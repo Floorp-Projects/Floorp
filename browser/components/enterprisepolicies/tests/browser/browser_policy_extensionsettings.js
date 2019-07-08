@@ -2,7 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const BASE_URL = "http://mochi.test:8888/browser/browser/components/enterprisepolicies/tests/browser/";
+const BASE_URL =
+  "http://mochi.test:8888/browser/browser/components/enterprisepolicies/tests/browser/";
 
 /**
  * Wait for the given PopupNotification to display
@@ -17,7 +18,9 @@ function promisePopupNotificationShown(name) {
   return new Promise(resolve => {
     function popupshown() {
       let notification = PopupNotifications.getNotification(name);
-      if (!notification) { return; }
+      if (!notification) {
+        return;
+      }
 
       ok(notification, `${name} notification shown`);
       ok(PopupNotifications.isPanelOpen, "notification panel open");
@@ -32,18 +35,22 @@ function promisePopupNotificationShown(name) {
 
 add_task(async function test_install_source_blocked_link() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "ExtensionSettings": {
+    policies: {
+      ExtensionSettings: {
         "*": {
-          "install_sources": ["http://blocks.other.install.sources/*"],
+          install_sources: ["http://blocks.other.install.sources/*"],
         },
       },
     },
   });
-  let popupPromise = promisePopupNotificationShown("addon-install-origin-blocked");
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+  let popupPromise = promisePopupNotificationShown(
+    "addon-install-origin-blocked"
+  );
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: BASE_URL + "extensionsettings.html",
-    waitForStateStop: true});
+    waitForStateStop: true,
+  });
 
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
     content.document.getElementById("policytest").click();
@@ -54,18 +61,22 @@ add_task(async function test_install_source_blocked_link() {
 
 add_task(async function test_install_source_blocked_installtrigger() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "ExtensionSettings": {
+    policies: {
+      ExtensionSettings: {
         "*": {
-          "install_sources": ["http://blocks.other.install.sources/*"],
+          install_sources: ["http://blocks.other.install.sources/*"],
         },
       },
     },
   });
-  let popupPromise = promisePopupNotificationShown("addon-install-origin-blocked");
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+  let popupPromise = promisePopupNotificationShown(
+    "addon-install-origin-blocked"
+  );
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: BASE_URL + "extensionsettings.html",
-    waitForStateStop: true});
+    waitForStateStop: true,
+  });
 
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
     content.document.getElementById("policytest_installtrigger").click();
@@ -76,18 +87,22 @@ add_task(async function test_install_source_blocked_installtrigger() {
 
 add_task(async function test_install_source_blocked_otherdomain() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "ExtensionSettings": {
+    policies: {
+      ExtensionSettings: {
         "*": {
-          "install_sources": ["http://mochi.test/*"],
+          install_sources: ["http://mochi.test/*"],
         },
       },
     },
   });
-  let popupPromise = promisePopupNotificationShown("addon-install-origin-blocked");
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+  let popupPromise = promisePopupNotificationShown(
+    "addon-install-origin-blocked"
+  );
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: BASE_URL + "extensionsettings.html",
-    waitForStateStop: true});
+    waitForStateStop: true,
+  });
 
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
     content.document.getElementById("policytest_otherdomain").click();
@@ -98,40 +113,50 @@ add_task(async function test_install_source_blocked_otherdomain() {
 
 add_task(async function test_install_source_blocked_direct() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "ExtensionSettings": {
+    policies: {
+      ExtensionSettings: {
         "*": {
-          "install_sources": ["http://blocks.other.install.sources/*"],
+          install_sources: ["http://blocks.other.install.sources/*"],
         },
       },
     },
   });
-  let popupPromise = promisePopupNotificationShown("addon-install-origin-blocked");
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+  let popupPromise = promisePopupNotificationShown(
+    "addon-install-origin-blocked"
+  );
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: BASE_URL + "extensionsettings.html",
-    waitForStateStop: true});
-
-  await ContentTask.spawn(tab.linkedBrowser, {baseUrl: BASE_URL}, async function({baseUrl}) {
-    content.document.location.href = baseUrl + "policytest_v0.1.xpi";
+    waitForStateStop: true,
   });
+
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { baseUrl: BASE_URL },
+    async function({ baseUrl }) {
+      content.document.location.href = baseUrl + "policytest_v0.1.xpi";
+    }
+  );
   await popupPromise;
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_install_source_allowed_link() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "ExtensionSettings": {
+    policies: {
+      ExtensionSettings: {
         "*": {
-          "install_sources": ["http://mochi.test/*"],
+          install_sources: ["http://mochi.test/*"],
         },
       },
     },
   });
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: BASE_URL + "extensionsettings.html",
-    waitForStateStop: true});
+    waitForStateStop: true,
+  });
 
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
     content.document.getElementById("policytest").click();
@@ -142,18 +167,20 @@ add_task(async function test_install_source_allowed_link() {
 
 add_task(async function test_install_source_allowed_installtrigger() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "ExtensionSettings": {
+    policies: {
+      ExtensionSettings: {
         "*": {
-          "install_sources": ["http://mochi.test/*"],
+          install_sources: ["http://mochi.test/*"],
         },
       },
     },
   });
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: BASE_URL + "extensionsettings.html",
-    waitForStateStop: true});
+    waitForStateStop: true,
+  });
 
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
     content.document.getElementById("policytest_installtrigger").click();
@@ -164,18 +191,20 @@ add_task(async function test_install_source_allowed_installtrigger() {
 
 add_task(async function test_install_source_allowed_otherdomain() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "ExtensionSettings": {
+    policies: {
+      ExtensionSettings: {
         "*": {
-          "install_sources": ["http://mochi.test/*", "http://example.org/*"],
+          install_sources: ["http://mochi.test/*", "http://example.org/*"],
         },
       },
     },
   });
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: BASE_URL + "extensionsettings.html",
-    waitForStateStop: true});
+    waitForStateStop: true,
+  });
 
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
     content.document.getElementById("policytest_otherdomain").click();
@@ -186,22 +215,28 @@ add_task(async function test_install_source_allowed_otherdomain() {
 
 add_task(async function test_install_source_allowed_direct() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "ExtensionSettings": {
+    policies: {
+      ExtensionSettings: {
         "*": {
-          "install_sources": ["http://mochi.test/*"],
+          install_sources: ["http://mochi.test/*"],
         },
       },
     },
   });
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: BASE_URL + "extensionsettings.html",
-    waitForStateStop: true});
-
-  await ContentTask.spawn(tab.linkedBrowser, {baseUrl: BASE_URL}, async function({baseUrl}) {
-    content.document.location.href = baseUrl + "policytest_v0.1.xpi";
+    waitForStateStop: true,
   });
+
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    { baseUrl: BASE_URL },
+    async function({ baseUrl }) {
+      content.document.location.href = baseUrl + "policytest_v0.1.xpi";
+    }
+  );
   await popupPromise;
   BrowserTestUtils.removeTab(tab);
 });

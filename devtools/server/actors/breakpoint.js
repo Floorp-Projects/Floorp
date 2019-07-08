@@ -174,11 +174,7 @@ BreakpointActor.prototype = {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     const location = this.threadActor.sources.getFrameLocation(frame);
-    const {
-      sourceActor,
-      line,
-      column,
-    } = location;
+    const { sourceActor, line, column } = location;
 
     if (
       this.threadActor.sources.isBlackBoxed(sourceActor.url, line, column) ||
@@ -233,7 +229,9 @@ BreakpointActor.prototype = {
 
     if (logValue) {
       const displayName = formatDisplayName(frame);
-      const completion = frame.evalWithBindings(`[${logValue}]`, { displayName });
+      const completion = frame.evalWithBindings(`[${logValue}]`, {
+        displayName,
+      });
       let value;
       let level = "logPoint";
 

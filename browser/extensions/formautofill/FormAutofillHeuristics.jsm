@@ -10,11 +10,18 @@
 
 var EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "LabelUtils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillUtils",
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
 
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
@@ -36,7 +43,7 @@ class FieldScanner {
    * @param {Array.DOMElement} elements
    *        The elements from a form for each parser.
    */
-  constructor(elements, {allowDuplicates = false, sectionEnabled = true}) {
+  constructor(elements, { allowDuplicates = false, sectionEnabled = true }) {
     this._elementsWeakRef = Cu.getWeakReference(elements);
     this.fieldDetails = [];
     this._parsingIndex = 0;
@@ -84,14 +91,16 @@ class FieldScanner {
    */
   getFieldDetailByIndex(index) {
     if (index >= this._elements.length) {
-      throw new Error(`The index ${index} is out of range.(${this._elements.length})`);
+      throw new Error(
+        `The index ${index} is out of range.(${this._elements.length})`
+      );
     }
 
     if (index < this.fieldDetails.length) {
       return this.fieldDetails[index];
     }
 
-    for (let i = this.fieldDetails.length; i < (index + 1); i++) {
+    for (let i = this.fieldDetails.length; i < index + 1; i++) {
       this.pushDetail();
     }
 
@@ -126,14 +135,19 @@ class FieldScanner {
       if (!fieldDetail.fieldName) {
         continue;
       }
-      if (seenTypes.has(fieldDetail.fieldName) &&
-          previousType != fieldDetail.fieldName) {
+      if (
+        seenTypes.has(fieldDetail.fieldName) &&
+        previousType != fieldDetail.fieldName
+      ) {
         seenTypes.clear();
         sectionCount++;
       }
       previousType = fieldDetail.fieldName;
       seenTypes.add(fieldDetail.fieldName);
-      this._pushToSection(DEFAULT_SECTION_NAME + "-" + sectionCount, fieldDetail);
+      this._pushToSection(
+        DEFAULT_SECTION_NAME + "-" + sectionCount,
+        fieldDetail
+      );
     }
   }
 
@@ -156,7 +170,10 @@ class FieldScanner {
     if (this._sections.length == 0) {
       return [];
     }
-    if (this._sections.length == 1 && this._sections[0].name == DEFAULT_SECTION_NAME) {
+    if (
+      this._sections.length == 1 &&
+      this._sections[0].name == DEFAULT_SECTION_NAME
+    ) {
       this._classifySections();
     }
 
@@ -226,9 +243,11 @@ class FieldScanner {
   }
 
   _isSameField(field1, field2) {
-    return field1.section == field2.section &&
-           field1.addressType == field2.addressType &&
-           field1.fieldName == field2.fieldName;
+    return (
+      field1.section == field2.section &&
+      field1.addressType == field2.addressType &&
+      field1.fieldName == field2.fieldName
+    );
   }
 
   /**
@@ -256,7 +275,10 @@ class FieldScanner {
       } else if (FormAutofillUtils.isCreditCardField(fieldName)) {
         creditCardFieldDetails.push(fieldDetail);
       } else {
-        log.debug("Not collecting a field with a unknown fieldName", fieldDetail);
+        log.debug(
+          "Not collecting a field with a unknown fieldName",
+          fieldDetail
+        );
       }
     }
 
@@ -269,18 +291,20 @@ class FieldScanner {
         type: FormAutofillUtils.SECTION_TYPES.CREDIT_CARD,
         fieldDetails: creditCardFieldDetails,
       },
-    ].map(section => {
-      if (this._allowDuplicates) {
+    ]
+      .map(section => {
+        if (this._allowDuplicates) {
+          return section;
+        }
+        // Deduplicate each set of fieldDetails
+        let details = section.fieldDetails;
+        section.fieldDetails = details.filter((detail, index) => {
+          let previousFields = details.slice(0, index);
+          return !previousFields.find(f => this._isSameField(detail, f));
+        });
         return section;
-      }
-      // Deduplicate each set of fieldDetails
-      let details = section.fieldDetails;
-      section.fieldDetails = details.filter((detail, index) => {
-        let previousFields = details.slice(0, index);
-        return !previousFields.find(f => this._isSameField(detail, f));
-      });
-      return section;
-    }).filter(section => section.fieldDetails.length > 0);
+      })
+      .filter(section => section.fieldDetails.length > 0);
   }
 
   elementExisting(index) {
@@ -323,7 +347,7 @@ var LabelUtils = {
       return this._labelStrings.get(element);
     }
     let strings = [];
-    let _extractLabelStrings = (el) => {
+    let _extractLabelStrings = el => {
       if (this.EXCLUDED_TAGS.includes(el.tagName)) {
         return;
       }
@@ -414,7 +438,9 @@ this.FormAutofillHeuristics = {
    *          Return whether subArray was found within the array or not.
    */
   _matchContiguousSubArray(array, subArray) {
-    return array.some((elm, i) => subArray.every((sElem, j) => sElem == array[i + j]));
+    return array.some((elm, i) =>
+      subArray.every((sElem, j) => sElem == array[i + j])
+    );
   },
 
   /**
@@ -431,7 +457,9 @@ this.FormAutofillHeuristics = {
     }
 
     const options = [...element.options];
-    const desiredValues = Array(12).fill(1).map((v, i) => v + i);
+    const desiredValues = Array(12)
+      .fill(1)
+      .map((v, i) => v + i);
 
     // The number of month options shouldn't be less than 12 or larger than 13
     // including the default option.
@@ -439,10 +467,14 @@ this.FormAutofillHeuristics = {
       return false;
     }
 
-    return this._matchContiguousSubArray(options.map(e => +e.value), desiredValues) ||
-           this._matchContiguousSubArray(options.map(e => +e.label), desiredValues);
+    return (
+      this._matchContiguousSubArray(
+        options.map(e => +e.value),
+        desiredValues
+      ) ||
+      this._matchContiguousSubArray(options.map(e => +e.label), desiredValues)
+    );
   },
-
 
   /**
    * Try to find the field that is look like a year select.
@@ -461,12 +493,18 @@ this.FormAutofillHeuristics = {
     // A normal expiration year select should contain at least the last three years
     // in the list.
     const curYear = new Date().getFullYear();
-    const desiredValues = Array(3).fill(0).map((v, i) => v + curYear + i);
+    const desiredValues = Array(3)
+      .fill(0)
+      .map((v, i) => v + curYear + i);
 
-    return this._matchContiguousSubArray(options.map(e => +e.value), desiredValues) ||
-           this._matchContiguousSubArray(options.map(e => +e.label), desiredValues);
+    return (
+      this._matchContiguousSubArray(
+        options.map(e => +e.value),
+        desiredValues
+      ) ||
+      this._matchContiguousSubArray(options.map(e => +e.label), desiredValues)
+    );
   },
-
 
   /**
    * Try to match the telephone related fields to the grammar
@@ -486,16 +524,29 @@ this.FormAutofillHeuristics = {
     for (let i = 0; i < GRAMMARS.length; i++) {
       let detailStart = fieldScanner.parsingIndex;
       let ruleStart = i;
-      for (; i < GRAMMARS.length && GRAMMARS[i][0] && fieldScanner.elementExisting(detailStart); i++, detailStart++) {
+      for (
+        ;
+        i < GRAMMARS.length &&
+        GRAMMARS[i][0] &&
+        fieldScanner.elementExisting(detailStart);
+        i++, detailStart++
+      ) {
         let detail = fieldScanner.getFieldDetailByIndex(detailStart);
-        if (!detail || GRAMMARS[i][0] != detail.fieldName || (detail._reason && detail._reason == "autocomplete")) {
+        if (
+          !detail ||
+          GRAMMARS[i][0] != detail.fieldName ||
+          (detail._reason && detail._reason == "autocomplete")
+        ) {
           break;
         }
         let element = detail.elementWeakRef.get();
         if (!element) {
           break;
         }
-        if (GRAMMARS[i][2] && (!element.maxLength || GRAMMARS[i][2] < element.maxLength)) {
+        if (
+          GRAMMARS[i][2] &&
+          (!element.maxLength || GRAMMARS[i][2] < element.maxLength)
+        ) {
           break;
         }
       }
@@ -521,7 +572,7 @@ this.FormAutofillHeuristics = {
 
     let parsedField = false;
     if (matchingResult) {
-      let {ruleFrom, ruleTo} = matchingResult;
+      let { ruleFrom, ruleTo } = matchingResult;
       let detailStart = fieldScanner.parsingIndex;
       for (let i = ruleFrom; i < ruleTo; i++) {
         fieldScanner.updateFieldName(detailStart, GRAMMARS[i][1]);
@@ -535,17 +586,33 @@ this.FormAutofillHeuristics = {
       return parsedField;
     }
 
-    let nextField = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
-    if (nextField && nextField._reason != "autocomplete" && fieldScanner.parsingIndex > 0) {
+    let nextField = fieldScanner.getFieldDetailByIndex(
+      fieldScanner.parsingIndex
+    );
+    if (
+      nextField &&
+      nextField._reason != "autocomplete" &&
+      fieldScanner.parsingIndex > 0
+    ) {
       const regExpTelExtension = new RegExp(
-        "\\bext|ext\\b|extension" +
-        "|ramal", // pt-BR, pt-PT
-        "iu");
-      const previousField = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex - 1);
-      const previousFieldType = FormAutofillUtils.getCategoryFromFieldName(previousField.fieldName);
-      if (previousField && previousFieldType == "tel" &&
-        this._matchRegexp(nextField.elementWeakRef.get(), regExpTelExtension)) {
-        fieldScanner.updateFieldName(fieldScanner.parsingIndex, "tel-extension");
+        "\\bext|ext\\b|extension|ramal", // pt-BR, pt-PT
+        "iu"
+      );
+      const previousField = fieldScanner.getFieldDetailByIndex(
+        fieldScanner.parsingIndex - 1
+      );
+      const previousFieldType = FormAutofillUtils.getCategoryFromFieldName(
+        previousField.fieldName
+      );
+      if (
+        previousField &&
+        previousFieldType == "tel" &&
+        this._matchRegexp(nextField.elementWeakRef.get(), regExpTelExtension)
+      ) {
+        fieldScanner.updateFieldName(
+          fieldScanner.parsingIndex,
+          "tel-extension"
+        );
         fieldScanner.parsingIndex++;
         parsedField = true;
       }
@@ -578,7 +645,7 @@ this.FormAutofillHeuristics = {
         "|indirizzo1" + // it-IT
         "|住所1" + // ja-JP
         "|地址1" + // zh-CN
-        "|주소.?1", // ko-KR
+          "|주소.?1", // ko-KR
         "iu"
       ),
       "address-line2": new RegExp(
@@ -587,7 +654,7 @@ this.FormAutofillHeuristics = {
         "|indirizzo2" + // it-IT
         "|住所2" + // ja-JP
         "|地址2" + // zh-CN
-        "|주소.?2", // ko-KR
+          "|주소.?2", // ko-KR
         "iu"
       ),
       "address-line3": new RegExp(
@@ -596,13 +663,19 @@ this.FormAutofillHeuristics = {
         "|indirizzo3" + // it-IT
         "|住所3" + // ja-JP
         "|地址3" + // zh-CN
-        "|주소.?3", // ko-KR
+          "|주소.?3", // ko-KR
         "iu"
       ),
     };
     while (!fieldScanner.parsingFinished) {
-      let detail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
-      if (!detail || !addressLines.includes(detail.fieldName) || detail._reason == "autocomplete") {
+      let detail = fieldScanner.getFieldDetailByIndex(
+        fieldScanner.parsingIndex
+      );
+      if (
+        !detail ||
+        !addressLines.includes(detail.fieldName) ||
+        detail._reason == "autocomplete"
+      ) {
         // When the field is not related to any address-line[1-3] fields or
         // determined by autocomplete attr, it means the parsing process can be
         // terminated.
@@ -637,12 +710,17 @@ this.FormAutofillHeuristics = {
 
     const savedIndex = fieldScanner.parsingIndex;
     const monthAndYearFieldNames = ["cc-exp-month", "cc-exp-year"];
-    const detail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+    const detail = fieldScanner.getFieldDetailByIndex(
+      fieldScanner.parsingIndex
+    );
     const element = detail.elementWeakRef.get();
 
     // Respect to autocomplete attr and skip the uninteresting fields
-    if (!detail || (detail._reason && detail._reason == "autocomplete") ||
-        !["cc-exp", ...monthAndYearFieldNames].includes(detail.fieldName)) {
+    if (
+      !detail ||
+      (detail._reason && detail._reason == "autocomplete") ||
+      !["cc-exp", ...monthAndYearFieldNames].includes(detail.fieldName)
+    ) {
       return false;
     }
 
@@ -656,9 +734,13 @@ this.FormAutofillHeuristics = {
 
     // Don't process the fields if expiration month and expiration year are already
     // matched by regex in correct order.
-    if (fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex++).fieldName == "cc-exp-month" &&
-        !fieldScanner.parsingFinished &&
-        fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex++).fieldName == "cc-exp-year") {
+    if (
+      fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex++)
+        .fieldName == "cc-exp-month" &&
+      !fieldScanner.parsingFinished &&
+      fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex++)
+        .fieldName == "cc-exp-year"
+    ) {
       return true;
     }
     fieldScanner.parsingIndex = savedIndex;
@@ -669,10 +751,15 @@ this.FormAutofillHeuristics = {
       fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-month");
       fieldScanner.parsingIndex++;
       if (!fieldScanner.parsingFinished) {
-        const nextDetail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+        const nextDetail = fieldScanner.getFieldDetailByIndex(
+          fieldScanner.parsingIndex
+        );
         const nextElement = nextDetail.elementWeakRef.get();
         if (this._isExpirationYearLikely(nextElement)) {
-          fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-year");
+          fieldScanner.updateFieldName(
+            fieldScanner.parsingIndex,
+            "cc-exp-year"
+          );
           fieldScanner.parsingIndex++;
           return true;
         }
@@ -686,10 +773,15 @@ this.FormAutofillHeuristics = {
       fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-month");
       fieldScanner.parsingIndex++;
       if (!fieldScanner.parsingFinished) {
-        const nextDetail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+        const nextDetail = fieldScanner.getFieldDetailByIndex(
+          fieldScanner.parsingIndex
+        );
         const nextElement = nextDetail.elementWeakRef.get();
         if (this._findMatchedFieldName(nextElement, ["cc-exp-year"])) {
-          fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-year");
+          fieldScanner.updateFieldName(
+            fieldScanner.parsingIndex,
+            "cc-exp-year"
+          );
           fieldScanner.parsingIndex++;
           return true;
         }
@@ -698,14 +790,19 @@ this.FormAutofillHeuristics = {
     fieldScanner.parsingIndex = savedIndex;
 
     // Look for MM and/or YY(YY).
-    if (this._matchRegexp(element, /^mm$/ig)) {
+    if (this._matchRegexp(element, /^mm$/gi)) {
       fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-month");
       fieldScanner.parsingIndex++;
       if (!fieldScanner.parsingFinished) {
-        const nextDetail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+        const nextDetail = fieldScanner.getFieldDetailByIndex(
+          fieldScanner.parsingIndex
+        );
         const nextElement = nextDetail.elementWeakRef.get();
         if (this._matchRegexp(nextElement, /^(yy|yyyy)$/)) {
-          fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-year");
+          fieldScanner.updateFieldName(
+            fieldScanner.parsingIndex,
+            "cc-exp-year"
+          );
           fieldScanner.parsingIndex++;
 
           return true;
@@ -715,8 +812,16 @@ this.FormAutofillHeuristics = {
     fieldScanner.parsingIndex = savedIndex;
 
     // Look for a cc-exp with 2-digit or 4-digit year.
-    if (this._matchRegexp(element, /(?:exp.*date[^y\\n\\r]*|mm\\s*[-/]?\\s*)yy(?:[^y]|$)/ig) ||
-        this._matchRegexp(element, /(?:exp.*date[^y\\n\\r]*|mm\\s*[-/]?\\s*)yyyy(?:[^y]|$)/ig)) {
+    if (
+      this._matchRegexp(
+        element,
+        /(?:exp.*date[^y\\n\\r]*|mm\\s*[-/]?\\s*)yy(?:[^y]|$)/gi
+      ) ||
+      this._matchRegexp(
+        element,
+        /(?:exp.*date[^y\\n\\r]*|mm\\s*[-/]?\\s*)yyyy(?:[^y]|$)/gi
+      )
+    ) {
       fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp");
       fieldScanner.parsingIndex++;
       return true;
@@ -755,23 +860,32 @@ this.FormAutofillHeuristics = {
    *        all sections within its field details in the form.
    */
   getFormInfo(form, allowDuplicates = false) {
-    const eligibleFields = Array.from(form.elements)
-      .filter(elem => FormAutofillUtils.isFieldEligibleForAutofill(elem));
+    const eligibleFields = Array.from(form.elements).filter(elem =>
+      FormAutofillUtils.isFieldEligibleForAutofill(elem)
+    );
 
     if (eligibleFields.length <= 0) {
       return [];
     }
 
-    let fieldScanner = new FieldScanner(eligibleFields,
-      {allowDuplicates, sectionEnabled: this._sectionEnabled});
+    let fieldScanner = new FieldScanner(eligibleFields, {
+      allowDuplicates,
+      sectionEnabled: this._sectionEnabled,
+    });
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
-      let parsedExpirationDateFields = this._parseCreditCardExpirationDateFields(fieldScanner);
+      let parsedExpirationDateFields = this._parseCreditCardExpirationDateFields(
+        fieldScanner
+      );
 
       // If there is no any field parsed, the parsing cursor can be moved
       // forward to the next one.
-      if (!parsedPhoneFields && !parsedAddressFields && !parsedExpirationDateFields) {
+      if (
+        !parsedPhoneFields &&
+        !parsedAddressFields &&
+        !parsedExpirationDateFields
+      ) {
         fieldScanner.parsingIndex++;
       }
     }
@@ -782,7 +896,7 @@ this.FormAutofillHeuristics = {
   },
 
   _regExpTableHashValue(...signBits) {
-    return signBits.reduce((p, c, i) => p | !!c << i, 0);
+    return signBits.reduce((p, c, i) => p | (!!c << i), 0);
   },
 
   _setRegExpListCache(regexps, b0, b1, b2) {
@@ -816,10 +930,14 @@ this.FormAutofillHeuristics = {
       "cc-exp-year",
       "cc-exp",
     ];
-    let regexps = isAutoCompleteOff ? FIELDNAMES_IGNORING_AUTOCOMPLETE_OFF : Object.keys(this.RULES);
+    let regexps = isAutoCompleteOff
+      ? FIELDNAMES_IGNORING_AUTOCOMPLETE_OFF
+      : Object.keys(this.RULES);
 
     if (!FormAutofill.isAutofillCreditCardsAvailable) {
-      regexps = regexps.filter(name => !FormAutofillUtils.isCreditCardField(name));
+      regexps = regexps.filter(
+        name => !FormAutofillUtils.isCreditCardField(name)
+      );
     }
 
     if (isSelectElem) {
@@ -831,7 +949,9 @@ this.FormAutofillHeuristics = {
         "cc-exp-year",
         "cc-exp",
       ];
-      regexps = regexps.filter(name => FIELDNAMES_FOR_SELECT_ELEMENT.includes(name));
+      regexps = regexps.filter(name =>
+        FIELDNAMES_FOR_SELECT_ELEMENT.includes(name)
+      );
     }
 
     this._setRegExpListCache(
@@ -848,7 +968,12 @@ this.FormAutofillHeuristics = {
     let info = element.getAutocompleteInfo();
     // An input[autocomplete="on"] will not be early return here since it stll
     // needs to find the field name.
-    if (info && info.fieldName && info.fieldName != "on" && info.fieldName != "off") {
+    if (
+      info &&
+      info.fieldName &&
+      info.fieldName != "on" &&
+      info.fieldName != "off"
+    ) {
       info._reason = "autocomplete";
       return info;
     }
@@ -857,7 +982,8 @@ this.FormAutofillHeuristics = {
       return null;
     }
 
-    let isAutoCompleteOff = element.autocomplete == "off" ||
+    let isAutoCompleteOff =
+      element.autocomplete == "off" ||
       (element.form && element.form.autocomplete == "off");
 
     // "email" type of input is accurate for heuristics to determine its Email
@@ -878,7 +1004,7 @@ this.FormAutofillHeuristics = {
       return null;
     }
 
-    let matchedFieldName =  this._findMatchedFieldName(element, regexps);
+    let matchedFieldName = this._findMatchedFieldName(element, regexps);
     if (matchedFieldName) {
       return {
         fieldName: matchedFieldName,
@@ -907,13 +1033,13 @@ this.FormAutofillHeuristics = {
    */
   _getElementStrings(element) {
     return {
-      * [Symbol.iterator]() {
+      *[Symbol.iterator]() {
         yield element.id;
         yield element.name;
 
         const labels = LabelUtils.findLabelElements(element);
         for (let label of labels) {
-          yield *LabelUtils.extractLabelStrings(label);
+          yield* LabelUtils.extractLabelStrings(label);
         }
       },
     };
@@ -938,8 +1064,13 @@ this.FormAutofillHeuristics = {
         //
         // Since "united state" string matches to the regexp of address-line2&3,
         // the two regexps should be excluded here.
-        if (["address-level1", "address-line2", "address-line3"].includes(regexp)) {
-          string = string.toLowerCase().split("united state").join("");
+        if (
+          ["address-level1", "address-line2", "address-line3"].includes(regexp)
+        ) {
+          string = string
+            .toLowerCase()
+            .split("united state")
+            .join("");
         }
         if (this.RULES[regexp].test(string)) {
           return regexp;
@@ -968,43 +1099,43 @@ this.FormAutofillHeuristics = {
     return false;
   },
 
-/**
- * Phone field grammars - first matched grammar will be parsed. Grammars are
- * separated by { REGEX_SEPARATOR, FIELD_NONE, 0 }. Suffix and extension are
- * parsed separately unless they are necessary parts of the match.
- * The following notation is used to describe the patterns:
- * <cc> - country code field.
- * <ac> - area code field.
- * <phone> - phone or prefix.
- * <suffix> - suffix.
- * <ext> - extension.
- * :N means field is limited to N characters, otherwise it is unlimited.
- * (pattern <field>)? means pattern is optional and matched separately.
- *
- * This grammar list from Chromium will be enabled partially once we need to
- * support more cases of Telephone fields.
- */
+  /**
+   * Phone field grammars - first matched grammar will be parsed. Grammars are
+   * separated by { REGEX_SEPARATOR, FIELD_NONE, 0 }. Suffix and extension are
+   * parsed separately unless they are necessary parts of the match.
+   * The following notation is used to describe the patterns:
+   * <cc> - country code field.
+   * <ac> - area code field.
+   * <phone> - phone or prefix.
+   * <suffix> - suffix.
+   * <ext> - extension.
+   * :N means field is limited to N characters, otherwise it is unlimited.
+   * (pattern <field>)? means pattern is optional and matched separately.
+   *
+   * This grammar list from Chromium will be enabled partially once we need to
+   * support more cases of Telephone fields.
+   */
   PHONE_FIELD_GRAMMARS: [
     // Country code: <cc> Area Code: <ac> Phone: <phone> (- <suffix>
 
     // (Ext: <ext>)?)?
-      // {REGEX_COUNTRY, FIELD_COUNTRY_CODE, 0},
-      // {REGEX_AREA, FIELD_AREA_CODE, 0},
-      // {REGEX_PHONE, FIELD_PHONE, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_COUNTRY, FIELD_COUNTRY_CODE, 0},
+    // {REGEX_AREA, FIELD_AREA_CODE, 0},
+    // {REGEX_PHONE, FIELD_PHONE, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // \( <ac> \) <phone>:3 <suffix>:4 (Ext: <ext>)?
-      // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 3},
-      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 3},
-      // {REGEX_PHONE, FIELD_SUFFIX, 4},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 3},
+    // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 3},
+    // {REGEX_PHONE, FIELD_SUFFIX, 4},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <cc> <ac>:3 - <phone>:3 - <suffix>:4 (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
-      // {REGEX_PHONE, FIELD_AREA_CODE, 3},
-      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 3},
-      // {REGEX_SUFFIX_SEPARATOR, FIELD_SUFFIX, 4},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+    // {REGEX_PHONE, FIELD_AREA_CODE, 3},
+    // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 3},
+    // {REGEX_SUFFIX_SEPARATOR, FIELD_SUFFIX, 4},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <cc>:3 <ac>:3 <phone>:3 <suffix>:4 (Ext: <ext>)?
     ["tel", "tel-country-code", 3],
@@ -1014,46 +1145,46 @@ this.FormAutofillHeuristics = {
     [null, null, 0],
 
     // Area Code: <ac> Phone: <phone> (- <suffix> (Ext: <ext>)?)?
-      // {REGEX_AREA, FIELD_AREA_CODE, 0},
-      // {REGEX_PHONE, FIELD_PHONE, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_AREA, FIELD_AREA_CODE, 0},
+    // {REGEX_PHONE, FIELD_PHONE, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <ac> <phone>:3 <suffix>:4 (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_AREA_CODE, 0},
-      // {REGEX_PHONE, FIELD_PHONE, 3},
-      // {REGEX_PHONE, FIELD_SUFFIX, 4},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_AREA_CODE, 0},
+    // {REGEX_PHONE, FIELD_PHONE, 3},
+    // {REGEX_PHONE, FIELD_SUFFIX, 4},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <cc> \( <ac> \) <phone> (- <suffix> (Ext: <ext>)?)?
-      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
-      // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 0},
-      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+    // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 0},
+    // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: \( <ac> \) <phone> (- <suffix> (Ext: <ext>)?)?
-      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
-      // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 0},
-      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+    // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 0},
+    // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <cc> - <ac> - <phone> - <suffix> (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
-      // {REGEX_PREFIX_SEPARATOR, FIELD_AREA_CODE, 0},
-      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
-      // {REGEX_SUFFIX_SEPARATOR, FIELD_SUFFIX, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+    // {REGEX_PREFIX_SEPARATOR, FIELD_AREA_CODE, 0},
+    // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
+    // {REGEX_SUFFIX_SEPARATOR, FIELD_SUFFIX, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Area code: <ac>:3 Prefix: <prefix>:3 Suffix: <suffix>:4 (Ext: <ext>)?
-      // {REGEX_AREA, FIELD_AREA_CODE, 3},
-      // {REGEX_PREFIX, FIELD_PHONE, 3},
-      // {REGEX_SUFFIX, FIELD_SUFFIX, 4},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_AREA, FIELD_AREA_CODE, 3},
+    // {REGEX_PREFIX, FIELD_PHONE, 3},
+    // {REGEX_SUFFIX, FIELD_SUFFIX, 4},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <ac> Prefix: <phone> Suffix: <suffix> (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_AREA_CODE, 0},
-      // {REGEX_PREFIX, FIELD_PHONE, 0},
-      // {REGEX_SUFFIX, FIELD_SUFFIX, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_AREA_CODE, 0},
+    // {REGEX_PREFIX, FIELD_PHONE, 0},
+    // {REGEX_SUFFIX, FIELD_SUFFIX, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <ac> - <phone>:3 - <suffix>:4 (Ext: <ext>)?
     ["tel", "tel-area-code", 0],
@@ -1062,28 +1193,28 @@ this.FormAutofillHeuristics = {
     [null, null, 0],
 
     // Phone: <cc> - <ac> - <phone> (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
-      // {REGEX_PREFIX_SEPARATOR, FIELD_AREA_CODE, 0},
-      // {REGEX_SUFFIX_SEPARATOR, FIELD_PHONE, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+    // {REGEX_PREFIX_SEPARATOR, FIELD_AREA_CODE, 0},
+    // {REGEX_SUFFIX_SEPARATOR, FIELD_PHONE, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <ac> - <phone> (Ext: <ext>)?
-      // {REGEX_AREA, FIELD_AREA_CODE, 0},
-      // {REGEX_PHONE, FIELD_PHONE, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_AREA, FIELD_AREA_CODE, 0},
+    // {REGEX_PHONE, FIELD_PHONE, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <cc>:3 - <phone>:10 (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 3},
-      // {REGEX_PHONE, FIELD_PHONE, 10},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_COUNTRY_CODE, 3},
+    // {REGEX_PHONE, FIELD_PHONE, 10},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Ext: <ext>
-      // {REGEX_EXTENSION, FIELD_EXTENSION, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_EXTENSION, FIELD_EXTENSION, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <phone> (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_PHONE, 0},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    // {REGEX_PHONE, FIELD_PHONE, 0},
+    // {REGEX_SEPARATOR, FIELD_NONE, 0},
   ],
 };
 
@@ -1099,13 +1230,21 @@ XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "_prefEnabled", () => {
 });
 
 Services.prefs.addObserver(PREF_HEURISTICS_ENABLED, () => {
-  this.FormAutofillHeuristics._prefEnabled = Services.prefs.getBoolPref(PREF_HEURISTICS_ENABLED);
+  this.FormAutofillHeuristics._prefEnabled = Services.prefs.getBoolPref(
+    PREF_HEURISTICS_ENABLED
+  );
 });
 
-XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "_sectionEnabled", () => {
-  return Services.prefs.getBoolPref(PREF_SECTION_ENABLED);
-});
+XPCOMUtils.defineLazyGetter(
+  this.FormAutofillHeuristics,
+  "_sectionEnabled",
+  () => {
+    return Services.prefs.getBoolPref(PREF_SECTION_ENABLED);
+  }
+);
 
 Services.prefs.addObserver(PREF_SECTION_ENABLED, () => {
-  this.FormAutofillHeuristics._sectionEnabled = Services.prefs.getBoolPref(PREF_SECTION_ENABLED);
+  this.FormAutofillHeuristics._sectionEnabled = Services.prefs.getBoolPref(
+    PREF_SECTION_ENABLED
+  );
 });

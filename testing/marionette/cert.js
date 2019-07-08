@@ -4,18 +4,22 @@
 
 "use strict";
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 this.EXPORTED_SYMBOLS = [
   "CertificateOverrideManager",
   "InsecureSweepingOverride",
 ];
 
-const registrar =
-    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-const sss = Cc["@mozilla.org/ssservice;1"]
-    .getService(Ci.nsISiteSecurityService);
+const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+const sss = Cc["@mozilla.org/ssservice;1"].getService(
+  Ci.nsISiteSecurityService
+);
 
 const CERT_PINNING_ENFORCEMENT_PREF = "security.cert_pinning.enforcement_level";
 const CID = Components.ID("{4b67cce0-a51c-11e6-9598-0800200c9a66}");
@@ -91,8 +95,7 @@ function InsecureSweepingOverride() {
   // make your life miserable.
   let service = function() {};
   service.prototype = {
-    hasMatchingOverride(
-        aHostName, aPort, aCert, aOverrideBits, aIsTemporary) {
+    hasMatchingOverride(aHostName, aPort, aCert, aOverrideBits, aIsTemporary) {
       aIsTemporary.value = false;
       aOverrideBits.value = Error.Untrusted | Error.Mismatch | Error.Time;
 

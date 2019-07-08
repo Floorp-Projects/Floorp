@@ -21,14 +21,16 @@ function getURL() {
 
   // match == null if not found; if so, return an empty string
   // instead of what would turn out to be portions of the URI
-  if (!match)
+  if (!match) {
     return "";
+  }
 
   url = decodeURIComponent(match[1]);
 
   // If this is a view-source page, then get then real URI of the page
-  if (url.startsWith("view-source:"))
+  if (url.startsWith("view-source:")) {
     url = url.slice(12);
+  }
   return url;
 }
 
@@ -67,16 +69,16 @@ function onClickSeeDetails() {
 function initPage() {
   var error = "";
   switch (getErrorCode()) {
-    case "malwareBlocked" :
+    case "malwareBlocked":
       error = "malware";
       break;
-    case "deceptiveBlocked" :
+    case "deceptiveBlocked":
       error = "phishing";
       break;
-    case "unwantedBlocked" :
+    case "unwantedBlocked":
       error = "unwanted";
       break;
-    case "harmfulBlocked" :
+    case "harmfulBlocked":
       error = "harmful";
       break;
     default:
@@ -86,9 +88,15 @@ function initPage() {
   // Set page contents depending on type of blocked page
   // Prepare the title and short description text
   let titleText = document.getElementById("errorTitleText");
-  document.l10n.setAttributes(titleText, "safeb-blocked-" + error + "-page-title");
+  document.l10n.setAttributes(
+    titleText,
+    "safeb-blocked-" + error + "-page-title"
+  );
   let shortDesc = document.getElementById("errorShortDescText");
-  document.l10n.setAttributes(shortDesc, "safeb-blocked-" + error + "-page-short-desc");
+  document.l10n.setAttributes(
+    shortDesc,
+    "safeb-blocked-" + error + "-page-short-desc"
+  );
 
   // Prepare the inner description, ensuring any redundant inner elements are removed.
   let innerDesc = document.getElementById("errorInnerDescription");
@@ -103,29 +111,36 @@ function initPage() {
     document.getElementById("report_detection").remove();
   }
 
-  document.l10n.setAttributes(innerDesc, innerDescL10nID, {sitename: getHostString()});
+  document.l10n.setAttributes(innerDesc, innerDescL10nID, {
+    sitename: getHostString(),
+  });
 
   // Add the learn more content:
   let learnMore = document.getElementById("learn_more");
-  document.l10n.setAttributes(learnMore, "safeb-blocked-" + error + "-page-learn-more");
+  document.l10n.setAttributes(
+    learnMore,
+    "safeb-blocked-" + error + "-page-learn-more"
+  );
 
   // Set sitename to bold by adding class
   let errorSitename = document.getElementById("error_desc_sitename");
   errorSitename.setAttribute("class", "sitename");
 
   let titleEl = document.createElement("title");
-  document.l10n.setAttributes(titleEl, "safeb-blocked-" + error + "-page-title");
+  document.l10n.setAttributes(
+    titleEl,
+    "safeb-blocked-" + error + "-page-title"
+  );
   document.head.appendChild(titleEl);
 
   // Inform the test harness that we're done loading the page.
-  var event = new CustomEvent("AboutBlockedLoaded",
-    {
-      bubbles: true,
-      detail: {
-        url: this.getURL(),
-        err: error,
-      },
-    });
+  var event = new CustomEvent("AboutBlockedLoaded", {
+    bubbles: true,
+    detail: {
+      url: this.getURL(),
+      err: error,
+    },
+  });
   document.dispatchEvent(event);
 }
 

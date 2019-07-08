@@ -2,17 +2,33 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function() {
-    registerCleanupFunction(function() {
-      window.restore();
-    });
-    function waitForActive() { return gBrowser.selectedTab.linkedBrowser.docShellIsActive; }
-    function waitForInactive() { return !gBrowser.selectedTab.linkedBrowser.docShellIsActive; }
-    await TestUtils.waitForCondition(waitForActive);
-    is(gBrowser.selectedTab.linkedBrowser.docShellIsActive, true, "Docshell should be active");
-    window.minimize();
-    await TestUtils.waitForCondition(waitForInactive);
-    is(gBrowser.selectedTab.linkedBrowser.docShellIsActive, false, "Docshell should be Inactive");
+  registerCleanupFunction(function() {
     window.restore();
-    await TestUtils.waitForCondition(waitForActive);
-    is(gBrowser.selectedTab.linkedBrowser.docShellIsActive, true, "Docshell should be active again");
+  });
+  function waitForActive() {
+    return gBrowser.selectedTab.linkedBrowser.docShellIsActive;
+  }
+  function waitForInactive() {
+    return !gBrowser.selectedTab.linkedBrowser.docShellIsActive;
+  }
+  await TestUtils.waitForCondition(waitForActive);
+  is(
+    gBrowser.selectedTab.linkedBrowser.docShellIsActive,
+    true,
+    "Docshell should be active"
+  );
+  window.minimize();
+  await TestUtils.waitForCondition(waitForInactive);
+  is(
+    gBrowser.selectedTab.linkedBrowser.docShellIsActive,
+    false,
+    "Docshell should be Inactive"
+  );
+  window.restore();
+  await TestUtils.waitForCondition(waitForActive);
+  is(
+    gBrowser.selectedTab.linkedBrowser.docShellIsActive,
+    true,
+    "Docshell should be active again"
+  );
 });

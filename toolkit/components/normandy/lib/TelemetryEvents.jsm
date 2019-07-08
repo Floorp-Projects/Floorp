@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["TelemetryEvents"];
 
@@ -15,6 +15,12 @@ const TelemetryEvents = {
   },
 
   sendEvent(method, object, value, extra) {
-    Services.telemetry.recordEvent(TELEMETRY_CATEGORY, method, object, value, extra);
+    Services.telemetry.recordEvent(
+      TELEMETRY_CATEGORY,
+      method,
+      object,
+      value,
+      extra
+    );
   },
 };

@@ -2,19 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const permissionExceptionsL10n = {
-  "trackingprotection": {
+  trackingprotection: {
     window: "permissions-exceptions-content-blocking-window",
     description: "permissions-exceptions-content-blocking-desc",
   },
-  "cookie": {
+  cookie: {
     window: "permissions-exceptions-cookie-window",
     description: "permissions-exceptions-cookie-desc",
   },
-  "popup": {
+  popup: {
     window: "permissions-exceptions-popup-window",
     description: "permissions-exceptions-popup-desc",
   },
@@ -22,7 +24,7 @@ const permissionExceptionsL10n = {
     window: "permissions-exceptions-saved-logins-window",
     description: "permissions-exceptions-saved-logins-desc",
   },
-  "install": {
+  install: {
     window: "permissions-exceptions-addons-window",
     description: "permissions-exceptions-addons-desc",
   },
@@ -73,11 +75,12 @@ var gPermissionManager = {
       document.documentElement,
     ]);
 
-    document.getElementById("btnBlock").hidden    = !params.blockVisible;
-    document.getElementById("btnSession").hidden  = !params.sessionVisible;
-    document.getElementById("btnAllow").hidden    = !params.allowVisible;
+    document.getElementById("btnBlock").hidden = !params.blockVisible;
+    document.getElementById("btnSession").hidden = !params.sessionVisible;
+    document.getElementById("btnAllow").hidden = !params.allowVisible;
 
-    let urlFieldVisible = (params.blockVisible || params.sessionVisible || params.allowVisible);
+    let urlFieldVisible =
+      params.blockVisible || params.sessionVisible || params.allowVisible;
 
     let urlField = document.getElementById("url");
     urlField.value = params.prefilledHost;
@@ -93,8 +96,9 @@ var gPermissionManager = {
     statusCol.hidden = this._hideStatusColumn;
     if (this._hideStatusColumn) {
       statusCol.removeAttribute("data-isCurrentSortCol");
-      document.getElementById("siteCol")
-              .setAttribute("data-isCurrentSortCol", "true");
+      document
+        .getElementById("siteCol")
+        .setAttribute("data-isCurrentSortCol", "true");
     }
 
     Services.obs.notifyObservers(null, "flush-pending-permissions", this._type);
@@ -113,14 +117,16 @@ var gPermissionManager = {
   },
 
   observe(subject, topic, data) {
-    if (topic !== "perm-changed")
+    if (topic !== "perm-changed") {
       return;
+    }
 
     let permission = subject.QueryInterface(Ci.nsIPermission);
 
     // Ignore unrelated permission types.
-    if (permission.type !== this._type)
+    if (permission.type !== this._type) {
       return;
+    }
 
     if (data == "added") {
       this._addPermissionToList(permission);
@@ -141,39 +147,49 @@ var gPermissionManager = {
   },
 
   _handleCapabilityChange(perm) {
-    let permissionlistitem = document.getElementsByAttribute("origin", perm.origin)[0];
-    document.l10n.setAttributes(permissionlistitem.querySelector(".website-capability-value"), this._getCapabilityL10nId(perm.capability));
+    let permissionlistitem = document.getElementsByAttribute(
+      "origin",
+      perm.origin
+    )[0];
+    document.l10n.setAttributes(
+      permissionlistitem.querySelector(".website-capability-value"),
+      this._getCapabilityL10nId(perm.capability)
+    );
   },
 
   _isCapabilitySupported(capability) {
-     return capability == Ci.nsIPermissionManager.ALLOW_ACTION ||
-            capability == Ci.nsIPermissionManager.DENY_ACTION ||
-            capability == Ci.nsICookiePermission.ACCESS_SESSION;
+    return (
+      capability == Ci.nsIPermissionManager.ALLOW_ACTION ||
+      capability == Ci.nsIPermissionManager.DENY_ACTION ||
+      capability == Ci.nsICookiePermission.ACCESS_SESSION
+    );
   },
 
   _getCapabilityL10nId(capability) {
     let stringKey = null;
     switch (capability) {
-    case Ci.nsIPermissionManager.ALLOW_ACTION:
-      stringKey = "permissions-capabilities-listitem-allow";
-      break;
-    case Ci.nsIPermissionManager.DENY_ACTION:
-      stringKey = "permissions-capabilities-listitem-block";
-      break;
-    case Ci.nsICookiePermission.ACCESS_SESSION:
-      stringKey = "permissions-capabilities-listitem-allow-session";
-      break;
-    default:
-      throw new Error(`Unknown capability: ${capability}`);
+      case Ci.nsIPermissionManager.ALLOW_ACTION:
+        stringKey = "permissions-capabilities-listitem-allow";
+        break;
+      case Ci.nsIPermissionManager.DENY_ACTION:
+        stringKey = "permissions-capabilities-listitem-block";
+        break;
+      case Ci.nsICookiePermission.ACCESS_SESSION:
+        stringKey = "permissions-capabilities-listitem-allow-session";
+        break;
+      default:
+        throw new Error(`Unknown capability: ${capability}`);
     }
     return stringKey;
   },
 
   _addPermissionToList(perm) {
-    if (perm.type !== this._type)
+    if (perm.type !== this._type) {
       return;
-    if (!this._isCapabilitySupported(perm.capability))
+    }
+    if (!this._isCapabilitySupported(perm.capability)) {
       return;
+    }
 
     let p = new Permission(perm.principal, perm.type, perm.capability);
     this._permissions.set(p.origin, p);
@@ -181,7 +197,7 @@ var gPermissionManager = {
 
   _addOrModifyPermission(principal, capability) {
     // check whether the permission already exists, if not, add it
-    let permissionParams = {principal, type: this._type, capability};
+    let permissionParams = { principal, type: this._type, capability };
     let existingPermission = this._permissions.get(principal.origin);
     if (!existingPermission) {
       this._permissionsToAdd.set(principal.origin, permissionParams);
@@ -214,22 +230,33 @@ var gPermissionManager = {
       // permissions from being entered by the user.
       try {
         let uri = Services.io.newURI(input_url);
-        let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+        let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+          uri,
+          {}
+        );
         if (principal.origin.startsWith("moz-nullprincipal:")) {
           throw new Error("Null principal");
         }
         principals.push(principal);
       } catch (ex) {
-        this._addNewPrincipalToList(principals, Services.io.newURI("http://" + input_url));
-        this._addNewPrincipalToList(principals, Services.io.newURI("https://" + input_url));
+        this._addNewPrincipalToList(
+          principals,
+          Services.io.newURI("http://" + input_url)
+        );
+        this._addNewPrincipalToList(
+          principals,
+          Services.io.newURI("https://" + input_url)
+        );
       }
     } catch (ex) {
-      document.l10n.formatValues([
-        {id: "permissions-invalid-uri-title"},
-        {id: "permissions-invalid-uri-label"},
-      ]).then(([title, message]) => {
-        Services.prompt.alert(window, title, message);
-      });
+      document.l10n
+        .formatValues([
+          { id: "permissions-invalid-uri-title" },
+          { id: "permissions-invalid-uri-label" },
+        ])
+        .then(([title, message]) => {
+          Services.prompt.alert(window, title, message);
+        });
       return;
     }
 
@@ -261,7 +288,10 @@ var gPermissionManager = {
 
   _removePermissionFromList(origin) {
     this._permissions.delete(origin);
-    let permissionlistitem = document.getElementsByAttribute("origin", origin)[0];
+    let permissionlistitem = document.getElementsByAttribute(
+      "origin",
+      origin
+    )[0];
     if (permissionlistitem) {
       permissionlistitem.remove();
     }
@@ -293,7 +323,10 @@ var gPermissionManager = {
       hbox = document.createXULElement("hbox");
       let capability = document.createXULElement("label");
       capability.setAttribute("class", "website-capability-value");
-      document.l10n.setAttributes(capability, this._getCapabilityL10nId(permission.capability));
+      document.l10n.setAttributes(
+        capability,
+        this._getCapabilityL10nId(permission.capability)
+      );
       hbox.setAttribute("width", "0");
       hbox.setAttribute("class", "website-name");
       hbox.setAttribute("flex", "1");
@@ -306,25 +339,30 @@ var gPermissionManager = {
   },
 
   onWindowKeyPress(event) {
-    if (event.keyCode == KeyEvent.DOM_VK_ESCAPE)
+    if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       window.close();
+    }
   },
 
   onPermissionKeyPress(event) {
-    if (!this._list.selectedItem)
+    if (!this._list.selectedItem) {
       return;
+    }
 
-    if (event.keyCode == KeyEvent.DOM_VK_DELETE ||
-       (AppConstants.platform == "macosx" &&
-        event.keyCode == KeyEvent.DOM_VK_BACK_SPACE)) {
+    if (
+      event.keyCode == KeyEvent.DOM_VK_DELETE ||
+      (AppConstants.platform == "macosx" &&
+        event.keyCode == KeyEvent.DOM_VK_BACK_SPACE)
+    ) {
       this.onPermissionDelete();
       event.preventDefault();
     }
   },
 
   onHostKeyPress(event) {
-    if (event.keyCode == KeyEvent.DOM_VK_RETURN)
+    if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
       document.getElementById("btnAllow").click();
+    }
   },
 
   onHostInput(siteField) {
@@ -334,8 +372,9 @@ var gPermissionManager = {
   },
 
   _setRemoveButtonState() {
-    if (!this._list)
+    if (!this._list) {
       return;
+    }
 
     let hasSelection = this._list.selectedIndex >= 0;
     let hasRows = this._list.itemCount > 0;
@@ -410,17 +449,22 @@ var gPermissionManager = {
 
     if (!column) {
       column = document.querySelector("treecol[data-isCurrentSortCol=true]");
-      sortDirection = column.getAttribute("data-last-sortDirection") || "ascending";
+      sortDirection =
+        column.getAttribute("data-last-sortDirection") || "ascending";
     } else {
       sortDirection = column.getAttribute("data-last-sortDirection");
-      sortDirection = sortDirection === "ascending" ? "descending" : "ascending";
+      sortDirection =
+        sortDirection === "ascending" ? "descending" : "ascending";
     }
 
     let sortFunc = null;
     switch (column.id) {
       case "siteCol":
         sortFunc = (a, b) => {
-          return comp.compare(a.getAttribute("origin"), b.getAttribute("origin"));
+          return comp.compare(
+            a.getAttribute("origin"),
+            b.getAttribute("origin")
+          );
         };
         break;
 
@@ -429,8 +473,14 @@ var gPermissionManager = {
           // The capabilities values ("Allow" and "Block") are localized asynchronously.
           // Sort based on the guaranteed-present localization ID instead, note that the
           // ascending/descending arrow may be pointing the wrong way.
-          return a.querySelector(".website-capability-value").getAttribute("data-l10n-id") >
-                 b.querySelector(".website-capability-value").getAttribute("data-l10n-id");
+          return (
+            a
+              .querySelector(".website-capability-value")
+              .getAttribute("data-l10n-id") >
+            b
+              .querySelector(".website-capability-value")
+              .getAttribute("data-l10n-id")
+          );
         };
         break;
     }

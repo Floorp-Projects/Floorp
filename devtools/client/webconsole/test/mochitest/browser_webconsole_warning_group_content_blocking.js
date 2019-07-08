@@ -14,7 +14,8 @@ const TEST_FILE =
 const TEST_URI = "http://example.com/" + TEST_FILE;
 
 const TRACKER_URL = "http://tracking.example.com/";
-const IMG_FILE = "browser/devtools/client/webconsole/test/mochitest/test-image.png";
+const IMG_FILE =
+  "browser/devtools/client/webconsole/test/mochitest/test-image.png";
 const TRACKER_IMG = "http://tracking.example.org/" + IMG_FILE;
 
 const CONTENT_BLOCKING_GROUP_LABEL =
@@ -22,17 +23,19 @@ const CONTENT_BLOCKING_GROUP_LABEL =
 
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIORS = {
-// reject all third-party cookies
+  // reject all third-party cookies
   REJECT_FOREIGN: 1,
-// reject all cookies
+  // reject all cookies
   REJECT: 2,
-// reject third-party cookies unless the eTLD already has at least one cookie
+  // reject third-party cookies unless the eTLD already has at least one cookie
   LIMIT_FOREIGN: 3,
-// reject trackers
+  // reject trackers
   REJECT_TRACKER: 4,
 };
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
@@ -42,12 +45,14 @@ pushPref("privacy.trackingprotection.enabled", true);
 pushPref("devtools.webconsole.groupWarningMessages", true);
 
 add_task(async function testContentBlockingMessage() {
-  const {hud, tab, win} = await openNewWindowAndConsole(
-    "http://tracking.example.org/" + TEST_FILE);
+  const { hud, tab, win } = await openNewWindowAndConsole(
+    "http://tracking.example.org/" + TEST_FILE
+  );
   const now = Date.now();
 
   info("Test content blocking message");
-  const message = `The resource at \u201chttp://tracking.example.com/?1&${now}\u201d ` +
+  const message =
+    `The resource at \u201chttp://tracking.example.com/?1&${now}\u201d ` +
     `was blocked because content blocking is enabled`;
   const onContentBlockingWarningMessage = waitForMessage(hud, message, ".warn");
   emitContentBlockingMessage(tab, `${TRACKER_URL}?1&${now}`);
@@ -55,13 +60,21 @@ add_task(async function testContentBlockingMessage() {
 
   ok(true, "The content blocking message was displayed");
 
-  info("Emit a new content blocking message to check that it causes a grouping");
-  const onContentBlockingWarningGroupMessage =
-    waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
+  info(
+    "Emit a new content blocking message to check that it causes a grouping"
+  );
+  const onContentBlockingWarningGroupMessage = waitForMessage(
+    hud,
+    CONTENT_BLOCKING_GROUP_LABEL,
+    ".warn"
+  );
   emitContentBlockingMessage(tab, `${TRACKER_URL}?2&${now}`);
-  const {node} = await onContentBlockingWarningGroupMessage;
-  is(node.querySelector(".warning-group-badge").textContent, "2",
-    "The badge has the expected text");
+  const { node } = await onContentBlockingWarningGroupMessage;
+  is(
+    node.querySelector(".warning-group-badge").textContent,
+    "2",
+    "The badge has the expected text"
+  );
 
   checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
@@ -83,47 +96,62 @@ add_task(async function testForeignCookieBlockedMessage() {
   info("Test foreign cookie blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT_FOREIGN);
-  await testStorageAccessBlockedGrouping("Request to access cookie or storage on " +
-    "“<URL>” was blocked because we are blocking all third-party storage access " +
-    "requests and content blocking is enabled.");
+  await testStorageAccessBlockedGrouping(
+    "Request to access cookie or storage on " +
+      "“<URL>” was blocked because we are blocking all third-party storage access " +
+      "requests and content blocking is enabled."
+  );
 });
 
 add_task(async function testLimitForeignCookieBlockedMessage() {
   info("Test unvisited eTLD foreign cookies blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.LIMIT_FOREIGN);
-  await testStorageAccessBlockedGrouping("Request to access cookie or storage on " +
-    "“<URL>” was blocked because we are blocking all third-party storage access " +
-    "requests and content blocking is enabled.");
+  await testStorageAccessBlockedGrouping(
+    "Request to access cookie or storage on " +
+      "“<URL>” was blocked because we are blocking all third-party storage access " +
+      "requests and content blocking is enabled."
+  );
 });
 
 add_task(async function testAllCookieBlockedMessage() {
   info("Test all cookies blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT);
-  await testStorageAccessBlockedGrouping("Request to access cookie or storage on " +
-    "“<URL>” was blocked because we are blocking all storage access requests.");
+  await testStorageAccessBlockedGrouping(
+    "Request to access cookie or storage on " +
+      "“<URL>” was blocked because we are blocking all storage access requests."
+  );
 });
 
 add_task(async function testTrackerCookieBlockedMessage() {
   info("Test tracker cookie blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT_TRACKER);
-  await testStorageAccessBlockedGrouping("Request to access cookie or storage on " +
-    "“<URL>” was blocked because it came from a tracker and content blocking is " +
-    "enabled.");
+  await testStorageAccessBlockedGrouping(
+    "Request to access cookie or storage on " +
+      "“<URL>” was blocked because it came from a tracker and content blocking is " +
+      "enabled."
+  );
 });
 
 add_task(async function testCookieBlockedByPermissionMessage() {
   info("Test cookie blocked by permission message");
   // Turn off tracking protection and add a block permission on the URL.
   await pushPref("privacy.trackingprotection.enabled", false);
-  const p = Services.scriptSecurityManager
-    .createCodebasePrincipalFromOrigin("http://tracking.example.org/");
-  Services.perms.addFromPrincipal(p, "cookie", Ci.nsIPermissionManager.DENY_ACTION);
+  const p = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    "http://tracking.example.org/"
+  );
+  Services.perms.addFromPrincipal(
+    p,
+    "cookie",
+    Ci.nsIPermissionManager.DENY_ACTION
+  );
 
-  await testStorageAccessBlockedGrouping("Request to access cookies or storage on " +
-    "“<URL>” was blocked because of custom cookie permission.");
+  await testStorageAccessBlockedGrouping(
+    "Request to access cookies or storage on " +
+      "“<URL>” was blocked because of custom cookie permission."
+  );
 
   // Remove the custom permission.
   Services.perms.removeFromPrincipal(p, "cookie");
@@ -136,30 +164,39 @@ add_task(async function testCookieBlockedByPermissionMessage() {
  *                             It should contain "<URL>".
  */
 async function testStorageAccessBlockedGrouping(groupLabel) {
-  const {hud, win, tab} = await openNewWindowAndConsole(TEST_URI);
+  const { hud, win, tab } = await openNewWindowAndConsole(TEST_URI);
   const now = Date.now();
 
   hud.ui.clearOutput();
 
   const getWarningMessage = url => groupLabel.replace("<URL>", url);
 
-  const onStorageAccessBlockedMessage =
-    waitForMessage(hud, getWarningMessage(`${TRACKER_IMG}?1&${now}`), ".warn");
+  const onStorageAccessBlockedMessage = waitForMessage(
+    hud,
+    getWarningMessage(`${TRACKER_IMG}?1&${now}`),
+    ".warn"
+  );
   emitStorageAccessBlockedMessage(tab, `${TRACKER_IMG}?1&${now}`);
   await onStorageAccessBlockedMessage;
 
-  info("Emit a new content blocking message to check that it causes a grouping");
+  info(
+    "Emit a new content blocking message to check that it causes a grouping"
+  );
 
-  const onContentBlockingWarningGroupMessage =
-    waitForMessage(hud, groupLabel, ".warn");
+  const onContentBlockingWarningGroupMessage = waitForMessage(
+    hud,
+    groupLabel,
+    ".warn"
+  );
   emitStorageAccessBlockedMessage(tab, `${TRACKER_IMG}?2&${now}`);
-  const {node} = await onContentBlockingWarningGroupMessage;
-  is(node.querySelector(".warning-group-badge").textContent, "2",
-    "The badge has the expected text");
+  const { node } = await onContentBlockingWarningGroupMessage;
+  is(
+    node.querySelector(".warning-group-badge").textContent,
+    "2",
+    "The badge has the expected text"
+  );
 
-  checkConsoleOutputForWarningGroup(hud, [
-    `▶︎⚠ ${groupLabel} 2`,
-  ]);
+  checkConsoleOutputForWarningGroup(hud, [`▶︎⚠ ${groupLabel} 2`]);
 
   info("Open the group");
   node.querySelector(".arrow").click();

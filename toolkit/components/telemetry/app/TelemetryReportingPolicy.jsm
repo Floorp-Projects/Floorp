@@ -4,9 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TelemetryReportingPolicy",
-];
+var EXPORTED_SYMBOLS = ["TelemetryReportingPolicy"];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
@@ -14,8 +12,11 @@ ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 ChromeUtils.import("resource://services-common/observers.js", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "TelemetrySend",
-                               "resource://gre/modules/TelemetrySend.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetrySend",
+  "resource://gre/modules/TelemetrySend.jsm"
+);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryReportingPolicy::";
@@ -48,7 +49,7 @@ const NOTIFICATION_DELAY_NEXT_RUNS_MSEC = 10 * 1000; // 10s
 var Policy = {
   now: () => new Date(),
   setShowInfobarTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
-  clearShowInfobarTimeout: (id) => clearTimeout(id),
+  clearShowInfobarTimeout: id => clearTimeout(id),
 };
 
 /**
@@ -76,7 +77,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
    */
   onUserNotifyComplete() {
     return TelemetryReportingPolicyImpl._userNotified();
-   },
+  },
 
   /**
    * Called when there was an error notifying the user about the policy.
@@ -153,7 +154,11 @@ var TelemetryReportingPolicy = {
    * Test only method, used to trigger an update of the "first run" state.
    */
   testUpdateFirstRun() {
-    return TelemetryReportingPolicyImpl.observe(null, "sessionstore-windows-restored", null);
+    return TelemetryReportingPolicyImpl.observe(
+      null,
+      "sessionstore-windows-restored",
+      null
+    );
   },
 };
 
@@ -169,7 +174,10 @@ var TelemetryReportingPolicyImpl = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX
+      );
     }
 
     return this._logger;
@@ -180,25 +188,34 @@ var TelemetryReportingPolicyImpl = {
    * @return {Object} A date object or null on errors.
    */
   get dataSubmissionPolicyNotifiedDate() {
-    let prefString = Services.prefs.getStringPref(TelemetryUtils.Preferences.AcceptedPolicyDate, "0");
+    let prefString = Services.prefs.getStringPref(
+      TelemetryUtils.Preferences.AcceptedPolicyDate,
+      "0"
+    );
     let valueInteger = parseInt(prefString, 10);
 
     // Bail out if we didn't store any value yet.
     if (valueInteger == 0) {
-      this._log.info("get dataSubmissionPolicyNotifiedDate - No date stored yet.");
+      this._log.info(
+        "get dataSubmissionPolicyNotifiedDate - No date stored yet."
+      );
       return null;
     }
 
     // If an invalid value is saved in the prefs, bail out too.
     if (Number.isNaN(valueInteger)) {
-      this._log.error("get dataSubmissionPolicyNotifiedDate - Invalid date stored.");
+      this._log.error(
+        "get dataSubmissionPolicyNotifiedDate - Invalid date stored."
+      );
       return null;
     }
 
     // Make sure the notification date is newer then the oldest allowed date.
     let date = new Date(valueInteger);
     if (date.getFullYear() < OLDEST_ALLOWED_ACCEPTANCE_YEAR) {
-      this._log.error("get dataSubmissionPolicyNotifiedDate - The stored date is too old.");
+      this._log.error(
+        "get dataSubmissionPolicyNotifiedDate - The stored date is too old."
+      );
       return null;
     }
 
@@ -213,11 +230,16 @@ var TelemetryReportingPolicyImpl = {
     this._log.trace("set dataSubmissionPolicyNotifiedDate - aDate: " + aDate);
 
     if (!aDate || aDate.getFullYear() < OLDEST_ALLOWED_ACCEPTANCE_YEAR) {
-      this._log.error("set dataSubmissionPolicyNotifiedDate - Invalid notification date.");
+      this._log.error(
+        "set dataSubmissionPolicyNotifiedDate - Invalid notification date."
+      );
       return;
     }
 
-    Services.prefs.setStringPref(TelemetryUtils.Preferences.AcceptedPolicyDate, aDate.getTime().toString());
+    Services.prefs.setStringPref(
+      TelemetryUtils.Preferences.AcceptedPolicyDate,
+      aDate.getTime().toString()
+    );
   },
 
   /**
@@ -228,12 +250,17 @@ var TelemetryReportingPolicyImpl = {
    */
   get dataSubmissionEnabled() {
     // Default is true because we are opt-out.
-    return Services.prefs.getBoolPref(TelemetryUtils.Preferences.DataSubmissionEnabled, true);
+    return Services.prefs.getBoolPref(
+      TelemetryUtils.Preferences.DataSubmissionEnabled,
+      true
+    );
   },
 
   get currentPolicyVersion() {
-    return Services.prefs.getIntPref(TelemetryUtils.Preferences.CurrentPolicyVersion,
-                                     TelemetryReportingPolicy.DEFAULT_DATAREPORTING_POLICY_VERSION);
+    return Services.prefs.getIntPref(
+      TelemetryUtils.Preferences.CurrentPolicyVersion,
+      TelemetryReportingPolicy.DEFAULT_DATAREPORTING_POLICY_VERSION
+    );
   },
 
   /**
@@ -241,7 +268,10 @@ var TelemetryReportingPolicyImpl = {
    * to be valid.
    */
   get minimumPolicyVersion() {
-    const minPolicyVersion = Services.prefs.getIntPref(TelemetryUtils.Preferences.MinimumPolicyVersion, 1);
+    const minPolicyVersion = Services.prefs.getIntPref(
+      TelemetryUtils.Preferences.MinimumPolicyVersion,
+      1
+    );
 
     // First check if the current channel has a specific minimum policy version. If not,
     // use the general minimum policy version.
@@ -249,19 +279,28 @@ var TelemetryReportingPolicyImpl = {
     try {
       channel = TelemetryUtils.getUpdateChannel();
     } catch (e) {
-      this._log.error("minimumPolicyVersion - Unable to retrieve the current channel.");
+      this._log.error(
+        "minimumPolicyVersion - Unable to retrieve the current channel."
+      );
       return minPolicyVersion;
     }
-    const channelPref = TelemetryUtils.Preferences.MinimumPolicyVersion + ".channel-" + channel;
+    const channelPref =
+      TelemetryUtils.Preferences.MinimumPolicyVersion + ".channel-" + channel;
     return Services.prefs.getIntPref(channelPref, minPolicyVersion);
   },
 
   get dataSubmissionPolicyAcceptedVersion() {
-    return Services.prefs.getIntPref(TelemetryUtils.Preferences.AcceptedPolicyVersion, 0);
+    return Services.prefs.getIntPref(
+      TelemetryUtils.Preferences.AcceptedPolicyVersion,
+      0
+    );
   },
 
   set dataSubmissionPolicyAcceptedVersion(value) {
-    Services.prefs.setIntPref(TelemetryUtils.Preferences.AcceptedPolicyVersion, value);
+    Services.prefs.setIntPref(
+      TelemetryUtils.Preferences.AcceptedPolicyVersion,
+      value
+    );
   },
 
   /**
@@ -271,8 +310,10 @@ var TelemetryReportingPolicyImpl = {
    */
   get isUserNotifiedOfCurrentPolicy() {
     // If we don't have a sane notification date, the user was not notified yet.
-    if (!this.dataSubmissionPolicyNotifiedDate ||
-        this.dataSubmissionPolicyNotifiedDate.getTime() <= 0) {
+    if (
+      !this.dataSubmissionPolicyNotifiedDate ||
+      this.dataSubmissionPolicyNotifiedDate.getTime() <= 0
+    ) {
       return false;
     }
 
@@ -341,7 +382,10 @@ var TelemetryReportingPolicyImpl = {
 
     // Submission is enabled. We enable upload if user is notified or we need to bypass
     // the policy.
-    const bypassNotification = Services.prefs.getBoolPref(TelemetryUtils.Preferences.BypassNotification, false);
+    const bypassNotification = Services.prefs.getBoolPref(
+      TelemetryUtils.Preferences.BypassNotification,
+      false
+    );
     return this.isUserNotifiedOfCurrentPolicy || bypassNotification;
   },
 
@@ -364,18 +408,27 @@ var TelemetryReportingPolicyImpl = {
    */
   _shouldNotify() {
     if (!this.dataSubmissionEnabled) {
-      this._log.trace("_shouldNotify - Data submission disabled by the policy.");
+      this._log.trace(
+        "_shouldNotify - Data submission disabled by the policy."
+      );
       return false;
     }
 
-    const bypassNotification = Services.prefs.getBoolPref(TelemetryUtils.Preferences.BypassNotification, false);
+    const bypassNotification = Services.prefs.getBoolPref(
+      TelemetryUtils.Preferences.BypassNotification,
+      false
+    );
     if (this.isUserNotifiedOfCurrentPolicy || bypassNotification) {
-      this._log.trace("_shouldNotify - User already notified or bypassing the policy.");
+      this._log.trace(
+        "_shouldNotify - User already notified or bypassing the policy."
+      );
       return false;
     }
 
     if (this._notificationInProgress) {
-      this._log.trace("_shouldNotify - User not notified, notification already in progress.");
+      this._log.trace(
+        "_shouldNotify - User not notified, notification already in progress."
+      );
       return false;
     }
 
@@ -425,17 +478,24 @@ var TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    let firstRunPolicyURL = Services.prefs.getStringPref(TelemetryUtils.Preferences.FirstRunURL, "");
+    let firstRunPolicyURL = Services.prefs.getStringPref(
+      TelemetryUtils.Preferences.FirstRunURL,
+      ""
+    );
     if (!firstRunPolicyURL) {
       return false;
     }
     firstRunPolicyURL = Services.urlFormatter.formatURL(firstRunPolicyURL);
 
-    const { BrowserWindowTracker } = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
+    const { BrowserWindowTracker } = ChromeUtils.import(
+      "resource:///modules/BrowserWindowTracker.jsm"
+    );
     let win = BrowserWindowTracker.getTopWindow();
 
     if (!win) {
-      this._log.info("Couldn't find browser window to open first-run page. Falling back to infobar.");
+      this._log.info(
+        "Couldn't find browser window to open first-run page. Falling back to infobar."
+      );
       return false;
     }
 
@@ -443,23 +503,35 @@ var TelemetryReportingPolicyImpl = {
     // in a background tab even if that tab hasn't been selected.
     let tab;
     let progressListener = {};
-    progressListener.onStateChange =
-      (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) => {
-        if (aWebProgress.isTopLevel &&
-            tab &&
-            tab.linkedBrowser == aBrowser &&
-            aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-            aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-          let uri = aBrowser.documentURI;
-          if (uri && !/^about:(blank|neterror|certerror|blocked)/.test(uri.spec)) {
-            this._userNotified();
-          } else {
-            this._log.info("Failed to load first-run page. Falling back to infobar.");
-            this._showInfobar();
-          }
-          removeListeners();
+    progressListener.onStateChange = (
+      aBrowser,
+      aWebProgress,
+      aRequest,
+      aStateFlags,
+      aStatus
+    ) => {
+      if (
+        aWebProgress.isTopLevel &&
+        tab &&
+        tab.linkedBrowser == aBrowser &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
+      ) {
+        let uri = aBrowser.documentURI;
+        if (
+          uri &&
+          !/^about:(blank|neterror|certerror|blocked)/.test(uri.spec)
+        ) {
+          this._userNotified();
+        } else {
+          this._log.info(
+            "Failed to load first-run page. Falling back to infobar."
+          );
+          this._showInfobar();
         }
-      };
+        removeListeners();
+      }
+    };
 
     let removeListeners = () => {
       win.removeEventListener("unload", removeListeners);
@@ -481,7 +553,10 @@ var TelemetryReportingPolicyImpl = {
       return;
     }
 
-    this._isFirstRun = Services.prefs.getBoolPref(TelemetryUtils.Preferences.FirstRun, true);
+    this._isFirstRun = Services.prefs.getBoolPref(
+      TelemetryUtils.Preferences.FirstRun,
+      true
+    );
     if (this._isFirstRun) {
       // We're performing the first run, flip firstRun preference for subsequent runs.
       Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, false);
@@ -496,11 +571,14 @@ var TelemetryReportingPolicyImpl = {
     }
 
     // Show the info bar.
-    const delay =
-      this._isFirstRun ? NOTIFICATION_DELAY_FIRST_RUN_MSEC : NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
+    const delay = this._isFirstRun
+      ? NOTIFICATION_DELAY_FIRST_RUN_MSEC
+      : NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
 
     this._startupNotificationTimerId = Policy.setShowInfobarTimeout(
-        // Calling |canUpload| eventually shows the infobar, if needed.
-        () => this._showInfobar(), delay);
+      // Calling |canUpload| eventually shows the infobar, if needed.
+      () => this._showInfobar(),
+      delay
+    );
   },
 };

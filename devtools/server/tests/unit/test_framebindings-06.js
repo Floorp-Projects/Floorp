@@ -19,46 +19,50 @@ function run_test() {
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_banana_environment();
-                           });
+    attachTestTabAndResume(gClient, "test-grips", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_banana_environment();
+    });
   });
   do_test_pending();
 }
 
 function test_banana_environment() {
-  gThreadClient.once("paused",
-    function(packet) {
-      const env = packet.frame.environment;
-      equal(env.type, "function");
-      equal(env.function.name, "banana3");
-      let parent = env.parent;
-      equal(parent.type, "block");
-      ok("banana3" in parent.bindings.variables);
-      parent = parent.parent;
-      equal(parent.type, "function");
-      equal(parent.function.name, "banana2");
-      parent = parent.parent;
-      equal(parent.type, "block");
-      ok("banana2" in parent.bindings.variables);
-      parent = parent.parent;
-      equal(parent.type, "function");
-      equal(parent.function.name, "banana");
+  gThreadClient.once("paused", function(packet) {
+    const env = packet.frame.environment;
+    equal(env.type, "function");
+    equal(env.function.name, "banana3");
+    let parent = env.parent;
+    equal(parent.type, "block");
+    ok("banana3" in parent.bindings.variables);
+    parent = parent.parent;
+    equal(parent.type, "function");
+    equal(parent.function.name, "banana2");
+    parent = parent.parent;
+    equal(parent.type, "block");
+    ok("banana2" in parent.bindings.variables);
+    parent = parent.parent;
+    equal(parent.type, "function");
+    equal(parent.function.name, "banana");
 
-      gThreadClient.resume().then(function() {
-        finishClient(gClient);
-      });
+    gThreadClient.resume().then(function() {
+      finishClient(gClient);
     });
+  });
 
-  gDebuggee.eval("function banana(x) {\n" +
-                 "  return function banana2(y) {\n" +
-                 "    return function banana3(z) {\n" +
-                 "      eval(\"\");\n" +
-                 "      debugger;\n" +
-                 "    };\n" +
-                 "  };\n" +
-                 "}\n" +
-                 "banana('x')('y')('z');\n");
+  gDebuggee.eval(
+    "function banana(x) {\n" +
+      "  return function banana2(y) {\n" +
+      "    return function banana3(z) {\n" +
+      '      eval("");\n' +
+      "      debugger;\n" +
+      "    };\n" +
+      "  };\n" +
+      "}\n" +
+      "banana('x')('y')('z');\n"
+  );
 }

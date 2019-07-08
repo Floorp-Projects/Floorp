@@ -6,12 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["WindowSize"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
 
 var WindowSize = {
-
   init(libDir) {
     Services.prefs.setBoolPref("browser.fullscreen.autohide", false);
   },
@@ -20,7 +21,9 @@ var WindowSize = {
     maximized: {
       selectors: [":root"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
         await toggleFullScreen(browserWindow, false);
 
         // Wait for the Lion fullscreen transition to end as there doesn't seem to be an event
@@ -37,7 +40,9 @@ var WindowSize = {
     normal: {
       selectors: [":root"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
         await toggleFullScreen(browserWindow, false);
         browserWindow.restore();
         await new Promise((resolve, reject) => {
@@ -49,7 +54,9 @@ var WindowSize = {
     fullScreen: {
       selectors: [":root"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
         await toggleFullScreen(browserWindow, true);
         // OS X Lion fullscreen transition takes a while
         await new Promise((resolve, reject) => {
@@ -63,6 +70,9 @@ var WindowSize = {
 function toggleFullScreen(browserWindow, wantsFS) {
   browserWindow.fullScreen = wantsFS;
   return BrowserTestUtils.waitForCondition(() => {
-    return wantsFS == browserWindow.document.documentElement.hasAttribute("inFullscreen");
+    return (
+      wantsFS ==
+      browserWindow.document.documentElement.hasAttribute("inFullscreen")
+    );
   }, "waiting for @inFullscreen change");
 }

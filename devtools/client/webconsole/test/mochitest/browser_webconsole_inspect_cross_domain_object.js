@@ -8,22 +8,29 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-inspect-cross-domain-objects-top.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-inspect-cross-domain-objects-top.html";
 
 add_task(async function() {
   requestLongerTimeout(2);
 
-  const hud = await openNewTabAndConsole("data:text/html;charset=utf8,<p>hello");
+  const hud = await openNewTabAndConsole(
+    "data:text/html;charset=utf8,<p>hello"
+  );
 
   info("Wait for the 'foobar' message to be logged by the frame");
   const onMessage = waitForMessage(hud, "foobar");
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
-  const {node} = await onMessage;
+  const { node } = await onMessage;
 
   const objectInspectors = [...node.querySelectorAll(".tree")];
-  is(objectInspectors.length, 2, "There is the expected number of object inspectors");
+  is(
+    objectInspectors.length,
+    2,
+    "There is the expected number of object inspectors"
+  );
 
   const [oi1, oi2] = objectInspectors;
 

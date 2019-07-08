@@ -3,20 +3,31 @@
 "use strict";
 
 add_task(async function testExecuteScript() {
-  const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
+  const BASE =
+    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
   const URL = BASE + "file_dummy.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL, true);
 
   async function background() {
     try {
-      await browser.tabs.executeScript({code: "this.foo = 'bar'"});
-      await browser.tabs.executeScript({file: "script.js"});
+      await browser.tabs.executeScript({ code: "this.foo = 'bar'" });
+      await browser.tabs.executeScript({ file: "script.js" });
 
-      let [result1] = await browser.tabs.executeScript({code: "[this.foo, this.bar]"});
-      let [result2] = await browser.tabs.executeScript({file: "script2.js"});
+      let [result1] = await browser.tabs.executeScript({
+        code: "[this.foo, this.bar]",
+      });
+      let [result2] = await browser.tabs.executeScript({ file: "script2.js" });
 
-      browser.test.assertEq("bar,baz", String(result1), "executeScript({code}) result");
-      browser.test.assertEq("bar,baz", String(result2), "executeScript({file}) result");
+      browser.test.assertEq(
+        "bar,baz",
+        String(result1),
+        "executeScript({code}) result"
+      );
+      browser.test.assertEq(
+        "bar,baz",
+        String(result2),
+        "executeScript({file}) result"
+      );
 
       browser.test.notifyPass("executeScript-multiple");
     } catch (e) {
@@ -27,7 +38,7 @@ add_task(async function testExecuteScript() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["http://mochi.test/"],
+      permissions: ["http://mochi.test/"],
     },
 
     background,

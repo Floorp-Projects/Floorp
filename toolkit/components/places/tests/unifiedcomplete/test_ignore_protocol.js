@@ -19,7 +19,7 @@ add_task(async function test_escape() {
   info("Searching for h matches site and not http://");
   await check_autocomplete({
     search: "h",
-    matches: [ { uri: uri2, title: "title" } ],
+    matches: [{ uri: uri2, title: "title" }],
   });
 
   await cleanup();

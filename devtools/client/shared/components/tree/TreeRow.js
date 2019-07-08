@@ -154,7 +154,9 @@ define(function(require, exports, module) {
      * tree node.
      */
     getFocusableElements() {
-      return Array.from(this.treeRowRef.current.querySelectorAll(focusableSelector));
+      return Array.from(
+        this.treeRowRef.current.querySelectorAll(focusableSelector)
+      );
     }
 
     /**
@@ -279,8 +281,8 @@ define(function(require, exports, module) {
       let renderCell = this.props.renderCell || RenderCell;
       let renderLabelCell = this.props.renderLabelCell || RenderLabelCell;
       if (decorator && decorator.renderLabelCell) {
-        renderLabelCell = decorator.renderLabelCell(member.object) ||
-          renderLabelCell;
+        renderLabelCell =
+          decorator.renderLabelCell(member.object) || renderLabelCell;
       }
 
       // Render a cell for every column.
@@ -295,7 +297,7 @@ define(function(require, exports, module) {
           renderCell = decorator.renderCell(member.object, col.id);
         }
 
-        const render = (col.id == "default") ? renderLabelCell : renderCell;
+        const render = col.id == "default" ? renderLabelCell : renderCell;
 
         // Some cells don't have to be rendered. This happens when some
         // other cells span more columns. Note that the label cells contains
@@ -307,9 +309,7 @@ define(function(require, exports, module) {
       });
 
       // Render tree row
-      return (
-        tr(props, cells)
-      );
+      return tr(props, cells);
     }
   }
 

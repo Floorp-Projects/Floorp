@@ -17,4 +17,3 @@ add_task(async function checkIdentityOfAboutSupport() {
   is(identityBox.className, "chromeUI", "Should know that we're chrome.");
   gBrowser.removeTab(tab);
 });
-

@@ -5,41 +5,57 @@
 SimpleTest.requestCompleteLog();
 
 add_task(async function test_windows_events_not_allowed() {
-  SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
   let monitor = await startIncognitoMonitorExtension();
 
   function background() {
     browser.windows.onCreated.addListener(window => {
       browser.test.log(`onCreated: windowId=${window.id}`);
 
-      browser.test.assertTrue(Number.isInteger(window.id),
-                              "Window object's id is an integer");
-      browser.test.assertEq("normal", window.type,
-                            "Window object returned with the correct type");
+      browser.test.assertTrue(
+        Number.isInteger(window.id),
+        "Window object's id is an integer"
+      );
+      browser.test.assertEq(
+        "normal",
+        window.type,
+        "Window object returned with the correct type"
+      );
       browser.test.sendMessage("window-created", window.id);
     });
 
     let lastWindowId;
     browser.windows.onFocusChanged.addListener(async eventWindowId => {
-      browser.test.log(`onFocusChange: windowId=${eventWindowId} lastWindowId=${lastWindowId}`);
+      browser.test.log(
+        `onFocusChange: windowId=${eventWindowId} lastWindowId=${lastWindowId}`
+      );
 
-      browser.test.assertTrue(lastWindowId !== eventWindowId,
-                              "onFocusChanged fired once for the given window");
+      browser.test.assertTrue(
+        lastWindowId !== eventWindowId,
+        "onFocusChanged fired once for the given window"
+      );
       lastWindowId = eventWindowId;
 
-      browser.test.assertTrue(Number.isInteger(eventWindowId),
-                              "windowId is an integer");
+      browser.test.assertTrue(
+        Number.isInteger(eventWindowId),
+        "windowId is an integer"
+      );
       let window = await browser.windows.getLastFocused();
-      browser.test.sendMessage("window-focus-changed", {winId: eventWindowId, lastFocusedWindowId: window.id});
+      browser.test.sendMessage("window-focus-changed", {
+        winId: eventWindowId,
+        lastFocusedWindowId: window.id,
+      });
     });
 
     browser.windows.onRemoved.addListener(windowId => {
       browser.test.log(`onRemoved: windowId=${windowId}`);
 
-      browser.test.assertTrue(Number.isInteger(windowId),
-                              "windowId is an integer");
+      browser.test.assertTrue(
+        Number.isInteger(windowId),
+        "windowId is an integer"
+      );
       browser.test.sendMessage("window-removed", windowId);
       browser.test.notifyPass("windows.events");
     });
@@ -62,12 +78,19 @@ add_task(async function test_windows_events_not_allowed() {
       info("Ignoring a superfluous WINDOW_ID_NONE (blur) event.");
       windowInfo = await extension.awaitMessage("window-focus-changed");
     }
-    is(windowInfo.winId, windowInfo.lastFocusedWindowId,
-       "Last focused window has the correct id");
+    is(
+      windowInfo.winId,
+      windowInfo.lastFocusedWindowId,
+      "Last focused window has the correct id"
+    );
     return windowInfo.winId;
   }
 
-  let {Management: {global: {windowTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  let {
+    Management: {
+      global: { windowTracker },
+    },
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   let currentWindow = window;
   let currentWindowId = windowTracker.getId(currentWindow);
@@ -86,7 +109,7 @@ add_task(async function test_windows_events_not_allowed() {
   is(winId, win1Id, "Got focus change event for the correct window ID.");
 
   info("Create browser window 2");
-  let win2 = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let win2 = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   let win2Id = await extension.awaitMessage("window-created");
   info(`Window 2 ID: ${win2Id}`);
 
@@ -116,7 +139,11 @@ add_task(async function test_windows_events_not_allowed() {
   is(winId, win1Id, "Got removed event for the correct window ID.");
 
   winId = await awaitFocusChanged();
-  is(winId, currentWindowId, "Got focus change event for the correct window ID.");
+  is(
+    winId,
+    currentWindowId,
+    "Got focus change event for the correct window ID."
+  );
 
   await extension.awaitFinish("windows.events");
   await extension.unload();

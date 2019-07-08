@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {Status} = ChromeUtils.import("resource://services-sync/status.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Status } = ChromeUtils.import("resource://services-sync/status.js");
 
 const fakeServer = new SyncServer();
 fakeServer.start();
@@ -59,7 +59,7 @@ add_task(async function test_401_logout() {
   });
 
   // Make sync fail due to login rejected.
-  await configureIdentity({username: "janedoe"}, server);
+  await configureIdentity({ username: "janedoe" }, server);
   Service._updateCachedURLs();
 
   _("Starting first sync.");
@@ -153,7 +153,7 @@ add_task(async function test_login_sync_network_error() {
   enableValidationPrefs();
 
   // Test network errors are reported when calling sync.
-  await configureIdentity({username: "broken.wipe"});
+  await configureIdentity({ username: "broken.wipe" });
   Service.clusterURL = fakeServerUrl;
 
   await Service.sync();
@@ -161,7 +161,6 @@ add_task(async function test_login_sync_network_error() {
 
   await clean();
 });
-
 
 add_task(async function test_sync_network_error() {
   enableValidationPrefs();
@@ -215,7 +214,7 @@ add_task(async function test_sync_non_network_error() {
 add_task(async function test_login_network_error() {
   enableValidationPrefs();
 
-  await configureIdentity({username: "johndoe"});
+  await configureIdentity({ username: "johndoe" });
   Service.clusterURL = fakeServerUrl;
 
   // Test network errors are not reported.
@@ -249,14 +248,16 @@ add_task(async function test_sync_server_maintenance_error() {
 
   const BACKOFF = 42;
   engine.enabled = true;
-  engine.exception = {status: 503,
-                      headers: {"retry-after": BACKOFF}};
+  engine.exception = { status: 503, headers: { "retry-after": BACKOFF } };
 
   Assert.equal(Status.service, STATUS_OK);
 
   let ping = await sync_and_validate_telem(true);
   equal(ping.status.sync, SERVER_MAINTENANCE);
-  deepEqual(ping.engines.find(e => e.failureReason).failureReason, { name: "httperror", code: 503 });
+  deepEqual(ping.engines.find(e => e.failureReason).failureReason, {
+    name: "httperror",
+    code: 503,
+  });
 
   Assert.equal(Status.service, SYNC_FAILED_PARTIAL);
   Assert.equal(Status.sync, SERVER_MAINTENANCE);
@@ -272,10 +273,13 @@ add_task(async function test_info_collections_login_server_maintenance_error() {
   let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.info"}, server);
+  await configureIdentity({ username: "broken.info" }, server);
 
   let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+  Svc.Obs.add("weave:service:backoff:interval", function observe(
+    subject,
+    data
+  ) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
     backoffInterval = subject;
   });
@@ -301,10 +305,13 @@ add_task(async function test_meta_global_login_server_maintenance_error() {
   let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.meta"}, server);
+  await configureIdentity({ username: "broken.meta" }, server);
 
   let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+  Svc.Obs.add("weave:service:backoff:interval", function observe(
+    subject,
+    data
+  ) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
     backoffInterval = subject;
   });

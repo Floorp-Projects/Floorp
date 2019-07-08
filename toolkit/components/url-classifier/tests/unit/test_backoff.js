@@ -1,6 +1,6 @@
 // Some unittests (e.g., paste into JS shell)
-var jslib = Cc["@mozilla.org/url-classifier/jslib;1"].
-            getService().wrappedJSObject;
+var jslib = Cc["@mozilla.org/url-classifier/jslib;1"].getService()
+  .wrappedJSObject;
 
 var jslibDate = Cu.getGlobalForObject(jslib).Date;
 

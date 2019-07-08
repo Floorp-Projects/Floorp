@@ -1,8 +1,10 @@
 "use strict";
 
-var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
+var { WebRequest } = ChromeUtils.import(
+  "resource://gre/modules/WebRequest.jsm"
+);
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE = "http://example.com/data/";
@@ -34,9 +36,11 @@ function onResponseStarted(details) {
   }
 }
 
-const expected_urls = [BASE + "/file_style_good.css",
-                       BASE + "/file_style_bad.css",
-                       BASE + "/file_style_redirect.css"];
+const expected_urls = [
+  BASE + "/file_style_good.css",
+  BASE + "/file_style_bad.css",
+  BASE + "/file_style_redirect.css",
+];
 
 function removeDupes(list) {
   let j = 0;
@@ -65,10 +69,12 @@ add_task(async function setup() {
 });
 
 add_task(async function filter_urls() {
-  let filter = {urls: new MatchPatternSet(["*://*/*_style_*"])};
+  let filter = { urls: new MatchPatternSet(["*://*/*_style_*"]) };
 
   WebRequest.onBeforeRequest.addListener(onBeforeRequest, filter, ["blocking"]);
-  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, ["blocking"]);
+  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, [
+    "blocking",
+  ]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(URL);
@@ -84,10 +90,12 @@ add_task(async function filter_urls() {
 });
 
 add_task(async function filter_types() {
-  let filter = {types: ["stylesheet"]};
+  let filter = { types: ["stylesheet"] };
 
   WebRequest.onBeforeRequest.addListener(onBeforeRequest, filter, ["blocking"]);
-  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, ["blocking"]);
+  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, [
+    "blocking",
+  ]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(URL);

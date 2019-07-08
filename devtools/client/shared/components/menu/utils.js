@@ -27,7 +27,7 @@ function showMenu(items, options) {
 
   // Build the menu object from provided menu items.
   const menu = new Menu();
-  items.forEach((item) => {
+  items.forEach(item => {
     if (item == "-") {
       item = { type: "separator" };
     }
@@ -37,7 +37,7 @@ function showMenu(items, options) {
 
     if (subItems) {
       const subMenu = new Menu();
-      subItems.forEach((subItem) => {
+      subItems.forEach(subItem => {
         subMenu.append(new MenuItem(subItem));
       });
       menuItem.submenu = subMenu;
@@ -46,20 +46,15 @@ function showMenu(items, options) {
     menu.append(menuItem);
   });
 
-  let screenX = options.screenX;
-  let screenY = options.screenY;
-
   // Calculate position on the screen according to
   // the parent button if available.
   if (options.button) {
-    const button = options.button;
-    const rect = button.getBoundingClientRect();
-    const defaultView = button.ownerDocument.defaultView;
-    screenX = rect.left + defaultView.mozInnerScreenX;
-    screenY = rect.bottom + defaultView.mozInnerScreenY;
+    menu.popupAtTarget(options.button, window.document);
+  } else {
+    const screenX = options.screenX;
+    const screenY = options.screenY;
+    menu.popup(screenX, screenY, window.document);
   }
-
-  menu.popup(screenX, screenY, window.document);
 }
 
 module.exports = {

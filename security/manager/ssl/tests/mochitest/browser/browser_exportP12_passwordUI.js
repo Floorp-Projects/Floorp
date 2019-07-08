@@ -24,34 +24,33 @@
  * @type TestCase[]
  */
 const TEST_CASES = [
-  { name: "empty",
-    password1: "",
-    password2: "",
-    strength: "0" },
-  { name: "match-weak",
-    password1: "foo",
-    password2: "foo",
-    strength: "10" },
-  { name: "match-medium",
+  { name: "empty", password1: "", password2: "", strength: "0" },
+  { name: "match-weak", password1: "foo", password2: "foo", strength: "10" },
+  {
+    name: "match-medium",
     password1: "foo123",
     password2: "foo123",
-    strength: "60" },
-  { name: "match-strong",
+    strength: "60",
+  },
+  {
+    name: "match-strong",
     password1: "fooBARBAZ 1234567890`~!@#$%^&*()-_=+{[}]|\\:;'\",<.>/?一二三",
     password2: "fooBARBAZ 1234567890`~!@#$%^&*()-_=+{[}]|\\:;'\",<.>/?一二三",
-    strength: "100" },
-  { name: "mismatch-weak",
-    password1: "foo",
-    password2: "bar",
-    strength: "10" },
-  { name: "mismatch-medium",
+    strength: "100",
+  },
+  { name: "mismatch-weak", password1: "foo", password2: "bar", strength: "10" },
+  {
+    name: "mismatch-medium",
     password1: "foo123",
     password2: "bar",
-    strength: "60" },
-  { name: "mismatch-strong",
+    strength: "60",
+  },
+  {
+    name: "mismatch-strong",
     password1: "fooBARBAZ 1234567890`~!@#$%^&*()-_=+{[}]|\\:;'\",<.>/?一二三",
     password2: "bar",
-    strength: "100" },
+    strength: "100",
+  },
 ];
 
 /**
@@ -64,14 +63,23 @@ const TEST_CASES = [
  *            2. The return value nsIWritablePropertyBag2 passed to the dialog.
  */
 function openSetP12PasswordDialog() {
-  let returnVals = Cc["@mozilla.org/hash-property-bag;1"]
-                     .createInstance(Ci.nsIWritablePropertyBag2);
-  let win = window.openDialog("chrome://pippki/content/setp12password.xul", "",
-                              "", returnVals);
+  let returnVals = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+    Ci.nsIWritablePropertyBag2
+  );
+  let win = window.openDialog(
+    "chrome://pippki/content/setp12password.xul",
+    "",
+    "",
+    returnVals
+  );
   return new Promise((resolve, reject) => {
-    win.addEventListener("load", function() {
-      executeSoon(() => resolve([win, returnVals]));
-    }, {once: true});
+    win.addEventListener(
+      "load",
+      function() {
+        executeSoon(() => resolve([win, returnVals]));
+      },
+      { once: true }
+    );
   });
 }
 
@@ -79,9 +87,11 @@ function openSetP12PasswordDialog() {
 // focused.
 add_task(async function testFocus() {
   let [win] = await openSetP12PasswordDialog();
-  Assert.equal(win.document.activeElement,
-               win.document.getElementById("pw1"),
-               "First password textbox should have focus");
+  Assert.equal(
+    win.document.activeElement,
+    win.document.getElementById("pw1"),
+    "First password textbox should have focus"
+  );
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -101,13 +111,17 @@ add_task(async function testPasswordStrengthAndEquality() {
     password1Textbox.oninput();
     password2Textbox.oninput();
 
-    Assert.equal(win.document.documentElement.getButton("accept").disabled,
-                 password1Textbox.value != password2Textbox.value,
-                 "Actual and expected accept button disable state should " +
-                 `match for ${testCase.name}`);
-    Assert.equal(strengthProgressBar.value, testCase.strength,
-                 "Actual and expected strength value should match for" +
-                 `${testCase.name}`);
+    Assert.equal(
+      win.document.documentElement.getButton("accept").disabled,
+      password1Textbox.value != password2Textbox.value,
+      "Actual and expected accept button disable state should " +
+        `match for ${testCase.name}`
+    );
+    Assert.equal(
+      strengthProgressBar.value,
+      testCase.strength,
+      `Actual and expected strength value should match for ${testCase.name}`
+    );
   }
 
   await BrowserTestUtils.closeWindow(win);
@@ -123,10 +137,15 @@ add_task(async function testAcceptDialogReturnValues() {
   win.document.getElementById("setp12password").acceptDialog();
   await BrowserTestUtils.windowClosed(win);
 
-  Assert.ok(retVals.get("confirmedPassword"),
-            "Return value should signal user confirmed a password");
-  Assert.equal(retVals.get("password"), password,
-               "Actual and expected password should match");
+  Assert.ok(
+    retVals.get("confirmedPassword"),
+    "Return value should signal user confirmed a password"
+  );
+  Assert.equal(
+    retVals.get("password"),
+    password,
+    "Actual and expected password should match"
+  );
 });
 
 // Test that the right values are returned when the dialog is canceled.
@@ -136,6 +155,8 @@ add_task(async function testCancelDialogReturnValues() {
   win.document.getElementById("setp12password").cancelDialog();
   await BrowserTestUtils.windowClosed(win);
 
-  Assert.ok(!retVals.get("confirmedPassword"),
-            "Return value should signal user didn't confirm a password");
+  Assert.ok(
+    !retVals.get("confirmedPassword"),
+    "Return value should signal user didn't confirm a password"
+  );
 });

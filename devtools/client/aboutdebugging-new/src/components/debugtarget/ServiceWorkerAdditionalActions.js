@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -12,7 +15,9 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { getCurrentRuntimeDetails } = require("../../modules/runtimes-state-helper");
+const {
+  getCurrentRuntimeDetails,
+} = require("../../modules/runtimes-state-helper");
 
 const Actions = require("../../actions/index");
 const Types = require("../../types/index");
@@ -60,7 +65,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
           disabled,
           onClick: e => onClick(),
         },
-        labelId,
+        labelId
       )
     );
   }
@@ -99,17 +104,11 @@ class ServiceWorkerAdditionalActions extends PureComponent {
 
     switch (status) {
       case SERVICE_WORKER_STATUSES.RUNNING:
-        return [
-          this._renderUnregisterButton(),
-          this._renderPushButton(),
-        ];
+        return [this._renderUnregisterButton(), this._renderPushButton()];
       case SERVICE_WORKER_STATUSES.REGISTERING:
         return null;
       case SERVICE_WORKER_STATUSES.STOPPED:
-        return [
-          this._renderUnregisterButton(),
-          this._renderStartButton(),
-        ];
+        return [this._renderUnregisterButton(), this._renderStartButton()];
       default:
         console.error("Unexpected service worker status: " + status);
         return null;
@@ -121,7 +120,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
       {
         className: "toolbar toolbar--right-align",
       },
-      this._renderActionButtons(),
+      this._renderActionButtons()
     );
   }
 }
@@ -133,4 +132,5 @@ const mapStateToProps = state => {
 };
 
 module.exports = FluentReact.withLocalization(
-  connect(mapStateToProps)(ServiceWorkerAdditionalActions));
+  connect(mapStateToProps)(ServiceWorkerAdditionalActions)
+);

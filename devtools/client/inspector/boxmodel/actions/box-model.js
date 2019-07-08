@@ -11,7 +11,6 @@ const {
 } = require("./index");
 
 module.exports = {
-
   /**
    * Updates the geometry editor's enabled state.
    *
@@ -44,5 +43,4 @@ module.exports = {
       offsetParent,
     };
   },
-
 };

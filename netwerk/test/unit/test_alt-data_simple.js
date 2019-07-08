@@ -9,7 +9,7 @@
  * - this time the alt data must arive
  */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";
@@ -18,13 +18,14 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 function inChildProcess() {
-  return Cc["@mozilla.org/xre/app-info;1"]
-           .getService(Ci.nsIXULRuntime)
-           .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  return (
+    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+  );
 }
 
 const responseContent = "response body";
@@ -37,15 +38,14 @@ var shouldPassRevalidation = true;
 
 var cache_storage = null;
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("Cache-Control", "no-cache");
   response.setHeader("ETag", "test-etag1");
 
   try {
     var etag = metadata.getHeader("If-None-Match");
-  } catch(ex) {
+  } catch (ex) {
     var etag = "";
   }
 
@@ -58,8 +58,7 @@ function contentHandler(metadata, response)
   }
 }
 
-function check_has_alt_data_in_index(aHasAltData)
-{
+function check_has_alt_data_in_index(aHasAltData) {
   if (inChildProcess()) {
     return;
   }
@@ -68,8 +67,7 @@ function check_has_alt_data_in_index(aHasAltData)
   Assert.equal(hasAltData.value, aHasAltData);
 }
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
@@ -77,15 +75,14 @@ function run_test()
   do_test_pending();
 
   if (!inChildProcess()) {
-    cache_storage = getCacheStorage("disk") ;
+    cache_storage = getCacheStorage("disk");
     wait_for_cache_index(asyncOpen);
   } else {
     asyncOpen();
   }
 }
 
-function asyncOpen()
-{
+function asyncOpen() {
   var chan = make_channel(URL);
 
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
@@ -94,8 +91,7 @@ function asyncOpen()
   chan.asyncOpen(new ChannelListener(readServerContent, null));
 }
 
-function readServerContent(request, buffer)
-{
+function readServerContent(request, buffer) {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   Assert.equal(buffer, responseContent);
@@ -112,20 +108,23 @@ function readServerContent(request, buffer)
 }
 
 // needs to be rooted
-var cacheFlushObserver = cacheFlushObserver = { observe() {
-  cacheFlushObserver = null;
-  openAltChannel();
-}};
+var cacheFlushObserver = (cacheFlushObserver = {
+  observe() {
+    cacheFlushObserver = null;
+    openAltChannel();
+  },
+});
 
-function flushAndOpenAltChannel()
-{
+function flushAndOpenAltChannel() {
   // We need to do a GC pass to ensure the cache entry has been freed.
   gc();
   if (!inChildProcess()) {
-    Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(cacheFlushObserver);
+    Services.cache2
+      .QueryInterface(Ci.nsICacheTesting)
+      .flush(cacheFlushObserver);
   } else {
-    do_send_remote_message('flush');
-    do_await_remote_message('flushed').then(() => {
+    do_send_remote_message("flush");
+    do_await_remote_message("flushed").then(() => {
       openAltChannel();
     });
   }
@@ -141,8 +140,7 @@ function openAltChannel() {
   chan.asyncOpen(new ChannelListener(readAltContent, null));
 }
 
-function readAltContent(request, buffer)
-{
+function readAltContent(request, buffer) {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   Assert.equal(servedNotModified, true);
@@ -153,12 +151,11 @@ function readAltContent(request, buffer)
   cc.getOriginalInputStream({
     onInputStreamReady(aInputStream) {
       executeSoon(() => readOriginalInputStream(aInputStream));
-    }
+    },
   });
 }
 
-function readOriginalInputStream(aInputStream)
-{
+function readOriginalInputStream(aInputStream) {
   // We expect the async stream length to match the expected content.
   // If the test times out, it's probably because of this.
   try {
@@ -171,8 +168,7 @@ function readOriginalInputStream(aInputStream)
   }
 }
 
-function requestAgain()
-{
+function requestAgain() {
   shouldPassRevalidation = false;
   var chan = make_channel(URL);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
@@ -180,8 +176,7 @@ function requestAgain()
   chan.asyncOpen(new ChannelListener(readEmptyAltContent, null));
 }
 
-function readEmptyAltContent(request, buffer)
-{
+function readEmptyAltContent(request, buffer) {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   // the cache is overwrite and the alt-data is reset

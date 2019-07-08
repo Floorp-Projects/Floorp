@@ -4,17 +4,26 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "JSONFile", "resource://gre/modules/JSONFile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "JSONFile",
+  "resource://gre/modules/JSONFile.jsm"
+);
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 var EXPORTED_SYMBOLS = ["Storage"];
 
 // Lazy-load JSON file that backs Storage instances.
 XPCOMUtils.defineLazyGetter(this, "lazyStore", async function() {
-  const path = OS.Path.join(OS.Constants.Path.profileDir, "shield-recipe-client.json");
-  const store = new JSONFile({path});
+  const path = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "shield-recipe-client.json"
+  );
+  const store = new JSONFile({ path });
   await store.load();
   return store;
 });

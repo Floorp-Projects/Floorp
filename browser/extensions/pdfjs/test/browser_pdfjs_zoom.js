@@ -3,7 +3,6 @@
 
 requestLongerTimeout(2);
 
-
 const RELATIVE_DIR = "browser/extensions/pdfjs/test/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 
@@ -59,42 +58,70 @@ const TESTS = [
 
 add_task(async function test() {
   let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-  let handlerInfo = mimeService.getFromTypeAndExtension("application/pdf", "pdf");
+  let handlerInfo = mimeService.getFromTypeAndExtension(
+    "application/pdf",
+    "pdf"
+  );
 
   // Make sure pdf.js is the default handler.
-  is(handlerInfo.alwaysAskBeforeHandling, false,
-     "pdf handler defaults to always-ask is false");
-  is(handlerInfo.preferredAction, Ci.nsIHandlerInfo.handleInternally,
-    "pdf handler defaults to internal");
+  is(
+    handlerInfo.alwaysAskBeforeHandling,
+    false,
+    "pdf handler defaults to always-ask is false"
+  );
+  is(
+    handlerInfo.preferredAction,
+    Ci.nsIHandlerInfo.handleInternally,
+    "pdf handler defaults to internal"
+  );
 
   info("Pref action: " + handlerInfo.preferredAction);
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
     async function(newTabBrowser) {
-      await waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf#zoom=100");
+      await waitForPdfJS(
+        newTabBrowser,
+        TESTROOT + "file_pdfjs_test.pdf#zoom=100"
+      );
 
-      await ContentTask.spawn(newTabBrowser, TESTS, async function(contentTESTS) {
+      await ContentTask.spawn(newTabBrowser, TESTS, async function(
+        contentTESTS
+      ) {
         let document = content.document;
 
         function waitForRender() {
-          return new Promise((resolve) => {
-            document.addEventListener("pagerendered", function onPageRendered(e) {
-              if (e.detail.pageNumber !== 1) {
-                return;
-              }
+          return new Promise(resolve => {
+            document.addEventListener(
+              "pagerendered",
+              function onPageRendered(e) {
+                if (e.detail.pageNumber !== 1) {
+                  return;
+                }
 
-              document.removeEventListener("pagerendered", onPageRendered, true);
-              resolve();
-            }, true);
+                document.removeEventListener(
+                  "pagerendered",
+                  onPageRendered,
+                  true
+                );
+                resolve();
+              },
+              true
+            );
           });
         }
 
         // check that PDF is opened with internal viewer
-        Assert.ok(content.document.querySelector("div#viewer"), "document content has viewer UI");
+        Assert.ok(
+          content.document.querySelector("div#viewer"),
+          "document content has viewer UI"
+        );
 
         let initialWidth, previousWidth;
-        initialWidth = previousWidth =
-          parseInt(content.document.querySelector("div.page[data-page-number='1']").style.width);
+        initialWidth = previousWidth = parseInt(
+          content.document.querySelector("div.page[data-page-number='1']").style
+            .width
+        );
 
         for (let subTest of contentTESTS) {
           // We zoom using an UI element
@@ -102,7 +129,10 @@ add_task(async function test() {
           if (subTest.action.selector) {
             // Get the element and trigger the action for changing the zoom
             var el = document.querySelector(subTest.action.selector);
-            Assert.ok(el, "Element '" + subTest.action.selector + "' has been found");
+            Assert.ok(
+              el,
+              "Element '" + subTest.action.selector + "' has been found"
+            );
 
             if (subTest.action.index) {
               el.selectedIndex = subTest.action.index;
@@ -113,27 +143,38 @@ add_task(async function test() {
           } else {
             // We zoom using keyboard
             // Simulate key press
-            ev = new content.KeyboardEvent("keydown",
-                                           { key: subTest.action.event,
-                                             keyCode: subTest.action.keyCode,
-                                             ctrlKey: true });
+            ev = new content.KeyboardEvent("keydown", {
+              key: subTest.action.event,
+              keyCode: subTest.action.keyCode,
+              ctrlKey: true,
+            });
             el = content;
           }
 
           el.dispatchEvent(ev);
           await waitForRender();
 
-          var pageZoomScale = content.document.querySelector("select#scaleSelect");
+          var pageZoomScale = content.document.querySelector(
+            "select#scaleSelect"
+          );
 
           // The zoom value displayed in the zoom select
-          var zoomValue = pageZoomScale.options[pageZoomScale.selectedIndex].innerHTML;
+          var zoomValue =
+            pageZoomScale.options[pageZoomScale.selectedIndex].innerHTML;
 
-          let pageContainer = content.document.querySelector("div.page[data-page-number='1']");
+          let pageContainer = content.document.querySelector(
+            "div.page[data-page-number='1']"
+          );
           let actualWidth = parseInt(pageContainer.style.width);
 
           // the actual zoom of the PDF document
-          let computedZoomValue = parseInt(((actualWidth / initialWidth).toFixed(2)) * 100) + "%";
-          Assert.equal(computedZoomValue, zoomValue, "Content has correct zoom");
+          let computedZoomValue =
+            parseInt((actualWidth / initialWidth).toFixed(2) * 100) + "%";
+          Assert.equal(
+            computedZoomValue,
+            zoomValue,
+            "Content has correct zoom"
+          );
 
           // Check that document zooms in the expected way (in/out)
           let zoom = (actualWidth - previousWidth) * subTest.expectedZoom;
@@ -145,5 +186,6 @@ add_task(async function test() {
         var viewer = content.wrappedJSObject.PDFViewerApplication;
         await viewer.close();
       });
-    });
+    }
+  );
 });

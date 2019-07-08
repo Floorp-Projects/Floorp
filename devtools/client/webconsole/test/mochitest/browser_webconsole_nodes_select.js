@@ -41,8 +41,10 @@ add_task(async function() {
   const openInInspectorIcon = node.querySelector(".open-inspector");
   ok(openInInspectorIcon !== null, "The is an open in inspector icon");
 
-  info("Clicking on the inspector icon and waiting for the " +
-       "inspector to be selected");
+  info(
+    "Clicking on the inspector icon and waiting for the " +
+      "inspector to be selected"
+  );
   const onInspectorSelected = toolbox.once("inspector-selected");
   const onInspectorUpdated = inspector.once("inspector-updated");
   const onNewNode = toolbox.selection.once("new-node-front");
@@ -56,6 +58,9 @@ add_task(async function() {
   ok(true, "Inspector selected and new node got selected");
   is(nodeFront.displayName, "h1", "The expected node was selected");
 
-  is(msg.querySelector(".arrow").classList.contains("expanded"), false,
-    "The object inspector wasn't expanded");
+  is(
+    msg.querySelector(".arrow").classList.contains("expanded"),
+    false,
+    "The object inspector wasn't expanded"
+  );
 });

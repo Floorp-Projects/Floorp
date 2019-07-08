@@ -9,8 +9,10 @@
  * as known by the platform. It is run from ./mach_commands.py by running
  * `mach devtools-css-db`.
  */
-var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-var {generateCssProperties} = require("devtools/server/actors/css-properties");
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var {
+  generateCssProperties,
+} = require("devtools/server/actors/css-properties");
 const InspectorUtils = require("InspectorUtils");
 
 // xpcshell can output extra information, so place some delimiter text between
@@ -18,11 +20,13 @@ const InspectorUtils = require("InspectorUtils");
 dump("DEVTOOLS_CSS_DB_DELIMITER");
 
 // Output JSON
-dump(JSON.stringify({
-  cssProperties: cssProperties(),
-  preferences: preferences(),
-  pseudoElements: pseudoElements(),
-}));
+dump(
+  JSON.stringify({
+    cssProperties: cssProperties(),
+    preferences: preferences(),
+    pseudoElements: pseudoElements(),
+  })
+);
 
 dump("DEVTOOLS_CSS_DB_DELIMITER");
 
@@ -53,7 +57,7 @@ function cssProperties() {
 function preferences() {
   const prefs = InspectorUtils.getCSSPropertyPrefs();
   const result = [];
-  for (const {name, pref} of prefs) {
+  for (const { name, pref } of prefs) {
     result.push([name, pref]);
   }
   return result;

@@ -23,8 +23,7 @@ module.exports = function(context) {
   }
 
   function deHungarianize(name) {
-    return name.substring(1, 2).toLowerCase() +
-           name.substring(2, name.length);
+    return name.substring(1, 2).toLowerCase() + name.substring(2, name.length);
   }
 
   function checkFunction(node) {
@@ -35,10 +34,12 @@ module.exports = function(context) {
           name: param.name,
           suggestion: deHungarianize(param.name),
         };
-        context.report(param,
-                       "Parameter '{{name}}' uses Hungarian Notation, " +
-                       "consider using '{{suggestion}}' instead.",
-                       errorObj);
+        context.report(
+          param,
+          "Parameter '{{name}}' uses Hungarian Notation, " +
+            "consider using '{{suggestion}}' instead.",
+          errorObj
+        );
       }
     }
   }
@@ -48,8 +49,8 @@ module.exports = function(context) {
   // ---------------------------------------------------------------------------
 
   return {
-    "FunctionDeclaration": checkFunction,
-    "ArrowFunctionExpression": checkFunction,
-    "FunctionExpression": checkFunction,
+    FunctionDeclaration: checkFunction,
+    ArrowFunctionExpression: checkFunction,
+    FunctionExpression: checkFunction,
   };
 };

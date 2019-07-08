@@ -44,10 +44,7 @@ class SelectorHighlighter extends PureComponent {
   async onToggleHighlighterClick(event) {
     event.stopPropagation();
 
-    const {
-      onToggleSelectorHighlighter,
-      selector,
-    } = this.props;
+    const { onToggleSelectorHighlighter, selector } = this.props;
 
     const uniqueSelector = await selector.getUniqueSelector();
     this.setState({ uniqueSelector });
@@ -63,15 +60,15 @@ class SelectorHighlighter extends PureComponent {
     const { highlightedSelector } = this.props;
     const { uniqueSelector } = this.state;
 
-    return (
-      dom.span({
-        className: "ruleview-selectorhighlighter" +
-                   (highlightedSelector && highlightedSelector === uniqueSelector ?
-                    " highlighted" : ""),
-        onClick: this.onToggleHighlighterClick,
-        title: getStr("rule.selectorHighlighter.tooltip"),
-      })
-    );
+    return dom.span({
+      className:
+        "ruleview-selectorhighlighter" +
+        (highlightedSelector && highlightedSelector === uniqueSelector
+          ? " highlighted"
+          : ""),
+      onClick: this.onToggleHighlighterClick,
+      title: getStr("rule.selectorHighlighter.tooltip"),
+    });
   }
 }
 

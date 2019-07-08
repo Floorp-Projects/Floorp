@@ -19,7 +19,7 @@ export default function HandleEventMixin(superclass) {
       }
       // Check whether event name is a defined function in object.
       let fn = "on" + capitalize(evt.type);
-      if (this[fn] && typeof(this[fn]) === "function") {
+      if (this[fn] && typeof this[fn] === "function") {
         return this[fn](evt);
       }
       return null;

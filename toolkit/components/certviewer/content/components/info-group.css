@@ -15,6 +15,10 @@
   font-weight: 600;
 }
 
+.info-group-title:dir(rtl) {
+  text-align: left;
+}
+
 .info-group-title-hr {
   height: 1px;
   background-color: black;

@@ -15,22 +15,32 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   info("Requesting a resource over HTTPS.");
-  await performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_2");
-  await performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_1");
+  await performRequestAndWait(
+    "https://example.com" + CORS_SJS_PATH + "?request_2"
+  );
+  await performRequestAndWait(
+    "https://example.com" + CORS_SJS_PATH + "?request_1"
+  );
 
   is(store.getState().requests.requests.size, 2, "Two events event logged.");
 
   await clickAndTestSecurityIcon();
 
   info("Selecting headers panel again.");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#headers-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#headers-tab")
+  );
 
   info("Sorting the items by filename.");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-list-file-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#requests-list-file-button")
+  );
 
-  info("Testing that security icon can be clicked after the items were sorted.");
+  info(
+    "Testing that security icon can be clicked after the items were sorted."
+  );
 
   await clickAndTestSecurityIcon();
 
@@ -46,11 +56,17 @@ add_task(async function() {
 
   async function clickAndTestSecurityIcon() {
     const icon = document.querySelector(".requests-security-state-icon");
-    info("Clicking security icon of the first request and waiting for panel update.");
+    info(
+      "Clicking security icon of the first request and waiting for panel update."
+    );
     EventUtils.synthesizeMouseAtCenter(icon, {}, monitor.panelWin);
-    await waitUntil(() => document.querySelector("#security-panel .security-info-value"));
+    await waitUntil(() =>
+      document.querySelector("#security-panel .security-info-value")
+    );
 
-    ok(document.querySelector("#security-tab[aria-selected=true]"),
-       "Security tab is selected.");
+    ok(
+      document.querySelector("#security-tab[aria-selected=true]"),
+      "Security tab is selected."
+    );
   }
 });

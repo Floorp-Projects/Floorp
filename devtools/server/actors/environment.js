@@ -51,22 +51,27 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
 
     // Does this environment have a parent?
     if (this.obj.parent) {
-      form.parent = (this.threadActor
-                     .createEnvironmentActor(this.obj.parent,
-                                             this.registeredPool)
-                     .form());
+      form.parent = this.threadActor
+        .createEnvironmentActor(this.obj.parent, this.registeredPool)
+        .form();
     }
 
     // Does this environment reflect the properties of an object as variables?
     if (this.obj.type == "object" || this.obj.type == "with") {
-      form.object = createValueGrip(this.obj.object,
-        this.registeredPool, this.threadActor.objectGrip);
+      form.object = createValueGrip(
+        this.obj.object,
+        this.registeredPool,
+        this.threadActor.objectGrip
+      );
     }
 
     // Is this the environment created for a function call?
     if (this.obj.callee) {
-      form.function = createValueGrip(this.obj.callee,
-        this.registeredPool, this.threadActor.objectGrip);
+      form.function = createValueGrip(
+        this.obj.callee,
+        this.registeredPool,
+        this.threadActor.objectGrip
+      );
     }
 
     // Shall we list this environment's bindings?
@@ -123,7 +128,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     // TODO: this part should be removed in favor of the commented-out part
     // below when getVariableDescriptor lands (bug 725815).
     if (typeof this.obj.getVariable != "function") {
-    // if (typeof this.obj.getVariableDescriptor != "function") {
+      // if (typeof this.obj.getVariableDescriptor != "function") {
       return bindings;
     }
 
@@ -152,23 +157,34 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
         configurable: desc.configurable,
       };
       if ("value" in desc) {
-        descForm.value = createValueGrip(desc.value,
-          this.registeredPool, this.threadActor.objectGrip);
+        descForm.value = createValueGrip(
+          desc.value,
+          this.registeredPool,
+          this.threadActor.objectGrip
+        );
         descForm.writable = desc.writable;
       } else {
-        descForm.get = createValueGrip(desc.get, this.registeredPool,
-          this.threadActor.objectGrip);
-        descForm.set = createValueGrip(desc.set, this.registeredPool,
-          this.threadActor.objectGrip);
+        descForm.get = createValueGrip(
+          desc.get,
+          this.registeredPool,
+          this.threadActor.objectGrip
+        );
+        descForm.set = createValueGrip(
+          desc.set,
+          this.registeredPool,
+          this.threadActor.objectGrip
+        );
       }
       arg[name] = descForm;
       bindings.arguments.push(arg);
     }
 
     for (const name of this.obj.names()) {
-      if (bindings.arguments.some(function exists(element) {
-        return !!element[name];
-      })) {
+      if (
+        bindings.arguments.some(function exists(element) {
+          return !!element[name];
+        })
+      ) {
         continue;
       }
 
@@ -179,10 +195,10 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
       const desc = {
         value: value,
         configurable: false,
-        writable: !(value &&
-                    (value.optimizedOut ||
-                     value.uninitialized ||
-                     value.missingArguments)),
+        writable: !(
+          value &&
+          (value.optimizedOut || value.uninitialized || value.missingArguments)
+        ),
         enumerable: true,
       };
 
@@ -192,14 +208,23 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
         configurable: desc.configurable,
       };
       if ("value" in desc) {
-        descForm.value = createValueGrip(desc.value,
-          this.registeredPool, this.threadActor.objectGrip);
+        descForm.value = createValueGrip(
+          desc.value,
+          this.registeredPool,
+          this.threadActor.objectGrip
+        );
         descForm.writable = desc.writable;
       } else {
-        descForm.get = createValueGrip(desc.get || undefined,
-          this.registeredPool, this.threadActor.objectGrip);
-        descForm.set = createValueGrip(desc.set || undefined,
-          this.registeredPool, this.threadActor.objectGrip);
+        descForm.get = createValueGrip(
+          desc.get || undefined,
+          this.registeredPool,
+          this.threadActor.objectGrip
+        );
+        descForm.set = createValueGrip(
+          desc.set || undefined,
+          this.registeredPool,
+          this.threadActor.objectGrip
+        );
       }
       bindings.variables[name] = descForm;
     }

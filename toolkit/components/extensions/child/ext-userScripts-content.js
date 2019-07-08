@@ -5,13 +5,20 @@
 var USERSCRIPT_PREFNAME = "extensions.webextensions.userScripts.enabled";
 var USERSCRIPT_DISABLED_ERRORMSG = `userScripts APIs are currently experimental and must be enabled with the ${USERSCRIPT_PREFNAME} preference.`;
 
-ChromeUtils.defineModuleGetter(this, "Schemas", "resource://gre/modules/Schemas.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Schemas",
+  "resource://gre/modules/Schemas.jsm"
+);
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "userScriptsEnabled", USERSCRIPT_PREFNAME, false);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "userScriptsEnabled",
+  USERSCRIPT_PREFNAME,
+  false
+);
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 const TYPEOF_PRIMITIVES = ["bigint", "boolean", "number", "string", "symbol"];
 
@@ -30,7 +37,7 @@ const TYPEOF_PRIMITIVES = ["bigint", "boolean", "number", "string", "symbol"];
  *        The Sandbox object of the userScript.
  */
 class UserScript {
-  constructor({context, metadata, scriptSandbox}) {
+  constructor({ context, metadata, scriptSandbox }) {
     this.context = context;
     this.extension = context.extension;
     this.apiSandbox = context.cloneScope;
@@ -51,8 +58,8 @@ class UserScript {
   api() {
     return {
       metadata: this.metadata,
-      defineGlobals: (sourceObject) => this.defineGlobals(sourceObject),
-      export: (value) => this.export(value),
+      defineGlobals: sourceObject => this.defineGlobals(sourceObject),
+      export: value => this.export(value),
     };
   }
 
@@ -75,7 +82,9 @@ class UserScript {
     }
 
     if (className !== "Object") {
-      throw new this.context.Error("Invalid sourceObject type, plain object expected.");
+      throw new this.context.Error(
+        "Invalid sourceObject type, plain object expected."
+      );
     }
 
     this.exportLazyGetters(sourceObject, this.scriptSandbox);
@@ -138,8 +147,10 @@ class UserScript {
     }
 
     let valueType = className || typeof valueToExport;
-    throw new ExportError(privateOptions.errorMessage ||
-                          `${valueType} cannot be exported to the userScript`);
+    throw new ExportError(
+      privateOptions.errorMessage ||
+        `${valueType} cannot be exported to the userScript`
+    );
   }
 
   /**
@@ -219,7 +230,9 @@ class UserScript {
         // received from the apiScript.
         for (let arg of args) {
           if (!this.canAccess(arg, this.apiSandbox)) {
-            throw new this.ScriptError(`Parameter not accessible to the userScript API`);
+            throw new this.ScriptError(
+              `Parameter not accessible to the userScript API`
+            );
           }
         }
 
@@ -256,7 +269,7 @@ class UserScript {
    * @param {Object|Array} obj
    *        The Object or Array object to shallow clone and iterate over.
    */
-  * shallowCloneEntries(obj) {
+  *shallowCloneEntries(obj) {
     const clonedObj = ChromeUtils.shallowClone(obj);
 
     for (let entry of Object.entries(clonedObj)) {
@@ -340,7 +353,10 @@ class UserScript {
     try {
       const debugName = this.extension.policy.debugName;
       Cu.reportError(
-        `An unexpected apiScript error occurred for '${debugName}': ${err} :: ${err.stack}`);
+        `An unexpected apiScript error occurred for '${debugName}': ${err} :: ${
+          err.stack
+        }`
+      );
     } catch (e) {}
 
     throw new this.ScriptError(`An unexpected apiScript error occurred`);
@@ -361,10 +377,14 @@ this.userScriptsContent = class extends ExtensionAPI {
 
             let handler = (event, metadata, scriptSandbox, eventResult) => {
               const us = new UserScript({
-                context, metadata, scriptSandbox,
+                context,
+                metadata,
+                scriptSandbox,
               });
 
-              const apiObj = Cu.cloneInto(us.api(), context.cloneScope, {cloneFunctions: true});
+              const apiObj = Cu.cloneInto(us.api(), context.cloneScope, {
+                cloneFunctions: true,
+              });
 
               Object.defineProperty(apiObj, "global", {
                 value: scriptSandbox,

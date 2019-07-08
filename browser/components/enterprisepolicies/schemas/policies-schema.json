@@ -708,6 +708,9 @@
         "places.history.enabled": {
           "type": "boolean"
         },
+        "privacy.file_unique_origin": {
+          "type": "boolean"
+        },
         "security.default_personal_cert": {
           "type": "string"
         },

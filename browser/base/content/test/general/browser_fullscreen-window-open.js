@@ -1,12 +1,16 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-const PREF_DISABLE_OPEN_NEW_WINDOW = "browser.link.open_newwindow.disabled_in_fullscreen";
-const PREF_BLOCK_TOPLEVEL_DATA = "security.data_uri.block_toplevel_data_uri_navigations";
-const isOSX = (Services.appinfo.OS === "Darwin");
+const PREF_DISABLE_OPEN_NEW_WINDOW =
+  "browser.link.open_newwindow.disabled_in_fullscreen";
+const PREF_BLOCK_TOPLEVEL_DATA =
+  "security.data_uri.block_toplevel_data_uri_navigations";
+const isOSX = Services.appinfo.OS === "Darwin";
 
 const TEST_FILE = "file_fullscreen-window-open.html";
-const gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
-                                                          "http://127.0.0.1:8888/");
+const gHttpTestRoot = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 
 var newWin;
 var newBrowser;
@@ -57,7 +61,6 @@ function runNextTest() {
     finish();
   }
 }
-
 
 // Test for window.open() with no feature.
 function test_open() {
@@ -140,8 +143,11 @@ function test_open_with_dialog() {
 function test_open_when_open_new_window_by_pref() {
   const PREF_NAME = "browser.link.open_newwindow";
   Services.prefs.setIntPref(PREF_NAME, Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW);
-  is(Services.prefs.getIntPref(PREF_NAME), Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW,
-     PREF_NAME + " is nsIBrowserDOMWindow.OPEN_NEWWINDOW at this time");
+  is(
+    Services.prefs.getIntPref(PREF_NAME),
+    Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW,
+    PREF_NAME + " is nsIBrowserDOMWindow.OPEN_NEWWINDOW at this time"
+  );
 
   waitForTabOpen({
     message: {
@@ -168,7 +174,6 @@ function test_open_with_pref_to_disable_in_fullscreen() {
     },
   });
 }
-
 
 // Test for window.open() called from chrome context.
 function test_open_from_chrome() {
@@ -198,8 +203,11 @@ function waitForTabOpen(aOptions) {
 
     let tab = aEvent.target;
     whenTabLoaded(tab, function() {
-      is(tab.linkedBrowser.contentTitle, message.title,
-         "Opened Tab is expected: " + message.title);
+      is(
+        tab.linkedBrowser.contentTitle,
+        message.title,
+        "Opened Tab is expected: " + message.title
+      );
 
       if (aOptions.successFn) {
         aOptions.successFn();
@@ -217,9 +225,10 @@ function waitForTabOpen(aOptions) {
     runNextTest();
   };
 
-  const URI = "data:text/html;charset=utf-8,<!DOCTYPE html><html><head><title>" +
-              message.title +
-              "<%2Ftitle><%2Fhead><body><%2Fbody><%2Fhtml>";
+  const URI =
+    "data:text/html;charset=utf-8,<!DOCTYPE html><html><head><title>" +
+    message.title +
+    "<%2Ftitle><%2Fhead><body><%2Fbody><%2Fhtml>";
 
   executeWindowOpenInContent({
     uri: URI,
@@ -227,7 +236,6 @@ function waitForTabOpen(aOptions) {
     option: message.param,
   });
 }
-
 
 function waitForWindowOpen(aOptions) {
   let message = aOptions.message;
@@ -249,10 +257,14 @@ function waitForWindowOpen(aOptions) {
     runNextTest();
   };
 
-  let listener = new WindowListener(message.title, AppConstants.BROWSER_CHROME_URL, {
-    onSuccess: aOptions.successFn,
-    onFinalize,
-  });
+  let listener = new WindowListener(
+    message.title,
+    AppConstants.BROWSER_CHROME_URL,
+    {
+      onSuccess: aOptions.successFn,
+      onFinalize,
+    }
+  );
   Services.wm.addListener(listener);
 
   executeWindowOpenInContent({
@@ -263,11 +275,15 @@ function waitForWindowOpen(aOptions) {
 }
 
 function executeWindowOpenInContent(aParam) {
-  ContentTask.spawn(newBrowser.selectedBrowser, JSON.stringify(aParam), async function(dataTestParam) {
-    let testElm = content.document.getElementById("test");
-    testElm.setAttribute("data-test-param", dataTestParam);
-    testElm.click();
-  });
+  ContentTask.spawn(
+    newBrowser.selectedBrowser,
+    JSON.stringify(aParam),
+    async function(dataTestParam) {
+      let testElm = content.document.getElementById("test");
+      testElm.setAttribute("data-test-param", dataTestParam);
+      testElm.click();
+    }
+  );
 }
 
 function waitForWindowOpenFromChrome(aOptions) {
@@ -290,10 +306,14 @@ function waitForWindowOpenFromChrome(aOptions) {
     runNextTest();
   };
 
-  let listener = new WindowListener(message.title, AppConstants.BROWSER_CHROME_URL, {
-    onSuccess: aOptions.successFn,
-    onFinalize,
-  });
+  let listener = new WindowListener(
+    message.title,
+    AppConstants.BROWSER_CHROME_URL,
+    {
+      onSuccess: aOptions.successFn,
+      onFinalize,
+    }
+  );
   Services.wm.addListener(listener);
 
   newWin.open(url, message.title, message.option);
@@ -306,7 +326,6 @@ function WindowListener(aTitle, aUrl, aCallBackObj) {
   this.callBack_onFinalize = aCallBackObj.onFinalize;
 }
 WindowListener.prototype = {
-
   test_title: null,
   test_url: null,
   callback_onSuccess: null,
@@ -317,8 +336,11 @@ WindowListener.prototype = {
 
     let domwindow = aXULWindow.docShell.domWindow;
     let onLoad = aEvent => {
-      is(domwindow.document.location.href, this.test_url,
-        "Opened Window is expected: " + this.test_title);
+      is(
+        domwindow.document.location.href,
+        this.test_url,
+        "Opened Window is expected: " + this.test_title
+      );
       if (this.callback_onSuccess) {
         this.callback_onSuccess();
       }

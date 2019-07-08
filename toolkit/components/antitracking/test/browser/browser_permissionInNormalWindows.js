@@ -1,6 +1,7 @@
 /* import-globals-from antitracking_head.js */
 
-AntiTracking.runTest("Test whether we receive any persistent permissions in normal windows",
+AntiTracking.runTest(
+  "Test whether we receive any persistent permissions in normal windows",
   // Blocking callback
   async _ => {
     // Nothing to do here!
@@ -8,33 +9,39 @@ AntiTracking.runTest("Test whether we receive any persistent permissions in norm
 
   // Non blocking callback
   async _ => {
-  try {
-    let Services = SpecialPowers.Services;
-    // We would use TEST_3RD_PARTY_DOMAIN here, except that the variable isn't
-    // accessible in the context of the web page...
-    let uri = Services.io.newURI("https://tracking.example.org/");
-    for (let perm of Services.perms.getAllForURI(uri)) {
-      // Ignore permissions other than storage access
-      if (!perm.type.startsWith("3rdPartyStorage^")) {
-        continue;
+    try {
+      let Services = SpecialPowers.Services;
+      // We would use TEST_3RD_PARTY_DOMAIN here, except that the variable isn't
+      // accessible in the context of the web page...
+      let uri = Services.io.newURI("https://tracking.example.org/");
+      for (let perm of Services.perms.getAllForURI(uri)) {
+        // Ignore permissions other than storage access
+        if (!perm.type.startsWith("3rdPartyStorage^")) {
+          continue;
+        }
+        is(
+          perm.expireType,
+          Services.perms.EXPIRE_TIME,
+          "Permission must expire at a specific time"
+        );
+        ok(perm.expireTime > 0, "Permission must have a expiry time");
       }
-      is(perm.expireType, Services.perms.EXPIRE_TIME,
-         "Permission must expire at a specific time");
-      ok(perm.expireTime > 0,
-         "Permission must have a expiry time");
+    } catch (e) {
+      alert(e);
     }
-  } catch (e) { alert(e); }
   },
 
   // Cleanup callback
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
     });
   },
   null, // no extra prefs
   true, // run the window.open() test
   true, // run the user interaction test
   0, // don't expect blocking notifications
-  false); // run in normal windows
-
+  false
+); // run in normal windows

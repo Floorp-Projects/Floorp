@@ -5,7 +5,10 @@
 "use strict";
 
 const { sourceSpec } = require("devtools/shared/specs/source");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 const { ArrayBufferFront } = require("devtools/shared/fronts/array-buffer");
 
 /**

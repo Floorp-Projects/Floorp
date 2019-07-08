@@ -16,8 +16,9 @@
 const kPageURL =
   "http://example.com/browser/security/sandbox/test/bug1393259.html";
 
-const environment = Cc["@mozilla.org/process/environment;1"]
-                    .getService(Ci.nsIEnvironment);
+const environment = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 
 // Parameters for running the python script that registers/unregisters fonts.
 const kPythonPath = "/usr/bin/python";
@@ -39,157 +40,167 @@ const kPrivateFontSubPath = "/FiraSans-Regular.otf";
 add_task(async function() {
   await new Promise(resolve => waitForFocus(resolve, window));
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: kPageURL,
-  }, async function(aBrowser) {
-    function runProcess(aCmd, aArgs, blocking = true) {
-      let cmdFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      cmdFile.initWithPath(aCmd);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: kPageURL,
+    },
+    async function(aBrowser) {
+      function runProcess(aCmd, aArgs, blocking = true) {
+        let cmdFile = Cc["@mozilla.org/file/local;1"].createInstance(
+          Ci.nsIFile
+        );
+        cmdFile.initWithPath(aCmd);
 
-      let process = Cc["@mozilla.org/process/util;1"]
-                      .createInstance(Ci.nsIProcess);
-      process.init(cmdFile);
-      process.run(blocking, aArgs, aArgs.length);
-      return process.exitValue;
-    }
-
-    // Register the font at path |fontPath| and wait
-    // for the brower to detect the change.
-    async function registerFont(fontPath) {
-      let fontRegistered = getFontNotificationPromise();
-      let exitCode = runProcess(kPythonPath, [kFontInstallerPath, kVerboseFlag,
-                                              fontPath]);
-      Assert.ok(exitCode == 0, "registering font" + fontPath);
-      if (exitCode == 0) {
-        // Wait for the font registration to be detected by the browser.
-        await fontRegistered;
-      }
-    }
-
-    // Unregister the font at path |fontPath|. If |waitForUnreg| is true,
-    // don't wait for the browser to detect the change and don't use
-    // the verbose arg for the unregister command.
-    async function unregisterFont(fontPath, waitForUnreg = true) {
-      let args = [kFontInstallerPath, kUninstallFlag];
-      let fontUnregistered;
-
-      if (waitForUnreg) {
-        args.push(kVerboseFlag);
-        fontUnregistered = getFontNotificationPromise();
+        let process = Cc["@mozilla.org/process/util;1"].createInstance(
+          Ci.nsIProcess
+        );
+        process.init(cmdFile);
+        process.run(blocking, aArgs, aArgs.length);
+        return process.exitValue;
       }
 
-      let exitCode = runProcess(kPythonPath, args.concat(fontPath));
-      if (waitForUnreg) {
-        Assert.ok(exitCode == 0, "unregistering font" + fontPath);
+      // Register the font at path |fontPath| and wait
+      // for the brower to detect the change.
+      async function registerFont(fontPath) {
+        let fontRegistered = getFontNotificationPromise();
+        let exitCode = runProcess(kPythonPath, [
+          kFontInstallerPath,
+          kVerboseFlag,
+          fontPath,
+        ]);
+        Assert.ok(exitCode == 0, "registering font" + fontPath);
         if (exitCode == 0) {
-          await fontUnregistered;
+          // Wait for the font registration to be detected by the browser.
+          await fontRegistered;
         }
       }
-    }
 
-    // Pref "font.internaluseonly.changed" is updated when system
-    // fonts change. We use it to wait for changes to be detected
-    // in the browser.
-    let prefBranch =
-      Services.prefs.getBranch("font.internaluseonly.");
+      // Unregister the font at path |fontPath|. If |waitForUnreg| is true,
+      // don't wait for the browser to detect the change and don't use
+      // the verbose arg for the unregister command.
+      async function unregisterFont(fontPath, waitForUnreg = true) {
+        let args = [kFontInstallerPath, kUninstallFlag];
+        let fontUnregistered;
 
-    // Returns a promise that resolves when the pref is changed
-    let getFontNotificationPromise = () => new Promise(resolve => {
-      let prefObserver = {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-        observe() {
-          prefBranch.removeObserver("changed", prefObserver);
-          resolve();
-        },
-      };
-      prefBranch.addObserver("changed", prefObserver);
-    });
+        if (waitForUnreg) {
+          args.push(kVerboseFlag);
+          fontUnregistered = getFontNotificationPromise();
+        }
 
-    let homeDir = Services.dirsvc.get("Home", Ci.nsIFile);
-    let privateFontPath = homeDir.path + kPrivateFontSubPath;
+        let exitCode = runProcess(kPythonPath, args.concat(fontPath));
+        if (waitForUnreg) {
+          Assert.ok(exitCode == 0, "unregistering font" + fontPath);
+          if (exitCode == 0) {
+            await fontUnregistered;
+          }
+        }
+      }
 
-    registerCleanupFunction(function() {
+      // Pref "font.internaluseonly.changed" is updated when system
+      // fonts change. We use it to wait for changes to be detected
+      // in the browser.
+      let prefBranch = Services.prefs.getBranch("font.internaluseonly.");
+
+      // Returns a promise that resolves when the pref is changed
+      let getFontNotificationPromise = () =>
+        new Promise(resolve => {
+          let prefObserver = {
+            QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+            observe() {
+              prefBranch.removeObserver("changed", prefObserver);
+              resolve();
+            },
+          };
+          prefBranch.addObserver("changed", prefObserver);
+        });
+
+      let homeDir = Services.dirsvc.get("Home", Ci.nsIFile);
+      let privateFontPath = homeDir.path + kPrivateFontSubPath;
+
+      registerCleanupFunction(function() {
+        unregisterFont(privateFontPath, /* waitForUnreg = */ false);
+        runProcess("/bin/rm", [privateFontPath], /* blocking = */ false);
+      });
+
+      // Copy the font file to the private path.
+      runProcess("/bin/cp", [kRepoFontPath, privateFontPath]);
+
+      // Cleanup previous aborted tests.
       unregisterFont(privateFontPath, /* waitForUnreg = */ false);
-      runProcess("/bin/rm", [privateFontPath], /* blocking = */ false);
-    });
 
-    // Copy the font file to the private path.
-    runProcess("/bin/cp", [kRepoFontPath, privateFontPath]);
-
-    // Cleanup previous aborted tests.
-    unregisterFont(privateFontPath, /* waitForUnreg = */ false);
-
-    // Get the original width, using the fallback monospaced font
-    let origWidth = await ContentTask.spawn(aBrowser, {}, async function() {
-      let window = content.window.wrappedJSObject;
-      let contentDiv = window.document.getElementById("content");
-      return contentDiv.offsetWidth;
-    });
-
-    // Activate the font we want to test at a non-standard path.
-    await registerFont(privateFontPath);
-
-    // Assign the new font to the content.
-    await ContentTask.spawn(aBrowser, {}, async function() {
-      let window = content.window.wrappedJSObject;
-      let contentDiv = window.document.getElementById("content");
-      contentDiv.style.fontFamily = "'Fira Sans', monospace";
-    });
-
-    // Wait until the width has changed, indicating the content process
-    // has recognized the newly-activated font.
-    while (true) {
-      let width = await ContentTask.spawn(aBrowser, {}, async function() {
+      // Get the original width, using the fallback monospaced font
+      let origWidth = await ContentTask.spawn(aBrowser, {}, async function() {
         let window = content.window.wrappedJSObject;
         let contentDiv = window.document.getElementById("content");
         return contentDiv.offsetWidth;
       });
-      if (width != origWidth) {
-        break;
+
+      // Activate the font we want to test at a non-standard path.
+      await registerFont(privateFontPath);
+
+      // Assign the new font to the content.
+      await ContentTask.spawn(aBrowser, {}, async function() {
+        let window = content.window.wrappedJSObject;
+        let contentDiv = window.document.getElementById("content");
+        contentDiv.style.fontFamily = "'Fira Sans', monospace";
+      });
+
+      // Wait until the width has changed, indicating the content process
+      // has recognized the newly-activated font.
+      while (true) {
+        let width = await ContentTask.spawn(aBrowser, {}, async function() {
+          let window = content.window.wrappedJSObject;
+          let contentDiv = window.document.getElementById("content");
+          return contentDiv.offsetWidth;
+        });
+        if (width != origWidth) {
+          break;
+        }
+        // If the content wasn't ready yet, wait a little before re-checking.
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        await new Promise(c => setTimeout(c, 100));
       }
-      // If the content wasn't ready yet, wait a little before re-checking.
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      await new Promise(c => setTimeout(c, 100));
+
+      // Get a list of fonts now being used to display the web content.
+      let fontList = await ContentTask.spawn(aBrowser, {}, async function() {
+        let window = content.window.wrappedJSObject;
+        let range = window.document.createRange();
+        let contentDiv = window.document.getElementById("content");
+        range.selectNode(contentDiv);
+        let fonts = InspectorUtils.getUsedFontFaces(range);
+
+        let fontList = [];
+        for (let i = 0; i < fonts.length; i++) {
+          fontList.push({ name: fonts[i].name });
+        }
+        return fontList;
+      });
+
+      let lastResortFontUsed = false;
+      let testFontUsed = false;
+
+      for (let font of fontList) {
+        // Did we fall back to the "LastResort" font?
+        if (!lastResortFontUsed && font.name.includes(kLastResortFontName)) {
+          lastResortFontUsed = true;
+          continue;
+        }
+        // Did we render using our test font as expected?
+        if (!testFontUsed && font.name.includes(kTestFontName)) {
+          testFontUsed = true;
+          continue;
+        }
+      }
+
+      Assert.ok(
+        !lastResortFontUsed,
+        `The ${kLastResortFontName} fallback font was not used`
+      );
+
+      Assert.ok(testFontUsed, `The test font "${kTestFontName}" was used`);
+
+      await unregisterFont(privateFontPath);
     }
-
-    // Get a list of fonts now being used to display the web content.
-    let fontList = await ContentTask.spawn(aBrowser, {}, async function() {
-      let window = content.window.wrappedJSObject;
-      let range = window.document.createRange();
-      let contentDiv = window.document.getElementById("content");
-      range.selectNode(contentDiv);
-      let fonts = InspectorUtils.getUsedFontFaces(range);
-
-      let fontList = [];
-      for (let i = 0; i < fonts.length; i++) {
-        fontList.push({name: fonts[i].name});
-      }
-      return fontList;
-    });
-
-    let lastResortFontUsed = false;
-    let testFontUsed = false;
-
-    for (let font of fontList) {
-      // Did we fall back to the "LastResort" font?
-      if (!lastResortFontUsed && font.name.includes(kLastResortFontName)) {
-        lastResortFontUsed = true;
-        continue;
-      }
-      // Did we render using our test font as expected?
-      if (!testFontUsed && font.name.includes(kTestFontName)) {
-        testFontUsed = true;
-        continue;
-      }
-    }
-
-    Assert.ok(!lastResortFontUsed,
-      `The ${kLastResortFontName} fallback font was not used`);
-
-    Assert.ok(testFontUsed,
-      `The test font "${kTestFontName}" was used`);
-
-    await unregisterFont(privateFontPath);
-  });
+  );
 });

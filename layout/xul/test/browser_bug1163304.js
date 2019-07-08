@@ -1,4 +1,7 @@
-ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+ChromeUtils.import(
+  "resource://testing-common/CustomizableUITestUtils.jsm",
+  this
+);
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
 add_task(async function test_setup() {
@@ -12,8 +15,11 @@ add_task(async function() {
   BrowserSearch.searchBar.focus();
 
   let DOMWindowUtils = EventUtils._getDOMWindowUtils();
-  is(DOMWindowUtils.IMEStatus, DOMWindowUtils.IME_STATUS_ENABLED,
-     "IME should be available when searchbar has focus");
+  is(
+    DOMWindowUtils.IMEStatus,
+    DOMWindowUtils.IME_STATUS_ENABLED,
+    "IME should be available when searchbar has focus"
+  );
 
   let searchPopup = document.getElementById("PopupSearchAutoComplete");
 
@@ -23,8 +29,11 @@ add_task(async function() {
   await shownPromise;
   await new Promise(r => setTimeout(r, 0));
 
-  is(DOMWindowUtils.IMEStatus, DOMWindowUtils.IME_STATUS_ENABLED,
-     "IME should be available even when the popup of searchbar is open");
+  is(
+    DOMWindowUtils.IMEStatus,
+    DOMWindowUtils.IME_STATUS_ENABLED,
+    "IME should be available even when the popup of searchbar is open"
+  );
 
   // Activate the menubar, then, the popup should be closed
   let hiddenPromise = BrowserTestUtils.waitForEvent(searchPopup, "popuphidden");
@@ -32,10 +41,16 @@ add_task(async function() {
   await hiddenPromise;
   await new Promise(r => setTimeout(r, 0));
 
-  is(DOMWindowUtils.IMEStatus, DOMWindowUtils.IME_STATUS_DISABLED,
-     "IME should not be available when menubar is active");
+  is(
+    DOMWindowUtils.IMEStatus,
+    DOMWindowUtils.IME_STATUS_DISABLED,
+    "IME should not be available when menubar is active"
+  );
   // Inactivate the menubar (and restore the focus to the searchbar
   EventUtils.synthesizeKey("KEY_Escape");
-  is(DOMWindowUtils.IMEStatus, DOMWindowUtils.IME_STATUS_ENABLED,
-     "IME should be available after focus is back to the searchbar");
+  is(
+    DOMWindowUtils.IMEStatus,
+    DOMWindowUtils.IME_STATUS_ENABLED,
+    "IME should be available after focus is back to the searchbar"
+  );
 });

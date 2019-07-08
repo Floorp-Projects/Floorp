@@ -27,19 +27,21 @@ var ADDONS = [
 
 const gHaveSymlinks = AppConstants.platform != "win";
 
-
 function createSymlink(aSource, aDest) {
-  if (aSource instanceof Ci.nsIFile)
+  if (aSource instanceof Ci.nsIFile) {
     aSource = aSource.path;
-  if (aDest instanceof Ci.nsIFile)
+  }
+  if (aDest instanceof Ci.nsIFile) {
     aDest = aDest.path;
+  }
 
   return OS.File.unixSymLink(aSource, aDest);
 }
 
 function promiseWriteFile(aFile, aData) {
-  if (!aFile.parent.exists())
+  if (!aFile.parent.exists()) {
     aFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+  }
 
   return OS.File.writeAtomic(aFile.path, new TextEncoder().encode(aData));
 }
@@ -52,10 +54,8 @@ function checkAddonsExist() {
   }
 }
 
-
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
-
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
@@ -66,8 +66,9 @@ function run_test() {
 
   add_task(run_proxy_tests);
 
-  if (gHaveSymlinks)
+  if (gHaveSymlinks) {
     add_task(run_symlink_tests);
+  }
 
   run_next_test();
 }
@@ -87,7 +88,7 @@ async function run_proxy_tests() {
     let files = ExtensionTestCommon.generateFiles({
       manifest: {
         name: addon.id,
-        applications: {gecko: {id: addon.id}},
+        applications: { gecko: { id: addon.id } },
       },
     });
     let path = OS.Path.join(gTmpD.path, addon.id);
@@ -111,17 +112,19 @@ async function run_proxy_tests() {
     for (let [i, addon] of addons.entries()) {
       // Ensure that valid proxied add-ons were installed properly on
       // platforms that support the installation method.
-      print(ADDONS[i].id,
-            ADDONS[i].dirId,
-            ADDONS[i].dirId != null,
-            ADDONS[i].type == "symlink");
-      Assert.equal(addon == null,
-                   ADDONS[i].dirId != null);
+      print(
+        ADDONS[i].id,
+        ADDONS[i].dirId,
+        ADDONS[i].dirId != null,
+        ADDONS[i].type == "symlink"
+      );
+      Assert.equal(addon == null, ADDONS[i].dirId != null);
 
       if (addon != null) {
         let fixURL = url => {
-          if (AppConstants.platform == "macosx")
+          if (AppConstants.platform == "macosx") {
             return url.replace(RegExp(`^file:///private/`), "file:///");
+          }
           return url;
         };
 
@@ -129,16 +132,20 @@ async function run_proxy_tests() {
         Assert.equal(addon.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
 
         // Check that getResourceURI points to the right place.
-        Assert.equal(Services.io.newFileURI(ADDONS[i].directory).spec,
-                     fixURL(addon.getResourceURI().spec),
-                     `Base resource URL resolves as expected`);
+        Assert.equal(
+          Services.io.newFileURI(ADDONS[i].directory).spec,
+          fixURL(addon.getResourceURI().spec),
+          `Base resource URL resolves as expected`
+        );
 
         let file = ADDONS[i].directory.clone();
         file.append("manifest.json");
 
-        Assert.equal(Services.io.newFileURI(file).spec,
-                     fixURL(addon.getResourceURI("manifest.json").spec),
-                     `Resource URLs resolve as expected`);
+        Assert.equal(
+          Services.io.newFileURI(file).spec,
+          fixURL(addon.getResourceURI("manifest.json").spec),
+          `Resource URLs resolve as expected`
+        );
 
         await addon.uninstall();
       }
@@ -153,8 +160,11 @@ async function run_proxy_tests() {
     // Check that all of the proxy files have been removed and remove
     // the original targets.
     for (let addon of ADDONS) {
-      equal(addon.proxyFile.exists(), addon.dirId != null,
-            `Proxy file ${addon.proxyFile.path} should exist?`);
+      equal(
+        addon.proxyFile.exists(),
+        addon.dirId != null,
+        `Proxy file ${addon.proxyFile.path} should exist?`
+      );
       addon.directory.remove(true);
       try {
         addon.proxyFile.remove(false);
@@ -181,7 +191,7 @@ async function run_symlink_tests() {
   addonDirectory.append(ID);
 
   let files = ExtensionTestCommon.generateFiles({
-    manifest: {applications: {gecko: {id: ID}}},
+    manifest: { applications: { gecko: { id: ID } } },
   });
   await AddonTestUtils.promiseWriteFilesToDir(addonDirectory.path, files);
 

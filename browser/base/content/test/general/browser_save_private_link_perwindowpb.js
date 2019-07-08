@@ -5,8 +5,9 @@
 function createTemporarySaveDirectory() {
   var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   saveDir.append("testsavedir");
-  if (!saveDir.exists())
+  if (!saveDir.exists()) {
     saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+  }
   return saveDir;
 }
 
@@ -19,7 +20,11 @@ function promiseNoCacheEntry(filename) {
       onCacheEntryInfo(uri) {
         let urispec = uri.asciiSpec;
         info(urispec);
-        is(urispec.includes(filename), false, "web content present in disk cache");
+        is(
+          urispec.includes(filename),
+          false,
+          "web content present in disk cache"
+        );
       },
       onCacheEntryVisitCompleted() {
         resolve();
@@ -27,7 +32,10 @@ function promiseNoCacheEntry(filename) {
     };
     function Visitor() {}
 
-    let storage = Services.cache2.diskCacheStorage(Services.loadContextInfo.default, false);
+    let storage = Services.cache2.diskCacheStorage(
+      Services.loadContextInfo.default,
+      false
+    );
     storage.asyncVisitStorage(new Visitor(), true /* Do walk entries */);
   });
 }
@@ -39,7 +47,10 @@ function promiseImageDownloaded() {
     MockFilePicker.init(window);
 
     function onTransferComplete(downloadSuccess) {
-      ok(downloadSuccess, "Image file should have been downloaded successfully " + fileName);
+      ok(
+        downloadSuccess,
+        "Image file should have been downloaded successfully " + fileName
+      );
 
       // Give the request a chance to finish and create a cache entry
       resolve(fileName);
@@ -70,17 +81,29 @@ function promiseImageDownloaded() {
 }
 
 add_task(async function() {
-  let testURI = "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.html";
-  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
-  let tab = await BrowserTestUtils.openNewForegroundTab(privateWindow.gBrowser, testURI);
+  let testURI =
+    "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.html";
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    privateWindow.gBrowser,
+    testURI
+  );
 
-  let contextMenu = privateWindow.document.getElementById("contentAreaContextMenu");
+  let contextMenu = privateWindow.document.getElementById(
+    "contentAreaContextMenu"
+  );
   let popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   let popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
-  await BrowserTestUtils.synthesizeMouseAtCenter("#img", {
-    type: "contextmenu",
-    button: 2,
-  }, tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#img",
+    {
+      type: "contextmenu",
+      button: 2,
+    },
+    tab.linkedBrowser
+  );
   await popupShown;
 
   Services.cache2.clear();
@@ -100,5 +123,7 @@ add_task(async function() {
 });
 
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
-                 this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
+  this
+);

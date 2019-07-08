@@ -17,7 +17,7 @@ module.exports = function(context) {
   // Public
   //  --------------------------------------------------------------------------
 
-  if (typeof(context.options[0]) !== "string") {
+  if (typeof context.options[0] !== "string") {
     throw new Error("reject-some-requires expects a regexp");
   }
   const RX = new RegExp(context.options[0]);
@@ -29,17 +29,21 @@ module.exports = function(context) {
   };
 
   return {
-    "CallExpression": function(node) {
-      if (node.callee.type == "Identifier" &&
-          node.callee.name == "require" &&
-          node.arguments.length == 1 &&
-          node.arguments[0].type == "Literal") {
+    CallExpression(node) {
+      if (
+        node.callee.type == "Identifier" &&
+        node.callee.name == "require" &&
+        node.arguments.length == 1 &&
+        node.arguments[0].type == "Literal"
+      ) {
         checkPath(node, node.arguments[0].value);
-      } else if (node.callee.type == "MemberExpression" &&
-                 node.callee.property.type == "Identifier" &&
-                 node.callee.property.name == "lazyRequireGetter" &&
-                 node.arguments.length >= 3 &&
-                 node.arguments[2].type == "Literal") {
+      } else if (
+        node.callee.type == "MemberExpression" &&
+        node.callee.property.type == "Identifier" &&
+        node.callee.property.name == "lazyRequireGetter" &&
+        node.arguments.length >= 3 &&
+        node.arguments[2].type == "Literal"
+      ) {
         checkPath(node, node.arguments[2].value);
       }
     },

@@ -11,12 +11,17 @@ add_task(async function() {
   const generatedStubs = await generateEvaluationResultStubs();
 
   const repoStubFilePath = getTestFilePath("../stubs/evaluationResult.js");
-  const repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
+  const repoStubFileContent = await OS.File.read(repoStubFilePath, {
+    encoding: "utf-8",
+  });
 
   if (generatedStubs != repoStubFileContent) {
-    ok(false, "The evaluationResult stubs file needs to be updated by running " +
-      "`mach test devtools/client/webconsole/test/fixtures/" +
-      "stub-generators/browser_webconsole_update_stubs_evaluation_result.js`");
+    ok(
+      false,
+      "The evaluationResult stubs file needs to be updated by running " +
+        "`mach test devtools/client/webconsole/test/fixtures/" +
+        "stub-generators/browser_webconsole_update_stubs_evaluation_result.js`"
+    );
   } else {
     ok(true, "The evaluationResult stubs file is up to date");
   }

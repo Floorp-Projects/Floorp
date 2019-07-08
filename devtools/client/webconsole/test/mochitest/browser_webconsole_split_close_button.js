@@ -3,8 +3,9 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for close button of " +
-                 "split console";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<p>Web Console test for close button of " +
+  "split console";
 
 add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
@@ -18,8 +19,10 @@ add_task(async function() {
   let closeButton = getCloseButton(toolbox);
   ok(closeButton, "The split console has close button.");
 
-  info("Check we can reopen split console after closing split console by using " +
-       "the close button");
+  info(
+    "Check we can reopen split console after closing split console by using " +
+      "the close button"
+  );
 
   let onSplitConsoleChange = toolbox.once("split-console");
   closeButton.click();
@@ -43,7 +46,10 @@ add_task(async function() {
   info("The split console has the close button if back to the inspector.");
 
   await toolbox.selectTool("inspector");
-  ok(toolbox.splitConsole, "The split console has been displayed with inspector.");
+  ok(
+    toolbox.splitConsole,
+    "The split console has been displayed with inspector."
+  );
   closeButton = getCloseButton(toolbox);
   ok(closeButton, "The split console on the inspector has the close button.");
 });

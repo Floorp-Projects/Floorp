@@ -34,7 +34,10 @@ async function endCustomizing(aWindow = window) {
   if (aWindow.document.documentElement.getAttribute("customizing") != "true") {
     return true;
   }
-  let eventPromise = BrowserTestUtils.waitForEvent(aWindow.gNavToolbox, "aftercustomization");
+  let eventPromise = BrowserTestUtils.waitForEvent(
+    aWindow.gNavToolbox,
+    "aftercustomization"
+  );
   aWindow.gCustomizeMode.exit();
   return eventPromise;
 }
@@ -43,7 +46,10 @@ async function startCustomizing(aWindow = window) {
   if (aWindow.document.documentElement.getAttribute("customizing") == "true") {
     return true;
   }
-  let eventPromise = BrowserTestUtils.waitForEvent(aWindow.gNavToolbox, "customizationready");
+  let eventPromise = BrowserTestUtils.waitForEvent(
+    aWindow.gNavToolbox,
+    "customizationready"
+  );
   aWindow.gCustomizeMode.enter();
   return eventPromise;
 }
@@ -67,18 +73,17 @@ add_task(async function init() {
   // First cleanup the form history in case other tests left things there.
   await new Promise((resolve, reject) => {
     info("cleanup the search history");
-    searchbar.FormHistory.update({op: "remove", fieldname: "searchbar-history"},
-                                 {handleCompletion: resolve,
-                                  handleError: reject});
+    searchbar.FormHistory.update(
+      { op: "remove", fieldname: "searchbar-history" },
+      { handleCompletion: resolve, handleError: reject }
+    );
   });
 
   await new Promise((resolve, reject) => {
     info("adding search history values: " + kValues);
     let addOps = kValues.map(value => {
- return {op: "add",
-                                             fieldname: "searchbar-history",
-                                             value};
-                                   });
+      return { op: "add", fieldname: "searchbar-history", value };
+    });
     searchbar.FormHistory.update(addOps, {
       handleCompletion: resolve,
       handleError: reject,
@@ -105,8 +110,9 @@ function add_no_popup_task(task) {
 
 // Simulates the full set of events for a context click
 function context_click(target) {
-  for (let event of ["mousedown", "contextmenu", "mouseup"])
+  for (let event of ["mousedown", "contextmenu", "mouseup"]) {
     EventUtils.synthesizeMouseAtCenter(target, { type: event, button: 2 });
+  }
 }
 
 // Right clicking the icon should not open the popup.
@@ -132,7 +138,11 @@ add_task(async function open_empty() {
   info("Clicking icon");
   EventUtils.synthesizeMouseAtCenter(searchIcon, {});
   await promise;
-  is(searchPopup.getAttribute("showonlysettings"), "true", "Should only show the settings");
+  is(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should only show the settings"
+  );
   is(textbox.mController.searchString, "", "Should be an empty search string");
 
   // By giving the textbox some text any next attempt to open the search popup
@@ -145,7 +155,11 @@ add_task(async function open_empty() {
   await synthesizeNativeMouseClick(searchIcon);
   await promise;
 
-  is(textbox.mController.searchString, "", "Should not have started to search for the new text");
+  is(
+    textbox.mController.searchString,
+    "",
+    "Should not have started to search for the new text"
+  );
 
   // Cancel the search if it started.
   if (textbox.mController.searchString != "") {
@@ -160,7 +174,11 @@ add_no_popup_task(function click_doesnt_open_popup() {
   gURLBar.focus();
 
   EventUtils.synthesizeMouseAtCenter(textbox, {});
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 0, "Should have selected all of the text");
 });
@@ -173,9 +191,17 @@ add_task(async function click_opens_popup() {
   let promise = promiseEvent(searchPopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(textbox, {});
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
@@ -196,7 +222,11 @@ add_no_popup_task(async function right_click_doesnt_open_popup() {
   context_click(textbox);
   await promise;
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
@@ -215,15 +245,23 @@ add_task(async function focus_change_closes_popup() {
   let promise = promiseEvent(searchPopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(textbox, {});
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
   let promise2 = promiseEvent(searchbar.textbox, "blur");
-  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   await promise;
   await promise2;
 
@@ -240,13 +278,21 @@ add_task(async function focus_change_closes_small_popup() {
     EventUtils.synthesizeMouseAtCenter(searchIcon, {});
   });
   await promise;
-  is(searchPopup.getAttribute("showonlysettings"), "true", "Should show the small popup");
+  is(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the small popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
 
   promise = promiseEvent(searchPopup, "popuphidden");
   let promise2 = promiseEvent(searchbar.textbox, "blur");
-  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   await promise;
   await promise2;
 });
@@ -259,9 +305,17 @@ add_task(async function escape_closes_popup() {
   let promise = promiseEvent(searchPopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(textbox, {});
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
@@ -280,16 +334,27 @@ add_task(async function contextmenu_closes_popup() {
   let promise = promiseEvent(searchPopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(textbox, {});
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
 
   // synthesizeKey does not work with VK_CONTEXT_MENU (bug 1127368)
-  EventUtils.synthesizeMouseAtCenter(textbox, { type: "contextmenu", button: null });
+  EventUtils.synthesizeMouseAtCenter(textbox, {
+    type: "contextmenu",
+    button: null,
+  });
 
   await promise;
 
@@ -311,9 +376,17 @@ add_task(async function tab_opens_popup() {
   EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Tab");
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
@@ -333,7 +406,11 @@ add_no_popup_task(function tab_doesnt_open_popup() {
   EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Tab");
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
@@ -348,9 +425,17 @@ add_task(async function refocus_window_doesnt_open_popup_mouse() {
   let promise = promiseEvent(searchPopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(searchbar, {});
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
@@ -387,9 +472,17 @@ add_task(async function refocus_window_doesnt_open_popup_keyboard() {
   EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Tab");
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
@@ -440,9 +533,17 @@ add_task(async function dont_consume_clicks() {
   let promise = promiseEvent(searchPopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(textbox, {});
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
@@ -450,7 +551,11 @@ add_task(async function dont_consume_clicks() {
   await synthesizeNativeMouseClick(gURLBar.inputField);
   await promise;
 
-  is(Services.focus.focusedElement, gURLBar.inputField, "Should have focused the URL bar");
+  is(
+    Services.focus.focusedElement,
+    gURLBar.inputField,
+    "Should have focused the URL bar"
+  );
 
   textbox.value = "";
 });
@@ -461,7 +566,10 @@ add_task(async function drop_opens_popup() {
   // can be interpreted as being selection drags by the drag manager, which
   // breaks the drag synthesis from EventUtils.js below. To avoid this, focus
   // the browser content instead.
-  let focusEventPromise = BrowserTestUtils.waitForEvent(gBrowser.selectedBrowser, "focus");
+  let focusEventPromise = BrowserTestUtils.waitForEvent(
+    gBrowser.selectedBrowser,
+    "focus"
+  );
   gBrowser.selectedBrowser.focus();
   await focusEventPromise;
 
@@ -469,11 +577,25 @@ add_task(async function drop_opens_popup() {
   // Use a source for the drop that is outside of the search bar area, to avoid
   // it receiving a mousedown and causing the popup to sometimes open.
   let homeButton = document.getElementById("home-button");
-  EventUtils.synthesizeDrop(homeButton, textbox.inputField, [[ {type: "text/plain", data: "foo" } ]], "move", window);
+  EventUtils.synthesizeDrop(
+    homeButton,
+    textbox.inputField,
+    [[{ type: "text/plain", data: "foo" }]],
+    "move",
+    window
+  );
   await promise;
 
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
-  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
+  is(
+    Services.focus.focusedElement,
+    textbox.inputField,
+    "Should have focused the search bar"
+  );
   promise = promiseEvent(searchPopup, "popuphidden");
   searchPopup.hidePopup();
   await promise;
@@ -492,46 +614,110 @@ add_task(async function dont_rollup_oncaretmove() {
 
   // Deselect the text
   EventUtils.synthesizeKey("KEY_ArrowRight");
-  is(textbox.selectionStart, 9, "Should have moved the caret (selectionStart after deselect right)");
-  is(textbox.selectionEnd, 9, "Should have moved the caret (selectionEnd after deselect right)");
+  is(
+    textbox.selectionStart,
+    9,
+    "Should have moved the caret (selectionStart after deselect right)"
+  );
+  is(
+    textbox.selectionEnd,
+    9,
+    "Should have moved the caret (selectionEnd after deselect right)"
+  );
   is(searchPopup.state, "open", "Popup should still be open");
 
   EventUtils.synthesizeKey("KEY_ArrowLeft");
-  is(textbox.selectionStart, 8, "Should have moved the caret (selectionStart after left)");
-  is(textbox.selectionEnd, 8, "Should have moved the caret (selectionEnd after left)");
+  is(
+    textbox.selectionStart,
+    8,
+    "Should have moved the caret (selectionStart after left)"
+  );
+  is(
+    textbox.selectionEnd,
+    8,
+    "Should have moved the caret (selectionEnd after left)"
+  );
   is(searchPopup.state, "open", "Popup should still be open");
 
   EventUtils.synthesizeKey("KEY_ArrowRight");
-  is(textbox.selectionStart, 9, "Should have moved the caret (selectionStart after right)");
-  is(textbox.selectionEnd, 9, "Should have moved the caret (selectionEnd after right)");
+  is(
+    textbox.selectionStart,
+    9,
+    "Should have moved the caret (selectionStart after right)"
+  );
+  is(
+    textbox.selectionEnd,
+    9,
+    "Should have moved the caret (selectionEnd after right)"
+  );
   is(searchPopup.state, "open", "Popup should still be open");
 
   // Ensure caret movement works while a suggestion is selected.
   is(textbox.popup.selectedIndex, -1, "No selected item in list");
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(textbox.popup.selectedIndex, 0, "Selected item in list");
-  is(textbox.selectionStart, 9, "Should have moved the caret to the end (selectionStart after selection)");
-  is(textbox.selectionEnd, 9, "Should have moved the caret to the end (selectionEnd after selection)");
+  is(
+    textbox.selectionStart,
+    9,
+    "Should have moved the caret to the end (selectionStart after selection)"
+  );
+  is(
+    textbox.selectionEnd,
+    9,
+    "Should have moved the caret to the end (selectionEnd after selection)"
+  );
 
   EventUtils.synthesizeKey("KEY_ArrowLeft");
-  is(textbox.selectionStart, 8, "Should have moved the caret again (selectionStart after left)");
-  is(textbox.selectionEnd, 8, "Should have moved the caret again (selectionEnd after left)");
+  is(
+    textbox.selectionStart,
+    8,
+    "Should have moved the caret again (selectionStart after left)"
+  );
+  is(
+    textbox.selectionEnd,
+    8,
+    "Should have moved the caret again (selectionEnd after left)"
+  );
   is(searchPopup.state, "open", "Popup should still be open");
 
   EventUtils.synthesizeKey("KEY_ArrowLeft");
-  is(textbox.selectionStart, 7, "Should have moved the caret (selectionStart after left)");
-  is(textbox.selectionEnd, 7, "Should have moved the caret (selectionEnd after left)");
+  is(
+    textbox.selectionStart,
+    7,
+    "Should have moved the caret (selectionStart after left)"
+  );
+  is(
+    textbox.selectionEnd,
+    7,
+    "Should have moved the caret (selectionEnd after left)"
+  );
   is(searchPopup.state, "open", "Popup should still be open");
 
   EventUtils.synthesizeKey("KEY_ArrowRight");
-  is(textbox.selectionStart, 8, "Should have moved the caret (selectionStart after right)");
-  is(textbox.selectionEnd, 8, "Should have moved the caret (selectionEnd after right)");
+  is(
+    textbox.selectionStart,
+    8,
+    "Should have moved the caret (selectionStart after right)"
+  );
+  is(
+    textbox.selectionEnd,
+    8,
+    "Should have moved the caret (selectionEnd after right)"
+  );
   is(searchPopup.state, "open", "Popup should still be open");
 
   if (!navigator.platform.includes("Mac")) {
     EventUtils.synthesizeKey("KEY_Home");
-    is(textbox.selectionStart, 0, "Should have moved the caret (selectionStart after home)");
-    is(textbox.selectionEnd, 0, "Should have moved the caret (selectionEnd after home)");
+    is(
+      textbox.selectionStart,
+      0,
+      "Should have moved the caret (selectionStart after home)"
+    );
+    is(
+      textbox.selectionEnd,
+      0,
+      "Should have moved the caret (selectionEnd after home)"
+    );
     is(searchPopup.state, "open", "Popup should still be open");
   }
 
@@ -553,7 +739,11 @@ add_task(async function dont_open_in_customization() {
   EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Tab");
   await promise;
-  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  isnot(
+    searchPopup.getAttribute("showonlysettings"),
+    "true",
+    "Should show the full popup"
+  );
 
   info("Entering customization mode");
   let sawPopup = false;
@@ -562,7 +752,7 @@ add_task(async function dont_open_in_customization() {
   }
   searchPopup.addEventListener("popupshowing", listener);
   await gCUITestUtils.openMainMenu();
-  promise =  promiseEvent(searchPopup, "popuphidden");
+  promise = promiseEvent(searchPopup, "popuphidden");
   await startCustomizing();
   await promise;
 
@@ -576,7 +766,7 @@ add_task(async function dont_open_in_customization() {
 add_task(async function cleanup() {
   info("removing search history values: " + kValues);
   let removeOps = kValues.map(value => {
-    return {op: "remove", fieldname: "searchbar-history", value};
+    return { op: "remove", fieldname: "searchbar-history", value };
   });
   searchbar.FormHistory.update(removeOps);
 });

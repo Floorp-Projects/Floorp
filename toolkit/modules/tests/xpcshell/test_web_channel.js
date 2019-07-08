@@ -3,9 +3,12 @@
 
 "use strict";
 
-const {WebChannel} = ChromeUtils.import("resource://gre/modules/WebChannel.jsm");
+const { WebChannel } = ChromeUtils.import(
+  "resource://gre/modules/WebChannel.jsm"
+);
 
-const ERROR_ID_ORIGIN_REQUIRED = "WebChannel id and originOrPermission are required.";
+const ERROR_ID_ORIGIN_REQUIRED =
+  "WebChannel id and originOrPermission are required.";
 const VALID_WEB_CHANNEL_ID = "id";
 const URL_STRING = "http://example.com";
 const VALID_WEB_CHANNEL_ORIGIN = Services.io.newURI(URL_STRING);
@@ -32,12 +35,19 @@ var MockWebChannelBroker = {
  */
 add_task(function test_web_channel_listen() {
   return new Promise((resolve, reject) => {
-    let channel = new WebChannel(VALID_WEB_CHANNEL_ID, VALID_WEB_CHANNEL_ORIGIN, {
-      broker: MockWebChannelBroker,
-    });
+    let channel = new WebChannel(
+      VALID_WEB_CHANNEL_ID,
+      VALID_WEB_CHANNEL_ORIGIN,
+      {
+        broker: MockWebChannelBroker,
+      }
+    );
     let delivered = 0;
     Assert.equal(channel.id, VALID_WEB_CHANNEL_ID);
-    Assert.equal(channel._originOrPermission.spec, VALID_WEB_CHANNEL_ORIGIN.spec);
+    Assert.equal(
+      channel._originOrPermission.spec,
+      VALID_WEB_CHANNEL_ORIGIN.spec
+    );
     Assert.equal(channel._deliverCallback, null);
 
     channel.listen(function(id, message, target) {
@@ -55,19 +65,25 @@ add_task(function test_web_channel_listen() {
     });
 
     // send two messages
-    channel.deliver({
-      id: VALID_WEB_CHANNEL_ID,
-      message: {
-        command: "one",
+    channel.deliver(
+      {
+        id: VALID_WEB_CHANNEL_ID,
+        message: {
+          command: "one",
+        },
       },
-    }, { sender: true });
+      { sender: true }
+    );
 
-    channel.deliver({
-      id: VALID_WEB_CHANNEL_ID,
-      message: {
-        command: "two",
+    channel.deliver(
+      {
+        id: VALID_WEB_CHANNEL_ID,
+        message: {
+          command: "two",
+        },
       },
-    }, { sender: true });
+      { sender: true }
+    );
   });
 });
 
@@ -77,8 +93,14 @@ add_task(function test_web_channel_listen() {
 add_task(function test_web_channel_listen_permission() {
   return new Promise((resolve, reject) => {
     // add a new permission
-    Services.perms.add(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME, Services.perms.ALLOW_ACTION);
-    registerCleanupFunction(() => Services.perms.remove(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME));
+    Services.perms.add(
+      VALID_WEB_CHANNEL_ORIGIN,
+      TEST_PERMISSION_NAME,
+      Services.perms.ALLOW_ACTION
+    );
+    registerCleanupFunction(() =>
+      Services.perms.remove(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME)
+    );
     let channel = new WebChannel(VALID_WEB_CHANNEL_ID, TEST_PERMISSION_NAME, {
       broker: MockWebChannelBroker,
     });
@@ -102,22 +124,27 @@ add_task(function test_web_channel_listen_permission() {
     });
 
     // send two messages
-    channel.deliver({
-      id: VALID_WEB_CHANNEL_ID,
-      message: {
-        command: "one",
+    channel.deliver(
+      {
+        id: VALID_WEB_CHANNEL_ID,
+        message: {
+          command: "one",
+        },
       },
-    }, { sender: true });
+      { sender: true }
+    );
 
-    channel.deliver({
-      id: VALID_WEB_CHANNEL_ID,
-      message: {
-        command: "two",
+    channel.deliver(
+      {
+        id: VALID_WEB_CHANNEL_ID,
+        message: {
+          command: "two",
+        },
       },
-    }, { sender: true });
+      { sender: true }
+    );
   });
 });
-
 
 /**
  * Test constructor
@@ -125,8 +152,14 @@ add_task(function test_web_channel_listen_permission() {
 add_test(function test_web_channel_constructor() {
   Assert.equal(constructorTester(), ERROR_ID_ORIGIN_REQUIRED);
   Assert.equal(constructorTester(undefined), ERROR_ID_ORIGIN_REQUIRED);
-  Assert.equal(constructorTester(undefined, VALID_WEB_CHANNEL_ORIGIN), ERROR_ID_ORIGIN_REQUIRED);
-  Assert.equal(constructorTester(VALID_WEB_CHANNEL_ID, undefined), ERROR_ID_ORIGIN_REQUIRED);
+  Assert.equal(
+    constructorTester(undefined, VALID_WEB_CHANNEL_ORIGIN),
+    ERROR_ID_ORIGIN_REQUIRED
+  );
+  Assert.equal(
+    constructorTester(VALID_WEB_CHANNEL_ID, undefined),
+    ERROR_ID_ORIGIN_REQUIRED
+  );
   Assert.ok(!constructorTester(VALID_WEB_CHANNEL_ID, VALID_WEB_CHANNEL_ORIGIN));
 
   run_next_test();

@@ -9,11 +9,17 @@ var tmp = {};
 ChromeUtils.import("resource://gre/modules/Promise.jsm", tmp);
 ChromeUtils.import("resource:///modules/CustomizableUI.jsm", tmp);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", tmp);
-ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", tmp);
-var {Promise, CustomizableUI, AppConstants, CustomizableUITestUtils} = tmp;
+ChromeUtils.import(
+  "resource://testing-common/CustomizableUITestUtils.jsm",
+  tmp
+);
+var { Promise, CustomizableUI, AppConstants, CustomizableUITestUtils } = tmp;
 
 var EventUtils = {};
-Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+Services.scriptloader.loadSubScript(
+  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+  EventUtils
+);
 
 /**
  * Instance of CustomizableUITestUtils for the current browser window.
@@ -21,9 +27,15 @@ Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/
 var gCUITestUtils = new CustomizableUITestUtils(window);
 
 Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
-registerCleanupFunction(() => Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck"));
+registerCleanupFunction(() =>
+  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck")
+);
 
-var {synthesizeDragStart, synthesizeDrop, synthesizeMouseAtCenter} = EventUtils;
+var {
+  synthesizeDragStart,
+  synthesizeDrop,
+  synthesizeMouseAtCenter,
+} = EventUtils;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -102,8 +114,9 @@ function removeCustomToolbars() {
     let tb = document.getElementById(toolbarId);
     if (tb.hasAttribute("overflowpanel")) {
       let panel = document.getElementById(tb.getAttribute("overflowpanel"));
-      if (panel)
+      if (panel) {
         panel.remove();
+      }
     }
     tb.remove();
   }
@@ -120,7 +133,10 @@ function isInDevEdition() {
 
 function removeNonReleaseButtons(areaPanelPlacements) {
   if (isInDevEdition() && areaPanelPlacements.includes("developer-button")) {
-    areaPanelPlacements.splice(areaPanelPlacements.indexOf("developer-button"), 1);
+    areaPanelPlacements.splice(
+      areaPanelPlacements.indexOf("developer-button"),
+      1
+    );
   }
 }
 
@@ -136,20 +152,37 @@ function assertAreaPlacements(areaId, expectedPlacements) {
 function placementArraysEqual(areaId, actualPlacements, expectedPlacements) {
   info("Actual placements: " + actualPlacements.join(", "));
   info("Expected placements: " + expectedPlacements.join(", "));
-  is(actualPlacements.length, expectedPlacements.length,
-     "Area " + areaId + " should have " + expectedPlacements.length + " items.");
+  is(
+    actualPlacements.length,
+    expectedPlacements.length,
+    "Area " + areaId + " should have " + expectedPlacements.length + " items."
+  );
   let minItems = Math.min(expectedPlacements.length, actualPlacements.length);
   for (let i = 0; i < minItems; i++) {
     if (typeof expectedPlacements[i] == "string") {
-      is(actualPlacements[i], expectedPlacements[i],
-         "Item " + i + " in " + areaId + " should match expectations.");
+      is(
+        actualPlacements[i],
+        expectedPlacements[i],
+        "Item " + i + " in " + areaId + " should match expectations."
+      );
     } else if (expectedPlacements[i] instanceof RegExp) {
-      ok(expectedPlacements[i].test(actualPlacements[i]),
-         "Item " + i + " (" + actualPlacements[i] + ") in " +
-         areaId + " should match " + expectedPlacements[i]);
+      ok(
+        expectedPlacements[i].test(actualPlacements[i]),
+        "Item " +
+          i +
+          " (" +
+          actualPlacements[i] +
+          ") in " +
+          areaId +
+          " should match " +
+          expectedPlacements[i]
+      );
     } else {
-      ok(false, "Unknown type of expected placement passed to " +
-                " assertAreaPlacements. Is your test broken?");
+      ok(
+        false,
+        "Unknown type of expected placement passed to " +
+          " assertAreaPlacements. Is your test broken?"
+      );
     }
   }
 }
@@ -164,12 +197,19 @@ function todoAssertAreaPlacements(areaId, expectedPlacements) {
     } else if (expectedPlacements[i] instanceof RegExp) {
       isPassing = isPassing && expectedPlacements[i].test(actualPlacements[i]);
     } else {
-      ok(false, "Unknown type of expected placement passed to " +
-                " assertAreaPlacements. Is your test broken?");
+      ok(
+        false,
+        "Unknown type of expected placement passed to " +
+          " assertAreaPlacements. Is your test broken?"
+      );
     }
   }
-  todo(isPassing, "The area placements for " + areaId +
-                  " should equal the expected placements.");
+  todo(
+    isPassing,
+    "The area placements for " +
+      areaId +
+      " should equal the expected placements."
+  );
 }
 
 function getAreaWidgetIds(areaId) {
@@ -183,14 +223,21 @@ function simulateItemDrag(aToDrag, aTarget, aEvent = {}) {
     const dwu = win.windowUtils;
     let bounds = dwu.getBoundsWithoutFlushing(aTarget);
     if (ev == "end") {
-      ev = {clientX: bounds.right - 2, clientY: bounds.bottom - 2};
+      ev = { clientX: bounds.right - 2, clientY: bounds.bottom - 2 };
     } else {
-      ev = {clientX: bounds.left + 2, clientY: bounds.top + 2};
+      ev = { clientX: bounds.left + 2, clientY: bounds.top + 2 };
     }
   }
   ev._domDispatchOnly = true;
-  synthesizeDrop(aToDrag.parentNode, aTarget, null, null,
-                 aToDrag.ownerGlobal, aTarget.ownerGlobal, ev);
+  synthesizeDrop(
+    aToDrag.parentNode,
+    aTarget,
+    null,
+    null,
+    aToDrag.ownerGlobal,
+    aTarget.ownerGlobal,
+    ev
+  );
   // Ensure dnd suppression is cleared.
   synthesizeMouseAtCenter(aTarget, { type: "mouseup" }, aTarget.ownerGlobal);
 }
@@ -201,10 +248,16 @@ function endCustomizing(aWindow = window) {
   }
   return new Promise(resolve => {
     function onCustomizationEnds() {
-      aWindow.gNavToolbox.removeEventListener("aftercustomization", onCustomizationEnds);
+      aWindow.gNavToolbox.removeEventListener(
+        "aftercustomization",
+        onCustomizationEnds
+      );
       resolve();
     }
-    aWindow.gNavToolbox.addEventListener("aftercustomization", onCustomizationEnds);
+    aWindow.gNavToolbox.addEventListener(
+      "aftercustomization",
+      onCustomizationEnds
+    );
     aWindow.gCustomizeMode.exit();
   });
 }
@@ -215,7 +268,10 @@ function startCustomizing(aWindow = window) {
   }
   return new Promise(resolve => {
     function onCustomizing() {
-      aWindow.gNavToolbox.removeEventListener("customizationready", onCustomizing);
+      aWindow.gNavToolbox.removeEventListener(
+        "customizationready",
+        onCustomizing
+      );
       resolve();
     }
     aWindow.gNavToolbox.addEventListener("customizationready", onCustomizing);
@@ -227,8 +283,8 @@ function promiseObserverNotified(aTopic) {
   return new Promise(resolve => {
     Services.obs.addObserver(function onNotification(subject, topic, data) {
       Services.obs.removeObserver(onNotification, topic);
-        resolve({subject, data});
-      }, aTopic);
+      resolve({ subject, data });
+    }, aTopic);
   });
 }
 
@@ -244,18 +300,26 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
         resolve(win);
       }, "browser-delayed-startup-finished");
     } else {
-      win.addEventListener("load", function() {
-        resolve(win);
-      }, {once: true});
+      win.addEventListener(
+        "load",
+        function() {
+          resolve(win);
+        },
+        { once: true }
+      );
     }
   });
 }
 
 function promiseWindowClosed(win) {
   return new Promise(resolve => {
-    win.addEventListener("unload", function() {
-      resolve();
-    }, {once: true});
+    win.addEventListener(
+      "unload",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
     win.close();
   });
 }
@@ -389,20 +453,33 @@ function promiseTabLoadEvent(aTab, aURL) {
 function promiseAttributeMutation(aNode, aAttribute, aFilterFn) {
   return new Promise((resolve, reject) => {
     info("waiting for mutation of attribute '" + aAttribute + "'.");
-    let obs = new MutationObserver((mutations) => {
+    let obs = new MutationObserver(mutations => {
       for (let mut of mutations) {
         let attr = mut.attributeName;
         let newValue = mut.target.getAttribute(attr);
         if (aFilterFn(newValue)) {
-          ok(true, "mutation occurred: attribute '" + attr + "' changed to '" + newValue + "' from '" + mut.oldValue + "'.");
+          ok(
+            true,
+            "mutation occurred: attribute '" +
+              attr +
+              "' changed to '" +
+              newValue +
+              "' from '" +
+              mut.oldValue +
+              "'."
+          );
           obs.disconnect();
           resolve();
         } else {
-          info("Ignoring mutation that produced value " + newValue + " because of filter.");
+          info(
+            "Ignoring mutation that produced value " +
+              newValue +
+              " because of filter."
+          );
         }
       }
     });
-    obs.observe(aNode, {attributeFilter: [aAttribute]});
+    obs.observe(aNode, { attributeFilter: [aAttribute] });
   });
 }
 
@@ -419,7 +496,7 @@ function popupHidden(aPopup) {
 function checkContextMenu(aContextMenu, aExpectedEntries, aWindow = window) {
   let children = [...aContextMenu.children];
   // Ignore hidden nodes:
-  children = children.filter((n) => !n.hidden);
+  children = children.filter(n => !n.hidden);
 
   for (let i = 0; i < children.length; i++) {
     let menuitem = children[i];
@@ -430,13 +507,22 @@ function checkContextMenu(aContextMenu, aExpectedEntries, aWindow = window) {
       }
 
       let selector = aExpectedEntries[i][0];
-      ok(menuitem.matches(selector), "menuitem should match " + selector + " selector");
+      ok(
+        menuitem.matches(selector),
+        "menuitem should match " + selector + " selector"
+      );
       let commandValue = menuitem.getAttribute("command");
-      let relatedCommand = commandValue ? aWindow.document.getElementById(commandValue) : null;
-      let menuItemDisabled = relatedCommand ?
-                               relatedCommand.getAttribute("disabled") == "true" :
-                               menuitem.getAttribute("disabled") == "true";
-      is(menuItemDisabled, !aExpectedEntries[i][1], "disabled state for " + selector);
+      let relatedCommand = commandValue
+        ? aWindow.document.getElementById(commandValue)
+        : null;
+      let menuItemDisabled = relatedCommand
+        ? relatedCommand.getAttribute("disabled") == "true"
+        : menuitem.getAttribute("disabled") == "true";
+      is(
+        menuItemDisabled,
+        !aExpectedEntries[i][1],
+        "disabled state for " + selector
+      );
     } catch (e) {
       ok(false, "Exception when checking context menu: " + e);
     }

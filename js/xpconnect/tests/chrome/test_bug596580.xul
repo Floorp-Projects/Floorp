@@ -14,36 +14,38 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-    SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-                                        true]]});
+    SimpleTest.waitForExplicitFinish();
+
     function init() {
       var f = new Function("let test = 'let is ok'; return test;");
       is(f(), 'let is ok', 'let should be ok');
       SimpleTest.finish();
     }
 
-    Test = {
-      include: function(p) {
-	var sawError = false;
-	try {
-	  Cc["@mozilla.org/moz/jssubscript-loader;1"].
-	    getService(Ci["mozIJSSubScriptLoader"]).
-	    loadSubScript(p);
-	} catch (e) {
-	  sawError = true;
-	}
-	ok(sawError, 'should receive an error loading a not-found file');
-      }
-    };
+    (async () => {
+      await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                               true]]});
+      Test = {
+        include: function(p) {
+          var sawError = false;
+          try {
+            Cc["@mozilla.org/moz/jssubscript-loader;1"].
+              getService(Ci["mozIJSSubScriptLoader"]).
+              loadSubScript(p);
+          } catch (e) {
+            sawError = true;
+          }
+          ok(sawError, 'should receive an error loading a not-found file');
+        }
+      };
 
-    // If the include method is defined as a global function, it works.
-    // try to load a non existing file to produce the error
-    Test.include("notfound.js");
+      // If the include method is defined as a global function, it works.
+      // try to load a non existing file to produce the error
+      Test.include("notfound.js");
 
-    // If init is called directly, it works.
-    setTimeout('init();', 0);
-
-    SimpleTest.waitForExplicitFinish();
+      // If init is called directly, it works.
+      setTimeout('init();', 0);
+    })();
 
   ]]></script>
 </window>

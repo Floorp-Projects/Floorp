@@ -3,15 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test_searchEngine() {
-  await Services.search.addEngineWithDetails("SearchEngine",
-    {method: "GET", template: "http://s.example.com/search"});
+  await Services.search.addEngineWithDetails("SearchEngine", {
+    method: "GET",
+    template: "http://s.example.com/search",
+  });
   let engine = Services.search.getEngineByName("SearchEngine");
   engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   let uri1 = NetUtil.newURI("http://s.example.com/search?q=Terms&client=1");
   let uri2 = NetUtil.newURI("http://s.example.com/search?q=Terms&client=2");
-  await PlacesTestUtils.addVisits({ uri: uri1, title: "Terms - SearchEngine Search" });
+  await PlacesTestUtils.addVisits({
+    uri: uri1,
+    title: "Terms - SearchEngine Search",
+  });
   await addBookmark({ uri: uri2, title: "Terms - SearchEngine Search" });
 
   info("Past search terms should be styled, unless bookmarked");
@@ -35,8 +40,10 @@ add_task(async function test_searchEngine() {
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", false);
   await check_autocomplete({
     search: "term",
-    matches: [ { uri: uri1, title: "Terms - SearchEngine Search" },
-               { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] } ],
+    matches: [
+      { uri: uri1, title: "Terms - SearchEngine Search" },
+      { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] },
+    ],
   });
 
   await cleanup();

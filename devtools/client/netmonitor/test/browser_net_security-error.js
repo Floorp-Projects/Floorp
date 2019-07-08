@@ -26,8 +26,10 @@ add_task(async function() {
   store.dispatch(Actions.toggleNetworkDetails());
 
   await waitUntil(() => document.querySelector("#security-tab"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#security-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#security-tab")
+  );
   await securityInfoLoaded;
 
   const errormsg = document.querySelector(".security-info-value");

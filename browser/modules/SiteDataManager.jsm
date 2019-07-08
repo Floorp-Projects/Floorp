@@ -1,25 +1,30 @@
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = [
-  "SiteDataManager",
-];
+var EXPORTED_SYMBOLS = ["SiteDataManager"];
 
 XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
-  return Services.strings.createBundle("chrome://browser/locale/siteData.properties");
+  return Services.strings.createBundle(
+    "chrome://browser/locale/siteData.properties"
+  );
 });
 
 XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
-  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
+  return Services.strings.createBundle(
+    "chrome://branding/locale/brand.properties"
+  );
 });
 
 var SiteDataManager = {
-
   _qms: Services.qms,
 
-  _appCache: Cc["@mozilla.org/network/application-cache-service;1"].getService(Ci.nsIApplicationCacheService),
+  _appCache: Cc["@mozilla.org/network/application-cache-service;1"].getService(
+    Ci.nsIApplicationCacheService
+  ),
 
   // A Map of sites and their disk usage according to Quota Manager and appcache
   // Key is host (group sites based on host across scheme, port, origin atttributes).
@@ -54,8 +59,10 @@ var SiteDataManager = {
     try {
       result = Services.eTLD.getBaseDomainFromHost(host);
     } catch (e) {
-      if (e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
-          e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+      if (
+        e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
+        e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
+      ) {
         // For these 2 expected errors, just take the host as the result.
         // - NS_ERROR_HOST_IS_IP_ADDRESS: the host is in ipv4/ipv6.
         // - NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS: not enough domain parts to extract.
@@ -135,8 +142,9 @@ var SiteDataManager = {
               // An non-persistent-storage site with 0 byte quota usage is redundant for us so skip it.
               continue;
             }
-            let principal =
-              Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+            let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+              item.origin
+            );
             let uri = principal.URI;
             if (uri.scheme == "http" || uri.scheme == "https") {
               let site = this._getOrInsertSite(uri.host);
@@ -204,7 +212,9 @@ var SiteDataManager = {
         // A site with 0 byte appcache usage is redundant for us so skip it.
         continue;
       }
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(group);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        group
+      );
       let uri = principal.URI;
       let site = this._getOrInsertSite(uri.host);
       if (!site.principals.some(p => p.origin == principal.origin)) {
@@ -295,13 +305,22 @@ var SiteDataManager = {
         continue;
       }
       removals.add(originNoSuffix);
-      promises.push(new Promise(resolve => {
-        // We are clearing *All* across OAs so need to ensure a principal without suffix here,
-        // or the call of `clearStoragesForPrincipal` would fail.
-        principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(originNoSuffix);
-        let request = this._qms.clearStoragesForPrincipal(principal, null, null, true);
-        request.callback = resolve;
-      }));
+      promises.push(
+        new Promise(resolve => {
+          // We are clearing *All* across OAs so need to ensure a principal without suffix here,
+          // or the call of `clearStoragesForPrincipal` would fail.
+          principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+            originNoSuffix
+          );
+          let request = this._qms.clearStoragesForPrincipal(
+            principal,
+            null,
+            null,
+            true
+          );
+          request.callback = resolve;
+        })
+      );
     }
     return Promise.all(promises);
   },
@@ -315,7 +334,12 @@ var SiteDataManager = {
   _removeCookies(site) {
     for (let cookie of site.cookies) {
       Services.cookies.remove(
-        cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
+        cookie.host,
+        cookie.name,
+        cookie.path,
+        false,
+        cookie.originAttributes
+      );
     }
     site.cookies = [];
   },
@@ -328,8 +352,10 @@ var SiteDataManager = {
 
     while (enumerator.hasMoreElements()) {
       let permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-      if (permission.type == "persistent-storage" ||
-          permission.type == "storage-access") {
+      if (
+        permission.type == "persistent-storage" ||
+        permission.type == "storage-access"
+      ) {
         perms.push(permission);
       }
     }
@@ -348,15 +374,21 @@ var SiteDataManager = {
     let perms = this._getDeletablePermissions();
     let promises = [];
     for (let host of hosts) {
-      promises.push(new Promise(function(resolve) {
-        Services.clearData.deleteDataFromHost(host, true,
-          Ci.nsIClearDataService.CLEAR_COOKIES |
-          Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-          Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-          Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
-          Ci.nsIClearDataService.CLEAR_EME |
-          Ci.nsIClearDataService.CLEAR_ALL_CACHES, resolve);
-      }));
+      promises.push(
+        new Promise(function(resolve) {
+          Services.clearData.deleteDataFromHost(
+            host,
+            true,
+            Ci.nsIClearDataService.CLEAR_COOKIES |
+              Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+              Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+              Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
+              Ci.nsIClearDataService.CLEAR_EME |
+              Ci.nsIClearDataService.CLEAR_ALL_CACHES,
+            resolve
+          );
+        })
+      );
 
       for (let perm of perms) {
         if (Services.eTLD.hasRootDomain(perm.principal.URI.host, host)) {
@@ -386,7 +418,12 @@ var SiteDataManager = {
         allowed: false,
       };
       let features = "centerscreen,chrome,modal,resizable=no";
-      win.openDialog("chrome://browser/content/preferences/siteDataRemoveSelected.xul", "", features, args);
+      win.openDialog(
+        "chrome://browser/content/preferences/siteDataRemoveSelected.xul",
+        "",
+        features,
+        args
+      );
       return args.allowed;
     }
 
@@ -396,11 +433,22 @@ var SiteDataManager = {
       Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
       Services.prompt.BUTTON_POS_0_DEFAULT;
     let title = gStringBundle.GetStringFromName("clearSiteDataPromptTitle");
-    let text = gStringBundle.formatStringFromName("clearSiteDataPromptText", [brandName]);
+    let text = gStringBundle.formatStringFromName("clearSiteDataPromptText", [
+      brandName,
+    ]);
     let btn0Label = gStringBundle.GetStringFromName("clearSiteDataNow");
 
     let result = Services.prompt.confirmEx(
-      win, title, text, flags, btn0Label, null, null, null, {});
+      win,
+      title,
+      text,
+      flags,
+      btn0Label,
+      null,
+      null,
+      null,
+      {}
+    );
     return result == 0;
   },
 
@@ -421,7 +469,10 @@ var SiteDataManager = {
    */
   removeCache() {
     return new Promise(function(resolve) {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL_CACHES, resolve);
+      Services.clearData.deleteData(
+        Ci.nsIClearDataService.CLEAR_ALL_CACHES,
+        resolve
+      );
     });
   },
 
@@ -435,10 +486,12 @@ var SiteDataManager = {
     await new Promise(function(resolve) {
       Services.clearData.deleteData(
         Ci.nsIClearDataService.CLEAR_COOKIES |
-        Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-        Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-        Ci.nsIClearDataService.CLEAR_EME |
-        Ci.nsIClearDataService.CLEAR_PLUGIN_DATA, resolve);
+          Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+          Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+          Ci.nsIClearDataService.CLEAR_EME |
+          Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
+        resolve
+      );
     });
 
     for (let permission of this._getDeletablePermissions()) {

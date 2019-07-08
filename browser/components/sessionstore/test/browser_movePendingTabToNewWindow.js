@@ -16,27 +16,33 @@ add_task(async function test_movePendingTabToNewWindow() {
   ];
 
   await SpecialPowers.pushPrefEnv({
-    "set": [
+    set: [
       ["browser.sessionstore.restore_on_demand", true],
       ["toolkit.cosmeticAnimations.enabled", false],
     ],
   });
 
   let state = {
-    windows: [{
-      tabs: [
-        { entries: [{ url: TEST_URIS[0], triggeringPrincipal_base64 }] },
-        { entries: [{ url: TEST_URIS[1], triggeringPrincipal_base64 }] },
-        { entries: [{ url: TEST_URIS[2], triggeringPrincipal_base64 }] },
-        { entries: [{ url: TEST_URIS[3], triggeringPrincipal_base64 }] },
-      ],
-      selected: 4,
-    }],
+    windows: [
+      {
+        tabs: [
+          { entries: [{ url: TEST_URIS[0], triggeringPrincipal_base64 }] },
+          { entries: [{ url: TEST_URIS[1], triggeringPrincipal_base64 }] },
+          { entries: [{ url: TEST_URIS[2], triggeringPrincipal_base64 }] },
+          { entries: [{ url: TEST_URIS[3], triggeringPrincipal_base64 }] },
+        ],
+        selected: 4,
+      },
+    ],
   };
 
   await promiseBrowserState(state);
 
-  is(gBrowser.visibleTabs.length, 4, "Three tabs are visible to start the test");
+  is(
+    gBrowser.visibleTabs.length,
+    4,
+    "Three tabs are visible to start the test"
+  );
 
   let tabToSelect = gBrowser.visibleTabs[1];
   ok(tabToSelect.hasAttribute("pending"), "Tab should be pending");
@@ -56,31 +62,65 @@ add_task(async function test_movePendingTabToNewWindow() {
 
   let newWindowTabs = newWindow.gBrowser.visibleTabs;
   await TestUtils.waitForCondition(() => {
-    return newWindowTabs.length == 3 &&
-           newWindowTabs[0].linkedBrowser.currentURI.spec == TEST_URIS[1] &&
-           newWindowTabs[1].linkedBrowser.currentURI.spec == TEST_URIS[2] &&
-           newWindowTabs[2].linkedBrowser.currentURI.spec == TEST_URIS[3];
+    return (
+      newWindowTabs.length == 3 &&
+      newWindowTabs[0].linkedBrowser.currentURI.spec == TEST_URIS[1] &&
+      newWindowTabs[1].linkedBrowser.currentURI.spec == TEST_URIS[2] &&
+      newWindowTabs[2].linkedBrowser.currentURI.spec == TEST_URIS[3]
+    );
   }, "Wait for all three tabs to move to new window and load");
 
   is(newWindowTabs.length, 3, "Three tabs should be in new window");
-  is(newWindowTabs[0].linkedBrowser.currentURI.spec, TEST_URIS[1], "Second tab moved");
-  is(newWindowTabs[1].linkedBrowser.currentURI.spec, TEST_URIS[2], "Third tab moved");
-  is(newWindowTabs[2].linkedBrowser.currentURI.spec, TEST_URIS[3], "Fourth tab moved");
+  is(
+    newWindowTabs[0].linkedBrowser.currentURI.spec,
+    TEST_URIS[1],
+    "Second tab moved"
+  );
+  is(
+    newWindowTabs[1].linkedBrowser.currentURI.spec,
+    TEST_URIS[2],
+    "Third tab moved"
+  );
+  is(
+    newWindowTabs[2].linkedBrowser.currentURI.spec,
+    TEST_URIS[3],
+    "Fourth tab moved"
+  );
 
-  ok(newWindowTabs[0].hasAttribute("pending"), "First tab in new window should still be pending");
-  ok(newWindowTabs[1].hasAttribute("pending"), "Second tab in new window should still be pending");
+  ok(
+    newWindowTabs[0].hasAttribute("pending"),
+    "First tab in new window should still be pending"
+  );
+  ok(
+    newWindowTabs[1].hasAttribute("pending"),
+    "Second tab in new window should still be pending"
+  );
   newWindow.gBrowser.clearMultiSelectedTabs(true);
-  ok(newWindowTabs.every(t => !t.multiselected), "No multiselection should be present");
+  ok(
+    newWindowTabs.every(t => !t.multiselected),
+    "No multiselection should be present"
+  );
 
   promiseNewWindow = BrowserTestUtils.waitForNewWindow();
   newWindow.gBrowser.replaceTabsWithWindow(newWindowTabs[0]);
 
   info("Waiting for second new window");
   let secondNewWindow = await promiseNewWindow;
-  await TestUtils.waitForCondition(() => secondNewWindow.gBrowser.selectedBrowser.currentURI.spec == TEST_URIS[1],
-    "Wait until the URI is updated");
-  is(secondNewWindow.gBrowser.visibleTabs.length, 1, "Only one tab in second new window");
-  is(secondNewWindow.gBrowser.selectedBrowser.currentURI.spec, TEST_URIS[1], "First tab moved");
+  await TestUtils.waitForCondition(
+    () =>
+      secondNewWindow.gBrowser.selectedBrowser.currentURI.spec == TEST_URIS[1],
+    "Wait until the URI is updated"
+  );
+  is(
+    secondNewWindow.gBrowser.visibleTabs.length,
+    1,
+    "Only one tab in second new window"
+  );
+  is(
+    secondNewWindow.gBrowser.selectedBrowser.currentURI.spec,
+    TEST_URIS[1],
+    "First tab moved"
+  );
 
   await BrowserTestUtils.closeWindow(secondNewWindow);
   await BrowserTestUtils.closeWindow(newWindow);

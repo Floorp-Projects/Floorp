@@ -1,6 +1,6 @@
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let httpserver = null;
 XPCOMUtils.defineLazyGetter(this, "cpURI", function() {
@@ -9,8 +9,7 @@ XPCOMUtils.defineLazyGetter(this, "cpURI", function() {
 
 const SUCCESS_STRING = "success\n";
 let cpResponse = SUCCESS_STRING;
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.bodyOutputStream.write(cpResponse, cpResponse.length);
 }
@@ -22,8 +21,9 @@ const PREF_CAPTIVE_MINTIME = "network.captive-portal-service.minInterval";
 const PREF_CAPTIVE_MAXTIME = "network.captive-portal-service.maxInterval";
 const PREF_DNS_NATIVE_IS_LOCALHOST = "network.dns.native-is-localhost";
 
-const cps = Cc["@mozilla.org/network/captive-portal-service;1"]
-              .getService(Ci.nsICaptivePortalService);
+const cps = Cc["@mozilla.org/network/captive-portal-service;1"].getService(
+  Ci.nsICaptivePortalService
+);
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref(PREF_CAPTIVE_ENABLED);
@@ -47,13 +47,13 @@ function observerPromise(topic) {
           Services.obs.removeObserver(observer, topic);
           resolve(aData);
         }
-      }
-    }
+      },
+    };
     Services.obs.addObserver(observer, topic);
   });
 }
 
-add_task(function setup(){
+add_task(function setup() {
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/captive.txt", contentHandler);
   httpserver.start(-1);
@@ -65,8 +65,7 @@ add_task(function setup(){
   Services.prefs.setBoolPref(PREF_DNS_NATIVE_IS_LOCALHOST, true);
 });
 
-add_task(async function test_simple()
-{
+add_task(async function test_simple() {
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
 
   equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
@@ -95,8 +94,7 @@ add_task(async function test_simple()
 
 // This test redirects to another URL which returns the same content.
 // It should still be interpreted as a captive portal.
-add_task(async function test_redirect_success()
-{
+add_task(async function test_redirect_success() {
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
   equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
 
@@ -106,16 +104,27 @@ add_task(async function test_redirect_success()
   });
   httpserver.registerPathHandler("/captive.txt", (metadata, response) => {
     response.setStatusLine(metadata.httpVersion, 307, "Moved Temporarily");
-    response.setHeader("Location", `http://localhost:${httpserver.identity.primaryPort}/succ.txt`);
+    response.setHeader(
+      "Location",
+      `http://localhost:${httpserver.identity.primaryPort}/succ.txt`
+    );
   });
 
-  let notification = observerPromise("captive-portal-login").then(() => "login");
-  let succNotif = observerPromise("network:captive-portal-connectivity").then(() => "connectivity");
+  let notification = observerPromise("captive-portal-login").then(
+    () => "login"
+  );
+  let succNotif = observerPromise("network:captive-portal-connectivity").then(
+    () => "connectivity"
+  );
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, true);
 
   let winner = await Promise.race([notification, succNotif]);
   equal(winner, "login", "This should have been a login, not a success");
-  equal(cps.state, Ci.nsICaptivePortalService.LOCKED_PORTAL, "Should be locked after redirect to same text");
+  equal(
+    cps.state,
+    Ci.nsICaptivePortalService.LOCKED_PORTAL,
+    "Should be locked after redirect to same text"
+  );
 });
 
 // This redirects to another URI with a different content.
@@ -131,14 +140,21 @@ add_task(async function test_redirect_bad() {
 
   httpserver.registerPathHandler("/captive.txt", (metadata, response) => {
     response.setStatusLine(metadata.httpVersion, 307, "Moved Temporarily");
-    response.setHeader("Location", `http://localhost:${httpserver.identity.primaryPort}/bad.txt`);
+    response.setHeader(
+      "Location",
+      `http://localhost:${httpserver.identity.primaryPort}/bad.txt`
+    );
   });
 
   let notification = observerPromise("captive-portal-login");
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, true);
 
   await notification;
-  equal(cps.state, Ci.nsICaptivePortalService.LOCKED_PORTAL, "Should be locked after redirect to bad text");
+  equal(
+    cps.state,
+    Ci.nsICaptivePortalService.LOCKED_PORTAL,
+    "Should be locked after redirect to bad text"
+  );
 });
 
 // This redirects to the same URI.
@@ -167,8 +183,8 @@ add_task(async function test_redirect_https() {
   equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
 
   let h2Port = Cc["@mozilla.org/process/environment;1"]
-                 .getService(Ci.nsIEnvironment)
-                 .get("MOZHTTP2_PORT");
+    .getService(Ci.nsIEnvironment)
+    .get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 
@@ -182,6 +198,10 @@ add_task(async function test_redirect_https() {
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, true);
 
   await notification;
-  equal(cps.state, Ci.nsICaptivePortalService.LOCKED_PORTAL, "Should be locked after redirect to https");
+  equal(
+    cps.state,
+    Ci.nsICaptivePortalService.LOCKED_PORTAL,
+    "Should be locked after redirect to https"
+  );
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
 });

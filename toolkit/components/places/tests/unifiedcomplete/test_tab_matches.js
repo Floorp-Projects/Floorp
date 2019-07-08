@@ -15,7 +15,10 @@ add_task(async function test_tab_matches() {
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "ABC rocks" },
     { uri: uri2, title: "xyz.net - we're better than ABC" },
-    { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ" },
+    {
+      uri: uri5,
+      title: "foobar.org - much better than ABC, definitely better than XYZ",
+    },
   ]);
   addOpenPages(uri1, 1);
   // Pages that cannot be registered in history.
@@ -26,19 +29,31 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               makeSearchMatch("abc.com", { heuristic: false }) ],
+    matches: [
+      makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
+      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+      makeSearchMatch("abc.com", { heuristic: false }),
+    ],
   });
 
   info("three results, one tab match");
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc", { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
-               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ],
+    matches: [
+      makeSearchMatch("abc", { heuristic: true }),
+      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+      {
+        uri: uri2,
+        title: "xyz.net - we're better than ABC",
+        style: ["favicon"],
+      },
+      {
+        uri: uri5,
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+        style: ["favicon"],
+      },
+    ],
   });
 
   info("three results, both normal results are tab matches");
@@ -46,10 +61,18 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc", { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }),
-               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ],
+    matches: [
+      makeSearchMatch("abc", { heuristic: true }),
+      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+      makeSwitchToTabMatch("http://xyz.net/", {
+        title: "xyz.net - we're better than ABC",
+      }),
+      {
+        uri: uri5,
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+        style: ["favicon"],
+      },
+    ],
   });
 
   info("a container tab is not visible in 'switch to tab'");
@@ -57,60 +80,118 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc", { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }),
-               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ],
+    matches: [
+      makeSearchMatch("abc", { heuristic: true }),
+      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+      makeSwitchToTabMatch("http://xyz.net/", {
+        title: "xyz.net - we're better than ABC",
+      }),
+      {
+        uri: uri5,
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+        style: ["favicon"],
+      },
+    ],
   });
 
-  info("a container tab should not see 'switch to tab' for other container tabs");
+  info(
+    "a container tab should not see 'switch to tab' for other container tabs"
+  );
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions user-context-id:3",
-    matches: [ makeSearchMatch("abc", { heuristic: true }),
-               makeSwitchToTabMatch("http://foobar.org/", { title: "foobar.org - much better than ABC, definitely better than XYZ" }),
-               { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ],
+    matches: [
+      makeSearchMatch("abc", { heuristic: true }),
+      makeSwitchToTabMatch("http://foobar.org/", {
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+      }),
+      { uri: uri1, title: "ABC rocks", style: ["favicon"] },
+      {
+        uri: uri2,
+        title: "xyz.net - we're better than ABC",
+        style: ["favicon"],
+      },
+    ],
   });
 
   info("a different container tab should not see any 'switch to tab'");
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions user-context-id:2",
-    matches: [ makeSearchMatch("abc", { heuristic: true }),
-               { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
-               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ],
+    matches: [
+      makeSearchMatch("abc", { heuristic: true }),
+      { uri: uri1, title: "ABC rocks", style: ["favicon"] },
+      {
+        uri: uri2,
+        title: "xyz.net - we're better than ABC",
+        style: ["favicon"],
+      },
+      {
+        uri: uri5,
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+        style: ["favicon"],
+      },
+    ],
   });
 
-  info("three results, both normal results are tab matches, one has multiple tabs");
+  info(
+    "three results, both normal results are tab matches, one has multiple tabs"
+  );
   addOpenPages(uri2, 5);
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc", { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }),
-               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ],
+    matches: [
+      makeSearchMatch("abc", { heuristic: true }),
+      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+      makeSwitchToTabMatch("http://xyz.net/", {
+        title: "xyz.net - we're better than ABC",
+      }),
+      {
+        uri: uri5,
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+        style: ["favicon"],
+      },
+    ],
   });
 
   info("three results, no tab matches (disable-private-actions)");
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions disable-private-actions",
-    matches: [ makeSearchMatch("abc", { heuristic: true }),
-               { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
-               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ],
+    matches: [
+      makeSearchMatch("abc", { heuristic: true }),
+      { uri: uri1, title: "ABC rocks", style: ["favicon"] },
+      {
+        uri: uri2,
+        title: "xyz.net - we're better than ABC",
+        style: ["favicon"],
+      },
+      {
+        uri: uri5,
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+        style: ["favicon"],
+      },
+    ],
   });
 
   info("two results (actions disabled)");
   await check_autocomplete({
     search: "abc",
     searchParam: "",
-    matches: [ { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
-               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ],
+    matches: [
+      { uri: uri1, title: "ABC rocks", style: ["favicon"] },
+      {
+        uri: uri2,
+        title: "xyz.net - we're better than ABC",
+        style: ["favicon"],
+      },
+      {
+        uri: uri5,
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+        style: ["favicon"],
+      },
+    ],
   });
 
   info("three results, no tab matches");
@@ -119,10 +200,20 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc", { heuristic: true }),
-               { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
-               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ],
+    matches: [
+      makeSearchMatch("abc", { heuristic: true }),
+      { uri: uri1, title: "ABC rocks", style: ["favicon"] },
+      {
+        uri: uri2,
+        title: "xyz.net - we're better than ABC",
+        style: ["favicon"],
+      },
+      {
+        uri: uri5,
+        title: "foobar.org - much better than ABC, definitely better than XYZ",
+        style: ["favicon"],
+      },
+    ],
   });
 
   info("tab match search with restriction character");
@@ -130,36 +221,48 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
-                               { heuristic: true, searchQuery: "abc" }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }) ],
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " abc", {
+        heuristic: true,
+        searchQuery: "abc",
+      }),
+      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+    ],
   });
 
   info("tab match with not-addable pages");
   await check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozilla", { heuristic: true }),
-               makeSwitchToTabMatch("about:mozilla") ],
+    matches: [
+      makeSearchMatch("mozilla", { heuristic: true }),
+      makeSwitchToTabMatch("about:mozilla"),
+    ],
   });
 
   info("tab match with not-addable pages and restriction character");
   await check_autocomplete({
     search: UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
-                               { heuristic: true, searchQuery: "mozilla" }),
-               makeSwitchToTabMatch("about:mozilla") ],
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla", {
+        heuristic: true,
+        searchQuery: "mozilla",
+      }),
+      makeSwitchToTabMatch("about:mozilla"),
+    ],
   });
 
   info("tab match with not-addable pages and only restriction character");
   await check_autocomplete({
     search: UrlbarTokenizer.RESTRICT.OPENPAGE,
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE, { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               makeSwitchToTabMatch("about:mozilla"),
-               makeSwitchToTabMatch("data:text/html,test") ],
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE, { heuristic: true }),
+      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+      makeSwitchToTabMatch("about:mozilla"),
+      makeSwitchToTabMatch("data:text/html,test"),
+    ],
   });
 
   info("tab match should not return tags as part of the title");
@@ -173,9 +276,11 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               makeSearchMatch("abc.com", { heuristic: false }) ],
+    matches: [
+      makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
+      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+      makeSearchMatch("abc.com", { heuristic: false }),
+    ],
   });
   await PlacesUtils.bookmarks.remove(bm);
 

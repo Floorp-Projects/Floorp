@@ -57,8 +57,9 @@ var rememberBox;
 
 function onLoad() {
   bundle = document.getElementById("pippki_bundle");
-  let rememberSetting =
-    Services.prefs.getBoolPref("security.remember_cert_checkbox_default_setting");
+  let rememberSetting = Services.prefs.getBoolPref(
+    "security.remember_cert_checkbox_default_setting"
+  );
 
   rememberBox = document.getElementById("rememberBox");
   rememberBox.label = bundle.getString("clientAuthRemember");
@@ -69,11 +70,13 @@ function onLoad() {
   let issuerOrg = window.arguments[2];
   let port = window.arguments[3];
   let formattedOrg = bundle.getFormattedString("clientAuthMessage1", [org]);
-  let formattedIssuerOrg = bundle.getFormattedString("clientAuthMessage2",
-                                                     [issuerOrg]);
-  let formattedHostnameAndPort =
-    bundle.getFormattedString("clientAuthHostnameAndPort",
-                              [hostname, port.toString()]);
+  let formattedIssuerOrg = bundle.getFormattedString("clientAuthMessage2", [
+    issuerOrg,
+  ]);
+  let formattedHostnameAndPort = bundle.getFormattedString(
+    "clientAuthHostnameAndPort",
+    [hostname, port.toString()]
+  );
   setText("hostname", formattedHostnameAndPort);
   setText("organization", formattedOrg);
   setText("issuer", formattedIssuerOrg);
@@ -83,9 +86,10 @@ function onLoad() {
   for (let i = 0; i < certArray.length; i++) {
     let menuItemNode = document.createXULElement("menuitem");
     let cert = certArray.queryElementAt(i, Ci.nsIX509Cert);
-    let nickAndSerial =
-      bundle.getFormattedString("clientAuthNickAndSerial",
-                                [cert.displayName, cert.serialNumber]);
+    let nickAndSerial = bundle.getFormattedString("clientAuthNickAndSerial", [
+      cert.displayName,
+      cert.serialNumber,
+    ]);
     menuItemNode.setAttribute("value", i);
     menuItemNode.setAttribute("label", nickAndSerial); // This is displayed.
     selectElement.menupopup.appendChild(menuItemNode);
@@ -98,8 +102,10 @@ function onLoad() {
   document.addEventListener("dialogaccept", doOK);
   document.addEventListener("dialogcancel", doCancel);
 
-  Services.obs.notifyObservers(document.getElementById("certAuthAsk"),
-                               "cert-dialog-loaded");
+  Services.obs.notifyObservers(
+    document.getElementById("certAuthAsk"),
+    "cert-dialog-loaded"
+  );
 }
 
 /**
@@ -112,25 +118,30 @@ function setDetails() {
   let detailLines = [
     bundle.getFormattedString("clientAuthIssuedTo", [cert.subjectName]),
     bundle.getFormattedString("clientAuthSerial", [cert.serialNumber]),
-    bundle.getFormattedString("clientAuthValidityPeriod",
-                              [cert.validity.notBeforeLocalTime,
-                               cert.validity.notAfterLocalTime]),
+    bundle.getFormattedString("clientAuthValidityPeriod", [
+      cert.validity.notBeforeLocalTime,
+      cert.validity.notAfterLocalTime,
+    ]),
   ];
   let keyUsages = cert.keyUsages;
   if (keyUsages) {
-    detailLines.push(bundle.getFormattedString("clientAuthKeyUsages",
-                                               [keyUsages]));
+    detailLines.push(
+      bundle.getFormattedString("clientAuthKeyUsages", [keyUsages])
+    );
   }
   let emailAddresses = cert.getEmailAddresses();
   if (emailAddresses.length > 0) {
     let joinedAddresses = emailAddresses.join(", ");
-    detailLines.push(bundle.getFormattedString("clientAuthEmailAddresses",
-                                               [joinedAddresses]));
+    detailLines.push(
+      bundle.getFormattedString("clientAuthEmailAddresses", [joinedAddresses])
+    );
   }
-  detailLines.push(bundle.getFormattedString("clientAuthIssuedBy",
-                                             [cert.issuerName]));
-  detailLines.push(bundle.getFormattedString("clientAuthStoredOn",
-                                             [cert.tokenName]));
+  detailLines.push(
+    bundle.getFormattedString("clientAuthIssuedBy", [cert.issuerName])
+  );
+  detailLines.push(
+    bundle.getFormattedString("clientAuthStoredOn", [cert.tokenName])
+  );
 
   document.getElementById("details").value = detailLines.join("\n");
 }

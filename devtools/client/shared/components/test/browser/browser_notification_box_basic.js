@@ -8,7 +8,9 @@
 /* import-globals-from ../../../../shared/test/shared-head.js */
 
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js", this);
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  this
+);
 
 const TEST_URI = "data:text/html;charset=utf-8,Test page";
 

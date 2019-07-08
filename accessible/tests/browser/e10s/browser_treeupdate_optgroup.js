@@ -7,7 +7,10 @@
 /* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
-addAccessibleTask('<select id="select"></select>', async function(browser, accDoc) {
+addAccessibleTask('<select id="select"></select>', async function(
+  browser,
+  accDoc
+) {
   let select = findAccessibleChildByID(accDoc, "select");
 
   let onEvent = waitForEvent(EVENT_REORDER, "select");
@@ -35,18 +38,24 @@ addAccessibleTask('<select id="select"></select>', async function(browser, accDo
   let option1Node = findAccessibleChildByID(event.accessible, "option1Node");
 
   let tree = {
-    COMBOBOX: [ {
-      COMBOBOX_LIST: [ {
-        GROUPING: [
-          { COMBOBOX_OPTION: [ { TEXT_LEAF: [] } ] },
-          { COMBOBOX_OPTION: [ { TEXT_LEAF: [] } ] }
-        ]
-      }, {
-        COMBOBOX_OPTION: []
-      }, {
-        COMBOBOX_OPTION: []
-      } ]
-    } ]
+    COMBOBOX: [
+      {
+        COMBOBOX_LIST: [
+          {
+            GROUPING: [
+              { COMBOBOX_OPTION: [{ TEXT_LEAF: [] }] },
+              { COMBOBOX_OPTION: [{ TEXT_LEAF: [] }] },
+            ],
+          },
+          {
+            COMBOBOX_OPTION: [],
+          },
+          {
+            COMBOBOX_OPTION: [],
+          },
+        ],
+      },
+    ],
   };
   testAccessibleTree(select, tree);
   ok(!isDefunct(option1Node), "option shouldn't be defunct");
@@ -60,16 +69,14 @@ addAccessibleTask('<select id="select"></select>', async function(browser, accDo
   await onEvent;
 
   tree = {
-    COMBOBOX: [ {
-      COMBOBOX_LIST: [
-        { COMBOBOX_OPTION: [] },
-        { COMBOBOX_OPTION: [] }
-      ]
-    } ]
+    COMBOBOX: [
+      {
+        COMBOBOX_LIST: [{ COMBOBOX_OPTION: [] }, { COMBOBOX_OPTION: [] }],
+      },
+    ],
   };
   testAccessibleTree(select, tree);
-  ok(isDefunct(option1Node),
-    "removed option shouldn't be accessible anymore!");
+  ok(isDefunct(option1Node), "removed option shouldn't be accessible anymore!");
 
   onEvent = waitForEvent(EVENT_REORDER, "select");
   // Remove all options from combobox
@@ -82,9 +89,11 @@ addAccessibleTask('<select id="select"></select>', async function(browser, accDo
   await onEvent;
 
   tree = {
-    COMBOBOX: [ {
-      COMBOBOX_LIST: [ ]
-    } ]
+    COMBOBOX: [
+      {
+        COMBOBOX_LIST: [],
+      },
+    ],
   };
   testAccessibleTree(select, tree);
 });

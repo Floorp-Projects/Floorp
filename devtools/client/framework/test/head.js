@@ -7,7 +7,10 @@
 /* import-globals-from ../../shared/test/telemetry-test-helpers.js */
 
 // shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  this
+);
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -33,7 +36,8 @@ function getParentProcessActors(callback) {
   DebuggerServer.allowChromeProcess = true;
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect()
+  client
+    .connect()
     .then(() => client.mainRoot.getMainProcess())
     .then(front => {
       callback(client, front);
@@ -102,7 +106,12 @@ function waitForContentMessage(name) {
  * @return {Promise} Resolves to the response data if a response is expected,
  * immediately resolves otherwise
  */
-function executeInContent(name, data = {}, objects = {}, expectResponse = true) {
+function executeInContent(
+  name,
+  data = {},
+  objects = {},
+  expectResponse = true
+) {
   info("Sending message " + name + " to content");
   const mm = gBrowser.selectedBrowser.messageManager;
 
@@ -121,7 +130,9 @@ function executeInContent(name, data = {}, objects = {}, expectResponse = true) 
 function synthesizeKeyElement(el) {
   const key = el.getAttribute("key") || el.getAttribute("keycode");
   const mod = {};
-  el.getAttribute("modifiers").split(" ").forEach((m) => mod[m + "Key"] = true);
+  el.getAttribute("modifiers")
+    .split(" ")
+    .forEach(m => (mod[m + "Key"] = true));
   info(`Synthesizing: key=${key}, mod=${JSON.stringify(mod)}`);
   EventUtils.synthesizeKey(key, mod, el.ownerDocument.defaultView);
 }
@@ -141,8 +152,11 @@ function checkHostType(toolbox, hostType, previousHostType) {
   is(pref, hostType, "host pref is " + hostType);
 
   if (previousHostType) {
-    is(Services.prefs.getCharPref("devtools.toolbox.previousHost"),
-      previousHostType, "The previous host is correct");
+    is(
+      Services.prefs.getCharPref("devtools.toolbox.previousHost"),
+      previousHostType,
+      "The previous host is correct"
+    );
   }
 }
 
@@ -191,13 +205,13 @@ function waitForSourceLoad(toolbox, url) {
 }
 
 /**
-* When a Toolbox is started it creates a DevToolPanel for each of the tools
-* by calling toolDefinition.build(). The returned object should
-* at least implement these functions. They will be used by the ToolBox.
-*
-* There may be no benefit in doing this as an abstract type, but if nothing
-* else gives us a place to write documentation.
-*/
+ * When a Toolbox is started it creates a DevToolPanel for each of the tools
+ * by calling toolDefinition.build(). The returned object should
+ * at least implement these functions. They will be used by the ToolBox.
+ *
+ * There may be no benefit in doing this as an abstract type, but if nothing
+ * else gives us a place to write documentation.
+ */
 function DevToolPanel(iframeWindow, toolbox) {
   EventEmitter.decorate(this);
 
@@ -251,7 +265,9 @@ async function openChevronMenu(toolbox) {
   const chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
   EventUtils.synthesizeMouseAtCenter(chevronMenuButton, {}, toolbox.win);
 
-  const menuPopup = toolbox.doc.getElementById("tools-chevron-menu-button-panel");
+  const menuPopup = toolbox.doc.getElementById(
+    "tools-chevron-menu-button-panel"
+  );
   ok(menuPopup, "tools-chevron-menupopup is available");
 
   info("Waiting for the menu popup to be displayed");
@@ -265,54 +281,83 @@ async function closeChevronMenu(toolbox) {
   chevronMenuButton.focus();
 
   EventUtils.sendKey("ESCAPE", toolbox.doc.defaultView);
-  const menuPopup = toolbox.doc.getElementById("tools-chevron-menu-button-panel");
+  const menuPopup = toolbox.doc.getElementById(
+    "tools-chevron-menu-button-panel"
+  );
 
   info("Closing the chevron popup menu");
   await waitUntil(() => !menuPopup.classList.contains("tooltip-visible"));
 }
 
 function prepareToolTabReorderTest(toolbox, startingOrder) {
-  Services.prefs.setCharPref("devtools.toolbox.tabsOrder", startingOrder.join(","));
-  ok(!toolbox.doc.getElementById("tools-chevron-menu-button"),
-     "The size of the screen being too small");
+  Services.prefs.setCharPref(
+    "devtools.toolbox.tabsOrder",
+    startingOrder.join(",")
+  );
+  ok(
+    !toolbox.doc.getElementById("tools-chevron-menu-button"),
+    "The size of the screen being too small"
+  );
 
   for (const id of startingOrder) {
-    ok(getElementByToolId(toolbox, id), `Tab element should exist for ${ id }`);
+    ok(getElementByToolId(toolbox, id), `Tab element should exist for ${id}`);
   }
 }
 
 async function dndToolTab(toolbox, dragTarget, dropTarget, passedTargets = []) {
-  info(`Drag ${ dragTarget } to ${ dropTarget }`);
-  const dragTargetEl = getElementByToolIdOrExtensionIdOrSelector(toolbox, dragTarget);
+  info(`Drag ${dragTarget} to ${dropTarget}`);
+  const dragTargetEl = getElementByToolIdOrExtensionIdOrSelector(
+    toolbox,
+    dragTarget
+  );
 
   const onReady = dragTargetEl.classList.contains("selected")
-                ? Promise.resolve() : toolbox.once("select");
-  EventUtils.synthesizeMouseAtCenter(dragTargetEl,
-                                     { type: "mousedown" },
-                                     dragTargetEl.ownerGlobal);
+    ? Promise.resolve()
+    : toolbox.once("select");
+  EventUtils.synthesizeMouseAtCenter(
+    dragTargetEl,
+    { type: "mousedown" },
+    dragTargetEl.ownerGlobal
+  );
   await onReady;
 
   for (const passedTarget of passedTargets) {
-    info(`Via ${ passedTarget }`);
-    const passedTargetEl =
-      getElementByToolIdOrExtensionIdOrSelector(toolbox, passedTarget);
-    EventUtils.synthesizeMouseAtCenter(passedTargetEl,
-                                       { type: "mousemove" },
-                                       passedTargetEl.ownerGlobal);
+    info(`Via ${passedTarget}`);
+    const passedTargetEl = getElementByToolIdOrExtensionIdOrSelector(
+      toolbox,
+      passedTarget
+    );
+    EventUtils.synthesizeMouseAtCenter(
+      passedTargetEl,
+      { type: "mousemove" },
+      passedTargetEl.ownerGlobal
+    );
   }
 
   if (dropTarget) {
-    const dropTargetEl = getElementByToolIdOrExtensionIdOrSelector(toolbox, dropTarget);
-    EventUtils.synthesizeMouseAtCenter(dropTargetEl,
-                                       { type: "mousemove" },
-                                       dropTargetEl.ownerGlobal);
-    EventUtils.synthesizeMouseAtCenter(dropTargetEl,
-                                       { type: "mouseup" },
-                                       dropTargetEl.ownerGlobal);
+    const dropTargetEl = getElementByToolIdOrExtensionIdOrSelector(
+      toolbox,
+      dropTarget
+    );
+    EventUtils.synthesizeMouseAtCenter(
+      dropTargetEl,
+      { type: "mousemove" },
+      dropTargetEl.ownerGlobal
+    );
+    EventUtils.synthesizeMouseAtCenter(
+      dropTargetEl,
+      { type: "mouseup" },
+      dropTargetEl.ownerGlobal
+    );
   } else {
     const containerEl = toolbox.doc.getElementById("toolbox-container");
-    EventUtils.synthesizeMouse(containerEl, 0, 0,
-                               { type: "mouseout" }, containerEl.ownerGlobal);
+    EventUtils.synthesizeMouse(
+      containerEl,
+      0,
+      0,
+      { type: "mouseout" },
+      containerEl.ownerGlobal
+    );
   }
 
   // Wait for updating the preference.
@@ -332,28 +377,37 @@ function assertToolTabOrder(toolbox, expectedOrder) {
   const tabEls = toolbox.doc.querySelectorAll(".devtools-tab");
 
   for (let i = 0; i < expectedOrder.length; i++) {
-    const isOrdered = tabEls[i].dataset.id === expectedOrder[i] ||
-                      tabEls[i].dataset.extensionId === expectedOrder[i];
-    ok(isOrdered, `The tab[${ expectedOrder[i] }] should exist at [${ i }]`);
+    const isOrdered =
+      tabEls[i].dataset.id === expectedOrder[i] ||
+      tabEls[i].dataset.extensionId === expectedOrder[i];
+    ok(isOrdered, `The tab[${expectedOrder[i]}] should exist at [${i}]`);
   }
 }
 
 function assertToolTabSelected(toolbox, dragTarget) {
   info("Check whether the drag target was selected");
-  const dragTargetEl = getElementByToolIdOrExtensionIdOrSelector(toolbox, dragTarget);
-  ok(dragTargetEl.classList.contains("selected"), "The dragged tool should be selected");
+  const dragTargetEl = getElementByToolIdOrExtensionIdOrSelector(
+    toolbox,
+    dragTarget
+  );
+  ok(
+    dragTargetEl.classList.contains("selected"),
+    "The dragged tool should be selected"
+  );
 }
 
 function assertToolTabPreferenceOrder(expectedOrder) {
   info("Check the order in DevTools preference for tabs order");
-  is(Services.prefs.getCharPref("devtools.toolbox.tabsOrder"), expectedOrder.join(","),
-     "The preference should be correct");
+  is(
+    Services.prefs.getCharPref("devtools.toolbox.tabsOrder"),
+    expectedOrder.join(","),
+    "The preference should be correct"
+  );
 }
 
 function getElementByToolId(toolbox, id) {
   for (const tabEl of toolbox.doc.querySelectorAll(".devtools-tab")) {
-    if (tabEl.dataset.id === id ||
-        tabEl.dataset.extensionId === id) {
+    if (tabEl.dataset.id === id || tabEl.dataset.extensionId === id) {
       return tabEl;
     }
   }
@@ -413,17 +467,19 @@ async function openAboutToolbox(params) {
  * Returns a promise that will resolve when the preferences are set.
  */
 function setupPreferencesForBrowserToolbox() {
-  const options = {"set": [
-    ["devtools.debugger.prompt-connection", false],
-    ["devtools.debugger.remote-enabled", true],
-    ["devtools.chrome.enabled", true],
-    // Test-only pref to allow passing `testScript` argument to the browser
-    // toolbox
-    ["devtools.browser-toolbox.allow-unsafe-script", true],
-    // On debug test runner, it takes more than the default time (20s)
-    // to get a initialized console
-    ["devtools.debugger.remote-timeout", 120000],
-  ]};
+  const options = {
+    set: [
+      ["devtools.debugger.prompt-connection", false],
+      ["devtools.debugger.remote-enabled", true],
+      ["devtools.chrome.enabled", true],
+      // Test-only pref to allow passing `testScript` argument to the browser
+      // toolbox
+      ["devtools.browser-toolbox.allow-unsafe-script", true],
+      // On debug test runner, it takes more than the default time (20s)
+      // to get a initialized console
+      ["devtools.debugger.remote-timeout", 120000],
+    ],
+  };
 
   return SpecialPowers.pushPrefEnv(options);
 }

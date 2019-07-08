@@ -2,9 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const MAX_ROUND_TRIP_TIME_MS = AppConstants.DEBUG || AppConstants.ASAN ? 60 : 30;
+const MAX_ROUND_TRIP_TIME_MS =
+  AppConstants.DEBUG || AppConstants.ASAN ? 60 : 30;
 const MAX_RETRIES = 5;
-
 
 const ECHO_BODY = String.raw`
   import struct
@@ -46,9 +46,9 @@ add_task(async function test_round_trip_perf() {
 
         function next() {
           port.postMessage({
-            "Lorem": {
-              "ipsum": {
-                "dolor": [
+            Lorem: {
+              ipsum: {
+                dolor: [
                   "sit amet",
                   "consectetur adipiscing elit",
                   "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -58,12 +58,12 @@ add_task(async function test_round_trip_perf() {
                   "quis nostrud exercitation ullamco",
                   "laboris nisi ut aliquip ex ea commodo consequat.",
                 ],
-                "Duis": [
+                Duis: [
                   "aute irure dolor in reprehenderit in",
                   "voluptate velit esse cillum dolore eu",
                   "fugiat nulla pariatur.",
                 ],
-                "Excepteur": [
+                Excepteur: [
                   "sint occaecat cupidatat non proident",
                   "sunt in culpa qui officia deserunt",
                   "mollit anim id est laborum.",
@@ -101,7 +101,7 @@ add_task(async function test_round_trip_perf() {
       });
     },
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -109,13 +109,19 @@ add_task(async function test_round_trip_perf() {
   await extension.startup();
 
   let roundTripTime = Infinity;
-  for (let i = 0; i < MAX_RETRIES && roundTripTime > MAX_ROUND_TRIP_TIME_MS; i++) {
+  for (
+    let i = 0;
+    i < MAX_RETRIES && roundTripTime > MAX_ROUND_TRIP_TIME_MS;
+    i++
+  ) {
     extension.sendMessage("run-tests");
     roundTripTime = await extension.awaitMessage("result");
   }
 
   await extension.unload();
 
-  ok(roundTripTime <= MAX_ROUND_TRIP_TIME_MS,
-     `Expected round trip time (${roundTripTime}ms) to be less than ${MAX_ROUND_TRIP_TIME_MS}ms`);
+  ok(
+    roundTripTime <= MAX_ROUND_TRIP_TIME_MS,
+    `Expected round trip time (${roundTripTime}ms) to be less than ${MAX_ROUND_TRIP_TIME_MS}ms`
+  );
 });

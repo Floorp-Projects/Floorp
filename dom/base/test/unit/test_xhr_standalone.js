@@ -6,14 +6,14 @@
 // in non-window non-Worker context
 
 function run_test() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "data:,", false);
-    var exceptionThrown = false;
-    try {
-        xhr.responseType = "";
-        xhr.withCredentials = false;
-    } catch (e) {
-        exceptionThrown = true;
-    }
-    Assert.equal(false, exceptionThrown);
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "data:,", false);
+  var exceptionThrown = false;
+  try {
+    xhr.responseType = "";
+    xhr.withCredentials = false;
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  Assert.equal(false, exceptionThrown);
 }

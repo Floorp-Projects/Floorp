@@ -32,7 +32,7 @@ function check_js_string_arg(stringfoo) {
 function check_js_object_arg(obj) {
   // Sync call from Java
   do_check_eq(obj.caller, "java");
-  java.asyncCall("checkJavaObjectArg", {caller: "js"});
+  java.asyncCall("checkJavaObjectArg", { caller: "js" });
 }
 
 function check_js_sync_call() {

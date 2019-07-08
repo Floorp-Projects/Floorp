@@ -14,7 +14,9 @@ add_task(async function() {
   await hud.jsterm.execute("console.timeStamp('test')");
   info(`Checking size`);
   await waitFor(() => findMessages(hud, "").length == 2);
-  const [first, second] = findMessages(hud, "").map(message=>message.textContent.trim());
+  const [first, second] = findMessages(hud, "").map(message =>
+    message.textContent.trim()
+  );
   info(`Checking first message`);
   is(first, "console.timeStamp('test')", "First message has expected text");
   info(`Checking second message`);

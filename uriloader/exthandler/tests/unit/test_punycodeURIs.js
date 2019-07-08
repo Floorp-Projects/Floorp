@@ -20,8 +20,13 @@ function checkFile() {
 
   if (!tempFile.exists()) {
     if (gCheckExistsAttempts >= kMaxCheckExistAttempts) {
-      do_throw("Expected File " + tempFile.path + " does not exist after " +
-                 kMaxCheckExistAttempts + " seconds");
+      do_throw(
+        "Expected File " +
+          tempFile.path +
+          " does not exist after " +
+          kMaxCheckExistAttempts +
+          " seconds"
+      );
     } else {
       ++gCheckExistsAttempts;
       // Wait a bit longer then try again
@@ -31,12 +36,12 @@ function checkFile() {
   }
 
   // Now read it
-  var fstream =
-    Cc["@mozilla.org/network/file-input-stream;1"]
-      .createInstance(Ci.nsIFileInputStream);
-  var sstream =
-    Cc["@mozilla.org/scriptableinputstream;1"]
-      .createInstance(Ci.nsIScriptableInputStream);
+  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
+  var sstream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   fstream.init(tempFile, -1, 0, 0);
   sstream.init(fstream);
 
@@ -55,8 +60,9 @@ function checkFile() {
   // find a way around it.
   // Additionally the lack of OS detection in xpcshell tests sucks, so we'll
   // have to check for the argument mac gives us.
-  if (data.substring(0, 7) != "-psn_0_")
+  if (data.substring(0, 7) != "-psn_0_") {
     Assert.equal(data, kExpectedURI);
+  }
 
   do_test_finished();
 }
@@ -71,9 +77,9 @@ function run_test() {
   var ioService = Services.io;
 
   // set up the local handler object
-  var localHandler =
-    Cc["@mozilla.org/uriloader/local-handler-app;1"]
-      .createInstance(Ci.nsILocalHandlerApp);
+  var localHandler = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(Ci.nsILocalHandlerApp);
   localHandler.name = "Test Local Handler App";
 
   // WriteArgument will just dump its arguments to a file for us.
@@ -84,17 +90,18 @@ function run_test() {
   if (!exe.exists()) {
     // Maybe we are on windows
     exe.leafName = "WriteArgument.exe";
-    if (!exe.exists())
+    if (!exe.exists()) {
       do_throw("Could not locate the WriteArgument tests executable\n");
+    }
   }
 
   var outFile = tempDir.clone();
   outFile.append(kOutputFile);
 
   // Set an environment variable for WriteArgument to pick up
-  var envSvc =
-    Cc["@mozilla.org/process/environment;1"]
-      .getService(Ci.nsIEnvironment);
+  var envSvc = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
 
   // The Write Argument file needs to know where its libraries are, so
   // just force the path variable

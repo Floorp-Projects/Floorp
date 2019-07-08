@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const PATH = "/file.meh";
 var httpserver = new HttpServer();
@@ -18,39 +18,60 @@ var testRan = 0;
 const tests = [
   // Those three first case are the case of a media loaded in a media element.
   // All three should be sniffed.
-  { contentType: "",
+  {
+    contentType: "",
     expectedContentType: "application/ogg",
-    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS | Ci.nsIChannel.LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE },
-  { contentType: "application/octet-stream",
+    flags:
+      Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS |
+      Ci.nsIChannel.LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE,
+  },
+  {
+    contentType: "application/octet-stream",
     expectedContentType: "application/ogg",
-    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS | Ci.nsIChannel.LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE },
-  { contentType: "application/something",
+    flags:
+      Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS |
+      Ci.nsIChannel.LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE,
+  },
+  {
+    contentType: "application/something",
     expectedContentType: "application/ogg",
-    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS | Ci.nsIChannel.LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE },
+    flags:
+      Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS |
+      Ci.nsIChannel.LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE,
+  },
   // This last cases test the case of a channel opened while allowing content
   // sniffers to override the content-type, like in the docshell.
-  { contentType: "application/octet-stream",
+  {
+    contentType: "application/octet-stream",
     expectedContentType: "application/ogg",
-    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS },
-  { contentType: "",
+    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS,
+  },
+  {
+    contentType: "",
     expectedContentType: "application/ogg",
-    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS },
-  { contentType: "application/something",
+    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS,
+  },
+  {
+    contentType: "application/something",
     expectedContentType: "application/something",
-    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS },
+    flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS,
+  },
 ];
 
 // A basic listener that reads checks the if we sniffed properly.
 var listener = {
   onStartRequest(request) {
-    Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,
-                 tests[testRan].expectedContentType);
+    Assert.equal(
+      request.QueryInterface(Ci.nsIChannel).contentType,
+      tests[testRan].expectedContentType
+    );
   },
 
   onDataAvailable(request, stream, offset, count) {
     try {
-      var bis = Cc["@mozilla.org/binaryinputstream;1"]
-                  .createInstance(Ci.nsIBinaryInputStream);
+      var bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+        Ci.nsIBinaryInputStream
+      );
       bis.setInputStream(stream);
       bis.readByteArray(bis.available());
     } catch (ex) {
@@ -65,8 +86,7 @@ var listener = {
 };
 
 function setupChannel(url, flags) {
-  let uri = "http://localhost:" +
-             httpserver.identity.primaryPort + url;
+  let uri = "http://localhost:" + httpserver.identity.primaryPort + url;
   var chan = NetUtil.newChannel({
     uri,
     loadUsingSystemPrincipal: true,

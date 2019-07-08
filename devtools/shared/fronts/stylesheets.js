@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 const {
   mediaRuleSpec,
   styleSheetSpec,
@@ -11,10 +14,18 @@ const {
 } = require("devtools/shared/specs/stylesheets");
 const promise = require("promise");
 
-loader.lazyRequireGetter(this, "getIndentationFromPrefs",
-  "devtools/shared/indentation", true);
-loader.lazyRequireGetter(this, "getIndentationFromString",
-  "devtools/shared/indentation", true);
+loader.lazyRequireGetter(
+  this,
+  "getIndentationFromPrefs",
+  "devtools/shared/indentation",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getIndentationFromString",
+  "devtools/shared/indentation",
+  true
+);
 
 /**
  * Corresponding client-side front for a MediaRuleActor.
@@ -118,18 +129,18 @@ class StyleSheetFront extends FrontClassWithSpec(styleSheetSpec) {
   guessIndentation() {
     const prefIndent = getIndentationFromPrefs();
     if (prefIndent) {
-      const {indentUnit, indentWithTabs} = prefIndent;
+      const { indentUnit, indentWithTabs } = prefIndent;
       return promise.resolve(indentWithTabs ? "\t" : " ".repeat(indentUnit));
     }
 
-    return (async function() {
+    return async function() {
       const longStr = await this.getText();
       const source = await longStr.string();
 
-      const {indentUnit, indentWithTabs} = getIndentationFromString(source);
+      const { indentUnit, indentWithTabs } = getIndentationFromString(source);
 
       return indentWithTabs ? "\t" : " ".repeat(indentUnit);
-    }.bind(this))();
+    }.bind(this)();
   }
 }
 

@@ -6,8 +6,10 @@
 
 /* import-globals-from ../../mochitest/states.js */
 /* import-globals-from ../../mochitest/role.js */
-loadScripts({ name: "states.js", dir: MOCHITESTS_DIR },
-            { name: "role.js", dir: MOCHITESTS_DIR });
+loadScripts(
+  { name: "states.js", dir: MOCHITESTS_DIR },
+  { name: "role.js", dir: MOCHITESTS_DIR }
+);
 
 async function runTests(browser, accDoc) {
   let onFocus = waitForEvent(EVENT_FOCUS, "input");
@@ -16,9 +18,11 @@ async function runTests(browser, accDoc) {
   testStates(evt.accessible, STATE_FOCUSED);
 
   onFocus = waitForEvent(EVENT_FOCUS, "buttonInputDoc");
-  let url = snippetToURL(`<input id="input" type="button" value="button">`, { id: "buttonInputDoc" });
+  let url = snippetToURL(`<input id="input" type="button" value="button">`, {
+    id: "buttonInputDoc",
+  });
   browser.loadURI(url, {
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
   evt = await onFocus;
   testStates(evt.accessible, STATE_FOCUSED);

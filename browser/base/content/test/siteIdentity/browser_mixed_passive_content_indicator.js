@@ -1,14 +1,18 @@
-const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "simple_mixed_passive.html";
+const TEST_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "simple_mixed_passive.html";
 
 add_task(async function test_mixed_passive_content_indicator() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      ["security.mixed_content.upgrade_display_content", false],
-    ],
+    set: [["security.mixed_content.upgrade_display_content", false]],
   });
   await BrowserTestUtils.withNewTab(TEST_URL, function() {
-    is(document.getElementById("identity-box").className,
-       "unknownIdentity mixedDisplayContent",
-       "identity box has class name for mixed content");
+    is(
+      document.getElementById("identity-box").className,
+      "unknownIdentity mixedDisplayContent",
+      "identity box has class name for mixed content"
+    );
   });
 });

@@ -22,11 +22,14 @@ function run_test() {
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-closures",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_object_grip();
-                           });
+    attachTestTabAndResume(gClient, "test-closures", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_object_grip();
+    });
   });
   do_test_pending();
 }
@@ -45,9 +48,15 @@ function test_object_grip() {
 
       Assert.equal(response.ownProperties.getFoo.value.class, "Function");
 
-      const getNameClient = gThreadClient.pauseGrip(response.ownProperties.getName.value);
-      const getAgeClient = gThreadClient.pauseGrip(response.ownProperties.getAge.value);
-      const getFooClient = gThreadClient.pauseGrip(response.ownProperties.getFoo.value);
+      const getNameClient = gThreadClient.pauseGrip(
+        response.ownProperties.getName.value
+      );
+      const getAgeClient = gThreadClient.pauseGrip(
+        response.ownProperties.getAge.value
+      );
+      const getFooClient = gThreadClient.pauseGrip(
+        response.ownProperties.getFoo.value
+      );
       getNameClient.getScope(response => {
         Assert.equal(response.scope.bindings.arguments[0].name.value, "Bob");
 

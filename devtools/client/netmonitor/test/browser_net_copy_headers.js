@@ -12,23 +12,26 @@ add_task(async function() {
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
-  const {
-    getSortedRequests,
-    getSelectedRequest,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSortedRequests, getSelectedRequest } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   const wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
 
   const requestItem = getSortedRequests(store.getState()).get(0);
   const { method, httpVersion, status, statusText } = requestItem;
 
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
 
   const selectedRequest = getSelectedRequest(store.getState());
   is(selectedRequest, requestItem, "Proper request is selected");
@@ -46,13 +49,19 @@ add_task(async function() {
     "Cache-Control: no-cache",
   ].join("\n");
 
-  await waitForClipboardPromise(function setup() {
-    getContextMenuItem(monitor, "request-list-context-copy-request-headers").click();
-  }, function validate(result) {
-    // Sometimes, a "Cookie" header is left over from other tests. Remove it:
-    result = String(result).replace(/Cookie: [^\n]+\n/, "");
-    return result === EXPECTED_REQUEST_HEADERS;
-  });
+  await waitForClipboardPromise(
+    function setup() {
+      getContextMenuItem(
+        monitor,
+        "request-list-context-copy-request-headers"
+      ).click();
+    },
+    function validate(result) {
+      // Sometimes, a "Cookie" header is left over from other tests. Remove it:
+      result = String(result).replace(/Cookie: [^\n]+\n/, "");
+      return result === EXPECTED_REQUEST_HEADERS;
+    }
+  );
   info("Clipboard contains the currently selected item's request headers.");
 
   const EXPECTED_RESPONSE_HEADERS = [
@@ -65,18 +74,29 @@ add_task(async function() {
     "date: Sun, 3 May 2015 11:11:11 GMT",
   ].join("\n");
 
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
 
-  await waitForClipboardPromise(function setup() {
-    getContextMenuItem(monitor, "response-list-context-copy-response-headers").click();
-  }, function validate(result) {
-    // Fake the "Last-Modified" and "Date" headers because they will vary:
-    result = String(result)
-      .replace(/last-modified: [^\n]+ GMT/, "last-modified: Sun, 3 May 2015 11:11:11 GMT")
-      .replace(/date: [^\n]+ GMT/, "date: Sun, 3 May 2015 11:11:11 GMT");
-    return result === EXPECTED_RESPONSE_HEADERS;
-  });
+  await waitForClipboardPromise(
+    function setup() {
+      getContextMenuItem(
+        monitor,
+        "response-list-context-copy-response-headers"
+      ).click();
+    },
+    function validate(result) {
+      // Fake the "Last-Modified" and "Date" headers because they will vary:
+      result = String(result)
+        .replace(
+          /last-modified: [^\n]+ GMT/,
+          "last-modified: Sun, 3 May 2015 11:11:11 GMT"
+        )
+        .replace(/date: [^\n]+ GMT/, "date: Sun, 3 May 2015 11:11:11 GMT");
+      return result === EXPECTED_RESPONSE_HEADERS;
+    }
+  );
   info("Clipboard contains the currently selected item's response headers.");
 
   await teardown(monitor);

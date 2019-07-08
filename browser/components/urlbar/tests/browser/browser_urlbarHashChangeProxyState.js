@@ -15,10 +15,25 @@ add_task(async function() {
     let expectedURL = url;
 
     let verifyURLBarState = testType => {
-      is(gURLBar.textValue, expectedURL, "URL bar visible value should be correct " + testType);
-      is(gURLBar.value, expectedURL, "URL bar value should be correct " + testType);
-      ok(identityBox.classList.contains("verifiedDomain"), "Identity box should know we're doing SSL " + testType);
-      is(gURLBar.getAttribute("pageproxystate"), "valid", "URL bar is in valid page proxy state");
+      is(
+        gURLBar.textValue,
+        expectedURL,
+        "URL bar visible value should be correct " + testType
+      );
+      is(
+        gURLBar.value,
+        expectedURL,
+        "URL bar value should be correct " + testType
+      );
+      ok(
+        identityBox.classList.contains("verifiedDomain"),
+        "Identity box should know we're doing SSL " + testType
+      );
+      is(
+        gURLBar.getAttribute("pageproxystate"),
+        "valid",
+        "URL bar is in valid page proxy state"
+      );
     };
 
     verifyURLBarState("at the beginning");
@@ -27,7 +42,9 @@ add_task(async function() {
     let resolveLocationChangePromise;
     let expectURL = urlTemp => {
       expectedURL = urlTemp;
-      locationChangePromise = new Promise(r => resolveLocationChangePromise = r);
+      locationChangePromise = new Promise(
+        r => (resolveLocationChangePromise = r)
+      );
     };
     let wpl = {
       onLocationChange(unused, unused2, location) {
@@ -94,19 +111,35 @@ add_task(async function() {
 add_task(async function() {
   // Ensure there's no preloaded newtab browser, since that'll not fire a load event.
   NewTabPagePreloading.removePreloadedBrowser(window);
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:newtab"
+  );
   let url = `${TEST_BASE_URL}dummy_page.html#foo`;
   gURLBar.value = url;
   gURLBar.select();
   EventUtils.sendKey("return");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  is(gURLBar.textValue, url, "URL bar visible value should be correct when the page loads from about:newtab");
-  is(gURLBar.value, url, "URL bar value should be correct when the page loads from about:newtab");
+  is(
+    gURLBar.textValue,
+    url,
+    "URL bar visible value should be correct when the page loads from about:newtab"
+  );
+  is(
+    gURLBar.value,
+    url,
+    "URL bar value should be correct when the page loads from about:newtab"
+  );
   let identityBox = document.getElementById("identity-box");
-  ok(identityBox.classList.contains("verifiedDomain"),
-     "Identity box should know we're doing SSL when the page loads from about:newtab");
-  is(gURLBar.getAttribute("pageproxystate"), "valid",
-     "URL bar is in valid page proxy state when SSL page with hash loads from about:newtab");
+  ok(
+    identityBox.classList.contains("verifiedDomain"),
+    "Identity box should know we're doing SSL when the page loads from about:newtab"
+  );
+  is(
+    gURLBar.getAttribute("pageproxystate"),
+    "valid",
+    "URL bar is in valid page proxy state when SSL page with hash loads from about:newtab"
+  );
   BrowserTestUtils.removeTab(tab);
 });

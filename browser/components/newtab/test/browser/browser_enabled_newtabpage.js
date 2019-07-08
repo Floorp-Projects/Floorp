@@ -1,5 +1,5 @@
 function checkSpec(uri, check, message) {
-  const {spec} = NetUtil.newChannel({
+  const { spec } = NetUtil.newChannel({
     loadUsingSystemPrincipal: true,
     uri,
   }).URI;
@@ -9,10 +9,16 @@ function checkSpec(uri, check, message) {
 }
 
 add_task(async function test_newtab_enabled() {
-  checkSpec("about:newtab", isnot, "did not get blank for default about:newtab");
+  checkSpec(
+    "about:newtab",
+    isnot,
+    "did not get blank for default about:newtab"
+  );
   checkSpec("about:home", isnot, "did not get blank for default about:home");
 
-  await SpecialPowers.pushPrefEnv({set: [["browser.newtabpage.enabled", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtabpage.enabled", false]],
+  });
 
   checkSpec("about:newtab", is, "got blank when newtab is not enabled");
   checkSpec("about:home", isnot, "still did not get blank for about:home");

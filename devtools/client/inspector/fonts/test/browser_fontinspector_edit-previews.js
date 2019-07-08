@@ -47,16 +47,25 @@ function checkPreviewImages(viewDoc, originalURIs, assertIdentical) {
   const previews = viewDoc.querySelectorAll("#font-container .font-preview");
   const newURIs = [...previews].map(p => p.src);
 
-  is(newURIs.length, originalURIs.length,
-    "The number of previews has not changed.");
+  is(
+    newURIs.length,
+    originalURIs.length,
+    "The number of previews has not changed."
+  );
 
   for (let i = 0; i < newURIs.length; ++i) {
     if (assertIdentical) {
-      is(newURIs[i], originalURIs[i],
-        `The preview image at index ${i} has stayed the same.`);
+      is(
+        newURIs[i],
+        originalURIs[i],
+        `The preview image at index ${i} has stayed the same.`
+      );
     } else {
-      isnot(newURIs[i], originalURIs[i],
-        `The preview image at index ${i} has changed.`);
+      isnot(
+        newURIs[i],
+        originalURIs[i],
+        `The preview image at index ${i} has changed.`
+      );
     }
   }
 }

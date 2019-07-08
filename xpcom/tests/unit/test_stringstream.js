@@ -4,15 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-    var s = Cc["@mozilla.org/io/string-input-stream;1"]
-              .createInstance(Ci.nsIStringInputStream);
-    var body = "This is a test";
-    s.setData(body, body.length);
-    Assert.equal(s.available(), body.length);
+  var s = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
+  var body = "This is a test";
+  s.setData(body, body.length);
+  Assert.equal(s.available(), body.length);
 
-    var sis = Cc["@mozilla.org/scriptableinputstream;1"]
-                .createInstance(Ci.nsIScriptableInputStream);
-    sis.init(s);
+  var sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
+  sis.init(s);
 
-    Assert.equal(sis.read(body.length), body);
+  Assert.equal(sis.read(body.length), body);
 }

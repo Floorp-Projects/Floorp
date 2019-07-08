@@ -19,7 +19,10 @@ add_task(async function() {
   ok(buttonEl, "pause/resume button should exist");
 
   info("Checking state during running animations");
-  ok(!buttonEl.classList.contains("paused"), "State of button should be running");
+  ok(
+    !buttonEl.classList.contains("paused"),
+    "State of button should be running"
+  );
 
   info("Checking button makes animations to pause");
   await clickOnPauseResumeButton(animationInspector, panel);
@@ -29,5 +32,8 @@ add_task(async function() {
   info("Checking button makes animations to resume");
   await clickOnPauseResumeButton(animationInspector, panel);
   assertAnimationsRunning(animationInspector);
-  ok(!buttonEl.classList.contains("paused"), "State of button should be resumed");
+  ok(
+    !buttonEl.classList.contains("paused"),
+    "State of button should be resumed"
+  );
 });

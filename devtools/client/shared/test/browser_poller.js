@@ -9,11 +9,17 @@
 const { Poller } = require("devtools/client/shared/poller");
 
 add_task(async function() {
-  let count1 = 0, count2 = 0, count3 = 0;
+  let count1 = 0,
+    count2 = 0,
+    count3 = 0;
 
-  const poller1 = new Poller(function() {
-    count1++;
-  }, 1000000000, true);
+  const poller1 = new Poller(
+    function() {
+      count1++;
+    },
+    1000000000,
+    true
+  );
   const poller2 = new Poller(function() {
     count2++;
   }, 10);
@@ -40,7 +46,10 @@ add_task(async function() {
 
   await waitUntil(() => count1 === 1);
   ok(true, "Poller calls fn immediately when `immediate` is true");
-  ok(count3 === 0, "Poller does not call fn immediately when `immediate` is not set");
+  ok(
+    count3 === 0,
+    "Poller does not call fn immediately when `immediate` is not set"
+  );
 
   ok(count2 === currentCount2, "a turned off poller does not continue to poll");
   await poller2.off();
@@ -88,21 +97,31 @@ add_task(async function() {
   // finishes.
   let inflightFinished = null;
   let pollCalls = 0;
-  const asyncPoller = new Poller(function() {
-    pollCalls++;
-    return new Promise(function(resolve, reject) {
-      setTimeout(() => {
-        inflightFinished = true;
-        resolve();
-      }, 1000);
-    });
-  }, 1, true);
+  const asyncPoller = new Poller(
+    function() {
+      pollCalls++;
+      return new Promise(function(resolve, reject) {
+        setTimeout(() => {
+          inflightFinished = true;
+          resolve();
+        }, 1000);
+      });
+    },
+    1,
+    true
+  );
   asyncPoller.on();
 
   await asyncPoller.off();
-  ok(inflightFinished,
-     "off() method does not resolve until remaining inflight poll calls finish");
-  is(pollCalls, 1, "should only be one poll call to occur before turning off polling");
+  ok(
+    inflightFinished,
+    "off() method does not resolve until remaining inflight poll calls finish"
+  );
+  is(
+    pollCalls,
+    1,
+    "should only be one poll call to occur before turning off polling"
+  );
 });
 
 add_task(async function() {
@@ -112,21 +131,31 @@ add_task(async function() {
   // finishes.
   let inflightFinished = null;
   let pollCalls = 0;
-  const asyncPoller = new Poller(function() {
-    pollCalls++;
-    return new Promise(function(resolve, reject) {
-      setTimeout(() => {
-        inflightFinished = true;
-        resolve();
-      }, 1000);
-    });
-  }, 1, true);
+  const asyncPoller = new Poller(
+    function() {
+      pollCalls++;
+      return new Promise(function(resolve, reject) {
+        setTimeout(() => {
+          inflightFinished = true;
+          resolve();
+        }, 1000);
+      });
+    },
+    1,
+    true
+  );
   asyncPoller.on();
 
   await asyncPoller.destroy();
-  ok(inflightFinished,
-     "destroy() method does not resolve until remaining inflight poll calls finish");
-  is(pollCalls, 1, "should only be one poll call to occur before destroying polling");
+  ok(
+    inflightFinished,
+    "destroy() method does not resolve until remaining inflight poll calls finish"
+  );
+  is(
+    pollCalls,
+    1,
+    "should only be one poll call to occur before destroying polling"
+  );
 
   try {
     asyncPoller.on();

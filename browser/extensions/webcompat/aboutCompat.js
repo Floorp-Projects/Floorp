@@ -10,7 +10,7 @@ const portToAddon = (function() {
   let port;
 
   function connect() {
-    port = browser.runtime.connect({name: "AboutCompatTab"});
+    port = browser.runtime.connect({ name: "AboutCompatTab" });
     port.onMessage.addListener(onMessageFromAddon);
     port.onDisconnect.addListener(e => {
       port = undefined;
@@ -26,15 +26,21 @@ const portToAddon = (function() {
     return Promise.reject("background script port disconnected");
   }
 
-  return {send};
-}());
+  return { send };
+})();
 
-const $ = function(sel) { return document.querySelector(sel); };
+const $ = function(sel) {
+  return document.querySelector(sel);
+};
 
 const DOMContentLoadedPromise = new Promise(resolve => {
-  document.addEventListener("DOMContentLoaded", () => {
-    resolve();
-  }, {once: true});
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+      resolve();
+    },
+    { once: true }
+  );
 });
 
 Promise.all([
@@ -50,7 +56,7 @@ Promise.all([
         ele.disabled = true;
         const id = row.getAttribute("data-id");
         try {
-          await browser.runtime.sendMessage({command: "toggle", id});
+          await browser.runtime.sendMessage({ command: "toggle", id });
         } catch (_) {
           ele.disabled = false;
         }
@@ -81,27 +87,31 @@ function onMessageFromAddon(msg) {
     return;
   }
   const active = msg.active;
-  document.l10n.setAttributes(button,
-                      active ? "label-disable" : "label-enable");
+  document.l10n.setAttributes(
+    button,
+    active ? "label-disable" : "label-enable"
+  );
   button.disabled = !!msg.toggling;
 }
 
 function redraw(info) {
-  const {overrides, interventions} = info;
+  const { overrides, interventions } = info;
   redrawTable($("#overrides"), overrides);
   redrawTable($("#interventions"), interventions);
 }
 
 function redrawTable(table, data) {
   const df = document.createDocumentFragment();
-  table.querySelectorAll("tr").forEach(tr => { tr.remove(); });
+  table.querySelectorAll("tr").forEach(tr => {
+    tr.remove();
+  });
 
   let noEntriesMessage;
   if (data === false) {
     noEntriesMessage = "text-disabled-in-about-config";
   } else if (data.length === 0) {
-    noEntriesMessage = table.id === "overrides" ? "text-no-overrides"
-                                                : "text-no-interventions";
+    noEntriesMessage =
+      table.id === "overrides" ? "text-no-overrides" : "text-no-interventions";
   }
 
   if (noEntriesMessage) {
@@ -130,7 +140,7 @@ function redrawTable(table, data) {
     const a = document.createElement("a");
     const bug = row.bug;
     a.href = `https://bugzilla.mozilla.org/show_bug.cgi?id=${bug}`;
-    document.l10n.setAttributes(a, "label-more-information", {bug});
+    document.l10n.setAttributes(a, "label-more-information", { bug });
     a.target = "_blank";
     td.appendChild(a);
     tr.appendChild(td);
@@ -138,8 +148,10 @@ function redrawTable(table, data) {
     td = document.createElement("td");
     tr.appendChild(td);
     const button = document.createElement("button");
-    document.l10n.setAttributes(button,
-                        row.active ? "label-disable" : "label-enable");
+    document.l10n.setAttributes(
+      button,
+      row.active ? "label-disable" : "label-enable"
+    );
     td.appendChild(button);
   }
   table.appendChild(df);

@@ -4,12 +4,13 @@
 
 var CC = Components.Constructor;
 
-const ServerSocket = CC("@mozilla.org/network/server-socket;1",
-                        "nsIServerSocket",
-                        "init");
+const ServerSocket = CC(
+  "@mozilla.org/network/server-socket;1",
+  "nsIServerSocket",
+  "init"
+);
 
-function testAddrInUse()
-{
+function testAddrInUse() {
   // Windows lets us have as many sockets listening on the same address as
   // we like, evidently.
   if (mozinfo.os == "win") {
@@ -22,11 +23,12 @@ function testAddrInUse()
   Assert.ok(listener instanceof Ci.nsIServerSocket);
 
   // Try to create another listening socket on the same port, whatever that was.
-  do_check_throws_nsIException(() => ServerSocket(listener.port, true, -1),
-                               "NS_ERROR_SOCKET_ADDRESS_IN_USE");
+  do_check_throws_nsIException(
+    () => ServerSocket(listener.port, true, -1),
+    "NS_ERROR_SOCKET_ADDRESS_IN_USE"
+  );
 }
 
-function run_test()
-{
+function run_test() {
   testAddrInUse();
 }

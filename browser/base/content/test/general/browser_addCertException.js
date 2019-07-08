@@ -14,40 +14,62 @@ add_task(async function() {
   await loadBadCertPage("https://expired.example.com");
 
   let { gIdentityHandler } = gBrowser.ownerGlobal;
-  let promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+  let promisePanelOpen = BrowserTestUtils.waitForEvent(
+    gIdentityHandler._identityPopup,
+    "popupshown"
+  );
   gIdentityHandler._identityBox.click();
   await promisePanelOpen;
 
-  let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
+  let promiseViewShown = BrowserTestUtils.waitForEvent(
+    gIdentityHandler._identityPopup,
+    "ViewShown"
+  );
   document.getElementById("identity-popup-security-expander").click();
   await promiseViewShown;
 
-  is_element_visible(document.getElementById("connection-icon"), "Should see connection icon");
+  is_element_visible(
+    document.getElementById("connection-icon"),
+    "Should see connection icon"
+  );
   let connectionIconImage = gBrowser.ownerGlobal
-        .getComputedStyle(document.getElementById("connection-icon"))
-        .getPropertyValue("list-style-image");
+    .getComputedStyle(document.getElementById("connection-icon"))
+    .getPropertyValue("list-style-image");
   let securityViewBG = gBrowser.ownerGlobal
-        .getComputedStyle(document.getElementById("identity-popup-securityView")
-                                  .getElementsByClassName("identity-popup-security-content")[0])
-        .getPropertyValue("background-image");
+    .getComputedStyle(
+      document
+        .getElementById("identity-popup-securityView")
+        .getElementsByClassName("identity-popup-security-content")[0]
+    )
+    .getPropertyValue("background-image");
   let securityContentBG = gBrowser.ownerGlobal
-        .getComputedStyle(document.getElementById("identity-popup-mainView")
-                                  .getElementsByClassName("identity-popup-security-content")[0])
-        .getPropertyValue("background-image");
-  is(connectionIconImage,
-     "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg\")",
-     "Using expected icon image in the identity block");
-  is(securityViewBG,
-     "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg\")",
-     "Using expected icon image in the Control Center main view");
-  is(securityContentBG,
-     "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg\")",
-     "Using expected icon image in the Control Center subview");
+    .getComputedStyle(
+      document
+        .getElementById("identity-popup-mainView")
+        .getElementsByClassName("identity-popup-security-content")[0]
+    )
+    .getPropertyValue("background-image");
+  is(
+    connectionIconImage,
+    'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
+    "Using expected icon image in the identity block"
+  );
+  is(
+    securityViewBG,
+    'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
+    "Using expected icon image in the Control Center main view"
+  );
+  is(
+    securityContentBG,
+    'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
+    "Using expected icon image in the Control Center subview"
+  );
 
   gIdentityHandler._identityPopup.hidden = true;
 
-  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
-                              .getService(Ci.nsICertOverrideService);
+  let certOverrideService = Cc[
+    "@mozilla.org/security/certoverride;1"
+  ].getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("expired.example.com", -1);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

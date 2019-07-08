@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 /**
  * Test whether the focus transfers to a tab which is already inspected .
@@ -13,39 +16,56 @@ add_task(async function() {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 
-  info("Select 'performance' panel as the initial tool since the tool does not listen " +
-       "any changes of the document without user action");
+  info(
+    "Select 'performance' panel as the initial tool since the tool does not listen " +
+      "any changes of the document without user action"
+  );
   await pushPref("devtools.toolbox.selectedTool", "performance");
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const inspectionTarget = "about:debugging";
-  info(`Open ${ inspectionTarget } as inspection target`);
+  info(`Open ${inspectionTarget} as inspection target`);
   await waitUntil(() => findDebugTargetByText(inspectionTarget, document));
-  info(`Inspect ${ inspectionTarget } page in about:devtools-toolbox`);
-  const { devtoolsTab, devtoolsWindow } =
-    await openAboutDevtoolsToolbox(document, tab, window, inspectionTarget);
+  info(`Inspect ${inspectionTarget} page in about:devtools-toolbox`);
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window,
+    inspectionTarget
+  );
 
-  info("Check the tab state after clicking inspect button " +
-       "when another tab was selected");
+  info(
+    "Check the tab state after clicking inspect button " +
+      "when another tab was selected"
+  );
   gBrowser.selectedTab = tab;
   clickInspectButton(inspectionTarget, document);
   const devtoolsURL = devtoolsWindow.location.href;
   assertDevtoolsToolboxTabState(devtoolsURL);
 
-  info("Check the tab state after clicking inspect button " +
-       "when the toolbox tab is in another window");
+  info(
+    "Check the tab state after clicking inspect button " +
+      "when the toolbox tab is in another window"
+  );
   const newNavigator = gBrowser.replaceTabWithWindow(devtoolsTab);
-  await waitUntil(() =>
-    newNavigator.gBrowser &&
-    newNavigator.gBrowser.selectedTab.linkedBrowser
-                .contentWindow.location.href === devtoolsURL);
-  info("Create a tab in the window and select the tab " +
-       "so that the about:devtools-toolbox tab loses focus");
-  newNavigator.gBrowser.selectedTab = newNavigator.gBrowser.addTab("about:blank", {
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  });
+  await waitUntil(
+    () =>
+      newNavigator.gBrowser &&
+      newNavigator.gBrowser.selectedTab.linkedBrowser.contentWindow.location
+        .href === devtoolsURL
+  );
+  info(
+    "Create a tab in the window and select the tab " +
+      "so that the about:devtools-toolbox tab loses focus"
+  );
+  newNavigator.gBrowser.selectedTab = newNavigator.gBrowser.addTab(
+    "about:blank",
+    {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    }
+  );
   clickInspectButton(inspectionTarget, document);
   assertDevtoolsToolboxTabState(devtoolsURL);
 
@@ -71,14 +91,17 @@ function assertDevtoolsToolboxTabState(devtoolsURL) {
 
   for (const navigator of Services.wm.getEnumerator("navigator:browser")) {
     for (const browser of navigator.gBrowser.browsers) {
-      if (browser.contentWindow && browser.contentWindow.location.href === devtoolsURL) {
+      if (
+        browser.contentWindow &&
+        browser.contentWindow.location.href === devtoolsURL
+      ) {
         const tab = navigator.gBrowser.getTabForBrowser(browser);
         existingTabs.push(tab);
       }
     }
   }
 
-  is(existingTabs.length, 1, `Only one tab is opened for ${ devtoolsURL }`);
+  is(existingTabs.length, 1, `Only one tab is opened for ${devtoolsURL}`);
   const tab = existingTabs[0];
   const navigator = tab.ownerGlobal;
   is(navigator.gBrowser.selectedTab, tab, "The tab is selected");

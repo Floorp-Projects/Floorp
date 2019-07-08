@@ -5,7 +5,9 @@ var Cm = Components.manager;
 
 // Required to avoid failures.
 do_get_profile();
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({
@@ -16,13 +18,18 @@ updateAppInfo({
 });
 
 function addResourceAlias() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-  const handler = Services.io.getProtocolHandler("resource")
-                  .QueryInterface(Ci.nsIResProtocolHandler);
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  const handler = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
 
   let modules = ["common", "crypto", "settings"];
   for (let module of modules) {
-    let uri = Services.io.newURI("resource://gre/modules/services-" + module + "/");
+    let uri = Services.io.newURI(
+      "resource://gre/modules/services-" + module + "/"
+    );
     handler.setSubstitution("services-" + module, uri);
   }
 }

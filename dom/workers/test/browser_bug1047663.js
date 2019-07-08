@@ -11,7 +11,9 @@ function test() {
 
   (async function() {
     // Disable rcwn to make cache behavior deterministic.
-    await SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]});
+    await SpecialPowers.pushPrefEnv({
+      set: [["network.http.rcwn.enabled", false]],
+    });
 
     let tab = await addTab(TAB_URL);
 

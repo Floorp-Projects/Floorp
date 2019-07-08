@@ -5,7 +5,10 @@
 "use strict";
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
@@ -97,13 +100,10 @@ class CurrentTimeScrubber extends PureComponent {
   }
 
   updateAnimationsCurrentTime(pageX, needRefresh) {
-    const {
-      direction,
-      setAnimationsCurrentTime,
-      timeScale,
-    } = this.props;
+    const { direction, setAnimationsCurrentTime, timeScale } = this.props;
 
-    let progressRate = (pageX - this.controllerArea.x) / this.controllerArea.width;
+    let progressRate =
+      (pageX - this.controllerArea.x) / this.controllerArea.width;
 
     if (progressRate < 0.0) {
       progressRate = 0.0;
@@ -111,9 +111,10 @@ class CurrentTimeScrubber extends PureComponent {
       progressRate = 1.0;
     }
 
-    const time = direction === "ltr"
-                  ? progressRate * timeScale.getDuration()
-                  : (1 - progressRate) * timeScale.getDuration();
+    const time =
+      direction === "ltr"
+        ? progressRate * timeScale.getDuration()
+        : (1 - progressRate) * timeScale.getDuration();
 
     setAnimationsCurrentTime(time, needRefresh);
   }
@@ -125,12 +126,10 @@ class CurrentTimeScrubber extends PureComponent {
       {
         className: "current-time-scrubber-area",
       },
-      IndicationBar(
-        {
-          className: "current-time-scrubber",
-          position,
-        }
-      )
+      IndicationBar({
+        className: "current-time-scrubber",
+        position,
+      })
     );
   }
 }

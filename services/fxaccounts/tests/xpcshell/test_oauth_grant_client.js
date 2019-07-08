@@ -3,8 +3,21 @@
 
 "use strict";
 
-const {ERRNO_INVALID_FXA_ASSERTION, ERRNO_NETWORK, ERRNO_PARSE, ERRNO_UNKNOWN_ERROR, ERROR_CODE_METHOD_NOT_ALLOWED, ERROR_MSG_METHOD_NOT_ALLOWED, ERROR_NETWORK, ERROR_PARSE, ERROR_UNKNOWN} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {FxAccountsOAuthGrantClient, FxAccountsOAuthGrantClientError} = ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
+const {
+  ERRNO_INVALID_FXA_ASSERTION,
+  ERRNO_NETWORK,
+  ERRNO_PARSE,
+  ERRNO_UNKNOWN_ERROR,
+  ERROR_CODE_METHOD_NOT_ALLOWED,
+  ERROR_MSG_METHOD_NOT_ALLOWED,
+  ERROR_NETWORK,
+  ERROR_PARSE,
+  ERROR_UNKNOWN,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {
+  FxAccountsOAuthGrantClient,
+  FxAccountsOAuthGrantClientError,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
 const CLIENT_OPTIONS = {
   serverURL: "https://127.0.0.1:9010/v1",
@@ -70,18 +83,17 @@ add_test(function successfulResponse() {
   let response = {
     success: true,
     status: STATUS_SUCCESS,
-    body: JSON.stringify({access_token: "http://example.com/image.jpeg",
-                          id: "0d5c1a89b8c54580b8e3e8adadae864a"}),
+    body: JSON.stringify({
+      access_token: "http://example.com/image.jpeg",
+      id: "0d5c1a89b8c54580b8e3e8adadae864a",
+    }),
   };
 
   client._Request = new mockResponse(response);
-  client.getTokenFromAssertion("assertion", "scope")
-    .then(
-      function(result) {
-        Assert.equal(result.access_token, "http://example.com/image.jpeg");
-        run_next_test();
-      }
-    );
+  client.getTokenFromAssertion("assertion", "scope").then(function(result) {
+    Assert.equal(result.access_token, "http://example.com/image.jpeg");
+    run_next_test();
+  });
 });
 
 add_test(function successfulDestroy() {
@@ -105,35 +117,38 @@ add_test(function parseErrorResponse() {
   };
 
   client._Request = new mockResponse(response);
-  client.getTokenFromAssertion("assertion", "scope")
-    .catch(function(e) {
-      Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
-      Assert.equal(e.code, STATUS_SUCCESS);
-      Assert.equal(e.errno, ERRNO_PARSE);
-      Assert.equal(e.error, ERROR_PARSE);
-      Assert.equal(e.message, "unexpected");
-      run_next_test();
-    });
+  client.getTokenFromAssertion("assertion", "scope").catch(function(e) {
+    Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
+    Assert.equal(e.code, STATUS_SUCCESS);
+    Assert.equal(e.errno, ERRNO_PARSE);
+    Assert.equal(e.error, ERROR_PARSE);
+    Assert.equal(e.message, "unexpected");
+    run_next_test();
+  });
 });
 
 add_task(async function serverErrorResponse() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     status: 400,
-    body: JSON.stringify({code: 400, errno: 104, error: "Bad Request",
-                          message: "Unauthorized", reason: "Invalid fxa assertion"}),
+    body: JSON.stringify({
+      code: 400,
+      errno: 104,
+      error: "Bad Request",
+      message: "Unauthorized",
+      reason: "Invalid fxa assertion",
+    }),
   };
 
   client._Request = new mockResponse(response);
-  client.getTokenFromAssertion("blah", "scope")
-    .catch(function(e) {
-      Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
-      Assert.equal(e.code, 400);
-      Assert.equal(e.errno, ERRNO_INVALID_FXA_ASSERTION);
-      Assert.equal(e.error, "Bad Request");
-      Assert.equal(e.message, "Unauthorized");
-      run_next_test();
-    });
+  client.getTokenFromAssertion("blah", "scope").catch(function(e) {
+    Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
+    Assert.equal(e.code, 400);
+    Assert.equal(e.errno, ERRNO_INVALID_FXA_ASSERTION);
+    Assert.equal(e.error, "Bad Request");
+    Assert.equal(e.message, "Unauthorized");
+    run_next_test();
+  });
 });
 
 add_task(async function networkErrorResponse() {
@@ -141,91 +156,99 @@ add_task(async function networkErrorResponse() {
     serverURL: "https://domain.dummy",
     client_id: "abc123",
   });
-  client.getTokenFromAssertion("assertion", "scope")
-    .catch(function(e) {
-      Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
-      Assert.equal(e.code, null);
-      Assert.equal(e.errno, ERRNO_NETWORK);
-      Assert.equal(e.error, ERROR_NETWORK);
-      run_next_test();
-    });
+  client.getTokenFromAssertion("assertion", "scope").catch(function(e) {
+    Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
+    Assert.equal(e.code, null);
+    Assert.equal(e.errno, ERRNO_NETWORK);
+    Assert.equal(e.error, ERROR_NETWORK);
+    run_next_test();
+  });
 });
 
 add_test(function unsupportedMethod() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
 
-  return client._createRequest("/", "PUT")
-    .catch(function(e) {
-      Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
-      Assert.equal(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
-      Assert.equal(e.errno, ERRNO_NETWORK);
-      Assert.equal(e.error, ERROR_NETWORK);
-      Assert.equal(e.message, ERROR_MSG_METHOD_NOT_ALLOWED);
-      run_next_test();
-    });
+  return client._createRequest("/", "PUT").catch(function(e) {
+    Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
+    Assert.equal(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
+    Assert.equal(e.errno, ERRNO_NETWORK);
+    Assert.equal(e.error, ERROR_NETWORK);
+    Assert.equal(e.message, ERROR_MSG_METHOD_NOT_ALLOWED);
+    run_next_test();
+  });
 });
 
 add_test(function onCompleteRequestError() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   client._Request = new mockResponseError(new Error("onComplete error"));
-  client.getTokenFromAssertion("assertion", "scope")
-    .catch(function(e) {
-      Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
-      Assert.equal(e.code, null);
-      Assert.equal(e.errno, ERRNO_NETWORK);
-      Assert.equal(e.error, ERROR_NETWORK);
-      Assert.equal(e.message, "Error: onComplete error");
-      run_next_test();
-    });
+  client.getTokenFromAssertion("assertion", "scope").catch(function(e) {
+    Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
+    Assert.equal(e.code, null);
+    Assert.equal(e.errno, ERRNO_NETWORK);
+    Assert.equal(e.error, ERROR_NETWORK);
+    Assert.equal(e.message, "Error: onComplete error");
+    run_next_test();
+  });
 });
 
 add_test(function incorrectErrno() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     status: 400,
-    body: JSON.stringify({code: 400, errno: "bad errno", error: "Bad Request",
-                          message: "Unauthorized", reason: "Invalid fxa assertion"}),
+    body: JSON.stringify({
+      code: 400,
+      errno: "bad errno",
+      error: "Bad Request",
+      message: "Unauthorized",
+      reason: "Invalid fxa assertion",
+    }),
   };
 
   client._Request = new mockResponse(response);
-  client.getTokenFromAssertion("blah", "scope")
-    .catch(function(e) {
-      Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
-      Assert.equal(e.code, 400);
-      Assert.equal(e.errno, ERRNO_UNKNOWN_ERROR);
-      Assert.equal(e.error, "Bad Request");
-      Assert.equal(e.message, "Unauthorized");
-      run_next_test();
-    });
+  client.getTokenFromAssertion("blah", "scope").catch(function(e) {
+    Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
+    Assert.equal(e.code, 400);
+    Assert.equal(e.errno, ERRNO_UNKNOWN_ERROR);
+    Assert.equal(e.error, "Bad Request");
+    Assert.equal(e.message, "Unauthorized");
+    run_next_test();
+  });
 });
 
 add_test(function constructorTests() {
-  validationHelper(undefined,
-    "Error: Missing configuration options");
+  validationHelper(undefined, "Error: Missing configuration options");
 
-  validationHelper({},
-    "Error: Missing 'serverURL' parameter");
+  validationHelper({}, "Error: Missing 'serverURL' parameter");
 
-  validationHelper({ serverURL: "https://example.com" },
-    "Error: Missing 'client_id' parameter");
+  validationHelper(
+    { serverURL: "https://example.com" },
+    "Error: Missing 'client_id' parameter"
+  );
 
-  validationHelper({ serverURL: "https://example.com" },
-    "Error: Missing 'client_id' parameter");
+  validationHelper(
+    { serverURL: "https://example.com" },
+    "Error: Missing 'client_id' parameter"
+  );
 
-  validationHelper({ client_id: "123ABC" },
-    "Error: Missing 'serverURL' parameter");
+  validationHelper(
+    { client_id: "123ABC" },
+    "Error: Missing 'serverURL' parameter"
+  );
 
-  validationHelper({ client_id: "123ABC", serverURL: "http://example.com" },
-    "Error: 'serverURL' must be HTTPS");
+  validationHelper(
+    { client_id: "123ABC", serverURL: "http://example.com" },
+    "Error: 'serverURL' must be HTTPS"
+  );
 
   try {
     Services.prefs.setBoolPref("identity.fxaccounts.allowHttp", true);
-    validationHelper({ client_id: "123ABC", serverURL: "http://example.com" }, null);
+    validationHelper(
+      { client_id: "123ABC", serverURL: "http://example.com" },
+      null
+    );
   } finally {
     Services.prefs.clearUserPref("identity.fxaccounts.allowHttp");
   }
-
-
 
   run_next_test();
 });
@@ -263,22 +286,19 @@ add_test(function errorTests() {
   run_next_test();
 });
 
-
 add_test(function networkErrorResponse() {
   let client = new FxAccountsOAuthGrantClient({
     serverURL: "https://domain.dummy",
     client_id: "abc123",
   });
-  client.getTokenFromAssertion("assertion", "scope")
-    .catch(function(e) {
-      Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
-      Assert.equal(e.code, null);
-      Assert.equal(e.errno, ERRNO_NETWORK);
-      Assert.equal(e.error, ERROR_NETWORK);
-      run_next_test();
-    });
+  client.getTokenFromAssertion("assertion", "scope").catch(function(e) {
+    Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
+    Assert.equal(e.code, null);
+    Assert.equal(e.errno, ERRNO_NETWORK);
+    Assert.equal(e.error, ERROR_NETWORK);
+    run_next_test();
+  });
 });
-
 
 /**
  * Quick way to test the "FxAccountsOAuthGrantClient" constructor.

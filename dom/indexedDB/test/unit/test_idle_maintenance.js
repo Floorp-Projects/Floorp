@@ -6,10 +6,12 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   let uri = Services.io.newURI("https://www.example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   info("Setting permissions");
 
@@ -55,10 +57,10 @@ function* testSteps()
     for (let i = 1; i <= 5; i++) {
       let dbName = "foo-" + i;
       let dbPersistence = persistence;
-      let req = indexedDB.openForPrincipal(principal,
-                                           dbName,
-                                           { version: 1,
-                                             storage: dbPersistence });
+      let req = indexedDB.openForPrincipal(principal, dbName, {
+        version: 1,
+        storage: dbPersistence,
+      });
       req.onerror = event => {
         if (dbPersistence != "persistent") {
           errorHandler(event);
@@ -66,12 +68,17 @@ function* testSteps()
         }
 
         // Explicit persistence is currently blocked on mobile.
-        info("Failed to create persistent database '" + dbPersistence + "/" +
-             dbName + "', hopefully this is on mobile!");
+        info(
+          "Failed to create persistent database '" +
+            dbPersistence +
+            "/" +
+            dbName +
+            "', hopefully this is on mobile!"
+        );
 
         event.preventDefault();
 
-        if (!(--dbCount)) {
+        if (!--dbCount) {
           continueToNextStep();
         }
       };
@@ -93,7 +100,7 @@ function* testSteps()
 
         db.close();
 
-        if (!(--dbCount)) {
+        if (!--dbCount) {
           continueToNextStep();
         }
       };
@@ -106,7 +113,7 @@ function* testSteps()
 
   let usageBeforeMaintenance;
 
-  Services.qms.getUsageForPrincipal(principal, (request) => {
+  Services.qms.getUsageForPrincipal(principal, request => {
     let usage = request.result.usage;
     ok(usage > 0, "Usage is non-zero");
     usageBeforeMaintenance = usage;
@@ -140,7 +147,7 @@ function* testSteps()
 
   let usageAfterMaintenance;
 
-  Services.qms.getUsageForPrincipal(principal, (request) => {
+  Services.qms.getUsageForPrincipal(principal, request => {
     let usage = request.result.usage;
     ok(usage > 0, "Usage is non-zero");
     usageAfterMaintenance = usage;
@@ -148,11 +155,18 @@ function* testSteps()
   });
   yield undefined;
 
-  info("Usage before: " + usageBeforeMaintenance + ". " +
-       "Usage after: " + usageAfterMaintenance);
+  info(
+    "Usage before: " +
+      usageBeforeMaintenance +
+      ". " +
+      "Usage after: " +
+      usageAfterMaintenance
+  );
 
-  ok(usageAfterMaintenance <= usageBeforeMaintenance,
-     "Maintenance decreased file sizes or left them the same");
+  ok(
+    usageAfterMaintenance <= usageBeforeMaintenance,
+    "Maintenance decreased file sizes or left them the same"
+  );
 
   finishTest();
   yield undefined;

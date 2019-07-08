@@ -475,7 +475,7 @@
   height: 12px;
   vertical-align: -1px;
   margin-inline-start: 5px;
-  background-image: url(chrome://devtools/skin/images/alert.svg);
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
   background-size: cover;
   -moz-context-properties: fill;
   fill: var(--yellow-60);

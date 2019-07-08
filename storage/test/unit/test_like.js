@@ -176,8 +176,17 @@ function test_like_8() {
   stmt.finalize();
 }
 
-var tests = [test_count, test_like_1, test_like_2, test_like_3, test_like_4,
-             test_like_5, test_like_6, test_like_7, test_like_8];
+var tests = [
+  test_count,
+  test_like_1,
+  test_like_2,
+  test_like_3,
+  test_like_4,
+  test_like_5,
+  test_like_6,
+  test_like_7,
+  test_like_8,
+];
 
 function run_test() {
   setup();
@@ -188,4 +197,3 @@ function run_test() {
 
   cleanup();
 }
-

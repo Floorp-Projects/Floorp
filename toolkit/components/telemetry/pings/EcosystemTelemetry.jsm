@@ -9,9 +9,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "EcosystemTelemetry",
-];
+var EXPORTED_SYMBOLS = ["EcosystemTelemetry"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -34,7 +32,8 @@ const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "EcosystemTelemetry::";
 
 var Policy = {
-  sendPing: (type, payload, options) => TelemetryController.submitExternalPing(type, payload, options),
+  sendPing: (type, payload, options) =>
+    TelemetryController.submitExternalPing(type, payload, options),
   monotonicNow: () => TelemetryUtils.monotonicNow(),
   fxaUid: () => {
     try {
@@ -43,7 +42,8 @@ var Policy = {
       return null;
     }
   },
-  isClientConfigured: () => Weave.Status.checkSetup() !== Weave.CLIENT_NOT_CONFIGURED,
+  isClientConfigured: () =>
+    Weave.Status.checkSetup() !== Weave.CLIENT_NOT_CONFIGURED,
 };
 
 var EcosystemTelemetry = {
@@ -70,11 +70,18 @@ var EcosystemTelemetry = {
 
   enabled() {
     // Never enabled when not Unified Telemetry (e.g. not enabled on Fennec)
-    if (!Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false)) {
+    if (
+      !Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false)
+    ) {
       return false;
     }
 
-    if (!Services.prefs.getBoolPref(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, false)) {
+    if (
+      !Services.prefs.getBoolPref(
+        TelemetryUtils.Preferences.EcosystemTelemetryEnabled,
+        false
+      )
+    ) {
       return false;
     }
 
@@ -203,13 +210,17 @@ var EcosystemTelemetry = {
     }
 
     if (!this._initialized || !pingType) {
-      this._log.trace(`Not initialized or ping type undefined when sending. Bug?`);
+      this._log.trace(
+        `Not initialized or ping type undefined when sending. Bug?`
+      );
       return;
     }
 
     if (pingType == this.PingType.POST) {
       // TODO(bug 1530654): Implement post-account ping
-      this._log.trace(`Post-account ping not implemented yet. Sending pre-account instead.`);
+      this._log.trace(
+        `Post-account ping not implemented yet. Sending pre-account instead.`
+      );
       pingType = this.PingType.PRE;
     }
 
@@ -228,8 +239,14 @@ var EcosystemTelemetry = {
     // Note: These scalars must be set _before_ getting the rest of the payload.
     // Note: We don't support signed integer scalars, so we convert these to strings
     //       in order to also capture the negative values.
-    Services.telemetry.scalarSet("telemetry.ecosystem_old_send_time", old_send_time.toString());
-    Services.telemetry.scalarSet("telemetry.ecosystem_new_send_time", new_send_time.toString());
+    Services.telemetry.scalarSet(
+      "telemetry.ecosystem_old_send_time",
+      old_send_time.toString()
+    );
+    Services.telemetry.scalarSet(
+      "telemetry.ecosystem_new_send_time",
+      new_send_time.toString()
+    );
 
     let payload = this._payload(reason, duration);
 
@@ -257,10 +274,26 @@ var EcosystemTelemetry = {
       ecosystemClientId: this._ecosystemClientId(),
       duration,
 
-      scalars: Telemetry.getSnapshotForScalars(this.METRICS_STORE, /* clear */ true, /* filter test */ true),
-      keyedScalars: Telemetry.getSnapshotForKeyedScalars(this.METRICS_STORE, /* clear */ true, /* filter test */ true),
-      histograms: Telemetry.getSnapshotForHistograms(this.METRICS_STORE, /* clear */ true, /* filter test */ true),
-      keyedHistograms: Telemetry.getSnapshotForKeyedHistograms(this.METRICS_STORE, /* clear */ true, /* filter test */ true),
+      scalars: Telemetry.getSnapshotForScalars(
+        this.METRICS_STORE,
+        /* clear */ true,
+        /* filter test */ true
+      ),
+      keyedScalars: Telemetry.getSnapshotForKeyedScalars(
+        this.METRICS_STORE,
+        /* clear */ true,
+        /* filter test */ true
+      ),
+      histograms: Telemetry.getSnapshotForHistograms(
+        this.METRICS_STORE,
+        /* clear */ true,
+        /* filter test */ true
+      ),
+      keyedHistograms: Telemetry.getSnapshotForKeyedHistograms(
+        this.METRICS_STORE,
+        /* clear */ true,
+        /* filter test */ true
+      ),
     };
 
     // UID is only allowed on post-account or login pings
@@ -304,7 +337,7 @@ var EcosystemTelemetry = {
           speedMHz: currentEnv.system.cpu.speedMHz,
         },
       },
-      profile: { }, // added conditionally
+      profile: {}, // added conditionally
     };
 
     if (currentEnv.profile.creationDate) {
@@ -326,7 +359,10 @@ var EcosystemTelemetry = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX
+      );
     }
 
     return this._logger;

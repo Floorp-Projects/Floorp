@@ -10,8 +10,11 @@
 var { BrowserTabList } = require("devtools/server/actors/webbrowser");
 var { DebuggerServer } = require("devtools/server/main");
 
-var gTestPage = "data:text/html;charset=utf-8," + encodeURIComponent(
-  "<title>JS Debugger BrowserTabList test page</title><body>Yo.</body>");
+var gTestPage =
+  "data:text/html;charset=utf-8," +
+  encodeURIComponent(
+    "<title>JS Debugger BrowserTabList test page</title><body>Yo.</body>"
+  );
 
 // The tablist object whose behavior we observe.
 var gTabList;
@@ -60,7 +63,11 @@ function checkSingleTab() {
       "about:blank",
       "initial tab list: initial tab URL is 'about:blank'"
     );
-    is(gFirstActor.title, "New Tab", "initial tab list: initial tab title is 'New Tab'");
+    is(
+      gFirstActor.title,
+      "New Tab",
+      "initial tab list: initial tab title is 'New Tab'"
+    );
   });
 }
 
@@ -209,7 +216,10 @@ function testWindowClosed() {
 
     info("actors: " + [...targetActors].map(a => a.url));
     gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
-    ok(gActorA.url.match(/^data:text\/html;/), "gNewWindow closed: new tab URL");
+    ok(
+      gActorA.url.match(/^data:text\/html;/),
+      "gNewWindow closed: new tab URL"
+    );
     is(
       gActorA.title,
       "JS Debugger BrowserTabList test page",

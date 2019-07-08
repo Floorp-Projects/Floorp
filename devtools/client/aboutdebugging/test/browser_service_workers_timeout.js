@@ -31,7 +31,9 @@ add_task(async function() {
 
   // Retrieve the DEBUG button for the worker
   const names = [...document.querySelectorAll("#service-workers .target-name")];
-  const name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
+  const name = names.filter(
+    element => element.textContent === SERVICE_WORKER
+  )[0];
   ok(name, "Found the service worker in the list");
   const targetElement = name.parentNode.parentNode;
   const debugBtn = targetElement.querySelector(".debug-button");
@@ -55,8 +57,10 @@ add_task(async function() {
   });
 
   assertHasTarget(true, document, "service-workers", SERVICE_WORKER);
-  ok(targetElement.querySelector(".debug-button"),
-    "The debug button is still there");
+  ok(
+    targetElement.querySelector(".debug-button"),
+    "The debug button is still there"
+  );
 
   await toolbox.destroy();
   toolbox = null;

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "10.0");
 
@@ -33,7 +33,7 @@ function resetTestEnv(replacedLockTime) {
   try {
     // call begin to reset mStartupCrashTrackingEnded
     appStartup.trackStartupCrashBegin();
-  } catch (x) { }
+  } catch (x) {}
   prefService.setIntPref(pref_max_resumed_crashes, 2);
   prefService.clearUserPref(pref_recent_crashes);
   gAppInfo.replacedLockTime = replacedLockTime;
@@ -61,7 +61,7 @@ function test_trackStartupCrashBegin() {
   try {
     Assert.ok(!appStartup.trackStartupCrashBegin());
     do_throw("Should have thrown since last_success is not set");
-  } catch (x) { }
+  } catch (x) {}
 
   Assert.ok(!prefService.prefHasUserValue(pref_last_success));
   Assert.ok(!prefService.prefHasUserValue(pref_recent_crashes));
@@ -76,7 +76,7 @@ function test_trackStartupCrashBegin() {
   try {
     Assert.ok(!appStartup.trackStartupCrashBegin());
     do_throw("Should have thrown since last_success is not set");
-  } catch (x) { }
+  } catch (x) {}
 
   Assert.ok(!prefService.prefHasUserValue(pref_last_success));
   Assert.ok(!prefService.prefHasUserValue(pref_recent_crashes));
@@ -87,9 +87,15 @@ function test_trackStartupCrashBegin() {
   resetTestEnv(replacedLockTime);
   Assert.ok(!prefService.prefHasUserValue(pref_recent_crashes));
   prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime));
-  Assert.equal(ms_to_s(replacedLockTime), prefService.getIntPref(pref_last_success));
+  Assert.equal(
+    ms_to_s(replacedLockTime),
+    prefService.getIntPref(pref_last_success)
+  );
   Assert.ok(!appStartup.trackStartupCrashBegin());
-  Assert.equal(ms_to_s(replacedLockTime), prefService.getIntPref(pref_last_success));
+  Assert.equal(
+    ms_to_s(replacedLockTime),
+    prefService.getIntPref(pref_last_success)
+  );
   Assert.ok(!prefService.prefHasUserValue(pref_recent_crashes));
   Assert.ok(!appStartup.automaticSafeModeNecessary);
 
@@ -98,7 +104,10 @@ function test_trackStartupCrashBegin() {
   prefService.setIntPref(pref_recent_crashes, 1);
   prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime));
   Assert.ok(!appStartup.trackStartupCrashBegin());
-  Assert.equal(ms_to_s(replacedLockTime), prefService.getIntPref(pref_last_success));
+  Assert.equal(
+    ms_to_s(replacedLockTime),
+    prefService.getIntPref(pref_last_success)
+  );
   Assert.equal(1, prefService.getIntPref(pref_recent_crashes));
   Assert.ok(!appStartup.automaticSafeModeNecessary);
 
@@ -107,7 +116,10 @@ function test_trackStartupCrashBegin() {
   prefService.setIntPref(pref_recent_crashes, max_resumed);
   prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime));
   Assert.ok(!appStartup.trackStartupCrashBegin());
-  Assert.equal(ms_to_s(replacedLockTime), prefService.getIntPref(pref_last_success));
+  Assert.equal(
+    ms_to_s(replacedLockTime),
+    prefService.getIntPref(pref_last_success)
+  );
   Assert.equal(max_resumed, prefService.getIntPref(pref_recent_crashes));
   Assert.ok(!appStartup.automaticSafeModeNecessary);
 
@@ -135,7 +147,10 @@ function test_trackStartupCrashBegin() {
   // normal startup after 1 non-recent crash (1 year ago), no other recent
   replacedLockTime = Date.now() - 365 * 24 * 60 * 60 * 1000;
   resetTestEnv(replacedLockTime);
-  prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime) - 365 * 24 * 60 * 60);
+  prefService.setIntPref(
+    pref_last_success,
+    ms_to_s(replacedLockTime) - 365 * 24 * 60 * 60
+  );
   Assert.ok(!appStartup.trackStartupCrashBegin());
   // recent crash count pref should be unset since the last crash was not recent
   Assert.ok(!prefService.prefHasUserValue(pref_recent_crashes));
@@ -144,14 +159,20 @@ function test_trackStartupCrashBegin() {
   // normal startup after 1 crash (1 minute ago), no other recent
   replacedLockTime = Date.now() - 60 * 1000;
   resetTestEnv(replacedLockTime);
-  prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime) - 60 * 60); // last success - 1 hour ago
+  prefService.setIntPref(
+    pref_last_success,
+    ms_to_s(replacedLockTime) - 60 * 60
+  ); // last success - 1 hour ago
   Assert.ok(!appStartup.trackStartupCrashBegin());
   // recent crash count pref should be created with value 1
   Assert.equal(1, prefService.getIntPref(pref_recent_crashes));
   Assert.ok(!appStartup.automaticSafeModeNecessary);
 
   // normal startup after another crash (1 minute ago), 1 already
-  prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime) - 60 * 60); // last success - 1 hour ago
+  prefService.setIntPref(
+    pref_last_success,
+    ms_to_s(replacedLockTime) - 60 * 60
+  ); // last success - 1 hour ago
   replacedLockTime = Date.now() - 60 * 1000;
   gAppInfo.replacedLockTime = replacedLockTime;
   Assert.ok(!appStartup.trackStartupCrashBegin());
@@ -160,7 +181,10 @@ function test_trackStartupCrashBegin() {
   Assert.ok(!appStartup.automaticSafeModeNecessary);
 
   // normal startup after another crash (1 minute ago), 2 already
-  prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime) - 60 * 60); // last success - 1 hour ago
+  prefService.setIntPref(
+    pref_last_success,
+    ms_to_s(replacedLockTime) - 60 * 60
+  ); // last success - 1 hour ago
   Assert.ok(appStartup.trackStartupCrashBegin());
   // recent crash count pref should be incremented by 1
   Assert.equal(3, prefService.getIntPref(pref_recent_crashes));
@@ -169,7 +193,10 @@ function test_trackStartupCrashBegin() {
   // normal startup after 1 non-recent crash (1 year ago), 3 crashes already
   replacedLockTime = Date.now() - 365 * 24 * 60 * 60 * 1000;
   resetTestEnv(replacedLockTime);
-  prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime) - 60 * 60); // last success - 1 hour ago
+  prefService.setIntPref(
+    pref_last_success,
+    ms_to_s(replacedLockTime) - 60 * 60
+  ); // last success - 1 hour ago
   Assert.ok(!appStartup.trackStartupCrashBegin());
   // recent crash count should be unset since the last crash was not recent
   Assert.ok(!prefService.prefHasUserValue(pref_recent_crashes));
@@ -183,7 +210,7 @@ function test_trackStartupCrashEnd() {
   try {
     appStartup.trackStartupCrashBegin(); // required to be called before end
     do_throw("Should have thrown since last_success is not set");
-  } catch (x) { }
+  } catch (x) {}
   appStartup.trackStartupCrashEnd();
   Assert.ok(!prefService.prefHasUserValue(pref_recent_crashes));
   Assert.ok(!prefService.prefHasUserValue(pref_last_success));
@@ -197,7 +224,9 @@ function test_trackStartupCrashEnd() {
   // ensure last_success was set since we have declared a succesful startup
   // main timestamp doesn't get set in XPCShell so approximate with now
   Assert.ok(prefService.getIntPref(pref_last_success) <= now_seconds());
-  Assert.ok(prefService.getIntPref(pref_last_success) >= now_seconds() - 4 * 60 * 60);
+  Assert.ok(
+    prefService.getIntPref(pref_last_success) >= now_seconds() - 4 * 60 * 60
+  );
   Assert.ok(!prefService.prefHasUserValue(pref_recent_crashes));
 
   // successful startup with 1 recent crash
@@ -263,7 +292,10 @@ function test_trackStartupCrashEnd_safeMode() {
   let replacedLockTime = Date.now();
   resetTestEnv(replacedLockTime);
   let max_resumed = prefService.getIntPref(pref_max_resumed_crashes);
-  prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime) - 24 * 60 * 60);
+  prefService.setIntPref(
+    pref_last_success,
+    ms_to_s(replacedLockTime) - 24 * 60 * 60
+  );
 
   // ensure recent_crashes were not cleared in manual safe mode
   prefService.setIntPref(pref_recent_crashes, 1);
@@ -288,7 +320,10 @@ function test_maxResumed() {
   prefService.setIntPref(pref_max_resumed_crashes, -1);
 
   prefService.setIntPref(pref_recent_crashes, max_resumed + 1);
-  prefService.setIntPref(pref_last_success, ms_to_s(replacedLockTime) - 24 * 60 * 60);
+  prefService.setIntPref(
+    pref_last_success,
+    ms_to_s(replacedLockTime) - 24 * 60 * 60
+  );
   appStartup.trackStartupCrashBegin();
   // should remain the same since the last startup was not a crash
   Assert.equal(max_resumed + 2, prefService.getIntPref(pref_recent_crashes));

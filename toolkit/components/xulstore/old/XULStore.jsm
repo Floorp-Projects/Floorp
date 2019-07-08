@@ -12,20 +12,26 @@ const WRITE_DELAY_MS = (debugMode ? 3 : 30) * 1000;
 const XULSTORE_CID = Components.ID("{6f46b6f4-c8b1-4bd4-a4fa-9ebbed0753ea}");
 const STOREDB_FILENAME = "xulstore.json";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 function XULStore() {
-  if (!Services.appinfo.inSafeMode)
+  if (!Services.appinfo.inSafeMode) {
     this.load();
+  }
 }
 
 XULStore.prototype = {
   classID: XULSTORE_CID,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsIXULStore,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsIXULStore,
+    Ci.nsISupportsWeakReference,
+  ]),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(XULStore),
 
   /* ---------- private members ---------- */
@@ -76,8 +82,9 @@ XULStore.prototype = {
    * Internal function for logging debug messages to the Error Console window
    */
   log(message) {
-    if (!debugMode)
+    if (!debugMode) {
       return;
+    }
     console.log("XULStore: " + message);
   },
 
@@ -92,8 +99,9 @@ XULStore.prototype = {
   },
 
   async writeFile() {
-    if (!this._needsSaving)
+    if (!this._needsSaving) {
       return;
+    }
 
     this._needsSaving = false;
 
@@ -104,8 +112,9 @@ XULStore.prototype = {
       let encoder = new TextEncoder();
 
       data = encoder.encode(data);
-      await OS.File.writeAtomic(this._storeFile.path, data,
-                              { tmpPath: this._storeFile.path + ".tmp" });
+      await OS.File.writeAtomic(this._storeFile.path, data, {
+        tmpPath: this._storeFile.path + ".tmp",
+      });
     } catch (e) {
       this.log("Failed to write xulstore.json: " + e);
       throw e;
@@ -113,8 +122,9 @@ XULStore.prototype = {
   },
 
   markAsChanged() {
-    if (this._needsSaving || !this._storeFile)
+    if (this._needsSaving || !this._storeFile) {
       return;
+    }
 
     // Don't write the file more than once every 30 seconds.
     this._needsSaving = true;
@@ -148,20 +158,29 @@ XULStore.prototype = {
   },
 
   setValue(docURI, id, attr, value) {
-    this.log("Saving " + attr + "=" + value + " for id=" + id + ", doc=" + docURI);
+    this.log(
+      "Saving " + attr + "=" + value + " for id=" + id + ", doc=" + docURI
+    );
 
     if (!this._saveAllowed) {
-      Services.console.logStringMessage("XULStore: Changes after profile-before-change are ignored!");
+      Services.console.logStringMessage(
+        "XULStore: Changes after profile-before-change are ignored!"
+      );
       return;
     }
 
     // bug 319846 -- don't save really long attributes or values.
     if (id.length > 512 || attr.length > 512) {
-      throw Components.Exception("id or attribute name too long", Cr.NS_ERROR_ILLEGAL_VALUE);
+      throw Components.Exception(
+        "id or attribute name too long",
+        Cr.NS_ERROR_ILLEGAL_VALUE
+      );
     }
 
     if (value.length > 4096) {
-      Services.console.logStringMessage("XULStore: Warning, truncating long attribute value");
+      Services.console.logStringMessage(
+        "XULStore: Warning, truncating long attribute value"
+      );
       value = value.substr(0, 4096);
     }
 
@@ -176,8 +195,9 @@ XULStore.prototype = {
     obj = obj[id];
 
     // Don't set the value if it is already set to avoid saving the file.
-    if (attr in obj && obj[attr] == value)
+    if (attr in obj && obj[attr] == value) {
       return;
+    }
 
     obj[attr] = value; // IE, this._data[docURI][id][attr] = value;
 
@@ -185,7 +205,9 @@ XULStore.prototype = {
   },
 
   hasValue(docURI, id, attr) {
-    this.log("has store value for id=" + id + ", attr=" + attr + ", doc=" + docURI);
+    this.log(
+      "has store value for id=" + id + ", attr=" + attr + ", doc=" + docURI
+    );
 
     let ids = this._data[docURI];
     if (ids) {
@@ -199,7 +221,9 @@ XULStore.prototype = {
   },
 
   getValue(docURI, id, attr) {
-    this.log("get store value for id=" + id + ", attr=" + attr + ", doc=" + docURI);
+    this.log(
+      "get store value for id=" + id + ", attr=" + attr + ", doc=" + docURI
+    );
 
     let ids = this._data[docURI];
     if (ids) {
@@ -213,10 +237,14 @@ XULStore.prototype = {
   },
 
   removeValue(docURI, id, attr) {
-    this.log("remove store value for id=" + id + ", attr=" + attr + ", doc=" + docURI);
+    this.log(
+      "remove store value for id=" + id + ", attr=" + attr + ", doc=" + docURI
+    );
 
     if (!this._saveAllowed) {
-      Services.console.logStringMessage("XULStore: Changes after profile-before-change are ignored!");
+      Services.console.logStringMessage(
+        "XULStore: Changes after profile-before-change are ignored!"
+      );
       return;
     }
 
@@ -243,7 +271,9 @@ XULStore.prototype = {
     this.log("remove store values for doc=" + docURI);
 
     if (!this._saveAllowed) {
-      Services.console.logStringMessage("XULStore: Changes after profile-before-change are ignored!");
+      Services.console.logStringMessage(
+        "XULStore: Changes after profile-before-change are ignored!"
+      );
       return;
     }
 
@@ -256,8 +286,9 @@ XULStore.prototype = {
   getIDsEnumerator(docURI) {
     this.log("Getting ID enumerator for doc=" + docURI);
 
-    if (!(docURI in this._data))
+    if (!(docURI in this._data)) {
       return new nsStringEnumerator([]);
+    }
 
     let result = [];
     let ids = this._data[docURI];
@@ -273,8 +304,9 @@ XULStore.prototype = {
   getAttributeEnumerator(docURI, id) {
     this.log("Getting attribute enumerator for id=" + id + ", doc=" + docURI);
 
-    if (!(docURI in this._data) || !(id in this._data[docURI]))
+    if (!(docURI in this._data) || !(id in this._data[docURI])) {
       return new nsStringEnumerator([]);
+    }
 
     let attrs = [];
     for (let attr in this._data[docURI][id]) {
@@ -299,8 +331,9 @@ nsStringEnumerator.prototype = {
     return this._nextIndex < this._items.length;
   },
   getNext() {
-    if (!this.hasMore())
+    if (!this.hasMore()) {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
+    }
     return this._items[this._nextIndex++];
   },
 };

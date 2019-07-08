@@ -4,7 +4,9 @@ browser.runtime
   .catch(runTest);
 
 async function runTest() {
-  await browser.runtime
-    .sendNativeMessage("browser", "testContentBrowserMessage");
+  await browser.runtime.sendNativeMessage(
+    "browser",
+    "testContentBrowserMessage"
+  );
   browser.runtime.connectNative("browser");
 }

@@ -10,8 +10,10 @@ const ZOOM_PREF = "devtools.toolbox.zoomValue";
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/toolbox.properties"
+);
 
 /**
  * Register generic keys to control zoom level of the given document.
@@ -62,15 +64,13 @@ exports.register = function(window, shortcuts) {
     shortcuts.on(zoomIn2, zoomIn);
   }
 
-  shortcuts.on(L10N.getStr("toolbox.zoomOut.key"),
-               zoomOut);
+  shortcuts.on(L10N.getStr("toolbox.zoomOut.key"), zoomOut);
   const zoomOut2 = L10N.getStr("toolbox.zoomOut2.key");
   if (zoomOut2) {
     shortcuts.on(zoomOut2, zoomOut);
   }
 
-  shortcuts.on(L10N.getStr("toolbox.zoomReset.key"),
-               zoomReset);
+  shortcuts.on(L10N.getStr("toolbox.zoomReset.key"), zoomReset);
   const zoomReset2 = L10N.getStr("toolbox.zoomReset2.key");
   if (zoomReset2) {
     shortcuts.on(zoomReset2, zoomReset);

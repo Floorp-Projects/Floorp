@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
+    attributes:
+        artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
     index:
         product: mobile
     worker:
@@ -11,9 +13,13 @@ job-defaults:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
         artifacts:
+            # TODO Bug 1563711 - Remove target.maven.zip
             - name: public/build/target.maven.zip
               path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
               type: file
+            - name: public/build/maven
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/maven/
+              type: directory
             - name: public/build/geckoview-androidTest.apk
               path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
               type: file
@@ -536,14 +542,6 @@ android-geckoview-fat-aar/opt:
             MOZ_ARTIFACT_TASK_ANDROID_AARCH64_OPT: {task-reference: '<android-aarch64-opt>'}
             MOZ_ARTIFACT_TASK_ANDROID_X86_OPT: {task-reference: '<android-x86-opt>'}
             MOZ_ARTIFACT_TASK_ANDROID_X86_64_OPT: {task-reference: '<android-x86_64-opt>'}
-        artifacts:
-            - name: public/android/maven
-              # TODO Bug 1433198. Remove the following entry once target.maven.zip is uploaded to a maven repository
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/maven/
-              type: directory
-            - name: public/build/target.maven.zip
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
-              type: file
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -557,7 +555,6 @@ android-geckoview-fat-aar-nightly/opt:
         nightly: true
         enable-full-crashsymbols: true
         disable-push-apk: true
-        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:

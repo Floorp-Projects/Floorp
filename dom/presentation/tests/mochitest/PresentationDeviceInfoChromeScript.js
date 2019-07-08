@@ -5,10 +5,13 @@
 
 /* eslint-env mozilla/frame-script */
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const manager = Cc["@mozilla.org/presentation-device/manager;1"]
-                  .getService(Ci.nsIPresentationDeviceManager);
+const manager = Cc["@mozilla.org/presentation-device/manager;1"].getService(
+  Ci.nsIPresentationDeviceManager
+);
 
 var testProvider = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceProvider]),
@@ -117,7 +120,6 @@ addMessageListener("trigger-add-multiple-devices", function() {
 addMessageListener("trigger-add-https-devices", function() {
   manager.addDevice(mockedDeviceSupportHttpsURL);
 });
-
 
 addMessageListener("trigger-device-update", function(device) {
   testDevice.id = device.id;

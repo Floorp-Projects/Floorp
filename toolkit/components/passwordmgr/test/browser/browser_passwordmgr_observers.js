@@ -7,10 +7,15 @@ add_task(async function test() {
     const LOGIN_COUNT = 5;
 
     let nsLoginInfo = new Components.Constructor(
-      "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+      "@mozilla.org/login-manager/loginInfo;1",
+      Ci.nsILoginInfo,
+      "init"
+    );
     let pmDialog = window.openDialog(
       "chrome://passwordmgr/content/passwordManager.xul",
-      "Toolkit:PasswordManager", "");
+      "Toolkit:PasswordManager",
+      ""
+    );
 
     let logins = [];
     let loginCounter = 0;
@@ -55,12 +60,26 @@ add_task(async function test() {
     function createLogins() {
       let login;
       for (let i = 0; i < LOGIN_COUNT; i++) {
-        login = new nsLoginInfo(LOGIN_HOST + "?n=" + i, LOGIN_HOST + "?n=" + i,
-                                null, "user" + i, "password" + i, "u" + i, "p" + i);
+        login = new nsLoginInfo(
+          LOGIN_HOST + "?n=" + i,
+          LOGIN_HOST + "?n=" + i,
+          null,
+          "user" + i,
+          "password" + i,
+          "u" + i,
+          "p" + i
+        );
         logins.push(login);
       }
-      modifiedLogin = new nsLoginInfo(LOGIN_HOST + "?n=0", LOGIN_HOST + "?n=0",
-                                      null, "user0", "newpassword0", "u0", "p0");
+      modifiedLogin = new nsLoginInfo(
+        LOGIN_HOST + "?n=0",
+        LOGIN_HOST + "?n=0",
+        null,
+        "user0",
+        "newpassword0",
+        "u0",
+        "p0"
+      );
       is(logins.length, LOGIN_COUNT, "Verify logins created");
     }
 
@@ -89,8 +108,7 @@ add_task(async function test() {
     }
 
     function startTest() {
-      Services.obs.addObserver(
-        testObserver, "passwordmgr-dialog-updated");
+      Services.obs.addObserver(testObserver, "passwordmgr-dialog-updated");
       is(countLogins(), 0, "Verify starts with 0 logins");
       createLogins();
       runNextTest();
@@ -119,7 +137,9 @@ add_task(async function test() {
           break;
         case 9: // finish
           Services.obs.removeObserver(
-            testObserver, "passwordmgr-dialog-updated");
+            testObserver,
+            "passwordmgr-dialog-updated"
+          );
           pmDialog.close();
           resolve();
           break;

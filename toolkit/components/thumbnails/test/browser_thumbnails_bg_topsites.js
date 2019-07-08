@@ -1,13 +1,20 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const image1x1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
-const image96x96 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAJCAYAAADNYymqAAAAKklEQVR42u3RMQEAAAjDMFCO9CGDg1RC00lN6awGAACADQAACAAAAXjXApPGFm+IdJG9AAAAAElFTkSuQmCC";
+const image1x1 =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+const image96x96 =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAJCAYAAADNYymqAAAAKklEQVR42u3RMQEAAAjDMFCO9CGDg1RC00lN6awGAACADQAACAAAAXjXApPGFm+IdJG9AAAAAElFTkSuQmCC";
 const baseURL = "http://mozilla${i}.com/";
 
 function* runTests() {
   yield SpecialPowers.pushPrefEnv({
-    set: [["browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", false]],
+    set: [
+      [
+        "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+        false,
+      ],
+    ],
   });
   // Add 3 top sites - 2 visits each so it can pass frecency threshold of the top sites query
   for (let i = 1; i <= 3; i++) {
@@ -23,21 +30,45 @@ function* runTests() {
 
   // Sanity check that we've successfully added all 3 urls to top sites
   let links = yield NewTabUtils.activityStreamLinks.getTopSites();
-  is(links[0].url, baseURL.replace("${i}", 3), "Top site has been successfully added");
-  is(links[1].url, baseURL.replace("${i}", 2), "Top site has been successfully added");
-  is(links[2].url, baseURL.replace("${i}", 1), "Top site has been successfully added");
+  is(
+    links[0].url,
+    baseURL.replace("${i}", 3),
+    "Top site has been successfully added"
+  );
+  is(
+    links[1].url,
+    baseURL.replace("${i}", 2),
+    "Top site has been successfully added"
+  );
+  is(
+    links[2].url,
+    baseURL.replace("${i}", 1),
+    "Top site has been successfully added"
+  );
 
   // Now, add a pinned site so we can also fetch a screenshot for that
-  const pinnedSite = {url: baseURL.replace("${i}", 4)};
+  const pinnedSite = { url: baseURL.replace("${i}", 4) };
   NewTabUtils.pinnedLinks.pin(pinnedSite, 0);
 
   // Check that the correct sites will capture screenshots
   gBrowserThumbnails.clearTopSiteURLCache();
   let topSites = yield gBrowserThumbnails._topSiteURLs;
-  ok(topSites.includes("http://mozilla1.com/"), "Top site did not have a rich icon - get a screenshot");
-  ok(topSites.includes("http://mozilla3.com/"), "Top site did not have an icon - get a screenshot");
-  ok(topSites.includes("http://mozilla4.com/"), "Site is pinned - get a screenshot");
-  ok(!topSites.includes("http://mozilla2.com/"), "Top site had a rich icon - do not get a screenshot");
+  ok(
+    topSites.includes("http://mozilla1.com/"),
+    "Top site did not have a rich icon - get a screenshot"
+  );
+  ok(
+    topSites.includes("http://mozilla3.com/"),
+    "Top site did not have an icon - get a screenshot"
+  );
+  ok(
+    topSites.includes("http://mozilla4.com/"),
+    "Site is pinned - get a screenshot"
+  );
+  ok(
+    !topSites.includes("http://mozilla2.com/"),
+    "Top site had a rich icon - do not get a screenshot"
+  );
 
   // Clean up
   NewTabUtils.pinnedLinks.unpin(pinnedSite);

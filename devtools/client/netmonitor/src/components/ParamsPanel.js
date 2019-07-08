@@ -4,11 +4,16 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Services = require("Services");
-const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const { L10N } = require("../utils/l10n");
 const {
   fetchNetworkUpdatePacket,
@@ -59,13 +64,17 @@ class ParamsPanel extends Component {
 
   componentDidMount() {
     const { request, connector } = this.props;
-    fetchNetworkUpdatePacket(connector.requestData, request, ["requestPostData"]);
+    fetchNetworkUpdatePacket(connector.requestData, request, [
+      "requestPostData",
+    ]);
     updateFormDataSections(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
     const { request, connector } = nextProps;
-    fetchNetworkUpdatePacket(connector.requestData, request, ["requestPostData"]);
+    fetchNetworkUpdatePacket(connector.requestData, request, [
+      "requestPostData",
+    ]);
     updateFormDataSections(nextProps);
   }
 
@@ -97,23 +106,17 @@ class ParamsPanel extends Component {
   }
 
   render() {
-    const {
-      openLink,
-      request,
-    } = this.props;
-    const {
-      formDataSections,
-      mimeType,
-      requestPostData,
-      url,
-    } = request;
+    const { openLink, request } = this.props;
+    const { formDataSections, mimeType, requestPostData, url } = request;
     let postData = requestPostData ? requestPostData.postData.text : null;
     const query = getUrlQuery(url);
 
-    if ((!formDataSections || formDataSections.length === 0) && !postData && !query) {
-      return div({ className: "empty-notice" },
-        PARAMS_EMPTY_TEXT
-      );
+    if (
+      (!formDataSections || formDataSections.length === 0) &&
+      !postData &&
+      !query
+    ) {
+      return div({ className: "empty-notice" }, PARAMS_EMPTY_TEXT);
     }
 
     const object = {};
@@ -126,13 +129,15 @@ class ParamsPanel extends Component {
 
     // Form Data section
     if (formDataSections && formDataSections.length > 0) {
-      const sections = formDataSections.filter((str) => /\S/.test(str)).join("&");
+      const sections = formDataSections.filter(str => /\S/.test(str)).join("&");
       object[PARAMS_FORM_DATA] = this.getProperties(parseFormData(sections));
     }
 
     // Request payload section
 
-    const limit = Services.prefs.getIntPref("devtools.netmonitor.requestBodyLimit");
+    const limit = Services.prefs.getIntPref(
+      "devtools.netmonitor.requestBodyLimit"
+    );
     // Check if the request post data has been truncated, in which case no parse should
     // be attempted.
     if (postData && limit <= postData.length) {
@@ -162,24 +167,23 @@ class ParamsPanel extends Component {
       postData = "";
     }
 
-    return (
-      div({ className: "panel-container" },
-        error && div({ className: "request-error-header", title: error },
-          error
-        ),
-        PropertiesView({
-          object,
-          filterPlaceHolder: PARAMS_FILTER_TEXT,
-          sectionNames: SECTION_NAMES,
-          openLink,
-        })
-      )
+    return div(
+      { className: "panel-container" },
+      error && div({ className: "request-error-header", title: error }, error),
+      PropertiesView({
+        object,
+        filterPlaceHolder: PARAMS_FILTER_TEXT,
+        sectionNames: SECTION_NAMES,
+        openLink,
+      })
     );
   }
 }
 
-module.exports = connect(null,
-  (dispatch) => ({
-    updateRequest: (id, data, batch) => dispatch(Actions.updateRequest(id, data, batch)),
-  }),
+module.exports = connect(
+  null,
+  dispatch => ({
+    updateRequest: (id, data, batch) =>
+      dispatch(Actions.updateRequest(id, data, batch)),
+  })
 )(ParamsPanel);

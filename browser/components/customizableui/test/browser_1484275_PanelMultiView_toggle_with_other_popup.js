@@ -43,45 +43,48 @@ add_task(async function test_PanelMultiView_toggle_with_other_popup() {
   });
   registerCleanupFunction(() => PlacesUtils.bookmarks.remove(bookmark));
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_URL,
-  }, async function(browser) {
-    // 1. Open the main menu.
-    await gCUITestUtils.openMainMenu();
-
-    // 2. Open another popup not managed by PanelMultiView.
-    let bookmarkPanel = document.getElementById("editBookmarkPanel");
-    let shown = BrowserTestUtils.waitForEvent(bookmarkPanel, "popupshown");
-    let hidden = BrowserTestUtils.waitForEvent(bookmarkPanel, "popuphidden");
-    EventUtils.synthesizeKey("D", { accelKey: true });
-    await shown;
-
-    // 3. Click the button to which the main menu is anchored. We need a native
-    // mouse event to simulate the exact platform behavior with popups.
-    let clickFn = () => synthesizeNativeMouseClick(
-      document.getElementById("PanelUI-button"));
-
-    if (AppConstants.platform == "win") {
-      // On Windows, the operation will close both popups.
-      await gCUITestUtils.hidePanelMultiView(PanelUI.panel, clickFn);
-      await new Promise(resolve => executeSoon(resolve));
-
-      // 4. Test that the popup can be opened again after it's been closed.
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_URL,
+    },
+    async function(browser) {
+      // 1. Open the main menu.
       await gCUITestUtils.openMainMenu();
-      Assert.equal(PanelUI.panel.state, "open");
-    } else {
-      // On other platforms, the operation will close both popups and reopen the
-      // main menu immediately, so we wait for the reopen to occur.
-      shown = BrowserTestUtils.waitForEvent(PanelUI.mainView, "ViewShown");
-      clickFn();
+
+      // 2. Open another popup not managed by PanelMultiView.
+      let bookmarkPanel = document.getElementById("editBookmarkPanel");
+      let shown = BrowserTestUtils.waitForEvent(bookmarkPanel, "popupshown");
+      let hidden = BrowserTestUtils.waitForEvent(bookmarkPanel, "popuphidden");
+      EventUtils.synthesizeKey("D", { accelKey: true });
       await shown;
+
+      // 3. Click the button to which the main menu is anchored. We need a native
+      // mouse event to simulate the exact platform behavior with popups.
+      let clickFn = () =>
+        synthesizeNativeMouseClick(document.getElementById("PanelUI-button"));
+
+      if (AppConstants.platform == "win") {
+        // On Windows, the operation will close both popups.
+        await gCUITestUtils.hidePanelMultiView(PanelUI.panel, clickFn);
+        await new Promise(resolve => executeSoon(resolve));
+
+        // 4. Test that the popup can be opened again after it's been closed.
+        await gCUITestUtils.openMainMenu();
+        Assert.equal(PanelUI.panel.state, "open");
+      } else {
+        // On other platforms, the operation will close both popups and reopen the
+        // main menu immediately, so we wait for the reopen to occur.
+        shown = BrowserTestUtils.waitForEvent(PanelUI.mainView, "ViewShown");
+        clickFn();
+        await shown;
+      }
+
+      await gCUITestUtils.hideMainMenu();
+
+      // Make sure the events for the bookmarks panel have also been processed
+      // before closing the tab and removing the bookmark.
+      await hidden;
     }
-
-    await gCUITestUtils.hideMainMenu();
-
-    // Make sure the events for the bookmarks panel have also been processed
-    // before closing the tab and removing the bookmark.
-    await hidden;
-  });
+  );
 });

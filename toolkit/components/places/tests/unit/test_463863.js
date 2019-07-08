@@ -25,8 +25,10 @@ var transitions = [
 function runQuery(aResultType) {
   let options = PlacesUtils.history.getNewQueryOptions();
   options.resultType = aResultType;
-  let root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
-                                              options).root;
+  let root = PlacesUtils.history.executeQuery(
+    PlacesUtils.history.getNewQuery(),
+    options
+  ).root;
   root.containerOpen = true;
   let cc = root.childCount;
   Assert.equal(cc, transitions.length - 2);

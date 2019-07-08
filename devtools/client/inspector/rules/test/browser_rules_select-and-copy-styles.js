@@ -38,7 +38,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("div", inspector);
   await checkCopySelection(view);
   await checkSelectAll(view);
@@ -51,7 +51,9 @@ async function checkCopySelection(view) {
   const contentDoc = view.styleDocument;
   const win = view.styleWindow;
   const prop = contentDoc.querySelector(".ruleview-property");
-  const values = contentDoc.querySelectorAll(".ruleview-propertyvaluecontainer");
+  const values = contentDoc.querySelectorAll(
+    ".ruleview-propertyvaluecontainer"
+  );
 
   const range = contentDoc.createRange();
   range.setStart(prop, 0);
@@ -59,24 +61,29 @@ async function checkCopySelection(view) {
   win.getSelection().addRange(range);
   info("Checking that _Copy() returns the correct clipboard value");
 
-  const expectedPattern = "    margin: 10em;[\\r\\n]+" +
-                        "    font-size: 14pt;[\\r\\n]+" +
-                        "    font-family: helvetica, sans-serif;[\\r\\n]+" +
-                        "    color: #AAA;[\\r\\n]+" +
-                        "}[\\r\\n]+" +
-                        "html {[\\r\\n]+" +
-                        "    color: #000000;[\\r\\n]*";
+  const expectedPattern =
+    "    margin: 10em;[\\r\\n]+" +
+    "    font-size: 14pt;[\\r\\n]+" +
+    "    font-family: helvetica, sans-serif;[\\r\\n]+" +
+    "    color: #AAA;[\\r\\n]+" +
+    "}[\\r\\n]+" +
+    "html {[\\r\\n]+" +
+    "    color: #000000;[\\r\\n]*";
 
   const allMenuItems = openStyleContextMenuAndGetAllItems(view, prop);
-  const menuitemCopy = allMenuItems.find(item => item.label ===
-    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy"));
+  const menuitemCopy = allMenuItems.find(
+    item =>
+      item.label ===
+      STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy")
+  );
 
-  ok(menuitemCopy.visible,
-    "Copy menu item is displayed as expected");
+  ok(menuitemCopy.visible, "Copy menu item is displayed as expected");
 
   try {
-    await waitForClipboardPromise(() => menuitemCopy.click(),
-      () => checkClipboardData(expectedPattern));
+    await waitForClipboardPromise(
+      () => menuitemCopy.click(),
+      () => checkClipboardData(expectedPattern)
+    );
   } catch (e) {
     failedClipboard(expectedPattern);
   }
@@ -88,29 +95,36 @@ async function checkSelectAll(view) {
   const contentDoc = view.styleDocument;
   const prop = contentDoc.querySelector(".ruleview-property");
 
-  info("Checking that _SelectAll() then copy returns the correct " +
-    "clipboard value");
+  info(
+    "Checking that _SelectAll() then copy returns the correct " +
+      "clipboard value"
+  );
   view.contextMenu._onSelectAll();
-  const expectedPattern = "element {[\\r\\n]+" +
-                        "    margin: 10em;[\\r\\n]+" +
-                        "    font-size: 14pt;[\\r\\n]+" +
-                        "    font-family: helvetica, sans-serif;[\\r\\n]+" +
-                        "    color: #AAA;[\\r\\n]+" +
-                        "}[\\r\\n]+" +
-                        "html {[\\r\\n]+" +
-                        "    color: #000000;[\\r\\n]+" +
-                        "}[\\r\\n]*";
+  const expectedPattern =
+    "element {[\\r\\n]+" +
+    "    margin: 10em;[\\r\\n]+" +
+    "    font-size: 14pt;[\\r\\n]+" +
+    "    font-family: helvetica, sans-serif;[\\r\\n]+" +
+    "    color: #AAA;[\\r\\n]+" +
+    "}[\\r\\n]+" +
+    "html {[\\r\\n]+" +
+    "    color: #000000;[\\r\\n]+" +
+    "}[\\r\\n]*";
 
   const allMenuItems = openStyleContextMenuAndGetAllItems(view, prop);
-  const menuitemCopy = allMenuItems.find(item => item.label ===
-    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy"));
+  const menuitemCopy = allMenuItems.find(
+    item =>
+      item.label ===
+      STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy")
+  );
 
-  ok(menuitemCopy.visible,
-    "Copy menu item is displayed as expected");
+  ok(menuitemCopy.visible, "Copy menu item is displayed as expected");
 
   try {
-    await waitForClipboardPromise(() => menuitemCopy.click(),
-      () => checkClipboardData(expectedPattern));
+    await waitForClipboardPromise(
+      () => menuitemCopy.click(),
+      () => checkClipboardData(expectedPattern)
+    );
   } catch (e) {
     failedClipboard(expectedPattern);
   }
@@ -124,21 +138,27 @@ async function checkCopyEditorValue(view) {
 
   const editor = await focusEditableField(view, propEditor.valueSpan);
 
-  info("Checking that copying a css property value editor returns the correct" +
-    " clipboard value");
+  info(
+    "Checking that copying a css property value editor returns the correct" +
+      " clipboard value"
+  );
 
   const expectedPattern = "10em";
 
   const allMenuItems = openStyleContextMenuAndGetAllItems(view, editor.input);
-  const menuitemCopy = allMenuItems.find(item => item.label ===
-    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy"));
+  const menuitemCopy = allMenuItems.find(
+    item =>
+      item.label ===
+      STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy")
+  );
 
-  ok(menuitemCopy.visible,
-    "Copy menu item is displayed as expected");
+  ok(menuitemCopy.visible, "Copy menu item is displayed as expected");
 
   try {
-    await waitForClipboardPromise(() => menuitemCopy.click(),
-      () => checkClipboardData(expectedPattern));
+    await waitForClipboardPromise(
+      () => menuitemCopy.click(),
+      () => checkClipboardData(expectedPattern)
+    );
   } catch (e) {
     failedClipboard(expectedPattern);
   }
@@ -164,8 +184,10 @@ function failedClipboard(expectedPattern) {
   expectedPattern = expectedPattern.trimRight();
   actual = actual.trimRight();
 
-  dump("TEST-UNEXPECTED-FAIL | Clipboard text does not match expected ... " +
-    "results (escaped for accurate comparison):\n");
+  dump(
+    "TEST-UNEXPECTED-FAIL | Clipboard text does not match expected ... " +
+      "results (escaped for accurate comparison):\n"
+  );
   info("Actual: " + escape(actual));
   info("Expected: " + escape(expectedPattern));
 }

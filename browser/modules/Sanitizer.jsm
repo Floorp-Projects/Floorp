@@ -5,22 +5,31 @@
 
 var EXPORTED_SYMBOLS = ["Sanitizer"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
-  ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
-                                   "@mozilla.org/dom/quota-manager-service;1",
-                                   "nsIQuotaManagerService");
-XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
-                                   "@mozilla.org/serviceworkers/manager;1",
-                                   "nsIServiceWorkerManager");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "quotaManagerService",
+  "@mozilla.org/dom/quota-manager-service;1",
+  "nsIQuotaManagerService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "serviceWorkerManager",
+  "@mozilla.org/serviceworkers/manager;1",
+  "nsIServiceWorkerManager"
+);
 
 var logConsole;
 function log(msg) {
@@ -73,19 +82,20 @@ var Sanitizer = {
    * Pref to newTab segregation. If true, on shutdown, the private container
    * used in about:newtab is cleaned up.  Exposed because used in tests.
    */
-  PREF_NEWTAB_SEGREGATION: "privacy.usercontext.about_newtab_segregation.enabled",
+  PREF_NEWTAB_SEGREGATION:
+    "privacy.usercontext.about_newtab_segregation.enabled",
 
   /**
    * Time span constants corresponding to values of the privacy.sanitize.timeSpan
    * pref.  Used to determine how much history to clear, for various items
    */
   TIMESPAN_EVERYTHING: 0,
-  TIMESPAN_HOUR:       1,
-  TIMESPAN_2HOURS:     2,
-  TIMESPAN_4HOURS:     3,
-  TIMESPAN_TODAY:      4,
-  TIMESPAN_5MIN:       5,
-  TIMESPAN_24HOURS:    6,
+  TIMESPAN_HOUR: 1,
+  TIMESPAN_2HOURS: 2,
+  TIMESPAN_4HOURS: 3,
+  TIMESPAN_TODAY: 4,
+  TIMESPAN_5MIN: 5,
+  TIMESPAN_24HOURS: 6,
 
   /**
    * Whether we should sanitize on shutdown.
@@ -107,14 +117,17 @@ var Sanitizer = {
    *                   parent for the created dialog.
    */
   showUI(parentWindow) {
-    let win = AppConstants.platform == "macosx" ?
-      null : // make this an app-modal window on Mac
-      parentWindow;
-    Services.ww.openWindow(win,
-                           "chrome://browser/content/sanitize.xul",
-                           "Sanitize",
-                           "chrome,titlebar,dialog,centerscreen,modal",
-                           null);
+    let win =
+      AppConstants.platform == "macosx"
+        ? null // make this an app-modal window on Mac
+        : parentWindow;
+    Services.ww.openWindow(
+      win,
+      "chrome://browser/content/sanitize.xul",
+      "Sanitize",
+      "chrome,titlebar,dialog,centerscreen,modal",
+      null
+    );
   },
 
   /**
@@ -128,12 +141,16 @@ var Sanitizer = {
     let pendingSanitizations = getAndClearPendingSanitizations();
 
     // Check if we should sanitize on shutdown.
-    this.shouldSanitizeOnShutdown =
-      Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false);
+    this.shouldSanitizeOnShutdown = Services.prefs.getBoolPref(
+      Sanitizer.PREF_SANITIZE_ON_SHUTDOWN,
+      false
+    );
     Services.prefs.addObserver(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, this, true);
     // Add a pending shutdown sanitization, if necessary.
     if (this.shouldSanitizeOnShutdown) {
-      let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+      let itemsToClear = getItemsToClearFromPrefBranch(
+        Sanitizer.PREF_SHUTDOWN_BRANCH
+      );
       addPendingSanitization("shutdown", itemsToClear, {});
     }
     // Shutdown sanitization is always pending, but the user may change the
@@ -149,12 +166,16 @@ var Sanitizer = {
     // a shutdown timeout.
     // We use the `options` argument to pass the `progress` object to sanitize().
     let progress = { isShutdown: true };
-    shutdownClient.addBlocker("sanitize.js: Sanitize on shutdown",
+    shutdownClient.addBlocker(
+      "sanitize.js: Sanitize on shutdown",
       () => sanitizeOnShutdown(progress),
-      {fetchState: () => ({ progress })}
+      { fetchState: () => ({ progress }) }
     );
 
-    this.shouldSanitizeNewTabContainer = Services.prefs.getBoolPref(this.PREF_NEWTAB_SEGREGATION, false);
+    this.shouldSanitizeNewTabContainer = Services.prefs.getBoolPref(
+      this.PREF_NEWTAB_SEGREGATION,
+      false
+    );
     if (this.shouldSanitizeNewTabContainer) {
       addPendingSanitization("newtab-container", [], {});
     }
@@ -167,11 +188,16 @@ var Sanitizer = {
 
     // Finally, run the sanitizations that were left pending, because we crashed
     // before completing them.
-    for (let {itemsToClear, options} of pendingSanitizations) {
+    for (let { itemsToClear, options } of pendingSanitizations) {
       try {
         await this.sanitize(itemsToClear, options);
       } catch (ex) {
-        Cu.reportError("A previously pending sanitization failed: " + itemsToClear + "\n" + ex);
+        Cu.reportError(
+          "A previously pending sanitization failed: " +
+            itemsToClear +
+            "\n" +
+            ex
+        );
       }
     }
   },
@@ -191,27 +217,29 @@ var Sanitizer = {
    * @return {Array} a 2-element Array containing the start and end times.
    */
   getClearRange(ts) {
-    if (ts === undefined)
+    if (ts === undefined) {
       ts = Services.prefs.getIntPref(Sanitizer.PREF_TIMESPAN);
-    if (ts === Sanitizer.TIMESPAN_EVERYTHING)
+    }
+    if (ts === Sanitizer.TIMESPAN_EVERYTHING) {
       return null;
+    }
 
     // PRTime is microseconds while JS time is milliseconds
     var endDate = Date.now() * 1000;
     switch (ts) {
-      case Sanitizer.TIMESPAN_5MIN :
+      case Sanitizer.TIMESPAN_5MIN:
         var startDate = endDate - 300000000; // 5*60*1000000
         break;
-      case Sanitizer.TIMESPAN_HOUR :
+      case Sanitizer.TIMESPAN_HOUR:
         startDate = endDate - 3600000000; // 1*60*60*1000000
         break;
-      case Sanitizer.TIMESPAN_2HOURS :
+      case Sanitizer.TIMESPAN_2HOURS:
         startDate = endDate - 7200000000; // 2*60*60*1000000
         break;
-      case Sanitizer.TIMESPAN_4HOURS :
+      case Sanitizer.TIMESPAN_4HOURS:
         startDate = endDate - 14400000000; // 4*60*60*1000000
         break;
-      case Sanitizer.TIMESPAN_TODAY :
+      case Sanitizer.TIMESPAN_TODAY:
         var d = new Date(); // Start with today
         d.setHours(0); // zero us back to midnight...
         d.setMinutes(0);
@@ -219,7 +247,7 @@ var Sanitizer = {
         d.setMilliseconds(0);
         startDate = d.valueOf() * 1000; // convert to epoch usec
         break;
-      case Sanitizer.TIMESPAN_24HOURS :
+      case Sanitizer.TIMESPAN_24HOURS:
         startDate = endDate - 86400000000; // 24*60*60*1000000
         break;
       default:
@@ -251,8 +279,9 @@ var Sanitizer = {
    */
   async sanitize(itemsToClear = null, options = {}) {
     let progress = options.progress || {};
-    if (!itemsToClear)
+    if (!itemsToClear) {
       itemsToClear = getItemsToClearFromPrefBranch(this.PREF_CPD_BRANCH);
+    }
     let promise = sanitizeInternal(this.items, itemsToClear, progress, options);
 
     // Depending on preferences, the sanitizer may perform asynchronous
@@ -262,12 +291,9 @@ var Sanitizer = {
     // Though, if this is a sanitize on shutdown, we already have a blocker.
     if (!progress.isShutdown) {
       let shutdownClient = PlacesUtils.history.shutdownClient.jsclient;
-      shutdownClient.addBlocker("sanitize.js: Sanitize",
-        promise,
-        {
-          fetchState: () => ({ progress }),
-        }
-      );
+      shutdownClient.addBlocker("sanitize.js: Sanitize", promise, {
+        fetchState: () => ({ progress }),
+      });
     }
 
     try {
@@ -279,22 +305,33 @@ var Sanitizer = {
 
   observe(subject, topic, data) {
     if (topic == "nsPref:changed") {
-      if (data.startsWith(this.PREF_SHUTDOWN_BRANCH) &&
-          this.shouldSanitizeOnShutdown) {
+      if (
+        data.startsWith(this.PREF_SHUTDOWN_BRANCH) &&
+        this.shouldSanitizeOnShutdown
+      ) {
         // Update the pending shutdown sanitization.
         removePendingSanitization("shutdown");
-        let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+        let itemsToClear = getItemsToClearFromPrefBranch(
+          Sanitizer.PREF_SHUTDOWN_BRANCH
+        );
         addPendingSanitization("shutdown", itemsToClear, {});
       } else if (data == this.PREF_SANITIZE_ON_SHUTDOWN) {
-        this.shouldSanitizeOnShutdown =
-          Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false);
+        this.shouldSanitizeOnShutdown = Services.prefs.getBoolPref(
+          Sanitizer.PREF_SANITIZE_ON_SHUTDOWN,
+          false
+        );
         removePendingSanitization("shutdown");
         if (this.shouldSanitizeOnShutdown) {
-          let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+          let itemsToClear = getItemsToClearFromPrefBranch(
+            Sanitizer.PREF_SHUTDOWN_BRANCH
+          );
           addPendingSanitization("shutdown", itemsToClear, {});
         }
       } else if (data == this.PREF_NEWTAB_SEGREGATION) {
-        this.shouldSanitizeNewTabContainer = Services.prefs.getBoolPref(this.PREF_NEWTAB_SEGREGATION, false);
+        this.shouldSanitizeNewTabContainer = Services.prefs.getBoolPref(
+          this.PREF_NEWTAB_SEGREGATION,
+          false
+        );
         removePendingSanitization("newtab-container");
         if (this.shouldSanitizeNewTabContainer) {
           addPendingSanitization("newtab-container", [], {});
@@ -331,9 +368,12 @@ var Sanitizer = {
       async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2", refObj);
-        await clearData(range, Ci.nsIClearDataService.CLEAR_COOKIES |
-                               Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
-                               Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES);
+        await clearData(
+          range,
+          Ci.nsIClearDataService.CLEAR_COOKIES |
+            Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
+            Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES
+        );
         TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
       },
     },
@@ -348,10 +388,13 @@ var Sanitizer = {
       async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
-        await clearData(range, Ci.nsIClearDataService.CLEAR_HISTORY |
-                               Ci.nsIClearDataService.CLEAR_SESSION_HISTORY |
-                               Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
-                               Ci.nsIClearDataService.CLEAR_CONTENT_BLOCKING_RECORDS);
+        await clearData(
+          range,
+          Ci.nsIClearDataService.CLEAR_HISTORY |
+            Ci.nsIClearDataService.CLEAR_SESSION_HISTORY |
+            Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
+            Ci.nsIClearDataService.CLEAR_CONTENT_BLOCKING_RECORDS
+        );
         TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
       },
     },
@@ -363,7 +406,9 @@ var Sanitizer = {
         TelemetryStopwatch.start("FX_SANITIZE_FORMDATA", refObj);
         try {
           // Clear undo history of all search bars.
-          for (let currentWindow of Services.wm.getEnumerator("navigator:browser")) {
+          for (let currentWindow of Services.wm.getEnumerator(
+            "navigator:browser"
+          )) {
             let currentDocument = currentWindow.document;
 
             // searchBar.textbox may not exist due to the search bar binding
@@ -371,8 +416,9 @@ var Sanitizer = {
             // overflow or menu panel. It won't have a value or edit history in
             // that case.
             let searchBar = currentDocument.getElementById("searchbar");
-            if (searchBar && searchBar.textbox)
+            if (searchBar && searchBar.textbox) {
               searchBar.textbox.reset();
+            }
 
             let tabBrowser = currentWindow.gBrowser;
             if (!tabBrowser) {
@@ -383,8 +429,9 @@ var Sanitizer = {
               continue;
             }
             for (let tab of tabBrowser.tabs) {
-              if (tabBrowser.isFindBarInitialized(tab))
+              if (tabBrowser.isFindBarInitialized(tab)) {
                 tabBrowser.getCachedFindBar(tab).clear();
+              }
             }
             // Clear any saved find value
             tabBrowser._lastFindValue = "";
@@ -396,12 +443,14 @@ var Sanitizer = {
         try {
           let change = { op: "remove" };
           if (range) {
-            [ change.firstUsedStart, change.firstUsedEnd ] = range;
+            [change.firstUsedStart, change.firstUsedEnd] = range;
           }
           await new Promise(resolve => {
             FormHistory.update(change, {
               handleError(e) {
-                seenException = new Error("Error " + e.result + ": " + e.message);
+                seenException = new Error(
+                  "Error " + e.result + ": " + e.message
+                );
               },
               handleCompletion() {
                 resolve();
@@ -432,8 +481,11 @@ var Sanitizer = {
       async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_SESSIONS", refObj);
-        await clearData(range, Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
-                               Ci.nsIClearDataService.CLEAR_AUTH_CACHE);
+        await clearData(
+          range,
+          Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
+            Ci.nsIClearDataService.CLEAR_AUTH_CACHE
+        );
         TelemetryStopwatch.finish("FX_SANITIZE_SESSIONS", refObj);
       },
     },
@@ -442,11 +494,14 @@ var Sanitizer = {
       async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_SITESETTINGS", refObj);
-        await clearData(range, Ci.nsIClearDataService.CLEAR_PERMISSIONS |
-                               Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES |
-                               Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
-                               Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-                               Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS);
+        await clearData(
+          range,
+          Ci.nsIClearDataService.CLEAR_PERMISSIONS |
+            Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES |
+            Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
+            Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+            Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS
+        );
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
       },
     },
@@ -482,14 +537,16 @@ var Sanitizer = {
           // If someone says "no" to a beforeunload prompt, we abort here:
           if (!this._canCloseWindow(someWin)) {
             this._resetAllWindowClosures(windowList);
-            throw new Error("Sanitize could not close windows: cancelled by user");
+            throw new Error(
+              "Sanitize could not close windows: cancelled by user"
+            );
           }
 
           // ...however, beforeunload prompts spin the event loop, and so the code here won't get
           // hit until the prompt has been dismissed. If more than 1 minute has elapsed since we
           // started prompting, stop, because the user might not even remember initiating the
           // 'forget', and the timespans will be all wrong by now anyway:
-          if (Date.now() > (startDate + 60 * 1000)) {
+          if (Date.now() > startDate + 60 * 1000) {
             this._resetAllWindowClosures(windowList);
             throw new Error("Sanitize could not close windows: timeout");
           }
@@ -506,11 +563,17 @@ var Sanitizer = {
 
         // First create a new window. We do this first so that on non-mac, we don't
         // accidentally close the app by closing all the windows.
-        let handler = Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler);
+        let handler = Cc["@mozilla.org/browser/clh;1"].getService(
+          Ci.nsIBrowserHandler
+        );
         let defaultArgs = handler.defaultArgs;
         let features = "chrome,all,dialog=no," + privateStateForNewWindow;
-        let newWindow = windowList[0].openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
-                                                 features, defaultArgs);
+        let newWindow = windowList[0].openDialog(
+          AppConstants.BROWSER_CHROME_URL,
+          "_blank",
+          features,
+          defaultArgs
+        );
 
         let onFullScreen = null;
         if (AppConstants.platform == "macosx") {
@@ -538,10 +601,14 @@ var Sanitizer = {
           // in existence). See bug 1088137.
           let newWindowOpened = false;
           let onWindowOpened = function(subject, topic, data) {
-            if (subject != newWindow)
+            if (subject != newWindow) {
               return;
+            }
 
-            Services.obs.removeObserver(onWindowOpened, "browser-delayed-startup-finished");
+            Services.obs.removeObserver(
+              onWindowOpened,
+              "browser-delayed-startup-finished"
+            );
             if (AppConstants.platform == "macosx") {
               newWindow.removeEventListener("fullscreen", onFullScreen);
             }
@@ -557,7 +624,10 @@ var Sanitizer = {
           let onWindowClosed = function() {
             numWindowsClosing--;
             if (numWindowsClosing == 0) {
-              Services.obs.removeObserver(onWindowClosed, "xul-window-destroyed");
+              Services.obs.removeObserver(
+                onWindowClosed,
+                "xul-window-destroyed"
+              );
               // If we're the last thing to happen, invoke callback.
               if (newWindowOpened) {
                 TelemetryStopwatch.finish("FX_SANITIZE_OPENWINDOWS", refObj);
@@ -565,7 +635,10 @@ var Sanitizer = {
               }
             }
           };
-          Services.obs.addObserver(onWindowOpened, "browser-delayed-startup-finished");
+          Services.obs.addObserver(
+            onWindowOpened,
+            "browser-delayed-startup-finished"
+          );
           Services.obs.addObserver(onWindowClosed, "xul-window-destroyed");
         });
 
@@ -590,16 +663,18 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
   let { ignoreTimespan = true, range } = options;
   let seenError = false;
   // Shallow copy the array, as we are going to modify it in place later.
-  if (!Array.isArray(aItemsToClear))
+  if (!Array.isArray(aItemsToClear)) {
     throw new Error("Must pass an array of items to clear.");
+  }
   let itemsToClear = [...aItemsToClear];
 
   // Store the list of items to clear, in case we are killed before we
   // get a chance to complete.
   let uid = gPendingSanitizationSerial++;
   // Shutdown sanitization is managed outside.
-  if (!progress.isShutdown)
+  if (!progress.isShutdown) {
     addPendingSanitization(uid, itemsToClear, options);
+  }
 
   // Store the list of items to clear, for debugging/forensics purposes
   for (let k of itemsToClear) {
@@ -646,11 +721,15 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
     let item = items[name];
     try {
       // Catch errors here, so later we can just loop through these.
-      handles.push({ name,
-                     promise: item.clear(range, options)
-                                  .then(() => progress[name] = "cleared",
-                                        ex => annotateError(name, ex)),
-                   });
+      handles.push({
+        name,
+        promise: item
+          .clear(range, options)
+          .then(
+            () => (progress[name] = "cleared"),
+            ex => annotateError(name, ex)
+          ),
+      });
     } catch (ex) {
       annotateError(name, ex);
     }
@@ -662,8 +741,9 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
 
   // Sanitization is complete.
   TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);
-  if (!progress.isShutdown)
+  if (!progress.isShutdown) {
     removePendingSanitization(uid);
+  }
   progress = {};
   if (seenError) {
     throw new Error("Error sanitizing");
@@ -700,7 +780,9 @@ class PrincipalsCollector {
 
         let list = [];
         for (let item of request.result) {
-          let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+          let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+            item.origin
+          );
           let uri = principal.URI;
           if (isSupportedURI(uri)) {
             list.push(principal);
@@ -718,7 +800,10 @@ class PrincipalsCollector {
     progress.step = "principals-service-workers";
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();
     for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+      let sw = serviceWorkers.queryElementAt(
+        i,
+        Ci.nsIServiceWorkerRegistrationInfo
+      );
       // We don't need to check the scheme. SW are just exposed to http/https URLs.
       principals.push(sw.principal);
     }
@@ -728,7 +813,10 @@ class PrincipalsCollector {
     let enumerator = Services.cookies.enumerator;
     let hosts = new Set();
     for (let cookie of enumerator) {
-      hosts.add(cookie.rawHost + ChromeUtils.originAttributesToSuffix(cookie.originAttributes));
+      hosts.add(
+        cookie.rawHost +
+          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
+      );
     }
 
     progress.step = "principals-host-cookie";
@@ -736,7 +824,10 @@ class PrincipalsCollector {
       // Cookies and permissions are handled by origin/host. Doesn't matter if we
       // use http: or https: schema here.
       principals.push(
-        Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("https://" + host));
+        Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+          "https://" + host
+        )
+      );
     });
 
     progress.step = "total-principals:" + principals.length;
@@ -751,7 +842,9 @@ async function sanitizeOnShutdown(progress) {
   if (Sanitizer.shouldSanitizeOnShutdown) {
     // Need to sanitize upon shutdown
     progress.advancement = "shutdown-cleaner";
-    let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+    let itemsToClear = getItemsToClearFromPrefBranch(
+      Sanitizer.PREF_SHUTDOWN_BRANCH
+    );
     await Sanitizer.sanitize(itemsToClear, { progress });
 
     // We didn't crash during shutdown sanitization, so annotate it to avoid
@@ -795,8 +888,12 @@ async function sanitizeOnShutdown(progress) {
   // the permission explicitly set to ACCEPT_SESSION need to be wiped.  There
   // are also other ways to think about and accomplish this, but this is what
   // the logic below currently does!
-  if (Services.prefs.getIntPref(PREF_COOKIE_LIFETIME,
-                                Ci.nsICookieService.ACCEPT_NORMALLY) == Ci.nsICookieService.ACCEPT_SESSION) {
+  if (
+    Services.prefs.getIntPref(
+      PREF_COOKIE_LIFETIME,
+      Ci.nsICookieService.ACCEPT_NORMALLY
+    ) == Ci.nsICookieService.ACCEPT_SESSION
+  ) {
     log("Session-only configuration detected");
     progress.advancement = "session-only";
 
@@ -811,8 +908,10 @@ async function sanitizeOnShutdown(progress) {
 
   // Let's see if we have to forget some particular site.
   for (let permission of Services.perms.enumerator) {
-    if (permission.type != "cookie" ||
-        permission.capability != Ci.nsICookiePermission.ACCESS_SESSION) {
+    if (
+      permission.type != "cookie" ||
+      permission.capability != Ci.nsICookiePermission.ACCESS_SESSION
+    ) {
       continue;
     }
 
@@ -821,11 +920,17 @@ async function sanitizeOnShutdown(progress) {
       continue;
     }
 
-    log("Custom session cookie permission detected for: " + permission.principal.URI.spec);
+    log(
+      "Custom session cookie permission detected for: " +
+        permission.principal.URI.spec
+    );
 
     // We use just the URI here, because permissions ignore OriginAttributes.
     let principals = await principalsCollector.getAllPrincipals(progress);
-    let selectedPrincipals = extractMatchingPrincipals(principals, permission.principal.URI);
+    let selectedPrincipals = extractMatchingPrincipals(
+      principals,
+      permission.principal.URI
+    );
     await maybeSanitizeSessionPrincipals(progress, selectedPrincipals);
   }
 
@@ -872,8 +977,10 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
     return true;
   }
 
-  if (p == Ci.nsICookiePermission.ACCESS_DENY ||
-      p == Ci.nsICookiePermission.ACCESS_SESSION) {
+  if (
+    p == Ci.nsICookiePermission.ACCESS_DENY ||
+    p == Ci.nsICookiePermission.ACCESS_SESSION
+  ) {
     log("Cookie denied or session!");
     return false;
   }
@@ -895,8 +1002,9 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
     }
 
     // We don't care about scheme, port, and anything else.
-    if (Services.eTLD.hasRootDomain(perm.principal.URI.host,
-                                    principal.URI.host)) {
+    if (
+      Services.eTLD.hasRootDomain(perm.principal.URI.host, principal.URI.host)
+    ) {
       log("Recursive cookie check on principal: " + perm.principal.URI.spec);
       return cookiesAllowedForDomainOrSubDomain(perm.principal);
     }
@@ -911,22 +1019,29 @@ async function sanitizeSessionPrincipal(progress, principal) {
 
   await new Promise(resolve => {
     progress.sanitizePrincipal = "started";
-    Services.clearData.deleteDataFromPrincipal(principal, true /* user request */,
-                                               Ci.nsIClearDataService.CLEAR_ALL_CACHES |
-                                               Ci.nsIClearDataService.CLEAR_COOKIES |
-                                               Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-                                               Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-                                               Ci.nsIClearDataService.CLEAR_EME |
-                                               Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
-                                               resolve);
+    Services.clearData.deleteDataFromPrincipal(
+      principal,
+      true /* user request */,
+      Ci.nsIClearDataService.CLEAR_ALL_CACHES |
+        Ci.nsIClearDataService.CLEAR_COOKIES |
+        Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+        Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+        Ci.nsIClearDataService.CLEAR_EME |
+        Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
+      resolve
+    );
   });
   progress.sanitizePrincipal = "completed";
 }
 
 function sanitizeNewTabSegregation() {
-  let identity = ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
+  let identity = ContextualIdentityService.getPrivateIdentity(
+    "userContextIdInternal.thumbnail"
+  );
   if (identity) {
-    Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: identity.userContextId });
+    Services.clearData.deleteDataFromOriginAttributesPattern({
+      userContextId: identity.userContextId,
+    });
   }
 }
 
@@ -955,31 +1070,37 @@ function getItemsToClearFromPrefBranch(branch) {
  */
 function addPendingSanitization(id, itemsToClear, options) {
   let pendingSanitizations = safeGetPendingSanitizations();
-  pendingSanitizations.push({id, itemsToClear, options});
-  Services.prefs.setStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS,
-                               JSON.stringify(pendingSanitizations));
+  pendingSanitizations.push({ id, itemsToClear, options });
+  Services.prefs.setStringPref(
+    Sanitizer.PREF_PENDING_SANITIZATIONS,
+    JSON.stringify(pendingSanitizations)
+  );
 }
 
 function removePendingSanitization(id) {
   let pendingSanitizations = safeGetPendingSanitizations();
   let i = pendingSanitizations.findIndex(s => s.id == id);
   let [s] = pendingSanitizations.splice(i, 1);
-  Services.prefs.setStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS,
-    JSON.stringify(pendingSanitizations));
+  Services.prefs.setStringPref(
+    Sanitizer.PREF_PENDING_SANITIZATIONS,
+    JSON.stringify(pendingSanitizations)
+  );
   return s;
 }
 
 function getAndClearPendingSanitizations() {
   let pendingSanitizations = safeGetPendingSanitizations();
-  if (pendingSanitizations.length)
+  if (pendingSanitizations.length) {
     Services.prefs.clearUserPref(Sanitizer.PREF_PENDING_SANITIZATIONS);
+  }
   return pendingSanitizations;
 }
 
 function safeGetPendingSanitizations() {
   try {
     return JSON.parse(
-      Services.prefs.getStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS, "[]"));
+      Services.prefs.getStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS, "[]")
+    );
   } catch (ex) {
     Cu.reportError("Invalid JSON value for pending sanitizations: " + ex);
     return [];
@@ -989,8 +1110,13 @@ function safeGetPendingSanitizations() {
 async function clearData(range, flags) {
   if (range) {
     await new Promise(resolve => {
-      Services.clearData.deleteDataInTimeRange(range[0], range[1], true /* user request */,
-                                               flags, resolve);
+      Services.clearData.deleteDataInTimeRange(
+        range[0],
+        range[1],
+        true /* user request */,
+        flags,
+        resolve
+      );
     });
   } else {
     await new Promise(resolve => {
@@ -1000,7 +1126,5 @@ async function clearData(range, flags) {
 }
 
 function isSupportedURI(uri) {
-  return uri.scheme == "http" ||
-         uri.scheme == "https" ||
-         uri.scheme == "file";
+  return uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file";
 }

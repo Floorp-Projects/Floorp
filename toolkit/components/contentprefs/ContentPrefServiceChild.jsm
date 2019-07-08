@@ -5,16 +5,23 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "ContentPrefServiceChild" ];
+var EXPORTED_SYMBOLS = ["ContentPrefServiceChild"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {ContentPref, _methodsCallableFromChild, cbHandleCompletion, cbHandleError, cbHandleResult, safeCallback} = ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {
+  ContentPref,
+  _methodsCallableFromChild,
+  cbHandleCompletion,
+  cbHandleError,
+  cbHandleResult,
+  safeCallback,
+} = ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
 
 // We only need one bit of information out of the context.
 function contextArg(context) {
-  return (context && context.usePrivateBrowsing) ?
-            { usePrivateBrowsing: true } :
-            null;
+  return context && context.usePrivateBrowsing
+    ? { usePrivateBrowsing: true }
+    : null;
 }
 
 function NYI() {
@@ -27,10 +34,10 @@ function CallbackCaller(callback) {
 
 CallbackCaller.prototype = {
   handleResult(contentPref) {
-    cbHandleResult(this._callback,
-                   new ContentPref(contentPref.domain,
-                                   contentPref.name,
-                                   contentPref.value));
+    cbHandleResult(
+      this._callback,
+      new ContentPref(contentPref.domain, contentPref.name, contentPref.value)
+    );
   },
 
   handleError(result) {
@@ -43,14 +50,16 @@ CallbackCaller.prototype = {
 };
 
 var ContentPrefServiceChild = {
-  QueryInterface: ChromeUtils.generateQI([ Ci.nsIContentPrefService2 ]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPrefService2]),
 
   // Map from pref name -> set of observers
   _observers: new Map(),
 
   _getRandomId() {
     return Cc["@mozilla.org/uuid-generator;1"]
-             .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+      .getService(Ci.nsIUUIDGenerator)
+      .generateUUID()
+      .toString();
   },
 
   // Map from random ID string -> CallbackCaller, per request
@@ -91,8 +100,9 @@ var ContentPrefServiceChild = {
 
       case "ContentPrefs:NotifyObservers": {
         let observerList = this._observers.get(data.name);
-        if (!observerList)
+        if (!observerList) {
           break;
+        }
 
         for (let observer of observerList) {
           safeCallback(observer, data.callback, data.args);
@@ -127,7 +137,9 @@ var ContentPrefServiceChild = {
 
       // This is the first observer for this name. Start listening for changes
       // to it.
-      Services.cpmm.sendAsyncMessage("ContentPrefs:AddObserverForName", { name });
+      Services.cpmm.sendAsyncMessage("ContentPrefs:AddObserverForName", {
+        name,
+      });
       this._observers.set(name, set);
     }
 
@@ -136,19 +148,25 @@ var ContentPrefServiceChild = {
 
   removeObserverForName(name, observer) {
     let set = this._observers.get(name);
-    if (!set)
+    if (!set) {
       return;
+    }
 
     set.delete(observer);
     if (set.size === 0) {
       // This was the last observer for this name. Stop listening for changes.
-      Services.cpmm.sendAsyncMessage("ContentPrefs:RemoveObserverForName", { name });
+      Services.cpmm.sendAsyncMessage("ContentPrefs:RemoveObserverForName", {
+        name,
+      });
 
       this._observers.delete(name);
       if (this._observers.size === 0) {
         // This was the last observer for this process. Stop listing for all
         // changes.
-        Services.cpmm.removeMessageListener("ContentPrefs:NotifyObservers", this);
+        Services.cpmm.removeMessageListener(
+          "ContentPrefs:NotifyObservers",
+          this
+        );
       }
     }
   },
@@ -175,7 +193,11 @@ function forwardMethodToParent(method, signature, ...args) {
 }
 
 for (let [method, signature] of _methodsCallableFromChild) {
-  ContentPrefServiceChild[method] = forwardMethodToParent.bind(ContentPrefServiceChild, method, signature);
+  ContentPrefServiceChild[method] = forwardMethodToParent.bind(
+    ContentPrefServiceChild,
+    method,
+    signature
+  );
 }
 
 ContentPrefServiceChild.init();

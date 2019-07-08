@@ -23,7 +23,7 @@
  * }
  * ```
  */
-const NAME = exports.NAME = "@@service/waitUntil";
+const NAME = (exports.NAME = "@@service/waitUntil");
 
 function waitUntilService({ dispatch, getState }) {
   let pending = [];

@@ -8,10 +8,12 @@
 // Check console.group, console.groupCollapsed and console.groupEnd calls
 // behave as expected.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-console-group.html";
-const { INDENT_WIDTH } =
-  require("devtools/client/webconsole/components/Output/MessageIndent");
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-console-group.html";
+const {
+  INDENT_WIDTH,
+} = require("devtools/client/webconsole/components/Output/MessageIndent");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -58,7 +60,9 @@ add_task(async function() {
   testClass(node, "log");
   testIndent(node, 2);
 
-  info("Test a message in a 1 level deep group, after closing a 2 level deep group");
+  info(
+    "Test a message in a 1 level deep group, after closing a 2 level deep group"
+  );
   node = findMessage(hud, "log-3");
   testClass(node, "log");
   testIndent(node, 1);
@@ -76,7 +80,17 @@ add_task(async function() {
     node,
     store,
     shouldBeOpen: false,
-    visibleMessageIdsAfterExpand: ["1", "2", "3", "4", "6", "8", "9", "10", "12"],
+    visibleMessageIdsAfterExpand: [
+      "1",
+      "2",
+      "3",
+      "4",
+      "6",
+      "8",
+      "9",
+      "10",
+      "12",
+    ],
     visibleMessageIdsAfterCollapse: ["1", "2", "3", "4", "6", "8", "9", "12"],
   });
 
@@ -89,13 +103,19 @@ add_task(async function() {
 });
 
 function testClass(node, className) {
-  ok(node.classList.contains(className), `message has the expected "${className}" class`);
+  ok(
+    node.classList.contains(className),
+    `message has the expected "${className}" class`
+  );
 }
 
 function testIndent(node, indent) {
   indent = `${indent * INDENT_WIDTH}px`;
-  is(node.querySelector(".indent").style.width, indent,
-    "message has the expected level of indentation");
+  is(
+    node.querySelector(".indent").style.width,
+    indent,
+    "message has the expected level of indentation"
+  );
 }
 
 async function testGroupToggle({
@@ -107,10 +127,17 @@ async function testGroupToggle({
 }) {
   const toggleArrow = node.querySelector(".collapse-button");
   const isOpen = node2 => node2.classList.contains("open");
-  const assertVisibleMessageIds = (expanded) => {
+  const assertVisibleMessageIds = expanded => {
     const visibleMessageIds = store.getState().messages.visibleMessages;
-    expanded ? is(visibleMessageIds.toString(), visibleMessageIdsAfterExpand.toString()) :
-      is(visibleMessageIds.toString(), visibleMessageIdsAfterCollapse.toString());
+    expanded
+      ? is(
+          visibleMessageIds.toString(),
+          visibleMessageIdsAfterExpand.toString()
+        )
+      : is(
+          visibleMessageIds.toString(),
+          visibleMessageIdsAfterCollapse.toString()
+        );
   };
 
   await waitFor(() => isOpen(node) === shouldBeOpen);

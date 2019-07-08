@@ -4,25 +4,35 @@
 
 add_task(async function perma_private_browsing_mode() {
   // make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 
-  Assert.equal(Services.prefs.getBoolPref("browser.privatebrowsing.autostart"),
-               true, "Permanent private browsing is enabled");
+  Assert.equal(
+    Services.prefs.getBoolPref("browser.privatebrowsing.autostart"),
+    true,
+    "Permanent private browsing is enabled"
+  );
 
   let extension = ExtensionTestUtils.loadExtension({
     incognitoOverride: "spanning",
     manifest: {
-      "permissions": ["tabs", "cookies"],
+      permissions: ["tabs", "cookies"],
     },
     async background() {
       let win = await browser.windows.create({});
-      browser.test.assertTrue(win.incognito, "New window should be private when perma-PBM is enabled.");
+      browser.test.assertTrue(
+        win.incognito,
+        "New window should be private when perma-PBM is enabled."
+      );
       await browser.test.assertRejects(
-        browser.tabs.create({cookieStoreId: "firefox-container-1", windowId: win.id}),
+        browser.tabs.create({
+          cookieStoreId: "firefox-container-1",
+          windowId: win.id,
+        }),
         /Illegal to set non-private cookieStoreId in a private window/,
-        "should refuse to open container tab in private browsing window");
+        "should refuse to open container tab in private browsing window"
+      );
       await browser.windows.remove(win.id);
 
       browser.test.sendMessage("done");

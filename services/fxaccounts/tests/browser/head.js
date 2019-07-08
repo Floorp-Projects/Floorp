@@ -11,9 +11,15 @@ function waitForDocLoadComplete(aBrowser = gBrowser) {
   return new Promise(resolve => {
     let listener = {
       onStateChange(webProgress, req, flags, status) {
-        let docStop = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
-                      Ci.nsIWebProgressListener.STATE_STOP;
-        info("Saw state " + flags.toString(16) + " and status " + status.toString(16));
+        let docStop =
+          Ci.nsIWebProgressListener.STATE_IS_NETWORK |
+          Ci.nsIWebProgressListener.STATE_STOP;
+        info(
+          "Saw state " +
+            flags.toString(16) +
+            " and status " +
+            status.toString(16)
+        );
 
         // When a load needs to be retargetted to a new process it is cancelled
         // with NS_BINDING_ABORTED so ignore that case
@@ -26,8 +32,10 @@ function waitForDocLoadComplete(aBrowser = gBrowser) {
           resolve();
         }
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                              Ci.nsISupportsWeakReference]),
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIWebProgressListener,
+        Ci.nsISupportsWeakReference,
+      ]),
     };
     aBrowser.addProgressListener(listener);
     waitForDocLoadComplete.listeners.add(listener);
@@ -37,14 +45,26 @@ function waitForDocLoadComplete(aBrowser = gBrowser) {
 
 function setupMockAlertsService() {
   const alertsService = {
-    showAlertNotification: (image, title, text, clickable, cookie, clickCallback) => {
+    showAlertNotification: (
+      image,
+      title,
+      text,
+      clickable,
+      cookie,
+      clickCallback
+    ) => {
       // We are invoking the event handler ourselves directly.
       clickCallback(null, "alertclickcallback", null);
     },
   };
-  const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
-                     .getService(Ci.nsIObserver);
-  gBrowserGlue.observe({wrappedJSObject: alertsService}, "browser-glue-test", "mock-alerts-service");
+  const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
+    Ci.nsIObserver
+  );
+  gBrowserGlue.observe(
+    { wrappedJSObject: alertsService },
+    "browser-glue-test",
+    "mock-alerts-service"
+  );
 }
 
 // Keep a set of progress listeners for waitForDocLoadComplete() to make sure

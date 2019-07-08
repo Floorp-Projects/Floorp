@@ -10,6 +10,8 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/StructuredCloneBlob.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
@@ -910,6 +912,10 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     return ReadInputStream(aCx, aIndex, this);
   }
 
+  if (aTag == SCTAG_DOM_BROWSING_CONTEXT) {
+    return BrowsingContext::ReadStructuredClone(aCx, aReader, this);
+  }
+
   return ReadFullySerializableObjects(aCx, aReader, aTag);
 }
 
@@ -969,6 +975,15 @@ bool StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   {
     StructuredCloneBlob* holder = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(StructuredCloneHolder, &obj, holder))) {
+      return holder->WriteStructuredClone(aCx, aWriter, this);
+    }
+  }
+
+  // See if this is a BrowsingContext object.
+  if (mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread ||
+      mStructuredCloneScope == StructuredCloneScope::DifferentProcess) {
+    BrowsingContext* holder = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(BrowsingContext, &obj, holder))) {
       return holder->WriteStructuredClone(aCx, aWriter, this);
     }
   }

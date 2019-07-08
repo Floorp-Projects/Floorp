@@ -5,7 +5,7 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const {Arg, Option, RetVal, types} = protocol;
+const { Arg, Option, RetVal, types } = protocol;
 
 types.addDictType("test.option", {
   "attribute-1": "string",
@@ -22,7 +22,7 @@ const dampTestSpec = protocol.generateActorSpec({
   typeName: "dampTest",
 
   events: {
-    "testEvent": { arg: Arg(0, "array:json") },
+    testEvent: { arg: Arg(0, "array:json") },
   },
 
   methods: {

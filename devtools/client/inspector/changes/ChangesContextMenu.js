@@ -7,7 +7,11 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
-loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
+loader.lazyRequireGetter(
+  this,
+  "MenuItem",
+  "devtools/client/framework/menu-item"
+);
 
 const { getStr } = require("./utils/l10n");
 
@@ -62,21 +66,27 @@ class ChangesContextMenu {
 
     if (ruleId || declEl) {
       // Copy Rule option
-      menu.append(new MenuItem({
-        label: getStr("changes.contextmenu.copyRule"),
-        click: () => this._onCopyRule(ruleId, true),
-      }));
+      menu.append(
+        new MenuItem({
+          label: getStr("changes.contextmenu.copyRule"),
+          click: () => this._onCopyRule(ruleId, true),
+        })
+      );
 
       // Copy Declaration option. Visible only if there is a declaration element target.
-      menu.append(new MenuItem({
-        label: getStr("changes.contextmenu.copyDeclaration"),
-        click: () => this._onCopyDeclaration(declEl),
-        visible: !!declEl,
-      }));
+      menu.append(
+        new MenuItem({
+          label: getStr("changes.contextmenu.copyDeclaration"),
+          click: () => this._onCopyDeclaration(declEl),
+          visible: !!declEl,
+        })
+      );
 
-      menu.append(new MenuItem({
-        type: "separator",
-      }));
+      menu.append(
+        new MenuItem({
+          type: "separator",
+        })
+      );
     }
 
     // Select All option

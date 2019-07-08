@@ -16,13 +16,17 @@ add_task(async function() {
   ContentTask.spawn(gBrowser.selectedBrowser, smokeMessage, function(msg) {
     content.wrappedJSObject.console.log(msg);
   });
-  const {node} = await onMessage;
+  const { node } = await onMessage;
   ok(true, "Message was logged");
 
   const selection = selectNode(hud, node);
 
   const selectionString = selection.toString().trim();
-  is(selectionString, smokeMessage, `selection has expected "${smokeMessage}" value`);
+  is(
+    selectionString,
+    smokeMessage,
+    `selection has expected "${smokeMessage}" value`
+  );
 
   await waitForClipboardPromise(
     () => {

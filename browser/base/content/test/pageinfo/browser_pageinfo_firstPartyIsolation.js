@@ -1,6 +1,5 @@
 const Cm = Components.manager;
 
-
 function testFirstPartyDomain(pageInfo) {
   return new Promise(resolve => {
     const EXPECTED_DOMAIN = "example.com";
@@ -38,16 +37,28 @@ function testFirstPartyDomain(pageInfo) {
         // it won't have origin attributes, now we've changed to loadingPrincipal
         // to the content in bug 1376971, it should have firstPartyDomain set.
         if (i == 0) {
-          let req = preview.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-          Assert.equal(req.imagePrincipal.originAttributes.firstPartyDomain, EXPECTED_DOMAIN,
-                       "imagePrincipal should have firstPartyDomain set to " + EXPECTED_DOMAIN);
+          let req = preview.getRequest(
+            Ci.nsIImageLoadingContent.CURRENT_REQUEST
+          );
+          Assert.equal(
+            req.imagePrincipal.originAttributes.firstPartyDomain,
+            EXPECTED_DOMAIN,
+            "imagePrincipal should have firstPartyDomain set to " +
+              EXPECTED_DOMAIN
+          );
         }
 
         // Check the node has the attribute 'triggeringprincipal'.
         let loadingPrincipalStr = preview.getAttribute("triggeringprincipal");
-        let loadingPrincipal = E10SUtils.deserializePrincipal(loadingPrincipalStr);
-        Assert.equal(loadingPrincipal.originAttributes.firstPartyDomain, EXPECTED_DOMAIN,
-                     "loadingPrincipal should have firstPartyDomain set to " + EXPECTED_DOMAIN);
+        let loadingPrincipal = E10SUtils.deserializePrincipal(
+          loadingPrincipalStr
+        );
+        Assert.equal(
+          loadingPrincipal.originAttributes.firstPartyDomain,
+          EXPECTED_DOMAIN,
+          "loadingPrincipal should have firstPartyDomain set to " +
+            EXPECTED_DOMAIN
+        );
       }
 
       resolve();
@@ -63,9 +74,14 @@ async function test() {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
   });
 
-  let url = "https://example.com/browser/browser/base/content/test/pageinfo/image.html";
+  let url =
+    "https://example.com/browser/browser/base/content/test/pageinfo/image.html";
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, url);
+  let loadPromise = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    url
+  );
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
   await loadPromise;
 

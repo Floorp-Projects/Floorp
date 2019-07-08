@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Check that reading non existant inner jars results in the right error
 
@@ -12,8 +12,14 @@ function run_test() {
   var outerJarBase = "jar:" + Services.io.newFileURI(file).spec + "!/";
   var goodSpec = "jar:" + outerJarBase + "inner.jar!/hello";
   var badSpec = "jar:" + outerJarBase + "jar_that_isnt_in_the.jar!/hello";
-  var goodChannel = NetUtil.newChannel({uri: goodSpec, loadUsingSystemPrincipal: true});
-  var badChannel = NetUtil.newChannel({uri: badSpec, loadUsingSystemPrincipal: true});
+  var goodChannel = NetUtil.newChannel({
+    uri: goodSpec,
+    loadUsingSystemPrincipal: true,
+  });
+  var badChannel = NetUtil.newChannel({
+    uri: badSpec,
+    loadUsingSystemPrincipal: true,
+  });
 
   try {
     goodChannel.open();

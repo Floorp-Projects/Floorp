@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
-*/
+ */
 /* Android-only TelemetryEnvironment xpcshell test that ensures that the device data is stored in the Environment.
-*/
+ */
 
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 
@@ -13,7 +13,7 @@ ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
  * @return True if |aValue| has type "string" and is not empty, False otherwise.
  */
 function checkString(aValue) {
-  return (typeof aValue == "string") && (aValue != "");
+  return typeof aValue == "string" && aValue != "";
 }
 
 /**
@@ -41,12 +41,12 @@ function checkNullOrString(aValue) {
  *         boolean.
  */
 function checkNullOrBool(aValue) {
-  return aValue === null || (typeof aValue == "boolean");
+  return aValue === null || typeof aValue == "boolean";
 }
 
 function checkSystemSection(data) {
-Assert.ok("system" in data, "There must be a system section in Environment.");
-// Device data is only available on Android.
+  Assert.ok("system" in data, "There must be a system section in Environment.");
+  // Device data is only available on Android.
   if (gIsAndroid) {
     let deviceData = data.system.device;
     Assert.ok(checkNullOrString(deviceData.model));

@@ -1,6 +1,6 @@
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   do_get_profile();
@@ -43,7 +43,7 @@ function testFiles(filename) {
     Assert.equal(filenames.size, MAX_TRIES);
 
     // Ensure that openUnique() creates a new human readable file name using, as the original name is already taken.
-    openedFile = await OS.File.openUnique(path, {humanReadable: true});
+    openedFile = await OS.File.openUnique(path, { humanReadable: true });
     info("\nCreate unique Human Readable file: " + openedFile.path);
     await openedFile.file.close();
     exists = await OS.File.exists(openedFile.path);
@@ -54,7 +54,7 @@ function testFiles(filename) {
     // Ensure that openUnique() generates different human readable file names each time
     filenames = new Set();
     for (let i = 0; i < MAX_TRIES; i++) {
-      openedFile = await OS.File.openUnique(path, {humanReadable: true});
+      openedFile = await OS.File.openUnique(path, { humanReadable: true });
       await openedFile.file.close();
       filenames.add(openedFile.path);
     }
@@ -64,7 +64,7 @@ function testFiles(filename) {
     let exn;
     try {
       for (let i = 0; i < 100; i++) {
-        openedFile = await OS.File.openUnique(path, {humanReadable: true});
+        openedFile = await OS.File.openUnique(path, { humanReadable: true });
         await openedFile.file.close();
       }
     } catch (ex) {

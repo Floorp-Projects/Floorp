@@ -4,7 +4,8 @@
 const loaderUtils = require("loader-utils");
 const QUOTE_REGEX_STRING = "['|\"]{1}";
 
-const hasOnlyExcludeFlags = query => Object.keys(query).filter(key => query[key] === true).length === 0;
+const hasOnlyExcludeFlags = query =>
+  Object.keys(query).filter(key => query[key] === true).length === 0;
 const escapePath = path => path.replace("/", "\\/");
 
 function createRequireStringRegex(query) {
@@ -14,13 +15,19 @@ function createRequireStringRegex(query) {
   if (Object.keys(query).length === 0) {
     regexArray.push("([^\\)]+)");
   } else if (hasOnlyExcludeFlags(query)) {
-  // if there are only negation matches in the query then replace everything
-  // except them
-    Object.keys(query).forEach(key => regexArray.push(`(?!${QUOTE_REGEX_STRING}${escapePath(key)})`));
+    // if there are only negation matches in the query then replace everything
+    // except them
+    Object.keys(query).forEach(key =>
+      regexArray.push(`(?!${QUOTE_REGEX_STRING}${escapePath(key)})`)
+    );
     regexArray.push("([^\\)]+)");
   } else {
     regexArray.push(`(${QUOTE_REGEX_STRING}(`);
-    regexArray.push(Object.keys(query).map(key => escapePath(key)).join("|"));
+    regexArray.push(
+      Object.keys(query)
+        .map(key => escapePath(key))
+        .join("|")
+    );
     regexArray.push(`)${QUOTE_REGEX_STRING})`);
   }
 

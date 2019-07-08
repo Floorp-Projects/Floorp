@@ -4,15 +4,19 @@
 ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm", this);
 
 const testUrlPath =
-      "://example.com/browser/toolkit/components/passwordmgr/test/browser/";
+  "://example.com/browser/toolkit/components/passwordmgr/test/browser/";
 
 /**
  * Waits for the given number of occurrences of InsecureLoginFormsStateChange
  * on the given browser element.
  */
 function waitForInsecureLoginFormsStateChange(browser, count) {
-  return BrowserTestUtils.waitForEvent(browser, "InsecureLoginFormsStateChange",
-                                       false, () => --count == 0);
+  return BrowserTestUtils.waitForEvent(
+    browser,
+    "InsecureLoginFormsStateChange",
+    false,
+    () => --count == 0
+  );
 }
 
 /**
@@ -21,7 +25,10 @@ function waitForInsecureLoginFormsStateChange(browser, count) {
  */
 add_task(async function test_simple() {
   for (let scheme of ["http", "https"]) {
-    let tab = BrowserTestUtils.addTab(gBrowser, scheme + testUrlPath + "form_basic.html");
+    let tab = BrowserTestUtils.addTab(
+      gBrowser,
+      scheme + testUrlPath + "form_basic.html"
+    );
     let browser = tab.linkedBrowser;
     await Promise.all([
       BrowserTestUtils.switchTab(gBrowser, tab),
@@ -30,8 +37,10 @@ add_task(async function test_simple() {
       waitForInsecureLoginFormsStateChange(browser, 2),
     ]);
 
-    Assert.equal(LoginManagerParent.hasInsecureLoginForms(browser),
-                 scheme == "http");
+    Assert.equal(
+      LoginManagerParent.hasInsecureLoginForms(browser),
+      scheme == "http"
+    );
 
     gBrowser.removeTab(tab);
   }
@@ -49,11 +58,14 @@ add_task(async function test_simple() {
  */
 add_task(async function test_subframe_navigation() {
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.mixed_content.block_active_content", false]],
+    set: [["security.mixed_content.block_active_content", false]],
   });
 
   // Load the page with the subframe in a new tab.
-  let tab = BrowserTestUtils.addTab(gBrowser, "https" + testUrlPath + "insecure_test.html");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    "https" + testUrlPath + "insecure_test.html"
+  );
   let browser = tab.linkedBrowser;
   await Promise.all([
     BrowserTestUtils.switchTab(gBrowser, tab),
@@ -71,8 +83,10 @@ add_task(async function test_subframe_navigation() {
     waitForInsecureLoginFormsStateChange(browser, 2),
   ]);
   await ContentTask.spawn(browser, null, async function() {
-    content.document.getElementById("test-iframe")
-           .contentDocument.getElementById("test-link").click();
+    content.document
+      .getElementById("test-iframe")
+      .contentDocument.getElementById("test-link")
+      .click();
   });
   await promiseSubframeReady;
 
@@ -82,8 +96,7 @@ add_task(async function test_subframe_navigation() {
   // InsecureLoginFormsStateChange event that is triggered by pageshow.
   let promise = waitForInsecureLoginFormsStateChange(browser, 1);
   await ContentTask.spawn(browser, null, async function() {
-    content.document.getElementById("test-iframe")
-           .contentWindow.history.back();
+    content.document.getElementById("test-iframe").contentWindow.history.back();
   });
   await promise;
 

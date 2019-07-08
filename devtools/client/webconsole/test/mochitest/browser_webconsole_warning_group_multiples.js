@@ -12,7 +12,8 @@ const TEST_FILE =
 const TEST_URI = "http://example.org/" + TEST_FILE;
 
 const TRACKER_URL = "http://tracking.example.com/";
-const FILE_PATH = "browser/devtools/client/webconsole/test/mochitest/test-image.png";
+const FILE_PATH =
+  "browser/devtools/client/webconsole/test/mochitest/test-image.png";
 const CONTENT_BLOCKED_URL = TRACKER_URL + FILE_PATH;
 const STORAGE_BLOCKED_URL = "http://example.com/" + FILE_PATH;
 
@@ -21,11 +22,14 @@ const COOKIE_BEHAVIORS_REJECT_FOREIGN = 1;
 
 const CONTENT_BLOCKED_GROUP_LABEL =
   "The resource at “<URL>” was blocked because content blocking is enabled.";
-const STORAGE_BLOCKED_GROUP_LABEL = "Request to access cookie or storage on “<URL>” " +
+const STORAGE_BLOCKED_GROUP_LABEL =
+  "Request to access cookie or storage on “<URL>” " +
   "was blocked because we are blocking all third-party storage access requests and " +
   "content blocking is enabled.";
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
@@ -40,39 +44,72 @@ add_task(async function testContentBlockingMessage() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  info("Log a tracking protection message to check a single message isn't grouped");
-  let onContentBlockedMessage = waitForMessage(hud, CONTENT_BLOCKED_URL, ".warn");
+  info(
+    "Log a tracking protection message to check a single message isn't grouped"
+  );
+  let onContentBlockedMessage = waitForMessage(
+    hud,
+    CONTENT_BLOCKED_URL,
+    ".warn"
+  );
   emitContentBlockingMessage(hud);
-  let {node} = await onContentBlockedMessage;
-  is(node.querySelector(".warning-indent"), null, "The message has the expected style");
-  is(node.querySelector(".indent").getAttribute("data-indent"), "0",
-    "The message has the expected indent");
+  let { node } = await onContentBlockedMessage;
+  is(
+    node.querySelector(".warning-indent"),
+    null,
+    "The message has the expected style"
+  );
+  is(
+    node.querySelector(".indent").getAttribute("data-indent"),
+    "0",
+    "The message has the expected indent"
+  );
 
   info("Log a simple message");
   await logString(hud, "simple message 1");
 
-  info("Log a second tracking protection message to check that it causes the grouping");
-  let onContentBlockedWarningGroupMessage =
-    waitForMessage(hud, CONTENT_BLOCKED_GROUP_LABEL, ".warn");
+  info(
+    "Log a second tracking protection message to check that it causes the grouping"
+  );
+  let onContentBlockedWarningGroupMessage = waitForMessage(
+    hud,
+    CONTENT_BLOCKED_GROUP_LABEL,
+    ".warn"
+  );
   emitContentBlockingMessage(hud);
-  const {node: contentBlockedWarningGroupNode} =
-    await onContentBlockedWarningGroupMessage;
-  is(contentBlockedWarningGroupNode.querySelector(".warning-group-badge").textContent,
-    "2", "The badge has the expected text");
+  const {
+    node: contentBlockedWarningGroupNode,
+  } = await onContentBlockedWarningGroupMessage;
+  is(
+    contentBlockedWarningGroupNode.querySelector(".warning-group-badge")
+      .textContent,
+    "2",
+    "The badge has the expected text"
+  );
 
   checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKED_GROUP_LABEL}`,
     `simple message 1`,
   ]);
 
-  let onStorageBlockedWarningGroupMessage =
-    waitForMessage(hud, STORAGE_BLOCKED_URL, ".warn");
+  let onStorageBlockedWarningGroupMessage = waitForMessage(
+    hud,
+    STORAGE_BLOCKED_URL,
+    ".warn"
+  );
 
   emitStorageAccessBlockedMessage(hud);
-  ({node} = await onStorageBlockedWarningGroupMessage);
-  is(node.querySelector(".warning-indent"), null, "The message has the expected style");
-  is(node.querySelector(".indent").getAttribute("data-indent"), "0",
-    "The message has the expected indent");
+  ({ node } = await onStorageBlockedWarningGroupMessage);
+  is(
+    node.querySelector(".warning-indent"),
+    null,
+    "The message has the expected style"
+  );
+  is(
+    node.querySelector(".indent").getAttribute("data-indent"),
+    "0",
+    "The message has the expected indent"
+  );
 
   info("Log a second simple message");
   await logString(hud, "simple message 2");
@@ -84,14 +121,24 @@ add_task(async function testContentBlockingMessage() {
     `simple message 2`,
   ]);
 
-  info("Log a second storage blocked message to check that it creates another group");
-  onStorageBlockedWarningGroupMessage =
-    waitForMessage(hud, STORAGE_BLOCKED_GROUP_LABEL, ".warn");
+  info(
+    "Log a second storage blocked message to check that it creates another group"
+  );
+  onStorageBlockedWarningGroupMessage = waitForMessage(
+    hud,
+    STORAGE_BLOCKED_GROUP_LABEL,
+    ".warn"
+  );
   emitStorageAccessBlockedMessage(hud);
-  const {node: storageBlockedWarningGroupNode} =
-    await onStorageBlockedWarningGroupMessage;
-  is(storageBlockedWarningGroupNode.querySelector(".warning-group-badge").textContent,
-    "2", "The badge has the expected text");
+  const {
+    node: storageBlockedWarningGroupNode,
+  } = await onStorageBlockedWarningGroupMessage;
+  is(
+    storageBlockedWarningGroupNode.querySelector(".warning-group-badge")
+      .textContent,
+    "2",
+    "The badge has the expected text"
+  );
 
   info("Expand the second warning group");
   storageBlockedWarningGroupNode.querySelector(".arrow").click();
@@ -106,8 +153,14 @@ add_task(async function testContentBlockingMessage() {
     `simple message 2`,
   ]);
 
-  info("Add another storage blocked message to check it does go into the opened group");
-  let onStorageBlockedMessage = waitForMessage(hud, STORAGE_BLOCKED_URL, ".warn");
+  info(
+    "Add another storage blocked message to check it does go into the opened group"
+  );
+  let onStorageBlockedMessage = waitForMessage(
+    hud,
+    STORAGE_BLOCKED_URL,
+    ".warn"
+  );
   emitStorageAccessBlockedMessage(hud);
   await onStorageBlockedMessage;
 
@@ -121,7 +174,9 @@ add_task(async function testContentBlockingMessage() {
     `simple message 2`,
   ]);
 
-  info("Add a content blocked message to check the first group badge is updated");
+  info(
+    "Add a content blocked message to check the first group badge is updated"
+  );
   emitContentBlockingMessage();
   await waitForBadgeNumber(contentBlockedWarningGroupNode, 3);
 
@@ -173,14 +228,22 @@ add_task(async function testContentBlockingMessage() {
     `${CONTENT_BLOCKED_URL}?8`,
   ]);
 
-  info("Add a storage blocked message and a content blocked one to create warningGroups");
-  onStorageBlockedWarningGroupMessage =
-    waitForMessage(hud, STORAGE_BLOCKED_GROUP_LABEL, ".warn");
+  info(
+    "Add a storage blocked message and a content blocked one to create warningGroups"
+  );
+  onStorageBlockedWarningGroupMessage = waitForMessage(
+    hud,
+    STORAGE_BLOCKED_GROUP_LABEL,
+    ".warn"
+  );
   emitStorageAccessBlockedMessage();
   await onStorageBlockedWarningGroupMessage;
 
-  onContentBlockedWarningGroupMessage =
-    waitForMessage(hud, CONTENT_BLOCKED_GROUP_LABEL, ".warn");
+  onContentBlockedWarningGroupMessage = waitForMessage(
+    hud,
+    CONTENT_BLOCKED_GROUP_LABEL,
+    ".warn"
+  );
   emitContentBlockingMessage();
   await onContentBlockedWarningGroupMessage;
 
@@ -242,6 +305,9 @@ function logString(hud, str) {
 }
 
 function waitForBadgeNumber(messageNode, expectedNumber) {
-  return waitFor(() =>
-    messageNode.querySelector(".warning-group-badge").textContent == expectedNumber);
+  return waitFor(
+    () =>
+      messageNode.querySelector(".warning-group-badge").textContent ==
+      expectedNumber
+  );
 }

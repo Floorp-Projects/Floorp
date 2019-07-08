@@ -9,25 +9,35 @@ add_task(async function startTestingWebAudioWithGUM() {
   await setupTestPreferences();
 
   info("- test web audio with gUM success -");
-  await testWebAudioWithGUM({constraints: { audio: true },
-                             shouldAllowStartingContext: true});
-  await testWebAudioWithGUM({constraints: { video: true },
-                             shouldAllowStartingContext: true});
-  await testWebAudioWithGUM({constraints: { video: true,
-                                            audio: true },
-                             shouldAllowStartingContext: true});
+  await testWebAudioWithGUM({
+    constraints: { audio: true },
+    shouldAllowStartingContext: true,
+  });
+  await testWebAudioWithGUM({
+    constraints: { video: true },
+    shouldAllowStartingContext: true,
+  });
+  await testWebAudioWithGUM({
+    constraints: { video: true, audio: true },
+    shouldAllowStartingContext: true,
+  });
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.navigator.permission.force", true],
-  ]}).then(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.navigator.permission.force", true]],
+  }).then(async function() {
     info("- test web audio with gUM denied -");
-    await testWebAudioWithGUM({constraints: { video: true },
-                               shouldAllowStartingContext: false});
-    await testWebAudioWithGUM({constraints: { audio: true },
-                               shouldAllowStartingContext: false});
-    await testWebAudioWithGUM({constraints: { video: true,
-                                              audio: true },
-                               shouldAllowStartingContext: false});
+    await testWebAudioWithGUM({
+      constraints: { video: true },
+      shouldAllowStartingContext: false,
+    });
+    await testWebAudioWithGUM({
+      constraints: { audio: true },
+      shouldAllowStartingContext: false,
+    });
+    await testWebAudioWithGUM({
+      constraints: { video: true, audio: true },
+      shouldAllowStartingContext: false,
+    });
   });
 });
 
@@ -35,13 +45,15 @@ add_task(async function startTestingWebAudioWithGUM() {
  * testing helper functions
  */
 function setupTestPreferences() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-    ["media.autoplay.enabled.user-gestures-needed", true],
-    ["media.autoplay.block-event.enabled", true],
-    ["media.autoplay.block-webaudio", true],
-    ["media.navigator.permission.fake", true],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+      ["media.autoplay.enabled.user-gestures-needed", true],
+      ["media.autoplay.block-event.enabled", true],
+      ["media.autoplay.block-webaudio", true],
+      ["media.navigator.permission.fake", true],
+    ],
+  });
 }
 
 function createAudioContext() {
@@ -49,14 +61,22 @@ function createAudioContext() {
   let ac = content.ac;
   ac.resumePromises = [];
   ac.stateChangePromise = new Promise(resolve => {
-    ac.addEventListener("statechange", function() {
-      resolve();
-    }, {once: true});
+    ac.addEventListener(
+      "statechange",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
   ac.notAllowedToStart = new Promise(resolve => {
-    ac.addEventListener("blocked", function() {
-      resolve();
-    }, {once: true});
+    ac.addEventListener(
+      "blocked",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 }
 
@@ -96,7 +116,9 @@ function callGUM(testParameters) {
     // Because of the prefs we've set and passed, this is going to allow the
     // window to start an AudioContext synchronously.
     testParameters.constraints.fake = true;
-    return content.navigator.mediaDevices.getUserMedia(testParameters.constraints);
+    return content.navigator.mediaDevices.getUserMedia(
+      testParameters.constraints
+    );
   }
 
   // Call gUM, without sucess: we've made it so that only fake requests
@@ -113,8 +135,10 @@ function callGUM(testParameters) {
 
 async function testWebAudioWithGUM(testParameters) {
   info("- open new tab -");
-  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                        "https://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "https://example.com"
+  );
   info("- create audio context -");
   // We want the same audio context be used between different content
   // tasks, so it *must* be loaded by frame script.
@@ -123,8 +147,11 @@ async function testWebAudioWithGUM(testParameters) {
 
   info("- check whether audio context starts running -");
   try {
-    await ContentTask.spawn(tab.linkedBrowser, null,
-                            checkingAudioContextRunningState);
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      null,
+      checkingAudioContextRunningState
+    );
   } catch (error) {
     ok(false, error.toString());
   }
@@ -137,9 +164,9 @@ async function testWebAudioWithGUM(testParameters) {
 
   info("- calling resume() again");
   try {
-    let resumeFunc = testParameters.shouldAllowStartingContext ?
-      resumeWithExpectedSuccess :
-      resumeWithoutExpectedSuccess;
+    let resumeFunc = testParameters.shouldAllowStartingContext
+      ? resumeWithExpectedSuccess
+      : resumeWithoutExpectedSuccess;
     await ContentTask.spawn(tab.linkedBrowser, null, resumeFunc);
   } catch (error) {
     ok(false, error.toString());

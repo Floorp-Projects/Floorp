@@ -6,10 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["AccessFu"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Logger, Utils} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "Rect",
-                               "resource://gre/modules/Geometry.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Logger, Utils } = ChromeUtils.import(
+  "resource://gre/modules/accessibility/Utils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Rect",
+  "resource://gre/modules/Geometry.jsm"
+);
 
 const GECKOVIEW_MESSAGE = {
   ACTIVATE: "GeckoView:AccessibilityActivate",
@@ -121,8 +126,10 @@ var AccessFu = {
       };
       this._eventDispatcherListeners.set(win, listener);
       // desktop mochitests don't have this.
-      win.WindowEventDispatcher.registerListener(listener,
-        Object.values(GECKOVIEW_MESSAGE));
+      win.WindowEventDispatcher.registerListener(
+        listener,
+        Object.values(GECKOVIEW_MESSAGE)
+      );
     }
   },
 
@@ -139,7 +146,8 @@ var AccessFu = {
       // desktop mochitests don't have this.
       win.WindowEventDispatcher.unregisterListener(
         this._eventDispatcherListeners.get(win),
-        Object.values(GECKOVIEW_MESSAGE));
+        Object.values(GECKOVIEW_MESSAGE)
+      );
       this._eventDispatcherListeners.delete(win);
     }
   },
@@ -157,7 +165,8 @@ var AccessFu = {
       case GECKOVIEW_MESSAGE.PREVIOUS: {
         let rule = "Simple";
         if (data && data.rule && data.rule.length) {
-          rule = data.rule.substr(0, 1).toUpperCase() +
+          rule =
+            data.rule.substr(0, 1).toUpperCase() +
             data.rule.substr(1).toLowerCase();
         }
         let method = event.replace(/GeckoView:Accessibility(\w+)/, "move$1");
@@ -198,9 +207,13 @@ var AccessFu = {
     switch (aTopic) {
       case "domwindowopened": {
         let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", () => {
-          this._attachWindow(win);
-        }, { once: true });
+        win.addEventListener(
+          "load",
+          () => {
+            this._attachWindow(win);
+          },
+          { once: true }
+        );
         break;
       }
     }
@@ -208,8 +221,7 @@ var AccessFu = {
 
   _handleEvent: function _handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "TabSelect":
-      {
+      case "TabSelect": {
         if (this._focused) {
           // We delay this for half a second so the awesomebar could close,
           // and we could use the current coordinates for the content item.
@@ -218,7 +230,8 @@ var AccessFu = {
             delay: 500,
             forcePresent: true,
             noOpIfOnScreen: true,
-            moveMethod: "moveFirst" });
+            moveMethod: "moveFirst",
+          });
         }
         break;
       }
@@ -247,36 +260,48 @@ var AccessFu = {
    * @param {Window} aWindow the window containing the item
    */
   screenToClientBounds(aJsonBounds, aWindow) {
-      let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
-                            aJsonBounds.right - aJsonBounds.left,
-                            aJsonBounds.bottom - aJsonBounds.top);
-      let { devicePixelRatio, mozInnerScreenX, mozInnerScreenY } = aWindow;
+    let bounds = new Rect(
+      aJsonBounds.left,
+      aJsonBounds.top,
+      aJsonBounds.right - aJsonBounds.left,
+      aJsonBounds.bottom - aJsonBounds.top
+    );
+    let { devicePixelRatio, mozInnerScreenX, mozInnerScreenY } = aWindow;
 
-      bounds = bounds.scale(1 / devicePixelRatio, 1 / devicePixelRatio);
-      bounds = bounds.translate(-mozInnerScreenX, -mozInnerScreenY);
-      return bounds.expandToIntegers();
-    },
+    bounds = bounds.scale(1 / devicePixelRatio, 1 / devicePixelRatio);
+    bounds = bounds.translate(-mozInnerScreenX, -mozInnerScreenY);
+    return bounds.expandToIntegers();
+  },
 };
 
 var Input = {
   moveToPoint: function moveToPoint(aRule, aX, aY, aWindow) {
     Logger.debug("moveToPoint", aX, aY);
     const mm = Utils.getCurrentMessageManager(aWindow);
-    mm.sendAsyncMessage("AccessFu:MoveToPoint",
-      {rule: aRule, x: aX, y: aY, origin: "top"});
+    mm.sendAsyncMessage("AccessFu:MoveToPoint", {
+      rule: aRule,
+      x: aX,
+      y: aY,
+      origin: "top",
+    });
   },
 
   moveCursor: function moveCursor(aAction, aRule, aInputType, aWindow) {
     const mm = Utils.getCurrentMessageManager(aWindow);
-    mm.sendAsyncMessage("AccessFu:MoveCursor",
-                        { action: aAction, rule: aRule,
-                          origin: "top", inputType: aInputType });
+    mm.sendAsyncMessage("AccessFu:MoveCursor", {
+      action: aAction,
+      rule: aRule,
+      origin: "top",
+      inputType: aInputType,
+    });
   },
 
   androidScroll: function androidScroll(aDirection, aWindow) {
     const mm = Utils.getCurrentMessageManager(aWindow);
-    mm.sendAsyncMessage("AccessFu:AndroidScroll",
-                        { direction: aDirection, origin: "top" });
+    mm.sendAsyncMessage("AccessFu:AndroidScroll", {
+      direction: aDirection,
+      origin: "top",
+    });
   },
 
   moveByGranularity: function moveByGranularity(aDetails, aWindow) {
@@ -305,9 +330,18 @@ var Input = {
     let win = aBrowser.ownerGlobal;
     let winUtils = win.windowUtils;
     let p = AccessFu.screenToClientBounds(aDetails.bounds, win).center();
-    winUtils.sendWheelEvent(p.x, p.y,
-      horizontal ? page : 0, horizontal ? 0 : page, 0,
-      win.WheelEvent.DOM_DELTA_PAGE, 0, 0, 0, 0);
+    winUtils.sendWheelEvent(
+      p.x,
+      p.y,
+      horizontal ? page : 0,
+      horizontal ? 0 : page,
+      0,
+      win.WheelEvent.DOM_DELTA_PAGE,
+      0,
+      0,
+      0,
+      0
+    );
   },
 };
 AccessFu.Input = Input;

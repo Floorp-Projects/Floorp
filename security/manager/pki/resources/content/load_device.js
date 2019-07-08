@@ -13,7 +13,9 @@ document.addEventListener("dialogaccept", onDialogAccept);
 
 async function onBrowseBtnPress() {
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  let [loadPK11ModuleFilePickerTitle] = await document.l10n.formatValues([{id: "load-pk11-module-file-picker-title"}]);
+  let [loadPK11ModuleFilePickerTitle] = await document.l10n.formatValues([
+    { id: "load-pk11-module-file-picker-title" },
+  ]);
   fp.init(window, loadPK11ModuleFilePickerTitle, Ci.nsIFilePicker.modeOpen);
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
   fp.open(rv => {
@@ -35,8 +37,9 @@ async function onBrowseBtnPress() {
 function onDialogAccept(event) {
   let nameBox = document.getElementById("device_name");
   let pathBox = document.getElementById("device_path");
-  let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                         .getService(Ci.nsIPKCS11ModuleDB);
+  let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
+    Ci.nsIPKCS11ModuleDB
+  );
 
   try {
     pkcs11ModuleDB.addModule(nameBox.value, pathBox.value, 0, 0);
@@ -47,7 +50,7 @@ function onDialogAccept(event) {
 }
 
 async function addModuleFailure(l10nID) {
-  let [AddModuleFailure] = await document.l10n.formatValues([{id: l10nID}]);
+  let [AddModuleFailure] = await document.l10n.formatValues([{ id: l10nID }]);
   alertPromptService(null, AddModuleFailure);
 }
 
@@ -62,7 +65,10 @@ function validateModuleName() {
     dialogNode.setAttribute("buttondisabledaccept", true);
   }
   if (name == "Root Certs") {
-    document.l10n.setAttributes(helpText, "load-module-help-root-certs-module-name");
+    document.l10n.setAttributes(
+      helpText,
+      "load-module-help-root-certs-module-name"
+    );
     dialogNode.setAttribute("buttondisabledaccept", true);
   }
 }

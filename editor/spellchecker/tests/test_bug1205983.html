@@ -34,7 +34,7 @@ var onSpellCheck =
 
 /** Test for Bug 1205983 **/
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(function() {
+SimpleTest.waitForFocus(async function() {
   /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
     // eslint-disable-next-line mozilla/use-services
@@ -57,7 +57,7 @@ SimpleTest.waitForFocus(function() {
     addMessageListener("de_DE-exists", () => de_DE.exists());
     addMessageListener("destroy", () => hunspell.removeDirectory(de_DE));
   });
-  is(script.sendSyncMessage("de_DE-exists")[0][0], true,
+  is(await script.sendQuery("de_DE-exists"), true,
      "true expected (de_DE directory should exist)");
 
   document.getElementById("de-DE").focus();
@@ -106,7 +106,7 @@ function enFocus() {
     is(sel.toString(), "German", "one misspelled word expected: German");
 
     // Remove the fake de_DE dictionary again.
-    script.sendSyncMessage("destroy");
+    script.sendAsyncMessage("destroy");
 
     // Focus again, so the spelling gets updated, but before we need to kill the focus handler.
     elem_de.onfocus = null;

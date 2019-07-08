@@ -8,25 +8,32 @@
 add_task(async function test_exit_background_customize_mode() {
   let nonCustomizingTab = gBrowser.selectedTab;
 
-  Assert.equal(gBrowser.tabContainer.querySelector("tab[customizemode=true]"),
-               null,
-               "Should not have a tab marked as being the customize tab now.");
+  Assert.equal(
+    gBrowser.tabContainer.querySelector("tab[customizemode=true]"),
+    null,
+    "Should not have a tab marked as being the customize tab now."
+  );
 
   await startCustomizing();
   is(gBrowser.tabs.length, 2, "Should have 2 tabs");
 
   let custTab = gBrowser.selectedTab;
 
-  let finishedCustomizing = BrowserTestUtils.waitForEvent(gNavToolbox, "aftercustomization");
+  let finishedCustomizing = BrowserTestUtils.waitForEvent(
+    gNavToolbox,
+    "aftercustomization"
+  );
   await BrowserTestUtils.switchTab(gBrowser, nonCustomizingTab);
   await finishedCustomizing;
 
   BrowserTestUtils.loadURI(custTab.linkedBrowser, "http://example.com");
   await BrowserTestUtils.browserLoaded(custTab.linkedBrowser);
 
-  Assert.equal(gBrowser.tabContainer.querySelector("tab[customizemode=true]"),
-               null,
-               "Should not have a tab marked as being the customize tab now.");
+  Assert.equal(
+    gBrowser.tabContainer.querySelector("tab[customizemode=true]"),
+    null,
+    "Should not have a tab marked as being the customize tab now."
+  );
 
   await startCustomizing();
   is(gBrowser.tabs.length, 3, "Should have 3 tabs now");

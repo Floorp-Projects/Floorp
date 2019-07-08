@@ -2,13 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {ContentPref, cbHandleCompletion, cbHandleError, cbHandleResult} = ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
-const {ContentPrefStore} = ChromeUtils.import("resource://gre/modules/ContentPrefStore.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "Sqlite",
-                               "resource://gre/modules/Sqlite.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {
+  ContentPref,
+  cbHandleCompletion,
+  cbHandleError,
+  cbHandleResult,
+} = ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
+const { ContentPrefStore } = ChromeUtils.import(
+  "resource://gre/modules/ContentPrefStore.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sqlite",
+  "resource://gre/modules/Sqlite.jsm"
+);
 
 const CACHE_MAX_GROUP_ENTRIES = 100;
 
@@ -21,8 +30,9 @@ const GROUP_CLAUSE = `
 
 function ContentPrefService2() {
   if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
-    return ChromeUtils.import("resource://gre/modules/ContentPrefServiceChild.jsm")
-             .ContentPrefServiceChild;
+    return ChromeUtils.import(
+      "resource://gre/modules/ContentPrefServiceChild.jsm"
+    ).ContentPrefServiceChild;
   }
 
   Services.obs.addObserver(this, "last-pb-context-exited");
@@ -37,11 +47,12 @@ cache.set = function CPS_cache_set(group, name, val) {
   let groupCount = this._groups.size;
   if (groupCount >= CACHE_MAX_GROUP_ENTRIES) {
     // Clean half of the entries
-    for (let [group, name ] of this) {
+    for (let [group, name] of this) {
       this.remove(group, name);
       groupCount--;
-      if (groupCount < CACHE_MAX_GROUP_ENTRIES / 2)
+      if (groupCount < CACHE_MAX_GROUP_ENTRIES / 2) {
         break;
+      }
     }
   }
 };
@@ -51,7 +62,7 @@ const privModeStorage = new ContentPrefStore();
 function executeStatementsInTransaction(conn, stmts) {
   return conn.executeTransaction(async () => {
     let rows = [];
-    for (let {sql, params, cachable} of stmts) {
+    for (let { sql, params, cachable } of stmts) {
       let execute = cachable ? conn.executeCached : conn.execute;
       let stmtRows = await execute.call(conn, sql, params);
       rows = rows.concat(stmtRows);
@@ -70,8 +81,9 @@ function HostnameGrouper_group(aURI) {
     // since the effect is the same (we can't derive a group from it).
 
     group = aURI.host;
-    if (!group)
+    if (!group) {
       throw new Error("can't derive group from host; no host in URI");
+    }
   } catch (ex) {
     // If we don't have a host, then use the entire URI (minus the query,
     // reference, and hash, if possible) as the group.  This means that URIs
@@ -115,7 +127,6 @@ ContentPrefService2.prototype = {
     delete this._genericObservers;
   },
 
-
   // in-memory cache and private-browsing stores
 
   _cache: cache,
@@ -128,7 +139,7 @@ ContentPrefService2.prototype = {
       return this._connPromise;
     }
 
-    return this._connPromise = new Promise(async (resolve, reject) => {
+    return (this._connPromise = new Promise(async (resolve, reject) => {
       let conn;
       try {
         conn = await this._getConnection();
@@ -137,7 +148,7 @@ ContentPrefService2.prototype = {
         reject(e);
       }
       resolve(conn);
-    });
+    }));
   },
 
   // nsIContentPrefService
@@ -180,8 +191,9 @@ ContentPrefService2.prototype = {
         let grp = row.getResultByName("grp");
         let val = row.getResultByName("value");
         this._cache.set(grp, name, val);
-        if (!pbPrefs.has(grp, name))
+        if (!pbPrefs.has(grp, name)) {
           cbHandleResult(callback, new ContentPref(grp, name, val));
+        }
       },
       onDone: (reason, ok, gotRow) => {
         if (ok) {
@@ -197,15 +209,22 @@ ContentPrefService2.prototype = {
     });
   },
 
-  getByDomainAndName: function CPS2_getByDomainAndName(group, name, context,
-                                                       callback) {
+  getByDomainAndName: function CPS2_getByDomainAndName(
+    group,
+    name,
+    context,
+    callback
+  ) {
     checkGroupArg(group);
     this._get(group, name, false, context, callback);
   },
 
-  getBySubdomainAndName: function CPS2_getBySubdomainAndName(group, name,
-                                                             context,
-                                                             callback) {
+  getBySubdomainAndName: function CPS2_getBySubdomainAndName(
+    group,
+    name,
+    context,
+    callback
+  ) {
     checkGroupArg(group);
     this._get(group, name, true, context, callback);
   },
@@ -224,8 +243,11 @@ ContentPrefService2.prototype = {
     // browsing.
     let pbPrefs = new ContentPrefStore();
     if (context && context.usePrivateBrowsing) {
-      for (let [sgroup, val] of
-             this._pbStore.match(group, name, includeSubdomains)) {
+      for (let [sgroup, val] of this._pbStore.match(
+        group,
+        name,
+        includeSubdomains
+      )) {
         pbPrefs.set(sgroup, name, val);
       }
     }
@@ -235,13 +257,15 @@ ContentPrefService2.prototype = {
         let grp = row.getResultByName("grp");
         let val = row.getResultByName("value");
         this._cache.set(grp, name, val);
-        if (!pbPrefs.has(group, name))
+        if (!pbPrefs.has(group, name)) {
           cbHandleResult(callback, new ContentPref(grp, name, val));
+        }
       },
       onDone: (reason, ok, gotRow) => {
         if (ok) {
-          if (!gotRow)
+          if (!gotRow) {
             this._cache.set(group, name, undefined);
+          }
           for (let [pbGroup, pbName, pbVal] of pbPrefs) {
             cbHandleResult(callback, new ContentPref(pbGroup, pbName, pbVal));
           }
@@ -254,18 +278,20 @@ ContentPrefService2.prototype = {
     });
   },
 
-  _commonGetStmt: function CPS2__commonGetStmt(group,
-                                               name,
-                                               includeSubdomains) {
-    let stmt = group ?
-      this._stmtWithGroupClause(group, includeSubdomains, `
+  _commonGetStmt: function CPS2__commonGetStmt(group, name, includeSubdomains) {
+    let stmt = group
+      ? this._stmtWithGroupClause(
+          group,
+          includeSubdomains,
+          `
         SELECT groups.name AS grp, prefs.value AS value
         FROM prefs
         JOIN settings ON settings.id = prefs.settingID
         JOIN groups ON groups.id = prefs.groupID
         WHERE settings.name = :name AND prefs.groupID IN (${GROUP_CLAUSE})
-      `) :
-      this._stmt(`
+      `
+        )
+      : this._stmt(`
         SELECT NULL AS grp, prefs.value AS value
         FROM prefs
         JOIN settings ON settings.id = prefs.settingID
@@ -275,28 +301,34 @@ ContentPrefService2.prototype = {
     return stmt;
   },
 
-  _stmtWithGroupClause: function CPS2__stmtWithGroupClause(group,
-                                                           includeSubdomains,
-                                                           sql) {
+  _stmtWithGroupClause: function CPS2__stmtWithGroupClause(
+    group,
+    includeSubdomains,
+    sql
+  ) {
     let stmt = this._stmt(sql, false);
     stmt.params.group = group;
     stmt.params.includeSubdomains = includeSubdomains || false;
-    stmt.params.pattern = "%." + (group == null ? null :
-      group.replace(/\/|%|_/g, "/$&"));
+    stmt.params.pattern =
+      "%." + (group == null ? null : group.replace(/\/|%|_/g, "/$&"));
     return stmt;
   },
 
-  getCachedByDomainAndName: function CPS2_getCachedByDomainAndName(group,
-                                                                   name,
-                                                                   context) {
+  getCachedByDomainAndName: function CPS2_getCachedByDomainAndName(
+    group,
+    name,
+    context
+  ) {
     checkGroupArg(group);
     let prefs = this._getCached(group, name, false, context);
     return prefs[0] || null;
   },
 
-  getCachedBySubdomainAndName: function CPS2_getCachedBySubdomainAndName(group,
-                                                                         name,
-                                                                         context) {
+  getCachedBySubdomainAndName: function CPS2_getCachedBySubdomainAndName(
+    group,
+    name,
+    context
+  ) {
     checkGroupArg(group);
     return this._getCached(group, name, true, context);
   },
@@ -306,14 +338,19 @@ ContentPrefService2.prototype = {
     return prefs[0] || null;
   },
 
-  _getCached: function CPS2__getCached(group, name, includeSubdomains,
-                                       context) {
+  _getCached: function CPS2__getCached(
+    group,
+    name,
+    includeSubdomains,
+    context
+  ) {
     group = this._parseGroup(group);
     checkNameArg(name);
 
     let storesToCheck = [this._cache];
-    if (context && context.usePrivateBrowsing)
+    if (context && context.usePrivateBrowsing) {
       storesToCheck.push(this._pbStore);
+    }
 
     let outStore = new ContentPrefStore();
     storesToCheck.forEach(function(store) {
@@ -416,11 +453,18 @@ ContentPrefService2.prototype = {
 
     this._execStmts(stmts, {
       onDone: (reason, ok) => {
-        if (ok)
+        if (ok) {
           this._cache.setWithCast(group, name, value);
+        }
         cbHandleCompletion(callback, reason);
-        if (ok)
-          this._notifyPrefSet(group, name, value, context && context.usePrivateBrowsing);
+        if (ok) {
+          this._notifyPrefSet(
+            group,
+            name,
+            value,
+            context && context.usePrivateBrowsing
+          );
+        }
       },
       onError: nsresult => {
         cbHandleError(callback, nsresult);
@@ -428,16 +472,22 @@ ContentPrefService2.prototype = {
     });
   },
 
-  removeByDomainAndName: function CPS2_removeByDomainAndName(group, name,
-                                                             context,
-                                                             callback) {
+  removeByDomainAndName: function CPS2_removeByDomainAndName(
+    group,
+    name,
+    context,
+    callback
+  ) {
     checkGroupArg(group);
     this._remove(group, name, false, context, callback);
   },
 
-  removeBySubdomainAndName: function CPS2_removeBySubdomainAndName(group, name,
-                                                                   context,
-                                                                   callback) {
+  removeBySubdomainAndName: function CPS2_removeBySubdomainAndName(
+    group,
+    name,
+    context,
+    callback
+  ) {
     checkGroupArg(group);
     this._remove(group, name, true, context, callback);
   },
@@ -446,8 +496,13 @@ ContentPrefService2.prototype = {
     this._remove(null, name, false, context, callback);
   },
 
-  _remove: function CPS2__remove(group, name, includeSubdomains, context,
-                                 callback) {
+  _remove: function CPS2__remove(
+    group,
+    name,
+    includeSubdomains,
+    context,
+    callback
+  ) {
     group = this._parseGroup(group);
     checkNameArg(name);
     checkCallbackArg(callback, false);
@@ -464,14 +519,18 @@ ContentPrefService2.prototype = {
     stmts.push(this._commonGetStmt(group, name, includeSubdomains));
 
     // Delete the matching prefs.
-    let stmt = this._stmtWithGroupClause(group, includeSubdomains, `
+    let stmt = this._stmtWithGroupClause(
+      group,
+      includeSubdomains,
+      `
       DELETE FROM prefs
       WHERE settingID = (SELECT id FROM settings WHERE name = :name) AND
             CASE typeof(:group)
             WHEN 'null' THEN prefs.groupID IS NULL
             ELSE prefs.groupID IN (${GROUP_CLAUSE})
             END
-    `);
+    `
+    );
     stmt.params.name = name;
     stmts.push(stmt);
 
@@ -490,8 +549,11 @@ ContentPrefService2.prototype = {
         if (ok) {
           this._cache.set(group, name, undefined);
           if (isPrivate) {
-            for (let [sgroup ] of
-                   this._pbStore.match(group, name, includeSubdomains)) {
+            for (let [sgroup] of this._pbStore.match(
+              group,
+              name,
+              includeSubdomains
+            )) {
               prefs.set(sgroup, name, undefined);
               this._pbStore.remove(sgroup, name);
             }
@@ -499,7 +561,7 @@ ContentPrefService2.prototype = {
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
-          for (let [sgroup, , ] of prefs) {
+          for (let [sgroup, ,] of prefs) {
             this._notifyPrefRemoved(sgroup, name, isPrivate);
           }
         }
@@ -541,8 +603,12 @@ ContentPrefService2.prototype = {
     this._removeByDomain(null, false, context, callback);
   },
 
-  _removeByDomain: function CPS2__removeByDomain(group, includeSubdomains,
-                                                 context, callback) {
+  _removeByDomain: function CPS2__removeByDomain(
+    group,
+    includeSubdomains,
+    context,
+    callback
+  ) {
     group = this._parseGroup(group);
     checkCallbackArg(callback, false);
 
@@ -557,37 +623,51 @@ ContentPrefService2.prototype = {
     // First get the matching prefs, then delete groups and prefs that reference
     // deleted groups.
     if (group) {
-      stmts.push(this._stmtWithGroupClause(group, includeSubdomains, `
+      stmts.push(
+        this._stmtWithGroupClause(
+          group,
+          includeSubdomains,
+          `
         SELECT groups.name AS grp, settings.name AS name
         FROM prefs
         JOIN settings ON settings.id = prefs.settingID
         JOIN groups ON groups.id = prefs.groupID
         WHERE prefs.groupID IN (${GROUP_CLAUSE})
-      `));
-      stmts.push(this._stmtWithGroupClause(group, includeSubdomains,
-        `DELETE FROM groups WHERE id IN (${GROUP_CLAUSE})`
-      ));
-      stmts.push(this._stmt(`
+      `
+        )
+      );
+      stmts.push(
+        this._stmtWithGroupClause(
+          group,
+          includeSubdomains,
+          `DELETE FROM groups WHERE id IN (${GROUP_CLAUSE})`
+        )
+      );
+      stmts.push(
+        this._stmt(`
         DELETE FROM prefs
         WHERE groupID NOTNULL AND groupID NOT IN (SELECT id FROM groups)
-      `));
+      `)
+      );
     } else {
-      stmts.push(this._stmt(`
+      stmts.push(
+        this._stmt(`
         SELECT NULL AS grp, settings.name AS name
         FROM prefs
         JOIN settings ON settings.id = prefs.settingID
         WHERE prefs.groupID IS NULL
-      `));
-      stmts.push(this._stmt(
-        "DELETE FROM prefs WHERE groupID IS NULL"
-      ));
+      `)
+      );
+      stmts.push(this._stmt("DELETE FROM prefs WHERE groupID IS NULL"));
     }
 
     // Finally delete settings that are no longer referenced.
-    stmts.push(this._stmt(`
+    stmts.push(
+      this._stmt(`
       DELETE FROM settings
       WHERE id NOT IN (SELECT DISTINCT settingID FROM prefs)
-    `));
+    `)
+    );
 
     let prefs = new ContentPrefStore();
 
@@ -601,10 +681,14 @@ ContentPrefService2.prototype = {
       },
       onDone: (reason, ok) => {
         if (ok && isPrivate) {
-          for (let [sgroup, sname ] of this._pbStore) {
-            if (!group ||
-                (!includeSubdomains && group == sgroup) ||
-                (includeSubdomains && sgroup && this._pbStore.groupsMatchIncludingSubdomains(group, sgroup))) {
+          for (let [sgroup, sname] of this._pbStore) {
+            if (
+              !group ||
+              (!includeSubdomains && group == sgroup) ||
+              (includeSubdomains &&
+                sgroup &&
+                this._pbStore.groupsMatchIncludingSubdomains(group, sgroup))
+            ) {
               prefs.set(sgroup, sname, undefined);
               this._pbStore.remove(sgroup, sname);
             }
@@ -612,7 +696,7 @@ ContentPrefService2.prototype = {
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
-          for (let [sgroup, sname ] of prefs) {
+          for (let [sgroup, sname] of prefs) {
             this._notifyPrefRemoved(sgroup, sname, isPrivate);
           }
         }
@@ -623,7 +707,11 @@ ContentPrefService2.prototype = {
     });
   },
 
-  _removeAllDomainsSince: function CPS2__removeAllDomainsSince(since, context, callback) {
+  _removeAllDomainsSince: function CPS2__removeAllDomainsSince(
+    since,
+    context,
+    callback
+  ) {
     checkCallbackArg(callback, false);
 
     since /= 1000;
@@ -669,7 +757,7 @@ ContentPrefService2.prototype = {
         // This nukes all the groups in _pbStore since we don't have their timestamp
         // information.
         if (ok && isPrivate) {
-          for (let [sgroup, sname ] of this._pbStore) {
+          for (let [sgroup, sname] of this._pbStore) {
             if (sgroup) {
               prefs.set(sgroup, sname, undefined);
             }
@@ -678,7 +766,7 @@ ContentPrefService2.prototype = {
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
-          for (let [sgroup, sname ] of prefs) {
+          for (let [sgroup, sname] of prefs) {
             this._notifyPrefRemoved(sgroup, sname, isPrivate);
           }
         }
@@ -689,7 +777,11 @@ ContentPrefService2.prototype = {
     });
   },
 
-  removeAllDomainsSince: function CPS2_removeAllDomainsSince(since, context, callback) {
+  removeAllDomainsSince: function CPS2_removeAllDomainsSince(
+    since,
+    context,
+    callback
+  ) {
     this._removeAllDomainsSince(since, context, callback);
   },
 
@@ -703,9 +795,10 @@ ContentPrefService2.prototype = {
 
     // Invalidate the cached values so consumers accessing the cache between now
     // and when the operation finishes don't get old data.
-    for (let [group, sname ] of this._cache) {
-      if (sname == name)
+    for (let [group, sname] of this._cache) {
+      if (sname == name) {
         this._cache.remove(group, name);
+      }
     }
 
     let stmts = [];
@@ -731,21 +824,23 @@ ContentPrefService2.prototype = {
     stmts.push(stmt);
 
     // Delete the target settings.
-    stmt = this._stmt(
-      "DELETE FROM settings WHERE name = :name"
-    );
+    stmt = this._stmt("DELETE FROM settings WHERE name = :name");
     stmt.params.name = name;
     stmts.push(stmt);
 
     // Delete prefs and groups that are no longer used.
-    stmts.push(this._stmt(
-      "DELETE FROM prefs WHERE settingID NOT IN (SELECT id FROM settings)"
-    ));
-    stmts.push(this._stmt(`
+    stmts.push(
+      this._stmt(
+        "DELETE FROM prefs WHERE settingID NOT IN (SELECT id FROM settings)"
+      )
+    );
+    stmts.push(
+      this._stmt(`
       DELETE FROM groups WHERE id NOT IN (
         SELECT DISTINCT groupID FROM prefs WHERE groupID NOTNULL
       )
-    `));
+    `)
+    );
 
     let prefs = new ContentPrefStore();
     let isPrivate = context && context.usePrivateBrowsing;
@@ -758,7 +853,7 @@ ContentPrefService2.prototype = {
       },
       onDone: (reason, ok) => {
         if (ok && isPrivate) {
-          for (let [sgroup, sname ] of this._pbStore) {
+          for (let [sgroup, sname] of this._pbStore) {
             if (sname === name) {
               prefs.set(sgroup, name, undefined);
               this._pbStore.remove(sgroup, name);
@@ -767,7 +862,7 @@ ContentPrefService2.prototype = {
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
-          for (let [sgroup, , ] of prefs) {
+          for (let [sgroup, ,] of prefs) {
             this._notifyPrefRemoved(sgroup, name, isPrivate);
           }
         }
@@ -840,9 +935,13 @@ ContentPrefService2.prototype = {
     }
 
     try {
-      callbacks.onDone(ok ? Ci.nsIContentPrefCallback2.COMPLETE_OK :
-                       Ci.nsIContentPrefCallback2.COMPLETE_ERROR,
-                       ok, rows && rows.length > 0);
+      callbacks.onDone(
+        ok
+          ? Ci.nsIContentPrefCallback2.COMPLETE_OK
+          : Ci.nsIContentPrefCallback2.COMPLETE_ERROR,
+        ok,
+        rows && rows.length > 0
+      );
     } catch (e) {
       Cu.reportError(e);
     }
@@ -858,8 +957,9 @@ ContentPrefService2.prototype = {
    *                  returns groupStr itself.  Otherwise returns null.
    */
   _parseGroup: function CPS2__parseGroup(groupStr) {
-    if (!groupStr)
+    if (!groupStr) {
       return null;
+    }
     try {
       var groupURI = Services.io.newURI(groupStr);
     } catch (err) {
@@ -881,29 +981,33 @@ ContentPrefService2.prototype = {
   addObserverForName: function CPS2_addObserverForName(aName, aObserver) {
     var observers;
     if (aName) {
-      if (!this._observers[aName])
+      if (!this._observers[aName]) {
         this._observers[aName] = [];
+      }
       observers = this._observers[aName];
     } else {
       observers = this._genericObservers;
     }
 
-    if (!observers.includes(aObserver))
+    if (!observers.includes(aObserver)) {
       observers.push(aObserver);
+    }
   },
 
   removeObserverForName: function CPS2_removeObserverForName(aName, aObserver) {
     var observers;
     if (aName) {
-      if (!this._observers[aName])
+      if (!this._observers[aName]) {
         return;
+      }
       observers = this._observers[aName];
     } else {
       observers = this._genericObservers;
     }
 
-    if (observers.includes(aObserver))
+    if (observers.includes(aObserver)) {
       observers.splice(observers.indexOf(aObserver), 1);
+    }
   },
 
   /**
@@ -916,8 +1020,9 @@ ContentPrefService2.prototype = {
   _getObservers: function ContentPrefService__getObservers(aName) {
     var observers = [];
 
-    if (aName && this._observers[aName])
+    if (aName && this._observers[aName]) {
       observers = observers.concat(this._observers[aName]);
+    }
     observers = observers.concat(this._genericObservers);
 
     return observers;
@@ -926,7 +1031,11 @@ ContentPrefService2.prototype = {
   /**
    * Notify all observers about the removal of a preference.
    */
-  _notifyPrefRemoved: function ContentPrefService__notifyPrefRemoved(aGroup, aName, aIsPrivate) {
+  _notifyPrefRemoved: function ContentPrefService__notifyPrefRemoved(
+    aGroup,
+    aName,
+    aIsPrivate
+  ) {
     for (var observer of this._getObservers(aName)) {
       try {
         observer.onContentPrefRemoved(aGroup, aName, aIsPrivate);
@@ -939,7 +1048,12 @@ ContentPrefService2.prototype = {
   /**
    * Notify all observers about a preference change.
    */
-  _notifyPrefSet: function ContentPrefService__notifyPrefSet(aGroup, aName, aValue, aIsPrivate) {
+  _notifyPrefSet: function ContentPrefService__notifyPrefSet(
+    aGroup,
+    aName,
+    aValue,
+    aIsPrivate
+  ) {
     for (var observer of this._getObservers(aName)) {
       try {
         observer.onContentPrefSet(aGroup, aName, aValue, aIsPrivate);
@@ -962,20 +1076,20 @@ ContentPrefService2.prototype = {
    */
   observe: function CPS2_observe(subj, topic, data) {
     switch (topic) {
-    case "profile-before-change":
-      this._destroy();
-      break;
-    case "last-pb-context-exited":
-      this._pbStore.removeAll();
-      break;
-    case "test:reset":
-      let fn = subj.QueryInterface(Ci.xpcIJSWeakReference).get();
-      this._reset(fn);
-      break;
-    case "test:db":
-      let obj = subj.QueryInterface(Ci.xpcIJSWeakReference).get();
-      obj.value = this.conn;
-      break;
+      case "profile-before-change":
+        this._destroy();
+        break;
+      case "last-pb-context-exited":
+        this._pbStore.removeAll();
+        break;
+      case "test:reset":
+        let fn = subj.QueryInterface(Ci.xpcIJSWeakReference).get();
+        this._reset(fn);
+        break;
+      case "test:db":
+        let obj = subj.QueryInterface(Ci.xpcIJSWeakReference).get();
+        obj.value = this.conn;
+        break;
     }
   },
 
@@ -993,14 +1107,17 @@ ContentPrefService2.prototype = {
 
     let tables = ["prefs", "groups", "settings"];
     let stmts = tables.map(t => this._stmt(`DELETE FROM ${t}`));
-    this._execStmts(stmts, { onDone: () => {
-      callback();
-    } });
+    this._execStmts(stmts, {
+      onDone: () => {
+        callback();
+      },
+    });
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIContentPrefService2",
-                                          "nsIObserver"]),
-
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIContentPrefService2",
+    "nsIObserver",
+  ]),
 
   // Database Creation & Access
 
@@ -1008,13 +1125,16 @@ ContentPrefService2.prototype = {
 
   _dbSchema: {
     tables: {
-      groups:     "id           INTEGER PRIMARY KEY, \
+      groups:
+        "id           INTEGER PRIMARY KEY, \
                    name         TEXT NOT NULL",
 
-      settings:   "id           INTEGER PRIMARY KEY, \
+      settings:
+        "id           INTEGER PRIMARY KEY, \
                    name         TEXT NOT NULL",
 
-      prefs:      "id           INTEGER PRIMARY KEY, \
+      prefs:
+        "id           INTEGER PRIMARY KEY, \
                    groupID      INTEGER REFERENCES groups(id), \
                    settingID    INTEGER NOT NULL REFERENCES settings(id), \
                    value        BLOB, \
@@ -1045,7 +1165,10 @@ ContentPrefService2.prototype = {
   },
 
   async _getConnection(aAttemptNum = 0) {
-    let path = OS.Path.join(OS.Constants.Path.profileDir, "content-prefs.sqlite");
+    let path = OS.Path.join(
+      OS.Constants.Path.profileDir,
+      "content-prefs.sqlite"
+    );
     let conn;
     let resetAndRetry = async e => {
       if (e.result != Cr.NS_ERROR_FILE_CORRUPTED) {
@@ -1072,7 +1195,8 @@ ContentPrefService2.prototype = {
       conn = await Sqlite.openConnection({ path });
       Sqlite.shutdown.addBlocker(
         "Closing ContentPrefService2 connection.",
-        () => conn.close());
+        () => conn.close()
+      );
     } catch (e) {
       Cu.reportError(e);
       return resetAndRetry(e);
@@ -1097,8 +1221,9 @@ ContentPrefService2.prototype = {
     // toolkit.storage.synchronous pref to 1 (NORMAL synchronization) or 2
     // (FULL synchronization), in which case mozStorageConnection::Initialize
     // will use that value, and we won't override it here.
-    if (!Services.prefs.prefHasUserValue("toolkit.storage.synchronous"))
+    if (!Services.prefs.prefHasUserValue("toolkit.storage.synchronous")) {
       await conn.execute("PRAGMA synchronous = OFF");
+    }
 
     return conn;
   },
@@ -1109,8 +1234,9 @@ ContentPrefService2.prototype = {
       await aConn.close();
     }
     let backupFile = aPath + ".corrupt";
-    let { file, path: uniquePath } =
-      await OS.File.openUnique(backupFile, { humanReadable: true });
+    let { file, path: uniquePath } = await OS.File.openUnique(backupFile, {
+      humanReadable: true,
+    });
     await file.close();
     await OS.File.copy(aPath, uniquePath);
     await OS.File.remove(aPath);
@@ -1136,8 +1262,14 @@ ContentPrefService2.prototype = {
 
   _createIndex: async function CPS2__createTable(aConn, aName) {
     let index = this._dbSchema.indices[aName];
-    let statement = "CREATE INDEX IF NOT EXISTS " + aName + " ON " + index.table +
-                    "(" + index.columns.join(", ") + ")";
+    let statement =
+      "CREATE INDEX IF NOT EXISTS " +
+      aName +
+      " ON " +
+      index.table +
+      "(" +
+      index.columns.join(", ") +
+      ")";
     await aConn.execute(statement);
   },
 
@@ -1169,8 +1301,12 @@ ContentPrefService2.prototype = {
       for (let i = aOldVersion; i < aNewVersion; i++) {
         let migrationName = "_dbMigrate" + i + "To" + (i + 1);
         if (typeof this[migrationName] != "function") {
-          throw new Error("no migrator function from version " + aOldVersion + " to version " +
-                          aNewVersion);
+          throw new Error(
+            "no migrator function from version " +
+              aOldVersion +
+              " to version " +
+              aNewVersion
+          );
         }
         await this[migrationName](aConn);
       }
@@ -1201,7 +1337,9 @@ ContentPrefService2.prototype = {
     try {
       await aConn.execute("SELECT timestamp FROM prefs");
     } catch (e) {
-      await aConn.execute("ALTER TABLE prefs ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0");
+      await aConn.execute(
+        "ALTER TABLE prefs ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0"
+      );
     }
 
     // To modify prefs_idx drop it and create again.
@@ -1213,25 +1351,30 @@ ContentPrefService2.prototype = {
 };
 
 function checkGroupArg(group) {
-  if (!group || typeof(group) != "string")
+  if (!group || typeof group != "string") {
     throw invalidArg("domain must be nonempty string.");
+  }
 }
 
 function checkNameArg(name) {
-  if (!name || typeof(name) != "string")
+  if (!name || typeof name != "string") {
     throw invalidArg("name must be nonempty string.");
+  }
 }
 
 function checkValueArg(value) {
-  if (value === undefined)
+  if (value === undefined) {
     throw invalidArg("value must not be undefined.");
+  }
 }
 
 function checkCallbackArg(callback, required) {
-  if (callback && !(callback instanceof Ci.nsIContentPrefCallback2))
+  if (callback && !(callback instanceof Ci.nsIContentPrefCallback2)) {
     throw invalidArg("callback must be an nsIContentPrefCallback2.");
-  if (!callback && required)
+  }
+  if (!callback && required) {
     throw invalidArg("callback must be given.");
+  }
 }
 
 function invalidArg(msg) {

@@ -6,7 +6,7 @@
 // Test for about:preferences foreground check for updates
 // with an unsupported update.
 add_task(async function aboutPrefs_foregroundCheck_unsupported() {
-  let params = {queryString: "&unsupported=1"};
+  let params = { queryString: "&unsupported=1" };
   await runAboutPrefsUpdateTest(params, [
     {
       panelId: "checkingForUpdates",

@@ -6,8 +6,18 @@
 let isMac = navigator.platform.indexOf("Mac") == 0;
 
 function checkState(allowCut, desc, testWindow = window) {
-  is(testWindow.document.getElementById("cmd_cut").getAttribute("disabled") == "true", !allowCut, desc + " - cut");
-  is(testWindow.document.getElementById("cmd_paste").getAttribute("disabled") == "true", false, desc + " - paste");
+  is(
+    testWindow.document.getElementById("cmd_cut").getAttribute("disabled") ==
+      "true",
+    !allowCut,
+    desc + " - cut"
+  );
+  is(
+    testWindow.document.getElementById("cmd_paste").getAttribute("disabled") ==
+      "true",
+    false,
+    desc + " - paste"
+  );
 }
 
 // Add a special controller to the urlbar and browser to listen in on when
@@ -16,7 +26,9 @@ function checkState(allowCut, desc, testWindow = window) {
 function expectCommandUpdate(count, testWindow = window) {
   return new Promise((resolve, reject) => {
     let overrideController = {
-      supportsCommand(cmd) { return cmd == "cmd_delete"; },
+      supportsCommand(cmd) {
+        return cmd == "cmd_delete";
+      },
       isCommandEnabled(cmd) {
         if (!count) {
           ok(false, "unexpected update");
@@ -24,8 +36,14 @@ function expectCommandUpdate(count, testWindow = window) {
         }
 
         if (!--count) {
-          testWindow.gURLBar.inputField.controllers.removeControllerAt(0, overrideController);
-          testWindow.gBrowser.selectedBrowser.controllers.removeControllerAt(0, overrideController);
+          testWindow.gURLBar.inputField.controllers.removeControllerAt(
+            0,
+            overrideController
+          );
+          testWindow.gBrowser.selectedBrowser.controllers.removeControllerAt(
+            0,
+            overrideController
+          );
           resolve(true);
         }
       },
@@ -33,22 +51,42 @@ function expectCommandUpdate(count, testWindow = window) {
 
     if (!count) {
       SimpleTest.executeSoon(() => {
-        testWindow.gURLBar.inputField.controllers.removeControllerAt(0, overrideController);
-        testWindow.gBrowser.selectedBrowser.controllers.removeControllerAt(0, overrideController);
+        testWindow.gURLBar.inputField.controllers.removeControllerAt(
+          0,
+          overrideController
+        );
+        testWindow.gBrowser.selectedBrowser.controllers.removeControllerAt(
+          0,
+          overrideController
+        );
         resolve(false);
       });
     }
 
-    testWindow.gURLBar.inputField.controllers.insertControllerAt(0, overrideController);
-    testWindow.gBrowser.selectedBrowser.controllers.insertControllerAt(0, overrideController);
+    testWindow.gURLBar.inputField.controllers.insertControllerAt(
+      0,
+      overrideController
+    );
+    testWindow.gBrowser.selectedBrowser.controllers.insertControllerAt(
+      0,
+      overrideController
+    );
   });
 }
 
 add_task(async function test_init() {
   // Put something on the clipboard to verify that the paste button is properly enabled during the test.
-  let clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+  let clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
+    Ci.nsIClipboardHelper
+  );
   await new Promise(resolve => {
-    SimpleTest.waitForClipboard("Sample", function() { clipboardHelper.copyString("Sample"); }, resolve);
+    SimpleTest.waitForClipboard(
+      "Sample",
+      function() {
+        clipboardHelper.copyString("Sample");
+      },
+      resolve
+    );
   });
 
   // Open and close the panel first so that it is fully initialized.
@@ -71,7 +109,10 @@ add_task(async function test_panelui_opened() {
   gURLBar.select();
   await overridePromise;
 
-  checkState(true, "Update when edit-controls is on panel and selection changed");
+  checkState(
+    true,
+    "Update when edit-controls is on panel and selection changed"
+  );
 
   overridePromise = expectCommandUpdate(0);
   await gCUITestUtils.hideMainMenu();
@@ -85,14 +126,21 @@ add_task(async function test_panelui_opened() {
   overridePromise = expectCommandUpdate(isMac ? 1 : 0);
   gURLBar.select();
   await overridePromise;
-  checkState(true, "Update when edit-controls is on panel, hidden and selection changed");
+  checkState(
+    true,
+    "Update when edit-controls is on panel, hidden and selection changed"
+  );
 });
 
 // Test updating when the edit-controls are moved to the toolbar.
 add_task(async function test_panelui_customize_to_toolbar() {
   await startCustomizing();
   let navbar = document.getElementById("nav-bar");
-  simulateItemDrag(document.getElementById("edit-controls"), CustomizableUI.getCustomizationTarget(navbar), "end");
+  simulateItemDrag(
+    document.getElementById("edit-controls"),
+    CustomizableUI.getCustomizationTarget(navbar),
+    "end"
+  );
   await endCustomizing();
 
   // updateEditUIVisibility should be called when customization ends but isn't. See bug 1359790.
@@ -113,7 +161,10 @@ add_task(async function test_panelui_customize_to_toolbar() {
   overridePromise = expectCommandUpdate(1);
   gURLBar.select();
   await overridePromise;
-  checkState(true, "Update when edit-controls on toolbar and selection changed");
+  checkState(
+    true,
+    "Update when edit-controls on toolbar and selection changed"
+  );
 
   const kOverflowPanel = document.getElementById("widget-overflow");
 
@@ -126,15 +177,21 @@ add_task(async function test_panelui_customize_to_toolbar() {
   });
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() =>
-    navbar.hasAttribute("overflowing") && !navbar.querySelector("edit-controls"));
+  await waitForCondition(
+    () =>
+      navbar.hasAttribute("overflowing") &&
+      !navbar.querySelector("edit-controls")
+  );
 
   // Mac will update the enabled state even when the buttons are overflowing,
   // so main menubar shortcuts will work properly.
   overridePromise = expectCommandUpdate(isMac ? 1 : 0);
   gURLBar.select();
   await overridePromise;
-  checkState(true, "Update when edit-controls is on overflow panel, hidden and selection changed");
+  checkState(
+    true,
+    "Update when edit-controls is on overflow panel, hidden and selection changed"
+  );
 
   // Check that we get an update if we select content while the panel is open.
   overridePromise = expectCommandUpdate(1);
@@ -151,7 +208,10 @@ add_task(async function test_panelui_customize_to_toolbar() {
   window.resizeTo(originalWidth, window.outerHeight);
   await waitForCondition(() => !navbar.hasAttribute("overflowing"));
 
-  CustomizableUI.addWidgetToArea("edit-controls", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "edit-controls",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   // updateEditUIVisibility should be called when customization happens but isn't. See bug 1359790.
   updateEditUIVisibility();
 
@@ -189,7 +249,10 @@ add_task(async function test_panelui_customize_to_palette() {
   await overridePromise;
 
   // If the UI isn't found, the command is set to be enabled.
-  checkState(true, "Update when edit-controls is on palette, hidden and selection changed");
+  checkState(
+    true,
+    "Update when edit-controls is on palette, hidden and selection changed"
+  );
 });
 
 add_task(async function finish() {
@@ -218,7 +281,11 @@ add_task(async function test_initial_state() {
   // Commands won't update when no edit UI is present. They default to being
   // enabled so that keyboard shortcuts will work. The real enabled state will
   // be checked when shortcut is pressed.
-  checkState(!isMac, "No update when edit-controls is on panel and not visible", testWindow);
+  checkState(
+    !isMac,
+    "No update when edit-controls is on panel and not visible",
+    testWindow
+  );
 
   await BrowserTestUtils.closeWindow(testWindow);
   await SimpleTest.promiseFocus(window);

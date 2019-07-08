@@ -49,28 +49,43 @@ add_task(async function() {
   await performRequestsInContent(requests);
   await wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
 
-  isnot(getSelectedRequest(store.getState()), null,
-    "There should be a selected item in the requests menu.");
-  is(getSelectedIndex(store.getState()), 0,
-    "The first item should be selected in the requests menu.");
-  is(!!document.querySelector(".network-details-panel"), true,
-    "The network details panel should be visible after toggle button was pressed.");
+  isnot(
+    getSelectedRequest(store.getState()),
+    null,
+    "There should be a selected item in the requests menu."
+  );
+  is(
+    getSelectedIndex(store.getState()),
+    0,
+    "The first item should be selected in the requests menu."
+  );
+  is(
+    !!document.querySelector(".network-details-panel"),
+    true,
+    "The network details panel should be visible after toggle button was pressed."
+  );
 
   testFilterButtons(monitor, "all");
   testContents([0, 1, 2, 3, 4, 5, 6], 7, 0);
 
   info("Sorting by size, ascending.");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-list-contentSize-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#requests-list-contentSize-button")
+  );
   testFilterButtons(monitor, "all");
   testContents([6, 4, 5, 0, 1, 2, 3], 7, 6);
 
   info("Testing html filtering.");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-html-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-html-button")
+  );
   testFilterButtons(monitor, "html");
   testContents([6, 4, 5, 0, 1, 2, 3], 1, 6);
 
@@ -91,36 +106,60 @@ add_task(async function() {
   info("Testing html filtering again.");
   resetSorting();
   testFilterButtons(monitor, "html");
-  testContents([12, 13, 20, 14, 16, 18, 15, 17, 19, 0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11],
-    3, 20);
+  testContents(
+    [12, 13, 20, 14, 16, 18, 15, 17, 19, 0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11],
+    3,
+    20
+  );
 
   await teardown(monitor);
 
   function resetSorting() {
-    EventUtils.sendMouseEvent({ type: "click" },
-      document.querySelector("#requests-list-waterfall-button"));
-    EventUtils.sendMouseEvent({ type: "click" },
-      document.querySelector("#requests-list-contentSize-button"));
+    EventUtils.sendMouseEvent(
+      { type: "click" },
+      document.querySelector("#requests-list-waterfall-button")
+    );
+    EventUtils.sendMouseEvent(
+      { type: "click" },
+      document.querySelector("#requests-list-contentSize-button")
+    );
   }
 
   function getSelectedIndex(state) {
     if (!state.requests.selectedId) {
       return -1;
     }
-    return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
+    return getSortedRequests(state).findIndex(
+      r => r.id === state.requests.selectedId
+    );
   }
 
   function testContents(order, visible, selection) {
-    isnot(getSelectedRequest(store.getState()), null,
-      "There should still be a selected item after filtering.");
-    is(getSelectedIndex(store.getState()), selection,
-      "The first item should be still selected after filtering.");
-    is(!!document.querySelector(".network-details-panel"), true,
-      "The network details panel should still be visible after filtering.");
+    isnot(
+      getSelectedRequest(store.getState()),
+      null,
+      "There should still be a selected item after filtering."
+    );
+    is(
+      getSelectedIndex(store.getState()),
+      selection,
+      "The first item should be still selected after filtering."
+    );
+    is(
+      !!document.querySelector(".network-details-panel"),
+      true,
+      "The network details panel should still be visible after filtering."
+    );
 
-    is(getSortedRequests(store.getState()).length, order.length,
-      "There should be a specific amount of items in the requests menu.");
-    is(getDisplayedRequests(store.getState()).length, visible,
-      "There should be a specific amount of visible items in the requests menu.");
+    is(
+      getSortedRequests(store.getState()).length,
+      order.length,
+      "There should be a specific amount of items in the requests menu."
+    );
+    is(
+      getDisplayedRequests(store.getState()).length,
+      visible,
+      "There should be a specific amount of visible items in the requests menu."
+    );
   }
 });

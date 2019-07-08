@@ -16,26 +16,41 @@ add_task(async function() {
   const enabledToggle = summary.querySelector(".stylesheet-enabled");
   ok(enabledToggle, "enabled toggle button exists");
 
-  is(editor.styleSheet.disabled, false,
-     "first stylesheet is initially enabled");
+  is(
+    editor.styleSheet.disabled,
+    false,
+    "first stylesheet is initially enabled"
+  );
 
-  is(summary.classList.contains("disabled"), false,
-     "first stylesheet is initially enabled, UI does not have DISABLED class");
+  is(
+    summary.classList.contains("disabled"),
+    false,
+    "first stylesheet is initially enabled, UI does not have DISABLED class"
+  );
 
   info("Disabling the first stylesheet.");
   await toggleEnabled(editor, enabledToggle, panel.panelWindow);
 
   is(editor.styleSheet.disabled, true, "first stylesheet is now disabled");
-  is(summary.classList.contains("disabled"), true,
-     "first stylesheet is now disabled, UI has DISABLED class");
+  is(
+    summary.classList.contains("disabled"),
+    true,
+    "first stylesheet is now disabled, UI has DISABLED class"
+  );
 
   info("Enabling the first stylesheet again.");
   await toggleEnabled(editor, enabledToggle, panel.panelWindow);
 
-  is(editor.styleSheet.disabled, false,
-     "first stylesheet is now enabled again");
-  is(summary.classList.contains("disabled"), false,
-     "first stylesheet is now enabled again, UI does not have DISABLED class");
+  is(
+    editor.styleSheet.disabled,
+    false,
+    "first stylesheet is now enabled again"
+  );
+  is(
+    summary.classList.contains("disabled"),
+    false,
+    "first stylesheet is now enabled again, UI does not have DISABLED class"
+  );
 });
 
 async function toggleEnabled(editor, enabledToggle, panelWindow) {

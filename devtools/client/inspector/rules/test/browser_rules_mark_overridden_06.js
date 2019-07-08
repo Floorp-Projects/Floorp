@@ -19,7 +19,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   await testMarkOverridden(inspector, view);
 });
@@ -48,13 +48,19 @@ async function testMarkOverridden(inspector, view) {
 // A helper to perform a repeated set of checks.
 function checkProperties(rule) {
   let prop = rule.textProps[0];
-  is(prop.name, "background-color",
-     "First property should be background-color");
+  is(
+    prop.name,
+    "background-color",
+    "First property should be background-color"
+  );
   is(prop.value, "blue", "First property value should be blue");
   ok(prop.overridden, "prop should be overridden.");
   prop = rule.textProps[1];
-  is(prop.name, "background-color",
-     "Second property should be background-color");
+  is(
+    prop.name,
+    "background-color",
+    "Second property should be background-color"
+  );
   is(prop.value, "chartreuse", "First property value should be chartreuse");
   ok(!prop.overridden, "prop should not be overridden.");
 }

@@ -26,7 +26,13 @@ async function performTests() {
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => content.focus());
   await waitFor(() => isInputFocused(hud) === false);
 
-  info("Reload the page to check that JsTerm does not steal the content page focus");
+  info(
+    "Reload the page to check that JsTerm does not steal the content page focus"
+  );
   await refreshTab();
-  is(isInputFocused(hud), false, "JsTerm is still unfocused after reloading the page");
+  is(
+    isInputFocused(hud),
+    false,
+    "JsTerm is still unfocused after reloading the page"
+  );
 }

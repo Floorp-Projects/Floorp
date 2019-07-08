@@ -25,12 +25,20 @@ add_task(async function() {
   const { inspector, toolbox } = await openInspectorForURL(encodeURI(TEST_URL));
 
   info("Select the green node");
-  const greenNode = await getNodeFrontInShadowDom("div", "test-component", inspector);
+  const greenNode = await getNodeFrontInShadowDom(
+    "div",
+    "test-component",
+    inspector
+  );
   await selectNode(greenNode, inspector);
 
   info("Take a screenshot of the green node and verify it looks as expected");
   const greenScreenshot = await takeNodeScreenshot(inspector);
-  await assertSingleColorScreenshotImage(greenScreenshot, 30, 30, { r: 0, g: 128, b: 0 });
+  await assertSingleColorScreenshotImage(greenScreenshot, 30, 30, {
+    r: 0,
+    g: 128,
+    b: 0,
+  });
 
   await toolbox.destroy();
 });

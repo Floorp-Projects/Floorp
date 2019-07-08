@@ -1,63 +1,75 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-class MozPopupNotification extends MozXULElement {
-  static get inheritedAttributes() {
-    return {
-      ".popup-notification-icon": "popupid,src=icon,class=iconclass",
-      ".popup-notification-origin": "value=origin,tooltiptext=origin",
-      ".popup-notification-description": "popupid",
-      ".popup-notification-description > span:first-of-type": "text=label,popupid",
-      ".popup-notification-description > b:first-of-type": "text=name,popupid",
-      ".popup-notification-description > span:nth-of-type(2)": "text=endlabel,popupid",
-      ".popup-notification-description > b:last-of-type": "text=secondname,popupid",
-      ".popup-notification-description > span:last-of-type": "secondendlabel,popupid",
-      ".popup-notification-closebutton": "oncommand=closebuttoncommand,hidden=closebuttonhidden",
-      ".popup-notification-learnmore-link": "onclick=learnmoreclick,href=learnmoreurl",
-      ".popup-notification-warning": "hidden=warninghidden,text=warninglabel",
-      ".popup-notification-button-container > .popup-notification-secondary-button":
+  class MozPopupNotification extends MozXULElement {
+    static get inheritedAttributes() {
+      return {
+        ".popup-notification-icon": "popupid,src=icon,class=iconclass",
+        ".popup-notification-origin": "value=origin,tooltiptext=origin",
+        ".popup-notification-description": "popupid",
+        ".popup-notification-description > span:first-of-type":
+          "text=label,popupid",
+        ".popup-notification-description > b:first-of-type":
+          "text=name,popupid",
+        ".popup-notification-description > span:nth-of-type(2)":
+          "text=endlabel,popupid",
+        ".popup-notification-description > b:last-of-type":
+          "text=secondname,popupid",
+        ".popup-notification-description > span:last-of-type":
+          "secondendlabel,popupid",
+        ".popup-notification-closebutton":
+          "oncommand=closebuttoncommand,hidden=closebuttonhidden",
+        ".popup-notification-learnmore-link":
+          "onclick=learnmoreclick,href=learnmoreurl",
+        ".popup-notification-warning": "hidden=warninghidden,text=warninglabel",
+        ".popup-notification-button-container > .popup-notification-secondary-button":
           "oncommand=secondarybuttoncommand,label=secondarybuttonlabel,accesskey=secondarybuttonaccesskey,hidden=secondarybuttonhidden",
-      ".popup-notification-button-container > toolbarseparator": "hidden=dropmarkerhidden",
-      ".popup-notification-dropmarker": "onpopupshown=dropmarkerpopupshown,hidden=dropmarkerhidden",
-      ".popup-notification-dropmarker > menupopup": "oncommand=menucommand",
-      ".popup-notification-primary-button": "oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,default=buttonhighlight,disabled=mainactiondisabled",
-    };
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (!this._hasSlotted) {
-      return;
+        ".popup-notification-button-container > toolbarseparator":
+          "hidden=dropmarkerhidden",
+        ".popup-notification-dropmarker":
+          "onpopupshown=dropmarkerpopupshown,hidden=dropmarkerhidden",
+        ".popup-notification-dropmarker > menupopup": "oncommand=menucommand",
+        ".popup-notification-primary-button":
+          "oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,default=buttonhighlight,disabled=mainactiondisabled",
+      };
     }
 
-    super.attributeChangedCallback(name, oldValue, newValue);
-  }
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (!this._hasSlotted) {
+        return;
+      }
 
-  show() {
-    this.slotContents();
-
-    if (this.checkboxState) {
-      this.checkbox.checked = this.checkboxState.checked;
-      this.checkbox.setAttribute("label", this.checkboxState.label);
-      this.checkbox.hidden = false;
-    } else {
-      this.checkbox.hidden = true;
+      super.attributeChangedCallback(name, oldValue, newValue);
     }
 
-    this.hidden = false;
-  }
+    show() {
+      this.slotContents();
 
-  slotContents() {
-    if (this._hasSlotted) {
-      return;
+      if (this.checkboxState) {
+        this.checkbox.checked = this.checkboxState.checked;
+        this.checkbox.setAttribute("label", this.checkboxState.label);
+        this.checkbox.hidden = false;
+      } else {
+        this.checkbox.hidden = true;
+      }
+
+      this.hidden = false;
     }
-    this._hasSlotted = true;
-    this.appendChild(MozXULElement.parseXULToFragment(`
+
+    slotContents() {
+      if (this._hasSlotted) {
+        return;
+      }
+      this._hasSlotted = true;
+      this.appendChild(
+        MozXULElement.parseXULToFragment(
+          `
       <hbox class="popup-notification-header-container"></hbox>
       <hbox align="start" class="popup-notification-body-container">
         <image class="popup-notification-icon"/>
@@ -87,37 +99,54 @@ class MozPopupNotification extends MozXULElement {
         </button>
         <button class="popup-notification-button popup-notification-primary-button" label="&defaultButton.label;" accesskey="&defaultButton.accesskey;"></button>
       </hbox>
-    `, ["chrome://global/locale/notification.dtd"]));
+    `,
+          ["chrome://global/locale/notification.dtd"]
+        )
+      );
 
-    this.button = this.querySelector(".popup-notification-primary-button");
-    this.secondaryButton =  this.querySelector(".popup-notification-secondary-button");
-    this.checkbox = this.querySelector(".popup-notification-checkbox");
-    this.closebutton = this.querySelector(".popup-notification-closebutton");
-    this.menubutton = this.querySelector(".popup-notification-dropmarker");
-    this.menupopup = this.menubutton.querySelector("menupopup");
+      this.button = this.querySelector(".popup-notification-primary-button");
+      this.secondaryButton = this.querySelector(
+        ".popup-notification-secondary-button"
+      );
+      this.checkbox = this.querySelector(".popup-notification-checkbox");
+      this.closebutton = this.querySelector(".popup-notification-closebutton");
+      this.menubutton = this.querySelector(".popup-notification-dropmarker");
+      this.menupopup = this.menubutton.querySelector("menupopup");
 
-    let popupnotificationfooter = this.querySelector("popupnotificationfooter");
-    if (popupnotificationfooter) {
-      this.querySelector(".popup-notification-footer-container").append(popupnotificationfooter);
+      let popupnotificationfooter = this.querySelector(
+        "popupnotificationfooter"
+      );
+      if (popupnotificationfooter) {
+        this.querySelector(".popup-notification-footer-container").append(
+          popupnotificationfooter
+        );
+      }
+
+      let popupnotificationheader = this.querySelector(
+        "popupnotificationheader"
+      );
+      if (popupnotificationheader) {
+        this.querySelector(".popup-notification-header-container").append(
+          popupnotificationheader
+        );
+      }
+
+      for (let popupnotificationcontent of this.querySelectorAll(
+        "popupnotificationcontent"
+      )) {
+        this.appendNotificationContent(popupnotificationcontent);
+      }
+
+      this.initializeAttributeInheritance();
     }
 
-    let popupnotificationheader = this.querySelector("popupnotificationheader");
-    if (popupnotificationheader) {
-      this.querySelector(".popup-notification-header-container").append(popupnotificationheader);
+    appendNotificationContent(el) {
+      let nextSibling = this.querySelector(
+        ".popup-notification-body > .popup-notification-learnmore-link"
+      );
+      nextSibling.before(el);
     }
-
-    for (let popupnotificationcontent of this.querySelectorAll("popupnotificationcontent")) {
-      this.appendNotificationContent(popupnotificationcontent);
-    }
-
-    this.initializeAttributeInheritance();
   }
 
-  appendNotificationContent(el) {
-    let nextSibling = this.querySelector(".popup-notification-body > .popup-notification-learnmore-link");
-    nextSibling.before(el);
-  }
-}
-
-customElements.define("popupnotification", MozPopupNotification);
+  customElements.define("popupnotification", MozPopupNotification);
 }

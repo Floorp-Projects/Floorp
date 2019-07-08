@@ -5,42 +5,52 @@
 // before the load and then sets its location during the load.  This should
 // create just one SHEntry.
 
-var doc = "data:text/html,<html><body onload='load()'>" +
- "<script>" +
- "  var iframe = document.createElement('iframe');" +
- "  iframe.id = 'iframe';" +
- "  document.documentElement.appendChild(iframe);" +
- "  function load() {" +
- "    iframe.src = 'data:text/html,Hello!';" +
- "  }" +
- "</script>" +
- "</body></html>";
+var doc =
+  "data:text/html,<html><body onload='load()'>" +
+  "<script>" +
+  "  var iframe = document.createElement('iframe');" +
+  "  iframe.id = 'iframe';" +
+  "  document.documentElement.appendChild(iframe);" +
+  "  function load() {" +
+  "    iframe.src = 'data:text/html,Hello!';" +
+  "  }" +
+  "</script>" +
+  "</body></html>";
 
 function test() {
   waitForExplicitFinish();
 
   let taskFinished;
 
-  let tab = BrowserTestUtils.addTab(gBrowser, doc, {}, (tab) => {
+  let tab = BrowserTestUtils.addTab(gBrowser, doc, {}, tab => {
     taskFinished = ContentTask.spawn(tab.linkedBrowser, null, () => {
       return new Promise(resolve => {
-        addEventListener("load", function() {
-          // The main page has loaded.  Now wait for the iframe to load.
-          let iframe = content.document.getElementById("iframe");
-          iframe.addEventListener("load", function listener(aEvent) {
-            // Wait for the iframe to load the new document, not about:blank.
-            if (!iframe.src)
-              return;
+        addEventListener(
+          "load",
+          function() {
+            // The main page has loaded.  Now wait for the iframe to load.
+            let iframe = content.document.getElementById("iframe");
+            iframe.addEventListener(
+              "load",
+              function listener(aEvent) {
+                // Wait for the iframe to load the new document, not about:blank.
+                if (!iframe.src) {
+                  return;
+                }
 
-            iframe.removeEventListener("load", listener, true);
-            let shistory = content.docShell
-                            .QueryInterface(Ci.nsIWebNavigation)
-                            .sessionHistory;
+                iframe.removeEventListener("load", listener, true);
+                let shistory = content.docShell.QueryInterface(
+                  Ci.nsIWebNavigation
+                ).sessionHistory;
 
-            Assert.equal(shistory.count, 1, "shistory count should be 1.");
-            resolve();
-          }, true);
-        }, true);
+                Assert.equal(shistory.count, 1, "shistory count should be 1.");
+                resolve();
+              },
+              true
+            );
+          },
+          true
+        );
       });
     });
   });

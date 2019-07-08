@@ -4,8 +4,10 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AndroidLog: "resource://gre/modules/AndroidLog.jsm",
@@ -13,8 +15,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const LOGTAG = "Experiments";
-const EXPERIMENTS_CONFIGURATION = "https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records";
-const Experiments = Services.wm.getMostRecentWindow("navigator:browser").Experiments;
+const EXPERIMENTS_CONFIGURATION =
+  "https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records";
+const Experiments = Services.wm.getMostRecentWindow("navigator:browser")
+  .Experiments;
 
 document.addEventListener("DOMContentLoaded", initList);
 
@@ -26,7 +30,10 @@ function initList() {
   const list = document.getElementById("list");
   list.addEventListener("click", toggleOverride);
 
-  Promise.all([promiseEnabledExperiments(), promiseExperimentsConfiguration()]).then(values => {
+  Promise.all([
+    promiseEnabledExperiments(),
+    promiseExperimentsConfiguration(),
+  ]).then(values => {
     const enabledExperiments = values[0];
     const serverConfiguration = values[1];
 
@@ -35,10 +42,13 @@ function initList() {
         let item = document.createElement("li");
         item.textContent = experiment.name;
         item.setAttribute("name", experiment.name);
-        item.setAttribute("isEnabled", enabledExperiments.includes(experiment.name));
+        item.setAttribute(
+          "isEnabled",
+          enabledExperiments.includes(experiment.name)
+        );
         list.appendChild(item);
       } catch (e) {
-          log(`Error while setting experiments list: ${e.error}`);
+        log(`Error while setting experiments list: ${e.error}`);
       }
     });
   });
@@ -61,12 +71,14 @@ function toggleOverride(experiment) {
 function promiseEnabledExperiments() {
   log("Getting the locally enabled experiments");
 
-  return EventDispatcher.instance.sendRequestForResult({
-    type: "Experiments:GetActive",
-  }).then(experiments => {
-    log("List of locally enabled experiments ready");
-    return experiments;
-  });
+  return EventDispatcher.instance
+    .sendRequestForResult({
+      type: "Experiments:GetActive",
+    })
+    .then(experiments => {
+      log("List of locally enabled experiments ready");
+      return experiments;
+    });
 }
 
 /**
@@ -100,7 +112,9 @@ function promiseExperimentsConfiguration() {
             reject(errorMessage);
           }
         } else {
-          const errorMessage = `Request to ${url} returned status ${xhr.status}`;
+          const errorMessage = `Request to ${url} returned status ${
+            xhr.status
+          }`;
           log(errorMessage);
           reject(errorMessage);
         }

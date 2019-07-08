@@ -6,7 +6,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const {img, button, span} = dom;
+const { img, button, span } = dom;
 
 class ToolboxTab extends Component {
   // See toolbox-toolbar propTypes for details on the props used here.
@@ -27,7 +27,7 @@ class ToolboxTab extends Component {
   }
 
   renderIcon(definition) {
-    const {icon} = definition;
+    const { icon } = definition;
     if (!icon) {
       return [];
     }
@@ -40,9 +40,22 @@ class ToolboxTab extends Component {
   }
 
   render() {
-    const {panelDefinition, currentToolId, highlightedTools, selectTool,
-           focusedButton, focusButton} = this.props;
-    const {id, extensionId, tooltip, label, iconOnly, badge} = panelDefinition;
+    const {
+      panelDefinition,
+      currentToolId,
+      highlightedTools,
+      selectTool,
+      focusedButton,
+      focusButton,
+    } = this.props;
+    const {
+      id,
+      extensionId,
+      tooltip,
+      label,
+      iconOnly,
+      badge,
+    } = panelDefinition;
     const isHighlighted = id === currentToolId;
 
     const className = [
@@ -64,34 +77,32 @@ class ToolboxTab extends Component {
         tabIndex: focusedButton === id ? "0" : "-1",
         onFocus: () => focusButton(id),
         onMouseDown: () => selectTool(id, "tab_switch"),
-        onKeyDown: (evt) => {
+        onKeyDown: evt => {
           if (evt.key === "Enter" || evt.key === " ") {
             selectTool(id, "tab_switch");
           }
         },
       },
-      span(
-        {
-          className: "devtools-tab-line",
-        }
-      ),
+      span({
+        className: "devtools-tab-line",
+      }),
       ...this.renderIcon(panelDefinition),
-      iconOnly ?
-        null :
-        span(
-          {
-            className: "devtools-tab-label",
-          },
-          label,
-          badge && !isHighlighted ?
-            span(
-              {
-                className: "devtools-tab-badge",
-              },
-              badge
-            ) :
-            null
-        )
+      iconOnly
+        ? null
+        : span(
+            {
+              className: "devtools-tab-label",
+            },
+            label,
+            badge && !isHighlighted
+              ? span(
+                  {
+                    className: "devtools-tab-badge",
+                  },
+                  badge
+                )
+              : null
+          )
     );
   }
 }

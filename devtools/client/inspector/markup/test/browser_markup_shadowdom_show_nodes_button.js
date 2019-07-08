@@ -44,7 +44,8 @@ add_task(async function() {
   info("Find the 'Show all nodes' button");
   const button = slotContainer.elt.querySelector("button");
   console.log(button);
-  ok(button.innerText.includes(NODE_COUNT),
-    "'Show all nodes' button contains correct node count");
+  ok(
+    button.innerText.includes(NODE_COUNT),
+    "'Show all nodes' button contains correct node count"
+  );
 });
-

@@ -6,7 +6,9 @@
 // Check that getChangesStylesheet() serializes tracked changes from nested CSS rules
 // into the expected stylesheet format.
 
-const { getChangesStylesheet } = require("devtools/client/inspector/changes/selectors/changes");
+const {
+  getChangesStylesheet,
+} = require("devtools/client/inspector/changes/selectors/changes");
 
 const { CHANGES_STATE } = require("resource://test/mocks");
 
@@ -35,14 +37,24 @@ body {
 `;
 
 add_test(() => {
-  info("Check stylesheet generated for the first ancestor in the CSS rule tree.");
-  equal(getChangesStylesheet(CHANGES_STATE), STYLESHEET_FOR_ANCESTOR,
-    "Stylesheet includes all ancestors.");
+  info(
+    "Check stylesheet generated for the first ancestor in the CSS rule tree."
+  );
+  equal(
+    getChangesStylesheet(CHANGES_STATE),
+    STYLESHEET_FOR_ANCESTOR,
+    "Stylesheet includes all ancestors."
+  );
 
-  info("Check stylesheet generated for the last descendant in the CSS rule tree.");
+  info(
+    "Check stylesheet generated for the last descendant in the CSS rule tree."
+  );
   const filter = { sourceIds: ["source1"], ruleIds: ["rule3"] };
-  equal(getChangesStylesheet(CHANGES_STATE, filter), STYLESHEET_FOR_DESCENDANT,
-    "Stylesheet includes just descendant.");
+  equal(
+    getChangesStylesheet(CHANGES_STATE, filter),
+    STYLESHEET_FOR_DESCENDANT,
+    "Stylesheet includes just descendant."
+  );
 
   run_next_test();
 });

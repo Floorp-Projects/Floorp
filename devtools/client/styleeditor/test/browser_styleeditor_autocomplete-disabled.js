@@ -15,10 +15,15 @@ add_task(async function() {
   const editor = await ui.editors[0].getSourceEditor();
   editor.sourceEditor.setOption("autocomplete", false);
 
-  is(editor.sourceEditor.getOption("autocomplete"), false,
-     "Autocompletion option does not exist");
-  ok(!editor.sourceEditor.getAutocompletionPopup(),
-     "Autocompletion popup does not exist");
+  is(
+    editor.sourceEditor.getOption("autocomplete"),
+    false,
+    "Autocompletion option does not exist"
+  );
+  ok(
+    !editor.sourceEditor.getAutocompletionPopup(),
+    "Autocompletion popup does not exist"
+  );
 });
 
 add_task(async function() {
@@ -26,8 +31,11 @@ add_task(async function() {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
   const editor = await ui.editors[0].getSourceEditor();
 
-  is(editor.sourceEditor.getOption("autocomplete"), false,
-     "Autocompletion option does not exist");
+  is(
+    editor.sourceEditor.getOption("autocomplete"),
+    false,
+    "Autocompletion option does not exist"
+  );
 });
 
 registerCleanupFunction(() => {

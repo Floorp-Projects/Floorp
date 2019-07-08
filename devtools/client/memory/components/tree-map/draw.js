@@ -79,10 +79,11 @@ exports.setupDraw = function(report, canvases, dragZoom) {
  * @param  {HTMLCanvasElement} canvas
  * @return {Function}
  */
-const configureD3Treemap = exports.configureD3Treemap = function(canvas) {
+const configureD3Treemap = (exports.configureD3Treemap = function(canvas) {
   const window = canvas.ownerDocument.defaultView;
   const ratio = window.devicePixelRatio;
-  const treemap = window.d3.layout.treemap()
+  const treemap = window.d3.layout
+    .treemap()
     .size([
       // The d3 layout includes the padding around everything, add some
       // extra padding to the size to compensate for thi
@@ -120,7 +121,7 @@ const configureD3Treemap = exports.configureD3Treemap = function(canvas) {
     nodes.sort((a, b) => a.depth - b.depth);
     return nodes;
   };
-};
+});
 
 /**
  * Draw the text, cut it in half every time it doesn't fit until it fits or
@@ -135,9 +136,13 @@ const configureD3Treemap = exports.configureD3Treemap = function(canvas) {
  *         the inner width of the containing treemap cell
  * @param  {Text} name
  */
-const drawTruncatedName = exports.drawTruncatedName = function(ctx, x, y,
-                                                               innerWidth,
-                                                               name) {
+const drawTruncatedName = (exports.drawTruncatedName = function(
+  ctx,
+  x,
+  y,
+  innerWidth,
+  name
+) {
   const truncated = name.substr(0, Math.floor(name.length / 2));
   const formatted = truncated + ELLIPSIS;
 
@@ -146,7 +151,7 @@ const drawTruncatedName = exports.drawTruncatedName = function(ctx, x, y,
   } else {
     ctx.fillText(formatted, x, y);
   }
-};
+});
 
 /**
  * Fit and draw the text in a node with the following strategies to shrink
@@ -164,8 +169,14 @@ const drawTruncatedName = exports.drawTruncatedName = function(ctx, x, y,
  * @param  {Object} dragZoom
  * @param  {Array}  padding
  */
-const drawText = exports.drawText = function(ctx, node, borderWidth, ratio,
-                                              dragZoom, padding) {
+const drawText = (exports.drawText = function(
+  ctx,
+  node,
+  borderWidth,
+  ratio,
+  dragZoom,
+  padding
+) {
   let { dx, dy, name, totalBytes, totalCount } = node;
   const scale = dragZoom.zoom + 1;
   dx *= scale;
@@ -203,12 +214,15 @@ const drawText = exports.drawText = function(ctx, node, borderWidth, ratio,
         // The full name plus the byte information will fit
         ctx.fillText(name, x, y);
         ctx.fillStyle = TEXT_LIGHT_COLOR;
-        ctx.fillText(`${bytesFormatted} ${countFormatted}`,
-          x + nameSize + spaceSize, y);
+        ctx.fillText(
+          `${bytesFormatted} ${countFormatted}`,
+          x + nameSize + spaceSize,
+          y
+        );
       }
     }
   }
-};
+});
 
 /**
  * Draw a box given a node
@@ -220,8 +234,13 @@ const drawText = exports.drawText = function(ctx, node, borderWidth, ratio,
  * @param  {Object} dragZoom
  * @param  {Array}  padding
  */
-const drawBox = exports.drawBox = function(ctx, node, borderWidth, dragZoom,
-                                           padding) {
+const drawBox = (exports.drawBox = function(
+  ctx,
+  node,
+  borderWidth,
+  dragZoom,
+  padding
+) {
   const border = borderWidth(node);
   const fillHSL = colorCoarseType(node);
   const strokeHSL = [fillHSL[0], fillHSL[1], fillHSL[2] * 0.5];
@@ -239,7 +258,7 @@ const drawBox = exports.drawBox = function(ctx, node, borderWidth, dragZoom,
   ctx.strokeStyle = hslToStyle(...strokeHSL);
   ctx.lineWidth = border;
   ctx.strokeRect(x, y, dx, dy);
-};
+});
 
 /**
  * Draw the overall treemap
@@ -249,8 +268,11 @@ const drawBox = exports.drawBox = function(ctx, node, borderWidth, dragZoom,
  * @param  {Array} nodes
  * @param  {Objbect} dragZoom
  */
-const drawTreemap = exports.drawTreemap = function({canvas, ctx}, nodes,
-                                                   dragZoom) {
+const drawTreemap = (exports.drawTreemap = function(
+  { canvas, ctx },
+  nodes,
+  dragZoom
+) {
   const window = canvas.ownerDocument.defaultView;
   const ratio = window.devicePixelRatio;
   const canvasArea = canvas.width * canvas.height;
@@ -275,7 +297,7 @@ const drawTreemap = exports.drawTreemap = function({canvas, ctx}, nodes,
     drawBox(ctx, node, borderWidth, dragZoom, padding);
     drawText(ctx, node, borderWidth, ratio, dragZoom, padding);
   }
-};
+});
 
 /**
  * Set the position of the zoomed in canvas. It always take up 100% of the view

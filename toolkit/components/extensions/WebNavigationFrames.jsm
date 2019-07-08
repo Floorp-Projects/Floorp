@@ -28,7 +28,9 @@ const EXPORTED_SYMBOLS = ["WebNavigationFrames"];
  */
 function iterateDocShellTree(docShell) {
   return docShell.getDocShellEnumerator(
-    docShell.typeContent, docShell.ENUMERATE_FORWARDS);
+    docShell.typeContent,
+    docShell.ENUMERATE_FORWARDS
+  );
 }
 
 /**
@@ -123,7 +125,10 @@ var WebNavigationFrames = {
   getParentFrameId,
 
   getAllFrames(docShell) {
-    return Array.from(iterateDocShellTree(docShell), convertDocShellToFrameDetail);
+    return Array.from(
+      iterateDocShellTree(docShell),
+      convertDocShellToFrameDetail
+    );
   },
 
   getDocShellFrameId,

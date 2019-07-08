@@ -6,11 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["ThumbnailsChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PageThumbUtils",
-                               "resource://gre/modules/PageThumbUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PageThumbUtils",
+  "resource://gre/modules/PageThumbUtils.jsm"
+);
 
 class ThumbnailsChild extends ActorChild {
   receiveMessage(message) {
@@ -22,16 +27,23 @@ class ThumbnailsChild extends ActorChild {
       let args = message.data.additionalArgs;
       let fullScale = args ? args.fullScale : false;
       if (fullScale) {
-        snapshot = PageThumbUtils.createSnapshotThumbnail(this.content, null, args);
+        snapshot = PageThumbUtils.createSnapshotThumbnail(
+          this.content,
+          null,
+          args
+        );
       } else {
         let snapshotWidth = message.data.canvasWidth;
         let snapshotHeight = message.data.canvasHeight;
-        snapshot =
-          PageThumbUtils.createCanvas(this.content, snapshotWidth, snapshotHeight);
+        snapshot = PageThumbUtils.createCanvas(
+          this.content,
+          snapshotWidth,
+          snapshotHeight
+        );
         PageThumbUtils.createSnapshotThumbnail(this.content, snapshot, args);
       }
 
-      snapshot.toBlob((aBlob) => {
+      snapshot.toBlob(aBlob => {
         this.mm.sendAsyncMessage("Browser:Thumbnail:Response", {
           thumbnail: aBlob,
           id: message.data.id,
@@ -42,7 +54,10 @@ class ThumbnailsChild extends ActorChild {
        * Remote isSafeForCapture request handler for PageThumbs.
        */
       Services.tm.idleDispatchToMainThread(() => {
-        let result = PageThumbUtils.shouldStoreContentThumbnail(this.content, this.mm.docShell);
+        let result = PageThumbUtils.shouldStoreContentThumbnail(
+          this.content,
+          this.mm.docShell
+        );
         this.mm.sendAsyncMessage("Browser:Thumbnail:CheckState:Response", {
           result,
         });

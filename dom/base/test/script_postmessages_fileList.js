@@ -1,10 +1,10 @@
 Cu.importGlobalProperties(["File"]);
 
-addMessageListener("file.open", function () {
+addMessageListener("file.open", function() {
   var testFile = Cc["@mozilla.org/file/directory_service;1"]
-                   .getService(Ci.nsIDirectoryService)
-                   .QueryInterface(Ci.nsIProperties)
-                   .get("ProfD", Ci.nsIFile);
+    .getService(Ci.nsIDirectoryService)
+    .QueryInterface(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
   testFile.append("prefs.js");
 
   File.createFromNsIFile(testFile).then(function(file) {
@@ -12,13 +12,13 @@ addMessageListener("file.open", function () {
   });
 });
 
-addMessageListener("dir.open", function () {
+addMessageListener("dir.open", function() {
   var testFile = Cc["@mozilla.org/file/directory_service;1"]
-                   .getService(Ci.nsIDirectoryService)
-                   .QueryInterface(Ci.nsIProperties)
-                   .get("ProfD", Ci.nsIFile);
+    .getService(Ci.nsIDirectoryService)
+    .QueryInterface(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
 
   sendAsyncMessage("dir.opened", {
-    dir: testFile.path
+    dir: testFile.path,
   });
 });

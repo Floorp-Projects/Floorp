@@ -12,7 +12,8 @@ const {
 } = require("devtools/client/memory/constants");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
+const TEST_URL =
+  "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   const store = panel.panelWin.gStore;
@@ -27,9 +28,11 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   EventUtils.synthesizeMouseAtCenter(takeSnapshotButton, {}, panel.panelWin);
 
   await waitUntilState(store, state => {
-    return state.snapshots.length === 1 &&
-           state.snapshots[0].census &&
-           state.snapshots[0].census.state === censusState.SAVED;
+    return (
+      state.snapshots.length === 1 &&
+      state.snapshots[0].census &&
+      state.snapshots[0].census.state === censusState.SAVED
+    );
   });
 
   // Click on the first individuals button found, and wait for the individuals
@@ -39,15 +42,18 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   EventUtils.synthesizeMouseAtCenter(individualsButton, {}, panel.panelWin);
 
   await waitUntilState(store, state => {
-    return state.view.state === viewState.INDIVIDUALS &&
-           state.individuals &&
-           state.individuals.state === individualsState.FETCHED;
+    return (
+      state.view.state === viewState.INDIVIDUALS &&
+      state.individuals &&
+      state.individuals.state === individualsState.FETCHED
+    );
   });
 
-  ok(doc.getElementById("shortest-paths"),
-     "Should be showing the shortest paths component");
-  ok(doc.querySelector(".heap-tree-item"),
-     "Should be showing the individuals");
+  ok(
+    doc.getElementById("shortest-paths"),
+    "Should be showing the shortest paths component"
+  );
+  ok(doc.querySelector(".heap-tree-item"), "Should be showing the individuals");
 
   // Go back to the previous view.
 
@@ -59,6 +65,8 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     return state.view.state === viewState.CENSUS;
   });
 
-  ok(!doc.getElementById("shortest-paths"),
-     "Should not be showing the shortest paths component anymore");
+  ok(
+    !doc.getElementById("shortest-paths"),
+    "Should not be showing the shortest paths component anymore"
+  );
 });

@@ -4,12 +4,16 @@ importScripts("urlSearchParams_commons.js");
 
 function ok(a, msg) {
   dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
-  postMessage({type: "status", status: !!a, msg: a + ": " + msg });
+  postMessage({ type: "status", status: !!a, msg: a + ": " + msg });
 }
 
 function is(a, b, msg) {
   dump("IS: " + (a === b) + "  =>  " + a + " | " + b + " " + msg + "\n");
-  postMessage({type: "status", status: a === b, msg: a + " === " + b + ": " + msg });
+  postMessage({
+    type: "status",
+    status: a === b,
+    msg: a + " === " + b + ": " + msg,
+  });
 }
 
 var tests = [
@@ -23,7 +27,7 @@ var tests = [
 
 function runTest() {
   if (!tests.length) {
-    postMessage({type: "finish" });
+    postMessage({ type: "finish" });
     return;
   }
 
@@ -34,11 +38,10 @@ function runTest() {
 onmessage = function() {
   let status = false;
   try {
-    if ((URLSearchParams instanceof Object)) {
+    if (URLSearchParams instanceof Object) {
       status = true;
     }
-  } catch (e) {
-  }
+  } catch (e) {}
   ok(status, "URLSearchParams in workers \\o/");
 
   runTest();

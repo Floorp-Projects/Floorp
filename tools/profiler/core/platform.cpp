@@ -2842,8 +2842,8 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   const Maybe<double>& aDuration);
 
 // This basically duplicates AutoProfilerLabel's constructor.
-ProfilingStack* MozGlueLabelEnter(const char* aLabel,
-                                  const char* aDynamicString, void* aSp) {
+static void* MozGlueLabelEnter(const char* aLabel, const char* aDynamicString,
+                               void* aSp) {
   ProfilingStack* profilingStack = AutoProfilerLabel::sProfilingStack.get();
   if (profilingStack) {
     profilingStack->pushLabelFrame(aLabel, aDynamicString, aSp,
@@ -2853,9 +2853,9 @@ ProfilingStack* MozGlueLabelEnter(const char* aLabel,
 }
 
 // This basically duplicates AutoProfilerLabel's destructor.
-void MozGlueLabelExit(ProfilingStack* sProfilingStack) {
+static void MozGlueLabelExit(void* sProfilingStack) {
   if (sProfilingStack) {
-    sProfilingStack->pop();
+    reinterpret_cast<ProfilingStack*>(sProfilingStack)->pop();
   }
 }
 
@@ -2928,9 +2928,6 @@ void profiler_init(void* aStackTop) {
       GeckoJavaSampler::Init();
     }
 #endif
-
-    // Setup support for pushing/popping labels in mozglue.
-    RegisterProfilerLabelEnterExit(MozGlueLabelEnter, MozGlueLabelExit);
 
     // (Linux-only) We could create CorePS::mLul and read unwind info into it
     // at this point. That would match the lifetime implied by destruction of
@@ -3477,6 +3474,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     }
   }
 
+  // Setup support for pushing/popping labels in mozglue.
+  RegisterProfilerLabelEnterExit(MozGlueLabelEnter, MozGlueLabelExit);
+
 #ifdef MOZ_TASK_TRACER
   if (ActivePS::FeatureTaskTracer(aLock)) {
     tasktracer::StartLogging();
@@ -3616,6 +3616,9 @@ static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
     tasktracer::StopLogging();
   }
 #endif
+
+  // Remove support for pushing/popping labels in mozglue.
+  RegisterProfilerLabelEnterExit(nullptr, nullptr);
 
   // Stop sampling live threads.
   int tid = profiler_current_thread_id();

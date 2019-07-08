@@ -11,8 +11,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
 
 const LONG_TEXT_ROTATE_LIMIT = 3;
-const HIGHLIGHT_RULE_PREF =
-  Services.prefs.getBoolPref("devtools.layout.boxmodel.highlightProperty");
+const HIGHLIGHT_RULE_PREF = Services.prefs.getBoolPref(
+  "devtools.layout.boxmodel.highlightProperty"
+);
 
 class BoxModelEditable extends PureComponent {
   static get propTypes() {
@@ -24,7 +25,8 @@ class BoxModelEditable extends PureComponent {
       onShowBoxModelEditor: PropTypes.func.isRequired,
       onShowRulePreviewTooltip: PropTypes.func.isRequired,
       property: PropTypes.string.isRequired,
-      textContent: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      textContent: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        .isRequired,
     };
   }
 
@@ -36,11 +38,14 @@ class BoxModelEditable extends PureComponent {
   componentDidMount() {
     const { property, onShowBoxModelEditor } = this.props;
 
-    editableItem({
-      element: this.boxModelEditable,
-    }, (element, event) => {
-      onShowBoxModelEditor(element, event, property);
-    });
+    editableItem(
+      {
+        element: this.boxModelEditable,
+      },
+      (element, event) => {
+        onShowBoxModelEditor(element, event, property);
+      }
+    );
   }
 
   onMouseOver(event) {
@@ -61,31 +66,34 @@ class BoxModelEditable extends PureComponent {
       textContent,
     } = this.props;
 
-    const rotate = direction &&
-                 (direction == "left" || direction == "right") &&
-                 box !== "position" &&
-                 textContent.toString().length > LONG_TEXT_ROTATE_LIMIT;
+    const rotate =
+      direction &&
+      (direction == "left" || direction == "right") &&
+      box !== "position" &&
+      textContent.toString().length > LONG_TEXT_ROTATE_LIMIT;
 
-    return (
-      dom.p(
-        {
-          className: `boxmodel-${box}
-                      ${direction ? " boxmodel-" + direction : "boxmodel-" + property}
+    return dom.p(
+      {
+        className: `boxmodel-${box}
+                      ${
+                        direction
+                          ? " boxmodel-" + direction
+                          : "boxmodel-" + property
+                      }
                       ${rotate ? " boxmodel-rotate" : ""}`,
-        },
-        dom.span(
-          {
-            className: "boxmodel-editable",
-            "data-box": box,
-            tabIndex: box === level && focusable ? 0 : -1,
-            title: property,
-            onMouseOver: this.onMouseOver,
-            ref: span => {
-              this.boxModelEditable = span;
-            },
+      },
+      dom.span(
+        {
+          className: "boxmodel-editable",
+          "data-box": box,
+          tabIndex: box === level && focusable ? 0 : -1,
+          title: property,
+          onMouseOver: this.onMouseOver,
+          ref: span => {
+            this.boxModelEditable = span;
           },
-          textContent
-        )
+        },
+        textContent
       )
     );
   }

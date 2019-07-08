@@ -2,7 +2,6 @@
  * Send HTTP requests and notify the parent about their channelId
  */
 
-
 let shouldQuit = false;
 
 function run_test() {
@@ -16,7 +15,10 @@ function run_test() {
 }
 
 function makeRequest(uri) {
-  let requestChannel = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
+  let requestChannel = NetUtil.newChannel({
+    uri,
+    loadUsingSystemPrincipal: true,
+  });
   requestChannel.asyncOpen(new ChannelListener(checkResponse, requestChannel));
   requestChannel.QueryInterface(Ci.nsIHttpChannel);
   dump(`Child opened request: ${uri}, channelId=${requestChannel.channelId}\n`);

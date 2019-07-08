@@ -30,14 +30,17 @@ add_task(async function() {
     await hideColumn(monitor, "waterfall");
   }
 
-  ["endTime", "responseTime", "duration", "latency"].forEach(async (column) => {
+  ["endTime", "responseTime", "duration", "latency"].forEach(async column => {
     if (!visibleColumns[column]) {
       await showColumn(monitor, column);
     }
   });
 
   const onNetworkEvents = waitForNetworkEvents(monitor, 1);
-  const onEventTimings = waitFor(monitor.panelWin.api, EVENTS.RECEIVED_EVENT_TIMINGS);
+  const onEventTimings = waitFor(
+    monitor.panelWin.api,
+    EVENTS.RECEIVED_EVENT_TIMINGS
+  );
   tab.linkedBrowser.reload();
   await Promise.all([onNetworkEvents, onEventTimings]);
 
@@ -46,12 +49,7 @@ add_task(async function() {
   is(requestItems.length, 1, "There must be one visible item");
 
   const item = requestItems[0];
-  const types = [
-    "end",
-    "response",
-    "duration",
-    "latency",
-  ];
+  const types = ["end", "response", "duration", "latency"];
 
   for (const t of types) {
     await waitUntil(() => {

@@ -37,7 +37,7 @@ async function checkRecommendedBadge(id, hidden) {
 add_task(async function testNotRecommended() {
   let id = "not-recommended@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: {applications: {gecko: {id}}},
+    manifest: { applications: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();
@@ -50,12 +50,14 @@ add_task(async function testNotRecommended() {
 add_task(async function testRecommended() {
   let id = "recommended@mochi.test";
   let provider = new MockProvider();
-  provider.createAddons([{
-    id,
-    isRecommended: true,
-    name: "Recommended",
-    type: "extension",
-  }]);
+  provider.createAddons([
+    {
+      id,
+      isRecommended: true,
+      name: "Recommended",
+      type: "extension",
+    },
+  ]);
 
   await checkRecommendedBadge(id, false);
 });

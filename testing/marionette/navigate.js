@@ -4,7 +4,9 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -51,8 +53,11 @@ navigate.isLoadEventExpected = function(current, future = undefined) {
   }
 
   // If hashes are present and identical
-  if (cur.href.includes("#") && fut.href.includes("#") &&
-      cur.hash === fut.hash) {
+  if (
+    cur.href.includes("#") &&
+    fut.href.includes("#") &&
+    cur.hash === fut.hash
+  ) {
     return false;
   }
 

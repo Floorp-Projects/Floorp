@@ -15,9 +15,7 @@ add_task(async function telemetry_partial_applyFailure_complete_stageFailure() {
   await runTelemetryUpdateTest(updateParams, "update-downloaded");
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_APP_UPDATE_STAGING_ENABLED, true],
-    ],
+    set: [[PREF_APP_UPDATE_STAGING_ENABLED, true]],
   });
   // Now that staging is enabled setup the test updater.
   await setupTestUpdater();

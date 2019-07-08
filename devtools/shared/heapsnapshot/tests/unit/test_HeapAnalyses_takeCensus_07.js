@@ -41,11 +41,15 @@ add_task(async function() {
     breakdown: BREAKDOWN,
   });
 
-  const { report: treeNode } = await client.takeCensus(snapshotFilePath, {
-    breakdown: BREAKDOWN,
-  }, {
-    asInvertedTreeNode: true,
-  });
+  const { report: treeNode } = await client.takeCensus(
+    snapshotFilePath,
+    {
+      breakdown: BREAKDOWN,
+    },
+    {
+      asInvertedTreeNode: true,
+    }
+  );
 
   compareCensusViewData(BREAKDOWN, report, treeNode, { invert: true });
 

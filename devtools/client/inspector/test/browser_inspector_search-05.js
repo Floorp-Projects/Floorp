@@ -22,8 +22,9 @@ const TEST_URL = `
 `;
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(
-    "data:text/html;charset=utf-8," + encodeURI(TEST_URL));
+  const { inspector } = await openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURI(TEST_URL)
+  );
 
   info("Focus the search box");
   await focusSearchBoxUsingShortcut(inspector.panelWin);
@@ -78,12 +79,11 @@ add_task(async function() {
 });
 
 const checkCorrectButton = async function(inspector, frameSelector) {
-  const {walker} = inspector;
+  const { walker } = inspector;
   const node = inspector.selection.nodeFront;
 
   is(node.id, "b1", "The selected node is #b1");
-  is(node.tagName.toLowerCase(), "button",
-    "The selected node is <button>");
+  is(node.tagName.toLowerCase(), "button", "The selected node is <button>");
 
   const selectedNodeDoc = await walker.document(node);
   let iframe = await walker.multiFrameQuerySelectorAll(frameSelector);

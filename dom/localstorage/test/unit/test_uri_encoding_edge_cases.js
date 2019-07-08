@@ -35,8 +35,10 @@ async function testSteps() {
 
     info("Checking the origin directory existence");
 
-    ok(!originDir.exists(),
-      `The origin directory ${origin.path} should not exists`);
+    ok(
+      !originDir.exists(),
+      `The origin directory ${origin.path} should not exists`
+    );
 
     info("Getting storage");
 

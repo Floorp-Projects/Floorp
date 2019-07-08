@@ -6,10 +6,10 @@
 // Non-string preferences are not tested here, because their behavior
 // should not be affected by this filtering.
 //
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function isParentProcess() {
-  return (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
+  return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 function makeBuffer(length) {
@@ -30,9 +30,9 @@ const largeString = makeBuffer(MAX_ADVISABLE_PREF_LENGTH + 1);
 const smallString = makeBuffer(4);
 
 const testValues = [
-  {name: "None", value: undefined},
-  {name: "Small", value: smallString},
-  {name: "Large", value: largeString},
+  { name: "None", value: undefined },
+  { name: "Small", value: smallString },
+  { name: "Large", value: largeString },
 ];
 
 function prefName(def, user) {
@@ -95,8 +95,10 @@ function run_test() {
         } catch (e) {
           prefExists = false;
         }
-        ok(!prefExists,
-          "Pref " + pref_name + " should not be set in the child");
+        ok(
+          !prefExists,
+          "Pref " + pref_name + " should not be set in the child"
+        );
       }
     }
   }

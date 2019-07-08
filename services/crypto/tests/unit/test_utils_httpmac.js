@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
+const { CryptoUtils } = ChromeUtils.import(
+  "resource://services-crypto/utils.js"
+);
 
 add_test(function setup() {
   initTestLogging();
@@ -18,24 +20,33 @@ add_task(async function test_sha1() {
   let nonce = "wGX71";
   let uri = CommonUtils.makeURI("http://10.250.2.176/alias/");
 
-  let result = await CryptoUtils.computeHTTPMACSHA1(id, key, method, uri,
-                                              {ts, nonce});
+  let result = await CryptoUtils.computeHTTPMACSHA1(id, key, method, uri, {
+    ts,
+    nonce,
+  });
 
   Assert.equal(btoa(result.mac), "jzh5chjQc2zFEvLbyHnPdX11Yck=");
 
-  Assert.equal(result.getHeader(),
-               'MAC id="vmo1txkttblmn51u2p3zk2xiy16hgvm5ok8qiv1yyi86ffjzy9zj0ez9x6wnvbx7", ' +
-               'ts="1329181221", nonce="wGX71", mac="jzh5chjQc2zFEvLbyHnPdX11Yck="');
+  Assert.equal(
+    result.getHeader(),
+    'MAC id="vmo1txkttblmn51u2p3zk2xiy16hgvm5ok8qiv1yyi86ffjzy9zj0ez9x6wnvbx7", ' +
+      'ts="1329181221", nonce="wGX71", mac="jzh5chjQc2zFEvLbyHnPdX11Yck="'
+  );
 
   let ext = "EXTRA DATA; foo,bar=1";
 
-  result = await CryptoUtils.computeHTTPMACSHA1(id, key, method, uri,
-                                              {ts, nonce, ext});
+  result = await CryptoUtils.computeHTTPMACSHA1(id, key, method, uri, {
+    ts,
+    nonce,
+    ext,
+  });
   Assert.equal(btoa(result.mac), "bNf4Fnt5k6DnhmyipLPkuZroH68=");
-  Assert.equal(result.getHeader(),
-               'MAC id="vmo1txkttblmn51u2p3zk2xiy16hgvm5ok8qiv1yyi86ffjzy9zj0ez9x6wnvbx7", ' +
-               'ts="1329181221", nonce="wGX71", mac="bNf4Fnt5k6DnhmyipLPkuZroH68=", ' +
-               'ext="EXTRA DATA; foo,bar=1"');
+  Assert.equal(
+    result.getHeader(),
+    'MAC id="vmo1txkttblmn51u2p3zk2xiy16hgvm5ok8qiv1yyi86ffjzy9zj0ez9x6wnvbx7", ' +
+      'ts="1329181221", nonce="wGX71", mac="bNf4Fnt5k6DnhmyipLPkuZroH68=", ' +
+      'ext="EXTRA DATA; foo,bar=1"'
+  );
 });
 
 add_task(async function test_nonce_length() {

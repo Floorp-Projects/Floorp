@@ -17,23 +17,30 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 8 } });
 // ------------------------------------------------------------------------------
 
 ruleTester.run("reject-importGlobalProperties", rule, {
-  valid: [{
-    code: "Cu.something();",
-  }, {
-    options: ["allownonwebidl"],
-    code: "Cu.importGlobalProperties(['fetch'])",
-  }],
-  invalid: [{
-    code: "Cu.importGlobalProperties(['fetch'])",
-    options: ["everything"],
-    errors: [{ messageId: "unexpectedCall"}],
-  }, {
-    code: "Cu.importGlobalProperties(['TextEncoder'])",
-    options: ["everything"],
-    errors: [{ messageId: "unexpectedCall"}],
-  }, {
-    code: "Cu.importGlobalProperties(['TextEncoder'])",
-    options: ["allownonwebidl"],
-    errors: [{ messageId: "unexpectedCallWebIdl"}],
-  }],
+  valid: [
+    {
+      code: "Cu.something();",
+    },
+    {
+      options: ["allownonwebidl"],
+      code: "Cu.importGlobalProperties(['fetch'])",
+    },
+  ],
+  invalid: [
+    {
+      code: "Cu.importGlobalProperties(['fetch'])",
+      options: ["everything"],
+      errors: [{ messageId: "unexpectedCall" }],
+    },
+    {
+      code: "Cu.importGlobalProperties(['TextEncoder'])",
+      options: ["everything"],
+      errors: [{ messageId: "unexpectedCall" }],
+    },
+    {
+      code: "Cu.importGlobalProperties(['TextEncoder'])",
+      options: ["allownonwebidl"],
+      errors: [{ messageId: "unexpectedCallWebIdl" }],
+    },
+  ],
 });

@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-telemetry.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-telemetry.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
 
 const TAB_URL = "data:text/html,<title>TEST_TAB</title>";
 
@@ -27,22 +30,37 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText("TEST_TAB", document));
 
   const tabTarget = findDebugTargetByText("TEST_TAB", document);
-  const inspectButton = tabTarget.querySelector(".qa-debug-target-inspect-button");
+  const inspectButton = tabTarget.querySelector(
+    ".qa-debug-target-inspect-button"
+  );
   ok(inspectButton, "Inspect button for the tab is available");
 
   info("Click on the inspect button for the test tab");
   inspectButton.click();
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   const newTabUrl = gBrowser.selectedBrowser.currentURI.spec;
-  ok(newTabUrl.startsWith("about:devtools-toolbox"),
-    "about:devtools-toolbox opened in a new tab");
+  ok(
+    newTabUrl.startsWith("about:devtools-toolbox"),
+    "about:devtools-toolbox opened in a new tab"
+  );
 
   const evts = readAboutDebuggingEvents().filter(e => e.method === "inspect");
   is(evts.length, 1, "Exactly one Inspect event found");
-  is(evts[0].extras.target_type, "TAB", "Inspect event has the expected target type");
-  is(evts[0].extras.runtime_type, "this-firefox",
-    "Inspect event has the expected runtime type");
-  is(evts[0].extras.session_id, sessionId, "Inspect event has the expected session");
+  is(
+    evts[0].extras.target_type,
+    "TAB",
+    "Inspect event has the expected target type"
+  );
+  is(
+    evts[0].extras.runtime_type,
+    "this-firefox",
+    "Inspect event has the expected runtime type"
+  );
+  is(
+    evts[0].extras.session_id,
+    sessionId,
+    "Inspect event has the expected session"
+  );
 
   info("Close the about:devtools-toolbox tab");
   await removeTab(gBrowser.selectedTab);

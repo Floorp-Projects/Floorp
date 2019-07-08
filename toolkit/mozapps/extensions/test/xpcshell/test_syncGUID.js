@@ -5,8 +5,10 @@
 // restartManager() mucks with XPIProvider.jsm importing, so we hack around.
 this.__defineGetter__("XPIProvider", function() {
   let scope = {};
-  return ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", scope)
-                   .XPIProvider;
+  return ChromeUtils.import(
+    "resource://gre/modules/addons/XPIProvider.jsm",
+    scope
+  ).XPIProvider;
 });
 
 const UUID_PATTERN = /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i;
@@ -30,12 +32,16 @@ add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   await promiseStartupManager();
 
-  xpis = await Promise.all(ADDONS.map(info => createTempWebExtensionFile({
-    manifest: {
-      name: info.name,
-      applications: {gecko: {id: info.id}},
-    },
-  })));
+  xpis = await Promise.all(
+    ADDONS.map(info =>
+      createTempWebExtensionFile({
+        manifest: {
+          name: info.name,
+          applications: { gecko: { id: info.id } },
+        },
+      })
+    )
+  );
 });
 
 add_task(async function test_getter_and_setter() {
@@ -69,9 +75,13 @@ add_task(async function test_error_on_duplicate_syncguid_insert() {
   let addons = await AddonManager.getAddonsByIDs(ADDONS.map(a => a.id));
   let initialGUID = addons[1].syncGUID;
 
-  Assert.throws(() => { addons[1].syncGUID = addons[0].syncGUID; },
-                /Addon sync GUID conflict/,
-                "Assigning conflicting sync guids throws");
+  Assert.throws(
+    () => {
+      addons[1].syncGUID = addons[0].syncGUID;
+    },
+    /Addon sync GUID conflict/,
+    "Assigning conflicting sync guids throws"
+  );
 
   await promiseRestartManager();
 

@@ -1,7 +1,9 @@
 /* eslint-env mozilla/frame-script */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {clearInterval, setInterval} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { clearInterval, setInterval } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 // Define these to make EventUtils happy.
 let window = this;
@@ -44,10 +46,11 @@ function handlePrompt(action, isTabModal, isSelect) {
       return false; // try again in a bit
     }
 
-    if (isSelect)
+    if (isSelect) {
       ui = doc;
-    else
+    } else {
       ui = doc.defaultView.Dialog.ui;
+    }
   }
 
   let promptState;
@@ -80,29 +83,28 @@ function getSelectState(ui) {
 
 function getPromptState(ui) {
   let state = {};
-  state.msg         = ui.infoBody.textContent;
+  state.msg = ui.infoBody.textContent;
   state.titleHidden = ui.infoTitle.getAttribute("hidden") == "true";
-  state.textHidden  = ui.loginContainer.hidden;
-  state.passHidden  = ui.password1Container.hidden;
+  state.textHidden = ui.loginContainer.hidden;
+  state.passHidden = ui.password1Container.hidden;
   state.checkHidden = ui.checkboxContainer.hidden;
-  state.checkMsg    = state.checkHidden ? "" : ui.checkbox.label;
-  state.checked     = state.checkHidden ? false : ui.checkbox.checked;
+  state.checkMsg = state.checkHidden ? "" : ui.checkbox.label;
+  state.checked = state.checkHidden ? false : ui.checkbox.checked;
   // tab-modal prompts don't have an infoIcon
-  state.iconClass   = ui.infoIcon ? ui.infoIcon.className : null;
-  state.textValue   = ui.loginTextbox.getAttribute("value");
-  state.passValue   = ui.password1Textbox.getAttribute("value");
+  state.iconClass = ui.infoIcon ? ui.infoIcon.className : null;
+  state.textValue = ui.loginTextbox.getAttribute("value");
+  state.passValue = ui.password1Textbox.getAttribute("value");
 
-  state.butt0Label  = ui.button0.label;
-  state.butt1Label  = ui.button1.label;
-  state.butt2Label  = ui.button2.label;
+  state.butt0Label = ui.button0.label;
+  state.butt1Label = ui.button1.label;
+  state.butt2Label = ui.button2.label;
 
   state.butt0Disabled = ui.button0.disabled;
   state.butt1Disabled = ui.button1.disabled;
   state.butt2Disabled = ui.button2.disabled;
 
   function isDefaultButton(b) {
-      return (b.hasAttribute("default") &&
-              b.getAttribute("default") == "true");
+    return b.hasAttribute("default") && b.getAttribute("default") == "true";
   }
   state.defButton0 = isDefaultButton(ui.button0);
   state.defButton1 = isDefaultButton(ui.button1);
@@ -125,12 +127,12 @@ function getPromptState(ui) {
   } else if (ui.infoBody.isSameNode(e)) {
     state.focused = "infoBody";
   } else {
-    state.focused = "ERROR: unexpected element focused: " + (e ? e.localName : "<null>");
+    state.focused =
+      "ERROR: unexpected element focused: " + (e ? e.localName : "<null>");
   }
 
-  let treeOwner = ui.prompt &&
-                  ui.prompt.docShell &&
-                  ui.prompt.docShell.treeOwner;
+  let treeOwner =
+    ui.prompt && ui.prompt.docShell && ui.prompt.docShell.treeOwner;
   if (treeOwner && treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)) {
     // Check that the dialog is modal, chrome and dependent;
     // We can't just check window.opener because that'll be
@@ -139,7 +141,8 @@ function getPromptState(ui) {
     let flags = treeOwner.getInterface(Ci.nsIXULWindow).chromeFlags;
     state.chrome = (flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME) != 0;
     state.dialog = (flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) != 0;
-    state.chromeDependent = (flags & Ci.nsIWebBrowserChrome.CHROME_DEPENDENT) != 0;
+    state.chromeDependent =
+      (flags & Ci.nsIWebBrowserChrome.CHROME_DEPENDENT) != 0;
     let wbc = treeOwner.getInterface(Ci.nsIWebBrowserChrome);
     state.isWindowModal = wbc.isWindowModal();
   }
@@ -152,13 +155,13 @@ function dismissSelect(ui, action) {
   let listbox = ui.getElementById("list");
 
   if (action.selectItem) {
-      listbox.selectedIndex = 1;
+    listbox.selectedIndex = 1;
   }
 
   if (action.buttonClick == "ok") {
-      dialog.acceptDialog();
+    dialog.acceptDialog();
   } else if (action.buttonClick == "cancel") {
-      dialog.cancelDialog();
+    dialog.cancelDialog();
   }
 }
 
@@ -199,8 +202,9 @@ function dismissPrompt(ui, action) {
       // Can't use setInterval here, because the window's in a modal state
       // and thus DOM events are suppressed.
       let interval = setInterval(() => {
-        if (ui.button0.disabled)
+        if (ui.button0.disabled) {
           return;
+        }
         ui.button0.click();
         clearInterval(interval);
       }, 100);
@@ -217,27 +221,33 @@ function getDialogDoc() {
   // Trudge through all the open windows, until we find the one
   // that has either commonDialog.xul or selectDialog.xul loaded.
   // var enumerator = Services.wm.getEnumerator("navigator:browser");
-  for (let {docShell} of Services.wm.getEnumerator(null)) {
+  for (let { docShell } of Services.wm.getEnumerator(null)) {
     var containedDocShells = docShell.getDocShellEnumerator(
-                                      docShell.typeChrome,
-                                      docShell.ENUMERATE_FORWARDS);
+      docShell.typeChrome,
+      docShell.ENUMERATE_FORWARDS
+    );
     for (let childDocShell of containedDocShells) {
-        // Get the corresponding document for this docshell
-        // We don't want it if it's not done loading.
-        if (childDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE)
-          continue;
-        var childDoc = childDocShell.contentViewer.DOMDocument;
+      // Get the corresponding document for this docshell
+      // We don't want it if it's not done loading.
+      if (childDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE) {
+        continue;
+      }
+      var childDoc = childDocShell.contentViewer.DOMDocument;
 
-        if (childDoc.location.href != "chrome://global/content/commonDialog.xul" &&
-            childDoc.location.href != "chrome://global/content/selectDialog.xul")
-          continue;
+      if (
+        childDoc.location.href != "chrome://global/content/commonDialog.xul" &&
+        childDoc.location.href != "chrome://global/content/selectDialog.xul"
+      ) {
+        continue;
+      }
 
-        // We're expecting the dialog to be focused. If it's not yet, try later.
-        // (In particular, this is needed on Linux to reliably check focused elements.)
-        if (Services.focus.focusedWindow != childDoc.defaultView)
-          continue;
+      // We're expecting the dialog to be focused. If it's not yet, try later.
+      // (In particular, this is needed on Linux to reliably check focused elements.)
+      if (Services.focus.focusedWindow != childDoc.defaultView) {
+        continue;
+      }
 
-        return childDoc;
+      return childDoc;
     }
   }
 

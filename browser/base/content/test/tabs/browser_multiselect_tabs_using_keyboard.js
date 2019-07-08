@@ -46,22 +46,33 @@ add_task(async function changeSelectionUsingKeyboard() {
 
   await BrowserTestUtils.switchTab(gBrowser, tab3);
   info("Move focus to location bar using the keyboard");
-  await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true});
+  await synthesizeKeyAndWaitForFocus(gURLBar, "l", { accelKey: true });
   is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
 
   info("Move focus to the selected tab using the keyboard");
   let identityBox = document.querySelector("#identity-box");
-  await synthesizeKeyAndWaitForFocus(identityBox, "VK_TAB", {shiftKey: true});
+  await synthesizeKeyAndWaitForFocus(identityBox, "VK_TAB", { shiftKey: true });
   is(document.activeElement, identityBox, "identity box should be focused");
-  await synthesizeKeyAndWaitForFocus(document.getElementById("reload-button"),
-    "VK_TAB", {shiftKey: true});
-  await synthesizeKeyAndWaitForFocus(tab3, "VK_TAB", {shiftKey: true});
+  await synthesizeKeyAndWaitForFocus(
+    document.getElementById("reload-button"),
+    "VK_TAB",
+    { shiftKey: true }
+  );
+  await synthesizeKeyAndWaitForFocus(tab3, "VK_TAB", { shiftKey: true });
   is(document.activeElement, tab3, "Tab3 should be focused");
 
   info("Move focus to tab 1 using the keyboard");
-  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab2, "KEY_ArrowLeft", {accelKey: true});
-  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab1, "KEY_ArrowLeft", {accelKey: true});
-  is(gBrowser.tabContainer.ariaFocusedItem, tab1, "Tab1 should be the ariaFocusedItem");
+  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab2, "KEY_ArrowLeft", {
+    accelKey: true,
+  });
+  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab1, "KEY_ArrowLeft", {
+    accelKey: true,
+  });
+  is(
+    gBrowser.tabContainer.ariaFocusedItem,
+    tab1,
+    "Tab1 should be the ariaFocusedItem"
+  );
 
   ok(!tab1.multiselected, "Tab1 shouldn't be multiselected");
   info("Select tab1 using keyboard");
@@ -69,33 +80,55 @@ add_task(async function changeSelectionUsingKeyboard() {
   ok(tab1.multiselected, "Tab1 should be multiselected");
 
   info("Move focus to tab 5 using the keyboard");
-  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab2, "KEY_ArrowRight", { accelKey: true });
-  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab3, "KEY_ArrowRight", { accelKey: true });
-  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab4, "KEY_ArrowRight", { accelKey: true });
-  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab5, "KEY_ArrowRight", { accelKey: true });
+  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab2, "KEY_ArrowRight", {
+    accelKey: true,
+  });
+  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab3, "KEY_ArrowRight", {
+    accelKey: true,
+  });
+  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab4, "KEY_ArrowRight", {
+    accelKey: true,
+  });
+  await synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab5, "KEY_ArrowRight", {
+    accelKey: true,
+  });
 
   ok(!tab5.multiselected, "Tab5 shouldn't be multiselected");
   info("Select tab5 using keyboard");
   EventUtils.synthesizeKey("VK_SPACE", { accelKey: true });
   ok(tab5.multiselected, "Tab5 should be multiselected");
 
-  ok(tab1.multiselected && gBrowser._multiSelectedTabsSet.has(tab1), "Tab1 is (multi) selected");
-  ok(tab3.multiselected && gBrowser._multiSelectedTabsSet.has(tab3), "Tab3 is (multi) selected");
-  ok(tab5.multiselected && gBrowser._multiSelectedTabsSet.has(tab5), "Tab5 is (multi) selected");
+  ok(
+    tab1.multiselected && gBrowser._multiSelectedTabsSet.has(tab1),
+    "Tab1 is (multi) selected"
+  );
+  ok(
+    tab3.multiselected && gBrowser._multiSelectedTabsSet.has(tab3),
+    "Tab3 is (multi) selected"
+  );
+  ok(
+    tab5.multiselected && gBrowser._multiSelectedTabsSet.has(tab5),
+    "Tab5 is (multi) selected"
+  );
   is(gBrowser.multiSelectedTabsCount, 3, "Three tabs (multi) selected");
   is(tab3, gBrowser.selectedTab, "Tab3 is still the selected tab");
 
   await synthesizeKeyAndWaitForFocus(tab4, "KEY_ArrowLeft", {});
-  is(tab4, gBrowser.selectedTab, "Tab4 is now selected tab since tab5 had keyboard focus");
+  is(
+    tab4,
+    gBrowser.selectedTab,
+    "Tab4 is now selected tab since tab5 had keyboard focus"
+  );
 
   is(tab4.previousElementSibling, tab3, "tab4 should be after tab3");
   is(tab4.nextElementSibling, tab5, "tab4 should be before tab5");
 
   let tabsReordered = BrowserTestUtils.waitForCondition(() => {
-    return tab4.previousElementSibling == tab2 &&
-           tab4.nextElementSibling == tab3;
+    return (
+      tab4.previousElementSibling == tab2 && tab4.nextElementSibling == tab3
+    );
   }, "tab4 should now be after tab2 and before tab3");
-  EventUtils.synthesizeKey("KEY_ArrowLeft", {accelKey: true, shiftKey: true});
+  EventUtils.synthesizeKey("KEY_ArrowLeft", { accelKey: true, shiftKey: true });
   await tabsReordered;
 
   is(tab4.previousElementSibling, tab2, "tab4 should be after tab2");

@@ -44,7 +44,10 @@ async function waitForAllRequestsFinished(expectedRequests) {
 
     function maybeResolve() {
       // Have all the requests finished yet?
-      if (payloadReady >= expectedRequests && timingsUpdated >= expectedRequests) {
+      if (
+        payloadReady >= expectedRequests &&
+        timingsUpdated >= expectedRequests
+      ) {
         // All requests are done - unsubscribe from events and resolve!
         window.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
         window.api.off(EVENTS.RECEIVED_EVENT_TIMINGS, onTimingsUpdated);
@@ -57,7 +60,11 @@ async function waitForAllRequestsFinished(expectedRequests) {
   });
 }
 
-exports.waitForNetworkRequests = async function(label, toolbox, expectedRequests) {
+exports.waitForNetworkRequests = async function(
+  label,
+  toolbox,
+  expectedRequests
+) {
   let test = runTest(label + ".requestsFinished.DAMP");
   await waitForAllRequestsFinished(expectedRequests);
   test.done();

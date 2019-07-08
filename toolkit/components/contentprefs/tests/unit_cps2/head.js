@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let loadContext = Cu.createLoadContext();
 let privateLoadContext = Cu.createPrivateLoadContext();
 
 // There has to be a profile directory before the CPS service is gotten.
 do_get_profile();
-let cps = Cc["@mozilla.org/content-pref/service;1"].
-          getService(Ci.nsIContentPrefService2);
+let cps = Cc["@mozilla.org/content-pref/service;1"].getService(
+  Ci.nsIContentPrefService2
+);
 
 function makeCallback(resolve, callbacks, success = null) {
   callbacks = callbacks || {};
@@ -24,7 +25,7 @@ function makeCallback(resolve, callbacks, success = null) {
       do_throw("handleResult call was not expected");
     };
   }
-  if (!callbacks.handleCompletion)
+  if (!callbacks.handleCompletion) {
     callbacks.handleCompletion = function(reason) {
       equal(reason, Ci.nsIContentPrefCallback2.COMPLETE_OK);
       if (success) {
@@ -33,6 +34,7 @@ function makeCallback(resolve, callbacks, success = null) {
         resolve();
       }
     };
+  }
   return callbacks;
 }
 
@@ -63,12 +65,15 @@ function setWithDate(group, name, val, timestamp, context) {
   return new Promise(resolve => {
     async function updateDate() {
       let conn = await sendMessage("db");
-      await conn.execute(`
+      await conn.execute(
+        `
         UPDATE prefs SET timestamp = :timestamp
         WHERE
           settingID = (SELECT id FROM settings WHERE name = :name)
           AND groupID = (SELECT id FROM groups WHERE name = :group)
-      `, {name, group, timestamp: timestamp / 1000});
+      `,
+        { name, group, timestamp: timestamp / 1000 }
+      );
 
       resolve();
     }
@@ -79,12 +84,15 @@ function setWithDate(group, name, val, timestamp, context) {
 
 async function getDate(group, name, context) {
   let conn = await sendMessage("db");
-  let [result] = await conn.execute(`
+  let [result] = await conn.execute(
+    `
       SELECT timestamp FROM prefs
       WHERE
         settingID = (SELECT id FROM settings WHERE name = :name)
         AND groupID = (SELECT id FROM groups WHERE name = :group)
-  `, {name, group});
+  `,
+    { name, group }
+  );
 
   return result.getResultByName("timestamp") * 1000;
 }
@@ -105,25 +113,34 @@ function prefOK(actual, expected, strict) {
   ok(actual instanceof Ci.nsIContentPref);
   equal(actual.domain, expected.domain);
   equal(actual.name, expected.name);
-  if (strict)
+  if (strict) {
     strictEqual(actual.value, expected.value);
-  else
+  } else {
     equal(actual.value, expected.value);
+  }
 }
 
 async function getOK(args, expectedVal, expectedGroup, strict) {
-  if (args.length == 2)
+  if (args.length == 2) {
     args.push(undefined);
-  let expectedPrefs = expectedVal === undefined ? [] :
-                      [{ domain: expectedGroup || args[0],
-                         name: args[1],
-                         value: expectedVal }];
+  }
+  let expectedPrefs =
+    expectedVal === undefined
+      ? []
+      : [
+          {
+            domain: expectedGroup || args[0],
+            name: args[1],
+            value: expectedVal,
+          },
+        ];
   await getOKEx("getByDomainAndName", args, expectedPrefs, strict);
 }
 
 async function getSubdomainsOK(args, expectedGroupValPairs) {
-  if (args.length == 2)
+  if (args.length == 2) {
     args.push(undefined);
+  }
   let expectedPrefs = expectedGroupValPairs.map(function([group, val]) {
     return { domain: group, name: args[1], value: val };
   });
@@ -131,19 +148,24 @@ async function getSubdomainsOK(args, expectedGroupValPairs) {
 }
 
 async function getGlobalOK(args, expectedVal) {
-  if (args.length == 1)
+  if (args.length == 1) {
     args.push(undefined);
-  let expectedPrefs = expectedVal === undefined ? [] :
-                      [{ domain: null, name: args[0], value: expectedVal }];
+  }
+  let expectedPrefs =
+    expectedVal === undefined
+      ? []
+      : [{ domain: null, name: args[0], value: expectedVal }];
   await getOKEx("getGlobal", args, expectedPrefs);
 }
 
 async function getOKEx(methodName, args, expectedPrefs, strict, context) {
   let actualPrefs = [];
   await new Promise(resolve => {
-    args.push(makeCallback(resolve, {
-      handleResult: pref => actualPrefs.push(pref),
-    }));
+    args.push(
+      makeCallback(resolve, {
+        handleResult: pref => actualPrefs.push(pref),
+      })
+    );
     cps[methodName].apply(cps, args);
   });
   arraysOfArraysOK([actualPrefs], [expectedPrefs], function(actual, expected) {
@@ -151,21 +173,30 @@ async function getOKEx(methodName, args, expectedPrefs, strict, context) {
   });
 }
 
-function getCachedOK(args, expectedIsCached, expectedVal, expectedGroup,
-                     strict) {
-  if (args.length == 2)
+function getCachedOK(
+  args,
+  expectedIsCached,
+  expectedVal,
+  expectedGroup,
+  strict
+) {
+  if (args.length == 2) {
     args.push(undefined);
-  let expectedPref = !expectedIsCached ? null : {
-    domain: expectedGroup || args[0],
-    name: args[1],
-    value: expectedVal,
-  };
+  }
+  let expectedPref = !expectedIsCached
+    ? null
+    : {
+        domain: expectedGroup || args[0],
+        name: args[1],
+        value: expectedVal,
+      };
   getCachedOKEx("getCachedByDomainAndName", args, expectedPref, strict);
 }
 
 function getCachedSubdomainsOK(args, expectedGroupValPairs) {
-  if (args.length == 2)
+  if (args.length == 2) {
     args.push(undefined);
+  }
   let actualPrefs = cps.getCachedBySubdomainAndName.apply(cps, args);
   actualPrefs = actualPrefs.sort(function(a, b) {
     return a.domain.localeCompare(b.domain);
@@ -177,27 +208,36 @@ function getCachedSubdomainsOK(args, expectedGroupValPairs) {
 }
 
 function getCachedGlobalOK(args, expectedIsCached, expectedVal) {
-  if (args.length == 1)
+  if (args.length == 1) {
     args.push(undefined);
-  let expectedPref = !expectedIsCached ? null : {
-    domain: null,
-    name: args[0],
-    value: expectedVal,
-  };
+  }
+  let expectedPref = !expectedIsCached
+    ? null
+    : {
+        domain: null,
+        name: args[0],
+        value: expectedVal,
+      };
   getCachedOKEx("getCachedGlobal", args, expectedPref);
 }
 
 function getCachedOKEx(methodName, args, expectedPref, strict) {
   let actualPref = cps[methodName].apply(cps, args);
-  if (expectedPref)
+  if (expectedPref) {
     prefOK(actualPref, expectedPref, strict);
-  else
+  } else {
     strictEqual(actualPref, null);
+  }
 }
 
 function arraysOK(actual, expected, cmp) {
   if (actual.length != expected.length) {
-    do_throw("Length is not equal: " + JSON.stringify(actual) + "==" + JSON.stringify(expected));
+    do_throw(
+      "Length is not equal: " +
+        JSON.stringify(actual) +
+        "==" +
+        JSON.stringify(expected)
+    );
   } else {
     actual.forEach(function(actualElt, j) {
       let expectedElt = expected[j];
@@ -248,7 +288,9 @@ async function dbOK(expectedRows) {
 
   let cols = ["grp", "name", "value"];
 
-  let actualRows = (await conn.execute(stmt)).map(row => (cols.map(c => row.getResultByName(c))));
+  let actualRows = (await conn.execute(stmt)).map(row =>
+    cols.map(c => row.getResultByName(c))
+  );
   arraysOfArraysOK(actualRows, expectedRows);
 }
 
@@ -260,8 +302,9 @@ function onEx(event, names, dontRemove) {
   let args = {
     reset() {
       for (let prop in this) {
-        if (Array.isArray(this[prop]))
+        if (Array.isArray(this[prop])) {
           this[prop].splice(0, this[prop].length);
+        }
       }
     },
   };
@@ -281,8 +324,9 @@ function onEx(event, names, dontRemove) {
       if (!triggered) {
         triggered = true;
         executeSoon(function() {
-          if (!dontRemove)
+          if (!dontRemove) {
             names.forEach(n => cps.removeObserverForName(n, observers[n]));
+          }
           deferred.resolve(args);
         });
       }
@@ -296,7 +340,7 @@ function onEx(event, names, dontRemove) {
   return {
     observers,
     promise: new Promise(resolve => {
-      deferred = {resolve};
+      deferred = { resolve };
     }),
   };
 }

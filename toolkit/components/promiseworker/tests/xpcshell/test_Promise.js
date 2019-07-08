@@ -33,16 +33,18 @@ add_task(async function test_no_args() {
 // Test that messages with promise work
 add_task(async function test_promise_args() {
   let message = ["test_promise_args", Promise.resolve(Math.random())];
-  let stringified = JSON.stringify((await Promise.resolve(Promise.all(message))));
+  let stringified = JSON.stringify(await Promise.resolve(Promise.all(message)));
   let result = await worker.post("bounce", message);
   Assert.equal(JSON.stringify(result), stringified);
 });
 
 // Test that messages with delayed promise work
 add_task(async function test_delayed_promise_args() {
-  let promise = new Promise(resolve => setTimeout(() => resolve(Math.random()), 10));
+  let promise = new Promise(resolve =>
+    setTimeout(() => resolve(Math.random()), 10)
+  );
   let message = ["test_delayed_promise_args", promise];
-  let stringified = JSON.stringify((await Promise.resolve(Promise.all(message))));
+  let stringified = JSON.stringify(await Promise.resolve(Promise.all(message)));
   let result = await worker.post("bounce", message);
   Assert.equal(JSON.stringify(result), stringified);
 });
@@ -55,8 +57,9 @@ add_task(async function test_rejected_promise_args() {
     await worker.post("bounce", message);
     do_throw("I shound have thrown an error by now");
   } catch (ex) {
-    if (ex != error)
+    if (ex != error) {
       throw ex;
+    }
     info("I threw the right error");
   }
 });
@@ -69,7 +72,12 @@ add_task(async function test_transfer_args() {
   }
   Assert.equal(array.buffer.byteLength, 4, "The buffer is not detached yet");
 
-  let result = (await worker.post("bounce", [array.buffer], [], [array.buffer]))[0];
+  let result = (await worker.post(
+    "bounce",
+    [array.buffer],
+    [],
+    [array.buffer]
+  ))[0];
 
   // Check that the buffer has been sent
   Assert.equal(array.buffer.byteLength, 0, "The buffer has been detached");
@@ -90,15 +98,20 @@ add_task(async function test_transfer_with_meta() {
   }
   Assert.equal(array.buffer.byteLength, 4, "The buffer is not detached yet");
 
-  let message = new BasePromiseWorker.Meta(array, {transfers: [array.buffer]});
+  let message = new BasePromiseWorker.Meta(array, {
+    transfers: [array.buffer],
+  });
   let result = (await worker.post("bounce", [message]))[0];
 
   // Check that the buffer has been sent
   Assert.equal(array.buffer.byteLength, 0, "The buffer has been detached");
 
   // Check that the result is correct
-  Assert.equal(Object.prototype.toString.call(result), "[object Uint8Array]",
-               "The result appears to be a Typed Array");
+  Assert.equal(
+    Object.prototype.toString.call(result),
+    "[object Uint8Array]",
+    "The result appears to be a Typed Array"
+  );
   Assert.equal(result.byteLength, 4, "The result has the right size");
 
   for (let i = 0; i < 4; ++i) {
@@ -128,8 +141,16 @@ add_task(async function test_terminate() {
 
   worker.terminate();
 
-  await Assert.rejects(promise1, /worker terminated/, "Pending promise should be rejected");
-  await Assert.rejects(promise2, /worker terminated/, "Pending promise should be rejected");
+  await Assert.rejects(
+    promise1,
+    /worker terminated/,
+    "Pending promise should be rejected"
+  );
+  await Assert.rejects(
+    promise2,
+    /worker terminated/,
+    "Pending promise should be rejected"
+  );
 
   // Unfortunately, there's no real way to check whether a terminate worked from
   // the JS API. We'll just have to assume it worked.
@@ -138,5 +159,9 @@ add_task(async function test_terminate() {
   message = ["test_simple_args", Math.random()];
   let result = await worker.post("bounce", message);
   Assert.equal(JSON.stringify(result), JSON.stringify(message));
-  Assert.notEqual(worker._worker, previousWorker, "ChromeWorker instances should differ");
+  Assert.notEqual(
+    worker._worker,
+    previousWorker,
+    "ChromeWorker instances should differ"
+  );
 });

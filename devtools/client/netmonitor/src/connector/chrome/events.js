@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const {EVENTS} = require("../../constants");
-const {Payloads} = require("./utils");
-const {getBulkLoader, PriorityLevels} = require("./bulk-loader");
+const { EVENTS } = require("../../constants");
+const { Payloads } = require("./utils");
+const { getBulkLoader, PriorityLevels } = require("./bulk-loader");
 
 class CDPConnector {
   constructor() {
@@ -19,7 +19,7 @@ class CDPConnector {
   }
 
   setup(connection, actions) {
-    const {Network, Page} = connection;
+    const { Network, Page } = connection;
     this.Network = Network;
     this.Page = Page;
     this.actions = actions;
@@ -53,50 +53,52 @@ class CDPConnector {
   }
 
   onNetworkUpdate(params) {
-    const {requestId} = params;
+    const { requestId } = params;
     const payload = this.payloads.add(requestId);
-    return payload.update(params).then(
-      ([request, header, postData]) => {
-        const bulkloader = getBulkLoader();
-        bulkloader.add(
-          requestId,
-          (resolve, reject) =>
-            this.addRequest(requestId, request).then(() => {
-              this.updateRequestHeader(requestId, header);
-              this.updatePostData(requestId, postData);
-              resolve();
-            })
-          , PriorityLevels.Critical);
-      });
+    return payload.update(params).then(([request, header, postData]) => {
+      const bulkloader = getBulkLoader();
+      bulkloader.add(
+        requestId,
+        (resolve, reject) =>
+          this.addRequest(requestId, request).then(() => {
+            this.updateRequestHeader(requestId, header);
+            this.updatePostData(requestId, postData);
+            resolve();
+          }),
+        PriorityLevels.Critical
+      );
+    });
   }
 
   onResponseReceived(params) {
-    const {requestId} = params;
+    const { requestId } = params;
     const payload = this.payloads.get(requestId);
-    return payload.update(params).then(
-      ([request, header, postData, state, timings]) => {
+    return payload
+      .update(params)
+      .then(([request, header, postData, state, timings]) => {
         const loader = getBulkLoader();
         loader.add(
           requestId,
-          (resolve) => {
+          resolve => {
             this.updateResponseHeader(requestId, header);
             this.updateResponseState(requestId, state);
             this.updateResponseTiming(requestId, timings);
             this.getResponseContent(params);
             resolve();
-          }
-          , PriorityLevels.Major);
+          },
+          PriorityLevels.Major
+        );
       });
   }
 
   onDataReceived(params) {
-    const {requestId} = params;
+    const { requestId } = params;
     const payload = this.payloads.get(requestId);
     payload.update(params);
   }
 
   onLoadingFinished(params) {
-    const {requestId} = params;
+    const { requestId } = params;
     const payload = this.payloads.get(requestId);
     if (payload) {
       payload.log("LoadingFinished", params);
@@ -145,7 +147,7 @@ class CDPConnector {
   }
 
   onLoadingFailed(params) {
-    const {requestId} = params;
+    const { requestId } = params;
     const payload = this.payloads.get(requestId);
     if (payload) {
       payload.log("LoadingFailed", params);
@@ -154,17 +156,18 @@ class CDPConnector {
   }
 
   async getResponseContent(params) {
-    const {requestId, response} = params;
+    const { requestId, response } = params;
 
-    return this.Network.getResponseBody({requestId}).then(
-      (content) => {
-        const payload = this.payloads.get(requestId);
-        return payload.update({requestId, response, content}).then(
+    return this.Network.getResponseBody({ requestId }).then(content => {
+      const payload = this.payloads.get(requestId);
+      return payload
+        .update({ requestId, response, content })
+        .then(
           ([request, header, postData, state, timings, responseContent]) => {
             const loader = getBulkLoader();
             loader.add(
               requestId,
-              (resolve) => {
+              resolve => {
                 this.updateResponseContent(requestId, responseContent);
                 return resolve();
               },
@@ -172,19 +175,16 @@ class CDPConnector {
             );
           }
         );
-      }
-    );
+    });
   }
 
   updateResponseContent(requestId, payload) {
     if (!payload) {
       return;
     }
-    this.actions.updateRequest(requestId, payload, true).then(
-      () => {
-        window.emit(EVENTS.RECEIVED_RESPONSE_CONTENT, requestId);
-      }
-    );
+    this.actions.updateRequest(requestId, payload, true).then(() => {
+      window.emit(EVENTS.RECEIVED_RESPONSE_CONTENT, requestId);
+    });
   }
 
   updatePostData(requestId, postData) {
@@ -213,19 +213,20 @@ class CDPConnector {
       fromServiceWorker,
     } = data;
 
-    this.actions.addRequest(
-      id,
-      {
-        startedMillis: startedDateTime,
-        method,
-        url,
-        isXHR,
-        cause,
-        fromCache,
-        fromServiceWorker,
-      },
-      true,
-    )
+    this.actions
+      .addRequest(
+        id,
+        {
+          startedMillis: startedDateTime,
+          method,
+          url,
+          isXHR,
+          cause,
+          fromCache,
+          fromServiceWorker,
+        },
+        true
+      )
       .then(() => window.emit(EVENTS.REQUEST_ADDED, id));
   }
 }

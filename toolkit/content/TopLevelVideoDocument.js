@@ -29,18 +29,24 @@
   setFocusToVideoElement();
 
   // Opt out of moving focus away if the DOM tree changes (from add-on or web content)
-  let observer = new MutationObserver(
-    () => {
-      observer.disconnect();
-      document.removeEventListener("focus", setFocusToVideoElement, true);
-    });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  let observer = new MutationObserver(() => {
+    observer.disconnect();
+    document.removeEventListener("focus", setFocusToVideoElement, true);
+  });
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
 
   // Handle fullscreen mode
   document.addEventListener("keypress", ev => {
     // Maximize the standalone video when pressing F11,
     // but ignore audio elements
-    if (ev.key == "F11" && videoElement.videoWidth != 0 && videoElement.videoHeight != 0) {
+    if (
+      ev.key == "F11" &&
+      videoElement.videoWidth != 0 &&
+      videoElement.videoHeight != 0
+    ) {
       // If we're in browser fullscreen mode, it means the user pressed F11
       // while browser chrome or another tab had focus.
       // Don't break leaving that mode, so do nothing here.

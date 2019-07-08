@@ -5,12 +5,12 @@
 const CC = Components.Constructor;
 
 const TEST_HOST = "example.com";
-const TEST_URL = "http://" + TEST_HOST + "/browser/browser/components/contextualidentity/test/browser/";
+const TEST_URL =
+  "http://" +
+  TEST_HOST +
+  "/browser/browser/components/contextualidentity/test/browser/";
 
-const USER_CONTEXTS = [
-  "default",
-  "personal",
-];
+const USER_CONTEXTS = ["default", "personal"];
 
 const TEST_EME_KEY = {
   initDataType: "keyids",
@@ -26,7 +26,7 @@ const TEST_EME_KEY = {
 
 async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;
@@ -34,7 +34,7 @@ async function openTabInUserContext(uri, userContextId) {
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
-  return {tab, browser};
+  return { tab, browser };
 }
 
 function HexToBase64(hex) {
@@ -42,7 +42,11 @@ function HexToBase64(hex) {
   for (var i = 0; i < hex.length; i += 2) {
     bin += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
   }
-  return window.btoa(bin).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  return window
+    .btoa(bin)
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
 }
 
 function Base64ToHex(str) {
@@ -72,9 +76,11 @@ function generateKeyObject(aKid, aKey) {
     k: HexToBase64(aKey),
   };
 
-  return new TextEncoder().encode(JSON.stringify({
-    keys: [keyObj],
-  }));
+  return new TextEncoder().encode(
+    JSON.stringify({
+      keys: [keyObj],
+    })
+  );
 }
 
 function generateKeyInfo(aData) {
@@ -94,14 +100,20 @@ async function setupEMEKey(browser) {
   let keyInfo = generateKeyInfo(TEST_EME_KEY);
 
   // Setup the EME key.
-  let result = await ContentTask.spawn(browser, keyInfo, async function(aKeyInfo) {
-    let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
-                                                                     [{
-                                                                       initDataTypes: [aKeyInfo.initDataType],
-                                                                       videoCapabilities: [{contentType: "video/webm"}],
-                                                                       sessionTypes: ["persistent-license"],
-                                                                       persistentState: "required",
-                                                                     }]);
+  let result = await ContentTask.spawn(browser, keyInfo, async function(
+    aKeyInfo
+  ) {
+    let access = await content.navigator.requestMediaKeySystemAccess(
+      "org.w3.clearkey",
+      [
+        {
+          initDataTypes: [aKeyInfo.initDataType],
+          videoCapabilities: [{ contentType: "video/webm" }],
+          sessionTypes: ["persistent-license"],
+          persistentState: "required",
+        },
+      ]
+    );
     let mediaKeys = await access.createMediaKeys();
     let session = mediaKeys.createSession(aKeyInfo.sessionType);
     let res = {};
@@ -109,14 +121,15 @@ async function setupEMEKey(browser) {
     // Insert the EME key.
     await new Promise(resolve => {
       session.addEventListener("message", function(event) {
-        session.update(aKeyInfo.keyObj).then(
-          () => { resolve(); }
-        ).catch(
-          () => {
+        session
+          .update(aKeyInfo.keyObj)
+          .then(() => {
+            resolve();
+          })
+          .catch(() => {
             ok(false, "Update the EME key fail.");
             resolve();
-          }
-        );
+          });
       });
 
       session.generateRequest(aKeyInfo.initDataType, aKeyInfo.initData);
@@ -139,7 +152,11 @@ async function setupEMEKey(browser) {
   });
 
   // Check the EME key ID.
-  is(ByteArrayToHex(result.keyId), Base64ToHex(TEST_EME_KEY.kid), "The key Id is correct.");
+  is(
+    ByteArrayToHex(result.keyId),
+    Base64ToHex(TEST_EME_KEY.kid),
+    "The key Id is correct."
+  );
   return result.sessionId;
 }
 
@@ -150,13 +167,17 @@ async function checkEMEKey(browser, emeSessionId) {
   keyInfo.sessionId = emeSessionId;
 
   await ContentTask.spawn(browser, keyInfo, async function(aKeyInfo) {
-    let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
-                                                                     [{
-                                                                       initDataTypes: [aKeyInfo.initDataType],
-                                                                       videoCapabilities: [{contentType: "video/webm"}],
-                                                                       sessionTypes: ["persistent-license"],
-                                                                       persistentState: "required",
-                                                                     }]);
+    let access = await content.navigator.requestMediaKeySystemAccess(
+      "org.w3.clearkey",
+      [
+        {
+          initDataTypes: [aKeyInfo.initDataType],
+          videoCapabilities: [{ contentType: "video/webm" }],
+          sessionTypes: ["persistent-license"],
+          persistentState: "required",
+        },
+      ]
+    );
     let mediaKeys = await access.createMediaKeys();
     let session = mediaKeys.createSession(aKeyInfo.sessionType);
 
@@ -166,7 +187,11 @@ async function checkEMEKey(browser, emeSessionId) {
     let map = session.keyStatuses;
 
     // Check that there is no media key here.
-    is(map.size, 0, "No media key should be here after forgetThisSite() was called.");
+    is(
+      map.size,
+      0,
+      "No media key should be here after forgetThisSite() was called."
+    );
   });
 }
 
@@ -176,12 +201,14 @@ async function checkEMEKey(browser, emeSessionId) {
 
 add_task(async function setup() {
   // Make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-      [ "privacy.userContext.enabled", true ],
-      [ "media.mediasource.enabled", true ],
-      [ "media.mediasource.webm.enabled", true ],
-      [ "media.clearkey.persistent-license.enabled", true ],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.userContext.enabled", true],
+      ["media.mediasource.enabled", true],
+      ["media.mediasource.webm.enabled", true],
+      ["media.clearkey.persistent-license.enabled", true],
+    ],
+  });
 });
 
 add_task(async function test_EME_forgetThisSite() {
@@ -190,27 +217,39 @@ add_task(async function test_EME_forgetThisSite() {
 
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.
-    tabs[userContextId] = await openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
+    tabs[userContextId] = await openTabInUserContext(
+      TEST_URL + "empty_file.html",
+      userContextId
+    );
 
     // Setup EME Key.
-    emeSessionIds[userContextId] = await setupEMEKey(tabs[userContextId].browser);
+    emeSessionIds[userContextId] = await setupEMEKey(
+      tabs[userContextId].browser
+    );
 
     // Close this tab.
     BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 
   // Clear all EME data for a given domain with originAttributes pattern.
-  let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].
-               getService(Ci.mozIGeckoMediaPluginChromeService);
+  let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
+    Ci.mozIGeckoMediaPluginChromeService
+  );
   mps.forgetThisSite(TEST_HOST, JSON.stringify({}));
 
   // Open tabs again to check EME keys have been cleared.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.
-    tabs[userContextId] = await openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
+    tabs[userContextId] = await openTabInUserContext(
+      TEST_URL + "empty_file.html",
+      userContextId
+    );
 
     // Check whether EME Key has been cleared.
-    await checkEMEKey(tabs[userContextId].browser, emeSessionIds[userContextId]);
+    await checkEMEKey(
+      tabs[userContextId].browser,
+      emeSessionIds[userContextId]
+    );
 
     // Close this tab.
     BrowserTestUtils.removeTab(tabs[userContextId].tab);

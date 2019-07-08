@@ -15,7 +15,7 @@ registerCleanupFunction(async () => {
 });
 
 add_task(async function test_add_bookmark_from_private_window() {
-  let win = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
 
   registerCleanupFunction(async () => {
@@ -31,7 +31,11 @@ add_task(async function test_add_bookmark_from_private_window() {
   await shownPromise;
 
   // Check if the bookmark star changes its state after click.
-  Assert.equal(bookmarkStar.getAttribute("starred"), "true", "Bookmark star changed its state correctly.");
+  Assert.equal(
+    bookmarkStar.getAttribute("starred"),
+    "true",
+    "Bookmark star changed its state correctly."
+  );
 
   // Close the bookmark panel.
   let hiddenPromise = promisePopupHidden(bookmarkPanel);
@@ -39,6 +43,10 @@ add_task(async function test_add_bookmark_from_private_window() {
   doneButton.click();
   await hiddenPromise;
 
-  let bm = await PlacesUtils.bookmarks.fetch({url: TEST_URL});
-  Assert.equal(bm.url, TEST_URL, "The bookmark was successfully saved in the database.");
+  let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
+  Assert.equal(
+    bm.url,
+    TEST_URL,
+    "The bookmark was successfully saved in the database."
+  );
 });

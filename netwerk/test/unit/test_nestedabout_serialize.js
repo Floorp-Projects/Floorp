@@ -1,18 +1,22 @@
-const BinaryInputStream =
-  Components.Constructor("@mozilla.org/binaryinputstream;1",
-                         "nsIBinaryInputStream", "setInputStream");
-const BinaryOutputStream =
-  Components.Constructor("@mozilla.org/binaryoutputstream;1",
-                         "nsIBinaryOutputStream", "setOutputStream");
+const BinaryInputStream = Components.Constructor(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
+const BinaryOutputStream = Components.Constructor(
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
+);
 
-const Pipe =
-  Components.Constructor("@mozilla.org/pipe;1", "nsIPipe", "init");
+const Pipe = Components.Constructor("@mozilla.org/pipe;1", "nsIPipe", "init");
 
 const kNestedAboutCID = "{2f277c00-0eaf-4ddb-b936-41326ba48aae}";
 
-function run_test()
-{
-  var ios = Cc["@mozilla.org/network/io-service;1"].createInstance(Ci.nsIIOService);
+function run_test() {
+  var ios = Cc["@mozilla.org/network/io-service;1"].createInstance(
+    Ci.nsIIOService
+  );
 
   var baseURI = ios.newURI("http://example.com/", "UTF-8");
 

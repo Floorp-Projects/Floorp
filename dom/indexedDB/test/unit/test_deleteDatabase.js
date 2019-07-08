@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   ok(indexedDB.deleteDatabase, "deleteDatabase function should exist!");
@@ -84,8 +83,11 @@ function* testSteps()
 
   event = yield undefined;
   is(event.target.result.version, 1, "DB has proper version");
-  is(event.target.result.objectStoreNames.length, 0, "DB should have no object stores");
-
+  is(
+    event.target.result.objectStoreNames.length,
+    0,
+    "DB should have no object stores"
+  );
 
   request = indexedDB.deleteDatabase("thisDatabaseHadBetterNotExist");
   request.onerror = errorHandler;

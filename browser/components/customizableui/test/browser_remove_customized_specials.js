@@ -14,7 +14,9 @@ add_task(async function() {
   let lastSpring = springs[springs.length - 1];
   let expectedPlacements = CustomizableUI.getWidgetIdsInArea("nav-bar");
   info("Placements before drag: " + expectedPlacements.join(","));
-  let lastItem = document.getElementById(expectedPlacements[expectedPlacements.length - 1]);
+  let lastItem = document.getElementById(
+    expectedPlacements[expectedPlacements.length - 1]
+  );
   await waitForElementShown(lastItem);
   simulateItemDrag(lastSpring, lastItem, "end");
   expectedPlacements.splice(expectedPlacements.indexOf(lastSpring.id), 1);
@@ -23,7 +25,11 @@ add_task(async function() {
   // Log these separately because Assert.deepEqual truncates the stringified versions...
   info("Actual placements: " + actualPlacements.join(","));
   info("Expected placements: " + expectedPlacements.join(","));
-  Assert.deepEqual(expectedPlacements, actualPlacements, "Should be able to move spring");
+  Assert.deepEqual(
+    expectedPlacements,
+    actualPlacements,
+    "Should be able to move spring"
+  );
   await gCustomizeMode.reset();
   await endCustomizing();
 });

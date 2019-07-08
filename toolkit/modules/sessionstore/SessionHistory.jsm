@@ -1,18 +1,27 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
 var EXPORTED_SYMBOLS = ["SessionHistory"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "uuidGenerator",
-  "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 function debug(msg) {
   Services.console.logStringMessage("SessionHistory: " + msg);
@@ -83,12 +92,13 @@ var SessionHistoryInternal = {
     // We want to keep track how many entries we *could* have collected and
     // how many we skipped, so we can sanitiy-check the current history index
     // and also determine whether we need to get any fallback data or not.
-    let skippedCount = 0, entryCount = 0;
+    let skippedCount = 0,
+      entryCount = 0;
 
     if (history && history.count > 0) {
       let shistory = history.legacySHistory.QueryInterface(Ci.nsISHistory);
       let count = shistory.count;
-      for ( ; entryCount < count; entryCount++) {
+      for (; entryCount < count; entryCount++) {
         let shEntry = shistory.getEntryAtIndex(entryCount);
         if (entryCount <= aFromIdx) {
           skippedCount++;
@@ -105,7 +115,10 @@ var SessionHistoryInternal = {
     // If either the session history isn't available yet or doesn't have any
     // valid entries, make sure we at least include the current page,
     // unless of course we just skipped all entries because aFromIdx was big enough.
-    if (data.entries.length == 0 && (skippedCount != entryCount || aFromIdx < 0)) {
+    if (
+      data.entries.length == 0 &&
+      (skippedCount != entryCount || aFromIdx < 0)
+    ) {
       let uri = webNavigation.currentURI.displaySpec;
       let body = webNavigation.document.body;
       // We landed here because the history is inaccessible or there are no
@@ -149,7 +162,9 @@ var SessionHistoryInternal = {
     // We will include the property only if it's truthy to save a couple of
     // bytes when the resulting object is stringified and saved to disk.
     if (shEntry.referrerInfo) {
-      entry.referrerInfo = E10SUtils.serializeReferrerInfo(shEntry.referrerInfo);
+      entry.referrerInfo = E10SUtils.serializeReferrerInfo(
+        shEntry.referrerInfo
+      );
     }
 
     if (shEntry.originalURI) {
@@ -181,22 +196,27 @@ var SessionHistoryInternal = {
       entry.loadReplace2 = shEntry.loadReplace;
     }
 
-    if (shEntry.srcdocData)
+    if (shEntry.srcdocData) {
       entry.srcdocData = shEntry.srcdocData;
+    }
 
-    if (shEntry.isSrcdocEntry)
+    if (shEntry.isSrcdocEntry) {
       entry.isSrcdocEntry = shEntry.isSrcdocEntry;
+    }
 
-    if (shEntry.baseURI)
+    if (shEntry.baseURI) {
       entry.baseURI = shEntry.baseURI.spec;
+    }
 
-    if (shEntry.contentType)
+    if (shEntry.contentType) {
       entry.contentType = shEntry.contentType;
+    }
 
     if (shEntry.scrollRestorationIsManual) {
       entry.scrollRestorationIsManual = true;
     } else {
-      let x = {}, y = {};
+      let x = {},
+        y = {};
       shEntry.getScrollPosition(x, y);
       if (x.value !== 0 || y.value !== 0) {
         entry.scroll = x.value + "," + y.value;
@@ -204,10 +224,14 @@ var SessionHistoryInternal = {
 
       let layoutHistoryState = shEntry.layoutHistoryState;
       if (layoutHistoryState && layoutHistoryState.hasStates) {
-        let presStates = layoutHistoryState.getKeys().map(key =>
-          this._getSerializablePresState(layoutHistoryState, key)).filter(presState =>
-            // Only keep presState entries that contain more than the key itself.
-            Object.getOwnPropertyNames(presState).length > 1);
+        let presStates = layoutHistoryState
+          .getKeys()
+          .map(key => this._getSerializablePresState(layoutHistoryState, key))
+          .filter(
+            presState =>
+              // Only keep presState entries that contain more than the key itself.
+              Object.getOwnPropertyNames(presState).length > 1
+          );
 
         if (presStates.length > 0) {
           entry.presState = presStates;
@@ -217,11 +241,15 @@ var SessionHistoryInternal = {
 
     // Collect triggeringPrincipal data for the current history entry.
     if (shEntry.principalToInherit) {
-      entry.principalToInherit_base64 = E10SUtils.serializePrincipal(shEntry.principalToInherit);
+      entry.principalToInherit_base64 = E10SUtils.serializePrincipal(
+        shEntry.principalToInherit
+      );
     }
 
     if (shEntry.triggeringPrincipal) {
-      entry.triggeringPrincipal_base64 = E10SUtils.serializePrincipal(shEntry.triggeringPrincipal);
+      entry.triggeringPrincipal_base64 = E10SUtils.serializePrincipal(
+        shEntry.triggeringPrincipal
+      );
     }
 
     if (shEntry.csp) {
@@ -274,7 +302,10 @@ var SessionHistoryInternal = {
    */
   _getSerializablePresState(layoutHistoryState, stateKey) {
     let presState = { stateKey };
-    let x = {}, y = {}, scrollOriginDowngrade = {}, res = {};
+    let x = {},
+      y = {},
+      scrollOriginDowngrade = {},
+      res = {};
 
     layoutHistoryState.getPresState(stateKey, x, y, scrollOriginDowngrade, res);
     if (x.value !== 0 || y.value !== 0) {
@@ -311,10 +342,14 @@ var SessionHistoryInternal = {
     for (let i = 0; i < tabData.entries.length; i++) {
       let entry = tabData.entries[i];
       // XXXzpao Wallpaper patch for bug 514751
-      if (!entry.url)
+      if (!entry.url) {
         continue;
+      }
       let persist = "persist" in entry ? entry.persist : true;
-      history.addEntry(this.deserializeEntry(entry, idMap, docIdentMap), persist);
+      history.addEntry(
+        this.deserializeEntry(entry, idMap, docIdentMap),
+        persist
+      );
     }
 
     // Select the right history entry.
@@ -337,27 +372,37 @@ var SessionHistoryInternal = {
    * @returns nsISHEntry
    */
   deserializeEntry(entry, idMap, docIdentMap) {
-    var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
-                  createInstance(Ci.nsISHEntry);
+    var shEntry = Cc[
+      "@mozilla.org/browser/session-history-entry;1"
+    ].createInstance(Ci.nsISHEntry);
 
     shEntry.URI = Services.io.newURI(entry.url);
     shEntry.title = entry.title || entry.url;
-    if (entry.subframe)
+    if (entry.subframe) {
       shEntry.isSubFrame = entry.subframe || false;
+    }
     shEntry.setLoadTypeAsHistory();
-    if (entry.contentType)
+    if (entry.contentType) {
       shEntry.contentType = entry.contentType;
+    }
     // Referrer information is now stored as a referrerInfo property. We should
     // also cope with the old format of passing `referrer` and `referrerPolicy`
     // separately.
     if (entry.referrerInfo) {
-      shEntry.referrerInfo = E10SUtils.deserializeReferrerInfo(entry.referrerInfo);
+      shEntry.referrerInfo = E10SUtils.deserializeReferrerInfo(
+        entry.referrerInfo
+      );
     } else if (entry.referrer) {
-      let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                                "nsIReferrerInfo",
-                                                "init");
+      let ReferrerInfo = Components.Constructor(
+        "@mozilla.org/referrer-info;1",
+        "nsIReferrerInfo",
+        "init"
+      );
       shEntry.referrerInfo = new ReferrerInfo(
-        entry.referrerPolicy, true, Services.io.newURI(entry.referrer));
+        entry.referrerPolicy,
+        true,
+        Services.io.newURI(entry.referrer)
+      );
     }
 
     if (entry.originalURI) {
@@ -375,10 +420,12 @@ var SessionHistoryInternal = {
     if (entry.loadReplace2) {
       shEntry.loadReplace = entry.loadReplace2;
     }
-    if (entry.isSrcdocEntry)
+    if (entry.isSrcdocEntry) {
       shEntry.srcdocData = entry.srcdocData;
-    if (entry.baseURI)
+    }
+    if (entry.baseURI) {
       shEntry.baseURI = Services.io.newURI(entry.baseURI);
+    }
 
     if (entry.cacheKey) {
       shEntry.cacheKey = entry.cacheKey;
@@ -389,7 +436,8 @@ var SessionHistoryInternal = {
       // start might already be in use)
       var id = idMap[entry.ID] || 0;
       if (!id) {
-        for (id = Date.now(); id in idMap.used; id++);
+        // eslint-disable-next-line no-empty
+        for (id = Date.now(); id in idMap.used; id++) {}
         idMap[entry.ID] = id;
         idMap.used[id] = true;
       }
@@ -402,8 +450,10 @@ var SessionHistoryInternal = {
       if (!this._docshellUUIDMap.has(entry.docshellID)) {
         // Convert the nsID to a string so that the docshellUUID property
         // is correctly stored as a string.
-        this._docshellUUIDMap.set(entry.docshellID,
-                                  uuidGenerator.generateUUID().toString());
+        this._docshellUUIDMap.set(
+          entry.docshellID,
+          uuidGenerator.generateUUID().toString()
+        );
       }
       entry.docshellUUID = this._docshellUUIDMap.get(entry.docshellID);
       delete entry.docshellID;
@@ -414,19 +464,23 @@ var SessionHistoryInternal = {
     }
 
     if (entry.structuredCloneState && entry.structuredCloneVersion) {
-      shEntry.stateData =
-        Cc["@mozilla.org/docshell/structured-clone-container;1"].
-        createInstance(Ci.nsIStructuredCloneContainer);
+      shEntry.stateData = Cc[
+        "@mozilla.org/docshell/structured-clone-container;1"
+      ].createInstance(Ci.nsIStructuredCloneContainer);
 
-      shEntry.stateData.initFromBase64(entry.structuredCloneState,
-                                       entry.structuredCloneVersion);
+      shEntry.stateData.initFromBase64(
+        entry.structuredCloneState,
+        entry.structuredCloneVersion
+      );
     }
 
     if (entry.scrollRestorationIsManual) {
       shEntry.scrollRestorationIsManual = true;
     } else {
       if (entry.scroll) {
-        shEntry.setScrollPosition(...this._deserializeScrollPosition(entry.scroll));
+        shEntry.setScrollPosition(
+          ...this._deserializeScrollPosition(entry.scroll)
+        );
       }
 
       if (entry.presState) {
@@ -446,7 +500,7 @@ var SessionHistoryInternal = {
       // for the document identifier.
       let matchingEntry = docIdentMap[entry.docIdentifier];
       if (!matchingEntry) {
-        matchingEntry = {shEntry, childDocIdents};
+        matchingEntry = { shEntry, childDocIdents };
         docIdentMap[entry.docIdentifier] = matchingEntry;
       } else {
         shEntry.adoptBFCacheEntry(matchingEntry.shEntry);
@@ -455,15 +509,22 @@ var SessionHistoryInternal = {
     }
 
     if (entry.triggeringPrincipal_base64) {
-      shEntry.triggeringPrincipal = E10SUtils.deserializePrincipal(entry.triggeringPrincipal_base64, () => {
-        // Ensure that we have a null principal if we couldn't deserialize it.
-        // This won't always work however is safe to use.
-        debug("Couldn't deserialize the triggeringPrincipal, falling back to NullPrincipal");
-        return Services.scriptSecurityManager.createNullPrincipal({});
-      });
+      shEntry.triggeringPrincipal = E10SUtils.deserializePrincipal(
+        entry.triggeringPrincipal_base64,
+        () => {
+          // Ensure that we have a null principal if we couldn't deserialize it.
+          // This won't always work however is safe to use.
+          debug(
+            "Couldn't deserialize the triggeringPrincipal, falling back to NullPrincipal"
+          );
+          return Services.scriptSecurityManager.createNullPrincipal({});
+        }
+      );
     }
     if (entry.principalToInherit_base64) {
-      shEntry.principalToInherit = E10SUtils.deserializePrincipal(entry.principalToInherit_base64);
+      shEntry.principalToInherit = E10SUtils.deserializePrincipal(
+        entry.principalToInherit_base64
+      );
     }
     if (entry.csp) {
       shEntry.csp = E10SUtils.deserializeCSP(entry.csp);
@@ -472,8 +533,9 @@ var SessionHistoryInternal = {
     if (entry.children) {
       for (var i = 0; i < entry.children.length; i++) {
         // XXXzpao Wallpaper patch for bug 514751
-        if (!entry.children[i].url)
+        if (!entry.children[i].url) {
           continue;
+        }
 
         // We're getting sessionrestore.js files with a cycle in the
         // doc-identifier graph, likely due to bug 698656.  (That is, we have
@@ -490,8 +552,10 @@ var SessionHistoryInternal = {
         // SHEntries with the same doc identifier have the same document iff
         // they have the same parent or their parents have the same document.
 
-        shEntry.AddChild(this.deserializeEntry(entry.children[i], idMap,
-                                               childDocIdents), i);
+        shEntry.AddChild(
+          this.deserializeEntry(entry.children[i], idMap, childDocIdents),
+          i
+        );
       }
     }
 
@@ -509,11 +573,17 @@ var SessionHistoryInternal = {
   _deserializePresState(layoutHistoryState, presState) {
     let stateKey = presState.stateKey;
     let scrollOriginDowngrade =
-      typeof presState.scrollOriginDowngrade == "boolean" ? presState.scrollOriginDowngrade : true;
+      typeof presState.scrollOriginDowngrade == "boolean"
+        ? presState.scrollOriginDowngrade
+        : true;
     let res = presState.res || 1.0;
 
-    layoutHistoryState.addNewPresState(stateKey, ...this._deserializeScrollPosition(presState.scroll),
-                                       scrollOriginDowngrade, res);
+    layoutHistoryState.addNewPresState(
+      stateKey,
+      ...this._deserializeScrollPosition(presState.scroll),
+      scrollOriginDowngrade,
+      res
+    );
   },
 
   /**
@@ -527,5 +597,4 @@ var SessionHistoryInternal = {
   _deserializeScrollPosition(scroll = "0,0") {
     return scroll.split(",").map(pos => parseInt(pos, 10) || 0);
   },
-
 };

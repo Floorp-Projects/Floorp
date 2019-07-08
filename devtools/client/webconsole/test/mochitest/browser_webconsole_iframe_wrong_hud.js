@@ -7,13 +7,16 @@
 
 // Ensure that iframes are not associated with the wrong hud. See Bug 593003.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
   "test/mochitest/test-iframe-wrong-hud.html";
 
-const TEST_IFRAME_URI = "http://example.com/browser/devtools/client/webconsole/" +
+const TEST_IFRAME_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
   "test/mochitest/test-iframe-wrong-hud-iframe.html";
 
-const TEST_DUMMY_URI = "http://example.com/browser/devtools/client/webconsole/" +
+const TEST_DUMMY_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
   "test/mochitest/test-console.html";
 
 add_task(async function() {
@@ -31,8 +34,11 @@ add_task(async function() {
   await waitFor(() => findMessage(hud1, TEST_IFRAME_URI, ".message.network"));
 
   const hud2 = await openConsole(tab2);
-  is(findMessage(hud2, TEST_IFRAME_URI), null,
-    "iframe network request is not displayed in tab2");
+  is(
+    findMessage(hud2, TEST_IFRAME_URI),
+    null,
+    "iframe network request is not displayed in tab2"
+  );
 });
 
 function reloadTab(tab) {

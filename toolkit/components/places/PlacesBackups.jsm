@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["PlacesBackups"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -15,13 +17,19 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "filenamesRegex",
-  () => /^bookmarks-([0-9-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=+-]{24})){0,1}\.(json(lz4)?)$/i
+XPCOMUtils.defineLazyGetter(
+  this,
+  "filenamesRegex",
+  () =>
+    /^bookmarks-([0-9-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=+-]{24})){0,1}\.(json(lz4)?)$/i
 );
 
 async function limitBackups(aMaxBackups, backupFiles) {
-  if (typeof aMaxBackups == "number" && aMaxBackups > -1 &&
-      backupFiles.length >= aMaxBackups) {
+  if (
+    typeof aMaxBackups == "number" &&
+    aMaxBackups > -1 &&
+    backupFiles.length >= aMaxBackups
+  ) {
     let numberOfBackupsToDelete = backupFiles.length - aMaxBackups;
     while (numberOfBackupsToDelete--) {
       let oldestBackup = backupFiles.pop();
@@ -35,10 +43,16 @@ async function limitBackups(aMaxBackups, backupFiles) {
  */
 function appendMetaDataToFilename(aFilename, aMetaData) {
   let matches = aFilename.match(filenamesRegex);
-  return "bookmarks-" + matches[1] +
-                  "_" + aMetaData.count +
-                  "_" + aMetaData.hash +
-                  "." + matches[4];
+  return (
+    "bookmarks-" +
+    matches[1] +
+    "_" +
+    aMetaData.count +
+    "_" +
+    aMetaData.hash +
+    "." +
+    matches[4]
+  );
 }
 
 /**
@@ -48,8 +62,9 @@ function appendMetaDataToFilename(aFilename, aMetaData) {
  */
 function getHashFromFilename(aFilename) {
   let matches = aFilename.match(filenamesRegex);
-  if (matches && matches[3])
+  if (matches && matches[3]) {
     return matches[3];
+  }
   return null;
 }
 
@@ -60,8 +75,7 @@ function isFilenameWithSameDate(aSourceName, aTargetName) {
   let sourceMatches = aSourceName.match(filenamesRegex);
   let targetMatches = aTargetName.match(filenamesRegex);
 
-  return sourceMatches && targetMatches &&
-         sourceMatches[1] == targetMatches[1];
+  return sourceMatches && targetMatches && sourceMatches[1] == targetMatches[1];
 }
 
 /**
@@ -73,8 +87,9 @@ function getBackupFileForSameDate(aFilename) {
   return (async function() {
     let backupFiles = await PlacesBackups.getBackupFiles();
     for (let backupFile of backupFiles) {
-      if (isFilenameWithSameDate(OS.Path.basename(backupFile), aFilename))
+      if (isFilenameWithSameDate(OS.Path.basename(backupFile), aFilename)) {
         return backupFile;
+      }
     }
     return null;
   })();
@@ -104,9 +119,12 @@ var PlacesBackups = {
         return this._backupFolder;
       }
       let profileDir = OS.Constants.Path.profileDir;
-      let backupsDirPath = OS.Path.join(profileDir, this.profileRelativeFolderPath);
+      let backupsDirPath = OS.Path.join(
+        profileDir,
+        this.profileRelativeFolderPath
+      );
       await OS.File.makeDir(backupsDirPath, { ignoreExisting: true });
-      return this._backupFolder = backupsDirPath;
+      return (this._backupFolder = backupsDirPath);
     })();
   },
 
@@ -121,8 +139,9 @@ var PlacesBackups = {
    */
   getBackupFiles: function PB_getBackupFiles() {
     return (async () => {
-      if (this._backupFiles)
+      if (this._backupFiles) {
         return this._backupFiles;
+      }
 
       this._backupFiles = [];
 
@@ -166,16 +185,17 @@ var PlacesBackups = {
    *        The date object to parse.
    * @return an ISO date string.
    */
-   toISODateString: function toISODateString(dateObj) {
-    if (!dateObj || dateObj.constructor.name != "Date" || !dateObj.getTime())
+  toISODateString: function toISODateString(dateObj) {
+    if (!dateObj || dateObj.constructor.name != "Date" || !dateObj.getTime()) {
       throw new Error("invalid date object");
+    }
     let padDate = val => ("0" + val).substr(-2, 2);
     return [
       dateObj.getFullYear(),
       padDate(dateObj.getMonth() + 1),
       padDate(dateObj.getDate()),
     ].join("-");
-   },
+  },
 
   /**
    * Creates a filename for bookmarks backup files.
@@ -192,8 +212,12 @@ var PlacesBackups = {
     let dateObj = aDateObj || new Date();
     // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
     // and makes the alphabetical order of multiple backup files more useful.
-      return "bookmarks-" + PlacesBackups.toISODateString(dateObj) + ".json" +
-                            (aCompress ? "lz4" : "");
+    return (
+      "bookmarks-" +
+      PlacesBackups.toISODateString(dateObj) +
+      ".json" +
+      (aCompress ? "lz4" : "")
+    );
   },
 
   /**
@@ -206,27 +230,28 @@ var PlacesBackups = {
   getDateForFile: function PB_getDateForFile(aBackupFile) {
     let filename = OS.Path.basename(aBackupFile);
     let matches = filename.match(filenamesRegex);
-    if (!matches)
+    if (!matches) {
       throw new Error(`Invalid backup file name: ${filename}`);
+    }
     return new Date(matches[1].replace(/-/g, "/"));
   },
 
-   /**
-    * Get the most recent backup file.
-    *
-    * @return {Promise}
-    * @result the path to the file.
-    */
-   getMostRecentBackup: function PB_getMostRecentBackup() {
-     return (async () => {
-       let entries = await this.getBackupFiles();
-       for (let entry of entries) {
-         let rx = /\.json(lz4)?$/;
-         if (OS.Path.basename(entry).match(rx)) {
-           return entry;
-         }
-       }
-       return null;
+  /**
+   * Get the most recent backup file.
+   *
+   * @return {Promise}
+   * @result the path to the file.
+   */
+  getMostRecentBackup: function PB_getMostRecentBackup() {
+    return (async () => {
+      let entries = await this.getBackupFiles();
+      for (let entry of entries) {
+        let rx = /\.json(lz4)?$/;
+        if (OS.Path.basename(entry).match(rx)) {
+          return entry;
+        }
+      }
+      return null;
     })();
   },
 
@@ -239,8 +264,9 @@ var PlacesBackups = {
    * @resolves the number of serialized uri nodes.
    */
   async saveBookmarksToJSONFile(aFilePath) {
-    let { count: nodeCount, hash: hash } =
-      await BookmarkJSONUtils.exportToFile(aFilePath);
+    let { count: nodeCount, hash: hash } = await BookmarkJSONUtils.exportToFile(
+      aFilePath
+    );
 
     let backupFolderPath = await this.getBackupFolder();
     if (OS.Path.dirname(aFilePath) == backupFolderPath) {
@@ -251,10 +277,13 @@ var PlacesBackups = {
       }
       this._backupFiles.unshift(aFilePath);
     } else {
-      let aMaxBackup = Services.prefs.getIntPref("browser.bookmarks.max_backups");
+      let aMaxBackup = Services.prefs.getIntPref(
+        "browser.bookmarks.max_backups"
+      );
       if (aMaxBackup === 0) {
-        if (!this._backupFiles)
+        if (!this._backupFiles) {
           await this.getBackupFiles();
+        }
         limitBackups(aMaxBackup, this._backupFiles);
         return nodeCount;
       }
@@ -263,30 +292,37 @@ var PlacesBackups = {
       // This way we ensure the latest valid backup is the same saved by the
       // user.  See bug 424389.
       let mostRecentBackupFile = await this.getMostRecentBackup();
-      if (!mostRecentBackupFile ||
-          hash != getHashFromFilename(OS.Path.basename(mostRecentBackupFile))) {
+      if (
+        !mostRecentBackupFile ||
+        hash != getHashFromFilename(OS.Path.basename(mostRecentBackupFile))
+      ) {
         let name = this.getFilenameForDate(undefined, true);
-        let newFilename = appendMetaDataToFilename(name,
-                                                   { count: nodeCount,
-                                                     hash });
+        let newFilename = appendMetaDataToFilename(name, {
+          count: nodeCount,
+          hash,
+        });
         let newFilePath = OS.Path.join(backupFolderPath, newFilename);
         let backupFile = await getBackupFileForSameDate(name);
         if (backupFile) {
           // There is already a backup for today, replace it.
           await OS.File.remove(backupFile, { ignoreAbsent: true });
-          if (!this._backupFiles)
+          if (!this._backupFiles) {
             await this.getBackupFiles();
-          else
+          } else {
             this._backupFiles.shift();
+          }
           this._backupFiles.unshift(newFilePath);
         } else {
           // There is no backup for today, add the new one.
-          if (!this._backupFiles)
+          if (!this._backupFiles) {
             await this.getBackupFiles();
+          }
           this._backupFiles.unshift(newFilePath);
         }
         let jsonString = await OS.File.read(aFilePath);
-        await OS.File.writeAtomic(newFilePath, jsonString, { compression: "lz4" });
+        await OS.File.writeAtomic(newFilePath, jsonString, {
+          compression: "lz4",
+        });
         await limitBackups(aMaxBackup, this._backupFiles);
       }
     }
@@ -310,21 +346,24 @@ var PlacesBackups = {
     return (async () => {
       if (aMaxBackups === 0) {
         // Backups are disabled, delete any existing one and bail out.
-        if (!this._backupFiles)
+        if (!this._backupFiles) {
           await this.getBackupFiles();
+        }
         await limitBackups(0, this._backupFiles);
         return;
       }
 
       // Ensure to initialize _backupFiles
-      if (!this._backupFiles)
+      if (!this._backupFiles) {
         await this.getBackupFiles();
+      }
       let newBackupFilename = this.getFilenameForDate(undefined, true);
       // If we already have a backup for today we should do nothing, unless we
       // were required to enforce a new backup.
       let backupFile = await getBackupFileForSameDate(newBackupFilename);
-      if (backupFile && !aForceBackup)
+      if (backupFile && !aForceBackup) {
         return;
+      }
 
       if (backupFile) {
         // In case there is a backup for today we should recreate it.
@@ -335,21 +374,26 @@ var PlacesBackups = {
       // Now check the hash of the most recent backup, and try to create a new
       // backup, if that fails due to hash conflict, just rename the old backup.
       let mostRecentBackupFile = await this.getMostRecentBackup();
-      let mostRecentHash = mostRecentBackupFile &&
-                           getHashFromFilename(OS.Path.basename(mostRecentBackupFile));
+      let mostRecentHash =
+        mostRecentBackupFile &&
+        getHashFromFilename(OS.Path.basename(mostRecentBackupFile));
 
       // Save bookmarks to a backup file.
       let backupFolder = await this.getBackupFolder();
       let newBackupFile = OS.Path.join(backupFolder, newBackupFilename);
       let newFilenameWithMetaData;
       try {
-        let { count: nodeCount, hash: hash } =
-          await BookmarkJSONUtils.exportToFile(newBackupFile,
-                                               { compress: true,
-                                                 failIfHashIs: mostRecentHash });
-        newFilenameWithMetaData = appendMetaDataToFilename(newBackupFilename,
-                                                           { count: nodeCount,
-                                                             hash });
+        let {
+          count: nodeCount,
+          hash: hash,
+        } = await BookmarkJSONUtils.exportToFile(newBackupFile, {
+          compress: true,
+          failIfHashIs: mostRecentHash,
+        });
+        newFilenameWithMetaData = appendMetaDataToFilename(newBackupFilename, {
+          count: nodeCount,
+          hash,
+        });
       } catch (ex) {
         if (!ex.becauseSameHash) {
           throw ex;
@@ -360,16 +404,20 @@ var PlacesBackups = {
         newBackupFile = mostRecentBackupFile;
         // Ensure we retain the proper extension when renaming
         // the most recent backup file.
-        if (/\.json$/.test(OS.Path.basename(mostRecentBackupFile)))
+        if (/\.json$/.test(OS.Path.basename(mostRecentBackupFile))) {
           newBackupFilename = this.getFilenameForDate();
-        newFilenameWithMetaData = appendMetaDataToFilename(
-          newBackupFilename,
-          { count: this.getBookmarkCountForFile(mostRecentBackupFile),
-            hash: mostRecentHash });
+        }
+        newFilenameWithMetaData = appendMetaDataToFilename(newBackupFilename, {
+          count: this.getBookmarkCountForFile(mostRecentBackupFile),
+          hash: mostRecentHash,
+        });
       }
 
       // Append metadata to the backup filename.
-      let newBackupFileWithMetadata = OS.Path.join(backupFolder, newFilenameWithMetaData);
+      let newBackupFileWithMetadata = OS.Path.join(
+        backupFolder,
+        newFilenameWithMetaData
+      );
       await OS.File.move(newBackupFile, newBackupFileWithMetadata);
       this._backupFiles.unshift(newBackupFileWithMetadata);
 
@@ -390,8 +438,9 @@ var PlacesBackups = {
     let count = null;
     let filename = OS.Path.basename(aFilePath);
     let matches = filename.match(filenamesRegex);
-    if (matches && matches[2])
+    if (matches && matches[2]) {
       count = matches[2];
+    }
     return count;
   },
 
@@ -421,14 +470,17 @@ var PlacesBackups = {
    */
   async getBookmarksTree() {
     let startTime = Date.now();
-    let root = await PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.rootGuid, {
-      includeItemIds: true,
-    });
+    let root = await PlacesUtils.promiseBookmarksTree(
+      PlacesUtils.bookmarks.rootGuid,
+      {
+        includeItemIds: true,
+      }
+    );
 
     try {
       Services.telemetry
-              .getHistogramById("PLACES_BACKUPS_BOOKMARKSTREE_MS")
-              .add(Date.now() - startTime);
+        .getHistogramById("PLACES_BACKUPS_BOOKMARKSTREE_MS")
+        .add(Date.now() - startTime);
     } catch (ex) {
       Cu.reportError("Unable to report telemetry.");
     }

@@ -8,7 +8,7 @@ function info(text) {
 }
 
 function ok(test, message) {
-  postMessage({ type: 'ok', test: test, message: message });
+  postMessage({ type: "ok", test: test, message: message });
 }
 
 /**
@@ -30,14 +30,21 @@ function makeHandler(nameTemplate, eventName, expectedState, prefix, custom) {
     ok(e.type == eventName, prefix + "event type should be " + eventName);
     ok(!e.bubbles, prefix + "event should not bubble");
     ok(!e.cancelable, prefix + "event should not be cancelable");
-    ok(e.target == self, prefix + "the event target should be the worker scope");
-    ok(eventName == 'online' ? navigator.onLine : !navigator.onLine, prefix + "navigator.onLine " + navigator.onLine + " should reflect event " + eventName);
+    ok(
+      e.target == self,
+      prefix + "the event target should be the worker scope"
+    );
+    ok(
+      eventName == "online" ? navigator.onLine : !navigator.onLine,
+      prefix +
+        "navigator.onLine " +
+        navigator.onLine +
+        " should reflect event " +
+        eventName
+    );
 
     if (custom) {
       custom();
     }
-  }
+  };
 }
-
-
-

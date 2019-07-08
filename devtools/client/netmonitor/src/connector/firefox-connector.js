@@ -10,7 +10,11 @@ const FirefoxDataProvider = require("./firefox-data-provider");
 const { getDisplayedTimingMarker } = require("../selectors/index");
 
 // Network throttling
-loader.lazyRequireGetter(this, "throttlingProfiles", "devtools/client/shared/components/throttling/profiles");
+loader.lazyRequireGetter(
+  this,
+  "throttlingProfiles",
+  "devtools/client/shared/components/throttling/profiles"
+);
 
 /**
  * Connector to Firefox backend.
@@ -121,28 +125,33 @@ class FirefoxConnector {
 
   async addListeners() {
     this.tabTarget.on("close", this.disconnect);
-    this.webConsoleClient.on("networkEvent",
-      this.dataProvider.onNetworkEvent);
-    this.webConsoleClient.on("networkEventUpdate",
-      this.dataProvider.onNetworkEventUpdate);
+    this.webConsoleClient.on("networkEvent", this.dataProvider.onNetworkEvent);
+    this.webConsoleClient.on(
+      "networkEventUpdate",
+      this.dataProvider.onNetworkEventUpdate
+    );
     this.webConsoleClient.on("documentEvent", this.onDocEvent);
 
     // Support for WebSocket monitoring is currently hidden behind this pref.
-    if (Services.prefs.getBoolPref(
-      "devtools.netmonitor.features.webSockets")) {
+    if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
       try {
         // Initialize WebSocket front to intercept websocket traffic.
         this.webSocketFront = await this.tabTarget.getFront("webSocket");
         this.webSocketFront.startListening();
 
-        this.webSocketFront.on("webSocketOpened",
-          this.dataProvider.onWebSocketOpened);
-        this.webSocketFront.on("webSocketClosed",
-          this.dataProvider.onWebSocketClosed);
-        this.webSocketFront.on("frameReceived",
-          this.dataProvider.onFrameReceived);
-        this.webSocketFront.on("frameSent",
-          this.dataProvider.onFrameSent);
+        this.webSocketFront.on(
+          "webSocketOpened",
+          this.dataProvider.onWebSocketOpened
+        );
+        this.webSocketFront.on(
+          "webSocketClosed",
+          this.dataProvider.onWebSocketClosed
+        );
+        this.webSocketFront.on(
+          "frameReceived",
+          this.dataProvider.onFrameReceived
+        );
+        this.webSocketFront.on("frameSent", this.dataProvider.onFrameSent);
       } catch (e) {
         // Support for FF68 or older
       }
@@ -157,21 +166,31 @@ class FirefoxConnector {
     if (this.tabTarget) {
       this.tabTarget.off("close", this.disconnect);
       if (this.webSocketFront) {
-        this.webSocketFront.off("webSocketOpened",
-          this.dataProvider.onWebSocketOpened);
-        this.webSocketFront.off("webSocketClosed",
-          this.dataProvider.onWebSocketClosed);
-        this.webSocketFront.off("frameReceived",
-          this.dataProvider.onFrameReceived);
-        this.webSocketFront.off("frameSent",
-          this.dataProvider.onFrameSent);
+        this.webSocketFront.off(
+          "webSocketOpened",
+          this.dataProvider.onWebSocketOpened
+        );
+        this.webSocketFront.off(
+          "webSocketClosed",
+          this.dataProvider.onWebSocketClosed
+        );
+        this.webSocketFront.off(
+          "frameReceived",
+          this.dataProvider.onFrameReceived
+        );
+        this.webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
         this.webSocketFront.stopListening();
       }
     }
     if (this.webConsoleClient) {
-      this.webConsoleClient.off("networkEvent", this.dataProvider.onNetworkEvent);
-      this.webConsoleClient.off("networkEventUpdate",
-        this.dataProvider.onNetworkEventUpdate);
+      this.webConsoleClient.off(
+        "networkEvent",
+        this.dataProvider.onNetworkEvent
+      );
+      this.webConsoleClient.off(
+        "networkEventUpdate",
+        this.dataProvider.onNetworkEventUpdate
+      );
       this.webConsoleClient.off("docEvent", this.onDocEvent);
     }
   }
@@ -314,7 +333,7 @@ class FirefoxConnector {
 
     // Waits for a series of "navigation start" and "navigation stop" events.
     const waitForNavigation = () => {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         this.tabTarget.once("will-navigate", () => {
           this.tabTarget.once("navigate", () => {
             resolve();
@@ -329,7 +348,7 @@ class FirefoxConnector {
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.
-    const reconfigureTabAndWaitForNavigation = (options) => {
+    const reconfigureTabAndWaitForNavigation = options => {
       options.performReload = true;
       const navigationFinished = waitForNavigation();
       return reconfigureTab(options).then(() => navigationFinished);

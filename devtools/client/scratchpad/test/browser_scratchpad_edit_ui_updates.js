@@ -16,7 +16,10 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,test Edit menu updates Scratchpad - bug 699130");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,test Edit menu updates Scratchpad - bug 699130"
+  );
 }
 
 function runTests() {
@@ -62,7 +65,9 @@ function runTests() {
     info("Self xss paste tests");
     is(WebConsoleUtils.usageCount, 0, "Test for usage count getter");
     const notificationbox = sp.notificationBox;
-    const notification = notificationbox.getNotificationWithValue("selfxss-notification");
+    const notification = notificationbox.getNotificationWithValue(
+      "selfxss-notification"
+    );
     ok(notification, "Self-xss notification shown");
     is(oldVal, sp.editor.getText(), "Paste blocked by self-xss prevention");
     Services.prefs.setIntPref("devtools.selfxss.count", 10);
@@ -72,9 +77,13 @@ function runTests() {
 
   const openMenu = function(aX, aY, aCallback) {
     if (!editMenu || OS != "Darwin") {
-      menuPopup.addEventListener("popupshown", function() {
-        executeSoon(aCallback);
-      }, {once: true});
+      menuPopup.addEventListener(
+        "popupshown",
+        function() {
+          executeSoon(aCallback);
+        },
+        { once: true }
+      );
     }
 
     executeSoon(function() {
@@ -93,9 +102,13 @@ function runTests() {
 
   const closeMenu = function(aCallback) {
     if (!editMenu || OS != "Darwin") {
-      menuPopup.addEventListener("popuphidden", function() {
-        executeSoon(aCallback);
-      }, {once: true});
+      menuPopup.addEventListener(
+        "popuphidden",
+        function() {
+          executeSoon(aCallback);
+        },
+        { once: true }
+      );
     }
 
     executeSoon(function() {
@@ -123,7 +136,10 @@ function runTests() {
   };
 
   const showAfterSelect = function() {
-    ok(!cutItem.hasAttribute("disabled"), "cut menuitem is enabled after select");
+    ok(
+      !cutItem.hasAttribute("disabled"),
+      "cut menuitem is enabled after select"
+    );
     closeMenu(hideAfterSelect);
   };
 
@@ -133,7 +149,7 @@ function runTests() {
       const selectedText = sp.editor.getSelection();
       ok(selectedText.length > 0, "non-empty selected text will be cut");
 
-      EventUtils.synthesizeKey("x", {accelKey: true}, gScratchpadWindow);
+      EventUtils.synthesizeKey("x", { accelKey: true }, gScratchpadWindow);
     }, gScratchpadWindow);
   };
 
@@ -144,14 +160,17 @@ function runTests() {
 
   const showAfterCut = function() {
     ok(cutItem.hasAttribute("disabled"), "cut menuitem is disabled after cut");
-    ok(!pasteItem.hasAttribute("disabled"), "paste menuitem is enabled after cut");
+    ok(
+      !pasteItem.hasAttribute("disabled"),
+      "paste menuitem is enabled after cut"
+    );
     closeMenu(hideAfterCut);
   };
 
   const hideAfterCut = function() {
     waitForFocus(function() {
       sp.editor.on("change", onPaste);
-      EventUtils.synthesizeKey("v", {accelKey: true}, gScratchpadWindow);
+      EventUtils.synthesizeKey("v", { accelKey: true }, gScratchpadWindow);
     }, gScratchpadWindow);
   };
 
@@ -161,8 +180,14 @@ function runTests() {
   };
 
   const showAfterPaste = function() {
-    ok(cutItem.hasAttribute("disabled"), "cut menuitem is disabled after paste");
-    ok(!pasteItem.hasAttribute("disabled"), "paste menuitem is enabled after paste");
+    ok(
+      cutItem.hasAttribute("disabled"),
+      "cut menuitem is disabled after paste"
+    );
+    ok(
+      !pasteItem.hasAttribute("disabled"),
+      "paste menuitem is enabled after paste"
+    );
     closeMenu(hideAfterPaste);
   };
 
@@ -194,7 +219,7 @@ function runTests() {
   };
   waitForFocus(function() {
     WebConsoleUtils.usageCount = 0;
-    EventUtils.synthesizeKey("v", {accelKey: true}, gScratchpadWindow);
+    EventUtils.synthesizeKey("v", { accelKey: true }, gScratchpadWindow);
     testSelfXss(oldVal);
   }, gScratchpadWindow);
 }

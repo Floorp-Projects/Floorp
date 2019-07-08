@@ -20,13 +20,30 @@ add_task(async function test_menu_in_hidden_window() {
   let hwDoc = Services.appShell.hiddenDOMWindow.document;
   let bmPopup = hwDoc.getElementById("bookmarksMenuPopup");
   var popupEvent = hwDoc.createEvent("MouseEvent");
-  popupEvent.initMouseEvent("popupshowing", true, true, Services.appShell.hiddenDOMWindow, 0,
-                            0, 0, 0, 0, false, false, false, false,
-                            0, null);
+  popupEvent.initMouseEvent(
+    "popupshowing",
+    true,
+    true,
+    Services.appShell.hiddenDOMWindow,
+    0,
+    0,
+    0,
+    0,
+    0,
+    false,
+    false,
+    false,
+    false,
+    0,
+    null
+  );
   bmPopup.dispatchEvent(popupEvent);
 
   let testMenuitem = [...bmPopup.children].find(
-    node => node.getAttribute("label") == "Test1");
-  Assert.ok(testMenuitem,
-    "Should have found the test bookmark in the hidden window bookmark menu");
+    node => node.getAttribute("label") == "Test1"
+  );
+  Assert.ok(
+    testMenuitem,
+    "Should have found the test bookmark in the hidden window bookmark menu"
+  );
 });

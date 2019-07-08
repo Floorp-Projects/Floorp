@@ -6,18 +6,22 @@
 
 const myScope = this;
 
-const {parseKeyValuePairsFromLines} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+const { parseKeyValuePairsFromLines } = ChromeUtils.import(
+  "resource://gre/modules/KeyValueParser.jsm"
+);
 ChromeUtils.import("resource://gre/modules/Log.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-const {TelemetryController} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
+const { TelemetryController } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryController.jsm"
+);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-var EXPORTED_SYMBOLS = [
-  "CrashManager",
-];
+var EXPORTED_SYMBOLS = ["CrashManager"];
 
 /**
  * How long to wait after application startup before crash event files are
@@ -125,7 +129,7 @@ var CrashManager = function(options) {
       case "storeDir":
         let key = "_" + k;
         delete this[key];
-        Object.defineProperty(this, key, {value});
+        Object.defineProperty(this, key, { value });
         break;
       case "telemetryStoreSizeKey":
         this._telemetryStoreSizeKey = value;
@@ -223,27 +227,27 @@ this.CrashManager.prototype = Object.freeze({
   },
 
   get _crDir() {
-    return this._lazyGetDir("_crDir",
-                            OS.Constants.Path.userApplicationDataDir,
-                            "Crash Reports");
+    return this._lazyGetDir(
+      "_crDir",
+      OS.Constants.Path.userApplicationDataDir,
+      "Crash Reports"
+    );
   },
 
   get _storeDir() {
-    return this._lazyGetDir("_storeDir",
-                            OS.Constants.Path.profileDir,
-                            "crashes");
+    return this._lazyGetDir(
+      "_storeDir",
+      OS.Constants.Path.profileDir,
+      "crashes"
+    );
   },
 
   get _pendingDumpsDir() {
-    return this._lazyGetDir("_pendingDumpsDir",
-                            this._crDir,
-                            "pending");
+    return this._lazyGetDir("_pendingDumpsDir", this._crDir, "pending");
   },
 
   get _submittedDumpsDir() {
-    return this._lazyGetDir("_submittedDumpsDir",
-                            this._crDir,
-                            "submitted");
+    return this._lazyGetDir("_submittedDumpsDir", this._crDir, "submitted");
   },
 
   get _eventsDirs() {
@@ -301,8 +305,10 @@ this.CrashManager.prototype = Object.freeze({
    * @return Promise<Array>
    */
   submittedDumps() {
-    return this._getDirectoryEntries(this._submittedDumpsDir,
-                                     this.SUBMITTED_REGEX);
+    return this._getDirectoryEntries(
+      this._submittedDumpsDir,
+      this.SUBMITTED_REGEX
+    );
   },
 
   /**
@@ -325,7 +331,7 @@ this.CrashManager.prototype = Object.freeze({
       return this._aggregatePromise;
     }
 
-    return this._aggregatePromise = (async () => {
+    return (this._aggregatePromise = (async () => {
       if (this._aggregatePromise) {
         return this._aggregatePromise;
       }
@@ -344,7 +350,7 @@ this.CrashManager.prototype = Object.freeze({
             switch (result) {
               case this.EVENT_FILE_SUCCESS:
                 needsSave = true;
-                // Fall through.
+              // Fall through.
 
               case this.EVENT_FILE_ERROR_MALFORMED:
                 deletePaths.push(entry.path);
@@ -354,8 +360,11 @@ this.CrashManager.prototype = Object.freeze({
                 break;
 
               default:
-                Cu.reportError("Unhandled crash event file return code. Please " +
-                               "file a bug: " + result);
+                Cu.reportError(
+                  "Unhandled crash event file return code. Please " +
+                    "file a bug: " +
+                    result
+                );
             }
           } catch (ex) {
             if (ex instanceof OS.File.Error) {
@@ -367,8 +376,10 @@ this.CrashManager.prototype = Object.freeze({
               //
               // If we get here, report the error and delete the source file
               // so we don't see it again.
-              Cu.reportError("Exception when processing crash event file: " +
-                             Log.exceptionStr(ex));
+              Cu.reportError(
+                "Exception when processing crash event file: " +
+                  Log.exceptionStr(ex)
+              );
               deletePaths.push(entry.path);
             }
           }
@@ -392,7 +403,7 @@ this.CrashManager.prototype = Object.freeze({
         this._aggregatePromise = false;
         this._storeProtectedCount--;
       }
-    })();
+    })());
   },
 
   /**
@@ -467,11 +478,13 @@ this.CrashManager.prototype = Object.freeze({
       }
 
       // Send a telemetry ping for each non-main process crash
-      if (processType === this.PROCESS_TYPE_CONTENT ||
-          processType === this.PROCESS_TYPE_GPU ||
-          processType === this.PROCESS_TYPE_VR ||
-          processType === this.PROCESS_TYPE_RDD ||
-          processType === this.PROCESS_TYPE_SOCKET) {
+      if (
+        processType === this.PROCESS_TYPE_CONTENT ||
+        processType === this.PROCESS_TYPE_GPU ||
+        processType === this.PROCESS_TYPE_VR ||
+        processType === this.PROCESS_TYPE_RDD ||
+        processType === this.PROCESS_TYPE_SOCKET
+      ) {
         this._sendCrashPing(id, processType, date, metadata);
       }
     })();
@@ -520,9 +533,14 @@ this.CrashManager.prototype = Object.freeze({
    * Generate a submission ID for use with addSubmission{Attempt,Result}.
    */
   generateSubmissionID() {
-    return "sub-" + Cc["@mozilla.org/uuid-generator;1"]
-                      .getService(Ci.nsIUUIDGenerator)
-                      .generateUUID().toString().slice(1, -1);
+    return (
+      "sub-" +
+      Cc["@mozilla.org/uuid-generator;1"]
+        .getService(Ci.nsIUUIDGenerator)
+        .generateUUID()
+        .toString()
+        .slice(1, -1)
+    );
   },
 
   /**
@@ -588,7 +606,9 @@ this.CrashManager.prototype = Object.freeze({
         }
       }
 
-      entries.sort((a, b) => { return a.date - b.date; });
+      entries.sort((a, b) => {
+        return a.date - b.date;
+      });
 
       return entries;
     })();
@@ -636,8 +656,9 @@ this.CrashManager.prototype = Object.freeze({
 
   _filterAnnotations(annotations) {
     let filteredAnnotations = {};
-    let crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-                          .getService(Ci.nsICrashReporter);
+    let crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
+      Ci.nsICrashReporter
+    );
 
     for (let line in annotations) {
       try {
@@ -656,17 +677,22 @@ this.CrashManager.prototype = Object.freeze({
     // If we have a saved environment, use it. Otherwise report
     // the current environment.
     let reportMeta = Cu.cloneInto(metadata, myScope);
-    let crashEnvironment = parseAndRemoveField(reportMeta,
-                                               "TelemetryEnvironment");
+    let crashEnvironment = parseAndRemoveField(
+      reportMeta,
+      "TelemetryEnvironment"
+    );
     let sessionId = getAndRemoveField(reportMeta, "TelemetrySessionId");
     let stackTraces = parseAndRemoveField(reportMeta, "StackTraces");
-    let minidumpSha256Hash = getAndRemoveField(reportMeta,
-                                               "MinidumpSha256Hash");
+    let minidumpSha256Hash = getAndRemoveField(
+      reportMeta,
+      "MinidumpSha256Hash"
+    );
 
     // Filter the remaining annotations to remove privacy-sensitive ones
     reportMeta = this._filterAnnotations(reportMeta);
 
-    this._pingPromise = TelemetryController.submitExternalPing("crash",
+    this._pingPromise = TelemetryController.submitExternalPing(
+      "crash",
       {
         version: 1,
         crashDate: date.toISOString().slice(0, 10), // YYYY-MM-DD
@@ -677,7 +703,7 @@ this.CrashManager.prototype = Object.freeze({
         processType: type,
         stackTraces,
         metadata: reportMeta,
-        hasCrashEnvironment: (crashEnvironment !== null),
+        hasCrashEnvironment: crashEnvironment !== null,
       },
       {
         addClientId: true,
@@ -688,61 +714,75 @@ this.CrashManager.prototype = Object.freeze({
   },
 
   _handleEventFilePayload(store, entry, type, date, payload) {
-      // The payload types and formats are documented in docs/crash-events.rst.
-      // Do not change the format of an existing type. Instead, invent a new
-      // type.
-      // DO NOT ADD NEW TYPES WITHOUT DOCUMENTING!
-      let lines = payload.split("\n");
+    // The payload types and formats are documented in docs/crash-events.rst.
+    // Do not change the format of an existing type. Instead, invent a new
+    // type.
+    // DO NOT ADD NEW TYPES WITHOUT DOCUMENTING!
+    let lines = payload.split("\n");
 
-      switch (type) {
-        case "crash.main.1":
-          if (lines.length > 1) {
-            this._log.warn("Multiple lines unexpected in payload for " +
-                           entry.path);
-            return this.EVENT_FILE_ERROR_MALFORMED;
+    switch (type) {
+      case "crash.main.1":
+        if (lines.length > 1) {
+          this._log.warn(
+            "Multiple lines unexpected in payload for " + entry.path
+          );
+          return this.EVENT_FILE_ERROR_MALFORMED;
+        }
+      // fall-through
+      case "crash.main.2":
+        let crashID = lines[0];
+        let metadata = parseKeyValuePairsFromLines(lines.slice(1));
+        store.addCrash(
+          this.PROCESS_TYPE_MAIN,
+          this.CRASH_TYPE_CRASH,
+          crashID,
+          date,
+          metadata
+        );
+
+        if (!("CrashPingUUID" in metadata)) {
+          // If CrashPingUUID is not present then a ping was not generated
+          // by the crashreporter for this crash so we need to send one from
+          // here.
+          this._sendCrashPing(crashID, this.PROCESS_TYPE_MAIN, date, metadata);
+        }
+
+        break;
+
+      case "crash.submission.1":
+        if (lines.length == 3) {
+          let [crashID, result, remoteID] = lines;
+          store.addCrash(
+            this.PROCESS_TYPE_MAIN,
+            this.CRASH_TYPE_CRASH,
+            crashID,
+            date
+          );
+
+          let submissionID = this.generateSubmissionID();
+          let succeeded = result === "true";
+          store.addSubmissionAttempt(crashID, submissionID, date);
+          store.addSubmissionResult(
+            crashID,
+            submissionID,
+            date,
+            succeeded
+              ? this.SUBMISSION_RESULT_OK
+              : this.SUBMISSION_RESULT_FAILED
+          );
+          if (succeeded) {
+            store.setRemoteCrashID(crashID, remoteID);
           }
-          // fall-through
-        case "crash.main.2":
-          let crashID = lines[0];
-          let metadata = parseKeyValuePairsFromLines(lines.slice(1));
-          store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
-                         crashID, date, metadata);
+        } else {
+          return this.EVENT_FILE_ERROR_MALFORMED;
+        }
+        break;
 
-          if (!("CrashPingUUID" in metadata)) {
-            // If CrashPingUUID is not present then a ping was not generated
-            // by the crashreporter for this crash so we need to send one from
-            // here.
-            this._sendCrashPing(crashID, this.PROCESS_TYPE_MAIN, date,
-                                metadata);
-          }
+      default:
+        return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
+    }
 
-          break;
-
-        case "crash.submission.1":
-          if (lines.length == 3) {
-            let [crashID, result, remoteID] = lines;
-            store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
-                           crashID, date);
-
-            let submissionID = this.generateSubmissionID();
-            let succeeded = result === "true";
-            store.addSubmissionAttempt(crashID, submissionID, date);
-            store.addSubmissionResult(crashID, submissionID, date,
-                                      succeeded ? this.SUBMISSION_RESULT_OK :
-                                                  this.SUBMISSION_RESULT_FAILED);
-            if (succeeded) {
-              store.setRemoteCrashID(crashID, remoteID);
-            }
-          } else {
-            return this.EVENT_FILE_ERROR_MALFORMED;
-          }
-          break;
-
-        default:
-          return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
-      }
-
-      return this.EVENT_FILE_SUCCESS;
+    return this.EVENT_FILE_SUCCESS;
   },
 
   /**
@@ -777,7 +817,7 @@ this.CrashManager.prototype = Object.freeze({
             return undefined;
           }
 
-          return OS.File.stat(entry.path).then((info) => {
+          return OS.File.stat(entry.path).then(info => {
             entries.push({
               path: entry.path,
               id: match[1],
@@ -789,7 +829,9 @@ this.CrashManager.prototype = Object.freeze({
         it.close();
       }
 
-      entries.sort((a, b) => { return a.date - b.date; });
+      entries.sort((a, b) => {
+        return a.date - b.date;
+      });
 
       return entries;
     })();
@@ -800,7 +842,7 @@ this.CrashManager.prototype = Object.freeze({
       return this._getStoreTask;
     }
 
-    return this._getStoreTask = (async () => {
+    return (this._getStoreTask = (async () => {
       try {
         if (!this._store) {
           await OS.File.makeDir(this._storeDir, {
@@ -808,13 +850,16 @@ this.CrashManager.prototype = Object.freeze({
             unixMode: OS.Constants.libc.S_IRWXU,
           });
 
-          let store = new CrashStore(this._storeDir,
-                                     this._telemetryStoreSizeKey);
+          let store = new CrashStore(
+            this._storeDir,
+            this._telemetryStoreSizeKey
+          );
           await store.load();
 
           this._store = store;
-          this._storeTimer = Cc["@mozilla.org/timer;1"]
-                               .createInstance(Ci.nsITimer);
+          this._storeTimer = Cc["@mozilla.org/timer;1"].createInstance(
+            Ci.nsITimer
+          );
         }
 
         // The application can go long periods without interacting with the
@@ -828,8 +873,11 @@ this.CrashManager.prototype = Object.freeze({
         // is protected from freeing by some other process.
         let timerCB = () => {
           if (this._storeProtectedCount) {
-            this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
-                                              this._storeTimer.TYPE_ONE_SHOT);
+            this._storeTimer.initWithCallback(
+              timerCB,
+              this.STORE_EXPIRATION_MS,
+              this._storeTimer.TYPE_ONE_SHOT
+            );
             return;
           }
 
@@ -840,14 +888,17 @@ this.CrashManager.prototype = Object.freeze({
           this._storeTimer = null;
         };
 
-        this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
-                                          this._storeTimer.TYPE_ONE_SHOT);
+        this._storeTimer.initWithCallback(
+          timerCB,
+          this.STORE_EXPIRATION_MS,
+          this._storeTimer.TYPE_ONE_SHOT
+        );
 
         return this._store;
       } finally {
         this._getStoreTask = null;
       }
-    })();
+    })());
   },
 
   /**
@@ -947,7 +998,7 @@ CrashStore.prototype = Object.freeze({
 
       try {
         let decoder = new TextDecoder();
-        let data = await OS.File.read(this._storePath, {compression: "lz4"});
+        let data = await OS.File.read(this._storePath, { compression: "lz4" });
         data = JSON.parse(decoder.decode(data));
 
         if (data.corruptDate) {
@@ -977,20 +1028,25 @@ CrashStore.prototype = Object.freeze({
           if (crash.submissions) {
             for (let submissionID in crash.submissions) {
               let submission = crash.submissions[submissionID];
-              denormalized.submissions.set(submissionID,
-                                           this._denormalize(submission));
+              denormalized.submissions.set(
+                submissionID,
+                this._denormalize(submission)
+              );
             }
           }
 
           this._data.crashes.set(id, denormalized);
 
-          let key = dateToDays(denormalized.crashDate) + "-" + denormalized.type;
+          let key =
+            dateToDays(denormalized.crashDate) + "-" + denormalized.type;
           actualCounts.set(key, (actualCounts.get(key) || 0) + 1);
 
           // If we have an OOM size, count the crash as an OOM in addition to
           // being a main process crash.
-          if (denormalized.metadata &&
-              denormalized.metadata.OOMAllocationSize) {
+          if (
+            denormalized.metadata &&
+            denormalized.metadata.OOMAllocationSize
+          ) {
             let oomKey = key + "-oom";
             actualCounts.set(oomKey, (actualCounts.get(oomKey) || 0) + 1);
           }
@@ -1090,8 +1146,9 @@ CrashStore.prototype = Object.freeze({
       let encoder = new TextEncoder();
       let data = encoder.encode(JSON.stringify(normalized));
       let size = await OS.File.writeAtomic(this._storePath, data, {
-                                           tmpPath: this._storePath + ".tmp",
-                                           compression: "lz4"});
+        tmpPath: this._storePath + ".tmp",
+        compression: "lz4",
+      });
       if (this._telemetrySizeKey) {
         Services.telemetry.getHistogramById(this._telemetrySizeKey).add(size);
       }
@@ -1249,8 +1306,10 @@ CrashStore.prototype = Object.freeze({
       let count = (this._countsByDay.get(day).get(type) || 0) + 1;
       this._countsByDay.get(day).set(type, count);
 
-      if (count > this.HIGH_WATER_DAILY_THRESHOLD &&
-          processType != CrashManager.prototype.PROCESS_TYPE_MAIN) {
+      if (
+        count > this.HIGH_WATER_DAILY_THRESHOLD &&
+        processType != CrashManager.prototype.PROCESS_TYPE_MAIN
+      ) {
         return null;
       }
 
@@ -1292,7 +1351,13 @@ CrashStore.prototype = Object.freeze({
    * @return boolean True if the crash was recorded and false if not.
    */
   addCrash(processType, crashType, id, date, metadata) {
-    return !!this._ensureCrashRecord(processType, crashType, id, date, metadata);
+    return !!this._ensureCrashRecord(
+      processType,
+      crashType,
+      id,
+      date,
+      metadata
+    );
   },
 
   /**
@@ -1344,14 +1409,17 @@ CrashStore.prototype = Object.freeze({
    * @return boolean True if the attempt was recorded.
    */
   addSubmissionAttempt(crashID, submissionID, date) {
-    let [submission, crash] =
-      this._ensureSubmissionRecord(crashID, submissionID);
+    let [submission, crash] = this._ensureSubmissionRecord(
+      crashID,
+      submissionID
+    );
     if (!submission) {
       return false;
     }
 
     submission.requestDate = date;
-    Services.telemetry.getKeyedHistogramById("PROCESS_CRASH_SUBMIT_ATTEMPT")
+    Services.telemetry
+      .getKeyedHistogramById("PROCESS_CRASH_SUBMIT_ATTEMPT")
       .add(crash.type, 1);
     return true;
   },
@@ -1371,7 +1439,8 @@ CrashStore.prototype = Object.freeze({
 
     submission.responseDate = date;
     submission.result = result;
-    Services.telemetry.getKeyedHistogramById("PROCESS_CRASH_SUBMIT_SUCCESS")
+    Services.telemetry
+      .getKeyedHistogramById("PROCESS_CRASH_SUBMIT_SUCCESS")
       .add(crash.type, result == "ok");
     return true;
   },

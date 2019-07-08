@@ -11,10 +11,13 @@ const TEST_FILE =
 const TEST_URI = "http://example.org/" + TEST_FILE;
 
 const TRACKER_URL = "http://tracking.example.com/";
-const BLOCKED_URL = TRACKER_URL +
+const BLOCKED_URL =
+  TRACKER_URL +
   "browser/devtools/client/webconsole/test/mochitest/test-image.png";
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
@@ -39,17 +42,20 @@ add_task(async function testContentBlockingMessage() {
     content.wrappedJSObject.console.group("myGroup");
     content.wrappedJSObject.console.log("log in group");
   });
-  const {node: consoleGroupMessageNode} = await onGroupMessage;
+  const { node: consoleGroupMessageNode } = await onGroupMessage;
   await onInGroupMessage;
 
-  checkConsoleOutputForWarningGroup(hud, [
-    `▼ myGroup`,
-    `| log in group`,
-  ]);
+  checkConsoleOutputForWarningGroup(hud, [`▼ myGroup`, `| log in group`]);
 
-  info("Log a tracking protection message to check a single message isn't grouped");
+  info(
+    "Log a tracking protection message to check a single message isn't grouped"
+  );
   const now = Date.now();
-  let onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
+  let onContentBlockingWarningMessage = waitForMessage(
+    hud,
+    BLOCKED_URL,
+    ".warn"
+  );
   emitContentBlockedMessage(now);
   await onContentBlockingWarningMessage;
 
@@ -63,9 +69,7 @@ add_task(async function testContentBlockingMessage() {
   consoleGroupMessageNode.querySelector(".arrow").click();
   await waitFor(() => !findMessage(hud, "log in group"));
 
-  checkConsoleOutputForWarningGroup(hud, [
-    `▶︎ myGroup`,
-  ]);
+  checkConsoleOutputForWarningGroup(hud, [`▶︎ myGroup`]);
 
   info("Expand the console.group");
   consoleGroupMessageNode.querySelector(".arrow").click();
@@ -77,11 +81,16 @@ add_task(async function testContentBlockingMessage() {
     `| ${BLOCKED_URL}?${now}-1`,
   ]);
 
-  info("Log a second tracking protection message to check that it causes the grouping");
-  const onContentBlockingWarningGroupMessage =
-    waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
+  info(
+    "Log a second tracking protection message to check that it causes the grouping"
+  );
+  const onContentBlockingWarningGroupMessage = waitForMessage(
+    hud,
+    CONTENT_BLOCKING_GROUP_LABEL,
+    ".warn"
+  );
   emitContentBlockedMessage(now);
-  const {node: warningGroupNode} = await onContentBlockingWarningGroupMessage;
+  const { node: warningGroupNode } = await onContentBlockingWarningGroupMessage;
 
   checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -101,9 +110,10 @@ add_task(async function testContentBlockingMessage() {
     `| log in group`,
   ]);
 
-  info("Log a new tracking protection message to check it appears inside the group");
-  onContentBlockingWarningMessage =
-    waitForMessage(hud, BLOCKED_URL, ".warn");
+  info(
+    "Log a new tracking protection message to check it appears inside the group"
+  );
+  onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
   emitContentBlockedMessage(now);
   await onContentBlockingWarningMessage;
   ok(true, "The new tracking protection message is displayed");

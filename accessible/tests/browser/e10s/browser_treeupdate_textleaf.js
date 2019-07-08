@@ -10,7 +10,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 async function removeTextData(browser, accessible, id, role) {
   let tree = {
     role,
-    children: [ { role: ROLE_TEXT_LEAF, name: "text" } ]
+    children: [{ role: ROLE_TEXT_LEAF, name: "text" }],
   };
   testAccessibleTree(accessible, tree);
 
@@ -24,11 +24,14 @@ async function removeTextData(browser, accessible, id, role) {
   testAccessibleTree(accessible, tree);
 }
 
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <p id="p">text</p>
-  <pre id="pre">text</pre>`, async function(browser, accDoc) {
-  let p = findAccessibleChildByID(accDoc, "p");
-  let pre = findAccessibleChildByID(accDoc, "pre");
-  await removeTextData(browser, p, "p", ROLE_PARAGRAPH);
-  await removeTextData(browser, pre, "pre", ROLE_TEXT_CONTAINER);
-});
+  <pre id="pre">text</pre>`,
+  async function(browser, accDoc) {
+    let p = findAccessibleChildByID(accDoc, "p");
+    let pre = findAccessibleChildByID(accDoc, "pre");
+    await removeTextData(browser, p, "p", ROLE_PARAGRAPH);
+    await removeTextData(browser, pre, "pre", ROLE_TEXT_CONTAINER);
+  }
+);

@@ -4,8 +4,11 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
-                               "resource://testing-common/ContentTaskUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentTaskUtils",
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
 
 const SIDEBAR_ID = "an-extension-sidebar";
 const SIDEBAR_TITLE = "Sidebar Title";
@@ -27,7 +30,9 @@ add_task(async function setupExtensionSidebar() {
   await extension.startup();
 
   fakeExtCallerInfo = {
-    url: WebExtensionPolicy.getByID(extension.id).getURL("fake-caller-script.js"),
+    url: WebExtensionPolicy.getByID(extension.id).getURL(
+      "fake-caller-script.js"
+    ),
     lineNumber: 1,
     addonId: extension.id,
   };
@@ -36,25 +41,43 @@ add_task(async function setupExtensionSidebar() {
   inspector = res.inspector;
   toolbox = res.toolbox;
 
-  const onceSidebarCreated = toolbox.once(`extension-sidebar-created-${SIDEBAR_ID}`);
-  toolbox.registerInspectorExtensionSidebar(SIDEBAR_ID, {title: SIDEBAR_TITLE});
+  const onceSidebarCreated = toolbox.once(
+    `extension-sidebar-created-${SIDEBAR_ID}`
+  );
+  toolbox.registerInspectorExtensionSidebar(SIDEBAR_ID, {
+    title: SIDEBAR_TITLE,
+  });
 
   const sidebar = await onceSidebarCreated;
 
   // Test sidebar properties.
-  is(sidebar, inspector.getPanel(SIDEBAR_ID),
-     "Got an extension sidebar instance equal to the one saved in the inspector");
-  is(sidebar.title, SIDEBAR_TITLE,
-     "Got the expected title in the extension sidebar instance");
-  is(sidebar.provider.props.title, SIDEBAR_TITLE,
-     "Got the expeted title in the provider props");
+  is(
+    sidebar,
+    inspector.getPanel(SIDEBAR_ID),
+    "Got an extension sidebar instance equal to the one saved in the inspector"
+  );
+  is(
+    sidebar.title,
+    SIDEBAR_TITLE,
+    "Got the expected title in the extension sidebar instance"
+  );
+  is(
+    sidebar.provider.props.title,
+    SIDEBAR_TITLE,
+    "Got the expeted title in the provider props"
+  );
 
   // Test sidebar Redux state.
   const inspectorStoreState = inspector.store.getState();
-  ok("extensionsSidebar" in inspectorStoreState,
-     "Got the extensionsSidebar sub-state in the inspector Redux store");
-  Assert.deepEqual(inspectorStoreState.extensionsSidebar, {},
-                   "The extensionsSidebar should be initially empty");
+  ok(
+    "extensionsSidebar" in inspectorStoreState,
+    "Got the extensionsSidebar sub-state in the inspector Redux store"
+  );
+  Assert.deepEqual(
+    inspectorStoreState.extensionsSidebar,
+    {},
+    "The extensionsSidebar should be initially empty"
+  );
 });
 
 add_task(async function testSidebarSetObject() {
@@ -70,14 +93,21 @@ add_task(async function testSidebarSetObject() {
 
   // Test updated sidebar Redux state.
   const inspectorStoreState = inspector.store.getState();
-  is(Object.keys(inspectorStoreState.extensionsSidebar).length, 1,
-     "The extensionsSidebar state contains the newly registered extension sidebar state");
-  Assert.deepEqual(inspectorStoreState.extensionsSidebar, {
-    [SIDEBAR_ID]: {
-      viewMode: "object-treeview",
-      object,
+  is(
+    Object.keys(inspectorStoreState.extensionsSidebar).length,
+    1,
+    "The extensionsSidebar state contains the newly registered extension sidebar state"
+  );
+  Assert.deepEqual(
+    inspectorStoreState.extensionsSidebar,
+    {
+      [SIDEBAR_ID]: {
+        viewMode: "object-treeview",
+        object,
+      },
     },
-  }, "Got the expected state for the registered extension sidebar");
+    "Got the expected state for the registered extension sidebar"
+  );
 
   // Select the extension sidebar.
   const waitSidebarSelected = toolbox.once(`inspector-sidebar-select`);
@@ -87,7 +117,10 @@ add_task(async function testSidebarSetObject() {
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
   // Test extension sidebar content.
-  ok(sidebarPanelContent, "Got a sidebar panel for the registered extension sidebar");
+  ok(
+    sidebarPanelContent,
+    "Got a sidebar panel for the registered extension sidebar"
+  );
 
   assertTreeView(sidebarPanelContent, {
     expectedTreeTables: 1,
@@ -97,7 +130,7 @@ add_task(async function testSidebarSetObject() {
 
   // Test sidebar refreshed on further sidebar.setObject calls.
   info("Change the inspected object in the extension sidebar object treeview");
-  sidebar.setObject({aNewProperty: 123});
+  sidebar.setObject({ aNewProperty: 123 });
 
   assertTreeView(sidebarPanelContent, {
     expectedTreeTables: 1,
@@ -107,8 +140,9 @@ add_task(async function testSidebarSetObject() {
 });
 
 add_task(async function testSidebarSetObjectValueGrip() {
-  const inspectedWindowFront =
-    await toolbox.target.getFront("webExtensionInspectedWindow");
+  const inspectedWindowFront = await toolbox.target.getFront(
+    "webExtensionInspectedWindow"
+  );
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
@@ -122,10 +156,14 @@ add_task(async function testSidebarSetObjectValueGrip() {
     obj;
   `;
 
-  const evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
-    evalResultAsGrip: true,
-    toolboxConsoleActorID: toolbox.target.activeConsole.actor,
-  });
+  const evalResult = await inspectedWindowFront.eval(
+    fakeExtCallerInfo,
+    expression,
+    {
+      evalResultAsGrip: true,
+      toolboxConsoleActorID: toolbox.target.activeConsole.actor,
+    }
+  );
 
   sidebar.setObjectValueGrip(evalResult.valueGrip, "Expected Root Title");
 
@@ -150,17 +188,22 @@ add_task(async function testSidebarSetObjectValueGrip() {
 });
 
 add_task(async function testSidebarDOMNodeHighlighting() {
-  const inspectedWindowFront =
-    await toolbox.target.getFront("webExtensionInspectedWindow");
+  const inspectedWindowFront = await toolbox.target.getFront(
+    "webExtensionInspectedWindow"
+  );
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
   const expression = "({ body: document.body })";
 
-  const evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
-    evalResultAsGrip: true,
-    toolboxConsoleActorID: toolbox.target.activeConsole.actor,
-  });
+  const evalResult = await inspectedWindowFront.eval(
+    fakeExtCallerInfo,
+    expression,
+    {
+      evalResultAsGrip: true,
+      toolboxConsoleActorID: toolbox.target.activeConsole.actor,
+    }
+  );
 
   sidebar.setObjectValueGrip(evalResult.valueGrip);
 
@@ -170,7 +213,9 @@ add_task(async function testSidebarDOMNodeHighlighting() {
   // Wait for the object to be expanded so we only target the "body" property node, and
   // not the root object element.
   await ContentTaskUtils.waitForCondition(
-    () => sidebarPanelContent.querySelectorAll(".object-inspector .tree-node").length > 1
+    () =>
+      sidebarPanelContent.querySelectorAll(".object-inspector .tree-node")
+        .length > 1
   );
 
   // Get and verify the DOMNode and the "open inspector"" icon
@@ -210,9 +255,15 @@ add_task(async function testSidebarDOMNodeOpenInspector() {
   let onceNewNodeFront = inspector.selection.once("new-node-front");
   inspector.selection.setNodeFront(null);
   let nodeFront = await onceNewNodeFront;
-  is(nodeFront, undefined, "The inspector selection should have been unselected");
+  is(
+    nodeFront,
+    undefined,
+    "The inspector selection should have been unselected"
+  );
 
-  info("Select the ObjectInspector DOMNode in the inspector panel by clicking on it");
+  info(
+    "Select the ObjectInspector DOMNode in the inspector panel by clicking on it"
+  );
 
   // Once we click the open-inspector icon we expect a new node front to be selected
   // and the node to have been highlighted and unhighlighted.
@@ -231,15 +282,17 @@ add_task(async function testSidebarDOMNodeOpenInspector() {
 });
 
 add_task(async function testSidebarSetExtensionPage() {
-  const inspectedWindowFront =
-    await toolbox.target.getFront("webExtensionInspectedWindow");
+  const inspectedWindowFront = await toolbox.target.getFront(
+    "webExtensionInspectedWindow"
+  );
 
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
   info("Testing sidebar.setExtensionPage");
 
-  const expectedURL = "data:text/html,<!DOCTYPE html><html><body><h1>Extension Page";
+  const expectedURL =
+    "data:text/html,<!DOCTYPE html><html><body><h1>Extension Page";
 
   sidebar.setExtensionPage(expectedURL);
 
@@ -253,13 +306,18 @@ add_task(async function teardownExtensionSidebar() {
 
   toolbox.unregisterInspectorExtensionSidebar(SIDEBAR_ID);
 
-  ok(!inspector.sidebar.getTabPanel(SIDEBAR_ID),
-     "The rendered extension sidebar has been removed");
+  ok(
+    !inspector.sidebar.getTabPanel(SIDEBAR_ID),
+    "The rendered extension sidebar has been removed"
+  );
 
   const inspectorStoreState = inspector.store.getState();
 
-  Assert.deepEqual(inspectorStoreState.extensionsSidebar, {},
-                   "The extensions sidebar Redux store data has been cleared");
+  Assert.deepEqual(
+    inspectorStoreState.extensionsSidebar,
+    {},
+    "The extensions sidebar Redux store data has been cleared"
+  );
 
   await extension.unload();
 
@@ -273,23 +331,30 @@ add_task(async function testActiveTabOnNonExistingSidebar() {
   // to simulate the scenario where an extension has installed a sidebar
   // which has been saved in the preference but it doesn't exist anymore.
   await SpecialPowers.pushPrefEnv({
-    set: [["devtools.inspector.activeSidebar"], "unexisting-sidebar-id"],
+    set: [["devtools.inspector.activeSidebar", "unexisting-sidebar-id"]],
   });
 
   const res = await openInspectorForURL("about:blank");
   inspector = res.inspector;
   toolbox = res.toolbox;
 
-  const onceSidebarCreated = toolbox.once(`extension-sidebar-created-${SIDEBAR_ID}`);
-  toolbox.registerInspectorExtensionSidebar(SIDEBAR_ID, {title: SIDEBAR_TITLE});
+  const onceSidebarCreated = toolbox.once(
+    `extension-sidebar-created-${SIDEBAR_ID}`
+  );
+  toolbox.registerInspectorExtensionSidebar(SIDEBAR_ID, {
+    title: SIDEBAR_TITLE,
+  });
 
   // Wait the extension sidebar to be created and then unregister it to force the tabbar
   // to select a new one.
   await onceSidebarCreated;
   toolbox.unregisterInspectorExtensionSidebar(SIDEBAR_ID);
 
-  is(inspector.sidebar.getCurrentTabID(), "layoutview",
-     "Got the expected inspector sidebar tab selected");
+  is(
+    inspector.sidebar.getCurrentTabID(),
+    "layoutview",
+    "Got the expected inspector sidebar tab selected"
+  );
 
   await SpecialPowers.popPrefEnv();
 });

@@ -12,14 +12,22 @@
 #include <winnt.h>
 #include <winternl.h>
 
+#include <stdlib.h>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
+
+#if defined(MOZILLA_INTERNAL_API)
+#  include "nsIFile.h"
+#  include "nsString.h"
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 /**
  * This header is intended for self-contained, header-only, utility code for
@@ -401,6 +409,128 @@ class MOZ_RAII AutoVirtualProtect final {
   DWORD mPrevProt;
   WindowsError mError;
 };
+
+inline UniquePtr<wchar_t[]> GetFullModulePath(HMODULE aModule) {
+  DWORD bufLen = MAX_PATH;
+  mozilla::UniquePtr<wchar_t[]> buf;
+  DWORD retLen;
+
+  while (true) {
+    buf = mozilla::MakeUnique<wchar_t[]>(bufLen);
+    retLen = ::GetModuleFileNameW(aModule, buf.get(), bufLen);
+    if (!retLen) {
+      return nullptr;
+    }
+
+    if (retLen == bufLen && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+      bufLen *= 2;
+      continue;
+    }
+
+    break;
+  }
+
+  // Upon success, retLen *excludes* the null character
+  ++retLen;
+
+  // Since we're likely to have a bunch of unused space in buf, let's reallocate
+  // a string to the actual size of the file name.
+  auto result = mozilla::MakeUnique<wchar_t[]>(retLen);
+  if (wcscpy_s(result.get(), retLen, buf.get())) {
+    return nullptr;
+  }
+
+  return result;
+}
+
+inline UniquePtr<wchar_t[]> GetFullBinaryPath() {
+  return GetFullModulePath(nullptr);
+}
+
+class ModuleVersion final {
+ public:
+  explicit ModuleVersion(const VS_FIXEDFILEINFO& aFixedInfo)
+      : mVersion((static_cast<uint64_t>(aFixedInfo.dwFileVersionMS) << 32) |
+                 static_cast<uint64_t>(aFixedInfo.dwFileVersionLS)) {}
+
+  explicit ModuleVersion(const uint64_t aVersion) : mVersion(aVersion) {}
+
+  ModuleVersion(const ModuleVersion& aOther) : mVersion(aOther.mVersion) {}
+
+  uint64_t AsInteger() const { return mVersion; }
+
+  operator uint64_t() const { return AsInteger(); }
+
+  Tuple<uint16_t, uint16_t, uint16_t, uint16_t> AsTuple() const {
+    uint16_t major = static_cast<uint16_t>((mVersion >> 48) & 0xFFFFU);
+    uint16_t minor = static_cast<uint16_t>((mVersion >> 32) & 0xFFFFU);
+    uint16_t patch = static_cast<uint16_t>((mVersion >> 16) & 0xFFFFU);
+    uint16_t build = static_cast<uint16_t>(mVersion & 0xFFFFU);
+
+    return MakeTuple(major, minor, patch, build);
+  }
+
+  explicit operator bool() const { return !!mVersion; }
+
+  bool operator<(const ModuleVersion& aOther) const {
+    return mVersion < aOther.mVersion;
+  }
+
+  bool operator<(const uint64_t& aOther) const { return mVersion < aOther; }
+
+ private:
+  const uint64_t mVersion;
+};
+
+inline WindowsErrorResult<ModuleVersion> GetModuleVersion(
+    const wchar_t* aModuleFullPath) {
+  DWORD verInfoLen = ::GetFileVersionInfoSizeW(aModuleFullPath, nullptr);
+  if (!verInfoLen) {
+    return Err(WindowsError::FromLastError());
+  }
+
+  auto verInfoBuf = MakeUnique<BYTE[]>(verInfoLen);
+  if (!::GetFileVersionInfoW(aModuleFullPath, 0, verInfoLen,
+                             verInfoBuf.get())) {
+    return Err(WindowsError::FromLastError());
+  }
+
+  UINT fixedInfoLen;
+  VS_FIXEDFILEINFO* fixedInfo = nullptr;
+  if (!::VerQueryValueW(verInfoBuf.get(), L"\\",
+                        reinterpret_cast<LPVOID*>(&fixedInfo), &fixedInfoLen)) {
+    // VerQueryValue may fail if the resource does not exist. This is not an
+    // error; we'll return 0 in this case.
+    return ModuleVersion(0ULL);
+  }
+
+  return ModuleVersion(*fixedInfo);
+}
+
+inline WindowsErrorResult<ModuleVersion> GetModuleVersion(HMODULE aModule) {
+  UniquePtr<wchar_t[]> fullPath(GetFullModulePath(aModule));
+  if (!fullPath) {
+    return Err(WindowsError::CreateGeneric());
+  }
+
+  return GetModuleVersion(fullPath.get());
+}
+
+#if defined(MOZILLA_INTERNAL_API)
+inline WindowsErrorResult<ModuleVersion> GetModuleVersion(nsIFile* aFile) {
+  if (!aFile) {
+    return Err(WindowsError::FromHResult(E_INVALIDARG));
+  }
+
+  nsAutoString fullPath;
+  nsresult rv = aFile->GetPath(fullPath);
+  if (NS_FAILED(rv)) {
+    return Err(WindowsError::CreateGeneric());
+  }
+
+  return GetModuleVersion(fullPath.get());
+}
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 }  // namespace mozilla
 

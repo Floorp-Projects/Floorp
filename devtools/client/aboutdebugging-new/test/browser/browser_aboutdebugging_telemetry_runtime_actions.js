@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-telemetry.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-telemetry.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
 
 const RUNTIME_ID = "test-runtime-id";
 const RUNTIME_NAME = "Test Runtime";
@@ -42,31 +45,48 @@ add_task(async function testUsbRuntimeUpdates() {
   const telemetryRuntimeId = runtimeAddedEvent.extras.runtime_id;
 
   info("Click on the toggle button and wait until the text is updated");
-  const promptButton = document.querySelector(".qa-connection-prompt-toggle-button");
+  const promptButton = document.querySelector(
+    ".qa-connection-prompt-toggle-button"
+  );
   promptButton.click();
   await waitUntil(() => promptButton.textContent.includes("Enable"));
 
-  checkTelemetryEvents([{
-    method: "update_conn_prompt",
-    extras: { "prompt_enabled": "false", "runtime_id": telemetryRuntimeId },
-  }], sessionId);
+  checkTelemetryEvents(
+    [
+      {
+        method: "update_conn_prompt",
+        extras: { prompt_enabled: "false", runtime_id: telemetryRuntimeId },
+      },
+    ],
+    sessionId
+  );
 
   info("Click on the toggle button again and check we log the correct value");
   promptButton.click();
   await waitUntil(() => promptButton.textContent.includes("Disable"));
 
-  checkTelemetryEvents([{
-    method: "update_conn_prompt",
-    extras: { "prompt_enabled": "true", "runtime_id": telemetryRuntimeId },
-  }], sessionId);
+  checkTelemetryEvents(
+    [
+      {
+        method: "update_conn_prompt",
+        extras: { prompt_enabled: "true", runtime_id: telemetryRuntimeId },
+      },
+    ],
+    sessionId
+  );
 
   info("Open the profiler dialog");
   await openProfilerDialog(usbClient, document);
 
-  checkTelemetryEvents([{
-    method: "show_profiler",
-    extras: { "runtime_id": telemetryRuntimeId },
-  }], sessionId);
+  checkTelemetryEvents(
+    [
+      {
+        method: "show_profiler",
+        extras: { runtime_id: telemetryRuntimeId },
+      },
+    ],
+    sessionId
+  );
 
   info("Remove runtime");
   mocks.removeRuntime(RUNTIME_ID);

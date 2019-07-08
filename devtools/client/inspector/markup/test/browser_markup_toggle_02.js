@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");
   const container = await getContainerForSelector("ul", inspector);
@@ -17,8 +17,11 @@ add_task(async function() {
   info("Dbl-clicking on the UL parent expander, and waiting for children");
   const onChildren = waitForChildrenUpdated(inspector);
   const onUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeMouseAtCenter(container.tagLine, {clickCount: 2},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    container.tagLine,
+    { clickCount: 2 },
+    inspector.markup.doc.defaultView
+  );
   await onChildren;
   await onUpdated;
 
@@ -26,7 +29,9 @@ add_task(async function() {
   let numLi = await testActor.getNumberOfElementMatches("li");
   for (let i = 0; i < numLi; i++) {
     const liContainer = await getContainerForSelector(
-      "li:nth-child(" + (i + 1) + ")", inspector);
+      "li:nth-child(" + (i + 1) + ")",
+      inspector
+    );
     ok(liContainer, "A container for the child LI element was created");
   }
   ok(container.expanded, "Parent UL container is expanded");
@@ -34,16 +39,24 @@ add_task(async function() {
   info("Dbl-clicking again on the UL expander");
   // No need to wait, this is a local, synchronous operation where nodes are
   // only hidden from the view, not destroyed
-  EventUtils.synthesizeMouseAtCenter(container.tagLine, {clickCount: 2},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    container.tagLine,
+    { clickCount: 2 },
+    inspector.markup.doc.defaultView
+  );
 
   info("Checking that child LI elements have been hidden");
   numLi = await testActor.getNumberOfElementMatches("li");
   for (let i = 0; i < numLi; i++) {
     const liContainer = await getContainerForSelector(
-      "li:nth-child(" + (i + 1) + ")", inspector);
-    is(liContainer.elt.getClientRects().length, 0,
-      "The container for the child LI element was hidden");
+      "li:nth-child(" + (i + 1) + ")",
+      inspector
+    );
+    is(
+      liContainer.elt.getClientRects().length,
+      0,
+      "The container for the child LI element was hidden"
+    );
   }
   ok(!container.expanded, "Parent UL container is collapsed");
 });

@@ -7,17 +7,27 @@
  * methods provide the same result.
  */
 
-const {DownloadUtils} = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+const { DownloadUtils } = ChromeUtils.import(
+  "resource://gre/modules/DownloadUtils.jsm"
+);
 
 function run_test() {
-  Assert.equal(DownloadUtils.getDownloadStatus(1000, null, null, null) + "",
-               DownloadUtils.getDownloadStatus(1000) + "");
-  Assert.equal(DownloadUtils.getDownloadStatus(1000, null, null) + "",
-               DownloadUtils.getDownloadStatus(1000, null) + "");
+  Assert.equal(
+    DownloadUtils.getDownloadStatus(1000, null, null, null) + "",
+    DownloadUtils.getDownloadStatus(1000) + ""
+  );
+  Assert.equal(
+    DownloadUtils.getDownloadStatus(1000, null, null) + "",
+    DownloadUtils.getDownloadStatus(1000, null) + ""
+  );
 
-  Assert.equal(DownloadUtils.getTransferTotal(1000, null) + "",
-               DownloadUtils.getTransferTotal(1000) + "");
+  Assert.equal(
+    DownloadUtils.getTransferTotal(1000, null) + "",
+    DownloadUtils.getTransferTotal(1000) + ""
+  );
 
-  Assert.equal(DownloadUtils.getTimeLeft(1000, null) + "",
-               DownloadUtils.getTimeLeft(1000) + "");
+  Assert.equal(
+    DownloadUtils.getTimeLeft(1000, null) + "",
+    DownloadUtils.getTimeLeft(1000) + ""
+  );
 }

@@ -2,7 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {Downloads} = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+const { Downloads } = ChromeUtils.import(
+  "resource://gre/modules/Downloads.jsm"
+);
 
 function backgroundScript() {
   let complete = new Map();
@@ -13,7 +15,7 @@ function backgroundScript() {
     }
 
     let promise = new Promise(resolve => {
-      complete.set(id, {resolve});
+      complete.set(id, { resolve });
     });
     complete.get(id).promise = promise;
     return promise;
@@ -31,16 +33,25 @@ function backgroundScript() {
     if (msg == "download.request") {
       try {
         let id = await browser.downloads.download(args[0]);
-        browser.test.sendMessage("download.done", {status: "success", id});
+        browser.test.sendMessage("download.done", { status: "success", id });
       } catch (error) {
-        browser.test.sendMessage("download.done", {status: "error", errmsg: error.message});
+        browser.test.sendMessage("download.done", {
+          status: "error",
+          errmsg: error.message,
+        });
       }
     } else if (msg == "search.request") {
       try {
         let downloads = await browser.downloads.search(args[0]);
-        browser.test.sendMessage("search.done", {status: "success", downloads});
+        browser.test.sendMessage("search.done", {
+          status: "success",
+          downloads,
+        });
       } catch (error) {
-        browser.test.sendMessage("search.done", {status: "error", errmsg: error.message});
+        browser.test.sendMessage("search.done", {
+          status: "error",
+          errmsg: error.message,
+        });
       }
     } else if (msg == "waitForComplete.request") {
       await waitForComplete(args[0]);
@@ -131,26 +142,30 @@ add_task(async function test_decoded_filename_download() {
   await extension.awaitMessage("ready");
 
   let downloadIds = {};
-  let msg = await download({url: FILE_NAME_ENCODED_URL_1});
+  let msg = await download({ url: FILE_NAME_ENCODED_URL_1 });
   equal(msg.status, "success", "download() succeeded");
   downloadIds.fileEncoded1 = msg.id;
 
-  msg = await download({url: FILE_NAME_ENCODED_URL_2});
+  msg = await download({ url: FILE_NAME_ENCODED_URL_2 });
   equal(msg.status, "success", "download() succeeded");
   downloadIds.fileEncoded2 = msg.id;
 
-  msg = await download({url: FILE_NAME_ENCODED_URL_3});
+  msg = await download({ url: FILE_NAME_ENCODED_URL_3 });
   equal(msg.status, "success", "download() succeeded");
   downloadIds.fileEncoded3 = msg.id;
 
   // Search for each individual download and check
   // the corresponding DownloadItem.
   async function checkDownloadItem(id, expect) {
-    let item = await search({id});
+    let item = await search({ id });
     equal(item.status, "success", "search() succeeded");
     equal(item.downloads.length, 1, "search() found exactly 1 download");
     Object.keys(expect).forEach(function(field) {
-      equal(item.downloads[0][field], expect[field], `DownloadItem.${field} is correct"`);
+      equal(
+        item.downloads[0][field],
+        expect[field],
+        `DownloadItem.${field} is correct"`
+      );
     });
   }
 
@@ -188,13 +203,33 @@ add_task(async function test_decoded_filename_download() {
   async function checkSearch(query, expected, description) {
     let item = await search(query);
     equal(item.status, "success", "search() succeeded");
-    equal(item.downloads.length, expected.length, `search() for ${description} found exactly ${expected.length} downloads`);
-    equal(item.downloads[0].id, downloadIds[expected[0]], `search() for ${description} returned ${expected[0]} in position ${0}`);
+    equal(
+      item.downloads.length,
+      expected.length,
+      `search() for ${description} found exactly ${expected.length} downloads`
+    );
+    equal(
+      item.downloads[0].id,
+      downloadIds[expected[0]],
+      `search() for ${description} returned ${expected[0]} in position ${0}`
+    );
   }
 
-  await checkSearch({filename: downloadPath(FILE_NAME_DECODED_1)}, ["fileEncoded1"], "filename");
-  await checkSearch({filename: downloadPath(FILE_NAME_DECODED_2)}, ["fileEncoded2"], "filename");
-  await checkSearch({filename: downloadPath(FILE_NAME_DECODED_3)}, ["fileEncoded3"], "filename");
+  await checkSearch(
+    { filename: downloadPath(FILE_NAME_DECODED_1) },
+    ["fileEncoded1"],
+    "filename"
+  );
+  await checkSearch(
+    { filename: downloadPath(FILE_NAME_DECODED_2) },
+    ["fileEncoded2"],
+    "filename"
+  );
+  await checkSearch(
+    { filename: downloadPath(FILE_NAME_DECODED_3) },
+    ["fileEncoded3"],
+    "filename"
+  );
 
   await extension.unload();
 });

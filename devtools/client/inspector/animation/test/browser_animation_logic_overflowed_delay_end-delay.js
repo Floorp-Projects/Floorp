@@ -10,11 +10,20 @@ add_task(async function() {
   const { panel } = await openAnimationInspector();
 
   info("Check the number of animation item");
-  const animationItemEls = panel.querySelectorAll(".animation-list .animation-item");
-  is(animationItemEls.length, 1, "The number of animations displayed should be 1");
+  const animationItemEls = panel.querySelectorAll(
+    ".animation-list .animation-item"
+  );
+  is(
+    animationItemEls.length,
+    1,
+    "The number of animations displayed should be 1"
+  );
 
   info("Check the id of animation displayed");
   const animationNameEl = animationItemEls[0].querySelector(".animation-name");
-  is(animationNameEl.textContent, "big-iteration-start",
-    "The animation name should be 'big-iteration-start'");
+  is(
+    animationNameEl.textContent,
+    "big-iteration-start",
+    "The animation name should be 'big-iteration-start'"
+  );
 });

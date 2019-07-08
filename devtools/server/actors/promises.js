@@ -56,27 +56,31 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   /**
    * Attach to the PromisesActor.
    */
-  attach: expectState("detached", function() {
-    this.dbg.addDebuggees();
+  attach: expectState(
+    "detached",
+    function() {
+      this.dbg.addDebuggees();
 
-    this._navigationLifetimePool = this._createActorPool();
-    this.conn.addActorPool(this._navigationLifetimePool);
+      this._navigationLifetimePool = this._createActorPool();
+      this.conn.addActorPool(this._navigationLifetimePool);
 
-    this._newPromises = [];
-    this._promisesSettled = [];
+      this._newPromises = [];
+      this._promisesSettled = [];
 
-    this.dbg.findScripts().forEach(s => {
-      this.parentActor.sources.createSourceActor(s.source);
-    });
+      this.dbg.findScripts().forEach(s => {
+        this.parentActor.sources.createSourceActor(s.source);
+      });
 
-    this.dbg.onNewScript = s => {
-      this.parentActor.sources.createSourceActor(s.source);
-    };
+      this.dbg.onNewScript = s => {
+        this.parentActor.sources.createSourceActor(s.source);
+      };
 
-    EventEmitter.on(this.parentActor, "window-ready", this._onWindowReady);
+      EventEmitter.on(this.parentActor, "window-ready", this._onWindowReady);
 
-    this.state = "attached";
-  }, "attaching to the PromisesActor"),
+      this.state = "attached";
+    },
+    "attaching to the PromisesActor"
+  ),
 
   /**
    * Detach from the PromisesActor upon Debugger closing.
@@ -117,17 +121,24 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
       return this._navigationLifetimePool.objectActors.get(promise);
     }
 
-    const actor = new ObjectActor(promise, {
-      getGripDepth: () => this._gripDepth,
-      incrementGripDepth: () => this._gripDepth++,
-      decrementGripDepth: () => this._gripDepth--,
-      createValueGrip: v =>
-        createValueGrip(v, this._navigationLifetimePool, this.objectGrip),
-      sources: () => this.parentActor.sources,
-      createEnvironmentActor: () => DevToolsUtils.reportException(
-        "PromisesActor", Error("createEnvironmentActor not yet implemented")),
-      getGlobalDebugObject: () => null,
-    }, this.conn);
+    const actor = new ObjectActor(
+      promise,
+      {
+        getGripDepth: () => this._gripDepth,
+        incrementGripDepth: () => this._gripDepth++,
+        decrementGripDepth: () => this._gripDepth--,
+        createValueGrip: v =>
+          createValueGrip(v, this._navigationLifetimePool, this.objectGrip),
+        sources: () => this.parentActor.sources,
+        createEnvironmentActor: () =>
+          DevToolsUtils.reportException(
+            "PromisesActor",
+            Error("createEnvironmentActor not yet implemented")
+          ),
+        getGlobalDebugObject: () => null,
+      },
+      this.conn
+    );
 
     this._navigationLifetimePool.addActor(actor);
     this._navigationLifetimePool.objectActors.set(promise, actor);
@@ -153,10 +164,14 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   listPromises: function() {
     const promises = this.dbg.findObjects({ class: "Promise" });
 
-    this.dbg.onNewPromise = this._makePromiseEventHandler(this._newPromises,
-      "new-promises");
+    this.dbg.onNewPromise = this._makePromiseEventHandler(
+      this._newPromises,
+      "new-promises"
+    );
     this.dbg.onPromiseSettled = this._makePromiseEventHandler(
-      this._promisesSettled, "promises-settled");
+      this._promisesSettled,
+      "promises-settled"
+    );
 
     return promises.map(p => this._createObjectActorForPromise(p));
   },

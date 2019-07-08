@@ -7,7 +7,7 @@
 // when it receives OnLocationChange events with the LOCATION_CHANGE_SAME_DOCUMENT flag set.
 
 add_task(async function() {
-  await BrowserTestUtils.withNewTab("about:blank", async (browser) => {
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
     let onLocationChangeCount = 0;
     let onSecurityChangeCount = 0;
     let progressListener = {
@@ -21,13 +21,18 @@ add_task(async function() {
       onProgressChange() {},
       onStatusChange() {},
 
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                              Ci.nsISupportsWeakReference]),
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIWebProgressListener,
+        Ci.nsISupportsWeakReference,
+      ]),
     };
     browser.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);
 
-    let uri = getRootDirectory(gTestPath).replace("chrome://mochitests/content",
-                                                  "https://example.com") + "dummy_page.html";
+    let uri =
+      getRootDirectory(gTestPath).replace(
+        "chrome://mochitests/content",
+        "https://example.com"
+      ) + "dummy_page.html";
     BrowserTestUtils.loadURI(browser, uri);
     await BrowserTestUtils.browserLoaded(browser, false, uri);
     is(onLocationChangeCount, 1, "should have 1 onLocationChange event");
@@ -36,6 +41,10 @@ add_task(async function() {
       content.history.pushState({}, "", "https://example.com");
     });
     is(onLocationChangeCount, 2, "should have 2 onLocationChange events");
-    is(onSecurityChangeCount, 1, "should still have only 1 onSecurityChange event");
+    is(
+      onSecurityChangeCount,
+      1,
+      "should still have only 1 onSecurityChange event"
+    );
   });
 });

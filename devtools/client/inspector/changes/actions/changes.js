@@ -4,13 +4,9 @@
 
 "use strict";
 
-const {
-  RESET_CHANGES,
-  TRACK_CHANGE,
-} = require("./index");
+const { RESET_CHANGES, TRACK_CHANGE } = require("./index");
 
 module.exports = {
-
   resetChanges() {
     return {
       type: RESET_CHANGES,
@@ -23,5 +19,4 @@ module.exports = {
       change,
     };
   },
-
 };

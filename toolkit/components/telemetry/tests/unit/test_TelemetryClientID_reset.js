@@ -2,13 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const PING_FORMAT_VERSION = 4;
 const OPTOUT_PING_TYPE = "optout";
@@ -31,10 +33,14 @@ add_task(async function test_setup() {
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   await new Promise(resolve =>
-    Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(resolve)));
+    Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(resolve))
+  );
 
   PingServer.start();
-  Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
+  Preferences.set(
+    TelemetryUtils.Preferences.Server,
+    "http://localhost:" + PingServer.port
+  );
   await TelemetryController.testSetup();
 });
 
@@ -65,7 +71,11 @@ add_task(async function test_clientid_reset_after_reenabling() {
   Assert.ok("clientId" in ping);
 
   let firstClientId = ping.clientId;
-  Assert.notEqual(TelemetryUtils.knownClientID, firstClientId, "Client ID should be valid and random");
+  Assert.notEqual(
+    TelemetryUtils.knownClientID,
+    firstClientId,
+    "Client ID should be valid and random"
+  );
 
   // Disable FHR upload: this should trigger a optout ping.
   Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
@@ -87,8 +97,16 @@ add_task(async function test_clientid_reset_after_reenabling() {
   await TelemetryController.testReset();
 
   let newClientId = await ClientID.getClientID();
-  Assert.notEqual(TelemetryUtils.knownClientID, newClientId, "Client ID should be valid and random");
-  Assert.notEqual(firstClientId, newClientId, "Client ID should be newly generated");
+  Assert.notEqual(
+    TelemetryUtils.knownClientID,
+    newClientId,
+    "Client ID should be valid and random"
+  );
+  Assert.notEqual(
+    firstClientId,
+    newClientId,
+    "Client ID should be newly generated"
+  );
 });
 
 /**
@@ -120,7 +138,11 @@ add_task(async function test_clientid_canary_after_disabling() {
   Assert.ok("clientId" in ping);
 
   let firstClientId = ping.clientId;
-  Assert.notEqual(TelemetryUtils.knownClientID, firstClientId, "Client ID should be valid and random");
+  Assert.notEqual(
+    TelemetryUtils.knownClientID,
+    firstClientId,
+    "Client ID should be valid and random"
+  );
 
   // Disable FHR upload: this should trigger a optout ping.
   Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
@@ -135,7 +157,11 @@ add_task(async function test_clientid_canary_after_disabling() {
   await sendPing();
   ping = await PingServer.promiseNextPing();
   Assert.equal(ping.type, TEST_PING_TYPE, "The ping must be a test ping");
-  Assert.notEqual(firstClientId, ping.clientId, "Client ID should be newly generated");
+  Assert.notEqual(
+    firstClientId,
+    ping.clientId,
+    "Client ID should be newly generated"
+  );
 
   // Now shutdown the instance
   await TelemetryController.testShutdown();
@@ -148,7 +174,11 @@ add_task(async function test_clientid_canary_after_disabling() {
   await TelemetryController.testReset();
 
   let newClientId = await ClientID.getClientID();
-  Assert.equal(TelemetryUtils.knownClientID, newClientId, "Client ID should be a canary when upload disabled");
+  Assert.equal(
+    TelemetryUtils.knownClientID,
+    newClientId,
+    "Client ID should be a canary when upload disabled"
+  );
 });
 
 /**
@@ -168,7 +198,11 @@ add_task(async function test_clientid_canary_reset_canary_on_nonunified() {
   Assert.ok("clientId" in ping);
 
   let firstClientId = ping.clientId;
-  Assert.notEqual(TelemetryUtils.knownClientID, firstClientId, "Client ID should be valid and random");
+  Assert.notEqual(
+    TelemetryUtils.knownClientID,
+    firstClientId,
+    "Client ID should be valid and random"
+  );
 
   // Force a canary client ID
   let clientId = await ClientID.setClientID(TelemetryUtils.knownClientID);
@@ -182,8 +216,16 @@ add_task(async function test_clientid_canary_reset_canary_on_nonunified() {
   await TelemetryController.testReset();
 
   let newClientId = await ClientID.getClientID();
-  Assert.notEqual(TelemetryUtils.knownClientID, newClientId, "Client ID should be valid and random");
-  Assert.notEqual(firstClientId, newClientId, "Client ID should be valid and random");
+  Assert.notEqual(
+    TelemetryUtils.knownClientID,
+    newClientId,
+    "Client ID should be valid and random"
+  );
+  Assert.notEqual(
+    firstClientId,
+    newClientId,
+    "Client ID should be valid and random"
+  );
 });
 
 /**
@@ -203,7 +245,11 @@ add_task(async function test_clientid_canary_nonunified_no_pref_trigger() {
   Assert.ok("clientId" in ping);
 
   let firstClientId = ping.clientId;
-  Assert.notEqual(TelemetryUtils.knownClientID, firstClientId, "Client ID should be valid and random");
+  Assert.notEqual(
+    TelemetryUtils.knownClientID,
+    firstClientId,
+    "Client ID should be valid and random"
+  );
 
   // Flip the pref again
   Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, true);
@@ -244,7 +290,11 @@ add_task(async function test_clientid_canary_nonunified_canary_detected() {
   await sendPing(/* environment */ true);
   let ping = await PingServer.promiseNextPing();
   Assert.equal(ping.type, TEST_PING_TYPE, "The ping must be a test ping");
-  Assert.equal(firstClientId, ping.clientId, "Client ID should be from the reset");
+  Assert.equal(
+    firstClientId,
+    ping.clientId,
+    "Client ID should be from the reset"
+  );
   Assert.ok(!("wasCanary" in ping.environment.profile));
 
   // Setting canary
@@ -256,9 +306,20 @@ add_task(async function test_clientid_canary_nonunified_canary_detected() {
   ping = await PingServer.promiseNextPing();
   Assert.equal(ping.type, TEST_PING_TYPE, "The ping must be a test ping");
   let clientId = ping.clientId;
-  Assert.notEqual(TelemetryUtils.knownClientID, clientId, "Client ID should have been reset to a valid one.");
-  Assert.notEqual(firstClientId, clientId, "Client ID should be a new one after reset.");
-  Assert.ok(ping.environment.profile.wasCanary, "Previous canary client ID should have been detected after reset.");
+  Assert.notEqual(
+    TelemetryUtils.knownClientID,
+    clientId,
+    "Client ID should have been reset to a valid one."
+  );
+  Assert.notEqual(
+    firstClientId,
+    clientId,
+    "Client ID should be a new one after reset."
+  );
+  Assert.ok(
+    ping.environment.profile.wasCanary,
+    "Previous canary client ID should have been detected after reset."
+  );
 
   // Reset the controller again.
   await TelemetryController.testReset();
@@ -266,7 +327,10 @@ add_task(async function test_clientid_canary_nonunified_canary_detected() {
   ping = await PingServer.promiseNextPing();
   Assert.equal(ping.type, TEST_PING_TYPE, "The ping must be a test ping");
   Assert.equal(clientId, ping.clientId, "Client ID should be unmodified now.");
-  Assert.ok(ping.environment.profile.wasCanary, "Canary client ID flag should be persisted.");
+  Assert.ok(
+    ping.environment.profile.wasCanary,
+    "Canary client ID flag should be persisted."
+  );
 });
 
 add_task(async function stopServer() {

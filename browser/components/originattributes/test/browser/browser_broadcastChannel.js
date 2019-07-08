@@ -3,7 +3,8 @@
  */
 
 const TEST_DOMAIN = "http://example.net/";
-const TEST_PATH = TEST_DOMAIN + "browser/browser/components/originattributes/test/browser/";
+const TEST_PATH =
+  TEST_DOMAIN + "browser/browser/components/originattributes/test/browser/";
 const TEST_PAGE = TEST_PATH + "file_broadcastChannel.html";
 
 async function doTest(aBrowser) {

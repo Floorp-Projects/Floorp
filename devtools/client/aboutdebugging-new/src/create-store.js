@@ -6,9 +6,14 @@
 
 const Services = require("Services");
 
-const { applyMiddleware, createStore } = require("devtools/client/shared/vendor/redux");
+const {
+  applyMiddleware,
+  createStore,
+} = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
-const { waitUntilService } = require("devtools/client/shared/redux/middleware/wait-service.js");
+const {
+  waitUntilService,
+} = require("devtools/client/shared/redux/middleware/wait-service.js");
 
 const rootReducer = require("./reducers/index");
 const { DebugTargetsState } = require("./reducers/debug-targets-state");
@@ -21,7 +26,9 @@ const extensionComponentDataMiddleware = require("./middleware/extension-compone
 const processComponentDataMiddleware = require("./middleware/process-component-data");
 const tabComponentDataMiddleware = require("./middleware/tab-component-data");
 const workerComponentDataMiddleware = require("./middleware/worker-component-data");
-const { getDebugTargetCollapsibilities } = require("./modules/debug-target-collapsibilities");
+const {
+  getDebugTargetCollapsibilities,
+} = require("./modules/debug-target-collapsibilities");
 const { getNetworkLocations } = require("./modules/network-locations");
 
 const { PREFERENCES } = require("./constants");
@@ -33,15 +40,17 @@ function configureStore() {
     ui: getUiState(),
   };
 
-  const middleware = applyMiddleware(thunk,
-                                     debugTargetListenerMiddleware,
-                                     errorLoggingMiddleware,
-                                     eventRecordingMiddleware,
-                                     extensionComponentDataMiddleware,
-                                     processComponentDataMiddleware,
-                                     tabComponentDataMiddleware,
-                                     workerComponentDataMiddleware,
-                                     waitUntilService);
+  const middleware = applyMiddleware(
+    thunk,
+    debugTargetListenerMiddleware,
+    errorLoggingMiddleware,
+    eventRecordingMiddleware,
+    extensionComponentDataMiddleware,
+    processComponentDataMiddleware,
+    tabComponentDataMiddleware,
+    workerComponentDataMiddleware,
+    waitUntilService
+  );
 
   return createStore(rootReducer, initialState, middleware);
 }
@@ -49,8 +58,10 @@ function configureStore() {
 function getUiState() {
   const collapsibilities = getDebugTargetCollapsibilities();
   const locations = getNetworkLocations();
-  const showHiddenAddons = Services.prefs.getBoolPref(PREFERENCES.SHOW_HIDDEN_ADDONS,
-    false);
+  const showHiddenAddons = Services.prefs.getBoolPref(
+    PREFERENCES.SHOW_HIDDEN_ADDONS,
+    false
+  );
   return new UiState(locations, collapsibilities, showHiddenAddons);
 }
 

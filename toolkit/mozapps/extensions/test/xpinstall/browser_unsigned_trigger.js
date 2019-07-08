@@ -11,15 +11,22 @@ function test() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": {
-      URL: TESTROOT + "unsigned.xpi",
-      IconURL: TESTROOT + "icon.png",
-      toString() { return this.URL; },
-    },
-  }));
+  var triggers = encodeURIComponent(
+    JSON.stringify({
+      "Unsigned XPI": {
+        URL: TESTROOT + "unsigned.xpi",
+        IconURL: TESTROOT + "icon.png",
+        toString() {
+          return this.URL;
+        },
+      },
+    })
+  );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    TESTROOT + "installtrigger.html?" + triggers
+  );
 }
 
 function confirm_install(panel) {
@@ -36,12 +43,16 @@ const finish_test = async function(count) {
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 
-  const results = await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-    return {
-      return: content.document.getElementById("return").textContent,
-      status: content.document.getElementById("status").textContent,
-    };
-  });
+  const results = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    null,
+    () => {
+      return {
+        return: content.document.getElementById("return").textContent,
+        status: content.document.getElementById("status").textContent,
+      };
+    }
+  );
 
   is(results.return, "true", "installTrigger should have claimed success");
   is(results.status, "0", "Callback should have seen a success");

@@ -3,9 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { pushSubscriptionSpec } =
-  require("devtools/shared/specs/worker/push-subscription");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  pushSubscriptionSpec,
+} = require("devtools/shared/specs/worker/push-subscription");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 
 class PushSubscriptionFront extends FrontClassWithSpec(pushSubscriptionSpec) {
   get endpoint() {

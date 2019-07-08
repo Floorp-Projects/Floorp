@@ -63,31 +63,35 @@ async function testHasPermission(params) {
 }
 
 add_task(async function testGoodPermissions() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/",
+    true
+  );
 
   info("Test explicit host permission");
   await testHasPermission({
-    manifest: {"permissions": ["http://mochi.test/"]},
+    manifest: { permissions: ["http://mochi.test/"] },
   });
 
   info("Test explicit host subdomain permission");
   await testHasPermission({
-    manifest: {"permissions": ["http://*.mochi.test/"]},
+    manifest: { permissions: ["http://*.mochi.test/"] },
   });
 
   info("Test explicit <all_urls> permission");
   await testHasPermission({
-    manifest: {"permissions": ["<all_urls>"]},
+    manifest: { permissions: ["<all_urls>"] },
   });
 
   info("Test activeTab permission with a command key press");
   await testHasPermission({
     manifest: {
-      "permissions": ["activeTab"],
-      "commands": {
+      permissions: ["activeTab"],
+      commands: {
         "test-tabs-executeScript": {
-          "suggested_key": {
-            "default": "Alt+Shift+K",
+          suggested_key: {
+            default: "Alt+Shift+K",
           },
         },
       },
@@ -101,7 +105,7 @@ add_task(async function testGoodPermissions() {
       return Promise.resolve();
     },
     setup: async function(extension) {
-      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await EventUtils.synthesizeKey("k", { altKey: true, shiftKey: true });
       await extension.awaitMessage("tabs-command-key-pressed");
     },
   });
@@ -109,12 +113,12 @@ add_task(async function testGoodPermissions() {
   info("Test activeTab permission with _execute_browser_action command");
   await testHasPermission({
     manifest: {
-      "permissions": ["activeTab"],
-      "browser_action": {},
-      "commands": {
-        "_execute_browser_action": {
-          "suggested_key": {
-            "default": "Alt+Shift+K",
+      permissions: ["activeTab"],
+      browser_action: {},
+      commands: {
+        _execute_browser_action: {
+          suggested_key: {
+            default: "Alt+Shift+K",
           },
         },
       },
@@ -126,7 +130,7 @@ add_task(async function testGoodPermissions() {
       return Promise.resolve();
     },
     setup: async function(extension) {
-      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await EventUtils.synthesizeKey("k", { altKey: true, shiftKey: true });
       await extension.awaitMessage("tabs-command-key-pressed");
     },
   });
@@ -134,12 +138,12 @@ add_task(async function testGoodPermissions() {
   info("Test activeTab permission with _execute_page_action command");
   await testHasPermission({
     manifest: {
-      "permissions": ["activeTab"],
-      "page_action": {},
-      "commands": {
-        "_execute_page_action": {
-          "suggested_key": {
-            "default": "Alt+Shift+K",
+      permissions: ["activeTab"],
+      page_action: {},
+      commands: {
+        _execute_page_action: {
+          suggested_key: {
+            default: "Alt+Shift+K",
           },
         },
       },
@@ -148,11 +152,14 @@ add_task(async function testGoodPermissions() {
       browser.pageAction.onClicked.addListener(() => {
         browser.test.sendMessage("tabs-command-key-pressed");
       });
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       await browser.pageAction.show(tab.id);
     },
     setup: async function(extension) {
-      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await EventUtils.synthesizeKey("k", { altKey: true, shiftKey: true });
       await extension.awaitMessage("tabs-command-key-pressed");
     },
   });
@@ -160,8 +167,8 @@ add_task(async function testGoodPermissions() {
   info("Test activeTab permission with a browser action click");
   await testHasPermission({
     manifest: {
-      "permissions": ["activeTab"],
-      "browser_action": {},
+      permissions: ["activeTab"],
+      browser_action: {},
     },
     contentSetup: function() {
       browser.browserAction.onClicked.addListener(() => {
@@ -176,11 +183,14 @@ add_task(async function testGoodPermissions() {
   info("Test activeTab permission with a page action click");
   await testHasPermission({
     manifest: {
-      "permissions": ["activeTab"],
-      "page_action": {},
+      permissions: ["activeTab"],
+      page_action: {},
     },
     contentSetup: async () => {
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       await browser.pageAction.show(tab.id);
     },
     setup: clickPageAction,
@@ -190,8 +200,8 @@ add_task(async function testGoodPermissions() {
   info("Test activeTab permission with a browser action w/popup click");
   await testHasPermission({
     manifest: {
-      "permissions": ["activeTab"],
-      "browser_action": {"default_popup": "panel.html"},
+      permissions: ["activeTab"],
+      browser_action: { default_popup: "panel.html" },
     },
     setup: async extension => {
       await clickBrowserAction(extension);
@@ -203,11 +213,14 @@ add_task(async function testGoodPermissions() {
   info("Test activeTab permission with a page action w/popup click");
   await testHasPermission({
     manifest: {
-      "permissions": ["activeTab"],
-      "page_action": {"default_popup": "panel.html"},
+      permissions: ["activeTab"],
+      page_action: { default_popup: "panel.html" },
     },
     contentSetup: async () => {
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       await browser.pageAction.show(tab.id);
     },
     setup: clickPageAction,
@@ -217,19 +230,28 @@ add_task(async function testGoodPermissions() {
   info("Test activeTab permission with a context menu click");
   await testHasPermission({
     manifest: {
-      "permissions": ["activeTab", "contextMenus"],
+      permissions: ["activeTab", "contextMenus"],
     },
     contentSetup: function() {
-      browser.contextMenus.create({title: "activeTab", contexts: ["all"]});
+      browser.contextMenus.create({ title: "activeTab", contexts: ["all"] });
       return Promise.resolve();
     },
     setup: async function(extension) {
       let contextMenu = document.getElementById("contentAreaContextMenu");
-      let awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-      let awaitPopupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+      let awaitPopupShown = BrowserTestUtils.waitForEvent(
+        contextMenu,
+        "popupshown"
+      );
+      let awaitPopupHidden = BrowserTestUtils.waitForEvent(
+        contextMenu,
+        "popuphidden"
+      );
 
-      await BrowserTestUtils.synthesizeMouseAtCenter("a[href]", {type: "contextmenu", button: 2},
-                                                     gBrowser.selectedBrowser);
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "a[href]",
+        { type: "contextmenu", button: 2 },
+        gBrowser.selectedBrowser
+      );
       await awaitPopupShown;
 
       let item = contextMenu.querySelector("[label=activeTab]");

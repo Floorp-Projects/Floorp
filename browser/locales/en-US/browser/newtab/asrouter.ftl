@@ -56,6 +56,7 @@ cfr-doorhanger-extension-total-users =
 cfr-doorhanger-pintab-description = Get easy access to your most-used sites. Keep sites open in a tab (even when you restart).
 
 ## These messages are steps on how to use the feature and are shown together.
+
 cfr-doorhanger-pintab-step1 = <b>Right-click</b> on the tab you want to pin.
 cfr-doorhanger-pintab-step2 = Select <b>Pin Tab</b> from the menu.
 cfr-doorhanger-pintab-step3 = If the site has an update you’ll see a blue dot on your pinned tab.
@@ -65,9 +66,18 @@ cfr-doorhanger-pintab-animation-resume = Resume
 
 
 ## Firefox Accounts Message
+
 cfr-doorhanger-bookmark-fxa-header = Sync your bookmarks everywhere.
 cfr-doorhanger-bookmark-fxa-body = Great find! Now don’t be left without this bookmark on your mobile devices. Get Started with a { -fxaccount-brand-name }.
 cfr-doorhanger-bookmark-fxa-link-text = Sync bookmarks now…
 cfr-doorhanger-bookmark-fxa-close-btn-tooltip =
   .aria-label = Close button
   .title = Close
+
+## What's New toolbar button and panel
+
+cfr-whatsnew-button =
+  .label = What’s New
+  .tooltiptext = What’s New
+
+cfr-whatsnew-panel-header = What’s New

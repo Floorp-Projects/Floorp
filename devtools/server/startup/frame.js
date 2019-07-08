@@ -23,10 +23,12 @@ try {
     // Because the debugger can't be running in the same compartment than its debuggee,
     // we have to load the server in a dedicated Loader, flagged with
     // invisibleToDebugger, which will force it to be loaded in another compartment.
-    let loader, customLoader = false;
+    let loader,
+      customLoader = false;
     if (content.document.nodePrincipal.isSystemPrincipal) {
-      const { DevToolsLoader } =
-        ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+      const { DevToolsLoader } = ChromeUtils.import(
+        "resource://devtools/shared/Loader.jsm"
+      );
       loader = new DevToolsLoader();
       loader.invisibleToDebugger = true;
       customLoader = true;
@@ -63,10 +65,19 @@ try {
       let actor;
 
       if (addonId) {
-        const { WebExtensionTargetActor } = require("devtools/server/actors/targets/webextension");
-        actor = new WebExtensionTargetActor(conn, chromeGlobal, prefix, addonId);
+        const {
+          WebExtensionTargetActor,
+        } = require("devtools/server/actors/targets/webextension");
+        actor = new WebExtensionTargetActor(
+          conn,
+          chromeGlobal,
+          prefix,
+          addonId
+        );
       } else {
-        const { FrameTargetActor } = require("devtools/server/actors/targets/frame");
+        const {
+          FrameTargetActor,
+        } = require("devtools/server/actors/targets/frame");
         actor = new FrameTargetActor(conn, chromeGlobal);
       }
 
@@ -74,7 +85,7 @@ try {
       actorPool.addActor(actor);
       conn.addActorPool(actorPool);
 
-      sendAsyncMessage("debug:actor", {actor: actor.form(), prefix: prefix});
+      sendAsyncMessage("debug:actor", { actor: actor.form(), prefix: prefix });
     });
 
     addMessageListener("debug:connect", onConnect);
@@ -98,13 +109,15 @@ try {
         const errorMessage =
           "Exception during actor module setup running in the child process: ";
         DevToolsUtils.reportException(errorMessage + e);
-        dumpn(`ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
-              `setupChild: '${setupChild}'\n${DevToolsUtils.safeErrorString(e)}`);
+        dumpn(
+          `ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
+            `setupChild: '${setupChild}'\n${DevToolsUtils.safeErrorString(e)}`
+        );
         return false;
       }
       if (msg.data.id) {
         // Send a message back to know when it is processed
-        sendAsyncMessage("debug:setup-in-child-response", {id: msg.data.id});
+        sendAsyncMessage("debug:setup-in-child-response", { id: msg.data.id });
       }
       return true;
     });

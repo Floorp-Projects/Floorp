@@ -11,27 +11,48 @@ ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
+ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm",
+  this
+);
 
-ChromeUtils.defineModuleGetter(this, "TelemetryHealthPing",
-                               "resource://gre/modules/HealthPing.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryHealthPing",
+  "resource://gre/modules/HealthPing.jsm"
+);
 
 function checkHealthPingStructure(ping, expectedFailuresDict) {
   let payload = ping.payload;
-  Assert.equal(ping.type, TelemetryHealthPing.HEALTH_PING_TYPE, "Should have recorded a health ping.");
+  Assert.equal(
+    ping.type,
+    TelemetryHealthPing.HEALTH_PING_TYPE,
+    "Should have recorded a health ping."
+  );
 
   for (let [key, value] of Object.entries(expectedFailuresDict)) {
-    Assert.deepEqual(payload[key], value, "Should have recorded correct entry with key: " + key);
+    Assert.deepEqual(
+      payload[key],
+      value,
+      "Should have recorded correct entry with key: " + key
+    );
   }
 }
 
 function fakeHealthSchedulerTimer(set, clear) {
-  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/HealthPing.jsm", null);
+  let telemetryHealthPing = ChromeUtils.import(
+    "resource://gre/modules/HealthPing.jsm",
+    null
+  );
   telemetryHealthPing.Policy.setSchedulerTickTimeout = set;
   telemetryHealthPing.Policy.clearSchedulerTickTimeout = clear;
 }
 
-async function waitForConditionWithPromise(promiseFn, timeoutMsg, tryCount = 30) {
+async function waitForConditionWithPromise(
+  promiseFn,
+  timeoutMsg,
+  tryCount = 30
+) {
   const SINGLE_TRY_TIMEOUT = 100;
   let tries = 0;
   do {
@@ -44,7 +65,10 @@ async function waitForConditionWithPromise(promiseFn, timeoutMsg, tryCount = 30)
 }
 
 function fakeSendSubmissionTimeout(timeOut) {
-  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
+  let telemetryHealthPing = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm",
+    null
+  );
   telemetryHealthPing.Policy.pingSubmissionTimeout = () => timeOut;
 }
 
@@ -58,7 +82,10 @@ add_task(async function setup() {
   await TelemetryController.testSetup();
   PingServer.start();
   TelemetrySend.setServer("http://localhost:" + PingServer.port);
-  Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
+  Preferences.set(
+    TelemetryUtils.Preferences.Server,
+    "http://localhost:" + PingServer.port
+  );
 });
 
 add_task(async function test_sendImmediately() {
@@ -69,10 +96,10 @@ add_task(async function test_sendImmediately() {
   let ping = await PingServer.promiseNextPing();
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "testProblem": 1,
+      testProblem: 1,
     },
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
+    os: TelemetryHealthPing.OsInfo,
+    reason: TelemetryHealthPing.Reason.IMMEDIATE,
   });
 });
 
@@ -83,12 +110,18 @@ add_task(async function test_sendOnDelay() {
   // This first failure should immediately trigger a ping. After this, subsequent failures should be throttled.
   await TelemetryHealthPing.recordSendFailure("testFailure");
   let testPing = await PingServer.promiseNextPing();
-  Assert.equal(testPing.type, TelemetryHealthPing.HEALTH_PING_TYPE, "Should have recorded a health ping.");
+  Assert.equal(
+    testPing.type,
+    TelemetryHealthPing.HEALTH_PING_TYPE,
+    "Should have recorded a health ping."
+  );
 
   // Retrieve delayed call back.
   let pingSubmissionCallBack = null;
-  fakeHealthSchedulerTimer((callBack) => pingSubmissionCallBack = callBack, () => {
-  });
+  fakeHealthSchedulerTimer(
+    callBack => (pingSubmissionCallBack = callBack),
+    () => {}
+  );
 
   // Record two failures, health ping must not be send now.
   await TelemetryHealthPing.recordSendFailure("testFailure");
@@ -100,10 +133,10 @@ add_task(async function test_sendOnDelay() {
   let ping = await PingServer.promiseNextPing();
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "testFailure": 2,
+      testFailure: 2,
     },
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.DELAYED,
+    os: TelemetryHealthPing.OsInfo,
+    reason: TelemetryHealthPing.Reason.DELAYED,
   });
 });
 
@@ -113,15 +146,17 @@ add_task(async function test_sendOverSizedPing() {
   let OVER_SIZED_PING_TYPE = "over-sized-ping";
   let overSizedData = generateRandomString(2 * 1024 * 1024);
 
-  await TelemetryController.submitExternalPing(OVER_SIZED_PING_TYPE, {"data": overSizedData});
+  await TelemetryController.submitExternalPing(OVER_SIZED_PING_TYPE, {
+    data: overSizedData,
+  });
   let ping = await PingServer.promiseNextPing();
 
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
       [OVER_SIZED_PING_TYPE]: 1,
     },
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
+    os: TelemetryHealthPing.OsInfo,
+    reason: TelemetryHealthPing.Reason.IMMEDIATE,
   });
 });
 
@@ -142,11 +177,18 @@ add_task(async function test_healthPingOnTop() {
   // Now trigger sending pings again.
   fakeNow(futureDate(now, 5 * 60 * 1000));
   await TelemetrySend.notifyCanUpload();
-  let scheduler = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
+  let scheduler = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm",
+    null
+  );
   scheduler.SendScheduler.triggerSendingPings(true);
 
   let pings = await PingServer.promiseNextPings(4);
-  Assert.equal(pings[0].type, "health", "Should have received the health ping first.");
+  Assert.equal(
+    pings[0].type,
+    "health",
+    "Should have received the health ping first."
+  );
 });
 
 add_task(async function test_sendOnTimeout() {
@@ -182,7 +224,10 @@ add_task(async function test_sendOnTimeout() {
     response.finish();
   }
 
-  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
+  let telemetryHealthPing = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySend.jsm",
+    null
+  );
   fakeSendSubmissionTimeout(telemetryHealthPing.PING_SUBMIT_TIMEOUT_MS);
   PingServer.resetPingHandler();
   TelemetrySend.notifyCanUpload();
@@ -191,10 +236,10 @@ add_task(async function test_sendOnTimeout() {
   let healthPing = pings.find(ping => ping.type === "health");
   checkHealthPingStructure(healthPing, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "timeout": 1,
+      timeout: 1,
     },
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
+    os: TelemetryHealthPing.OsInfo,
+    reason: TelemetryHealthPing.Reason.IMMEDIATE,
   });
   await TelemetryStorage.testClearPendingPings();
 });
@@ -208,13 +253,18 @@ add_task(async function test_sendOnlyTopTenDiscardedPings() {
   // This first failure should immediately trigger a ping. After this, subsequent failures should be throttled.
   await TelemetryHealthPing.recordSendFailure("testFailure");
   let testPing = await PingServer.promiseNextPing();
-  Assert.equal(testPing.type, TelemetryHealthPing.HEALTH_PING_TYPE, "Should have recorded a health ping.");
-
+  Assert.equal(
+    testPing.type,
+    TelemetryHealthPing.HEALTH_PING_TYPE,
+    "Should have recorded a health ping."
+  );
 
   // Retrieve delayed call back.
   let pingSubmissionCallBack = null;
-  fakeHealthSchedulerTimer((callBack) => pingSubmissionCallBack = callBack, () => {
-  });
+  fakeHealthSchedulerTimer(
+    callBack => (pingSubmissionCallBack = callBack),
+    () => {}
+  );
 
   // Add failures
   for (let i = 1; i < 12; i++) {
@@ -228,8 +278,8 @@ add_task(async function test_sendOnlyTopTenDiscardedPings() {
   let ping = await PingServer.promiseNextPing();
 
   checkHealthPingStructure(ping, {
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.DELAYED,
+    os: TelemetryHealthPing.OsInfo,
+    reason: TelemetryHealthPing.Reason.DELAYED,
     [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
       [PING_TYPE + 11]: 10,
       [PING_TYPE + 10]: 9,
@@ -257,7 +307,7 @@ add_task(async function test_discardedForSizePending() {
   const OVERSIZED_PING = {
     id: OVERSIZED_PING_ID,
     type: PING_TYPE,
-    creationDate: (new Date()).toISOString(),
+    creationDate: new Date().toISOString(),
     // Generate a 2MB string to use as the ping payload.
     payload: overSizedPayload,
   };
@@ -265,17 +315,19 @@ add_task(async function test_discardedForSizePending() {
   // Test loadPendingPing.
   await TelemetryStorage.savePendingPing(OVERSIZED_PING);
   // Try to manually load the oversized ping.
-  await Assert.rejects(TelemetryStorage.loadPendingPing(OVERSIZED_PING_ID),
+  await Assert.rejects(
+    TelemetryStorage.loadPendingPing(OVERSIZED_PING_ID),
     /loadPendingPing - exceeded the maximum ping size/,
-    "The oversized ping should have been pruned.");
+    "The oversized ping should have been pruned."
+  );
 
   let ping = await PingServer.promiseNextPing();
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
       "<unknown>": 1,
     },
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
+    os: TelemetryHealthPing.OsInfo,
+    reason: TelemetryHealthPing.Reason.IMMEDIATE,
   });
 
   // Test _scanPendingPings.
@@ -288,14 +340,16 @@ add_task(async function test_discardedForSizePending() {
     [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
       "<unknown>": 1,
     },
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
+    os: TelemetryHealthPing.OsInfo,
+    reason: TelemetryHealthPing.Reason.IMMEDIATE,
   });
 });
 
 add_task(async function test_usePingSenderOnShutdown() {
-  if (gIsAndroid ||
-      (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)) {
+  if (
+    gIsAndroid ||
+    (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)
+  ) {
     // We don't support the pingsender on Android, yet, see bug 1335917.
     // We also don't support the pingsender testing on Treeherder for
     // Linux 32 bit (due to missing libraries). So skip it there too.
@@ -322,17 +376,23 @@ add_task(async function test_usePingSenderOnShutdown() {
 
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "testFailure": 1,
+      testFailure: 1,
     },
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.SHUT_DOWN,
+    os: TelemetryHealthPing.OsInfo,
+    reason: TelemetryHealthPing.Reason.SHUT_DOWN,
   });
 
   // Check that the health ping is sent at shutdown using the pingsender.
-  Assert.equal(request.getHeader("User-Agent"), "pingsender/1.0",
-    "Should have received the correct user agent string.");
-  Assert.equal(request.getHeader("X-PingSender-Version"), "1.0",
-    "Should have received the correct PingSender version string.");
+  Assert.equal(
+    request.getHeader("User-Agent"),
+    "pingsender/1.0",
+    "Should have received the correct user agent string."
+  );
+  Assert.equal(
+    request.getHeader("X-PingSender-Version"),
+    "1.0",
+    "Should have received the correct PingSender version string."
+  );
 });
 
 add_task(async function cleanup() {

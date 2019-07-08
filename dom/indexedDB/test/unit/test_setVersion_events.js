@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   // Open a datbase for the first time.
@@ -14,7 +13,10 @@ function* testSteps()
 
   // Sanity checks
   ok(request instanceof IDBRequest, "Request should be an IDBRequest");
-  ok(request instanceof IDBOpenDBRequest, "Request should be an IDBOpenDBRequest");
+  ok(
+    request instanceof IDBOpenDBRequest,
+    "Request should be an IDBOpenDBRequest"
+  );
   ok(request instanceof EventTarget, "Request should be an EventTarget");
   is(request.source, null, "Request should have no source");
   try {
@@ -61,8 +63,7 @@ function* testSteps()
   ok(event instanceof IDBVersionChangeEvent, "Event is of the right type");
   ok(event.target.result instanceof IDBDatabase, "Good result");
   db2 = event.target.result;
-  is(event.target.transaction.mode, "versionchange",
-     "Correct mode");
+  is(event.target.transaction.mode, "versionchange", "Correct mode");
   is(db2.version, 2, "Correct db version");
   is(event.oldVersion, 1, "Correct event oldVersion");
   is(event.newVersion, 2, "Correct event newVersion");
@@ -132,8 +133,7 @@ function* testSteps()
 
   ok(event instanceof IDBVersionChangeEvent, "Event is of the right type");
   ok(event.target.result instanceof IDBDatabase, "Good result");
-  is(event.target.transaction.mode, "versionchange",
-     "Correct mode");
+  is(event.target.transaction.mode, "versionchange", "Correct mode");
   is(event.oldVersion, 3, "Correct event oldVersion");
   is(event.newVersion, 4, "Correct event newVersion");
 
@@ -150,19 +150,21 @@ function* testSteps()
 
   event = new IDBVersionChangeEvent("versionchange");
   ok(event, "Should be able to create an event with just passing in the type");
-  event = new IDBVersionChangeEvent("versionchange", {oldVersion: 1});
+  event = new IDBVersionChangeEvent("versionchange", { oldVersion: 1 });
   ok(event, "Should be able to create an event with just the old version");
   is(event.oldVersion, 1, "Correct old version");
   is(event.newVersion, null, "Correct new version");
-  event = new IDBVersionChangeEvent("versionchange", {newVersion: 1});
+  event = new IDBVersionChangeEvent("versionchange", { newVersion: 1 });
   ok(event, "Should be able to create an event with just the new version");
   is(event.oldVersion, 0, "Correct old version");
   is(event.newVersion, 1, "Correct new version");
-  event = new IDBVersionChangeEvent("versionchange", {oldVersion: 1, newVersion: 2});
+  event = new IDBVersionChangeEvent("versionchange", {
+    oldVersion: 1,
+    newVersion: 2,
+  });
   ok(event, "Should be able to create an event with both versions");
   is(event.oldVersion, 1, "Correct old version");
   is(event.newVersion, 2, "Correct new version");
 
   finishTest();
 }
-

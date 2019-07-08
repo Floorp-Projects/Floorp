@@ -7,8 +7,12 @@ requestLongerTimeout(2);
 
 // Tests the Filter Editor Widget's label-dragging
 
-const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
-const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
+const {
+  CSSFilterEditorWidget,
+} = require("devtools/client/shared/widgets/FilterWidget");
+const {
+  getClientCssProperties,
+} = require("devtools/shared/fronts/css-properties");
 
 const FAST_VALUE_MULTIPLIER = 10;
 const SLOW_VALUE_MULTIPLIER = 0.1;
@@ -20,12 +24,14 @@ const GRAYSCALE_MAX = 100,
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  const [,, doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
   const widget = new CSSFilterEditorWidget(
-    container, "grayscale(0%) url(test.svg)", cssIsValid
+    container,
+    "grayscale(0%) url(test.svg)",
+    cssIsValid
   );
 
   const filters = widget.el.querySelector("#filters");
@@ -46,9 +52,11 @@ add_task(async function() {
     shiftKey: false,
   });
   let expected = DEFAULT_VALUE_MULTIPLIER * 12;
-  is(widget.getValueAt(0),
-     `${expected}%`,
-     "Should update value correctly without modifiers");
+  is(
+    widget.getValueAt(0),
+    `${expected}%`,
+    "Should update value correctly without modifiers"
+  );
 
   info("Test label-dragging on number-type filters with alt");
   widget._mouseMove({
@@ -59,9 +67,11 @@ add_task(async function() {
   });
 
   expected = expected + SLOW_VALUE_MULTIPLIER * 8;
-  is(widget.getValueAt(0),
-     `${expected}%`,
-     "Should update value correctly with alt key");
+  is(
+    widget.getValueAt(0),
+    `${expected}%`,
+    "Should update value correctly with alt key"
+  );
 
   info("Test label-dragging on number-type filters with shift");
   widget._mouseMove({
@@ -72,9 +82,11 @@ add_task(async function() {
   });
 
   expected = expected + FAST_VALUE_MULTIPLIER * 5;
-  is(widget.getValueAt(0),
-     `${expected}%`,
-     "Should update value correctly with shift key");
+  is(
+    widget.getValueAt(0),
+    `${expected}%`,
+    "Should update value correctly with shift key"
+  );
 
   info("Test releasing mouse and dragging again");
 
@@ -94,9 +106,11 @@ add_task(async function() {
   });
 
   expected = expected + DEFAULT_VALUE_MULTIPLIER * 5;
-  is(widget.getValueAt(0),
-     `${expected}%`,
-     "Should reset multiplier to default");
+  is(
+    widget.getValueAt(0),
+    `${expected}%`,
+    "Should reset multiplier to default"
+  );
 
   info("Test value ranges");
 
@@ -108,9 +122,11 @@ add_task(async function() {
   });
 
   expected = GRAYSCALE_MAX;
-  is(widget.getValueAt(0),
-     `${expected}%`,
-     "Shouldn't allow values higher than max");
+  is(
+    widget.getValueAt(0),
+    `${expected}%`,
+    "Shouldn't allow values higher than max"
+  );
 
   widget._mouseMove({
     pageX: -11,
@@ -119,9 +135,11 @@ add_task(async function() {
   });
 
   expected = GRAYSCALE_MIN;
-  is(widget.getValueAt(0),
-     `${expected}%`,
-     "Shouldn't allow values less than min");
+  is(
+    widget.getValueAt(0),
+    `${expected}%`,
+    "Shouldn't allow values less than min"
+  );
 
   widget._mouseUp();
 
@@ -133,8 +151,10 @@ add_task(async function() {
     shiftKey: false,
   });
 
-  ok(!widget.isDraggingLabel,
-     "Label-dragging should not work for string-type filters");
+  ok(
+    !widget.isDraggingLabel,
+    "Label-dragging should not work for string-type filters"
+  );
 
   widget._mouseMove({
     pageX: -11,
@@ -142,7 +162,9 @@ add_task(async function() {
     shiftKey: true,
   });
 
-  is(widget.getValueAt(1),
-     "test.svg",
-     "Label-dragging on string-type filters shouldn't affect their value");
+  is(
+    widget.getValueAt(1),
+    "test.svg",
+    "Label-dragging on string-type filters shouldn't affect their value"
+  );
 });

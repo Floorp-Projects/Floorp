@@ -2,12 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
-const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-const {DebuggerServer} = require("devtools/server/main");
-const {gDevTools} = require("devtools/client/framework/devtools");
-const {Toolbox} = require("devtools/client/framework/toolbox");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DebuggerServer } = require("devtools/server/main");
+const { gDevTools } = require("devtools/client/framework/devtools");
+const { Toolbox } = require("devtools/client/framework/toolbox");
 
 async function setupToolboxTest(extensionId) {
   DebuggerServer.init();
@@ -15,9 +15,13 @@ async function setupToolboxTest(extensionId) {
   const transport = DebuggerServer.connectPipe();
   const client = new DebuggerClient(transport);
   await client.connect();
-  const addonFront = await client.mainRoot.getAddon({id: extensionId});
+  const addonFront = await client.mainRoot.getAddon({ id: extensionId });
   const target = await addonFront.connect();
-  const toolbox = await gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
+  const toolbox = await gDevTools.showToolbox(
+    target,
+    null,
+    Toolbox.HostType.WINDOW
+  );
 
   async function waitFor(condition) {
     while (!condition()) {
@@ -27,8 +31,8 @@ async function setupToolboxTest(extensionId) {
   }
 
   const console = await toolbox.selectTool("webconsole");
-  const {hud} = console;
-  const {jsterm} = hud;
+  const { hud } = console;
+  const { jsterm } = hud;
 
   const netmonitor = await toolbox.selectTool("netmonitor");
 
@@ -39,10 +43,12 @@ async function setupToolboxTest(extensionId) {
   await jsterm.execute(`doFetchHTTPRequest("${expectedURL}");`);
 
   await waitFor(() => {
-    return !netmonitor.panelWin.document.querySelector(".request-list-empty-notice");
+    return !netmonitor.panelWin.document.querySelector(
+      ".request-list-empty-notice"
+    );
   });
 
-  let {store} = netmonitor.panelWin;
+  let { store } = netmonitor.panelWin;
 
   // NOTE: we need to filter the requests to the ones that we expect until
   // the network monitor is not yet filtering out the requests that are not
@@ -55,15 +61,18 @@ async function setupToolboxTest(extensionId) {
   let requests;
 
   await waitFor(() => {
-    requests = Array.from(store.getState().requests.requests.values())
-                    .filter(filterRequest);
+    requests = Array.from(store.getState().requests.requests.values()).filter(
+      filterRequest
+    );
 
     return requests.length > 0;
   });
 
   // Call a function defined in the target extension to make assertions
   // on the network requests collected by the netmonitor panel.
-  await jsterm.execute(`testNetworkRequestReceived(${JSON.stringify(requests)});`);
+  await jsterm.execute(
+    `testNetworkRequestReceived(${JSON.stringify(requests)});`
+  );
 
   const onToolboxClosed = gDevTools.once("toolbox-destroyed");
   await toolbox.destroy();
@@ -80,11 +89,17 @@ add_task(async function test_addon_debugging_netmonitor_panel() {
       await fetch(urlToFetch);
     };
     window.testNetworkRequestReceived = async function(requests) {
-      browser.test.log("Addon Debugging Netmonitor panel collected requests: " +
-                       JSON.stringify(requests));
+      browser.test.log(
+        "Addon Debugging Netmonitor panel collected requests: " +
+          JSON.stringify(requests)
+      );
       browser.test.assertEq(1, requests.length, "Got one request logged");
       browser.test.assertEq("GET", requests[0].method, "Got a GET request");
-      browser.test.assertEq(expectedURL, requests[0].url, "Got the expected request url");
+      browser.test.assertEq(
+        expectedURL,
+        requests[0].url,
+        "Got the expected request url"
+      );
 
       browser.test.notifyPass("netmonitor_request_logged");
     };
@@ -97,7 +112,7 @@ add_task(async function test_addon_debugging_netmonitor_panel() {
     manifest: {
       permissions: ["http://mochi.test/"],
       applications: {
-        gecko: {id: EXTENSION_ID},
+        gecko: { id: EXTENSION_ID },
       },
     },
   });

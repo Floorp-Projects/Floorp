@@ -26,23 +26,28 @@ add_task(async function() {
 
   // Open context menu and execute "Edit & Resend".
   const firstRequest = document.querySelectorAll(".request-list-item")[0];
-  const waitForHeaders = waitUntil(() => document.querySelector(".headers-overview"));
+  const waitForHeaders = waitUntil(() =>
+    document.querySelector(".headers-overview")
+  );
   EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
   await waitForHeaders;
   await waitForRequestData(store, ["requestHeaders"]);
   EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
 
   // Open "New Request" form
-  const contextResend = getContextMenuItem(monitor, "request-list-context-resend");
+  const contextResend = getContextMenuItem(
+    monitor,
+    "request-list-context-resend"
+  );
   contextResend.click();
   await waitUntil(() => document.querySelector("#custom-headers-value"));
   const headersTextarea = document.querySelector("#custom-headers-value");
   await waitUntil(() => document.querySelector("#custom-method-value"));
   const methodField = document.querySelector("#custom-method-value");
   const originalMethodValue = methodField.value;
-  const {
-    getSelectedRequest,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSelectedRequest } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
   const request = getSelectedRequest(store.getState());
   const hostHeader = request.requestHeaders.headers[0];
 
@@ -61,21 +66,27 @@ add_task(async function() {
   methodField.select();
   EventUtils.synthesizeKey("VK_DELETE", {});
 
-  ok(getSelectedRequest(store.getState()).requestHeaders.headers[0] !== hostHeader,
+  ok(
+    getSelectedRequest(store.getState()).requestHeaders.headers[0] !==
+      hostHeader,
     "Value of Host header was edited and should change"
   );
 
-  ok(headersTextarea.selectionStart === start && headersTextarea.selectionEnd === start,
+  ok(
+    headersTextarea.selectionStart === start &&
+      headersTextarea.selectionEnd === start,
     "Position of caret should not change"
   );
 
-  ok(getSelectedRequest(store.getState()).method === "",
+  ok(
+    getSelectedRequest(store.getState()).method === "",
     "Value of method header was deleted and should be empty"
   );
 
   headersTextarea.focus();
 
-  ok(getSelectedRequest(store.getState()).method === originalMethodValue,
+  ok(
+    getSelectedRequest(store.getState()).method === originalMethodValue,
     "Value of method header should reset to its original value"
   );
 

@@ -2,27 +2,68 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const lameMultiWindowState = { windows: [
+const lameMultiWindowState = {
+  windows: [
     {
       tabs: [
-        { entries: [{ url: "http://example.org#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        {
+          entries: [
+            { url: "http://example.org#1", triggeringPrincipal_base64 },
+          ],
+          extData: { uniq: r() },
+        },
+        {
+          entries: [
+            { url: "http://example.org#2", triggeringPrincipal_base64 },
+          ],
+          extData: { uniq: r() },
+        },
+        {
+          entries: [
+            { url: "http://example.org#3", triggeringPrincipal_base64 },
+          ],
+          extData: { uniq: r() },
+        },
+        {
+          entries: [
+            { url: "http://example.org#4", triggeringPrincipal_base64 },
+          ],
+          extData: { uniq: r() },
+        },
       ],
       selected: 1,
     },
     {
       tabs: [
-        { entries: [{ url: "http://example.com#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        {
+          entries: [
+            { url: "http://example.com#1", triggeringPrincipal_base64 },
+          ],
+          extData: { uniq: r() },
+        },
+        {
+          entries: [
+            { url: "http://example.com#2", triggeringPrincipal_base64 },
+          ],
+          extData: { uniq: r() },
+        },
+        {
+          entries: [
+            { url: "http://example.com#3", triggeringPrincipal_base64 },
+          ],
+          extData: { uniq: r() },
+        },
+        {
+          entries: [
+            { url: "http://example.com#4", triggeringPrincipal_base64 },
+          ],
+          extData: { uniq: r() },
+        },
       ],
       selected: 3,
     },
-  ] };
-
+  ],
+};
 
 function getOuterWindowID(aWindow) {
   return aWindow.windowUtils.outerWindowID;
@@ -35,7 +76,10 @@ function test() {
   // We'll track events per window so we are sure that they are each happening once
   // pre window.
   let windowEvents = {};
-  windowEvents[getOuterWindowID(window)] = { busyEventCount: 0, readyEventCount: 0 };
+  windowEvents[getOuterWindowID(window)] = {
+    busyEventCount: 0,
+    readyEventCount: 0,
+  };
 
   // waitForBrowserState does it's own observing for windows, but doesn't attach
   // the listeners we want here, so do it ourselves.
@@ -45,12 +89,22 @@ function test() {
       Services.ww.unregisterNotification(windowObserver);
 
       newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      newWindow.addEventListener("load", function() {
-        windowEvents[getOuterWindowID(newWindow)] = { busyEventCount: 0, readyEventCount: 0 };
+      newWindow.addEventListener(
+        "load",
+        function() {
+          windowEvents[getOuterWindowID(newWindow)] = {
+            busyEventCount: 0,
+            readyEventCount: 0,
+          };
 
-        newWindow.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
-        newWindow.addEventListener("SSWindowStateReady", onSSWindowStateReady);
-      }, {once: true});
+          newWindow.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+          newWindow.addEventListener(
+            "SSWindowStateReady",
+            onSSWindowStateReady
+          );
+        },
+        { once: true }
+      );
     }
   }
 
@@ -70,8 +124,16 @@ function test() {
     let checkedWindows = 0;
     for (let id of Object.keys(windowEvents)) {
       let winEvents = windowEvents[id];
-      is(winEvents.busyEventCount, 1, "window" + id + " busy event count correct");
-      is(winEvents.readyEventCount, 1, "window" + id + " ready event count correct");
+      is(
+        winEvents.busyEventCount,
+        1,
+        "window" + id + " busy event count correct"
+      );
+      is(
+        winEvents.readyEventCount,
+        1,
+        "window" + id + " ready event count correct"
+      );
       checkedWindows++;
     }
     is(checkedWindows, 2, "checked 2 windows");
@@ -88,4 +150,3 @@ function test() {
     finish();
   });
 }
-

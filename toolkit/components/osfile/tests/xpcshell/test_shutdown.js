@@ -22,7 +22,10 @@ add_task(async function system_shutdown() {
       Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
       Services.prefs.setBoolPref("toolkit.osfile.log", true);
       Services.prefs.setBoolPref("toolkit.osfile.log.redirect", true);
-      Services.prefs.setCharPref("toolkit.osfile.test.shutdown.observer", topic);
+      Services.prefs.setCharPref(
+        "toolkit.osfile.test.shutdown.observer",
+        topic
+      );
 
       let observer = function(aMessage) {
         try {
@@ -35,7 +38,9 @@ add_task(async function system_shutdown() {
           if (!message.includes("TEST OS Controller WARNING")) {
             return;
           }
-          info("Got message: " + message + ", looking for resource " + resource);
+          info(
+            "Got message: " + message + ", looking for resource " + resource
+          );
           if (!message.includes(resource)) {
             return;
           }
@@ -75,21 +80,24 @@ add_task(async function system_shutdown() {
     })();
   }
 
-  let TEST_DIR = OS.Path.join((await OS.File.getCurrentDirectory()), "..");
+  let TEST_DIR = OS.Path.join(await OS.File.getCurrentDirectory(), "..");
   info("Testing for leaks of directory iterator " + TEST_DIR);
   let iterator = new OS.File.DirectoryIterator(TEST_DIR);
   info("At this stage, we leak the directory");
-  Assert.ok((await testLeaksOf(TEST_DIR, "test.shutdown.dir.leak")));
+  Assert.ok(await testLeaksOf(TEST_DIR, "test.shutdown.dir.leak"));
   await iterator.close();
   info("At this stage, we don't leak the directory anymore");
-  Assert.equal(false, (await testLeaksOf(TEST_DIR, "test.shutdown.dir.noleak")));
+  Assert.equal(false, await testLeaksOf(TEST_DIR, "test.shutdown.dir.noleak"));
 
   let TEST_FILE = OS.Path.join(OS.Constants.Path.profileDir, "test");
   info("Testing for leaks of file descriptor: " + TEST_FILE);
-  let openedFile = await OS.File.open(TEST_FILE, { create: true} );
+  let openedFile = await OS.File.open(TEST_FILE, { create: true });
   info("At this stage, we leak the file");
-  Assert.ok((await testLeaksOf(TEST_FILE, "test.shutdown.file.leak")));
+  Assert.ok(await testLeaksOf(TEST_FILE, "test.shutdown.file.leak"));
   await openedFile.close();
   info("At this stage, we don't leak the file anymore");
-  Assert.equal(false, (await testLeaksOf(TEST_FILE, "test.shutdown.file.leak.2")));
+  Assert.equal(
+    false,
+    await testLeaksOf(TEST_FILE, "test.shutdown.file.leak.2")
+  );
 });

@@ -9,7 +9,12 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installchrome.html? " + encodeURIComponent(TESTROOT + "amosigned.xpi"));
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    TESTROOT +
+      "installchrome.html? " +
+      encodeURIComponent(TESTROOT + "amosigned.xpi")
+  );
 }
 
 function install_ended(install, addon) {

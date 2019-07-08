@@ -1,4 +1,4 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var addedTopic = "xpcom-category-entry-added";
 var removedTopic = "xpcom-category-entry-removed";
@@ -25,13 +25,18 @@ var observer = {
       timer = null;
     }
 
-    if (subject.QueryInterface(Ci.nsISupportsCString).data != testEntry || data != testCategory)
+    if (
+      subject.QueryInterface(Ci.nsISupportsCString).data != testEntry ||
+      data != testCategory
+    ) {
       return;
+    }
 
-    if (topic == addedTopic)
+    if (topic == addedTopic) {
       result += "add ";
-    else if (topic == removedTopic)
+    } else if (topic == removedTopic) {
       result += "remove ";
+    }
   },
 };
 
@@ -41,8 +46,20 @@ function run_test() {
   Services.obs.addObserver(observer, addedTopic);
   Services.obs.addObserver(observer, removedTopic);
 
-  Services.catMan.addCategoryEntry(testCategory, testEntry, testValue, false, true);
-  Services.catMan.addCategoryEntry(testCategory, testEntry, testValue, false, true);
+  Services.catMan.addCategoryEntry(
+    testCategory,
+    testEntry,
+    testValue,
+    false,
+    true
+  );
+  Services.catMan.addCategoryEntry(
+    testCategory,
+    testEntry,
+    testValue,
+    false,
+    true
+  );
   Services.catMan.deleteCategoryEntry(testCategory, testEntry, false);
 
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);

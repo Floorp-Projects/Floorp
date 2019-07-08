@@ -2,7 +2,8 @@ function test() {
   waitForExplicitFinish();
 
   (async function() {
-    let testPage = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+    let testPage =
+      "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
     let tab1 = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
     await FullZoomHelper.load(tab1, testPage);
@@ -24,8 +25,9 @@ function test() {
     tab2Zoom = ZoomManager.getZoomForBrowser(tab2.linkedBrowser);
     isnot(tab1Zoom, tab2Zoom, "Zoom should not affect background tabs");
 
-    if (Services.prefs.prefHasUserValue("browser.zoom.updateBackgroundTabs"))
+    if (Services.prefs.prefHasUserValue("browser.zoom.updateBackgroundTabs")) {
       Services.prefs.clearUserPref("browser.zoom.updateBackgroundTabs");
+    }
     await FullZoomHelper.removeTabAndWaitForLocationChange(tab1);
     await FullZoomHelper.removeTabAndWaitForLocationChange(tab2);
   })().then(finish, FullZoomHelper.failAndContinue(finish));

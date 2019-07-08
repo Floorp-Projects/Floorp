@@ -8,17 +8,19 @@
 // Ensure that the appropriate initialization has happened.
 do_get_profile();
 
-const LABELS = ["mylabel1",
-                "mylabel2",
-                "mylabel3"];
+const LABELS = ["mylabel1", "mylabel2", "mylabel3"];
 
 async function delete_all_secrets() {
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
   for (let label of LABELS) {
     if (await keystore.asyncSecretAvailable(label)) {
       await keystore.asyncDeleteSecret(label);
-      ok(!await keystore.asyncSecretAvailable(label), label + " should be deleted now.");
+      ok(
+        !(await keystore.asyncSecretAvailable(label)),
+        label + " should be deleted now."
+      );
     }
   }
 }
@@ -38,9 +40,11 @@ var gMockPrompter = {
   // how objects get wrapped when going across xpcom boundaries.
   promptPassword(dialogTitle, text, password, checkMsg, checkValue) {
     this.numPrompts++;
-    equal(text,
-          "Please enter your master password.",
-          "password prompt text should be as expected");
+    equal(
+      text,
+      "Please enter your master password.",
+      "password prompt text should be as expected"
+    );
     equal(checkMsg, null, "checkMsg should be null");
     ok(this.passwordToTry, "passwordToTry should be non-null");
     if (this.passwordToTry == "DontTryThisPassword") {
@@ -62,9 +66,13 @@ var gWindowWatcher = {
 };
 
 async function encrypt_decrypt_test() {
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
-  ok(!await keystore.asyncSecretAvailable(LABELS[0]), "The secret should not be available yet.");
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
+  ok(
+    !(await keystore.asyncSecretAvailable(LABELS[0])),
+    "The secret should not be available yet."
+  );
 
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
   ok(recoveryPhrase, "A recovery phrase should've been created.");
@@ -83,7 +91,10 @@ async function encrypt_decrypt_test() {
   // Decrypting should give us the plaintext bytes again.
   try {
     let plaintext = await keystore.asyncDecryptBytes(LABELS[0], ciphertext);
-    ok(plaintext.toString() == text.toString(), "Decrypted plaintext should be the same as text.");
+    ok(
+      plaintext.toString() == text.toString(),
+      "Decrypted plaintext should be the same as text."
+    );
   } catch (e) {
     ok(false, "Error decrypting ciphertext " + e);
   }
@@ -98,13 +109,15 @@ async function encrypt_decrypt_test() {
 }
 
 add_task(async function() {
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
   let windowWatcherCID;
   if (keystore.isNSSKeyStore) {
-    windowWatcherCID =
-      MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1",
-                             gWindowWatcher);
+    windowWatcherCID = MockRegistrar.register(
+      "@mozilla.org/embedcomp/window-watcher;1",
+      gWindowWatcher
+    );
     registerCleanupFunction(() => {
       MockRegistrar.unregister(windowWatcherCID);
     });
@@ -114,17 +127,24 @@ add_task(async function() {
   await encrypt_decrypt_test();
   await delete_all_secrets();
 
-  if (AppConstants.platform == "macosx" || AppConstants.platform == "win" ||
-      AppConstants.platform == "linux") {
-    ok(!keystore.isNSSKeyStore, "OS X, Windows, and Linux should use the non-NSS implementation");
+  if (
+    AppConstants.platform == "macosx" ||
+    AppConstants.platform == "win" ||
+    AppConstants.platform == "linux"
+  ) {
+    ok(
+      !keystore.isNSSKeyStore,
+      "OS X, Windows, and Linux should use the non-NSS implementation"
+    );
   }
 
   if (keystore.isNSSKeyStore) {
     // If we use the NSS key store implementation test that everything works
     // when a master password is set.
     // Set an initial password.
-    let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
-                    .getService(Ci.nsIPK11TokenDB);
+    let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+      Ci.nsIPK11TokenDB
+    );
     let token = tokenDB.getInternalKeyToken();
     token.initPassword("hunter2");
 
@@ -134,7 +154,10 @@ add_task(async function() {
     // Set the correct password so that the test operations should succeed.
     gMockPrompter.passwordToTry = "hunter2";
     await encrypt_decrypt_test();
-    ok(gMockPrompter.numPrompts == 1, "There should've been one password prompt.");
+    ok(
+      gMockPrompter.numPrompts == 1,
+      "There should've been one password prompt."
+    );
     await delete_all_secrets();
   }
 
@@ -153,8 +176,10 @@ add_task(async function() {
       await keystore.asyncUnlock();
       ok(false, "Unlock should've rejected.");
     } catch (e) {
-      ok(e.result == Cr.NS_ERROR_FAILURE || e.result == Cr.NS_ERROR_ABORT,
-         "Rejected login prompt.");
+      ok(
+        e.result == Cr.NS_ERROR_FAILURE || e.result == Cr.NS_ERROR_ABORT,
+        "Rejected login prompt."
+      );
     }
     // clean up
     if (keystore.isNSSKeyStore) {
@@ -169,8 +194,9 @@ add_task(async function() {
 add_task(async function() {
   await delete_all_secrets();
 
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
   ok(recoveryPhrase, "A recovery phrase should've been created.");
 
@@ -193,8 +219,9 @@ add_task(async function() {
 add_task(async function() {
   await delete_all_secrets();
 
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
 
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
   ok(recoveryPhrase, "A recovery phrase should've been created.");
@@ -205,13 +232,21 @@ add_task(async function() {
 
   await keystore.asyncDeleteSecret(LABELS[0]);
   // Decrypting should fail after deleting the secret.
-  await keystore.asyncDecryptBytes(LABELS[0], ciphertext)
-    .then(() => ok(false, "decrypting didn't throw as expected after deleting the secret"))
-    .catch(() => ok(true, "decrypting threw as expected after deleting the secret"));
+  await keystore
+    .asyncDecryptBytes(LABELS[0], ciphertext)
+    .then(() =>
+      ok(false, "decrypting didn't throw as expected after deleting the secret")
+    )
+    .catch(() =>
+      ok(true, "decrypting threw as expected after deleting the secret")
+    );
 
   await keystore.asyncRecoverSecret(LABELS[0], recoveryPhrase);
   let plaintext = await keystore.asyncDecryptBytes(LABELS[0], ciphertext);
-  ok(plaintext.toString() == text.toString(), "Decrypted plaintext should be the same as text.");
+  ok(
+    plaintext.toString() == text.toString(),
+    "Decrypted plaintext should be the same as text."
+  );
 
   await delete_all_secrets();
 });
@@ -220,17 +255,25 @@ add_task(async function() {
 add_task(async function() {
   await delete_all_secrets();
 
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
-  await keystore.asyncRecoverSecret(LABELS[0], "@##$^&*()#$^&*(@#%&*_")
-    .then(() => ok(false, "base64-decoding non-base64 should have failed but didn't"))
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
+  await keystore
+    .asyncRecoverSecret(LABELS[0], "@##$^&*()#$^&*(@#%&*_")
+    .then(() =>
+      ok(false, "base64-decoding non-base64 should have failed but didn't")
+    )
     .catch(() => ok(true, "base64-decoding non-base64 failed as expected"));
 
-  ok(!await keystore.asyncSecretAvailable(LABELS[0]),
-     "we didn't recover a secret, so the secret shouldn't be available");
+  ok(
+    !(await keystore.asyncSecretAvailable(LABELS[0])),
+    "we didn't recover a secret, so the secret shouldn't be available"
+  );
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
-  ok(recoveryPhrase && recoveryPhrase.length > 0,
-     "we should be able to re-use that label to generate a new secret");
+  ok(
+    recoveryPhrase && recoveryPhrase.length > 0,
+    "we should be able to re-use that label to generate a new secret"
+  );
   await delete_all_secrets();
 });
 
@@ -238,8 +281,9 @@ add_task(async function() {
 add_task(async function() {
   await delete_all_secrets();
 
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
 
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
   ok(recoveryPhrase, "A recovery phrase should've been created.");
@@ -252,14 +296,21 @@ add_task(async function() {
   ok(newRecoveryPhrase, "A new recovery phrase should've been created.");
 
   // The new secret replaced the old one so we shouldn't be able to decrypt the ciphertext now.
-  await keystore.asyncDecryptBytes(LABELS[0], ciphertext)
-    .then(() => ok(false, "decrypting without the original key should have failed"))
-    .catch(() => ok(true, "decrypting without the original key failed as expected"));
+  await keystore
+    .asyncDecryptBytes(LABELS[0], ciphertext)
+    .then(() =>
+      ok(false, "decrypting without the original key should have failed")
+    )
+    .catch(() =>
+      ok(true, "decrypting without the original key failed as expected")
+    );
 
   await keystore.asyncRecoverSecret(LABELS[0], recoveryPhrase);
   let plaintext = await keystore.asyncDecryptBytes(LABELS[0], ciphertext);
-  ok(plaintext.toString() == text.toString(),
-     "Decrypted plaintext should be the same as text (once we have the original key again).");
+  ok(
+    plaintext.toString() == text.toString(),
+    "Decrypted plaintext should be the same as text (once we have the original key again)."
+  );
 
   await delete_all_secrets();
 });
@@ -269,8 +320,9 @@ add_task(async function() {
 add_task(async function() {
   await delete_all_secrets();
 
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
 
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
   ok(recoveryPhrase, "A recovery phrase should've been created.");
@@ -286,14 +338,17 @@ add_task(async function() {
 
   // We recovered the old secret, so decrypting ciphertext that had been encrypted with the newer
   // key should fail.
-  await keystore.asyncDecryptBytes(LABELS[0], ciphertext)
+  await keystore
+    .asyncDecryptBytes(LABELS[0], ciphertext)
     .then(() => ok(false, "decrypting without the new key should have failed"))
     .catch(() => ok(true, "decrypting without the new key failed as expected"));
 
   await keystore.asyncRecoverSecret(LABELS[0], newRecoveryPhrase);
   let plaintext = await keystore.asyncDecryptBytes(LABELS[0], ciphertext);
-  ok(plaintext.toString() == text.toString(),
-     "Decrypted plaintext should be the same as text (once we have the new key again).");
+  ok(
+    plaintext.toString() == text.toString(),
+    "Decrypted plaintext should be the same as text (once we have the new key again)."
+  );
 
   await delete_all_secrets();
 });
@@ -302,32 +357,57 @@ add_task(async function() {
 add_task(async function() {
   await delete_all_secrets();
 
-  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
-                   .getService(Ci.nsIOSKeyStore);
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
 
-  await keystore.asyncRecoverSecret(LABELS[0], "")
+  await keystore
+    .asyncRecoverSecret(LABELS[0], "")
     .then(() => ok(false, "'recovering' with an empty key should have failed"))
     .catch(() => ok(true, "'recovering' with an empty key failed as expected"));
-  ok(!await keystore.asyncSecretAvailable(LABELS[0]),
-     "we didn't recover a secret, so the secret shouldn't be available");
+  ok(
+    !(await keystore.asyncSecretAvailable(LABELS[0])),
+    "we didn't recover a secret, so the secret shouldn't be available"
+  );
 
-  await keystore.asyncRecoverSecret(LABELS[0], "AAAAAA")
-    .then(() => ok(false, "recovering with a key that is too short should have failed"))
-    .catch(() => ok(true, "recovering with a key that is too short failed as expected"));
-  ok(!await keystore.asyncSecretAvailable(LABELS[0]),
-     "we didn't recover a secret, so the secret shouldn't be available");
+  await keystore
+    .asyncRecoverSecret(LABELS[0], "AAAAAA")
+    .then(() =>
+      ok(false, "recovering with a key that is too short should have failed")
+    )
+    .catch(() =>
+      ok(true, "recovering with a key that is too short failed as expected")
+    );
+  ok(
+    !(await keystore.asyncSecretAvailable(LABELS[0])),
+    "we didn't recover a secret, so the secret shouldn't be available"
+  );
 
-  await keystore.asyncRecoverSecret(LABELS[0], "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    .then(() => ok(false, "recovering with a key that is too long should have failed"))
-    .catch(() => ok(true, "recovering with a key that is too long failed as expected"));
-  ok(!await keystore.asyncSecretAvailable(LABELS[0]),
-     "we didn't recover a secret, so the secret shouldn't be available");
+  await keystore
+    .asyncRecoverSecret(
+      LABELS[0],
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    )
+    .then(() =>
+      ok(false, "recovering with a key that is too long should have failed")
+    )
+    .catch(() =>
+      ok(true, "recovering with a key that is too long failed as expected")
+    );
+  ok(
+    !(await keystore.asyncSecretAvailable(LABELS[0])),
+    "we didn't recover a secret, so the secret shouldn't be available"
+  );
 
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
-  ok(recoveryPhrase && recoveryPhrase.length > 0,
-     "we should be able to use that label to generate a new secret");
-  ok(await keystore.asyncSecretAvailable(LABELS[0]),
-     "the generated secret should now be available");
+  ok(
+    recoveryPhrase && recoveryPhrase.length > 0,
+    "we should be able to use that label to generate a new secret"
+  );
+  ok(
+    await keystore.asyncSecretAvailable(LABELS[0]),
+    "the generated secret should now be available"
+  );
 
   await delete_all_secrets();
 });

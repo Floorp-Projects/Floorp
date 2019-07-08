@@ -209,7 +209,7 @@ TestRunner.setFailureFile = function(fileName) {
 
 TestRunner.generateFailureList = function () {
     if (TestRunner._failureFile) {
-        var failures = new SpecialPowersLogger(TestRunner._failureFile);
+        var failures = new MozillaFileLogger(TestRunner._failureFile);
         failures.log(JSON.stringify(TestRunner._failedTests));
         failures.close();
     }
@@ -543,8 +543,8 @@ TestRunner.testFinished = function(tests) {
                          TestRunner.dumpAboutMemoryAfterTest,
                          TestRunner.dumpDMDAfterTest);
 
-        function cleanUpCrashDumpFiles() {
-            if (!SpecialPowers.removeExpectedCrashDumpFiles(TestRunner._expectingProcessCrash)) {
+        async function cleanUpCrashDumpFiles() {
+            if (!await SpecialPowers.removeExpectedCrashDumpFiles(TestRunner._expectingProcessCrash)) {
                 var subtest = "expected-crash-dump-missing";
                 TestRunner.structuredLogger.testStatus(TestRunner.currentTestURL,
                                                        subtest,
@@ -556,7 +556,7 @@ TestRunner.testFinished = function(tests) {
             }
 
             var unexpectedCrashDumpFiles =
-                SpecialPowers.findUnexpectedCrashDumpFiles();
+                await SpecialPowers.findUnexpectedCrashDumpFiles();
             TestRunner._expectingProcessCrash = false;
             if (unexpectedCrashDumpFiles.length) {
                 var subtest = "unexpected-crash-dump-found";
@@ -577,7 +577,7 @@ TestRunner.testFinished = function(tests) {
             }
 
             if (TestRunner.cleanupCrashes) {
-                if (SpecialPowers.removePendingCrashDumpFiles()) {
+                if (await SpecialPowers.removePendingCrashDumpFiles()) {
                     TestRunner.structuredLogger.info("This test left pending crash dumps");
                 }
             }
@@ -640,14 +640,12 @@ TestRunner.testFinished = function(tests) {
             TestRunner._makeIframe(interstitialURL, 0);
         }
 
-        SpecialPowers.executeAfterFlushingMessageQueue(function() {
-            SpecialPowers.waitForCrashes(TestRunner._expectingProcessCrash)
-                         .then(() => {
-                cleanUpCrashDumpFiles();
-                SpecialPowers.flushPermissions(function () {
-                    SpecialPowers.flushPrefEnv(runNextTest);
-                });
-            });
+        SpecialPowers.executeAfterFlushingMessageQueue(async function() {
+          await SpecialPowers.waitForCrashes(TestRunner._expectingProcessCrash);
+          await cleanUpCrashDumpFiles();
+          await SpecialPowers.flushPermissions();
+          await SpecialPowers.flushPrefEnv();
+          runNextTest();
         });
     });
 };

@@ -419,6 +419,7 @@ class MachCommands(MachCommandBase):
         if ret != 0:
             return ret
 
+        # TODO Bug 1563711 - Remove target.maven.zip
         # The zip archive is passed along in CI to ship geckoview onto a maven repo
         _craft_maven_zip_archive(self.topobjdir)
 

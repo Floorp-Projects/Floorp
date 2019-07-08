@@ -17,25 +17,27 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // ------------------------------------------------------------------------------
 
 function callError(message) {
-  return [{message, type: "CallExpression"}];
+  return [{ message, type: "CallExpression" }];
 }
 function error(message, type) {
-  return [{message, type}];
+  return [{ message, type }];
 }
 
-const MSG_NO_JS_QUERY_INTERFACE = (
+const MSG_NO_JS_QUERY_INTERFACE =
   "Please use ChromeUtils.generateQI rather than manually creating " +
-  "JavaScript QueryInterface functions");
+  "JavaScript QueryInterface functions";
 
-const MSG_NO_XPCOMUTILS_GENERATEQI = (
-  "Please use ChromeUtils.generateQI instead of XPCOMUtils.generateQI");
+const MSG_NO_XPCOMUTILS_GENERATEQI =
+  "Please use ChromeUtils.generateQI instead of XPCOMUtils.generateQI";
 
 /* globals nsIFlug */
 function QueryInterface(iid) {
-  if (iid.equals(Ci.nsISupports) ||
-      iid.equals(Ci.nsIMeh) ||
-      iid.equals(nsIFlug) ||
-      iid.equals(Ci.amIFoo)) {
+  if (
+    iid.equals(Ci.nsISupports) ||
+    iid.equals(Ci.nsIMeh) ||
+    iid.equals(nsIFlug) ||
+    iid.equals(Ci.amIFoo)
+  ) {
     return this;
   }
   throw Cr.NS_ERROR_NO_INTERFACE;
@@ -63,7 +65,10 @@ ruleTester.run("use-chromeutils-generateqi", rule, {
       errors: error(MSG_NO_JS_QUERY_INTERFACE, "Property"),
     },
     {
-      code: `X.prototype = { ${String(QueryInterface).replace(/^function /, "")} };`,
+      code: `X.prototype = { ${String(QueryInterface).replace(
+        /^function /,
+        ""
+      )} };`,
       output: `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh", "nsIFlug", "amIFoo"]) };`,
       errors: error(MSG_NO_JS_QUERY_INTERFACE, "Property"),
     },
@@ -74,4 +79,3 @@ ruleTester.run("use-chromeutils-generateqi", rule, {
     },
   ],
 });
-

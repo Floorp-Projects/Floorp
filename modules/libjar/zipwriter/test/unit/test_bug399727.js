@@ -4,12 +4,14 @@
  */
 
 function BinaryComparer(file, callback) {
-  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
+  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fstream.init(file, -1, 0, 0);
   this.length = file.fileSize;
-  this.fileStream = Cc["@mozilla.org/binaryinputstream;1"].
-                    createInstance(Ci.nsIBinaryInputStream);
+  this.fileStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   this.fileStream.setInputStream(fstream);
   this.offset = 0;
   this.callback = callback;
@@ -21,8 +23,7 @@ BinaryComparer.prototype = {
   length: null,
   callback: null,
 
-  onStartRequest(aRequest) {
-  },
+  onStartRequest(aRequest) {},
 
   onStopRequest(aRequest, aStatusCode) {
     this.fileStream.close();
@@ -32,8 +33,9 @@ BinaryComparer.prototype = {
   },
 
   onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
-    var stream = Cc["@mozilla.org/binaryinputstream;1"].
-                 createInstance(Ci.nsIBinaryInputStream);
+    var stream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+      Ci.nsIBinaryInputStream
+    );
     stream.setInputStream(aInputStream);
     var source, actual;
     for (var i = 0; i < aCount; i++) {
@@ -45,10 +47,23 @@ BinaryComparer.prototype = {
       try {
         actual = stream.read8();
       } catch (e) {
-        do_throw("Unable to read from converted stream at offset " + this.offset + " " + e);
+        do_throw(
+          "Unable to read from converted stream at offset " +
+            this.offset +
+            " " +
+            e
+        );
       }
-      if (source != actual)
-        do_throw("Invalid value " + actual + " at offset " + this.offset + ", should have been " + source);
+      if (source != actual) {
+        do_throw(
+          "Invalid value " +
+            actual +
+            " at offset " +
+            this.offset +
+            ", should have been " +
+            source
+        );
+      }
       this.offset++;
     }
   },
@@ -60,22 +75,32 @@ function comparer_callback() {
 
 function run_test() {
   var source = do_get_file(DATA_DIR + "test_bug399727.html");
-  var comparer = new BinaryComparer(do_get_file(DATA_DIR + "test_bug399727.zlib"),
-                                    comparer_callback);
+  var comparer = new BinaryComparer(
+    do_get_file(DATA_DIR + "test_bug399727.zlib"),
+    comparer_callback
+  );
 
   // Prepare the stream converter
-  var scs = Cc["@mozilla.org/streamConverters;1"].
-            getService(Ci.nsIStreamConverterService);
-  var converter = scs.asyncConvertData("uncompressed", "deflate", comparer, null);
+  var scs = Cc["@mozilla.org/streamConverters;1"].getService(
+    Ci.nsIStreamConverterService
+  );
+  var converter = scs.asyncConvertData(
+    "uncompressed",
+    "deflate",
+    comparer,
+    null
+  );
 
   // Open the expected output file
-  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
+  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fstream.init(source, -1, 0, 0);
 
   // Set up a pump to push data from the file to the stream converter
-  var pump = Cc["@mozilla.org/network/input-stream-pump;1"].
-             createInstance(Ci.nsIInputStreamPump);
+  var pump = Cc["@mozilla.org/network/input-stream-pump;1"].createInstance(
+    Ci.nsIInputStreamPump
+  );
   pump.init(fstream, 0, 0, true);
   pump.asyncRead(converter, null);
   do_test_pending();

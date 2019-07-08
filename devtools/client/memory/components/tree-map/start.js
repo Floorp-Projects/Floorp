@@ -16,12 +16,18 @@ const CanvasUtils = require("./canvas-utils");
  *                  the report from a census
  * @param  {Number} debounceRate
  */
-module.exports = function startVisualization(parentEl, report,
-                                              debounceRate = 60) {
+module.exports = function startVisualization(
+  parentEl,
+  report,
+  debounceRate = 60
+) {
   const window = parentEl.ownerDocument.defaultView;
   const canvases = new CanvasUtils(parentEl, debounceRate);
-  const dragZoom = new DragZoom(canvases.container, debounceRate,
-                              window.requestAnimationFrame);
+  const dragZoom = new DragZoom(
+    canvases.container,
+    debounceRate,
+    window.requestAnimationFrame
+  );
 
   setupDraw(report, canvases, dragZoom);
 

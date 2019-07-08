@@ -3,9 +3,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
+const paymentSrv = Cc[
+  "@mozilla.org/dom/payments/payment-request-service;1"
+].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
   sendAsyncMessage("test-fail", message);
@@ -13,15 +17,21 @@ function emitTestFail(message) {
 
 function checkSimplestRequest(payRequest) {
   if (payRequest.topLevelPrincipal.origin != "https://example.com") {
-    emitTestFail("Top level principal's Origin should be 'https://example.com', but got '"
-                 + payRequest.topLevelPrincipal.origin + "'.");
+    emitTestFail(
+      "Top level principal's Origin should be 'https://example.com', but got '" +
+        payRequest.topLevelPrincipal.origin +
+        "'."
+    );
   }
 
   if (payRequest.paymentMethods.length != 1) {
     emitTestFail("paymentMethods' length should be 1.");
   }
 
-  const methodData = payRequest.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
+  const methodData = payRequest.paymentMethods.queryElementAt(
+    0,
+    Ci.nsIPaymentMethodData
+  );
   if (!methodData) {
     emitTestFail("Fail to get payment methodData.");
   }
@@ -70,22 +80,28 @@ function checkSimplestRequest(payRequest) {
     emitTestFail("requestShipping option should be false.");
   }
   if (paymentOptions.shippingType != "shipping") {
-    emitTestFail("shippingType option should be 'shipping'.")
+    emitTestFail("shippingType option should be 'shipping'.");
   }
 }
 
 // eslint-disable-next-line complexity
 function checkComplexRequest(payRequest) {
   if (payRequest.topLevelPrincipal.origin != "https://example.com") {
-    emitTestFail("Top level principal's origin should be 'https://example.com', but got '"
-                 + payRequest.topLevelPrincipal.origin + "'.");
+    emitTestFail(
+      "Top level principal's origin should be 'https://example.com', but got '" +
+        payRequest.topLevelPrincipal.origin +
+        "'."
+    );
   }
 
   if (payRequest.paymentMethods.length != 1) {
     emitTestFail("paymentMethods' length should be 1.");
   }
 
-  const methodData = payRequest.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
+  const methodData = payRequest.paymentMethods.queryElementAt(
+    0,
+    Ci.nsIPaymentMethodData
+  );
   if (!methodData) {
     emitTestFail("Fail to get payment methodData.");
   }
@@ -95,23 +111,41 @@ function checkComplexRequest(payRequest) {
   }
   const data = methodData.data;
   const supportedNetworks = data.supportedNetworks;
-  const expectedSupportedNetworks = ["unionpay", "visa", "mastercard", "amex",
-                                     "discover", "diners", "jcb", "mir"];
-  if (supportedNetworks.length !=  expectedSupportedNetworks.length) {
-    emitTestFail("supportedNetworks.length should be " +
-                 expectedSupportedNetworks.length +
-                 ", but got " + supportedNetworks.length + ".");
+  const expectedSupportedNetworks = [
+    "unionpay",
+    "visa",
+    "mastercard",
+    "amex",
+    "discover",
+    "diners",
+    "jcb",
+    "mir",
+  ];
+  if (supportedNetworks.length != expectedSupportedNetworks.length) {
+    emitTestFail(
+      "supportedNetworks.length should be " +
+        expectedSupportedNetworks.length +
+        ", but got " +
+        supportedNetworks.length +
+        "."
+    );
   }
   for (let idx = 0; idx < supportedNetworks.length; idx++) {
     if (supportedNetworks[idx] != expectedSupportedNetworks[idx]) {
-      emitTestFail("supportedNetworks[" + idx + "] should be '" +
-                   expectedSupportedNetworks[idx] + "', but got '" +
-                   supportedNetworks[idx] + "'.");
+      emitTestFail(
+        "supportedNetworks[" +
+          idx +
+          "] should be '" +
+          expectedSupportedNetworks[idx] +
+          "', but got '" +
+          supportedNetworks[idx] +
+          "'."
+      );
     }
   }
   // checking the passed PaymentDetails parameter
   const details = payRequest.paymentDetails;
-  if (details.id != "payment details" ) {
+  if (details.id != "payment details") {
     emitTestFail("details.id should be 'payment details'.");
   }
   if (details.totalItem.label != "Total") {
@@ -129,7 +163,7 @@ function checkComplexRequest(payRequest) {
     emitTestFail("details.displayItems should not be undefined.");
   }
   if (displayItems.length != 2) {
-    emitTestFail("displayItems' length should be 2.")
+    emitTestFail("displayItems' length should be 2.");
   }
   let item = displayItems.queryElementAt(0, Ci.nsIPaymentItem);
   if (item.label != "First item") {
@@ -189,8 +223,11 @@ function checkComplexRequest(payRequest) {
     emitTestFail("additional item's value should be '-10.00'.");
   }
   if (modifier.data.discountProgramParticipantId != "86328764873265") {
-    emitTestFail("modifier's data should be '86328764873265', but got '" +
-                 modifier.data.discountProgramParticipantId + "'.");
+    emitTestFail(
+      "modifier's data should be '86328764873265', but got '" +
+        modifier.data.discountProgramParticipantId +
+        "'."
+    );
   }
 
   const shippingOptions = details.shippingOptions;
@@ -200,7 +237,10 @@ function checkComplexRequest(payRequest) {
   if (shippingOptions.length != 2) {
     emitTestFail("shippingOptions' length should be 2.");
   }
-  let shippingOption = shippingOptions.queryElementAt(0, Ci.nsIPaymentShippingOption);
+  let shippingOption = shippingOptions.queryElementAt(
+    0,
+    Ci.nsIPaymentShippingOption
+  );
   if (shippingOption.id != "NormalShipping") {
     emitTestFail("1st shippingOption's id should be 'NormalShipping'.");
   }
@@ -216,7 +256,10 @@ function checkComplexRequest(payRequest) {
   if (!shippingOption.selected) {
     emitTestFail("1st shippingOption should be selected.");
   }
-  shippingOption = shippingOptions.queryElementAt(1, Ci.nsIPaymentShippingOption);
+  shippingOption = shippingOptions.queryElementAt(
+    1,
+    Ci.nsIPaymentShippingOption
+  );
   if (shippingOption.id != "FastShipping") {
     emitTestFail("2nd shippingOption's id should be 'FastShipping'.");
   }
@@ -248,7 +291,7 @@ function checkComplexRequest(payRequest) {
     emitTestFail("requestShipping option should be true.");
   }
   if (paymentOptions.shippingType != "shipping") {
-    emitTestFail("shippingType option should be 'shipping'.")
+    emitTestFail("shippingType option should be 'shipping'.");
   }
 }
 
@@ -257,7 +300,10 @@ function checkNonBasicCardRequest(payRequest) {
     emitTestFail("paymentMethods' length should be 1.");
   }
 
-  const methodData = payRequest.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
+  const methodData = payRequest.paymentMethods.queryElementAt(
+    0,
+    Ci.nsIPaymentMethodData
+  );
   if (!methodData) {
     emitTestFail("Fail to get payment methodData.");
   }
@@ -268,11 +314,19 @@ function checkNonBasicCardRequest(payRequest) {
 
   const paymentId = methodData.data.paymentId;
   if (paymentId != "P3892940") {
-    emitTestFail("methodData.data.paymentId should be 'P3892940', but got " + paymentId + ".");
+    emitTestFail(
+      "methodData.data.paymentId should be 'P3892940', but got " +
+        paymentId +
+        "."
+    );
   }
   const paymentType = methodData.data.paymentType;
   if (paymentType != "prepaid") {
-    emitTestFail("methodData.data.paymentType should be 'prepaid', but got " + paymentType + ".");
+    emitTestFail(
+      "methodData.data.paymentType should be 'prepaid', but got " +
+        paymentType +
+        "."
+    );
   }
 
   // checking the passed PaymentDetails parameter
@@ -312,14 +366,16 @@ function checkNonBasicCardRequest(payRequest) {
     emitTestFail("requestShipping option should be false.");
   }
   if (paymentOptions.shippingType != "shipping") {
-    emitTestFail("shippingType option should be 'shipping'.")
+    emitTestFail("shippingType option should be 'shipping'.");
   }
 }
 
 function checkSimplestRequestHandler() {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
-    emitTestFail("PaymentRequestService should have at least one payment request.");
+    emitTestFail(
+      "PaymentRequestService should have at least one payment request."
+    );
   }
   for (let payRequest of paymentEnum) {
     if (!payRequest) {
@@ -335,7 +391,9 @@ function checkSimplestRequestHandler() {
 function checkComplexRequestHandler() {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
-    emitTestFail("PaymentRequestService should have at least one payment request.");
+    emitTestFail(
+      "PaymentRequestService should have at least one payment request."
+    );
   }
   for (let payRequest of paymentEnum) {
     if (!payRequest) {
@@ -351,7 +409,9 @@ function checkComplexRequestHandler() {
 function checkNonBasicCardRequestHandler() {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
-    emitTestFail("PaymentRequestService should have at least one payment request.");
+    emitTestFail(
+      "PaymentRequestService should have at least one payment request."
+    );
   }
   for (let payRequest of paymentEnum) {
     if (!payRequest) {
@@ -364,10 +424,12 @@ function checkNonBasicCardRequestHandler() {
   sendAsyncMessage("check-complete");
 }
 
-function checkMultipleRequestsHandler () {
+function checkMultipleRequestsHandler() {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
-    emitTestFail("PaymentRequestService should have at least one payment request.");
+    emitTestFail(
+      "PaymentRequestService should have at least one payment request."
+    );
   }
   for (let payRequest of paymentEnum) {
     if (!payRequest) {
@@ -387,7 +449,9 @@ function checkMultipleRequestsHandler () {
 function checkCrossOriginTopLevelPrincipalHandler() {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
-    emitTestFail("PaymentRequestService should have at least one payment request.");
+    emitTestFail(
+      "PaymentRequestService should have at least one payment request."
+    );
   }
   for (let payRequest of paymentEnum) {
     if (!payRequest) {
@@ -395,8 +459,11 @@ function checkCrossOriginTopLevelPrincipalHandler() {
       break;
     }
     if (payRequest.topLevelPrincipal.origin != "https://example.com") {
-      emitTestFail("Top level principal's origin should be 'https://example.com', but got '"
-                   + payRequest.topLevelPrincipal.origin + "'.");
+      emitTestFail(
+        "Top level principal's origin should be 'https://example.com', but got '" +
+          payRequest.topLevelPrincipal.origin +
+          "'."
+      );
     }
   }
   paymentSrv.cleanup();
@@ -406,8 +473,14 @@ function checkCrossOriginTopLevelPrincipalHandler() {
 addMessageListener("check-simplest-request", checkSimplestRequestHandler);
 addMessageListener("check-complex-request", checkComplexRequestHandler);
 addMessageListener("check-multiple-requests", checkMultipleRequestsHandler);
-addMessageListener("check-nonbasiccard-request", checkNonBasicCardRequestHandler);
-addMessageListener("check-cross-origin-top-level-principal", checkCrossOriginTopLevelPrincipalHandler);
+addMessageListener(
+  "check-nonbasiccard-request",
+  checkNonBasicCardRequestHandler
+);
+addMessageListener(
+  "check-cross-origin-top-level-principal",
+  checkCrossOriginTopLevelPrincipalHandler
+);
 
 addMessageListener("teardown", function() {
   sendAsyncMessage("teardown-complete");

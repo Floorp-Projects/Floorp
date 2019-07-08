@@ -9,9 +9,10 @@
 // devtools/inspector/test folder. This test only cares about checking that the
 // box model view does call the highlighter, and it does so by mocking it.
 
-const STYLE = "div { position: absolute; top: 50px; left: 50px; " +
-              "height: 10px; width: 10px; border: 10px solid black; " +
-              "padding: 10px; margin: 10px;}";
+const STYLE =
+  "div { position: absolute; top: 50px; left: 50px; " +
+  "height: 10px; width: 10px; border: 10px solid black; " +
+  "padding: 10px; margin: 10px;}";
 const HTML = "<style>" + STYLE + "</style><div></div>";
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
@@ -19,7 +20,7 @@ var highlightedNodeFront, highlighterOptions;
 
 add_task(async function() {
   await addTab(TEST_URL);
-  const {toolbox, inspector, boxmodel} = await openLayoutView();
+  const { toolbox, inspector, boxmodel } = await openLayoutView();
   await selectNode("div", inspector);
 
   // Mock the highlighter by replacing the showBoxModel method.
@@ -43,8 +44,13 @@ add_task(async function() {
 
 async function testGuideOnLayoutHover(elt, expectedRegion, inspector) {
   info("Synthesizing mouseover on the boxmodel-view");
-  EventUtils.synthesizeMouse(elt, 50, 2, {type: "mouseover"},
-    elt.ownerDocument.defaultView);
+  EventUtils.synthesizeMouse(
+    elt,
+    50,
+    2,
+    { type: "mouseover" },
+    elt.ownerDocument.defaultView
+  );
 
   info("Waiting for the node-highlight event from the toolbox");
   await inspector.highlighter.once("node-highlight");
@@ -53,8 +59,14 @@ async function testGuideOnLayoutHover(elt, expectedRegion, inspector) {
   // test is executed after finishing synthesizing mouse event.
   await new Promise(executeSoon);
 
-  is(highlightedNodeFront, inspector.selection.nodeFront,
-    "The right nodeFront was highlighted");
-  is(highlighterOptions.region, expectedRegion,
-    "Region " + expectedRegion + " was highlighted");
+  is(
+    highlightedNodeFront,
+    inspector.selection.nodeFront,
+    "The right nodeFront was highlighted"
+  );
+  is(
+    highlighterOptions.region,
+    expectedRegion,
+    "Region " + expectedRegion + " was highlighted"
+  );
 }

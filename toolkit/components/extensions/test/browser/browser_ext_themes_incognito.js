@@ -9,13 +9,13 @@ add_task(async function test_theme_incognito_not_allowed() {
     incognitoOverride: "spanning",
     async background() {
       const theme = {
-        "colors": {
-          "frame": "black",
-          "tab_background_text": "black",
+        colors: {
+          frame: "black",
+          tab_background_text: "black",
         },
       };
-      let window = await browser.windows.create({incognito: true});
-      browser.test.onMessage.addListener(async (message) => {
+      let window = await browser.windows.create({ incognito: true });
+      browser.test.onMessage.addListener(async message => {
         if (message == "update") {
           browser.theme.update(window.id, theme);
           return;
@@ -34,9 +34,9 @@ add_task(async function test_theme_incognito_not_allowed() {
 
   async function background(windowId) {
     const theme = {
-      "colors": {
-        "frame": "black",
-        "tab_background_text": "black",
+      colors: {
+        frame: "black",
+        tab_background_text: "black",
       },
     };
 
@@ -47,15 +47,18 @@ add_task(async function test_theme_incognito_not_allowed() {
     await browser.test.assertRejects(
       browser.theme.getCurrent(windowId),
       /Invalid window ID/,
-      "API should reject getting window theme");
+      "API should reject getting window theme"
+    );
     await browser.test.assertRejects(
       browser.theme.update(windowId, theme),
       /Invalid window ID/,
-      "API should reject updating theme");
+      "API should reject updating theme"
+    );
     await browser.test.assertRejects(
       browser.theme.reset(windowId),
       /Invalid window ID/,
-      "API should reject reseting theme on window");
+      "API should reject reseting theme on window"
+    );
 
     browser.test.sendMessage("start");
   }

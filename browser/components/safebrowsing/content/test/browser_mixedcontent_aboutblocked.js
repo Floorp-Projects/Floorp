@@ -1,10 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const SECURE_CONTAINER_URL = "https://example.com/browser/browser/components/safebrowsing/content/test/empty_file.html";
+const SECURE_CONTAINER_URL =
+  "https://example.com/browser/browser/components/safebrowsing/content/test/empty_file.html";
 
 add_task(async function testNormalBrowsing() {
-  await BrowserTestUtils.withNewTab(SECURE_CONTAINER_URL, async function(browser) {
+  await BrowserTestUtils.withNewTab(SECURE_CONTAINER_URL, async function(
+    browser
+  ) {
     // Before we load the phish url, we have to make sure the hard-coded
     // black list has been added to the database.
     await new Promise(resolve => waitForDBInit(resolve));

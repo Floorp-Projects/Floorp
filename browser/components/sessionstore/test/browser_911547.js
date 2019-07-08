@@ -8,11 +8,12 @@
 add_task(async function test() {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
+    set: [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
   // create a tab that has a CSP
-  let testURL = "http://mochi.test:8888/browser/browser/components/sessionstore/test/browser_911547_sample.html";
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, testURL);
+  let testURL =
+    "http://mochi.test:8888/browser/browser/components/sessionstore/test/browser_911547_sample.html";
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, testURL));
   gBrowser.selectedTab = tab;
 
   let browser = tab.linkedBrowser;
@@ -20,12 +21,18 @@ add_task(async function test() {
 
   // this is a baseline to ensure CSP is active
   // attempt to inject and run a script via inline (pre-restore, allowed)
-  await injectInlineScript(browser, `document.getElementById("test_id1").value = "id1_modified";`);
+  await injectInlineScript(
+    browser,
+    `document.getElementById("test_id1").value = "id1_modified";`
+  );
 
   let loadedPromise = promiseBrowserLoaded(browser);
   await ContentTask.spawn(browser, null, function() {
-    is(content.document.getElementById("test_id1").value, "id1_initial",
-       "CSP should block the inline script that modifies test_id");
+    is(
+      content.document.getElementById("test_id1").value,
+      "id1_initial",
+      "CSP should block the inline script that modifies test_id"
+    );
     content.document.getElementById("test_data_link").click();
   });
 
@@ -33,8 +40,11 @@ add_task(async function test() {
 
   await ContentTask.spawn(browser, {}, function( {}) { // eslint-disable-line
     // the data: URI inherits the CSP and the inline script needs to be blocked
-    is(content.document.getElementById("test_id2").value, "id2_initial",
-       "CSP should block the script loaded by the clicked data URI");
+    is(
+      content.document.getElementById("test_id2").value,
+      "id2_initial",
+      "CSP should block the script loaded by the clicked data URI"
+    );
   });
 
   // close the tab
@@ -48,8 +58,11 @@ add_task(async function test() {
   await ContentTask.spawn(browser, {}, function({}) { // eslint-disable-line
     // the data: URI should be restored including the inherited CSP and the
     // inline script should be blocked.
-    is(content.document.getElementById("test_id2").value, "id2_initial",
-       "CSP should block the script loaded by the clicked data URI after restore");
+    is(
+      content.document.getElementById("test_id2").value,
+      "id2_initial",
+      "CSP should block the script loaded by the clicked data URI after restore"
+    );
   });
 
   // clean up

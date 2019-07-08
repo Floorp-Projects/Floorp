@@ -5,11 +5,9 @@
 add_task(async function sidebar_tab_query_bug_1340739() {
   let data = {
     manifest: {
-      "permissions": [
-        "tabs",
-      ],
-      "sidebar_action": {
-        "default_panel": "sidebar.html",
+      permissions: ["tabs"],
+      sidebar_action: {
+        default_panel: "sidebar.html",
       },
     },
     useAddonManager: "temporary",
@@ -26,10 +24,14 @@ add_task(async function sidebar_tab_query_bug_1340739() {
       `,
       "sidebar.js": function() {
         Promise.all([
-          browser.tabs.query({}).then((tabs) => {
-            browser.test.assertEq(1, tabs.length, "got tab without currentWindow");
+          browser.tabs.query({}).then(tabs => {
+            browser.test.assertEq(
+              1,
+              tabs.length,
+              "got tab without currentWindow"
+            );
           }),
-          browser.tabs.query({currentWindow: true}).then((tabs) => {
+          browser.tabs.query({ currentWindow: true }).then(tabs => {
             browser.test.assertEq(1, tabs.length, "got tab with currentWindow");
           }),
         ]).then(() => {

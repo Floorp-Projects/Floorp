@@ -7,28 +7,32 @@ const test = new SearchConfigTest({
   identifier: "baidu",
   aliases: ["@\u767E\u5EA6", "@baidu"],
   default: {
-    included: [{
-      regions: [
-        "cn",
-      ],
-      locales: {
-        matches: ["zh-CN"],
+    included: [
+      {
+        regions: ["cn"],
+        locales: {
+          matches: ["zh-CN"],
+        },
       },
-    }],
+    ],
   },
   available: {
-    included: [{
-      locales: {
-        matches: ["zh-CN"],
+    included: [
+      {
+        locales: {
+          matches: ["zh-CN"],
+        },
       },
-    }],
+    ],
   },
-  details: [{
-    included: [{}],
-    domain: "baidu.com",
-    searchUrlCode: "tn=monline_7_dg",
-    suggestUrlCode: "tn=monline_7_dg",
-  }],
+  details: [
+    {
+      included: [{}],
+      domain: "baidu.com",
+      searchUrlCode: "tn=monline_7_dg",
+      suggestUrlCode: "tn=monline_7_dg",
+    },
+  ],
 });
 
 add_task(async function setup() {

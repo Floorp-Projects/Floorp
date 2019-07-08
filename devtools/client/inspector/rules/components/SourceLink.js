@@ -34,9 +34,11 @@ class SourceLink extends PureComponent {
    * Style Editor is enabled and the rule is not a user agent or element style.
    */
   get isSourceLinkEnabled() {
-    return this.props.isSourceLinkEnabled &&
-           !this.props.isUserAgentStyle &&
-           this.props.type !== ELEMENT_STYLE;
+    return (
+      this.props.isSourceLinkEnabled &&
+      !this.props.isUserAgentStyle &&
+      this.props.type !== ELEMENT_STYLE
+    );
   }
 
   onSourceClick(event) {
@@ -50,20 +52,19 @@ class SourceLink extends PureComponent {
   render() {
     const { label, title } = this.props.sourceLink;
 
-    return (
-      dom.div(
+    return dom.div(
+      {
+        className:
+          "ruleview-rule-source theme-link" +
+          (!this.isSourceLinkEnabled ? " disabled" : ""),
+        onClick: this.onSourceClick,
+      },
+      dom.span(
         {
-          className: "ruleview-rule-source theme-link" +
-                     (!this.isSourceLinkEnabled ? " disabled" : ""),
-          onClick: this.onSourceClick,
+          className: "ruleview-rule-source-label",
+          title,
         },
-        dom.span(
-          {
-            className: "ruleview-rule-source-label",
-            title,
-          },
-          label
-        )
+        label
       )
     );
   }

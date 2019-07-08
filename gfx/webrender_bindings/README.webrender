@@ -6,7 +6,6 @@ To build and run WebRender in Gecko:
    Ensure that rustc and cargo are in your $PATH (adding $HOME/.cargo/bin/ should be sufficient)
 2. Build using |mach build|.
    You don't need anything special in your mozconfig for local builds; webrender will be built by default.
-   If you are building a non-nightly version (e.g. beta) you may need to add |ac_add_options --enable-webrender=build| to your mozconfig.
 3. Run with |MOZ_WEBRENDER=1| in your environment. e.g. |MOZ_WEBRENDER=1 ./mach run|.
    Alternatively, you can set the gfx.webrender.enabled pref to true (browser restart required).
    Note that on Linux, acceleration is disabled by default and it needs to be enabled for WebRender to work.

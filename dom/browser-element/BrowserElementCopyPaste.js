@@ -22,21 +22,29 @@ debug("loaded");
 
 var CopyPasteAssistent = {
   COMMAND_MAP: {
-    "cut": "cmd_cut",
-    "copy": "cmd_copy",
-    "paste": "cmd_paste",
-    "selectall": "cmd_selectAll",
+    cut: "cmd_cut",
+    copy: "cmd_copy",
+    paste: "cmd_paste",
+    selectall: "cmd_selectAll",
   },
 
   init() {
-    addEventListener("mozcaretstatechanged", this,
-                     /* useCapture = */ true, /* wantsUntrusted = */ false);
+    addEventListener(
+      "mozcaretstatechanged",
+      this,
+      /* useCapture = */ true,
+      /* wantsUntrusted = */ false
+    );
     addMessageListener("browser-element-api:call", this);
   },
 
   destroy() {
-    removeEventListener("mozcaretstatechanged", this,
-                        /* useCapture = */ true, /* wantsUntrusted = */ false);
+    removeEventListener(
+      "mozcaretstatechanged",
+      this,
+      /* useCapture = */ true,
+      /* wantsUntrusted = */ false
+    );
     removeMessageListener("browser-element-api:call", this);
   },
 
@@ -80,7 +88,8 @@ var CopyPasteAssistent = {
 
     let boundingClientRect = e.boundingClientRect;
     this._isCommandEnabled("paste");
-    let zoomFactor = content.innerWidth == 0 ? 1 : content.screen.width / content.innerWidth;
+    let zoomFactor =
+      content.innerWidth == 0 ? 1 : content.screen.width / content.innerWidth;
 
     let detail = {
       rect: {

@@ -5,12 +5,16 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   let requests = [];
-  function doOpen(version, errorCallback, upgradeNeededCallback, successCallback) {
+  function doOpen(
+    version,
+    errorCallback,
+    upgradeNeededCallback,
+    successCallback
+  ) {
     let request = indexedDB.open(name, version);
     request.onerror = errorCallback;
     request.onupgradeneeded = upgradeNeededCallback;
@@ -18,7 +22,12 @@ function* testSteps()
     requests.push(request);
   }
 
-  doOpen(1, errorHandler, grabEventAndContinueHandler, grabEventAndContinueHandler);
+  doOpen(
+    1,
+    errorHandler,
+    grabEventAndContinueHandler,
+    grabEventAndContinueHandler
+  );
   doOpen(2, errorHandler, unexpectedSuccessHandler, unexpectedSuccessHandler);
 
   let event = yield undefined;
@@ -36,7 +45,11 @@ function* testSteps()
 
   event = yield undefined;
   is(event.type, "complete", "expect a complete event");
-  is(event.target, requests[0].transaction, "expect it to be fired at the transaction");
+  is(
+    event.target,
+    requests[0].transaction,
+    "expect it to be fired at the transaction"
+  );
 
   event = yield undefined;
   is(event.type, "success", "expect a success event");
@@ -83,4 +96,3 @@ function* testSteps()
 
   finishTest();
 }
-

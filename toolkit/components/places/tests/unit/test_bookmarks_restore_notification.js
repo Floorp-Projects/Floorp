@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {BookmarkHTMLUtils} = ChromeUtils.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
+const { BookmarkHTMLUtils } = ChromeUtils.import(
+  "resource://gre/modules/BookmarkHTMLUtils.jsm"
+);
 
 /**
  * Tests the bookmarks-restore-* nsIObserver notifications after restoring
@@ -12,11 +14,11 @@ const {BookmarkHTMLUtils} = ChromeUtils.import("resource://gre/modules/BookmarkH
  */
 
 // The topics and data passed to nsIObserver.observe() on bookmarks restore
-const NSIOBSERVER_TOPIC_BEGIN    = "bookmarks-restore-begin";
-const NSIOBSERVER_TOPIC_SUCCESS  = "bookmarks-restore-success";
-const NSIOBSERVER_TOPIC_FAILED   = "bookmarks-restore-failed";
-const NSIOBSERVER_DATA_JSON      = "json";
-const NSIOBSERVER_DATA_HTML      = "html";
+const NSIOBSERVER_TOPIC_BEGIN = "bookmarks-restore-begin";
+const NSIOBSERVER_TOPIC_SUCCESS = "bookmarks-restore-success";
+const NSIOBSERVER_TOPIC_FAILED = "bookmarks-restore-failed";
+const NSIOBSERVER_DATA_JSON = "json";
+const NSIOBSERVER_DATA_HTML = "html";
 const NSIOBSERVER_DATA_HTML_INIT = "html-initial";
 
 // Bookmarks are added for these URIs
@@ -34,7 +36,8 @@ var uris = [
 async function addBookmarks() {
   for (let url of uris) {
     await PlacesUtils.bookmarks.insert({
-      url, parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url,
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
     });
     Assert.ok(await PlacesUtils.bookmarks.fetch({ url }), "Url is bookmarked");
   }
@@ -51,11 +54,10 @@ async function addBookmarks() {
 function promiseFile(aBasename) {
   let path = OS.Path.join(OS.Constants.Path.profileDir, aBasename);
   info("opening " + path);
-  return OS.File.open(path, { truncate: true })
-                .then(aFile => {
-                  aFile.close();
-                  return path;
-                });
+  return OS.File.open(path, { truncate: true }).then(aFile => {
+    aFile.close();
+    return path;
+  });
 }
 
 /**
@@ -86,18 +88,26 @@ async function checkObservers(expectPromises, expectedData) {
   let [promiseBegin, promiseResult] = expectPromises;
 
   let beginData = (await promiseBegin)[1];
-  Assert.equal(beginData, expectedData.data,
-    "Data for current test should be what is expected");
+  Assert.equal(
+    beginData,
+    expectedData.data,
+    "Data for current test should be what is expected"
+  );
 
   let [resultSubject, resultData] = await promiseResult;
-  Assert.equal(resultData, expectedData.data,
-    "Data for current test should be what is expected");
+  Assert.equal(
+    resultData,
+    expectedData.data,
+    "Data for current test should be what is expected"
+  );
 
   // Make sure folder ID is what is expected.  For importing HTML into a
   // folder, this will be an integer, otherwise null.
   if (resultSubject) {
-    Assert.equal(resultSubject.QueryInterface(Ci.nsISupportsPRInt64).data,
-                expectedData.folderId);
+    Assert.equal(
+      resultSubject.QueryInterface(Ci.nsISupportsPRInt64).data,
+      expectedData.folderId
+    );
   } else {
     Assert.equal(expectedData.folderId, null);
   }
@@ -109,7 +119,7 @@ async function checkObservers(expectPromises, expectedData) {
 async function teardown(file, begin, success, fail) {
   // On restore failed, file may not exist, so wrap in try-catch.
   try {
-    await OS.File.remove(file, {ignoreAbsent: true});
+    await OS.File.remove(file, { ignoreAbsent: true });
   } catch (e) {}
 
   // clean up bookmarks
@@ -121,8 +131,8 @@ add_task(async function test_json_restore_normal() {
   // folderId: for HTML restore into a folder, the folder ID to restore into;
   //           otherwise, set it to null
   let expectedData = {
-    data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_JSON,
+    folderId: null,
   };
   let expectPromises = registerObservers(true);
 
@@ -144,15 +154,18 @@ add_task(async function test_json_restore_normal() {
 
 add_task(async function test_json_restore_empty() {
   let expectedData = {
-    data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_JSON,
+    folderId: null,
   };
   let expectPromises = registerObservers(false);
 
   info("JSON restore: empty file should fail");
   let file = await promiseFile("bookmarks-test_restoreNotification.json");
-  await Assert.rejects(BookmarkJSONUtils.importFromFile(file, { replace: true }),
-    /SyntaxError/, "Restore should reject for an empty file.");
+  await Assert.rejects(
+    BookmarkJSONUtils.importFromFile(file, { replace: true }),
+    /SyntaxError/,
+    "Restore should reject for an empty file."
+  );
 
   await checkObservers(expectPromises, expectedData);
   await teardown(file);
@@ -160,16 +173,19 @@ add_task(async function test_json_restore_empty() {
 
 add_task(async function test_json_restore_nonexist() {
   let expectedData = {
-    data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_JSON,
+    folderId: null,
   };
   let expectPromises = registerObservers(false);
 
   info("JSON restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 1");
-  await Assert.rejects(BookmarkJSONUtils.importFromFile(file.path, { replace: true }),
-    /Cannot restore from nonexisting json file/, "Restore should reject for a non-existent file.");
+  await Assert.rejects(
+    BookmarkJSONUtils.importFromFile(file.path, { replace: true }),
+    /Cannot restore from nonexisting json file/,
+    "Restore should reject for a non-existent file."
+  );
 
   await checkObservers(expectPromises, expectedData);
   await teardown(file);
@@ -177,8 +193,8 @@ add_task(async function test_json_restore_nonexist() {
 
 add_task(async function test_html_restore_normal() {
   let expectedData = {
-    data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_HTML,
+    folderId: null,
   };
   let expectPromises = registerObservers(true);
 
@@ -188,8 +204,9 @@ add_task(async function test_html_restore_normal() {
   await BookmarkHTMLUtils.exportToFile(file);
   await PlacesUtils.bookmarks.eraseEverything();
   try {
-    BookmarkHTMLUtils.importFromFile(file)
-                     .catch(do_report_unexpected_exception);
+    BookmarkHTMLUtils.importFromFile(file).catch(
+      do_report_unexpected_exception
+    );
   } catch (e) {
     do_throw("  Restore should not have failed");
   }
@@ -200,16 +217,17 @@ add_task(async function test_html_restore_normal() {
 
 add_task(async function test_html_restore_empty() {
   let expectedData = {
-    data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_HTML,
+    folderId: null,
   };
   let expectPromises = registerObservers(true);
 
   info("HTML restore: empty file should succeed");
   let file = await promiseFile("bookmarks-test_restoreNotification.init.html");
   try {
-    BookmarkHTMLUtils.importFromFile(file)
-                     .catch(do_report_unexpected_exception);
+    BookmarkHTMLUtils.importFromFile(file).catch(
+      do_report_unexpected_exception
+    );
   } catch (e) {
     do_throw("  Restore should not have failed");
   }
@@ -220,16 +238,19 @@ add_task(async function test_html_restore_empty() {
 
 add_task(async function test_html_restore_nonexist() {
   let expectedData = {
-    data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_HTML,
+    folderId: null,
   };
   let expectPromises = registerObservers(false);
 
   info("HTML restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 2");
-  await Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path),
-    /Cannot import from nonexisting html file/, "Restore should reject for a non-existent file.");
+  await Assert.rejects(
+    BookmarkHTMLUtils.importFromFile(file.path),
+    /Cannot import from nonexisting html file/,
+    "Restore should reject for a non-existent file."
+  );
 
   await checkObservers(expectPromises, expectedData);
   await teardown(file);
@@ -237,8 +258,8 @@ add_task(async function test_html_restore_nonexist() {
 
 add_task(async function test_html_init_restore_normal() {
   let expectedData = {
-    data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_HTML_INIT,
+    folderId: null,
   };
   let expectPromises = registerObservers(true);
 
@@ -248,8 +269,9 @@ add_task(async function test_html_init_restore_normal() {
   await BookmarkHTMLUtils.exportToFile(file);
   await PlacesUtils.bookmarks.eraseEverything();
   try {
-    BookmarkHTMLUtils.importFromFile(file, { replace: true })
-                     .catch(do_report_unexpected_exception);
+    BookmarkHTMLUtils.importFromFile(file, { replace: true }).catch(
+      do_report_unexpected_exception
+    );
   } catch (e) {
     do_throw("  Restore should not have failed");
   }
@@ -260,16 +282,17 @@ add_task(async function test_html_init_restore_normal() {
 
 add_task(async function test_html_init_restore_empty() {
   let expectedData = {
-    data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_HTML_INIT,
+    folderId: null,
   };
   let expectPromises = registerObservers(true);
 
   info("HTML initial restore: empty file should succeed");
   let file = await promiseFile("bookmarks-test_restoreNotification.init.html");
   try {
-    BookmarkHTMLUtils.importFromFile(file, { replace: true })
-                     .catch(do_report_unexpected_exception);
+    BookmarkHTMLUtils.importFromFile(file, { replace: true }).catch(
+      do_report_unexpected_exception
+    );
   } catch (e) {
     do_throw("  Restore should not have failed");
   }
@@ -280,16 +303,19 @@ add_task(async function test_html_init_restore_empty() {
 
 add_task(async function test_html_init_restore_nonexist() {
   let expectedData = {
-    data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null,
+    data: NSIOBSERVER_DATA_HTML_INIT,
+    folderId: null,
   };
   let expectPromises = registerObservers(false);
 
   info("HTML initial restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 3");
-  await Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path, { replace: true }),
-    /Cannot import from nonexisting html file/, "Restore should reject for a non-existent file.");
+  await Assert.rejects(
+    BookmarkHTMLUtils.importFromFile(file.path, { replace: true }),
+    /Cannot import from nonexisting html file/,
+    "Restore should reject for a non-existent file."
+  );
 
   await checkObservers(expectPromises, expectedData);
   await teardown(file);

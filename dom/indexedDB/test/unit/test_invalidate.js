@@ -5,10 +5,8 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const databaseName =
-    ("window" in this) ? window.location.pathname : "Test";
+function* testSteps() {
+  const databaseName = "window" in this ? window.location.pathname : "Test";
 
   let dbCount = 0;
 
@@ -25,8 +23,9 @@ function* testSteps()
 
   request.onupgradeneeded = unexpectedSuccessHandler;
 
-  let objStore =
-    request.result.createObjectStore("foo", { autoIncrement: true });
+  let objStore = request.result.createObjectStore("foo", {
+    autoIncrement: true,
+  });
   objStore.createIndex("fooIndex", "fooIndex", { unique: true });
   objStore.put({ foo: 1 });
   objStore.get(1);
@@ -38,9 +37,9 @@ function* testSteps()
 
   clearAllDatabases(continueToNextStepSync);
 
-  objStore =  request.result.createObjectStore("bar");
+  objStore = request.result.createObjectStore("bar");
   objStore.createIndex("barIndex", "barIndex", { multiEntry: true });
-  objStore.put({ bar: 1, barIndex: [ 0, 1 ] }, 10);
+  objStore.put({ bar: 1, barIndex: [0, 1] }, 10);
   objStore.get(10);
   objStore.count();
   objStore.openCursor();
@@ -67,8 +66,11 @@ function* testSteps()
   request.transaction.oncomplete = grabEventAndContinueHandler;
   event = yield undefined;
 
-  is(event.type, "complete",
-     "Got complete event for versionchange transaction on database " + dbCount);
+  is(
+    event.type,
+    "complete",
+    "Got complete event for versionchange transaction on database " + dbCount
+  );
 
   info("Invalidating database " + dbCount);
 

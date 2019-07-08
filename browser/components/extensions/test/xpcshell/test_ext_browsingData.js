@@ -7,14 +7,19 @@ add_task(async function testInvalidArguments() {
     const UNSUPPORTED_DATA_TYPES = ["appcache", "fileSystems", "webSQL"];
 
     await browser.test.assertRejects(
-      browser.browsingData.remove({originTypes: {protectedWeb: true}}, {cookies: true}),
+      browser.browsingData.remove(
+        { originTypes: { protectedWeb: true } },
+        { cookies: true }
+      ),
       "Firefox does not support protectedWeb or extension as originTypes.",
-      "Expected error received when using protectedWeb originType.");
+      "Expected error received when using protectedWeb originType."
+    );
 
     await browser.test.assertRejects(
-      browser.browsingData.removeCookies({originTypes: {extension: true}}),
+      browser.browsingData.removeCookies({ originTypes: { extension: true } }),
       "Firefox does not support protectedWeb or extension as originTypes.",
-      "Expected error received when using extension originType.");
+      "Expected error received when using extension originType."
+    );
 
     for (let dataType of UNSUPPORTED_DATA_TYPES) {
       let dataTypes = {};

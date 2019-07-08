@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Selecting the test element");
   await selectNode("#testid", inspector);
@@ -37,8 +37,11 @@ async function testEditSelector(view, name) {
   info("Focusing an existing selector name in the rule-view");
   const editor = await focusEditableField(view, idRuleEditor.selectorText);
 
-  is(inplaceEditor(idRuleEditor.selectorText), editor,
-    "The selector editor got focused");
+  is(
+    inplaceEditor(idRuleEditor.selectorText),
+    editor,
+    "The selector editor got focused"
+  );
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
@@ -52,8 +55,10 @@ async function testEditSelector(view, name) {
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
-  ok(getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"),
-    "Rule with " + name + " does not match the current element.");
+  ok(
+    getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"),
+    "Rule with " + name + " does not match the current element."
+  );
 }
 
 function checkModifiedElement(view, name) {

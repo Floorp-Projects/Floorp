@@ -4,12 +4,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "CoverageCollector",
-];
+var EXPORTED_SYMBOLS = ["CoverageCollector"];
 
 /* globals Debugger */
-const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+const { addDebuggerToGlobal } = ChromeUtils.import(
+  "resource://gre/modules/jsdebugger.jsm"
+);
 addDebuggerToGlobal(Cu.getGlobalForObject(this));
 
 /**
@@ -22,7 +22,7 @@ var CoverageCollector = function(prefix) {
   this._dbg.addAllGlobalsAsDebuggees();
   this._scripts = this._dbg.findScripts();
 
-  this._dbg.onNewScript = (script) => {
+  this._dbg.onNewScript = script => {
     this._scripts.push(script);
   };
 
@@ -44,7 +44,7 @@ CoverageCollector.prototype._getLinesCovered = function() {
     }
 
     cov.forEach(covered => {
-      let {lineNumber, columnNumber, offset, count} = covered;
+      let { lineNumber, columnNumber, offset, count } = covered;
       if (!count) {
         return;
       }
@@ -71,10 +71,11 @@ CoverageCollector.prototype._getLinesCovered = function() {
   // any offset on a particular line, that line must have been covered.
   for (let scriptName in currentCoverage) {
     for (let key in currentCoverage[scriptName]) {
-      if (!this._allCoverage[scriptName] ||
-          !this._allCoverage[scriptName][key] ||
-          (this._allCoverage[scriptName][key] <
-           currentCoverage[scriptName][key])) {
+      if (
+        !this._allCoverage[scriptName] ||
+        !this._allCoverage[scriptName][key] ||
+        this._allCoverage[scriptName][key] < currentCoverage[scriptName][key]
+      ) {
         // eslint-disable-next-line no-unused-vars
         let [lineNumber, colNumber, offset] = key.split("#");
         if (!coveredLines[scriptName]) {
@@ -100,7 +101,7 @@ CoverageCollector.prototype._getUncoveredLines = function() {
     }
 
     // Get all lines in the script
-    scriptOffsets.forEach( function(element, index) {
+    scriptOffsets.forEach(function(element, index) {
       if (!element) {
         return;
       }
@@ -138,11 +139,11 @@ CoverageCollector.prototype._getMethodNames = function() {
     }
 
     /**
-    * Get all lines contained within the method and
-    * push a record of the form:
-    * <method name> : <lines covered>
-    */
-    scriptOffsets.forEach( function(element, index) {
+     * Get all lines contained within the method and
+     * push a record of the form:
+     * <method name> : <lines covered>
+     */
+    scriptOffsets.forEach(function(element, index) {
       if (!element) {
         return;
       }
@@ -161,14 +162,17 @@ CoverageCollector.prototype._getMethodNames = function() {
  */
 CoverageCollector.prototype.recordTestCoverage = function(testName) {
   let ccov_scope = {};
-  const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", ccov_scope);
+  const { OS } = ChromeUtils.import(
+    "resource://gre/modules/osfile.jsm",
+    ccov_scope
+  );
 
   dump("Collecting coverage for: " + testName + "\n");
   let rawLines = this._getLinesCovered(testName);
   let methods = this._getMethodNames();
   let uncoveredLines = this._getUncoveredLines();
   let result = [];
-  let versionControlBlock = {version: 1.0};
+  let versionControlBlock = { version: 1.0 };
   result.push(versionControlBlock);
 
   for (let scriptName in rawLines) {
@@ -180,8 +184,13 @@ CoverageCollector.prototype.recordTestCoverage = function(testName) {
       uncovered: [],
     };
 
-    if (typeof(methods[scriptName]) != "undefined" && methods[scriptName] != null) {
-      for (let [methodName, methodLines] of Object.entries(methods[scriptName])) {
+    if (
+      typeof methods[scriptName] != "undefined" &&
+      methods[scriptName] != null
+    ) {
+      for (let [methodName, methodLines] of Object.entries(
+        methods[scriptName]
+      )) {
         rec.methods[methodName] = methodLines;
       }
     }
@@ -199,7 +208,7 @@ CoverageCollector.prototype.recordTestCoverage = function(testName) {
   let arr = this._encoder.encode(JSON.stringify(result, null, 2));
   let path = this._prefix + "/jscov_" + Date.now() + ".json";
   dump("Writing coverage to: " + path + "\n");
-  return OS.File.writeAtomic(path, arr, {tmpPath: path + ".tmp"});
+  return OS.File.writeAtomic(path, arr, { tmpPath: path + ".tmp" });
 };
 
 /**

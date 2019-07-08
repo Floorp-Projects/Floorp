@@ -1,8 +1,14 @@
 "use strict";
 
 const { extend } = require("devtools/shared/extend");
-const { setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
-const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
+const {
+  setNamedTimeout,
+  clearNamedTimeout,
+} = require("devtools/client/shared/widgets/view-helpers");
+const {
+  AbstractCanvasGraph,
+  CanvasGraphUtils,
+} = require("devtools/client/shared/widgets/Graphs");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -146,8 +152,9 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    */
   buildGraphImage: function() {
     if (!this.format || !this.format.length) {
-      throw new Error("The graph format traits are mandatory to style " +
-                      "the data source.");
+      throw new Error(
+        "The graph format traits are mandatory to style " + "the data source."
+      );
     }
     const { canvas, ctx } = this._getNamedCanvas("bar-graph-data");
     const width = this._width;
@@ -161,12 +168,16 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     const minBlocksHeight = this.minBlocksHeight * this._pixelRatio;
 
     const duration = this.dataDuration || lastTick;
-    const dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);
-    const dataScaleY = this.dataScaleY = height / this._calcMaxHeight({
-      data: this._data,
-      dataScaleX: dataScaleX,
-      minBarsWidth: minBarsWidth,
-    }) * this.dampenValuesFactor;
+    const dataScaleX = (this.dataScaleX =
+      width / (duration - this.dataOffsetX));
+    const dataScaleY = (this.dataScaleY =
+      (height /
+        this._calcMaxHeight({
+          data: this._data,
+          dataScaleX: dataScaleX,
+          minBarsWidth: minBarsWidth,
+        })) *
+      this.dampenValuesFactor);
 
     // Draw the graph.
 
@@ -200,7 +211,8 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
           continue;
         }
 
-        const averageHeight = (blockHeight + skippedHeight) / (skippedCount + 1);
+        const averageHeight =
+          (blockHeight + skippedHeight) / (skippedCount + 1);
         if (averageHeight >= minBlocksHeight) {
           const bottom = height - ~~prevHeight[tick];
           ctx.moveTo(prevRight, bottom);
@@ -235,7 +247,7 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     // The blocks bounding rects isn't guaranteed to be sorted ascending by
     // block location on the X axis. This should be the case, for better
     // cache cohesion and a faster `buildMaskImage`.
-    this._blocksBoundingRects.sort((a, b) => a.start > b.start ? 1 : -1);
+    this._blocksBoundingRects.sort((a, b) => (a.start > b.start ? 1 : -1));
 
     // Update the legend.
 
@@ -263,8 +275,11 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    * @param function unpack [optional]
    *        @see AbstractCanvasGraph.prototype.getMappedSelection
    */
-  buildMaskImage: function(highlights, inPixels = false,
-                            unpack = e => e.delta) {
+  buildMaskImage: function(
+    highlights,
+    inPixels = false,
+    unpack = e => e.delta
+  ) {
     // A null `highlights` array is used to clear the mask. An empty array
     // will mask the entire graph.
     if (!highlights) {
@@ -299,10 +314,14 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
         start = CanvasGraphUtils.map(start, firstTick, lastTick, 0, width);
         end = CanvasGraphUtils.map(end, firstTick, lastTick, 0, width);
       }
-      const firstSnap = findFirst(this._blocksBoundingRects,
-                                e => e.start >= start);
-      const lastSnap = findLast(this._blocksBoundingRects,
-                              e => e.start >= start && e.end <= end);
+      const firstSnap = findFirst(
+        this._blocksBoundingRects,
+        e => e.start >= start
+      );
+      const lastSnap = findLast(
+        this._blocksBoundingRects,
+        e => e.start >= start && e.end <= end
+      );
 
       const x1 = firstSnap ? firstSnap.start : start;
       let x2;
@@ -369,8 +388,10 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    * Creates the legend container when constructing this graph.
    */
   _createLegend: function() {
-    const legendNode = this._legendNode = this._document.createElementNS(HTML_NS,
-                                                                       "div");
+    const legendNode = (this._legendNode = this._document.createElementNS(
+      HTML_NS,
+      "div"
+    ));
     legendNode.className = "bar-graph-widget-legend";
     this._container.appendChild(legendNode);
   },

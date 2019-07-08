@@ -4,26 +4,32 @@
 "use strict";
 
 const selectors = require("devtools/client/performance-new/store/selectors");
-const { recordingState: {
-  AVAILABLE_TO_RECORD,
-  REQUEST_TO_START_RECORDING,
-  REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER,
-  REQUEST_TO_STOP_PROFILER,
-}} = require("devtools/client/performance-new/utils");
+const {
+  recordingState: {
+    AVAILABLE_TO_RECORD,
+    REQUEST_TO_START_RECORDING,
+    REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER,
+    REQUEST_TO_STOP_PROFILER,
+  },
+} = require("devtools/client/performance-new/utils");
 const { OS } = require("resource://gre/modules/osfile.jsm");
-const { ProfilerGetSymbols } = require("resource://gre/modules/ProfilerGetSymbols.jsm");
+const {
+  ProfilerGetSymbols,
+} = require("resource://gre/modules/ProfilerGetSymbols.jsm");
 
 /**
  * The recording state manages the current state of the recording panel.
  * @param {string} state - A valid state in `recordingState`.
  * @param {object} options
  */
-const changeRecordingState = exports.changeRecordingState =
-  (state, options = { didRecordingUnexpectedlyStopped: false }) => ({
-    type: "CHANGE_RECORDING_STATE",
-    state,
-    didRecordingUnexpectedlyStopped: options.didRecordingUnexpectedlyStopped,
-  });
+const changeRecordingState = (exports.changeRecordingState = (
+  state,
+  options = { didRecordingUnexpectedlyStopped: false }
+) => ({
+  type: "CHANGE_RECORDING_STATE",
+  state,
+  didRecordingUnexpectedlyStopped: options.didRecordingUnexpectedlyStopped,
+}));
 
 /**
  * This is the result of the initial questions about the state of the profiler.
@@ -46,11 +52,13 @@ function _dispatchAndUpdatePreferences(action) {
     if (typeof action !== "object") {
       throw new Error(
         "This function assumes that the dispatched action is a simple object and " +
-        "synchronous."
+          "synchronous."
       );
     }
     dispatch(action);
-    const setRecordingPreferences = selectors.getSetRecordingPreferencesFn(getState());
+    const setRecordingPreferences = selectors.getSetRecordingPreferencesFn(
+      getState()
+    );
     const recordingSettings = selectors.getRecordingSettings(getState());
     setRecordingPreferences(recordingSettings);
   };
@@ -60,46 +68,51 @@ function _dispatchAndUpdatePreferences(action) {
  * Updates the recording settings for the interval.
  * @param {number} interval
  */
-exports.changeInterval = interval => _dispatchAndUpdatePreferences({
-  type: "CHANGE_INTERVAL",
-  interval,
-});
+exports.changeInterval = interval =>
+  _dispatchAndUpdatePreferences({
+    type: "CHANGE_INTERVAL",
+    interval,
+  });
 
 /**
  * Updates the recording settings for the entries.
  * @param {number} entries
  */
-exports.changeEntries = entries => _dispatchAndUpdatePreferences({
-  type: "CHANGE_ENTRIES",
-  entries,
-});
+exports.changeEntries = entries =>
+  _dispatchAndUpdatePreferences({
+    type: "CHANGE_ENTRIES",
+    entries,
+  });
 
 /**
  * Updates the recording settings for the features.
  * @param {object} features
  */
-exports.changeFeatures = features => _dispatchAndUpdatePreferences({
-  type: "CHANGE_FEATURES",
-  features,
-});
+exports.changeFeatures = features =>
+  _dispatchAndUpdatePreferences({
+    type: "CHANGE_FEATURES",
+    features,
+  });
 
 /**
  * Updates the recording settings for the threads.
  * @param {array} threads
  */
-exports.changeThreads = threads => _dispatchAndUpdatePreferences({
-  type: "CHANGE_THREADS",
-  threads,
-});
+exports.changeThreads = threads =>
+  _dispatchAndUpdatePreferences({
+    type: "CHANGE_THREADS",
+    threads,
+  });
 
 /**
  * Updates the recording settings for the objdirs.
  * @param {array} objdirs
  */
-exports.changeObjdirs = objdirs => _dispatchAndUpdatePreferences({
-  type: "CHANGE_OBJDIRS",
-  objdirs,
-});
+exports.changeObjdirs = objdirs =>
+  _dispatchAndUpdatePreferences({
+    type: "CHANGE_OBJDIRS",
+    objdirs,
+  });
 
 /**
  * Receive the values to intialize the store. See the reducer for what values
@@ -172,8 +185,10 @@ function createLibraryMap(profile) {
 }
 
 async function getSymbolTableFromDebuggee(perfFront, path, breakpadId) {
-  const [addresses, index, buffer] =
-    await perfFront.getSymbolTable(path, breakpadId);
+  const [addresses, index, buffer] = await perfFront.getSymbolTable(
+    path,
+    breakpadId
+  );
   // The protocol transmits these arrays as plain JavaScript arrays of
   // numbers, but we want to pass them on as typed arrays. Convert them now.
   return [
@@ -253,7 +268,7 @@ exports.getProfileAndStopProfiler = () => {
 
     const libraryGetter = createLibraryMap(profile);
     async function getSymbolTable(debugName, breakpadId) {
-      const {name, path, debugPath} = libraryGetter(debugName, breakpadId);
+      const { name, path, debugPath } = libraryGetter(debugName, breakpadId);
       if (await doesFileExistAtPath(path)) {
         // This profile was obtained from this machine, and not from a
         // different device (e.g. an Android phone). Dump symbols from the file

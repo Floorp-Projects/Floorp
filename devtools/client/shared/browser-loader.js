@@ -3,18 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const loaders = ChromeUtils.import("resource://devtools/shared/base-loader.js", null);
-const {
-  devtools,
-  loader,
-} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const loaders = ChromeUtils.import(
+  "resource://devtools/shared/base-loader.js",
+  null
+);
+const { devtools, loader } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
 const flags = devtools.require("devtools/shared/flags");
 const { joinURI } = devtools.require("devtools/shared/path");
 const { assert } = devtools.require("devtools/shared/DevToolsUtils");
-const { AppConstants } = devtools.require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = devtools.require(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
-loader.lazyRequireGetter(this, "getMockedModule",
-  "devtools/client/shared/browser-loader-mocks", {});
+loader.lazyRequireGetter(
+  this,
+  "getMockedModule",
+  "devtools/client/shared/browser-loader-mocks",
+  {}
+);
 
 const BROWSER_BASED_DIRS = [
   "resource://devtools/client/inspector/boxmodel",
@@ -34,9 +42,7 @@ const BROWSER_BASED_DIRS = [
   "resource://devtools/client/shared/vendor",
 ];
 
-const COMMON_LIBRARY_DIRS = [
-  "resource://devtools/client/shared/vendor",
-];
+const COMMON_LIBRARY_DIRS = ["resource://devtools/client/shared/vendor"];
 
 // Any directory that matches the following regular expression
 // is also considered as browser based module directory.
@@ -45,8 +51,7 @@ const COMMON_LIBRARY_DIRS = [
 // An example:
 // * `resource://devtools/client/inspector/components`
 // * `resource://devtools/client/inspector/shared/components`
-const browserBasedDirsRegExp =
-  /^resource\:\/\/devtools\/client\/\S*\/components\//;
+const browserBasedDirsRegExp = /^resource\:\/\/devtools\/client\/\S*\/components\//;
 
 /*
  * Create a loader to be used in a browser environment. This evaluates
@@ -102,9 +107,16 @@ function BrowserLoader(options) {
  *        Allows for sharing common modules between tools, instead of loading a new
  *        instance into each tool. For example, pass "toolbox.browserRequire" here.
  */
-function BrowserLoaderBuilder({ baseURI, window, useOnlyShared, commonLibRequire }) {
-  assert(!!baseURI !== !!useOnlyShared,
-    "Cannot use both `baseURI` and `useOnlyShared`.");
+function BrowserLoaderBuilder({
+  baseURI,
+  window,
+  useOnlyShared,
+  commonLibRequire,
+}) {
+  assert(
+    !!baseURI !== !!useOnlyShared,
+    "Cannot use both `baseURI` and `useOnlyShared`."
+  );
 
   const loaderOptions = devtools.require("@loader/options");
   const dynamicPaths = {};
@@ -144,13 +156,17 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared, commonLibRequire
         return getMockedModule(uri);
       }
 
-      if (commonLibRequire && COMMON_LIBRARY_DIRS.some(dir => uri.startsWith(dir))) {
+      if (
+        commonLibRequire &&
+        COMMON_LIBRARY_DIRS.some(dir => uri.startsWith(dir))
+      ) {
         return commonLibRequire(uri);
       }
 
       // Check if the URI matches one of hardcoded paths or a regexp.
-      const isBrowserDir = BROWSER_BASED_DIRS.some(dir => uri.startsWith(dir)) ||
-                         uri.match(browserBasedDirsRegExp) != null;
+      const isBrowserDir =
+        BROWSER_BASED_DIRS.some(dir => uri.startsWith(dir)) ||
+        uri.match(browserBasedDirsRegExp) != null;
 
       if ((useOnlyShared || !uri.startsWith(baseURI)) && !isBrowserDir) {
         return devtools.require(uri);
@@ -215,8 +231,8 @@ BrowserLoaderBuilder.prototype = {
   lazyRequireGetter: function(obj, property, module, destructure) {
     devtools.lazyGetter(obj, property, () => {
       return destructure
-          ? this.require(module)[property]
-          : this.require(module || property);
+        ? this.require(module)[property]
+        : this.require(module || property);
     });
   },
 };

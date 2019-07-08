@@ -27,8 +27,10 @@ add_task(async function() {
 
   await waitForServiceWorkerActivation(SERVICE_WORKER, document);
 
-  info("Ensure that the registration resolved before trying to interact with " +
-    "the service worker.");
+  info(
+    "Ensure that the registration resolved before trying to interact with " +
+      "the service worker."
+  );
   await waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
@@ -41,8 +43,11 @@ add_task(async function() {
 
   info("Check the scope displayed scope is correct");
   const scope = target.querySelector(".service-worker-scope");
-  is(scope.textContent, SCOPE,
-    "The expected scope is displayed in the service worker info.");
+  is(
+    scope.textContent,
+    SCOPE,
+    "The expected scope is displayed in the service worker info."
+  );
 
   info("Unregister the service worker via the unregister link.");
   const unregisterLink = target.querySelector(".unregister-link");

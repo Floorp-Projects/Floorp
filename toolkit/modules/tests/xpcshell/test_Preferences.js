@@ -3,7 +3,9 @@
 
 var Cm = Components.manager;
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 add_test(function test_set_get_pref() {
   Preferences.set("test_set_get_pref.integer", 1);
@@ -35,13 +37,17 @@ add_test(function test_set_get_branch_pref() {
 });
 
 add_test(function test_set_get_multiple_prefs() {
-  Preferences.set({ "test_set_get_multiple_prefs.integer":  1,
-                    "test_set_get_multiple_prefs.string":   "foo",
-                    "test_set_get_multiple_prefs.boolean":  true });
+  Preferences.set({
+    "test_set_get_multiple_prefs.integer": 1,
+    "test_set_get_multiple_prefs.string": "foo",
+    "test_set_get_multiple_prefs.boolean": true,
+  });
 
-  let [i, s, b] = Preferences.get(["test_set_get_multiple_prefs.integer",
-                                   "test_set_get_multiple_prefs.string",
-                                   "test_set_get_multiple_prefs.boolean"]);
+  let [i, s, b] = Preferences.get([
+    "test_set_get_multiple_prefs.integer",
+    "test_set_get_multiple_prefs.string",
+    "test_set_get_multiple_prefs.boolean",
+  ]);
 
   Assert.equal(i, 1);
   Assert.equal(s, "foo");
@@ -54,13 +60,19 @@ add_test(function test_set_get_multiple_prefs() {
 });
 
 add_test(function test_get_multiple_prefs_with_default_value() {
-  Preferences.set({ "test_get_multiple_prefs_with_default_value.a":  1,
-                    "test_get_multiple_prefs_with_default_value.b":  2 });
+  Preferences.set({
+    "test_get_multiple_prefs_with_default_value.a": 1,
+    "test_get_multiple_prefs_with_default_value.b": 2,
+  });
 
-  let [a, b, c] = Preferences.get(["test_get_multiple_prefs_with_default_value.a",
-                                   "test_get_multiple_prefs_with_default_value.b",
-                                   "test_get_multiple_prefs_with_default_value.c"],
-                                  0);
+  let [a, b, c] = Preferences.get(
+    [
+      "test_get_multiple_prefs_with_default_value.a",
+      "test_get_multiple_prefs_with_default_value.b",
+      "test_get_multiple_prefs_with_default_value.c",
+    ],
+    0
+  );
 
   Assert.equal(a, 1);
   Assert.equal(b, 2);
@@ -74,7 +86,10 @@ add_test(function test_get_multiple_prefs_with_default_value() {
 
 add_test(function test_set_get_unicode_pref() {
   Preferences.set("test_set_get_unicode_pref", String.fromCharCode(960));
-  Assert.equal(Preferences.get("test_set_get_unicode_pref"), String.fromCharCode(960));
+  Assert.equal(
+    Preferences.get("test_set_get_unicode_pref"),
+    String.fromCharCode(960)
+  );
 
   // Clean up.
   Preferences.reset("test_set_get_unicode_pref");
@@ -125,12 +140,19 @@ add_test(function test_get_string_pref() {
 
 add_test(function test_get_localized_string_pref() {
   let prefName = "test_get_localized_string_pref";
-  let localizedString = Cc["@mozilla.org/pref-localizedstring;1"]
-    .createInstance(Ci.nsIPrefLocalizedString);
+  let localizedString = Cc[
+    "@mozilla.org/pref-localizedstring;1"
+  ].createInstance(Ci.nsIPrefLocalizedString);
   localizedString.data = "a localized string";
-  Services.prefs.setComplexValue(prefName, Ci.nsIPrefLocalizedString, localizedString);
-  Assert.equal(Preferences.get(prefName, null, Ci.nsIPrefLocalizedString),
-    "a localized string");
+  Services.prefs.setComplexValue(
+    prefName,
+    Ci.nsIPrefLocalizedString,
+    localizedString
+  );
+  Assert.equal(
+    Preferences.get(prefName, null, Ci.nsIPrefLocalizedString),
+    "a localized string"
+  );
 
   // Clean up.
   Preferences.reset(prefName);
@@ -195,7 +217,9 @@ add_test(function test_reset_nonexistent_pref_branch() {
 
 add_test(function test_observe_prefs_function() {
   let observed = false;
-  let observer = function() { observed = !observed; };
+  let observer = function() {
+    observed = !observed;
+  };
 
   Preferences.observe("test_observe_prefs_function", observer);
   Preferences.set("test_observe_prefs_function.subpref", "something");
@@ -274,7 +298,9 @@ add_test(function test_observe_prefs_nsIObserver() {
 // passes the preference's new value but not its name.
 add_test(function test_observe_exact_pref() {
   let observed = false;
-  let observer = function() { observed = !observed; };
+  let observer = function() {
+    observed = !observed;
+  };
 
   Preferences.observe("test_observe_exact_pref", observer);
   Preferences.set("test_observe_exact_pref.sub-pref", "something");
@@ -288,7 +314,9 @@ add_test(function test_observe_exact_pref() {
 });
 
 add_test(function test_observe_value_of_set_pref() {
-  let observer = function(newVal) { Assert.equal(newVal, "something"); };
+  let observer = function(newVal) {
+    Assert.equal(newVal, "something");
+  };
 
   Preferences.observe("test_observe_value_of_set_pref", observer);
   Preferences.set("test_observe_value_of_set_pref.subpref", "somethingelse");
@@ -303,7 +331,9 @@ add_test(function test_observe_value_of_set_pref() {
 });
 
 add_test(function test_observe_value_of_reset_pref() {
-  let observer = function(newVal) { Assert.ok(typeof newVal == "undefined"); };
+  let observer = function(newVal) {
+    Assert.ok(typeof newVal == "undefined");
+  };
 
   Preferences.set("test_observe_value_of_reset_pref", "something");
   Preferences.observe("test_observe_value_of_reset_pref", observer);
@@ -322,9 +352,11 @@ add_test(function test_has_pref() {
 
   Preferences.set("test_has_pref.foo", "foo");
   Preferences.set("test_has_pref.bar", "bar");
-  let [hasFoo, hasBar, hasBaz] = Preferences.has(["test_has_pref.foo",
-                                                  "test_has_pref.bar",
-                                                  "test_has_pref.baz"]);
+  let [hasFoo, hasBar, hasBaz] = Preferences.has([
+    "test_has_pref.foo",
+    "test_has_pref.bar",
+    "test_has_pref.baz",
+  ]);
   Assert.ok(hasFoo);
   Assert.ok(hasBar);
   Assert.ok(!hasBaz);

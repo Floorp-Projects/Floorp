@@ -14,7 +14,7 @@ class MessageSender {
   }
 
   sendAsyncMessage(name, data, objects) {
-    this.sent.push({name, data, objects});
+    this.sent.push({ name, data, objects });
   }
 }
 
@@ -60,12 +60,11 @@ add_test(function test_addEventListener() {
   equal(eventTarget.listeners.click[0], listener);
 
   // should have sent a registration message
-  deepEqual(
-      ipc.sent[0], {
-        name: "Marionette:DOM:AddEventListener",
-        data: {type: "click"},
-        objects: undefined,
-      });
+  deepEqual(ipc.sent[0], {
+    name: "Marionette:DOM:AddEventListener",
+    data: { type: "click" },
+    objects: undefined,
+  });
 
   run_next_test();
 });
@@ -86,17 +85,16 @@ add_test(function test_WebElementEventTarget_addEventListener_once() {
   let ipc = new MessageSender();
   let eventTarget = new WebElementEventTarget(ipc);
 
-  eventTarget.addEventListener("click", () => {}, {once: true});
+  eventTarget.addEventListener("click", () => {}, { once: true });
   equal(eventTarget.listeners.click[0].once, true);
 
-  eventTarget.dispatchEvent({type: "click"});
+  eventTarget.dispatchEvent({ type: "click" });
   equal(eventTarget.listeners.click.length, 0);
-  deepEqual(
-      ipc.sent[1], {
-        name: "Marionette:DOM:RemoveEventListener",
-        data: {type: "click"},
-        objects: undefined,
-      });
+  deepEqual(ipc.sent[1], {
+    name: "Marionette:DOM:RemoveEventListener",
+    data: { type: "click" },
+    objects: undefined,
+  });
 
   run_next_test();
 });
@@ -131,13 +129,11 @@ add_test(function test_WebElementEventTarget_removeEventListener() {
 
   eventTarget.removeEventListener("click", firstListener);
   equal(eventTarget.listeners.click.length, 0);
-  deepEqual(
-      ipc.sent[ipc.sent.length - 1],
-      {
-        name: "Marionette:DOM:RemoveEventListener",
-        data: {type: "click"},
-        objects: undefined,
-      });
+  deepEqual(ipc.sent[ipc.sent.length - 1], {
+    name: "Marionette:DOM:RemoveEventListener",
+    data: { type: "click" },
+    objects: undefined,
+  });
 
   run_next_test();
 });
@@ -147,9 +143,9 @@ add_test(function test_WebElementEventTarget_dispatchEvent() {
   let eventTarget = new WebElementEventTarget(ipc);
 
   let listenerCalled = false;
-  let listener = () => listenerCalled = true;
+  let listener = () => (listenerCalled = true);
   eventTarget.addEventListener("click", listener);
-  eventTarget.dispatchEvent({type: "click"});
+  eventTarget.dispatchEvent({ type: "click" });
   ok(listenerCalled);
 
   run_next_test();
@@ -168,7 +164,7 @@ add_test(function test_WebElementEventTarget_dispatchEvent_multipleListeners() {
   eventTarget.addEventListener("click", listenerA);
   eventTarget.addEventListener("click", listenerA);
   eventTarget.addEventListener("click", listenerB);
-  eventTarget.dispatchEvent({type: "click"});
+  eventTarget.dispatchEvent({ type: "click" });
   equal(clicksA, 1);
   equal(clicksB, 1);
 
@@ -179,7 +175,9 @@ add_test(function test_ContentEventObserverService_add() {
   let ipc = new MessageSender();
   let win = new Window();
   let obs = new ContentEventObserverService(
-      win, ipc.sendAsyncMessage.bind(ipc));
+    win,
+    ipc.sendAsyncMessage.bind(ipc)
+  );
 
   equal(obs.events.size, 0);
   equal(win.events.length, 0);
@@ -201,7 +199,9 @@ add_test(function test_ContentEventObserverService_remove() {
   let ipc = new MessageSender();
   let win = new Window();
   let obs = new ContentEventObserverService(
-      win, ipc.sendAsyncMessage.bind(ipc));
+    win,
+    ipc.sendAsyncMessage.bind(ipc)
+  );
 
   obs.remove("foo");
   equal(obs.events.size, 0);
@@ -239,7 +239,9 @@ add_test(function test_ContentEventObserverService_clear() {
   let ipc = new MessageSender();
   let win = new Window();
   let obs = new ContentEventObserverService(
-      win, ipc.sendAsyncMessage.bind(ipc));
+    win,
+    ipc.sendAsyncMessage.bind(ipc)
+  );
 
   obs.clear();
   equal(obs.events.size, 0);
@@ -262,15 +264,16 @@ add_test(function test_ContentEventObserverService_handleEvent() {
   let ipc = new MessageSender();
   let win = new Window();
   let obs = new ContentEventObserverService(
-      win, ipc.sendAsyncMessage.bind(ipc));
+    win,
+    ipc.sendAsyncMessage.bind(ipc)
+  );
 
-  obs.handleEvent({type: "click", target: win});
-  deepEqual(
-      ipc.sent[0], {
-        name: "Marionette:DOM:OnEvent",
-        data: {type: "click"},
-        objects: {"target": win},
-      });
+  obs.handleEvent({ type: "click", target: win });
+  deepEqual(ipc.sent[0], {
+    name: "Marionette:DOM:OnEvent",
+    data: { type: "click" },
+    objects: { target: win },
+  });
 
   run_next_test();
 });

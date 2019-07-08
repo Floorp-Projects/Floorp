@@ -3,13 +3,21 @@
 "use strict";
 
 add_task(async function() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    "https://example.com/browser/browser/components/pocket/test/test.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com/browser/browser/components/pocket/test/test.html"
+  );
 
   let pageActionContextMenu = document.getElementById("pageActionPanel");
   let pageActionButton = document.getElementById("pageActionButton");
-  let pageActionShown = BrowserTestUtils.waitForEvent(pageActionContextMenu, "popupshown");
-  let pageActionHidden = BrowserTestUtils.waitForEvent(pageActionContextMenu, "popuphidden");
+  let pageActionShown = BrowserTestUtils.waitForEvent(
+    pageActionContextMenu,
+    "popupshown"
+  );
+  let pageActionHidden = BrowserTestUtils.waitForEvent(
+    pageActionContextMenu,
+    "popuphidden"
+  );
 
   info("opening page action panel");
   pageActionButton.click();
@@ -22,9 +30,16 @@ add_task(async function() {
   await pageActionHidden;
 
   let pocketPanel = document.getElementById("pageActionActivatedActionPanel");
-  is(pocketPanel.state, "showing", "panel pageActionActivatedActionPanel is showing");
+  is(
+    pocketPanel.state,
+    "showing",
+    "panel pageActionActivatedActionPanel is showing"
+  );
 
-  let pocketPanelHidden = BrowserTestUtils.waitForEvent(pocketPanel, "popuphidden");
+  let pocketPanelHidden = BrowserTestUtils.waitForEvent(
+    pocketPanel,
+    "popuphidden"
+  );
   pocketPanel.hidePopup();
   await pocketPanelHidden;
   BrowserTestUtils.removeTab(tab);

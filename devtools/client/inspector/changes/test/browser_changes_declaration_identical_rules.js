@@ -50,8 +50,24 @@ add_task(async function() {
   // The last of the two matching rules shows up first in Rule view given that the
   // specificity is the same. This is correct. If the properties were the same, the latest
   // declaration would overwrite the first and thus show up on top.
-  is(removeDecl[0].property, "font-size", "Correct property name for second declaration");
-  is(removeDecl[0].value, "1em", "Correct property value for second declaration");
-  is(removeDecl[1].property, "color", "Correct property name for first declaration");
-  is(removeDecl[1].value, "red", "Correct property value for first declaration");
+  is(
+    removeDecl[0].property,
+    "font-size",
+    "Correct property name for second declaration"
+  );
+  is(
+    removeDecl[0].value,
+    "1em",
+    "Correct property value for second declaration"
+  );
+  is(
+    removeDecl[1].property,
+    "color",
+    "Correct property name for first declaration"
+  );
+  is(
+    removeDecl[1].value,
+    "red",
+    "Correct property value for first declaration"
+  );
 });

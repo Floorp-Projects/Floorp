@@ -10,7 +10,7 @@ const { L10N } = require("../utils");
 
 class IndividualsHeader extends Component {
   static get propTypes() {
-    return { };
+    return {};
   }
 
   render() {

@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  CHANGE_NETWORK_THROTTLING,
-} = require("./actions");
+const { CHANGE_NETWORK_THROTTLING } = require("./actions");
 
 const INITIAL_STATE = {
   enabled: false,

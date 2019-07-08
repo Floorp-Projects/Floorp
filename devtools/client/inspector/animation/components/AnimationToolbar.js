@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -41,30 +44,22 @@ class AnimationToolbar extends PureComponent {
       {
         className: "animation-toolbar devtools-toolbar",
       },
-      RewindButton(
-        {
-          rewindAnimationsCurrentTime,
-        }
-      ),
-      PauseResumeButton(
-        {
-          animations,
-          setAnimationsPlayState,
-        }
-      ),
-      PlaybackRateSelector(
-        {
-          animations,
-          setAnimationsPlaybackRate,
-        }
-      ),
-      CurrentTimeLabel(
-        {
-          addAnimationsCurrentTimeListener,
-          removeAnimationsCurrentTimeListener,
-          timeScale,
-        }
-      )
+      RewindButton({
+        rewindAnimationsCurrentTime,
+      }),
+      PauseResumeButton({
+        animations,
+        setAnimationsPlayState,
+      }),
+      PlaybackRateSelector({
+        animations,
+        setAnimationsPlaybackRate,
+      }),
+      CurrentTimeLabel({
+        addAnimationsCurrentTimeListener,
+        removeAnimationsCurrentTimeListener,
+        timeScale,
+      })
     );
   }
 }

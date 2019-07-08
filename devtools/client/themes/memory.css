@@ -580,7 +580,7 @@ html, body, #app, #memory-tool {
   height: 12px;
   max-height: 12px;
   margin-inline-end: 5px;
-  background-image: url(chrome://devtools/skin/images/alert.svg);
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill;

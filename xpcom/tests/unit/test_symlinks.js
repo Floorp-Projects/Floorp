@@ -1,27 +1,25 @@
 const CWD = do_get_cwd();
 
-const DIR_TARGET     = "target";
-const DIR_LINK       = "link";
-const DIR_LINK_LINK  = "link_link";
-const FILE_TARGET    = "target.txt";
-const FILE_LINK      = "link.txt";
+const DIR_TARGET = "target";
+const DIR_LINK = "link";
+const DIR_LINK_LINK = "link_link";
+const FILE_TARGET = "target.txt";
+const FILE_LINK = "link.txt";
 const FILE_LINK_LINK = "link_link.txt";
 
 const DOES_NOT_EXIST = "doesnotexist";
-const DANGLING_LINK  = "dangling_link";
-const LOOP_LINK      = "loop_link";
+const DANGLING_LINK = "dangling_link";
+const LOOP_LINK = "loop_link";
 
 const nsIFile = Ci.nsIFile;
 
 var process;
 function createSymLink(from, to) {
   if (!process) {
-    var ln = Cc["@mozilla.org/file/local;1"]
-               .createInstance(Ci.nsIFile);
+    var ln = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     ln.initWithPath("/bin/ln");
 
-    process = Cc["@mozilla.org/process/util;1"]
-                .createInstance(Ci.nsIProcess);
+    process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(ln);
   }
 
@@ -81,7 +79,7 @@ function setupTestDir(testDir, relative) {
   var loop = testDir.clone();
   loop.append(LOOP_LINK);
 
-  var dirLink  = makeSymLink(targetDir, DIR_LINK, relative);
+  var dirLink = makeSymLink(targetDir, DIR_LINK, relative);
   var fileLink = makeSymLink(targetFile, FILE_LINK, relative);
 
   makeSymLink(dirLink, DIR_LINK_LINK, relative);
@@ -92,36 +90,43 @@ function setupTestDir(testDir, relative) {
   try {
     makeSymLink(loop, LOOP_LINK, relative);
     Assert.ok(false);
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 function createSpaces(dirs, files, links) {
   function longest(a, b) {
     return a.length > b.length ? a : b;
   }
-  return dirs.concat(files, links).reduce(longest, "").replace(/./g, " ");
+  return dirs
+    .concat(files, links)
+    .reduce(longest, "")
+    .replace(/./g, " ");
 }
 
 function testSymLinks(testDir, relative) {
   setupTestDir(testDir, relative);
 
-  const dirLinks   = [DIR_LINK, DIR_LINK_LINK];
-  const fileLinks  = [FILE_LINK, FILE_LINK_LINK];
+  const dirLinks = [DIR_LINK, DIR_LINK_LINK];
+  const fileLinks = [FILE_LINK, FILE_LINK_LINK];
   const otherLinks = [DANGLING_LINK, LOOP_LINK];
-  const dirs  = [DIR_TARGET].concat(dirLinks);
+  const dirs = [DIR_TARGET].concat(dirLinks);
   const files = [FILE_TARGET].concat(fileLinks);
   const links = otherLinks.concat(dirLinks, fileLinks);
 
   const spaces = createSpaces(dirs, files, links);
-  const bools = {false: " false", true: " true "};
+  const bools = { false: " false", true: " true " };
   print(spaces + " dir   file  symlink");
   var dirEntries = testDir.directoryEntries;
   while (dirEntries.hasMoreElements()) {
     const file = dirEntries.nextFile;
     const name = file.leafName;
-    print(name + spaces.substring(name.length) + bools[file.isDirectory()] +
-          bools[file.isFile()] + bools[file.isSymlink()]);
+    print(
+      name +
+        spaces.substring(name.length) +
+        bools[file.isDirectory()] +
+        bools[file.isFile()] +
+        bools[file.isSymlink()]
+    );
     Assert.equal(file.isDirectory(), dirs.includes(name));
     Assert.equal(file.isFile(), files.includes(name));
     Assert.equal(file.isSymlink(), links.includes(name));
@@ -130,8 +135,9 @@ function testSymLinks(testDir, relative) {
 
 function run_test() {
   // Skip this test on Windows
-  if (mozinfo.os == "win")
+  if (mozinfo.os == "win") {
     return;
+  }
 
   var testDir = CWD;
   testDir.append("test_symlinks");

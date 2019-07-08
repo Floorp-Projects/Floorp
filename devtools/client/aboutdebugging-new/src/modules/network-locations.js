@@ -51,8 +51,10 @@ function addNetworkLocation(location) {
   const locationsSet = new Set(locations);
   locationsSet.add(location);
 
-  Services.prefs.setStringPref(NETWORK_LOCATIONS_PREF,
-    JSON.stringify([...locationsSet]));
+  Services.prefs.setStringPref(
+    NETWORK_LOCATIONS_PREF,
+    JSON.stringify([...locationsSet])
+  );
 }
 exports.addNetworkLocation = addNetworkLocation;
 
@@ -61,7 +63,9 @@ function removeNetworkLocation(location) {
   const locationsSet = new Set(locations);
   locationsSet.delete(location);
 
-  Services.prefs.setStringPref(NETWORK_LOCATIONS_PREF,
-    JSON.stringify([...locationsSet]));
+  Services.prefs.setStringPref(
+    NETWORK_LOCATIONS_PREF,
+    JSON.stringify([...locationsSet])
+  );
 }
 exports.removeNetworkLocation = removeNetworkLocation;

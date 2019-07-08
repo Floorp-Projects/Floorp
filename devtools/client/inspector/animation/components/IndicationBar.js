@@ -23,14 +23,12 @@ class IndicationBar extends PureComponent {
   render() {
     const { className, position } = this.props;
 
-    return dom.div(
-      {
-        className: `indication-bar ${ className }`,
-        style: {
-          marginInlineStart: `${ position * 100 }%`,
-        },
-      }
-    );
+    return dom.div({
+      className: `indication-bar ${className}`,
+      style: {
+        marginInlineStart: `${position * 100}%`,
+      },
+    });
   }
 }
 

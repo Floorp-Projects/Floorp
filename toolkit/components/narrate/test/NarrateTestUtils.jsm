@@ -4,11 +4,15 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {ContentTaskUtils} = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { ContentTaskUtils } = ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
 
-var EXPORTED_SYMBOLS = [ "NarrateTestUtils" ];
+var EXPORTED_SYMBOLS = ["NarrateTestUtils"];
 
 var NarrateTestUtils = {
   TOGGLE: ".narrate-toggle",
@@ -67,7 +71,8 @@ var NarrateTestUtils = {
     }
 
     let voiceOption = window.document.querySelector(
-      `.narrate-voices .option[data-value="${voiceUri}"]`);
+      `.narrate-voices .option[data-value="${voiceUri}"]`
+    );
 
     voiceOption.focus();
     voiceOption.click();
@@ -77,8 +82,8 @@ var NarrateTestUtils = {
 
   getEventUtils(window) {
     let eventUtils = {
-      "_EU_Ci": Ci,
-      "_EU_Cc": Cc,
+      _EU_Ci: Ci,
+      _EU_Cc: Cc,
       window,
       parent: window,
       navigator: window.navigator,
@@ -86,7 +91,9 @@ var NarrateTestUtils = {
       KeyEvent: window.KeyEvent,
     };
     Services.scriptloader.loadSubScript(
-      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", eventUtils);
+      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+      eventUtils
+    );
     return eventUtils;
   },
 
@@ -109,8 +116,7 @@ var NarrateTestUtils = {
 
   waitForNarrateToggle(window) {
     let toggle = window.document.querySelector(this.TOGGLE);
-    return ContentTaskUtils.waitForCondition(
-      () => !toggle.hidden, "");
+    return ContentTaskUtils.waitForCondition(() => !toggle.hidden, "");
   },
 
   waitForPrefChange(pref) {
@@ -126,8 +132,7 @@ var NarrateTestUtils = {
 
   sendBoundaryEvent(window, name, charIndex, charLength) {
     let detail = { type: "boundary", args: { name, charIndex, charLength } };
-    window.dispatchEvent(new window.CustomEvent("testsynthevent",
-      { detail }));
+    window.dispatchEvent(new window.CustomEvent("testsynthevent", { detail }));
   },
 
   isWordHighlightGone(window, ok) {
@@ -139,9 +144,11 @@ var NarrateTestUtils = {
     let $$ = window.document.querySelectorAll.bind(window.document);
     let nodes = Array.from($$(".narrate-word-highlight"));
     return nodes.map(node => {
-      return { word: node.dataset.word,
+      return {
+        word: node.dataset.word,
         left: Number(node.style.left.replace(/px$/, "")),
-        top: Number(node.style.top.replace(/px$/, ""))};
+        top: Number(node.style.top.replace(/px$/, "")),
+      };
     });
   },
 };

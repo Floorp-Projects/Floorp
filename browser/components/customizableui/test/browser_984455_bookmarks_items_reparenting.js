@@ -5,7 +5,9 @@
 "use strict";
 
 var gNavBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-var gOverflowList = document.getElementById(gNavBar.getAttribute("overflowtarget"));
+var gOverflowList = document.getElementById(
+  gNavBar.getAttribute("overflowtarget")
+);
 
 const kBookmarksButton = "bookmarks-menu-button";
 const kBookmarksItems = "personal-bookmarks";
@@ -18,7 +20,7 @@ const kOriginalWindowWidth = window.outerWidth;
 function bookmarksMenuPanelShown() {
   return new Promise(resolve => {
     let bookmarksMenuPopup = document.getElementById("BMB_bookmarksPopup");
-    let onPopupShown = (e) => {
+    let onPopupShown = e => {
       if (e.target == bookmarksMenuPopup) {
         bookmarksMenuPopup.removeEventListener("popupshown", onPopupShown);
         resolve();
@@ -42,12 +44,16 @@ function checkPlacesContextMenu(aItemWithContextMenu) {
     let newBookmarkItem = document.getElementById("placesContext_new:bookmark");
     info("Waiting for context menu on " + aItemWithContextMenu.id);
     let shownPromise = popupShown(contextMenu);
-    EventUtils.synthesizeMouseAtCenter(aItemWithContextMenu,
-                                       {type: "contextmenu", button: 2});
+    EventUtils.synthesizeMouseAtCenter(aItemWithContextMenu, {
+      type: "contextmenu",
+      button: 2,
+    });
     await shownPromise;
 
-    ok(!newBookmarkItem.hasAttribute("disabled"),
-       "New bookmark item shouldn't be disabled");
+    ok(
+      !newBookmarkItem.hasAttribute("disabled"),
+      "New bookmark item shouldn't be disabled"
+    );
 
     info("Closing context menu");
     await closePopup(contextMenu);
@@ -65,8 +71,8 @@ function checkSpecialContextMenus() {
     let bookmarksMenuPopup = document.getElementById("BMB_bookmarksPopup");
 
     const kSpecialItemIDs = {
-      "BMB_bookmarksToolbar": "BMB_bookmarksToolbarPopup",
-      "BMB_unsortedBookmarks": "BMB_unsortedBookmarksPopup",
+      BMB_bookmarksToolbar: "BMB_bookmarksToolbarPopup",
+      BMB_unsortedBookmarks: "BMB_unsortedBookmarksPopup",
     };
 
     // Open the bookmarks menu button context menus and ensure that
@@ -122,8 +128,9 @@ function checkBookmarksItemsChevronContextMenu() {
     await shownPromise;
     await waitForCondition(() => {
       for (let child of chevronPopup.children) {
-        if (child.style.visibility != "hidden")
+        if (child.style.visibility != "hidden") {
           return true;
+        }
       }
       return false;
     });
@@ -161,12 +168,17 @@ function stopOverflowing() {
  * @param aID the ID of the node to check for overflowingness.
  */
 function checkOverflowing(aID) {
-  ok(!gNavBar.querySelector("#" + aID),
-     "Item with ID " + aID + " should no longer be in the gNavBar");
+  ok(
+    !gNavBar.querySelector("#" + aID),
+    "Item with ID " + aID + " should no longer be in the gNavBar"
+  );
   let item = gOverflowList.querySelector("#" + aID);
   ok(item, "Item with ID " + aID + " should be overflowing");
-  is(item.getAttribute("overflowedItem"), "true",
-     "Item with ID " + aID + " should have overflowedItem attribute");
+  is(
+    item.getAttribute("overflowedItem"),
+    "true",
+    "Item with ID " + aID + " should have overflowedItem attribute"
+  );
 }
 
 /**
@@ -175,12 +187,16 @@ function checkOverflowing(aID) {
  * @param aID the ID of hte node to check for non-overflowingness.
  */
 function checkNotOverflowing(aID) {
-  ok(!gOverflowList.querySelector("#" + aID),
-     "Item with ID " + aID + " should no longer be overflowing");
+  ok(
+    !gOverflowList.querySelector("#" + aID),
+    "Item with ID " + aID + " should no longer be overflowing"
+  );
   let item = gNavBar.querySelector("#" + aID);
   ok(item, "Item with ID " + aID + " should be in the nav bar");
-  ok(!item.hasAttribute("overflowedItem"),
-     "Item with ID " + aID + " should not have overflowedItem attribute");
+  ok(
+    !item.hasAttribute("overflowedItem"),
+    "Item with ID " + aID + " should not have overflowedItem attribute"
+  );
 }
 
 /**
@@ -189,9 +205,15 @@ function checkNotOverflowing(aID) {
  */
 add_task(async function testOverflowingBookmarksButtonContextMenu() {
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
-  CustomizableUI.removeWidgetFromArea("library-button", CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.removeWidgetFromArea(
+    "library-button",
+    CustomizableUI.AREA_NAVBAR
+  );
   CustomizableUI.addWidgetToArea(kBookmarksButton, CustomizableUI.AREA_NAVBAR);
-  ok(!gNavBar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
+  ok(
+    !gNavBar.hasAttribute("overflowing"),
+    "Should start with a non-overflowing toolbar."
+  );
 
   // Open the Unsorted and Bookmarks Toolbar context menus and ensure
   // that they have views attached.

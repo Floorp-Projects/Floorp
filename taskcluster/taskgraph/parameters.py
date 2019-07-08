@@ -162,7 +162,7 @@ class Parameters(ReadOnlyDict):
             'tasks_for': 'hg-push',
             'try_mode': None,
             'try_options': None,
-            'try_task_config': None,
+            'try_task_config': {},
             'version': get_version(),
         }
 

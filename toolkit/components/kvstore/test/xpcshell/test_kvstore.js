@@ -3,9 +3,11 @@
 
 "use strict";
 
-const {KeyValueService} = ChromeUtils.import("resource://gre/modules/kvstore.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { KeyValueService } = ChromeUtils.import(
+  "resource://gre/modules/kvstore.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   do_get_profile();
@@ -18,8 +20,9 @@ async function makeDatabaseDir(name) {
   return databaseDir;
 }
 
-const gKeyValueService =
-  Cc["@mozilla.org/key-value-service;1"].getService(Ci.nsIKeyValueService);
+const gKeyValueService = Cc["@mozilla.org/key-value-service;1"].getService(
+  Ci.nsIKeyValueService
+);
 
 add_task(async function getService() {
   Assert.ok(gKeyValueService);
@@ -31,12 +34,23 @@ add_task(async function getOrCreate() {
   Assert.ok(database);
 
   // Test creating a database with a nonexistent path.
-  const nonexistentDir = OS.Path.join(OS.Constants.Path.profileDir, "nonexistent");
-  await Assert.rejects(KeyValueService.getOrCreate(nonexistentDir, "db"), /DirectoryDoesNotExistError/);
+  const nonexistentDir = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "nonexistent"
+  );
+  await Assert.rejects(
+    KeyValueService.getOrCreate(nonexistentDir, "db"),
+    /DirectoryDoesNotExistError/
+  );
 
   // Test creating a database with a non-normalized but fully-qualified path.
   let nonNormalizedDir = await makeDatabaseDir("non-normalized");
-  nonNormalizedDir = OS.Path.join(nonNormalizedDir, "..", ".", "non-normalized");
+  nonNormalizedDir = OS.Path.join(
+    nonNormalizedDir,
+    "..",
+    ".",
+    "non-normalized"
+  );
   Assert.ok(await KeyValueService.getOrCreate(nonNormalizedDir, "db"));
 });
 
@@ -58,7 +72,10 @@ add_task(async function putGetHasDelete() {
   // The put method succeeds without returning a value.
   Assert.strictEqual(await database.put("int-key", 1234), undefined);
   Assert.strictEqual(await database.put("double-key", 56.78), undefined);
-  Assert.strictEqual(await database.put("string-key", "Héllo, wőrld!"), undefined);
+  Assert.strictEqual(
+    await database.put("string-key", "Héllo, wőrld!"),
+    undefined
+  );
   Assert.strictEqual(await database.put("bool-key", true), undefined);
 
   // Getting key/value pairs that exist returns the expected values.
@@ -134,9 +151,18 @@ add_task(async function largeNumbers() {
   await database.put("min-value", Number.MIN_VALUE);
 
   Assert.strictEqual(await database.get("max-int-variant"), MAX_INT_VARIANT);
-  Assert.strictEqual(await database.get("min-double-variant"), MIN_DOUBLE_VARIANT);
-  Assert.strictEqual(await database.get("max-safe-integer"), Number.MAX_SAFE_INTEGER);
-  Assert.strictEqual(await database.get("min-safe-integer"), Number.MIN_SAFE_INTEGER);
+  Assert.strictEqual(
+    await database.get("min-double-variant"),
+    MIN_DOUBLE_VARIANT
+  );
+  Assert.strictEqual(
+    await database.get("max-safe-integer"),
+    Number.MAX_SAFE_INTEGER
+  );
+  Assert.strictEqual(
+    await database.get("min-safe-integer"),
+    Number.MIN_SAFE_INTEGER
+  );
   Assert.strictEqual(await database.get("max-value"), Number.MAX_VALUE);
   Assert.strictEqual(await database.get("min-value"), Number.MIN_VALUE);
 });
@@ -342,11 +368,7 @@ add_task(async function writeManyPutDelete() {
     ["key5", "val5"],
   ]);
 
-  await database.writeMany([
-    ["key2", "val2"],
-    ["key4", null],
-    ["key5", null],
-  ]);
+  await database.writeMany([["key2", "val2"], ["key4", null], ["key5", null]]);
 
   Assert.strictEqual(await database.get("key1"), "val1");
   Assert.strictEqual(await database.get("key2"), "val2");
@@ -387,15 +409,35 @@ add_task(async function getOrCreateNamedDatabases() {
   await fooDB.put("key", 2);
   Assert.ok(!(await barDB.has("key")), "the bar DB still doesn't have the key");
   await barDB.put("key", 3);
-  Assert.strictEqual(await bazDB.get("key", 0), 1, "the baz DB has its KV pair");
-  Assert.strictEqual(await fooDB.get("key", 0), 2, "the foo DB has its KV pair");
-  Assert.strictEqual(await barDB.get("key", 0), 3, "the bar DB has its KV pair");
+  Assert.strictEqual(
+    await bazDB.get("key", 0),
+    1,
+    "the baz DB has its KV pair"
+  );
+  Assert.strictEqual(
+    await fooDB.get("key", 0),
+    2,
+    "the foo DB has its KV pair"
+  );
+  Assert.strictEqual(
+    await barDB.get("key", 0),
+    3,
+    "the bar DB has its KV pair"
+  );
 
   // Key/value pairs that are deleted from a database still exist in other DBs.
   await bazDB.delete("key");
-  Assert.strictEqual(await fooDB.get("key", 0), 2, "the foo DB still has its KV pair");
+  Assert.strictEqual(
+    await fooDB.get("key", 0),
+    2,
+    "the foo DB still has its KV pair"
+  );
   await fooDB.delete("key");
-  Assert.strictEqual(await barDB.get("key", 0), 3, "the bar DB still has its KV pair");
+  Assert.strictEqual(
+    await barDB.get("key", 0),
+    3,
+    "the bar DB still has its KV pair"
+  );
   await barDB.delete("key");
 });
 
@@ -504,10 +546,7 @@ add_task(async function enumeration() {
 
   // Test enumeration to a key that does exist, which should enumerate pairs
   // whose key is less than that key.
-  await test(null, "int-key", [
-    ["bool-key", true],
-    ["double-key", 56.78],
-  ]);
+  await test(null, "int-key", [["bool-key", true], ["double-key", 56.78]]);
 
   // Test enumeration to a key that doesn't exist and is lexicographically
   // less than the least key in the database, which should enumerate
@@ -516,9 +555,7 @@ add_task(async function enumeration() {
 
   // Test enumeration between intermediate keys that don't exist, which should
   // enumerate the pairs whose keys lie in between them.
-  await test("ggggg", "ppppp", [
-    ["int-key", 1234],
-  ]);
+  await test("ggggg", "ppppp", [["int-key", 1234]]);
 
   // Test enumeration from a key that exists to the same key, which shouldn't
   // enumerate any pairs, because the "to" key is exclusive.

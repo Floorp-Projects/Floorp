@@ -1,5 +1,5 @@
-import {addNumberReducer, FakePrefs} from "test/unit/utils";
-import {createStore} from "redux";
+import { addNumberReducer, FakePrefs } from "test/unit/utils";
+import { createStore } from "redux";
 import injector from "inject!lib/Store.jsm";
 
 describe("Store", () => {
@@ -21,10 +21,12 @@ describe("Store", () => {
       this.db = {};
       sinon.stub(this, "db").get(dbStub);
     }
-    ({Store} = injector({
-      "lib/ActivityStreamMessageChannel.jsm": {ActivityStreamMessageChannel},
-      "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
-      "lib/ActivityStreamStorage.jsm": {ActivityStreamStorage: FakeActivityStreamStorage},
+    ({ Store } = injector({
+      "lib/ActivityStreamMessageChannel.jsm": { ActivityStreamMessageChannel },
+      "lib/ActivityStreamPrefs.jsm": { Prefs: FakePrefs },
+      "lib/ActivityStreamStorage.jsm": {
+        ActivityStreamStorage: FakeActivityStreamStorage,
+      },
     }));
     store = new Store();
     sandbox.stub(store, "_initIndexedDB").resolves();
@@ -46,7 +48,7 @@ describe("Store", () => {
     assert.equal(store._messageChannel.dispatch, store.dispatch);
   });
   it("should connect the ActivityStreamMessageChannel's middleware", () => {
-    store.dispatch({type: "FOO"});
+    store.dispatch({ type: "FOO" });
     assert.calledOnce(store._messageChannel.middleware);
   });
   describe("#initFeed", () => {
@@ -62,10 +64,10 @@ describe("Store", () => {
     it("should call the feed's onAction with uninit action if it exists", () => {
       let feed;
       function createFeed() {
-        feed = {onAction: sinon.spy()};
+        feed = { onAction: sinon.spy() };
         return feed;
       }
-      const action = {type: "FOO"};
+      const action = { type: "FOO" };
       store._feedFactories = new Map([["foo", createFeed]]);
 
       store.initFeed("foo", action);
@@ -90,10 +92,10 @@ describe("Store", () => {
     it("should call the feed's onAction with uninit action if it exists", () => {
       let feed;
       function createFeed() {
-        feed = {onAction: sinon.spy()};
+        feed = { onAction: sinon.spy() };
         return feed;
       }
-      const action = {type: "BAR"};
+      const action = { type: "BAR" };
       store._feedFactories = new Map([["foo", createFeed]]);
       store.initFeed("foo");
 
@@ -187,7 +189,7 @@ describe("Store", () => {
     });
     it("should emit an initial event if provided", async () => {
       sinon.stub(store, "dispatch");
-      const action = {type: "FOO"};
+      const action = { type: "FOO" };
 
       await store.init(new Map(), action);
 
@@ -200,21 +202,25 @@ describe("Store", () => {
       const telemetrySpy = sandbox.stub().returns({});
       const fooSpy = sandbox.stub().returns({});
       // Intentionally put the telemetry feed as the second item.
-      const feedFactories = new Map([["feeds.foo", fooSpy],
-                                     ["feeds.telemetry", telemetrySpy]]);
+      const feedFactories = new Map([
+        ["feeds.foo", fooSpy],
+        ["feeds.telemetry", telemetrySpy],
+      ]);
       store.init(feedFactories);
       assert.ok(telemetrySpy.calledBefore(fooSpy));
     });
     it("should dispatch init/load events", async () => {
-      await store.init(new Map(), {type: "FOO"});
+      await store.init(new Map(), { type: "FOO" });
 
       assert.calledOnce(store._messageChannel.simulateMessagesForExistingTabs);
     });
     it("should dispatch INIT before LOAD", async () => {
-      const init = {type: "INIT"};
-      const load = {type: "TAB_LOAD"};
+      const init = { type: "INIT" };
+      const load = { type: "TAB_LOAD" };
       sandbox.stub(store, "dispatch");
-      store._messageChannel.simulateMessagesForExistingTabs.callsFake(() => store.dispatch(load));
+      store._messageChannel.simulateMessagesForExistingTabs.callsFake(() =>
+        store.dispatch(load)
+      );
       await store.init(new Map(), init);
 
       assert.calledTwice(store.dispatch);
@@ -225,7 +231,7 @@ describe("Store", () => {
   describe("#uninit", () => {
     it("should emit an uninit event if provided on init", () => {
       sinon.stub(store, "dispatch");
-      const action = {type: "BAR"};
+      const action = { type: "BAR" };
       store.init(new Map(), null, action);
 
       store.uninit();
@@ -235,11 +241,9 @@ describe("Store", () => {
     });
     it("should clear .feeds and ._feedFactories", () => {
       store._prefs.set("a", true);
-      store.init(new Map([
-        ["a", () => ({})],
-        ["b", () => ({})],
-        ["c", () => ({})],
-      ]));
+      store.init(
+        new Map([["a", () => ({})], ["b", () => ({})], ["c", () => ({})]])
+      );
 
       store.uninit();
 
@@ -254,15 +258,15 @@ describe("Store", () => {
   describe("#getState", () => {
     it("should return the redux state", () => {
       store._store = createStore((prevState = 123) => prevState);
-      const {getState} = store;
+      const { getState } = store;
       assert.equal(getState(), 123);
     });
   });
   describe("#dispatch", () => {
     it("should call .onAction of each feed", async () => {
-      const {dispatch} = store;
-      const sub = {onAction: sinon.spy()};
-      const action = {type: "FOO"};
+      const { dispatch } = store;
+      const sub = { onAction: sinon.spy() };
+      const action = { type: "FOO" };
 
       store._prefs.set("sub", true);
       await store.init(new Map([["sub", () => sub]]));
@@ -272,10 +276,10 @@ describe("Store", () => {
       assert.calledWith(sub.onAction, action);
     });
     it("should call the reducers", () => {
-      const {dispatch} = store;
+      const { dispatch } = store;
       store._store = createStore(addNumberReducer);
 
-      dispatch({type: "ADD", data: 14});
+      dispatch({ type: "ADD", data: 14 });
 
       assert.equal(store.getState(), 14);
     });
@@ -283,7 +287,7 @@ describe("Store", () => {
   describe("#subscribe", () => {
     it("should subscribe to changes to the store", () => {
       const sub = sinon.spy();
-      const action = {type: "FOO"};
+      const action = { type: "FOO" };
 
       store.subscribe(sub);
       store.dispatch(action);

@@ -30,12 +30,18 @@ function get_remote_history(browser) {
   }
 
   return new Promise(resolve => {
-    browser.messageManager.addMessageListener("Test:History", function listener({data}) {
-      browser.messageManager.removeMessageListener("Test:History", listener);
-      resolve(data);
-    });
+    browser.messageManager.addMessageListener(
+      "Test:History",
+      function listener({ data }) {
+        browser.messageManager.removeMessageListener("Test:History", listener);
+        resolve(data);
+      }
+    );
 
-    browser.messageManager.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
+    browser.messageManager.loadFrameScript(
+      "data:,(" + frame_script.toString() + ")();",
+      true
+    );
   });
 }
 
@@ -43,14 +49,26 @@ var check_history = async function() {
   let sessionHistory = await get_remote_history(gBrowser.selectedBrowser);
 
   let count = sessionHistory.entries.length;
-  is(count, gExpectedHistory.entries.length, "Should have the right number of history entries");
-  is(sessionHistory.index, gExpectedHistory.index, "Should have the right history index");
+  is(
+    count,
+    gExpectedHistory.entries.length,
+    "Should have the right number of history entries"
+  );
+  is(
+    sessionHistory.index,
+    gExpectedHistory.index,
+    "Should have the right history index"
+  );
 
   for (let i = 0; i < count; i++) {
     let entry = sessionHistory.entries[i];
     info("Checking History Entry: " + entry.uri);
     is(entry.uri, gExpectedHistory.entries[i].uri, "Should have the right URI");
-    is(entry.title, gExpectedHistory.entries[i].title, "Should have the right title");
+    is(
+      entry.title,
+      gExpectedHistory.entries[i].title,
+      "Should have the right title"
+    );
   }
 };
 
@@ -74,8 +92,10 @@ var waitForLoad = async function(uri) {
   // and they may finish localization later.
   // To prevent this test from being intermittent, we'll
   // wait for the `document.l10n.ready` promise to resolve.
-  if (gBrowser.selectedBrowser.contentWindow &&
-      gBrowser.selectedBrowser.contentWindow.document.l10n) {
+  if (
+    gBrowser.selectedBrowser.contentWindow &&
+    gBrowser.selectedBrowser.contentWindow.document.l10n
+  ) {
     await gBrowser.selectedBrowser.contentWindow.document.l10n.ready;
   }
   gExpectedHistory.index++;
@@ -86,7 +106,10 @@ var waitForLoad = async function(uri) {
 };
 
 // Waits for a load and updates the known history
-var waitForLoadWithFlags = async function(uri, flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE) {
+var waitForLoadWithFlags = async function(
+  uri,
+  flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE
+) {
   info("Loading " + uri + " flags = " + flags);
   gBrowser.selectedBrowser.loadURI(uri, {
     flags,
@@ -129,71 +152,155 @@ add_task(async function test_navigation() {
 
   info("1");
   // Create a tab and load a remote page in it
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
-  let {permanentKey} = gBrowser.selectedBrowser;
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
+    skipAnimation: true,
+  });
+  let { permanentKey } = gBrowser.selectedBrowser;
   await waitForLoad("http://example.org/" + DUMMY_PATH);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
 
   info("2");
   // Load another page
   await waitForLoad("http://example.com/" + DUMMY_PATH);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("3");
   // Load a non-remote page
   await waitForLoad("about:robots");
-  await TestUtils.waitForCondition(() => gBrowser.selectedBrowser.contentTitle != "about:robots",
-    "Waiting for about:robots title to update");
-  is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  await TestUtils.waitForCondition(
+    () => gBrowser.selectedBrowser.contentTitle != "about:robots",
+    "Waiting for about:robots title to update"
+  );
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("4");
   // Load a remote page
   await waitForLoad("http://example.org/" + DUMMY_PATH);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("5");
   await back();
-  is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("6");
   await back();
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("7");
   await forward();
-  is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("8");
   await forward();
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("9");
   await back();
-  is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("10");
   // Load a new remote page, this should replace the last history entry
   gExpectedHistory.entries.splice(gExpectedHistory.entries.length - 1, 1);
   await waitForLoad("http://example.com/" + DUMMY_PATH);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
   await check_history();
 
   info("11");
@@ -208,33 +315,78 @@ add_task(async function test_synchronous() {
 
   info("1");
   // Create a tab and load a remote page in it
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
-  let {permanentKey} = gBrowser.selectedBrowser;
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
+    skipAnimation: true,
+  });
+  let { permanentKey } = gBrowser.selectedBrowser;
   await waitForLoad("http://example.org/" + DUMMY_PATH);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
 
   info("2");
   // Load another page
   info("Loading about:robots");
   await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
-  is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
 
   await BrowserTestUtils.browserStopped(gBrowser);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
 
   info("3");
   // Load the remote page again
   info("Loading http://example.org/" + DUMMY_PATH);
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.org/" + DUMMY_PATH);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  await BrowserTestUtils.loadURI(
+    gBrowser.selectedBrowser,
+    "http://example.org/" + DUMMY_PATH
+  );
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
 
   await BrowserTestUtils.browserStopped(gBrowser);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
-  is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
 
   info("4");
   gBrowser.removeCurrentTab();
@@ -248,34 +400,66 @@ add_task(async function test_loadflags() {
 
   info("1");
   // Create a tab and load a remote page in it
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
+    skipAnimation: true,
+  });
   await waitForLoadWithFlags("about:robots");
-  await TestUtils.waitForCondition(() => gBrowser.selectedBrowser.contentTitle != "about:robots",
-    "Waiting for about:robots title to update");
-  is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
+  await TestUtils.waitForCondition(
+    () => gBrowser.selectedBrowser.contentTitle != "about:robots",
+    "Waiting for about:robots title to update"
+  );
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
   await check_history();
 
   info("2");
   // Load a page in the remote process with some custom flags
-  await waitForLoadWithFlags("http://example.com/" + DUMMY_PATH, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
+  await waitForLoadWithFlags(
+    "http://example.com/" + DUMMY_PATH,
+    Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY
+  );
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
   await check_history();
 
   info("3");
   // Load a non-remote page
   await waitForLoadWithFlags("about:robots");
-  await TestUtils.waitForCondition(() => gBrowser.selectedBrowser.contentTitle != "about:robots",
-    "Waiting for about:robots title to update");
-  is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
+  await TestUtils.waitForCondition(
+    () => gBrowser.selectedBrowser.contentTitle != "about:robots",
+    "Waiting for about:robots title to update"
+  );
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
   await check_history();
 
   info("4");
   // Load another remote page
-  await waitForLoadWithFlags("http://example.org/" + DUMMY_PATH, Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY);
-  is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
+  await waitForLoadWithFlags(
+    "http://example.org/" + DUMMY_PATH,
+    Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY
+  );
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
   await check_history();
 
-  is(gExpectedHistory.entries.length, 2, "Should end with the right number of history entries");
+  is(
+    gExpectedHistory.entries.length,
+    2,
+    "Should end with the right number of history entries"
+  );
 
   info("5");
   gBrowser.removeCurrentTab();

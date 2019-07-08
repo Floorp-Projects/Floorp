@@ -29,8 +29,14 @@ function* do_run_test() {
   var spec2 = "http://bar.com/bar.html";
   var uri1 = NetUtil.newURI(spec1);
   var uri2 = NetUtil.newURI(spec2);
-  var channel1 = NetUtil.newChannel({uri: uri1, loadUsingSystemPrincipal: true});
-  var channel2 = NetUtil.newChannel({uri: uri2, loadUsingSystemPrincipal: true});
+  var channel1 = NetUtil.newChannel({
+    uri: uri1,
+    loadUsingSystemPrincipal: true,
+  });
+  var channel2 = NetUtil.newChannel({
+    uri: uri2,
+    loadUsingSystemPrincipal: true,
+  });
 
   // Force the channel URI to be used when determining the originating URI of
   // the channel.
@@ -75,4 +81,3 @@ function* do_run_test() {
 
   finish_test();
 }
-

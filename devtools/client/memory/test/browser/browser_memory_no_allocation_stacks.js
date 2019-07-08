@@ -5,12 +5,15 @@
 
 "use strict";
 
-const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+const {
+  takeSnapshotAndCensus,
+} = require("devtools/client/memory/actions/snapshot");
 const censusDisplayActions = require("devtools/client/memory/actions/census-display");
 const { viewState } = require("devtools/client/memory/constants");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
+const TEST_URL =
+  "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
@@ -20,21 +23,30 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
 
   dispatch(changeView(viewState.CENSUS));
 
-  ok(!getState().allocations.recording,
-     "Should not be recording allocagtions");
+  ok(!getState().allocations.recording, "Should not be recording allocagtions");
 
   await dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await dispatch(censusDisplayActions.setCensusDisplayAndRefresh(
-    heapWorker,
-    censusDisplays.allocationStack));
+  await dispatch(
+    censusDisplayActions.setCensusDisplayAndRefresh(
+      heapWorker,
+      censusDisplays.allocationStack
+    )
+  );
 
-  is(getState().censusDisplay.breakdown.by, "allocationStack",
-     "Should be using allocation stack breakdown");
+  is(
+    getState().censusDisplay.breakdown.by,
+    "allocationStack",
+    "Should be using allocation stack breakdown"
+  );
 
-  ok(!getState().allocations.recording,
-     "Should still not be recording allocagtions");
+  ok(
+    !getState().allocations.recording,
+    "Should still not be recording allocagtions"
+  );
 
-  ok(doc.querySelector(".no-allocation-stacks"),
+  ok(
+    doc.querySelector(".no-allocation-stacks"),
     "Because we did not record allocations, " +
-    "the no-allocation-stack warning should be visible");
+      "the no-allocation-stack warning should be visible"
+  );
 });

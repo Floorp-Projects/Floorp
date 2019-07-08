@@ -1,6 +1,6 @@
 "use strict";
 
-self.onmessage = function () {
+self.onmessage = function() {
   postMessage("worker");
   debugger;
 };

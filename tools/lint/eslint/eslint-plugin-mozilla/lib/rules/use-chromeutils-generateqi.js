@@ -18,17 +18,19 @@ function isIdentifier(node, id) {
 }
 
 function isMemberExpression(node, object, member) {
-  return (node.type === "MemberExpression" &&
-          isIdentifier(node.object, object) &&
-          isIdentifier(node.property, member));
+  return (
+    node.type === "MemberExpression" &&
+    isIdentifier(node.object, object) &&
+    isIdentifier(node.property, member)
+  );
 }
 
-const MSG_NO_JS_QUERY_INTERFACE = (
+const MSG_NO_JS_QUERY_INTERFACE =
   "Please use ChromeUtils.generateQI rather than manually creating " +
-  "JavaScript QueryInterface functions");
+  "JavaScript QueryInterface functions";
 
-const MSG_NO_XPCOMUTILS_GENERATEQI = (
-  "Please use ChromeUtils.generateQI instead of XPCOMUtils.generateQI");
+const MSG_NO_XPCOMUTILS_GENERATEQI =
+  "Please use ChromeUtils.generateQI instead of XPCOMUtils.generateQI";
 
 function funcToGenerateQI(context, node) {
   const sourceCode = context.getSourceCode();
@@ -41,9 +43,10 @@ function funcToGenerateQI(context, node) {
     interfaces.push(match[1] || match[2]);
   }
 
-  let ifaces = interfaces.filter(iface => iface != "nsISupports")
-                         .map(iface => JSON.stringify(iface))
-                         .join(", ");
+  let ifaces = interfaces
+    .filter(iface => iface != "nsISupports")
+    .map(iface => JSON.stringify(iface))
+    .join(", ");
 
   return `ChromeUtils.generateQI([${ifaces}])`;
 }
@@ -55,8 +58,8 @@ module.exports = {
 
   create(context) {
     return {
-      "CallExpression": function(node) {
-        let {callee} = node;
+      CallExpression(node) {
+        let { callee } = node;
         if (isMemberExpression(callee, "XPCOMUtils", "generateQI")) {
           context.report({
             node,
@@ -68,8 +71,10 @@ module.exports = {
         }
       },
 
-      "AssignmentExpression > MemberExpression[property.name='QueryInterface']": function(node) {
-        const {right} = node.parent;
+      "AssignmentExpression > MemberExpression[property.name='QueryInterface']": function(
+        node
+      ) {
+        const { right } = node.parent;
         if (right.type === "FunctionExpression") {
           context.report({
             node: node.parent,
@@ -81,7 +86,9 @@ module.exports = {
         }
       },
 
-      "Property[key.name='QueryInterface'][value.type='FunctionExpression']": function(node) {
+      "Property[key.name='QueryInterface'][value.type='FunctionExpression']": function(
+        node
+      ) {
         context.report({
           node,
           message: MSG_NO_JS_QUERY_INTERFACE,
@@ -94,4 +101,3 @@ module.exports = {
     };
   },
 };
-

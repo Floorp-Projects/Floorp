@@ -6,8 +6,12 @@
 const { mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
-const { setupStore } = require("devtools/client/accessibility/test/jest/helpers");
+const Provider = createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
+const {
+  setupStore,
+} = require("devtools/client/accessibility/test/jest/helpers");
 
 const BadgeClass = require("devtools/client/accessibility/components/Badge");
 const Badge = createFactory(BadgeClass);
@@ -24,7 +28,9 @@ describe("Badge component:", () => {
 
     const badge = wrapper.find(BadgeClass);
     expect(badge.children().length).toBe(1);
-    expect(badge.find(`span[aria-label="${label}"][title="${tooltip}"]`)).toHaveLength(1);
+    expect(
+      badge.find(`span[aria-label="${label}"][title="${tooltip}"]`)
+    ).toHaveLength(1);
 
     const badgeText = badge.childAt(0);
     expect(badgeText.hasClass("audit-badge")).toBe(true);

@@ -14,30 +14,31 @@ const framePath = "/tests/dom/tests/mochitest/localstorage/";
 
 window.addEventListener("message", onMessageReceived);
 
-function onMessageReceived(event)
-{
-  switch (event.data)
-  {
+function onMessageReceived(event) {
+  switch (event.data) {
     // Indication of the frame onload event
     case "frame loaded":
-      if (--frameLoadsPending)
+      if (--frameLoadsPending) {
         break;
+      }
 
-      // Just fall through...
+    // Just fall through...
 
     // Indication of successfully finished step of a test
     case "perf":
-      if (callMasterFrame)
+      if (callMasterFrame) {
         masterFrame.postMessage("step", masterFrameOrigin);
-      else
+      } else {
         slaveFrame.postMessage("step", slaveFrameOrigin);
+      }
       callMasterFrame = !callMasterFrame;
       break;
 
     // Indication of all test parts finish (from any of the frames)
     case "done":
-      if (testDone)
+      if (testDone) {
         break;
+      }
 
       testDone = true;
       t.done();

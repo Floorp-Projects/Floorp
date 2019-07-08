@@ -55,7 +55,12 @@ const EXPECTED_REQUESTS_TOP = [
     causeUri: TOP_URL,
     stack: [
       { fn: "performPromiseFetchRequest", file: TOP_FILE_NAME, line: 41 },
-      { fn: null, file: TOP_FILE_NAME, line: 40, asyncCause: "promise callback" },
+      {
+        fn: null,
+        file: TOP_FILE_NAME,
+        line: 40,
+        asyncCause: "promise callback",
+      },
     ],
   },
   {
@@ -65,8 +70,12 @@ const EXPECTED_REQUESTS_TOP = [
     causeUri: TOP_URL,
     stack: [
       { fn: "performTimeoutFetchRequest", file: TOP_FILE_NAME, line: 43 },
-      { fn: "performPromiseFetchRequest", file: TOP_FILE_NAME, line: 42,
-        asyncCause: "setTimeout handler" },
+      {
+        fn: "performPromiseFetchRequest",
+        file: TOP_FILE_NAME,
+        line: 42,
+        asyncCause: "setTimeout handler",
+      },
     ],
   },
   {
@@ -121,7 +130,12 @@ const EXPECTED_REQUESTS_SUB = [
     causeUri: SUB_URL,
     stack: [
       { fn: "performPromiseFetchRequest", file: SUB_FILE_NAME, line: 40 },
-      { fn: null, file: SUB_FILE_NAME, line: 39, asyncCause: "promise callback" },
+      {
+        fn: null,
+        file: SUB_FILE_NAME,
+        line: 39,
+        asyncCause: "promise callback",
+      },
     ],
   },
   {
@@ -131,8 +145,12 @@ const EXPECTED_REQUESTS_SUB = [
     causeUri: SUB_URL,
     stack: [
       { fn: "performTimeoutFetchRequest", file: SUB_FILE_NAME, line: 42 },
-      { fn: "performPromiseFetchRequest", file: SUB_FILE_NAME, line: 41,
-        asyncCause: "setTimeout handler" },
+      {
+        fn: "performPromiseFetchRequest",
+        file: SUB_FILE_NAME,
+        line: 41,
+        asyncCause: "setTimeout handler",
+      },
     ],
   },
   {
@@ -144,11 +162,14 @@ const EXPECTED_REQUESTS_SUB = [
   },
 ];
 
-const REQUEST_COUNT = EXPECTED_REQUESTS_TOP.length + EXPECTED_REQUESTS_SUB.length;
+const REQUEST_COUNT =
+  EXPECTED_REQUESTS_TOP.length + EXPECTED_REQUESTS_SUB.length;
 
 add_task(async function() {
   // Async stacks aren't on by default in all builds
-  await SpecialPowers.pushPrefEnv({ set: [["javascript.options.asyncstack", true]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [["javascript.options.asyncstack", true]],
+  });
 
   // the initNetMonitor function clears the network request list after the
   // page is loaded. That's why we first load a bogus page from SIMPLE_URL,
@@ -160,10 +181,9 @@ add_task(async function() {
 
   const { document, store, windowRequire, connector } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -171,14 +191,20 @@ add_task(async function() {
 
   await waitForNetworkEvents(monitor, REQUEST_COUNT);
 
-  is(store.getState().requests.requests.size, REQUEST_COUNT,
-    "All the page events should be recorded.");
+  is(
+    store.getState().requests.requests.size,
+    REQUEST_COUNT,
+    "All the page events should be recorded."
+  );
 
   // Fetch stack-trace data from the backend and wait till
   // all packets are received.
   const requests = getSortedRequests(store.getState());
-  await Promise.all(requests.map(requestItem =>
-    connector.requestData(requestItem.id, "stackTrace")));
+  await Promise.all(
+    requests.map(requestItem =>
+      connector.requestData(requestItem.id, "stackTrace")
+    )
+  );
 
   // While there is a defined order for requests in each document separately, the requests
   // from different documents may interleave in various ways that change per test run, so
@@ -212,20 +238,34 @@ add_task(async function() {
 
     if (stack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);
-      ok(stackLen > 0,
-        `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`);
+      ok(
+        stackLen > 0,
+        `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`
+      );
 
       // if "stack" is array, check the details about the top stack frames
       if (Array.isArray(stack)) {
         stack.forEach((frame, j) => {
-          is(stacktrace[j].functionName, frame.fn,
-            `Request #${i} has the correct function on JS stack frame #${j}`);
-          is(stacktrace[j].filename.split("/").pop(), frame.file,
-            `Request #${i} has the correct file on JS stack frame #${j}`);
-          is(stacktrace[j].lineNumber, frame.line,
-            `Request #${i} has the correct line number on JS stack frame #${j}`);
-          is(stacktrace[j].asyncCause, frame.asyncCause,
-            `Request #${i} has the correct async cause on JS stack frame #${j}`);
+          is(
+            stacktrace[j].functionName,
+            frame.fn,
+            `Request #${i} has the correct function on JS stack frame #${j}`
+          );
+          is(
+            stacktrace[j].filename.split("/").pop(),
+            frame.file,
+            `Request #${i} has the correct file on JS stack frame #${j}`
+          );
+          is(
+            stacktrace[j].lineNumber,
+            frame.line,
+            `Request #${i} has the correct line number on JS stack frame #${j}`
+          );
+          is(
+            stacktrace[j].asyncCause,
+            frame.asyncCause,
+            `Request #${i} has the correct async cause on JS stack frame #${j}`
+          );
         });
       }
     } else {

@@ -21,13 +21,21 @@ add_task(async function() {
 
   let count = 0;
   function check(selectedIndex, panelVisibility) {
-    info("Performing check " + (count++) + ".");
+    info("Performing check " + count++ + ".");
 
-    const requestItems = Array.from(document.querySelectorAll(".request-list-item"));
-    is(requestItems.findIndex((item) => item.matches(".selected")), selectedIndex,
-      "The selected item in the requests menu was incorrect.");
-    is(!!document.querySelector(".network-details-panel"), panelVisibility,
-      "The network details panel should render correctly.");
+    const requestItems = Array.from(
+      document.querySelectorAll(".request-list-item")
+    );
+    is(
+      requestItems.findIndex(item => item.matches(".selected")),
+      selectedIndex,
+      "The selected item in the requests menu was incorrect."
+    );
+    is(
+      !!document.querySelector(".network-details-panel"),
+      panelVisibility,
+      "The network details panel should render correctly."
+    );
   }
 
   // Execute requests.

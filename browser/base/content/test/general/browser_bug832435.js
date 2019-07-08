@@ -7,16 +7,20 @@ function test() {
   ok(true, "Starting up");
 
   gBrowser.selectedBrowser.focus();
-  gURLBar.addEventListener("focus", function() {
-    ok(true, "Invoked onfocus handler");
-    EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
+  gURLBar.addEventListener(
+    "focus",
+    function() {
+      ok(true, "Invoked onfocus handler");
+      EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
 
-    // javscript: URIs are evaluated async.
-    SimpleTest.executeSoon(function() {
-      ok(true, "Evaluated without crashing");
-      finish();
-    });
-  }, {once: true});
+      // javscript: URIs are evaluated async.
+      SimpleTest.executeSoon(function() {
+        ok(true, "Evaluated without crashing");
+        finish();
+      });
+    },
+    { once: true }
+  );
   gURLBar.inputField.value = "javascript: var foo = '11111111'; ";
   gURLBar.focus();
 }

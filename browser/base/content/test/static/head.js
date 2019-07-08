@@ -4,13 +4,19 @@
 "use strict";
 
 /* Shorthand constructors to construct an nsI(Local)File and zip reader: */
-const LocalFile = new Components.Constructor("@mozilla.org/file/local;1", Ci.nsIFile, "initWithPath");
-const ZipReader = new Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "open");
+const LocalFile = new Components.Constructor(
+  "@mozilla.org/file/local;1",
+  Ci.nsIFile,
+  "initWithPath"
+);
+const ZipReader = new Components.Constructor(
+  "@mozilla.org/libjar/zip-reader;1",
+  "nsIZipReader",
+  "open"
+);
 
-
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {OS, require} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * Returns a promise that is resolved with a list of files that have one of the
@@ -29,7 +35,7 @@ function generateURIsFromDirTree(dir, extensions) {
     let rv = [];
     while (dirQueue.length) {
       let nextDir = dirQueue.shift();
-      let {subdirs, files} = await iterateOverPath(nextDir, extensions);
+      let { subdirs, files } = await iterateOverPath(nextDir, extensions);
       dirQueue.push(...subdirs);
       rv.push(...files);
     }
@@ -53,10 +59,10 @@ function iterateOverPath(path, extensions) {
   let subdirs = [];
   let files = [];
 
-  let pathEntryIterator = (entry) => {
+  let pathEntryIterator = entry => {
     if (entry.isDir) {
       subdirs.push(entry.path);
-    } else if (extensions.some((extension) => entry.name.endsWith(extension))) {
+    } else if (extensions.some(extension => entry.name.endsWith(extension))) {
       let file = parentDir.clone();
       file.append(entry.name);
       // the build system might leave dead symlinks hanging around, which are
@@ -65,8 +71,12 @@ function iterateOverPath(path, extensions) {
         let uriSpec = getURLForFile(file);
         files.push(Services.io.newURI(uriSpec));
       }
-    } else if (entry.name.endsWith(".ja") || entry.name.endsWith(".jar") ||
-               entry.name.endsWith(".zip") || entry.name.endsWith(".xpi")) {
+    } else if (
+      entry.name.endsWith(".ja") ||
+      entry.name.endsWith(".jar") ||
+      entry.name.endsWith(".zip") ||
+      entry.name.endsWith(".xpi")
+    ) {
       let file = parentDir.clone();
       file.append(entry.name);
       for (let extension of extensions) {
@@ -81,7 +91,7 @@ function iterateOverPath(path, extensions) {
       try {
         // Iterate through the directory
         await iterator.forEach(pathEntryIterator);
-        resolve({files, subdirs});
+        resolve({ files, subdirs });
       } catch (ex) {
         reject(ex);
       } finally {

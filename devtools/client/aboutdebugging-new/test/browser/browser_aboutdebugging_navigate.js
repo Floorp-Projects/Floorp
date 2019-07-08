@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 /**
  * Check that navigating from This Firefox to Connect and back to This Firefox works and
@@ -27,11 +30,18 @@ add_task(async function() {
   ok(connectSidebarItem, "Found the Connect sidebar item");
 
   const thisFirefoxString = getThisFirefoxString(window);
-  const thisFirefoxSidebarItem = findSidebarItemByText(thisFirefoxString, document);
-  const thisFirefoxLink = thisFirefoxSidebarItem.querySelector(".qa-sidebar-link");
+  const thisFirefoxSidebarItem = findSidebarItemByText(
+    thisFirefoxString,
+    document
+  );
+  const thisFirefoxLink = thisFirefoxSidebarItem.querySelector(
+    ".qa-sidebar-link"
+  );
   ok(thisFirefoxSidebarItem, "Found the ThisFirefox sidebar item");
-  ok(isSidebarItemSelected(thisFirefoxSidebarItem),
-    "ThisFirefox sidebar item is selected by default");
+  ok(
+    isSidebarItemSelected(thisFirefoxSidebarItem),
+    "ThisFirefox sidebar item is selected by default"
+  );
 
   info("Open a new background tab TAB1");
   const backgroundTab1 = await addTab(TAB_URL_1, { background: true });
@@ -48,7 +58,10 @@ add_task(async function() {
   // we need to wait here because the sidebar isn't updated after mounting the page
   info("Wait until Connect sidebar item is selected");
   await waitUntil(() => isSidebarItemSelected(connectSidebarItem));
-  ok(!document.querySelector(".qa-runtime-page"), "Runtime page no longer rendered");
+  ok(
+    !document.querySelector(".qa-runtime-page"),
+    "Runtime page no longer rendered"
+  );
 
   info("Open a new tab which should be listed when we go back to This Firefox");
   const backgroundTab2 = await addTab(TAB_URL_2, { background: true });
@@ -62,9 +75,14 @@ add_task(async function() {
 
   info("Wait until ThisFirefox page is displayed");
   await waitUntil(() => document.querySelector(".qa-runtime-page"));
-  ok(isSidebarItemSelected(thisFirefoxSidebarItem),
-    "ThisFirefox sidebar item is selected again");
-  ok(!document.querySelector(".qa-connect-page"), "Connect page no longer rendered");
+  ok(
+    isSidebarItemSelected(thisFirefoxSidebarItem),
+    "ThisFirefox sidebar item is selected again"
+  );
+  ok(
+    !document.querySelector(".qa-connect-page"),
+    "Connect page no longer rendered"
+  );
 
   info("TAB2 should already be displayed in the debug targets");
   await waitUntil(() => findDebugTargetByText("TAB2", document));
@@ -72,13 +90,17 @@ add_task(async function() {
   info("Remove first background tab");
   await removeTab(backgroundTab1);
 
-  info("Check TAB1 disappears, meaning ThisFirefox client is correctly connected");
+  info(
+    "Check TAB1 disappears, meaning ThisFirefox client is correctly connected"
+  );
   await waitUntil(() => !findDebugTargetByText("TAB1", document));
 
   info("Remove second background tab");
   await removeTab(backgroundTab2);
 
-  info("Check TAB2 disappears, meaning ThisFirefox client is correctly connected");
+  info(
+    "Check TAB2 disappears, meaning ThisFirefox client is correctly connected"
+  );
   await waitUntil(() => !findDebugTargetByText("TAB2", document));
 
   await waitForRequestsToSettle(AboutDebugging.store);

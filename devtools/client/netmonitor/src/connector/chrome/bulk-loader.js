@@ -6,7 +6,7 @@
 
 let bulkLoader = undefined;
 
-const PriorityLevels = {Critical: 1, Major: 2, Normal: 3, None: 0};
+const PriorityLevels = { Critical: 1, Major: 2, Normal: 3, None: 0 };
 
 class Scheduler {
   constructor() {
@@ -24,7 +24,7 @@ class Scheduler {
 
   dequeue() {
     const self = this;
-    const recursive = (resolve) => {
+    const recursive = resolve => {
       self.dequeue();
     };
     this.busy = true;
@@ -53,13 +53,13 @@ const getBulkLoader = () => {
     return options.None;
   };
 
-  const getTimeoutMS = (priority) => {
-    const delay = {Critical: 3000, Major: 1000, Normal: 500, None: 100};
+  const getTimeoutMS = priority => {
+    const delay = { Critical: 3000, Major: 1000, Normal: 500, None: 100 };
     return mappingPriority(priority, delay);
   };
 
-  const getDelayStartMS = (priority) => {
-    const delay = {Critical: 1, Major: 50, Normal: 100, None: 500};
+  const getDelayStartMS = priority => {
+    const delay = { Critical: 1, Major: 50, Normal: 100, None: 500 };
     return mappingPriority(priority, delay);
   };
 
@@ -76,7 +76,7 @@ const getBulkLoader = () => {
     });
   };
 
-    // TODO : recovery thread after all tasks finished.
+  // TODO : recovery thread after all tasks finished.
   class Thread {
     constructor() {
       this.scheduler = new Scheduler();
@@ -104,7 +104,7 @@ const getBulkLoader = () => {
         thread = new Thread();
         this.threads.set(priority, thread);
       }
-      this.tasks.push({id, priority, task: callback, isFinished: false});
+      this.tasks.push({ id, priority, task: callback, isFinished: false });
       return thread.addTask(callback, priority);
     }
 

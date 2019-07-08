@@ -5,8 +5,9 @@ const CONTENT_CREATED = "ipc:content-created";
 // Make sure that BTU.withNewTab({ ..., forceNewProcess: true }) loads
 // new tabs in their own process.
 async function spawnNewAndTest(recur, pids) {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank", forceNewProcess: true },
-                                    async function(browser) {
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank", forceNewProcess: true },
+    async function(browser) {
       // Make sure our new browser is in its own process.
       let newPid = browser.frameLoader.remoteTab.osPid;
       ok(!pids.has(newPid), "new tab is in its own process: " + recur);
@@ -20,14 +21,18 @@ async function spawnNewAndTest(recur, pids) {
         };
         Services.obs.addObserver(observer, CONTENT_CREATED);
 
-        await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function() {
-          // If this new tab caused us to create a new process, the ok(false)
-          // should have already happened. Therefore, if we get here, we've
-          // passed. Simply remove the observer.
-          Services.obs.removeObserver(observer, CONTENT_CREATED);
-        });
+        await BrowserTestUtils.withNewTab(
+          { gBrowser, url: "about:blank" },
+          function() {
+            // If this new tab caused us to create a new process, the ok(false)
+            // should have already happened. Therefore, if we get here, we've
+            // passed. Simply remove the observer.
+            Services.obs.removeObserver(observer, CONTENT_CREATED);
+          }
+        );
       }
-  });
+    }
+  );
 }
 
 add_task(async function test() {
@@ -36,5 +41,5 @@ add_task(async function test() {
 
   // Use at least one more tab than max processes or at least 5 to make this
   // test interesting.
-  await spawnNewAndTest(Math.max(maxCount + 1, 5), new Set([ curPid ]));
+  await spawnNewAndTest(Math.max(maxCount + 1, 5), new Set([curPid]));
 });

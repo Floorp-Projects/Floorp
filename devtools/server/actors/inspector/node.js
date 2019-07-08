@@ -11,32 +11,137 @@ const protocol = require("devtools/shared/protocol");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 
-loader.lazyRequireGetter(this, "getCssPath", "devtools/shared/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "getXPath", "devtools/shared/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(
+  this,
+  "getCssPath",
+  "devtools/shared/inspector/css-logic",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getXPath",
+  "devtools/shared/inspector/css-logic",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "findCssSelector",
+  "devtools/shared/inspector/css-logic",
+  true
+);
 
-loader.lazyRequireGetter(this, "isAfterPseudoElement", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isAnonymous", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isBeforePseudoElement", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isDirectShadowHostChild", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isMarkerPseudoElement", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isNativeAnonymous", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isShadowAnonymous", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isShadowHost", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isShadowRoot", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "getShadowRootMode", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isXBLAnonymous", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "isAfterPseudoElement",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isAnonymous",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isBeforePseudoElement",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isDirectShadowHostChild",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isMarkerPseudoElement",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isNativeAnonymous",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isShadowAnonymous",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isShadowHost",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isShadowRoot",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getShadowRootMode",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isXBLAnonymous",
+  "devtools/shared/layout/utils",
+  true
+);
 
-loader.lazyRequireGetter(this, "InspectorActorUtils", "devtools/server/actors/inspector/utils");
-loader.lazyRequireGetter(this, "LongStringActor", "devtools/server/actors/string", true);
-loader.lazyRequireGetter(this, "getFontPreviewData", "devtools/server/actors/styles", true);
-loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "EventCollector", "devtools/server/actors/inspector/event-collector", true);
-loader.lazyRequireGetter(this, "DocumentWalker", "devtools/server/actors/inspector/document-walker", true);
-loader.lazyRequireGetter(this, "scrollbarTreeWalkerFilter", "devtools/server/actors/inspector/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "InspectorActorUtils",
+  "devtools/server/actors/inspector/utils"
+);
+loader.lazyRequireGetter(
+  this,
+  "LongStringActor",
+  "devtools/server/actors/string",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getFontPreviewData",
+  "devtools/server/actors/styles",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "CssLogic",
+  "devtools/server/actors/inspector/css-logic",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "EventCollector",
+  "devtools/server/actors/inspector/event-collector",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "DocumentWalker",
+  "devtools/server/actors/inspector/document-walker",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "scrollbarTreeWalkerFilter",
+  "devtools/server/actors/inspector/utils",
+  true
+);
 
-const SUBGRID_ENABLED =
-  Services.prefs.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
+const SUBGRID_ENABLED = Services.prefs.getBoolPref(
+  "layout.css.grid-template-subgrid-value.enabled"
+);
 
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
@@ -59,8 +164,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   toString: function() {
-    return "[NodeActor " + this.actorID + " for " +
-      this.rawNode.toString() + "]";
+    return (
+      "[NodeActor " + this.actorID + " for " + this.rawNode.toString() + "]"
+    );
   },
 
   /**
@@ -72,8 +178,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   isDocumentElement: function() {
-    return this.rawNode.ownerDocument &&
-           this.rawNode.ownerDocument.documentElement === this.rawNode;
+    return (
+      this.rawNode.ownerDocument &&
+      this.rawNode.ownerDocument.documentElement === this.rawNode
+    );
   },
 
   destroy: function() {
@@ -104,7 +212,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     const parentNode = this.walker.parentNode(this);
     const inlineTextChild = this.walker.inlineTextChild(this);
     const shadowRoot = isShadowRoot(this.rawNode);
-    const hostActor = shadowRoot ? this.walker.getNode(this.rawNode.host) : null;
+    const hostActor = shadowRoot
+      ? this.walker.getNode(this.rawNode.host)
+      : null;
 
     const form = {
       actor: this.actorID,
@@ -143,7 +253,8 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       mutationBreakpoints: this.walker.getMutationBreakpoints(this),
 
       isDisplayed: this.isDisplayed,
-      isInHTMLDocument: this.rawNode.ownerDocument &&
+      isInHTMLDocument:
+        this.rawNode.ownerDocument &&
         this.rawNode.ownerDocument.contentType === "text/html",
       hasEventListeners: this._hasEventListeners,
     };
@@ -189,16 +300,19 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   get numChildren() {
     // For pseudo elements, childNodes.length returns 1, but the walker
     // will return 0.
-    if (isMarkerPseudoElement(this.rawNode) ||
-      isBeforePseudoElement(this.rawNode) || isAfterPseudoElement(this.rawNode)
+    if (
+      isMarkerPseudoElement(this.rawNode) ||
+      isBeforePseudoElement(this.rawNode) ||
+      isAfterPseudoElement(this.rawNode)
     ) {
       return 0;
     }
 
     const rawNode = this.rawNode;
     let numChildren = rawNode.childNodes.length;
-    const hasAnonChildren = rawNode.nodeType === Node.ELEMENT_NODE &&
-                          rawNode.ownerDocument.getAnonymousNodes(rawNode);
+    const hasAnonChildren =
+      rawNode.nodeType === Node.ELEMENT_NODE &&
+      rawNode.ownerDocument.getAnonymousNodes(rawNode);
 
     const hasContentDocument = rawNode.contentDocument;
     const hasSVGDocument = rawNode.getSVGDocument && rawNode.getSVGDocument();
@@ -209,8 +323,12 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     // Normal counting misses ::before/::after.  Also, some anonymous children
     // may ultimately be skipped, so we have to consult with the walker.
-    if (numChildren === 0 || hasAnonChildren || isShadowHost(this.rawNode) ||
-      isShadowAnonymous(this.rawNode)) {
+    if (
+      numChildren === 0 ||
+      hasAnonChildren ||
+      isShadowHost(this.rawNode) ||
+      isShadowAnonymous(this.rawNode)
+    ) {
       numChildren = this.walker.countChildren(this);
     }
 
@@ -229,8 +347,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   get displayType() {
     // Consider all non-element nodes as displayed.
-    if (InspectorActorUtils.isNodeDead(this) ||
-        this.rawNode.nodeType !== Node.ELEMENT_NODE) {
+    if (
+      InspectorActorUtils.isNodeDead(this) ||
+      this.rawNode.nodeType !== Node.ELEMENT_NODE
+    ) {
       return null;
     }
 
@@ -246,10 +366,12 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       // Fails for <scrollbar> elements.
     }
 
-    if (SUBGRID_ENABLED &&
-        (display === "grid" || display === "inline-grid") &&
-        (style.gridTemplateRows === "subgrid" ||
-         style.gridTemplateColumns === "subgrid")) {
+    if (
+      SUBGRID_ENABLED &&
+      (display === "grid" || display === "inline-grid") &&
+      (style.gridTemplateRows === "subgrid" ||
+        style.gridTemplateColumns === "subgrid")
+    ) {
       display = "subgrid";
     }
 
@@ -261,15 +383,20 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   get isScrollable() {
     // Check first if the element has an overflow area, bail out if not.
-    if (this.rawNode.clientHeight === this.rawNode.scrollHeight &&
-        this.rawNode.clientWidth === this.rawNode.scrollWidth) {
+    if (
+      this.rawNode.clientHeight === this.rawNode.scrollHeight &&
+      this.rawNode.clientWidth === this.rawNode.scrollWidth
+    ) {
       return false;
     }
 
     // If it does, then check it also has scrollbars.
     try {
-      const walker = new DocumentWalker(this.rawNode, this.rawNode.ownerGlobal,
-                                        { filter: scrollbarTreeWalkerFilter });
+      const walker = new DocumentWalker(
+        this.rawNode,
+        this.rawNode.ownerGlobal,
+        { filter: scrollbarTreeWalkerFilter }
+      );
       return !!walker.firstChild();
     } catch (e) {
       // We have no access to a DOM object. This is probably due to a CORS
@@ -309,13 +436,15 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   writeAttrs: function() {
     // If the node has no attributes or this.rawNode is the document node and a
     // node with `name="attributes"` exists in the DOM we need to bail.
-    if (!this.rawNode.attributes ||
-        !(this.rawNode.attributes instanceof NamedNodeMap)) {
+    if (
+      !this.rawNode.attributes ||
+      !(this.rawNode.attributes instanceof NamedNodeMap)
+    ) {
       return undefined;
     }
 
     return [...this.rawNode.attributes].map(attr => {
-      return {namespace: attr.namespace, name: attr.name, value: attr.value };
+      return { namespace: attr.namespace, name: attr.name, value: attr.value };
     });
   },
 
@@ -356,7 +485,8 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     const customElementsRegistry = this.rawNode.ownerGlobal.customElements;
-    const customElement = customElementsRegistry && customElementsRegistry.get(name);
+    const customElement =
+      customElementsRegistry && customElementsRegistry.get(name);
     if (!customElement) {
       return undefined;
     }
@@ -444,12 +574,14 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * transfered in the longstring back to the client will be that much smaller
    */
   getImageData: function(maxDim) {
-    return InspectorActorUtils.imageToImageData(this.rawNode, maxDim).then(imageData => {
-      return {
-        data: LongStringActor(this.conn, imageData.data),
-        size: imageData.size,
-      };
-    });
+    return InspectorActorUtils.imageToImageData(this.rawNode, maxDim).then(
+      imageData => {
+        return {
+          data: LongStringActor(this.conn, imageData.data),
+          size: imageData.size,
+        };
+      }
+    );
   },
 
   /**
@@ -477,14 +609,19 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     for (const change of modifications) {
       if (change.newValue == null) {
         if (change.attributeNamespace) {
-          rawNode.removeAttributeNS(change.attributeNamespace,
-                                    change.attributeName);
+          rawNode.removeAttributeNS(
+            change.attributeNamespace,
+            change.attributeName
+          );
         } else {
           rawNode.removeAttribute(change.attributeName);
         }
       } else if (change.attributeNamespace) {
-        rawNode.setAttributeNS(change.attributeNamespace, change.attributeName,
-                               change.newValue);
+        rawNode.setAttributeNS(
+          change.attributeNamespace,
+          change.attributeName,
+          change.newValue
+        );
       } else {
         rawNode.setAttribute(change.attributeName, change.newValue);
       }
@@ -586,7 +723,8 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
    * Get a range of the items from the node list.
    */
   items: function(start = 0, end = this.nodeList.length) {
-    const items = Array.prototype.slice.call(this.nodeList, start, end)
+    const items = Array.prototype.slice
+      .call(this.nodeList, start, end)
       .map(item => this.walker._ref(item));
     return this.walker.attachElements(items);
   },

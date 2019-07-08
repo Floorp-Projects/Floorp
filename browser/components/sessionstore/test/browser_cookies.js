@@ -4,8 +4,11 @@ function promiseSetCookie(cookie) {
   info(`Set-Cookie: ${cookie}`);
   return Promise.all([
     waitForCookieChanged(),
-    ContentTask.spawn(gBrowser.selectedBrowser, cookie,
-      passedCookie => content.document.cookie = passedCookie),
+    ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      cookie,
+      passedCookie => (content.document.cookie = passedCookie)
+    ),
   ]);
 }
 
@@ -19,7 +22,9 @@ function waitForCookieChanged() {
 }
 
 function cookieExists(host, name, value) {
-  let {cookies: [c]} = JSON.parse(ss.getBrowserState());
+  let {
+    cookies: [c],
+  } = JSON.parse(ss.getBrowserState());
   return c && c.host == host && c.name == name && c.value == value;
 }
 
@@ -35,7 +40,10 @@ add_task(async function test_run() {
   Services.cookies.removeAll();
 
   // Add a new tab for testing.
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "http://example.com/"
+  );
   await promiseBrowserLoaded(gBrowser.selectedBrowser);
 
   // Add a session cookie.

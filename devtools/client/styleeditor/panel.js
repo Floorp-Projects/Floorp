@@ -6,12 +6,16 @@
 
 var Services = require("Services");
 var promise = require("promise");
-var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 var EventEmitter = require("devtools/shared/event-emitter");
 
-var {StyleEditorUI} = require("resource://devtools/client/styleeditor/StyleEditorUI.jsm");
-var {getString} = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
-var {initCssProperties} = require("devtools/shared/fronts/css-properties");
+var {
+  StyleEditorUI,
+} = require("resource://devtools/client/styleeditor/StyleEditorUI.jsm");
+var {
+  getString,
+} = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
+var { initCssProperties } = require("devtools/shared/fronts/css-properties");
 
 var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
   EventEmitter.decorate(this);
@@ -45,11 +49,16 @@ StyleEditorPanel.prototype = {
     this._debuggee = await this.target.getFront("stylesheets");
 
     // Initialize the CSS properties database.
-    const {cssProperties} = await initCssProperties(this._toolbox);
+    const { cssProperties } = await initCssProperties(this._toolbox);
 
     // Initialize the UI
-    this.UI = new StyleEditorUI(this._toolbox, this._debuggee, this.target,
-                                this._panelDoc, cssProperties);
+    this.UI = new StyleEditorUI(
+      this._toolbox,
+      this._debuggee,
+      this.target,
+      this._panelDoc,
+      cssProperties
+    );
     this.UI.on("error", this._showError);
     await this.UI.initialize();
 
@@ -77,8 +86,9 @@ StyleEditorPanel.prototype = {
     }
 
     const notificationBox = this._toolbox.getNotificationBox();
-    const notification =
-        notificationBox.getNotificationWithValue("styleeditor-error");
+    const notification = notificationBox.getNotificationWithValue(
+      "styleeditor-error"
+    );
 
     let level = notificationBox.PRIORITY_CRITICAL_LOW;
     if (data.level === "info") {
@@ -88,8 +98,12 @@ StyleEditorPanel.prototype = {
     }
 
     if (!notification) {
-      notificationBox.appendNotification(errorMessage, "styleeditor-error",
-                                         "", level);
+      notificationBox.appendNotification(
+        errorMessage,
+        "styleeditor-error",
+        "",
+        level
+      );
     }
   },
 
@@ -136,8 +150,8 @@ StyleEditorPanel.prototype = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(StyleEditorPanel.prototype, "strings",
-  function() {
-    return Services.strings.createBundle(
-            "chrome://devtools/locale/styleeditor.properties");
-  });
+XPCOMUtils.defineLazyGetter(StyleEditorPanel.prototype, "strings", function() {
+  return Services.strings.createBundle(
+    "chrome://devtools/locale/styleeditor.properties"
+  );
+});

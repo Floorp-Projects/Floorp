@@ -264,10 +264,7 @@ const AVAILABLE_BREAKPOINTS = [
   },
   {
     name: "Worker",
-    items: [
-      workerEvent("message"),
-      workerEvent("messageerror"),
-    ],
+    items: [workerEvent("message"), workerEvent("messageerror")],
   },
   {
     name: "XHR",
@@ -383,8 +380,9 @@ function eventBreakpointForNotification(dbg, notification) {
         return null;
       }
 
-      const nodeName =
-        currentTarget.getProperty("nodeName").return.toLowerCase();
+      const nodeName = currentTarget
+        .getProperty("nodeName")
+        .return.toLowerCase();
       if (nodeName !== "audio" && nodeName !== "video") {
         return null;
       }

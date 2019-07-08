@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testserver = createHttpServer({hosts: ["example.com"]});
+var testserver = createHttpServer({ hosts: ["example.com"] });
 var gInstallDate;
 
 const ADDONS = {
@@ -10,21 +10,21 @@ const ADDONS = {
     manifest: {
       name: "Test 1",
       version: "1.0",
-      applications: {gecko: {id: "addon1@tests.mozilla.org"}},
+      applications: { gecko: { id: "addon1@tests.mozilla.org" } },
     },
   },
   test_install2_1: {
     manifest: {
       name: "Test 2",
       version: "2.0",
-      applications: {gecko: {id: "addon2@tests.mozilla.org"}},
+      applications: { gecko: { id: "addon2@tests.mozilla.org" } },
     },
   },
   test_install2_2: {
     manifest: {
       name: "Test 2",
       version: "3.0",
-      applications: {gecko: {id: "addon2@tests.mozilla.org"}},
+      applications: { gecko: { id: "addon2@tests.mozilla.org" } },
     },
   },
   test_install3: {
@@ -108,13 +108,17 @@ const COMPAT_JSON = {
   count: 0,
   next: null,
   previous: null,
-  results: [ ],
+  results: [],
 };
 
 function checkInstall(install, expected) {
   for (let [key, value] of Object.entries(expected)) {
     if (value instanceof Ci.nsIURI) {
-      equal(install[key] && install[key].spec, value.spec, `Expected value of install.${key}`);
+      equal(
+        install[key] && install[key].spec,
+        value.spec,
+        `Expected value of install.${key}`
+      );
     } else {
       deepEqual(install[key], value, `Expected value of install.${key}`);
     }
@@ -158,13 +162,16 @@ add_task(async function test_install_file() {
     sourceURI: uri,
   });
 
-  let {addon} = install;
+  let { addon } = install;
   checkAddon("addon1@tests.mozilla.org", addon, {
     install,
     sourceURI: uri,
   });
   notEqual(addon.syncGUID, null);
-  equal(addon.getResourceURI("manifest.json").spec, `jar:${uri.spec}!/manifest.json`);
+  equal(
+    addon.getResourceURI("manifest.json").spec,
+    `jar:${uri.spec}!/manifest.json`
+  );
 
   let activeInstalls = await AddonManager.getAllInstalls();
   equal(activeInstalls.length, 1);
@@ -181,12 +188,13 @@ add_task(async function test_install_file() {
     {
       addonEvents: {
         "addon1@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
     },
-    () => install.install());
+    () => install.install()
+  );
 
   addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   ok(addon);
@@ -220,12 +228,14 @@ add_task(async function test_install_file() {
   do_check_in_crash_annotation(a1.id, a1.version);
 
   let difference = a1.installDate.getTime() - updateDate;
-  if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
+  if (Math.abs(difference) > MAX_TIME_DIFFERENCE) {
     do_throw("Add-on install time was out by " + difference + "ms");
+  }
 
   difference = a1.updateDate.getTime() - updateDate;
-  if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
+  if (Math.abs(difference) > MAX_TIME_DIFFERENCE) {
     do_throw("Add-on update time was out by " + difference + "ms");
+  }
 
   equal(a1.getResourceURI("manifest.json").spec, uri2 + "manifest.json");
 
@@ -263,12 +273,14 @@ add_task(async function test_install_url() {
   await expectEvents(
     {
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded", returnValue: false},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded", returnValue: false },
       ],
-    }, () => {
+    },
+    () => {
       install.install();
-    });
+    }
+  );
 
   checkInstall(install, {
     version: "2.0",
@@ -281,16 +293,17 @@ add_task(async function test_install_url() {
     {
       addonEvents: {
         "addon2@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
-    () => install.install());
+    () => install.install()
+  );
 
   let updateDate = Date.now();
 
@@ -313,12 +326,18 @@ add_task(async function test_install_url() {
   do_check_in_crash_annotation(a2.id, a2.version);
 
   let difference = a2.installDate.getTime() - updateDate;
-  Assert.lessOrEqual(Math.abs(difference), MAX_TIME_DIFFERENCE,
-                     "Add-on install time was correct");
+  Assert.lessOrEqual(
+    Math.abs(difference),
+    MAX_TIME_DIFFERENCE,
+    "Add-on install time was correct"
+  );
 
   difference = a2.updateDate.getTime() - updateDate;
-  Assert.lessOrEqual(Math.abs(difference), MAX_TIME_DIFFERENCE,
-                     "Add-on update time was correct");
+  Assert.lessOrEqual(
+    Math.abs(difference),
+    MAX_TIME_DIFFERENCE,
+    "Add-on update time was correct"
+  );
 
   gInstallDate = a2.installDate;
 });
@@ -348,13 +367,14 @@ add_task(async function test_install_new_version() {
   await expectEvents(
     {
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded", returnValue: false},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded", returnValue: false },
       ],
     },
     () => {
       install.install();
-    });
+    }
+  );
 
   checkInstall(install, {
     version: "3.0",
@@ -370,16 +390,17 @@ add_task(async function test_install_new_version() {
     {
       addonEvents: {
         "addon2@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
-    () => install.install());
+    () => install.install()
+  );
 
   await promiseRestartManager();
 
@@ -431,13 +452,14 @@ add_task(async function test_install_compat_update() {
   await expectEvents(
     {
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded", returnValue: false},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded", returnValue: false },
       ],
     },
     () => {
       install.install();
-    });
+    }
+  );
 
   checkInstall(install, {
     version: "1.0",
@@ -454,16 +476,17 @@ add_task(async function test_install_compat_update() {
     {
       addonEvents: {
         "addon3@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
-    () => install.install());
+    () => install.install()
+  );
 
   await promiseRestartManager();
 
@@ -497,16 +520,17 @@ add_task(async function test_compat_update_local() {
     {
       addonEvents: {
         "addon3@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
-    () => install.install());
+    () => install.install()
+  );
 
   await promiseRestartManager();
 
@@ -551,28 +575,27 @@ add_task(async function test_cancel() {
   function cancel() {
     promise = expectEvents(
       {
-        installEvents: [
-          {event: "onDownloadCancelled"},
-        ],
+        installEvents: [{ event: "onDownloadCancelled" }],
       },
       () => {
         install.cancel();
-      });
+      }
+    );
   }
 
   await expectEvents(
     {
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded", callback: cancel},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded", callback: cancel },
       ],
     },
     () => {
       install.install();
-    });
+    }
+  );
 
   await promise;
-
 
   let file = install.file;
 
@@ -598,7 +621,6 @@ add_task(async function test_cancel_onDownloadStarted() {
       executeSoon(() => install.cancel());
     },
   });
-
 
   let promise = AddonTestUtils.promiseInstallEvent("onDownloadCancelled");
   install.install();
@@ -635,25 +657,25 @@ add_task(async function test_cancel_onDownloadEnded() {
   function cancel() {
     promise = expectEvents(
       {
-        installEvents: [
-          {event: "onDownloadCancelled"},
-        ],
+        installEvents: [{ event: "onDownloadCancelled" }],
       },
       async () => {
         install.cancel();
-      });
+      }
+    );
   }
 
   await expectEvents(
     {
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded", callback: cancel},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded", callback: cancel },
       ],
     },
     () => {
       install.install();
-    });
+    }
+  );
 
   await promise;
 
@@ -741,15 +763,22 @@ add_task(async function test_userDisabled() {
 // Checks that metadata is not stored if the pref is set to false
 add_task(async function test_18_1() {
   AddonTestUtils.registerJSON(testserver, "/getaddons.json", GETADDONS_JSON);
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
-                             "http://example.com/getaddons.json");
+  Services.prefs.setCharPref(
+    PREF_GETADDONS_BYIDS,
+    "http://example.com/getaddons.json"
+  );
 
   AddonTestUtils.registerJSON(testserver, "/compat.json", COMPAT_JSON);
-  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
-                             "http://example.com/compat.json");
+  Services.prefs.setCharPref(
+    PREF_COMPAT_OVERRIDES,
+    "http://example.com/compat.json"
+  );
 
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
-  Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
+  Services.prefs.setBoolPref(
+    "extensions.addon2@tests.mozilla.org.getAddons.cache.enabled",
+    false
+  );
 
   let url = "http://example.com/addons/test_install2_1.xpi";
   let install = await AddonManager.getInstallForURL(url);
@@ -768,7 +797,10 @@ add_task(async function test_18_1() {
 // Checks that metadata is downloaded for new installs and is visible before and
 // after restart
 add_task(async function test_metadata() {
-  Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", true);
+  Services.prefs.setBoolPref(
+    "extensions.addon2@tests.mozilla.org.getAddons.cache.enabled",
+    true
+  );
 
   let url = "http://example.com/addons/test_install2_1.xpi";
   let install = await AddonManager.getInstallForURL(url);
@@ -816,26 +848,27 @@ add_task(async function test_restart() {
   try {
     await install.install();
     ok(false, "Install should not have succeeded");
-  } catch (err) { }
+  } catch (err) {}
 
   let promise = expectEvents(
     {
       addonEvents: {
         "addon1@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded"},
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded" },
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
     () => {
       install.install();
-    });
+    }
+  );
 
   await Promise.all([
     promise,
@@ -864,26 +897,27 @@ add_task(async function test_restart_hash() {
   try {
     await install.install();
     ok(false, "Install should not have succeeded");
-  } catch (err) { }
+  } catch (err) {}
 
   let promise = expectEvents(
     {
       addonEvents: {
         "addon1@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded"},
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded" },
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
     () => {
       install.install();
-    });
+    }
+  );
 
   await Promise.all([
     promise,
@@ -897,7 +931,7 @@ add_task(async function test_restart_hash() {
 // it will only fail again
 add_task(async function test_restart_badhash() {
   let url = "http://example.com/addons/test_install1.xpi";
-  let install = await AddonManager.getInstallForURL(url, {hash: "sha1:foo"});
+  let install = await AddonManager.getInstallForURL(url, { hash: "sha1:foo" });
   equal(install.state, AddonManager.STATE_AVAILABLE);
 
   install.addListener({
@@ -910,7 +944,7 @@ add_task(async function test_restart_badhash() {
   try {
     await install.install();
     ok(false, "Install should not have succeeded");
-  } catch (err) { }
+  } catch (err) {}
 
   try {
     await install.install();
@@ -979,15 +1013,15 @@ add_task(async function test_restart2() {
     {
       addonEvents: {
         "addon1@tests.mozilla.org": [
-          {event: "onInstalling"},
-          {event: "onInstalled"},
+          { event: "onInstalling" },
+          { event: "onInstalled" },
         ],
       },
       installEvents: [
-        {event: "onDownloadStarted"},
-        {event: "onDownloadEnded"},
-        {event: "onInstallStarted"},
-        {event: "onInstallEnded"},
+        { event: "onDownloadStarted" },
+        { event: "onDownloadEnded" },
+        { event: "onInstallStarted" },
+        { event: "onInstallEnded" },
       ],
     },
     () => {
@@ -995,7 +1029,8 @@ add_task(async function test_restart2() {
       install.install();
       notEqual(file.path, install.file.path);
       ok(!file.exists());
-    });
+    }
+  );
 
   await Promise.all([
     promise,

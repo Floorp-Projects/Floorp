@@ -3,10 +3,7 @@
 // This file tests various aspects of the nsICryptoHash implementation for all
 // of the supported algorithms.
 
-const messages = [
-  "The quick brown fox jumps over the lazy dog",
-  "",
-];
+const messages = ["The quick brown fox jumps over the lazy dog", ""];
 const ALGORITHMS = [
   {
     initString: "md5",
@@ -15,10 +12,7 @@ const ALGORITHMS = [
       "9e107d9d372bb6826bd81d3542a419d6",
       "d41d8cd98f00b204e9800998ecf8427e",
     ],
-    b64Hashes: [
-      "nhB9nTcrtoJr2B01QqQZ1g==",
-      "1B2M2Y8AsgTpgAmY7PhCfg==",
-    ],
+    b64Hashes: ["nhB9nTcrtoJr2B01QqQZ1g==", "1B2M2Y8AsgTpgAmY7PhCfg=="],
   },
   {
     initString: "sha1",
@@ -27,10 +21,7 @@ const ALGORITHMS = [
       "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
       "da39a3ee5e6b4b0d3255bfef95601890afd80709",
     ],
-    b64Hashes: [
-      "L9ThxnotKPzthJ7hu3bnORuT6xI=",
-      "2jmj7l5rSw0yVb/vlWAYkK/YBwk=",
-    ],
+    b64Hashes: ["L9ThxnotKPzthJ7hu3bnORuT6xI=", "2jmj7l5rSw0yVb/vlWAYkK/YBwk="],
   },
   {
     initString: "sha256",
@@ -71,21 +62,30 @@ const ALGORITHMS = [
 ];
 
 function doHash(algo, value, cmp) {
-  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
   hash.initWithString(algo);
 
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  let converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "utf8";
   value = converter.convertToByteArray(value);
   hash.update(value, value.length);
-  equal(hexify(hash.finish(false)), cmp,
-        `Actual and expected hash for ${algo} should match`);
+  equal(
+    hexify(hash.finish(false)),
+    cmp,
+    `Actual and expected hash for ${algo} should match`
+  );
 
   hash.initWithString(algo);
   hash.update(value, value.length);
-  equal(hexify(hash.finish(false)), cmp,
-        `Actual and expected hash for ${algo} should match after re-init`);
+  equal(
+    hexify(hash.finish(false)),
+    cmp,
+    `Actual and expected hash for ${algo} should match after re-init`
+  );
 }
 
 function doHashStream(algo, value, cmp) {
@@ -94,29 +94,46 @@ function doHashStream(algo, value, cmp) {
     return;
   }
 
-  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
   hash.initWithString(algo);
 
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  let converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "utf8";
   let stream = converter.convertToInputStream(value);
   hash.updateFromStream(stream, stream.available());
-  equal(hexify(hash.finish(false)), cmp,
-        `Actual and expected hash for ${algo} should match updating from stream`);
+  equal(
+    hexify(hash.finish(false)),
+    cmp,
+    `Actual and expected hash for ${algo} should match updating from stream`
+  );
 }
 
-function testInitConstantAndBase64(initConstant, algoName, message, expectedOutput) {
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+function testInitConstantAndBase64(
+  initConstant,
+  algoName,
+  message,
+  expectedOutput
+) {
+  let converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "utf8";
   let value = converter.convertToByteArray(message);
 
-  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
   hash.init(initConstant);
   hash.update(value, value.length);
-  equal(hash.finish(true), expectedOutput,
-        `Actual and expected base64 hash for ${algoName} should match`);
+  equal(
+    hash.finish(true),
+    expectedOutput,
+    `Actual and expected base64 hash for ${algoName} should match`
+  );
 }
 
 function run_test() {
@@ -126,8 +143,12 @@ function run_test() {
       doHashStream(algo.initString, messages[i], hash);
     });
     algo.b64Hashes.forEach((hash, i) => {
-      testInitConstantAndBase64(algo.initConstant, algo.initString, messages[i],
-                                hash);
+      testInitConstantAndBase64(
+        algo.initConstant,
+        algo.initString,
+        messages[i],
+        hash
+      );
     });
   }
 

@@ -14,7 +14,11 @@ const {
   UPDATE_SIDEBAR_SIZE,
 } = require("../actions/index");
 
-loader.lazyRequireGetter(this, "TimeScale", "devtools/client/inspector/animation/utils/timescale");
+loader.lazyRequireGetter(
+  this,
+  "TimeScale",
+  "devtools/client/inspector/animation/utils/timescale"
+);
 
 const INITIAL_STATE = {
   animations: [],
@@ -35,8 +39,12 @@ const reducers = {
     let detailVisibility = state.detailVisibility;
     let selectedAnimation = state.selectedAnimation;
 
-    if (!state.selectedAnimation ||
-        !animations.find(animation => animation.actorID === selectedAnimation.actorID)) {
+    if (
+      !state.selectedAnimation ||
+      !animations.find(
+        animation => animation.actorID === selectedAnimation.actorID
+      )
+    ) {
       selectedAnimation = animations.length === 1 ? animations[0] : null;
       detailVisibility = !!selectedAnimation;
     }
@@ -53,8 +61,7 @@ const reducers = {
   },
 
   [UPDATE_DETAIL_VISIBILITY](state, { detailVisibility }) {
-    const selectedAnimation =
-      detailVisibility ? state.selectedAnimation : null;
+    const selectedAnimation = detailVisibility ? state.selectedAnimation : null;
 
     return Object.assign({}, state, {
       detailVisibility,
@@ -97,7 +104,11 @@ const reducers = {
 };
 
 function getPlaybackRates(basePlaybackRate, animations) {
-  return [...new Set(animations.map(a => a.state.playbackRate).concat(basePlaybackRate))];
+  return [
+    ...new Set(
+      animations.map(a => a.state.playbackRate).concat(basePlaybackRate)
+    ),
+  ];
 }
 
 module.exports = function(state = INITIAL_STATE, action) {

@@ -20,7 +20,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode(".testclass", inspector);
   await testEditClassSelector(view);
   await testEditDivSelector(view);
@@ -42,13 +42,17 @@ async function testEditClassSelector(view) {
   info("Check that the correct rules are visible");
   is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
   ok(ruleEditor.element.getAttribute("unmatched"), "Rule editor is unmatched.");
-  is(getRuleViewRule(view, ".testclass"), undefined,
-    "Rule with .testclass selector should not exist.");
-  ok(getRuleViewRule(view, "body"),
-    "Rule with body selector exists.");
-  is(inplaceEditor(propEditor.nameSpan),
-     inplaceEditor(view.styleDocument.activeElement),
-     "Focus should have moved to the property name.");
+  is(
+    getRuleViewRule(view, ".testclass"),
+    undefined,
+    "Rule with .testclass selector should not exist."
+  );
+  ok(getRuleViewRule(view, "body"), "Rule with body selector exists.");
+  is(
+    inplaceEditor(propEditor.nameSpan),
+    inplaceEditor(view.styleDocument.activeElement),
+    "Focus should have moved to the property name."
+  );
 }
 
 async function testEditDivSelector(view) {
@@ -66,11 +70,15 @@ async function testEditDivSelector(view) {
   info("Check that the correct rules are visible");
   is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
   ok(ruleEditor.element.getAttribute("unmatched"), "Rule editor is unmatched.");
-  is(getRuleViewRule(view, "div"), undefined,
-    "Rule with div selector should not exist.");
-  ok(getRuleViewRule(view, "asdf"),
-    "Rule with asdf selector exists.");
-  is(inplaceEditor(ruleEditor.newPropSpan),
-     inplaceEditor(view.styleDocument.activeElement),
-     "Focus should have moved to the property name.");
+  is(
+    getRuleViewRule(view, "div"),
+    undefined,
+    "Rule with div selector should not exist."
+  );
+  ok(getRuleViewRule(view, "asdf"), "Rule with asdf selector exists.");
+  is(
+    inplaceEditor(ruleEditor.newPropSpan),
+    inplaceEditor(view.styleDocument.activeElement),
+    "Focus should have moved to the property name."
+  );
 }

@@ -8,12 +8,14 @@
 "use strict";
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-const certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 // This is a certificate that (currently) ships with the platform.
 // It should be considered a built-in root.
-const sGeoTrustBase64 = "" +
+const sGeoTrustBase64 =
+  "" +
   "MIICrjCCAjWgAwIBAgIQPLL0SAoA4v7rJDteYD7DazAKBggqhkjOPQQDAzCBmDEL" +
   "MAkGA1UEBhMCVVMxFjAUBgNVBAoTDUdlb1RydXN0IEluYy4xOTA3BgNVBAsTMChj" +
   "KSAyMDA3IEdlb1RydXN0IEluYy4gLSBGb3IgYXV0aG9yaXplZCB1c2Ugb25seTE2" +
@@ -30,10 +32,10 @@ const sGeoTrustBase64 = "" +
   "qQ7mndwxHLKgpxgceeHHNgIwOlavmnRs9vuD4DPTCF+hnMJbn0bWtsuRBmOiBucz" +
   "rD6ogRLQy7rQkgu2npaqBA+K";
 
-
 // This is a certificate that does not ship with the platform.
 // It should not be considered a built-in root.
-const sLetsEncryptBase64 = "" +
+const sLetsEncryptBase64 =
+  "" +
   "MIIEqDCCA5CgAwIBAgIRAJgT9HUT5XULQ+dDHpceRL0wDQYJKoZIhvcNAQELBQAw" +
   "PzEkMCIGA1UEChMbRGlnaXRhbCBTaWduYXR1cmUgVHJ1c3QgQ28uMRcwFQYDVQQD" +
   "Ew5EU1QgUm9vdCBDQSBYMzAeFw0xNTEwMTkyMjMzMzZaFw0yMDEwMTkyMjMzMzZa" +

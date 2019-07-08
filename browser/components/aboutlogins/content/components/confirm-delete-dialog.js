@@ -13,7 +13,7 @@ export default class ConfirmDeleteDialog extends HTMLElement {
       return;
     }
     let template = document.querySelector("#confirm-delete-dialog-template");
-    let shadowRoot = this.attachShadow({mode: "open"});
+    let shadowRoot = this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(template.content.cloneNode(true));
 
@@ -33,9 +33,11 @@ export default class ConfirmDeleteDialog extends HTMLElement {
         }
         break;
       case "click":
-        if (event.target.classList.contains("cancel-button") ||
-            event.target.classList.contains("dismiss-button") ||
-            event.target.classList.contains("overlay")) {
+        if (
+          event.target.classList.contains("cancel-button") ||
+          event.target.classList.contains("dismiss-button") ||
+          event.target.classList.contains("overlay")
+        ) {
           this.onCancel();
         } else if (event.target.classList.contains("confirm-button")) {
           this.onConfirm();

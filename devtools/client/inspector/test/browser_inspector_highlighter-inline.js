@@ -23,7 +23,7 @@ const TEST_DATA = [
 
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   for (const selector of TEST_DATA) {
     info("Selecting and highlighting node " + selector);
@@ -32,24 +32,33 @@ add_task(async function() {
     info("Get all quads for this node");
     const data = await testActor.getAllAdjustedQuads(selector);
 
-    info("Iterate over the box-model regions and verify that the highlighter " +
-         "is correct");
+    info(
+      "Iterate over the box-model regions and verify that the highlighter " +
+        "is correct"
+    );
     for (const region of ["margin", "border", "padding", "content"]) {
-      const {points} = await testActor.getHighlighterRegionPath(region);
-      is(points.length, data[region].length, "The highlighter's " + region +
-         " path defines the correct number of boxes");
+      const { points } = await testActor.getHighlighterRegionPath(region);
+      is(
+        points.length,
+        data[region].length,
+        "The highlighter's " +
+          region +
+          " path defines the correct number of boxes"
+      );
     }
 
-    info("Verify that the guides define a rectangle that contains all " +
-         "content boxes");
+    info(
+      "Verify that the guides define a rectangle that contains all " +
+        "content boxes"
+    );
 
     const expectedContentRect = {
-      p1: {x: Infinity, y: Infinity},
-      p2: {x: -Infinity, y: Infinity},
-      p3: {x: -Infinity, y: -Infinity},
-      p4: {x: Infinity, y: -Infinity},
+      p1: { x: Infinity, y: Infinity },
+      p2: { x: -Infinity, y: Infinity },
+      p3: { x: -Infinity, y: -Infinity },
+      p4: { x: Infinity, y: -Infinity },
     };
-    for (const {p1, p2, p3, p4} of data.content) {
+    for (const { p1, p2, p3, p4 } of data.content) {
       expectedContentRect.p1.x = Math.min(expectedContentRect.p1.x, p1.x);
       expectedContentRect.p1.y = Math.min(expectedContentRect.p1.y, p1.y);
       expectedContentRect.p2.x = Math.max(expectedContentRect.p2.x, p2.x);
@@ -63,14 +72,20 @@ add_task(async function() {
     const contentRect = await testActor.getGuidesRectangle();
 
     for (const point of ["p1", "p2", "p3", "p4"]) {
-      is(Math.round(contentRect[point].x),
-         (Math.round(expectedContentRect[point].x)),
-         "x coordinate of point " + point +
-         " of the content rectangle defined by the outer guides is correct");
-      is(Math.round(contentRect[point].y),
-         (Math.round(expectedContentRect[point].y)),
-         "y coordinate of point " + point +
-         " of the content rectangle defined by the outer guides is correct");
+      is(
+        Math.round(contentRect[point].x),
+        Math.round(expectedContentRect[point].x),
+        "x coordinate of point " +
+          point +
+          " of the content rectangle defined by the outer guides is correct"
+      );
+      is(
+        Math.round(contentRect[point].y),
+        Math.round(expectedContentRect[point].y),
+        "y coordinate of point " +
+          point +
+          " of the content rectangle defined by the outer guides is correct"
+      );
     }
   }
 });

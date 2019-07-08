@@ -4,13 +4,12 @@
 
 "use strict";
 
-const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const protocol = require("devtools/shared/protocol");
-const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
-const {addonsSpec} = require("devtools/shared/specs/addon/addons");
+const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
+const { addonsSpec } = require("devtools/shared/specs/addon/addons");
 
 const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
-
   initialize: function(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
   },

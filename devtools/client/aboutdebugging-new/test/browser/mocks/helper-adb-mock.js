@@ -15,7 +15,9 @@
  *        - unregisterListener(listener)
  */
 function enableAdbMock(mock) {
-  const { setMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  const {
+    setMockedModule,
+  } = require("devtools/client/shared/browser-loader-mocks");
   setMockedModule(mock, "devtools/shared/adb/adb");
 }
 /* exported enableAdbMock */
@@ -24,7 +26,9 @@ function enableAdbMock(mock) {
  * Update the loader to clear the mock entry for the adb module.
  */
 function disableAdbMock() {
-  const { removeMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  const {
+    removeMockedModule,
+  } = require("devtools/client/shared/browser-loader-mocks");
   removeMockedModule("devtools/shared/adb/adb");
 }
 /* exported disableAdbMock */
@@ -114,13 +118,17 @@ function createAdbProcessMock() {
 /* exported createAdbProcessMock */
 
 function enableAdbProcessMock(mock) {
-  const { setMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  const {
+    setMockedModule,
+  } = require("devtools/client/shared/browser-loader-mocks");
   setMockedModule(mock, "devtools/shared/adb/adb-process");
 }
 /* exported enableAdbProcessMock */
 
 function disableAdbProcessMock() {
-  const { removeMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  const {
+    removeMockedModule,
+  } = require("devtools/client/shared/browser-loader-mocks");
   removeMockedModule("devtools/shared/adb/adb-process");
 }
 /* exported disableAdbProcessMock */

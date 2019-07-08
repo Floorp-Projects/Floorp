@@ -8,7 +8,9 @@
  */
 
 add_task(async function() {
-  const { tab, monitor, toolbox} = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+  const { tab, monitor, toolbox } = await initNetMonitor(
+    CONTENT_TYPE_WITHOUT_CACHE_URL
+  );
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
@@ -19,15 +21,23 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[1]);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[1]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[1]
+  );
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelectorAll(".request-list-item")[1]
+  );
   await waitUntil(() =>
-    getContextMenuItem(monitor, "request-list-context-open-in-style-editor"));
+    getContextMenuItem(monitor, "request-list-context-open-in-style-editor")
+  );
 
   const onStyleEditorReady = toolbox.once("styleeditor-ready");
-  getContextMenuItem(monitor, "request-list-context-open-in-style-editor").click();
+  getContextMenuItem(
+    monitor,
+    "request-list-context-open-in-style-editor"
+  ).click();
   await onStyleEditorReady;
 
   ok(true, "Style Editor has been open");

@@ -10,7 +10,12 @@ const gRegistrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 let gLoadedInProcess2Promise = null;
 
 function _createProcessChooser(remoteTab, from, to, rejectPromise = false) {
-  let processChooser = new ProcessChooser(remoteTab, "example.com", "example.org", rejectPromise);
+  let processChooser = new ProcessChooser(
+    remoteTab,
+    "example.com",
+    "example.org",
+    rejectPromise
+  );
   registerCleanupFunction(function() {
     processChooser.unregister();
   });
@@ -90,21 +95,35 @@ ProcessChooser.prototype = {
 
   // nsISupports
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-}
+};
 
 add_task(async function() {
-  info("Check that a redirect in process A may be correctly handled in process B");
+  info(
+    "Check that a redirect in process A may be correctly handled in process B"
+  );
 
-  const kRoot1 = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
-                                                     "https://example.com/");
-  const kRoot2 = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
-                                                     "https://example.org/");
+  const kRoot1 = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content/",
+    "https://example.com/"
+  );
+  const kRoot2 = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content/",
+    "https://example.org/"
+  );
   const kRoot3 = getRootDirectory(gTestPath);
 
   // This process will attempt to load the page that redirects to a different origin
-  let tab1 = await BrowserTestUtils.openNewForegroundTab({ gBrowser, url: kRoot1 + "dummy.html", forceNewProcess: true });
+  let tab1 = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: kRoot1 + "dummy.html",
+    forceNewProcess: true,
+  });
   // This process will eventually receive the redirected channel.
-  let tab2 = await BrowserTestUtils.openNewForegroundTab({ gBrowser, url: kRoot2 + "dummy.html", forceNewProcess: true });
+  let tab2 = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: kRoot2 + "dummy.html",
+    forceNewProcess: true,
+  });
 
   let browser1 = gBrowser.getBrowserForTab(tab1);
   let browser2 = gBrowser.getBrowserForTab(tab2);
@@ -112,7 +131,11 @@ add_task(async function() {
   // This is for testing purposes only.
   // This "process chooser" will direct the channel to be opened in the second
   // tab, and thus in the second parent.
-  let processChooser = _createProcessChooser(browser2.frameLoader.remoteTab, "example.com", "example.org");
+  let processChooser = _createProcessChooser(
+    browser2.frameLoader.remoteTab,
+    "example.com",
+    "example.org"
+  );
 
   info("Loading redirected URL");
   // Open the URL in the first process. We expect it to wind up in the second
@@ -120,18 +143,32 @@ add_task(async function() {
 
   // Define the child listener in the new channel.
   await ContentTask.spawn(browser2, null, async function(arg) {
-    function ChannelListener(childListener) { this.childListener = childListener; }
+    function ChannelListener(childListener) {
+      this.childListener = childListener;
+    }
     ChannelListener.prototype = {
       onStartRequest(aRequest) {
         info("onStartRequest");
         let channel = aRequest.QueryInterface(Ci.nsIChannel);
-        Assert.equal(channel.URI.spec, this.childListener.URI, "Make sure the channel has the proper URI");
-        Assert.equal(channel.originalURI.spec, this.childListener.originalURI, "Make sure the originalURI is correct");
+        Assert.equal(
+          channel.URI.spec,
+          this.childListener.URI,
+          "Make sure the channel has the proper URI"
+        );
+        Assert.equal(
+          channel.originalURI.spec,
+          this.childListener.originalURI,
+          "Make sure the originalURI is correct"
+        );
       },
       onStopRequest(aRequest, aStatusCode) {
         info("onStopRequest");
         Assert.equal(aStatusCode, Cr.NS_OK, "Check the status code");
-        Assert.equal(this.gotData, true, "Check that the channel received data");
+        Assert.equal(
+          this.gotData,
+          true,
+          "Check that the channel received data"
+        );
         if (this.childListener.onComplete) {
           this.childListener.onComplete();
         }
@@ -141,10 +178,17 @@ add_task(async function() {
         this.gotData = true;
         info("onDataAvailable");
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener,Ci.nsIRequestObserver])
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIStreamListener,
+        Ci.nsIRequestObserver,
+      ]),
     };
 
-    function ChildListener(uri, originalURI, resolve) { this.URI = uri; this.originalURI = originalURI; this.resolve = resolve;}
+    function ChildListener(uri, originalURI, resolve) {
+      this.URI = uri;
+      this.originalURI = originalURI;
+      this.resolve = resolve;
+    }
     ChildListener.prototype = {
       // nsIChildProcessChannelListener
       onChannelReady(aChildChannel, aIdentifier) {
@@ -161,32 +205,54 @@ add_task(async function() {
       },
       lockFactory() {},
       // nsISupports
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIChildProcessChannelListener, Ci.nsIFactory]),
-      classID: Components.ID("{a6c142a9-eb38-4a09-a940-b71cdad479e1}")
-    }
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIChildProcessChannelListener,
+        Ci.nsIFactory,
+      ]),
+      classID: Components.ID("{a6c142a9-eb38-4a09-a940-b71cdad479e1}"),
+    };
 
     content.window.ChildListener = ChildListener;
   });
 
   // This promise instantiates a ChildListener and is resolved when the redirected
   // channel is completed.
-  let loadedInProcess2Promise = ContentTask.spawn(browser2, { URI: kRoot2 + "dummy.html", originalURI: kRoot1 + "redirect.sjs?" + kRoot2 + "dummy.html"}, async function(arg) {
-    // We register the listener in process no. 2
-    return new Promise(resolve => {
-      var childListener = new content.window.ChildListener(arg.URI, arg.originalURI, resolve);
-      var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-      childListener.onComplete = () => {
-        registrar.unregisterFactory(childListener.classID, childListener);
-      }
-      registrar.registerFactory(childListener.classID, "",
-                              "@mozilla.org/network/childProcessChannelListener;1",
-                              childListener);
-    });
-  });
+  let loadedInProcess2Promise = ContentTask.spawn(
+    browser2,
+    {
+      URI: kRoot2 + "dummy.html",
+      originalURI: kRoot1 + "redirect.sjs?" + kRoot2 + "dummy.html",
+    },
+    async function(arg) {
+      // We register the listener in process no. 2
+      return new Promise(resolve => {
+        var childListener = new content.window.ChildListener(
+          arg.URI,
+          arg.originalURI,
+          resolve
+        );
+        var registrar = Components.manager.QueryInterface(
+          Ci.nsIComponentRegistrar
+        );
+        childListener.onComplete = () => {
+          registrar.unregisterFactory(childListener.classID, childListener);
+        };
+        registrar.registerFactory(
+          childListener.classID,
+          "",
+          "@mozilla.org/network/childProcessChannelListener;1",
+          childListener
+        );
+      });
+    }
+  );
 
   let browser1LoadHasStopped = BrowserTestUtils.browserStopped(browser1);
 
-  await BrowserTestUtils.loadURI(browser1, kRoot1 + "redirect.sjs?" + kRoot2 + "dummy.html");
+  await BrowserTestUtils.loadURI(
+    browser1,
+    kRoot1 + "redirect.sjs?" + kRoot2 + "dummy.html"
+  );
 
   // Check that the channel was delivered to process no. 2
   await loadedInProcess2Promise;
@@ -195,9 +261,17 @@ add_task(async function() {
   await browser1LoadHasStopped;
 
   // check that a rejected promise also works.
-  processChooser = _createProcessChooser(browser2.frameLoader.remoteTab, "example.com", "example.org", true);
+  processChooser = _createProcessChooser(
+    browser2.frameLoader.remoteTab,
+    "example.com",
+    "example.org",
+    true
+  );
   let browser1LoadHasStoppedAgain = BrowserTestUtils.browserStopped(browser1);
-  await BrowserTestUtils.loadURI(browser1, kRoot1 + "redirect.sjs?" + kRoot2 + "dummy.html");
+  await BrowserTestUtils.loadURI(
+    browser1,
+    kRoot1 + "redirect.sjs?" + kRoot2 + "dummy.html"
+  );
   await browser1LoadHasStoppedAgain;
   info("this is done now");
 

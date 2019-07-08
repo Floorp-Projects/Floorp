@@ -4,13 +4,21 @@
 
 var EXPORTED_SYMBOLS = ["PasswordEngine", "LoginRec", "PasswordValidator"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Collection, CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
-const {SCORE_INCREMENT_XLARGE} = ChromeUtils.import("resource://services-sync/constants.js");
-const {CollectionValidator} = ChromeUtils.import("resource://services-sync/collection_validator.js");
-const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
-const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Collection, CryptoWrapper } = ChromeUtils.import(
+  "resource://services-sync/record.js"
+);
+const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
+  "resource://services-sync/constants.js"
+);
+const { CollectionValidator } = ChromeUtils.import(
+  "resource://services-sync/collection_validator.js"
+);
+const { Store, SyncEngine, Tracker } = ChromeUtils.import(
+  "resource://services-sync/engines.js"
+);
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { Async } = ChromeUtils.import("resource://services-common/async.js");
 
 const SYNCABLE_LOGIN_FIELDS = [
   // `nsILoginInfo` fields.
@@ -60,11 +68,16 @@ LoginRec.prototype = {
 };
 
 Utils.deferGetSet(LoginRec, "cleartext", [
-    "hostname", "formSubmitURL",
-    "httpRealm", "username", "password", "usernameField", "passwordField",
-    "timeCreated", "timePasswordChanged",
-    ]);
-
+  "hostname",
+  "formSubmitURL",
+  "httpRealm",
+  "username",
+  "password",
+  "usernameField",
+  "passwordField",
+  "timeCreated",
+  "timePasswordChanged",
+]);
 
 function PasswordEngine(service) {
   SyncEngine.call(this, "Passwords", service);
@@ -120,7 +133,11 @@ PasswordEngine.prototype = {
       return null;
     }
 
-    let logins = Services.logins.findLogins(login.origin, login.formActionOrigin, login.httpRealm);
+    let logins = Services.logins.findLogins(
+      login.origin,
+      login.formActionOrigin,
+      login.httpRealm
+    );
 
     await Async.promiseYield(); // Yield back to main thread after synchronous operation.
 
@@ -150,13 +167,19 @@ PasswordEngine.prototype = {
 
 function PasswordStore(name, engine) {
   Store.call(this, name, engine);
-  this._nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+  this._nsLoginInfo = new Components.Constructor(
+    "@mozilla.org/login-manager/loginInfo;1",
+    Ci.nsILoginInfo,
+    "init"
+  );
 }
 PasswordStore.prototype = {
   __proto__: Store.prototype,
 
   _newPropertyBag() {
-    return Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag2);
+    return Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag2
+    );
   },
 
   /**
@@ -164,24 +187,30 @@ PasswordStore.prototype = {
    */
   _nsLoginInfoFromRecord(record) {
     function nullUndefined(x) {
-      return (x == undefined) ? null : x;
+      return x == undefined ? null : x;
     }
 
     if (record.formSubmitURL && record.httpRealm) {
-      this._log.warn("Record " + record.id + " has both formSubmitURL and httpRealm. Skipping.");
+      this._log.warn(
+        "Record " +
+          record.id +
+          " has both formSubmitURL and httpRealm. Skipping."
+      );
       return null;
     }
 
     // Passing in "undefined" results in an empty string, which later
     // counts as a value. Explicitly `|| null` these fields according to JS
     // truthiness. Records with empty strings or null will be unmolested.
-    let info = new this._nsLoginInfo(record.hostname,
-                                     nullUndefined(record.formSubmitURL),
-                                     nullUndefined(record.httpRealm),
-                                     record.username,
-                                     record.password,
-                                     record.usernameField,
-                                     record.passwordField);
+    let info = new this._nsLoginInfo(
+      record.hostname,
+      nullUndefined(record.formSubmitURL),
+      nullUndefined(record.httpRealm),
+      record.username,
+      record.password,
+      record.usernameField,
+      record.passwordField
+    );
 
     info.QueryInterface(Ci.nsILoginMetaInfo);
     info.guid = record.id;
@@ -236,7 +265,7 @@ PasswordStore.prototype = {
       this._log.trace("Can't change item ID: item doesn't exist");
       return;
     }
-    if ((await this._getLoginFromGUID(newID))) {
+    if (await this._getLoginFromGUID(newID)) {
       this._log.trace("Can't change item ID: new ID already in use");
       return;
     }
@@ -283,8 +312,13 @@ PasswordStore.prototype = {
     }
 
     this._log.trace("Adding login for " + record.hostname);
-    this._log.trace("httpRealm: " + JSON.stringify(login.httpRealm) + "; " +
-                    "formSubmitURL: " + JSON.stringify(login.formActionOrigin));
+    this._log.trace(
+      "httpRealm: " +
+        JSON.stringify(login.httpRealm) +
+        "; " +
+        "formSubmitURL: " +
+        JSON.stringify(login.formActionOrigin)
+    );
     Services.logins.addLogin(login);
   },
 
@@ -360,7 +394,9 @@ PasswordTracker.prototype = {
 
       case "addLogin":
       case "removeLogin":
-        subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
+        subject
+          .QueryInterface(Ci.nsILoginMetaInfo)
+          .QueryInterface(Ci.nsILoginInfo);
         const tracked = await this._trackLogin(subject);
         if (tracked) {
           this._log.trace(data + ": " + subject.guid);
@@ -404,8 +440,9 @@ class PasswordValidator extends CollectionValidator {
   getClientItems() {
     let logins = Services.logins.getAllLogins();
     let syncHosts = Utils.getSyncCredentialsHosts();
-    let result = logins.map(l => l.QueryInterface(Ci.nsILoginMetaInfo))
-                       .filter(l => !syncHosts.has(l.origin));
+    let result = logins
+      .map(l => l.QueryInterface(Ci.nsILoginMetaInfo))
+      .filter(l => !syncHosts.has(l.origin));
     return Promise.resolve(result);
   }
 
@@ -428,5 +465,3 @@ class PasswordValidator extends CollectionValidator {
     return Object.assign({ guid: item.id }, item);
   }
 }
-
-

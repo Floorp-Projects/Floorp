@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -64,8 +67,10 @@ class PauseResumeButton extends PureComponent {
 
   onKeyDown(event) {
     // Prevent to the duplicated call from the key listener and click listener.
-    if (event.keyCode === KeyCodes.DOM_VK_SPACE &&
-        event.target !== this.pauseResumeButtonRef.current) {
+    if (
+      event.keyCode === KeyCodes.DOM_VK_SPACE &&
+      event.target !== this.pauseResumeButtonRef.current
+    ) {
       this.onToggleAnimationsPlayState(event);
     }
   }
@@ -79,17 +84,15 @@ class PauseResumeButton extends PureComponent {
   render() {
     const { isRunning } = this.state;
 
-    return dom.button(
-      {
-        className: "pause-resume-button devtools-button" +
-                   (isRunning ? "" : " paused"),
-        onClick: this.onToggleAnimationsPlayState.bind(this),
-        title: isRunning ?
-                 getStr("timeline.resumedButtonTooltip") :
-                 getStr("timeline.pausedButtonTooltip"),
-        ref: this.pauseResumeButtonRef,
-      }
-    );
+    return dom.button({
+      className:
+        "pause-resume-button devtools-button" + (isRunning ? "" : " paused"),
+      onClick: this.onToggleAnimationsPlayState.bind(this),
+      title: isRunning
+        ? getStr("timeline.resumedButtonTooltip")
+        : getStr("timeline.pausedButtonTooltip"),
+      ref: this.pauseResumeButtonRef,
+    });
   }
 }
 

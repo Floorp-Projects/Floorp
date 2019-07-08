@@ -7,8 +7,15 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
+const {
+  initPerformanceInTab,
+  initConsoleInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  waitForRecordingStartedEvents,
+  waitForRecordingStoppedEvents,
+} = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
   startTelemetry();
@@ -41,17 +48,40 @@ add_task(async function() {
 function checkResults() {
   // For help generating these tests use generateTelemetryTests("DEVTOOLS_PERFTOOLS_")
   // here.
-  checkTelemetry("DEVTOOLS_PERFTOOLS_CONSOLE_RECORDING_COUNT", "", {0: 1, 1: 0}, "array");
-  checkTelemetry("DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS", "", null, "hasentries");
   checkTelemetry(
-    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withMarkers", {0: 0, 1: 1, 2: 0},
-    "array");
+    "DEVTOOLS_PERFTOOLS_CONSOLE_RECORDING_COUNT",
+    "",
+    { 0: 1, 1: 0 },
+    "array"
+  );
   checkTelemetry(
-    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withMemory", {0: 1, 1: 0}, "array");
+    "DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS",
+    "",
+    null,
+    "hasentries"
+  );
   checkTelemetry(
-    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withAllocations", {0: 1, 1: 0},
-    "array");
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED",
+    "withMarkers",
+    { 0: 0, 1: 1, 2: 0 },
+    "array"
+  );
   checkTelemetry(
-    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withTicks", {0: 0, 1: 1, 2: 0},
-    "array");
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED",
+    "withMemory",
+    { 0: 1, 1: 0 },
+    "array"
+  );
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED",
+    "withAllocations",
+    { 0: 1, 1: 0 },
+    "array"
+  );
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED",
+    "withTicks",
+    { 0: 0, 1: 1, 2: 0 },
+    "array"
+  );
 }

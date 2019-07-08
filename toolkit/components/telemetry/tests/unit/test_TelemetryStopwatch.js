@@ -5,22 +5,23 @@ const HIST_NAME = "TELEMETRY_SEND_SUCCESS";
 const HIST_NAME2 = "RANGE_CHECKSUM_ERRORS";
 const KEYED_HIST = { id: "TELEMETRY_INVALID_PING_TYPE_SUBMITTED", key: "TEST" };
 
-var refObj = {}, refObj2 = {};
+var refObj = {},
+  refObj2 = {};
 
 var originalCount1, originalCount2, originalCount3;
 
 function run_test() {
   let histogram = Telemetry.getHistogramById(HIST_NAME);
   let snapshot = histogram.snapshot();
-  originalCount1 = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  originalCount1 = Object.values(snapshot.values).reduce((a, b) => (a += b), 0);
 
   histogram = Telemetry.getHistogramById(HIST_NAME2);
   snapshot = histogram.snapshot();
-  originalCount2 = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  originalCount2 = Object.values(snapshot.values).reduce((a, b) => (a += b), 0);
 
   histogram = Telemetry.getKeyedHistogramById(KEYED_HIST.id);
-  snapshot = histogram.snapshot()[KEYED_HIST.key] || {values: []};
-  originalCount3 = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  snapshot = histogram.snapshot()[KEYED_HIST.key] || { values: [] };
+  originalCount3 = Object.values(snapshot.values).reduce((a, b) => (a += b), 0);
 
   Assert.ok(TelemetryStopwatch.start("mark1"));
   Assert.ok(TelemetryStopwatch.start("mark2"));
@@ -152,8 +153,10 @@ function run_test() {
 
   // Verify that keyed histograms can only be canceled through "keyed" API.
   Assert.ok(TelemetryStopwatch.startKeyed(KEYED_HIST.id, KEYED_HIST.key));
-  Assert.throws(() => TelemetryStopwatch.cancel(KEYED_HIST.id, KEYED_HIST.key),
-                /is not an object/);
+  Assert.throws(
+    () => TelemetryStopwatch.cancel(KEYED_HIST.id, KEYED_HIST.key),
+    /is not an object/
+  );
   Assert.ok(TelemetryStopwatch.cancelKeyed(KEYED_HIST.id, KEYED_HIST.key));
   Assert.ok(!TelemetryStopwatch.cancelKeyed(KEYED_HIST.id, KEYED_HIST.key));
 
@@ -163,19 +166,31 @@ function run_test() {
 function finishTest() {
   let histogram = Telemetry.getHistogramById(HIST_NAME);
   let snapshot = histogram.snapshot();
-  let newCount = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  let newCount = Object.values(snapshot.values).reduce((a, b) => (a += b), 0);
 
-  Assert.equal(newCount - originalCount1, 5, "The correct number of histograms were added for histogram 1.");
+  Assert.equal(
+    newCount - originalCount1,
+    5,
+    "The correct number of histograms were added for histogram 1."
+  );
 
   histogram = Telemetry.getHistogramById(HIST_NAME2);
   snapshot = histogram.snapshot();
-  newCount = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  newCount = Object.values(snapshot.values).reduce((a, b) => (a += b), 0);
 
-  Assert.equal(newCount - originalCount2, 3, "The correct number of histograms were added for histogram 2.");
+  Assert.equal(
+    newCount - originalCount2,
+    3,
+    "The correct number of histograms were added for histogram 2."
+  );
 
   histogram = Telemetry.getKeyedHistogramById(KEYED_HIST.id);
   snapshot = histogram.snapshot()[KEYED_HIST.key];
-  newCount = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  newCount = Object.values(snapshot.values).reduce((a, b) => (a += b), 0);
 
-  Assert.equal(newCount - originalCount3, 2, "The correct number of histograms were added for histogram 3.");
+  Assert.equal(
+    newCount - originalCount3,
+    2,
+    "The correct number of histograms were added for histogram 3."
+  );
 }

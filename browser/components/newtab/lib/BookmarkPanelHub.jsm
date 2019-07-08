@@ -3,17 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "FxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccounts",
+  "resource://gre/modules/FxAccounts.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 class _BookmarkPanelHub {
   constructor() {
     this._id = "BookmarkPanelHub";
-    this._trigger = {id: "bookmark-panel"};
+    this._trigger = { id: "bookmark-panel" };
     this._handleMessageRequest = null;
     this._addImpression = null;
     this._dispatch = null;
@@ -63,7 +72,12 @@ class _BookmarkPanelHub {
       return false;
     }
 
-    if (this._response && this._response.win === win && this._response.url === target.url && this._response.content) {
+    if (
+      this._response &&
+      this._response.win === win &&
+      this._response.url === target.url &&
+      this._response.content
+    ) {
       this.showMessage(this._response.content, target, win);
       return true;
     }
@@ -111,7 +125,8 @@ class _BookmarkPanelHub {
       return;
     }
 
-    const createElement = elem => target.document.createElementNS("http://www.w3.org/1999/xhtml", elem);
+    const createElement = elem =>
+      target.document.createElementNS("http://www.w3.org/1999/xhtml", elem);
 
     if (!target.container.querySelector("#cfrMessageContainer")) {
       const recommendation = createElement("div");
@@ -123,13 +138,17 @@ class _BookmarkPanelHub {
         const url = await FxAccounts.config.promiseEmailFirstURI("bookmark");
         win.ownerGlobal.openLinkIn(url, "tabshifted", {
           private: false,
-          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+            {}
+          ),
           csp: null,
         });
         this.sendUserEventTelemetry("CLICK", win);
       });
       recommendation.style.color = message.color;
-      recommendation.style.background = `-moz-linear-gradient(-45deg, ${message.background_color_1} 0%, ${message.background_color_2} 70%)`;
+      recommendation.style.background = `-moz-linear-gradient(-45deg, ${
+        message.background_color_1
+      } 0%, ${message.background_color_2} 70%)`;
       const close = createElement("button");
       close.setAttribute("id", "cfrClose");
       close.setAttribute("aria-label", "close");
@@ -148,7 +167,10 @@ class _BookmarkPanelHub {
 
       // If `string_id` is present it means we are relying on fluent for translations
       if (message.text.string_id) {
-        this._l10n.setAttributes(close, message.close_button.tooltiptext.string_id);
+        this._l10n.setAttributes(
+          close,
+          message.close_button.tooltiptext.string_id
+        );
         this._l10n.setAttributes(title, message.title.string_id);
         this._l10n.setAttributes(content, message.text.string_id);
         this._l10n.setAttributes(cta, message.cta.string_id);
@@ -175,7 +197,7 @@ class _BookmarkPanelHub {
       return;
     }
 
-    const {target} = this._response;
+    const { target } = this._response;
     if (visible === undefined) {
       // When called from the info button of the bookmark panel
       target.infoButton.checked = !target.infoButton.checked;
@@ -198,7 +220,9 @@ class _BookmarkPanelHub {
 
   _removeContainer(target) {
     if (target || (this._response && this._response.target)) {
-      const container = (target || this._response.target).container.querySelector("#cfrMessageContainer");
+      const container = (
+        target || this._response.target
+      ).container.querySelector("#cfrMessageContainer");
       if (container) {
         container.remove();
       }
@@ -226,7 +250,7 @@ class _BookmarkPanelHub {
     // Remove any existing message
     this.hideMessage(panelTarget);
     // Reset the reference to the panel elements
-    this._response = {target: panelTarget};
+    this._response = { target: panelTarget };
     // Required if we want to preview messages that include fluent strings
     win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
     win.MozXULElement.insertFTLIfNeeded("browser/branding/sync-brand.ftl");
@@ -239,15 +263,23 @@ class _BookmarkPanelHub {
 
   sendUserEventTelemetry(event, win) {
     // Only send pings for non private browsing windows
-    if (!PrivateBrowsingUtils.isBrowserPrivate(win.ownerGlobal.gBrowser.selectedBrowser)) {
-      this._sendTelemetry({message_id: this._response.id, bucket_id: this._response.id, event});
+    if (
+      !PrivateBrowsingUtils.isBrowserPrivate(
+        win.ownerGlobal.gBrowser.selectedBrowser
+      )
+    ) {
+      this._sendTelemetry({
+        message_id: this._response.id,
+        bucket_id: this._response.id,
+        event,
+      });
     }
   }
 
   _sendTelemetry(ping) {
     this._dispatch({
       type: "DOORHANGER_TELEMETRY",
-      data: {action: "cfr_user_event", source: "CFR", ...ping},
+      data: { action: "cfr_user_event", source: "CFR", ...ping },
     });
   }
 }

@@ -10,23 +10,30 @@
 
 "use strict";
 
-const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-mixedcontent-securityerrors.html";
+const TEST_URI =
+  "https://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-mixedcontent-securityerrors.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   info("console opened");
 
-  const msg =
-    await waitFor(() => findMessage(hud, "Blocked loading mixed active content"));
+  const msg = await waitFor(() =>
+    findMessage(hud, "Blocked loading mixed active content")
+  );
   ok(msg, "error message");
-  const locationNode = msg.querySelector(".message-location .frame-link-filename");
+  const locationNode = msg.querySelector(
+    ".message-location .frame-link-filename"
+  );
   ok(locationNode, "location node");
 
   const onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
   locationNode.click();
   await onTabOpen;
-  ok(true, "the view source tab was opened in response to clicking the location node");
+  ok(
+    true,
+    "the view source tab was opened in response to clicking the location node"
+  );
 });

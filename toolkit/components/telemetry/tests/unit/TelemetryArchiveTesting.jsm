@@ -1,9 +1,9 @@
-const {TelemetryArchive} = ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryArchive } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryArchive.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = [
-  "TelemetryArchiveTesting",
-];
+var EXPORTED_SYMBOLS = ["TelemetryArchiveTesting"];
 
 function checkForProperties(ping, expected) {
   for (let [props, val] of expected) {
@@ -26,12 +26,11 @@ function checkForProperties(ping, expected) {
  * was properly saved. To use, first initialize to collect the starting pings
  * and then check for new ping data.
  */
-function Checker() {
-}
+function Checker() {}
 Checker.prototype = {
   promiseInit() {
     this._pingMap = new Map();
-    return TelemetryArchive.promiseArchivedPingList().then((plist) => {
+    return TelemetryArchive.promiseArchivedPingList().then(plist => {
       for (let ping of plist) {
         this._pingMap.set(ping.id, ping);
       }

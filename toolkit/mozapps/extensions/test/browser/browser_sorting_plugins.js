@@ -19,46 +19,52 @@ async function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
-  gProvider.createAddons([{
-    //  enabledInstalled group
-    //    * Always activate
-    //    * Ask to activate
-    //    * Never activate
-    id: "test1@tests.mozilla.org",
-    name: "Java Applet Plug-in Java 7 Update 51",
-    description: "foo",
-    type: "plugin",
-    isActive: true,
-    userDisabled: AddonManager.STATE_ASK_TO_ACTIVATE,
-  }, {
-    id: "test2@tests.mozilla.org",
-    name: "Quick Time Plug-in",
-    description: "foo",
-    type: "plugin",
-    isActive: true,
-    userDisabled: false,
-  }, {
-    id: "test3@tests.mozilla.org",
-    name: "Shockwave Flash",
-    description: "foo",
-    type: "plugin",
-    isActive: false,
-    userDisabled: true,
-  }, {
-    id: "test4@tests.mozilla.org",
-    name: "Adobe Reader Plug-in",
-    description: "foo",
-    type: "plugin",
-    isActive: true,
-    userDisabled: AddonManager.STATE_ASK_TO_ACTIVATE,
-  }, {
-    id: "test5@tests.mozilla.org",
-    name: "3rd Party Plug-in",
-    description: "foo",
-    type: "plugin",
-    isActive: true,
-    userDisabled: false,
-  }]);
+  gProvider.createAddons([
+    {
+      //  enabledInstalled group
+      //    * Always activate
+      //    * Ask to activate
+      //    * Never activate
+      id: "test1@tests.mozilla.org",
+      name: "Java Applet Plug-in Java 7 Update 51",
+      description: "foo",
+      type: "plugin",
+      isActive: true,
+      userDisabled: AddonManager.STATE_ASK_TO_ACTIVATE,
+    },
+    {
+      id: "test2@tests.mozilla.org",
+      name: "Quick Time Plug-in",
+      description: "foo",
+      type: "plugin",
+      isActive: true,
+      userDisabled: false,
+    },
+    {
+      id: "test3@tests.mozilla.org",
+      name: "Shockwave Flash",
+      description: "foo",
+      type: "plugin",
+      isActive: false,
+      userDisabled: true,
+    },
+    {
+      id: "test4@tests.mozilla.org",
+      name: "Adobe Reader Plug-in",
+      description: "foo",
+      type: "plugin",
+      isActive: true,
+      userDisabled: AddonManager.STATE_ASK_TO_ACTIVATE,
+    },
+    {
+      id: "test5@tests.mozilla.org",
+      name: "3rd Party Plug-in",
+      description: "foo",
+      type: "plugin",
+      isActive: true,
+      userDisabled: false,
+    },
+  ]);
 
   let aWindow = await open_manager("addons://list/plugin");
   gManagerWindow = aWindow;
@@ -76,12 +82,17 @@ function check_order(aExpectedOrder) {
   var node = list.firstChild;
   while (node) {
     var id = node.getAttribute("value");
-    if (id && id.endsWith("@tests.mozilla.org"))
+    if (id && id.endsWith("@tests.mozilla.org")) {
       order.push(node.getAttribute("value"));
+    }
     node = node.nextSibling;
   }
 
-  is(order.toSource(), aExpectedOrder.toSource(), "Should have seen the right order");
+  is(
+    order.toSource(),
+    aExpectedOrder.toSource(),
+    "Should have seen the right order"
+  );
 }
 
 // Tests that ascending name ordering was the default

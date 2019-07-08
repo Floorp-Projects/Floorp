@@ -19,13 +19,13 @@ function histogramCountsSum(histogram) {
 add_task(async function testPageActionTelemetry() {
   let extensionOptions = {
     manifest: {
-      "page_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      page_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
     },
     background: function() {
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         const tabId = tabs[0].id;
 
         browser.pageAction.show(tabId).then(() => {
@@ -42,8 +42,8 @@ add_task(async function testPageActionTelemetry() {
     ...extensionOptions,
     manifest: {
       ...extensionOptions.manifest,
-      "applications": {
-        "gecko": {"id": EXTENSION_ID1},
+      applications: {
+        gecko: { id: EXTENSION_ID1 },
       },
     },
   });
@@ -51,84 +51,137 @@ add_task(async function testPageActionTelemetry() {
     ...extensionOptions,
     manifest: {
       ...extensionOptions.manifest,
-      "applications": {
-        "gecko": {"id": EXTENSION_ID2},
+      applications: {
+        gecko: { id: EXTENSION_ID2 },
       },
     },
   });
 
   let histogram = Services.telemetry.getHistogramById(HISTOGRAM);
-  let histogramKeyed = Services.telemetry.getKeyedHistogramById(HISTOGRAM_KEYED);
+  let histogramKeyed = Services.telemetry.getKeyedHistogramById(
+    HISTOGRAM_KEYED
+  );
 
   histogram.clear();
   histogramKeyed.clear();
 
-  is(histogramCountsSum(histogram), 0,
-     `No data recorded for histogram: ${HISTOGRAM}.`);
-  is(Object.keys(histogramKeyed).length, 0,
-     `No data recorded for histogram: ${HISTOGRAM_KEYED}.`);
+  is(
+    histogramCountsSum(histogram),
+    0,
+    `No data recorded for histogram: ${HISTOGRAM}.`
+  );
+  is(
+    Object.keys(histogramKeyed).length,
+    0,
+    `No data recorded for histogram: ${HISTOGRAM_KEYED}.`
+  );
 
   await extension1.startup();
   await extension1.awaitMessage("action-shown");
   await extension2.startup();
   await extension2.awaitMessage("action-shown");
 
-  is(histogramCountsSum(histogram), 0,
-     `No data recorded for histogram after PageAction shown: ${HISTOGRAM}.`);
-  is(Object.keys(histogramKeyed).length, 0,
-     `No data recorded for histogram after PageAction shown: ${HISTOGRAM_KEYED}.`);
+  is(
+    histogramCountsSum(histogram),
+    0,
+    `No data recorded for histogram after PageAction shown: ${HISTOGRAM}.`
+  );
+  is(
+    Object.keys(histogramKeyed).length,
+    0,
+    `No data recorded for histogram after PageAction shown: ${HISTOGRAM_KEYED}.`
+  );
 
   clickPageAction(extension1, window);
   await awaitExtensionPanel(extension1);
 
-  is(histogramCountsSum(histogram), 1,
-     `Data recorded for first extension for histogram: ${HISTOGRAM}.`);
+  is(
+    histogramCountsSum(histogram),
+    1,
+    `Data recorded for first extension for histogram: ${HISTOGRAM}.`
+  );
   let keyedSnapshot = histogramKeyed.snapshot();
-  Assert.deepEqual(Object.keys((keyedSnapshot)), [EXTENSION_ID1],
-                   `Data recorded for first extension histogram: ${HISTOGRAM_KEYED}.`);
-  is(snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]), 1,
-     `Data recorded for first extension for histogram: ${HISTOGRAM_KEYED}.`);
+  Assert.deepEqual(
+    Object.keys(keyedSnapshot),
+    [EXTENSION_ID1],
+    `Data recorded for first extension histogram: ${HISTOGRAM_KEYED}.`
+  );
+  is(
+    snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]),
+    1,
+    `Data recorded for first extension for histogram: ${HISTOGRAM_KEYED}.`
+  );
 
   await closePageAction(extension1, window);
 
   clickPageAction(extension2, window);
   await awaitExtensionPanel(extension2);
 
-  is(histogramCountsSum(histogram), 2,
-     `Data recorded for second extension for histogram: ${HISTOGRAM}.`);
+  is(
+    histogramCountsSum(histogram),
+    2,
+    `Data recorded for second extension for histogram: ${HISTOGRAM}.`
+  );
   keyedSnapshot = histogramKeyed.snapshot();
-  Assert.deepEqual(Object.keys((keyedSnapshot)).sort(), [EXTENSION_ID1, EXTENSION_ID2],
-                   `Data recorded for second extension histogram: ${HISTOGRAM_KEYED}.`);
-  is(snapshotCountsSum(keyedSnapshot[EXTENSION_ID2]), 1,
-     `Data recorded for second extension for histogram: ${HISTOGRAM_KEYED}.`);
-  is(snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]), 1,
-     `Data recorded for first extension should not change for histogram: ${HISTOGRAM_KEYED}.`);
+  Assert.deepEqual(
+    Object.keys(keyedSnapshot).sort(),
+    [EXTENSION_ID1, EXTENSION_ID2],
+    `Data recorded for second extension histogram: ${HISTOGRAM_KEYED}.`
+  );
+  is(
+    snapshotCountsSum(keyedSnapshot[EXTENSION_ID2]),
+    1,
+    `Data recorded for second extension for histogram: ${HISTOGRAM_KEYED}.`
+  );
+  is(
+    snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]),
+    1,
+    `Data recorded for first extension should not change for histogram: ${HISTOGRAM_KEYED}.`
+  );
 
   await closePageAction(extension2, window);
 
   clickPageAction(extension2, window);
   await awaitExtensionPanel(extension2);
 
-  is(histogramCountsSum(histogram), 3,
-     `Data recorded for second opening of popup for histogram: ${HISTOGRAM}.`);
+  is(
+    histogramCountsSum(histogram),
+    3,
+    `Data recorded for second opening of popup for histogram: ${HISTOGRAM}.`
+  );
   keyedSnapshot = histogramKeyed.snapshot();
-  is(snapshotCountsSum(keyedSnapshot[EXTENSION_ID2]), 2,
-     `Data recorded for second opening of popup for histogram: ${HISTOGRAM_KEYED}.`);
-  is(snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]), 1,
-     `Data recorded for first extension should not change for histogram: ${HISTOGRAM_KEYED}.`);
+  is(
+    snapshotCountsSum(keyedSnapshot[EXTENSION_ID2]),
+    2,
+    `Data recorded for second opening of popup for histogram: ${HISTOGRAM_KEYED}.`
+  );
+  is(
+    snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]),
+    1,
+    `Data recorded for first extension should not change for histogram: ${HISTOGRAM_KEYED}.`
+  );
 
   await closePageAction(extension2, window);
 
   clickPageAction(extension1, window);
   await awaitExtensionPanel(extension1);
 
-  is(histogramCountsSum(histogram), 4,
-     `Data recorded for second opening of popup for histogram: ${HISTOGRAM}.`);
+  is(
+    histogramCountsSum(histogram),
+    4,
+    `Data recorded for second opening of popup for histogram: ${HISTOGRAM}.`
+  );
   keyedSnapshot = histogramKeyed.snapshot();
-  is(snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]), 2,
-     `Data recorded for second opening of popup for histogram: ${HISTOGRAM_KEYED}.`);
-  is(snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]), 2,
-     `Data recorded for second extension should not change for histogram: ${HISTOGRAM_KEYED}.`);
+  is(
+    snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]),
+    2,
+    `Data recorded for second opening of popup for histogram: ${HISTOGRAM_KEYED}.`
+  );
+  is(
+    snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]),
+    2,
+    `Data recorded for second extension should not change for histogram: ${HISTOGRAM_KEYED}.`
+  );
 
   await closePageAction(extension1, window);
 

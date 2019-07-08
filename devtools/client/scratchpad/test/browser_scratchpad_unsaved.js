@@ -21,89 +21,116 @@ function test() {
   testRestoreFromFileUnsaved();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test star* UI for unsaved file changes");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,<p>test star* UI for unsaved file changes"
+  );
 }
 
 function testListeners() {
-  openScratchpad(function(aWin, aScratchpad) {
-    aScratchpad.setText("new text");
-    ok(isStar(aWin), "show star if scratchpad text changes");
+  openScratchpad(
+    function(aWin, aScratchpad) {
+      aScratchpad.setText("new text");
+      ok(isStar(aWin), "show star if scratchpad text changes");
 
-    aScratchpad.dirty = false;
-    ok(!isStar(aWin), "no star before changing text");
+      aScratchpad.dirty = false;
+      ok(!isStar(aWin), "no star before changing text");
 
-    aScratchpad.setFilename("foo.js");
-    aScratchpad.setText("new text2");
-    ok(isStar(aWin), "shows star if scratchpad text changes");
+      aScratchpad.setFilename("foo.js");
+      aScratchpad.setText("new text2");
+      ok(isStar(aWin), "shows star if scratchpad text changes");
 
-    aScratchpad.dirty = false;
-    ok(!isStar(aWin), "no star if scratchpad was just saved");
+      aScratchpad.dirty = false;
+      ok(!isStar(aWin), "no star if scratchpad was just saved");
 
-    aScratchpad.setText("new text3");
-    ok(isStar(aWin), "shows star if scratchpad has more changes");
+      aScratchpad.setText("new text3");
+      ok(isStar(aWin), "shows star if scratchpad has more changes");
 
-    aScratchpad.undo();
-    ok(!isStar(aWin), "no star if scratchpad undo to save point");
+      aScratchpad.undo();
+      ok(!isStar(aWin), "no star if scratchpad undo to save point");
 
-    aScratchpad.undo();
-    ok(isStar(aWin), "star if scratchpad undo past save point");
+      aScratchpad.undo();
+      ok(isStar(aWin), "star if scratchpad undo past save point");
 
-    aWin.close();
-    done();
-  }, {noFocus: true});
+      aWin.close();
+      done();
+    },
+    { noFocus: true }
+  );
 }
 
 function testRestoreNotFromFile() {
-  const session = [{
-    text: "test1",
-    executionContext: 1,
-  }];
+  const session = [
+    {
+      text: "test1",
+      executionContext: 1,
+    },
+  ];
 
   const [win] = ScratchpadManager.restoreSession(session);
-  openScratchpad(function(aWin, aScratchpad) {
-    aScratchpad.setText("new text");
-    ok(isStar(win), "show star if restored scratchpad isn't from a file");
+  openScratchpad(
+    function(aWin, aScratchpad) {
+      aScratchpad.setText("new text");
+      ok(isStar(win), "show star if restored scratchpad isn't from a file");
 
-    win.close();
-    done();
-  }, {window: win, noFocus: true});
+      win.close();
+      done();
+    },
+    { window: win, noFocus: true }
+  );
 }
 
 function testRestoreFromFileSaved() {
-  const session = [{
-    filename: "test.js",
-    text: "test1",
-    executionContext: 1,
-    saved: true,
-  }];
+  const session = [
+    {
+      filename: "test.js",
+      text: "test1",
+      executionContext: 1,
+      saved: true,
+    },
+  ];
 
   const [win] = ScratchpadManager.restoreSession(session);
-  openScratchpad(function(aWin, aScratchpad) {
-    ok(!isStar(win), "no star before changing text in scratchpad restored from file");
+  openScratchpad(
+    function(aWin, aScratchpad) {
+      ok(
+        !isStar(win),
+        "no star before changing text in scratchpad restored from file"
+      );
 
-    aScratchpad.setText("new text");
-    ok(isStar(win), "star when text changed from scratchpad restored from file");
+      aScratchpad.setText("new text");
+      ok(
+        isStar(win),
+        "star when text changed from scratchpad restored from file"
+      );
 
-    win.close();
-    done();
-  }, {window: win, noFocus: true});
+      win.close();
+      done();
+    },
+    { window: win, noFocus: true }
+  );
 }
 
 function testRestoreFromFileUnsaved() {
-  const session = [{
-    filename: "test.js",
-    text: "test1",
-    executionContext: 1,
-    saved: false,
-  }];
+  const session = [
+    {
+      filename: "test.js",
+      text: "test1",
+      executionContext: 1,
+      saved: false,
+    },
+  ];
 
   const [win] = ScratchpadManager.restoreSession(session);
-  openScratchpad(function() {
-    ok(isStar(win), "star with scratchpad restored with unsaved text");
+  openScratchpad(
+    function() {
+      ok(isStar(win), "star with scratchpad restored with unsaved text");
 
-    win.close();
-    done();
-  }, {window: win, noFocus: true});
+      win.close();
+      done();
+    },
+    { window: win, noFocus: true }
+  );
 }
 
 function isStar(win) {

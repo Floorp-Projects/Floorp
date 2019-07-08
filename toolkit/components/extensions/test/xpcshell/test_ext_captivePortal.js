@@ -32,15 +32,19 @@ registerCleanupFunction(() => {
 });
 
 add_task(function setup() {
-  Services.prefs.setCharPref(PREF_CAPTIVE_ENDPOINT, `http://localhost:${httpserver.identity.primaryPort}/captive.txt`);
+  Services.prefs.setCharPref(
+    PREF_CAPTIVE_ENDPOINT,
+    `http://localhost:${httpserver.identity.primaryPort}/captive.txt`
+  );
   Services.prefs.setBoolPref(PREF_CAPTIVE_TESTMODE, true);
   Services.prefs.setIntPref(PREF_CAPTIVE_MINTIME, 0);
   Services.prefs.setBoolPref(PREF_DNS_NATIVE_IS_LOCALHOST, true);
 });
 
 add_task(async function test_captivePortal_basic() {
-  let cps = Cc["@mozilla.org/network/captive-portal-service;1"]
-              .getService(Ci.nsICaptivePortalService);
+  let cps = Cc["@mozilla.org/network/captive-portal-service;1"].getService(
+    Ci.nsICaptivePortalService
+  );
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -49,7 +53,9 @@ add_task(async function test_captivePortal_basic() {
     isPrivileged: true,
     async background() {
       browser.captivePortal.onConnectivityAvailable.addListener(details => {
-        browser.test.log(`onConnectivityAvailable received ${JSON.stringify(details)}`);
+        browser.test.log(
+          `onConnectivityAvailable received ${JSON.stringify(details)}`
+        );
         browser.test.sendMessage("connectivity", details);
       });
 
@@ -60,10 +66,17 @@ add_task(async function test_captivePortal_basic() {
 
       browser.test.onMessage.addListener(async msg => {
         if (msg == "getstate") {
-          browser.test.sendMessage("getstate", await browser.captivePortal.getState());
+          browser.test.sendMessage(
+            "getstate",
+            await browser.captivePortal.getState()
+          );
         }
       });
-      browser.test.assertEq("unknown", await browser.captivePortal.getState(), "initial state unknown");
+      browser.test.assertEq(
+        "unknown",
+        await browser.captivePortal.getState(),
+        "initial state unknown"
+      );
     },
   });
   await extension.startup();

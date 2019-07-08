@@ -23,6 +23,7 @@ add_task(async function() {
   await waitForFilter();
 
   const hiddenCount = await getElementCount(
-    ".jsonPanelBox .treeTable .treeRow.hidden");
+    ".jsonPanelBox .treeTable .treeRow.hidden"
+  );
   is(hiddenCount, 4, "There must be expected number of hidden rows");
 });

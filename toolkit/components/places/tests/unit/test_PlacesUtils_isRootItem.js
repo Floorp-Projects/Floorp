@@ -8,8 +8,14 @@ const GUIDS = [
 
 add_task(async function test_isRootItem() {
   for (let guid of GUIDS) {
-    Assert.ok(PlacesUtils.isRootItem(guid), `Should correctly identify root item ${guid}`);
+    Assert.ok(
+      PlacesUtils.isRootItem(guid),
+      `Should correctly identify root item ${guid}`
+    );
   }
 
-  Assert.ok(!PlacesUtils.isRootItem("fakeguid1234"), "Should not identify other items as root.");
+  Assert.ok(
+    !PlacesUtils.isRootItem("fakeguid1234"),
+    "Should not identify other items as root."
+  );
 });

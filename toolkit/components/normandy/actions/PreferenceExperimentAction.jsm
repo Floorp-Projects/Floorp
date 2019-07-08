@@ -4,18 +4,41 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {BaseAction} = ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { BaseAction } = ChromeUtils.import(
+  "resource://normandy/actions/BaseAction.jsm"
+);
 ChromeUtils.defineModuleGetter(
-  this, "Sampling", "resource://gre/modules/components-utils/Sampling.jsm");
-ChromeUtils.defineModuleGetter(this, "ActionSchemas", "resource://normandy/actions/schemas/index.js");
-ChromeUtils.defineModuleGetter(this, "ClientEnvironment", "resource://normandy/lib/ClientEnvironment.jsm");
-ChromeUtils.defineModuleGetter(this, "PreferenceExperiments", "resource://normandy/lib/PreferenceExperiments.jsm");
+  this,
+  "Sampling",
+  "resource://gre/modules/components-utils/Sampling.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ActionSchemas",
+  "resource://normandy/actions/schemas/index.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ClientEnvironment",
+  "resource://normandy/lib/ClientEnvironment.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PreferenceExperiments",
+  "resource://normandy/lib/PreferenceExperiments.jsm"
+);
 const SHIELD_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
-XPCOMUtils.defineLazyPreferenceGetter(this, "shieldOptOutPref", SHIELD_OPT_OUT_PREF, false);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "shieldOptOutPref",
+  SHIELD_OPT_OUT_PREF,
+  false
+);
 
 var EXPORTED_SYMBOLS = ["PreferenceExperimentAction"];
-
 
 /**
  * Enrolls a user in a preference experiment, in which we assign the
@@ -34,7 +57,9 @@ class PreferenceExperimentAction extends BaseAction {
 
   _preExecution() {
     if (!shieldOptOutPref) {
-      this.log.info("User has opted out of preference experiments. Disabling this action.");
+      this.log.info(
+        "User has opted out of preference experiments. Disabling this action."
+      );
       this.disable();
     }
   }
@@ -58,9 +83,13 @@ class PreferenceExperimentAction extends BaseAction {
       // If there's already an active experiment that has set that preference, abort.
       const activeExperiments = await PreferenceExperiments.getAllActive();
       for (const branch of branches) {
-        const conflictingPrefs = Object.keys(branch.preferences).filter(preferenceName => {
-          return activeExperiments.some(exp => exp.preferences.hasOwnProperty(preferenceName));
-        });
+        const conflictingPrefs = Object.keys(branch.preferences).filter(
+          preferenceName => {
+            return activeExperiments.some(exp =>
+              exp.preferences.hasOwnProperty(preferenceName)
+            );
+          }
+        );
         if (conflictingPrefs.length > 0) {
           throw new Error(
             `Experiment ${slug} ignored; another active experiment is already using the
@@ -122,23 +151,25 @@ class PreferenceExperimentAction extends BaseAction {
    */
   async _finalize() {
     const activeExperiments = await PreferenceExperiments.getAllActive();
-    return Promise.all(activeExperiments.map(experiment => {
-      if (this.name != experiment.actionName) {
-        // Another action is responsible for cleaning this one
-        // up. Leave it alone.
-        return null;
-      }
+    return Promise.all(
+      activeExperiments.map(experiment => {
+        if (this.name != experiment.actionName) {
+          // Another action is responsible for cleaning this one
+          // up. Leave it alone.
+          return null;
+        }
 
-      if (this.seenExperimentNames.includes(experiment.name)) {
-        return null;
-      }
+        if (this.seenExperimentNames.includes(experiment.name)) {
+          return null;
+        }
 
-      return PreferenceExperiments.stop(experiment.name, {
-        resetValue: true,
-        reason: "recipe-not-seen",
-      }).catch(e => {
-        this.log.warn(`Stopping experiment ${experiment.name} failed: ${e}`);
-      });
-    }));
+        return PreferenceExperiments.stop(experiment.name, {
+          resetValue: true,
+          reason: "recipe-not-seen",
+        }).catch(e => {
+          this.log.warn(`Stopping experiment ${experiment.name} failed: ${e}`);
+        });
+      })
+    );
   }
 }

@@ -29,23 +29,31 @@ add_task(async function() {
   await selectNode("#grid", inspector);
   const checkbox = doc.getElementById("grid-setting-show-grid-areas");
 
-  ok(!Services.prefs.getBoolPref(SHOW_GRID_AREAS_PREF),
-    "'Display grid areas' is pref off by default.");
+  ok(
+    !Services.prefs.getBoolPref(SHOW_GRID_AREAS_PREF),
+    "'Display grid areas' is pref off by default."
+  );
 
   info("Toggling ON the 'Display grid areas' setting.");
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.highlighterSettings.showGridAreasOverlay);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state => state.highlighterSettings.showGridAreasOverlay
+  );
   checkbox.click();
   await onCheckboxChange;
 
   info("Toggling OFF the 'Display grid areas' setting.");
-  onCheckboxChange = waitUntilState(store, state =>
-    !state.highlighterSettings.showGridAreasOverlay);
+  onCheckboxChange = waitUntilState(
+    store,
+    state => !state.highlighterSettings.showGridAreasOverlay
+  );
   checkbox.click();
   await onCheckboxChange;
 
-  ok(!Services.prefs.getBoolPref(SHOW_GRID_AREAS_PREF),
-    "'Display grid areas' is pref off.");
+  ok(
+    !Services.prefs.getBoolPref(SHOW_GRID_AREAS_PREF),
+    "'Display grid areas' is pref off."
+  );
 
   Services.prefs.clearUserPref(SHOW_GRID_AREAS_PREF);
 });

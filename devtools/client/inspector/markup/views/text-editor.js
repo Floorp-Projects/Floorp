@@ -6,11 +6,28 @@
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
-const TextNode = createFactory(require("devtools/client/inspector/markup/components/TextNode"));
+const TextNode = createFactory(
+  require("devtools/client/inspector/markup/components/TextNode")
+);
 
-loader.lazyRequireGetter(this, "getAutocompleteMaxWidth", "devtools/client/inspector/markup/utils", true);
-loader.lazyRequireGetter(this, "getLongString", "devtools/client/inspector/shared/utils", true);
-loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
+loader.lazyRequireGetter(
+  this,
+  "getAutocompleteMaxWidth",
+  "devtools/client/inspector/markup/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getLongString",
+  "devtools/client/inspector/shared/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "InplaceEditor",
+  "devtools/client/shared/inplace-editor",
+  true
+);
 
 /**
  * Creates a simple text editor node, used for TEXT and COMMENT
@@ -42,11 +59,14 @@ TextEditor.prototype = {
     this.elt.classList.add("editor", type);
 
     getLongString(this.node.getNodeValue()).then(value => {
-      this.textNode = this.ReactDOM.render(TextNode({
-        showTextEditor: this.showTextEditor,
-        type,
-        value,
-      }), this.elt);
+      this.textNode = this.ReactDOM.render(
+        TextNode({
+          showTextEditor: this.showTextEditor,
+          type,
+          value,
+        }),
+        this.elt
+      );
     });
   },
 
@@ -76,11 +96,14 @@ TextEditor.prototype = {
           return;
         }
         getLongString(this.node.getNodeValue()).then(oldValue => {
-          this.container.undo.do(() => {
-            this.node.setNodeValue(val);
-          }, () => {
-            this.node.setNodeValue(oldValue);
-          });
+          this.container.undo.do(
+            () => {
+              this.node.setNodeValue(val);
+            },
+            () => {
+              this.node.setNodeValue(oldValue);
+            }
+          );
         });
       },
       element,

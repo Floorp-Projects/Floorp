@@ -4,9 +4,11 @@
 
 function waitForConsole(task, message) {
   return new Promise(async resolve => {
-    SimpleTest.monitorConsole(resolve, [{
-      message: new RegExp(message),
-    }]);
+    SimpleTest.monitorConsole(resolve, [
+      {
+        message: new RegExp(message),
+      },
+    ]);
     await task();
     SimpleTest.endMonitorConsole();
   });
@@ -29,7 +31,7 @@ add_task(async function test_static_theme() {
     });
     await waitForConsole(
       extension.startup,
-      `Unrecognized theme property found: ${property}.such_property`,
+      `Unrecognized theme property found: ${property}.such_property`
     );
     await extension.unload();
   }
@@ -74,10 +76,14 @@ add_task(async function test_dynamic_theme() {
 
 add_task(async function test_experiments_enabled() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.legacy.enabled", AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS]],
+    set: [
+      ["extensions.legacy.enabled", AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS],
+    ],
   });
 
-  info("Testing that experiments are handled correctly when legacy pref is enabled");
+  info(
+    "Testing that experiments are handled correctly when legacy pref is enabled"
+  );
 
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -115,7 +121,9 @@ add_task(async function test_experiments_disabled() {
     set: [["extensions.legacy.enabled", false]],
   });
 
-  info("Testing that experiments are handled correctly when legacy pref is disabled");
+  info(
+    "Testing that experiments are handled correctly when legacy pref is disabled"
+  );
 
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {

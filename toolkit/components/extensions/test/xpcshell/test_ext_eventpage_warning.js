@@ -5,7 +5,7 @@ AddonTestUtils.init(this);
 function createEventPageExtension(eventPage) {
   return ExtensionTestUtils.loadExtension({
     manifest: {
-      "background": eventPage,
+      background: eventPage,
     },
     files: {
       "event_page_script.js"() {
@@ -26,41 +26,42 @@ add_task(async function test_eventpages() {
     {
       message: "testing event page running as a background page",
       eventPage: {
-        "page": "event-page.html",
-        "persistent": false,
+        page: "event-page.html",
+        persistent: false,
       },
     },
     {
       message: "testing event page scripts running as a background page",
       eventPage: {
-        "scripts": ["event_page_script.js"],
-        "persistent": false,
+        scripts: ["event_page_script.js"],
+        persistent: false,
       },
     },
     {
       message: "testing additional unrecognized properties on background page",
       eventPage: {
-        "scripts": ["event_page_script.js"],
-        "nonExistentProp": true,
+        scripts: ["event_page_script.js"],
+        nonExistentProp: true,
       },
     },
     {
       message: "testing persistent background page",
       eventPage: {
-        "page": "event-page.html",
-        "persistent": true,
+        page: "event-page.html",
+        persistent: true,
       },
     },
     {
-      message: "testing scripts with persistent background running as a background page",
+      message:
+        "testing scripts with persistent background running as a background page",
       eventPage: {
-        "scripts": ["event_page_script.js"],
-        "persistent": true,
+        scripts: ["event_page_script.js"],
+        persistent: true,
       },
     },
   ];
 
-  let {messages} = await promiseConsoleOutput(async () => {
+  let { messages } = await promiseConsoleOutput(async () => {
     for (let test of testCases) {
       info(test.message);
 
@@ -71,9 +72,17 @@ add_task(async function test_eventpages() {
       await extension.unload();
     }
   });
-  AddonTestUtils.checkMessages(messages, {expected: [
-    {message: /Event pages are not currently supported./},
-    {message: /Event pages are not currently supported./},
-    {message: /Reading manifest: Error processing background.nonExistentProp: An unexpected property was found/},
-  ]}, true);
+  AddonTestUtils.checkMessages(
+    messages,
+    {
+      expected: [
+        { message: /Event pages are not currently supported./ },
+        { message: /Event pages are not currently supported./ },
+        {
+          message: /Reading manifest: Error processing background.nonExistentProp: An unexpected property was found/,
+        },
+      ],
+    },
+    true
+  );
 });

@@ -10,7 +10,9 @@
 // - when using the context-menu "Inspect element"
 // - when using the element picker
 
-const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
+const TEST_URL =
+  `data:text/html;charset=utf-8,` +
+  encodeURIComponent(`
   <test-outer></test-outer>
   <script>
   (function() {
@@ -46,7 +48,9 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
   </script>`);
 
 add_task(async function() {
-  const { inspector, toolbox, tab, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox, tab, testActor } = await openInspectorForURL(
+    TEST_URL
+  );
 
   info("Waiting for element picker to become active");
   await startPicker(toolbox);
@@ -72,26 +76,47 @@ add_task(async function() {
 async function assertMarkupView(inspector) {
   const outerFront = await getNodeFront("test-outer", inspector);
   const outerContainer = inspector.markup.getContainer(outerFront);
-  assertContainer(outerContainer, {expanded: true, text: "test-outer", children: 1});
+  assertContainer(outerContainer, {
+    expanded: true,
+    text: "test-outer",
+    children: 1,
+  });
 
   const outerShadowContainer = outerContainer.getChildContainers()[0];
-  assertContainer(outerShadowContainer,
-    {expanded: true, text: "#shadow-root", children: 1});
+  assertContainer(outerShadowContainer, {
+    expanded: true,
+    text: "#shadow-root",
+    children: 1,
+  });
 
   const innerContainer = outerShadowContainer.getChildContainers()[0];
-  assertContainer(innerContainer, {expanded: true, text: "test-inner", children: 2});
+  assertContainer(innerContainer, {
+    expanded: true,
+    text: "test-inner",
+    children: 2,
+  });
 
   const innerShadowContainer = innerContainer.getChildContainers()[0];
   const imageContainer = innerContainer.getChildContainers()[1];
-  assertContainer(innerShadowContainer, {expanded: false, text: "#shadow-root"});
-  assertContainer(imageContainer, {expanded: true, text: "test-image", children: 1});
+  assertContainer(innerShadowContainer, {
+    expanded: false,
+    text: "#shadow-root",
+  });
+  assertContainer(imageContainer, {
+    expanded: true,
+    text: "test-image",
+    children: 1,
+  });
 
   const imageShadowContainer = imageContainer.getChildContainers()[0];
-  assertContainer(imageShadowContainer,
-    {expanded: true, text: "#shadow-root", children: 1});
+  assertContainer(imageShadowContainer, {
+    expanded: true,
+    text: "#shadow-root",
+    children: 1,
+  });
 
   const redDivContainer = imageShadowContainer.getChildContainers()[0];
-  assertContainer(redDivContainer, {expanded: false, text: "div"});
+  assertContainer(redDivContainer, { expanded: false, text: "div" });
   is(redDivContainer.selected, true, "Div element is selected as expected");
 }
 
@@ -99,11 +124,15 @@ async function assertMarkupView(inspector) {
  * Check if the provided markup container is expanded, has the expected text and the
  * expected number of children.
  */
-function assertContainer(container, {expanded, text, children}) {
+function assertContainer(container, { expanded, text, children }) {
   is(container.expanded, expanded, "Container is expanded");
   assertContainerHasText(container, text);
   if (expanded) {
     const childContainers = container.getChildContainers();
-    is(childContainers.length, children, "Container has expected number of children");
+    is(
+      childContainers.length,
+      children,
+      "Container has expected number of children"
+    );
   }
 }

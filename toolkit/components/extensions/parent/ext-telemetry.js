@@ -1,13 +1,25 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "TelemetryController",
-                               "resource://gre/modules/TelemetryController.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryUtils",
-                               "resource://gre/modules/TelemetryUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionUtils",
-                               "resource://gre/modules/ExtensionUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryController",
+  "resource://gre/modules/TelemetryController.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryUtils",
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionUtils",
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
 const SCALAR_TYPES = {
   count: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
@@ -19,7 +31,9 @@ const SCALAR_TYPES = {
 // See 1280234 c67 for discussion.
 function desktopCheck() {
   if (AppConstants.MOZ_BUILD_APP !== "browser") {
-    throw new ExtensionUtils.ExtensionError("This API is only supported on desktop");
+    throw new ExtensionUtils.ExtensionError(
+      "This API is only supported on desktop"
+    );
   }
 }
 
@@ -40,9 +54,13 @@ this.telemetry = class extends ExtensionAPI {
           // Note: remove the ternary and direct pref check when
           // TelemetryController.canUpload() is implemented (bug 1440089).
           try {
-            const result = ("canUpload" in TelemetryController) ?
-              TelemetryController.canUpload() :
-              Services.prefs.getBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+            const result =
+              "canUpload" in TelemetryController
+                ? TelemetryController.canUpload()
+                : Services.prefs.getBoolPref(
+                    TelemetryUtils.Preferences.FhrUploadEnabled,
+                    false
+                  );
             return result;
           } catch (ex) {
             throw new ExtensionUtils.ExtensionError(ex);
@@ -75,7 +93,13 @@ this.telemetry = class extends ExtensionAPI {
         recordEvent(category, method, object, value, extra) {
           desktopCheck();
           try {
-            Services.telemetry.recordEvent(category, method, object, value, extra);
+            Services.telemetry.recordEvent(
+              category,
+              method,
+              object,
+              value,
+              extra
+            );
           } catch (ex) {
             throw new ExtensionUtils.ExtensionError(ex);
           }

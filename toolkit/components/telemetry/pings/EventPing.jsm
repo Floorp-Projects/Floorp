@@ -9,9 +9,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TelemetryEventPing",
-];
+var EXPORTED_SYMBOLS = ["TelemetryEventPing"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -25,10 +23,26 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
 });
 
-ChromeUtils.defineModuleGetter(this, "setTimeout", "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout", "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryUtils", "resource://gre/modules/TelemetryUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "clearTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryUtils",
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 const Utils = TelemetryUtils;
 
@@ -45,14 +59,15 @@ const EVENT_LIMIT_REACHED_TOPIC = "event-telemetry-storage-limit-reached";
 
 var Policy = {
   setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
-  clearTimeout: (id) => clearTimeout(id),
-  sendPing: (type, payload, options) => TelemetryController.submitExternalPing(type, payload, options),
+  clearTimeout: id => clearTimeout(id),
+  sendPing: (type, payload, options) =>
+    TelemetryController.submitExternalPing(type, payload, options),
 };
 
 var TelemetryEventPing = {
   Reason: Object.freeze({
     PERIODIC: "periodic", // Sent the ping containing events from the past periodic interval (default one hour).
-    MAX: "max",           // Sent the ping containing the maximum number (default 1000) of event records, earlier than the periodic interval.
+    MAX: "max", // Sent the ping containing the maximum number (default 1000) of event records, earlier than the periodic interval.
     SHUTDOWN: "shutdown", // Recorded data was sent on shutdown.
   }),
 
@@ -68,8 +83,9 @@ var TelemetryEventPing = {
   _processStartTimestamp: 0,
 
   get dataset() {
-    return Telemetry.canRecordPrereleaseData ? Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-                                             : Ci.nsITelemetry.DATASET_ALL_CHANNELS;
+    return Telemetry.canRecordPrereleaseData
+      ? Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+      : Ci.nsITelemetry.DATASET_ALL_CHANNELS;
   },
 
   startup() {
@@ -79,19 +95,31 @@ var TelemetryEventPing = {
     this._log.trace("Starting up.");
 
     // Calculate process creation once.
-    this._processStartTimestamp = Math.round((Date.now() - TelemetryUtils.monotonicNow()) / MS_IN_A_MINUTE) * MS_IN_A_MINUTE;
+    this._processStartTimestamp =
+      Math.round(
+        (Date.now() - TelemetryUtils.monotonicNow()) / MS_IN_A_MINUTE
+      ) * MS_IN_A_MINUTE;
 
     Services.obs.addObserver(this, EVENT_LIMIT_REACHED_TOPIC);
 
-    XPCOMUtils.defineLazyPreferenceGetter(this, "maxEventsPerPing",
-                                          Utils.Preferences.EventPingEventLimit,
-                                          DEFAULT_EVENT_LIMIT);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "maxFrequency",
-                                          Utils.Preferences.EventPingMaximumFrequency,
-                                          DEFAULT_MAX_FREQUENCY_MS);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "minFrequency",
-                                          Utils.Preferences.EventPingMinimumFrequency,
-                                          DEFAULT_MIN_FREQUENCY_MS);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "maxEventsPerPing",
+      Utils.Preferences.EventPingEventLimit,
+      DEFAULT_EVENT_LIMIT
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "maxFrequency",
+      Utils.Preferences.EventPingMaximumFrequency,
+      DEFAULT_MAX_FREQUENCY_MS
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "minFrequency",
+      Utils.Preferences.EventPingMinimumFrequency,
+      DEFAULT_MIN_FREQUENCY_MS
+    );
 
     this._startTimer();
   },
@@ -112,11 +140,13 @@ var TelemetryEventPing = {
       case EVENT_LIMIT_REACHED_TOPIC:
         this._log.trace("event limit reached");
         let now = Utils.monotonicNow();
-        if ((now - this._lastSendTime) < this.maxFrequency) {
+        if (now - this._lastSendTime < this.maxFrequency) {
           this._log.trace("can't submit ping immediately as it's too soon");
-          this._startTimer(this.maxFrequency - this._lastSendTime,
-                           this.Reason.MAX,
-                           true /* discardLeftovers*/);
+          this._startTimer(
+            this.maxFrequency - this._lastSendTime,
+            this.Reason.MAX,
+            true /* discardLeftovers*/
+          );
         } else {
           this._log.trace("submitting ping immediately");
           this._submitPing(this.Reason.MAX);
@@ -125,10 +155,16 @@ var TelemetryEventPing = {
     }
   },
 
-  _startTimer(delay = this.minFrequency, reason = this.Reason.PERIODIC, discardLeftovers = false) {
+  _startTimer(
+    delay = this.minFrequency,
+    reason = this.Reason.PERIODIC,
+    discardLeftovers = false
+  ) {
     this._clearTimer();
-    this._timeoutId =
-      Policy.setTimeout(() => TelemetryEventPing._submitPing(reason, discardLeftovers), delay);
+    this._timeoutId = Policy.setTimeout(
+      () => TelemetryEventPing._submitPing(reason, discardLeftovers),
+      delay
+    );
   },
 
   _clearTimer() {
@@ -151,17 +187,24 @@ var TelemetryEventPing = {
       this._startTimer();
     }
 
-    let snapshot = Telemetry.snapshotEvents(this.dataset,
-                                            true /* clear */,
-                                            this.maxEventsPerPing);
+    let snapshot = Telemetry.snapshotEvents(
+      this.dataset,
+      true /* clear */,
+      this.maxEventsPerPing
+    );
 
     if (!this._testing) {
       for (let process of Object.keys(snapshot)) {
-        snapshot[process] = snapshot[process].filter(([, category]) => !category.startsWith("telemetry.test"));
+        snapshot[process] = snapshot[process].filter(
+          ([, category]) => !category.startsWith("telemetry.test")
+        );
       }
     }
 
-    let eventCount = Object.values(snapshot).reduce((acc, val) => acc + val.length, 0);
+    let eventCount = Object.values(snapshot).reduce(
+      (acc, val) => acc + val.length,
+      0
+    );
     if (eventCount === 0) {
       // Don't send a ping if we haven't any events.
       this._log.trace("not sending event ping due to lack of events");
@@ -184,9 +227,11 @@ var TelemetryEventPing = {
       // Any leftovers must be discarded, the count submitted in the ping.
       // This can happen on shutdown or if our max was reached before faster
       // than our maxFrequency.
-      let leftovers = Telemetry.snapshotEvents(this.dataset,
-                                               true /* clear */);
-      let leftoverCount = Object.values(leftovers).reduce((acc, val) => acc + val.length, 0);
+      let leftovers = Telemetry.snapshotEvents(this.dataset, true /* clear */);
+      let leftoverCount = Object.values(leftovers).reduce(
+        (acc, val) => acc + val.length,
+        0
+      );
       payload.lostEventsCount = leftoverCount;
     }
 
@@ -212,7 +257,10 @@ var TelemetryEventPing = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX + "::");
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX + "::"
+      );
     }
 
     return this._logger;

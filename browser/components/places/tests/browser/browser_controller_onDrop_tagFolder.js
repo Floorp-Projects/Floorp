@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 const sandbox = sinon.createSandbox();
 const TAG_NAME = "testTag";
@@ -24,14 +24,17 @@ add_task(async function setup() {
 
   bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "bm1",
-      url: "http://example1.com",
-    }, {
-      title: "bm2",
-      url: "http://example2.com",
-      tags: [TAG_NAME],
-    }],
+    children: [
+      {
+        title: "bm1",
+        url: "http://example1.com",
+      },
+      {
+        title: "bm2",
+        url: "http://example2.com",
+        tags: [TAG_NAME],
+      },
+    ],
   });
   bookmarkId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
 });
@@ -47,7 +50,7 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
 
   let dragBookmark = bookmarks[startBookmarkIndex];
 
-  await withSidebarTree("bookmarks", async (tree) => {
+  await withSidebarTree("bookmarks", async tree => {
     tree.selectItems([PlacesUtils.bookmarks.unfiledGuid]);
     PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
 
@@ -60,17 +63,22 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
       orientation: Ci.nsITreeView.DROP_ON,
     });
 
-    let bookmarkWithId = JSON.stringify(Object.assign({
-      id: bookmarkId,
-      itemGuid: dragBookmark.guid,
-      uri: dragBookmark.url,
-    }, dragBookmark));
+    let bookmarkWithId = JSON.stringify(
+      Object.assign(
+        {
+          id: bookmarkId,
+          itemGuid: dragBookmark.guid,
+          uri: dragBookmark.url,
+        },
+        dragBookmark
+      )
+    );
 
     let dt = {
       dropEffect: "move",
       mozCursor: "auto",
       mozItemCount: 1,
-      types: [ PlacesUtils.TYPE_X_MOZ_PLACE ],
+      types: [PlacesUtils.TYPE_X_MOZ_PLACE],
       mozTypesAt(i) {
         return this.types;
       },
@@ -81,17 +89,28 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
 
     await PlacesControllerDragHelper.onDrop(ip, dt);
 
-    Assert.ok(PlacesTransactions.Tag.calledOnce,
-      "Should have called PlacesTransactions.Tag at least once.");
+    Assert.ok(
+      PlacesTransactions.Tag.calledOnce,
+      "Should have called PlacesTransactions.Tag at least once."
+    );
 
     let arg = PlacesTransactions.Tag.args[0][0];
 
-    Assert.equal(arg.urls.length, 1,
-      "Should have called PlacesTransactions.Tag with an array of one url");
-    Assert.equal(arg.urls[0], dragBookmark.url,
-      "Should have called PlacesTransactions.Tag with the correct url");
-    Assert.equal(arg.tag, TAG_NAME,
-      "Should have called PlacesTransactions.Tag with the correct tag name");
+    Assert.equal(
+      arg.urls.length,
+      1,
+      "Should have called PlacesTransactions.Tag with an array of one url"
+    );
+    Assert.equal(
+      arg.urls[0],
+      dragBookmark.url,
+      "Should have called PlacesTransactions.Tag with the correct url"
+    );
+    Assert.equal(
+      arg.tag,
+      TAG_NAME,
+      "Should have called PlacesTransactions.Tag with the correct tag name"
+    );
   });
 }
 

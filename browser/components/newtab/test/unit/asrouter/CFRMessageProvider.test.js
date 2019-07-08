@@ -1,4 +1,4 @@
-import {CFRMessageProvider} from "lib/CFRMessageProvider.jsm";
+import { CFRMessageProvider } from "lib/CFRMessageProvider.jsm";
 const messages = CFRMessageProvider.getMessages();
 
 const REGULAR_IDS = [
@@ -18,7 +18,11 @@ describe("CFRMessageProvider", () => {
     for (const id of REGULAR_IDS) {
       const cohort3 = messages.find(msg => msg.id === `${id}_3`);
       assert.ok(cohort3, `contains three day cohort for ${id}`);
-      assert.deepEqual(cohort3.frequency, {lifetime: 3}, "three day cohort has the right frequency cap");
+      assert.deepEqual(
+        cohort3.frequency,
+        { lifetime: 3 },
+        "three day cohort has the right frequency cap"
+      );
       assert.notInclude(cohort3.targeting, `providerCohorts.cfr`);
     }
   });
@@ -46,6 +50,9 @@ describe("CFRMessageProvider", () => {
   it("should contain `www.` version of the hosts", () => {
     const pinTabMessage = messages.find(m => m.id === "PIN_TAB");
 
-    assert.isTrue(pinTabMessage.trigger.params.filter(host => host.startsWith("www.")).length > 0);
+    assert.isTrue(
+      pinTabMessage.trigger.params.filter(host => host.startsWith("www."))
+        .length > 0
+    );
   });
 });

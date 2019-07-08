@@ -18,8 +18,11 @@
 
 const kDeleteTempFileOnExit = "browser.helperApps.deleteTempFileOnExit";
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 /**
  * Creates and starts a new download, using either DownloadCopySaver or
@@ -65,8 +68,10 @@ function promiseStartDownload_tryToKeepPartialData() {
       let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
       download = await Downloads.createDownload({
         source: httpUrl("interruptible_resumable.txt"),
-        target: { path: targetFilePath,
-                  partFilePath: targetFilePath + ".part" },
+        target: {
+          path: targetFilePath,
+          partFilePath: targetFilePath + ".part",
+        },
       });
       download.tryToKeepPartialData = true;
       download.start().catch(() => {});
@@ -128,8 +133,7 @@ function promisePartFileReady(aDownload) {
  * @resolves When the properties have been verified.
  * @rejects JavaScript exception.
  */
-var promiseVerifyTarget = async function(downloadTarget,
-                                                expectedContents) {
+var promiseVerifyTarget = async function(downloadTarget, expectedContents) {
   await promiseVerifyContents(downloadTarget.path, expectedContents);
   Assert.ok(downloadTarget.exists);
   Assert.equal(downloadTarget.size, expectedContents.length);
@@ -144,8 +148,10 @@ function waitForFileLaunched() {
     let waitFn = base => ({
       launchFile(file, mimeInfo) {
         Integration.downloads.unregister(waitFn);
-        if (!mimeInfo ||
-            mimeInfo.preferredAction == Ci.nsIMIMEInfo.useSystemDefault) {
+        if (
+          !mimeInfo ||
+          mimeInfo.preferredAction == Ci.nsIMIMEInfo.useSystemDefault
+        ) {
           resolve(null);
         } else {
           resolve(mimeInfo);
@@ -201,8 +207,7 @@ add_task(async function test_basic() {
   } else {
     // When testing DownloadLegacySaver, the download is already started when it
     // is created, thus we must check its basic properties while in progress.
-    download = await promiseStartLegacyDownload(null,
-                                                { targetFile });
+    download = await promiseStartLegacyDownload(null, { targetFile });
 
     Assert.equal(download.source.url, httpUrl("source.txt"));
     Assert.equal(download.target.path, targetFile.path);
@@ -261,12 +266,16 @@ add_task(async function test_channelIsForDownload_classFlags() {
     await promiseDownloadStopped(download);
   }
 
-  Assert.ok(downloadChannel.QueryInterface(Ci.nsIHttpChannelInternal)
-                           .channelIsForDownload);
+  Assert.ok(
+    downloadChannel.QueryInterface(Ci.nsIHttpChannelInternal)
+      .channelIsForDownload
+  );
 
   // Throttleable is the only class flag assigned to downloads.
-  Assert.equal(downloadChannel.QueryInterface(Ci.nsIClassOfService)
-                              .classFlags, Ci.nsIClassOfService.Throttleable);
+  Assert.equal(
+    downloadChannel.QueryInterface(Ci.nsIClassOfService).classFlags,
+    Ci.nsIClassOfService.Throttleable
+  );
 });
 
 /**
@@ -274,8 +283,11 @@ add_task(async function test_channelIsForDownload_classFlags() {
  */
 add_task(async function test_unix_permissions() {
   // This test is only executed on some Desktop systems.
-  if (Services.appinfo.OS != "Darwin" && Services.appinfo.OS != "Linux" &&
-      Services.appinfo.OS != "WINNT") {
+  if (
+    Services.appinfo.OS != "Darwin" &&
+    Services.appinfo.OS != "Linux" &&
+    Services.appinfo.OS != "WINNT"
+  ) {
     info("Skipping test.");
     return;
   }
@@ -285,9 +297,10 @@ add_task(async function test_unix_permissions() {
   for (let autoDelete of [false, true]) {
     for (let isPrivate of [false, true]) {
       for (let launchWhenSucceeded of [false, true]) {
-        info("Checking " + JSON.stringify({ autoDelete,
-                                            isPrivate,
-                                            launchWhenSucceeded }));
+        info(
+          "Checking " +
+            JSON.stringify({ autoDelete, isPrivate, launchWhenSucceeded })
+        );
 
         Services.prefs.setBoolPref(kDeleteTempFileOnExit, autoDelete);
 
@@ -320,8 +333,10 @@ add_task(async function test_unix_permissions() {
           // Temporary downloads should be read-only and not accessible to other
           // users, while permanently downloaded files should be readable and
           // writable as specified by the system umask.
-          Assert.equal(stat.unixMode,
-                       isTemporary ? 0o400 : (0o666 & ~OS.Constants.Sys.umask));
+          Assert.equal(
+            stat.unixMode,
+            isTemporary ? 0o400 : 0o666 & ~OS.Constants.Sys.umask
+          );
         }
       }
     }
@@ -345,45 +360,76 @@ add_task(async function test_windows_zoneInformation() {
     return;
   }
 
-  let normalTargetFile = FileUtils.getFile("LocalAppData",
-                                           ["xpcshell-download-test.txt"]);
+  let normalTargetFile = FileUtils.getFile("LocalAppData", [
+    "xpcshell-download-test.txt",
+  ]);
 
   // The template file name lenght is more than MAX_PATH characters. The final
   // full path will be shortened to MAX_PATH length by the createUnique call.
-  let longTargetFile = FileUtils.getFile("LocalAppData",
-                                         ["T".repeat(256) + ".txt"]);
+  let longTargetFile = FileUtils.getFile("LocalAppData", [
+    "T".repeat(256) + ".txt",
+  ]);
   longTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   const httpSourceUrl = httpUrl("source.txt");
   const dataSourceUrl = "data:text/html," + TEST_DATA_SHORT;
   const tests = [
-    { expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
-                      "HostUrl=" + httpSourceUrl + "\r\n" },
-    { targetFile: longTargetFile,
-      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
-                      "HostUrl=" + httpSourceUrl + "\r\n" },
-    { sourceUrl: dataSourceUrl,
-      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
-                      "HostUrl=about:internet\r\n" },
-    { options: { referrer: TEST_REFERRER_URL },
-      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
-                      "ReferrerUrl=" + TEST_REFERRER_URL + "\r\n" +
-                      "HostUrl=" + httpSourceUrl + "\r\n" },
-    { options: { referrer: dataSourceUrl },
-      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
-                      "HostUrl=" + httpSourceUrl + "\r\n" },
-    { options: { referrer: "http://example.com/a\rb\nc" },
-      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
-                      "ReferrerUrl=http://example.com/abc\r\n" +
-                      "HostUrl=" + httpSourceUrl + "\r\n" },
-    { options: { referrer: "ftp://user:pass@example.com/" },
-      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
-                      "ReferrerUrl=ftp://example.com/\r\n" +
-                      "HostUrl=" + httpSourceUrl + "\r\n" },
-    { options: { isPrivate: true },
-      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" },
-    { options: { referrer: TEST_REFERRER_URL, isPrivate: true },
-      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" },
+    {
+      expectedZoneId:
+        "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=" + httpSourceUrl + "\r\n",
+    },
+    {
+      targetFile: longTargetFile,
+      expectedZoneId:
+        "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=" + httpSourceUrl + "\r\n",
+    },
+    {
+      sourceUrl: dataSourceUrl,
+      expectedZoneId:
+        "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=about:internet\r\n",
+    },
+    {
+      options: { referrer: TEST_REFERRER_URL },
+      expectedZoneId:
+        "[ZoneTransfer]\r\nZoneId=3\r\n" +
+        "ReferrerUrl=" +
+        TEST_REFERRER_URL +
+        "\r\n" +
+        "HostUrl=" +
+        httpSourceUrl +
+        "\r\n",
+    },
+    {
+      options: { referrer: dataSourceUrl },
+      expectedZoneId:
+        "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=" + httpSourceUrl + "\r\n",
+    },
+    {
+      options: { referrer: "http://example.com/a\rb\nc" },
+      expectedZoneId:
+        "[ZoneTransfer]\r\nZoneId=3\r\n" +
+        "ReferrerUrl=http://example.com/abc\r\n" +
+        "HostUrl=" +
+        httpSourceUrl +
+        "\r\n",
+    },
+    {
+      options: { referrer: "ftp://user:pass@example.com/" },
+      expectedZoneId:
+        "[ZoneTransfer]\r\nZoneId=3\r\n" +
+        "ReferrerUrl=ftp://example.com/\r\n" +
+        "HostUrl=" +
+        httpSourceUrl +
+        "\r\n",
+    },
+    {
+      options: { isPrivate: true },
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n",
+    },
+    {
+      options: { referrer: TEST_REFERRER_URL, isPrivate: true },
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n",
+    },
   ];
   for (const test of tests) {
     const sourceUrl = test.sourceUrl || httpSourceUrl;
@@ -392,24 +438,32 @@ add_task(async function test_windows_zoneInformation() {
     try {
       if (!gUseLegacySaver) {
         let download = await Downloads.createDownload({
-          source: test.options ? Object.assign({ url: sourceUrl }, test.options)
-                               : sourceUrl,
+          source: test.options
+            ? Object.assign({ url: sourceUrl }, test.options)
+            : sourceUrl,
           target: targetFile.path,
         });
         await download.start();
       } else {
-        let download = await promiseStartLegacyDownload(sourceUrl,
-          Object.assign({ targetFile }, test.options || {}));
+        let download = await promiseStartLegacyDownload(
+          sourceUrl,
+          Object.assign({ targetFile }, test.options || {})
+        );
         await promiseDownloadStopped(download);
       }
       await promiseVerifyContents(targetFile.path, TEST_DATA_SHORT);
 
       // Verify that the Alternate Data Stream has been written.
-      let file = await OS.File.open(targetFile.path + ":Zone.Identifier", {},
-                 { winAllowLengthBeyondMaxPathWithCaveats: true });
+      let file = await OS.File.open(
+        targetFile.path + ":Zone.Identifier",
+        {},
+        { winAllowLengthBeyondMaxPathWithCaveats: true }
+      );
       try {
-        Assert.equal(new TextDecoder().decode(await file.read()),
-                     test.expectedZoneId);
+        Assert.equal(
+          new TextDecoder().decode(await file.read()),
+          test.expectedZoneId
+        );
       } finally {
         file.close();
       }
@@ -452,8 +506,7 @@ add_task(async function test_referrer() {
     await download.start();
 
     download = await Downloads.createDownload({
-      source: { url: sourceUrl, referrer: TEST_REFERRER_URL,
-                isPrivate: true },
+      source: { url: sourceUrl, referrer: TEST_REFERRER_URL, isPrivate: true },
       target: targetPath,
     });
     Assert.equal(download.source.referrer, TEST_REFERRER_URL);
@@ -467,19 +520,22 @@ add_task(async function test_referrer() {
     Assert.equal(download.source.referrer, TEST_REFERRER_URL);
     await download.start();
   } else {
-    download = await promiseStartLegacyDownload(
-      sourceUrl, { referrer: TEST_REFERRER_URL });
+    download = await promiseStartLegacyDownload(sourceUrl, {
+      referrer: TEST_REFERRER_URL,
+    });
     await promiseDownloadStopped(download);
     Assert.equal(download.source.referrer, TEST_REFERRER_URL);
 
-    download = await promiseStartLegacyDownload(
-      sourceUrl, { referrer: TEST_REFERRER_URL,
-                   isPrivate: true});
+    download = await promiseStartLegacyDownload(sourceUrl, {
+      referrer: TEST_REFERRER_URL,
+      isPrivate: true,
+    });
     await promiseDownloadStopped(download);
     Assert.equal(download.source.referrer, TEST_REFERRER_URL);
 
-    download = await promiseStartLegacyDownload(
-      dataSourceUrl, { referrer: TEST_REFERRER_URL });
+    download = await promiseStartLegacyDownload(dataSourceUrl, {
+      referrer: TEST_REFERRER_URL,
+    });
     await promiseDownloadStopped(download);
     Assert.equal(download.source.referrer, null);
   }
@@ -517,8 +573,9 @@ add_task(async function test_adjustChannel() {
     channel.QueryInterface(Ci.nsIHttpChannel);
     channel.setRequestHeader(customHeader.name, customHeader.value, false);
 
-    const stream = Cc["@mozilla.org/io/string-input-stream;1"]
-                   .createInstance(Ci.nsIStringInputStream);
+    const stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+      Ci.nsIStringInputStream
+    );
     stream.setData(postData, postData.length);
 
     channel.QueryInterface(Ci.nsIUploadChannel2);
@@ -663,8 +720,7 @@ add_task(async function test_empty_progress_tryToKeepPartialData() {
     let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
     download = await Downloads.createDownload({
       source: httpUrl("empty.txt"),
-      target: { path: targetFilePath,
-                partFilePath: targetFilePath + ".part" },
+      target: { path: targetFilePath, partFilePath: targetFilePath + ".part" },
     });
     download.tryToKeepPartialData = true;
     download.start().catch(() => {});
@@ -672,7 +728,8 @@ add_task(async function test_empty_progress_tryToKeepPartialData() {
     // Start a download using nsIExternalHelperAppService, that is configured
     // to keep partially downloaded data by default.
     download = await promiseStartExternalHelperAppServiceDownload(
-                                                         httpUrl("empty.txt"));
+      httpUrl("empty.txt")
+    );
   }
   await promiseDownloadStopped(download);
 
@@ -699,11 +756,14 @@ add_task(async function test_empty_noprogress() {
   }
   registerCleanupFunction(cleanup);
 
-  registerInterruptibleHandler(sourcePath,
+  registerInterruptibleHandler(
+    sourcePath,
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
       deferRequestReceived.resolve();
-    }, function secondPart(aRequest, aResponse) { });
+    },
+    function secondPart(aRequest, aResponse) {}
+  );
 
   // Start the download, without allowing the request to finish.
   mustInterruptResponses();
@@ -810,8 +870,10 @@ add_task(async function test_cancel_midway() {
   if (!gUseLegacySaver) {
     download = await promiseNewDownload(httpUrl("interruptible.txt"));
   } else {
-    download = await promiseStartLegacyDownload(httpUrl("interruptible.txt"),
-                                                options);
+    download = await promiseStartLegacyDownload(
+      httpUrl("interruptible.txt"),
+      options
+    );
   }
 
   // Cancel the download after receiving the first part of the response.
@@ -998,8 +1060,11 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
   // but we still stop when half of the remaining progress is reached.
   let deferMidway = Promise.defer();
   download.onchange = function() {
-    if (!download.stopped && !download.canceled &&
-        download.currentBytes == Math.floor(TEST_DATA_SHORT.length * 3 / 2)) {
+    if (
+      !download.stopped &&
+      !download.canceled &&
+      download.currentBytes == Math.floor((TEST_DATA_SHORT.length * 3) / 2)
+    ) {
       download.onchange = null;
       deferMidway.resolve();
     }
@@ -1059,57 +1124,64 @@ add_task(async function test_cancel_midway_restart_removePartialData() {
  * data and restarts the download from the beginning without keeping the partial
  * data anymore.
  */
-add_task(async function test_cancel_midway_restart_tryToKeepPartialData_false() {
-  let download = await promiseStartDownload_tryToKeepPartialData();
-  await download.cancel();
+add_task(
+  async function test_cancel_midway_restart_tryToKeepPartialData_false() {
+    let download = await promiseStartDownload_tryToKeepPartialData();
+    await download.cancel();
 
-  download.tryToKeepPartialData = false;
+    download.tryToKeepPartialData = false;
 
-  // The above property change does not affect existing partial data.
-  Assert.ok(download.hasPartialData);
-  await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
+    // The above property change does not affect existing partial data.
+    Assert.ok(download.hasPartialData);
+    await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
 
-  await download.removePartialData();
-  Assert.equal(false, await OS.File.exists(download.target.path));
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+    await download.removePartialData();
+    Assert.equal(false, await OS.File.exists(download.target.path));
+    Assert.equal(false, await OS.File.exists(download.target.partFilePath));
 
-  // Restart the download from the beginning.
-  mustInterruptResponses();
-  download.start().catch(() => {});
+    // Restart the download from the beginning.
+    mustInterruptResponses();
+    download.start().catch(() => {});
 
-  await promiseDownloadMidway(download);
-  await promisePartFileReady(download);
+    await promiseDownloadMidway(download);
+    await promisePartFileReady(download);
 
-  // While the download is in progress, we should still have a ".part" file.
-  Assert.ok(!download.hasPartialData);
-  Assert.ok(await OS.File.exists(download.target.path));
-  Assert.ok(await OS.File.exists(download.target.partFilePath));
+    // While the download is in progress, we should still have a ".part" file.
+    Assert.ok(!download.hasPartialData);
+    Assert.ok(await OS.File.exists(download.target.path));
+    Assert.ok(await OS.File.exists(download.target.partFilePath));
 
-  // On Unix, verify that the file with the partially downloaded data is not
-  // accessible by other users on the system.
-  if (Services.appinfo.OS == "Darwin" || Services.appinfo.OS == "Linux") {
-    Assert.equal((await OS.File.stat(download.target.partFilePath)).unixMode,
-                 0o600);
+    // On Unix, verify that the file with the partially downloaded data is not
+    // accessible by other users on the system.
+    if (Services.appinfo.OS == "Darwin" || Services.appinfo.OS == "Linux") {
+      Assert.equal(
+        (await OS.File.stat(download.target.partFilePath)).unixMode,
+        0o600
+      );
+    }
+
+    await download.cancel();
+
+    // The ".part" file should be deleted now that the download is canceled.
+    Assert.ok(!download.hasPartialData);
+    Assert.equal(false, await OS.File.exists(download.target.path));
+    Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+
+    // The third time, we'll request and obtain the entire response again.
+    continueResponses();
+    await download.start();
+
+    // Verify that the server sent the response from the start.
+    Assert.equal(gMostRecentFirstBytePos, 0);
+
+    // The target file should now have been created, and the ".part" file deleted.
+    await promiseVerifyTarget(
+      download.target,
+      TEST_DATA_SHORT + TEST_DATA_SHORT
+    );
+    Assert.equal(false, await OS.File.exists(download.target.partFilePath));
   }
-
-  await download.cancel();
-
-  // The ".part" file should be deleted now that the download is canceled.
-  Assert.ok(!download.hasPartialData);
-  Assert.equal(false, await OS.File.exists(download.target.path));
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
-
-  // The third time, we'll request and obtain the entire response again.
-  continueResponses();
-  await download.start();
-
-  // Verify that the server sent the response from the start.
-  Assert.equal(gMostRecentFirstBytePos, 0);
-
-  // The target file should now have been created, and the ".part" file deleted.
-  await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
-});
+);
 
 /**
  * Cancels a download right after starting it, then restarts it immediately.
@@ -1308,7 +1380,7 @@ add_task(async function test_finalize() {
   try {
     await download.start();
     do_throw("It should not be possible to restart after finalization.");
-  } catch (ex) { }
+  } catch (ex) {}
 
   await promiseFinalized;
 
@@ -1440,11 +1512,16 @@ add_task(async function test_error_source() {
 add_task(async function test_error_source_partial() {
   let sourceUrl = httpUrl("shorter-than-content-length-http-1-1.txt");
 
-  let enforcePref = Services.prefs.getBoolPref("network.http.enforce-framing.http1");
+  let enforcePref = Services.prefs.getBoolPref(
+    "network.http.enforce-framing.http1"
+  );
   Services.prefs.setBoolPref("network.http.enforce-framing.http1", true);
 
   function cleanup() {
-    Services.prefs.setBoolPref("network.http.enforce-framing.http1", enforcePref);
+    Services.prefs.setBoolPref(
+      "network.http.enforce-framing.http1",
+      enforcePref
+    );
   }
   registerCleanupFunction(cleanup);
 
@@ -1555,8 +1632,7 @@ add_task(async function test_error_target() {
         // testing the promise returned by the "start" method or we are testing
         // the "error" property checked by promiseDownloadStopped.  This happens
         // because we don't have control over when the download is started.
-        download = await promiseStartLegacyDownload(null,
-                                                    { targetFile });
+        download = await promiseStartLegacyDownload(null, { targetFile });
         await promiseDownloadStopped(download);
       }
       do_throw("The download should have failed.");
@@ -1601,8 +1677,7 @@ add_task(async function test_error_restart() {
       });
       download.start().catch(() => {});
     } else {
-      download = await promiseStartLegacyDownload(null,
-                                                  { targetFile });
+      download = await promiseStartLegacyDownload(null, { targetFile });
     }
     await promiseDownloadStopped(download);
     do_throw("The download should have failed.");
@@ -1684,8 +1759,9 @@ add_task(async function test_public_and_private() {
     });
     await download.start();
   } else {
-    let download = await promiseStartLegacyDownload(sourceUrl,
-                                                    { isPrivate: true });
+    let download = await promiseStartLegacyDownload(sourceUrl, {
+      isPrivate: true,
+    });
     await promiseDownloadStopped(download);
   }
 
@@ -1726,12 +1802,17 @@ add_task(async function test_with_content_encoding() {
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
-    aResponse.setHeader("Content-Length",
-                        "" + TEST_DATA_SHORT_GZIP_ENCODED.length, false);
+    aResponse.setHeader(
+      "Content-Length",
+      "" + TEST_DATA_SHORT_GZIP_ENCODED.length,
+      false
+    );
 
     let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
-    bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED,
-                       TEST_DATA_SHORT_GZIP_ENCODED.length);
+    bos.writeByteArray(
+      TEST_DATA_SHORT_GZIP_ENCODED,
+      TEST_DATA_SHORT_GZIP_ENCODED.length
+    );
   });
 
   let download = await promiseStartDownload(sourceUrl);
@@ -1761,12 +1842,17 @@ add_task(async function test_with_content_encoding_ignore_extension() {
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
-    aResponse.setHeader("Content-Length",
-                        "" + TEST_DATA_SHORT_GZIP_ENCODED.length, false);
+    aResponse.setHeader(
+      "Content-Length",
+      "" + TEST_DATA_SHORT_GZIP_ENCODED.length,
+      false
+    );
 
     let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
-    bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED,
-                       TEST_DATA_SHORT_GZIP_ENCODED.length);
+    bos.writeByteArray(
+      TEST_DATA_SHORT_GZIP_ENCODED,
+      TEST_DATA_SHORT_GZIP_ENCODED.length
+    );
   });
 
   let download = await promiseStartDownload(sourceUrl);
@@ -1778,8 +1864,10 @@ add_task(async function test_with_content_encoding_ignore_extension() {
 
   // Ensure the content matches the encoded test data.  We convert the data to a
   // string before executing the content check.
-  await promiseVerifyTarget(download.target,
-        String.fromCharCode.apply(String, TEST_DATA_SHORT_GZIP_ENCODED));
+  await promiseVerifyTarget(
+    download.target,
+    String.fromCharCode.apply(String, TEST_DATA_SHORT_GZIP_ENCODED)
+  );
 
   cleanup();
 });
@@ -1795,8 +1883,11 @@ add_task(async function test_cancel_midway_restart_with_content_encoding() {
   // The first time, cancel the download midway.
   await new Promise(resolve => {
     let onchange = function() {
-      if (!download.stopped && !download.canceled &&
-          download.currentBytes == TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length) {
+      if (
+        !download.stopped &&
+        !download.canceled &&
+        download.currentBytes == TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length
+      ) {
         resolve(download.cancel());
       }
     };
@@ -1875,7 +1966,9 @@ add_task(async function test_blocked_parental_controls_httpstatus450() {
       download = await promiseNewDownload(httpUrl("parentalblocked.zip"));
       await download.start();
     } else {
-      download = await promiseStartLegacyDownload(httpUrl("parentalblocked.zip"));
+      download = await promiseStartLegacyDownload(
+        httpUrl("parentalblocked.zip")
+      );
       await promiseDownloadStopped(download);
     }
     do_throw("The download should have blocked.");
@@ -1963,10 +2056,11 @@ add_task(async function test_getSha256Hash() {
  */
 var promiseBlockedDownload = async function(options) {
   let blockFn = base => ({
-    shouldBlockForReputationCheck: () => Promise.resolve({
-      shouldBlock: true,
-      verdict: Downloads.Error.BLOCK_VERDICT_UNCOMMON,
-    }),
+    shouldBlockForReputationCheck: () =>
+      Promise.resolve({
+        shouldBlock: true,
+        verdict: Downloads.Error.BLOCK_VERDICT_UNCOMMON,
+      }),
     shouldKeepBlockedData: () => Promise.resolve(options.keepBlockedData),
   });
 
@@ -1997,11 +2091,15 @@ var promiseBlockedDownload = async function(options) {
       throw ex;
     }
     Assert.ok(ex.becauseBlockedByReputationCheck);
-    Assert.equal(ex.reputationCheckVerdict,
-                 Downloads.Error.BLOCK_VERDICT_UNCOMMON);
+    Assert.equal(
+      ex.reputationCheckVerdict,
+      Downloads.Error.BLOCK_VERDICT_UNCOMMON
+    );
     Assert.ok(download.error.becauseBlockedByReputationCheck);
-    Assert.equal(download.error.reputationCheckVerdict,
-                 Downloads.Error.BLOCK_VERDICT_UNCOMMON);
+    Assert.equal(
+      download.error.reputationCheckVerdict,
+      Downloads.Error.BLOCK_VERDICT_UNCOMMON
+    );
   }
 
   Assert.ok(download.stopped);
@@ -2192,9 +2290,12 @@ add_task(async function test_blocked_applicationReputation_decisionRace() {
   let unblockPromise = download.unblock();
   let confirmBlockPromise = download.confirmBlock();
 
-  await confirmBlockPromise.then(() => {
-    do_throw("confirmBlock should have failed.");
-  }, () => {});
+  await confirmBlockPromise.then(
+    () => {
+      do_throw("confirmBlock should have failed.");
+    },
+    () => {}
+  );
 
   await unblockPromise;
 
@@ -2214,9 +2315,12 @@ add_task(async function test_blocked_applicationReputation_decisionRace() {
   confirmBlockPromise = download.confirmBlock();
   unblockPromise = download.unblock();
 
-  await unblockPromise.then(() => {
-    do_throw("unblock should have failed.");
-  }, () => {});
+  await unblockPromise.then(
+    () => {
+      do_throw("unblock should have failed.");
+    },
+    () => {}
+  );
 
   await confirmBlockPromise;
 
@@ -2248,9 +2352,12 @@ add_task(async function test_blocked_applicationReputation_unblock() {
   await OS.File.remove(download.target.partFilePath);
 
   let unblockPromise = download.unblock();
-  await unblockPromise.then(() => {
-    do_throw("unblock should have failed.");
-  }, () => {});
+  await unblockPromise.then(
+    () => {
+      do_throw("unblock should have failed.");
+    },
+    () => {}
+  );
 
   // Even though unblocking failed the download state should have been updated
   // to reflect the lack of blocked data.
@@ -2284,8 +2391,9 @@ add_task(async function test_showContainingDirectory() {
     }
     // Invalid paths on Windows are reported with NS_ERROR_FAILURE,
     // but with NS_ERROR_FILE_UNRECOGNIZED_PATH on Mac/Linux
-    let validResult = ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH ||
-                      ex.result == Cr.NS_ERROR_FAILURE;
+    let validResult =
+      ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH ||
+      ex.result == Cr.NS_ERROR_FAILURE;
     Assert.ok(validResult);
   }
 
@@ -2322,18 +2430,20 @@ add_task(async function test_launch() {
         await download.launch();
         do_throw("Can't launch download file as it has not completed yet");
       } catch (ex) {
-        Assert.equal(ex.message,
-                     "launch can only be called if the download succeeded");
+        Assert.equal(
+          ex.message,
+          "launch can only be called if the download succeeded"
+        );
       }
 
       await download.start();
     } else {
       // When testing DownloadLegacySaver, the download is already started when
       // it is created, thus we don't test calling "launch" before starting.
-      download = await promiseStartLegacyDownload(
-                                         httpUrl("source.txt"),
-                                         { launcherPath,
-                                           launchWhenSucceeded: true });
+      download = await promiseStartLegacyDownload(httpUrl("source.txt"), {
+        launcherPath,
+        launchWhenSucceeded: true,
+      });
       await promiseDownloadStopped(download);
     }
 
@@ -2350,9 +2460,11 @@ add_task(async function test_launch() {
     } else {
       // Check the nsIMIMEInfo instance that would have been used for launching.
       Assert.equal(result.preferredAction, Ci.nsIMIMEInfo.useHelperApp);
-      Assert.ok(result.preferredApplicationHandler
-                      .QueryInterface(Ci.nsILocalHandlerApp)
-                      .executable.equals(customLauncher));
+      Assert.ok(
+        result.preferredApplicationHandler
+          .QueryInterface(Ci.nsILocalHandlerApp)
+          .executable.equals(customLauncher)
+      );
     }
   }
 });
@@ -2391,8 +2503,9 @@ add_task(async function test_launcherPath_invalid() {
     }
     // Invalid paths on Windows are reported with NS_ERROR_FAILURE,
     // but with NS_ERROR_FILE_UNRECOGNIZED_PATH on Mac/Linux
-    let validResult = ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH ||
-                      ex.result == Cr.NS_ERROR_FAILURE;
+    let validResult =
+      ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH ||
+      ex.result == Cr.NS_ERROR_FAILURE;
     Assert.ok(validResult);
   }
 });
@@ -2417,10 +2530,10 @@ add_task(async function test_launchWhenSucceeded() {
       });
       await download.start();
     } else {
-      let download = await promiseStartLegacyDownload(
-                                             httpUrl("source.txt"),
-                                             { launcherPath,
-                                               launchWhenSucceeded: true });
+      let download = await promiseStartLegacyDownload(httpUrl("source.txt"), {
+        launcherPath,
+        launchWhenSucceeded: true,
+      });
       await promiseDownloadStopped(download);
     }
 
@@ -2433,9 +2546,11 @@ add_task(async function test_launchWhenSucceeded() {
     } else {
       // Check the nsIMIMEInfo instance that would have been used for launching.
       Assert.equal(result.preferredAction, Ci.nsIMIMEInfo.useHelperApp);
-      Assert.ok(result.preferredApplicationHandler
-                      .QueryInterface(Ci.nsILocalHandlerApp)
-                      .executable.equals(customLauncher));
+      Assert.ok(
+        result.preferredApplicationHandler
+          .QueryInterface(Ci.nsILocalHandlerApp)
+          .executable.equals(customLauncher)
+      );
     }
   }
 });
@@ -2479,7 +2594,10 @@ add_task(async function test_history() {
   // We will wait for the visit to be notified during the download.
   await PlacesUtils.history.clear();
   let promiseVisit = promiseWaitForVisit(sourceUrl);
-  let promiseAnnotation = waitForAnnotation(sourceUrl, "downloads/destinationFileURI");
+  let promiseAnnotation = waitForAnnotation(
+    sourceUrl,
+    "downloads/destinationFileURI"
+  );
 
   // Start a download that is not allowed to finish yet.
   let download = await promiseStartDownload(sourceUrl);
@@ -2495,9 +2613,14 @@ add_task(async function test_history() {
   Assert.equal(lastKnownTitle, expectedFile.leafName);
 
   let expectedFileURI = Services.io.newFileURI(expectedFile);
-  let pageInfo = await PlacesUtils.history.fetch(sourceUrl, {includeAnnotations: true});
-  Assert.equal(pageInfo.annotations.get("downloads/destinationFileURI"), expectedFileURI.spec,
-    "Should have saved the correct download target annotation.");
+  let pageInfo = await PlacesUtils.history.fetch(sourceUrl, {
+    includeAnnotations: true,
+  });
+  Assert.equal(
+    pageInfo.annotations.get("downloads/destinationFileURI"),
+    expectedFileURI.spec,
+    "Should have saved the correct download target annotation."
+  );
 
   // Restart and complete the download after clearing history.
   await PlacesUtils.history.clear();
@@ -2516,8 +2639,9 @@ add_task(async function test_history() {
 add_task(async function test_history_tryToKeepPartialData() {
   // We will wait for the visit to be notified during the download.
   await PlacesUtils.history.clear();
-  let promiseVisit =
-      promiseWaitForVisit(httpUrl("interruptible_resumable.txt"));
+  let promiseVisit = promiseWaitForVisit(
+    httpUrl("interruptible_resumable.txt")
+  );
 
   // Start a download that is not allowed to finish yet.
   let beforeStartTimeMs = Date.now();
@@ -2547,8 +2671,7 @@ add_task(async function test_download_cancel_retry_finalize() {
   mustInterruptResponses();
   let download1 = await Downloads.createDownload({
     source: sourceUrl,
-    target: { path: targetFilePath,
-              partFilePath: targetFilePath + ".part" },
+    target: { path: targetFilePath, partFilePath: targetFilePath + ".part" },
   });
   download1.start().catch(() => {});
   await promiseDownloadMidway(download1);
@@ -2564,8 +2687,7 @@ add_task(async function test_download_cancel_retry_finalize() {
   // Download the same file again with a different download session.
   let download2 = await Downloads.createDownload({
     source: sourceUrl,
-    target: { path: targetFilePath,
-              partFilePath: targetFilePath + ".part" },
+    target: { path: targetFilePath, partFilePath: targetFilePath + ".part" },
   });
   download2.start().catch(() => {});
 
@@ -2603,8 +2725,10 @@ add_task(async function test_blocked_removeByHand_confirmBlock() {
   // Download a file with the same name as the blocked download.
   let download2 = await Downloads.createDownload({
     source: httpUrl("interruptible_resumable.txt"),
-    target: { path: download1.target.path,
-              partFilePath: download1.target.path + ".part" },
+    target: {
+      path: download1.target.path,
+      partFilePath: download1.target.path + ".part",
+    },
   });
   download2.start().catch(() => {});
 
@@ -2667,8 +2791,9 @@ add_task(async function test_launchWhenSucceeded_deleteTempFileOnExit() {
   Assert.equal(false, await OS.File.exists(autoDeleteTargetPathOne));
 
   // Simulate browser shutdown
-  let expire = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
-                 .getService(Ci.nsIObserver);
+  let expire = Cc[
+    "@mozilla.org/uriloader/external-helper-app-service;1"
+  ].getService(Ci.nsIObserver);
   expire.observe(null, "profile-before-change", null);
   Assert.equal(false, await OS.File.exists(autoDeleteTargetPathTwo));
   Assert.ok(await OS.File.exists(noAutoDeleteTargetPath));

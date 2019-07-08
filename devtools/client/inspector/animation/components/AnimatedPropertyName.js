@@ -17,22 +17,17 @@ class AnimatedPropertyName extends PureComponent {
   }
 
   render() {
-    const {
-      name,
-      state,
-    } = this.props;
+    const { name, state } = this.props;
 
     return dom.div(
       {
-        className: "animated-property-name" +
-                   (state && state.runningOnCompositor ? " compositor" : "") +
-                   (state && state.warning ? " warning" : ""),
+        className:
+          "animated-property-name" +
+          (state && state.runningOnCompositor ? " compositor" : "") +
+          (state && state.warning ? " warning" : ""),
         title: state ? state.warning : "",
       },
-      dom.span(
-        {},
-        name
-      )
+      dom.span({}, name)
     );
   }
 }

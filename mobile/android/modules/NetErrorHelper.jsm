@@ -3,9 +3,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {UITelemetry} = ChromeUtils.import("resource://gre/modules/UITelemetry.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
+const { UITelemetry } = ChromeUtils.import(
+  "resource://gre/modules/UITelemetry.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["NetErrorHelper"];
 
@@ -78,7 +82,7 @@ handlers.searchbutton = {
     } else {
       let text = browser.contentDocument.querySelector("#searchtext");
       text.value = tab.userRequested;
-      text.addEventListener("keypress", (event) => {
+      text.addEventListener("keypress", event => {
         if (event.keyCode === KEY_CODE_ENTER) {
           this.doSearch(event.target.value);
         }
@@ -98,29 +102,36 @@ handlers.searchbutton = {
 
     let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
     // Reset the user search to whatever the new search term was
-    browserWin.BrowserApp.loadURI(uri.spec, undefined, { isSearch: true, userRequested: value });
+    browserWin.BrowserApp.loadURI(uri.spec, undefined, {
+      isSearch: true,
+      userRequested: value,
+    });
   },
 };
 
 handlers.wifi = {
   // This registers itself with the nsIObserverService as a weak ref,
   // so we have to implement GetWeakReference as well.
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   GetWeakReference: function() {
     return Cu.getWeakReference(this);
   },
 
   onPageShown: function(browser) {
-      // If we have a connection, don't bother showing the wifi toggle.
-      let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
-      if (network.isLinkUp && network.linkStatusKnown) {
-        let nodes = browser.contentDocument.querySelectorAll("#wifi");
-        for (let i = 0; i < nodes.length; i++) {
-          nodes[i].style.display = "none";
-        }
+    // If we have a connection, don't bother showing the wifi toggle.
+    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(
+      Ci.nsINetworkLinkService
+    );
+    if (network.isLinkUp && network.linkStatusKnown) {
+      let nodes = browser.contentDocument.querySelectorAll("#wifi");
+      for (let i = 0; i < nodes.length; i++) {
+        nodes[i].style.display = "none";
       }
+    }
   },
 
   handleClick: function(event) {
@@ -156,7 +167,9 @@ handlers.wifi = {
     node.disabled = false;
     node.classList.remove("inProgress");
 
-    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
+    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(
+      Ci.nsINetworkLinkService
+    );
     if (network.isLinkUp && network.linkStatusKnown) {
       // If everything worked, reload the page
       UITelemetry.addEvent("neterror.1", "button", null, "wifitoggle.reload");

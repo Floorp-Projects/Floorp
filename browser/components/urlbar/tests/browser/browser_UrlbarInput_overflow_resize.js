@@ -11,15 +11,20 @@ async function testVal(win, url) {
   for (let width of [1000, 800]) {
     win.resizeTo(width, 500);
     await win.promiseDocumentFlushed(() => {});
-    Assert.greater(urlbar.inputField.scrollWidth, urlbar.inputField.clientWidth,
-                   "Check The input field overflows");
+    Assert.greater(
+      urlbar.inputField.scrollWidth,
+      urlbar.inputField.clientWidth,
+      "Check The input field overflows"
+    );
     // Resize is handled on a timer, so we must wait for it.
     await TestUtils.waitForCondition(
       () => urlbar.inputField.scrollLeft == urlbar.inputField.scrollLeftMax,
-      "The urlbar input field is completely scrolled to the end");
+      "The urlbar input field is completely scrolled to the end"
+    );
     await TestUtils.waitForCondition(
       () => urlbar.getAttribute("textoverflow") == "start",
-      "Wait for the textoverflow attribute");
+      "Wait for the textoverflow attribute"
+    );
   }
 }
 
@@ -33,17 +38,20 @@ add_task(async function() {
   let lotsOfSpaces = "%20".repeat(200);
 
   // اسماء.شبكة
-  let rtlDomain = "\u0627\u0633\u0645\u0627\u0621\u002e\u0634\u0628\u0643\u0629";
+  let rtlDomain =
+    "\u0627\u0633\u0645\u0627\u0621\u002e\u0634\u0628\u0643\u0629";
 
   // Mix the direction of the tests to cover more cases, and to ensure the
   // textoverflow attribute changes every time, because tewtVal waits for that.
   await testVal(win, `https://${rtlDomain}/${lotsOfSpaces}/test/`);
 
   info("Test with formatting and trimurl disabled");
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.urlbar.formatting.enabled", false],
-    ["browser.urlbar.trimURLs", false],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.formatting.enabled", false],
+      ["browser.urlbar.trimURLs", false],
+    ],
+  });
 
   await testVal(win, `https://${rtlDomain}/${lotsOfSpaces}/test/`);
   await testVal(win, `http://${rtlDomain}/${lotsOfSpaces}/test/`);

@@ -8,8 +8,11 @@
 const CC = Components.Constructor;
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1",
-                              "nsIBinaryOutputStream", "setOutputStream");
+const BinaryOutputStream = CC(
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
+);
 
 function write8(bos) {
   bos.write8(0xef);
@@ -70,7 +73,9 @@ add_task(async function() {
 async function test_one(url, encoding) {
   // Be sure to set the encoding to something that will yield an
   // invalid result if BOM sniffing is not done.
-  await DevToolsUtils.fetch(url, { charset: "ISO-8859-1" }).then(({content}) => {
-    Assert.equal(content, "hı", "The content looks correct for " + encoding);
-  });
+  await DevToolsUtils.fetch(url, { charset: "ISO-8859-1" }).then(
+    ({ content }) => {
+      Assert.equal(content, "hı", "The content looks correct for " + encoding);
+    }
+  );
 }

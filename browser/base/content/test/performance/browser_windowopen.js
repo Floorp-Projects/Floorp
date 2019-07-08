@@ -22,10 +22,16 @@ const EXPECTED_REFLOWS = [
 // there are at least 5 areas that changed near the top of the screen, or if
 // the toolbar background is involved on OSX, but will only ignore this once.
 function isLikelyFocusChange(rects) {
-  if (rects.length > 5 && rects.every(r => r.y2 < 100))
+  if (rects.length > 5 && rects.every(r => r.y2 < 100)) {
     return true;
-  if (Services.appinfo.OS == "Darwin" && rects.length == 2 && rects.every(r => r.y1 == 0 && r.h == 33))
+  }
+  if (
+    Services.appinfo.OS == "Darwin" &&
+    rects.length == 2 &&
+    rects.every(r => r.y1 == 0 && r.h == 33)
+  ) {
     return true;
+  }
   return false;
 }
 
@@ -40,9 +46,12 @@ add_task(async function() {
   Services.obs.notifyObservers(null, "startupcache-invalidate");
   Services.obs.notifyObservers(null, "chrome-flush-caches");
 
-  let win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
-                              "chrome,all,dialog=no,remote,suppressanimation",
-                              "about:home");
+  let win = window.openDialog(
+    AppConstants.BROWSER_CHROME_URL,
+    "_blank",
+    "chrome,all,dialog=no,remote,suppressanimation",
+    "about:home"
+  );
 
   let alreadyFocused = false;
   let inRange = (val, min, max) => min <= val && val <= max;
@@ -54,68 +63,92 @@ add_task(async function() {
         // window for some reason. See bug 1445161.
         if (!alreadyFocused && isLikelyFocusChange(rects)) {
           alreadyFocused = true;
-          todo(false,
-               "bug 1445161 - the window should be focused at first paint, " +
-               rects.toSource());
+          todo(
+            false,
+            "bug 1445161 - the window should be focused at first paint, " +
+              rects.toSource()
+          );
           return [];
         }
 
         return rects;
       },
       exceptions: [
-        {name: "bug 1421463 - reload toolbar icon shouldn't flicker",
-         condition: r => inRange(r.h, 13, 14) && inRange(r.w, 14, 16) && // icon size
-                         inRange(r.y1, 40, 80) && // in the toolbar
-                         // near the left side of the screen
-                         // The reload icon is shifted on devedition builds
-                         // where there's an additional devtools toolbar icon.
-                         AppConstants.MOZ_DEV_EDITION ? inRange(r.x1, 100, 120) :
-                                                        inRange(r.x1, 65, 100),
+        {
+          name: "bug 1421463 - reload toolbar icon shouldn't flicker",
+          condition: r =>
+            inRange(r.h, 13, 14) &&
+            inRange(r.w, 14, 16) && // icon size
+            inRange(r.y1, 40, 80) && // in the toolbar
+            // near the left side of the screen
+            // The reload icon is shifted on devedition builds
+            // where there's an additional devtools toolbar icon.
+            AppConstants.MOZ_DEV_EDITION
+              ? inRange(r.x1, 100, 120)
+              : inRange(r.x1, 65, 100),
         },
-        {name: "bug 1555842 - the urlbar shouldn't flicker",
-         condition: r => {
-           let inputFieldRect = win.gURLBar.inputField.getBoundingClientRect();
+        {
+          name: "bug 1555842 - the urlbar shouldn't flicker",
+          condition: r => {
+            let inputFieldRect = win.gURLBar.inputField.getBoundingClientRect();
 
-           return (!AppConstants.DEBUG ||
-                   AppConstants.platform == "linux" && AppConstants.ASAN) &&
-                  r.x1 >= inputFieldRect.left && r.x2 <= inputFieldRect.right &&
-                  r.y1 >= inputFieldRect.top && r.y2 <= inputFieldRect.bottom;
-         },
+            return (
+              (!AppConstants.DEBUG ||
+                (AppConstants.platform == "linux" && AppConstants.ASAN)) &&
+              r.x1 >= inputFieldRect.left &&
+              r.x2 <= inputFieldRect.right &&
+              r.y1 >= inputFieldRect.top &&
+              r.y2 <= inputFieldRect.bottom
+            );
+          },
         },
       ],
     },
   };
 
-  await withPerfObserver(async function() {
-    // Avoid showing the remotecontrol UI.
-    await new Promise(resolve => {
-      win.addEventListener("DOMContentLoaded", () => {
-        delete win.Marionette;
-        win.Marionette = {running: false};
-        resolve();
-      }, {once: true});
-    });
+  await withPerfObserver(
+    async function() {
+      // Avoid showing the remotecontrol UI.
+      await new Promise(resolve => {
+        win.addEventListener(
+          "DOMContentLoaded",
+          () => {
+            delete win.Marionette;
+            win.Marionette = { running: false };
+            resolve();
+          },
+          { once: true }
+        );
+      });
 
-    await TestUtils.topicObserved("browser-delayed-startup-finished",
-                                  subject => subject == win);
+      await TestUtils.topicObserved(
+        "browser-delayed-startup-finished",
+        subject => subject == win
+      );
 
-    await BrowserTestUtils.firstBrowserLoaded(win, false);
-    await BrowserTestUtils.browserStopped(win.gBrowser.selectedBrowser, "about:home");
+      await BrowserTestUtils.firstBrowserLoaded(win, false);
+      await BrowserTestUtils.browserStopped(
+        win.gBrowser.selectedBrowser,
+        "about:home"
+      );
 
-    await new Promise(resolve => {
-      // 10 is an arbitrary value here, it needs to be at least 2 to avoid
-      // races with code initializing itself using idle callbacks.
-      (function waitForIdle(count = 10) {
-        if (!count) {
-          resolve();
-          return;
-        }
-        Services.tm.idleDispatchToMainThread(() => {
-          waitForIdle(count - 1);
-        });
-      })();
-    });
-  }, expectations, win);
+      await new Promise(resolve => {
+        // 10 is an arbitrary value here, it needs to be at least 2 to avoid
+        // races with code initializing itself using idle callbacks.
+        (function waitForIdle(count = 10) {
+          if (!count) {
+            resolve();
+            return;
+          }
+          Services.tm.idleDispatchToMainThread(() => {
+            waitForIdle(count - 1);
+          });
+        })();
+      });
+    },
+    expectations,
+    win
+  );
 
   await BrowserTestUtils.closeWindow(win);
 });

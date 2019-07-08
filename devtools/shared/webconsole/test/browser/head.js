@@ -8,7 +8,8 @@
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
 async function getTargetForTab(tab) {
   const target = await TargetFactory.forTab(tab);
@@ -32,8 +33,11 @@ function checkValue(name, value, expected) {
     ok(false, "'" + name + "' is null");
   } else if (value === undefined) {
     ok(false, "'" + name + "' is undefined");
-  } else if (typeof expected == "string" || typeof expected == "number" ||
-    typeof expected == "boolean") {
+  } else if (
+    typeof expected == "string" ||
+    typeof expected == "number" ||
+    typeof expected == "boolean"
+  ) {
     is(value, expected, "property '" + name + "'");
   } else if (expected instanceof RegExp) {
     ok(expected.test(value), name + ": " + expected + " matched " + value);

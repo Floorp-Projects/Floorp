@@ -3,7 +3,8 @@
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-const ROOT = "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
+const ROOT =
+  "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
 
 add_task(async function test_richIcons() {
   const URL = ROOT + "file_rich_icon.html";
@@ -18,8 +19,16 @@ add_task(async function test_richIcons() {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   let [tabIcon, richIcon] = await tabPromises;
 
-  is(richIcon.iconURL, EXPECTED_RICH_ICON, "should choose the largest rich icon");
-  is(tabIcon.iconURL, EXPECTED_ICON, "should use the non-rich icon for the tab");
+  is(
+    richIcon.iconURL,
+    EXPECTED_RICH_ICON,
+    "should choose the largest rich icon"
+  );
+  is(
+    tabIcon.iconURL,
+    EXPECTED_ICON,
+    "should use the non-rich icon for the tab"
+  );
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -31,7 +40,11 @@ add_task(async function test_maskIcons() {
   let promise = waitForFaviconMessage(true, EXPECTED_ICON);
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   let tabIcon = await promise;
-  is(tabIcon.iconURL, EXPECTED_ICON, "should ignore the mask icons and load the root favicon");
+  is(
+    tabIcon.iconURL,
+    EXPECTED_ICON,
+    "should ignore the mask icons and load the root favicon"
+  );
 
   BrowserTestUtils.removeTab(tab);
 });

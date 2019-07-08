@@ -77,7 +77,7 @@ const accessibleSpec = generateActorSpec({
       type: "shortcutChange",
       shortcut: Arg(0, "string"),
     },
-    "reorder": {
+    reorder: {
       type: "reorder",
       childCount: Arg(0, "number"),
       walker: Arg(1, "nullable:accessiblewalker"),
@@ -90,7 +90,7 @@ const accessibleSpec = generateActorSpec({
       type: "indexInParentChange",
       indexInParent: Arg(0, "number"),
     },
-    "audited": {
+    audited: {
       type: "audited",
       audit: Arg(0, "nullable:json"),
     },
@@ -210,10 +210,10 @@ const accessibilitySpec = generateActorSpec({
   typeName: "accessibility",
 
   events: {
-    "init": {
+    init: {
       type: "init",
     },
-    "shutdown": {
+    shutdown: {
       type: "shutdown",
     },
     "can-be-disabled-change": {

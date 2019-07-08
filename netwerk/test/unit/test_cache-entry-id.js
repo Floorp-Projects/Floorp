@@ -2,7 +2,7 @@
  * Test for the "CacheEntryId" under several cases.
  */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";
@@ -16,22 +16,39 @@ const altContent = "!@#$%^&*()";
 const altContentType = "text/binary";
 
 function isParentProcess() {
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"];
-    return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
+  let appInfo = Cc["@mozilla.org/xre/app-info;1"];
+  return (
+    !appInfo ||
+    appInfo.getService(Ci.nsIXULRuntime).processType ==
+      Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+  );
 }
 
 var handlers = [
-  (m, r) => {r.bodyOutputStream.write(responseContent, responseContent.length)},
-  (m, r) => {r.setStatusLine(m.httpVersion, 304, "Not Modified")},
-  (m, r) => {r.setStatusLine(m.httpVersion, 304, "Not Modified")},
-  (m, r) => {r.setStatusLine(m.httpVersion, 304, "Not Modified")},
-  (m, r) => {r.setStatusLine(m.httpVersion, 304, "Not Modified")},
-  (m, r) => {r.bodyOutputStream.write(responseContent2, responseContent2.length)},
-  (m, r) => {r.setStatusLine(m.httpVersion, 304, "Not Modified")},
+  (m, r) => {
+    r.bodyOutputStream.write(responseContent, responseContent.length);
+  },
+  (m, r) => {
+    r.setStatusLine(m.httpVersion, 304, "Not Modified");
+  },
+  (m, r) => {
+    r.setStatusLine(m.httpVersion, 304, "Not Modified");
+  },
+  (m, r) => {
+    r.setStatusLine(m.httpVersion, 304, "Not Modified");
+  },
+  (m, r) => {
+    r.setStatusLine(m.httpVersion, 304, "Not Modified");
+  },
+  (m, r) => {
+    r.bodyOutputStream.write(responseContent2, responseContent2.length);
+  },
+  (m, r) => {
+    r.setStatusLine(m.httpVersion, 304, "Not Modified");
+  },
 ];
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("Cache-Control", "no-cache");
 
@@ -44,28 +61,30 @@ function contentHandler(metadata, response)
   Assert.ok(false, "Should not reach here.");
 }
 
-function fetch(preferredDataType = null)
-{
+function fetch(preferredDataType = null) {
   return new Promise(resolve => {
-    var chan = NetUtil.newChannel({uri: URL, loadUsingSystemPrincipal: true});
+    var chan = NetUtil.newChannel({ uri: URL, loadUsingSystemPrincipal: true });
 
     if (preferredDataType) {
       var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
       cc.preferAlternativeDataType(altContentType, "", true);
     }
 
-    chan.asyncOpen(new ChannelListener((request,
-                                         buffer,
-                                         ctx,
-                                         isFromCache,
-                                         cacheEntryId) => {
-      resolve({request, buffer, isFromCache, cacheEntryId});
-    }, null));
+    chan.asyncOpen(
+      new ChannelListener((request, buffer, ctx, isFromCache, cacheEntryId) => {
+        resolve({ request, buffer, isFromCache, cacheEntryId });
+      }, null)
+    );
   });
 }
 
-function check(response, content, preferredDataType, isFromCache, cacheEntryIdChecker)
-{
+function check(
+  response,
+  content,
+  preferredDataType,
+  isFromCache,
+  cacheEntryIdChecker
+) {
   var cc = response.request.QueryInterface(Ci.nsICacheInfoChannel);
 
   Assert.equal(response.buffer, content);
@@ -76,8 +95,7 @@ function check(response, content, preferredDataType, isFromCache, cacheEntryIdCh
   return response;
 }
 
-function writeAltData(request)
-{
+function writeAltData(request) {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
   var os = cc.openAlternativeOutputStream(altContentType, altContent.length);
   os.write(altContent, altContent.length);
@@ -86,17 +104,15 @@ function writeAltData(request)
 
   return new Promise(resolve => {
     if (isParentProcess()) {
-      Services.cache2.QueryInterface(Ci.nsICacheTesting)
-              .flush(resolve);
+      Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(resolve);
     } else {
-      do_send_remote_message('flush');
-      do_await_remote_message('flushed').then(resolve);
+      do_send_remote_message("flush");
+      do_await_remote_message("flushed").then(resolve);
     }
   });
 }
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
@@ -105,42 +121,93 @@ function run_test()
 
   var targetCacheEntryId = null;
 
-  return Promise.resolve()
-    // Setup testing environment: Placing alternative data into HTTP cache.
-    .then(_ => fetch(altContentType))
-    .then(r => check(r, responseContent, "", false,
-                     cacheEntryId => cacheEntryId === undefined))
-    .then(r => writeAltData(r.request))
+  return (
+    Promise.resolve()
+      // Setup testing environment: Placing alternative data into HTTP cache.
+      .then(_ => fetch(altContentType))
+      .then(r =>
+        check(
+          r,
+          responseContent,
+          "",
+          false,
+          cacheEntryId => cacheEntryId === undefined
+        )
+      )
+      .then(r => writeAltData(r.request))
 
-    // Start testing.
-    .then(_ => fetch(altContentType))
-    .then(r => check(r, altContent, altContentType, true,
-                     cacheEntryId => cacheEntryId !== undefined))
-    .then(r => targetCacheEntryId = r.cacheEntryId)
+      // Start testing.
+      .then(_ => fetch(altContentType))
+      .then(r =>
+        check(
+          r,
+          altContent,
+          altContentType,
+          true,
+          cacheEntryId => cacheEntryId !== undefined
+        )
+      )
+      .then(r => (targetCacheEntryId = r.cacheEntryId))
 
-    .then(_ => fetch())
-    .then(r => check(r, responseContent, "", true,
-                     cacheEntryId => cacheEntryId === targetCacheEntryId))
+      .then(_ => fetch())
+      .then(r =>
+        check(
+          r,
+          responseContent,
+          "",
+          true,
+          cacheEntryId => cacheEntryId === targetCacheEntryId
+        )
+      )
 
-    .then(_ => fetch(altContentType))
-    .then(r => check(r, altContent, altContentType, true,
-                     cacheEntryId => cacheEntryId === targetCacheEntryId))
+      .then(_ => fetch(altContentType))
+      .then(r =>
+        check(
+          r,
+          altContent,
+          altContentType,
+          true,
+          cacheEntryId => cacheEntryId === targetCacheEntryId
+        )
+      )
 
-    .then(_ => fetch())
-    .then(r => check(r, responseContent, "", true,
-                     cacheEntryId => cacheEntryId === targetCacheEntryId))
+      .then(_ => fetch())
+      .then(r =>
+        check(
+          r,
+          responseContent,
+          "",
+          true,
+          cacheEntryId => cacheEntryId === targetCacheEntryId
+        )
+      )
 
-    .then(_ => fetch()) // The response is changed here.
-    .then(r => check(r, responseContent2, "", false,
-                     cacheEntryId => cacheEntryId === undefined))
+      .then(_ => fetch()) // The response is changed here.
+      .then(r =>
+        check(
+          r,
+          responseContent2,
+          "",
+          false,
+          cacheEntryId => cacheEntryId === undefined
+        )
+      )
 
-    .then(_ => fetch())
-    .then(r => check(r, responseContent2, "", true,
-                     cacheEntryId => cacheEntryId !== undefined &&
-                                     cacheEntryId !== targetCacheEntryId))
+      .then(_ => fetch())
+      .then(r =>
+        check(
+          r,
+          responseContent2,
+          "",
+          true,
+          cacheEntryId =>
+            cacheEntryId !== undefined && cacheEntryId !== targetCacheEntryId
+        )
+      )
 
-    // Tear down.
-    .catch(e => Assert.ok(false, "Unexpected exception: " + e))
-    .then(_ => Assert.equal(handlers.length, 0))
-    .then(_ => httpServer.stop(do_test_finished));
+      // Tear down.
+      .catch(e => Assert.ok(false, "Unexpected exception: " + e))
+      .then(_ => Assert.equal(handlers.length, 0))
+      .then(_ => httpServer.stop(do_test_finished))
+  );
 }

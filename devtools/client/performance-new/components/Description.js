@@ -4,7 +4,11 @@
 "use strict";
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
-const { div, button, p } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  div,
+  button,
+  p,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 const { openDocLink } = require("devtools/client/shared/link");
 
 /**
@@ -43,17 +47,16 @@ class Description extends PureComponent {
   render() {
     return div(
       { className: "perf-description" },
-      p(null,
+      p(
+        null,
         "This new recording panel is a bit different from the existing " +
           "performance panel. It records the entire browser, and then opens up " +
           "and shares the profile with ",
-        this.renderLink(
-          "https://profiler.firefox.com",
-          "profiler.firefox.com"
-        ),
+        this.renderLink("https://profiler.firefox.com", "profiler.firefox.com"),
         ", a Mozilla performance analysis tool."
       ),
-      p(null,
+      p(
+        null,
         "This is still a prototype. Join along or file bugs at: ",
         this.renderLink(
           "https://github.com/firefox-devtools/profiler",

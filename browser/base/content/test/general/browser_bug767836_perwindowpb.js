@@ -3,11 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let gNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
-  .getService(Ci.nsIAboutNewTabService);
+let gNewTabService = Cc[
+  "@mozilla.org/browser/aboutnewtab-service;1"
+].getService(Ci.nsIAboutNewTabService);
 
 async function doTest(isPrivate) {
-  let win = await BrowserTestUtils.openNewBrowserWindow({private: isPrivate});
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: isPrivate });
   let defaultURL = gNewTabService.newTabURL;
   let newTabURL;
   let mode;
@@ -22,8 +23,11 @@ async function doTest(isPrivate) {
 
   await openNewTab(win, newTabURL);
   // Check the new tab opened while in normal/private mode
-  is(win.gBrowser.selectedBrowser.currentURI.spec, newTabURL,
-    "URL of NewTab should be " + newTabURL + " in " + mode + " mode");
+  is(
+    win.gBrowser.selectedBrowser.currentURI.spec,
+    newTabURL,
+    "URL of NewTab should be " + newTabURL + " in " + mode + " mode"
+  );
 
   // Set the custom newtab url
   gNewTabService.newTabURL = testURL;
@@ -31,8 +35,11 @@ async function doTest(isPrivate) {
 
   // Open a newtab after setting the custom newtab url
   await openNewTab(win, testURL);
-  is(win.gBrowser.selectedBrowser.currentURI.spec, testURL,
-     "URL of NewTab should be the custom url");
+  is(
+    win.gBrowser.selectedBrowser.currentURI.spec,
+    testURL,
+    "URL of NewTab should be the custom url"
+  );
 
   // Clear the custom url.
   gNewTabService.resetNewTabURL();
@@ -42,7 +49,6 @@ async function doTest(isPrivate) {
   win.gBrowser.removeTab(win.gBrowser.selectedTab);
   await BrowserTestUtils.closeWindow(win);
 }
-
 
 add_task(async function test_newTabService() {
   // check whether any custom new tab url has been configured
@@ -60,7 +66,11 @@ async function openNewTab(aWindow, aExpectedURL) {
   aWindow.BrowserOpenTab();
 
   let browser = aWindow.gBrowser.selectedBrowser;
-  let loadPromise = BrowserTestUtils.browserLoaded(browser, false, aExpectedURL);
+  let loadPromise = BrowserTestUtils.browserLoaded(
+    browser,
+    false,
+    aExpectedURL
+  );
   let alreadyLoaded = await ContentTask.spawn(browser, aExpectedURL, url => {
     let doc = content.document;
     return doc && doc.readyState === "complete" && doc.location.href == url;

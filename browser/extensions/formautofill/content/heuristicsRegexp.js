@@ -17,19 +17,19 @@ var HeuristicsRegExp = {
   // [1] https://cs.chromium.org/chromium/src/components/autofill/core/browser/autofill_regex_constants.cc
   RULES: {
     // ==== Email ====
-    "email": new RegExp(
+    email: new RegExp(
       "e.?mail" +
       "|courriel" + // fr
       "|メールアドレス" + // ja-JP
       "|Электронной.?Почты" + // ru
       "|邮件|邮箱" + // zh-CN
       "|電郵地址" + // zh-TW
-      "|(?:이메일|전자.?우편|[Ee]-?mail)(.?주소)?", // ko-KR
+        "|(?:이메일|전자.?우편|[Ee]-?mail)(.?주소)?", // ko-KR
       "iu"
     ),
 
     // ==== Telephone ====
-    "tel": new RegExp(
+    tel: new RegExp(
       "phone|mobile|contact.?number" +
       "|telefonnummer" + // de-DE
       "|telefono|teléfono" + // es
@@ -38,12 +38,12 @@ var HeuristicsRegExp = {
       "|telefone|telemovel" + // pt-BR, pt-PT
       "|телефон" + // ru
       "|电话" + // zh-CN
-      "|(?:전화|핸드폰|휴대폰|휴대전화)(?:.?번호)?", // ko-KR
+        "|(?:전화|핸드폰|휴대폰|휴대전화)(?:.?번호)?", // ko-KR
       "iu"
     ),
 
     // ==== Address Fields ====
-    "organization": new RegExp(
+    organization: new RegExp(
       "company|business|organization|organisation" +
       "|firma|firmenname" + // de-DE
       "|empresa" + // es
@@ -52,13 +52,10 @@ var HeuristicsRegExp = {
       "|会社" + // ja-JP
       "|название.?компании" + // ru
       "|单位|公司" + // zh-CN
-      "|회사|직장", // ko-KR
+        "|회사|직장", // ko-KR
       "iu"
     ),
-    "street-address": new RegExp(
-      "streetaddress|street-address",
-      "iu"
-    ),
+    "street-address": new RegExp("streetaddress|street-address", "iu"),
     "address-line1": new RegExp(
       "^address$|address[_-]?line(one)?|address1|addr1|street" +
       "|addrline1|address_1" + // Extra rules by Firefox
@@ -72,7 +69,7 @@ var HeuristicsRegExp = {
       "|morada|endereço" + // pt-BR, pt-PT
       "|Адрес" + // ru
       "|地址" + // zh-CN
-      "|^주소.?$|주소.?1", // ko-KR
+        "|^주소.?$|주소.?1", // ko-KR
       "iu"
     ),
     "address-line2": new RegExp(
@@ -86,7 +83,7 @@ var HeuristicsRegExp = {
       "|complemento|addrcomplement" + // pt-BR, pt-PT
       "|Улица" + // ru
       "|地址2" + // zh-CN
-      "|주소.?2", // ko-KR
+        "|주소.?2", // ko-KR
       "iu"
     ),
     "address-line3": new RegExp(
@@ -100,7 +97,7 @@ var HeuristicsRegExp = {
       "|complemento|addrcomplement" + // pt-BR, pt-PT
       "|Улица" + // ru
       "|地址3" + // zh-CN
-      "|주소.?3", // ko-KR
+        "|주소.?3", // ko-KR
       "iu"
     ),
     "address-level2": new RegExp(
@@ -115,7 +112,7 @@ var HeuristicsRegExp = {
       "|Город" + // ru
       "|市" + // zh-CN
       "|分區" + // zh-TW
-      "|^시[^도·・]|시[·・]?군[·・]?구", // ko-KR
+        "|^시[^도·・]|시[·・]?군[·・]?구", // ko-KR
       "iu"
     ),
     "address-level1": new RegExp(
@@ -130,7 +127,7 @@ var HeuristicsRegExp = {
       "|область" + // ru
       "|省" + // zh-CN
       "|地區" + // zh-TW
-      "|^시[·・]?도", // ko-KR
+        "|^시[·・]?도", // ko-KR
       "iu"
     ),
     "postal-code": new RegExp(
@@ -145,20 +142,20 @@ var HeuristicsRegExp = {
       "|Почтовый.?Индекс" + // ru
       "|邮政编码|邮编" + // zh-CN
       "|郵遞區號" + // zh-TW
-      "|우편.?번호", // ko-KR
+        "|우편.?번호", // ko-KR
       "iu"
     ),
-    "country": new RegExp(
+    country: new RegExp(
       "country|countries" +
       "|país|pais" + // es
       "|国" + // ja-JP
       "|国家" + // zh-CN
-      "|국가|나라", // ko-KR
+        "|국가|나라", // ko-KR
       "iu"
     ),
 
     // ==== Name Fields ====
-    "name": new RegExp(
+    name: new RegExp(
       "^name|full.?name|your.?name|customer.?name|bill.?name|ship.?name" +
       "|name.*first.*last|firstandlastname" +
       "|nombre.*y.*apellidos" + // es
@@ -166,7 +163,7 @@ var HeuristicsRegExp = {
       "|お名前|氏名" + // ja-JP
       "|^nome" + // pt-BR, pt-PT
       "|姓名" + // zh-CN
-      "|성명", // ko-KR
+        "|성명", // ko-KR
       "iu"
     ),
     "given-name": new RegExp(
@@ -177,15 +174,14 @@ var HeuristicsRegExp = {
       "|名" + // ja-JP
       "|nome" + // pt-BR, pt-PT
       "|Имя" + // ru
-      "|이름", // ko-KR
+        "|이름", // ko-KR
       "iu"
     ),
     "additional-name": new RegExp(
       "middle.*name|mname|middle$" +
       "|apellido.?materno|lastlastname" + // es
-
-      // This rule is for middle initial.
-      "middle.*initial|m\\.i\\.|mi$|\\bmi\\b",
+        // This rule is for middle initial.
+        "middle.*initial|m\\.i\\.|mi$|\\bmi\\b",
       "iu"
     ),
     "family-name": new RegExp(
@@ -197,7 +193,7 @@ var HeuristicsRegExp = {
       "|姓" + // ja-JP
       "|morada|apelidos|surename|sobrenome" + // pt-BR, pt-PT
       "|Фамилия" + // ru
-      "|\\b성(?:[^명]|\\b)", // ko-KR
+        "|\\b성(?:[^명]|\\b)", // ko-KR
       "iu"
     ),
 
@@ -212,7 +208,7 @@ var HeuristicsRegExp = {
       "|名前" + // ja-JP
       "|Имя.*карты" + // ru
       "|信用卡开户名|开户名|持卡人姓名" + // zh-CN
-      "|持卡人姓名", // zh-TW
+        "|持卡人姓名", // zh-TW
       "iu"
     ),
     "cc-number": new RegExp(
@@ -225,7 +221,7 @@ var HeuristicsRegExp = {
       "|Номер.*карты" + // ru
       "|信用卡号|信用卡号码" + // zh-CN
       "|信用卡卡號" + // zh-TW
-      "|카드", // ko-KR
+        "|카드", // ko-KR
       "iu"
     ),
     "cc-exp-month": new RegExp(
@@ -238,7 +234,7 @@ var HeuristicsRegExp = {
       "|有効期限" + // ja-JP
       "|validade" + // pt-BR, pt-PT
       "|Срок действия карты" + // ru
-      "|月", // zh-CN,
+        "|月", // zh-CN,
       "iu"
     ),
     "cc-exp-year": new RegExp(
@@ -250,7 +246,7 @@ var HeuristicsRegExp = {
       "|有効期限" + // ja-JP
       "|validade" + // pt-BR, pt-PT
       "|Срок действия карты" + // ru
-      "|年|有效期", // zh-CN
+        "|年|有效期", // zh-CN
       "iu"
     ),
     "cc-exp": new RegExp(
@@ -261,7 +257,7 @@ var HeuristicsRegExp = {
       "|scadenza" + // it-IT
       "|有効期限" + // ja-JP
       "|validade" + // pt-BR, pt-PT
-      "|Срок действия карты", // ru
+        "|Срок действия карты", // ru
       "iu"
     ),
   },

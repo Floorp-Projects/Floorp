@@ -8,38 +8,39 @@
  * Check that setting a breakpoint in a line in a child script works.
  */
 
-add_task(threadClientTest(({ threadClient, client, debuggee }) => {
-  return new Promise(resolve => {
-    threadClient.once("paused", async function(packet) {
-      const source = await getSourceById(
-        threadClient,
-        packet.frame.where.actor
-      );
-      const location = { sourceUrl: source.url, line: debuggee.line0 + 3 };
-
-      threadClient.setBreakpoint(location, {});
-      await client.waitForRequestsToSettle();
-
+add_task(
+  threadClientTest(({ threadClient, client, debuggee }) => {
+    return new Promise(resolve => {
       threadClient.once("paused", async function(packet) {
-        // Check the return value.
-        Assert.equal(packet.frame.where.actor, source.actor);
-        Assert.equal(packet.frame.where.line, location.line);
-        Assert.equal(packet.why.type, "breakpoint");
-        // Check that the breakpoint worked.
-        Assert.equal(debuggee.a, 1);
-        Assert.equal(debuggee.b, undefined);
+        const source = await getSourceById(
+          threadClient,
+          packet.frame.where.actor
+        );
+        const location = { sourceUrl: source.url, line: debuggee.line0 + 3 };
 
-        // Remove the breakpoint.
-        threadClient.removeBreakpoint(location);
+        threadClient.setBreakpoint(location, {});
         await client.waitForRequestsToSettle();
-        threadClient.resume().then(resolve);
+
+        threadClient.once("paused", async function(packet) {
+          // Check the return value.
+          Assert.equal(packet.frame.where.actor, source.actor);
+          Assert.equal(packet.frame.where.line, location.line);
+          Assert.equal(packet.why.type, "breakpoint");
+          // Check that the breakpoint worked.
+          Assert.equal(debuggee.a, 1);
+          Assert.equal(debuggee.b, undefined);
+
+          // Remove the breakpoint.
+          threadClient.removeBreakpoint(location);
+          await client.waitForRequestsToSettle();
+          threadClient.resume().then(resolve);
+        });
+
+        // Continue until the breakpoint is hit.
+        await threadClient.resume();
       });
 
-      // Continue until the breakpoint is hit.
-      await threadClient.resume();
-    });
-
-    /* eslint-disable */
+      /* eslint-disable */
     Cu.evalInSandbox(
       "var line0 = Error().lineNumber;\n" +
       "function foo() {\n" + // line0 + 1
@@ -50,6 +51,7 @@ add_task(threadClientTest(({ threadClient, client, debuggee }) => {
       "foo();\n",            // line0 + 6
       debuggee
     );
-    /* eslint-enable */
-  });
-}));
+      /* eslint-enable */
+    });
+  })
+);

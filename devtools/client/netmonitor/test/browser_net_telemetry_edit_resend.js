@@ -32,7 +32,9 @@ add_task(async function() {
 
   // Open context menu and execute "Edit & Resend".
   const firstRequest = document.querySelectorAll(".request-list-item")[0];
-  const waitForHeaders = waitUntil(() => document.querySelector(".headers-overview"));
+  const waitForHeaders = waitUntil(() =>
+    document.querySelector(".headers-overview")
+  );
   EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
   await waitForHeaders;
   await waitForRequestData(store, ["requestHeaders", "responseHeaders"]);
@@ -46,9 +48,12 @@ add_task(async function() {
   await waitForNetworkEvents(monitor, 1);
 
   // Verify existence of the telemetry event.
-  checkTelemetryEvent({}, {
-    method: "edit_resend",
-  });
+  checkTelemetryEvent(
+    {},
+    {
+      method: "edit_resend",
+    }
+  );
 
   return teardown(monitor);
 });

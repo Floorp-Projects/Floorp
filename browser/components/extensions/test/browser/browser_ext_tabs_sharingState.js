@@ -5,7 +5,10 @@ add_task(async function test_tabs_mediaIndicators() {
     set: [["extensions.webextensions.tabhide.enabled", true]],
   });
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com/"
+  );
   // setBrowserSharing is called when a request for media icons occurs.  We're
   // just testing that extension tabs get the info and are updated when it is
   // called.
@@ -17,7 +20,7 @@ add_task(async function test_tabs_mediaIndicators() {
   });
 
   async function background() {
-    let tabs = await browser.tabs.query({microphone: true});
+    let tabs = await browser.tabs.query({ microphone: true });
     let testTab = tabs[0];
 
     let state = testTab.sharingState;
@@ -25,19 +28,23 @@ add_task(async function test_tabs_mediaIndicators() {
     browser.test.assertTrue(state.microphone, "sharing mic was turned on");
     browser.test.assertEq(state.screen, "Window", "sharing screen is window");
 
-    tabs = await browser.tabs.query({screen: true});
+    tabs = await browser.tabs.query({ screen: true });
     browser.test.assertEq(tabs.length, 1, "screen sharing tab was found");
 
-    tabs = await browser.tabs.query({screen: "Window"});
-    browser.test.assertEq(tabs.length, 1, "screen sharing (window) tab was found");
+    tabs = await browser.tabs.query({ screen: "Window" });
+    browser.test.assertEq(
+      tabs.length,
+      1,
+      "screen sharing (window) tab was found"
+    );
 
-    tabs = await browser.tabs.query({screen: "Screen"});
+    tabs = await browser.tabs.query({ screen: "Screen" });
     browser.test.assertEq(tabs.length, 0, "screen sharing tab was not found");
 
     // Verify we cannot hide a sharing tab.
     let hidden = await browser.tabs.hide(testTab.id);
     browser.test.assertEq(hidden.length, 0, "unable to hide sharing tab");
-    tabs = await browser.tabs.query({hidden: true});
+    tabs = await browser.tabs.query({ hidden: true });
     browser.test.assertEq(tabs.length, 0, "unable to hide sharing tab");
 
     browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -54,7 +61,7 @@ add_task(async function test_tabs_mediaIndicators() {
   }
 
   let extdata = {
-    manifest: {permissions: ["tabs", "tabHide"]},
+    manifest: { permissions: ["tabs", "tabHide"] },
     useAddonManager: "temporary",
     background,
   };

@@ -9,12 +9,14 @@
 add_task(async function() {
   pushPref("devtools.enabled", false);
 
-  const {tab, doc, win} = await openAboutDevTools();
+  const { tab, doc, win } = await openAboutDevTools();
 
   const installPage = doc.getElementById("install-page");
   const welcomePage = doc.getElementById("welcome-page");
 
-  info("Check that about:devtools is in the correct state with devtools.enabled=false");
+  info(
+    "Check that about:devtools is in the correct state with devtools.enabled=false"
+  );
   ok(!installPage.hasAttribute("hidden"), "install screen is visible");
   ok(welcomePage.hasAttribute("hidden"), "welcome screen is hidden");
 
@@ -25,8 +27,10 @@ add_task(async function() {
   info("Wait until the UI updates");
   await waitUntil(() => installPage.hasAttribute("hidden") === true);
   ok(!welcomePage.hasAttribute("hidden"), "welcome screen is visible");
-  ok(Services.prefs.getBoolPref("devtools.enabled"),
-    "The preference devtools.enabled has been flipped to true.");
+  ok(
+    Services.prefs.getBoolPref("devtools.enabled"),
+    "The preference devtools.enabled has been flipped to true."
+  );
 
   // Flip the devtools.enabled preference back to false, otherwise the pushPref cleanup
   // times out.

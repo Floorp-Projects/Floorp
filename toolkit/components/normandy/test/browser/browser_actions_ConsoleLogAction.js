@@ -8,15 +8,18 @@ add_task(async function logging_works() {
   const action = new ConsoleLogAction();
   const infoStub = sinon.stub(action.log, "info");
   try {
-    const recipe = {id: 1, arguments: {message: "Hello, world!"}};
+    const recipe = { id: 1, arguments: { message: "Hello, world!" } };
     await action.runRecipe(recipe);
     is(action.lastError, null, "lastError should be null");
-    Assert.deepEqual(infoStub.args, ["Hello, world!"], "the message should be logged");
+    Assert.deepEqual(
+      infoStub.args,
+      ["Hello, world!"],
+      "the message should be logged"
+    );
   } finally {
     infoStub.restore();
   }
 });
-
 
 // test that argument validation works
 decorate_task(
@@ -27,22 +30,26 @@ decorate_task(
 
     try {
       // message is required
-      let recipe = {id: 1, arguments: {}};
+      let recipe = { id: 1, arguments: {} };
       await action.runRecipe(recipe);
       is(action.lastError, null, "lastError should be null");
       Assert.deepEqual(infoStub.args, [], "no message should be logged");
-      Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_EXECUTION_ERROR]]);
+      Assert.deepEqual(reportRecipeStub.args, [
+        [recipe, Uptake.RECIPE_EXECUTION_ERROR],
+      ]);
 
       reportRecipeStub.reset();
 
       // message must be a string
-      recipe = {id: 1, arguments: {message: 1}};
+      recipe = { id: 1, arguments: { message: 1 } };
       await action.runRecipe(recipe);
       is(action.lastError, null, "lastError should be null");
       Assert.deepEqual(infoStub.args, [], "no message should be logged");
-      Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_EXECUTION_ERROR]]);
+      Assert.deepEqual(reportRecipeStub.args, [
+        [recipe, Uptake.RECIPE_EXECUTION_ERROR],
+      ]);
     } finally {
       infoStub.restore();
     }
-  },
+  }
 );

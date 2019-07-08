@@ -8,12 +8,10 @@
 
 async function fetchTitle(url) {
   let entry;
-  await TestUtils.waitForCondition(
-    async () => {
-      entry = await PlacesUtils.history.fetch(url);
-      return !!entry;
-    },
-    "fetch title for entry");
+  await TestUtils.waitForCondition(async () => {
+    entry = await PlacesUtils.history.fetch(url);
+    return !!entry;
+  }, "fetch title for entry");
   return entry.title;
 }
 
@@ -25,51 +23,54 @@ add_task(async function() {
   let result = await PlacesUtils.history.insert({
     url,
     title,
-    visits: [
-      { transition: PlacesUtils.history.TRANSITIONS.LINK },
-    ],
+    visits: [{ transition: PlacesUtils.history.TRANSITIONS.LINK }],
   });
   Assert.equal(title, result.title, "title should be stored");
   Assert.equal(title, await fetchTitle(url), "title should be stored");
 
   // This is shared by the next tests.
-  let promiseTitleChange = PlacesTestUtils.waitForNotification("onTitleChanged",
-  () => notified = true, "history");
+  let promiseTitleChange = PlacesTestUtils.waitForNotification(
+    "onTitleChanged",
+    () => (notified = true),
+    "history"
+  );
 
   info("Insert a visit with a null title, should not clear the previous title");
   let notified = false;
   result = await PlacesUtils.history.insert({
     url,
     title: null,
-    visits: [
-      { transition: PlacesUtils.history.TRANSITIONS.LINK },
-    ],
+    visits: [{ transition: PlacesUtils.history.TRANSITIONS.LINK }],
   });
   Assert.equal(title, result.title, "title should be unchanged");
   Assert.equal(title, await fetchTitle(url), "title should be unchanged");
-  await Promise.race([promiseTitleChange, new Promise(r => do_timeout(1000, r))]);
+  await Promise.race([
+    promiseTitleChange,
+    new Promise(r => do_timeout(1000, r)),
+  ]);
   Assert.ok(!notified, "A title change should not be notified");
 
-  info("Insert a visit without specifying a title, should not clear the previous title");
+  info(
+    "Insert a visit without specifying a title, should not clear the previous title"
+  );
   notified = false;
   result = await PlacesUtils.history.insert({
     url,
-    visits: [
-      { transition: PlacesUtils.history.TRANSITIONS.LINK },
-    ],
+    visits: [{ transition: PlacesUtils.history.TRANSITIONS.LINK }],
   });
   Assert.equal(title, result.title, "title should be unchanged");
   Assert.equal(title, await fetchTitle(url), "title should be unchanged");
-  await Promise.race([promiseTitleChange, new Promise(r => do_timeout(1000, r))]);
+  await Promise.race([
+    promiseTitleChange,
+    new Promise(r => do_timeout(1000, r)),
+  ]);
   Assert.ok(!notified, "A title change should not be notified");
 
   info("Insert a visit with an empty title, should clear the previous title");
   result = await PlacesUtils.history.insert({
     url,
     title: "",
-    visits: [
-      { transition: PlacesUtils.history.TRANSITIONS.LINK },
-    ],
+    visits: [{ transition: PlacesUtils.history.TRANSITIONS.LINK }],
   });
   info("Waiting for the title change notification");
   await promiseTitleChange;

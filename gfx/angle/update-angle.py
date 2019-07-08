@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+from __future__ import print_function
 assert __name__ == '__main__'
 
 '''
@@ -84,7 +85,7 @@ GN_ENV['DEPOT_TOOLS_WIN_TOOLCHAIN'] = '0'
 # ------------------------------------------------------------------------------
 
 def run_checked(*args, **kwargs):
-    print(' ', args)
+    print((' ', args))
     sys.stdout.flush()
     return subprocess.run(args, check=True, **kwargs)
 
@@ -293,7 +294,7 @@ def gather_libraries(roots: Sequence[str], descs: dict) -> Set[str]:
     libraries = set()
     def fn(target_name):
         cur = descs[target_name]
-        print('  ' + cur['type'], target_name)
+        print(('  ' + cur['type'], target_name))
         assert has_all_includes(target_name, descs), target_name
 
         if cur['type'] in ('shared_library', 'static_library'):
@@ -308,7 +309,7 @@ def gather_libraries(roots: Sequence[str], descs: dict) -> Set[str]:
 libraries = gather_libraries(ROOTS, descs)
 print(f'\n{len(libraries)} libraries:')
 for k in libraries:
-    print(' ', k)
+    print((' ', k))
 
 if CHECK_ONLY:
     print('\n--check complete.')
@@ -570,7 +571,7 @@ def export_target(target_name) -> Set[str]:
     # Write it out
 
     mozbuild = target_dir / 'moz.build'
-    print(' ', ' ', f'Writing {mozbuild}')
+    print((' ', ' ', f'Writing {mozbuild}'))
     data = b'\n'.join((x.encode() for x in lines))
     mozbuild.write_bytes(data)
 

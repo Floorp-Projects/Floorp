@@ -163,7 +163,9 @@ LazyActor.prototype = {
       // Fetch the actor constructor
     } catch (e) {
       throw new Error(
-        `Unable to load actor module '${options.id}'\n${e.message}\n${e.stack}\n`
+        `Unable to load actor module '${options.id}'\n${e.message}\n${
+          e.stack
+        }\n`
       );
     }
   },
@@ -183,7 +185,9 @@ LazyActor.prototype = {
     const constructor = module[options.constructorName];
     if (!constructor) {
       throw new Error(
-        `Unable to find actor constructor named '${this.name}'. (Is it exported?)`
+        `Unable to find actor constructor named '${
+          this.name
+        }'. (Is it exported?)`
       );
     }
     return constructor;

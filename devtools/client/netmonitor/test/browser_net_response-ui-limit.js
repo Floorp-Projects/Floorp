@@ -25,14 +25,19 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, HTML_LONG_URL, async function(url) {
+  await ContentTask.spawn(tab.linkedBrowser, HTML_LONG_URL, async function(
+    url
+  ) {
     content.wrappedJSObject.performRequests(1, url);
   });
   await wait;
 
   wait = waitForDOM(document, "#response-panel .responseTextContainer");
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent({ type: "click" }, document.querySelector("#response-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
   await wait;
 
   await teardown(monitor);

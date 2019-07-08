@@ -7,8 +7,7 @@
 
 "use strict";
 
-const TEST_URI =
-  `data:text/html;charset=utf-8,<p>Test keyboard accessibility</p>
+const TEST_URI = `data:text/html;charset=utf-8,<p>Test keyboard accessibility</p>
   <script>
     for (let i = 1; i <= 100; i++) {
       console.log("console message " + i);
@@ -42,13 +41,18 @@ async function performTests() {
   hud.jsterm.focus();
   // Page up.
   EventUtils.synthesizeKey("KEY_PageUp");
-  isnot(outputScroller.scrollTop, currentPosition,
-    "scroll position changed after page up");
+  isnot(
+    outputScroller.scrollTop,
+    currentPosition,
+    "scroll position changed after page up"
+  );
   // Page down.
   currentPosition = outputScroller.scrollTop;
   EventUtils.synthesizeKey("KEY_PageDown");
-  ok(outputScroller.scrollTop > currentPosition,
-     "scroll position now at bottom");
+  ok(
+    outputScroller.scrollTop > currentPosition,
+    "scroll position now at bottom"
+  );
 
   // Home
   EventUtils.synthesizeKey("KEY_Home");
@@ -57,8 +61,10 @@ async function performTests() {
   // End
   EventUtils.synthesizeKey("KEY_End");
   const scrollTop = outputScroller.scrollTop;
-  ok(scrollTop > 0 && Math.abs(scrollTop - bottom) <= 5,
-     "scroll position now at bottom");
+  ok(
+    scrollTop > 0 && Math.abs(scrollTop - bottom) <= 5,
+    "scroll position now at bottom"
+  );
 
   // Clear output
   info("try ctrl-l to clear output");
@@ -84,7 +90,10 @@ async function performTests() {
     synthesizeKeyShortcut(WCUL10n.getStr("webconsole.clear.alternativeKeyOSX"));
 
     await waitFor(() => findMessages(hud, "").length == 0);
-    ok(isInputFocused(hud), "console was cleared as expected with alternative shortcut");
+    ok(
+      isInputFocused(hud),
+      "console was cleared as expected with alternative shortcut"
+    );
   }
 
   // Focus filter
@@ -96,6 +105,9 @@ async function performTests() {
   info("try ctrl-f when filter is already focused");
   synthesizeKeyShortcut(WCUL10n.getStr("webconsole.find.key"));
   ok(!isInputFocused(hud), "input is not focused");
-  is(getFilterInput(hud), outputScroller.ownerDocument.activeElement,
-    "filter input is focused");
+  is(
+    getFilterInput(hud),
+    outputScroller.ownerDocument.activeElement,
+    "filter input is focused"
+  );
 }

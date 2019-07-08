@@ -1,7 +1,9 @@
 "use strict";
 
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {Schemas} = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 
@@ -25,8 +27,10 @@ class FakeAPIManager extends ExtensionCommon.SchemaAPIManager {
   }
 
   getModuleJSONURLs() {
-    return Array.from(Services.catMan.enumerateCategory(CATEGORY_EXTENSION_MODULES),
-                      ({value}) => value);
+    return Array.from(
+      Services.catMan.enumerateCategory(CATEGORY_EXTENSION_MODULES),
+      ({ value }) => value
+    );
   }
 
   async lazyInit() {
@@ -39,11 +43,15 @@ class FakeAPIManager extends ExtensionCommon.SchemaAPIManager {
     let modulesPromise = this.loadModuleJSON(this.getModuleJSONURLs());
 
     let scriptURLs = [];
-    for (let {value} of Services.catMan.enumerateCategory(CATEGORY_EXTENSION_SCRIPTS)) {
+    for (let { value } of Services.catMan.enumerateCategory(
+      CATEGORY_EXTENSION_SCRIPTS
+    )) {
       scriptURLs.push(value);
     }
 
-    let scripts = await Promise.all(scriptURLs.map(url => ChromeUtils.compileScript(url)));
+    let scripts = await Promise.all(
+      scriptURLs.map(url => ChromeUtils.compileScript(url))
+    );
 
     this.initModuleData(await modulesPromise);
 
@@ -56,10 +64,12 @@ class FakeAPIManager extends ExtensionCommon.SchemaAPIManager {
     // extended by other schemas, so needs to be loaded first.
     await Schemas.load(BASE_SCHEMA).then(() => {
       let promises = [];
-      for (let {value} of Services.catMan.enumerateCategory(CATEGORY_EXTENSION_SCHEMAS)) {
+      for (let { value } of Services.catMan.enumerateCategory(
+        CATEGORY_EXTENSION_SCHEMAS
+      )) {
         promises.push(Schemas.load(value));
       }
-      for (let [url, {content}] of this.schemaURLs) {
+      for (let [url, { content }] of this.schemaURLs) {
         promises.push(Schemas.load(url, content));
       }
       for (let url of schemaURLs) {
@@ -74,15 +84,19 @@ class FakeAPIManager extends ExtensionCommon.SchemaAPIManager {
   async loadAllModules(reverseOrder = false) {
     await this.lazyInit();
 
-    let apiModuleNames = Array.from(this.modules.keys()).filter(moduleName => {
-      let moduleDesc = this.modules.get(moduleName);
-      return moduleDesc && !!moduleDesc.url;
-    }).sort();
+    let apiModuleNames = Array.from(this.modules.keys())
+      .filter(moduleName => {
+        let moduleDesc = this.modules.get(moduleName);
+        return moduleDesc && !!moduleDesc.url;
+      })
+      .sort();
 
     apiModuleNames = reverseOrder ? apiModuleNames.reverse() : apiModuleNames;
 
     for (let apiModule of apiModuleNames) {
-      info(`Loading apiModule ${apiModule}: ${this.modules.get(apiModule).url}`);
+      info(
+        `Loading apiModule ${apiModule}: ${this.modules.get(apiModule).url}`
+      );
       await this.asyncLoadModule(apiModule);
     }
   }
@@ -91,7 +105,7 @@ class FakeAPIManager extends ExtensionCommon.SchemaAPIManager {
 // Specialized helper class used to test loading "child process" modules (similarly to the
 // SchemaAPIManagers sub-classes defined in ExtensionPageChild.jsm and ExtensionContent.jsm).
 class FakeChildProcessAPIManager extends FakeAPIManager {
-  constructor({processType, categoryScripts}) {
+  constructor({ processType, categoryScripts }) {
     super(processType, Schemas);
 
     this.categoryScripts = categoryScripts;
@@ -101,7 +115,9 @@ class FakeChildProcessAPIManager extends FakeAPIManager {
     if (!this.initialized) {
       this.initialized = true;
       this.initGlobal();
-      for (let {value} of Services.catMan.enumerateCategory(this.categoryScripts)) {
+      for (let { value } of Services.catMan.enumerateCategory(
+        this.categoryScripts
+      )) {
         await this.loadScript(value);
       }
     }

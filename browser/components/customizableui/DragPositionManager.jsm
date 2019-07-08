@@ -88,8 +88,7 @@ AreaPositionManager.prototype = {
       // Check if we're closer to the next target than to this one:
       // Only move if we're not targeting a node in a different row:
       if (aY > targetBounds.top && aY < targetBounds.bottom) {
-        if ((!this._rtl && aX > outsideX) ||
-            (this._rtl && aX < outsideX)) {
+        if ((!this._rtl && aX > outsideX) || (this._rtl && aX < outsideX)) {
           return closest.nextElementSibling || aContainer;
         }
       }
@@ -127,8 +126,11 @@ AreaPositionManager.prototype = {
         child.style.transform = "";
       }
     }
-    if (aContainer.lastElementChild && aIsFromThisArea &&
-        !this._lastPlaceholderInsertion) {
+    if (
+      aContainer.lastElementChild &&
+      aIsFromThisArea &&
+      !this._lastPlaceholderInsertion
+    ) {
       // Flush layout:
       aContainer.lastElementChild.getBoundingClientRect();
       // then remove all the [notransition]
@@ -226,8 +228,10 @@ AreaPositionManager.prototype = {
     // (i.e. the row in which this item is placed is full)
     // we should move it to align with the first item in the next row instead
     let bound = this._containerInfo[this._rtl ? "left" : "right"];
-    if ((!this._rtl && xDiff + aNodeBounds.right > bound) ||
-        (this._rtl && xDiff + aNodeBounds.left < bound)) {
+    if (
+      (!this._rtl && xDiff + aNodeBounds.right > bound) ||
+      (this._rtl && xDiff + aNodeBounds.left < bound)
+    ) {
       xDiff = this._lazyStoreGet(aFirstNodeInRow)[side] - aNodeBounds[side];
     }
     return xDiff;

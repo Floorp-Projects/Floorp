@@ -6,7 +6,9 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -34,7 +36,9 @@ this.sessionrestore = class extends ExtensionAPI {
     // the profile to disk.
     async function getTalosParentProfiler() {
       try {
-        var {TalosParentProfiler} = ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm");
+        var { TalosParentProfiler } = ChromeUtils.import(
+          "resource://talos-powers/TalosParentProfiler.jsm"
+        );
         return TalosParentProfiler;
       } catch (err) {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -75,34 +79,48 @@ this.sessionrestore = class extends ExtensionAPI {
       if (!StartupPerformance.isRestored) {
         await SessionStartup.onceInitialized;
 
-        if (SessionStartup.sessionType == SessionStartup.NO_SESSION ||
-            SessionStartup.sessionType == SessionStartup.DEFER_SESSION) {
+        if (
+          SessionStartup.sessionType == SessionStartup.NO_SESSION ||
+          SessionStartup.sessionType == SessionStartup.DEFER_SESSION
+        ) {
           // We should only hit this patch in sessionrestore_no_auto_restore
-          if (!Services.prefs.getBoolPref("talos.sessionrestore.norestore", false)) {
+          if (
+            !Services.prefs.getBoolPref("talos.sessionrestore.norestore", false)
+          ) {
             throw new Error("Session was not restored!");
           }
-          await this.finishProfiling("This test measures the time between process " +
-                                     "creation and sessionRestored.");
+          await this.finishProfiling(
+            "This test measures the time between process " +
+              "creation and sessionRestored."
+          );
 
           didRestore = false;
         } else {
           await new Promise(resolve => {
             let observe = async () => {
-              Services.obs.removeObserver(observe, StartupPerformance.RESTORED_TOPIC);
-              await this.finishProfiling("This test measures the time between process " +
-                                         "creation and the last restored tab.");
+              Services.obs.removeObserver(
+                observe,
+                StartupPerformance.RESTORED_TOPIC
+              );
+              await this.finishProfiling(
+                "This test measures the time between process " +
+                  "creation and the last restored tab."
+              );
 
               resolve();
             };
-            Services.obs.addObserver(observe, StartupPerformance.RESTORED_TOPIC);
+            Services.obs.addObserver(
+              observe,
+              StartupPerformance.RESTORED_TOPIC
+            );
           });
         }
       }
 
       let startup_info = Services.startup.getStartupInfo();
       let restoreTime = didRestore
-                      ? StartupPerformance.latestRestoredTimeStamp
-                      : startup_info.sessionRestored;
+        ? StartupPerformance.latestRestoredTimeStamp
+        : startup_info.sessionRestored;
       let duration = restoreTime - startup_info.process;
 
       // Report data to Talos, if possible.

@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {FormEngine} = ChromeUtils.import("resource://services-sync/engines/forms.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { FormEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/forms.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function run_test() {
   _("Verify we've got an empty tracker to work with.");
@@ -17,12 +19,12 @@ add_task(async function run_test() {
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   async function addEntry(name, value) {
-    await engine._store.create({name, value});
+    await engine._store.create({ name, value });
     await engine._tracker.asyncObserver.promiseObserversComplete();
   }
   async function removeEntry(name, value) {
-    let guid = await engine._findDupe({name, value});
-    await engine._store.remove({id: guid});
+    let guid = await engine._findDupe({ name, value });
+    await engine._store.remove({ id: guid });
     await engine._tracker.asyncObserver.promiseObserversComplete();
   }
 
@@ -44,7 +46,6 @@ add_task(async function run_test() {
     await addEntry("address", "Memory Lane");
     changes = await tracker.getChangedIDs();
     do_check_attribute_count(changes, 3);
-
 
     _("Check that ignoreAll is respected");
     await tracker.clearChangedIDs();

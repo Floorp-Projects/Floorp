@@ -22,8 +22,9 @@ function getLoadContext() {
 }
 
 function getTransferableFromClipboard(asHTML) {
-  let trans = Cc["@mozilla.org/widget/transferable;1"].
-                    createInstance(Ci.nsITransferable);
+  let trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(
+    Ci.nsITransferable
+  );
   trans.init(getLoadContext());
   if (asHTML) {
     trans.addDataFlavor("text/html");
@@ -36,15 +37,21 @@ function getTransferableFromClipboard(asHTML) {
 
 async function cutCurrentSelection(elementQueryString, property, browser) {
   // Cut the current selection.
-  await BrowserTestUtils.synthesizeKey("x", {accelKey: true}, browser);
+  await BrowserTestUtils.synthesizeKey("x", { accelKey: true }, browser);
 
   // The editor should be empty after cut.
-  await ContentTask.spawn(browser, [elementQueryString, property],
+  await ContentTask.spawn(
+    browser,
+    [elementQueryString, property],
     async function([contentElementQueryString, contentProperty]) {
       let element = content.document.querySelector(contentElementQueryString);
-      is(element[contentProperty], "",
-        `${contentElementQueryString} should be empty after cut (superkey + x)`);
-    });
+      is(
+        element[contentProperty],
+        "",
+        `${contentElementQueryString} should be empty after cut (superkey + x)`
+      );
+    }
+  );
 }
 
 // Test that you are able to pasteTransferable for plain text
@@ -57,7 +64,7 @@ add_task(async function test_paste_transferable_plain_text() {
   await BrowserTestUtils.withNewTab(testPage, async function(browser) {
     // Select all the content in your editor element.
     await BrowserTestUtils.synthesizeMouse("#textarea", 0, 0, {}, browser);
-    await BrowserTestUtils.synthesizeKey("a", {accelKey: true}, browser);
+    await BrowserTestUtils.synthesizeKey("a", { accelKey: true }, browser);
 
     await cutCurrentSelection("#textarea", "value", browser);
 
@@ -67,8 +74,11 @@ add_task(async function test_paste_transferable_plain_text() {
 
     await ContentTask.spawn(browser, null, async function() {
       let textArea = content.document.querySelector("#textarea");
-      is(textArea.value, "Write something here",
-         "Send content command pasteTransferable successful");
+      is(
+        textArea.value,
+        "Write something here",
+        "Send content command pasteTransferable successful"
+      );
     });
   });
 });
@@ -102,8 +112,11 @@ add_task(async function test_paste_transferable_html() {
 
     await ContentTask.spawn(browser, null, async function() {
       let textArea = content.document.querySelector("div");
-      is(textArea.innerHTML, "<b>Bold Text</b><i>italics</i>",
-         "Send content command pasteTransferable successful");
+      is(
+        textArea.innerHTML,
+        "<b>Bold Text</b><i>italics</i>",
+        "Send content command pasteTransferable successful"
+      );
     });
   });
 });

@@ -26,6 +26,9 @@ add_task(async function() {
 
   gBrowser.removeTab(tab);
   gBrowser.removeTabsProgressListener(listener);
-  is(numLocationChanges, 1,
-     "pushState with a different URI should cause a LocationChange event.");
+  is(
+    numLocationChanges,
+    1,
+    "pushState with a different URI should cause a LocationChange event."
+  );
 });

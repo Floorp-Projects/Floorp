@@ -15,7 +15,7 @@ CookiePolicyHelper.runTest("BroadcastChannel", {
       ok(true, "BroadcastChannel cannot be used!");
       is(e.name, "SecurityError", "We want a security error message.");
     }
-  }
+  },
 });
 
 CookiePolicyHelper.runTest("BroadcastChannel in workers", {
@@ -25,7 +25,9 @@ CookiePolicyHelper.runTest("BroadcastChannel in workers", {
       postMessage(true);
     }
 
-    let blob = new w.Blob([nonBlockingCode.toString() + "; nonBlockingCode();"]);
+    let blob = new w.Blob([
+      nonBlockingCode.toString() + "; nonBlockingCode();",
+    ]);
     ok(blob, "Blob has been created");
 
     let blobURL = w.URL.createObjectURL(blob);
@@ -73,5 +75,5 @@ CookiePolicyHelper.runTest("BroadcastChannel in workers", {
         }
       };
     });
-  }
+  },
 });

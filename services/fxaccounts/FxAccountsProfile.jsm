@@ -14,22 +14,31 @@
 
 var EXPORTED_SYMBOLS = ["FxAccountsProfile"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {ON_PROFILE_CHANGE_NOTIFICATION, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {fxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
+const { fxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "FxAccountsProfileClient",
-  "resource://gre/modules/FxAccountsProfileClient.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsProfileClient",
+  "resource://gre/modules/FxAccountsProfileClient.jsm"
+);
 
 var FxAccountsProfile = function(options = {}) {
   this._currentFetchPromise = null;
   this._cachedAt = 0; // when we saved the cached version.
   this._isNotifying = false; // are we sending a notification?
   this.fxa = options.fxa || fxAccounts;
-  this.client = options.profileClient || new FxAccountsProfileClient({
-    fxa: this.fxa,
-    serverURL: options.profileServerUrl,
-  });
+  this.client =
+    options.profileClient ||
+    new FxAccountsProfileClient({
+      fxa: this.fxa,
+      serverURL: options.profileServerUrl,
+    });
 
   // An observer to invalidate our _cachedAt optimization. We use a weak-ref
   // just incase this.tearDown isn't called in some cases.
@@ -72,7 +81,9 @@ this.FxAccountsProfile.prototype = {
     const profile = response.body;
     const userData = await this.fxa.getSignedInUser();
     if (profile.uid != userData.uid) {
-      throw new Error("The fetched profile does not correspond with the current account.");
+      throw new Error(
+        "The fetched profile does not correspond with the current account."
+      );
     }
     let profileCache = {
       profile,
@@ -137,7 +148,7 @@ this.FxAccountsProfile.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
   ]),
 };

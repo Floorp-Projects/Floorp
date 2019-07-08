@@ -53,6 +53,11 @@ interface nsIWebVTTParserWrapper : nsISupports
   void watch(in nsIWebVTTListener callback);
 
   /**
+   * Cancel watching notifications which parser would send.
+   */
+  void cancel();
+
+  /**
    * Convert the text content of a WebVTT cue to a document fragment so that
    * we can display it on the page.
    *

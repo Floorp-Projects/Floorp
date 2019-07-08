@@ -18,8 +18,9 @@ function run_test() {
   // public key and signature fields in the header are both empty.
   let file = do_get_file("data/test_crx_dummy.crx");
 
-  let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
-    createInstance(Ci.nsIZipReader);
+  let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+    Ci.nsIZipReader
+  );
   zipreader.open(file);
   // do crc stuff
   function check_archive_crc() {
@@ -28,12 +29,15 @@ function run_test() {
   }
   Assert.ok(check_archive_crc());
   zipreader.findEntries(null);
-  let stream = wrapInputStream(zipreader.getInputStream("modules/libjar/test/Makefile.in"));
-  let dirstream = wrapInputStream(zipreader.getInputStream("modules/libjar/test/"));
+  let stream = wrapInputStream(
+    zipreader.getInputStream("modules/libjar/test/Makefile.in")
+  );
+  let dirstream = wrapInputStream(
+    zipreader.getInputStream("modules/libjar/test/")
+  );
   zipreader.close();
   zipreader = null;
   Cu.forceGC();
   Assert.ok(stream.read(1024).length > 0);
   Assert.ok(dirstream.read(100).length > 0);
 }
-

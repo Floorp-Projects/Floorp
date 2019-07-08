@@ -6,11 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["ESEDBReader"]; /* exported ESEDBReader */
 
-const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
+  let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {})
+    .ConsoleAPI;
   let consoleOptions = {
     maxLogLevelPref: "browser.esedbreader.loglevel",
     prefix: "ESEDBReader",
@@ -30,43 +33,46 @@ const MAX_STR_LENGTH = 64 * 1024;
 // Kernel-related types:
 const KERNEL = {};
 KERNEL.FILETIME = new ctypes.StructType("FILETIME", [
-  {dwLowDateTime: ctypes.uint32_t},
-  {dwHighDateTime: ctypes.uint32_t},
+  { dwLowDateTime: ctypes.uint32_t },
+  { dwHighDateTime: ctypes.uint32_t },
 ]);
 KERNEL.SYSTEMTIME = new ctypes.StructType("SYSTEMTIME", [
-  {wYear: ctypes.uint16_t},
-  {wMonth: ctypes.uint16_t},
-  {wDayOfWeek: ctypes.uint16_t},
-  {wDay: ctypes.uint16_t},
-  {wHour: ctypes.uint16_t},
-  {wMinute: ctypes.uint16_t},
-  {wSecond: ctypes.uint16_t},
-  {wMilliseconds: ctypes.uint16_t},
+  { wYear: ctypes.uint16_t },
+  { wMonth: ctypes.uint16_t },
+  { wDayOfWeek: ctypes.uint16_t },
+  { wDay: ctypes.uint16_t },
+  { wHour: ctypes.uint16_t },
+  { wMinute: ctypes.uint16_t },
+  { wSecond: ctypes.uint16_t },
+  { wMilliseconds: ctypes.uint16_t },
 ]);
 
 // DB column types, cribbed from the ESE header
 var COLUMN_TYPES = {
-  JET_coltypBit:           1, /* True, False, or NULL */
-  JET_coltypUnsignedByte:  2, /* 1-byte integer, unsigned */
-  JET_coltypShort:         3, /* 2-byte integer, signed */
-  JET_coltypLong:          4, /* 4-byte integer, signed */
-  JET_coltypCurrency:      5, /* 8 byte integer, signed */
-  JET_coltypIEEESingle:    6, /* 4-byte IEEE single precision */
-  JET_coltypIEEEDouble:    7, /* 8-byte IEEE double precision */
-  JET_coltypDateTime:      8, /* Integral date, fractional time */
-  JET_coltypBinary:        9, /* Binary data, < 255 bytes */
-  JET_coltypText:         10, /* ANSI text, case insensitive, < 255 bytes */
-  JET_coltypLongBinary:   11, /* Binary data, long value */
-  JET_coltypLongText:     12, /* ANSI text, long value */
+  JET_coltypBit: 1 /* True, False, or NULL */,
+  JET_coltypUnsignedByte: 2 /* 1-byte integer, unsigned */,
+  JET_coltypShort: 3 /* 2-byte integer, signed */,
+  JET_coltypLong: 4 /* 4-byte integer, signed */,
+  JET_coltypCurrency: 5 /* 8 byte integer, signed */,
+  JET_coltypIEEESingle: 6 /* 4-byte IEEE single precision */,
+  JET_coltypIEEEDouble: 7 /* 8-byte IEEE double precision */,
+  JET_coltypDateTime: 8 /* Integral date, fractional time */,
+  JET_coltypBinary: 9 /* Binary data, < 255 bytes */,
+  JET_coltypText: 10 /* ANSI text, case insensitive, < 255 bytes */,
+  JET_coltypLongBinary: 11 /* Binary data, long value */,
+  JET_coltypLongText: 12 /* ANSI text, long value */,
 
-  JET_coltypUnsignedLong: 14, /* 4-byte unsigned integer */
-  JET_coltypLongLong:     15, /* 8-byte signed integer */
-  JET_coltypGUID:         16, /* 16-byte globally unique identifier */
+  JET_coltypUnsignedLong: 14 /* 4-byte unsigned integer */,
+  JET_coltypLongLong: 15 /* 8-byte signed integer */,
+  JET_coltypGUID: 16 /* 16-byte globally unique identifier */,
 };
 
 // Not very efficient, but only used for error messages
 function getColTypeName(numericValue) {
-  return Object.keys(COLUMN_TYPES).find(t => COLUMN_TYPES[t] == numericValue) || "unknown";
+  return (
+    Object.keys(COLUMN_TYPES).find(t => COLUMN_TYPES[t] == numericValue) ||
+    "unknown"
+  );
 }
 
 // All type constants and method wrappers go on this object:
@@ -77,7 +83,8 @@ ESE.JET_PCWSTR = ctypes.char16_t.ptr;
 // pointer and because OS.File code implies that the name you give a type
 // matters, I opted for a different name.
 // Note that this is defined differently on 32 vs. 64-bit in the header.
-ESE.JET_API_ITEM = ctypes.voidptr_t.size == 4 ? ctypes.unsigned_long : ctypes.uint64_t;
+ESE.JET_API_ITEM =
+  ctypes.voidptr_t.size == 4 ? ctypes.unsigned_long : ctypes.uint64_t;
 ESE.JET_INSTANCE = ESE.JET_API_ITEM;
 ESE.JET_SESID = ESE.JET_API_ITEM;
 ESE.JET_TABLEID = ESE.JET_API_ITEM;
@@ -87,15 +94,15 @@ ESE.JET_COLTYP = ctypes.unsigned_long;
 ESE.JET_DBID = ctypes.unsigned_long;
 
 ESE.JET_COLUMNDEF = new ctypes.StructType("JET_COLUMNDEF", [
-  {"cbStruct": ctypes.unsigned_long },
-  {"columnid": ESE.JET_COLUMNID },
-  {"coltyp": ESE.JET_COLTYP },
-  {"wCountry": ctypes.unsigned_short }, // sepcifies the country/region for the column definition
-  {"langid": ctypes.unsigned_short },
-  {"cp": ctypes.unsigned_short },
-  {"wCollate": ctypes.unsigned_short }, /* Must be 0 */
-  {"cbMax": ctypes.unsigned_long },
-  {"grbit": ESE.JET_GRBIT },
+  { cbStruct: ctypes.unsigned_long },
+  { columnid: ESE.JET_COLUMNID },
+  { coltyp: ESE.JET_COLTYP },
+  { wCountry: ctypes.unsigned_short }, // sepcifies the country/region for the column definition
+  { langid: ctypes.unsigned_short },
+  { cp: ctypes.unsigned_short },
+  { wCollate: ctypes.unsigned_short } /* Must be 0 */,
+  { cbMax: ctypes.unsigned_long },
+  { grbit: ESE.JET_GRBIT },
 ]);
 
 // Track open databases
@@ -136,7 +143,12 @@ function convertESEError(errorCode) {
   }
 }
 
-function handleESEError(method, methodName, shouldThrow = true, errorLog = true) {
+function handleESEError(
+  method,
+  methodName,
+  shouldThrow = true,
+  errorLog = true
+) {
   return function() {
     let rv;
     try {
@@ -160,53 +172,121 @@ function handleESEError(method, methodName, shouldThrow = true, errorLog = true)
   };
 }
 
-
 function declareESEFunction(methodName, ...args) {
-  let declaration = ["Jet" + methodName, ctypes.winapi_abi, ESE.JET_ERR].concat(args);
+  let declaration = ["Jet" + methodName, ctypes.winapi_abi, ESE.JET_ERR].concat(
+    args
+  );
   let ctypeMethod = gLibs.ese.declare.apply(gLibs.ese, declaration);
   ESE[methodName] = handleESEError(ctypeMethod, methodName);
   ESE["FailSafe" + methodName] = handleESEError(ctypeMethod, methodName, false);
-  ESE["Manual" + methodName] = handleESEError(ctypeMethod, methodName, false, false);
+  ESE["Manual" + methodName] = handleESEError(
+    ctypeMethod,
+    methodName,
+    false,
+    false
+  );
 }
 
 function declareESEFunctions() {
-  declareESEFunction("GetDatabaseFileInfoW", ESE.JET_PCWSTR, ctypes.voidptr_t,
-                     ctypes.unsigned_long, ctypes.unsigned_long);
+  declareESEFunction(
+    "GetDatabaseFileInfoW",
+    ESE.JET_PCWSTR,
+    ctypes.voidptr_t,
+    ctypes.unsigned_long,
+    ctypes.unsigned_long
+  );
 
-  declareESEFunction("GetSystemParameterW", ESE.JET_INSTANCE, ESE.JET_SESID,
-                     ctypes.unsigned_long, ESE.JET_API_ITEM.ptr,
-                     ESE.JET_PCWSTR, ctypes.unsigned_long);
-  declareESEFunction("SetSystemParameterW", ESE.JET_INSTANCE.ptr,
-                     ESE.JET_SESID, ctypes.unsigned_long, ESE.JET_API_ITEM,
-                     ESE.JET_PCWSTR);
+  declareESEFunction(
+    "GetSystemParameterW",
+    ESE.JET_INSTANCE,
+    ESE.JET_SESID,
+    ctypes.unsigned_long,
+    ESE.JET_API_ITEM.ptr,
+    ESE.JET_PCWSTR,
+    ctypes.unsigned_long
+  );
+  declareESEFunction(
+    "SetSystemParameterW",
+    ESE.JET_INSTANCE.ptr,
+    ESE.JET_SESID,
+    ctypes.unsigned_long,
+    ESE.JET_API_ITEM,
+    ESE.JET_PCWSTR
+  );
   declareESEFunction("CreateInstanceW", ESE.JET_INSTANCE.ptr, ESE.JET_PCWSTR);
   declareESEFunction("Init", ESE.JET_INSTANCE.ptr);
 
-  declareESEFunction("BeginSessionW", ESE.JET_INSTANCE, ESE.JET_SESID.ptr,
-                     ESE.JET_PCWSTR, ESE.JET_PCWSTR);
-  declareESEFunction("AttachDatabaseW", ESE.JET_SESID, ESE.JET_PCWSTR,
-                     ESE.JET_GRBIT);
+  declareESEFunction(
+    "BeginSessionW",
+    ESE.JET_INSTANCE,
+    ESE.JET_SESID.ptr,
+    ESE.JET_PCWSTR,
+    ESE.JET_PCWSTR
+  );
+  declareESEFunction(
+    "AttachDatabaseW",
+    ESE.JET_SESID,
+    ESE.JET_PCWSTR,
+    ESE.JET_GRBIT
+  );
   declareESEFunction("DetachDatabaseW", ESE.JET_SESID, ESE.JET_PCWSTR);
-  declareESEFunction("OpenDatabaseW", ESE.JET_SESID, ESE.JET_PCWSTR,
-                     ESE.JET_PCWSTR, ESE.JET_DBID.ptr, ESE.JET_GRBIT);
-  declareESEFunction("OpenTableW", ESE.JET_SESID, ESE.JET_DBID, ESE.JET_PCWSTR,
-                     ctypes.voidptr_t, ctypes.unsigned_long, ESE.JET_GRBIT,
-                     ESE.JET_TABLEID.ptr);
+  declareESEFunction(
+    "OpenDatabaseW",
+    ESE.JET_SESID,
+    ESE.JET_PCWSTR,
+    ESE.JET_PCWSTR,
+    ESE.JET_DBID.ptr,
+    ESE.JET_GRBIT
+  );
+  declareESEFunction(
+    "OpenTableW",
+    ESE.JET_SESID,
+    ESE.JET_DBID,
+    ESE.JET_PCWSTR,
+    ctypes.voidptr_t,
+    ctypes.unsigned_long,
+    ESE.JET_GRBIT,
+    ESE.JET_TABLEID.ptr
+  );
 
-  declareESEFunction("GetColumnInfoW", ESE.JET_SESID, ESE.JET_DBID,
-                     ESE.JET_PCWSTR, ESE.JET_PCWSTR, ctypes.voidptr_t,
-                     ctypes.unsigned_long, ctypes.unsigned_long);
+  declareESEFunction(
+    "GetColumnInfoW",
+    ESE.JET_SESID,
+    ESE.JET_DBID,
+    ESE.JET_PCWSTR,
+    ESE.JET_PCWSTR,
+    ctypes.voidptr_t,
+    ctypes.unsigned_long,
+    ctypes.unsigned_long
+  );
 
-  declareESEFunction("Move", ESE.JET_SESID, ESE.JET_TABLEID, ctypes.long,
-                     ESE.JET_GRBIT);
+  declareESEFunction(
+    "Move",
+    ESE.JET_SESID,
+    ESE.JET_TABLEID,
+    ctypes.long,
+    ESE.JET_GRBIT
+  );
 
-  declareESEFunction("RetrieveColumn", ESE.JET_SESID, ESE.JET_TABLEID,
-                     ESE.JET_COLUMNID, ctypes.voidptr_t, ctypes.unsigned_long,
-                     ctypes.unsigned_long.ptr, ESE.JET_GRBIT, ctypes.voidptr_t);
+  declareESEFunction(
+    "RetrieveColumn",
+    ESE.JET_SESID,
+    ESE.JET_TABLEID,
+    ESE.JET_COLUMNID,
+    ctypes.voidptr_t,
+    ctypes.unsigned_long,
+    ctypes.unsigned_long.ptr,
+    ESE.JET_GRBIT,
+    ctypes.voidptr_t
+  );
 
   declareESEFunction("CloseTable", ESE.JET_SESID, ESE.JET_TABLEID);
-  declareESEFunction("CloseDatabase", ESE.JET_SESID, ESE.JET_DBID,
-                     ESE.JET_GRBIT);
+  declareESEFunction(
+    "CloseDatabase",
+    ESE.JET_SESID,
+    ESE.JET_DBID,
+    ESE.JET_GRBIT
+  );
 
   declareESEFunction("EndSession", ESE.JET_SESID, ESE.JET_GRBIT);
 
@@ -234,8 +314,13 @@ function loadLibraries() {
   Services.obs.addObserver(unloadLibraries, "xpcom-shutdown");
   gLibs.ese = ctypes.open("esent.dll");
   gLibs.kernel = ctypes.open("kernel32.dll");
-  KERNEL.FileTimeToSystemTime = gLibs.kernel.declare("FileTimeToSystemTime",
-    ctypes.winapi_abi, ctypes.int, KERNEL.FILETIME.ptr, KERNEL.SYSTEMTIME.ptr);
+  KERNEL.FileTimeToSystemTime = gLibs.kernel.declare(
+    "FileTimeToSystemTime",
+    ctypes.winapi_abi,
+    ctypes.int,
+    KERNEL.FILETIME.ptr,
+    KERNEL.SYSTEMTIME.ptr
+  );
 
   declareESEFunctions();
 }
@@ -272,40 +357,75 @@ ESEDB.prototype = {
   _internalOpen() {
     try {
       let dbinfo = new ctypes.unsigned_long();
-      ESE.GetDatabaseFileInfoW(this.dbPath, dbinfo.address(),
-                               ctypes.unsigned_long.size, 17);
+      ESE.GetDatabaseFileInfoW(
+        this.dbPath,
+        dbinfo.address(),
+        ctypes.unsigned_long.size,
+        17
+      );
 
       let pageSize = ctypes.UInt64.lo(dbinfo.value);
-      ESE.SetSystemParameterW(null, 0, 64 /* JET_paramDatabasePageSize*/,
-                              pageSize, null);
+      ESE.SetSystemParameterW(
+        null,
+        0,
+        64 /* JET_paramDatabasePageSize*/,
+        pageSize,
+        null
+      );
 
       this._instanceId = new ESE.JET_INSTANCE();
-      ESE.CreateInstanceW(this._instanceId.address(),
-                          "firefox-dbreader-" + (gESEInstanceCounter++));
+      ESE.CreateInstanceW(
+        this._instanceId.address(),
+        "firefox-dbreader-" + gESEInstanceCounter++
+      );
       this._instanceCreated = true;
 
-      ESE.SetSystemParameterW(this._instanceId.address(), 0,
-                              0 /* JET_paramSystemPath*/, 0, this.rootPath);
-      ESE.SetSystemParameterW(this._instanceId.address(), 0,
-                              1 /* JET_paramTempPath */, 0, this.rootPath);
-      ESE.SetSystemParameterW(this._instanceId.address(), 0,
-                              2 /* JET_paramLogFilePath*/, 0, this.logPath);
+      ESE.SetSystemParameterW(
+        this._instanceId.address(),
+        0,
+        0 /* JET_paramSystemPath*/,
+        0,
+        this.rootPath
+      );
+      ESE.SetSystemParameterW(
+        this._instanceId.address(),
+        0,
+        1 /* JET_paramTempPath */,
+        0,
+        this.rootPath
+      );
+      ESE.SetSystemParameterW(
+        this._instanceId.address(),
+        0,
+        2 /* JET_paramLogFilePath*/,
+        0,
+        this.logPath
+      );
 
       // Shouldn't try to call JetTerm if the following call fails.
       this._instanceCreated = false;
       ESE.Init(this._instanceId.address());
       this._instanceCreated = true;
       this._sessionId = new ESE.JET_SESID();
-      ESE.BeginSessionW(this._instanceId, this._sessionId.address(), null,
-                        null);
+      ESE.BeginSessionW(
+        this._instanceId,
+        this._sessionId.address(),
+        null,
+        null
+      );
       this._sessionCreated = true;
 
       const JET_bitDbReadOnly = 1;
       ESE.AttachDatabaseW(this._sessionId, this.dbPath, JET_bitDbReadOnly);
       this._attached = true;
       this._dbId = new ESE.JET_DBID();
-      ESE.OpenDatabaseW(this._sessionId, this.dbPath, null,
-                        this._dbId.address(), JET_bitDbReadOnly);
+      ESE.OpenDatabaseW(
+        this._sessionId,
+        this.dbPath,
+        null,
+        this._dbId.address(),
+        JET_bitDbReadOnly
+      );
       this._opened = true;
     } catch (ex) {
       try {
@@ -326,7 +446,7 @@ ESEDB.prototype = {
 
     let columnInfo;
     try {
-      columnInfo = this._getColumnInfo(tableName, [{name: columnName}]);
+      columnInfo = this._getColumnInfo(tableName, [{ name: columnName }]);
     } catch (ex) {
       return null;
     }
@@ -339,9 +459,15 @@ ESEDB.prototype = {
     }
 
     let tableId = new ESE.JET_TABLEID();
-    let rv = ESE.ManualOpenTableW(this._sessionId, this._dbId, tableName, null,
-                                  0, 4 /* JET_bitTableReadOnly */,
-                                  tableId.address());
+    let rv = ESE.ManualOpenTableW(
+      this._sessionId,
+      this._dbId,
+      tableName,
+      null,
+      0,
+      4 /* JET_bitTableReadOnly */,
+      tableId.address()
+    );
     if (rv == -1305 /* JET_errObjectNotFound */) {
       return false;
     }
@@ -357,7 +483,7 @@ ESEDB.prototype = {
     return true;
   },
 
-  * tableItems(tableName, columns) {
+  *tableItems(tableName, columns) {
     if (!this._opened) {
       throw new Error("The database was closed!");
     }
@@ -370,8 +496,12 @@ ESEDB.prototype = {
 
       let columnInfo = this._getColumnInfo(tableName, columns);
 
-      let rv = ESE.ManualMove(this._sessionId, tableId,
-                              -2147483648 /* JET_MoveFirst */, 0);
+      let rv = ESE.ManualMove(
+        this._sessionId,
+        tableId,
+        -2147483648 /* JET_MoveFirst */,
+        0
+      );
       if (rv == -1603 /* JET_errNoCurrentRecord */) {
         // There are no rows in the table.
         this._closeTable(tableId);
@@ -386,13 +516,22 @@ ESEDB.prototype = {
         for (let column of columnInfo) {
           let [buffer, bufferSize] = this._getBufferForColumn(column);
           // We handle errors manually so we accurately deal with NULL values.
-          let err = ESE.ManualRetrieveColumn(this._sessionId, tableId,
-                                             column.id, buffer.address(),
-                                             bufferSize, null, 0, null);
+          let err = ESE.ManualRetrieveColumn(
+            this._sessionId,
+            tableId,
+            column.id,
+            buffer.address(),
+            bufferSize,
+            null,
+            0,
+            null
+          );
           rowContents[column.name] = this._convertResult(column, buffer, err);
         }
         yield rowContents;
-      } while (ESE.ManualMove(this._sessionId, tableId, 1 /* JET_MoveNext */, 0) === 0);
+      } while (
+        ESE.ManualMove(this._sessionId, tableId, 1 /* JET_MoveNext */, 0) === 0
+      );
     } catch (ex) {
       if (tableOpened) {
         this._closeTable(tableId);
@@ -404,8 +543,15 @@ ESEDB.prototype = {
 
   _openTable(tableName) {
     let tableId = new ESE.JET_TABLEID();
-    ESE.OpenTableW(this._sessionId, this._dbId, tableName, null,
-                   0, 4 /* JET_bitTableReadOnly */, tableId.address());
+    ESE.OpenTableW(
+      this._sessionId,
+      this._dbId,
+      tableName,
+      null,
+      0,
+      4 /* JET_bitTableReadOnly */,
+      tableId.address()
+    );
     return tableId;
   },
 
@@ -435,7 +581,12 @@ ESEDB.prototype = {
         // Deal with null values:
         buffer = null;
       } else {
-        Cu.reportError("Unexpected JET error: " + err + "; retrieving value for column " + column.name);
+        Cu.reportError(
+          "Unexpected JET error: " +
+            err +
+            "; retrieving value for column " +
+            column.name
+        );
         throw new Error(convertESEError(err));
       }
     }
@@ -443,11 +594,13 @@ ESEDB.prototype = {
       return buffer ? buffer.readString() : "";
     }
     if (column.type == "boolean") {
-      return buffer ? (buffer.value == 255) : false;
+      return buffer ? buffer.value == 255 : false;
     }
     if (column.type == "guid") {
       if (buffer.length != 16) {
-        Cu.reportError("Buffer size for guid field " + column.id + " should have been 16!");
+        Cu.reportError(
+          "Buffer size for guid field " + column.id + " should have been 16!"
+        );
         return "";
       }
       let rv = "{";
@@ -466,20 +619,27 @@ ESEDB.prototype = {
         return null;
       }
       let systemTime = new KERNEL.SYSTEMTIME();
-      let result = KERNEL.FileTimeToSystemTime(buffer.address(), systemTime.address());
+      let result = KERNEL.FileTimeToSystemTime(
+        buffer.address(),
+        systemTime.address()
+      );
       if (result == 0) {
         throw new Error(ctypes.winLastError);
       }
 
       // System time is in UTC, so we use Date.UTC to get milliseconds from epoch,
       // then divide by 1000 to get seconds, and round down:
-      return new Date(Date.UTC(systemTime.wYear,
-                                 systemTime.wMonth - 1,
-                                 systemTime.wDay,
-                                 systemTime.wHour,
-                                 systemTime.wMinute,
-                                 systemTime.wSecond,
-                                 systemTime.wMilliseconds));
+      return new Date(
+        Date.UTC(
+          systemTime.wYear,
+          systemTime.wMonth - 1,
+          systemTime.wDay,
+          systemTime.wHour,
+          systemTime.wMinute,
+          systemTime.wSecond,
+          systemTime.wMilliseconds
+        )
+      );
     }
     return undefined;
   },
@@ -488,40 +648,80 @@ ESEDB.prototype = {
     let rv = [];
     for (let column of columns) {
       let columnInfoFromDB = new ESE.JET_COLUMNDEF();
-      ESE.GetColumnInfoW(this._sessionId, this._dbId, tableName, column.name,
-                         columnInfoFromDB.address(), ESE.JET_COLUMNDEF.size, 0 /* JET_ColInfo */);
+      ESE.GetColumnInfoW(
+        this._sessionId,
+        this._dbId,
+        tableName,
+        column.name,
+        columnInfoFromDB.address(),
+        ESE.JET_COLUMNDEF.size,
+        0 /* JET_ColInfo */
+      );
       let dbType = parseInt(columnInfoFromDB.coltyp.toString(10), 10);
       let dbSize = parseInt(columnInfoFromDB.cbMax.toString(10), 10);
       if (column.type == "string") {
-        if (dbType != COLUMN_TYPES.JET_coltypLongText &&
-            dbType != COLUMN_TYPES.JET_coltypText) {
-          throw new Error("Invalid column type for column " + column.name +
-                          "; expected text type, got type " + getColTypeName(dbType));
+        if (
+          dbType != COLUMN_TYPES.JET_coltypLongText &&
+          dbType != COLUMN_TYPES.JET_coltypText
+        ) {
+          throw new Error(
+            "Invalid column type for column " +
+              column.name +
+              "; expected text type, got type " +
+              getColTypeName(dbType)
+          );
         }
         if (dbSize > MAX_STR_LENGTH) {
-          throw new Error("Column " + column.name + " has more than 64k data in it. This API is not designed to handle data that large.");
+          throw new Error(
+            "Column " +
+              column.name +
+              " has more than 64k data in it. This API is not designed to handle data that large."
+          );
         }
       } else if (column.type == "boolean") {
         if (dbType != COLUMN_TYPES.JET_coltypBit) {
-          throw new Error("Invalid column type for column " + column.name +
-                          "; expected bit type, got type " + getColTypeName(dbType));
+          throw new Error(
+            "Invalid column type for column " +
+              column.name +
+              "; expected bit type, got type " +
+              getColTypeName(dbType)
+          );
         }
       } else if (column.type == "date") {
         if (dbType != COLUMN_TYPES.JET_coltypLongLong) {
-          throw new Error("Invalid column type for column " + column.name +
-                          "; expected long long type, got type " + getColTypeName(dbType));
+          throw new Error(
+            "Invalid column type for column " +
+              column.name +
+              "; expected long long type, got type " +
+              getColTypeName(dbType)
+          );
         }
       } else if (column.type == "guid") {
         if (dbType != COLUMN_TYPES.JET_coltypGUID) {
-          throw new Error("Invalid column type for column " + column.name +
-                          "; expected guid type, got type " + getColTypeName(dbType));
+          throw new Error(
+            "Invalid column type for column " +
+              column.name +
+              "; expected guid type, got type " +
+              getColTypeName(dbType)
+          );
         }
       } else if (column.type) {
-        throw new Error("Unknown column type " + column.type + " requested for column " +
-                        column.name + ", don't know what to do.");
+        throw new Error(
+          "Unknown column type " +
+            column.type +
+            " requested for column " +
+            column.name +
+            ", don't know what to do."
+        );
       }
 
-      rv.push({name: column.name, id: columnInfoFromDB.columnid, type: column.type, dbSize, dbType});
+      rv.push({
+        name: column.name,
+        id: columnInfoFromDB.columnid,
+        type: column.type,
+        dbSize,
+        dbType,
+      });
     }
     return rv;
   },
@@ -585,17 +785,20 @@ let ESEDBReader = {
   },
 
   async dbLocked(dbFile) {
-    let options = {winShare: OS.Constants.Win.FILE_SHARE_READ};
+    let options = { winShare: OS.Constants.Win.FILE_SHARE_READ };
     let locked = true;
-    await OS.File.open(dbFile.path, {read: true}, options).then(fileHandle => {
-      locked = false;
-      // Return the close promise so we wait for the file to be closed again.
-      // Otherwise the file might still be kept open by this handle by the time
-      // that we try to use the ESE APIs to access it.
-      return fileHandle.close();
-    }, () => {
-      Cu.reportError("ESE DB at " + dbFile.path + " is locked.");
-    });
+    await OS.File.open(dbFile.path, { read: true }, options).then(
+      fileHandle => {
+        locked = false;
+        // Return the close promise so we wait for the file to be closed again.
+        // Otherwise the file might still be kept open by this handle by the time
+        // that we try to use the ESE APIs to access it.
+        return fileHandle.close();
+      },
+      () => {
+        Cu.reportError("ESE DB at " + dbFile.path + " is locked.");
+      }
+    );
     return locked;
   },
 
@@ -605,4 +808,3 @@ let ESEDBReader = {
 
   COLUMN_TYPES,
 };
-

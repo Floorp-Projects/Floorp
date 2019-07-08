@@ -3,7 +3,7 @@ WebGLUtil = (function() {
   // Error handling (for obvious failures, such as invalid element ids)
 
   function defaultErrorFunc(str) {
-    console.log('Error: ' + str);
+    console.log("Error: " + str);
   }
 
   var gErrorFunc = defaultErrorFunc;
@@ -19,7 +19,7 @@ WebGLUtil = (function() {
   // Warning handling (for failures that may be intentional)
 
   function defaultWarningFunc(str) {
-    console.log('Warning: ' + str);
+    console.log("Warning: " + str);
   }
 
   var gWarningFunc = defaultWarningFunc;
@@ -41,17 +41,17 @@ WebGLUtil = (function() {
 
     var gl = null;
     try {
-      gl = canvas.getContext('webgl', attributes);
-    } catch(e) {}
+      gl = canvas.getContext("webgl", attributes);
+    } catch (e) {}
 
     if (!gl && !requireConformant) {
       try {
-        gl = canvas.getContext('experimental-webgl', attributes);
-      } catch(e) {}
+        gl = canvas.getContext("experimental-webgl", attributes);
+      } catch (e) {}
     }
 
     if (!gl) {
-      error('WebGL context could not be retrieved from \'' + canvasId + '\'.');
+      error("WebGL context could not be retrieved from '" + canvasId + "'.");
       return null;
     }
 
@@ -64,17 +64,17 @@ WebGLUtil = (function() {
 
       var gl = null;
       try {
-        gl = canvas.getContext('webgl2');
-      } catch(e) {}
+        gl = canvas.getContext("webgl2");
+      } catch (e) {}
 
       if (!gl) {
-        todo(false, 'WebGL2 is not supported');
+        todo(false, "WebGL2 is not supported");
         onFinished();
         return;
       }
 
       function errorFunc(str) {
-        ok(false, 'Error: ' + str);
+        ok(false, "Error: " + str);
       }
       setErrorFunc(errorFunc);
       setWarningFunc(errorFunc);
@@ -85,13 +85,13 @@ WebGLUtil = (function() {
 
     try {
       var prefArrArr = [
-        ['webgl.force-enabled', true],
-        ['webgl.enable-webgl2', true],
+        ["webgl.force-enabled", true],
+        ["webgl.enable-webgl2", true],
       ];
-      var prefEnv = {'set': prefArrArr};
+      var prefEnv = { set: prefArrArr };
       SpecialPowers.pushPrefEnv(prefEnv, run);
     } catch (e) {
-      warning('No SpecialPowers, but trying WebGL2 anyway...');
+      warning("No SpecialPowers, but trying WebGL2 anyway...");
       run();
     }
   }
@@ -100,8 +100,9 @@ WebGLUtil = (function() {
     var str = "";
     var k = elem.firstChild;
     while (k) {
-      if (k.nodeType == 3)
+      if (k.nodeType == 3) {
         str += k.textContent;
+      }
 
       k = k.nextSibling;
     }
@@ -113,7 +114,7 @@ WebGLUtil = (function() {
   function createShaderById(gl, id) {
     var elem = document.getElementById(id);
     if (!elem) {
-      error('Failed to create shader from non-existent id \'' + id + '\'.');
+      error("Failed to create shader from non-existent id '" + id + "'.");
       return null;
     }
 
@@ -125,7 +126,7 @@ WebGLUtil = (function() {
     } else if (elem.type == "x-shader/x-vertex") {
       shader = gl.createShader(gl.VERTEX_SHADER);
     } else {
-      error('Bad MIME type for shader \'' + id + '\': ' + elem.type + '.');
+      error("Bad MIME type for shader '" + id + "': " + elem.type + ".");
       return null;
     }
 
@@ -138,8 +139,9 @@ WebGLUtil = (function() {
   function createProgramByIds(gl, vsId, fsId) {
     var vs = createShaderById(gl, vsId);
     var fs = createShaderById(gl, fsId);
-    if (!vs || !fs)
+    if (!vs || !fs) {
       return null;
+    }
 
     var prog = gl.createProgram();
     gl.attachShader(prog, vs);
@@ -167,13 +169,12 @@ WebGLUtil = (function() {
     createShaderById: createShaderById,
     createProgramByIds: createProgramByIds,
 
-
     linkProgramByIds: function(gl, vertSrcElem, fragSrcElem) {
       const prog = gl.createProgram();
 
       function attachShaderById(type, srcElem) {
         const shader = gl.createShader(type);
-        gl.shaderSource(shader, srcElem.innerHTML.trim() + '\n');
+        gl.shaderSource(shader, srcElem.innerHTML.trim() + "\n");
         gl.compileShader(shader);
         gl.attachShader(prog, shader);
         prog[type] = shader;
@@ -184,10 +185,14 @@ WebGLUtil = (function() {
       gl.linkProgram(prog);
       const success = gl.getProgramParameter(prog, gl.LINK_STATUS);
       if (!success) {
-        console.error('Error linking program:');
-        console.error('\nLink log: ' + gl.getProgramInfoLog(prog));
-        console.error('\nVert shader log: ' + gl.getShaderInfoLog(prog[gl.VERTEX_SHADER]));
-        console.error('\nFrag shader log: ' + gl.getShaderInfoLog(prog[gl.FRAGMENT_SHADER]));
+        console.error("Error linking program:");
+        console.error("\nLink log: " + gl.getProgramInfoLog(prog));
+        console.error(
+          "\nVert shader log: " + gl.getShaderInfoLog(prog[gl.VERTEX_SHADER])
+        );
+        console.error(
+          "\nFrag shader log: " + gl.getShaderInfoLog(prog[gl.FRAGMENT_SHADER])
+        );
         return null;
       }
       gl.deleteShader(prog[gl.VERTEX_SHADER]);

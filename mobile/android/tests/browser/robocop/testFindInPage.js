@@ -5,13 +5,15 @@
 
 "use strict";
 
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const TEST_URL = "http://mochi.test:8888/tests/robocop/robocop_text_page.html";
 
 function promiseBrowserEvent(browser, eventType) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     function handle(event) {
       do_print("Received event " + eventType + " from browser");
       browser.removeEventListener(eventType, handle, true);
@@ -25,17 +27,26 @@ function promiseBrowserEvent(browser, eventType) {
 
 function openTabWithUrl(url) {
   do_print("Going to open " + url);
-  let browserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
-  let browser = browserApp.addTab(url, { selected: true, parentId: browserApp.selectedTab.id }).browser;
+  let browserApp = Services.wm.getMostRecentWindow("navigator:browser")
+    .BrowserApp;
+  let browser = browserApp.addTab(url, {
+    selected: true,
+    parentId: browserApp.selectedTab.id,
+  }).browser;
 
-  return promiseBrowserEvent(browser, "load")
-    .then(() => { return browser; });
+  return promiseBrowserEvent(browser, "load").then(() => {
+    return browser;
+  });
 }
 
 function findInPage(browser, text, nrOfMatches) {
   let repaintPromise = promiseBrowserEvent(browser, "MozAfterPaint");
   do_print("Send findInPageMessage: " + text + " nth: " + nrOfMatches);
-  EventDispatcher.instance.sendRequest({ type: "Test:FindInPage", text: text, nrOfMatches: nrOfMatches });
+  EventDispatcher.instance.sendRequest({
+    type: "Test:FindInPage",
+    text: text,
+    nrOfMatches: nrOfMatches,
+  });
   return repaintPromise;
 }
 
@@ -46,7 +57,11 @@ function closeFindInPage(browser) {
   return repaintPromise;
 }
 
-function assertSelection(document, expectedSelection = false, expectedAnchorText = false) {
+function assertSelection(
+  document,
+  expectedSelection = false,
+  expectedAnchorText = false
+) {
   let sel = document.getSelection();
   if (!expectedSelection) {
     do_print("Assert empty selection");

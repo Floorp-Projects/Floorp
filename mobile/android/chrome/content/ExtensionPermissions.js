@@ -1,7 +1,10 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ExtensionData",
-                               "resource://gre/modules/Extension.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionData",
+  "resource://gre/modules/Extension.jsm"
+);
 
 var ExtensionPermissions = {
   // id -> object containing update details (see applyUpdate() )
@@ -10,14 +13,17 @@ var ExtensionPermissions = {
   // Prepare the strings needed for a permission notification.
   _prepareStrings(info) {
     let appName = Strings.brand.GetStringFromName("brandShortName");
-    let info2 = Object.assign({appName}, info);
+    let info2 = Object.assign({ appName }, info);
     let strings = ExtensionData.formatPermissionStrings(info2, Strings.browser);
 
     // We dump the main body of the dialog into a big android
     // TextView.  Build a big string with the full contents here.
     let message = "";
     if (strings.msgs.length > 0) {
-      message = [strings.listIntro, ...strings.msgs.map(s => `\u2022 ${s}`)].join("\n");
+      message = [
+        strings.listIntro,
+        ...strings.msgs.map(s => `\u2022 ${s}`),
+      ].join("\n");
     }
 
     return {
@@ -42,12 +48,14 @@ var ExtensionPermissions = {
   async observe(subject, topic, data) {
     switch (topic) {
       case "webextension-permission-prompt": {
-        let {target, info} = subject.wrappedJSObject;
-        let stringInfo = Object.assign({addonName: info.addon.name}, info);
+        let { target, info } = subject.wrappedJSObject;
+        let stringInfo = Object.assign({ addonName: info.addon.name }, info);
         let details = this._prepareStrings(stringInfo);
         details.icon = this._prepareIcon(info.icon);
         details.type = "Extension:PermissionPrompt";
-        let accepted = await EventDispatcher.instance.sendRequestForResult(details);
+        let accepted = await EventDispatcher.instance.sendRequestForResult(
+          details
+        );
 
         if (accepted) {
           info.resolve();
@@ -59,11 +67,14 @@ var ExtensionPermissions = {
 
       case "webextension-update-permissions":
         let info = subject.wrappedJSObject;
-        let {addon, resolve, reject} = info;
-        let stringInfo = Object.assign({
-          type: "update",
-          addonName: addon.name,
-        }, info);
+        let { addon, resolve, reject } = info;
+        let stringInfo = Object.assign(
+          {
+            type: "update",
+            addonName: addon.name,
+          },
+          info
+        );
 
         let details = this._prepareStrings(stringInfo);
 
@@ -77,8 +88,8 @@ var ExtensionPermissions = {
         // look at update, at which point we will pick up in this.applyUpdate()
         details.icon = this._prepareIcon(addon.iconURL || "dummy.svg");
 
-        let first = (this.updates.size == 0);
-        this.updates.set(addon.id, {details, resolve, reject});
+        let first = this.updates.size == 0;
+        this.updates.set(addon.id, { details, resolve, reject });
 
         if (first) {
           EventDispatcher.instance.sendRequest({
@@ -90,11 +101,14 @@ var ExtensionPermissions = {
 
       case "webextension-optional-permission-prompt": {
         let info = subject.wrappedJSObject;
-        let {name, resolve} = info;
-        let stringInfo = Object.assign({
-          type: "optional",
-          addonName: name,
-        }, info);
+        let { name, resolve } = info;
+        let stringInfo = Object.assign(
+          {
+            type: "optional",
+            addonName: name,
+          },
+          info
+        );
 
         let details = this._prepareStrings(stringInfo);
 
@@ -109,7 +123,9 @@ var ExtensionPermissions = {
         details.icon = this._prepareIcon(info.icon || "dummy.svg");
 
         details.type = "Extension:PermissionPrompt";
-        let accepted = await EventDispatcher.instance.sendRequestForResult(details);
+        let accepted = await EventDispatcher.instance.sendRequestForResult(
+          details
+        );
         resolve(accepted);
       }
     }
@@ -129,7 +145,7 @@ var ExtensionPermissions = {
       });
     }
 
-    let {details} = update;
+    let { details } = update;
     details.type = "Extension:PermissionPrompt";
 
     let accepted = await EventDispatcher.instance.sendRequestForResult(details);

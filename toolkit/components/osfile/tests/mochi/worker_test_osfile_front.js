@@ -54,7 +54,9 @@ function test_init() {
  */
 function test_open_existing_file() {
   info("Starting test_open_existing");
-  let file = OS.File.open("chrome/toolkit/components/osfile/tests/mochi/worker_test_osfile_unix.js");
+  let file = OS.File.open(
+    "chrome/toolkit/components/osfile/tests/mochi/worker_test_osfile_unix.js"
+  );
   file.close();
 }
 
@@ -71,8 +73,14 @@ function test_open_non_existing_file() {
     info("test_open_non_existing_file: Exception detail " + exn);
   }
   ok(!!exn, "test_open_non_existing_file: Exception was raised ");
-  ok(exn instanceof OS.File.Error, "test_open_non_existing_file: Exception was a OS.File.Error");
-  ok(exn.becauseNoSuchFile, "test_open_non_existing_file: Exception confirms that the file does not exist");
+  ok(
+    exn instanceof OS.File.Error,
+    "test_open_non_existing_file: Exception was a OS.File.Error"
+  );
+  ok(
+    exn.becauseNoSuchFile,
+    "test_open_non_existing_file: Exception confirms that the file does not exist"
+  );
 }
 
 /**
@@ -82,7 +90,7 @@ function test_open_non_existing_file() {
 function test_flush_open_file() {
   info("Starting test_flush_open_file");
   let tmp = "test_flush.tmp";
-  let file = OS.File.open(tmp, {create: true, write: true});
+  let file = OS.File.open(tmp, { create: true, write: true });
   file.flush();
   file.close();
   OS.File.remove(tmp);
@@ -114,7 +122,11 @@ function compare_files(test, sourcePath, destPath, prefix) {
       sourceResult = source.read();
       destResult = dest.read();
     }
-    is(sourceResult.length, destResult.length, test + ": Both files have the same size");
+    is(
+      sourceResult.length,
+      destResult.length,
+      test + ": Both files have the same size"
+    );
     for (let i = 0; i < sourceResult.length; ++i) {
       if (sourceResult[i] != destResult[i]) {
         is(sourceResult[i] != destResult[i], test + ": Comparing char " + i);
@@ -132,9 +144,15 @@ function compare_files(test, sourcePath, destPath, prefix) {
  * Test that copying a file using |copy| works.
  */
 function test_copy_existing_file() {
-  let src_file_name =
-    OS.Path.join("chrome", "toolkit", "components", "osfile", "tests", "mochi",
-                 "worker_test_osfile_front.js");
+  let src_file_name = OS.Path.join(
+    "chrome",
+    "toolkit",
+    "components",
+    "osfile",
+    "tests",
+    "mochi",
+    "worker_test_osfile_front.js"
+  );
   let tmp_file_name = "test_osfile_front.tmp";
   info("Starting test_copy_existing");
   OS.File.copy(src_file_name, tmp_file_name);
@@ -144,7 +162,7 @@ function test_copy_existing_file() {
 
   // Create a bogus file with arbitrary content, then attempt to overwrite
   // it with |copy|.
-  let dest = OS.File.open(tmp_file_name, {trunc: true});
+  let dest = OS.File.open(tmp_file_name, { trunc: true });
   let buf = new Uint8Array(50);
   dest.write(buf);
   dest.close();
@@ -156,11 +174,14 @@ function test_copy_existing_file() {
   // Attempt to overwrite with noOverwrite
   let exn;
   try {
-    OS.File.copy(src_file_name, tmp_file_name, {noOverwrite: true});
+    OS.File.copy(src_file_name, tmp_file_name, { noOverwrite: true });
   } catch (x) {
     exn = x;
   }
-  ok(!!exn, "test_copy_existing: noOverwrite prevents overwriting existing files");
+  ok(
+    !!exn,
+    "test_copy_existing: noOverwrite prevents overwriting existing files"
+  );
 
   info("test_copy_existing: Cleaning up");
   OS.File.remove(tmp_file_name);
@@ -172,9 +193,15 @@ function test_copy_existing_file() {
 function test_move_file() {
   info("test_move_file: Starting");
   // 1. Copy file into a temporary file
-  let src_file_name =
-    OS.Path.join("chrome", "toolkit", "components", "osfile", "tests", "mochi",
-                 "worker_test_osfile_front.js");
+  let src_file_name = OS.Path.join(
+    "chrome",
+    "toolkit",
+    "components",
+    "osfile",
+    "tests",
+    "mochi",
+    "worker_test_osfile_front.js"
+  );
   let tmp_file_name = "test_osfile_front.tmp";
   let tmp2_file_name = "test_osfile_front.tmp2";
   OS.File.copy(src_file_name, tmp_file_name);
@@ -207,7 +234,7 @@ function test_iter_dir() {
 
   // Create a file, to be sure that it exists
   let tmp_file_name = "test_osfile_front.tmp";
-  let tmp_file = OS.File.open(tmp_file_name, {write: true, trunc: true});
+  let tmp_file = OS.File.open(tmp_file_name, { write: true, trunc: true });
   tmp_file.close();
 
   let parent = OS.File.getCurrentDirectory();
@@ -221,7 +248,10 @@ function test_iter_dir() {
 
     if (entry.name == tmp_file_name) {
       encountered_tmp_file = true;
-      isnot(entry.isDir, "test_iter_dir: The temporary file is not a directory");
+      isnot(
+        entry.isDir,
+        "test_iter_dir: The temporary file is not a directory"
+      );
       isnot(entry.isSymLink, "test_iter_dir: The temporary file is not a link");
     }
 
@@ -246,15 +276,30 @@ function test_iter_dir() {
       let year = new Date().getFullYear();
       let creation = entry.winCreationDate;
       ok(creation, "test_iter_dir: Windows creation date exists: " + creation);
-      ok(creation.getFullYear() >= 2009 && creation.getFullYear() <= year, "test_iter_dir: consistent creation date");
+      ok(
+        creation.getFullYear() >= 2009 && creation.getFullYear() <= year,
+        "test_iter_dir: consistent creation date"
+      );
 
       let lastWrite = entry.winLastWriteDate;
-      ok(lastWrite, "test_iter_dir: Windows lastWrite date exists: " + lastWrite);
-      ok(lastWrite.getFullYear() >= 2009 && lastWrite.getFullYear() <= year, "test_iter_dir: consistent lastWrite date");
+      ok(
+        lastWrite,
+        "test_iter_dir: Windows lastWrite date exists: " + lastWrite
+      );
+      ok(
+        lastWrite.getFullYear() >= 2009 && lastWrite.getFullYear() <= year,
+        "test_iter_dir: consistent lastWrite date"
+      );
 
       let lastAccess = entry.winLastAccessDate;
-      ok(lastAccess, "test_iter_dir: Windows lastAccess date exists: " + lastAccess);
-      ok(lastAccess.getFullYear() >= 2009 && lastAccess.getFullYear() <= year, "test_iter_dir: consistent lastAccess date");
+      ok(
+        lastAccess,
+        "test_iter_dir: Windows lastAccess date exists: " + lastAccess
+      );
+      ok(
+        lastAccess.getFullYear() >= 2009 && lastAccess.getFullYear() <= year,
+        "test_iter_dir: consistent lastAccess date"
+      );
     }
   }
   ok(encountered_tmp_file, "test_iter_dir: We have found the temporary file");
@@ -270,69 +315,132 @@ function test_iter_dir() {
   }
   iterator.close();
 
-  ok(allentries.length >= 14, "test_iter_dir: Meta-check: the test directory should contain at least 14 items");
+  ok(
+    allentries.length >= 14,
+    "test_iter_dir: Meta-check: the test directory should contain at least 14 items"
+  );
 
   iterator = new OS.File.DirectoryIterator(parent);
   let firstten = iterator.nextBatch(10);
   is(firstten.length, 10, "test_iter_dir: nextBatch(10) returns 10 items");
   for (let i = 0; i < firstten.length; ++i) {
-    is(allentries[i].path, firstten[i].path, "test_iter_dir: Checking that batch returns the correct entries");
+    is(
+      allentries[i].path,
+      firstten[i].path,
+      "test_iter_dir: Checking that batch returns the correct entries"
+    );
   }
   let nextthree = iterator.nextBatch(3);
   is(nextthree.length, 3, "test_iter_dir: nextBatch(3) returns 3 items");
   for (let i = 0; i < nextthree.length; ++i) {
-    is(allentries[i + firstten.length].path, nextthree[i].path, "test_iter_dir: Checking that batch 2 returns the correct entries");
+    is(
+      allentries[i + firstten.length].path,
+      nextthree[i].path,
+      "test_iter_dir: Checking that batch 2 returns the correct entries"
+    );
   }
   let everythingelse = iterator.nextBatch();
-  ok(everythingelse.length >= 1, "test_iter_dir: nextBatch() returns at least one item");
+  ok(
+    everythingelse.length >= 1,
+    "test_iter_dir: nextBatch() returns at least one item"
+  );
   for (let i = 0; i < everythingelse.length; ++i) {
-    is(allentries[i + firstten.length + nextthree.length].path, everythingelse[i].path, "test_iter_dir: Checking that batch 3 returns the correct entries");
+    is(
+      allentries[i + firstten.length + nextthree.length].path,
+      everythingelse[i].path,
+      "test_iter_dir: Checking that batch 3 returns the correct entries"
+    );
   }
-  is(iterator.nextBatch().length, 0, "test_iter_dir: Once there is nothing left, nextBatch returns an empty array");
+  is(
+    iterator.nextBatch().length,
+    0,
+    "test_iter_dir: Once there is nothing left, nextBatch returns an empty array"
+  );
   iterator.close();
 
   iterator = new OS.File.DirectoryIterator(parent);
   iterator.close();
-  is(iterator.nextBatch().length, 0, "test_iter_dir: nextBatch on closed iterator returns an empty array");
+  is(
+    iterator.nextBatch().length,
+    0,
+    "test_iter_dir: nextBatch on closed iterator returns an empty array"
+  );
 
   iterator = new OS.File.DirectoryIterator(parent);
   let allentries2 = iterator.nextBatch();
-  is(allentries.length, allentries2.length, "test_iter_dir: Checking that getBatch(null) returns the right number of entries");
+  is(
+    allentries.length,
+    allentries2.length,
+    "test_iter_dir: Checking that getBatch(null) returns the right number of entries"
+  );
   for (let i = 0; i < allentries.length; ++i) {
-    is(allentries[i].path, allentries2[i].path, "test_iter_dir: Checking that getBatch(null) returns everything in the right order");
+    is(
+      allentries[i].path,
+      allentries2[i].path,
+      "test_iter_dir: Checking that getBatch(null) returns everything in the right order"
+    );
   }
   iterator.close();
 
   // Test forEach
   iterator = new OS.File.DirectoryIterator(parent);
   let index = 0;
-  iterator.forEach(
-    function cb(entry, aIndex, aIterator) {
-      is(index, aIndex, "test_iter_dir: Checking that forEach index is correct");
-      ok(iterator == aIterator, "test_iter_dir: Checking that right iterator is passed");
-      if (index < 10) {
-        is(allentries[index].path, entry.path, "test_iter_dir: Checking that forEach entry is correct");
-      } else if (index == 10) {
-        iterator.close();
-      } else {
-        ok(false, "test_iter_dir: Checking that forEach can be stopped early");
-      }
-      ++index;
+  iterator.forEach(function cb(entry, aIndex, aIterator) {
+    is(index, aIndex, "test_iter_dir: Checking that forEach index is correct");
+    ok(
+      iterator == aIterator,
+      "test_iter_dir: Checking that right iterator is passed"
+    );
+    if (index < 10) {
+      is(
+        allentries[index].path,
+        entry.path,
+        "test_iter_dir: Checking that forEach entry is correct"
+      );
+    } else if (index == 10) {
+      iterator.close();
+    } else {
+      ok(false, "test_iter_dir: Checking that forEach can be stopped early");
+    }
+    ++index;
   });
   iterator.close();
 
   // test for prototype |OS.File.DirectoryIterator.unixAsFile|
   if ("unixAsFile" in OS.File.DirectoryIterator.prototype) {
     info("testing property unixAsFile");
-    let path = OS.Path.join("chrome", "toolkit", "components", "osfile", "tests", "mochi");
+    let path = OS.Path.join(
+      "chrome",
+      "toolkit",
+      "components",
+      "osfile",
+      "tests",
+      "mochi"
+    );
     iterator = new OS.File.DirectoryIterator(path);
 
-    let dir_file = iterator.unixAsFile();// return |File|
+    let dir_file = iterator.unixAsFile(); // return |File|
     let stat0 = dir_file.stat();
     let stat1 = OS.File.stat(path);
 
     let unix_info_to_string = function unix_info_to_string(info) {
-      return "| " + info.unixMode + " | " + info.unixOwner + " | " + info.unixGroup + " | " + info.creationDate + " | " + info.lastModificationDate + " | " + info.lastAccessDate + " | " + info.size + " |";
+      return (
+        "| " +
+        info.unixMode +
+        " | " +
+        info.unixOwner +
+        " | " +
+        info.unixGroup +
+        " | " +
+        info.creationDate +
+        " | " +
+        info.lastModificationDate +
+        " | " +
+        info.lastAccessDate +
+        " | " +
+        info.size +
+        " |"
+      );
     };
 
     let s0_string = unix_info_to_string(stat0);
@@ -354,9 +462,15 @@ function test_position() {
   ok("POS_END" in OS.File, "test_position: POS_END exists");
 
   let ARBITRARY_POSITION = 321;
-  let src_file_name =
-    OS.Path.join("chrome", "toolkit", "components", "osfile", "tests", "mochi",
-                 "worker_test_osfile_front.js");
+  let src_file_name = OS.Path.join(
+    "chrome",
+    "toolkit",
+    "components",
+    "osfile",
+    "tests",
+    "mochi",
+    "worker_test_osfile_front.js"
+  );
 
   let file = OS.File.open(src_file_name);
   is(file.getPosition(), 0, "test_position: Initial position is 0");
@@ -364,16 +478,32 @@ function test_position() {
   let size = 0 + file.stat().size; // Hack: We can remove this 0 + once 776259 has landed
 
   file.setPosition(ARBITRARY_POSITION, OS.File.POS_START);
-  is(file.getPosition(), ARBITRARY_POSITION, "test_position: Setting position from start");
+  is(
+    file.getPosition(),
+    ARBITRARY_POSITION,
+    "test_position: Setting position from start"
+  );
 
   file.setPosition(0, OS.File.POS_START);
-  is(file.getPosition(), 0, "test_position: Setting position from start back to 0");
+  is(
+    file.getPosition(),
+    0,
+    "test_position: Setting position from start back to 0"
+  );
 
   file.setPosition(ARBITRARY_POSITION);
-  is(file.getPosition(), ARBITRARY_POSITION, "test_position: Setting position without argument");
+  is(
+    file.getPosition(),
+    ARBITRARY_POSITION,
+    "test_position: Setting position without argument"
+  );
 
   file.setPosition(-ARBITRARY_POSITION, OS.File.POS_END);
-  is(file.getPosition(), size - ARBITRARY_POSITION, "test_position: Setting position from end");
+  is(
+    file.getPosition(),
+    size - ARBITRARY_POSITION,
+    "test_position: Setting position from end"
+  );
 
   file.setPosition(ARBITRARY_POSITION, OS.File.POS_CURRENT);
   is(file.getPosition(), size, "test_position: Setting position from current");
@@ -386,10 +516,10 @@ function test_info() {
   info("test_info: Starting");
 
   let filename = "test_info.tmp";
-  let size = 261;// An arbitrary file length
+  let size = 261; // An arbitrary file length
   let start = new Date();
 
- // Cleanup any leftover from previous tests
+  // Cleanup any leftover from previous tests
   try {
     OS.File.remove(filename);
     info("test_info: Cleaned up previous garbage");
@@ -400,7 +530,7 @@ function test_info() {
     info("test_info: No previous garbage");
   }
 
-  let file = OS.File.open(filename, {trunc: true});
+  let file = OS.File.open(filename, { trunc: true });
   let buf = new ArrayBuffer(size);
   file._write(buf, size);
   file.close();
@@ -420,7 +550,7 @@ function test_info() {
   // under FAT).
   let SLOPPY_FILE_SYSTEM_ADJUSTMENT = 3000;
   let startMs = start.getTime() - SLOPPY_FILE_SYSTEM_ADJUSTMENT;
-  let stopMs  = stop.getTime() + SLOPPY_FILE_SYSTEM_ADJUSTMENT;
+  let stopMs = stop.getTime() + SLOPPY_FILE_SYSTEM_ADJUSTMENT;
   info("Testing stat with bounds [ " + startMs + ", " + stopMs + " ]");
 
   (function() {
@@ -433,8 +563,7 @@ function test_info() {
       ok(true, "Skipping birthdate test");
       return;
     }
-    ok(birth.getTime() <= stopMs,
-    "test_info: platformBirthDate is consistent");
+    ok(birth.getTime() <= stopMs, "test_info: platformBirthDate is consistent");
     // Note: Previous versions of this test checked whether the file
     // has been created after the start of the test. Unfortunately,
     // this sometimes failed under Windows, in specific circumstances:
@@ -447,8 +576,10 @@ function test_info() {
 
   let change = stat.lastModificationDate;
   info("Testing lastModificationDate: " + change);
-  ok(change.getTime() >= startMs && change.getTime() <= stopMs,
-     "test_info: lastModificationDate is consistent");
+  ok(
+    change.getTime() >= startMs && change.getTime() <= stopMs,
+    "test_info: lastModificationDate is consistent"
+  );
 
   // Test OS.File.prototype.stat on new file
   file = OS.File.open(filename);
@@ -467,18 +598,22 @@ function test_info() {
 
   // Round up/down as above
   startMs = start.getTime() - SLOPPY_FILE_SYSTEM_ADJUSTMENT;
-  stopMs  = stop.getTime() + SLOPPY_FILE_SYSTEM_ADJUSTMENT;
+  stopMs = stop.getTime() + SLOPPY_FILE_SYSTEM_ADJUSTMENT;
   info("Testing stat 2 with bounds [ " + startMs + ", " + stopMs + " ]");
 
   let access = stat.lastAccessDate;
   info("Testing lastAccessDate: " + access);
-  ok(access.getTime() >= startMs && access.getTime() <= stopMs,
-     "test_info: lastAccessDate is consistent");
+  ok(
+    access.getTime() >= startMs && access.getTime() <= stopMs,
+    "test_info: lastAccessDate is consistent"
+  );
 
   change = stat.lastModificationDate;
   info("Testing lastModificationDate 2: " + change);
-  ok(change.getTime() >= startMs && change.getTime() <= stopMs,
-     "test_info: lastModificationDate 2 is consistent");
+  ok(
+    change.getTime() >= startMs && change.getTime() <= stopMs,
+    "test_info: lastModificationDate 2 is consistent"
+  );
 
   // Test OS.File.stat on directory
   stat = OS.File.stat(OS.File.getCurrentDirectory());
@@ -502,7 +637,11 @@ function test_path() {
   is(OS.Path.normalize(abdotsc), OS.Path.join("a", "c"), "normalize a/b/../c");
 
   let adotsdotsdots = OS.Path.join("a", "..", "..", "..");
-  is(OS.Path.normalize(adotsdotsdots), OS.Path.join("..", ".."), "normalize a/../../..");
+  is(
+    OS.Path.normalize(adotsdotsdots),
+    OS.Path.join("..", ".."),
+    "normalize a/../../.."
+  );
 
   info("test_path: Complete");
 }
@@ -511,16 +650,38 @@ function test_path() {
  * Test the file |exists| method.
  */
 function test_exists_file() {
-  let file_name = OS.Path.join("chrome", "toolkit", "components", "osfile",
-                               "tests", "mochi", "test_osfile_front.xul");
+  let file_name = OS.Path.join(
+    "chrome",
+    "toolkit",
+    "components",
+    "osfile",
+    "tests",
+    "mochi",
+    "test_osfile_front.xul"
+  );
   info("test_exists_file: starting");
-  ok(OS.File.exists(file_name), "test_exists_file: file exists (OS.File.exists)");
-  ok(!OS.File.exists(file_name + ".tmp"), "test_exists_file: file does not exists (OS.File.exists)");
+  ok(
+    OS.File.exists(file_name),
+    "test_exists_file: file exists (OS.File.exists)"
+  );
+  ok(
+    !OS.File.exists(file_name + ".tmp"),
+    "test_exists_file: file does not exists (OS.File.exists)"
+  );
 
-  let dir_name = OS.Path.join("chrome", "toolkit", "components", "osfile",
-                               "tests", "mochi");
+  let dir_name = OS.Path.join(
+    "chrome",
+    "toolkit",
+    "components",
+    "osfile",
+    "tests",
+    "mochi"
+  );
   ok(OS.File.exists(dir_name), "test_exists_file: directory exists");
-  ok(!OS.File.exists(dir_name) + ".tmp", "test_exists_file: directory does not exist");
+  ok(
+    !OS.File.exists(dir_name) + ".tmp",
+    "test_exists_file: directory does not exist"
+  );
 
   info("test_exists_file: complete");
 }
@@ -533,25 +694,29 @@ function test_remove_file() {
 
   // Check that removing absent files is handled correctly
   let exn = should_throw(function() {
-    OS.File.remove(absent_file_name, {ignoreAbsent: false});
+    OS.File.remove(absent_file_name, { ignoreAbsent: false });
   });
   ok(!!exn, "test_remove_file: throws if there is no such file");
 
   exn = should_throw(function() {
-    OS.File.remove(absent_file_name, {ignoreAbsent: true});
+    OS.File.remove(absent_file_name, { ignoreAbsent: true });
     OS.File.remove(absent_file_name);
   });
   ok(!exn, "test_remove_file: ignoreAbsent works");
 
   if (OS.Win) {
     let file_name = "test_osfile_front_file_to_remove.tmp";
-    let file = OS.File.open(file_name, {write: true});
+    let file = OS.File.open(file_name, { write: true });
     file.close();
     ok(OS.File.exists(file_name), "test_remove_file: test file exists");
-    OS.Win.File.SetFileAttributes(file_name,
-                                  OS.Constants.Win.FILE_ATTRIBUTE_READONLY);
+    OS.Win.File.SetFileAttributes(
+      file_name,
+      OS.Constants.Win.FILE_ATTRIBUTE_READONLY
+    );
     OS.File.remove(file_name);
-    ok(!OS.File.exists(file_name),
-       "test_remove_file: test file has been removed");
+    ok(
+      !OS.File.exists(file_name),
+      "test_remove_file: test file has been removed"
+    );
   }
 }

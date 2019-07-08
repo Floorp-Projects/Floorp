@@ -18,7 +18,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 
 function invalidCode(code) {
   let message = "use .includes instead of .indexOf";
-  return {code, errors: [{message, type: "BinaryExpression"}]};
+  return { code, errors: [{ message, type: "BinaryExpression" }] };
 }
 
 ruleTester.run("use-includes-instead-of-indexOf", rule, {

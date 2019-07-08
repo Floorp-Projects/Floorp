@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -44,10 +44,8 @@ class ADBAddon extends EventEmitter {
     this._status = ADB_ADDON_STATES.UNKNOWN;
 
     const addonsListener = {};
-    addonsListener.onEnabled =
-    addonsListener.onDisabled =
-    addonsListener.onInstalled =
-    addonsListener.onUninstalled = () => this.updateInstallStatus();
+    addonsListener.onEnabled = addonsListener.onDisabled = addonsListener.onInstalled = addonsListener.onUninstalled = () =>
+      this.updateInstallStatus();
     AddonManager.addAddonListener(addonsListener);
 
     this.updateInstallStatus();
@@ -109,7 +107,9 @@ class ADBAddon extends EventEmitter {
    */
   async install(source) {
     if (!source) {
-      throw new Error("Missing mandatory `source` parameter for adb-addon.install");
+      throw new Error(
+        "Missing mandatory `source` parameter for adb-addon.install"
+      );
     }
 
     const addon = await this._getAddon();
@@ -121,10 +121,9 @@ class ADBAddon extends EventEmitter {
     if (addon && addon.userDisabled) {
       await addon.enable();
     } else {
-      const install = await AddonManager.getInstallForURL(
-        this._getXpiLink(),
-        {telemetryInfo: {source}}
-      );
+      const install = await AddonManager.getInstallForURL(this._getXpiLink(), {
+        telemetryInfo: { source },
+      });
       install.addListener(this);
       install.install();
     }
@@ -199,7 +198,7 @@ class ADBAddon extends EventEmitter {
   }
 
   // Expected AddonManager install listener.
-  onInstallEnded({addon}) {
+  onInstallEnded({ addon }) {
     addon.enable();
   }
 }

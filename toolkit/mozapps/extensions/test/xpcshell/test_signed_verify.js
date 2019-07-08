@@ -1,4 +1,3 @@
-
 // Enable signature checks for these tests
 gUseRealCertChecks = true;
 
@@ -17,7 +16,10 @@ function verifySignatures() {
     Services.obs.addObserver(observer, "xpi-signature-changed");
 
     info("Verifying signatures");
-    let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
+    let XPIscope = ChromeUtils.import(
+      "resource://gre/modules/addons/XPIProvider.jsm",
+      null
+    );
     XPIscope.XPIDatabase.verifySignatures();
   });
 }
@@ -93,8 +95,11 @@ add_task(async function test_diable() {
   Assert.equal(changes.disabled.length, 1);
   Assert.equal(changes.disabled[0], ID);
 
-  Assert.deepEqual(changedProperties, ["signedState", "appDisabled"],
-                   "Got onPropertyChanged events for signedState and appDisabled");
+  Assert.deepEqual(
+    changedProperties,
+    ["signedState", "appDisabled"],
+    "Got onPropertyChanged events for signedState and appDisabled"
+  );
 
   Assert.ok(addon.appDisabled);
   Assert.ok(!addon.isActive);
@@ -103,4 +108,3 @@ add_task(async function test_diable() {
   await addon.uninstall();
   AddonManager.removeAddonListener(listener);
 });
-

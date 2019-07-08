@@ -21,19 +21,28 @@ add_task(async function() {
     content.wrappedJSObject.console.log(content.wrappedJSObject.document);
   });
 
-  const {node} = await onMessage;
+  const { node } = await onMessage;
   const object = node.querySelector(".object-inspector .node");
 
   info("Ctrl+click on an object to put it in the sidebar");
-  const onSidebarShown = waitFor(() => hud.ui.document.querySelector(".sidebar"));
-  EventUtils.sendMouseEvent({
-    type: "click",
-    [isMacOS ? "metaKey" : "ctrlKey"]: true,
-  }, object, hud.ui.window);
+  const onSidebarShown = waitFor(() =>
+    hud.ui.document.querySelector(".sidebar")
+  );
+  EventUtils.sendMouseEvent(
+    {
+      type: "click",
+      [isMacOS ? "metaKey" : "ctrlKey"]: true,
+    },
+    object,
+    hud.ui.window
+  );
   await onSidebarShown;
   const sidebarContents = hud.ui.document.querySelector(".sidebar-contents");
 
   // Let's wait until the object is fully expanded.
   await waitFor(() => sidebarContents.querySelectorAll(".node").length > 1);
-  ok(sidebarContents.scrollHeight > sidebarContents.clientHeight, "Sidebar overflows");
+  ok(
+    sidebarContents.scrollHeight > sidebarContents.clientHeight,
+    "Sidebar overflows"
+  );
 });

@@ -34,13 +34,17 @@ add_task(async function() {
 
   async function performRequest(method, payload) {
     const waitRequest = waitForNetworkEvents(monitor, 1);
-    await ContentTask.spawn(tab.linkedBrowser, {
-      url: SIMPLE_SJS,
-      method_: method,
-      payload_: payload,
-    }, async function({url, method_, payload_}) {
-      content.wrappedJSObject.performRequest(url, method_, payload_);
-    });
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      {
+        url: SIMPLE_SJS,
+        method_: method,
+        payload_: payload,
+      },
+      async function({ url, method_, payload_ }) {
+        content.wrappedJSObject.performRequest(url, method_, payload_);
+      }
+    );
     await waitRequest;
   }
 
@@ -49,21 +53,31 @@ add_task(async function() {
 
     const items = document.querySelectorAll(".request-list-item");
     EventUtils.sendMouseEvent({ type: "mousedown" }, items[items.length - 1]);
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelectorAll(".request-list-item")[0]);
+    EventUtils.sendMouseEvent(
+      { type: "contextmenu" },
+      document.querySelectorAll(".request-list-item")[0]
+    );
 
     /* Ensure that the use as fetch option is always visible */
-    const useAsFetchNode = getContextMenuItem(monitor,
-      "request-list-context-use-as-fetch");
-    is(!!useAsFetchNode, true,
-      "The \"Use as Fetch\" context menu item should not be hidden.");
+    const useAsFetchNode = getContextMenuItem(
+      monitor,
+      "request-list-context-use-as-fetch"
+    );
+    is(
+      !!useAsFetchNode,
+      true,
+      'The "Use as Fetch" context menu item should not be hidden.'
+    );
 
     useAsFetchNode.click();
     await toolbox.once("split-console");
     const hud = toolbox.getPanel("webconsole").hud;
     await hud.jsterm.once("set-input-value");
 
-    is(hud.getInputValue(), expectedResult,
-      "Console input contains fetch request for item " + (items.length - 1));
+    is(
+      hud.getInputValue(),
+      expectedResult,
+      "Console input contains fetch request for item " + (items.length - 1)
+    );
   }
 });

@@ -18,10 +18,7 @@ use style_traits::{CommaWithSpace, CssWriter, ParseError, Separator};
 use style_traits::{StyleParseErrorKind, ToCss};
 
 /// Specified SVG Paint value
-pub type SVGPaint = generic::SVGPaint<Color, SpecifiedUrl>;
-
-/// Specified SVG Paint Kind value
-pub type SVGPaintKind = generic::SVGPaintKind<Color, SpecifiedUrl>;
+pub type SVGPaint = generic::GenericSVGPaint<Color, SpecifiedUrl>;
 
 /// <length> | <percentage> | <number> | context-value
 pub type SVGLength = generic::SVGLength<LengthPercentage>;
@@ -80,14 +77,14 @@ impl Parse for SVGStrokeDashArray {
                 NonNegativeLengthPercentage::parse_quirky(context, i, AllowQuirks::Always)
             })
         }) {
-            return Ok(generic::SVGStrokeDashArray::Values(values));
+            return Ok(generic::SVGStrokeDashArray::Values(values.into()));
         }
 
         try_match_ident_ignore_ascii_case! { input,
             "context-value" if is_context_value_enabled() => {
                 Ok(generic::SVGStrokeDashArray::ContextValue)
             },
-            "none" => Ok(generic::SVGStrokeDashArray::Values(vec![])),
+            "none" => Ok(generic::SVGStrokeDashArray::Values(Default::default())),
         }
     }
 }

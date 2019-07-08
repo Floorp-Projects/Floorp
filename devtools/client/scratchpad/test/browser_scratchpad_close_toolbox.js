@@ -4,7 +4,7 @@
 // Test that closing the toolbox after having opened a scratchpad leaves the
 // latter in a functioning state.
 
-var {TargetFactory} = require("devtools/client/framework/target");
+var { TargetFactory } = require("devtools/client/framework/target");
 
 function test() {
   const options = {
@@ -19,7 +19,7 @@ async function runTests([win, sp]) {
   // Use the scratchpad before opening the toolbox.
   const source = "window.foobar = 7;";
   sp.setText(source);
-  const [,, result] = await sp.display();
+  const [, , result] = await sp.display();
   is(result, 7, "Display produced the expected output.");
 
   // Now open the toolbox and close it again.
@@ -30,7 +30,10 @@ async function runTests([win, sp]) {
 
   // Now see if using the scratcphad works as expected.
   sp.setText(source);
-  const [,, result2] = await sp.display();
-  is(result2, 7,
-     "Display produced the expected output after the toolbox was gone.");
+  const [, , result2] = await sp.display();
+  is(
+    result2,
+    7,
+    "Display produced the expected output after the toolbox was gone."
+  );
 }

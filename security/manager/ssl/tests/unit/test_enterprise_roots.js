@@ -11,12 +11,22 @@
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
-async function check_no_enterprise_roots_imported(nssComponent, certDB, dbKey = undefined) {
+async function check_no_enterprise_roots_imported(
+  nssComponent,
+  certDB,
+  dbKey = undefined
+) {
   let enterpriseRoots = nssComponent.getEnterpriseRoots();
   notEqual(enterpriseRoots, null, "enterprise roots list should not be null");
-  equal(enterpriseRoots.length, 0, "should not have imported any enterprise roots");
+  equal(
+    enterpriseRoots.length,
+    0,
+    "should not have imported any enterprise roots"
+  );
   if (dbKey) {
     let cert = certDB.findCertByDBKey(dbKey);
     // If the garbage-collector hasn't run, there may be reachable copies of
@@ -39,7 +49,11 @@ function der_array_to_string(derArray) {
 async function check_some_enterprise_roots_imported(nssComponent, certDB) {
   let enterpriseRoots = nssComponent.getEnterpriseRoots();
   notEqual(enterpriseRoots, null, "enterprise roots list should not be null");
-  notEqual(enterpriseRoots.length, 0, "should have imported some enterprise roots");
+  notEqual(
+    enterpriseRoots.length,
+    0,
+    "should have imported some enterprise roots"
+  );
   let foundNonBuiltIn = false;
   let savedDBKey = null;
   for (let certDer of enterpriseRoots) {
@@ -59,13 +73,18 @@ async function check_some_enterprise_roots_imported(nssComponent, certDB) {
 
 add_task(async function run_test() {
   let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
-  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   nssComponent.getEnterpriseRoots(); // blocks until roots are loaded
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", false);
   await check_no_enterprise_roots_imported(nssComponent, certDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", true);
   await TestUtils.topicObserved("psm:enterprise-certs-imported");
-  let savedDBKey = await check_some_enterprise_roots_imported(nssComponent, certDB);
+  let savedDBKey = await check_some_enterprise_roots_imported(
+    nssComponent,
+    certDB
+  );
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", false);
   await check_no_enterprise_roots_imported(nssComponent, certDB, savedDBKey);
 });

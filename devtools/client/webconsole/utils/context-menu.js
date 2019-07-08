@@ -14,10 +14,30 @@ const { MESSAGE_SOURCE } = require("devtools/client/webconsole/constants");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
-loader.lazyRequireGetter(this, "showSaveFileDialog", "devtools/shared/DevToolsUtils", true);
-loader.lazyRequireGetter(this, "saveFileStream", "devtools/shared/DevToolsUtils", true);
-loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
-loader.lazyRequireGetter(this, "getElementText", "devtools/client/webconsole/utils/clipboard", true);
+loader.lazyRequireGetter(
+  this,
+  "showSaveFileDialog",
+  "devtools/shared/DevToolsUtils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "saveFileStream",
+  "devtools/shared/DevToolsUtils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "openContentLink",
+  "devtools/client/shared/link",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getElementText",
+  "devtools/client/webconsole/utils/clipboard",
+  true
+);
 
 /**
  * Create a Menu instance for the webconsole.
@@ -40,18 +60,22 @@ loader.lazyRequireGetter(this, "getElementText", "devtools/client/webconsole/uti
  *        - {Object} executionPoint (optional) when replaying, the execution point where
  *            this message was logged
  */
-function createContextMenu(webConsoleUI, parentNode, {
-  actor,
-  clipboardText,
-  variableText,
-  message,
-  serviceContainer,
-  openSidebar,
-  rootActorId,
-  executionPoint,
-  toolbox,
-  url,
-}) {
+function createContextMenu(
+  webConsoleUI,
+  parentNode,
+  {
+    actor,
+    clipboardText,
+    variableText,
+    message,
+    serviceContainer,
+    openSidebar,
+    rootActorId,
+    executionPoint,
+    toolbox,
+    url,
+  }
+) {
   const win = parentNode.ownerDocument.defaultView;
   const selection = win.getSelection();
 
@@ -62,203 +86,238 @@ function createContextMenu(webConsoleUI, parentNode, {
   });
 
   // Copy URL for a network request.
-  menu.append(new MenuItem({
-    id: "console-menu-copy-url",
-    label: l10n.getStr("webconsole.menu.copyURL.label"),
-    accesskey: l10n.getStr("webconsole.menu.copyURL.accesskey"),
-    visible: source === MESSAGE_SOURCE.NETWORK,
-    click: () => {
-      if (!request) {
-        return;
-      }
-      clipboardHelper.copyString(request.url);
-    },
-  }));
+  menu.append(
+    new MenuItem({
+      id: "console-menu-copy-url",
+      label: l10n.getStr("webconsole.menu.copyURL.label"),
+      accesskey: l10n.getStr("webconsole.menu.copyURL.accesskey"),
+      visible: source === MESSAGE_SOURCE.NETWORK,
+      click: () => {
+        if (!request) {
+          return;
+        }
+        clipboardHelper.copyString(request.url);
+      },
+    })
+  );
 
   // Open Network message in the Network panel.
   if (serviceContainer.openNetworkPanel && request) {
-    menu.append(new MenuItem({
-      id: "console-menu-open-in-network-panel",
-      label: l10n.getStr("webconsole.menu.openInNetworkPanel.label"),
-      accesskey: l10n.getStr("webconsole.menu.openInNetworkPanel.accesskey"),
-      visible: source === MESSAGE_SOURCE.NETWORK,
-      click: () => serviceContainer.openNetworkPanel(message.messageId),
-    }));
+    menu.append(
+      new MenuItem({
+        id: "console-menu-open-in-network-panel",
+        label: l10n.getStr("webconsole.menu.openInNetworkPanel.label"),
+        accesskey: l10n.getStr("webconsole.menu.openInNetworkPanel.accesskey"),
+        visible: source === MESSAGE_SOURCE.NETWORK,
+        click: () => serviceContainer.openNetworkPanel(message.messageId),
+      })
+    );
   }
 
   // Resend Network message.
   if (serviceContainer.resendNetworkRequest && request) {
-    menu.append(new MenuItem({
-      id: "console-menu-resend-network-request",
-      label: l10n.getStr("webconsole.menu.resendNetworkRequest.label"),
-      accesskey: l10n.getStr("webconsole.menu.resendNetworkRequest.accesskey"),
-      visible: source === MESSAGE_SOURCE.NETWORK,
-      click: () => serviceContainer.resendNetworkRequest(message.messageId),
-    }));
+    menu.append(
+      new MenuItem({
+        id: "console-menu-resend-network-request",
+        label: l10n.getStr("webconsole.menu.resendNetworkRequest.label"),
+        accesskey: l10n.getStr(
+          "webconsole.menu.resendNetworkRequest.accesskey"
+        ),
+        visible: source === MESSAGE_SOURCE.NETWORK,
+        click: () => serviceContainer.resendNetworkRequest(message.messageId),
+      })
+    );
   }
 
   // Open URL in a new tab for a network request.
-  menu.append(new MenuItem({
-    id: "console-menu-open-url",
-    label: l10n.getStr("webconsole.menu.openURL.label"),
-    accesskey: l10n.getStr("webconsole.menu.openURL.accesskey"),
-    visible: source === MESSAGE_SOURCE.NETWORK,
-    click: () => {
-      if (!request) {
-        return;
-      }
-      openContentLink(request.url);
-    },
-  }));
+  menu.append(
+    new MenuItem({
+      id: "console-menu-open-url",
+      label: l10n.getStr("webconsole.menu.openURL.label"),
+      accesskey: l10n.getStr("webconsole.menu.openURL.accesskey"),
+      visible: source === MESSAGE_SOURCE.NETWORK,
+      click: () => {
+        if (!request) {
+          return;
+        }
+        openContentLink(request.url);
+      },
+    })
+  );
 
   // Store as global variable.
-  menu.append(new MenuItem({
-    id: "console-menu-store",
-    label: l10n.getStr("webconsole.menu.storeAsGlobalVar.label"),
-    accesskey: l10n.getStr("webconsole.menu.storeAsGlobalVar.accesskey"),
-    disabled: !actor,
-    click: () => {
-      const evalString = `{ let i = 0;
+  menu.append(
+    new MenuItem({
+      id: "console-menu-store",
+      label: l10n.getStr("webconsole.menu.storeAsGlobalVar.label"),
+      accesskey: l10n.getStr("webconsole.menu.storeAsGlobalVar.accesskey"),
+      disabled: !actor,
+      click: () => {
+        const evalString = `{ let i = 0;
         while (this.hasOwnProperty("temp" + i) && i < 1000) {
           i++;
         }
         this["temp" + i] = _self;
         "temp" + i;
       }`;
-      const options = {
-        selectedObjectActor: actor,
-      };
+        const options = {
+          selectedObjectActor: actor,
+        };
 
-      webConsoleUI.jsterm.requestEvaluation(evalString, options).then((res) => {
-        webConsoleUI.jsterm.focus();
-        webConsoleUI.hud.setInputValue(res.result);
-      });
-    },
-  }));
+        webConsoleUI.jsterm.requestEvaluation(evalString, options).then(res => {
+          webConsoleUI.jsterm.focus();
+          webConsoleUI.hud.setInputValue(res.result);
+        });
+      },
+    })
+  );
 
   // Copy message or grip.
-  menu.append(new MenuItem({
-    id: "console-menu-copy",
-    label: l10n.getStr("webconsole.menu.copyMessage.label"),
-    accesskey: l10n.getStr("webconsole.menu.copyMessage.accesskey"),
-    // Disabled if there is no selection and no message element available to copy.
-    disabled: selection.isCollapsed && !clipboardText,
-    click: () => {
-      if (selection.isCollapsed) {
-        // If the selection is empty/collapsed, copy the text content of the
-        // message for which the context menu was opened.
-        clipboardHelper.copyString(clipboardText);
-      } else {
-        clipboardHelper.copyString(selection.toString());
-      }
-    },
-  }));
+  menu.append(
+    new MenuItem({
+      id: "console-menu-copy",
+      label: l10n.getStr("webconsole.menu.copyMessage.label"),
+      accesskey: l10n.getStr("webconsole.menu.copyMessage.accesskey"),
+      // Disabled if there is no selection and no message element available to copy.
+      disabled: selection.isCollapsed && !clipboardText,
+      click: () => {
+        if (selection.isCollapsed) {
+          // If the selection is empty/collapsed, copy the text content of the
+          // message for which the context menu was opened.
+          clipboardHelper.copyString(clipboardText);
+        } else {
+          clipboardHelper.copyString(selection.toString());
+        }
+      },
+    })
+  );
 
   // Copy message object.
-  menu.append(new MenuItem({
-    id: "console-menu-copy-object",
-    label: l10n.getStr("webconsole.menu.copyObject.label"),
-    accesskey: l10n.getStr("webconsole.menu.copyObject.accesskey"),
-    // Disabled if there is no actor and no variable text associated.
-    disabled: (!actor && !variableText),
-    click: () => {
-      if (actor) {
-        // The Debugger.Object of the OA will be bound to |_self| during evaluation,
-        webConsoleUI.jsterm.copyObject(`_self`, { selectedObjectActor: actor })
-          .then((res) => {
-            clipboardHelper.copyString(res.helperResult.value);
-          });
-      } else {
-        clipboardHelper.copyString(variableText);
-      }
-    },
-  }));
+  menu.append(
+    new MenuItem({
+      id: "console-menu-copy-object",
+      label: l10n.getStr("webconsole.menu.copyObject.label"),
+      accesskey: l10n.getStr("webconsole.menu.copyObject.accesskey"),
+      // Disabled if there is no actor and no variable text associated.
+      disabled: !actor && !variableText,
+      click: () => {
+        if (actor) {
+          // The Debugger.Object of the OA will be bound to |_self| during evaluation,
+          webConsoleUI.jsterm
+            .copyObject(`_self`, { selectedObjectActor: actor })
+            .then(res => {
+              clipboardHelper.copyString(res.helperResult.value);
+            });
+        } else {
+          clipboardHelper.copyString(variableText);
+        }
+      },
+    })
+  );
 
   // Select all.
-  menu.append(new MenuItem({
-    id: "console-menu-select",
-    label: l10n.getStr("webconsole.menu.selectAll.label"),
-    accesskey: l10n.getStr("webconsole.menu.selectAll.accesskey"),
-    disabled: false,
-    click: () => {
-      const webconsoleOutput = parentNode.querySelector(".webconsole-output");
-      selection.selectAllChildren(webconsoleOutput);
-    },
-  }));
+  menu.append(
+    new MenuItem({
+      id: "console-menu-select",
+      label: l10n.getStr("webconsole.menu.selectAll.label"),
+      accesskey: l10n.getStr("webconsole.menu.selectAll.accesskey"),
+      disabled: false,
+      click: () => {
+        const webconsoleOutput = parentNode.querySelector(".webconsole-output");
+        selection.selectAllChildren(webconsoleOutput);
+      },
+    })
+  );
 
   const exportSubmenu = new Menu({
     id: "export-submenu",
   });
 
   // Export to clipboard
-  exportSubmenu.append(new MenuItem({
-    id: "console-menu-export-clipboard",
-    label: l10n.getStr("webconsole.menu.exportSubmenu.exportCliboard.label"),
-    disabled: false,
-    click: () => {
-      const webconsoleOutput = parentNode.querySelector(".webconsole-output");
-      clipboardHelper.copyString(getElementText(webconsoleOutput));
-    },
-  }));
+  exportSubmenu.append(
+    new MenuItem({
+      id: "console-menu-export-clipboard",
+      label: l10n.getStr("webconsole.menu.exportSubmenu.exportCliboard.label"),
+      disabled: false,
+      click: () => {
+        const webconsoleOutput = parentNode.querySelector(".webconsole-output");
+        clipboardHelper.copyString(getElementText(webconsoleOutput));
+      },
+    })
+  );
 
   // Export to file
-  exportSubmenu.append(new MenuItem({
-    id: "console-menu-export-file",
-    label: l10n.getStr("webconsole.menu.exportSubmenu.exportFile.label"),
-    disabled: false,
-    click: async () => {
-      const date = new Date();
-      const suggestedName = `console-export-${date.getFullYear()}-` +
-        `${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-` +
-        `${date.getMinutes()}-${date.getSeconds()}.txt`;
-      const returnFile = await showSaveFileDialog(win, suggestedName);
-      const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                        .createInstance(Ci.nsIScriptableUnicodeConverter);
-      converter.charset = "UTF-8";
-      const webconsoleOutput = parentNode.querySelector(".webconsole-output");
-      const istream = converter.convertToInputStream(getElementText(webconsoleOutput));
-      return saveFileStream(returnFile, istream);
-    },
-  }));
+  exportSubmenu.append(
+    new MenuItem({
+      id: "console-menu-export-file",
+      label: l10n.getStr("webconsole.menu.exportSubmenu.exportFile.label"),
+      disabled: false,
+      click: async () => {
+        const date = new Date();
+        const suggestedName =
+          `console-export-${date.getFullYear()}-` +
+          `${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-` +
+          `${date.getMinutes()}-${date.getSeconds()}.txt`;
+        const returnFile = await showSaveFileDialog(win, suggestedName);
+        const converter = Cc[
+          "@mozilla.org/intl/scriptableunicodeconverter"
+        ].createInstance(Ci.nsIScriptableUnicodeConverter);
+        converter.charset = "UTF-8";
+        const webconsoleOutput = parentNode.querySelector(".webconsole-output");
+        const istream = converter.convertToInputStream(
+          getElementText(webconsoleOutput)
+        );
+        return saveFileStream(returnFile, istream);
+      },
+    })
+  );
 
-  menu.append(new MenuItem({
-    id: "console-menu-export",
-    label: l10n.getStr("webconsole.menu.exportSubmenu.label"),
-    disabled: false,
-    submenu: exportSubmenu,
-  }));
+  menu.append(
+    new MenuItem({
+      id: "console-menu-export",
+      label: l10n.getStr("webconsole.menu.exportSubmenu.label"),
+      disabled: false,
+      submenu: exportSubmenu,
+    })
+  );
 
   // Open object in sidebar.
   if (openSidebar) {
-    menu.append(new MenuItem({
-      id: "console-menu-open-sidebar",
-      label: l10n.getStr("webconsole.menu.openInSidebar.label"),
-      accesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
-      disabled: !rootActorId,
-      click: () => openSidebar(message.messageId),
-    }));
+    menu.append(
+      new MenuItem({
+        id: "console-menu-open-sidebar",
+        label: l10n.getStr("webconsole.menu.openInSidebar.label"),
+        accesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
+        disabled: !rootActorId,
+        click: () => openSidebar(message.messageId),
+      })
+    );
   }
 
   // Add time warp option if available.
   if (executionPoint) {
-    menu.append(new MenuItem({
-      id: "console-menu-time-warp",
-      label: l10n.getStr("webconsole.menu.timeWarp.label"),
-      disabled: false,
-      click: () => {
-        const threadClient = toolbox.threadClient;
-        threadClient.timeWarp(executionPoint);
-      },
-    }));
+    menu.append(
+      new MenuItem({
+        id: "console-menu-time-warp",
+        label: l10n.getStr("webconsole.menu.timeWarp.label"),
+        disabled: false,
+        click: () => {
+          const threadClient = toolbox.threadClient;
+          threadClient.timeWarp(executionPoint);
+        },
+      })
+    );
   }
 
   if (url) {
-    menu.append(new MenuItem({
-      id: "console-menu-copy-url",
-      label: l10n.getStr("webconsole.menu.copyURL.label"),
-      accesskey: l10n.getStr("webconsole.menu.copyURL.accesskey"),
-      click: () => clipboardHelper.copyString(url),
-    }));
+    menu.append(
+      new MenuItem({
+        id: "console-menu-copy-url",
+        label: l10n.getStr("webconsole.menu.copyURL.label"),
+        accesskey: l10n.getStr("webconsole.menu.copyURL.accesskey"),
+        click: () => clipboardHelper.copyString(url),
+      })
+    );
   }
 
   return menu;

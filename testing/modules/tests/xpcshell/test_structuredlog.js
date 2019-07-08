@@ -2,7 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  const {StructuredLogger} = ChromeUtils.import("resource://testing-common/StructuredLog.jsm");
+  const { StructuredLogger } = ChromeUtils.import(
+    "resource://testing-common/StructuredLog.jsm"
+  );
 
   let testBuffer = [];
 
@@ -37,13 +39,12 @@ function run_test() {
     level: "INFO",
   });
 
-  logger.info("Test message",
-              {foo: "bar"});
+  logger.info("Test message", { foo: "bar" });
   assertLastMsg({
     action: "log",
     message: "Test message",
     level: "INFO",
-    extra: {foo: "bar"},
+    extra: { foo: "bar" },
   });
 
   // Test end / start actions
@@ -110,8 +111,14 @@ function run_test() {
     expected: "PASS",
   });
 
-  logger.testStatus("aTest", "bar", "FAIL", "PASS", null,
-                    "Many\nlines\nof\nstack\n");
+  logger.testStatus(
+    "aTest",
+    "bar",
+    "FAIL",
+    "PASS",
+    null,
+    "Many\nlines\nof\nstack\n"
+  );
   assertLastMsg({
     action: "test_status",
     test: "aTest",

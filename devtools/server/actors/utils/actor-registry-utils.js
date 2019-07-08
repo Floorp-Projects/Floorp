@@ -7,7 +7,9 @@
 const { Cu, CC } = require("chrome");
 
 const { DebuggerServer } = require("devtools/server/main");
-const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+const {
+  ActorRegistry,
+} = require("devtools/server/actors/utils/actor-registry");
 
 /**
  * Support for actor registration. Main used by ActorRegistryActor
@@ -29,7 +31,11 @@ exports.registerActor = function(sourceText, fileName, options) {
   });
 };
 
-exports.registerActorInCurrentProcess = function(sourceText, fileName, options) {
+exports.registerActorInCurrentProcess = function(
+  sourceText,
+  fileName,
+  options
+) {
   const principal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
   const sandbox = Cu.Sandbox(principal);
   sandbox.exports = {};
@@ -39,18 +45,30 @@ exports.registerActorInCurrentProcess = function(sourceText, fileName, options) 
 
   const { prefix, constructor, type } = options;
 
-  if (type.global && !ActorRegistry.globalActorFactories.hasOwnProperty(prefix)) {
-    ActorRegistry.addGlobalActor({
-      constructorName: constructor,
-      constructorFun: sandbox[constructor],
-    }, prefix);
+  if (
+    type.global &&
+    !ActorRegistry.globalActorFactories.hasOwnProperty(prefix)
+  ) {
+    ActorRegistry.addGlobalActor(
+      {
+        constructorName: constructor,
+        constructorFun: sandbox[constructor],
+      },
+      prefix
+    );
   }
 
-  if (type.target && !ActorRegistry.targetScopedActorFactories.hasOwnProperty(prefix)) {
-    ActorRegistry.addTargetScopedActor({
-      constructorName: constructor,
-      constructorFun: sandbox[constructor],
-    }, prefix);
+  if (
+    type.target &&
+    !ActorRegistry.targetScopedActorFactories.hasOwnProperty(prefix)
+  ) {
+    ActorRegistry.addTargetScopedActor(
+      {
+        constructorName: constructor,
+        constructorFun: sandbox[constructor],
+      },
+      prefix
+    );
   }
 };
 

@@ -12,4 +12,6 @@ ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
 
 var EXPORTED_SYMBOLS = ["ReaderWorker"];
 
-var ReaderWorker = new BasePromiseWorker("resource://gre/modules/reader/ReaderWorker.js");
+var ReaderWorker = new BasePromiseWorker(
+  "resource://gre/modules/reader/ReaderWorker.js"
+);

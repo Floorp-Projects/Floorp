@@ -21,34 +21,43 @@ This is a complex test checking the internal "deferred doom" functionality in bo
 
 const kENTRYCOUNT = 10;
 
-function log_(msg) { if (true) dump(">>>>>>>>>>>>> " + msg + "\n"); }
+function log_(msg) {
+  if (true) {
+    dump(">>>>>>>>>>>>> " + msg + "\n");
+  }
+}
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
 
   var lci = Services.loadContextInfo.default;
   var testingInterface = get_cache_service().QueryInterface(Ci.nsICacheTesting);
   Assert.ok(testingInterface);
 
-  var mc = new MultipleCallbacks(1, function() {
-    // (2)
+  var mc = new MultipleCallbacks(
+    1,
+    function() {
+      // (2)
 
-    mc = new MultipleCallbacks(1, finish_cache2_test);
-    // Release all references to cache entries so that they can be purged
-    // Calling gc() four times is needed to force it to actually release
-    // entries that are obviously unreferenced.  Yeah, I know, this is wacky...
-    gc();
-    gc();
-    executeSoon(() => {
+      mc = new MultipleCallbacks(1, finish_cache2_test);
+      // Release all references to cache entries so that they can be purged
+      // Calling gc() four times is needed to force it to actually release
+      // entries that are obviously unreferenced.  Yeah, I know, this is wacky...
       gc();
       gc();
-      log_("purging");
+      executeSoon(() => {
+        gc();
+        gc();
+        log_("purging");
 
-      // Invokes cacheservice:purge-memory-pools when done.
-      get_cache_service().purgeFromMemory(Ci.nsICacheStorageService.PURGE_EVERYTHING); // goes to (3)
-    });
-  }, true);
+        // Invokes cacheservice:purge-memory-pools when done.
+        get_cache_service().purgeFromMemory(
+          Ci.nsICacheStorageService.PURGE_EVERYTHING
+        ); // goes to (3)
+      });
+    },
+    true
+  );
 
   // (1), here we start
 
@@ -58,73 +67,120 @@ function run_test()
 
     // Callbacks 1-20
     mc.add();
-    asyncOpenCacheEntry("http://pinned" + i + "/", "pin", Ci.nsICacheStorage.OPEN_TRUNCATE, lci,
-      new OpenCallback(NEW|WAITFORWRITE, "m" + i, "p" + i, function(entry) { mc.fired(); }));
+    asyncOpenCacheEntry(
+      "http://pinned" + i + "/",
+      "pin",
+      Ci.nsICacheStorage.OPEN_TRUNCATE,
+      lci,
+      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "p" + i, function(entry) {
+        mc.fired();
+      })
+    );
 
     mc.add();
-    asyncOpenCacheEntry("http://common" + i + "/", "disk", Ci.nsICacheStorage.OPEN_TRUNCATE, lci,
-      new OpenCallback(NEW|WAITFORWRITE, "m" + i, "d" + i, function(entry) { mc.fired(); }));
+    asyncOpenCacheEntry(
+      "http://common" + i + "/",
+      "disk",
+      Ci.nsICacheStorage.OPEN_TRUNCATE,
+      lci,
+      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "d" + i, function(entry) {
+        mc.fired();
+      })
+    );
   }
 
   mc.fired(); // Goes to (2)
 
-  var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  os.addObserver({
-    observe(subject, topic, data)
+  var os = Cc["@mozilla.org/observer-service;1"].getService(
+    Ci.nsIObserverService
+  );
+  os.addObserver(
     {
-      // (3)
+      observe(subject, topic, data) {
+        // (3)
 
-      log_("after purge, second set of opens");
-      // Prevent the I/O thread from reading the data.  We first want to schedule clear of the cache.
-      // This deterministically emulates a slow hard drive.
-      testingInterface.suspendCacheIOThread(3);
+        log_("after purge, second set of opens");
+        // Prevent the I/O thread from reading the data.  We first want to schedule clear of the cache.
+        // This deterministically emulates a slow hard drive.
+        testingInterface.suspendCacheIOThread(3);
 
-      // All entries should load
-      // Callbacks 21-40
-      for (i = 0; i < kENTRYCOUNT; ++i) {
-        mc.add();
-        asyncOpenCacheEntry("http://pinned" + i + "/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, lci,
-          new OpenCallback(NORMAL, "m" + i, "p" + i, function(entry) { mc.fired(); }));
+        // All entries should load
+        // Callbacks 21-40
+        for (i = 0; i < kENTRYCOUNT; ++i) {
+          mc.add();
+          asyncOpenCacheEntry(
+            "http://pinned" + i + "/",
+            "disk",
+            Ci.nsICacheStorage.OPEN_NORMALLY,
+            lci,
+            new OpenCallback(NORMAL, "m" + i, "p" + i, function(entry) {
+              mc.fired();
+            })
+          );
 
-        // Unfortunately we cannot ensure that entries existing in the cache will be delivered to the consumer
-        // when soon after are evicted by some cache API call.  It's better to not ensure getting an entry
-        // than allowing to get an entry that was just evicted from the cache.  Entries may be delievered
-        // as new, but are already doomed.  Output stream cannot be openned, or the file handle is already
-        // writing to a doomed file.
-        //
-        // The API now just ensures that entries removed by any of the cache eviction APIs are never more
-        // available to consumers.
-        mc.add();
-        asyncOpenCacheEntry("http://common" + i + "/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, lci,
-          new OpenCallback(MAYBE_NEW|DOOMED, "m" + i, "d" + i, function(entry) { mc.fired(); }));
-      }
+          // Unfortunately we cannot ensure that entries existing in the cache will be delivered to the consumer
+          // when soon after are evicted by some cache API call.  It's better to not ensure getting an entry
+          // than allowing to get an entry that was just evicted from the cache.  Entries may be delievered
+          // as new, but are already doomed.  Output stream cannot be openned, or the file handle is already
+          // writing to a doomed file.
+          //
+          // The API now just ensures that entries removed by any of the cache eviction APIs are never more
+          // available to consumers.
+          mc.add();
+          asyncOpenCacheEntry(
+            "http://common" + i + "/",
+            "disk",
+            Ci.nsICacheStorage.OPEN_NORMALLY,
+            lci,
+            new OpenCallback(MAYBE_NEW | DOOMED, "m" + i, "d" + i, function(
+              entry
+            ) {
+              mc.fired();
+            })
+          );
+        }
 
-      log_("clearing");
-      // Now clear everything except pinned, all entries are in state of reading
-      get_cache_service().clear();
-      log_("cleared");
+        log_("clearing");
+        // Now clear everything except pinned, all entries are in state of reading
+        get_cache_service().clear();
+        log_("cleared");
 
-      // Resume reading the cache data, only now the pinning status on entries will be discovered,
-      // the deferred dooming code will trigger.
-      testingInterface.resumeCacheIOThread();
+        // Resume reading the cache data, only now the pinning status on entries will be discovered,
+        // the deferred dooming code will trigger.
+        testingInterface.resumeCacheIOThread();
 
-      log_("third set of opens");
-      // Now open again.  Pinned entries should be there, disk entries should be the renewed entries.
-      // Callbacks 41-60
-      for (i = 0; i < kENTRYCOUNT; ++i) {
-        mc.add();
-        asyncOpenCacheEntry("http://pinned" + i + "/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, lci,
-          new OpenCallback(NORMAL, "m" + i, "p" + i, function(entry) { mc.fired(); }));
+        log_("third set of opens");
+        // Now open again.  Pinned entries should be there, disk entries should be the renewed entries.
+        // Callbacks 41-60
+        for (i = 0; i < kENTRYCOUNT; ++i) {
+          mc.add();
+          asyncOpenCacheEntry(
+            "http://pinned" + i + "/",
+            "disk",
+            Ci.nsICacheStorage.OPEN_NORMALLY,
+            lci,
+            new OpenCallback(NORMAL, "m" + i, "p" + i, function(entry) {
+              mc.fired();
+            })
+          );
 
-        mc.add();
-        asyncOpenCacheEntry("http://common" + i + "/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, lci,
-          new OpenCallback(NEW, "m2" + i, "d2" + i, function(entry) { mc.fired(); }));
-      }
+          mc.add();
+          asyncOpenCacheEntry(
+            "http://common" + i + "/",
+            "disk",
+            Ci.nsICacheStorage.OPEN_NORMALLY,
+            lci,
+            new OpenCallback(NEW, "m2" + i, "d2" + i, function(entry) {
+              mc.fired();
+            })
+          );
+        }
 
-      mc.fired(); // Finishes this test
-    }
-  }, "cacheservice:purge-memory-pools");
-
+        mc.fired(); // Finishes this test
+      },
+    },
+    "cacheservice:purge-memory-pools"
+  );
 
   do_test_pending();
 }

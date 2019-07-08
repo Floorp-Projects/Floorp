@@ -5,13 +5,17 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "HomeProvider" ];
+var EXPORTED_SYMBOLS = ["HomeProvider"];
 
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Sqlite} = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 /*
  * SCHEMA_VERSION history:
@@ -36,8 +40,12 @@ XPCOMUtils.defineLazyGetter(this, "gSyncCheckIntervalSecs", function() {
   return Services.prefs.getIntPref(PREF_SYNC_CHECK_INTERVAL_SECS);
 });
 
-XPCOMUtils.defineLazyServiceGetter(this,
-  "gUpdateTimerManager", "@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUpdateTimerManager",
+  "@mozilla.org/updates/timer-manager;1",
+  "nsIUpdateTimerManager"
+);
 
 /**
  * All SQL statements should be defined here.
@@ -45,33 +53,30 @@ XPCOMUtils.defineLazyServiceGetter(this,
 const SQL = {
   createItemsTable:
     "CREATE TABLE items (" +
-      "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      "dataset_id TEXT NOT NULL, " +
-      "url TEXT," +
-      "title TEXT," +
-      "description TEXT," +
-      "image_url TEXT," +
-      "background_color TEXT," +
-      "background_url TEXT," +
-      "filter TEXT," +
-      "created INTEGER" +
+    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "dataset_id TEXT NOT NULL, " +
+    "url TEXT," +
+    "title TEXT," +
+    "description TEXT," +
+    "image_url TEXT," +
+    "background_color TEXT," +
+    "background_url TEXT," +
+    "filter TEXT," +
+    "created INTEGER" +
     ")",
 
-  dropItemsTable:
-    "DROP TABLE items",
+  dropItemsTable: "DROP TABLE items",
 
   insertItem:
     "INSERT INTO items (dataset_id, url, title, description, image_url, background_color, background_url, filter, created) " +
-      "VALUES (:dataset_id, :url, :title, :description, :image_url, :background_color, :background_url, :filter, :created)",
+    "VALUES (:dataset_id, :url, :title, :description, :image_url, :background_color, :background_url, :filter, :created)",
 
-  deleteFromDataset:
-    "DELETE FROM items WHERE dataset_id = :dataset_id",
+  deleteFromDataset: "DELETE FROM items WHERE dataset_id = :dataset_id",
 
   addColumnBackgroundColor:
     "ALTER TABLE items ADD COLUMN background_color TEXT",
 
-  addColumnBackgroundUrl:
-    "ALTER TABLE items ADD COLUMN background_url TEXT",
+  addColumnBackgroundUrl: "ALTER TABLE items ADD COLUMN background_url TEXT",
 };
 
 /**
@@ -79,8 +84,13 @@ const SQL = {
  * but we express this as "wifi" to the user.
  */
 function isUsingWifi() {
-  let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
-  return (network.linkType === Ci.nsINetworkLinkService.LINK_TYPE_WIFI || network.linkType === Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET);
+  let network = Cc["@mozilla.org/network/network-link-service;1"].getService(
+    Ci.nsINetworkLinkService
+  );
+  return (
+    network.linkType === Ci.nsINetworkLinkService.LINK_TYPE_WIFI ||
+    network.linkType === Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET
+  );
 }
 
 function getNowInSeconds() {
@@ -104,7 +114,10 @@ var gSyncCallbacks = {};
  */
 function syncTimerCallback(timer) {
   for (let datasetId in gSyncCallbacks) {
-    let lastSyncTime = Services.prefs.getIntPref(getLastSyncPrefName(datasetId), 0);
+    let lastSyncTime = Services.prefs.getIntPref(
+      getLastSyncPrefName(datasetId),
+      0
+    );
 
     let now = getNowInSeconds();
     let { interval: interval, callback: callback } = gSyncCallbacks[datasetId];
@@ -154,8 +167,13 @@ var HomeProvider = Object.freeze({
    */
   requestSync: function(datasetId, callback) {
     // Make sure it's a good time to sync.
-    if ((Services.prefs.getIntPref(PREF_SYNC_UPDATE_MODE) === 1) && !isUsingWifi()) {
-      Cu.reportError("HomeProvider: Failed to sync because device is not on a local network");
+    if (
+      Services.prefs.getIntPref(PREF_SYNC_UPDATE_MODE) === 1 &&
+      !isUsingWifi()
+    ) {
+      Cu.reportError(
+        "HomeProvider: Failed to sync because device is not on a local network"
+      );
       return false;
     }
 
@@ -173,8 +191,13 @@ var HomeProvider = Object.freeze({
   addPeriodicSync: function(datasetId, interval, callback) {
     // Warn developers if they're expecting more frequent notifications that we allow.
     if (interval < gSyncCheckIntervalSecs) {
-      Cu.reportError("HomeProvider: Warning for dataset " + datasetId +
-        " : Sync notifications are throttled to " + gSyncCheckIntervalSecs + " seconds");
+      Cu.reportError(
+        "HomeProvider: Warning for dataset " +
+          datasetId +
+          " : Sync notifications are throttled to " +
+          gSyncCheckIntervalSecs +
+          " seconds"
+      );
     }
 
     gSyncCallbacks[datasetId] = {
@@ -183,7 +206,11 @@ var HomeProvider = Object.freeze({
     };
 
     if (!gTimerRegistered) {
-      gUpdateTimerManager.registerTimer("home-provider-sync-timer", syncTimerCallback, gSyncCheckIntervalSecs);
+      gUpdateTimerManager.registerTimer(
+        "home-provider-sync-timer",
+        syncTimerCallback,
+        gSyncCheckIntervalSecs
+      );
       gTimerRegistered = true;
     }
   },
@@ -276,13 +303,17 @@ async function getDatabaseConnection() {
  */
 function validateItem(datasetId, item) {
   if (!item.url) {
-    throw new ValidationError("HomeStorage: All rows must have an URL: datasetId = " +
-                              datasetId);
+    throw new ValidationError(
+      "HomeStorage: All rows must have an URL: datasetId = " + datasetId
+    );
   }
 
   if (!item.image_url && !item.title && !item.description) {
-    throw new ValidationError("HomeStorage: All rows must have at least an image URL, " +
-                              "or a title or a description: datasetId = " + datasetId);
+    throw new ValidationError(
+      "HomeStorage: All rows must have at least an image URL, " +
+        "or a title or a description: datasetId = " +
+        datasetId
+    );
   }
 }
 
@@ -299,14 +330,18 @@ function refreshDataset(datasetId) {
   }
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback(function(timer) {
-    delete gRefreshTimers[datasetId];
+  timer.initWithCallback(
+    function(timer) {
+      delete gRefreshTimers[datasetId];
 
-    EventDispatcher.instance.sendRequest({
-      type: "HomePanels:RefreshDataset",
-      datasetId: datasetId,
-    });
-  }, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+      EventDispatcher.instance.sendRequest({
+        type: "HomePanels:RefreshDataset",
+        datasetId: datasetId,
+      });
+    },
+    100,
+    Ci.nsITimer.TYPE_ONE_SHOT
+  );
 
   gRefreshTimers[datasetId] = timer;
 }
@@ -333,36 +368,42 @@ HomeStorage.prototype = {
    */
   async save(data, options) {
     if (data && data.length > MAX_SAVE_COUNT) {
-      throw new Error(`save failed for dataset = ${this.datasetId}: ` +
-        `you cannot save more than ${MAX_SAVE_COUNT} items at once`);
+      throw new Error(
+        `save failed for dataset = ${this.datasetId}: ` +
+          `you cannot save more than ${MAX_SAVE_COUNT} items at once`
+      );
     }
 
     let db = await getDatabaseConnection();
     try {
-      await db.executeTransaction(async function save_transaction() {
-        if (options && options.replace) {
-          await db.executeCached(SQL.deleteFromDataset, { dataset_id: this.datasetId });
-        }
+      await db.executeTransaction(
+        async function save_transaction() {
+          if (options && options.replace) {
+            await db.executeCached(SQL.deleteFromDataset, {
+              dataset_id: this.datasetId,
+            });
+          }
 
-        // Insert data into DB.
-        for (let item of data) {
-          validateItem(this.datasetId, item);
+          // Insert data into DB.
+          for (let item of data) {
+            validateItem(this.datasetId, item);
 
-          // XXX: Directly pass item as params? More validation for item?
-          let params = {
-            dataset_id: this.datasetId,
-            url: item.url,
-            title: item.title,
-            description: item.description,
-            image_url: item.image_url,
-            background_color: item.background_color,
-            background_url: item.background_url,
-            filter: item.filter,
-            created: Date.now(),
-          };
-          await db.executeCached(SQL.insertItem, params);
-        }
-      }.bind(this));
+            // XXX: Directly pass item as params? More validation for item?
+            let params = {
+              dataset_id: this.datasetId,
+              url: item.url,
+              title: item.title,
+              description: item.description,
+              image_url: item.image_url,
+              background_color: item.background_color,
+              background_url: item.background_url,
+              filter: item.filter,
+              created: Date.now(),
+            };
+            await db.executeCached(SQL.insertItem, params);
+          }
+        }.bind(this)
+      );
     } finally {
       await db.close();
     }

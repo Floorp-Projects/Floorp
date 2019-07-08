@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-
 // Test SessionStartup.sessionType in the following scenario:
 // - valid sessionstore.js;
 // - valid sessionCheckpoints.json with all checkpoints;
@@ -9,7 +8,10 @@
 
 function run_test() {
   let profd = do_get_profile();
-  var SessionFile = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", {}).SessionFile;
+  var SessionFile = ChromeUtils.import(
+    "resource:///modules/sessionstore/SessionFile.jsm",
+    {}
+  ).SessionFile;
 
   let sourceSession = do_get_file("data/sessionstore_valid.js");
   sourceSession.copyTo(profd, "sessionstore.js");

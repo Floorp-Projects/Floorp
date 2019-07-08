@@ -7,9 +7,17 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_ENABLE_MEMORY_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const {
+  UI_ENABLE_MEMORY_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -28,46 +36,67 @@ add_task(async function() {
   const memoryGraph = OverviewView.graphs.get("memory");
   const framerateGraph = OverviewView.graphs.get("framerate");
 
-  ok(markersOverview,
-    "The markers graph should have been created now.");
-  ok(memoryGraph,
-    "The memory graph should have been created now.");
-  ok(framerateGraph,
-    "The framerate graph should have been created now.");
+  ok(markersOverview, "The markers graph should have been created now.");
+  ok(memoryGraph, "The memory graph should have been created now.");
+  ok(framerateGraph, "The framerate graph should have been created now.");
 
-  ok(!markersOverview.selectionEnabled,
-    "Selection shouldn't be enabled when the first recording started (2).");
-  ok(!memoryGraph.selectionEnabled,
-    "Selection shouldn't be enabled when the first recording started (3).");
-  ok(!framerateGraph.selectionEnabled,
-    "Selection shouldn't be enabled when the first recording started (1).");
+  ok(
+    !markersOverview.selectionEnabled,
+    "Selection shouldn't be enabled when the first recording started (2)."
+  );
+  ok(
+    !memoryGraph.selectionEnabled,
+    "Selection shouldn't be enabled when the first recording started (3)."
+  );
+  ok(
+    !framerateGraph.selectionEnabled,
+    "Selection shouldn't be enabled when the first recording started (1)."
+  );
 
   await stopRecording(panel);
 
-  ok(markersOverview.selectionEnabled,
-    "Selection should be enabled when the first recording finishes (2).");
-  ok(memoryGraph.selectionEnabled,
-    "Selection should be enabled when the first recording finishes (3).");
-  ok(framerateGraph.selectionEnabled,
-    "Selection should be enabled when the first recording finishes (1).");
+  ok(
+    markersOverview.selectionEnabled,
+    "Selection should be enabled when the first recording finishes (2)."
+  );
+  ok(
+    memoryGraph.selectionEnabled,
+    "Selection should be enabled when the first recording finishes (3)."
+  );
+  ok(
+    framerateGraph.selectionEnabled,
+    "Selection should be enabled when the first recording finishes (1)."
+  );
 
   await startRecording(panel);
 
-  ok(!markersOverview.selectionEnabled,
-    "Selection shouldn't be enabled when the second recording started (2).");
-  ok(!memoryGraph.selectionEnabled,
-    "Selection shouldn't be enabled when the second recording started (3).");
-  ok(!framerateGraph.selectionEnabled,
-    "Selection shouldn't be enabled when the second recording started (1).");
+  ok(
+    !markersOverview.selectionEnabled,
+    "Selection shouldn't be enabled when the second recording started (2)."
+  );
+  ok(
+    !memoryGraph.selectionEnabled,
+    "Selection shouldn't be enabled when the second recording started (3)."
+  );
+  ok(
+    !framerateGraph.selectionEnabled,
+    "Selection shouldn't be enabled when the second recording started (1)."
+  );
 
   await stopRecording(panel);
 
-  ok(markersOverview.selectionEnabled,
-    "Selection should be enabled when the first second finishes (2).");
-  ok(memoryGraph.selectionEnabled,
-    "Selection should be enabled when the first second finishes (3).");
-  ok(framerateGraph.selectionEnabled,
-    "Selection should be enabled when the first second finishes (1).");
+  ok(
+    markersOverview.selectionEnabled,
+    "Selection should be enabled when the first second finishes (2)."
+  );
+  ok(
+    memoryGraph.selectionEnabled,
+    "Selection should be enabled when the first second finishes (3)."
+  );
+  ok(
+    framerateGraph.selectionEnabled,
+    "Selection should be enabled when the first second finishes (1)."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

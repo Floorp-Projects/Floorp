@@ -7,12 +7,13 @@
 
 do_get_profile();
 
-const gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB);
+const gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 const PKCS12_FILE = "test_certDB_import/cert_from_windows.pfx";
 const PKCS12_FILE_EMPTY_PASS =
-        "test_certDB_import/cert_from_windows_emptypass.pfx";
+  "test_certDB_import/cert_from_windows_emptypass.pfx";
 const PKCS12_FILE_NO_PASS = "test_certDB_import/cert_from_windows_nopass.pfx";
 const CERT_COMMON_NAME = "test_cert_from_windows";
 const TEST_CERT_PASSWORD = "黒い";
@@ -89,8 +90,10 @@ function doesCertExist(commonName) {
 function runOneTestcase(testcase) {
   info(`running ${testcase.name}`);
   if (testcase.checkCertExist) {
-    ok(!doesCertExist(CERT_COMMON_NAME),
-       "cert should not be in the database before import");
+    ok(
+      !doesCertExist(CERT_COMMON_NAME),
+      "cert should not be in the database before import"
+    );
   }
 
   // Import and check for failure.
@@ -100,8 +103,11 @@ function runOneTestcase(testcase) {
   gCurrentTestcase = testcase;
   let errorCode = gCertDB.importPKCS12File(certFile, testcase.passwordToUse);
   equal(errorCode, testcase.errorCode, `verifying error code`);
-  equal(doesCertExist(CERT_COMMON_NAME), testcase.successExpected,
-        `cert should${testcase.successExpected ? "" : " not"} be found now`);
+  equal(
+    doesCertExist(CERT_COMMON_NAME),
+    testcase.successExpected,
+    `cert should${testcase.successExpected ? "" : " not"} be found now`
+  );
 }
 
 function run_test() {

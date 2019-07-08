@@ -8,7 +8,7 @@
 
 let gElements = {};
 
-document.addEventListener("DOMContentLoaded", (e) => {
+document.addEventListener("DOMContentLoaded", e => {
   RPMAddMessageListener("Certificate", showCertificate);
   RPMSendAsyncMessage("getCertificate");
   gElements.certificateSection = document.querySelector("certificate-section");
@@ -28,7 +28,7 @@ const updateSelectedItem = (() => {
   };
 })();
 
-const str2ab = (str) => {
+const str2ab = str => {
   let buf = new ArrayBuffer(str.length);
   let bufView = new Uint8Array(buf);
   for (let i = 0; i < str.length; i++) {
@@ -37,7 +37,7 @@ const str2ab = (str) => {
   return buf;
 };
 
-const showCertificate = (message) => {
+const showCertificate = message => {
   console.log("certificate ", message.data.certs);
   let chain = message.data.certs;
   let builtChain = chain.map(cert => {

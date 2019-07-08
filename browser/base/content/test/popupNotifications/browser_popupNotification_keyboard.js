@@ -9,7 +9,9 @@ function test() {
   ok(PopupNotifications.panel, "PopupNotifications panel exists");
 
   // Force tabfocus for all elements on OSX.
-  SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]}).then(setup);
+  SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] }).then(
+    setup
+  );
 }
 
 // Focusing on notification icon buttons is handled by the ToolbarKeyboardNavigator
@@ -27,7 +29,8 @@ function focusNotificationAnchor(anchor) {
 var tests = [
   // Test that for persistent notifications,
   // the secondary action is triggered by pressing the escape key.
-  { id: "Test#1",
+  {
+    id: "Test#1",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.persistent = true;
@@ -40,14 +43,26 @@ var tests = [
     onHidden(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
       ok(this.notifyObj.secondaryActionClicked, "secondaryAction was clicked");
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-      is(this.notifyObj.mainActionSource, undefined, "shouldn't have a main action source.");
-      is(this.notifyObj.secondaryActionSource, "esc-press", "secondary action should be from ESC key press");
+      is(
+        this.notifyObj.mainActionSource,
+        undefined,
+        "shouldn't have a main action source."
+      );
+      is(
+        this.notifyObj.secondaryActionSource,
+        "esc-press",
+        "secondary action should be from ESC key press"
+      );
     },
   },
   // Test that for non-persistent notifications, the escape key dismisses the notification.
-  { id: "Test#2",
+  {
+    id: "Test#2",
     async run() {
       await waitForWindowReadyForPopupNotifications(window);
       this.notifyObj = new BasicNotification(this.id);
@@ -59,16 +74,34 @@ var tests = [
     },
     onHidden(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
-      ok(!this.notifyObj.secondaryActionClicked, "secondaryAction was not clicked");
-      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback triggered");
-      ok(!this.notifyObj.removedCallbackTriggered, "removed callback was not triggered");
-      is(this.notifyObj.mainActionSource, undefined, "shouldn't have a main action source.");
-      is(this.notifyObj.secondaryActionSource, undefined, "shouldn't have a secondary action source.");
+      ok(
+        !this.notifyObj.secondaryActionClicked,
+        "secondaryAction was not clicked"
+      );
+      ok(
+        this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback triggered"
+      );
+      ok(
+        !this.notifyObj.removedCallbackTriggered,
+        "removed callback was not triggered"
+      );
+      is(
+        this.notifyObj.mainActionSource,
+        undefined,
+        "shouldn't have a main action source."
+      );
+      is(
+        this.notifyObj.secondaryActionSource,
+        undefined,
+        "shouldn't have a secondary action source."
+      );
       this.notification.remove();
     },
   },
   // Test that the space key on an anchor element focuses an active notification
-  { id: "Test#3",
+  {
+    id: "Test#3",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.anchorID = "geo-notification-icon";
@@ -85,11 +118,12 @@ var tests = [
       is(document.activeElement, popup.children[0].closebutton);
       this.notification.remove();
     },
-    onHidden(popup) { },
+    onHidden(popup) {},
   },
   // Test that you can switch between active notifications with the space key
   // and that the notification is focused on selection.
-  { id: "Test#4",
+  {
+    id: "Test#4",
     async run() {
       let notifyObj1 = new BasicNotification(this.id);
       notifyObj1.id += "_1";
@@ -146,7 +180,8 @@ var tests = [
     },
   },
   // Test that passing the autofocus option will focus an opened notification.
-  { id: "Test#5",
+  {
+    id: "Test#5",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.anchorID = "geo-notification-icon";
@@ -188,35 +223,45 @@ var tests = [
     },
   },
   // Test that focus is not moved out of a content element if autofocus is not set.
-  { id: "Test#6",
+  {
+    id: "Test#6",
     async run() {
       let id = this.id;
-      await BrowserTestUtils.withNewTab("data:text/html,<input id='test-input'/>", async function(browser) {
-        let notifyObj = new BasicNotification(id);
-        await ContentTask.spawn(browser, {}, function() {
-          content.document.getElementById("test-input").focus();
-        });
+      await BrowserTestUtils.withNewTab(
+        "data:text/html,<input id='test-input'/>",
+        async function(browser) {
+          let notifyObj = new BasicNotification(id);
+          await ContentTask.spawn(browser, {}, function() {
+            content.document.getElementById("test-input").focus();
+          });
 
-        let opened = waitForNotificationPanel();
-        let notification = showNotification(notifyObj);
-        await opened;
+          let opened = waitForNotificationPanel();
+          let notification = showNotification(notifyObj);
+          await opened;
 
-        // Check that the focused element in the chrome window
-        // is either the browser in case we're running on e10s
-        // or the input field in case of non-e10s.
-        if (gMultiProcessBrowser) {
-          is(Services.focus.focusedElement, browser);
-        } else {
-          is(Services.focus.focusedElement, browser.contentDocument.getElementById("test-input"));
+          // Check that the focused element in the chrome window
+          // is either the browser in case we're running on e10s
+          // or the input field in case of non-e10s.
+          if (gMultiProcessBrowser) {
+            is(Services.focus.focusedElement, browser);
+          } else {
+            is(
+              Services.focus.focusedElement,
+              browser.contentDocument.getElementById("test-input")
+            );
+          }
+
+          // Check that the input field is still focused inside the browser.
+          await ContentTask.spawn(browser, {}, function() {
+            is(
+              content.document.activeElement,
+              content.document.getElementById("test-input")
+            );
+          });
+
+          notification.remove();
         }
-
-        // Check that the input field is still focused inside the browser.
-        await ContentTask.spawn(browser, {}, function() {
-          is(content.document.activeElement, content.document.getElementById("test-input"));
-        });
-
-        notification.remove();
-      });
+      );
       goNext();
     },
   },

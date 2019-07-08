@@ -33,7 +33,9 @@ class AdbDevice {
 
     // Filter to lines with "firefox-debugger-socket"
     let socketInfos = rawSocketInfo.split(/\r?\n/);
-    socketInfos = socketInfos.filter(l => l.includes("firefox-debugger-socket"));
+    socketInfos = socketInfos.filter(l =>
+      l.includes("firefox-debugger-socket")
+    );
 
     // It's possible to have multiple lines with the same path, so de-dupe them
     const socketPaths = new Set();

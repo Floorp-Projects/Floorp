@@ -9,20 +9,34 @@
 
 // Globals
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginImport",
+  "resource://gre/modules/LoginImport.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginStore",
+  "resource://gre/modules/LoginStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sqlite",
+  "resource://gre/modules/Sqlite.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "LoginImport",
-                               "resource://gre/modules/LoginImport.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginStore",
-                               "resource://gre/modules/LoginStore.jsm");
-ChromeUtils.defineModuleGetter(this, "Sqlite",
-                               "resource://gre/modules/Sqlite.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gLoginManagerCrypto",
-                                   "@mozilla.org/login-manager/crypto/SDR;1",
-                                   "nsILoginManagerCrypto");
-XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gLoginManagerCrypto",
+  "@mozilla.org/login-manager/crypto/SDR;1",
+  "nsILoginManagerCrypto"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUUIDGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 /**
  * Creates empty login data tables in the given SQLite connection, resembling
@@ -31,28 +45,34 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
 function promiseCreateDatabaseSchema(aConnection) {
   return (async function() {
     await aConnection.setSchemaVersion(5);
-    await aConnection.execute("CREATE TABLE moz_logins (" +
-                              "id                  INTEGER PRIMARY KEY," +
-                              "hostname            TEXT NOT NULL," +
-                              "httpRealm           TEXT," +
-                              "formSubmitURL       TEXT," +
-                              "usernameField       TEXT NOT NULL," +
-                              "passwordField       TEXT NOT NULL," +
-                              "encryptedUsername   TEXT NOT NULL," +
-                              "encryptedPassword   TEXT NOT NULL," +
-                              "guid                TEXT," +
-                              "encType             INTEGER," +
-                              "timeCreated         INTEGER," +
-                              "timeLastUsed        INTEGER," +
-                              "timePasswordChanged INTEGER," +
-                              "timesUsed           INTEGER)");
-    await aConnection.execute("CREATE TABLE moz_disabledHosts (" +
-                              "id                  INTEGER PRIMARY KEY," +
-                              "hostname            TEXT UNIQUE)");
-    await aConnection.execute("CREATE TABLE moz_deleted_logins (" +
-                              "id                  INTEGER PRIMARY KEY," +
-                              "guid                TEXT," +
-                              "timeDeleted         INTEGER)");
+    await aConnection.execute(
+      "CREATE TABLE moz_logins (" +
+        "id                  INTEGER PRIMARY KEY," +
+        "hostname            TEXT NOT NULL," +
+        "httpRealm           TEXT," +
+        "formSubmitURL       TEXT," +
+        "usernameField       TEXT NOT NULL," +
+        "passwordField       TEXT NOT NULL," +
+        "encryptedUsername   TEXT NOT NULL," +
+        "encryptedPassword   TEXT NOT NULL," +
+        "guid                TEXT," +
+        "encType             INTEGER," +
+        "timeCreated         INTEGER," +
+        "timeLastUsed        INTEGER," +
+        "timePasswordChanged INTEGER," +
+        "timesUsed           INTEGER)"
+    );
+    await aConnection.execute(
+      "CREATE TABLE moz_disabledHosts (" +
+        "id                  INTEGER PRIMARY KEY," +
+        "hostname            TEXT UNIQUE)"
+    );
+    await aConnection.execute(
+      "CREATE TABLE moz_deleted_logins (" +
+        "id                  INTEGER PRIMARY KEY," +
+        "guid                TEXT," +
+        "timeDeleted         INTEGER)"
+    );
   })();
 }
 
@@ -82,20 +102,27 @@ function promiseInsertLoginInfo(aConnection, aLoginInfo) {
     aLoginInfo.timesUsed,
   ];
 
-  return aConnection.execute("INSERT INTO moz_logins (hostname, " +
-                             "httpRealm, formSubmitURL, usernameField, " +
-                             "passwordField, encryptedUsername, " +
-                             "encryptedPassword, guid, encType, timeCreated, " +
-                             "timeLastUsed, timePasswordChanged, timesUsed) " +
-                             "VALUES (?" + ",?".repeat(12) + ")", values);
+  return aConnection.execute(
+    "INSERT INTO moz_logins (hostname, " +
+      "httpRealm, formSubmitURL, usernameField, " +
+      "passwordField, encryptedUsername, " +
+      "encryptedPassword, guid, encType, timeCreated, " +
+      "timeLastUsed, timePasswordChanged, timesUsed) " +
+      "VALUES (?" +
+      ",?".repeat(12) +
+      ")",
+    values
+  );
 }
 
 /**
  * Inserts a new disabled host entry in the database.
  */
 function promiseInsertDisabledHost(aConnection, aOrigin) {
-  return aConnection.execute("INSERT INTO moz_disabledHosts (hostname) " +
-                             "VALUES (?)", [aOrigin]);
+  return aConnection.execute(
+    "INSERT INTO moz_disabledHosts (hostname) VALUES (?)",
+    [aOrigin]
+  );
 }
 
 // Tests
@@ -137,25 +164,33 @@ add_task(async function test_import() {
 
   // Verify that every login in the test data has a matching imported row.
   Assert.equal(loginList.length, store.data.logins.length);
-  Assert.ok(loginList.every(function(loginInfo) {
-    return store.data.logins.some(function(loginDataItem) {
-      let username = gLoginManagerCrypto.decrypt(loginDataItem.encryptedUsername);
-      let password = gLoginManagerCrypto.decrypt(loginDataItem.encryptedPassword);
-      return loginDataItem.hostname == loginInfo.origin &&
-             loginDataItem.httpRealm == loginInfo.httpRealm &&
-             loginDataItem.formSubmitURL == loginInfo.formActionOrigin &&
-             loginDataItem.usernameField == loginInfo.usernameField &&
-             loginDataItem.passwordField == loginInfo.passwordField &&
-             username == loginInfo.username &&
-             password == loginInfo.password &&
-             loginDataItem.guid == loginInfo.guid &&
-             loginDataItem.encType == loginInfo.encType &&
-             loginDataItem.timeCreated == loginInfo.timeCreated &&
-             loginDataItem.timeLastUsed == loginInfo.timeLastUsed &&
-             loginDataItem.timePasswordChanged == loginInfo.timePasswordChanged &&
-             loginDataItem.timesUsed == loginInfo.timesUsed;
-    });
-  }));
+  Assert.ok(
+    loginList.every(function(loginInfo) {
+      return store.data.logins.some(function(loginDataItem) {
+        let username = gLoginManagerCrypto.decrypt(
+          loginDataItem.encryptedUsername
+        );
+        let password = gLoginManagerCrypto.decrypt(
+          loginDataItem.encryptedPassword
+        );
+        return (
+          loginDataItem.hostname == loginInfo.origin &&
+          loginDataItem.httpRealm == loginInfo.httpRealm &&
+          loginDataItem.formSubmitURL == loginInfo.formActionOrigin &&
+          loginDataItem.usernameField == loginInfo.usernameField &&
+          loginDataItem.passwordField == loginInfo.passwordField &&
+          username == loginInfo.username &&
+          password == loginInfo.password &&
+          loginDataItem.guid == loginInfo.guid &&
+          loginDataItem.encType == loginInfo.encType &&
+          loginDataItem.timeCreated == loginInfo.timeCreated &&
+          loginDataItem.timeLastUsed == loginInfo.timeLastUsed &&
+          loginDataItem.timePasswordChanged == loginInfo.timePasswordChanged &&
+          loginDataItem.timesUsed == loginInfo.timesUsed
+        );
+      });
+    })
+  );
 });
 
 /**
@@ -170,13 +205,16 @@ add_task(async function test_import_downgraded() {
   try {
     await promiseCreateDatabaseSchema(connection);
     await connection.setSchemaVersion(3);
-    await promiseInsertLoginInfo(connection, TestData.formLogin({
-      guid: gUUIDGenerator.generateUUID().toString(),
-      timeCreated: null,
-      timeLastUsed: null,
-      timePasswordChanged: null,
-      timesUsed: 0,
-    }));
+    await promiseInsertLoginInfo(
+      connection,
+      TestData.formLogin({
+        guid: gUUIDGenerator.generateUUID().toString(),
+        timeCreated: null,
+        timeLastUsed: null,
+        timePasswordChanged: null,
+        timesUsed: 0,
+      })
+    );
   } finally {
     await connection.close();
   }
@@ -206,7 +244,7 @@ add_task(async function test_import_v2() {
   try {
     await new LoginImport(store, loginsSqlite).import();
     do_throw("The operation should have failed.");
-  } catch (ex) { }
+  } catch (ex) {}
 });
 
 /**

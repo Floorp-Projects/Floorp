@@ -7,8 +7,7 @@
 // Test that pseudo elements have no side effect on the box model widget for their
 // container. See bug 1350499.
 
-const TEST_URI =
-  `<style>
+const TEST_URI = `<style>
     .test::before {
       content: 'before';
       margin-top: 5px;
@@ -22,30 +21,53 @@ const TEST_URI =
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  const {inspector, boxmodel, testActor} = await openLayoutView();
+  const { inspector, boxmodel, testActor } = await openLayoutView();
 
   await selectNode(".test", inspector);
 
   // No margin-top defined.
   info("Test that margins are not impacted by a pseudo element");
-  is((await getStyle(testActor, ".test", "margin-top")), "", "margin-top is correct");
-  await checkValueInBoxModel(".boxmodel-margin.boxmodel-top", "0", boxmodel.document);
+  is(
+    await getStyle(testActor, ".test", "margin-top"),
+    "",
+    "margin-top is correct"
+  );
+  await checkValueInBoxModel(
+    ".boxmodel-margin.boxmodel-top",
+    "0",
+    boxmodel.document
+  );
 
   // No padding-top defined.
   info("Test that paddings are not impacted by a pseudo element");
-  is((await getStyle(testActor, ".test", "padding-top")), "", "padding-top is correct");
-  await checkValueInBoxModel(".boxmodel-padding.boxmodel-top", "0", boxmodel.document);
+  is(
+    await getStyle(testActor, ".test", "padding-top"),
+    "",
+    "padding-top is correct"
+  );
+  await checkValueInBoxModel(
+    ".boxmodel-padding.boxmodel-top",
+    "0",
+    boxmodel.document
+  );
 
   // Width should be driven by the parent div.
   info("Test that dimensions are not impacted by a pseudo element");
-  is((await getStyle(testActor, ".test", "width")), "", "width is correct");
-  await checkValueInBoxModel(".boxmodel-content.boxmodel-width", "200",
-    boxmodel.document);
+  is(await getStyle(testActor, ".test", "width"), "", "width is correct");
+  await checkValueInBoxModel(
+    ".boxmodel-content.boxmodel-width",
+    "200",
+    boxmodel.document
+  );
 });
 
 async function checkValueInBoxModel(selector, expectedValue, doc) {
   const span = doc.querySelector(selector + " > span");
-  is(span.textContent, expectedValue, "Should have the right value in the box model.");
+  is(
+    span.textContent,
+    expectedValue,
+    "Should have the right value in the box model."
+  );
 
   EventUtils.synthesizeMouseAtCenter(span, {}, doc.defaultView);
   const editor = doc.querySelector(".styleinspector-propertyeditor");

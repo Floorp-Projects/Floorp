@@ -66,8 +66,8 @@ function formatStopwatchTime(time) {
 
   const sign = time < 0 ? "-" : "";
   let milliseconds = parseInt(Math.abs(time % 1000), 10);
-  let seconds = parseInt(Math.abs((time / 1000)) % 60, 10);
-  let minutes = parseInt(Math.abs((time / (1000 * 60))), 10);
+  let seconds = parseInt(Math.abs(time / 1000) % 60, 10);
+  let minutes = parseInt(Math.abs(time / (1000 * 60)), 10);
 
   minutes = minutes.toString().padStart(2, "0");
   seconds = seconds.toString().padStart(2, "0");

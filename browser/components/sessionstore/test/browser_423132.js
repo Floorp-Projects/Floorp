@@ -5,7 +5,8 @@
  * by sessionstore (bug 423132).
  */
 add_task(async function() {
-  const testURL = "http://mochi.test:8888/browser/" +
+  const testURL =
+    "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_423132_sample.html";
 
   Services.cookies.removeAll();
@@ -37,8 +38,9 @@ add_task(async function() {
 
   // at this point, the cookie should be restored...
   for (var cookie2 of Services.cookies.enumerator) {
-    if (cookie.name == cookie2.name)
+    if (cookie.name == cookie2.name) {
       break;
+    }
   }
   is(cookie.name, cookie2.name, "cookie name successfully restored");
   is(cookie.value, cookie2.value, "cookie value successfully restored");

@@ -33,21 +33,21 @@ add_task(async function() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "name": "contextMenus commands",
-      "permissions": ["contextMenus", "activeTab", "tabs"],
-      "browser_action": {
-        "default_title": "Test BrowserAction",
-        "default_popup": "test.html",
-        "browser_style": true,
+      name: "contextMenus commands",
+      permissions: ["contextMenus", "activeTab", "tabs"],
+      browser_action: {
+        default_title: "Test BrowserAction",
+        default_popup: "test.html",
+        browser_style: true,
       },
-      "page_action": {
-        "default_title": "Test PageAction",
-        "default_popup": "test.html",
-        "browser_style": true,
+      page_action: {
+        default_title: "Test PageAction",
+        default_popup: "test.html",
+        browser_style: true,
       },
-      "sidebar_action": {
-        "default_title": "Test Sidebar",
-        "default_panel": "test.html",
+      sidebar_action: {
+        default_title: "Test Sidebar",
+        default_panel: "test.html",
       },
     },
     background,
@@ -69,11 +69,18 @@ add_task(async function() {
   await extension.awaitMessage("ready");
 
   // open a page so page action works
-  const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html?test=commands";
+  const PAGE =
+    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html?test=commands";
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
-  ok(await testContext("open_sidebar_action"), "_execute_sidebar_action worked");
-  ok(await testContext("open_browser_action"), "_execute_browser_action worked");
+  ok(
+    await testContext("open_sidebar_action"),
+    "_execute_sidebar_action worked"
+  );
+  ok(
+    await testContext("open_browser_action"),
+    "_execute_browser_action worked"
+  );
   ok(await testContext("open_page_action"), "_execute_page_action worked");
 
   BrowserTestUtils.removeTab(tab);

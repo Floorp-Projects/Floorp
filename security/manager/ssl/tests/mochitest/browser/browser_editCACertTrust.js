@@ -6,8 +6,9 @@
 // reflects trust in the cert DB, and correctly updates trust in the cert DB
 // when requested.
 
-var gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
-                .getService(Ci.nsIX509CertDB);
+var gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 /**
  * The cert we're editing the trust of.
@@ -23,24 +24,42 @@ var gCert;
  *          the window of the opened dialog.
  */
 function openEditCertTrustDialog() {
-  let win = window.openDialog("chrome://pippki/content/editcacert.xul", "", "",
-                              gCert);
+  let win = window.openDialog(
+    "chrome://pippki/content/editcacert.xul",
+    "",
+    "",
+    gCert
+  );
   return new Promise((resolve, reject) => {
-    win.addEventListener("load", function() {
-      executeSoon(() => resolve(win));
-    }, {once: true});
+    win.addEventListener(
+      "load",
+      function() {
+        executeSoon(() => resolve(win));
+      },
+      { once: true }
+    );
   });
 }
 
 add_task(async function setup() {
   // Initially trust ca.pem for SSL but not e-mail.
   gCert = await readCertificate("ca.pem", "CT,,");
-  Assert.ok(gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                  Ci.nsIX509CertDB.TRUSTED_SSL),
-            "Sanity check: ca.pem should be trusted for SSL");
-  Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                   Ci.nsIX509CertDB.TRUSTED_EMAIL),
-            "Sanity check: ca.pem should not be trusted for e-mail");
+  Assert.ok(
+    gCertDB.isCertTrusted(
+      gCert,
+      Ci.nsIX509Cert.CA_CERT,
+      Ci.nsIX509CertDB.TRUSTED_SSL
+    ),
+    "Sanity check: ca.pem should be trusted for SSL"
+  );
+  Assert.ok(
+    !gCertDB.isCertTrusted(
+      gCert,
+      Ci.nsIX509Cert.CA_CERT,
+      Ci.nsIX509CertDB.TRUSTED_EMAIL
+    ),
+    "Sanity check: ca.pem should not be trusted for e-mail"
+  );
 });
 
 // Tests the following:
@@ -52,10 +71,11 @@ add_task(async function testAcceptDialog() {
 
   let sslCheckbox = win.document.getElementById("trustSSL");
   let emailCheckbox = win.document.getElementById("trustEmail");
-  Assert.ok(sslCheckbox.checked,
-            "Cert should be trusted for SSL in UI");
-  Assert.ok(!emailCheckbox.checked,
-            "Cert should not be trusted for e-mail in UI");
+  Assert.ok(sslCheckbox.checked, "Cert should be trusted for SSL in UI");
+  Assert.ok(
+    !emailCheckbox.checked,
+    "Cert should not be trusted for e-mail in UI"
+  );
 
   sslCheckbox.checked = false;
   emailCheckbox.checked = true;
@@ -64,12 +84,22 @@ add_task(async function testAcceptDialog() {
   win.document.getElementById("editCaCert").acceptDialog();
   await BrowserTestUtils.windowClosed(win);
 
-  Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                   Ci.nsIX509CertDB.TRUSTED_SSL),
-            "Cert should no longer be trusted for SSL");
-  Assert.ok(gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                  Ci.nsIX509CertDB.TRUSTED_EMAIL),
-            "Cert should now be trusted for e-mail");
+  Assert.ok(
+    !gCertDB.isCertTrusted(
+      gCert,
+      Ci.nsIX509Cert.CA_CERT,
+      Ci.nsIX509CertDB.TRUSTED_SSL
+    ),
+    "Cert should no longer be trusted for SSL"
+  );
+  Assert.ok(
+    gCertDB.isCertTrusted(
+      gCert,
+      Ci.nsIX509Cert.CA_CERT,
+      Ci.nsIX509CertDB.TRUSTED_EMAIL
+    ),
+    "Cert should now be trusted for e-mail"
+  );
 });
 
 // Tests the following:
@@ -81,10 +111,8 @@ add_task(async function testCancelDialog() {
 
   let sslCheckbox = win.document.getElementById("trustSSL");
   let emailCheckbox = win.document.getElementById("trustEmail");
-  Assert.ok(!sslCheckbox.checked,
-            "Cert should not be trusted for SSL in UI");
-  Assert.ok(emailCheckbox.checked,
-            "Cert should be trusted for e-mail in UI");
+  Assert.ok(!sslCheckbox.checked, "Cert should not be trusted for SSL in UI");
+  Assert.ok(emailCheckbox.checked, "Cert should be trusted for e-mail in UI");
 
   sslCheckbox.checked = true;
   emailCheckbox.checked = false;
@@ -93,10 +121,20 @@ add_task(async function testCancelDialog() {
   win.document.getElementById("editCaCert").cancelDialog();
   await BrowserTestUtils.windowClosed(win);
 
-  Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                  Ci.nsIX509CertDB.TRUSTED_SSL),
-            "Cert should still not be trusted for SSL");
-  Assert.ok(gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                  Ci.nsIX509CertDB.TRUSTED_EMAIL),
-            "Cert should still be trusted for e-mail");
+  Assert.ok(
+    !gCertDB.isCertTrusted(
+      gCert,
+      Ci.nsIX509Cert.CA_CERT,
+      Ci.nsIX509CertDB.TRUSTED_SSL
+    ),
+    "Cert should still not be trusted for SSL"
+  );
+  Assert.ok(
+    gCertDB.isCertTrusted(
+      gCert,
+      Ci.nsIX509Cert.CA_CERT,
+      Ci.nsIX509CertDB.TRUSTED_EMAIL
+    ),
+    "Cert should still be trusted for e-mail"
+  );
 });

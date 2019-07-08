@@ -2,22 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {AppManager} = require("devtools/client/webide/modules/app-manager");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { AppManager } = require("devtools/client/webide/modules/app-manager");
 
-window.addEventListener("load", function() {
-  document.addEventListener("visibilitychange", updateUI, true);
-  AppManager.on("app-manager-update", onAppManagerUpdate);
-  updateUI();
-}, {capture: true, once: true});
+window.addEventListener(
+  "load",
+  function() {
+    document.addEventListener("visibilitychange", updateUI, true);
+    AppManager.on("app-manager-update", onAppManagerUpdate);
+    updateUI();
+  },
+  { capture: true, once: true }
+);
 
-window.addEventListener("unload", function() {
-  AppManager.off("app-manager-update", onAppManagerUpdate);
-}, {capture: true, once: true});
+window.addEventListener(
+  "unload",
+  function() {
+    AppManager.off("app-manager-update", onAppManagerUpdate);
+  },
+  { capture: true, once: true }
+);
 
 function onAppManagerUpdate(what, details) {
-  if (what == "project" ||
-      what == "project-validated") {
+  if (what == "project" || what == "project-validated") {
     updateUI();
   }
 }
@@ -82,7 +89,8 @@ function updateUI() {
     } else if (project.type == "mainProcess") {
       document.querySelector("#type").textContent = project.name;
     } else {
-      document.querySelector("#type").textContent = project.type + " " + (manifest.type || "web");
+      document.querySelector("#type").textContent =
+        project.type + " " + (manifest.type || "web");
     }
 
     if (project.type == "packaged") {

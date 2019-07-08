@@ -94,12 +94,13 @@ var TabStateFlusherInternal = {
     }
 
     let mm = browser.messageManager;
-    mm.sendAsyncMessage("SessionStore:flush", {id});
+    mm.sendAsyncMessage("SessionStore:flush", { id });
 
     // Retrieve active requests for given browser.
     let permanentKey = browser.permanentKey;
     let perBrowserRequests = this._requests.get(permanentKey) || new Map();
-    let perBrowserRequestsToNative = this._requestsToNativeListener.get(permanentKey) || new Map();
+    let perBrowserRequestsToNative =
+      this._requestsToNativeListener.get(permanentKey) || new Map();
 
     return new Promise(resolve => {
       // Store resolve() so that we can resolve the promise later.
@@ -108,7 +109,10 @@ var TabStateFlusherInternal = {
 
       // Update the flush requests stored per browser.
       this._requests.set(permanentKey, perBrowserRequests);
-      this._requestsToNativeListener.set(permanentKey, perBrowserRequestsToNative);
+      this._requestsToNativeListener.set(
+        permanentKey,
+        perBrowserRequestsToNative
+      );
     });
   },
 
@@ -146,14 +150,19 @@ var TabStateFlusherInternal = {
     }
 
     // Check if there is request to native listener for given browser.
-    let perBrowserRequestsForNativeListener = this._requestsToNativeListener.get(browser.permanentKey);
+    let perBrowserRequestsForNativeListener = this._requestsToNativeListener.get(
+      browser.permanentKey
+    );
     if (!perBrowserRequestsForNativeListener.has(flushID)) {
       return;
     }
     let waitForNextResolve = perBrowserRequestsForNativeListener.get(flushID);
     if (waitForNextResolve) {
       perBrowserRequestsForNativeListener.set(flushID, false);
-      this._requestsToNativeListener.set(browser.permanentKey, perBrowserRequestsForNativeListener);
+      this._requestsToNativeListener.set(
+        browser.permanentKey,
+        perBrowserRequestsForNativeListener
+      );
       return;
     }
 

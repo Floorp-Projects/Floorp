@@ -4,25 +4,22 @@
 
 "use strict";
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "env",
-    "@mozilla.org/process/environment;1",
-    "nsIEnvironment");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "env",
+  "@mozilla.org/process/environment;1",
+  "nsIEnvironment"
+);
 
-const {
-  PREF_BOOL,
-  PREF_INT,
-  PREF_INVALID,
-  PREF_STRING,
-} = Ci.nsIPrefBranch;
+const { PREF_BOOL, PREF_INT, PREF_INVALID, PREF_STRING } = Ci.nsIPrefBranch;
 
-this.EXPORTED_SYMBOLS = [
-  "Branch",
-  "MarionettePrefs",
-];
+this.EXPORTED_SYMBOLS = ["Branch", "MarionettePrefs"];
 
 class Branch {
   /**
@@ -245,7 +242,7 @@ class EnvironmentPrefs {
    *
    * @return {Iterable.<string, (string|boolean|number)>
    */
-  static* from(key) {
+  static *from(key) {
     if (!env.exists(key)) {
       return;
     }

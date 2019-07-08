@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "doc_cssom.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#target", inspector);
 
   const elementStyle = view._elementStyle;
@@ -24,6 +24,10 @@ add_task(async function() {
 
   rule = elementStyle.rules[2];
   is(rule.textProps.length, 1, "rule 2 should have one property");
-  is(rule.textProps[0].name, "font-weight", "the property should be 'font-weight'");
+  is(
+    rule.textProps[0].name,
+    "font-weight",
+    "the property should be 'font-weight'"
+  );
   is(rule.ruleLine, -1, "the property has no source line");
 });

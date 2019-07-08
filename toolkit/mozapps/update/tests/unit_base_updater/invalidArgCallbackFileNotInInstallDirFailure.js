@@ -21,7 +21,12 @@ async function run_test() {
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     INVALID_CALLBACK_DIR_ERROR, 1);
+  checkUpdateManager(
+    STATE_NONE,
+    false,
+    STATE_FAILED,
+    INVALID_CALLBACK_DIR_ERROR,
+    1
+  );
   waitForFilesInUse();
 }

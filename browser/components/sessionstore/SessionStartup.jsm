@@ -33,16 +33,28 @@ var EXPORTED_SYMBOLS = ["SessionStartup"];
 
 /* :::::::: Constants and Helpers ::::::::::::::: */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "SessionFile",
-  "resource:///modules/sessionstore/SessionFile.jsm");
-ChromeUtils.defineModuleGetter(this, "StartupPerformance",
-  "resource:///modules/sessionstore/StartupPerformance.jsm");
-ChromeUtils.defineModuleGetter(this, "CrashMonitor",
-  "resource://gre/modules/CrashMonitor.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SessionFile",
+  "resource:///modules/sessionstore/SessionFile.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "StartupPerformance",
+  "resource:///modules/sessionstore/StartupPerformance.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "CrashMonitor",
+  "resource://gre/modules/CrashMonitor.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const STATE_RUNNING_STR = "running";
 
@@ -55,9 +67,18 @@ const TYPE_DEFER_SESSION = 3;
 const BROWSER_STARTUP_RESUME_SESSION = 3;
 
 function warning(msg, exception) {
-  let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
-  consoleMsg.init(msg, exception.fileName, null, exception.lineNumber, 0, Ci.nsIScriptError.warningFlag,
-    "component javascript");
+  let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
+    Ci.nsIScriptError
+  );
+  consoleMsg.init(
+    msg,
+    exception.fileName,
+    null,
+    exception.lineNumber,
+    0,
+    Ci.nsIScriptError.warningFlag,
+    "component javascript"
+  );
   Services.console.logMessage(consoleMsg);
 }
 
@@ -90,7 +111,7 @@ var SessionStartup = {
 
   _resumeSessionEnabled: null,
 
-/* ........ Global Event Handlers .............. */
+  /* ........ Global Event Handlers .............. */
 
   /**
    * Initialize the component
@@ -106,27 +127,35 @@ var SessionStartup = {
       return;
     }
 
-    if (Services.prefs.getBoolPref("browser.sessionstore.resuming_after_os_restart")) {
+    if (
+      Services.prefs.getBoolPref(
+        "browser.sessionstore.resuming_after_os_restart"
+      )
+    ) {
       if (!Services.appinfo.restartedByOS) {
         // We had set resume_session_once in order to resume after an OS restart,
         // but we aren't automatically started by the OS (or else appinfo.restartedByOS
         // would have been set). Therefore we should clear resume_session_once
         // to avoid forcing a resume for a normal startup.
-        Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", false);
+        Services.prefs.setBoolPref(
+          "browser.sessionstore.resume_session_once",
+          false
+        );
       }
-      Services.prefs.setBoolPref("browser.sessionstore.resuming_after_os_restart", false);
+      Services.prefs.setBoolPref(
+        "browser.sessionstore.resuming_after_os_restart",
+        false
+      );
     }
 
-    SessionFile.read().then(
-      this._onSessionFileRead.bind(this),
-      console.error
-    );
+    SessionFile.read().then(this._onSessionFileRead.bind(this), console.error);
   },
 
   // Wrap a string as a nsISupports.
   _createSupportsString(data) {
-    let string = Cc["@mozilla.org/supports-string;1"]
-                   .createInstance(Ci.nsISupportsString);
+    let string = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString
+    );
     string.data = data;
     return string;
   },
@@ -137,12 +166,15 @@ var SessionStartup = {
    * @param source The Session State string read from disk.
    * @param parsed The object obtained by parsing |source| as JSON.
    */
-  _onSessionFileRead({source, parsed, noFilesFound}) {
+  _onSessionFileRead({ source, parsed, noFilesFound }) {
     this._initialized = true;
 
     // Let observers modify the state before it is used
     let supportsStateString = this._createSupportsString(source);
-    Services.obs.notifyObservers(supportsStateString, "sessionstore-state-read");
+    Services.obs.notifyObservers(
+      supportsStateString,
+      "sessionstore-state-read"
+    );
     let stateString = supportsStateString.data;
 
     if (stateString != source) {
@@ -170,11 +202,17 @@ var SessionStartup = {
     let initialState = this._initialState;
     Services.tm.idleDispatchToMainThread(() => {
       let pinnedTabCount = initialState.windows.reduce((winAcc, win) => {
-        return winAcc + win.tabs.reduce((tabAcc, tab) => {
-          return tabAcc + (tab.pinned ? 1 : 0);
-        }, 0);
+        return (
+          winAcc +
+          win.tabs.reduce((tabAcc, tab) => {
+            return tabAcc + (tab.pinned ? 1 : 0);
+          }, 0)
+        );
       }, 0);
-      Services.telemetry.scalarSet("browser.engagement.restored_pinned_tabs_count", pinnedTabCount);
+      Services.telemetry.scalarSet(
+        "browser.engagement.restored_pinned_tabs_count",
+        pinnedTabCount
+      );
     }, 60000);
 
     // If this is a normal restore then throw away any previous session.
@@ -186,7 +224,9 @@ var SessionStartup = {
       if (checkpoints) {
         // If the previous session finished writing the final state, we'll
         // assume there was no crash.
-        this._previousSessionCrashed = !checkpoints["sessionstore-final-state-write-complete"];
+        this._previousSessionCrashed = !checkpoints[
+          "sessionstore-final-state-write-complete"
+        ];
       } else if (noFilesFound) {
         // If the Crash Monitor could not load a checkpoints file it will
         // provide null. This could occur on the first run after updating to
@@ -206,17 +246,20 @@ var SessionStartup = {
         // If the session.state flag is present, we will fallback to using it
         // for crash detection - If the last write of sessionstore.js had it
         // set to "running", we crashed.
-        let stateFlagPresent = (this._initialState.session &&
-                                this._initialState.session.state);
+        let stateFlagPresent =
+          this._initialState.session && this._initialState.session.state;
 
-        this._previousSessionCrashed = !stateFlagPresent ||
-          (this._initialState.session.state == STATE_RUNNING_STR);
+        this._previousSessionCrashed =
+          !stateFlagPresent ||
+          this._initialState.session.state == STATE_RUNNING_STR;
       }
 
       // Report shutdown success via telemetry. Shortcoming here are
       // being-killed-by-OS-shutdown-logic, shutdown freezing after
       // session restore was written, etc.
-      Services.telemetry.getHistogramById("SHUTDOWN_OK").add(!this._previousSessionCrashed);
+      Services.telemetry
+        .getHistogramById("SHUTDOWN_OK")
+        .add(!this._previousSessionCrashed);
 
       Services.obs.addObserver(this, "sessionstore-windows-restored", true);
 
@@ -252,7 +295,7 @@ var SessionStartup = {
     }
   },
 
-/* ........ Public API ................*/
+  /* ........ Public API ................*/
 
   get onceInitialized() {
     return gOnceInitializedDeferred.promise;
@@ -274,9 +317,13 @@ var SessionStartup = {
    */
   isAutomaticRestoreEnabled() {
     if (this._resumeSessionEnabled === null) {
-      this._resumeSessionEnabled = !PrivateBrowsingUtils.permanentPrivateBrowsing &&
-        (Services.prefs.getBoolPref("browser.sessionstore.resume_session_once") ||
-         Services.prefs.getIntPref("browser.startup.page") == BROWSER_STARTUP_RESUME_SESSION);
+      this._resumeSessionEnabled =
+        !PrivateBrowsingUtils.permanentPrivateBrowsing &&
+        (Services.prefs.getBoolPref(
+          "browser.sessionstore.resume_session_once"
+        ) ||
+          Services.prefs.getIntPref("browser.startup.page") ==
+            BROWSER_STARTUP_RESUME_SESSION);
     }
 
     return this._resumeSessionEnabled;
@@ -287,8 +334,10 @@ var SessionStartup = {
    * @returns bool
    */
   willRestore() {
-    return this.sessionType == this.RECOVER_SESSION ||
-           this.sessionType == this.RESUME_SESSION;
+    return (
+      this.sessionType == this.RECOVER_SESSION ||
+      this.sessionType == this.RESUME_SESSION
+    );
   },
 
   /**
@@ -326,10 +375,12 @@ var SessionStartup = {
       this.onceInitialized.then(() => {
         // If there are valid windows with not only pinned tabs, signal that we
         // will override the default homepage by restoring a session.
-        resolve(this.willRestore() &&
-                this._initialState &&
-                this._initialState.windows &&
-                this._initialState.windows.some(w => w.tabs.some(t => !t.pinned)));
+        resolve(
+          this.willRestore() &&
+            this._initialState &&
+            this._initialState.windows &&
+            this._initialState.windows.some(w => w.tabs.some(t => !t.pinned))
+        );
       });
     });
   },
@@ -339,18 +390,20 @@ var SessionStartup = {
    */
   get sessionType() {
     if (this._sessionType === null) {
-     let resumeFromCrash = Services.prefs.getBoolPref("browser.sessionstore.resume_from_crash");
-     // Set the startup type.
-     if (this.isAutomaticRestoreEnabled()) {
-       this._sessionType = this.RESUME_SESSION;
-     } else if (this._previousSessionCrashed && resumeFromCrash) {
-       this._sessionType = this.RECOVER_SESSION;
-     } else if (this._initialState) {
-       this._sessionType = this.DEFER_SESSION;
-     } else {
-       this._sessionType = this.NO_SESSION;
-     }
-   }
+      let resumeFromCrash = Services.prefs.getBoolPref(
+        "browser.sessionstore.resume_from_crash"
+      );
+      // Set the startup type.
+      if (this.isAutomaticRestoreEnabled()) {
+        this._sessionType = this.RESUME_SESSION;
+      } else if (this._previousSessionCrashed && resumeFromCrash) {
+        this._sessionType = this.RECOVER_SESSION;
+      } else if (this._initialState) {
+        this._sessionType = this.DEFER_SESSION;
+      } else {
+        this._sessionType = this.NO_SESSION;
+      }
+    }
 
     return this._sessionType;
   },
@@ -367,7 +420,8 @@ var SessionStartup = {
     this._sessionType = null;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 };
-

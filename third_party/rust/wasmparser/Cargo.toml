@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "wasmparser"
-version = "0.31.1"
+version = "0.32.1"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 exclude = ["fuzz/**/*", "tests/**/*"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"
@@ -23,14 +24,14 @@ repository = "https://github.com/yurydelendik/wasmparser.rs"
 [[bench]]
 name = "benchmark"
 harness = false
-[dependencies.hashmap_core]
-version = "0.1.10"
+[dependencies.hashbrown]
+version = "0.5.0"
 optional = true
 [dev-dependencies.criterion]
 version = "0.2"
 
 [features]
-core = ["hashmap_core"]
+core = ["hashbrown"]
 default = ["std"]
 std = []
 [badges.travis-ci]

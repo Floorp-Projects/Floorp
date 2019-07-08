@@ -21,7 +21,7 @@ add_task(async function setup() {
 add_task(async function test_save_sorted_engines() {
   let [engine1, engine2] = await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
-    { name: "A second test engine", xmlFileName: "engine2.xml"},
+    { name: "A second test engine", xmlFileName: "engine2.xml" },
   ]);
   await promiseAfterCache();
 

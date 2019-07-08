@@ -5,22 +5,27 @@
 
 "use strict";
 
-const {PushDB} = ChromeUtils.import("resource://gre/modules/PushDB.jsm");
-const {PushRecord} = ChromeUtils.import("resource://gre/modules/PushRecord.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { PushDB } = ChromeUtils.import("resource://gre/modules/PushDB.jsm");
+const { PushRecord } = ChromeUtils.import(
+  "resource://gre/modules/PushRecord.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { clearTimeout, setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
-const {
-  PushCrypto,
-  concatArray,
-} = ChromeUtils.import("resource://gre/modules/PushCrypto.jsm");
+const { PushCrypto, concatArray } = ChromeUtils.import(
+  "resource://gre/modules/PushCrypto.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["PushServiceHttp2"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
-  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
     prefix: "PushServiceHttp2",
@@ -48,9 +53,10 @@ var PushSubscriptionListener = function(pushService, uri) {
 };
 
 PushSubscriptionListener.prototype = {
-
-  QueryInterface: ChromeUtils.generateQI(["nsIHttpPushListener",
-                                         "nsIStreamListener"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIHttpPushListener",
+    "nsIStreamListener",
+  ]),
 
   getInterface(aIID) {
     return this.QueryInterface(aIID);
@@ -69,8 +75,9 @@ PushSubscriptionListener.prototype = {
       return;
     }
 
-    let inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
-                        .createInstance(Ci.nsIScriptableInputStream);
+    let inputStream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+      Ci.nsIScriptableInputStream
+    );
 
     inputStream.init(aStream);
     inputStream.read(aCount);
@@ -79,12 +86,14 @@ PushSubscriptionListener.prototype = {
   onStopRequest(aRequest, aStatusCode) {
     console.debug("PushSubscriptionListener: onStopRequest()");
     if (!this._pushService) {
-        return;
+      return;
     }
 
-    this._pushService.connOnStop(aRequest,
-                                 Components.isSuccessCode(aStatusCode),
-                                 this.uri);
+    this._pushService.connOnStop(
+      aRequest,
+      Components.isSuccessCode(aStatusCode),
+      this.uri
+    );
   },
 
   onPush(associatedChannel, pushChannel) {
@@ -110,7 +119,6 @@ var PushChannelListener = function(pushSubscriptionListener) {
 };
 
 PushChannelListener.prototype = {
-
   onStartRequest(aRequest) {
     this._ackUri = aRequest.URI.spec;
   },
@@ -122,8 +130,9 @@ PushChannelListener.prototype = {
       return;
     }
 
-    let inputStream = Cc["@mozilla.org/binaryinputstream;1"]
-                        .createInstance(Ci.nsIBinaryInputStream);
+    let inputStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+      Ci.nsIBinaryInputStream
+    );
 
     inputStream.setInputStream(aStream);
     let chunk = new ArrayBuffer(aCount);
@@ -132,11 +141,16 @@ PushChannelListener.prototype = {
   },
 
   onStopRequest(aRequest, aStatusCode) {
-    console.debug("PushChannelListener: onStopRequest()", "status code",
-      aStatusCode);
-    if (Components.isSuccessCode(aStatusCode) &&
-        this._mainListener &&
-        this._mainListener._pushService) {
+    console.debug(
+      "PushChannelListener: onStopRequest()",
+      "status code",
+      aStatusCode
+    );
+    if (
+      Components.isSuccessCode(aStatusCode) &&
+      this._mainListener &&
+      this._mainListener._pushService
+    ) {
       let headers = {
         encryption_key: getHeaderField(aRequest, "Encryption-Key"),
         crypto_key: getHeaderField(aRequest, "Crypto-Key"),
@@ -145,10 +159,12 @@ PushChannelListener.prototype = {
       };
       let msg = concatArray(this._message);
 
-      this._mainListener._pushService._pushChannelOnStop(this._mainListener.uri,
-                                                         this._ackUri,
-                                                         headers,
-                                                         msg);
+      this._mainListener._pushService._pushChannelOnStop(
+        this._mainListener.uri,
+        this._ackUri,
+        headers,
+        msg
+      );
     }
   },
 };
@@ -168,7 +184,6 @@ var PushServiceDelete = function(resolve, reject) {
 };
 
 PushServiceDelete.prototype = {
-
   onStartRequest(aRequest) {},
 
   onDataAvailable(aRequest, aStream, aOffset, aCount) {
@@ -178,8 +193,9 @@ PushServiceDelete.prototype = {
       return;
     }
 
-    let inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
-                        .createInstance(Ci.nsIScriptableInputStream);
+    let inputStream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+      Ci.nsIScriptableInputStream
+    );
 
     inputStream.init(aStream);
     inputStream.read(aCount);
@@ -187,15 +203,20 @@ PushServiceDelete.prototype = {
 
   onStopRequest(aRequest, aStatusCode) {
     if (Components.isSuccessCode(aStatusCode)) {
-       this._resolve();
+      this._resolve();
     } else {
-       this._reject(new Error("Error removing subscription: " + aStatusCode));
+      this._reject(new Error("Error removing subscription: " + aStatusCode));
     }
   },
 };
 
-var SubscriptionListener = function(aSubInfo, aResolve, aReject,
-                                    aServerURI, aPushServiceHttp2) {
+var SubscriptionListener = function(
+  aSubInfo,
+  aResolve,
+  aReject,
+  aServerURI,
+  aPushServiceHttp2
+) {
   console.debug("SubscriptionListener()");
   this._subInfo = aSubInfo;
   this._resolve = aResolve;
@@ -207,7 +228,6 @@ var SubscriptionListener = function(aSubInfo, aResolve, aReject,
 };
 
 SubscriptionListener.prototype = {
-
   onStartRequest(aRequest) {},
 
   onDataAvailable(aRequest, aStream, aOffset, aCount) {},
@@ -233,14 +253,13 @@ SubscriptionListener.prototype = {
         this._subInfo.retries++;
         var retryAfter = retryAfterParser(aRequest);
         this._retryTimeoutID = setTimeout(_ => {
-            this._reject(
-              {
-                retry: true,
-                subInfo: this._subInfo,
-              });
-            this._service.removeListenerPendingRetry(this);
-            this._retryTimeoutID = null;
-          }, retryAfter);
+          this._reject({
+            retry: true,
+            subInfo: this._subInfo,
+          });
+          this._service.removeListenerPendingRetry(this);
+          this._retryTimeoutID = null;
+        }, retryAfter);
         this._service.addListenerPendingRetry(this);
       } else {
         this._reject(new Error("Unexpected server response: " + statusCode));
@@ -284,10 +303,10 @@ SubscriptionListener.prototype = {
     try {
       Services.io.newURI(subscriptionUri);
     } catch (e) {
-      console.error("onStopRequest: Invalid subscription URI",
-        subscriptionUri);
-      this._reject(new Error("Invalid subscription endpoint: " +
-        subscriptionUri));
+      console.error("onStopRequest: Invalid subscription URI", subscriptionUri);
+      this._reject(
+        new Error("Invalid subscription endpoint: " + subscriptionUri)
+      );
       return;
     }
 
@@ -310,7 +329,9 @@ SubscriptionListener.prototype = {
       clearTimeout(this._retryTimeoutID);
       this._retryTimeoutID = null;
     } else {
-      console.debug("SubscriptionListener.abortRetry: aborting non-existent retry?");
+      console.debug(
+        "SubscriptionListener.abortRetry: aborting non-existent retry?"
+      );
     }
   },
 };
@@ -320,11 +341,11 @@ function retryAfterParser(aRequest) {
   try {
     let retryField = aRequest.getResponseHeader("retry-after");
     if (isNaN(retryField)) {
-      retryAfter = Date.parse(retryField) - (new Date().getTime());
+      retryAfter = Date.parse(retryField) - new Date().getTime();
     } else {
       retryAfter = parseInt(retryField, 10) * 1000;
     }
-    retryAfter = (retryAfter > 0) ? retryAfter : 0;
+    retryAfter = retryAfter > 0 ? retryAfter : 0;
   } catch (e) {}
 
   return retryAfter;
@@ -332,7 +353,7 @@ function retryAfterParser(aRequest) {
 
 function linkParser(linkHeader, serverURI) {
   let linkList = linkHeader.split(",");
-  if ((linkList.length < 1)) {
+  if (linkList.length < 1) {
     throw new Error("Invalid Link header");
   }
 
@@ -344,11 +365,15 @@ function linkParser(linkHeader, serverURI) {
 
     if (linkElems.length == 2) {
       if (linkElems[1].trim() === 'rel="urn:ietf:params:push"') {
-        pushEndpoint = linkElems[0].substring(linkElems[0].indexOf("<") + 1,
-                                              linkElems[0].indexOf(">"));
+        pushEndpoint = linkElems[0].substring(
+          linkElems[0].indexOf("<") + 1,
+          linkElems[0].indexOf(">")
+        );
       } else if (linkElems[1].trim() === 'rel="urn:ietf:params:push:receipt"') {
-        pushReceiptEndpoint = linkElems[0].substring(linkElems[0].indexOf("<") + 1,
-                                                     linkElems[0].indexOf(">"));
+        pushReceiptEndpoint = linkElems[0].substring(
+          linkElems[0].indexOf("<") + 1,
+          linkElems[0].indexOf(">")
+        );
       }
     }
   });
@@ -363,13 +388,12 @@ function linkParser(linkHeader, serverURI) {
   const pushURI = Services.io.newURI(pushEndpoint, null, serverURI);
   let pushReceiptURI;
   if (pushReceiptEndpoint) {
-    pushReceiptURI = Services.io.newURI(pushReceiptEndpoint, null,
-                                        serverURI);
+    pushReceiptURI = Services.io.newURI(pushReceiptEndpoint, null, serverURI);
   }
 
   return {
     pushEndpoint: pushURI.spec,
-    pushReceiptEndpoint: (pushReceiptURI) ? pushReceiptURI.spec : "",
+    pushReceiptEndpoint: pushReceiptURI ? pushReceiptURI.spec : "",
   };
 }
 
@@ -388,11 +412,13 @@ var PushServiceHttp2 = {
   _listenersPendingRetry: new Set(),
 
   newPushDB() {
-    return new PushDB(kPUSHHTTP2DB_DB_NAME,
-                      kPUSHHTTP2DB_DB_VERSION,
-                      kPUSHHTTP2DB_STORE_NAME,
-                      "subscriptionUri",
-                      PushRecordHttp2);
+    return new PushDB(
+      kPUSHHTTP2DB_DB_NAME,
+      kPUSHHTTP2DB_DB_VERSION,
+      kPUSHHTTP2DB_STORE_NAME,
+      "subscriptionUri",
+      PushRecordHttp2
+    );
   },
 
   hasmainPushService() {
@@ -424,11 +450,14 @@ var PushServiceHttp2 = {
   },
 
   _makeChannel(aUri) {
-    var chan = NetUtil.newChannel({uri: aUri, loadUsingSystemPrincipal: true})
-                      .QueryInterface(Ci.nsIHttpChannel);
+    var chan = NetUtil.newChannel({
+      uri: aUri,
+      loadUsingSystemPrincipal: true,
+    }).QueryInterface(Ci.nsIHttpChannel);
 
-    var loadGroup = Cc["@mozilla.org/network/load-group;1"]
-                      .createInstance(Ci.nsILoadGroup);
+    var loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(
+      Ci.nsILoadGroup
+    );
     chan.loadGroup = loadGroup;
     return chan;
   },
@@ -442,23 +471,21 @@ var PushServiceHttp2 = {
     return this._subscribeResourceInternal({
       record: aRecord,
       retries: 0,
-    })
-    .then(result =>
-      PushCrypto.generateKeys()
-        .then(([publicKey, privateKey]) => {
-          result.p256dhPublicKey = publicKey;
-          result.p256dhPrivateKey = privateKey;
-          result.authenticationSecret = PushCrypto.generateAuthenticationSecret();
-          this._conns[result.subscriptionUri] = {
-            channel: null,
-            listener: null,
-            countUnableToConnect: 0,
-            lastStartListening: 0,
-            retryTimerID: 0,
-          };
-          this._listenForMsgs(result.subscriptionUri);
-          return result;
-        })
+    }).then(result =>
+      PushCrypto.generateKeys().then(([publicKey, privateKey]) => {
+        result.p256dhPublicKey = publicKey;
+        result.p256dhPrivateKey = privateKey;
+        result.authenticationSecret = PushCrypto.generateAuthenticationSecret();
+        this._conns[result.subscriptionUri] = {
+          channel: null,
+          listener: null,
+          countUnableToConnect: 0,
+          lastStartListening: 0,
+          retryTimerID: 0,
+        };
+        this._listenForMsgs(result.subscriptionUri);
+        return result;
+      })
     );
   },
 
@@ -466,17 +493,18 @@ var PushServiceHttp2 = {
     console.debug("subscribeResourceInternal()");
 
     return new Promise((resolve, reject) => {
-      var listener = new SubscriptionListener(aSubInfo,
-                                              resolve,
-                                              reject,
-                                              this._serverURI,
-                                              this);
+      var listener = new SubscriptionListener(
+        aSubInfo,
+        resolve,
+        reject,
+        this._serverURI,
+        this
+      );
 
       var chan = this._makeChannel(this._serverURI.spec);
       chan.requestMethod = "POST";
       chan.asyncOpen(listener);
-    })
-    .catch(err => {
+    }).catch(err => {
       if ("retry" in err) {
         return this._subscribeResourceInternal(err.subInfo);
       }
@@ -508,8 +536,10 @@ var PushServiceHttp2 = {
   _listenForMsgs(aSubscriptionUri) {
     console.debug("listenForMsgs()", aSubscriptionUri);
     if (!this._conns[aSubscriptionUri]) {
-      console.warn("listenForMsgs: We do not have this subscription",
-        aSubscriptionUri);
+      console.warn(
+        "listenForMsgs: We do not have this subscription",
+        aSubscriptionUri
+      );
       return;
     }
 
@@ -524,8 +554,11 @@ var PushServiceHttp2 = {
     try {
       chan.asyncOpen(listener);
     } catch (e) {
-      console.error("listenForMsgs: Error connecting to push server.",
-        "asyncOpen failed", e);
+      console.error(
+        "listenForMsgs: Error connecting to push server.",
+        "asyncOpen failed",
+        e
+      );
       conn.listener.disconnect();
       chan.cancel(Cr.NS_ERROR_ABORT);
       this._retryAfterBackoff(aSubscriptionUri, -1);
@@ -555,8 +588,10 @@ var PushServiceHttp2 = {
 
     var resetRetryCount = prefs.getIntPref("http2.reset_retry_count_after_ms");
     // If it was running for some time, reset retry counter.
-    if ((Date.now() - this._conns[aSubscriptionUri].lastStartListening) >
-        resetRetryCount) {
+    if (
+      Date.now() - this._conns[aSubscriptionUri].lastStartListening >
+      resetRetryCount
+    ) {
       this._conns[aSubscriptionUri].countUnableToConnect = 0;
     }
 
@@ -570,19 +605,24 @@ var PushServiceHttp2 = {
     if (retryAfter !== -1) {
       // This is a 5xx response.
       this._conns[aSubscriptionUri].countUnableToConnect++;
-      this._conns[aSubscriptionUri].retryTimerID =
-        setTimeout(_ => this._listenForMsgs(aSubscriptionUri), retryAfter);
+      this._conns[aSubscriptionUri].retryTimerID = setTimeout(
+        _ => this._listenForMsgs(aSubscriptionUri),
+        retryAfter
+      );
       return;
     }
 
-    retryAfter = prefs.getIntPref("http2.retryInterval") *
+    retryAfter =
+      prefs.getIntPref("http2.retryInterval") *
       Math.pow(2, this._conns[aSubscriptionUri].countUnableToConnect);
 
     retryAfter = retryAfter * (0.8 + Math.random() * 0.4); // add +/-20%.
 
     this._conns[aSubscriptionUri].countUnableToConnect++;
-    this._conns[aSubscriptionUri].retryTimerID =
-      setTimeout(_ => this._listenForMsgs(aSubscriptionUri), retryAfter);
+    this._conns[aSubscriptionUri].retryTimerID = setTimeout(
+      _ => this._listenForMsgs(aSubscriptionUri),
+      retryAfter
+    );
 
     console.debug("retryAfterBackoff: Retry in", retryAfter);
   },
@@ -622,22 +662,30 @@ var PushServiceHttp2 = {
 
     for (let i = 0; i < aSubscriptions.length; i++) {
       let record = aSubscriptions[i];
-      this._mainPushService.ensureCrypto(record).then(record => {
-        this._startSingleConnection(record);
-      }, error => {
-        console.error("startConnections: Error updating record",
-          record.keyID, error);
-      });
+      this._mainPushService.ensureCrypto(record).then(
+        record => {
+          this._startSingleConnection(record);
+        },
+        error => {
+          console.error(
+            "startConnections: Error updating record",
+            record.keyID,
+            error
+          );
+        }
+      );
     }
   },
 
   _startSingleConnection(record) {
     console.debug("_startSingleConnection()");
     if (typeof this._conns[record.subscriptionUri] != "object") {
-      this._conns[record.subscriptionUri] = {channel: null,
-                                             listener: null,
-                                             countUnableToConnect: 0,
-                                             retryTimerID: 0};
+      this._conns[record.subscriptionUri] = {
+        channel: null,
+        listener: null,
+        countUnableToConnect: 0,
+        retryTimerID: 0,
+      };
     }
     if (!this._conns[record.subscriptionUri].conn) {
       this._listenForMsgs(record.subscriptionUri);
@@ -670,7 +718,7 @@ var PushServiceHttp2 = {
   },
 
   _abortPendingSubscriptionRetries() {
-    this._listenersPendingRetry.forEach((listener) => listener.abortRetry());
+    this._listenersPendingRetry.forEach(listener => listener.abortRetry());
     this._listenersPendingRetry.clear();
   },
 
@@ -680,8 +728,11 @@ var PushServiceHttp2 = {
   },
 
   reportDeliveryError(messageID, reason) {
-    console.warn("reportDeliveryError: Ignoring message delivery error",
-      messageID, reason);
+    console.warn(
+      "reportDeliveryError: Ignoring message delivery error",
+      messageID,
+      reason
+    );
   },
 
   /** Push server has deleted subscription.
@@ -691,22 +742,24 @@ var PushServiceHttp2 = {
    *  TODO: maybe pushsubscriptionerror will be included.
    */
   _resubscribe(aSubscriptionUri) {
-    this._mainPushService.getByKeyID(aSubscriptionUri)
-      .then(record => this.register(record)
-        .then(recordNew => {
+    this._mainPushService.getByKeyID(aSubscriptionUri).then(record =>
+      this.register(record).then(
+        recordNew => {
           if (this._mainPushService) {
             this._mainPushService
-                .updateRegistrationAndNotifyApp(aSubscriptionUri, recordNew)
-                .catch(Cu.reportError);
+              .updateRegistrationAndNotifyApp(aSubscriptionUri, recordNew)
+              .catch(Cu.reportError);
           }
-        }, error => {
+        },
+        error => {
           if (this._mainPushService) {
             this._mainPushService
-                .dropRegistrationAndNotifyApp(aSubscriptionUri)
-                .catch(Cu.reportError);
+              .dropRegistrationAndNotifyApp(aSubscriptionUri)
+              .catch(Cu.reportError);
           }
-        })
-      );
+        }
+      )
+    );
   },
 
   connOnStop(aRequest, aSuccess, aSubscriptionUri) {
@@ -731,7 +784,8 @@ var PushServiceHttp2 = {
     } else if (Math.floor(aRequest.responseStatus / 100) == 4) {
       this._shutdownSubscription(aSubscriptionUri);
       this._resubscribe(aSubscriptionUri);
-    } else if (Math.floor(aRequest.responseStatus / 100) == 2) { // This should be 204
+    } else if (Math.floor(aRequest.responseStatus / 100) == 2) {
+      // This should be 204
       setTimeout(_ => this._listenForMsgs(aSubscriptionUri), 0);
     } else {
       this._retryAfterBackoff(aSubscriptionUri, -1);
@@ -751,17 +805,15 @@ var PushServiceHttp2 = {
   _pushChannelOnStop(aUri, aAckUri, aHeaders, aMessage) {
     console.debug("pushChannelOnStop()");
 
-    this._mainPushService.receivedPushMessage(
-      aUri, "", aHeaders, aMessage, record => {
+    this._mainPushService
+      .receivedPushMessage(aUri, "", aHeaders, aMessage, record => {
         // Always update the stored record.
         return record;
-      }
-    )
-    .then(_ => this._ackMsgRecv(aAckUri))
-    .catch(err => {
-      console.error("pushChannelOnStop: Error receiving message",
-        err);
-    });
+      })
+      .then(_ => this._ackMsgRecv(aAckUri))
+      .catch(err => {
+        console.error("pushChannelOnStop: Error receiving message", err);
+      });
   },
 };
 

@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-serviceworker.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-serviceworker.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-serviceworker.js",
+  this
+);
 
 const SW_TAB_URL = URL_ROOT + "resources/service-workers/empty-sw.html";
 const SW_URL = URL_ROOT + "resources/service-workers/empty-sw.js";
@@ -18,8 +21,9 @@ const SW_URL = URL_ROOT + "resources/service-workers/empty-sw.js";
 add_task(async function() {
   await enableServiceWorkerDebugging();
 
-  const { document, tab, window } =
-    await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } = await openAboutDebugging({
+    enableWorkerUpdates: true,
+  });
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // Open a tab that registers a basic service worker.
@@ -32,7 +36,9 @@ add_task(async function() {
   const unregisterButton = targetElement.querySelector(".qa-unregister-button");
   ok(unregisterButton, "Found its unregister button");
 
-  info("Click on the unregister button and wait for the service worker to disappear");
+  info(
+    "Click on the unregister button and wait for the service worker to disappear"
+  );
   unregisterButton.click();
   await waitUntil(() => !findDebugTargetByText(SW_URL, document));
 

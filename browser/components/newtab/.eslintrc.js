@@ -102,7 +102,6 @@ module.exports = {
     "capitalized-comments": 0,
     "class-methods-use-this": 0,
     "consistent-this": [2, "use-bind"],
-    "curly": [2, "all"],
     "default-case": 0,
     "eqeqeq": 2,
     "for-direction": 2,

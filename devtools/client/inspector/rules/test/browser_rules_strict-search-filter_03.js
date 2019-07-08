@@ -23,7 +23,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   await testAddTextInFilter(inspector, view);
 });
@@ -33,12 +33,19 @@ async function testAddTextInFilter(inspector, view) {
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
-    "First rule is inline element.");
+  is(
+    getRuleViewRuleEditor(view, 0).rule.selectorText,
+    "element",
+    "First rule is inline element."
+  );
 
   const ruleEditor = getRuleViewRuleEditor(view, 1);
 
   is(ruleEditor.rule.selectorText, ".testclass", "Second rule is .testclass.");
-  ok(ruleEditor.selectorText.children[0].classList
-    .contains("ruleview-highlight"), ".testclass selector is highlighted.");
+  ok(
+    ruleEditor.selectorText.children[0].classList.contains(
+      "ruleview-highlight"
+    ),
+    ".testclass selector is highlighted."
+  );
 }

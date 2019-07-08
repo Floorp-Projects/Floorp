@@ -4,20 +4,26 @@
  */
 "use strict";
 
-const { AppConstants } =
-  ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { MockRegistrar } =
-  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
-                       .getService(Ci.nsIDebug2).isDebugBuild;
+const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2)
+  .isDebugBuild;
 
 // The test EV roots are only enabled in debug builds as a security measure.
 const gEVExpected = isDebugBuild;
@@ -34,61 +40,67 @@ const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 const PRErrorCodeSuccess = 0;
 
 // Sort in numerical order
-const SEC_ERROR_INVALID_TIME                            = SEC_ERROR_BASE + 8;
-const SEC_ERROR_BAD_DER                                 = SEC_ERROR_BASE + 9;
-const SEC_ERROR_BAD_SIGNATURE                           = SEC_ERROR_BASE + 10;
-const SEC_ERROR_EXPIRED_CERTIFICATE                     = SEC_ERROR_BASE + 11;
-const SEC_ERROR_REVOKED_CERTIFICATE                     = SEC_ERROR_BASE + 12;
-const SEC_ERROR_UNKNOWN_ISSUER                          = SEC_ERROR_BASE + 13;
-const SEC_ERROR_UNTRUSTED_ISSUER                        = SEC_ERROR_BASE + 20;
-const SEC_ERROR_UNTRUSTED_CERT                          = SEC_ERROR_BASE + 21;
-const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE              = SEC_ERROR_BASE + 30;
-const SEC_ERROR_CA_CERT_INVALID                         = SEC_ERROR_BASE + 36;
-const SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION              = SEC_ERROR_BASE + 41;
-const SEC_ERROR_PKCS7_BAD_SIGNATURE                     = SEC_ERROR_BASE + 47;
-const SEC_ERROR_INADEQUATE_KEY_USAGE                    = SEC_ERROR_BASE + 90;
-const SEC_ERROR_INADEQUATE_CERT_TYPE                    = SEC_ERROR_BASE + 91;
-const SEC_ERROR_CERT_NOT_IN_NAME_SPACE                  = SEC_ERROR_BASE + 112;
-const SEC_ERROR_CERT_BAD_ACCESS_LOCATION                = SEC_ERROR_BASE + 117;
-const SEC_ERROR_OCSP_MALFORMED_REQUEST                  = SEC_ERROR_BASE + 120;
-const SEC_ERROR_OCSP_SERVER_ERROR                       = SEC_ERROR_BASE + 121;
-const SEC_ERROR_OCSP_TRY_SERVER_LATER                   = SEC_ERROR_BASE + 122;
-const SEC_ERROR_OCSP_REQUEST_NEEDS_SIG                  = SEC_ERROR_BASE + 123;
-const SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST               = SEC_ERROR_BASE + 124;
-const SEC_ERROR_OCSP_UNKNOWN_CERT                       = SEC_ERROR_BASE + 126;
-const SEC_ERROR_OCSP_MALFORMED_RESPONSE                 = SEC_ERROR_BASE + 129;
-const SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE              = SEC_ERROR_BASE + 130;
-const SEC_ERROR_OCSP_OLD_RESPONSE                       = SEC_ERROR_BASE + 132;
-const SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE              = SEC_ERROR_BASE + 141;
-const SEC_ERROR_OCSP_INVALID_SIGNING_CERT               = SEC_ERROR_BASE + 144;
-const SEC_ERROR_POLICY_VALIDATION_FAILED                = SEC_ERROR_BASE + 160;
-const SEC_ERROR_OCSP_BAD_SIGNATURE                      = SEC_ERROR_BASE + 157;
-const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED       = SEC_ERROR_BASE + 176;
+const SEC_ERROR_INVALID_TIME = SEC_ERROR_BASE + 8;
+const SEC_ERROR_BAD_DER = SEC_ERROR_BASE + 9;
+const SEC_ERROR_BAD_SIGNATURE = SEC_ERROR_BASE + 10;
+const SEC_ERROR_EXPIRED_CERTIFICATE = SEC_ERROR_BASE + 11;
+const SEC_ERROR_REVOKED_CERTIFICATE = SEC_ERROR_BASE + 12;
+const SEC_ERROR_UNKNOWN_ISSUER = SEC_ERROR_BASE + 13;
+const SEC_ERROR_UNTRUSTED_ISSUER = SEC_ERROR_BASE + 20;
+const SEC_ERROR_UNTRUSTED_CERT = SEC_ERROR_BASE + 21;
+const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE = SEC_ERROR_BASE + 30;
+const SEC_ERROR_CA_CERT_INVALID = SEC_ERROR_BASE + 36;
+const SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION = SEC_ERROR_BASE + 41;
+const SEC_ERROR_PKCS7_BAD_SIGNATURE = SEC_ERROR_BASE + 47;
+const SEC_ERROR_INADEQUATE_KEY_USAGE = SEC_ERROR_BASE + 90;
+const SEC_ERROR_INADEQUATE_CERT_TYPE = SEC_ERROR_BASE + 91;
+const SEC_ERROR_CERT_NOT_IN_NAME_SPACE = SEC_ERROR_BASE + 112;
+const SEC_ERROR_CERT_BAD_ACCESS_LOCATION = SEC_ERROR_BASE + 117;
+const SEC_ERROR_OCSP_MALFORMED_REQUEST = SEC_ERROR_BASE + 120;
+const SEC_ERROR_OCSP_SERVER_ERROR = SEC_ERROR_BASE + 121;
+const SEC_ERROR_OCSP_TRY_SERVER_LATER = SEC_ERROR_BASE + 122;
+const SEC_ERROR_OCSP_REQUEST_NEEDS_SIG = SEC_ERROR_BASE + 123;
+const SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST = SEC_ERROR_BASE + 124;
+const SEC_ERROR_OCSP_UNKNOWN_CERT = SEC_ERROR_BASE + 126;
+const SEC_ERROR_OCSP_MALFORMED_RESPONSE = SEC_ERROR_BASE + 129;
+const SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE = SEC_ERROR_BASE + 130;
+const SEC_ERROR_OCSP_OLD_RESPONSE = SEC_ERROR_BASE + 132;
+const SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE = SEC_ERROR_BASE + 141;
+const SEC_ERROR_OCSP_INVALID_SIGNING_CERT = SEC_ERROR_BASE + 144;
+const SEC_ERROR_POLICY_VALIDATION_FAILED = SEC_ERROR_BASE + 160;
+const SEC_ERROR_OCSP_BAD_SIGNATURE = SEC_ERROR_BASE + 157;
+const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED = SEC_ERROR_BASE + 176;
 
-const SSL_ERROR_NO_CYPHER_OVERLAP                       = SSL_ERROR_BASE + 2;
-const SSL_ERROR_BAD_CERT_DOMAIN                         = SSL_ERROR_BASE + 12;
-const SSL_ERROR_BAD_CERT_ALERT                          = SSL_ERROR_BASE + 17;
-const SSL_ERROR_WEAK_SERVER_CERT_KEY                    = SSL_ERROR_BASE + 132;
+const SSL_ERROR_NO_CYPHER_OVERLAP = SSL_ERROR_BASE + 2;
+const SSL_ERROR_BAD_CERT_DOMAIN = SSL_ERROR_BASE + 12;
+const SSL_ERROR_BAD_CERT_ALERT = SSL_ERROR_BASE + 17;
+const SSL_ERROR_WEAK_SERVER_CERT_KEY = SSL_ERROR_BASE + 132;
 
-const MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE            = MOZILLA_PKIX_ERROR_BASE + 0;
-const MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY     = MOZILLA_PKIX_ERROR_BASE + 1;
-const MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE            = MOZILLA_PKIX_ERROR_BASE + 2;
-const MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA             = MOZILLA_PKIX_ERROR_BASE + 3;
-const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE      = MOZILLA_PKIX_ERROR_BASE + 5;
-const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
-const MOZILLA_PKIX_ERROR_OCSP_RESPONSE_FOR_CERT_MISSING = MOZILLA_PKIX_ERROR_BASE + 8;
-const MOZILLA_PKIX_ERROR_REQUIRED_TLS_FEATURE_MISSING   = MOZILLA_PKIX_ERROR_BASE + 10;
-const MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME              = MOZILLA_PKIX_ERROR_BASE + 12;
-const MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED = MOZILLA_PKIX_ERROR_BASE + 13;
-const MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT               = MOZILLA_PKIX_ERROR_BASE + 14;
-const MOZILLA_PKIX_ERROR_MITM_DETECTED                  = MOZILLA_PKIX_ERROR_BASE + 15;
+const MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE = MOZILLA_PKIX_ERROR_BASE + 0;
+const MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY =
+  MOZILLA_PKIX_ERROR_BASE + 1;
+const MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE = MOZILLA_PKIX_ERROR_BASE + 2;
+const MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA = MOZILLA_PKIX_ERROR_BASE + 3;
+const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE =
+  MOZILLA_PKIX_ERROR_BASE + 5;
+const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE =
+  MOZILLA_PKIX_ERROR_BASE + 6;
+const MOZILLA_PKIX_ERROR_OCSP_RESPONSE_FOR_CERT_MISSING =
+  MOZILLA_PKIX_ERROR_BASE + 8;
+const MOZILLA_PKIX_ERROR_REQUIRED_TLS_FEATURE_MISSING =
+  MOZILLA_PKIX_ERROR_BASE + 10;
+const MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME = MOZILLA_PKIX_ERROR_BASE + 12;
+const MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED =
+  MOZILLA_PKIX_ERROR_BASE + 13;
+const MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT = MOZILLA_PKIX_ERROR_BASE + 14;
+const MOZILLA_PKIX_ERROR_MITM_DETECTED = MOZILLA_PKIX_ERROR_BASE + 15;
 
 // Supported Certificate Usages
-const certificateUsageSSLClient              = 0x0001;
-const certificateUsageSSLServer              = 0x0002;
-const certificateUsageSSLCA                  = 0x0008;
-const certificateUsageEmailSigner            = 0x0010;
-const certificateUsageEmailRecipient         = 0x0020;
+const certificateUsageSSLClient = 0x0001;
+const certificateUsageSSLServer = 0x0002;
+const certificateUsageSSLCA = 0x0008;
+const certificateUsageEmailSigner = 0x0010;
+const certificateUsageEmailRecipient = 0x0020;
 
 // A map from the name of a certificate usage to the value of the usage.
 // Useful for printing debugging information and for enumerating all supported
@@ -122,8 +134,6 @@ function arrayToString(a) {
   return s;
 }
 
-
-
 // Commonly certificates are represented as PEM. The format is roughly as
 // follows:
 //
@@ -136,14 +146,16 @@ function arrayToString(a) {
 // with no newlines or BEGIN/END headers. This is a helper function to convert
 // PEM to the format that nsIX509CertDB requires.
 function pemToBase64(pem) {
-  return pem.replace(/-----BEGIN CERTIFICATE-----/, "")
-            .replace(/-----END CERTIFICATE-----/, "")
-            .replace(/[\r\n]/g, "");
+  return pem
+    .replace(/-----BEGIN CERTIFICATE-----/, "")
+    .replace(/-----END CERTIFICATE-----/, "")
+    .replace(/[\r\n]/g, "");
 }
 
 function build_cert_chain(certNames, testDirectory = "bad_certs") {
-  let certList = Cc["@mozilla.org/security/x509certlist;1"]
-                   .createInstance(Ci.nsIX509CertList);
+  let certList = Cc["@mozilla.org/security/x509certlist;1"].createInstance(
+    Ci.nsIX509CertList
+  );
   certNames.forEach(function(certName) {
     let cert = constructCertFromFile(`${testDirectory}/${certName}.pem`);
     certList.addCert(cert);
@@ -152,11 +164,13 @@ function build_cert_chain(certNames, testDirectory = "bad_certs") {
 }
 
 function readFile(file) {
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fstream.init(file, -1, 0, 0);
   let available = fstream.available();
-  let data = available > 0 ? NetUtil.readInputStreamToString(fstream, available) : "";
+  let data =
+    available > 0 ? NetUtil.readInputStreamToString(fstream, available) : "";
   fstream.close();
   return data;
 }
@@ -174,8 +188,9 @@ function addCertFromFile(certdb, filename, trustString) {
 function constructCertFromFile(filename) {
   let certFile = do_get_file(filename, false);
   let certBytes = readFile(certFile);
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   try {
     return certdb.constructX509(certBytes);
   } catch (e) {}
@@ -184,14 +199,16 @@ function constructCertFromFile(filename) {
 }
 
 function setCertTrust(cert, trustString) {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   certdb.setCertTrustFromString(cert, trustString);
 }
 
 function getXPCOMStatusFromNSS(statusNSS) {
-  let nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
-                           .getService(Ci.nsINSSErrorsService);
+  let nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"].getService(
+    Ci.nsINSSErrorsService
+  );
   return nssErrorsService.getXPCOMFromNSSError(statusNSS);
 }
 
@@ -205,12 +222,18 @@ class CertVerificationExpectedErrorResult {
   }
 
   verifyCertFinished(aPRErrorCode, aVerifiedChain, aHasEVPolicy) {
-    equal(aPRErrorCode, this.expectedError,
-          `verifying ${this.certName}: should get error ${this.expectedError}`);
+    equal(
+      aPRErrorCode,
+      this.expectedError,
+      `verifying ${this.certName}: should get error ${this.expectedError}`
+    );
     if (this.expectedEVStatus != undefined) {
-      equal(aHasEVPolicy, this.expectedEVStatus,
-            `verifying ${this.certName}: ` +
-            `should ${this.expectedEVStatus ? "be" : "not be"} EV`);
+      equal(
+        aHasEVPolicy,
+        this.expectedEVStatus,
+        `verifying ${this.certName}: ` +
+          `should ${this.expectedEVStatus ? "be" : "not be"} EV`
+      );
     }
     this.resolve();
   }
@@ -218,34 +241,63 @@ class CertVerificationExpectedErrorResult {
 
 // certdb implements nsIX509CertDB. See nsIX509CertDB.idl for documentation.
 // In particular, hostname is optional.
-function checkCertErrorGenericAtTime(certdb, cert, expectedError, usage, time,
-                                     /* optional */ isEVExpected,
-                                     /* optional */ hostname) {
+function checkCertErrorGenericAtTime(
+  certdb,
+  cert,
+  expectedError,
+  usage,
+  time,
+  /* optional */ isEVExpected,
+  /* optional */ hostname
+) {
   return new Promise((resolve, reject) => {
-      let result = new CertVerificationExpectedErrorResult(
-        cert.commonName, expectedError, isEVExpected, resolve);
-      certdb.asyncVerifyCertAtTime(cert, usage, NO_FLAGS, hostname, time,
-                                   result);
+    let result = new CertVerificationExpectedErrorResult(
+      cert.commonName,
+      expectedError,
+      isEVExpected,
+      resolve
+    );
+    certdb.asyncVerifyCertAtTime(cert, usage, NO_FLAGS, hostname, time, result);
   });
 }
 
 // certdb implements nsIX509CertDB. See nsIX509CertDB.idl for documentation.
 // In particular, hostname is optional.
-function checkCertErrorGeneric(certdb, cert, expectedError, usage,
-                                     /* optional */ isEVExpected,
-                                     /* optional */ hostname) {
-  let now = (new Date()).getTime() / 1000;
-  return checkCertErrorGenericAtTime(certdb, cert, expectedError, usage, now,
-                                     isEVExpected, hostname);
+function checkCertErrorGeneric(
+  certdb,
+  cert,
+  expectedError,
+  usage,
+  /* optional */ isEVExpected,
+  /* optional */ hostname
+) {
+  let now = new Date().getTime() / 1000;
+  return checkCertErrorGenericAtTime(
+    certdb,
+    cert,
+    expectedError,
+    usage,
+    now,
+    isEVExpected,
+    hostname
+  );
 }
 
 function checkEVStatus(certDB, cert, usage, isEVExpected) {
-  return checkCertErrorGeneric(certDB, cert, PRErrorCodeSuccess, usage,
-                               isEVExpected);
+  return checkCertErrorGeneric(
+    certDB,
+    cert,
+    PRErrorCodeSuccess,
+    usage,
+    isEVExpected
+  );
 }
 
-function _getLibraryFunctionWithNoArguments(functionName, libraryName,
-                                            returnType) {
+function _getLibraryFunctionWithNoArguments(
+  functionName,
+  libraryName,
+  returnType
+) {
   // Open the NSS library. copied from services/crypto/modules/WeaveCrypto.js
   let path = ctypes.libraryName(libraryName);
 
@@ -262,28 +314,36 @@ function _getLibraryFunctionWithNoArguments(functionName, libraryName,
   }
 
   let SECStatus = ctypes.int;
-  let func = nsslib.declare(functionName, ctypes.default_abi,
-                            returnType || SECStatus);
+  let func = nsslib.declare(
+    functionName,
+    ctypes.default_abi,
+    returnType || SECStatus
+  );
   return func;
 }
 
 function clearOCSPCache() {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   certdb.clearOCSPCache();
 }
 
 function clearSessionCache() {
   let SSL_ClearSessionCache = null;
   try {
-    SSL_ClearSessionCache =
-      _getLibraryFunctionWithNoArguments("SSL_ClearSessionCache", "ssl3",
-                                         ctypes.void_t);
+    SSL_ClearSessionCache = _getLibraryFunctionWithNoArguments(
+      "SSL_ClearSessionCache",
+      "ssl3",
+      ctypes.void_t
+    );
   } catch (e) {
     // On Windows, this is actually in the nss3 library.
-    SSL_ClearSessionCache =
-      _getLibraryFunctionWithNoArguments("SSL_ClearSessionCache", "nss3",
-                                         ctypes.void_t);
+    SSL_ClearSessionCache = _getLibraryFunctionWithNoArguments(
+      "SSL_ClearSessionCache",
+      "nss3",
+      ctypes.void_t
+    );
   }
   if (!SSL_ClearSessionCache) {
     throw new Error("couldn't get SSL_ClearSessionCache");
@@ -292,31 +352,36 @@ function clearSessionCache() {
 }
 
 function getSSLStatistics() {
-  let SSL3Statistics = new ctypes.StructType("SSL3Statistics",
-                           [ { "sch_sid_cache_hits": ctypes.long },
-                             { "sch_sid_cache_misses": ctypes.long },
-                             { "sch_sid_cache_not_ok": ctypes.long },
-                             { "hsh_sid_cache_hits": ctypes.long },
-                             { "hsh_sid_cache_misses": ctypes.long },
-                             { "hsh_sid_cache_not_ok": ctypes.long },
-                             { "hch_sid_cache_hits": ctypes.long },
-                             { "hch_sid_cache_misses": ctypes.long },
-                             { "hch_sid_cache_not_ok": ctypes.long },
-                             { "sch_sid_stateless_resumes": ctypes.long },
-                             { "hsh_sid_stateless_resumes": ctypes.long },
-                             { "hch_sid_stateless_resumes": ctypes.long },
-                             { "hch_sid_ticket_parse_failures": ctypes.long }]);
+  let SSL3Statistics = new ctypes.StructType("SSL3Statistics", [
+    { sch_sid_cache_hits: ctypes.long },
+    { sch_sid_cache_misses: ctypes.long },
+    { sch_sid_cache_not_ok: ctypes.long },
+    { hsh_sid_cache_hits: ctypes.long },
+    { hsh_sid_cache_misses: ctypes.long },
+    { hsh_sid_cache_not_ok: ctypes.long },
+    { hch_sid_cache_hits: ctypes.long },
+    { hch_sid_cache_misses: ctypes.long },
+    { hch_sid_cache_not_ok: ctypes.long },
+    { sch_sid_stateless_resumes: ctypes.long },
+    { hsh_sid_stateless_resumes: ctypes.long },
+    { hch_sid_stateless_resumes: ctypes.long },
+    { hch_sid_ticket_parse_failures: ctypes.long },
+  ]);
   let SSL3StatisticsPtr = new ctypes.PointerType(SSL3Statistics);
   let SSL_GetStatistics = null;
   try {
-    SSL_GetStatistics = _getLibraryFunctionWithNoArguments("SSL_GetStatistics",
-                                                           "ssl3",
-                                                           SSL3StatisticsPtr);
+    SSL_GetStatistics = _getLibraryFunctionWithNoArguments(
+      "SSL_GetStatistics",
+      "ssl3",
+      SSL3StatisticsPtr
+    );
   } catch (e) {
     // On Windows, this is actually in the nss3 library.
-    SSL_GetStatistics = _getLibraryFunctionWithNoArguments("SSL_GetStatistics",
-                                                           "nss3",
-                                                           SSL3StatisticsPtr);
+    SSL_GetStatistics = _getLibraryFunctionWithNoArguments(
+      "SSL_GetStatistics",
+      "nss3",
+      SSL3StatisticsPtr
+    );
   }
   if (!SSL_GetStatistics) {
     throw new Error("Failed to get SSL statistics");
@@ -402,18 +467,23 @@ function add_tls_server_setup(serverBinName, certsPath, addDefaultRoot = true) {
  *   affects OCSP because OCSP cache is double-keyed by origin attributes' first
  *   party domain.
  */
-function add_connection_test(aHost, aExpectedResult,
-                             aBeforeConnect, aWithSecurityInfo,
-                             aAfterStreamOpen,
-                             /* optional */ aOriginAttributes) {
+function add_connection_test(
+  aHost,
+  aExpectedResult,
+  aBeforeConnect,
+  aWithSecurityInfo,
+  aAfterStreamOpen,
+  /* optional */ aOriginAttributes
+) {
   const REMOTE_PORT = 8443;
 
   function Connection(host) {
     this.host = host;
     this.thread = Services.tm.currentThread;
     this.defer = Promise.defer();
-    let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
-                .getService(Ci.nsISocketTransportService);
+    let sts = Cc["@mozilla.org/network/socket-transport-service;1"].getService(
+      Ci.nsISocketTransportService
+    );
     this.transport = sts.createTransport(["ssl"], host, REMOTE_PORT, null);
     // See bug 1129771 - attempting to connect to [::1] when the server is
     // listening on 127.0.0.1 causes frequent failures on OS X 10.10.
@@ -430,7 +500,10 @@ function add_connection_test(aHost, aExpectedResult,
   Connection.prototype = {
     // nsITransportEventSink
     onTransportStatus(aTransport, aStatus, aProgress, aProgressMax) {
-      if (!this.connected && aStatus == Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
+      if (
+        !this.connected &&
+        aStatus == Ci.nsISocketTransport.STATUS_CONNECTED_TO
+      ) {
         this.connected = true;
         this.outputStream.asyncWait(this, 0, 0, this.thread);
       }
@@ -441,8 +514,7 @@ function add_connection_test(aHost, aExpectedResult,
       try {
         // this will throw if the stream has been closed by an error
         let str = NetUtil.readInputStreamToString(aStream, aStream.available());
-        Assert.equal(str, "0",
-                     "Should have received ASCII '0' from server");
+        Assert.equal(str, "0", "Should have received ASCII '0' from server");
         this.inputStream.close();
         this.outputStream.close();
         this.result = Cr.NS_OK;
@@ -457,19 +529,22 @@ function add_connection_test(aHost, aExpectedResult,
       if (aAfterStreamOpen) {
         aAfterStreamOpen(this.transport);
       }
-      let sslSocketControl = this.transport.securityInfo
-                               .QueryInterface(Ci.nsISSLSocketControl);
+      let sslSocketControl = this.transport.securityInfo.QueryInterface(
+        Ci.nsISSLSocketControl
+      );
       sslSocketControl.proxyStartSSL();
       this.outputStream.write("0", 1);
-      let inStream = this.transport.openInputStream(0, 0, 0)
-                       .QueryInterface(Ci.nsIAsyncInputStream);
+      let inStream = this.transport
+        .openInputStream(0, 0, 0)
+        .QueryInterface(Ci.nsIAsyncInputStream);
       this.inputStream = inStream;
       this.inputStream.asyncWait(this, 0, 0, this.thread);
     },
 
     go() {
-      this.outputStream = this.transport.openOutputStream(0, 0, 0)
-                            .QueryInterface(Ci.nsIAsyncOutputStream);
+      this.outputStream = this.transport
+        .openOutputStream(0, 0, 0)
+        .QueryInterface(Ci.nsIAsyncOutputStream);
       return this.defer.promise;
     },
   };
@@ -488,14 +563,21 @@ function add_connection_test(aHost, aExpectedResult,
     }
     connectTo(aHost).then(function(conn) {
       info("handling " + aHost);
-      let expectedNSResult = aExpectedResult == PRErrorCodeSuccess
-                           ? Cr.NS_OK
-                           : getXPCOMStatusFromNSS(aExpectedResult);
-      Assert.equal(conn.result, expectedNSResult,
-                   "Actual and expected connection result should match");
+      let expectedNSResult =
+        aExpectedResult == PRErrorCodeSuccess
+          ? Cr.NS_OK
+          : getXPCOMStatusFromNSS(aExpectedResult);
+      Assert.equal(
+        conn.result,
+        expectedNSResult,
+        "Actual and expected connection result should match"
+      );
       if (aWithSecurityInfo) {
-        aWithSecurityInfo(conn.transport.securityInfo
-                              .QueryInterface(Ci.nsITransportSecurityInfo));
+        aWithSecurityInfo(
+          conn.transport.securityInfo.QueryInterface(
+            Ci.nsITransportSecurityInfo
+          )
+        );
       }
       run_next_test();
     });
@@ -532,8 +614,9 @@ function _getBinaryUtil(binaryUtilName) {
 
 // Do not call this directly; use add_tls_server_setup
 function _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot) {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   // The trusted CA that is typically used for "good" certificates.
   if (addDefaultRoot) {
     addCertFromFile(certdb, `${certsPath}/test-ca.pem`, "CTu,u,u");
@@ -541,8 +624,9 @@ function _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot) {
 
   const CALLBACK_PORT = 8444;
 
-  let envSvc = Cc["@mozilla.org/process/environment;1"]
-                 .getService(Ci.nsIEnvironment);
+  let envSvc = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   let greBinDir = Services.dirsvc.get("GreBinD", Ci.nsIFile);
   envSvc.set("DYLD_LIBRARY_PATH", greBinDir.path);
   // TODO(bug 1107794): Android libraries are in /data/local/xpcb, but "GreBinD"
@@ -552,16 +636,18 @@ function _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot) {
   envSvc.set("MOZ_TLS_SERVER_CALLBACK_PORT", CALLBACK_PORT);
 
   let httpServer = new HttpServer();
-  httpServer.registerPathHandler("/",
-      function handleServerCallback(aRequest, aResponse) {
-        aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
-        aResponse.setHeader("Content-Type", "text/plain");
-        let responseBody = "OK!";
-        aResponse.bodyOutputStream.write(responseBody, responseBody.length);
-        executeSoon(function() {
-          httpServer.stop(run_next_test);
-        });
-      });
+  httpServer.registerPathHandler("/", function handleServerCallback(
+    aRequest,
+    aResponse
+  ) {
+    aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+    aResponse.setHeader("Content-Type", "text/plain");
+    let responseBody = "OK!";
+    aResponse.bodyOutputStream.write(responseBody, responseBody.length);
+    executeSoon(function() {
+      httpServer.stop(run_next_test);
+    });
+  });
   httpServer.start(CALLBACK_PORT);
 
   let serverBin = _getBinaryUtil(serverBinName);
@@ -571,7 +657,7 @@ function _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot) {
   certDir.append(`${certsPath}`);
   Assert.ok(certDir.exists(), `certificate folder (${certsPath}) should exist`);
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
-  process.run(false, [ "sql:" + certDir.path, Services.appinfo.processID ], 2);
+  process.run(false, ["sql:" + certDir.path, Services.appinfo.processID], 2);
 
   registerCleanupFunction(function() {
     process.kill();
@@ -600,8 +686,9 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation) {
     argArray.push(filename);
     info("argArray = " + argArray);
 
-    let process = Cc["@mozilla.org/process/util;1"]
-                    .createInstance(Ci.nsIProcess);
+    let process = Cc["@mozilla.org/process/util;1"].createInstance(
+      Ci.nsIProcess
+    );
     process.init(ocspGenBin);
     process.run(true, argArray, argArray.length);
     Assert.equal(0, process.exitValue, "Process exit value should be 0");
@@ -651,61 +738,91 @@ function getFailingHttpServer(serverPort, serverIdentities) {
 //   GenerateOCSPResponse.cpp).
 // responseHeaderPairs is an optional array of HTTP header (name, value) pairs
 //   to set in each response.
-function startOCSPResponder(serverPort, identity, nssDBLocation,
-                            expectedCertNames, expectedBasePaths,
-                            expectedMethods, expectedResponseTypes,
-                            responseHeaderPairs = []) {
-  let ocspResponseGenerationArgs = expectedCertNames.map(
-    function(expectedNick) {
-      let responseType = "good";
-      if (expectedResponseTypes && expectedResponseTypes.length >= 1) {
-        responseType = expectedResponseTypes.shift();
-      }
-      return [responseType, expectedNick, "unused", 0];
+function startOCSPResponder(
+  serverPort,
+  identity,
+  nssDBLocation,
+  expectedCertNames,
+  expectedBasePaths,
+  expectedMethods,
+  expectedResponseTypes,
+  responseHeaderPairs = []
+) {
+  let ocspResponseGenerationArgs = expectedCertNames.map(function(
+    expectedNick
+  ) {
+    let responseType = "good";
+    if (expectedResponseTypes && expectedResponseTypes.length >= 1) {
+      responseType = expectedResponseTypes.shift();
     }
+    return [responseType, expectedNick, "unused", 0];
+  });
+  let ocspResponses = generateOCSPResponses(
+    ocspResponseGenerationArgs,
+    nssDBLocation
   );
-  let ocspResponses = generateOCSPResponses(ocspResponseGenerationArgs,
-                                            nssDBLocation);
   let httpServer = new HttpServer();
-  httpServer.registerPrefixHandler("/",
-    function handleServerCallback(aRequest, aResponse) {
-      info("got request for: " + aRequest.path);
-      let basePath = aRequest.path.slice(1).split("/")[0];
-      if (expectedBasePaths.length >= 1) {
-        Assert.equal(basePath, expectedBasePaths.shift(),
-                     "Actual and expected base path should match");
-      }
-      Assert.ok(expectedCertNames.length >= 1,
-                "expectedCertNames should contain >= 1 entries");
-      if (expectedMethods && expectedMethods.length >= 1) {
-        Assert.equal(aRequest.method, expectedMethods.shift(),
-                     "Actual and expected fetch method should match");
-      }
-      aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
-      aResponse.setHeader("Content-Type", "application/ocsp-response");
-      for (let headerPair of responseHeaderPairs) {
-        aResponse.setHeader(headerPair[0], headerPair[1]);
-      }
-      aResponse.write(ocspResponses.shift());
-    });
+  httpServer.registerPrefixHandler("/", function handleServerCallback(
+    aRequest,
+    aResponse
+  ) {
+    info("got request for: " + aRequest.path);
+    let basePath = aRequest.path.slice(1).split("/")[0];
+    if (expectedBasePaths.length >= 1) {
+      Assert.equal(
+        basePath,
+        expectedBasePaths.shift(),
+        "Actual and expected base path should match"
+      );
+    }
+    Assert.ok(
+      expectedCertNames.length >= 1,
+      "expectedCertNames should contain >= 1 entries"
+    );
+    if (expectedMethods && expectedMethods.length >= 1) {
+      Assert.equal(
+        aRequest.method,
+        expectedMethods.shift(),
+        "Actual and expected fetch method should match"
+      );
+    }
+    aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+    aResponse.setHeader("Content-Type", "application/ocsp-response");
+    for (let headerPair of responseHeaderPairs) {
+      aResponse.setHeader(headerPair[0], headerPair[1]);
+    }
+    aResponse.write(ocspResponses.shift());
+  });
   httpServer.identity.setPrimary("http", identity, serverPort);
   httpServer.start(serverPort);
   return {
     stop(callback) {
       // make sure we consumed each expected response
-      Assert.equal(ocspResponses.length, 0,
-                   "Should have 0 remaining expected OCSP responses");
+      Assert.equal(
+        ocspResponses.length,
+        0,
+        "Should have 0 remaining expected OCSP responses"
+      );
       if (expectedMethods) {
-        Assert.equal(expectedMethods.length, 0,
-                     "Should have 0 remaining expected fetch methods");
+        Assert.equal(
+          expectedMethods.length,
+          0,
+          "Should have 0 remaining expected fetch methods"
+        );
       }
       if (expectedBasePaths) {
-        Assert.equal(expectedBasePaths.length, 0,
-                     "Should have 0 remaining expected base paths");
+        Assert.equal(
+          expectedBasePaths.length,
+          0,
+          "Should have 0 remaining expected base paths"
+        );
       }
       if (expectedResponseTypes) {
-        Assert.equal(expectedResponseTypes.length, 0,
-                     "Should have 0 remaining expected response types");
+        Assert.equal(
+          expectedResponseTypes.length,
+          0,
+          "Should have 0 remaining expected response types"
+        );
       }
       httpServer.stop(callback);
     },
@@ -719,7 +836,6 @@ function stopOCSPResponder(responder) {
     responder.stop(resolve);
   });
 }
-
 
 // A prototype for a fake, error-free secInfo
 var FakeTransportSecurityInfo = function(certificate) {
@@ -746,34 +862,61 @@ FakeTransportSecurityInfo.prototype = {
 // called directly.
 function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
   let bits =
-    (aSecurityInfo.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
-    (aSecurityInfo.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
-    (aSecurityInfo.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
+    (aSecurityInfo.isUntrusted
+      ? Ci.nsICertOverrideService.ERROR_UNTRUSTED
+      : 0) |
+    (aSecurityInfo.isDomainMismatch
+      ? Ci.nsICertOverrideService.ERROR_MISMATCH
+      : 0) |
+    (aSecurityInfo.isNotValidAtThisTime
+      ? Ci.nsICertOverrideService.ERROR_TIME
+      : 0);
 
-  Assert.equal(bits, aExpectedBits,
-               "Actual and expected override bits should match");
+  Assert.equal(
+    bits,
+    aExpectedBits,
+    "Actual and expected override bits should match"
+  );
   let cert = aSecurityInfo.serverCert;
-  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
-                              .getService(Ci.nsICertOverrideService);
-  certOverrideService.rememberValidityOverride(aHost, 8443, cert, aExpectedBits,
-                                               true);
+  let certOverrideService = Cc[
+    "@mozilla.org/security/certoverride;1"
+  ].getService(Ci.nsICertOverrideService);
+  certOverrideService.rememberValidityOverride(
+    aHost,
+    8443,
+    cert,
+    aExpectedBits,
+    true
+  );
 }
 
 // Given a host, expected error bits (see nsICertOverrideService.idl), and an
 // expected error code, tests that an initial connection to the host fails
 // with the expected errors and that adding an override results in a subsequent
 // connection succeeding.
-function add_cert_override_test(aHost, aExpectedBits, aExpectedError,
-                                aExpectedSecInfo = undefined) {
-  add_connection_test(aHost, aExpectedError, null,
-                      add_cert_override.bind(this, aHost, aExpectedBits));
+function add_cert_override_test(
+  aHost,
+  aExpectedBits,
+  aExpectedError,
+  aExpectedSecInfo = undefined
+) {
+  add_connection_test(
+    aHost,
+    aExpectedError,
+    null,
+    add_cert_override.bind(this, aHost, aExpectedBits)
+  );
   add_connection_test(aHost, PRErrorCodeSuccess, null, aSecurityInfo => {
-    Assert.ok(aSecurityInfo.securityState &
-              Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
-              "Cert override flag should be set on the security state");
+    Assert.ok(
+      aSecurityInfo.securityState &
+        Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
+      "Cert override flag should be set on the security state"
+    );
     if (aExpectedSecInfo) {
       if (aExpectedSecInfo.failedCertChain) {
-        ok(aExpectedSecInfo.failedCertChain.equals(aSecurityInfo.failedCertChain));
+        ok(
+          aExpectedSecInfo.failedCertChain.equals(aSecurityInfo.failedCertChain)
+        );
       }
     }
   });
@@ -786,16 +929,31 @@ function add_cert_override_test(aHost, aExpectedBits, aExpectedError,
 function attempt_adding_cert_override(aHost, aExpectedBits, aSecurityInfo) {
   if (aSecurityInfo.serverCert) {
     let bits =
-      (aSecurityInfo.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
-      (aSecurityInfo.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
-      (aSecurityInfo.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
-    Assert.equal(bits, aExpectedBits,
-                 "Actual and expected override bits should match");
+      (aSecurityInfo.isUntrusted
+        ? Ci.nsICertOverrideService.ERROR_UNTRUSTED
+        : 0) |
+      (aSecurityInfo.isDomainMismatch
+        ? Ci.nsICertOverrideService.ERROR_MISMATCH
+        : 0) |
+      (aSecurityInfo.isNotValidAtThisTime
+        ? Ci.nsICertOverrideService.ERROR_TIME
+        : 0);
+    Assert.equal(
+      bits,
+      aExpectedBits,
+      "Actual and expected override bits should match"
+    );
     let cert = aSecurityInfo.serverCert;
-    let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
-                                .getService(Ci.nsICertOverrideService);
-    certOverrideService.rememberValidityOverride(aHost, 8443, cert, aExpectedBits,
-                                                 true);
+    let certOverrideService = Cc[
+      "@mozilla.org/security/certoverride;1"
+    ].getService(Ci.nsICertOverrideService);
+    certOverrideService.rememberValidityOverride(
+      aHost,
+      8443,
+      cert,
+      aExpectedBits,
+      true
+    );
   }
 }
 
@@ -805,9 +963,17 @@ function attempt_adding_cert_override(aHost, aExpectedBits, aSecurityInfo) {
 // subsequent connection succeeding (i.e. the same error code is encountered).
 // The idea here is that for HSTS hosts or hosts with key pins, no error is
 // overridable, even if an entry is added to the override service.
-function add_prevented_cert_override_test(aHost, aExpectedBits, aExpectedError) {
-  add_connection_test(aHost, aExpectedError, null,
-                      attempt_adding_cert_override.bind(this, aHost, aExpectedBits));
+function add_prevented_cert_override_test(
+  aHost,
+  aExpectedBits,
+  aExpectedError
+) {
+  add_connection_test(
+    aHost,
+    aExpectedError,
+    null,
+    attempt_adding_cert_override.bind(this, aHost, aExpectedBits)
+  );
   add_connection_test(aHost, aExpectedError);
 }
 
@@ -822,11 +988,17 @@ class CertVerificationResult {
 
   verifyCertFinished(aPRErrorCode, aVerifiedChain, aHasEVPolicy) {
     if (this.successExpected) {
-      equal(aPRErrorCode, PRErrorCodeSuccess,
-            `verifying ${this.certName} for ${this.usageString} should succeed`);
+      equal(
+        aPRErrorCode,
+        PRErrorCodeSuccess,
+        `verifying ${this.certName} for ${this.usageString} should succeed`
+      );
     } else {
-      notEqual(aPRErrorCode, PRErrorCodeSuccess,
-               `verifying ${this.certName} for ${this.usageString} should fail`);
+      notEqual(
+        aPRErrorCode,
+        PRErrorCodeSuccess,
+        `verifying ${this.certName} for ${this.usageString} should fail`
+      );
     }
     this.resolve();
   }
@@ -851,14 +1023,18 @@ class CertVerificationResult {
  *   have completed.
  */
 function asyncTestCertificateUsages(certdb, cert, expectedUsages) {
-  let now = (new Date()).getTime() / 1000;
+  let now = new Date().getTime() / 1000;
   let promises = [];
   Object.keys(allCertificateUsages).forEach(usageString => {
     let promise = new Promise((resolve, reject) => {
       let usage = allCertificateUsages[usageString];
       let successExpected = expectedUsages.includes(usage);
-      let result = new CertVerificationResult(cert.commonName, usageString,
-                                              successExpected, resolve);
+      let result = new CertVerificationResult(
+        cert.commonName,
+        usageString,
+        successExpected,
+        resolve
+      );
       let flags = Ci.nsIX509CertDB.FLAG_LOCAL_ONLY;
       certdb.asyncVerifyCertAtTime(cert, usage, flags, null, now, result);
     });
@@ -884,14 +1060,17 @@ function loadPKCS11TestModule(expectModuleUnloadToFail) {
   libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
   ok(libraryFile.exists(), "The pkcs11testmodule file should exist");
 
-  let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                         .getService(Ci.nsIPKCS11ModuleDB);
+  let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
+    Ci.nsIPKCS11ModuleDB
+  );
   registerCleanupFunction(() => {
     try {
       pkcs11ModuleDB.deleteModule("PKCS11 Test Module");
     } catch (e) {
-      Assert.ok(expectModuleUnloadToFail,
-                `Module unload should suceed only when expected: ${e}`);
+      Assert.ok(
+        expectModuleUnloadToFail,
+        `Module unload should suceed only when expected: ${e}`
+      );
     }
   });
   pkcs11ModuleDB.addModule("PKCS11 Test Module", libraryFile.path, 0, 0);
@@ -906,7 +1085,9 @@ function hexify(data) {
   // Therefore, if the Unicode value is < 0x10, we have a single-character hex
   // string when we want one that's two characters, and unconditionally
   // prepending a "0" solves the problem.
-  return Array.from(data, (c, i) => ("0" + data.charCodeAt(i).toString(16)).slice(-2)).join("");
+  return Array.from(data, (c, i) =>
+    ("0" + data.charCodeAt(i).toString(16)).slice(-2)
+  ).join("");
 }
 
 /**

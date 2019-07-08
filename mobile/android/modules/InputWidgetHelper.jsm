@@ -5,7 +5,9 @@
 
 var EXPORTED_SYMBOLS = ["InputWidgetHelper"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Prompt: "resource://gre/modules/Prompt.jsm",
@@ -18,7 +20,8 @@ var InputWidgetHelper = {
   strings: function() {
     if (!this._strings) {
       this._strings = Services.strings.createBundle(
-          "chrome://browser/locale/browser.properties");
+        "chrome://browser/locale/browser.properties"
+      );
     }
     return this._strings;
   },
@@ -30,8 +33,13 @@ var InputWidgetHelper = {
   handleClick: function(aTarget) {
     // if we're busy looking at a InputWidget we want to eat any clicks that
     // come to us, but not to process them
-    if (this._uiBusy || !this.hasInputWidget(aTarget) || this._isDisabledElement(aTarget))
+    if (
+      this._uiBusy ||
+      !this.hasInputWidget(aTarget) ||
+      this._isDisabledElement(aTarget)
+    ) {
       return;
+    }
 
     this._uiBusy = true;
     this.show(aTarget);
@@ -48,46 +56,55 @@ var InputWidgetHelper = {
         this.strings().GetStringFromName("inputWidgetHelper.clear"),
         this.strings().GetStringFromName("inputWidgetHelper.cancel"),
       ],
-    }).addDatePicker({
-      value: aElement.value,
-      type: type,
-      step: this._getInputTimeStep(aElement),
-      min: aElement.min,
-      max: aElement.max,
-    }).show(data => {
-      let changed = false;
-      if (data.button == -1) {
-        // This type is not supported with this android version.
-        return;
-      }
-      if (data.button == 1) {
-        // The user cleared the value.
-        if (aElement.value != "") {
-          aElement.value = "";
-          changed = true;
+    })
+      .addDatePicker({
+        value: aElement.value,
+        type: type,
+        step: this._getInputTimeStep(aElement),
+        min: aElement.min,
+        max: aElement.max,
+      })
+      .show(data => {
+        let changed = false;
+        if (data.button == -1) {
+          // This type is not supported with this android version.
+          return;
         }
-      } else if (data.button == 0) {
-        // Commit the new value.
-        if (aElement.value != data[type]) {
-          aElement.value = data[type + "0"];
-          changed = true;
+        if (data.button == 1) {
+          // The user cleared the value.
+          if (aElement.value != "") {
+            aElement.value = "";
+            changed = true;
+          }
+        } else if (data.button == 0) {
+          // Commit the new value.
+          if (aElement.value != data[type]) {
+            aElement.value = data[type + "0"];
+            changed = true;
+          }
         }
-      }
-      // Else the user canceled the input.
+        // Else the user canceled the input.
 
-      if (changed)
-        this.fireOnChange(aElement);
-    });
+        if (changed) {
+          this.fireOnChange(aElement);
+        }
+      });
   },
 
   hasInputWidget: function(aElement) {
     let win = aElement.ownerGlobal;
-    if (!(aElement instanceof win.HTMLInputElement))
+    if (!(aElement instanceof win.HTMLInputElement)) {
       return false;
+    }
 
     let type = aElement.type;
-    if (type == "date" || type == "datetime-local" ||
-        type == "week" || type == "month" || type == "time") {
+    if (
+      type == "date" ||
+      type == "datetime-local" ||
+      type == "week" ||
+      type == "month" ||
+      type == "time"
+    ) {
       return true;
     }
 
@@ -105,8 +122,9 @@ var InputWidgetHelper = {
   _isDisabledElement: function(aElement) {
     let currentElement = aElement;
     while (currentElement) {
-      if (currentElement.disabled)
+      if (currentElement.disabled) {
         return true;
+      }
 
       currentElement = currentElement.parentElement;
     }

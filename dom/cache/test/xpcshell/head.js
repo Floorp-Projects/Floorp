@@ -6,15 +6,16 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // services required be initialized in order to run CacheStorage
-var ss = Cc["@mozilla.org/storage/service;1"]
-         .createInstance(Ci.mozIStorageService);
-var sts = Cc["@mozilla.org/network/stream-transport-service;1"]
-          .getService(Ci.nsIStreamTransportService);
-var hash = Cc["@mozilla.org/security/hash;1"]
-           .createInstance(Ci.nsICryptoHash);
+var ss = Cc["@mozilla.org/storage/service;1"].createInstance(
+  Ci.mozIStorageService
+);
+var sts = Cc["@mozilla.org/network/stream-transport-service;1"].getService(
+  Ci.nsIStreamTransportService
+);
+var hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 
 // Expose Cache and Fetch symbols on the global
 Cu.importGlobalProperties(["caches", "fetch"]);
@@ -31,8 +32,9 @@ function create_test_profile(zipFileName) {
   var packageFile = currentDir.clone();
   packageFile.append(zipFileName);
 
-  var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
-                  .createInstance(Ci.nsIZipReader);
+  var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+    Ci.nsIZipReader
+  );
   zipReader.open(packageFile);
 
   var entryNames = Array.from(zipReader.findEntries(null));
@@ -51,12 +53,14 @@ function create_test_profile(zipFileName) {
     } else {
       var istream = zipReader.getInputStream(entryName);
 
-      var ostream = Cc["@mozilla.org/network/file-output-stream;1"]
-                    .createInstance(Ci.nsIFileOutputStream);
+      var ostream = Cc[
+        "@mozilla.org/network/file-output-stream;1"
+      ].createInstance(Ci.nsIFileOutputStream);
       ostream.init(file, -1, parseInt("0644", 8), 0);
 
-      var bostream = Cc["@mozilla.org/network/buffered-output-stream;1"]
-                     .createInstance(Ci.nsIBufferedOutputStream);
+      var bostream = Cc[
+        "@mozilla.org/network/buffered-output-stream;1"
+      ].createInstance(Ci.nsIBufferedOutputStream);
       bostream.init(ostream, 32 * 1024);
 
       bostream.writeFrom(istream, istream.available());

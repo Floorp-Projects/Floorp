@@ -16,19 +16,25 @@
 
 "use strict";
 
-const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-mixedcontent-securityerrors.html";
-const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/Security/" +
-                       "Mixed_content" + DOCS_GA_PARAMS;
+const TEST_URI =
+  "https://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-mixedcontent-securityerrors.html";
+const LEARN_MORE_URI =
+  "https://developer.mozilla.org/docs/Web/Security/" +
+  "Mixed_content" +
+  DOCS_GA_PARAMS;
 
-const blockedActiveContentText = "Blocked loading mixed active content " +
-  "\u201chttp://example.com/\u201d";
-const blockedDisplayContentText = "Blocked loading mixed display content " +
+const blockedActiveContentText =
+  "Blocked loading mixed active content " + "\u201chttp://example.com/\u201d";
+const blockedDisplayContentText =
+  "Blocked loading mixed display content " +
   "\u201chttp://example.com/tests/image/test/mochitest/blue.png\u201d";
-const activeContentText = "Loading mixed (insecure) active content " +
+const activeContentText =
+  "Loading mixed (insecure) active content " +
   "\u201chttp://example.com/\u201d on a secure page";
-const displayContentText = "Loading mixed (insecure) display content " +
+const displayContentText =
+  "Loading mixed (insecure) display content " +
   "\u201chttp://example.com/tests/image/test/mochitest/blue.png\u201d on a " +
   "secure page";
 
@@ -50,15 +56,23 @@ add_task(async function() {
   ok(true, "Blocked mixed active content error message is visible");
 
   info("Clicking on the Learn More link");
-  let learnMoreLink = blockedMixedActiveContentMessage.querySelector(".learn-more-link");
+  let learnMoreLink = blockedMixedActiveContentMessage.querySelector(
+    ".learn-more-link"
+  );
   let response = await simulateLinkClick(learnMoreLink);
-  is(response.link, LEARN_MORE_URI, `Clicking the provided link opens ${response.link}`);
+  is(
+    response.link,
+    LEARN_MORE_URI,
+    `Clicking the provided link opens ${response.link}`
+  );
 
   info("Test disabling mixed content protection");
 
-  const {gIdentityHandler} = gBrowser.ownerGlobal;
-  ok(gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
-    "Mixed Active Content state appeared on identity box");
+  const { gIdentityHandler } = gBrowser.ownerGlobal;
+  ok(
+    gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
+    "Mixed Active Content state appeared on identity box"
+  );
   // Disabe mixed content protection.
   gIdentityHandler.disableMixedContentProtection();
 
@@ -77,7 +91,11 @@ add_task(async function() {
   info("Clicking on the Learn More link");
   learnMoreLink = mixedActiveContentMessage.querySelector(".learn-more-link");
   response = await simulateLinkClick(learnMoreLink);
-  is(response.link, LEARN_MORE_URI, `Clicking the provided link opens ${response.link}`);
+  is(
+    response.link,
+    LEARN_MORE_URI,
+    `Clicking the provided link opens ${response.link}`
+  );
 });
 
 function pushPrefEnv() {

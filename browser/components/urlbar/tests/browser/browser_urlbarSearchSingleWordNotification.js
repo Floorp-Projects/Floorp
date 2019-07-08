@@ -14,39 +14,65 @@ function promiseNotification(aBrowser, value, expected, input) {
     let notificationBox = aBrowser.getNotificationBox(aBrowser.selectedBrowser);
     if (expected) {
       info("Waiting for " + value + " notification");
-      resolve(BrowserTestUtils.waitForNotificationInNotificationBox(
-        notificationBox, value));
+      resolve(
+        BrowserTestUtils.waitForNotificationInNotificationBox(
+          notificationBox,
+          value
+        )
+      );
     } else {
       setTimeout(() => {
-        is(notificationBox.getNotificationWithValue(value), null,
-           `We are expecting to not get a notification for ${input}`);
+        is(
+          notificationBox.getNotificationWithValue(value),
+          null,
+          `We are expecting to not get a notification for ${input}`
+        );
         resolve();
       }, 1000);
     }
   });
 }
 
-async function runURLBarSearchTest({valueToOpen, expectSearch, expectNotification, aWindow = window}) {
+async function runURLBarSearchTest({
+  valueToOpen,
+  expectSearch,
+  expectNotification,
+  aWindow = window,
+}) {
   aWindow.gURLBar.value = valueToOpen;
   let expectedURI;
   if (!expectSearch) {
     expectedURI = "http://" + valueToOpen + "/";
   } else {
-    expectedURI = (await Services.search.getDefault()).getSubmission(valueToOpen, null, "keyword").uri.spec;
+    expectedURI = (await Services.search.getDefault()).getSubmission(
+      valueToOpen,
+      null,
+      "keyword"
+    ).uri.spec;
   }
   aWindow.gURLBar.focus();
-  let docLoadPromise =
-    BrowserTestUtils.waitForDocLoadAndStopIt(expectedURI, aWindow.gBrowser.selectedBrowser);
+  let docLoadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
+    expectedURI,
+    aWindow.gBrowser.selectedBrowser
+  );
   EventUtils.synthesizeKey("VK_RETURN", {}, aWindow);
 
   await Promise.all([
     docLoadPromise,
-    promiseNotification(aWindow.gBrowser, "keyword-uri-fixup", expectNotification, valueToOpen),
+    promiseNotification(
+      aWindow.gBrowser,
+      "keyword-uri-fixup",
+      expectNotification,
+      valueToOpen
+    ),
   ]);
 }
 
 add_task(async function test_navigate_full_domain() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:blank"
+  ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "www.mozilla.org",
@@ -57,7 +83,10 @@ add_task(async function test_navigate_full_domain() {
 });
 
 add_task(async function test_navigate_decimal_ip() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:blank"
+  ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "1234",
@@ -68,7 +97,10 @@ add_task(async function test_navigate_decimal_ip() {
 });
 
 add_task(async function test_navigate_decimal_ip_with_path() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:blank"
+  ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "1234/12",
@@ -79,7 +111,10 @@ add_task(async function test_navigate_decimal_ip_with_path() {
 });
 
 add_task(async function test_navigate_large_number() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:blank"
+  ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "123456789012345",
@@ -90,7 +125,10 @@ add_task(async function test_navigate_large_number() {
 });
 
 add_task(async function test_navigate_small_hex_number() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:blank"
+  ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "0x1f00ffff",
@@ -101,7 +139,10 @@ add_task(async function test_navigate_small_hex_number() {
 });
 
 add_task(async function test_navigate_large_hex_number() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:blank"
+  ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "0x7f0000017f000001",
@@ -117,7 +158,7 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     let win;
     if (isPrivate) {
       let promiseWin = BrowserTestUtils.waitForNewWindow();
-      win = OpenBrowserWindow({private: true});
+      win = OpenBrowserWindow({ private: true });
       await promiseWin;
       await new Promise(resolve => {
         waitForFocus(resolve, win);
@@ -137,9 +178,13 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     });
 
     let notificationBox = browser.getNotificationBox(tab.linkedBrowser);
-    let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
-    let docLoadPromise =
-      BrowserTestUtils.waitForDocLoadAndStopIt("http://" + hostName + "/", tab.linkedBrowser);
+    let notification = notificationBox.getNotificationWithValue(
+      "keyword-uri-fixup"
+    );
+    let docLoadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
+      "http://" + hostName + "/",
+      tab.linkedBrowser
+    );
     notification.querySelector("button").click();
 
     // check pref value
@@ -176,7 +221,10 @@ add_task(get_test_function_for_localhost_with_hostname("localhost."));
 add_task(get_test_function_for_localhost_with_hostname("localhost", true));
 
 add_task(async function test_navigate_invalid_url() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:blank"
+  ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "mozilla is awesome",

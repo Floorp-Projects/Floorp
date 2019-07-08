@@ -13,7 +13,12 @@ function AddToZip(zipWriter, path, file) {
   }
 
   // THIS IS WHERE THE ERROR OCCURS, FOR THE FILE "st14-1.tiff" IN "test_bug446708"
-  zipWriter.addEntryFile(currentPath, Ci.nsIZipWriter.COMPRESSION_DEFAULT, file, false);
+  zipWriter.addEntryFile(
+    currentPath,
+    Ci.nsIZipWriter.COMPRESSION_DEFAULT,
+    file,
+    false
+  );
 
   // if it's a dir, continue adding its contents recursively...
   if (file.isDirectory()) {
@@ -32,4 +37,3 @@ function RecursivelyZipDirectory(bundle) {
   AddToZip(zipW, "", bundle);
   zipW.close();
 }
-

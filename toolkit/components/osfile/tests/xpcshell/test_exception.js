@@ -9,13 +9,12 @@
 
 var EXISTING_FILE = do_get_file("xpcshell.ini").path;
 
-
 // Tests on |open|
 
 add_test_pair(async function test_typeerror() {
   let exn;
   try {
-    let fd = await OS.File.open("/tmp", {no_such_key: 1});
+    let fd = await OS.File.open("/tmp", { no_such_key: 1 });
     info("Fd: " + fd);
   } catch (ex) {
     exn = ex;

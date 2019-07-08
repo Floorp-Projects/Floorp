@@ -5,7 +5,10 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://featuregates/FeatureGate.jsm", this);
-ChromeUtils.import("resource://featuregates/FeatureGateImplementation.jsm", this);
+ChromeUtils.import(
+  "resource://featuregates/FeatureGateImplementation.jsm",
+  this
+);
 ChromeUtils.import("resource://testing-common/httpd.js", this);
 
 const kDefinitionDefaults = {
@@ -34,7 +37,9 @@ class DefinitionServer {
     }
 
     this.server.start();
-    registerCleanupFunction(() => new Promise(resolve => this.server.stop(resolve)));
+    registerCleanupFunction(
+      () => new Promise(resolve => this.server.stop(resolve))
+    );
   }
 
   // for nsIHttpRequestHandler
@@ -44,15 +49,15 @@ class DefinitionServer {
   }
 
   get definitionsUrl() {
-    const {primaryScheme, primaryHost, primaryPort} = this.server.identity;
+    const { primaryScheme, primaryHost, primaryPort } = this.server.identity;
     return `${primaryScheme}://${primaryHost}:${primaryPort}/definitions.json`;
   }
 
   addDefinition(overrides = {}) {
     const definition = definitionFactory(overrides);
     // convert targeted values, used by fromId
-    definition.isPublic = {default: definition.isPublic};
-    definition.defaultValue = {default: definition.defaultValue};
+    definition.isPublic = { default: definition.isPublic };
+    definition.defaultValue = { default: definition.defaultValue };
     this.definitions[definition.id] = definition;
     return definition;
   }
@@ -64,21 +69,35 @@ add_task(async function testGetValue() {
   equal(
     Services.prefs.getPrefType(preference),
     Services.prefs.PREF_INVALID,
-    "Before creating the feature gate, the preference should not exist",
+    "Before creating the feature gate, the preference should not exist"
   );
-  const feature = new FeatureGateImplementation(definitionFactory({ preference, defaultValue: false }));
+  const feature = new FeatureGateImplementation(
+    definitionFactory({ preference, defaultValue: false })
+  );
   equal(
     Services.prefs.getPrefType(preference),
     Services.prefs.PREF_INVALID,
-    "Instantiating a feature gate should not set its default value",
+    "Instantiating a feature gate should not set its default value"
   );
-  equal(await feature.getValue(), false, "getValue() should return the feature gate's default");
+  equal(
+    await feature.getValue(),
+    false,
+    "getValue() should return the feature gate's default"
+  );
 
   Services.prefs.setBoolPref(preference, true);
-  equal(await feature.getValue(), true, "getValue() should return the new value");
+  equal(
+    await feature.getValue(),
+    true,
+    "getValue() should return the new value"
+  );
 
   Services.prefs.setBoolPref(preference, false);
-  equal(await feature.getValue(), false, "getValue() should return the third value");
+  equal(
+    await feature.getValue(),
+    false,
+    "getValue() should return the third value"
+  );
 
   // cleanup
   Services.prefs.getDefaultBranch("").deleteBranch(preference);
@@ -87,7 +106,9 @@ add_task(async function testGetValue() {
 // event observers should work
 add_task(async function testGetValue() {
   const preference = "test.pref";
-  const feature = new FeatureGateImplementation(definitionFactory({ preference, defaultValue: false }));
+  const feature = new FeatureGateImplementation(
+    definitionFactory({ preference, defaultValue: false })
+  );
   const observer = {
     onChange: sinon.stub(),
     onEnable: sinon.stub(),
@@ -99,25 +120,61 @@ add_task(async function testGetValue() {
 
   Assert.deepEqual(observer.onChange.args, [], "onChange should not be called");
   Assert.deepEqual(observer.onEnable.args, [], "onEnable should not be called");
-  Assert.deepEqual(observer.onDisable.args, [], "onDisable should not be called");
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [],
+    "onDisable should not be called"
+  );
 
   Services.prefs.setBoolPref(preference, true);
   await Promise.resolve(); // Allow events to be called async
-  Assert.deepEqual(observer.onChange.args, [[true]], "onChange should be called with the new value");
+  Assert.deepEqual(
+    observer.onChange.args,
+    [[true]],
+    "onChange should be called with the new value"
+  );
   Assert.deepEqual(observer.onEnable.args, [[]], "onEnable should be called");
-  Assert.deepEqual(observer.onDisable.args, [], "onDisable should not be called");
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [],
+    "onDisable should not be called"
+  );
 
   Services.prefs.setBoolPref(preference, false);
   await Promise.resolve(); // Allow events to be called async
-  Assert.deepEqual(observer.onChange.args, [[true], [false]], "onChange should be called again with the new value");
-  Assert.deepEqual(observer.onEnable.args, [[]], "onEnable should not be called a second time");
-  Assert.deepEqual(observer.onDisable.args, [[]], "onDisable should be called for the first time");
+  Assert.deepEqual(
+    observer.onChange.args,
+    [[true], [false]],
+    "onChange should be called again with the new value"
+  );
+  Assert.deepEqual(
+    observer.onEnable.args,
+    [[]],
+    "onEnable should not be called a second time"
+  );
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [[]],
+    "onDisable should be called for the first time"
+  );
 
   Services.prefs.setBoolPref(preference, false);
   await Promise.resolve(); // Allow events to be called async
-  Assert.deepEqual(observer.onChange.args, [[true], [false]], "onChange should not be called if the value did not change");
-  Assert.deepEqual(observer.onEnable.args, [[]], "onEnable should not be called again if the value did not change");
-  Assert.deepEqual(observer.onDisable.args, [[]], "onDisable should not be called if the value did not change");
+  Assert.deepEqual(
+    observer.onChange.args,
+    [[true], [false]],
+    "onChange should not be called if the value did not change"
+  );
+  Assert.deepEqual(
+    observer.onEnable.args,
+    [[]],
+    "onEnable should not be called again if the value did not change"
+  );
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [[]],
+    "onDisable should not be called if the value did not change"
+  );
 
   // cleanup
   feature.removeAllObservers();

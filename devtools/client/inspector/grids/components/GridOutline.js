@@ -21,10 +21,12 @@ const GRID_HIGHLIGHTING_DEBOUNCE = 50;
 
 // Prefs for the max number of rows/cols a grid container can have for
 // the outline to display.
-const GRID_OUTLINE_MAX_ROWS_PREF =
-  Services.prefs.getIntPref("devtools.gridinspector.gridOutlineMaxRows");
-const GRID_OUTLINE_MAX_COLUMNS_PREF =
-  Services.prefs.getIntPref("devtools.gridinspector.gridOutlineMaxColumns");
+const GRID_OUTLINE_MAX_ROWS_PREF = Services.prefs.getIntPref(
+  "devtools.gridinspector.gridOutlineMaxRows"
+);
+const GRID_OUTLINE_MAX_COLUMNS_PREF = Services.prefs.getIntPref(
+  "devtools.gridinspector.gridOutlineMaxColumns"
+);
 
 // Move SVG grid to the right 100 units, so that it is not flushed against the edge of
 // layout border
@@ -50,9 +52,10 @@ class GridOutline extends PureComponent {
     // Store the height of the grid container in the component state to prevent overflow
     // issues. We want to store the width of the grid container as well so that the
     // viewbox is only the calculated width of the grid outline.
-    const { width, height } = selectedGrid && selectedGrid.gridFragments.length
-                            ? getTotalWidthAndHeight(selectedGrid)
-                            : { width: 0, height: 0 };
+    const { width, height } =
+      selectedGrid && selectedGrid.gridFragments.length
+        ? getTotalWidthAndHeight(selectedGrid)
+        : { width: 0, height: 0 };
     let showOutline;
 
     if (selectedGrid && selectedGrid.gridFragments.length) {
@@ -60,8 +63,9 @@ class GridOutline extends PureComponent {
 
       // Show the grid outline if both the rows/columns are less than or equal
       // to their max prefs.
-      showOutline = (cols.lines.length <= GRID_OUTLINE_MAX_COLUMNS_PREF) &&
-                    (rows.lines.length <= GRID_OUTLINE_MAX_ROWS_PREF);
+      showOutline =
+        cols.lines.length <= GRID_OUTLINE_MAX_COLUMNS_PREF &&
+        rows.lines.length <= GRID_OUTLINE_MAX_ROWS_PREF;
     }
 
     return { height, width, selectedGrid, showOutline };
@@ -81,7 +85,9 @@ class GridOutline extends PureComponent {
     this.getGridAreaName = this.getGridAreaName.bind(this);
     this.getHeight = this.getHeight.bind(this);
     this.onHighlightCell = this.onHighlightCell.bind(this);
-    this.renderCannotShowOutlineText = this.renderCannotShowOutlineText.bind(this);
+    this.renderCannotShowOutlineText = this.renderCannotShowOutlineText.bind(
+      this
+    );
     this.renderGrid = this.renderGrid.bind(this);
     this.renderGridCell = this.renderGridCell.bind(this);
     this.renderGridOutline = this.renderGridOutline.bind(this);
@@ -90,10 +96,7 @@ class GridOutline extends PureComponent {
   }
 
   doHighlightCell(target, hide) {
-    const {
-      grids,
-      onShowGridOutlineHighlight,
-    } = this.props;
+    const { grids, onShowGridOutlineHighlight } = this.props;
     const name = target.dataset.gridAreaName;
     const id = target.dataset.gridId;
     const gridFragmentIndex = target.dataset.gridFragmentIndex;
@@ -129,9 +132,11 @@ class GridOutline extends PureComponent {
    * @return {String} If there is a grid area return area name, otherwise null.
    */
   getGridAreaName(columnNumber, rowNumber, areas) {
-    const gridArea = areas.find(area =>
-      (area.rowStart <= rowNumber && area.rowEnd > rowNumber) &&
-      (area.columnStart <= columnNumber && area.columnEnd > columnNumber)
+    const gridArea = areas.find(
+      area =>
+        area.rowStart <= rowNumber &&
+        area.rowEnd > rowNumber &&
+        (area.columnStart <= columnNumber && area.columnEnd > columnNumber)
     );
 
     if (!gridArea) {
@@ -162,16 +167,13 @@ class GridOutline extends PureComponent {
    * Displays a message text "Cannot show outline for this grid".
    */
   renderCannotShowOutlineText() {
-    return (
-      dom.div({ className: "grid-outline-text" },
-        dom.span(
-          {
-            className: "grid-outline-text-icon",
-            title: getStr("layout.cannotShowGridOutline.title"),
-          }
-        ),
-        getStr("layout.cannotShowGridOutline")
-      )
+    return dom.div(
+      { className: "grid-outline-text" },
+      dom.span({
+        className: "grid-outline-text-icon",
+        title: getStr("layout.cannotShowGridOutline.title"),
+      }),
+      getStr("layout.cannotShowGridOutline")
     );
   }
 
@@ -198,15 +200,35 @@ class GridOutline extends PureComponent {
 
     // Draw the cells contained within the grid outline border.
     for (let rowNumber = 1; rowNumber <= numberOfRows; rowNumber++) {
-      height = GRID_CELL_SCALE_FACTOR * (rows.tracks[rowNumber - 1].breadth / 100);
+      height =
+        GRID_CELL_SCALE_FACTOR * (rows.tracks[rowNumber - 1].breadth / 100);
 
-      for (let columnNumber = 1; columnNumber <= numberOfColumns; columnNumber++) {
-        width = GRID_CELL_SCALE_FACTOR * (cols.tracks[columnNumber - 1].breadth / 100);
+      for (
+        let columnNumber = 1;
+        columnNumber <= numberOfColumns;
+        columnNumber++
+      ) {
+        width =
+          GRID_CELL_SCALE_FACTOR *
+          (cols.tracks[columnNumber - 1].breadth / 100);
 
-        const gridAreaName = this.getGridAreaName(columnNumber, rowNumber, areas);
-        const gridCell = this.renderGridCell(id, gridFragmentIndex, x, y,
-                                             rowNumber, columnNumber, color, gridAreaName,
-                                             width, height);
+        const gridAreaName = this.getGridAreaName(
+          columnNumber,
+          rowNumber,
+          areas
+        );
+        const gridCell = this.renderGridCell(
+          id,
+          gridFragmentIndex,
+          x,
+          y,
+          rowNumber,
+          columnNumber,
+          color,
+          gridAreaName,
+          width,
+          height
+        );
 
         rectangles.push(gridCell);
         x += width;
@@ -229,13 +251,13 @@ class GridOutline extends PureComponent {
     );
 
     // Draw a rectangle that acts as the grid outline border.
-    const border = this.renderGridOutlineBorder(this.state.width, this.state.height,
-                                                color);
+    const border = this.renderGridOutlineBorder(
+      this.state.width,
+      this.state.height,
+      color
+    );
 
-    return [
-      border,
-      cellGroup,
-    ];
+    return [border, cellGroup];
   }
 
   /**
@@ -260,76 +282,74 @@ class GridOutline extends PureComponent {
    * @param  {Number} height
    *         The height of the grid cell.
    */
-  renderGridCell(id, gridFragmentIndex, x, y, rowNumber, columnNumber, color,
-    gridAreaName, width, height) {
-    return (
-      dom.rect({
-        key: `${id}-${rowNumber}-${columnNumber}`,
-        className: "grid-outline-cell",
-        "data-grid-area-name": gridAreaName,
-        "data-grid-fragment-index": gridFragmentIndex,
-        "data-grid-id": id,
-        "data-grid-row": rowNumber,
-        "data-grid-column": columnNumber,
-        x,
-        y,
-        width,
-        height,
-        fill: "none",
-        onMouseEnter: this.onHighlightCell,
-        onMouseLeave: this.onHighlightCell,
-      })
-    );
+  renderGridCell(
+    id,
+    gridFragmentIndex,
+    x,
+    y,
+    rowNumber,
+    columnNumber,
+    color,
+    gridAreaName,
+    width,
+    height
+  ) {
+    return dom.rect({
+      key: `${id}-${rowNumber}-${columnNumber}`,
+      className: "grid-outline-cell",
+      "data-grid-area-name": gridAreaName,
+      "data-grid-fragment-index": gridFragmentIndex,
+      "data-grid-id": id,
+      "data-grid-row": rowNumber,
+      "data-grid-column": columnNumber,
+      x,
+      y,
+      width,
+      height,
+      fill: "none",
+      onMouseEnter: this.onHighlightCell,
+      onMouseLeave: this.onHighlightCell,
+    });
   }
 
   renderGridOutline(grid) {
     const { color } = grid;
 
-    return (
-      dom.g(
-        {
-          id: "grid-outline-group",
-          className: "grid-outline-group",
-          style: { color },
-        },
-        this.renderGrid(grid)
-      )
+    return dom.g(
+      {
+        id: "grid-outline-group",
+        className: "grid-outline-group",
+        style: { color },
+      },
+      this.renderGrid(grid)
     );
   }
 
   renderGridOutlineBorder(borderWidth, borderHeight, color) {
-    return (
-      dom.rect({
-        key: "border",
-        className: "grid-outline-border",
-        x: 0,
-        y: 0,
-        width: borderWidth,
-        height: borderHeight,
-      })
-    );
+    return dom.rect({
+      key: "border",
+      className: "grid-outline-border",
+      x: 0,
+      y: 0,
+      width: borderWidth,
+      height: borderHeight,
+    });
   }
 
   renderOutline() {
-    const {
-      height,
-      selectedGrid,
-      showOutline,
-      width,
-    } = this.state;
+    const { height, selectedGrid, showOutline, width } = this.state;
 
-    return showOutline ?
-      dom.svg(
-        {
-          id: "grid-outline",
-          width: "100%",
-          height: this.getHeight(),
-          viewBox: `${TRANSLATE_X} ${TRANSLATE_Y} ${width} ${height}`,
-        },
-        this.renderGridOutline(selectedGrid)
-      )
-      :
-      this.renderCannotShowOutlineText();
+    return showOutline
+      ? dom.svg(
+          {
+            id: "grid-outline",
+            width: "100%",
+            height: this.getHeight(),
+            viewBox: `${TRANSLATE_X} ${TRANSLATE_Y} ${width} ${height}`,
+          },
+          this.renderGridOutline(selectedGrid)
+        )
+      : this.renderCannotShowOutlineText();
   }
 
   onHighlightCell({ target, type }) {
@@ -350,16 +370,15 @@ class GridOutline extends PureComponent {
   render() {
     const { selectedGrid } = this.state;
 
-    return selectedGrid && selectedGrid.gridFragments.length ?
-      dom.div(
-        {
-          id: "grid-outline-container",
-          className: "grid-outline-container",
-        },
-        this.renderOutline()
-      )
-      :
-      null;
+    return selectedGrid && selectedGrid.gridFragments.length
+      ? dom.div(
+          {
+            id: "grid-outline-container",
+            className: "grid-outline-container",
+          },
+          this.renderOutline()
+        )
+      : null;
   }
 }
 
@@ -389,7 +408,7 @@ function getTotalWidthAndHeight(grid) {
   // All writing modes other than horizontal-tb (the initial value) involve a 90 deg
   // rotation, so swap width and height.
   if (grid.writingMode != "horizontal-tb") {
-    [ width, height ] = [ height, width ];
+    [width, height] = [height, width];
   }
 
   return { width, height };

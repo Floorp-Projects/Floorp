@@ -13,11 +13,13 @@ function contentScript() {
 
 let extensionData = {
   manifest: {
-    "content_scripts": [{
-      "matches": ["http://localhost/*/file_sample.html"],
-      "js": ["content_script.js"],
-      "run_at": "document_idle",
-    }],
+    content_scripts: [
+      {
+        matches: ["http://localhost/*/file_sample.html"],
+        js: ["content_script.js"],
+        run_at: "document_idle",
+      },
+    ],
   },
 
   files: {
@@ -30,7 +32,8 @@ add_task(async function test_contentscript() {
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    `${BASE_URL}/file_sample.html`);
+    `${BASE_URL}/file_sample.html`
+  );
 
   await extension.awaitFinish();
   await contentPage.close();

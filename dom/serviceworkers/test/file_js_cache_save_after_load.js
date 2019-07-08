@@ -3,7 +3,7 @@ function send_ping() {
 }
 send_ping(); // ping (=1)
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   send_ping(); // ping (=2)
 
   // Append a script which should call |foo|, before the encoding of this script

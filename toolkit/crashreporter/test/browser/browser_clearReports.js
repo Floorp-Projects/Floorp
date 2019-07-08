@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function clickClearReports() {
   const doc = content.document;
@@ -10,10 +10,20 @@ function clickClearReports() {
     Assert.ok(false, "Report list not found");
   }
 
-  const unsubmittedStyle = doc.defaultView.getComputedStyle(reportListUnsubmitted);
+  const unsubmittedStyle = doc.defaultView.getComputedStyle(
+    reportListUnsubmitted
+  );
   const submittedStyle = doc.defaultView.getComputedStyle(reportListSubmitted);
-  Assert.notEqual(unsubmittedStyle.display, "none", "Unsubmitted report list is visible");
-  Assert.notEqual(submittedStyle.display, "none", "Submitted report list is visible");
+  Assert.notEqual(
+    unsubmittedStyle.display,
+    "none",
+    "Unsubmitted report list is visible"
+  );
+  Assert.notEqual(
+    submittedStyle.display,
+    "none",
+    "Submitted report list is visible"
+  );
 
   const clearUnsubmittedButton = doc.getElementById("clearUnsubmittedReports");
   const clearSubmittedButton = doc.getElementById("clearSubmittedReports");
@@ -79,16 +89,30 @@ add_task(async function test() {
     cleanup_fake_appdir();
   });
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" },
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:crashes" },
     async function(browser) {
-      let dirs = [ submitdir, pendingdir, crD ];
-      let existing = [ file1.path, file2.path, report1.path, report2.path,
-                       report3.path, submitdir.path, pendingdir.path ];
+      let dirs = [submitdir, pendingdir, crD];
+      let existing = [
+        file1.path,
+        file2.path,
+        report1.path,
+        report2.path,
+        report3.path,
+        submitdir.path,
+        pendingdir.path,
+      ];
 
       ContentTask.spawn(browser, null, clickClearReports);
-      await BrowserTestUtils.waitForCondition(() =>
-        content.document.getElementById("reportListUnsubmitted").classList.contains("hidden")
-        && content.document.getElementById("reportListSubmitted").classList.contains("hidden"));
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          content.document
+            .getElementById("reportListUnsubmitted")
+            .classList.contains("hidden") &&
+          content.document
+            .getElementById("reportListSubmitted")
+            .classList.contains("hidden")
+      );
 
       for (let dir of dirs) {
         let entries = dir.directoryEntries;
@@ -105,5 +129,6 @@ add_task(async function test() {
 
       is(existing.length, 0, "All the files that should still exist exist");
       ok(promptShown, "Prompt shown");
-    });
+    }
+  );
 });

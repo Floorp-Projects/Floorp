@@ -5,9 +5,9 @@
 
 "use strict";
 
-var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
-const {angleUtils} = require("devtools/client/shared/css-angle");
+const { angleUtils } = require("devtools/client/shared/css-angle");
 
 const CLASSIFY_TESTS = [
   { input: "180deg", output: "deg" },

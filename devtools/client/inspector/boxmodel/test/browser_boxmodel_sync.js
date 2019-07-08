@@ -10,17 +10,20 @@ const TEST_URI = "<p>hello</p>";
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  const {inspector, boxmodel} = await openLayoutView();
+  const { inspector, boxmodel } = await openLayoutView();
 
   info("When a property is edited, it should sync in the rule view");
 
   await selectNode("p", inspector);
 
   info("Modify padding-bottom in box model view");
-  const span =
-    boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
+  const span = boxmodel.document.querySelector(
+    ".boxmodel-padding.boxmodel-bottom > span"
+  );
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  const editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  const editor = boxmodel.document.querySelector(
+    ".styleinspector-propertyeditor"
+  );
 
   const onRuleViewRefreshed = once(inspector, "rule-view-refreshed");
   EventUtils.synthesizeKey("7", {}, boxmodel.document.defaultView);

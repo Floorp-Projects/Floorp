@@ -17,7 +17,9 @@ ExtensionTestUtils.mockAppInfo();
 
 async function reloadTopContext(contentPage) {
   await contentPage.spawn(null, async () => {
-    let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+    let { TestUtils } = ChromeUtils.import(
+      "resource://testing-common/TestUtils.jsm"
+    );
     let windowNukeObserved = TestUtils.topicObserved("inner-window-nuked");
     info(`Reloading top-level document`);
     this.content.location.reload();
@@ -45,7 +47,11 @@ async function assertContextReleased(contentPage, description) {
 
     // The above loop needs to be repeated at most 3 times according to MinimizeMemoryUsage:
     // https://searchfox.org/mozilla-central/rev/6f86cc3479f80ace97f62634e2c82a483d1ede40/xpcom/base/nsMemoryReporterManager.cpp#2644-2647
-    Assert.lessOrEqual(gcCount, 3, `Context should have been GCd within a few GC attempts.`);
+    Assert.lessOrEqual(
+      gcCount,
+      3,
+      `Context should have been GCd within a few GC attempts.`
+    );
 
     // Each test will set this.contextWeakRef before unloading the document.
     Assert.ok(!this.contextWeakRef.get(), assertionDescription);
@@ -72,12 +78,19 @@ add_task(async function test_ContentScriptContextChild_in_child_frame() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_toplevel.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/file_toplevel.html`
+  );
   await extension.awaitMessage("contentScriptLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
-    let frame = this.content.document.querySelector("iframe[src*='file_iframe.html']");
+    let { DocumentManager } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm",
+      null
+    );
+    let frame = this.content.document.querySelector(
+      "iframe[src*='file_iframe.html']"
+    );
     let context = DocumentManager.getContext(extensionId, frame.contentWindow);
 
     Assert.ok(context, "Got content script context");
@@ -86,7 +99,10 @@ add_task(async function test_ContentScriptContextChild_in_child_frame() {
     frame.remove();
   });
 
-  await assertContextReleased(contentPage, "ContentScriptContextChild should have been released");
+  await assertContextReleased(
+    contentPage,
+    "ContentScriptContextChild should have been released"
+  );
 
   await contentPage.close();
   await extension.unload();
@@ -112,11 +128,16 @@ add_task(async function test_ContentScriptContextChild_in_toplevel() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/file_sample.html`
+  );
   await extension.awaitMessage("contentScriptLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
+    let { DocumentManager } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm",
+      null
+    );
     let context = DocumentManager.getContext(extensionId, this.content);
 
     Assert.ok(context, "Got content script context");
@@ -126,7 +147,10 @@ add_task(async function test_ContentScriptContextChild_in_toplevel() {
 
   await reloadTopContext(contentPage);
   await extension.awaitMessage("contentScriptLoaded");
-  await assertContextReleased(contentPage, "ContentScriptContextChild should have been released");
+  await assertContextReleased(
+    contentPage,
+    "ContentScriptContextChild should have been released"
+  );
 
   await contentPage.close();
   await extension.unload();
@@ -150,16 +174,23 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`moz-extension://${extension.uuid}/toplevel.html`, {
-    extension,
-    remote: extension.extension.remote,
-  });
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `moz-extension://${extension.uuid}/toplevel.html`,
+    {
+      extension,
+      remote: extension.extension.remote,
+    }
+  );
   await extension.awaitMessage("extensionPageLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {ExtensionPageChild} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm");
+    let { ExtensionPageChild } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionPageChild.jsm"
+    );
 
-    let frame = this.content.document.querySelector("iframe[src*='iframe.html']");
+    let frame = this.content.document.querySelector(
+      "iframe[src*='iframe.html']"
+    );
     let innerWindowID = frame.contentWindow.windowUtils.currentInnerWindowID;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);
 
@@ -169,7 +200,10 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
     frame.remove();
   });
 
-  await assertContextReleased(contentPage, "ExtensionPageContextChild should have been released");
+  await assertContextReleased(
+    contentPage,
+    "ExtensionPageContextChild should have been released"
+  );
 
   await contentPage.close();
   await extension.unload();
@@ -189,14 +223,19 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`moz-extension://${extension.uuid}/toplevel.html`, {
-    extension,
-    remote: extension.extension.remote,
-  });
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `moz-extension://${extension.uuid}/toplevel.html`,
+    {
+      extension,
+      remote: extension.extension.remote,
+    }
+  );
   await extension.awaitMessage("extensionPageLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {ExtensionPageChild} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm");
+    let { ExtensionPageChild } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionPageChild.jsm"
+    );
 
     let innerWindowID = this.content.windowUtils.currentInnerWindowID;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);
@@ -223,7 +262,10 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
     }
     info(`Going to GC after waiting for ${Date.now() - start} ms.`);
   });
-  await assertContextReleased(contentPage, "ExtensionPageContextChild should have been released");
+  await assertContextReleased(
+    contentPage,
+    "ExtensionPageContextChild should have been released"
+  );
 
   await contentPage.close();
   await extension.unload();

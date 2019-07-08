@@ -29,7 +29,7 @@ const SHAPE_TYPES = [
 ];
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
   const front = inspector.inspector;
   const highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
@@ -43,7 +43,10 @@ async function getShapeHidden(testActor, highlighterFront) {
   const hidden = {};
   for (const shape of SHAPE_IDS) {
     hidden[shape] = await testActor.getHighlighterNodeAttribute(
-      "shapes-" + shape, "hidden", highlighterFront);
+      "shapes-" + shape,
+      "hidden",
+      highlighterFront
+    );
   }
   return hidden;
 }
@@ -52,9 +55,15 @@ async function isHiddenByDefault(testActor, highlighterFront) {
   info("Checking that highlighter is hidden by default");
 
   const polygonHidden = await testActor.getHighlighterNodeAttribute(
-    "shapes-polygon", "hidden", highlighterFront);
+    "shapes-polygon",
+    "hidden",
+    highlighterFront
+  );
   const ellipseHidden = await testActor.getHighlighterNodeAttribute(
-    "shapes-ellipse", "hidden", highlighterFront);
+    "shapes-ellipse",
+    "hidden",
+    highlighterFront
+  );
   ok(polygonHidden && ellipseHidden, "The highlighter is hidden by default");
 }
 
@@ -63,7 +72,7 @@ async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
     info(`Asking to show the highlighter on the ${shapeName} node`);
 
     const node = await getNodeFront(`#${shapeName}`, inspector);
-    await highlighterFront.show(node, {mode: "cssClipPath"});
+    await highlighterFront.show(node, { mode: "cssClipPath" });
 
     const hidden = await getShapeHidden(testActor, highlighterFront);
     ok(!hidden[highlighter], `The ${shapeName} highlighter is visible`);
@@ -73,5 +82,8 @@ async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
   await highlighterFront.hide();
 
   const hidden = await getShapeHidden(testActor, highlighterFront);
-  ok(hidden.polygon && hidden.ellipse && hidden.rect, "The highlighter is hidden");
+  ok(
+    hidden.polygon && hidden.ellipse && hidden.rect,
+    "The highlighter is hidden"
+  );
 }

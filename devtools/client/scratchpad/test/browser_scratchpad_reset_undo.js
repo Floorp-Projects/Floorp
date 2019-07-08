@@ -28,7 +28,10 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test that undo get's reset after file load in Scratchpad");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,<p>test that undo get's reset after file load in Scratchpad"
+  );
 }
 
 function runTests() {
@@ -42,18 +45,29 @@ function runTests() {
   gFileB.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the temporary file.
-  const foutA = Cc["@mozilla.org/network/file-output-stream;1"]
-             .createInstance(Ci.nsIFileOutputStream);
-  foutA.init(gFileA.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
-            0o644, foutA.DEFER_OPEN);
+  const foutA = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
+  foutA.init(
+    gFileA.QueryInterface(Ci.nsIFile),
+    0x02 | 0x08 | 0x20,
+    0o644,
+    foutA.DEFER_OPEN
+  );
 
-  const foutB = Cc["@mozilla.org/network/file-output-stream;1"]
-             .createInstance(Ci.nsIFileOutputStream);
-  foutB.init(gFileB.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
-            0o644, foutB.DEFER_OPEN);
+  const foutB = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
+  foutB.init(
+    gFileB.QueryInterface(Ci.nsIFile),
+    0x02 | 0x08 | 0x20,
+    0o644,
+    foutB.DEFER_OPEN
+  );
 
-  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                  .createInstance(Ci.nsIScriptableUnicodeConverter);
+  const converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   const fileContentStreamA = converter.convertToInputStream(gFileAContent);
   const fileContentStreamB = converter.convertToInputStream(gFileBContent);
@@ -73,39 +87,55 @@ function tempFileSaved(aStatus) {
   }
 
   if (gFirstFileSaved && success) {
-    ok((gFirstFileSaved && success), "Both files loaded");
+    ok(gFirstFileSaved && success, "Both files loaded");
     // Import the file A into Scratchpad.
-    gScratchpad.importFromFile(gFileA.QueryInterface(Ci.nsIFile), true,
-                              fileAImported);
+    gScratchpad.importFromFile(
+      gFileA.QueryInterface(Ci.nsIFile),
+      true,
+      fileAImported
+    );
   }
   gFirstFileSaved = success;
 }
 
 function fileAImported(aStatus, aFileContent) {
-  ok(Components.isSuccessCode(aStatus),
-     "the temporary file A was imported successfully with Scratchpad");
+  ok(
+    Components.isSuccessCode(aStatus),
+    "the temporary file A was imported successfully with Scratchpad"
+  );
 
   is(aFileContent, gFileAContent, "received data is correct");
 
   is(gScratchpad.getText(), gFileAContent, "the editor content is correct");
 
-  gScratchpad.editor.replaceText("new text",
-    gScratchpad.editor.getPosition(gScratchpad.getText().length));
+  gScratchpad.editor.replaceText(
+    "new text",
+    gScratchpad.editor.getPosition(gScratchpad.getText().length)
+  );
 
-  is(gScratchpad.getText(), gFileAContent + "new text", "text updated correctly");
+  is(
+    gScratchpad.getText(),
+    gFileAContent + "new text",
+    "text updated correctly"
+  );
   gScratchpad.undo();
   is(gScratchpad.getText(), gFileAContent, "undo works");
   gScratchpad.redo();
   is(gScratchpad.getText(), gFileAContent + "new text", "redo works");
 
   // Import the file B into Scratchpad.
-  gScratchpad.importFromFile(gFileB.QueryInterface(Ci.nsIFile), true,
-                            fileBImported);
+  gScratchpad.importFromFile(
+    gFileB.QueryInterface(Ci.nsIFile),
+    true,
+    fileBImported
+  );
 }
 
 function fileBImported(aStatus, aFileContent) {
-  ok(Components.isSuccessCode(aStatus),
-     "the temporary file B was imported successfully with Scratchpad");
+  ok(
+    Components.isSuccessCode(aStatus),
+    "the temporary file B was imported successfully with Scratchpad"
+  );
 
   is(aFileContent, gFileBContent, "received data is correct");
 
@@ -114,12 +144,21 @@ function fileBImported(aStatus, aFileContent) {
   ok(!gScratchpad.editor.canUndo(), "editor cannot undo after load");
 
   gScratchpad.undo();
-  is(gScratchpad.getText(), gFileBContent,
-      "the editor content is still correct after undo");
+  is(
+    gScratchpad.getText(),
+    gFileBContent,
+    "the editor content is still correct after undo"
+  );
 
-  gScratchpad.editor.replaceText("new text",
-    gScratchpad.editor.getPosition(gScratchpad.getText().length));
-  is(gScratchpad.getText(), gFileBContent + "new text", "text updated correctly");
+  gScratchpad.editor.replaceText(
+    "new text",
+    gScratchpad.editor.getPosition(gScratchpad.getText().length)
+  );
+  is(
+    gScratchpad.getText(),
+    gFileBContent + "new text",
+    "text updated correctly"
+  );
 
   gScratchpad.undo();
   is(gScratchpad.getText(), gFileBContent, "undo works");

@@ -4,7 +4,9 @@
 
 "use strict";
 
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["BrowserActions"];
 
@@ -46,7 +48,9 @@ var BrowserActions = {
    */
   onEvent(event, data) {
     if (event !== "Menu:Clicked") {
-      throw new Error(`Expected "Menu:Clicked" event - received "${event}" instead`);
+      throw new Error(
+        `Expected "Menu:Clicked" event - received "${event}" instead`
+      );
     }
 
     let browserAction = this._browserActions[data.item];

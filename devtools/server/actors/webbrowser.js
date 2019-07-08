@@ -12,15 +12,52 @@ var { DebuggerServer } = require("devtools/server/main");
 var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
-loader.lazyRequireGetter(this, "FrameTargetActorProxy", "devtools/server/actors/targets/frame-proxy", true);
-loader.lazyRequireGetter(this, "WebExtensionActor", "devtools/server/actors/addon/webextension", true);
-loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-target-actor-list", true);
-loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList",
-  "devtools/server/actors/worker/service-worker-registration-list", true);
-loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
-loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-loader.lazyImporter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
+loader.lazyRequireGetter(
+  this,
+  "RootActor",
+  "devtools/server/actors/root",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "FrameTargetActorProxy",
+  "devtools/server/actors/targets/frame-proxy",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "WebExtensionActor",
+  "devtools/server/actors/addon/webextension",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "WorkerTargetActorList",
+  "devtools/server/actors/worker/worker-target-actor-list",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ServiceWorkerRegistrationActorList",
+  "devtools/server/actors/worker/service-worker-registration-list",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ProcessActorList",
+  "devtools/server/actors/process",
+  true
+);
+loader.lazyImporter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+loader.lazyImporter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 /**
  * Browser-specific actors.
@@ -38,7 +75,9 @@ function appShellDOMWindowType(window) {
  * Send Debugger:Shutdown events to all "navigator:browser" windows.
  */
 function sendShutdownEvent() {
-  for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
+  for (const win of Services.wm.getEnumerator(
+    DebuggerServer.chromeWindowType
+  )) {
     const evt = win.document.createEvent("Event");
     evt.initEvent("Debugger:Shutdown", true, false);
     win.document.documentElement.dispatchEvent(evt);
@@ -63,8 +102,9 @@ exports.createRootActor = function createRootActor(connection) {
     tabList: new BrowserTabList(connection),
     addonList: new BrowserAddonList(connection),
     workerList: new WorkerTargetActorList(connection, {}),
-    serviceWorkerRegistrationList:
-      new ServiceWorkerRegistrationActorList(connection),
+    serviceWorkerRegistrationList: new ServiceWorkerRegistrationActorList(
+      connection
+    ),
     processList: new ProcessActorList(),
     globalActorFactories: ActorRegistry.globalActorFactories,
     onShutdown: sendShutdownEvent,
@@ -221,9 +261,11 @@ BrowserTabList.prototype._getSelectedBrowser = function(window) {
  * Produces an iterable (in this case a generator) to enumerate all available
  * browser tabs.
  */
-BrowserTabList.prototype._getBrowsers = function* () {
+BrowserTabList.prototype._getBrowsers = function*() {
   // Iterate over all navigator:browser XUL windows.
-  for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
+  for (const win of Services.wm.getEnumerator(
+    DebuggerServer.chromeWindowType
+  )) {
     // For each tab in this XUL window, ensure that we have an actor for
     // it, reusing existing actors where possible.
     for (const browser of this._getChildren(win)) {
@@ -250,7 +292,8 @@ BrowserTabList.prototype._getChildren = function(window) {
 
 BrowserTabList.prototype.getList = function(browserActorOptions) {
   const topXULWindow = Services.wm.getMostRecentWindow(
-    DebuggerServer.chromeWindowType);
+    DebuggerServer.chromeWindowType
+  );
   let selectedBrowser = null;
   if (topXULWindow) {
     selectedBrowser = this._getSelectedBrowser(topXULWindow);
@@ -271,20 +314,22 @@ BrowserTabList.prototype.getList = function(browserActorOptions) {
   for (const browser of this._getBrowsers()) {
     const selected = browser === selectedBrowser;
     actorPromises.push(
-      this._getActorForBrowser(browser, browserActorOptions)
-          .then(actor => {
-            // Set the 'selected' properties on all actors correctly.
-            actor.selected = selected;
-            return actor;
-          }, e => {
-            if (e.error === "tabDestroyed") {
-              // Return null if a tab was destroyed while retrieving the tab list.
-              return null;
-            }
+      this._getActorForBrowser(browser, browserActorOptions).then(
+        actor => {
+          // Set the 'selected' properties on all actors correctly.
+          actor.selected = selected;
+          return actor;
+        },
+        e => {
+          if (e.error === "tabDestroyed") {
+            // Return null if a tab was destroyed while retrieving the tab list.
+            return null;
+          }
 
-            // Forward unexpected errors.
-            throw e;
-          })
+          // Forward unexpected errors.
+          throw e;
+        }
+      )
     );
   }
 
@@ -304,7 +349,10 @@ BrowserTabList.prototype.getList = function(browserActorOptions) {
 /**
  * @param browserActorOptions see options argument of FrameTargetActorProxy constructor.
  */
-BrowserTabList.prototype._getActorForBrowser = function(browser, browserActorOptions) {
+BrowserTabList.prototype._getActorForBrowser = function(
+  browser,
+  browserActorOptions
+) {
   // Do we have an existing actor for this browser? If not, create one.
   let actor = this._actorByBrowser.get(browser);
   if (actor) {
@@ -312,14 +360,20 @@ BrowserTabList.prototype._getActorForBrowser = function(browser, browserActorOpt
     return actor.update(browserActorOptions);
   }
 
-  actor = new FrameTargetActorProxy(this._connection, browser, browserActorOptions);
+  actor = new FrameTargetActorProxy(
+    this._connection,
+    browser,
+    browserActorOptions
+  );
   this._actorByBrowser.set(browser, actor);
   this._checkListening();
   return actor.connect();
 };
 
-BrowserTabList.prototype.getTab = function({ outerWindowID, tabId },
-                                           browserActorOptions) {
+BrowserTabList.prototype.getTab = function(
+  { outerWindowID, tabId },
+  browserActorOptions
+) {
   if (typeof outerWindowID == "number") {
     // First look for in-process frames with this ID
     const window = Services.wm.getOuterWindowWithId(outerWindowID);
@@ -350,9 +404,11 @@ BrowserTabList.prototype.getTab = function({ outerWindowID, tabId },
   } else if (typeof tabId == "number") {
     // Tabs OOP
     for (const browser of this._getBrowsers()) {
-      if (browser.frameLoader &&
-          browser.frameLoader.remoteTab &&
-          browser.frameLoader.remoteTab.tabId === tabId) {
+      if (
+        browser.frameLoader &&
+        browser.frameLoader.remoteTab &&
+        browser.frameLoader.remoteTab.tabId === tabId
+      ) {
         return this._getActorForBrowser(browser, browserActorOptions);
       }
     }
@@ -363,7 +419,8 @@ BrowserTabList.prototype.getTab = function({ outerWindowID, tabId },
   }
 
   const topXULWindow = Services.wm.getMostRecentWindow(
-    DebuggerServer.chromeWindowType);
+    DebuggerServer.chromeWindowType
+  );
   if (topXULWindow) {
     const selectedBrowser = this._getSelectedBrowser(topXULWindow);
     return this._getActorForBrowser(selectedBrowser, browserActorOptions);
@@ -383,7 +440,8 @@ Object.defineProperty(BrowserTabList.prototype, "onListChanged", {
   set(v) {
     if (v !== null && typeof v !== "function") {
       throw new Error(
-        "onListChanged property may only be set to 'null' or a function");
+        "onListChanged property may only be set to 'null' or a function"
+      );
     }
     this._onListChanged = v;
     this._checkListening();
@@ -411,7 +469,9 @@ BrowserTabList.prototype._notifyListChanged = function() {
 BrowserTabList.prototype._handleActorClose = function(actor, browser) {
   if (this._testing) {
     if (this._actorByBrowser.get(browser) !== actor) {
-      throw new Error("FrameTargetActorProxy not stored in map under given browser");
+      throw new Error(
+        "FrameTargetActorProxy not stored in map under given browser"
+      );
     }
     if (actor.browser !== browser) {
       throw new Error("actor's browser and map key don't match");
@@ -443,22 +503,27 @@ BrowserTabList.prototype._checkListening = function() {
    * iterated, but all the actors have since been closed, and we must have
    * sent a notification already when they closed.
    */
-  this._listenForEventsIf(this._onListChanged && this._mustNotify,
-                          "_listeningForTabOpen",
-                          ["TabOpen", "TabSelect", "TabAttrModified"]);
+  this._listenForEventsIf(
+    this._onListChanged && this._mustNotify,
+    "_listeningForTabOpen",
+    ["TabOpen", "TabSelect", "TabAttrModified"]
+  );
 
   /* If we have live actors, we need to be ready to mark them dead. */
-  this._listenForEventsIf(this._actorByBrowser.size > 0,
-                          "_listeningForTabClose",
-                          ["TabClose", "TabRemotenessChange"]);
+  this._listenForEventsIf(
+    this._actorByBrowser.size > 0,
+    "_listeningForTabClose",
+    ["TabClose", "TabRemotenessChange"]
+  );
 
   /*
    * We must listen to the window mediator in either case, since that's the
    * only way to find out about tabs that come and go when top-level windows
    * are opened and closed.
    */
-  this._listenToMediatorIf((this._onListChanged && this._mustNotify) ||
-                           (this._actorByBrowser.size > 0));
+  this._listenToMediatorIf(
+    (this._onListChanged && this._mustNotify) || this._actorByBrowser.size > 0
+  );
 
   /*
    * We also listen for title changed from the child process.
@@ -466,9 +531,11 @@ BrowserTabList.prototype._checkListening = function() {
    * OOP tabs are running browser-child.js frame script which sends DOMTitleChanged
    * events through the message manager.
    */
-  this._listenForMessagesIf(this._onListChanged && this._mustNotify,
-                            "_listeningForTitleChange",
-                            ["DOMTitleChanged"]);
+  this._listenForMessagesIf(
+    this._onListChanged && this._mustNotify,
+    "_listeningForTitleChange",
+    ["DOMTitleChanged"]
+  );
 
   /*
    * We also listen for title changed event on Android document.
@@ -479,10 +546,12 @@ BrowserTabList.prototype._checkListening = function() {
    * updates via DOMTitleChanged messages.
    */
   if (AppConstants.platform === "android") {
-    this._listenForEventsIf(this._onListChanged && this._mustNotify,
-                            "_listeningForAndroidDocument",
-                            ["DOMTitleChanged"],
-                            this._onAndroidDocumentEvent);
+    this._listenForEventsIf(
+      this._onListChanged && this._mustNotify,
+      "_listeningForAndroidDocument",
+      ["DOMTitleChanged"],
+      this._onAndroidDocumentEvent
+    );
   }
 };
 
@@ -497,18 +566,24 @@ BrowserTabList.prototype._checkListening = function() {
  * @param eventNames array of strings
  *    An array of event names.
  */
-BrowserTabList.prototype._listenForEventsIf =
-  function(shouldListen, guard, eventNames, listener = this) {
-    if (!shouldListen !== !this[guard]) {
-      const op = shouldListen ? "addEventListener" : "removeEventListener";
-      for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
-        for (const name of eventNames) {
-          win[op](name, listener, false);
-        }
+BrowserTabList.prototype._listenForEventsIf = function(
+  shouldListen,
+  guard,
+  eventNames,
+  listener = this
+) {
+  if (!shouldListen !== !this[guard]) {
+    const op = shouldListen ? "addEventListener" : "removeEventListener";
+    for (const win of Services.wm.getEnumerator(
+      DebuggerServer.chromeWindowType
+    )) {
+      for (const name of eventNames) {
+        win[op](name, listener, false);
       }
-      this[guard] = shouldListen;
     }
-  };
+    this[guard] = shouldListen;
+  }
+};
 
 /*
  * Add or remove message listeners for all XUL windows.
@@ -521,18 +596,23 @@ BrowserTabList.prototype._listenForEventsIf =
  * @param messageNames array of strings
  *    An array of message names.
  */
-BrowserTabList.prototype._listenForMessagesIf =
-  function(shouldListen, guard, messageNames) {
-    if (!shouldListen !== !this[guard]) {
-      const op = shouldListen ? "addMessageListener" : "removeMessageListener";
-      for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
-        for (const name of messageNames) {
-          win.messageManager[op](name, this);
-        }
+BrowserTabList.prototype._listenForMessagesIf = function(
+  shouldListen,
+  guard,
+  messageNames
+) {
+  if (!shouldListen !== !this[guard]) {
+    const op = shouldListen ? "addMessageListener" : "removeMessageListener";
+    for (const win of Services.wm.getEnumerator(
+      DebuggerServer.chromeWindowType
+    )) {
+      for (const name of messageNames) {
+        win.messageManager[op](name, this);
       }
-      this[guard] = shouldListen;
     }
-  };
+    this[guard] = shouldListen;
+  }
+};
 
 /*
  * This function assumes to be used as a event listener for Android document.
@@ -551,16 +631,17 @@ BrowserTabList.prototype._onAndroidDocumentEvent = function(event) {
 /**
  * Implement nsIMessageListener.
  */
-BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(
-  function(message) {
-    const browser = message.target;
-    switch (message.name) {
-      case "DOMTitleChanged": {
-        this._onDOMTitleChanged(browser);
-        break;
-      }
+BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(function(
+  message
+) {
+  const browser = message.target;
+  switch (message.name) {
+    case "DOMTitleChanged": {
+      this._onDOMTitleChanged(browser);
+      break;
     }
-  });
+  }
+});
 
 /**
  * Handle "DOMTitleChanged" event.
@@ -572,13 +653,15 @@ BrowserTabList.prototype._onDOMTitleChanged = DevToolsUtils.makeInfallible(
       this._notifyListChanged();
       this._checkListening();
     }
-  });
+  }
+);
 
 /**
  * Implement nsIDOMEventListener.
  */
-BrowserTabList.prototype.handleEvent =
-DevToolsUtils.makeInfallible(function(event) {
+BrowserTabList.prototype.handleEvent = DevToolsUtils.makeInfallible(function(
+  event
+) {
   // If event target has `linkedBrowser`, the event target can be assumed <tab> element.
   // Else (in Android case), because event target is assumed <browser> element,
   // use the target as it is.
@@ -628,7 +711,8 @@ DevToolsUtils.makeInfallible(function(event) {
       break;
     }
   }
-}, "BrowserTabList.prototype.handleEvent");
+},
+"BrowserTabList.prototype.handleEvent");
 
 /*
  * If |shouldListen| is true, ensure we've registered a listener with the
@@ -651,8 +735,9 @@ BrowserTabList.prototype._listenToMediatorIf = function(shouldListen) {
  * An nsIWindowMediatorListener's methods get passed all sorts of windows; we
  * only care about the tab containers. Those have 'gBrowser' members.
  */
-BrowserTabList.prototype.onOpenWindow =
-DevToolsUtils.makeInfallible(function(window) {
+BrowserTabList.prototype.onOpenWindow = DevToolsUtils.makeInfallible(function(
+  window
+) {
   const handleLoad = DevToolsUtils.makeInfallible(() => {
     /* We don't want any further load events from this window. */
     window.removeEventListener("load", handleLoad);
@@ -687,14 +772,17 @@ DevToolsUtils.makeInfallible(function(window) {
    * loaded, and then see what we've got. This also avoids
    * nsIWindowMediator enumeration from within listeners (bug 873589).
    */
-  window = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindow);
+  window = window
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindow);
 
   window.addEventListener("load", handleLoad);
-}, "BrowserTabList.prototype.onOpenWindow");
+},
+"BrowserTabList.prototype.onOpenWindow");
 
-BrowserTabList.prototype.onCloseWindow =
-DevToolsUtils.makeInfallible(function(window) {
+BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(
+  window
+) {
   if (window instanceof Ci.nsIXULWindow) {
     window = window.docShell.domWindow;
   }
@@ -708,19 +796,22 @@ DevToolsUtils.makeInfallible(function(window) {
    * a nsIWindowMediatorListener's onCloseWindow hook (bug 873589), so
    * handle the close in a different tick.
    */
-  Services.tm.dispatchToMainThread(DevToolsUtils.makeInfallible(() => {
-    /*
-     * Scan the entire map for actors representing tabs that were in this
-     * top-level window, and exit them.
-     */
-    for (const [browser, actor] of this._actorByBrowser) {
-      /* The browser document of a closed window has no default view. */
-      if (!browser.ownerGlobal) {
-        this._handleActorClose(actor, browser);
+  Services.tm.dispatchToMainThread(
+    DevToolsUtils.makeInfallible(() => {
+      /*
+       * Scan the entire map for actors representing tabs that were in this
+       * top-level window, and exit them.
+       */
+      for (const [browser, actor] of this._actorByBrowser) {
+        /* The browser document of a closed window has no default view. */
+        if (!browser.ownerGlobal) {
+          this._handleActorClose(actor, browser);
+        }
       }
-    }
-  }, "BrowserTabList.prototype.onCloseWindow's delayed body"));
-}, "BrowserTabList.prototype.onCloseWindow");
+    }, "BrowserTabList.prototype.onCloseWindow's delayed body")
+  );
+},
+"BrowserTabList.prototype.onCloseWindow");
 
 exports.BrowserTabList = BrowserTabList;
 
@@ -752,7 +843,8 @@ Object.defineProperty(BrowserAddonList.prototype, "onListChanged", {
   set(v) {
     if (v !== null && typeof v != "function") {
       throw new Error(
-        "onListChanged property may only be set to 'null' or a function");
+        "onListChanged property may only be set to 'null' or a function"
+      );
     }
     this._onListChanged = v;
     this._adjustListener();

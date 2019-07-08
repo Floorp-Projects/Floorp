@@ -215,7 +215,7 @@ ToolSidebar.prototype = {
       return;
     }
 
-    const onIFrameLoaded = (event) => {
+    const onIFrameLoaded = event => {
       iframe.removeEventListener("load", onIFrameLoaded, true);
 
       const doc = event.target;
@@ -256,7 +256,7 @@ ToolSidebar.prototype = {
     this._tabbar.removeTab(tabId);
 
     const win = this.getWindowForTab(tabId);
-    if (win && ("destroy" in win)) {
+    if (win && "destroy" in win) {
       await win.destroy();
     }
 
@@ -294,8 +294,9 @@ ToolSidebar.prototype = {
   getTabPanel: function(id) {
     // Search with and without the ID prefix as there might have been existing
     // tabpanels by the time the sidebar got created
-    return this._panelDoc.querySelector("#" +
-      this.TABPANEL_ID_PREFIX + id + ", #" + id);
+    return this._panelDoc.querySelector(
+      "#" + this.TABPANEL_ID_PREFIX + id + ", #" + id
+    );
   },
 
   /**
@@ -340,14 +341,12 @@ ToolSidebar.prototype = {
       previousToolId = this.getTelemetryPanelNameOrOther(previousToolId);
       this._telemetry.toolClosed(previousToolId, sessionId, this);
 
-      this._telemetry.recordEvent("sidepanel_changed", "inspector", null,
-        {
-          "oldpanel": previousToolId,
-          "newpanel": currentToolId,
-          "os": this._telemetry.osNameAndVersion,
-          "session_id": sessionId,
-        }
-      );
+      this._telemetry.recordEvent("sidepanel_changed", "inspector", null, {
+        oldpanel: previousToolId,
+        newpanel: currentToolId,
+        os: this._telemetry.osNameAndVersion,
+        session_id: sessionId,
+      });
     }
     this._telemetry.toolOpened(currentToolId, sessionId, this);
   },
@@ -411,7 +410,11 @@ ToolSidebar.prototype = {
   getWindowForTab: function(id) {
     // Get the tabpanel and make sure it contains an iframe
     const panel = this.getTabPanel(id);
-    if (!panel || !panel.firstElementChild || !panel.firstElementChild.contentWindow) {
+    if (
+      !panel ||
+      !panel.firstElementChild ||
+      !panel.firstElementChild.contentWindow
+    ) {
       return null;
     }
 
@@ -439,7 +442,7 @@ ToolSidebar.prototype = {
         continue;
       }
       const win = iframe.contentWindow;
-      if (win && ("destroy" in win)) {
+      if (win && "destroy" in win) {
         await win.destroy();
       }
       panel.remove();

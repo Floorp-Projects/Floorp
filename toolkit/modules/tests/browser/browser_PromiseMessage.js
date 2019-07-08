@@ -5,14 +5,13 @@
 "use strict";
 ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm", this);
 
-
 const url = "http://example.org/tests/dom/manifest/test/resource.sjs";
 
 /**
  * Test basic API error conditions
  */
 add_task(async function() {
-  await BrowserTestUtils.withNewTab({gBrowser, url}, testPromiseMessageAPI);
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, testPromiseMessageAPI);
 });
 
 async function testPromiseMessageAPI(aBrowser) {
@@ -21,7 +20,7 @@ async function testPromiseMessageAPI(aBrowser) {
   const mm = aBrowser.messageManager;
   const id = "this should not change";
   const foo = "neitherShouldThis";
-  const data = {id, foo};
+  const data = { id, foo };
 
   // This just returns false, and it doesn't matter for this test.
   await PromiseMessage.send(mm, msgKey, data);

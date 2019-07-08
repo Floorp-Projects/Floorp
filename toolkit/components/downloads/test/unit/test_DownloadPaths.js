@@ -32,7 +32,7 @@ function testCreateNiceUniqueFile(aTempFile, aExpectedLeafName) {
 
 add_task(async function test_sanitize() {
   // Platform-dependent conversion of special characters to spaces.
-  const kSpecialChars = "A:*?|\"\"<<>>;,+=[]B][=+,;>><<\"\"|?*:C";
+  const kSpecialChars = 'A:*?|""<<>>;,+=[]B][=+,;>><<""|?*:C';
   if (AppConstants.platform == "android") {
     testSanitize(kSpecialChars, "A B C");
     testSanitize(" :: Website :: ", "Website");
@@ -46,7 +46,7 @@ add_task(async function test_sanitize() {
     testSanitize("Website | Page!", "Website   Page!");
     testSanitize("Directory Listing: /a/b/", "Directory Listing  _a_b_");
   } else if (AppConstants.platform == "macosx") {
-    testSanitize(kSpecialChars, "A *?|\"\"<<>>;,+=[]B][=+,;>><<\"\"|?* C");
+    testSanitize(kSpecialChars, 'A *?|""<<>>;,+=[]B][=+,;>><<""|?* C');
     testSanitize(" :: Website :: ", "Website");
     testSanitize("* Website!", "* Website!");
     testSanitize("Website | Page!", "Website | Page!");

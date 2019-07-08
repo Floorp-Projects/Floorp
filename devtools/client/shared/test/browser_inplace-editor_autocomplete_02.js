@@ -32,35 +32,33 @@ const testData = [
 
 const mockGetCSSValuesForPropertyName = function(propertyName) {
   const values = {
-    "display": [
-      "block",
-      "flex",
-      "inline",
-      "inline-block",
-      "none",
-    ],
+    display: ["block", "flex", "inline", "inline-block", "none"],
   };
   return values[propertyName] || [];
 };
 
 add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," +
-    "inplace editor CSS value autocomplete");
+  await addTab(
+    "data:text/html;charset=utf-8," + "inplace editor CSS value autocomplete"
+  );
   const [host, win, doc] = await createHost();
 
   const xulDocument = win.top.document;
   const popup = new AutocompletePopup(xulDocument, { autoSelect: true });
 
   await new Promise(resolve => {
-    createInplaceEditorAndClick({
-      start: runAutocompletionTest,
-      contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
-      property: {
-        name: "display",
+    createInplaceEditorAndClick(
+      {
+        start: runAutocompletionTest,
+        contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
+        property: {
+          name: "display",
+        },
+        done: resolve,
+        popup: popup,
       },
-      done: resolve,
-      popup: popup,
-    }, doc);
+      doc
+    );
   });
 
   popup.destroy();

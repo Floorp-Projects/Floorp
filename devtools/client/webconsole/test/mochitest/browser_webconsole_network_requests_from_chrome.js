@@ -14,11 +14,13 @@ add_task(async function() {
   // Start a listener on the console service.
   let good = true;
   const listener = {
-    QueryInterface: ChromeUtils.generateQI([ Ci.nsIObserver ]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
     observe: function(subject) {
-      if (subject instanceof Ci.nsIScriptError &&
-          subject.category === "XPConnect JavaScript" &&
-          subject.sourceName.includes("webconsole")) {
+      if (
+        subject instanceof Ci.nsIScriptError &&
+        subject.category === "XPConnect JavaScript" &&
+        subject.sourceName.includes("webconsole")
+      ) {
         good = false;
       }
     },
@@ -30,7 +32,10 @@ add_task(async function() {
 
   await sendRequestFromChrome();
 
-  ok(good, "No exception was thrown when sending a network request from a chrome window");
+  ok(
+    good,
+    "No exception was thrown when sending a network request from a chrome window"
+  );
 
   Services.console.unregisterListener(listener);
 });
@@ -39,9 +44,13 @@ function sendRequestFromChrome() {
   return new Promise(resolve => {
     const xhr = new XMLHttpRequest();
 
-    xhr.addEventListener("load", () => {
-      window.setTimeout(resolve, 0);
-    }, { once: true });
+    xhr.addEventListener(
+      "load",
+      () => {
+        window.setTimeout(resolve, 0);
+      },
+      { once: true }
+    );
 
     xhr.open("GET", TEST_URI, true);
     xhr.send(null);

@@ -9,8 +9,12 @@ const MarkupContainer = require("devtools/client/inspector/markup/views/markup-c
 const { extend } = require("devtools/shared/extend");
 
 function SlottedNodeContainer(markupView, node) {
-  MarkupContainer.prototype.initialize.call(this, markupView, node,
-    "slottednodecontainer");
+  MarkupContainer.prototype.initialize.call(
+    this,
+    markupView,
+    node,
+    "slottednodecontainer"
+  );
 
   this.editor = new SlottedNodeEditor(this, node);
   this.tagLine.appendChild(this.editor.elt);
@@ -37,7 +41,10 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
   _revealFromSlot() {
     const reason = "reveal-from-slot";
     this.markup.inspector.selection.setNodeFront(this.node, { reason });
-    this.markup.telemetry.scalarSet("devtools.shadowdom.reveal_link_clicked", true);
+    this.markup.telemetry.scalarSet(
+      "devtools.shadowdom.reveal_link_clicked",
+      true
+    );
   },
 
   _onKeyDown: function(event) {

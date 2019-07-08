@@ -6,7 +6,6 @@
 
 const BUTTONID = "test-XUL-wrapper-destroyWidget";
 
-
 add_task(function() {
   let btn = createDummyXULButton(BUTTONID, "XUL btn");
   gNavToolbox.palette.appendChild(btn);
@@ -17,7 +16,11 @@ add_task(function() {
   btn.remove();
   CustomizableUI.destroyWidget(BUTTONID);
   let secondWrapper = CustomizableUI.getWidget(BUTTONID).forWindow(window);
-  isnot(firstWrapper, secondWrapper, "Wrappers should be different after destroyWidget call.");
+  isnot(
+    firstWrapper,
+    secondWrapper,
+    "Wrappers should be different after destroyWidget call."
+  );
   ok(!firstWrapper.node, "No node should be there on old wrapper.");
   ok(!secondWrapper.node, "No node should be there on new wrapper.");
 
@@ -30,4 +33,3 @@ add_task(function() {
   ok(secondWrapper.node, "Node should be there on second wrapper.");
   ok(thirdWrapper.node, "Node should be there on third wrapper.");
 });
-

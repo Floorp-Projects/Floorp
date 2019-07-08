@@ -15,23 +15,32 @@ add_task(async function() {
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise");
 
-  await testPromisesSettled(promisesFront,
+  await testPromisesSettled(
+    promisesFront,
     v => new Promise(resolve => resolve(v)),
-    v => new Promise((resolve, reject) => reject(v)));
+    v => new Promise((resolve, reject) => reject(v))
+  );
 });
 
 add_task(async function() {
   const { debuggee, promisesFront } = await createTabPromisesFront();
 
-  await testPromisesSettled(promisesFront, v => {
-    return debuggee.Promise.resolve(v);
-  }, v => {
-    return debuggee.Promise.reject(v);
-  });
+  await testPromisesSettled(
+    promisesFront,
+    v => {
+      return debuggee.Promise.resolve(v);
+    },
+    v => {
+      return debuggee.Promise.reject(v);
+    }
+  );
 });
 
-async function testPromisesSettled(front, makeResolvePromise,
-    makeRejectPromise) {
+async function testPromisesSettled(
+  front,
+  makeResolvePromise,
+  makeRejectPromise
+) {
   const resolution = "MyLittleSecret" + Math.random();
 
   await front.attach();
@@ -60,16 +69,26 @@ function oncePromiseSettled(front, resolution, resolveValue, rejectValue) {
       for (const p of promises) {
         equal(p.type, "object", "Expect type to be Object");
         equal(p.class, "Promise", "Expect class to be Promise");
-        equal(typeof p.promiseState.creationTimestamp, "number",
-          "Expect creation timestamp to be a number");
-        equal(typeof p.promiseState.timeToSettle, "number",
-          "Expect time to settle to be a number");
+        equal(
+          typeof p.promiseState.creationTimestamp,
+          "number",
+          "Expect creation timestamp to be a number"
+        );
+        equal(
+          typeof p.promiseState.timeToSettle,
+          "number",
+          "Expect time to settle to be a number"
+        );
 
-        if (p.promiseState.state === "fulfilled" &&
-            p.promiseState.value === resolution) {
+        if (
+          p.promiseState.state === "fulfilled" &&
+          p.promiseState.value === resolution
+        ) {
           resolve(resolveValue);
-        } else if (p.promiseState.state === "rejected" &&
-                   p.promiseState.reason === resolution) {
+        } else if (
+          p.promiseState.state === "rejected" &&
+          p.promiseState.reason === resolution
+        ) {
           resolve(rejectValue);
         } else {
           dump("Found non-target promise\n");

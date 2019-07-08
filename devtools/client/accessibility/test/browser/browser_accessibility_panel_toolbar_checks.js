@@ -14,80 +14,92 @@ const TEST_URI = `<html>
 </html>`;
 
 /**
-* Test data has the format of:
-* {
-*   desc     {String}    description for better logging
-*   setup    {Function}  An optional setup that needs to be performed before
-*                        the state of the tree and the sidebar can be checked.
-*   expected {JSON}      An expected states for the tree and the sidebar.
-* }
-*/
-const tests = [{
-  desc: "Check initial state.",
-  expected: {
-    toolbar: [false, false, false],
+ * Test data has the format of:
+ * {
+ *   desc     {String}    description for better logging
+ *   setup    {Function}  An optional setup that needs to be performed before
+ *                        the state of the tree and the sidebar can be checked.
+ *   expected {JSON}      An expected states for the tree and the sidebar.
+ * }
+ */
+const tests = [
+  {
+    desc: "Check initial state.",
+    expected: {
+      toolbar: [false, false, false],
+    },
   },
-}, {
-  desc: "Toggle first filter (all) to activate.",
-  setup: async ({ doc }) => {
-    await toggleFilter(doc, 0);
+  {
+    desc: "Toggle first filter (all) to activate.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 0);
+    },
+    expected: {
+      toolbar: [true, true, true],
+    },
   },
-  expected: {
-    toolbar: [true, true, true],
+  {
+    desc: "Click on the filter again.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 0);
+    },
+    expected: {
+      toolbar: [false, false, false],
+    },
   },
-}, {
-  desc: "Click on the filter again.",
-  setup: async ({ doc }) => {
-    await toggleFilter(doc, 0);
+  {
+    desc: "Toggle second filter (contrast) to activate.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 1);
+    },
+    expected: {
+      toolbar: [false, true, false],
+    },
   },
-  expected: {
-    toolbar: [false, false, false],
+  {
+    desc: "Click on the filter again.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 1);
+    },
+    expected: {
+      toolbar: [false, false, false],
+    },
   },
-}, {
-  desc: "Toggle second filter (contrast) to activate.",
-  setup: async ({ doc }) => {
-    await toggleFilter(doc, 1);
+  {
+    desc: "Toggle second filter (contrast) to activate.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 1);
+    },
+    expected: {
+      toolbar: [false, true, false],
+    },
   },
-  expected: {
-    toolbar: [false, true, false],
+  {
+    desc: "Toggle third filter (all) (text label) to activate.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 2);
+    },
+    expected: {
+      toolbar: [true, true, true],
+    },
   },
-}, {
-  desc: "Click on the filter again.",
-  setup: async ({ doc }) => {
-    await toggleFilter(doc, 1);
+  {
+    desc: "Click on the first filter to de-activate all.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 0);
+    },
+    expected: {
+      toolbar: [false, false, false],
+    },
   },
-  expected: {
-    toolbar: [false, false, false],
-  },
-}, {
-  desc: "Toggle second filter (contrast) to activate.",
-  setup: async ({ doc }) => {
-    await toggleFilter(doc, 1);
-  },
-  expected: {
-    toolbar: [false, true, false],
-  },
-}, {
-  desc: "Toggle third filter (all) (text label) to activate.",
-  setup: async ({ doc }) => {
-    await toggleFilter(doc, 2);
-  },
-  expected: {
-    toolbar: [true, true, true],
-  },
-}, {
-  desc: "Click on the first filter to de-activate all.",
-  setup: async ({ doc }) => {
-    await toggleFilter(doc, 0);
-  },
-  expected: {
-    toolbar: [false, false, false],
-  },
-}];
+];
 
 /**
-* Simple test that checks toggle states for filters in the Accessibility panel
-* toolbar.
-*/
-addA11yPanelTestsTask(tests, TEST_URI,
-  "Test Accessibility panel filter toggle states.");
+ * Simple test that checks toggle states for filters in the Accessibility panel
+ * toolbar.
+ */
+addA11yPanelTestsTask(
+  tests,
+  TEST_URI,
+  "Test Accessibility panel filter toggle states."
+);

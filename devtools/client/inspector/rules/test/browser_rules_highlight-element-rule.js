@@ -33,10 +33,18 @@ add_task(async function() {
 
   await onHighlightProperty;
 
-  ok(isInViewport(rules[0].editor.element, styleWindow), ".test::after is in view.");
+  ok(
+    isInViewport(rules[0].editor.element, styleWindow),
+    ".test::after is in view."
+  );
 });
 
 function isInViewport(element, win) {
   const { top, left, bottom, right } = element.getBoundingClientRect();
-  return top >= 0 && bottom <= win.innerHeight && left >= 0 && right <= win.innerWidth;
+  return (
+    top >= 0 &&
+    bottom <= win.innerHeight &&
+    left >= 0 &&
+    right <= win.innerWidth
+  );
 }

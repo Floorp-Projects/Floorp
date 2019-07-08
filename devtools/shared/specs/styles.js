@@ -17,7 +17,7 @@ types.addActorType("domstylerule");
 /**
  * DOM Nodes returned by the style actor will be owned by the DOM walker
  * for the connection.
-  */
+ */
 types.addLifetime("walker", "walker");
 
 /**
@@ -144,11 +144,13 @@ const pageStyleSpec = generateActorSpec({
         property: Arg(1, "string"),
         filter: Option(2, "string"),
       },
-      response: RetVal(types.addDictType("matchedselectorresponse", {
-        rules: "array:domstylerule",
-        sheets: "array:stylesheet",
-        matched: "array:matchedselector",
-      })),
+      response: RetVal(
+        types.addDictType("matchedselectorresponse", {
+          rules: "array:domstylerule",
+          sheets: "array:stylesheet",
+          matched: "array:matchedselector",
+        })
+      ),
     },
     getRule: {
       request: {
@@ -169,7 +171,7 @@ const pageStyleSpec = generateActorSpec({
       response: RetVal("appliedStylesReturn"),
     },
     isPositionEditable: {
-      request: { node: Arg(0, "domnode")},
+      request: { node: Arg(0, "domnode") },
       response: { value: RetVal("boolean") },
     },
     getLayout: {

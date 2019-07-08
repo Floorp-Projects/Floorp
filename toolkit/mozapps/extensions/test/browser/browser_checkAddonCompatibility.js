@@ -8,7 +8,10 @@ async function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
-  ok(AddonManager.strictCompatibility, "Strict compatibility should be enabled");
+  ok(
+    AddonManager.strictCompatibility,
+    "Strict compatibility should be enabled"
+  );
 
   let aAddons = await AddonManager.getAllAddons();
   aAddons.sort(function compareTypeName(a, b) {
@@ -18,10 +21,14 @@ async function test() {
   let allCompatible = true;
   for (let a of aAddons) {
     // Ignore plugins.
-    if (a.type == "plugin" || a.id == "workerbootstrap-test@mozilla.org")
+    if (a.type == "plugin" || a.id == "workerbootstrap-test@mozilla.org") {
       continue;
+    }
 
-    ok(a.isCompatible, a.type + " " + a.name + " " + a.version + " should be compatible");
+    ok(
+      a.isCompatible,
+      a.type + " " + a.name + " " + a.version + " should be compatible"
+    );
     allCompatible = allCompatible && a.isCompatible;
   }
 

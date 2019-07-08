@@ -4,20 +4,30 @@
 
 let reportURL;
 
-const {CrashReports} = ChromeUtils.import("resource://gre/modules/CrashReports.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { CrashReports } = ChromeUtils.import(
+  "resource://gre/modules/CrashReports.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-ChromeUtils.defineModuleGetter(this, "CrashSubmit", "resource://gre/modules/CrashSubmit.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CrashSubmit",
+  "resource://gre/modules/CrashSubmit.jsm"
+);
 
 document.addEventListener("DOMContentLoaded", () => {
   populateReportLists();
-  document.getElementById("clearUnsubmittedReports").addEventListener("click", () => {
-    clearUnsubmittedReports().catch(Cu.reportError);
-  });
-  document.getElementById("clearSubmittedReports").addEventListener("click", () => {
-    clearSubmittedReports().catch(Cu.reportError);
-  });
+  document
+    .getElementById("clearUnsubmittedReports")
+    .addEventListener("click", () => {
+      clearUnsubmittedReports().catch(Cu.reportError);
+    });
+  document
+    .getElementById("clearSubmittedReports")
+    .addEventListener("click", () => {
+      clearSubmittedReports().catch(Cu.reportError);
+    });
 });
 
 const buildID = Services.appinfo.appBuildID;
@@ -48,7 +58,9 @@ function populateReportLists() {
     timeStyle: "short",
     dateStyle: "short",
   });
-  reports.forEach(report => addReportRow(report.pending, report.id, report.date, dateFormatter));
+  reports.forEach(report =>
+    addReportRow(report.pending, report.id, report.date, dateFormatter)
+  );
   showAppropriateSections();
 }
 
@@ -64,7 +76,9 @@ function populateReportLists() {
  */
 function addReportRow(isPending, id, date, dateFormatter) {
   const rowTemplate = document.getElementById("crashReportRow");
-  const row = document.importNode(rowTemplate.content, true).querySelector("tr");
+  const row = document
+    .importNode(rowTemplate.content, true)
+    .querySelector("tr");
   row.id = id;
 
   const cells = row.querySelectorAll("td");
@@ -73,15 +87,20 @@ function addReportRow(isPending, id, date, dateFormatter) {
 
   if (isPending) {
     const buttonTemplate = document.getElementById("crashSubmitButton");
-    const button = document.importNode(buttonTemplate.content, true).querySelector("button");
+    const button = document
+      .importNode(buttonTemplate.content, true)
+      .querySelector("button");
     const buttonText = button.querySelector("span");
-    button.addEventListener("click",
-      () => submitPendingReport(id, row, button, buttonText, dateFormatter));
+    button.addEventListener("click", () =>
+      submitPendingReport(id, row, button, buttonText, dateFormatter)
+    );
     cells[2].appendChild(button);
     document.getElementById("unsubmitted").appendChild(row);
   } else {
     const linkTemplate = document.getElementById("viewCrashLink");
-    const link = document.importNode(linkTemplate.content, true).querySelector("a");
+    const link = document
+      .importNode(linkTemplate.content, true)
+      .querySelector("a");
     link.href = `${reportURL}${id}`;
     cells[2].appendChild(link);
     document.getElementById("submitted").appendChild(row);
@@ -95,12 +114,19 @@ function addReportRow(isPending, id, date, dateFormatter) {
  * indicating that no crash reports have been submitted.
  */
 function showAppropriateSections() {
-  let hasUnsubmitted = document.getElementById("unsubmitted").childElementCount > 0;
-  document.getElementById("reportListUnsubmitted").classList.toggle("hidden", !hasUnsubmitted);
+  let hasUnsubmitted =
+    document.getElementById("unsubmitted").childElementCount > 0;
+  document
+    .getElementById("reportListUnsubmitted")
+    .classList.toggle("hidden", !hasUnsubmitted);
 
   let hasSubmitted = document.getElementById("submitted").childElementCount > 0;
-  document.getElementById("reportListSubmitted").classList.toggle("hidden", !hasSubmitted);
-  document.getElementById("noSubmittedReports").classList.toggle("hidden", hasSubmitted);
+  document
+    .getElementById("reportListSubmitted")
+    .classList.toggle("hidden", !hasSubmitted);
+  document
+    .getElementById("noSubmittedReports")
+    .classList.toggle("hidden", hasSubmitted);
 }
 
 /**
@@ -118,9 +144,12 @@ function showAppropriateSections() {
  */
 function submitPendingReport(reportId, row, button, buttonText, dateFormatter) {
   button.classList.add("submitting");
-  CrashSubmit.submit(reportId, { noThrottle: true }).then(remoteCrashID => {
+  CrashSubmit.submit(reportId, { noThrottle: true }).then(
+    remoteCrashID => {
       document.getElementById("unsubmitted").removeChild(row);
-      const report = CrashReports.getReports().filter(report => report.id === remoteCrashID);
+      const report = CrashReports.getReports().filter(
+        report => report.id === remoteCrashID
+      );
       addReportRow(false, remoteCrashID, report.date, dateFormatter);
       showAppropriateSections();
       dispatchEvent("CrashSubmitSucceeded");
@@ -128,9 +157,12 @@ function submitPendingReport(reportId, row, button, buttonText, dateFormatter) {
     () => {
       button.classList.remove("submitting");
       button.classList.add("failed-to-submit");
-      document.l10n.setAttributes(buttonText, "submit-crash-button-failure-label");
+      document.l10n.setAttributes(
+        buttonText,
+        "submit-crash-button-failure-label"
+      );
       dispatchEvent("CrashSubmitFailed");
-    },
+    }
   );
 }
 
@@ -140,8 +172,8 @@ function submitPendingReport(reportId, row, button, buttonText, dateFormatter) {
  */
 async function clearUnsubmittedReports() {
   const [title, description] = await document.l10n.formatValues([
-    {id: "delete-confirm-title"},
-    {id: "delete-unsubmitted-description"},
+    { id: "delete-confirm-title" },
+    { id: "delete-unsubmitted-description" },
   ]);
   if (!Services.prompt.confirm(window, title, description)) {
     return;
@@ -158,8 +190,8 @@ async function clearUnsubmittedReports() {
  */
 async function clearSubmittedReports() {
   const [title, description] = await document.l10n.formatValues([
-    {id: "delete-confirm-title"},
-    {id: "delete-submitted-description"},
+    { id: "delete-confirm-title" },
+    { id: "delete-submitted-description" },
   ]);
   if (!Services.prompt.confirm(window, title, description)) {
     return;
@@ -167,7 +199,7 @@ async function clearSubmittedReports() {
 
   await cleanupFolder(
     CrashReports.submittedDir.path,
-    async entry => entry.name.startsWith("bp-") && entry.name.endsWith(".txt"),
+    async entry => entry.name.startsWith("bp-") && entry.name.endsWith(".txt")
   );
   await clearOldReports();
   document.getElementById("reportListSubmitted").classList.add("hidden");
@@ -180,7 +212,10 @@ async function clearSubmittedReports() {
 async function clearOldReports() {
   const oneYearAgo = Date.now() - 31586000000;
   await cleanupFolder(CrashReports.reportsDir.path, async entry => {
-    if (!entry.name.startsWith("InstallTime") || entry.name == "InstallTime" + buildID) {
+    if (
+      !entry.name.startsWith("InstallTime") ||
+      entry.name == "InstallTime" + buildID
+    ) {
       return false;
     }
 

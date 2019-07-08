@@ -9,13 +9,17 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
-  debuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+add_task(
+  threadClientTest(async ({ threadClient, debuggee, client }) => {
+    debuggee.eval(
+      function stopMe(arg1) {
+        debugger;
+      }.toString()
+    );
 
-  await test_object_grip(debuggee, threadClient);
-}));
+    await test_object_grip(debuggee, threadClient);
+  })
+);
 
 async function test_object_grip(debuggee, threadClient) {
   const code = `
@@ -23,17 +27,22 @@ async function test_object_grip(debuggee, threadClient) {
       method: {},
     });
   `;
-  const obj = await eval_and_resume(debuggee, threadClient, code, async frame => {
-    const arg1 = frame.arguments[0];
-    Assert.equal(arg1.class, "Object");
+  const obj = await eval_and_resume(
+    debuggee,
+    threadClient,
+    code,
+    async frame => {
+      const arg1 = frame.arguments[0];
+      Assert.equal(arg1.class, "Object");
 
-    await threadClient.pauseGrip(arg1).threadGrip();
-    return arg1;
-  });
+      await threadClient.pauseGrip(arg1).threadGrip();
+      return arg1;
+    }
+  );
   const objClient = threadClient.pauseGrip(obj);
 
   const method = threadClient.pauseGrip(
-    (await objClient.getPropertyValue("method", null)).value.return,
+    (await objClient.getPropertyValue("method", null)).value.return
   );
 
   try {

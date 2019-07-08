@@ -6,9 +6,15 @@
 // settings to be reset on tab switch (bug 464962)
 
 add_task(async function test() {
-  let win = (await BrowserTestUtils.openNewBrowserWindow({ private: true }));
-  let tabAbout = (await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:mozilla"));
-  let tabMozilla = (await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:mozilla"));
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+  let tabAbout = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    "about:mozilla"
+  );
+  let tabMozilla = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    "about:mozilla"
+  );
 
   let mozillaZoom = win.ZoomManager.zoom;
 
@@ -25,8 +31,11 @@ add_task(async function test() {
   await BrowserTestUtils.switchTab(win.gBrowser, tabMozilla);
 
   // make sure the zoom level has not changed
-  is(win.ZoomManager.zoom, mozillaZoom,
-     "Entering private browsing should not reset the zoom on a tab");
+  is(
+    win.ZoomManager.zoom,
+    mozillaZoom,
+    "Entering private browsing should not reset the zoom on a tab"
+  );
 
   // cleanup
   win.FullZoom.reset();

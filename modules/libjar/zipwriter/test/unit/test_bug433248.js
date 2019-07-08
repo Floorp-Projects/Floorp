@@ -34,7 +34,12 @@ function run_test() {
   }
 
   try {
-    zipW.addEntryFile("test", Ci.nsIZipWriter.COMPRESSION_DEFAULT, tmpDir, false);
+    zipW.addEntryFile(
+      "test",
+      Ci.nsIZipWriter.COMPRESSION_DEFAULT,
+      tmpDir,
+      false
+    );
     do_throw("Should have thrown uninitialized error.");
   } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_NOT_INITIALIZED);

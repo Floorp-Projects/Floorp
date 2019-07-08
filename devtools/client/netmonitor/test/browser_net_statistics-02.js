@@ -16,37 +16,59 @@ add_task(async function() {
   const { document, store, windowRequire, connector } = panel;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-html-button"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-css-button"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-js-button"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-ws-button"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-other-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-html-button")
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-css-button")
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-js-button")
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-ws-button")
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-other-button")
+  );
   testFilterButtonsCustom(monitor, [0, 1, 1, 1, 0, 0, 0, 0, 1, 1]);
-  info("The correct filtering predicates are used before entering perf. analysis mode.");
+  info(
+    "The correct filtering predicates are used before entering perf. analysis mode."
+  );
 
   store.dispatch(Actions.openStatistics(connector, true));
 
-  ok(document.querySelector(".statistics-panel"),
-    "The main panel is switched to the statistics panel.");
+  ok(
+    document.querySelector(".statistics-panel"),
+    "The main panel is switched to the statistics panel."
+  );
 
   await waitUntil(
-    () => document.querySelectorAll(".pie-chart-container:not([placeholder=true])")
-                  .length == 2);
+    () =>
+      document.querySelectorAll(".pie-chart-container:not([placeholder=true])")
+        .length == 2
+  );
   ok(true, "Two real pie charts appear to be rendered correctly.");
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".pie-chart-slice"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".pie-chart-slice")
+  );
 
-  ok(document.querySelector(".monitor-panel"),
-    "The main panel is switched back to the monitor panel.");
+  ok(
+    document.querySelector(".monitor-panel"),
+    "The main panel is switched back to the monitor panel."
+  );
 
   testFilterButtons(monitor, "html");
-  info("The correct filtering predicate is used when exiting perf. analysis mode.");
+  info(
+    "The correct filtering predicate is used when exiting perf. analysis mode."
+  );
 
   await teardown(monitor);
 });

@@ -50,7 +50,11 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_ArrowRight");
   await onPopupClose;
   ok(true, "popup was closed");
-  checkInputValueAndCursorPosition(hud, "dump(window.testB)|", "input wasn't modified");
+  checkInputValueAndCursorPosition(
+    hud,
+    "dump(window.testB)|",
+    "input wasn't modified"
+  );
 
   await setInitialState(hud);
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -59,7 +63,11 @@ async function performTests() {
 
   const items = popup.getItems().map(e => e.label);
   const expectedItems = ["testBugAA", "testBugBB"];
-  is(items.join("-"), expectedItems.join("-"), "getItems returns the items we expect");
+  is(
+    items.join("-"),
+    expectedItems.join("-"),
+    "getItems returns the items we expect"
+  );
 
   info("press Tab and wait for popup to hide");
   onPopupClose = popup.once("popup-closed");
@@ -68,8 +76,11 @@ async function performTests() {
 
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
-  checkInputValueAndCursorPosition(hud, "dump(window.testBugBB|)",
-    "completion was successful after VK_TAB");
+  checkInputValueAndCursorPosition(
+    hud,
+    "dump(window.testBugBB|)",
+    "completion was successful after VK_TAB"
+  );
   ok(!getInputCompletionValue(hud), "there is no completion text");
 
   info("Test ENTER key when popup is visible with a selected item");
@@ -80,8 +91,11 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open");
-  checkInputValueAndCursorPosition(hud, "dump(window.testBugAA|)",
-    "completion was successful after Enter");
+  checkInputValueAndCursorPosition(
+    hud,
+    "dump(window.testBugAA|)",
+    "completion was successful after Enter"
+  );
   ok(!getInputCompletionValue(hud), "there is no completion text");
 
   info("Test autocomplete inside parens");
@@ -103,8 +117,11 @@ async function performTests() {
   ok(!getInputCompletionValue(hud), "there is no completion text");
 
   EventUtils.synthesizeKey("KEY_Tab");
-  checkInputValueAndCursorPosition(hud, "dump(window.testBugAA\t|)",
-    "completion was successful after Enter");
+  checkInputValueAndCursorPosition(
+    hud,
+    "dump(window.testBugAA\t|)",
+    "completion was successful after Enter"
+  );
 
   info("Check that we don't show the popup when editing words");
   await setInputValueForAutocompletion(hud, "estBug", 0);
@@ -141,7 +158,7 @@ async function performTests() {
 }
 
 async function setInitialState(hud) {
-  const {jsterm} = hud;
+  const { jsterm } = hud;
   jsterm.focus();
   setInputValue(hud, "dump()");
   EventUtils.synthesizeKey("KEY_ArrowLeft");

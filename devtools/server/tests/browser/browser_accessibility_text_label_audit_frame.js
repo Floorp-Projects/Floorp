@@ -20,8 +20,9 @@ const {
 } = require("devtools/shared/constants");
 
 add_task(async function() {
-  const {target, walker, accessibility} = await initAccessibilityFrontForUrl(
-    `${MAIN_DOMAIN}doc_accessibility_text_label_audit_frame.html`);
+  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+    `${MAIN_DOMAIN}doc_accessibility_text_label_audit_frame.html`
+  );
 
   const a11yWalker = await accessibility.getWalker();
   await accessibility.enable();
@@ -36,8 +37,11 @@ add_task(async function() {
     const node = await walker.querySelector(walker.rootNode, selector);
     const front = await a11yWalker.getAccessibleFor(node);
     const audit = await front.audit({ types: [TEXT_LABEL] });
-    Assert.deepEqual(audit[TEXT_LABEL], expected,
-      `Audit result for ${selector} is correct.`);
+    Assert.deepEqual(
+      audit[TEXT_LABEL],
+      expected,
+      `Audit result for ${selector} is correct.`
+    );
   }
 
   await accessibility.disable();

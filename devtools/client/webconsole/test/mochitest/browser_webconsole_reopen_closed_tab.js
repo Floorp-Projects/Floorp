@@ -8,8 +8,9 @@
 // See Bug 597756. Check that errors are still displayed in the console after
 // reloading a page.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-reopen-closed-tab.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-reopen-closed-tab.html";
 
 add_task(async function() {
   // If we persist log, the test might be successful even if only the first

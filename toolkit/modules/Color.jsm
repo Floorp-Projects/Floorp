@@ -61,11 +61,9 @@ class Color {
       if (color <= 10) {
         return color / 255 / 12.92;
       }
-      return Math.pow(((color / 255) + 0.055) / 1.055, 2.4);
+      return Math.pow((color / 255 + 0.055) / 1.055, 2.4);
     });
-    return colorArr[0] * 0.2126 +
-           colorArr[1] * 0.7152 +
-           colorArr[2] * 0.0722;
+    return colorArr[0] * 0.2126 + colorArr[1] * 0.7152 + colorArr[2] * 0.0722;
   }
 
   /**
@@ -94,8 +92,10 @@ class Color {
 
     let luminance = this.relativeLuminance;
     let otherLuminance = otherColor.relativeLuminance;
-    return (Math.max(luminance, otherLuminance) + 0.05) /
-      (Math.min(luminance, otherLuminance) + 0.05);
+    return (
+      (Math.max(luminance, otherLuminance) + 0.05) /
+      (Math.min(luminance, otherLuminance) + 0.05)
+    );
   }
 
   /**

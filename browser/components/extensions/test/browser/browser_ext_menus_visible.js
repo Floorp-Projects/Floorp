@@ -3,14 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+const PAGE =
+  "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
 add_task(async function visible_false() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   async function background() {
     browser.menus.onShown.addListener(info => {
-      browser.test.assertEq("[]", JSON.stringify(info.menuIds), "Expected no menu items");
+      browser.test.assertEq(
+        "[]",
+        JSON.stringify(info.menuIds),
+        "Expected no menu items"
+      );
       browser.test.sendMessage("done");
     });
     browser.menus.create({
@@ -28,7 +33,7 @@ add_task(async function visible_false() {
       id: "update-visible-to-false",
       title: "initially visible menu item",
     });
-    await browser.menus.update("update-visible-to-false", {visible: false});
+    await browser.menus.update("update-visible-to-false", { visible: false });
     browser.test.sendMessage("ready");
   }
 
@@ -55,7 +60,11 @@ add_task(async function visible_true() {
 
   async function background() {
     browser.menus.onShown.addListener(info => {
-      browser.test.assertEq(`["update-to-true"]`, JSON.stringify(info.menuIds), "Expected no menu items");
+      browser.test.assertEq(
+        `["update-to-true"]`,
+        JSON.stringify(info.menuIds),
+        "Expected no menu items"
+      );
       browser.test.sendMessage("done");
     });
     browser.menus.create({
@@ -63,7 +72,7 @@ add_task(async function visible_true() {
       title: "invisible menu item",
       visible: false,
     });
-    await browser.menus.update("update-to-true", {visible: true});
+    await browser.menus.update("update-to-true", { visible: true });
     browser.test.sendMessage("ready");
   }
 

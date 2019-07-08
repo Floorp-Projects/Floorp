@@ -5,17 +5,28 @@
 // Output: we have the correct referrer policy applied.
 
 function startNewTabTestCase(aTestNumber) {
-  info("browser_referrer_open_link_in_container_tab: " +
-       getReferrerTestDescription(aTestNumber));
+  info(
+    "browser_referrer_open_link_in_container_tab: " +
+      getReferrerTestDescription(aTestNumber)
+  );
   contextMenuOpened(gTestWindow, "testlink").then(function(aContextMenu) {
     someTabLoaded(gTestWindow).then(function(aNewTab) {
       gTestWindow.gBrowser.selectedTab = aNewTab;
 
-      checkReferrerAndStartNextTest(aTestNumber, null, aNewTab,
-                                    startNewTabTestCase, { userContextId: 1 });
+      checkReferrerAndStartNextTest(
+        aTestNumber,
+        null,
+        aNewTab,
+        startNewTabTestCase,
+        { userContextId: 1 }
+      );
     });
 
-    doContextMenuCommand(gTestWindow, aContextMenu, "context-openlinkincontainertab");
+    doContextMenuCommand(
+      gTestWindow,
+      aContextMenu,
+      "context-openlinkincontainertab"
+    );
   });
 }
 
@@ -23,9 +34,10 @@ function test() {
   waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv(
-    {set: [["privacy.userContext.enabled", true]]},
+    { set: [["privacy.userContext.enabled", true]] },
     function() {
       requestLongerTimeout(10); // slowwww shutdown on e10s
       startReferrerTest(startNewTabTestCase, { userContextId: 1 });
-    });
+    }
+  );
 }

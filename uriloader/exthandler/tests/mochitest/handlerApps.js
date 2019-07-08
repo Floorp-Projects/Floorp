@@ -9,18 +9,20 @@ const Cc = SpecialPowers.Cc;
 
 function test() {
   // set up the web handler object
-  var webHandler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
-    createInstance(SpecialPowers.Ci.nsIWebHandlerApp);
+  var webHandler = Cc[
+    "@mozilla.org/uriloader/web-handler-app;1"
+  ].createInstance(SpecialPowers.Ci.nsIWebHandlerApp);
   webHandler.name = "Test Web Handler App";
   webHandler.uriTemplate =
-      "https://example.com/tests/uriloader/exthandler/tests/mochitest/" +
-      "handlerApp.xhtml?uri=%s";
+    "https://example.com/tests/uriloader/exthandler/tests/mochitest/" +
+    "handlerApp.xhtml?uri=%s";
 
   // set up the uri to test with
   /* eslint-disable mozilla/use-services */
 
-  var ioService = Cc["@mozilla.org/network/io-service;1"].
-    getService(SpecialPowers.Ci.nsIIOService);
+  var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
+    SpecialPowers.Ci.nsIIOService
+  );
 
   var uri = ioService.newURI(testURI);
 
@@ -41,18 +43,21 @@ function test() {
   ok(true, "webHandler launchWithURI (new window/tab) test started");
 
   // set up the local handler object
-  var localHandler = Cc["@mozilla.org/uriloader/local-handler-app;1"].
-    createInstance(SpecialPowers.Ci.nsILocalHandlerApp);
+  var localHandler = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(SpecialPowers.Ci.nsILocalHandlerApp);
   localHandler.name = "Test Local Handler App";
 
   // get a local app that we know will be there and do something sane
   /* eslint-disable mozilla/use-services */
 
-  var osString = Cc["@mozilla.org/xre/app-info;1"].
-                 getService(SpecialPowers.Ci.nsIXULRuntime).OS;
+  var osString = Cc["@mozilla.org/xre/app-info;1"].getService(
+    SpecialPowers.Ci.nsIXULRuntime
+  ).OS;
 
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(SpecialPowers.Ci.nsIDirectoryServiceProvider);
+  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(
+    SpecialPowers.Ci.nsIDirectoryServiceProvider
+  );
   if (osString == "WINNT") {
     var windowsDir = dirSvc.getFile("WinD", {});
     var exe = windowsDir.clone().QueryInterface(SpecialPowers.Ci.nsIFile);
@@ -61,9 +66,9 @@ function test() {
     var localAppsDir = dirSvc.getFile("LocApp", {});
     exe = localAppsDir.clone();
     exe.append("iCal.app"); // lingers after the tests finish, but this seems
-                            // seems better than explicitly killing it, since
-                            // developers who run the tests locally may well
-                            // information in their running copy of iCal
+    // seems better than explicitly killing it, since
+    // developers who run the tests locally may well
+    // information in their running copy of iCal
 
     if (navigator.userAgent.match(/ SeaMonkey\//)) {
       // SeaMonkey tinderboxes don't like to have iCal lingering (and focused)
@@ -71,14 +76,16 @@ function test() {
       todo(false, "On SeaMonkey, testing OS X as generic Unix. (Bug 749872)");
 
       // assume a generic UNIX variant
-      exe = Cc["@mozilla.org/file/local;1"].
-            createInstance(SpecialPowers.Ci.nsIFile);
+      exe = Cc["@mozilla.org/file/local;1"].createInstance(
+        SpecialPowers.Ci.nsIFile
+      );
       exe.initWithPath("/bin/echo");
     }
   } else {
     // assume a generic UNIX variant
-    exe = Cc["@mozilla.org/file/local;1"].
-          createInstance(SpecialPowers.Ci.nsIFile);
+    exe = Cc["@mozilla.org/file/local;1"].createInstance(
+      SpecialPowers.Ci.nsIFile
+    );
     exe.initWithPath("/bin/echo");
   }
 
@@ -91,12 +98,14 @@ function test() {
   // if we ever decide that killing iCal is the right thing to do, change
   // the if statement below from "NOTDarwin" to "Darwin"
   if (osString == "NOTDarwin") {
-    var killall = Cc["@mozilla.org/file/local;1"].
-                  createInstance(SpecialPowers.Ci.nsIFile);
+    var killall = Cc["@mozilla.org/file/local;1"].createInstance(
+      SpecialPowers.Ci.nsIFile
+    );
     killall.initWithPath("/usr/bin/killall");
 
-    var process = Cc["@mozilla.org/process/util;1"].
-                  createInstance(SpecialPowers.Ci.nsIProcess);
+    var process = Cc["@mozilla.org/process/util;1"].createInstance(
+      SpecialPowers.Ci.nsIProcess
+    );
     process.init(killall);
 
     var args = ["iCal"];

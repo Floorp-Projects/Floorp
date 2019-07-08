@@ -8,14 +8,20 @@
 // Tests that changing preferences in the options panel updates the prefs
 // and toggles appropriate things in the toolbox.
 
-var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
-const {PrefObserver} = require("devtools/client/shared/prefs");
+var doc = null,
+  toolbox = null,
+  panelWin = null,
+  modifiedPrefs = [];
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/toolbox.properties"
+);
+const { PrefObserver } = require("devtools/client/shared/prefs");
 
 add_task(async function() {
-  const URL = "data:text/html;charset=utf8,test for dynamically registering " +
-              "and unregistering tools";
+  const URL =
+    "data:text/html;charset=utf8,test for dynamically registering " +
+    "and unregistering tools";
   registerNewTool();
   const tab = await addTab(URL);
   const target = await TargetFactory.forTab(tab);
@@ -47,12 +53,16 @@ function registerNewTool() {
   };
 
   ok(gDevTools, "gDevTools exists");
-  ok(!gDevTools.getToolDefinitionMap().has("testTool"),
-    "The tool is not registered");
+  ok(
+    !gDevTools.getToolDefinitionMap().has("testTool"),
+    "The tool is not registered"
+  );
 
   gDevTools.registerTool(toolDefinition);
-  ok(gDevTools.getToolDefinitionMap().has("testTool"),
-    "The tool is registered");
+  ok(
+    gDevTools.getToolDefinitionMap().has("testTool"),
+    "The tool is registered"
+  );
 }
 
 // Register a fake WebExtension to check that it is
@@ -81,19 +91,27 @@ function registerNewPerToolboxTool() {
   };
 
   ok(gDevTools, "gDevTools exists");
-  ok(!gDevTools.getToolDefinitionMap().has("test-pertoolbox-tool"),
-     "The per-toolbox tool is not registered globally");
+  ok(
+    !gDevTools.getToolDefinitionMap().has("test-pertoolbox-tool"),
+    "The per-toolbox tool is not registered globally"
+  );
 
   ok(toolbox, "toolbox exists");
-  ok(!toolbox.hasAdditionalTool("test-pertoolbox-tool"),
-     "The per-toolbox tool is not yet registered to the toolbox");
+  ok(
+    !toolbox.hasAdditionalTool("test-pertoolbox-tool"),
+    "The per-toolbox tool is not yet registered to the toolbox"
+  );
 
   toolbox.addAdditionalTool(toolDefinition);
 
-  ok(!gDevTools.getToolDefinitionMap().has("test-pertoolbox-tool"),
-     "The per-toolbox tool is not registered globally");
-  ok(toolbox.hasAdditionalTool("test-pertoolbox-tool"),
-     "The per-toolbox tool has been registered to the toolbox");
+  ok(
+    !gDevTools.getToolDefinitionMap().has("test-pertoolbox-tool"),
+    "The per-toolbox tool is not registered globally"
+  );
+  ok(
+    toolbox.hasAdditionalTool("test-pertoolbox-tool"),
+    "The per-toolbox tool has been registered to the toolbox"
+  );
 }
 
 async function testSelectTool() {
@@ -121,7 +139,9 @@ async function testOptionsShortcut() {
 async function testOptions() {
   const tool = toolbox.getPanel("options");
   panelWin = tool.panelWin;
-  const prefNodes = tool.panelDoc.querySelectorAll("input[type=checkbox][data-pref]");
+  const prefNodes = tool.panelDoc.querySelectorAll(
+    "input[type=checkbox][data-pref]"
+  );
 
   // Store modified pref names so that they can be cleared on error.
   for (const node of tool.panelDoc.querySelectorAll("[data-pref]")) {
@@ -150,8 +170,11 @@ async function testSelect(select) {
   const options = Array.from(select.options);
   info("Checking select for: " + pref);
 
-  is(select.options[select.selectedIndex].value, GetPref(pref),
-    "select starts out selected");
+  is(
+    select.options[select.selectedIndex].value,
+    GetPref(pref),
+    "select starts out selected"
+  );
 
   for (const option of options) {
     if (options.indexOf(option) === select.selectedIndex) {
@@ -220,53 +243,70 @@ async function testToggleWebExtensions() {
   function assertExpectedDisabledExtensions() {
     for (const ext of toggleableWebExtensions) {
       if (disabledExtensions.has(ext)) {
-        ok(!toolbox.isWebExtensionEnabled(ext.uuid),
-           `The WebExtension "${ext.name}" should be disabled`);
+        ok(
+          !toolbox.isWebExtensionEnabled(ext.uuid),
+          `The WebExtension "${ext.name}" should be disabled`
+        );
       } else {
-        ok(toolbox.isWebExtensionEnabled(ext.uuid),
-           `The WebExtension "${ext.name}" should  be enabled`);
+        ok(
+          toolbox.isWebExtensionEnabled(ext.uuid),
+          `The WebExtension "${ext.name}" should  be enabled`
+        );
       }
     }
   }
 
   function assertAllExtensionsDisabled() {
     const enabledUUIDs = toggleableWebExtensions
-            .filter(ext => toolbox.isWebExtensionEnabled(ext.uuid))
-            .map(ext => ext.uuid);
+      .filter(ext => toolbox.isWebExtensionEnabled(ext.uuid))
+      .map(ext => ext.uuid);
 
-    Assert.deepEqual(enabledUUIDs, [],
-                     "All the registered WebExtensions should be disabled");
+    Assert.deepEqual(
+      enabledUUIDs,
+      [],
+      "All the registered WebExtensions should be disabled"
+    );
   }
 
   function assertAllExtensionsEnabled() {
-    const disabledUUIDs = toolbox.listWebExtensions()
-            .filter(ext => !toolbox.isWebExtensionEnabled(ext.uuid))
-            .map(ext => ext.uuid);
+    const disabledUUIDs = toolbox
+      .listWebExtensions()
+      .filter(ext => !toolbox.isWebExtensionEnabled(ext.uuid))
+      .map(ext => ext.uuid);
 
-    Assert.deepEqual(disabledUUIDs, [],
-                     "All the registered WebExtensions should be enabled");
+    Assert.deepEqual(
+      disabledUUIDs,
+      [],
+      "All the registered WebExtensions should be enabled"
+    );
   }
 
   function getWebExtensionNodes() {
     const toolNodes = panelWin.document.querySelectorAll(
       "#default-tools-box input[type=checkbox]:not([data-unsupported])," +
-        "#additional-tools-box input[type=checkbox]:not([data-unsupported])");
+        "#additional-tools-box input[type=checkbox]:not([data-unsupported])"
+    );
 
     return [...toolNodes].filter(node => {
       return toggleableWebExtensions.some(
-        ({uuid}) => node.getAttribute("id") === `webext-${uuid}`
+        ({ uuid }) => node.getAttribute("id") === `webext-${uuid}`
       );
     });
   }
 
   let webExtensionNodes = getWebExtensionNodes();
 
-  is(webExtensionNodes.length, toggleableWebExtensions.length,
-     "There should be a toggle checkbox for every WebExtension registered");
+  is(
+    webExtensionNodes.length,
+    toggleableWebExtensions.length,
+    "There should be a toggle checkbox for every WebExtension registered"
+  );
 
   for (const ext of toggleableWebExtensions) {
-    ok(toolbox.isWebExtensionEnabled(ext.uuid),
-       `The WebExtension "${ext.name}" is initially enabled`);
+    ok(
+      toolbox.isWebExtensionEnabled(ext.uuid),
+      `The WebExtension "${ext.name}" is initially enabled`
+    );
   }
 
   // Store modified pref names so that they can be cleared on error.
@@ -307,31 +347,49 @@ async function testToggleWebExtensions() {
   // Unregister the WebExtensions one by one, and check that only the expected
   // ones have been unregistered, and the remaining onea are still listed.
   for (const ext of toggleableWebExtensions) {
-    ok(toolbox.listWebExtensions().length > 0,
-       "There should still be extensions registered");
+    ok(
+      toolbox.listWebExtensions().length > 0,
+      "There should still be extensions registered"
+    );
     toolbox.unregisterWebExtension(ext.uuid);
 
     const registeredUUIDs = toolbox.listWebExtensions().map(item => item.uuid);
-    ok(!registeredUUIDs.includes(ext.uuid),
-       `the WebExtension "${ext.name}" should have been unregistered`);
+    ok(
+      !registeredUUIDs.includes(ext.uuid),
+      `the WebExtension "${ext.name}" should have been unregistered`
+    );
 
     webExtensionNodes = getWebExtensionNodes();
 
-    const checkboxEl = webExtensionNodes.find(el => el.id === `webext-${ext.uuid}`);
-    is(checkboxEl, undefined,
-       "The unregistered WebExtension checkbox should have been removed");
+    const checkboxEl = webExtensionNodes.find(
+      el => el.id === `webext-${ext.uuid}`
+    );
+    is(
+      checkboxEl,
+      undefined,
+      "The unregistered WebExtension checkbox should have been removed"
+    );
 
-    is(registeredUUIDs.length, webExtensionNodes.length,
-       "There should be the expected number of WebExtensions checkboxes");
+    is(
+      registeredUUIDs.length,
+      webExtensionNodes.length,
+      "There should be the expected number of WebExtensions checkboxes"
+    );
   }
 
-  is(toolbox.listWebExtensions().length, 0,
-     "All WebExtensions have been unregistered");
+  is(
+    toolbox.listWebExtensions().length,
+    0,
+    "All WebExtensions have been unregistered"
+  );
 
   webExtensionNodes = getWebExtensionNodes();
 
-  is(webExtensionNodes.length, 0,
-     "There should not be any checkbox for the unregistered WebExtensions");
+  is(
+    webExtensionNodes.length,
+    0,
+    "There should not be any checkbox for the unregistered WebExtensions"
+  );
 }
 
 function getToolNode(id) {
@@ -341,21 +399,27 @@ function getToolNode(id) {
 async function testToggleTools() {
   const toolNodes = panelWin.document.querySelectorAll(
     "#default-tools-box input[type=checkbox]:not([data-unsupported])," +
-    "#additional-tools-box input[type=checkbox]:not([data-unsupported])");
+      "#additional-tools-box input[type=checkbox]:not([data-unsupported])"
+  );
   const toolNodeIds = [...toolNodes].map(node => node.id);
-  const enabledToolIds = [...toolNodes].filter(node => node.checked).map(node => node.id);
+  const enabledToolIds = [...toolNodes]
+    .filter(node => node.checked)
+    .map(node => node.id);
 
-  const toggleableTools = gDevTools.getDefaultTools()
-                                 .filter(tool => {
-                                   return tool.visibilityswitch;
-                                 })
-                                 .concat(gDevTools.getAdditionalTools())
-                                 .concat(toolbox.getAdditionalTools());
+  const toggleableTools = gDevTools
+    .getDefaultTools()
+    .filter(tool => {
+      return tool.visibilityswitch;
+    })
+    .concat(gDevTools.getAdditionalTools())
+    .concat(toolbox.getAdditionalTools());
 
   for (const node of toolNodes) {
     const id = node.getAttribute("id");
-    ok(toggleableTools.some(tool => tool.id === id),
-       "There should be a toggle checkbox for: " + id);
+    ok(
+      toggleableTools.some(tool => tool.id === id),
+      "There should be a toggle checkbox for: " + id
+    );
   }
 
   // Store modified pref names so that they can be cleared on error.
@@ -407,11 +471,15 @@ async function toggleTool(node) {
 
   const registeredPromise = new Promise(resolve => {
     if (node.checked) {
-      gDevTools.once("tool-unregistered",
-        checkUnregistered.bind(null, toolId, resolve));
+      gDevTools.once(
+        "tool-unregistered",
+        checkUnregistered.bind(null, toolId, resolve)
+      );
     } else {
-      gDevTools.once("tool-registered",
-        checkRegistered.bind(null, toolId, resolve));
+      gDevTools.once(
+        "tool-registered",
+        checkRegistered.bind(null, toolId, resolve)
+      );
     }
   });
   node.scrollIntoView();
@@ -424,8 +492,10 @@ function checkUnregistered(toolId, resolve, data) {
   if (data == toolId) {
     ok(true, "Correct tool removed");
     // checking tab on the toolbox
-    ok(!doc.getElementById("toolbox-tab-" + toolId),
-      "Tab removed for " + toolId);
+    ok(
+      !doc.getElementById("toolbox-tab-" + toolId),
+      "Tab removed for " + toolId
+    );
   } else {
     ok(false, "Something went wrong, " + toolId + " was not unregistered");
   }

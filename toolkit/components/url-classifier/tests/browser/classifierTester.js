@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 var classifierTester = {
-  URL_PATH: "/browser/toolkit/components/url-classifier/tests/browser/flash_block_frame.html",
+  URL_PATH:
+    "/browser/toolkit/components/url-classifier/tests/browser/flash_block_frame.html",
   OBJECT_ID: "testObject",
   IFRAME_ID: "testFrame",
   FLASHBLOCK_ENABLE_PREF: "plugins.flashBlock.enabled",
@@ -47,7 +47,11 @@ var classifierTester = {
     },
   ],
 
-  setPrefs({setDBs = true, flashBlockEnable = true, flashSetting = classifierTester.ALWAYS_ACTIVATE_PREF_VALUE} = {}) {
+  setPrefs({
+    setDBs = true,
+    flashBlockEnable = true,
+    flashSetting = classifierTester.ALWAYS_ACTIVATE_PREF_VALUE,
+  } = {}) {
     if (setDBs) {
       let DBs = [];
 
@@ -56,15 +60,24 @@ var classifierTester = {
         DBs.push(dbData.db);
       }
 
-      let completions = Services.prefs.getCharPref(classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF);
+      let completions = Services.prefs.getCharPref(
+        classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF
+      );
       completions += "," + DBs.join(",");
-      Services.prefs.setCharPref(classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF, completions);
+      Services.prefs.setCharPref(
+        classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF,
+        completions
+      );
     }
 
-    Services.prefs.setBoolPref(classifierTester.FLASHBLOCK_ENABLE_PREF,
-                               flashBlockEnable);
-    Services.prefs.setIntPref(classifierTester.FLASH_PLUGIN_USER_SETTING_PREF,
-                              flashSetting);
+    Services.prefs.setBoolPref(
+      classifierTester.FLASHBLOCK_ENABLE_PREF,
+      flashBlockEnable
+    );
+    Services.prefs.setIntPref(
+      classifierTester.FLASH_PLUGIN_USER_SETTING_PREF,
+      flashSetting
+    );
   },
 
   unsetPrefs() {
@@ -72,9 +85,13 @@ var classifierTester = {
       Services.prefs.clearUserPref(dbData.pref);
     }
 
-    Services.prefs.clearUserPref(classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF);
+    Services.prefs.clearUserPref(
+      classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF
+    );
     Services.prefs.clearUserPref(classifierTester.FLASHBLOCK_ENABLE_PREF);
-    Services.prefs.clearUserPref(classifierTester.FLASH_PLUGIN_USER_SETTING_PREF);
+    Services.prefs.clearUserPref(
+      classifierTester.FLASH_PLUGIN_USER_SETTING_PREF
+    );
   },
 
   // The |domains| property describes the domains of the nested documents making
@@ -124,12 +141,20 @@ var classifierTester = {
     },
     {
       name: "Subdocument of blocked subdocument",
-      domains: ["http://example.com", "http://flashblock.example.com", "http://example.com"],
+      domains: [
+        "http://example.com",
+        "http://flashblock.example.com",
+        "http://example.com",
+      ],
       expectedFlashClassification: "denied",
     },
     {
       name: "Blocked subdocument nested among in allowed documents",
-      domains: ["http://flashallow.example.com", "http://flashblock.example.com", "http://flashallow.example.com"],
+      domains: [
+        "http://flashallow.example.com",
+        "http://flashblock.example.com",
+        "http://flashallow.example.com",
+      ],
       expectedFlashClassification: "denied",
     },
     {
@@ -149,22 +174,35 @@ var classifierTester = {
     },
     {
       name: "Sub-document blocked domain in non-Third-Party context",
-      domains: ["http://subdocument.example.com", "http://subdocument.example.com"],
+      domains: [
+        "http://subdocument.example.com",
+        "http://subdocument.example.com",
+      ],
       expectedFlashClassification: "unknown",
     },
     {
       name: "Sub-document blocked domain differing only by scheme",
-      domains: ["http://subdocument.example.com", "https://subdocument.example.com"],
+      domains: [
+        "http://subdocument.example.com",
+        "https://subdocument.example.com",
+      ],
       expectedFlashClassification: "denied",
     },
     {
       name: "Sub-document blocked subdocument of an allowed domain",
-      domains: ["http://flashallow.example.com", "http://subdocument.example.com"],
+      domains: [
+        "http://flashallow.example.com",
+        "http://subdocument.example.com",
+      ],
       expectedFlashClassification: "denied",
     },
     {
       name: "Subdocument of Sub-document blocked domain",
-      domains: ["http://example.com", "http://subdocument.example.com", "http://example.com"],
+      domains: [
+        "http://example.com",
+        "http://subdocument.example.com",
+        "http://example.com",
+      ],
       expectedFlashClassification: "denied",
     },
     {
@@ -174,7 +212,10 @@ var classifierTester = {
     },
     {
       name: "Sub-document blocked domain exception",
-      domains: ["http://example.com", "http://exception.subdocument.example.com"],
+      domains: [
+        "http://example.com",
+        "http://exception.subdocument.example.com",
+      ],
       expectedFlashClassification: "unknown",
     },
   ],
@@ -186,7 +227,9 @@ var classifierTester = {
       case "unknown":
         if (flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE) {
           return null;
-        } else if (flashSetting == classifierTester.ASK_TO_ACTIVATE_PREF_VALUE) {
+        } else if (
+          flashSetting == classifierTester.ASK_TO_ACTIVATE_PREF_VALUE
+        ) {
           return Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY;
         } else if (flashSetting == classifierTester.NEVER_ACTIVATE_PREF_VALUE) {
           return Ci.nsIObjectLoadingContent.PLUGIN_DISABLED;
@@ -208,9 +251,9 @@ var classifierTester = {
   expectedActivated(classification, flashSetting) {
     switch (classification) {
       case "unknown":
-        return (flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE);
+        return flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE;
       case "allowed":
-        return (flashSetting != classifierTester.NEVER_ACTIVATE_PREF_VALUE);
+        return flashSetting != classifierTester.NEVER_ACTIVATE_PREF_VALUE;
       case "denied":
         return false;
     }
@@ -222,9 +265,9 @@ var classifierTester = {
   expectedHasRunningPlugin(classification, flashSetting) {
     switch (classification) {
       case "unknown":
-        return (flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE);
+        return flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE;
       case "allowed":
-        return (flashSetting != classifierTester.NEVER_ACTIVATE_PREF_VALUE);
+        return flashSetting != classifierTester.NEVER_ACTIVATE_PREF_VALUE;
       case "denied":
         return false;
     }
@@ -234,14 +277,17 @@ var classifierTester = {
   // Returns null if this value should not be verified given the combination
   // of inputs
   expectedPluginListed(classification, flashSetting) {
-    if (flashSetting == classifierTester.ASK_TO_ACTIVATE_PREF_VALUE &&
-        Services.prefs.getCharPref("plugins.navigator.hidden_ctp_plugin") == "Shockwave Flash") {
+    if (
+      flashSetting == classifierTester.ASK_TO_ACTIVATE_PREF_VALUE &&
+      Services.prefs.getCharPref("plugins.navigator.hidden_ctp_plugin") ==
+        "Shockwave Flash"
+    ) {
       return false;
     }
     switch (classification) {
       case "unknown":
       case "allowed":
-        return (flashSetting != classifierTester.NEVER_ACTIVATE_PREF_VALUE);
+        return flashSetting != classifierTester.NEVER_ACTIVATE_PREF_VALUE;
       case "denied":
         return false;
     }
@@ -252,24 +298,39 @@ var classifierTester = {
     return (async function() {
       let iframeDomains = testCase.domains.slice();
       let pageDomain = iframeDomains.shift();
-      let tab = await BrowserTestUtils.openNewForegroundTab(browser,
-                                                            pageDomain + classifierTester.URL_PATH);
+      let tab = await BrowserTestUtils.openNewForegroundTab(
+        browser,
+        pageDomain + classifierTester.URL_PATH
+      );
 
       let depth = 0;
       for (let domain of iframeDomains) {
         // Firefox does not like to load the same page in its own iframe. Put some
         // bogus query strings in the URL to make it happy.
-        let url = domain + classifierTester.URL_PATH + "?date=" + Date.now() + "rand=" + Math.random();
-        let domainLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, url);
+        let url =
+          domain +
+          classifierTester.URL_PATH +
+          "?date=" +
+          Date.now() +
+          "rand=" +
+          Math.random();
+        let domainLoaded = BrowserTestUtils.browserLoaded(
+          tab.linkedBrowser,
+          true,
+          url
+        );
 
-        ContentTask.spawn(tab.linkedBrowser, {iframeId: classifierTester.IFRAME_ID, url, depth},
-                          async function({iframeId, url, depth}) {
-          let doc = content.document;
-          for (let i = 0; i < depth; ++i) {
-            doc = doc.getElementById(iframeId).contentDocument;
+        ContentTask.spawn(
+          tab.linkedBrowser,
+          { iframeId: classifierTester.IFRAME_ID, url, depth },
+          async function({ iframeId, url, depth }) {
+            let doc = content.document;
+            for (let i = 0; i < depth; ++i) {
+              doc = doc.getElementById(iframeId).contentDocument;
+            }
+            doc.getElementById(iframeId).src = url;
           }
-          doc.getElementById(iframeId).src = url;
-        });
+        );
 
         await domainLoaded;
         ++depth;
@@ -279,29 +340,31 @@ var classifierTester = {
   },
 
   getPluginInfo(browser, depth) {
-    return ContentTask.spawn(browser,
-                             {iframeId: classifierTester.IFRAME_ID, depth},
-                             async function({iframeId, depth}) {
-      let doc = content.document;
-      let win = content.window;
-      for (let i = 0; i < depth; ++i) {
-        let frame = doc.getElementById(iframeId);
-        doc = frame.contentDocument;
-        win = frame.contentWindow;
-      }
+    return ContentTask.spawn(
+      browser,
+      { iframeId: classifierTester.IFRAME_ID, depth },
+      async function({ iframeId, depth }) {
+        let doc = content.document;
+        let win = content.window;
+        for (let i = 0; i < depth; ++i) {
+          let frame = doc.getElementById(iframeId);
+          doc = frame.contentDocument;
+          win = frame.contentWindow;
+        }
 
-      let pluginObj = doc.getElementById("testObject");
-      if (!(pluginObj instanceof Ci.nsIObjectLoadingContent)) {
-        throw new Error("Unable to find plugin!");
+        let pluginObj = doc.getElementById("testObject");
+        if (!(pluginObj instanceof Ci.nsIObjectLoadingContent)) {
+          throw new Error("Unable to find plugin!");
+        }
+        return {
+          pluginFallbackType: pluginObj.pluginFallbackType,
+          activated: pluginObj.activated,
+          hasRunningPlugin: pluginObj.hasRunningPlugin,
+          listed: "Shockwave Flash" in win.navigator.plugins,
+          flashClassification: doc.documentFlashClassification,
+        };
       }
-      return {
-        pluginFallbackType: pluginObj.pluginFallbackType,
-        activated: pluginObj.activated,
-        hasRunningPlugin: pluginObj.hasRunningPlugin,
-        listed: ("Shockwave Flash" in win.navigator.plugins),
-        flashClassification: doc.documentFlashClassification,
-      };
-    });
+    );
   },
 
   checkPluginInfo(pluginInfo, expectedClassification, flashSetting) {
@@ -310,39 +373,58 @@ var classifierTester = {
     if (flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE) {
       flashSetting = classifierTester.ASK_TO_ACTIVATE_PREF_VALUE;
     }
-    is(pluginInfo.flashClassification, expectedClassification,
-       "Page's classification should match expected");
+    is(
+      pluginInfo.flashClassification,
+      expectedClassification,
+      "Page's classification should match expected"
+    );
 
-    let expectedPluginFallbackType =
-      classifierTester.expectedPluginFallbackType(pluginInfo.flashClassification,
-                                                  flashSetting);
+    let expectedPluginFallbackType = classifierTester.expectedPluginFallbackType(
+      pluginInfo.flashClassification,
+      flashSetting
+    );
     if (expectedPluginFallbackType != null) {
-      is(pluginInfo.pluginFallbackType, expectedPluginFallbackType,
-         "Plugin should have the correct fallback type");
+      is(
+        pluginInfo.pluginFallbackType,
+        expectedPluginFallbackType,
+        "Plugin should have the correct fallback type"
+      );
     }
 
-    let expectedActivated =
-      classifierTester.expectedActivated(pluginInfo.flashClassification,
-                                         flashSetting);
+    let expectedActivated = classifierTester.expectedActivated(
+      pluginInfo.flashClassification,
+      flashSetting
+    );
     if (expectedActivated != null) {
-      is(pluginInfo.activated, expectedActivated,
-         "Plugin should have the correct activation");
+      is(
+        pluginInfo.activated,
+        expectedActivated,
+        "Plugin should have the correct activation"
+      );
     }
 
-    let expectedHasRunningPlugin =
-      classifierTester.expectedHasRunningPlugin(pluginInfo.flashClassification,
-                                                flashSetting);
+    let expectedHasRunningPlugin = classifierTester.expectedHasRunningPlugin(
+      pluginInfo.flashClassification,
+      flashSetting
+    );
     if (expectedHasRunningPlugin != null) {
-      is(pluginInfo.hasRunningPlugin, expectedHasRunningPlugin,
-         "Plugin should have the correct 'plugin running' state");
+      is(
+        pluginInfo.hasRunningPlugin,
+        expectedHasRunningPlugin,
+        "Plugin should have the correct 'plugin running' state"
+      );
     }
 
-    let expectedPluginListed =
-      classifierTester.expectedPluginListed(pluginInfo.flashClassification,
-                                            flashSetting);
+    let expectedPluginListed = classifierTester.expectedPluginListed(
+      pluginInfo.flashClassification,
+      flashSetting
+    );
     if (expectedPluginListed != null) {
-      is(pluginInfo.listed, expectedPluginListed,
-         "Plugin's existance in navigator.plugins should match expected");
+      is(
+        pluginInfo.listed,
+        expectedPluginListed,
+        "Plugin's existance in navigator.plugins should match expected"
+      );
     }
   },
 };

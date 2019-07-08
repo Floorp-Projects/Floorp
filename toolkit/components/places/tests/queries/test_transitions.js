@@ -76,7 +76,8 @@ var testData = [
     title: "arewefastyet",
     uri: "http://arewefastyet.com/",
     transType: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
-  }];
+  },
+];
 // sets of indices of testData array by transition type
 var testDataTyped = [0, 5, 7, 9];
 var testDataDownload = [1, 2, 4, 6, 10];
@@ -96,42 +97,54 @@ add_task(async function test_transitions() {
   // dump_table("moz_places");
   // dump_table("moz_historyvisits");
 
-  var numSortFunc = function(a, b) { return (a - b); };
-  var arrs = testDataTyped.concat(testDataDownload).concat(testDataBookmark)
-              .sort(numSortFunc);
+  var numSortFunc = function(a, b) {
+    return a - b;
+  };
+  var arrs = testDataTyped
+    .concat(testDataDownload)
+    .concat(testDataBookmark)
+    .sort(numSortFunc);
 
   // Four tests which compare the result of a query to an expected set.
   var data = arrs.filter(function(index) {
-      return (testData[index].uri.match(/arewefastyet\.com/) &&
-              testData[index].transType ==
-                Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
-    });
+    return (
+      testData[index].uri.match(/arewefastyet\.com/) &&
+      testData[index].transType == Ci.nsINavHistoryService.TRANSITION_DOWNLOAD
+    );
+  });
 
-  compareQueryToTestData("place:domain=arewefastyet.com&transition=" +
-                         Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-                         data.slice());
+  compareQueryToTestData(
+    "place:domain=arewefastyet.com&transition=" +
+      Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+    data.slice()
+  );
 
-  compareQueryToTestData("place:transition=" +
-                         Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-                         testDataDownload.slice());
+  compareQueryToTestData(
+    "place:transition=" + Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+    testDataDownload.slice()
+  );
 
-  compareQueryToTestData("place:transition=" +
-                         Ci.nsINavHistoryService.TRANSITION_TYPED,
-                         testDataTyped.slice());
+  compareQueryToTestData(
+    "place:transition=" + Ci.nsINavHistoryService.TRANSITION_TYPED,
+    testDataTyped.slice()
+  );
 
-  compareQueryToTestData("place:transition=" +
-                         Ci.nsINavHistoryService.TRANSITION_DOWNLOAD +
-                         "&transition=" +
-                         Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
-                         data);
+  compareQueryToTestData(
+    "place:transition=" +
+      Ci.nsINavHistoryService.TRANSITION_DOWNLOAD +
+      "&transition=" +
+      Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
+    data
+  );
 
   // Tests the live update property of transitions.
   var query = {};
   var options = {};
-  PlacesUtils.history.
-    queryStringToQuery("place:transition=" +
-                         Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-                         query, options);
+  PlacesUtils.history.queryStringToQuery(
+    "place:transition=" + Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+    query,
+    options
+  );
   var result = PlacesUtils.history.executeQuery(query.value, options.value);
   var root = result.root;
   root.containerOpen = true;

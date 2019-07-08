@@ -1,4 +1,6 @@
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 /**
  * Load the browser with the given url and then invokes the given function.
@@ -91,10 +93,9 @@ function reloadButton() {
 // //////////////////////////////////////////////////////////////////////////////
 // private section
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var gBrowserContext =
-{
+var gBrowserContext = {
   browserWnd: null,
   testFunc: null,
   startURL: "",
@@ -104,20 +105,26 @@ function openBrowserWindowIntl() {
   var params = "chrome,all,dialog=no,non-remote";
   var rect = gBrowserContext.browserRect;
   if (rect) {
-    if ("left" in rect)
+    if ("left" in rect) {
       params += ",left=" + rect.left;
-    if ("top" in rect)
+    }
+    if ("top" in rect) {
       params += ",top=" + rect.top;
-    if ("width" in rect)
+    }
+    if ("width" in rect) {
       params += ",width=" + rect.width;
-    if ("height" in rect)
+    }
+    if ("height" in rect) {
       params += ",height=" + rect.height;
+    }
   }
 
-  gBrowserContext.browserWnd =
-    window.openDialog(AppConstants.BROWSER_CHROME_URL,
-                      "_blank", params,
-                      gBrowserContext.startURL || "data:text/html,<html></html>");
+  gBrowserContext.browserWnd = window.openDialog(
+    AppConstants.BROWSER_CHROME_URL,
+    "_blank",
+    params,
+    gBrowserContext.startURL || "data:text/html,<html></html>"
+  );
 
   whenDelayedStartupFinished(browserWindow(), function() {
     addA11yLoadEvent(startBrowserTests, browserWindow());
@@ -125,10 +132,12 @@ function openBrowserWindowIntl() {
 }
 
 function startBrowserTests() {
-  if (gBrowserContext.startURL) // wait for load
+  if (gBrowserContext.startURL) {
+    // wait for load
     addA11yLoadEvent(gBrowserContext.testFunc, currentBrowser().contentWindow);
-  else
+  } else {
     gBrowserContext.testFunc();
+  }
 }
 
 function whenDelayedStartupFinished(aWindow, aCallback) {

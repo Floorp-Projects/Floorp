@@ -9,7 +9,9 @@
 define(function(require, exports, module) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { MainTabbedArea } = createFactories(require("./components/MainTabbedArea"));
+  const { MainTabbedArea } = createFactories(
+    require("./components/MainTabbedArea")
+  );
   const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 
   const AUTO_EXPAND_MAX_SIZE = 100 * 1024;
@@ -39,14 +41,17 @@ define(function(require, exports, module) {
 
     onSaveJson: function() {
       if (input.prettified && !prettyURL) {
-        prettyURL = URL.createObjectURL(new window.Blob([input.jsonPretty.textContent]));
+        prettyURL = URL.createObjectURL(
+          new window.Blob([input.jsonPretty.textContent])
+        );
       }
       dispatchEvent("save", input.prettified ? prettyURL : null);
     },
 
     onCopyHeaders: function() {
       let value = "";
-      const isWinNT = document.documentElement.getAttribute("platform") === "win";
+      const isWinNT =
+        document.documentElement.getAttribute("platform") === "win";
       const eol = isWinNT ? "\r\n" : "\n";
 
       const responseHeaders = input.headers.response;
@@ -67,7 +72,7 @@ define(function(require, exports, module) {
     },
 
     onSearch: function(value) {
-      theApp.setState({searchFilter: value});
+      theApp.setState({ searchFilter: value });
     },
 
     onPrettify: function(data) {
@@ -76,12 +81,12 @@ define(function(require, exports, module) {
         return;
       }
       if (input.prettified) {
-        theApp.setState({jsonText: input.jsonText});
+        theApp.setState({ jsonText: input.jsonText });
       } else {
         if (!input.jsonPretty) {
           input.jsonPretty = new Text(JSON.stringify(input.json, null, "  "));
         }
-        theApp.setState({jsonText: input.jsonPretty});
+        theApp.setState({ jsonText: input.jsonPretty });
       }
 
       input.prettified = !input.prettified;
@@ -94,7 +99,7 @@ define(function(require, exports, module) {
 
     onExpand: function(data) {
       input.expandedNodes = TreeViewClass.getExpandedNodes(input.json);
-      theApp.setState({expandedNodes: input.expandedNodes});
+      theApp.setState({ expandedNodes: input.expandedNodes });
     },
   };
 
@@ -104,10 +109,14 @@ define(function(require, exports, module) {
    * @param {String} string The text to be copied.
    */
   function copyString(string) {
-    document.addEventListener("copy", event => {
-      event.clipboardData.setData("text/plain", string);
-      event.preventDefault();
-    }, {once: true});
+    document.addEventListener(
+      "copy",
+      event => {
+        event.clipboardData.setData("text/plain", string);
+        event.preventDefault();
+      },
+      { once: true }
+    );
 
     document.execCommand("copy", false, null);
   }
@@ -141,15 +150,17 @@ define(function(require, exports, module) {
       input.json = {};
       input.activeTab = 1;
       return new Promise(resolve => {
-        document.addEventListener("DOMContentLoaded", resolve, {once: true});
-      }).then(parseJSON).then(() => {
-        // Now update the state and switch to the JSON tab.
-        theApp.setState({
-          activeTab: 0,
-          json: input.json,
-          expandedNodes: input.expandedNodes,
+        document.addEventListener("DOMContentLoaded", resolve, { once: true });
+      })
+        .then(parseJSON)
+        .then(() => {
+          // Now update the state and switch to the JSON tab.
+          theApp.setState({
+            activeTab: 0,
+            json: input.json,
+            expandedNodes: input.expandedNodes,
+          });
         });
-      });
     }
 
     // If the JSON has been loaded, parse it immediately before loading the app.
@@ -161,11 +172,13 @@ define(function(require, exports, module) {
     }
 
     // Expand the document by default if its size isn't bigger than 100KB.
-    if (!(input.json instanceof Error) && jsonString.length <= AUTO_EXPAND_MAX_SIZE) {
-      input.expandedNodes = TreeViewClass.getExpandedNodes(
-        input.json,
-        {maxLevel: AUTO_EXPAND_MAX_LEVEL}
-      );
+    if (
+      !(input.json instanceof Error) &&
+      jsonString.length <= AUTO_EXPAND_MAX_SIZE
+    ) {
+      input.expandedNodes = TreeViewClass.getExpandedNodes(input.json, {
+        maxLevel: AUTO_EXPAND_MAX_LEVEL,
+      });
     }
     return undefined;
   })();

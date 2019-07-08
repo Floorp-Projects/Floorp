@@ -5,7 +5,10 @@
 
 // Tests for DevToolsUtils.saveFileStream file:
 
-const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm",
+  {}
+);
 
 /**
  * Tests that a file is properly saved using the saveFileStream function
@@ -28,8 +31,9 @@ add_task(async function test_save_file() {
  * @return nsIInputStream
  */
 function convertToInputStream(content) {
-  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  const converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   return converter.convertToInputStream(content);
 }

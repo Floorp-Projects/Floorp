@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {recordTelemetryEvent} from "../aboutLoginsUtils.js";
+import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
 
 export default class LoginFilter extends HTMLElement {
   connectedCallback() {
@@ -11,13 +11,17 @@ export default class LoginFilter extends HTMLElement {
     }
 
     let loginFilterTemplate = document.querySelector("#login-filter-template");
-    let shadowRoot = this.attachShadow({mode: "open"});
+    let shadowRoot = this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginFilterTemplate.content.cloneNode(true));
 
     this._input = this.shadowRoot.querySelector("input");
 
     this.addEventListener("input", this);
+  }
+
+  focus() {
+    this._input.focus();
   }
 
   handleEvent(event) {
@@ -39,13 +43,15 @@ export default class LoginFilter extends HTMLElement {
   }
 
   _dispatchFilterEvent(value) {
-    this.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
-      bubbles: true,
-      composed: true,
-      detail: value,
-    }));
+    this.dispatchEvent(
+      new CustomEvent("AboutLoginsFilterLogins", {
+        bubbles: true,
+        composed: true,
+        detail: value,
+      })
+    );
 
-    recordTelemetryEvent({object: "list", method: "filter"});
+    recordTelemetryEvent({ object: "list", method: "filter" });
   }
 }
 customElements.define("login-filter", LoginFilter);

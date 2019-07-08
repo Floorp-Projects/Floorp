@@ -1,6 +1,6 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {GlobalOverrider} from "test/unit/utils";
-import {PrefsFeed} from "lib/PrefsFeed.jsm";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import { GlobalOverrider } from "test/unit/utils";
+import { PrefsFeed } from "lib/PrefsFeed.jsm";
 
 let overrider = new GlobalOverrider();
 
@@ -10,7 +10,11 @@ describe("PrefsFeed", () => {
   let sandbox;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    FAKE_PREFS = new Map([["foo", 1], ["bar", 2], ["baz", {value: 1, skipBroadcast: true}]]);
+    FAKE_PREFS = new Map([
+      ["foo", 1],
+      ["bar", 2],
+      ["baz", { value: 1, skipBroadcast: true }],
+    ]);
     feed = new PrefsFeed(FAKE_PREFS);
     const storage = {
       getAll: sandbox.stub().resolves(),
@@ -18,8 +22,10 @@ describe("PrefsFeed", () => {
     };
     feed.store = {
       dispatch: sinon.spy(),
-      getState() { return this.state; },
-      dbStorage: {getDbTable: sandbox.stub().returns(storage)},
+      getState() {
+        return this.state;
+      },
+      dbStorage: { getDbTable: sandbox.stub().returns(storage) },
     };
     // Setup for tests that don't call `init`
     feed._storage = storage;
@@ -32,7 +38,7 @@ describe("PrefsFeed", () => {
       ignoreBranch: sinon.spy(),
       reset: sinon.stub(),
     };
-    overrider.set({PrivateBrowsingUtils: {enabled: true}});
+    overrider.set({ PrivateBrowsingUtils: { enabled: true } });
   });
   afterEach(() => {
     overrider.restore();
@@ -44,16 +50,19 @@ describe("PrefsFeed", () => {
     assert.calledWith(feed._prefs.set, "foo", 2);
   });
   it("should dispatch PREFS_INITIAL_VALUES on init with pref values and .isPrivateBrowsingEnabled", () => {
-    feed.onAction({type: at.INIT});
+    feed.onAction({ type: at.INIT });
     assert.calledOnce(feed.store.dispatch);
-    assert.equal(feed.store.dispatch.firstCall.args[0].type, at.PREFS_INITIAL_VALUES);
-    const [{data}] = feed.store.dispatch.firstCall.args;
+    assert.equal(
+      feed.store.dispatch.firstCall.args[0].type,
+      at.PREFS_INITIAL_VALUES
+    );
+    const [{ data }] = feed.store.dispatch.firstCall.args;
     assert.equal(data.foo, 1);
     assert.equal(data.bar, 2);
     assert.isTrue(data.isPrivateBrowsingEnabled);
   });
   it("should add one branch observer on init", () => {
-    feed.onAction({type: at.INIT});
+    feed.onAction({ type: at.INIT });
     assert.calledOnce(feed._prefs.observeBranch);
     assert.calledWith(feed._prefs.observeBranch, feed);
   });
@@ -64,39 +73,53 @@ describe("PrefsFeed", () => {
     assert.calledWithExactly(feed.store.dbStorage.getDbTable, "sectionPrefs");
   });
   it("should remove the branch observer on uninit", () => {
-    feed.onAction({type: at.UNINIT});
+    feed.onAction({ type: at.UNINIT });
     assert.calledOnce(feed._prefs.ignoreBranch);
     assert.calledWith(feed._prefs.ignoreBranch, feed);
   });
   it("should send a PREF_CHANGED action when onPrefChanged is called", () => {
     feed.onPrefChanged("foo", 2);
-    assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({type: at.PREF_CHANGED, data: {name: "foo", value: 2}}));
+    assert.calledWith(
+      feed.store.dispatch,
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: { name: "foo", value: 2 },
+      })
+    );
   });
   it("should set storage pref on UPDATE_SECTION_PREFS", async () => {
     await feed.onAction({
       type: at.UPDATE_SECTION_PREFS,
-      data: {id: "topsites", value: {collapsed: false}},
+      data: { id: "topsites", value: { collapsed: false } },
     });
-    assert.calledWith(feed._storage.set, "topsites", {collapsed: false});
+    assert.calledWith(feed._storage.set, "topsites", { collapsed: false });
   });
   it("should set storage pref with section prefix on UPDATE_SECTION_PREFS", async () => {
     await feed.onAction({
       type: at.UPDATE_SECTION_PREFS,
-      data: {id: "topstories", value: {collapsed: false}},
+      data: { id: "topstories", value: { collapsed: false } },
     });
-    assert.calledWith(feed._storage.set, "feeds.section.topstories", {collapsed: false});
+    assert.calledWith(feed._storage.set, "feeds.section.topstories", {
+      collapsed: false,
+    });
   });
   it("should catch errors on UPDATE_SECTION_PREFS", async () => {
     feed._storage.set.throws(new Error("foo"));
     assert.doesNotThrow(async () => {
       await feed.onAction({
         type: at.UPDATE_SECTION_PREFS,
-        data: {id: "topstories", value: {collapsed: false}},
+        data: { id: "topstories", value: { collapsed: false } },
       });
     });
   });
   it("should send OnlyToMain pref update if config for pref has skipBroadcast: true", async () => {
-    feed.onPrefChanged("baz", {value: 2, skipBroadcast: true});
-    assert.calledWith(feed.store.dispatch, ac.OnlyToMain({type: at.PREF_CHANGED, data: {name: "baz", value: {value: 2, skipBroadcast: true}}}));
+    feed.onPrefChanged("baz", { value: 2, skipBroadcast: true });
+    assert.calledWith(
+      feed.store.dispatch,
+      ac.OnlyToMain({
+        type: at.PREF_CHANGED,
+        data: { name: "baz", value: { value: 2, skipBroadcast: true } },
+      })
+    );
   });
 });

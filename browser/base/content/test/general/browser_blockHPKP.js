@@ -21,14 +21,17 @@
 // 3. A certificate with a different issuer, so as to cause a key pinning violation."
 //   certutil -S -n "dynamicPinningBad" -s "CN=bad.include-subdomains.pinning-dynamic.example.com" -c "alternateTrustedAuthority" -t "P,," -k rsa -g 2048 -Z SHA256 -m 893945439 -v 120 -8 "bad.include-subdomains.pinning-dynamic.example.com" -d .
 
-const gSSService = Cc["@mozilla.org/ssservice;1"]
-                     .getService(Ci.nsISiteSecurityService);
+const gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+  Ci.nsISiteSecurityService
+);
 
 const kPinningDomain = "include-subdomains.pinning-dynamic.example.com";
-const khpkpPinninEnablePref = "security.cert_pinning.process_headers_from_non_builtin_roots";
+const khpkpPinninEnablePref =
+  "security.cert_pinning.process_headers_from_non_builtin_roots";
 const kpkpEnforcementPref = "security.cert_pinning.enforcement_level";
 const kBadPinningDomain = "bad.include-subdomains.pinning-dynamic.example.com";
-const kURLPath = "/browser/browser/base/content/test/general/pinning_headers.sjs?";
+const kURLPath =
+  "/browser/browser/base/content/test/general/pinning_headers.sjs?";
 
 function test() {
   waitForExplicitFinish();
@@ -47,8 +50,13 @@ function test() {
 
 // Start by making a successful connection to a domain that will pin a site
 function loadPinningPage() {
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kPinningDomain + kURLPath + "valid").then(function() {
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => successfulPinningPageListener.handleEvent());
+  BrowserTestUtils.loadURI(
+    gBrowser.selectedBrowser,
+    "https://" + kPinningDomain + kURLPath + "valid"
+  ).then(function() {
+    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() =>
+      successfulPinningPageListener.handleEvent()
+    );
   });
 }
 
@@ -56,9 +64,14 @@ function loadPinningPage() {
 // fail to validate
 var successfulPinningPageListener = {
   handleEvent() {
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kBadPinningDomain).then(function() {
-      return BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-    }).then(errorPageLoaded);
+    BrowserTestUtils.loadURI(
+      gBrowser.selectedBrowser,
+      "https://" + kBadPinningDomain
+    )
+      .then(function() {
+        return BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
+      })
+      .then(errorPageLoaded);
   },
 };
 
@@ -68,21 +81,33 @@ function errorPageLoaded() {
   ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let textElement = content.document.getElementById("errorShortDescText");
     let text = textElement.innerHTML;
-    ok(text.indexOf("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE") > 0,
-       "Got a pinning error page");
+    ok(
+      text.indexOf("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE") > 0,
+      "Got a pinning error page"
+    );
   }).then(function() {
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kPinningDomain + kURLPath + "zeromaxagevalid").then(function() {
-      return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    }).then(pinningRemovalLoaded);
+    BrowserTestUtils.loadURI(
+      gBrowser.selectedBrowser,
+      "https://" + kPinningDomain + kURLPath + "zeromaxagevalid"
+    )
+      .then(function() {
+        return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      })
+      .then(pinningRemovalLoaded);
   });
 }
 
 // After the pinning information has been removed (successful load) proceed
 // to load again with the invalid pin domain.
 function pinningRemovalLoaded() {
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kBadPinningDomain).then(function() {
-    return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  }).then(badPinningPageLoaded);
+  BrowserTestUtils.loadURI(
+    gBrowser.selectedBrowser,
+    "https://" + kBadPinningDomain
+  )
+    .then(function() {
+      return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    })
+    .then(badPinningPageLoaded);
 }
 
 // Finally, we should successfully load

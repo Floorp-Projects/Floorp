@@ -9,19 +9,28 @@
  *          isDisabledUnsigned, loadReleaseNotes, openOptionsInTab,
  *          promiseEvent, shouldShowPermissionsPrompt, showPermissionsPrompt */
 
-const {AddonSettings} =
-  ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { AddonSettings } = ChromeUtils.import(
+  "resource://gre/modules/addons/AddonSettings.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this, "WEBEXT_PERMISSION_PROMPTS",
-  "extensions.webextPermissionPrompts", false);
+  this,
+  "WEBEXT_PERMISSION_PROMPTS",
+  "extensions.webextPermissionPrompts",
+  false
+);
 
-ChromeUtils.defineModuleGetter(this, "Extension",
-                               "resource://gre/modules/Extension.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Extension",
+  "resource://gre/modules/Extension.jsm"
+);
 
 function getBrowserElement() {
   return window.docShell.chromeEventHandler;
@@ -29,7 +38,7 @@ function getBrowserElement() {
 
 function promiseEvent(event, target, capture = false) {
   return new Promise(resolve => {
-    target.addEventListener(event, resolve, {capture, once: true});
+    target.addEventListener(event, resolve, { capture, once: true });
   });
 }
 
@@ -38,7 +47,7 @@ function attachUpdateHandler(install) {
     return;
   }
 
-  install.promptHandler = (info) => {
+  install.promptHandler = info => {
     let oldPerms = info.existingAddon.userPermissions;
     if (!oldPerms) {
       // Updating from a legacy add-on, let it proceed
@@ -78,7 +87,7 @@ function attachUpdateHandler(install) {
 }
 
 async function loadReleaseNotes(uri) {
-  const res = await fetch(uri.spec, {credentials: "omit"});
+  const res = await fetch(uri.spec, { credentials: "omit" });
 
   if (!res.ok) {
     throw new Error("Error loading release notes");
@@ -88,8 +97,9 @@ async function loadReleaseNotes(uri) {
   const text = await res.text();
 
   // Setup the content sanitizer.
-  const ParserUtils = Cc["@mozilla.org/parserutils;1"]
-    .getService(Ci.nsIParserUtils);
+  const ParserUtils = Cc["@mozilla.org/parserutils;1"].getService(
+    Ci.nsIParserUtils
+  );
   const flags =
     ParserUtils.SanitizerDropMedia |
     ParserUtils.SanitizerDropNonCSSPresentation |
@@ -117,12 +127,12 @@ function shouldShowPermissionsPrompt(addon) {
     return false;
   }
 
-  const {origins, permissions} = addon.userPermissions;
+  const { origins, permissions } = addon.userPermissions;
   return origins.length > 0 || permissions.length > 0;
 }
 
 function showPermissionsPrompt(addon) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const permissions = addon.userPermissions;
     const target = getBrowserElement();
 
@@ -130,10 +140,13 @@ function showPermissionsPrompt(addon) {
       // The user has just enabled a sideloaded extension, if the permission
       // can be changed for the extension, show the post-install panel to
       // give the user that opportunity.
-      if (addon.permissions &
-        AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS) {
-        Services.obs.notifyObservers({addon, target},
-          "webextension-install-notify");
+      if (
+        addon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
+      ) {
+        Services.obs.notifyObservers(
+          { addon, target },
+          "webextension-install-notify"
+        );
       }
       resolve();
     };
@@ -182,8 +195,9 @@ function isCorrectlySigned(addon) {
 }
 
 function isDisabledUnsigned(addon) {
-  let signingRequired = (addon.type == "locale") ?
-                        AddonSettings.LANGPACKS_REQUIRE_SIGNING :
-                        AddonSettings.REQUIRE_SIGNING;
+  let signingRequired =
+    addon.type == "locale"
+      ? AddonSettings.LANGPACKS_REQUIRE_SIGNING
+      : AddonSettings.REQUIRE_SIGNING;
   return signingRequired && !isCorrectlySigned(addon);
 }

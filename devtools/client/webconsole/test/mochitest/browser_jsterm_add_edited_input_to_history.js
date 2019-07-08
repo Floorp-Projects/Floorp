@@ -22,7 +22,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   ok(!getInputValue(hud), "console input is empty");
   checkInputCursorPosition(hud, 0, "Cursor is at expected position");
@@ -40,8 +40,11 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(getInputValue(hud), '"first item"', "test history up");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(getInputValue(hud), '"editing input 1"',
-    "test history down restores in-progress input");
+  is(
+    getInputValue(hud),
+    '"editing input 1"',
+    "test history down restores in-progress input"
+  );
 
   setInputValue(hud, '"second item"');
   await jsterm.execute();
@@ -53,8 +56,11 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(getInputValue(hud), '"second item"', "test history down");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(getInputValue(hud), '"editing input 2"',
-     "test history down restores new in-progress input again");
+  is(
+    getInputValue(hud),
+    '"editing input 2"',
+    "test history down restores new in-progress input again"
+  );
 
   // Appending the same value again should not impact the history.
   // Let's also use some spaces around to check that the input value
@@ -62,9 +68,15 @@ async function performTests() {
   await jsterm.execute('"second item"');
   await jsterm.execute('  "second item"    ');
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(getInputValue(hud), '"second item"',
-    "test history up reaches duplicated entry just once");
+  is(
+    getInputValue(hud),
+    '"second item"',
+    "test history up reaches duplicated entry just once"
+  );
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(getInputValue(hud), '"first item"',
-    "test history up reaches the previous value");
+  is(
+    getInputValue(hud),
+    '"first item"',
+    "test history up reaches the previous value"
+  );
 }

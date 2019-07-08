@@ -10,14 +10,26 @@ function test() {
     openScratchpad(testThrowOutput);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8,<p>Test throw outputs in Scratchpad</p>");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html;charset=utf8,<p>Test throw outputs in Scratchpad</p>"
+  );
 }
 
 function testThrowOutput() {
-  const scratchpad = gScratchpadWindow.Scratchpad, tests = [];
+  const scratchpad = gScratchpadWindow.Scratchpad,
+    tests = [];
 
-  const falsyValues = ["false", "0", "-0", "null", "undefined", "Infinity",
-                       "-Infinity", "NaN"];
+  const falsyValues = [
+    "false",
+    "0",
+    "-0",
+    "null",
+    "undefined",
+    "Infinity",
+    "-Infinity",
+    "NaN",
+  ];
   falsyValues.forEach(function(value) {
     tests.push({
       method: "display",
@@ -31,14 +43,20 @@ function testThrowOutput() {
 
   const longLength = DebuggerServer.LONG_STRING_LENGTH + 1;
   const longString = new Array(longLength).join("a");
-  const shortedString = longString.substring(0,
-    DebuggerServer.LONG_STRING_INITIAL_LENGTH) + "\u2026";
+  const shortedString =
+    longString.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH) +
+    "\u2026";
 
   tests.push({
     method: "display",
     code: "throw (new Array(" + longLength + ").join('a'));",
-    result: "throw (new Array(" + longLength + ").join('a'));\n" +
-            "/*\nException: " + shortedString + "\n*/",
+    result:
+      "throw (new Array(" +
+      longLength +
+      ").join('a'));\n" +
+      "/*\nException: " +
+      shortedString +
+      "\n*/",
     label: "Correct exception message for a longString is shown",
   });
 

@@ -11,22 +11,25 @@ const PREF_OVERRIDE_URL = "startup.homepage_override_url";
 const DEFAULT_PREF_URL = "http://pref.example.com/";
 const DEFAULT_UPDATE_URL = "http://example.com/";
 
-const XML_EMPTY = "<?xml version=\"1.0\"?><updates xmlns=" +
-                  "\"http://www.mozilla.org/2005/app-update\"></updates>";
+const XML_EMPTY =
+  '<?xml version="1.0"?><updates xmlns=' +
+  '"http://www.mozilla.org/2005/app-update"></updates>';
 
-const XML_PREFIX =  "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"" +
-                    "><update appVersion=\"1.0\" buildID=\"20080811053724\" " +
-                    "channel=\"nightly\" displayVersion=\"Version 1.0\" " +
-                    "installDate=\"1238441400314\" isCompleteUpdate=\"true\" " +
-                    "name=\"Update Test 1.0\" type=\"minor\" detailsURL=" +
-                    "\"http://example.com/\" previousAppVersion=\"1.0\" " +
-                    "serviceURL=\"https://example.com/\" " +
-                    "statusText=\"The Update was successfully installed\" " +
-                    "foregroundDownload=\"true\"";
+const XML_PREFIX =
+  '<updates xmlns="http://www.mozilla.org/2005/app-update"' +
+  '><update appVersion="1.0" buildID="20080811053724" ' +
+  'channel="nightly" displayVersion="Version 1.0" ' +
+  'installDate="1238441400314" isCompleteUpdate="true" ' +
+  'name="Update Test 1.0" type="minor" detailsURL=' +
+  '"http://example.com/" previousAppVersion="1.0" ' +
+  'serviceURL="https://example.com/" ' +
+  'statusText="The Update was successfully installed" ' +
+  'foregroundDownload="true"';
 
-const XML_SUFFIX = "><patch type=\"complete\" URL=\"http://example.com/\" " +
-                   "size=\"775\" selected=\"true\" state=\"succeeded\"/>" +
-                   "</update></updates>";
+const XML_SUFFIX =
+  '><patch type="complete" URL="http://example.com/" ' +
+  'size="775" selected="true" state="succeeded"/>' +
+  "</update></updates>";
 
 // nsBrowserContentHandler.js defaultArgs tests
 const BCH_TESTS = [
@@ -34,39 +37,47 @@ const BCH_TESTS = [
     description: "no mstone change and no update",
     noPostUpdatePref: true,
     noMstoneChange: true,
-  }, {
+  },
+  {
     description: "mstone changed and no update",
     noPostUpdatePref: true,
     prefURL: DEFAULT_PREF_URL,
-  }, {
+  },
+  {
     description: "no mstone change and update with 'showURL' for actions",
     actions: "showURL",
     noMstoneChange: true,
-  }, {
+  },
+  {
     description: "update without actions",
     prefURL: DEFAULT_PREF_URL,
-  }, {
+  },
+  {
     description: "update with 'showURL' for actions",
     actions: "showURL",
     prefURL: DEFAULT_PREF_URL,
-  }, {
+  },
+  {
     description: "update with 'showURL' for actions and openURL",
     actions: "showURL",
     openURL: DEFAULT_UPDATE_URL,
-  }, {
+  },
+  {
     description: "update with 'extra showURL' for actions",
     actions: "extra showURL",
     prefURL: DEFAULT_PREF_URL,
-  }, {
+  },
+  {
     description: "update with 'extra showURL' for actions and openURL",
     actions: "extra showURL",
     openURL: DEFAULT_UPDATE_URL,
-  }, {
+  },
+  {
     description: "update with 'silent' for actions",
     actions: "silent",
-  }, {
-    description: "update with 'silent showURL extra' " +
-                 "for actions and openURL",
+  },
+  {
+    description: "update with 'silent showURL extra' for actions and openURL",
     actions: "silent showURL extra",
   },
 ];
@@ -131,12 +142,15 @@ function testDefaultArgs() {
 
   for (let i = 0; i < BCH_TESTS.length; i++) {
     let testCase = BCH_TESTS[i];
-    ok(true, "Test nsBrowserContentHandler " + (i + 1) + ": " + testCase.description);
+    ok(
+      true,
+      "Test nsBrowserContentHandler " + (i + 1) + ": " + testCase.description
+    );
 
     if (testCase.actions) {
-      let actionsXML = " actions=\"" + testCase.actions + "\"";
+      let actionsXML = ' actions="' + testCase.actions + '"';
       if (testCase.openURL) {
-        actionsXML += " openURL=\"" + testCase.openURL + "\"";
+        actionsXML += ' openURL="' + testCase.openURL + '"';
       }
       writeUpdatesToXMLFile(XML_PREFIX + actionsXML + XML_SUFFIX);
     } else {
@@ -145,8 +159,9 @@ function testDefaultArgs() {
 
     reloadUpdateManagerData();
 
-    let noOverrideArgs = Cc["@mozilla.org/browser/clh;1"].
-                         getService(Ci.nsIBrowserHandler).defaultArgs;
+    let noOverrideArgs = Cc["@mozilla.org/browser/clh;1"].getService(
+      Ci.nsIBrowserHandler
+    ).defaultArgs;
 
     let overrideArgs = "";
     if (testCase.prefURL) {
@@ -169,14 +184,18 @@ function testDefaultArgs() {
       Services.prefs.setBoolPref(PREF_POSTUPDATE, true);
     }
 
-    let defaultArgs = Cc["@mozilla.org/browser/clh;1"].
-                      getService(Ci.nsIBrowserHandler).defaultArgs;
+    let defaultArgs = Cc["@mozilla.org/browser/clh;1"].getService(
+      Ci.nsIBrowserHandler
+    ).defaultArgs;
     is(defaultArgs, overrideArgs, "correct value returned by defaultArgs");
 
     if (testCase.noMstoneChange === undefined || !testCase.noMstoneChange) {
       let newMstone = Services.prefs.getCharPref(PREF_MSTONE);
-      is(originalMstone, newMstone, "preference " + PREF_MSTONE +
-         " should have been updated");
+      is(
+        originalMstone,
+        newMstone,
+        "preference " + PREF_MSTONE + " should have been updated"
+      );
     }
 
     if (Services.prefs.prefHasUserValue(PREF_POSTUPDATE)) {
@@ -189,22 +208,24 @@ function testDefaultArgs() {
 
 /* Reloads the update metadata from disk */
 function reloadUpdateManagerData() {
-  Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager).
-  QueryInterface(Ci.nsIObserver).observe(null, "um-reload-update-data", "");
+  Cc["@mozilla.org/updates/update-manager;1"]
+    .getService(Ci.nsIUpdateManager)
+    .QueryInterface(Ci.nsIObserver)
+    .observe(null, "um-reload-update-data", "");
 }
-
 
 function writeUpdatesToXMLFile(aText) {
   const PERMS_FILE = 0o644;
 
-  const MODE_WRONLY   = 0x02;
-  const MODE_CREATE   = 0x08;
+  const MODE_WRONLY = 0x02;
+  const MODE_CREATE = 0x08;
   const MODE_TRUNCATE = 0x20;
 
   let file = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
   file.append("updates.xml");
-  let fos = Cc["@mozilla.org/network/file-output-stream;1"].
-            createInstance(Ci.nsIFileOutputStream);
+  let fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   if (!file.exists()) {
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   }

@@ -1,6 +1,7 @@
 /* import-globals-from antitracking_head.js */
 
-AntiTracking.runTest("IndexedDB",
+AntiTracking.runTest(
+  "IndexedDB",
   // blocking callback
   async _ => {
     try {
@@ -19,11 +20,15 @@ AntiTracking.runTest("IndexedDB",
   // Cleanup callback
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
     });
-  });
+  }
+);
 
-AntiTracking.runTest("IndexedDB and Storage Access API",
+AntiTracking.runTest(
+  "IndexedDB and Storage Access API",
   // blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
@@ -40,7 +45,10 @@ AntiTracking.runTest("IndexedDB and Storage Access API",
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
 
-    let shouldThrow = SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
+    let shouldThrow =
+      SpecialPowers.Services.prefs.getIntPref(
+        "network.cookie.cookieBehavior"
+      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
 
     let hasThrown;
     try {
@@ -51,7 +59,11 @@ AntiTracking.runTest("IndexedDB and Storage Access API",
       is(e.name, "SecurityError", "We want a security error message.");
     }
 
-    is(hasThrown, shouldThrow, "IDB should be allowed if not in BEHAVIOR_REJECT");
+    is(
+      hasThrown,
+      shouldThrow,
+      "IDB should be allowed if not in BEHAVIOR_REJECT"
+    );
   },
   // non-blocking callback
   async _ => {
@@ -74,7 +86,12 @@ AntiTracking.runTest("IndexedDB and Storage Access API",
   // Cleanup callback
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
     });
   },
-  null, false, false);
+  null,
+  false,
+  false
+);

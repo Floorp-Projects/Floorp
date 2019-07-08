@@ -16,29 +16,37 @@ const {
 } = require("../constants");
 
 /**
-  * Update the relevant prefs when:
-  *   - a column has been toggled
-  *   - a filter type has been set
-  */
+ * Update the relevant prefs when:
+ *   - a column has been toggled
+ *   - a filter type has been set
+ */
 function prefsMiddleware(store) {
   return next => action => {
     const res = next(action);
     switch (action.type) {
       case ENABLE_REQUEST_FILTER_TYPE_ONLY:
       case TOGGLE_REQUEST_FILTER_TYPE:
-        const filters = Object.entries(store.getState().filters.requestFilterTypes)
+        const filters = Object.entries(
+          store.getState().filters.requestFilterTypes
+        )
           .filter(([type, check]) => check)
           .map(([type, check]) => type);
         Services.prefs.setCharPref(
-          "devtools.netmonitor.filters", JSON.stringify(filters));
+          "devtools.netmonitor.filters",
+          JSON.stringify(filters)
+        );
         break;
       case ENABLE_PERSISTENT_LOGS:
         Services.prefs.setBoolPref(
-          "devtools.netmonitor.persistlog", store.getState().ui.persistentLogsEnabled);
+          "devtools.netmonitor.persistlog",
+          store.getState().ui.persistentLogsEnabled
+        );
         break;
       case DISABLE_BROWSER_CACHE:
         Services.prefs.setBoolPref(
-          "devtools.cache.disabled", store.getState().ui.browserCacheDisabled);
+          "devtools.cache.disabled",
+          store.getState().ui.browserCacheDisabled
+        );
         break;
       case TOGGLE_COLUMN:
         persistVisibleColumns(store.getState());
@@ -69,7 +77,8 @@ function persistVisibleColumns(state) {
 
   Services.prefs.setCharPref(
     "devtools.netmonitor.visibleColumns",
-    JSON.stringify(visibleColumns));
+    JSON.stringify(visibleColumns)
+  );
 }
 
 /**
@@ -79,7 +88,8 @@ function persistColumnsData(state) {
   const columnsData = [...state.ui.columnsData.values()];
   Services.prefs.setCharPref(
     "devtools.netmonitor.columnsData",
-    JSON.stringify(columnsData));
+    JSON.stringify(columnsData)
+  );
 }
 
 module.exports = prefsMiddleware;

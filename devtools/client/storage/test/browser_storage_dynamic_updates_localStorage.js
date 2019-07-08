@@ -55,18 +55,15 @@ add_task(async function() {
 
   await gUI.once("store-objects-cleared");
 
-  await checkState([
-    [
-      ["localStorage", "http://test1.example.org"],
-      [ ],
-    ],
-  ]);
+  await checkState([[["localStorage", "http://test1.example.org"], []]]);
 
   await finishTests();
 });
 
 async function setLocalStorageItem(key, value) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [key, value],
     ([innerKey, innerValue]) => {
       content.wrappedJSObject.localStorage.setItem(innerKey, innerValue);
     }
@@ -74,9 +71,7 @@ async function setLocalStorageItem(key, value) {
 }
 
 async function removeLocalStorageItem(key) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, key,
-    innerKey => {
-      content.wrappedJSObject.localStorage.removeItem(innerKey);
-    }
-  );
+  await ContentTask.spawn(gBrowser.selectedBrowser, key, innerKey => {
+    content.wrappedJSObject.localStorage.removeItem(innerKey);
+  });
 }

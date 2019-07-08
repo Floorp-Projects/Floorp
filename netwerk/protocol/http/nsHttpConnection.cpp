@@ -1795,6 +1795,7 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
        this, trans, static_cast<uint32_t>(reason)));
 
   MOZ_ASSERT((trans == mTransaction) ||
+             (mTLSFilter && !mTLSFilter->Transaction()) ||
              (mTLSFilter && mTLSFilter->Transaction() == trans));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -1818,10 +1819,23 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
     // Not doing this leads to use of this closed connection to activate the
     // not closed transaction what will likely lead to a use of a closed ssl
     // socket and may cause a crash because of an unexpected use.
-    mTLSFilter->Close(reason);
+    //
+    // There can possibly be two states: the actual transaction is still hanging
+    // of off the filter, or has not even been assigned on it yet.  In the
+    // latter case we simply must close the transaction given to us via the
+    // argument.
+    if (!mTLSFilter->Transaction()) {
+      LOG(("  closing transaction directly"));
+      MOZ_ASSERT(trans);
+      trans->Close(reason);
+    } else {
+      LOG(("  closing transactin hanging of off mTLSFilter"));
+      mTLSFilter->Close(reason);
+    }
   }
 
   if (mTransaction) {
+    LOG(("  closing associated mTransaction"));
     mHttp1xTransactionCount += mTransaction->Http1xTransactionCount();
 
     mTransaction->Close(reason);

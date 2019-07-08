@@ -15,9 +15,9 @@ const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci, Cr = SpecialPowers.Cr;
 var remainder = 4;
 var observer;
 
-function doTest()
+async function doTest()
 {
-  SpecialPowers.setBoolPref("network.http.debug-observations", true);
+  await SpecialPowers.setBoolPref("network.http.debug-observations", true);
   
   observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
     remainder--;

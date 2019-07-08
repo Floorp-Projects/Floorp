@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   function testInvalidStateError(aDb, aTxn) {
     try {
       info("The db shall become invalid after closed.");
@@ -27,8 +26,9 @@ function* testSteps()
     }
   }
 
-  const name = this.window ? window.location.pathname :
-                             "test_database_onclose.js";
+  const name = this.window
+    ? window.location.pathname
+    : "test_database_onclose.js";
 
   info("#1: Verifying IDBDatabase.onclose after cleared by the agent.");
   let openRequest = indexedDB.open(name, 1);
@@ -70,8 +70,10 @@ function* testSteps()
 
   testInvalidStateError(db, txn);
 
-  info("#2: Verifying IDBDatabase.onclose && IDBTransaction.onerror " +
-       "in *write* operation after cleared by the agent.");
+  info(
+    "#2: Verifying IDBDatabase.onclose && IDBTransaction.onerror " +
+      "in *write* operation after cleared by the agent."
+  );
   openRequest = indexedDB.open(name, 1);
   openRequest.onerror = errorHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
@@ -101,7 +103,7 @@ function* testSteps()
 
   let objectId = 0;
   while (true) {
-    let addRequest = objectStore.add({foo: "foo"}, objectId);
+    let addRequest = objectStore.add({ foo: "foo" }, objectId);
     addRequest.onerror = function(event) {
       info("addRequest.onerror, objectId: " + objectId);
       txn.onerror = grabEventAndContinueHandler;
@@ -145,8 +147,10 @@ function* testSteps()
   info("Wait for the callback of clearAllDatabases().");
   yield undefined;
 
-  info("#3: Verifying IDBDatabase.onclose && IDBTransaction.onerror " +
-  "in *read* operation after cleared by the agent.");
+  info(
+    "#3: Verifying IDBDatabase.onclose && IDBTransaction.onerror " +
+      "in *read* operation after cleared by the agent."
+  );
   openRequest = indexedDB.open(name, 1);
   openRequest.onerror = errorHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
@@ -160,14 +164,16 @@ function* testSteps()
   ok(event instanceof IDBVersionChangeEvent, "Expect a versionchange event");
 
   db = event.target.result;
-  objectStore =
-    db.createObjectStore("store", { keyPath: "id", autoIncrement: true });
+  objectStore = db.createObjectStore("store", {
+    keyPath: "id",
+    autoIncrement: true,
+  });
   // The number of read records varies between 1~2000 before the db is cleared
   // during testing.
   let numberOfObjects = 3000;
   objectId = 0;
   while (true) {
-    let addRequest = objectStore.add({foo: "foo"});
+    let addRequest = objectStore.add({ foo: "foo" });
     addRequest.onsuccess = function() {
       objectId++;
       testGenerator.next(objectId == numberOfObjects);
@@ -221,13 +227,21 @@ function* testSteps()
 
     event = yield undefined;
     is(event.type, "error", "Got an error event");
-    is(event.target.error.name, "AbortError", "Expected AbortError was thrown.");
+    is(
+      event.target.error.name,
+      "AbortError",
+      "Expected AbortError was thrown."
+    );
     event.preventDefault();
 
     txn.onabort = grabEventAndContinueHandler;
     event = yield undefined;
     is(event.type, "abort", "Got an abort event");
-    is(event.target.error.name, "AbortError", "Expected AbortError was thrown.");
+    is(
+      event.target.error.name,
+      "AbortError",
+      "Expected AbortError was thrown."
+    );
 
     db.onclose = grabEventAndContinueHandler;
     event = yield undefined;

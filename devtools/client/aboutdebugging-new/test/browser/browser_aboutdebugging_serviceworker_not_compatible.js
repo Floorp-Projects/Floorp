@@ -35,17 +35,24 @@ const TEST_DATA = [
  */
 add_task(async function testLocalRuntime() {
   for (const testData of TEST_DATA) {
-    const { serviceWorkersEnabled, privateBrowsingEnabled, expectedMessage } = testData;
+    const {
+      serviceWorkersEnabled,
+      privateBrowsingEnabled,
+      expectedMessage,
+    } = testData;
 
-    info(`Test warning message on this-firefox ` +
-      `with serviceWorkersEnabled: ${serviceWorkersEnabled} ` +
-      `and with privateBrowsingEnabled: ${privateBrowsingEnabled}`);
+    info(
+      `Test warning message on this-firefox ` +
+        `with serviceWorkersEnabled: ${serviceWorkersEnabled} ` +
+        `and with privateBrowsingEnabled: ${privateBrowsingEnabled}`
+    );
 
     await pushPref("dom.serviceWorkers.enabled", serviceWorkersEnabled);
     await pushPref("browser.privatebrowsing.autostart", privateBrowsingEnabled);
 
-    const { document, tab, window } =
-      await openAboutDebugging({ enableWorkerUpdates: true });
+    const { document, tab, window } = await openAboutDebugging({
+      enableWorkerUpdates: true,
+    });
     await selectThisFirefoxPage(document, window.AboutDebugging.store);
     assertWarningMessage(document, expectedMessage);
     await removeTab(tab);
@@ -53,8 +60,9 @@ add_task(async function testLocalRuntime() {
 });
 
 add_task(async function testRemoteRuntime() {
-  const { remoteClientManager } =
-    require("devtools/client/shared/remote-debugging/remote-client-manager");
+  const {
+    remoteClientManager,
+  } = require("devtools/client/shared/remote-debugging/remote-client-manager");
 
   // enable USB devices mocks
   const mocks = new Mocks();
@@ -64,17 +72,27 @@ add_task(async function testRemoteRuntime() {
   });
 
   for (const testData of TEST_DATA) {
-    const { serviceWorkersEnabled, privateBrowsingEnabled, expectedMessage } = testData;
+    const {
+      serviceWorkersEnabled,
+      privateBrowsingEnabled,
+      expectedMessage,
+    } = testData;
 
-    info(`Test warning message on mocked USB runtime ` +
-         `with serviceWorkersEnabled: ${serviceWorkersEnabled} ` +
-         `and with privateBrowsingEnabled: ${privateBrowsingEnabled}`);
+    info(
+      `Test warning message on mocked USB runtime ` +
+        `with serviceWorkersEnabled: ${serviceWorkersEnabled} ` +
+        `and with privateBrowsingEnabled: ${privateBrowsingEnabled}`
+    );
 
     client.setPreference("dom.serviceWorkers.enabled", serviceWorkersEnabled);
-    client.setPreference("browser.privatebrowsing.autostart", privateBrowsingEnabled);
+    client.setPreference(
+      "browser.privatebrowsing.autostart",
+      privateBrowsingEnabled
+    );
 
-    const { document, tab, window } =
-      await openAboutDebugging({ enableWorkerUpdates: true });
+    const { document, tab, window } = await openAboutDebugging({
+      enableWorkerUpdates: true,
+    });
     await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
     info("Checking a USB runtime");
@@ -95,6 +113,10 @@ add_task(async function testRemoteRuntime() {
 
 function assertWarningMessage(doc, expectedMessage) {
   const hasMessage = !!doc.querySelector(".qa-service-workers-warning");
-  ok(hasMessage === expectedMessage, expectedMessage ?
-    "Warning message is displayed" : "Warning message is not displayed");
+  ok(
+    hasMessage === expectedMessage,
+    expectedMessage
+      ? "Warning message is displayed"
+      : "Warning message is not displayed"
+  );
 }

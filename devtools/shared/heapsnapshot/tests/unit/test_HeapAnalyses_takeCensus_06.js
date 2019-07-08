@@ -60,11 +60,15 @@ add_task(async function() {
     breakdown: BREAKDOWN,
   });
 
-  const { report: treeNode } = await client.takeCensus(snapshotFilePath, {
-    breakdown: BREAKDOWN,
-  }, {
-    asTreeNode: true,
-  });
+  const { report: treeNode } = await client.takeCensus(
+    snapshotFilePath,
+    {
+      breakdown: BREAKDOWN,
+    },
+    {
+      asTreeNode: true,
+    }
+  );
 
   const markers = treeNode.children.find(c => c.name === "AllocationMarker");
   ok(markers);
@@ -99,8 +103,12 @@ add_task(async function() {
   equal(numShouldHaveFiveFound, 1);
   equal(numShouldHaveOneFound, 5);
 
-  compareCensusViewData(BREAKDOWN, report, treeNode,
-    "Returning census as a tree node represents same data as the report");
+  compareCensusViewData(
+    BREAKDOWN,
+    report,
+    treeNode,
+    "Returning census as a tree node represents same data as the report"
+  );
 
   client.destroy();
 });

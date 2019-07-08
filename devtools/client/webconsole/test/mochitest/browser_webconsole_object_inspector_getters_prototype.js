@@ -6,7 +6,8 @@
 "use strict";
 
 // Check evaluating getters on prototype nodes in the console.
-const TEST_URI = "data:text/html;charset=utf8,<h1>Object Inspector on Getters</h1>";
+const TEST_URI =
+  "data:text/html;charset=utf8,<h1>Object Inspector on Getters</h1>";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -68,42 +69,55 @@ add_task(async function() {
   });
 });
 
-async function testObject(oi, {myValue, value}) {
+async function testObject(oi, { myValue, value }) {
   expandObjectInspectorNode(oi.querySelector(".tree-node"));
-  const prototypeNode = await waitFor(() => findObjectInspectorNode(oi, "<prototype>"));
+  const prototypeNode = await waitFor(() =>
+    findObjectInspectorNode(oi, "<prototype>")
+  );
   let valueGetterNode = await getValueNode(prototypeNode);
 
-  ok(findObjectInspectorNode(oi, "myValue").textContent.includes(myValue),
-    `myValue has expected "${myValue}" content`);
+  ok(
+    findObjectInspectorNode(oi, "myValue").textContent.includes(myValue),
+    `myValue has expected "${myValue}" content`
+  );
 
   getObjectInspectorInvokeGetterButton(valueGetterNode).click();
 
-  await waitFor(() =>
-    !getObjectInspectorInvokeGetterButton(findObjectInspectorNode(oi, "value")));
+  await waitFor(
+    () =>
+      !getObjectInspectorInvokeGetterButton(
+        findObjectInspectorNode(oi, "value")
+      )
+  );
   valueGetterNode = findObjectInspectorNode(oi, "value");
-  ok(valueGetterNode.textContent.includes(value),
-    `Getter now has the expected "${value}" content`);
+  ok(
+    valueGetterNode.textContent.includes(value),
+    `Getter now has the expected "${value}" content`
+  );
 }
 
 async function getValueNode(prototypeNode) {
   expandObjectInspectorNode(prototypeNode);
 
-  await waitFor(() => getObjectInspectorChildrenNodes(prototypeNode).length > 0);
+  await waitFor(
+    () => getObjectInspectorChildrenNodes(prototypeNode).length > 0
+  );
 
   const children = getObjectInspectorChildrenNodes(prototypeNode);
   const valueNode = children.find(
-    child => child.querySelector(".object-label").textContent === "value");
+    child => child.querySelector(".object-label").textContent === "value"
+  );
 
   if (valueNode) {
     return valueNode;
   }
 
-  const childPrototypeNode = children.find(child =>
-    child.querySelector(".object-label").textContent === "<prototype>");
+  const childPrototypeNode = children.find(
+    child => child.querySelector(".object-label").textContent === "<prototype>"
+  );
   if (!childPrototypeNode) {
     return null;
   }
 
   return getValueNode(childPrototypeNode);
 }
-

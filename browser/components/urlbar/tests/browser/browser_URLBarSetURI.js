@@ -31,7 +31,11 @@ var tests = [
   function revert(next) {
     loadTabInWindow(window, function(tab) {
       gURLBar.handleRevert();
-      is(gURLBar.textValue, "example.com", "URL bar had user/pass stripped after reverting");
+      is(
+        gURLBar.textValue,
+        "example.com",
+        "URL bar had user/pass stripped after reverting"
+      );
       gBrowser.removeTab(tab);
       next();
     });
@@ -43,7 +47,11 @@ var tests = [
       loadTabInWindow(win, function() {
         openToolbarCustomizationUI(function() {
           closeToolbarCustomizationUI(function() {
-            is(win.gURLBar.textValue, "example.com", "URL bar had user/pass stripped after customize");
+            is(
+              win.gURLBar.textValue,
+              "example.com",
+              "URL bar had user/pass stripped after customize"
+            );
             win.close();
             next();
           }, win);
@@ -57,7 +65,11 @@ var tests = [
       // error.
       BrowserTestUtils.loadURI(tab.linkedBrowser, "http://test1.example.com");
       tab.linkedBrowser.stop();
-      is(gURLBar.textValue, "example.com", "URL bar had user/pass stripped after load error");
+      is(
+        gURLBar.textValue,
+        "example.com",
+        "URL bar had user/pass stripped after load error"
+      );
       gBrowser.removeTab(tab);
       next();
     });
@@ -67,32 +79,47 @@ var tests = [
 function loadTabInWindow(win, callback) {
   info("Loading tab");
   let url = "http://user:pass@example.com/";
-  let tab = win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser, url);
+  let tab = (win.gBrowser.selectedTab = BrowserTestUtils.addTab(
+    win.gBrowser,
+    url
+  ));
   BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url).then(() => {
     info("Tab loaded");
-    is(win.gURLBar.textValue, "example.com", "URL bar had user/pass stripped initially");
+    is(
+      win.gURLBar.textValue,
+      "example.com",
+      "URL bar had user/pass stripped initially"
+    );
     callback(tab);
   }, true);
 }
 
 function openToolbarCustomizationUI(aCallback, aBrowserWin) {
-  if (!aBrowserWin)
+  if (!aBrowserWin) {
     aBrowserWin = window;
+  }
 
   aBrowserWin.gCustomizeMode.enter();
 
-  aBrowserWin.gNavToolbox.addEventListener("customizationready", function() {
-    executeSoon(function() {
-      aCallback(aBrowserWin);
-    });
-  }, {once: true});
+  aBrowserWin.gNavToolbox.addEventListener(
+    "customizationready",
+    function() {
+      executeSoon(function() {
+        aCallback(aBrowserWin);
+      });
+    },
+    { once: true }
+  );
 }
 
 function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
-  aBrowserWin.gNavToolbox.addEventListener("aftercustomization", function() {
-    executeSoon(aCallback);
-  }, {once: true});
+  aBrowserWin.gNavToolbox.addEventListener(
+    "aftercustomization",
+    function() {
+      executeSoon(aCallback);
+    },
+    { once: true }
+  );
 
   aBrowserWin.gCustomizeMode.exit();
 }
-

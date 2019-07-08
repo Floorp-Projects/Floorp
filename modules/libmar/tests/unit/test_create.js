@@ -83,8 +83,11 @@ function run_test() {
     },
     // Test creating a MAR file with multiple files inside of it.
     test_multiple_file: function _test_multiple_file() {
-      return run_one_test("multiple_file.mar",
-                          ["0_sized_file", "1_byte_file", "binary_data_file"]);
+      return run_one_test("multiple_file.mar", [
+        "0_sized_file",
+        "1_byte_file",
+        "binary_data_file",
+      ]);
     },
     // Test creating a MAR file on top of a different one that already exists
     // at the location the new one will be created at.

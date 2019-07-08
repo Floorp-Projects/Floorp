@@ -2,7 +2,6 @@
 
 requestLongerTimeout(3);
 
-
 const BASE_URI = "http://mochi.test:8888/browser/dom/file/ipc/tests/empty.html";
 
 // More than 1mb memory blob childA-parent-childB.
@@ -12,12 +11,16 @@ add_task(async function test_CtoPtoC_big() {
 
   let blob = await ContentTask.spawn(browser1, null, function() {
     Cu.importGlobalProperties(["Blob"]);
-    let blob = new Blob([new Array(1024*1024).join('123456789ABCDEF')]);
+    let blob = new Blob([new Array(1024 * 1024).join("123456789ABCDEF")]);
     return blob;
   });
 
   ok(blob, "CtoPtoC-big: We have a blob!");
-  is(blob.size, new Array(1024*1024).join('123456789ABCDEF').length, "CtoPtoC-big: The size matches");
+  is(
+    blob.size,
+    new Array(1024 * 1024).join("123456789ABCDEF").length,
+    "CtoPtoC-big: The size matches"
+  );
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
   let browser2 = gBrowser.getBrowserForTab(tab2);
@@ -27,8 +30,8 @@ add_task(async function test_CtoPtoC_big() {
       let fr = new content.FileReader();
       fr.readAsText(blob);
       fr.onloadend = function() {
-        resolve(fr.result == new Array(1024*1024).join('123456789ABCDEF'));
-      }
+        resolve(fr.result == new Array(1024 * 1024).join("123456789ABCDEF"));
+      };
     });
   });
 
@@ -61,7 +64,7 @@ add_task(async function test_CtoPtoC_small() {
       fr.readAsText(blob);
       fr.onloadend = function() {
         resolve(fr.result == "hello world!");
-      }
+      };
     });
   });
 
@@ -78,10 +81,12 @@ add_task(async function test_CtoPtoC_bc_big() {
 
   await ContentTask.spawn(browser1, null, function() {
     Cu.importGlobalProperties(["Blob"]);
-    var bc = new content.BroadcastChannel('test');
+    var bc = new content.BroadcastChannel("test");
     bc.onmessage = function() {
-      bc.postMessage(new Blob([new Array(1024*1024).join('123456789ABCDEF')]));
-    }
+      bc.postMessage(
+        new Blob([new Array(1024 * 1024).join("123456789ABCDEF")])
+      );
+    };
   });
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
@@ -89,14 +94,14 @@ add_task(async function test_CtoPtoC_bc_big() {
 
   let status = await ContentTask.spawn(browser2, null, function() {
     return new Promise(resolve => {
-      var bc = new content.BroadcastChannel('test');
+      var bc = new content.BroadcastChannel("test");
       bc.onmessage = function(e) {
         let fr = new content.FileReader();
         fr.readAsText(e.data);
         fr.onloadend = function() {
-          resolve(fr.result == new Array(1024*1024).join('123456789ABCDEF'));
-        }
-      }
+          resolve(fr.result == new Array(1024 * 1024).join("123456789ABCDEF"));
+        };
+      };
 
       bc.postMessage("GO!");
     });
@@ -115,10 +120,10 @@ add_task(async function test_CtoPtoC_bc_small() {
 
   await ContentTask.spawn(browser1, null, function() {
     Cu.importGlobalProperties(["Blob"]);
-    var bc = new content.BroadcastChannel('test');
+    var bc = new content.BroadcastChannel("test");
     bc.onmessage = function() {
       bc.postMessage(new Blob(["hello world!"]));
-    }
+    };
   });
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
@@ -126,14 +131,14 @@ add_task(async function test_CtoPtoC_bc_small() {
 
   let status = await ContentTask.spawn(browser2, null, function() {
     return new Promise(resolve => {
-      var bc = new content.BroadcastChannel('test');
+      var bc = new content.BroadcastChannel("test");
       bc.onmessage = function(e) {
         let fr = new content.FileReader();
         fr.readAsText(e.data);
         fr.onloadend = function() {
           resolve(fr.result == "hello world!");
-        }
-      }
+        };
+      };
 
       bc.postMessage("GO!");
     });
@@ -164,7 +169,7 @@ add_task(async function test_CtoPtoC_bc_small() {
       xhr.open("GET", blobURL);
       xhr.onloadend = function() {
         resolve(xhr.response == "hello world!");
-      }
+      };
 
       xhr.send();
     });
@@ -201,7 +206,7 @@ add_task(async function test_CtoPtoC_multipart() {
       fr.readAsText(new Blob(["hello ", blob]));
       fr.onloadend = function() {
         resolve(fr.result == "hello world!");
-      }
+      };
     });
   });
 
@@ -219,7 +224,7 @@ add_task(async function test_CtoPsize_multipart() {
   let blob = await ContentTask.spawn(browser, null, function() {
     Cu.importGlobalProperties(["Blob"]);
 
-    let data = new Array(1024*512).join('A');
+    let data = new Array(1024 * 512).join("A");
     let blob1 = new Blob([data]);
     let blob2 = new Blob([data]);
     let blob3 = new Blob([data]);
@@ -228,7 +233,11 @@ add_task(async function test_CtoPsize_multipart() {
   });
 
   ok(blob, "CtoPsize-multipart: We have a blob!");
-  is(blob.size, new Array(1024*512).join('A').length * 3, "CtoPsize-multipart: The size matches");
+  is(
+    blob.size,
+    new Array(1024 * 512).join("A").length * 3,
+    "CtoPsize-multipart: The size matches"
+  );
 
   BrowserTestUtils.removeTab(tab);
 });

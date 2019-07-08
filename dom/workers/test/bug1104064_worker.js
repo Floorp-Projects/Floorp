@@ -4,7 +4,7 @@ onmessage = function() {
     ++counter;
     if (counter == 2) {
       clearInterval(id);
-      postMessage('done');
+      postMessage("done");
     }
   }, 0);
-}
+};

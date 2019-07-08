@@ -1,8 +1,11 @@
 "use strict";
 
-const META_PAGE = "http://example.org/browser/browser/base/content/test/general/refresh_meta.sjs";
-const HEADER_PAGE = "http://example.org/browser/browser/base/content/test/general/refresh_header.sjs";
-const TARGET_PAGE = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+const META_PAGE =
+  "http://example.org/browser/browser/base/content/test/general/refresh_meta.sjs";
+const HEADER_PAGE =
+  "http://example.org/browser/browser/base/content/test/general/refresh_header.sjs";
+const TARGET_PAGE =
+  "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 const PREF = "accessibility.blockautorefresh";
 
 /**
@@ -17,13 +20,18 @@ const PREF = "accessibility.blockautorefresh";
  * @returns Promise
  */
 async function attemptFakeRefresh(browser, expectRefresh) {
-  await ContentTask.spawn(browser, expectRefresh, async function(contentExpectRefresh) {
+  await ContentTask.spawn(browser, expectRefresh, async function(
+    contentExpectRefresh
+  ) {
     let URI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
     let refresher = docShell.QueryInterface(Ci.nsIRefreshURI);
     refresher.refreshURI(URI, null, 0, false, true);
 
-    Assert.equal(refresher.refreshPending, contentExpectRefresh,
-      "Got the right refreshPending state");
+    Assert.equal(
+      refresher.refreshPending,
+      contentExpectRefresh,
+      "Got the right refreshPending state"
+    );
 
     if (refresher.refreshPending) {
       // Cancel the pending refresh
@@ -43,28 +51,33 @@ async function attemptFakeRefresh(browser, expectRefresh) {
  * when we disable the pref, that refreshes can go through again.
  */
 add_task(async function test_can_enable_and_block() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TARGET_PAGE,
-  }, async function(browser) {
-    // By default, we should be able to reload the page.
-    await attemptFakeRefresh(browser, true);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TARGET_PAGE,
+    },
+    async function(browser) {
+      // By default, we should be able to reload the page.
+      await attemptFakeRefresh(browser, true);
 
-    await pushPrefs(["accessibility.blockautorefresh", true]);
+      await pushPrefs(["accessibility.blockautorefresh", true]);
 
-    let notificationPromise =
-      BrowserTestUtils.waitForNotificationBar(gBrowser, browser,
-                                              "refresh-blocked");
+      let notificationPromise = BrowserTestUtils.waitForNotificationBar(
+        gBrowser,
+        browser,
+        "refresh-blocked"
+      );
 
-    await attemptFakeRefresh(browser, false);
+      await attemptFakeRefresh(browser, false);
 
-    await notificationPromise;
+      await notificationPromise;
 
-    await pushPrefs(["accessibility.blockautorefresh", false]);
+      await pushPrefs(["accessibility.blockautorefresh", false]);
 
-    // Page reloads should go through again.
-    await attemptFakeRefresh(browser, true);
-  });
+      // Page reloads should go through again.
+      await attemptFakeRefresh(browser, true);
+    }
+  );
 });
 
 /**
@@ -85,34 +98,43 @@ add_task(async function test_can_enable_and_block() {
  * @returns Promise
  */
 async function testRealRefresh(refreshPage, delay) {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "about:blank",
-  }, async function(browser) {
-    await pushPrefs(["accessibility.blockautorefresh", true]);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:blank",
+    },
+    async function(browser) {
+      await pushPrefs(["accessibility.blockautorefresh", true]);
 
-    BrowserTestUtils.loadURI(browser, refreshPage + "?p=" + TARGET_PAGE + "&d=" + delay);
-    await BrowserTestUtils.browserLoaded(browser);
+      BrowserTestUtils.loadURI(
+        browser,
+        refreshPage + "?p=" + TARGET_PAGE + "&d=" + delay
+      );
+      await BrowserTestUtils.browserLoaded(browser);
 
-    // Once browserLoaded resolves, all nsIWebProgressListener callbacks
-    // should have fired, so the notification should be visible.
-    let notificationBox = gBrowser.getNotificationBox(browser);
-    let notification = notificationBox.currentNotification;
+      // Once browserLoaded resolves, all nsIWebProgressListener callbacks
+      // should have fired, so the notification should be visible.
+      let notificationBox = gBrowser.getNotificationBox(browser);
+      let notification = notificationBox.currentNotification;
 
-    ok(notification, "Notification should be visible");
-    is(notification.getAttribute("value"), "refresh-blocked",
-       "Should be showing the right notification");
+      ok(notification, "Notification should be visible");
+      is(
+        notification.getAttribute("value"),
+        "refresh-blocked",
+        "Should be showing the right notification"
+      );
 
-    // Then click the button to allow the refresh.
-    let buttons = notification.querySelectorAll(".notification-button");
-    is(buttons.length, 1, "Should have one button.");
+      // Then click the button to allow the refresh.
+      let buttons = notification.querySelectorAll(".notification-button");
+      is(buttons.length, 1, "Should have one button.");
 
-    // Prepare a Promise that should resolve when the refresh goes through
-    let refreshPromise = BrowserTestUtils.browserLoaded(browser);
-    buttons[0].click();
+      // Prepare a Promise that should resolve when the refresh goes through
+      let refreshPromise = BrowserTestUtils.browserLoaded(browser);
+      buttons[0].click();
 
-    await refreshPromise;
-  });
+      await refreshPromise;
+    }
+  );
 }
 
 /**

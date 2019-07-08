@@ -3,12 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
-const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { GeckoViewUtils } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewUtils.jsm"
+);
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {debug, warn} = GeckoViewUtils.initLogging("ErrorPageEventHandler"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("ErrorPageEventHandler"); // eslint-disable-line no-unused-vars
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
@@ -21,8 +27,9 @@ var ErrorPageEventHandler = {
     switch (aEvent.type) {
       case "click": {
         // Don't trust synthetic events
-        if (!aEvent.isTrusted)
+        if (!aEvent.isTrusted) {
           return;
+        }
 
         let target = aEvent.originalTarget;
         let errorDoc = target.ownerDocument;
@@ -39,8 +46,9 @@ var ErrorPageEventHandler = {
             let securityInfo = docShell.failedChannel.securityInfo;
             securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
             let cert = securityInfo.serverCert;
-            let overrideService = Cc["@mozilla.org/security/certoverride;1"]
-                                    .getService(Ci.nsICertOverrideService);
+            let overrideService = Cc[
+              "@mozilla.org/security/certoverride;1"
+            ].getService(Ci.nsICertOverrideService);
             let flags = 0;
             if (securityInfo.isUntrusted) {
               flags |= overrideService.ERROR_UNTRUSTED;
@@ -51,12 +59,20 @@ var ErrorPageEventHandler = {
             if (securityInfo.isNotValidAtThisTime) {
               flags |= overrideService.ERROR_TIME;
             }
-            let temporary = (target == temp) ||
-                            PrivateBrowsingUtils.isWindowPrivate(errorDoc.defaultView);
-            overrideService.rememberValidityOverride(uri.asciiHost, uri.port, cert, flags,
-                                                     temporary);
+            let temporary =
+              target == temp ||
+              PrivateBrowsingUtils.isWindowPrivate(errorDoc.defaultView);
+            overrideService.rememberValidityOverride(
+              uri.asciiHost,
+              uri.port,
+              cert,
+              flags,
+              temporary
+            );
             errorDoc.location.reload();
-          } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
+          } else if (
+            target == errorDoc.getElementById("getMeOutOfHereButton")
+          ) {
             errorDoc.location = "about:home";
           }
         }

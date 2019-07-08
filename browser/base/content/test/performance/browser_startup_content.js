@@ -20,8 +20,9 @@ const kDumpAllStacks = false;
 const whitelist = {
   modules: new Set([
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
-    "resource://specialpowers/specialpowers.js",
-    "resource://specialpowers/specialpowersAPI.js",
+    "resource://specialpowers/SpecialPowersChild.jsm",
+    "resource://specialpowers/SpecialPowersAPI.jsm",
+    "resource://specialpowers/WrapPrivileged.jsm",
 
     "resource://gre/modules/ContentProcessSingleton.jsm",
 
@@ -64,8 +65,6 @@ const whitelist = {
   ]),
   frameScripts: new Set([
     // Test related
-    "resource://specialpowers/MozillaLogger.js",
-    "resource://specialpowers/specialpowersFrameScript.js",
     "chrome://mochikit/content/shutdown-leaks-collector.js",
     "chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js",
     "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js",
@@ -119,40 +118,58 @@ const blacklist = {
 add_task(async function() {
   SimpleTest.requestCompleteLog();
 
-  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
-                                                         forceNewProcess: true});
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    forceNewProcess: true,
+  });
 
   let mm = gBrowser.selectedBrowser.messageManager;
   let promise = BrowserTestUtils.waitForMessage(mm, "Test:LoadedScripts");
 
   // Load a custom frame script to avoid using ContentTask which loads Task.jsm
-  mm.loadFrameScript("data:text/javascript,(" + function() {
-    /* eslint-env mozilla/frame-script */
-    const Cm = Components.manager;
-    Cm.QueryInterface(Ci.nsIServiceManager);
-    const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-    let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
-    let components = {};
-    for (let component of Cu.loadedComponents) {
-      /* Keep only the file name for components, as the path is an absolute file
+  mm.loadFrameScript(
+    "data:text/javascript,(" +
+      function() {
+        /* eslint-env mozilla/frame-script */
+        const Cm = Components.manager;
+        Cm.QueryInterface(Ci.nsIServiceManager);
+        const { AppConstants } = ChromeUtils.import(
+          "resource://gre/modules/AppConstants.jsm"
+        );
+        let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
+        let components = {};
+        for (let component of Cu.loadedComponents) {
+          /* Keep only the file name for components, as the path is an absolute file
          URL rather than a resource:// URL like for modules. */
-      components[component.replace(/.*\//, "")] =
-        collectStacks ? Cu.getComponentLoadStack(component) : "";
-    }
-    let modules = {};
-    for (let module of Cu.loadedModules) {
-      modules[module] = collectStacks ? Cu.getModuleImportStack(module) : "";
-    }
-    let services = {};
-    for (let contractID of Object.keys(Cc)) {
-      try {
-        if (Cm.isServiceInstantiatedByContractID(contractID, Ci.nsISupports)) {
-          services[contractID] = "";
+          components[component.replace(/.*\//, "")] = collectStacks
+            ? Cu.getComponentLoadStack(component)
+            : "";
         }
-      } catch (e) {}
-    }
-    sendAsyncMessage("Test:LoadedScripts", {components, modules, services});
-  } + ")()", false);
+        let modules = {};
+        for (let module of Cu.loadedModules) {
+          modules[module] = collectStacks
+            ? Cu.getModuleImportStack(module)
+            : "";
+        }
+        let services = {};
+        for (let contractID of Object.keys(Cc)) {
+          try {
+            if (
+              Cm.isServiceInstantiatedByContractID(contractID, Ci.nsISupports)
+            ) {
+              services[contractID] = "";
+            }
+          } catch (e) {}
+        }
+        sendAsyncMessage("Test:LoadedScripts", {
+          components,
+          modules,
+          services,
+        });
+      } +
+      ")()",
+    false
+  );
 
   let loadedInfo = await promise;
 
@@ -172,8 +189,9 @@ add_task(async function() {
 
   for (let scriptType in whitelist) {
     loadedList[scriptType] = Object.keys(loadedInfo[scriptType]).filter(c => {
-      if (!whitelist[scriptType].has(c))
+      if (!whitelist[scriptType].has(c)) {
         return true;
+      }
       whitelist[scriptType].delete(c);
       return false;
     });
@@ -182,27 +200,43 @@ add_task(async function() {
       return !intermittently_loaded_whitelist[scriptType].has(c);
     });
 
-    is(loadedList[scriptType].length, 0,
-       `should have no unexpected ${scriptType} loaded on content process startup`);
+    is(
+      loadedList[scriptType].length,
+      0,
+      `should have no unexpected ${scriptType} loaded on content process startup`
+    );
 
     for (let script of loadedList[scriptType]) {
-      ok(false, `Unexpected ${scriptType} loaded during content process startup: ${script}`);
+      ok(
+        false,
+        `Unexpected ${scriptType} loaded during content process startup: ${script}`
+      );
       info(`Stack that loaded ${script}:\n`);
       info(loadedInfo[scriptType][script]);
     }
 
-    is(whitelist[scriptType].size, 0,
-       `all ${scriptType} whitelist entries should have been used`);
+    is(
+      whitelist[scriptType].size,
+      0,
+      `all ${scriptType} whitelist entries should have been used`
+    );
 
     for (let script of whitelist[scriptType]) {
-      ok(false, `${scriptType} is whitelisted for content process startup but wasn't used: ${script}`);
+      ok(
+        false,
+        `${scriptType} is whitelisted for content process startup but wasn't used: ${script}`
+      );
     }
 
     if (kDumpAllStacks) {
       info(`Stacks for all loaded ${scriptType}:`);
       for (let file in loadedInfo[scriptType]) {
         if (loadedInfo[scriptType][file]) {
-          info(`${file}\n------------------------------------\n` + loadedInfo[scriptType][file] + "\n");
+          info(
+            `${file}\n------------------------------------\n` +
+              loadedInfo[scriptType][file] +
+              "\n"
+          );
         }
       }
     }
@@ -212,7 +246,10 @@ add_task(async function() {
     for (let script of blacklist[scriptType]) {
       let loaded = script in loadedInfo[scriptType];
       if (loaded) {
-        ok(false, `Unexpected ${scriptType} loaded during content process startup: ${script}`);
+        ok(
+          false,
+          `Unexpected ${scriptType} loaded during content process startup: ${script}`
+        );
         if (loadedInfo[scriptType][script]) {
           info(`Stack that loaded ${script}:\n`);
           info(loadedInfo[scriptType][script]);

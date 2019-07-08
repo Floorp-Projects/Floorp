@@ -55,13 +55,17 @@ async function testNewWindow(client, win) {
 
   if (Services.focus.activeWindow != win) {
     await new Promise(resolve => {
-      win.addEventListener("activate", function onActivate(event) {
-        if (event.target != win) {
-          return;
-        }
-        win.removeEventListener("activate", onActivate, true);
-        resolve();
-      }, true);
+      win.addEventListener(
+        "activate",
+        function onActivate(event) {
+          if (event.target != win) {
+            return;
+          }
+          win.removeEventListener("activate", onActivate, true);
+          resolve();
+        },
+        true
+      );
     });
   }
 

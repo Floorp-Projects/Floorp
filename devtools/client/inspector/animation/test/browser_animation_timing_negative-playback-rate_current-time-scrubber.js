@@ -12,17 +12,23 @@ add_task(async function() {
 
   info("Set initial state");
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
-  const initialCurrentTime = animationInspector.state.animations[0].state.currentTime;
+  const initialCurrentTime =
+    animationInspector.state.animations[0].state.currentTime;
   const initialProgressBarX = getProgressBarX(panel);
 
   info("Check whether the animation currentTime was decreased");
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
-  ok(initialCurrentTime > animationInspector.state.animations[0].state.currentTime,
-    "currentTime should be decreased");
+  ok(
+    initialCurrentTime >
+      animationInspector.state.animations[0].state.currentTime,
+    "currentTime should be decreased"
+  );
 
   info("Check whether the progress bar was moved to left");
-  ok(initialProgressBarX > getProgressBarX(panel),
-    "Progress bar should be moved to left");
+  ok(
+    initialProgressBarX > getProgressBarX(panel),
+    "Progress bar should be moved to left"
+  );
 });
 
 function getProgressBarX(panel) {

@@ -10,28 +10,47 @@
 
 var EXPORTED_SYMBOLS = ["FormAutofillHandler"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillHeuristics",
-                               "resource://formautofill/FormAutofillHeuristics.jsm");
-ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
-                               "resource://gre/modules/FormLikeFactory.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillUtils",
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillHeuristics",
+  "resource://formautofill/FormAutofillHeuristics.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormLikeFactory",
+  "resource://gre/modules/FormLikeFactory.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
-  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
+  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
+    "brandShortName"
+  );
   return FormAutofillUtils.stringBundle.formatStringFromName(
-    `useCreditCardPasswordPrompt.${AppConstants.platform}`, [brandShortName]);
+    `useCreditCardPasswordPrompt.${AppConstants.platform}`,
+    [brandShortName]
+  );
 });
 
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
-const {FIELD_STATES} = FormAutofillUtils;
+const { FIELD_STATES } = FormAutofillUtils;
 
 class FormAutofillSection {
   constructor(fieldDetails, winUtils) {
@@ -53,7 +72,11 @@ class FormAutofillSection {
 
     if (!this.isValidSection()) {
       this.fieldDetails = [];
-      log.debug(`Ignoring ${this.constructor.name} related fields since it is an invalid section`);
+      log.debug(
+        `Ignoring ${
+          this.constructor.name
+        } related fields since it is an invalid section`
+      );
     }
 
     this._cacheValue = {
@@ -163,7 +186,9 @@ class FormAutofillSection {
 
   get allFieldNames() {
     if (!this._cacheValue.allFieldNames) {
-      this._cacheValue.allFieldNames = this.fieldDetails.map(record => record.fieldName);
+      this._cacheValue.allFieldNames = this.fieldDetails.map(
+        record => record.fieldName
+      );
     }
     return this._cacheValue.allFieldNames;
   }
@@ -194,7 +219,11 @@ class FormAutofillSection {
         continue;
       }
 
-      let option = FormAutofillUtils.findSelectOption(element, profile, fieldName);
+      let option = FormAutofillUtils.findSelectOption(
+        element,
+        profile,
+        fieldName
+      );
       if (option) {
         cache[value] = Cu.getWeakReference(option);
         this._cacheValue.matchingSelectOption.set(element, cache);
@@ -223,7 +252,11 @@ class FormAutofillSection {
       }
 
       let maxLength = element.maxLength;
-      if (maxLength === undefined || maxLength < 0 || profile[key].length <= maxLength) {
+      if (
+        maxLength === undefined ||
+        maxLength < 0 ||
+        profile[key].length <= maxLength
+      ) {
         continue;
       }
 
@@ -255,7 +288,7 @@ class FormAutofillSection {
       throw new Error("No fieldDetail for the focused input.");
     }
 
-    if (!await this.prepareFillingProfile(profile)) {
+    if (!(await this.prepareFillingProfile(profile))) {
       log.debug("profile cannot be filled", profile);
       return;
     }
@@ -282,8 +315,10 @@ class FormAutofillSection {
         // For the others, the fields should be only filled when their values
         // are empty.
         let focusedInput = focusedDetail.elementWeakRef.get();
-        if (element == focusedInput ||
-            (element != focusedInput && !element.value)) {
+        if (
+          element == focusedInput ||
+          (element != focusedInput && !element.value)
+        ) {
           element.setUserInput(value);
           this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
         }
@@ -297,8 +332,12 @@ class FormAutofillSection {
         // Use case for multiple select is not considered here.
         if (!option.selected) {
           option.selected = true;
-          element.dispatchEvent(new element.ownerGlobal.Event("input", {bubbles: true}));
-          element.dispatchEvent(new element.ownerGlobal.Event("change", {bubbles: true}));
+          element.dispatchEvent(
+            new element.ownerGlobal.Event("input", { bubbles: true })
+          );
+          element.dispatchEvent(
+            new element.ownerGlobal.Event("change", { bubbles: true })
+          );
         }
         // Autofill highlight appears regardless if value is changed or not
         this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
@@ -343,7 +382,10 @@ class FormAutofillSection {
         continue;
       }
       element.previewValue = value;
-      this._changeFieldState(fieldDetail, value ? FIELD_STATES.PREVIEW : FIELD_STATES.NORMAL);
+      this._changeFieldState(
+        fieldDetail,
+        value ? FIELD_STATES.PREVIEW : FIELD_STATES.NORMAL
+      );
     }
   }
 
@@ -384,8 +426,10 @@ class FormAutofillSection {
       }
 
       // Only reset value for input element.
-      if (fieldDetail.state == FIELD_STATES.AUTO_FILLED &&
-          ChromeUtils.getClassName(element) === "HTMLInputElement") {
+      if (
+        fieldDetail.state == FIELD_STATES.AUTO_FILLED &&
+        ChromeUtils.getClassName(element) === "HTMLInputElement"
+      ) {
         element.setUserInput("");
       }
     }
@@ -407,7 +451,10 @@ class FormAutofillSection {
       return;
     }
     if (!(nextState in this._FIELD_STATE_ENUM)) {
-      log.warn(fieldDetail.fieldName, "is trying to change to an invalid state");
+      log.warn(
+        fieldDetail.fieldName,
+        "is trying to change to an invalid state"
+      );
       return;
     }
     if (fieldDetail.state == nextState) {
@@ -431,12 +478,12 @@ class FormAutofillSection {
     switch (nextState) {
       case FIELD_STATES.NORMAL: {
         if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
-          element.removeEventListener("input", this, {mozSystemGroup: true});
+          element.removeEventListener("input", this, { mozSystemGroup: true });
         }
         break;
       }
       case FIELD_STATES.AUTO_FILLED: {
-        element.addEventListener("input", this, {mozSystemGroup: true});
+        element.addEventListener("input", this, { mozSystemGroup: true });
         break;
       }
     }
@@ -447,7 +494,7 @@ class FormAutofillSection {
   resetFieldStates() {
     for (let fieldDetail of this.fieldDetails) {
       const element = fieldDetail.elementWeakRef.get();
-      element.removeEventListener("input", this, {mozSystemGroup: true});
+      element.removeEventListener("input", this, { mozSystemGroup: true });
       this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
     this.filledRecordGUID = null;
@@ -554,7 +601,9 @@ class FormAutofillAddressSection extends FormAutofillSection {
   }
 
   isValidSection() {
-    return this.fieldDetails.length >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
+    return (
+      this.fieldDetails.length >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD
+    );
   }
 
   isEnabled() {
@@ -562,7 +611,10 @@ class FormAutofillAddressSection extends FormAutofillSection {
   }
 
   isRecordCreatable(record) {
-    if (record.country && !FormAutofill.supportedCountries.includes(record.country)) {
+    if (
+      record.country &&
+      !FormAutofill.supportedCountries.includes(record.country)
+    ) {
       // We don't want to save data in the wrong fields due to not having proper
       // heuristic regexes in countries we don't yet support.
       log.warn("isRecordCreatable: Country not supported:", record.country);
@@ -581,7 +633,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
       }
       length++;
     }
-    return (length + hasName) >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
+    return length + hasName >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
   }
 
   _getOneLineStreetAddress(address) {
@@ -589,7 +641,9 @@ class FormAutofillAddressSection extends FormAutofillSection {
       this._cacheValue.oneLineStreetAddress = {};
     }
     if (!this._cacheValue.oneLineStreetAddress[address]) {
-      this._cacheValue.oneLineStreetAddress[address] = FormAutofillUtils.toOneLineAddress(address);
+      this._cacheValue.oneLineStreetAddress[
+        address
+      ] = FormAutofillUtils.toOneLineAddress(address);
     }
     return this._cacheValue.oneLineStreetAddress[address];
   }
@@ -598,10 +652,15 @@ class FormAutofillAddressSection extends FormAutofillSection {
     if (profile["street-address"]) {
       // "-moz-street-address-one-line" is used by the labels in
       // ProfileAutoCompleteResult.
-      profile["-moz-street-address-one-line"] = this._getOneLineStreetAddress(profile["street-address"]);
+      profile["-moz-street-address-one-line"] = this._getOneLineStreetAddress(
+        profile["street-address"]
+      );
       let streetAddressDetail = this.getFieldDetailByName("street-address");
-      if (streetAddressDetail &&
-          (ChromeUtils.getClassName(streetAddressDetail.elementWeakRef.get()) === "HTMLInputElement")) {
+      if (
+        streetAddressDetail &&
+        ChromeUtils.getClassName(streetAddressDetail.elementWeakRef.get()) ===
+          "HTMLInputElement"
+      ) {
         profile["street-address"] = profile["-moz-street-address-one-line"];
       }
 
@@ -648,7 +707,10 @@ class FormAutofillAddressSection extends FormAutofillSection {
         return;
       }
     } else if (element.maxLength) {
-      if (detail._reason == "autocomplete" && profile.tel.length <= element.maxLength) {
+      if (
+        detail._reason == "autocomplete" &&
+        profile.tel.length <= element.maxLength
+      ) {
         return;
       }
     }
@@ -688,8 +750,10 @@ class FormAutofillAddressSection extends FormAutofillSection {
 
   computeFillingValue(value, fieldDetail, element) {
     // Try to abbreviate the value of select element.
-    if (fieldDetail.fieldName == "address-level1" &&
-      ChromeUtils.getClassName(element) === "HTMLSelectElement") {
+    if (
+      fieldDetail.fieldName == "address-level1" &&
+      ChromeUtils.getClassName(element) === "HTMLSelectElement"
+    ) {
       // Don't save the record when the option value is empty *OR* there
       // are multiple options being selected. The empty option is usually
       // assumed to be default along with a meaningless text to users.
@@ -698,7 +762,8 @@ class FormAutofillAddressSection extends FormAutofillSection {
         value = "";
       } else {
         let text = element.selectedOptions[0].text.trim();
-        value = FormAutofillUtils.getAbbreviatedSubregionName([value, text]) || text;
+        value =
+          FormAutofillUtils.getAbbreviatedSubregionName([value, text]) || text;
       }
     }
     return value;
@@ -715,7 +780,9 @@ class FormAutofillAddressSection extends FormAutofillSection {
       // Try identifying country field aggressively if it doesn't come from
       // @autocomplete.
       if (detail._reason != "autocomplete") {
-        let countryCode = FormAutofillUtils.identifyCountryCode(address.record.country);
+        let countryCode = FormAutofillUtils.identifyCountryCode(
+          address.record.country
+        );
         if (countryCode) {
           address.record.country = countryCode;
         }
@@ -726,7 +793,9 @@ class FormAutofillAddressSection extends FormAutofillSection {
     FormAutofillUtils.compressTel(address.record);
     if (address.record.tel) {
       let allTelComponentsAreUntouched = Object.keys(address.record)
-        .filter(field => FormAutofillUtils.getCategoryFromFieldName(field) == "tel")
+        .filter(
+          field => FormAutofillUtils.getCategoryFromFieldName(field) == "tel"
+        )
         .every(field => address.untouchedFields.includes(field));
       if (allTelComponentsAreUntouched) {
         // No need to verify it if none of related fields are modified after autofilling.
@@ -779,7 +848,10 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       }
     }
 
-    return hasCCNumber && (ccNumberReason == "autocomplete" || hasExpiryDate || hasCCName);
+    return (
+      hasCCNumber &&
+      (ccNumberReason == "autocomplete" || hasExpiryDate || hasCCName)
+    );
   }
 
   isEnabled() {
@@ -787,7 +859,9 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
   }
 
   isRecordCreatable(record) {
-    return record["cc-number"] && FormAutofillUtils.isCCNumber(record["cc-number"]);
+    return (
+      record["cc-number"] && FormAutofillUtils.isCCNumber(record["cc-number"])
+    );
   }
 
   creditCardExpDateTransformer(profile) {
@@ -810,30 +884,45 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       ccExpYear = profile["cc-exp-year"],
       placeholder = element.placeholder;
 
-    result = /(?:[^m]|\b)(m{1,2})\s*([-/\\]*)\s*(y{2,4})(?!y)/i.exec(placeholder);
+    result = /(?:[^m]|\b)(m{1,2})\s*([-/\\]*)\s*(y{2,4})(?!y)/i.exec(
+      placeholder
+    );
     if (result) {
-      profile["cc-exp"] = String(ccExpMonth).padStart(result[1].length, "0") +
-                          result[2] +
-                          String(ccExpYear).substr(-1 * result[3].length);
+      profile["cc-exp"] =
+        String(ccExpMonth).padStart(result[1].length, "0") +
+        result[2] +
+        String(ccExpYear).substr(-1 * result[3].length);
       return;
     }
 
-    result = /(?:[^y]|\b)(y{2,4})\s*([-/\\]*)\s*(m{1,2})(?!m)/i.exec(placeholder);
+    result = /(?:[^y]|\b)(y{2,4})\s*([-/\\]*)\s*(m{1,2})(?!m)/i.exec(
+      placeholder
+    );
     if (result) {
-      profile["cc-exp"] = String(ccExpYear).substr(-1 * result[1].length) +
-                          result[2] +
-                          String(ccExpMonth).padStart(result[3].length, "0");
+      profile["cc-exp"] =
+        String(ccExpYear).substr(-1 * result[1].length) +
+        result[2] +
+        String(ccExpMonth).padStart(result[3].length, "0");
     }
   }
 
   async _decrypt(cipherText, reauth) {
-    return new Promise((resolve) => {
-      Services.cpmm.addMessageListener("FormAutofill:DecryptedString", function getResult(result) {
-        Services.cpmm.removeMessageListener("FormAutofill:DecryptedString", getResult);
-        resolve(result.data);
-      });
+    return new Promise(resolve => {
+      Services.cpmm.addMessageListener(
+        "FormAutofill:DecryptedString",
+        function getResult(result) {
+          Services.cpmm.removeMessageListener(
+            "FormAutofill:DecryptedString",
+            getResult
+          );
+          resolve(result.data);
+        }
+      );
 
-      Services.cpmm.sendAsyncMessage("FormAutofill:GetDecryptedString", {cipherText, reauth});
+      Services.cpmm.sendAsyncMessage("FormAutofill:GetDecryptedString", {
+        cipherText,
+        reauth,
+      });
     });
   }
 
@@ -877,7 +966,10 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     // Prompt the OS login dialog to get the decrypted credit
     // card number.
     if (profile["cc-number-encrypted"]) {
-      let decrypted = await this._decrypt(profile["cc-number-encrypted"], reauthPasswordPromptMessage);
+      let decrypted = await this._decrypt(
+        profile["cc-number-encrypted"],
+        reauthPasswordPromptMessage
+      );
 
       if (!decrypted) {
         // Early return if the decrypted is empty or undefined
@@ -916,9 +1008,7 @@ class FormAutofillHandler {
   set focusedInput(element) {
     let section = this._sectionCache.get(element);
     if (!section) {
-      section = this.sections.find(
-        s => s.getFieldDetailByElement(element)
-      );
+      section = this.sections.find(s => s.getFieldDetailByElement(element));
       this._sectionCache.set(element, section);
     }
 
@@ -1015,14 +1105,20 @@ class FormAutofillHandler {
    * @returns {Array} The valid address and credit card details.
    */
   collectFormFields(allowDuplicates = false) {
-    let sections = FormAutofillHeuristics.getFormInfo(this.form, allowDuplicates);
+    let sections = FormAutofillHeuristics.getFormInfo(
+      this.form,
+      allowDuplicates
+    );
     let allValidDetails = [];
-    for (let {fieldDetails, type} of sections) {
+    for (let { fieldDetails, type } of sections) {
       let section;
       if (type == FormAutofillUtils.SECTION_TYPES.ADDRESS) {
         section = new FormAutofillAddressSection(fieldDetails, this.winUtils);
       } else if (type == FormAutofillUtils.SECTION_TYPES.CREDIT_CARD) {
-        section = new FormAutofillCreditCardSection(fieldDetails, this.winUtils);
+        section = new FormAutofillCreditCardSection(
+          fieldDetails,
+          this.winUtils
+        );
       } else {
         throw new Error("Unknown field type.");
       }
@@ -1035,7 +1131,7 @@ class FormAutofillHandler {
       if (!input) {
         continue;
       }
-      input.addEventListener("input", this, {mozSystemGroup: true});
+      input.addEventListener("input", this, { mozSystemGroup: true });
     }
 
     this.fieldDetails = allValidDetails;
@@ -1068,16 +1164,24 @@ class FormAutofillHandler {
       }
       // Unregister listeners once no field is in AUTO_FILLED state.
       if (!this._hasFilledSection()) {
-        this.form.rootElement.removeEventListener("input", onChangeHandler, {mozSystemGroup: true});
-        this.form.rootElement.removeEventListener("reset", onChangeHandler, {mozSystemGroup: true});
+        this.form.rootElement.removeEventListener("input", onChangeHandler, {
+          mozSystemGroup: true,
+        });
+        this.form.rootElement.removeEventListener("reset", onChangeHandler, {
+          mozSystemGroup: true,
+        });
       }
     };
 
     if (noFilledSectionsPreviously) {
       // Handle the highlight style resetting caused by user's correction afterward.
       log.debug("register change handler for filled form:", this.form);
-      this.form.rootElement.addEventListener("input", onChangeHandler, {mozSystemGroup: true});
-      this.form.rootElement.addEventListener("reset", onChangeHandler, {mozSystemGroup: true});
+      this.form.rootElement.addEventListener("input", onChangeHandler, {
+        mozSystemGroup: true,
+      });
+      this.form.rootElement.addEventListener("reset", onChangeHandler, {
+        mozSystemGroup: true,
+      });
     }
   }
 
@@ -1093,7 +1197,7 @@ class FormAutofillHandler {
           if (!input) {
             continue;
           }
-          input.removeEventListener("input", this, {mozSystemGroup: true});
+          input.removeEventListener("input", this, { mozSystemGroup: true });
         }
         this.timeStartedFillingMS = Date.now();
         break;

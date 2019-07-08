@@ -1,4 +1,3 @@
-
 /*
 - test to check we use only a single connection for both onymous and anonymous requests over an existing h2 session
 - request from a domain w/o LOAD_ANONYMOUS flag
@@ -13,7 +12,9 @@ var http2pref;
 var extpref;
 
 function run_test() {
-  var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  var env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
@@ -29,12 +30,16 @@ function run_test() {
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   prefs.setBoolPref("network.http.originextension", true);
-  prefs.setCharPref("network.dns.localDomains", "foo.example.com, alt1.example.com");
+  prefs.setCharPref(
+    "network.dns.localDomains",
+    "foo.example.com, alt1.example.com"
+  );
 
   // The moz-http2 cert is for {foo, alt1, alt2}.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert.
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   doTest1();
@@ -50,7 +55,7 @@ function resetPrefs() {
 function makeChan(origin) {
   return NetUtil.newChannel({
     uri: origin,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
 }
 
@@ -81,24 +86,22 @@ Listener.prototype = {
   onStopRequest: function testOnStopRequest(request, status) {
     Assert.ok(Components.isSuccessCode(status));
     if (nextPortExpectedToBeSame) {
-     Assert.equal(currentPort, this.clientPort);
+      Assert.equal(currentPort, this.clientPort);
     } else {
-     Assert.notEqual(currentPort, this.clientPort);
+      Assert.notEqual(currentPort, this.clientPort);
     }
     currentPort = this.clientPort;
     nextTest();
     do_test_finished();
-  }
+  },
 };
 
-function testsDone()
-{
+function testsDone() {
   dump("testsDone\n");
   resetPrefs();
 }
 
-function doTest()
-{
+function doTest() {
   dump("execute doTest " + origin + "\n");
 
   var loadFlags = Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
@@ -118,8 +121,7 @@ function doTest()
   chan.asyncOpen(listener);
 }
 
-function doTest1()
-{
+function doTest1() {
   dump("doTest1()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-1";
   nextTest = doTest2;
@@ -128,8 +130,7 @@ function doTest1()
   doTest();
 }
 
-function doTest2()
-{
+function doTest2() {
   // connection expected to be reused for an anonymous request
   dump("doTest2()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-2";
@@ -140,8 +141,7 @@ function doTest2()
   doTest();
 }
 
-function doTest3()
-{
+function doTest3() {
   dump("doTest3()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-3";
   nextTest = doTest4;
@@ -152,8 +152,7 @@ function doTest3()
   doTest();
 }
 
-function doTest4()
-{
+function doTest4() {
   dump("doTest4()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-4";
   nextTest = testsDone;

@@ -11,7 +11,7 @@ const AUTOCOMPLETION_PREF = "devtools.editor.autocomplete";
 // popups, only their integration with the editor.
 async function test() {
   waitForExplicitFinish();
-  const {ed, win} = await setup();
+  const { ed, win } = await setup();
   const edWin = ed.container.contentWindow.wrappedJSObject;
   testJS(ed, edWin);
   testCSS(ed, edWin);

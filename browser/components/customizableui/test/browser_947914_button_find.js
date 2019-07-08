@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -9,7 +9,10 @@ add_task(async function() {
   // The TabContextMenu initializes its strings only on a focus or mouseover event.
   // Calls focus event on the TabContextMenu early in the test.
   gBrowser.selectedTab.focus();
-  CustomizableUI.addWidgetToArea("find-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "find-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   registerCleanupFunction(() => CustomizableUI.reset());
 
   await waitForOverflowButtonShown();
@@ -20,8 +23,9 @@ add_task(async function() {
   let findButton = document.getElementById("find-button");
   ok(findButton, "Find button exists in Panel Menu");
 
-  let findBarPromise = gBrowser.isFindBarInitialized() ?
-    null : BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabFindInitialized");
+  let findBarPromise = gBrowser.isFindBarInitialized()
+    ? null
+    : BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabFindInitialized");
 
   findButton.click();
   await findBarPromise;

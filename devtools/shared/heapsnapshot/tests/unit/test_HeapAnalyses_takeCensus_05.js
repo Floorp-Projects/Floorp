@@ -21,21 +21,30 @@ add_task(async function() {
     breakdown: BREAKDOWN,
   });
 
-  const { report: treeNode } = await client.takeCensus(snapshotFilePath, {
-    breakdown: BREAKDOWN,
-  }, {
-    asTreeNode: true,
-  });
+  const { report: treeNode } = await client.takeCensus(
+    snapshotFilePath,
+    {
+      breakdown: BREAKDOWN,
+    },
+    {
+      asTreeNode: true,
+    }
+  );
 
   ok(treeNode.children.length > 0, "treeNode has children");
-  ok(treeNode.children.every(type => {
-    return "name" in type &&
-           "bytes" in type &&
-           "count" in type;
-  }), "all of tree node's children have name, bytes, count");
+  ok(
+    treeNode.children.every(type => {
+      return "name" in type && "bytes" in type && "count" in type;
+    }),
+    "all of tree node's children have name, bytes, count"
+  );
 
-  compareCensusViewData(BREAKDOWN, report, treeNode,
-    "Returning census as a tree node represents same data as the report");
+  compareCensusViewData(
+    BREAKDOWN,
+    report,
+    treeNode,
+    "Returning census as a tree node represents same data as the report"
+  );
 
   client.destroy();
 });

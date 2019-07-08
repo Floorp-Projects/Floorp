@@ -12,8 +12,7 @@ function testRootObject(objExpr, summary = objExpr) {
     const TEST_JSON_URL = "data:application/json," + objExpr;
     await addJsonViewTab(TEST_JSON_URL);
 
-    const objectText = await getElementText(
-      ".jsonPanelBox .panelContent");
+    const objectText = await getElementText(".jsonPanelBox .panelContent");
     is(objectText, summary, "The root object " + objExpr + " is visible");
   };
 }
@@ -26,18 +25,21 @@ function testNestedObject(objExpr, summary = objExpr) {
     await addJsonViewTab(TEST_JSON_URL);
 
     const objectCellCount = await getElementCount(
-      ".jsonPanelBox .treeTable .objectCell");
+      ".jsonPanelBox .treeTable .objectCell"
+    );
     is(objectCellCount, 1, "There must be one object cell");
 
     const objectCellText = await getElementText(
-      ".jsonPanelBox .treeTable .objectCell");
+      ".jsonPanelBox .treeTable .objectCell"
+    );
     is(objectCellText, summary, objExpr + " has a visible summary");
 
     // Collapse auto-expanded node.
     await clickJsonNode(".jsonPanelBox .treeTable .treeLabel");
 
     const textAfter = await getElementText(
-      ".jsonPanelBox .treeTable .objectCell");
+      ".jsonPanelBox .treeTable .objectCell"
+    );
     is(textAfter, summary, objExpr + " still has a visible summary");
   };
 }

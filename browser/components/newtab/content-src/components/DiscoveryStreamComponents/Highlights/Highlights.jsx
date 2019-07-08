@@ -1,6 +1,6 @@
-import {connect} from "react-redux";
+import { connect } from "react-redux";
 import React from "react";
-import {SectionIntl} from "content-src/components/Sections/Sections";
+import { SectionIntl } from "content-src/components/Sections/Sections";
 
 export class _Highlights extends React.PureComponent {
   render() {
@@ -17,4 +17,6 @@ export class _Highlights extends React.PureComponent {
   }
 }
 
-export const Highlights = connect(state => ({Sections: state.Sections}))(_Highlights);
+export const Highlights = connect(state => ({ Sections: state.Sections }))(
+  _Highlights
+);

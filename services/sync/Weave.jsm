@@ -2,12 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "syncUsername", "services.sync.username");
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "syncUsername",
+  "services.sync.username"
+);
 
 /**
  * Sync's XPCOM service.
@@ -62,11 +71,13 @@ function WeaveService() {
 WeaveService.prototype = {
   classID: Components.ID("{74b89fb0-f200-4ae8-a3ec-dd164117f6de}"),
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   ensureLoaded() {
-    const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+    const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
 
     // Side-effect of accessing the service is that it is instantiated.
     Weave.Service;
@@ -89,26 +100,33 @@ WeaveService.prototype = {
   init() {
     // Force Weave service to load if it hasn't triggered from overlays
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.timer.initWithCallback({
-      notify: () => {
-        let isConfigured = false;
-        // We only load more if it looks like Sync is configured.
-        if (this.enabled) {
-          // We have an associated FxAccount. So, do a more thorough check.
-          // This will import a number of modules and thus increase memory
-          // accordingly. We could potentially copy code performed by
-          // this check into this file if our above code is yielding too
-          // many false positives.
-          var {Weave} = ChromeUtils.import("resource://services-sync/main.js");
-          isConfigured = Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED;
-        }
-        let getHistogramById = Services.telemetry.getHistogramById;
-        getHistogramById("WEAVE_CONFIGURED").add(isConfigured);
-        if (isConfigured) {
-          this.ensureLoaded();
-        }
+    this.timer.initWithCallback(
+      {
+        notify: () => {
+          let isConfigured = false;
+          // We only load more if it looks like Sync is configured.
+          if (this.enabled) {
+            // We have an associated FxAccount. So, do a more thorough check.
+            // This will import a number of modules and thus increase memory
+            // accordingly. We could potentially copy code performed by
+            // this check into this file if our above code is yielding too
+            // many false positives.
+            var { Weave } = ChromeUtils.import(
+              "resource://services-sync/main.js"
+            );
+            isConfigured =
+              Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED;
+          }
+          let getHistogramById = Services.telemetry.getHistogramById;
+          getHistogramById("WEAVE_CONFIGURED").add(isConfigured);
+          if (isConfigured) {
+            this.ensureLoaded();
+          }
+        },
       },
-    }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
+      10000,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
   },
 
   /**
@@ -120,7 +138,10 @@ WeaveService.prototype = {
    * For that, you'll want to check Weave.Status.checkSetup().
    */
   get enabled() {
-    return !!syncUsername && Services.prefs.getBoolPref("identity.fxaccounts.enabled");
+    return (
+      !!syncUsername &&
+      Services.prefs.getBoolPref("identity.fxaccounts.enabled")
+    );
   },
 };
 
@@ -128,8 +149,10 @@ function AboutWeaveLog() {}
 AboutWeaveLog.prototype = {
   classID: Components.ID("{d28f8a0b-95da-48f4-b712-caf37097be41}"),
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIAboutModule,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   getURIFlags(aURI) {
     return 0;
@@ -146,8 +169,10 @@ AboutWeaveLog.prototype = {
     // view. That way links to files can be opened. make sure we use the correct
     // origin attributes when creating the principal for accessing the
     // about:sync-log data.
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri,
-      aLoadInfo.originAttributes);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      uri,
+      aLoadInfo.originAttributes
+    );
 
     channel.owner = principal;
     return channel;

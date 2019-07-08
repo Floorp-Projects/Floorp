@@ -7,7 +7,8 @@
  */
 
 add_task(async function() {
-  const ICON_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAA" +
+  const ICON_URI =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAA" +
     "CQkWg2AAABGklEQVQoz2NgGB6AnZ1dUlJSXl4eSDIyMhLW4Ovr%2B%2Fr168uXL69Zs4YoG%2BL" +
     "i4i5dusTExMTGxsbNzd3f37937976%2BnpmZmagbHR09J49e5YvX66kpATVEBYW9ubNm2nTphkb" +
     "G7e2tp44cQLIuHfvXm5urpaWFlDKysqqu7v73LlzECMYIiIiHj58mJCQoKKicvXq1bS0NKBgW1v" +
@@ -24,20 +25,28 @@ add_task(async function() {
   let originalEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:mozilla"
+  );
 
   registerCleanupFunction(async function() {
     await Services.search.setDefault(originalEngine);
     await Services.search.removeEngine(engine);
     try {
       BrowserTestUtils.removeTab(tab);
-    } catch (ex) { /* tab may have already been closed in case of failure */ }
+    } catch (ex) {
+      /* tab may have already been closed in case of failure */
+    }
     await PlacesUtils.history.clear();
   });
 
   await promiseAutocompleteResultPopup("moz");
-  Assert.equal(gURLBar.textValue, "moz",
-    "Preselected search keyword result shouldn't automatically add a space");
+  Assert.equal(
+    gURLBar.textValue,
+    "moz",
+    "Preselected search keyword result shouldn't automatically add a space"
+  );
 
   await promiseAutocompleteResultPopup("moz open a search");
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -47,6 +56,9 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Enter");
   await tabPromise;
 
-  Assert.equal(gBrowser.selectedBrowser.currentURI.spec,
-    "http://example.com/?q=open+a+search", "Should have loaded the correct page");
+  Assert.equal(
+    gBrowser.selectedBrowser.currentURI.spec,
+    "http://example.com/?q=open+a+search",
+    "Should have loaded the correct page"
+  );
 });

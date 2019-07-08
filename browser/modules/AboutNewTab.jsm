@@ -4,20 +4,26 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "AboutNewTab" ];
+var EXPORTED_SYMBOLS = ["AboutNewTab"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActivityStream: "resource://activity-stream/lib/ActivityStream.jsm",
-  RemotePages: "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
+  RemotePages:
+    "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
 });
 
 const BROWSER_READY_NOTIFICATION = "sessionstore-windows-restored";
 
 var AboutNewTab = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   // AboutNewTab
 
@@ -48,7 +54,9 @@ var AboutNewTab = {
       Services.obs.addObserver(this, BROWSER_READY_NOTIFICATION);
     }
 
-    this.pageListener = pageListener || new RemotePages(["about:home", "about:newtab", "about:welcome"]);
+    this.pageListener =
+      pageListener ||
+      new RemotePages(["about:home", "about:newtab", "about:welcome"]);
   },
 
   /**
@@ -56,7 +64,7 @@ var AboutNewTab = {
    */
   onBrowserReady() {
     if (this.activityStream && this.activityStream.initialized) {
-       return;
+      return;
     }
 
     this.activityStream = new ActivityStream();
@@ -86,8 +94,9 @@ var AboutNewTab = {
   override(shouldPassPageListener) {
     this.isOverridden = true;
     const pageListener = this.pageListener;
-    if (!pageListener)
+    if (!pageListener) {
       return null;
+    }
     if (shouldPassPageListener) {
       this.pageListener = null;
       return pageListener;

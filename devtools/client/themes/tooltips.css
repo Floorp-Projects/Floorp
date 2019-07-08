@@ -42,7 +42,7 @@
   /* Tooltips */
   --theme-tooltip-color: var(--theme-body-color);
   --theme-tooltip-background: rgb(255, 255, 255);
-  --theme-tooltip-shadow: rgba(155, 155, 155, 0.26);
+  --theme-tooltip-shadow: var(--grey-90-a10);
 
   /* Doorhangers */
   /* These colors are based on the colors used for doorhangers elsewhere in
@@ -127,7 +127,7 @@ strong {
   background: transparent;
   pointer-events: none;
   overflow: hidden;
-  filter: drop-shadow(0 3px 4px var(--theme-tooltip-shadow));
+  filter: drop-shadow(0 2px 8px var(--theme-tooltip-shadow));
 }
 
 .tooltip-xul-wrapper {
@@ -205,7 +205,7 @@ strong {
   min-height: 10px;
   box-sizing: border-box;
   width: 100%;
-  border-radius: 5px;
+  border-radius: var(--theme-arrowpanel-border-radius);
 }
 
 .tooltip-top[type="arrow"] .tooltip-panel {
@@ -234,11 +234,11 @@ strong {
 }
 
 .tooltip-top .tooltip-arrow {
-  margin-top: -3px;
+  margin-top: -1px;
 }
 
 .tooltip-bottom .tooltip-arrow {
-  margin-bottom: -3px;
+  margin-bottom: -1px;
 }
 
 .tooltip-arrow:before {
@@ -254,13 +254,19 @@ strong {
 }
 
 .tooltip-bottom .tooltip-arrow:before {
-  margin-top: 4px;
+  margin-top: 5px;
   transform: rotate(225deg);
 }
 
 .tooltip-top .tooltip-arrow:before {
   margin-top: -12px;
   transform: rotate(45deg);
+}
+
+/* XUL panels have a default border, but pure HTML tooltips don't have one. */
+.tooltip-container[type="arrow"]:not(.tooltip-container-xul) > .tooltip-panel,
+.tooltip-container[type="arrow"]:not(.tooltip-container-xul) > .tooltip-arrow::before {
+  border: 1px solid var(--theme-arrowpanel-border-color);
 }
 
 /* Tooltip : doorhanger style */
@@ -486,6 +492,7 @@ strong {
 /* Tooltip: Events */
 
 .devtools-tooltip-events-container {
+  border-radius: var(--theme-arrowpanel-border-radius);
   height: 100%;
   overflow-y: auto;
 }

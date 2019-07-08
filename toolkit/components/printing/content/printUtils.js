@@ -73,7 +73,9 @@ var PrintUtils = {
 
   get _bundle() {
     delete this._bundle;
-    return this._bundle = Services.strings.createBundle("chrome://global/locale/printing.properties");
+    return (this._bundle = Services.strings.createBundle(
+      "chrome://global/locale/printing.properties"
+    ));
   },
 
   /**
@@ -85,14 +87,20 @@ var PrintUtils = {
   showPageSetup() {
     try {
       var printSettings = this.getPrintSettings();
-      var PRINTPROMPTSVC = Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
-                             .getService(Ci.nsIPrintingPromptService);
+      var PRINTPROMPTSVC = Cc[
+        "@mozilla.org/embedcomp/printingprompt-service;1"
+      ].getService(Ci.nsIPrintingPromptService);
       PRINTPROMPTSVC.showPageSetupDialog(window, printSettings, null);
       if (gSavePrintSettings) {
         // Page Setup data is a "native" setting on the Mac
-        var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                      .getService(Ci.nsIPrintSettingsService);
-        PSSVC.savePrintSettingsToPrefs(printSettings, true, printSettings.kInitSaveNativeData);
+        var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+          Ci.nsIPrintSettingsService
+        );
+        PSSVC.savePrintSettingsToPrefs(
+          printSettings,
+          true,
+          printSettings.kInitSaveNativeData
+        );
       }
     } catch (e) {
       dump("showPageSetup " + e + "\n");
@@ -103,8 +111,9 @@ var PrintUtils = {
 
   _getDefaultPrinterName() {
     try {
-      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                    .getService(Ci.nsIPrintSettingsService);
+      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+        Ci.nsIPrintSettingsService
+      );
 
       return PSSVC.defaultPrinterName;
     } catch (e) {
@@ -191,9 +200,9 @@ var PrintUtils = {
       // issues in bug 267422.
       // We use the print preview browser as the source browser to avoid
       // re-initializing print preview with a document that might now have changed.
-      this._sourceBrowser = this._shouldSimplify ?
-        this._listener.getSimplifiedPrintPreviewBrowser() :
-        this._listener.getPrintPreviewBrowser();
+      this._sourceBrowser = this._shouldSimplify
+        ? this._listener.getSimplifiedPrintPreviewBrowser()
+        : this._listener.getPrintPreviewBrowser();
       this._sourceBrowser.collapsed = true;
 
       // If the user transits too quickly within preview and we have a pending
@@ -202,24 +211,33 @@ var PrintUtils = {
     }
 
     this._webProgressPP = {};
-    let ppParams        = {};
-    let notifyOnOpen    = {};
-    let printSettings   = this.getPrintSettings();
+    let ppParams = {};
+    let notifyOnOpen = {};
+    let printSettings = this.getPrintSettings();
     // Here we get the PrintingPromptService so we can display the PP Progress from script
     // For the browser implemented via XUL with the PP toolbar we cannot let it be
     // automatically opened from the print engine because the XUL scrollbars in the PP window
     // will layout before the content window and a crash will occur.
     // Doing it all from script, means it lays out before hand and we can let printing do its own thing
-    let PPROMPTSVC = Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
-                       .getService(Ci.nsIPrintingPromptService);
+    let PPROMPTSVC = Cc[
+      "@mozilla.org/embedcomp/printingprompt-service;1"
+    ].getService(Ci.nsIPrintingPromptService);
     // just in case we are already printing,
     // an error code could be returned if the Progress Dialog is already displayed
     try {
-      PPROMPTSVC.showPrintProgressDialog(window, null, printSettings, this._obsPP, false,
-                                         this._webProgressPP, ppParams, notifyOnOpen);
+      PPROMPTSVC.showPrintProgressDialog(
+        window,
+        null,
+        printSettings,
+        this._obsPP,
+        false,
+        this._webProgressPP,
+        ppParams,
+        notifyOnOpen
+      );
       if (ppParams.value) {
         ppParams.value.docTitle = this._originalTitle;
-        ppParams.value.docURL   = this._originalURL;
+        ppParams.value.docURL = this._originalURL;
       }
 
       // this tells us whether we should continue on with PP or
@@ -296,16 +314,21 @@ var PrintUtils = {
       msg = this._bundle.GetStringFromName(msgName);
     }
 
-    title = this._bundle.GetStringFromName(isPrinting ? "print_error_dialog_title"
-                                                      : "printpreview_error_dialog_title");
+    title = this._bundle.GetStringFromName(
+      isPrinting
+        ? "print_error_dialog_title"
+        : "printpreview_error_dialog_title"
+    );
 
     Services.prompt.alert(window, title, msg);
   },
 
   receiveMessage(aMessage) {
     if (aMessage.name == "Printing:Error") {
-      this._displayPrintingError(aMessage.data.nsresult,
-                                 aMessage.data.isPrinting);
+      this._displayPrintingError(
+        aMessage.data.nsresult,
+        aMessage.data.isPrinting
+      );
       return undefined;
     }
 
@@ -323,11 +346,14 @@ var PrintUtils = {
 
     switch (aMessage.name) {
       case "Printing:Preview:ProgressChange": {
-        return listener.onProgressChange(null, null,
-                                         data.curSelfProgress,
-                                         data.maxSelfProgress,
-                                         data.curTotalProgress,
-                                         data.maxTotalProgress);
+        return listener.onProgressChange(
+          null,
+          null,
+          data.curSelfProgress,
+          data.maxSelfProgress,
+          data.curTotalProgress,
+          data.maxTotalProgress
+        );
       }
 
       case "Printing:Preview:StateChange": {
@@ -346,32 +372,43 @@ var PrintUtils = {
           printPreviewTB.disableUpdateTriggers(false);
         }
 
-        return listener.onStateChange(null, null,
-                                      data.stateFlags,
-                                      data.status);
+        return listener.onStateChange(null, null, data.stateFlags, data.status);
       }
     }
     return undefined;
   },
 
   _setPrinterDefaultsForSelectedPrinter(aPSSVC, aPrintSettings) {
-    if (!aPrintSettings.printerName)
+    if (!aPrintSettings.printerName) {
       aPrintSettings.printerName = aPSSVC.defaultPrinterName;
+    }
 
     // First get any defaults from the printer
-    aPSSVC.initPrintSettingsFromPrinter(aPrintSettings.printerName, aPrintSettings);
+    aPSSVC.initPrintSettingsFromPrinter(
+      aPrintSettings.printerName,
+      aPrintSettings
+    );
     // now augment them with any values from last time
-    aPSSVC.initPrintSettingsFromPrefs(aPrintSettings, true, aPrintSettings.kInitSaveAll);
+    aPSSVC.initPrintSettingsFromPrefs(
+      aPrintSettings,
+      true,
+      aPrintSettings.kInitSaveAll
+    );
   },
 
   getPrintSettings() {
-    gPrintSettingsAreGlobal = Services.prefs.getBoolPref("print.use_global_printsettings");
-    gSavePrintSettings = Services.prefs.getBoolPref("print.save_print_settings");
+    gPrintSettingsAreGlobal = Services.prefs.getBoolPref(
+      "print.use_global_printsettings"
+    );
+    gSavePrintSettings = Services.prefs.getBoolPref(
+      "print.save_print_settings"
+    );
 
     var printSettings;
     try {
-      var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                    .getService(Ci.nsIPrintSettingsService);
+      var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+        Ci.nsIPrintSettingsService
+      );
       if (gPrintSettingsAreGlobal) {
         printSettings = PSSVC.globalPrintSettings;
         this._setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
@@ -385,8 +422,7 @@ var PrintUtils = {
   },
 
   // This observer is called once the progress dialog has been "opened"
-  _obsPP:
-  {
+  _obsPP: {
     observe(aSubject, aTopic, aData) {
       // Only process a null topic which means the progress dialog is open.
       if (aTopic) {
@@ -394,11 +430,15 @@ var PrintUtils = {
       }
 
       // delay the print preview to show the content of the progress dialog
-      setTimeout(function() { PrintUtils._enterPrintPreview(); }, 0);
+      setTimeout(function() {
+        PrintUtils._enterPrintPreview();
+      }, 0);
     },
 
-    QueryInterface: ChromeUtils.generateQI(["nsIObserver",
-                                            "nsISupportsWeakReference"]),
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIObserver",
+      "nsISupportsWeakReference",
+    ]),
   },
 
   get shouldSimplify() {
@@ -410,16 +450,16 @@ var PrintUtils = {
   },
 
   /**
-  * Currently, we create a new print preview browser to host the simplified
-  * cloned-document when Simplify Page option is used on preview. To accomplish
-  * this, we need to keep track of what browser should be presented, based on
-  * whether the 'Simplify page' checkbox is checked.
-  *
-  * _ppBrowsers
-  *        Set of print preview browsers.
-  * _currentPPBrowser
-  *        References the current print preview browser that is being presented.
-  */
+   * Currently, we create a new print preview browser to host the simplified
+   * cloned-document when Simplify Page option is used on preview. To accomplish
+   * this, we need to keep track of what browser should be presented, based on
+   * whether the 'Simplify page' checkbox is checked.
+   *
+   * _ppBrowsers
+   *        Set of print preview browsers.
+   * _currentPPBrowser
+   *        References the current print preview browser that is being presented.
+   */
   _ppBrowsers: new Set(),
   _currentPPBrowser: null,
 
@@ -429,9 +469,9 @@ var PrintUtils = {
     // progress listener from nsIPrintingPromptService.showPrintProgressDialog
     // in printPreview, we add listeners to feed that progress
     // listener.
-    let ppBrowser = this._shouldSimplify ?
-      this._listener.getSimplifiedPrintPreviewBrowser() :
-      this._listener.getPrintPreviewBrowser();
+    let ppBrowser = this._shouldSimplify
+      ? this._listener.getSimplifiedPrintPreviewBrowser()
+      : this._listener.getPrintPreviewBrowser();
     this._ppBrowsers.add(ppBrowser);
 
     // If we're switching from 'normal' print preview to 'simplified' print
@@ -472,10 +512,16 @@ var PrintUtils = {
         // callback. Once we discover reader mode has been loaded, we fire
         // up a message to enter on print preview.
         let spMM = simplifiedBrowser.messageManager;
-        spMM.addMessageListener("Printing:Preview:ReaderModeReady", function onReaderReady() {
-          spMM.removeMessageListener("Printing:Preview:ReaderModeReady", onReaderReady);
-          sendEnterPreviewMessage(simplifiedBrowser, true);
-        });
+        spMM.addMessageListener(
+          "Printing:Preview:ReaderModeReady",
+          function onReaderReady() {
+            spMM.removeMessageListener(
+              "Printing:Preview:ReaderModeReady",
+              onReaderReady
+            );
+            sendEnterPreviewMessage(simplifiedBrowser, true);
+          }
+        );
 
         // Here, we send down a message to simplified browser in order to parse
         // the original page. After we have parsed it, content will tell parent
@@ -499,7 +545,7 @@ var PrintUtils = {
       waitForPrintProgressToEnableToolbar = true;
     }
 
-    let onEntered = (message) => {
+    let onEntered = message => {
       mm.removeMessageListener("Printing:Preview:Entered", onEntered);
 
       if (message.data.failed) {
@@ -545,8 +591,9 @@ var PrintUtils = {
 
       // show the toolbar after we go into print preview mode so
       // that we can initialize the toolbar with total num pages
-      printPreviewTB = document.createXULElement("toolbar",
-        { is: "printpreview-toolbar" });
+      printPreviewTB = document.createXULElement("toolbar", {
+        is: "printpreview-toolbar",
+      });
       printPreviewTB.setAttribute("fullscreentoolbar", true);
       printPreviewTB.id = "print-preview-toolbar";
 
@@ -575,7 +622,10 @@ var PrintUtils = {
       } else {
         this._closeHandlerPP = null;
       }
-      document.documentElement.setAttribute("onclose", "PrintUtils.exitPrintPreview(); return false;");
+      document.documentElement.setAttribute(
+        "onclose",
+        "PrintUtils.exitPrintPreview(); return false;"
+      );
 
       // disable chrome shortcuts...
       window.addEventListener("keydown", this.onKeyDownPP, true);
@@ -613,10 +663,11 @@ var PrintUtils = {
     printPreviewTB.destroy();
     printPreviewTB.remove();
 
-    if (gFocusedElement)
+    if (gFocusedElement) {
       Services.focus.setFocus(gFocusedElement, Services.focus.FLAG_NOSCROLL);
-    else
+    } else {
       this._sourceBrowser.focus();
+    }
     gFocusedElement = null;
 
     this.setSimplifiedMode(false);
@@ -641,18 +692,22 @@ var PrintUtils = {
   onKeyPressPP(aEvent) {
     var closeKey;
     try {
-      closeKey = document.getElementById("key_close")
-                         .getAttribute("key");
+      closeKey = document.getElementById("key_close").getAttribute("key");
       closeKey = aEvent["DOM_VK_" + closeKey];
     } catch (e) {}
     var isModif = aEvent.ctrlKey || aEvent.metaKey;
     // Ctrl-W exits the PP
-    if (isModif &&
-        (aEvent.charCode == closeKey || aEvent.charCode == closeKey + 32)) {
+    if (
+      isModif &&
+      (aEvent.charCode == closeKey || aEvent.charCode == closeKey + 32)
+    ) {
       PrintUtils.exitPrintPreview();
     } else if (isModif) {
       var printPreviewTB = document.getElementById("print-preview-toolbar");
-      var printKey = document.getElementById("printKb").getAttribute("key").toUpperCase();
+      var printKey = document
+        .getElementById("printKb")
+        .getAttribute("key")
+        .toUpperCase();
       var pressedKey = String.fromCharCode(aEvent.charCode).toUpperCase();
       if (printKey == pressedKey) {
         printPreviewTB.print();
@@ -671,8 +726,12 @@ var PrintUtils = {
    */
   ensureProgressDialogClosed() {
     if (this._webProgressPP && this._webProgressPP.value) {
-      this._webProgressPP.value.onStateChange(null, null,
-        Ci.nsIWebProgressListener.STATE_STOP, 0);
+      this._webProgressPP.value.onStateChange(
+        null,
+        null,
+        Ci.nsIWebProgressListener.STATE_STOP,
+        0
+      );
     }
   },
 };

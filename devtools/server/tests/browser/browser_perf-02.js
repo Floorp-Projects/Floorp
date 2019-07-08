@@ -7,11 +7,13 @@
  * Test what happens when other tools control the profiler.
  */
 add_task(async function() {
-  const {front, client} = await initPerfFront();
+  const { front, client } = await initPerfFront();
 
   // Simulate other tools by getting an independent handle on the Gecko Profiler.
   // eslint-disable-next-line mozilla/use-services
-  const geckoProfiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
+  const geckoProfiler = Cc["@mozilla.org/tools/profiler;1"].getService(
+    Ci.nsIProfiler
+  );
 
   is(await front.isActive(), false, "The profiler hasn't been started yet.");
 
@@ -23,7 +25,11 @@ add_task(async function() {
   const profilerStopped = once(front, "profiler-stopped");
   geckoProfiler.StopProfiler();
   await profilerStopped;
-  is(await front.isActive(), false, "The profiler was stopped by another tool.");
+  is(
+    await front.isActive(),
+    false,
+    "The profiler was stopped by another tool."
+  );
 
   // Clean up.
   await front.destroy();

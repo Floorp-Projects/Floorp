@@ -9,8 +9,9 @@
 add_task(async function test_invalid_file() {
   // Write bogus data to checkpoint file
   let data = "[}";
-  await OS.File.writeAtomic(sessionCheckpointsPath, data,
-                            {tmpPath: sessionCheckpointsPath + ".tmp"});
+  await OS.File.writeAtomic(sessionCheckpointsPath, data, {
+    tmpPath: sessionCheckpointsPath + ".tmp",
+  });
 
   CrashMonitor.init();
   let checkpoints = await CrashMonitor.previousCheckpoints;

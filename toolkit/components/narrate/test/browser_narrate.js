@@ -24,15 +24,19 @@ add_task(async function testNarrate() {
     ok(NarrateTestUtils.isVisible(popup), "popup toggled");
 
     let voiceOptions = $(NarrateTestUtils.VOICE_OPTIONS);
-    ok(!NarrateTestUtils.isVisible(voiceOptions),
-      "voice options are initially hidden");
+    ok(
+      !NarrateTestUtils.isVisible(voiceOptions),
+      "voice options are initially hidden"
+    );
 
     $(NarrateTestUtils.VOICE_SELECT).click();
     ok(NarrateTestUtils.isVisible(voiceOptions), "voice options pop up");
 
     let prefChanged = NarrateTestUtils.waitForPrefChange("narrate.voice");
-    ok(NarrateTestUtils.selectVoice(content, TEST_VOICE),
-      "test voice selected");
+    ok(
+      NarrateTestUtils.selectVoice(content, TEST_VOICE),
+      "test voice selected"
+    );
     await prefChanged;
 
     ok(!NarrateTestUtils.isVisible(voiceOptions), "voice options hidden again");
@@ -65,7 +69,9 @@ add_task(async function testNarrate() {
     paragraph = speechinfo.paragraph;
     $(NarrateTestUtils.STOP).click();
     await ContentTaskUtils.waitForCondition(
-      () => !$(NarrateTestUtils.STOP), "transitioned to stopped state");
+      () => !$(NarrateTestUtils.STOP),
+      "transitioned to stopped state"
+    );
     NarrateTestUtils.isStoppedState(content, ok);
 
     promiseEvent = ContentTaskUtils.waitForEvent(content, "paragraphstart");
@@ -91,7 +97,9 @@ add_task(async function testNarrate() {
     await promiseEvent;
 
     await ContentTaskUtils.waitForCondition(
-      () => !$(NarrateTestUtils.STOP), "transitioned to stopped state");
+      () => !$(NarrateTestUtils.STOP),
+      "transitioned to stopped state"
+    );
     NarrateTestUtils.isStoppedState(content, ok);
 
     promiseEvent = ContentTaskUtils.waitForEvent(content, "scroll");
@@ -121,7 +129,8 @@ add_task(async function testNarrate() {
     do {
       promiseEvent = Promise.race([
         ContentTaskUtils.waitForEvent(content, "paragraphstart"),
-        ContentTaskUtils.waitForEvent(content, "paragraphsdone")]);
+        ContentTaskUtils.waitForEvent(content, "paragraphsdone"),
+      ]);
       $(NarrateTestUtils.FORWARD).click();
     } while ((await promiseEvent).type == "paragraphstart");
 
@@ -129,7 +138,9 @@ add_task(async function testNarrate() {
     content.scroll(0, 0);
 
     await ContentTaskUtils.waitForCondition(
-      () => !$(NarrateTestUtils.STOP), "transitioned to stopped state");
+      () => !$(NarrateTestUtils.STOP),
+      "transitioned to stopped state"
+    );
     NarrateTestUtils.isStoppedState(content, ok);
   });
 });

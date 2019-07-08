@@ -21,14 +21,24 @@
 #include "js/GCVariant.h"
 #include "js/HashTable.h"
 #include "js/Promise.h"
+#include "js/Result.h"
+#include "js/RootingAPI.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
+#include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/SavedStacks.h"
 #include "vm/Stack.h"
+
+/*
+ * Windows 3.x used a cooperative multitasking model, with a Yield macro that
+ * let you relinquish control to other cooperative threads. Microsoft replaced
+ * it with an empty macro long ago. We should be free to use it in our code.
+ */
+#undef Yield
 
 namespace js {
 
@@ -85,6 +95,165 @@ enum class ResumeMode {
    * This corresponds to a resumption value of `{return: <value>}`.
    */
   Return,
+};
+
+/**
+ * A completion value, describing how some sort of JavaScript evaluation
+ * completed. This is used to tell an onPop handler what's going on with the
+ * frame, and to report the outcome of call, apply, setProperty, and getProperty
+ * operations.
+ *
+ * Local variables of type Completion should be held in Rooted locations,
+ * and passed using Handle and MutableHandle.
+ */
+class Completion {
+ public:
+  struct Return {
+    explicit Return(const Value& value) : value(value) {}
+    Value value;
+
+    void trace(JSTracer* trc) {
+      JS::UnsafeTraceRoot(trc, &value, "js::Completion::Return::value");
+    }
+  };
+
+  struct Throw {
+    Throw(const Value& exception, SavedFrame* stack)
+        : exception(exception), stack(stack) {}
+    Value exception;
+    SavedFrame* stack;
+
+    void trace(JSTracer* trc) {
+      JS::UnsafeTraceRoot(trc, &exception, "js::Completion::Throw::exception");
+      JS::UnsafeTraceRoot(trc, &stack, "js::Completion::Throw::stack");
+    }
+  };
+
+  struct Terminate {
+    void trace(JSTracer* trc) {}
+  };
+
+  struct InitialYield {
+    explicit InitialYield(AbstractGeneratorObject* generatorObject)
+        : generatorObject(generatorObject) {}
+    AbstractGeneratorObject* generatorObject;
+
+    void trace(JSTracer* trc) {
+      JS::UnsafeTraceRoot(trc, &generatorObject,
+                          "js::Completion::InitialYield::generatorObject");
+    }
+  };
+
+  struct Yield {
+    Yield(AbstractGeneratorObject* generatorObject, const Value& iteratorResult)
+        : generatorObject(generatorObject), iteratorResult(iteratorResult) {}
+    AbstractGeneratorObject* generatorObject;
+    Value iteratorResult;
+
+    void trace(JSTracer* trc) {
+      JS::UnsafeTraceRoot(trc, &generatorObject,
+                          "js::Completion::Yield::generatorObject");
+      JS::UnsafeTraceRoot(trc, &iteratorResult,
+                          "js::Completion::Yield::iteratorResult");
+    }
+  };
+
+  struct Await {
+    Await(AbstractGeneratorObject* generatorObject, const Value& awaitee)
+        : generatorObject(generatorObject), awaitee(awaitee) {}
+    AbstractGeneratorObject* generatorObject;
+    Value awaitee;
+
+    void trace(JSTracer* trc) {
+      JS::UnsafeTraceRoot(trc, &generatorObject,
+                          "js::Completion::Await::generatorObject");
+      JS::UnsafeTraceRoot(trc, &awaitee, "js::Completion::Await::awaitee");
+    }
+  };
+
+  // The JS::Result macros want to assign to an existing variable, so having a
+  // default constructor is handy.
+  Completion() : variant(Terminate()) {}
+
+  // Construct a completion from a specific variant.
+  //
+  // Unfortunately, using a template here would prevent the implicit definitions
+  // of the copy and move constructor and assignment operators, which is icky.
+  explicit Completion(Return&& variant)
+      : variant(std::forward<Return>(variant)) {}
+  explicit Completion(Throw&& variant)
+      : variant(std::forward<Throw>(variant)) {}
+  explicit Completion(Terminate&& variant)
+      : variant(std::forward<Terminate>(variant)) {}
+  explicit Completion(InitialYield&& variant)
+      : variant(std::forward<InitialYield>(variant)) {}
+  explicit Completion(Yield&& variant)
+      : variant(std::forward<Yield>(variant)) {}
+  explicit Completion(Await&& variant)
+      : variant(std::forward<Await>(variant)) {}
+
+  // Capture a JavaScript operation result as a Completion value. This clears
+  // any exception and stack from cx, taking ownership of them itself.
+  static Completion fromJSResult(JSContext* cx, bool ok, const Value& rv);
+
+  // Construct a completion given an AbstractFramePtr that is being popped. This
+  // clears any exception and stack from cx, taking ownership of them itself.
+  static Completion fromJSFramePop(JSContext* cx, AbstractFramePtr frame,
+                                   const jsbytecode* pc, bool ok);
+
+  template <typename V>
+  bool is() const {
+    return variant.template is<V>();
+  }
+
+  template <typename V>
+  V& as() {
+    return variant.template as<V>();
+  }
+
+  template <typename V>
+  const V& as() const {
+    return variant.template as<V>();
+  }
+
+  void trace(JSTracer* trc);
+
+  /* True if this completion is a suspension of a generator or async call. */
+  bool suspending() const {
+    return variant.is<InitialYield>() || variant.is<Yield>() ||
+           variant.is<Await>();
+  }
+
+  /*
+   * If this completion is a suspension of a generator or async call, return the
+   * call's generator object, nullptr otherwise.
+   */
+  AbstractGeneratorObject* maybeGeneratorObject() const;
+
+  /* Set `result` to a Debugger API completion value describing this completion.
+   */
+  bool buildCompletionValue(JSContext* cx, Debugger* dbg,
+                            MutableHandleValue result) const;
+
+  /*
+   * Set `resumeMode`, `value`, and `exnStack` to values describing this
+   * completion.
+   */
+  void toResumeMode(ResumeMode& resumeMode, MutableHandleValue value,
+                    MutableHandleSavedFrame exnStack) const;
+  /*
+   * Given a `ResumeMode` and value (typically derived from a resumption value
+   * returned by a Debugger hook), update this completion as requested.
+   */
+  void updateForNextHandler(ResumeMode resumeMode, HandleValue value);
+
+ private:
+  using Variant =
+      mozilla::Variant<Return, Throw, Terminate, InitialYield, Yield, Await>;
+  struct BuildValueMatcher;
+  struct ToResumeModeMatcher;
+
+  Variant variant;
 };
 
 typedef HashSet<WeakHeapPtrGlobalObject,
@@ -1145,46 +1314,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                              MutableHandleDebuggerFrame result);
 
   /*
-   * Set |*resumeMode| and |*value| to a (ResumeMode, Value) pair reflecting a
-   * standard SpiderMonkey call state: a boolean success value |ok|, a return
-   * value |rv|, and a context |cx| that may or may not have an exception set.
-   * If an exception was pending on |cx|, it is cleared (and |ok| is asserted
-   * to be false). On exceptional returns, exnStack will be set to any stack
-   * associated with the original throw, if available.
-   */
-  static void resultToCompletion(JSContext* cx, bool ok, const Value& rv,
-                                 ResumeMode* resumeMode,
-                                 MutableHandleValue value,
-                                 MutableHandleSavedFrame exnStack);
-
-  /*
-   * Set |*result| to a JavaScript completion value corresponding to
-   * |resumeMode| and |value|. |value| should be the return value or exception
-   * value, not wrapped as a debuggee value. When throwing an exception,
-   * |exnStack| may be set to the stack when the value was thrown. |cx| must be
-   * in the debugger compartment.
-   */
-  MOZ_MUST_USE bool newCompletionValue(JSContext* cx, ResumeMode resumeMode,
-                                       const Value& value, SavedFrame* exnStack,
-                                       MutableHandleValue result);
-
-  /*
-   * Precondition: we are in the debuggee realm (ar is entered) and ok is true
-   * if the operation in the debuggee realm succeeded, false on error or
-   * exception.
-   *
-   * Postcondition: we are in the debugger realm, having called `ar.reset()`
-   * even if an error occurred.
-   *
-   * On success, a completion value is in vp and ar.context does not have a
-   * pending exception. (This ordinarily returns true even if the ok argument
-   * is false.)
-   */
-  MOZ_MUST_USE bool receiveCompletionValue(mozilla::Maybe<AutoRealm>& ar,
-                                           bool ok, HandleValue val,
-                                           MutableHandleValue vp);
-
-  /*
    * Return the Debugger.Script object for |script|, or create a new one if
    * needed. The context |cx| must be in the debugger realm; |script| must be
    * a script in a debuggee realm.
@@ -1389,15 +1518,16 @@ class ScriptedOnStepHandler final : public OnStepHandler {
  */
 struct OnPopHandler : Handler {
   /*
-   * If a frame is about the be popped, this method is called with the frame
-   * as argument, and `resumeMode` and `vp` set to a completion value specifying
-   * how this frame's execution completed. If successful, this method should
-   * return true, with `resumeMode` and `vp` set to a resumption value
-   * specifying how execution should continue.
+   * The given `frame` is about to be popped; `completion` explains why.
+   *
+   * When this method returns true, it must set `resumeMode` and `vp` to a
+   * resumption value specifying how execution should continue.
+   *
+   * When this method returns false, it should set an exception on `cx`.
    */
   virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
-                     ResumeMode& resumeMode, MutableHandleValue vp,
-                     HandleSavedFrame exnStack) = 0;
+                     const Completion& completion, ResumeMode& resumeMode,
+                     MutableHandleValue vp) = 0;
 };
 
 class ScriptedOnPopHandler final : public OnPopHandler {
@@ -1407,8 +1537,8 @@ class ScriptedOnPopHandler final : public OnPopHandler {
   virtual void drop() override;
   virtual void trace(JSTracer* tracer) override;
   virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
-                     ResumeMode& resumeMode, MutableHandleValue vp,
-                     HandleSavedFrame exnStack) override;
+                     const Completion& completion, ResumeMode& resumeMode,
+                     MutableHandleValue vp) override;
 
  private:
   HeapPtr<JSObject*> object_;
@@ -1478,13 +1608,10 @@ class DebuggerFrame : public NativeObject {
                                             HandleDebuggerFrame frame,
                                             OnStepHandler* handler);
 
-  static MOZ_MUST_USE bool eval(JSContext* cx, HandleDebuggerFrame frame,
-                                mozilla::Range<const char16_t> chars,
-                                HandleObject bindings,
-                                const EvalOptions& options,
-                                ResumeMode& resumeMode,
-                                MutableHandleValue value,
-                                MutableHandleSavedFrame exnStack);
+  static MOZ_MUST_USE JS::Result<Completion> eval(
+      JSContext* cx, HandleDebuggerFrame frame,
+      mozilla::Range<const char16_t> chars, HandleObject bindings,
+      const EvalOptions& options);
 
   MOZ_MUST_USE bool requireLive(JSContext* cx);
   static MOZ_MUST_USE DebuggerFrame* checkThis(JSContext* cx,
@@ -1528,7 +1655,7 @@ class DebuggerFrame : public NativeObject {
    *
    * If provided, owner must be the Debugger to which this Debugger.Frame
    * belongs; remove this frame's entry from its generatorFrames map, and clean
-   * up its cross-compartment wrapper table entries. The owner must be passed
+   * up its cross-compartment wrapper table entry. The owner must be passed
    * unless this method is being called from the Debugger.Frame's finalizer. (In
    * that case, the owner is not reliably available, and is not actually
    * necessary.)
@@ -1670,14 +1797,12 @@ class DebuggerObject : public NativeObject {
                                     bool& result);
   static MOZ_MUST_USE bool isFrozen(JSContext* cx, HandleDebuggerObject object,
                                     bool& result);
-  static MOZ_MUST_USE bool getProperty(JSContext* cx,
-                                       HandleDebuggerObject object, HandleId id,
-                                       HandleValue receiver,
-                                       MutableHandleValue result);
-  static MOZ_MUST_USE bool setProperty(JSContext* cx,
-                                       HandleDebuggerObject object, HandleId id,
-                                       HandleValue value, HandleValue receiver,
-                                       MutableHandleValue result);
+  static MOZ_MUST_USE JS::Result<Completion> getProperty(
+      JSContext* cx, HandleDebuggerObject object, HandleId id,
+      HandleValue receiver);
+  static MOZ_MUST_USE JS::Result<Completion> setProperty(
+      JSContext* cx, HandleDebuggerObject object, HandleId id,
+      HandleValue value, HandleValue receiver);
   static MOZ_MUST_USE bool getPrototypeOf(JSContext* cx,
                                           HandleDebuggerObject object,
                                           MutableHandleDebuggerObject result);
@@ -1704,16 +1829,15 @@ class DebuggerObject : public NativeObject {
   static MOZ_MUST_USE bool deleteProperty(JSContext* cx,
                                           HandleDebuggerObject object,
                                           HandleId id, ObjectOpResult& result);
-  static MOZ_MUST_USE bool call(JSContext* cx, HandleDebuggerObject object,
-                                HandleValue thisv, Handle<ValueVector> args,
-                                MutableHandleValue result);
+  static MOZ_MUST_USE mozilla::Maybe<Completion> call(
+      JSContext* cx, HandleDebuggerObject object, HandleValue thisv,
+      Handle<ValueVector> args);
   static MOZ_MUST_USE bool forceLexicalInitializationByName(
       JSContext* cx, HandleDebuggerObject object, HandleId id, bool& result);
-  static MOZ_MUST_USE bool executeInGlobal(
+  static MOZ_MUST_USE JS::Result<Completion> executeInGlobal(
       JSContext* cx, HandleDebuggerObject object,
       mozilla::Range<const char16_t> chars, HandleObject bindings,
-      const EvalOptions& options, ResumeMode& resumeMode,
-      MutableHandleValue value, MutableHandleSavedFrame exnStack);
+      const EvalOptions& options);
   static MOZ_MUST_USE bool makeDebuggeeValue(JSContext* cx,
                                              HandleDebuggerObject object,
                                              HandleValue value,

@@ -61,7 +61,9 @@ add_task(async function() {
 
 function getTabContainer(name, document) {
   const nameElements = [...document.querySelectorAll("#tabs .target-name")];
-  const nameElement = nameElements.filter(element => element.textContent === name)[0];
+  const nameElement = nameElements.filter(
+    element => element.textContent === name
+  )[0];
   if (nameElement) {
     return nameElement.closest(".target-container");
   }

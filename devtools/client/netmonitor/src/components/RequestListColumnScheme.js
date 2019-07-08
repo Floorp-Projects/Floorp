@@ -16,18 +16,19 @@ class RequestListColumnScheme extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.props.item.urlDetails.scheme !== nextProps.item.urlDetails.scheme;
+    return (
+      this.props.item.urlDetails.scheme !== nextProps.item.urlDetails.scheme
+    );
   }
 
   render() {
     const { urlDetails } = this.props.item;
-    return (
-      dom.td({
+    return dom.td(
+      {
         className: "requests-list-column requests-list-scheme",
         title: urlDetails.scheme,
       },
-        urlDetails.scheme
-      )
+      urlDetails.scheme
     );
   }
 }

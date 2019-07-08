@@ -4,13 +4,15 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const STORAGE_MAX_EVENTS = 1000;
 
 var _consoleStorage = new Map();
 
-const CONSOLEAPISTORAGE_CID = Components.ID("{96cf7855-dfa9-4c6d-8276-f9705b4890f2}");
+const CONSOLEAPISTORAGE_CID = Components.ID(
+  "{96cf7855-dfa9-4c6d-8276-f9705b4890f2}"
+);
 
 /**
  * The ConsoleAPIStorage is meant to cache window.console API calls for later
@@ -40,8 +42,10 @@ function ConsoleAPIStorageService() {
 
 ConsoleAPIStorageService.prototype = {
   classID: CONSOLEAPISTORAGE_CID,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleAPIStorage,
-                                          Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIConsoleAPIStorage,
+    Ci.nsIObserver,
+  ]),
 
   observe: function CS_observe(aSubject, aTopic, aData) {
     if (aTopic == "xpcom-shutdown") {

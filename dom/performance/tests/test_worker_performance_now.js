@@ -1,17 +1,24 @@
 function ok(a, msg) {
   dump("OK: " + !!a + "  =>  " + a + ": " + msg + "\n");
-  postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
+  postMessage({ type: "status", status: !!a, msg: a + ": " + msg });
 }
 
 function workerTestDone() {
-  postMessage({ type: 'finish' });
+  postMessage({ type: "finish" });
 }
 
 ok(self.performance, "Performance object should exist.");
-ok(typeof self.performance.now == 'function', "Performance object should have a 'now' method.");
-var n = self.performance.now(), d = Date.now();
+ok(
+  typeof self.performance.now == "function",
+  "Performance object should have a 'now' method."
+);
+var n = self.performance.now(),
+  d = Date.now();
 ok(n >= 0, "The value of now() should be equal to or greater than 0.");
-ok(self.performance.now() >= n, "The value of now() should monotonically increase.");
+ok(
+  self.performance.now() >= n,
+  "The value of now() should monotonically increase."
+);
 
 // Spin on setTimeout() until performance.now() increases. Due to recent
 // security developments, the hr-time working group has not yet reached
@@ -43,15 +50,19 @@ function checkAfterTimeout() {
   // can't assert that elapsedPerf >= 1 ms because this worker test runs with
   // "privacy.reduceTimerPrecision" == false so performance.now() is not
   // limited to 1 ms resolution.
-  ok(elapsedPerf > 0,
-     `Loose - the value of now() should increase after 2ms. ` +
-     `delta now(): ${elapsedPerf} ms`);
+  ok(
+    elapsedPerf > 0,
+    `Loose - the value of now() should increase after 2ms. ` +
+      `delta now(): ${elapsedPerf} ms`
+  );
 
   // If we need more than 1 iteration, then either performance.now() resolution
   // is shorter than 1 ms or setTimeout() is returning too early.
-  ok(checks == 1,
-     `Strict - the value of now() should increase after one setTimeout. ` +
-     `iters: ${checks}, dt: ${elapsedTime}, now(): ${n2}`);
+  ok(
+    checks == 1,
+    `Strict - the value of now() should increase after one setTimeout. ` +
+      `iters: ${checks}, dt: ${elapsedTime}, now(): ${n2}`
+  );
 
   workerTestDone();
-};
+}

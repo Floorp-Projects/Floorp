@@ -11,8 +11,9 @@ function init(tq, mean, max) {
 }
 
 function run_test() {
-  let tq = Cc["@mozilla.org/network/throttlequeue;1"]
-      .createInstance(Ci.nsIInputChannelThrottleQueue);
+  let tq = Cc["@mozilla.org/network/throttlequeue;1"].createInstance(
+    Ci.nsIInputChannelThrottleQueue
+  );
 
   ok(!init(tq, 0, 50), "mean bytes cannot be 0");
   ok(!init(tq, 50, 0), "max bytes cannot be 0");

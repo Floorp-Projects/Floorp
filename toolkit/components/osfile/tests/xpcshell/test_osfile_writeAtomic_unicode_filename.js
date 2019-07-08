@@ -22,7 +22,11 @@ async function writeAndCheck(path, tmpPath) {
 
   // Clean up
   await OS.File.remove(path);
-  Assert.equal(written, content, `Expected correct write/read for ${path} with tmpPath ${tmpPath}`);
+  Assert.equal(
+    written,
+    content,
+    `Expected correct write/read for ${path} with tmpPath ${tmpPath}`
+  );
 }
 
 add_task(async function init() {
@@ -33,8 +37,12 @@ add_task(async function init() {
 add_test_pair(async function test_osfile_writeAtomic_unicode_filename() {
   await writeAndCheck(OS.Path.join(profileDir, "☕") + ".tmp", undefined);
   await writeAndCheck(OS.Path.join(profileDir, "☕"), undefined);
-  await writeAndCheck(OS.Path.join(profileDir, "☕") + ".tmp",
-                      OS.Path.join(profileDir, "☕"));
-  await writeAndCheck(OS.Path.join(profileDir, "☕"),
-                      OS.Path.join(profileDir, "☕") + ".tmp");
+  await writeAndCheck(
+    OS.Path.join(profileDir, "☕") + ".tmp",
+    OS.Path.join(profileDir, "☕")
+  );
+  await writeAndCheck(
+    OS.Path.join(profileDir, "☕"),
+    OS.Path.join(profileDir, "☕") + ".tmp"
+  );
 });

@@ -58,7 +58,9 @@ function run_test() {
     // bit more predictable.
     gc(g, "shrinking");
 
-    baseline = saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "count" } }).count;
+    baseline = saveHeapSnapshotAndTakeCensus(dbg, {
+      breakdown: { by: "count" },
+    }).count;
     return baseline >= oldBaseline + n;
   }
 

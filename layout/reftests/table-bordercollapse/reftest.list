@@ -110,11 +110,11 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518-5.html bug137
 # Fuzzy because border-collapsed borders are not antialiased, since each segment is painted separately.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-fuzzy(0-255,0-40) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
+fuzzy(0-255,0-40) fails-if(geckoview&&webrender) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
 # Fuzzy because border-collapsed borders are not antialiased, since each segment is painted separately.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-fuzzy(0-255,0-40) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
+fuzzy(0-255,0-40) fails-if(geckoview&&webrender) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
 fuzzy(0-2,0-11000) == 1324524.html 1324524-ref.html
 == 1384602-1a.html 1384602-1-ref.html
 == 1384602-1b.html 1384602-1-ref.html

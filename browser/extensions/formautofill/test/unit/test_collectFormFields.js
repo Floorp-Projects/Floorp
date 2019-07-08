@@ -6,7 +6,9 @@
 
 var FormAutofillHandler;
 add_task(async function setup() {
-  ({FormAutofillHandler} = ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm"));
+  ({ FormAutofillHandler } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillHandler.jsm"
+  ));
 });
 
 const TESTCASES = [
@@ -17,28 +19,77 @@ const TESTCASES = [
                <input id='email'><input id="phone"></form>`,
     sections: [
       [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "given-name",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "family-name",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "address-line1",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "address-level2",
+        },
+        { section: "", addressType: "", contactType: "", fieldName: "country" },
+        { section: "", addressType: "", contactType: "", fieldName: "email" },
+        { section: "", addressType: "", contactType: "", fieldName: "tel" },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "given-name",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "family-name",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "address-line1",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "address-level2",
+      },
+      { section: "", addressType: "", contactType: "", fieldName: "country" },
+      { section: "", addressType: "", contactType: "", fieldName: "email" },
+      { section: "", addressType: "", contactType: "", fieldName: "tel" },
     ],
-    ids: ["given-name", "family-name", "street-addr", "city", "country", "email", "phone"],
+    ids: [
+      "given-name",
+      "family-name",
+      "street-addr",
+      "city",
+      "country",
+      "email",
+      "phone",
+    ],
   },
   {
-    description: "An address and credit card form with autocomplete properties and 1 token",
+    description:
+      "An address and credit card form with autocomplete properties and 1 token",
     document: `<form>
                <input id="given-name" autocomplete="given-name">
                <input id="family-name" autocomplete="family-name">
@@ -54,32 +105,98 @@ const TESTCASES = [
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-      ], [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "given-name",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "family-name",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "street-address",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "address-level2",
+        },
+        { section: "", addressType: "", contactType: "", fieldName: "country" },
+        { section: "", addressType: "", contactType: "", fieldName: "email" },
+        { section: "", addressType: "", contactType: "", fieldName: "tel" },
+      ],
+      [
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+        { section: "", addressType: "", contactType: "", fieldName: "cc-name" },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-exp-month",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-exp-year",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "given-name",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "family-name",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "street-address",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "address-level2",
+      },
+      { section: "", addressType: "", contactType: "", fieldName: "country" },
+      { section: "", addressType: "", contactType: "", fieldName: "email" },
+      { section: "", addressType: "", contactType: "", fieldName: "tel" },
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+      { section: "", addressType: "", contactType: "", fieldName: "cc-name" },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "cc-exp-month",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "cc-exp-year",
+      },
     ],
   },
   {
@@ -93,27 +210,98 @@ const TESTCASES = [
                <input id="tel" autocomplete="shipping tel"></form>`,
     sections: [
       [
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "given-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "family-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "street-address",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "address-level2",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "country",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "email",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "tel",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "given-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "family-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "street-address",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "address-level2",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "country",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "email",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "tel",
+      },
     ],
   },
   {
-    description: "Form with autocomplete properties and profile is partly matched",
+    description:
+      "Form with autocomplete properties and profile is partly matched",
     document: `<form><input id="given-name" autocomplete="shipping given-name">
                <input id="family-name" autocomplete="shipping family-name">
                <input id="street-addr" autocomplete="shipping street-address">
@@ -123,23 +311,93 @@ const TESTCASES = [
                <input id="tel" autocomplete="shipping tel"></form>`,
     sections: [
       [
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "given-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "family-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "street-address",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "address-level2",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "country",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "email",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "tel",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "given-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "family-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "street-address",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "address-level2",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "country",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "email",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "tel",
+      },
     ],
   },
   {
@@ -152,18 +410,59 @@ const TESTCASES = [
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-      ], [
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "cc-number"},
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "given-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "family-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "street-address",
+        },
+      ],
+      [
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "cc-number",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "cc-number"},
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "given-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "family-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "street-address",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "cc-number",
+      },
     ],
   },
   {
@@ -176,7 +475,8 @@ const TESTCASES = [
     validFieldDetails: [],
   },
   {
-    description: "An invalid credit card form due to non-autocomplete-attr cc-number only",
+    description:
+      "An invalid credit card form due to non-autocomplete-attr cc-number only",
     document: `<form>
                <input id="cc-number" name="cc-number">
                </form>`,
@@ -194,63 +494,76 @@ const TESTCASES = [
     validFieldDetails: [],
   },
   {
-    description: "A valid credit card form with non-autocomplete-attr cc-number and cc-name.",
+    description:
+      "A valid credit card form with non-autocomplete-attr cc-number and cc-name.",
     document: `<form>
                <input id="cc-name" autocomplete="cc-name">
                <input id="cc-number" name="card-number">
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+        { section: "", addressType: "", contactType: "", fieldName: "cc-name" },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+      { section: "", addressType: "", contactType: "", fieldName: "cc-name" },
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
     ],
-    ids: [
-      "cc-name",
-      "cc-number",
-    ],
+    ids: ["cc-name", "cc-number"],
   },
   {
-    description: "A valid credit card form with autocomplete-attr cc-number only.",
+    description:
+      "A valid credit card form with autocomplete-attr cc-number only.",
     document: `<form>
                <input id="cc-number" autocomplete="cc-number">
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
     ],
   },
   {
-    description: "A valid credit card form with non-autocomplete-attr cc-number and cc-exp.",
+    description:
+      "A valid credit card form with non-autocomplete-attr cc-number and cc-exp.",
     document: `<form>
                <input id="cc-number" name="card-number">
                <input id="cc-exp" autocomplete="cc-exp">
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+        { section: "", addressType: "", contactType: "", fieldName: "cc-exp" },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+      { section: "", addressType: "", contactType: "", fieldName: "cc-exp" },
     ],
-    ids: [
-      "cc-number",
-      "cc-exp",
-    ],
+    ids: ["cc-number", "cc-exp"],
   },
   {
-    description: "A valid credit card form with non-autocomplete-attr cc-number and cc-exp-month/cc-exp-year.",
+    description:
+      "A valid credit card form with non-autocomplete-attr cc-number and cc-exp-month/cc-exp-year.",
     document: `<form>
                <input id="cc-number" name="card-number">
                <input id="cc-exp-month" autocomplete="cc-exp-month">
@@ -258,21 +571,42 @@ const TESTCASES = [
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-exp-month",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-exp-year",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "cc-exp-month",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "cc-exp-year",
+      },
     ],
-    ids: [
-      "cc-number",
-      "cc-exp-month",
-      "cc-exp-year",
-    ],
+    ids: ["cc-number", "cc-exp-month", "cc-exp-year"],
   },
   {
     description: "Three sets of adjacent phone number fields",
@@ -294,46 +628,167 @@ const TESTCASES = [
     allowDuplicates: true,
     sections: [
       [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
-      ], [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-area-code",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-local-prefix",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-local-suffix",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-extension",
+        },
+      ],
+      [
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-area-code",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-local-prefix",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-local-suffix",
+        },
 
         // TODO Bug 1421181 - "tel-country-code" field should belong to the next
         // section. There should be a way to group the related fields during the
         // parsing stage.
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-country-code"},
-      ], [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-country-code",
+        },
+      ],
+      [
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-area-code",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-local-prefix",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "tel-local-suffix",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-country-code"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-area-code",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-local-prefix",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-local-suffix",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-extension",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-area-code",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-local-prefix",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-local-suffix",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-country-code",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-area-code",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-local-prefix",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "tel-local-suffix",
+      },
     ],
     ids: [
-      "shippingAC", "shippingPrefix", "shippingSuffix", "shippingTelExt",
-      "billingAC", "billingPrefix", "billingSuffix",
-      "otherCC", "otherAC", "otherPrefix", "otherSuffix",
+      "shippingAC",
+      "shippingPrefix",
+      "shippingSuffix",
+      "shippingTelExt",
+      "billingAC",
+      "billingPrefix",
+      "billingSuffix",
+      "otherCC",
+      "otherAC",
+      "otherPrefix",
+      "otherSuffix",
     ],
   },
   {
-    description: "Dedup the same field names of the different telephone fields.",
+    description:
+      "Dedup the same field names of the different telephone fields.",
     document: `<form>
                  <input id="i1" autocomplete="given-name">
                  <input id="i2" autocomplete="family-name">
@@ -346,24 +801,55 @@ const TESTCASES = [
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "given-name",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "family-name",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "street-address",
+        },
+        { section: "", addressType: "", contactType: "", fieldName: "email" },
+        { section: "", addressType: "", contactType: "", fieldName: "tel" },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "given-name",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "family-name",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "street-address",
+      },
+      { section: "", addressType: "", contactType: "", fieldName: "email" },
+      { section: "", addressType: "", contactType: "", fieldName: "tel" },
     ],
     ids: ["i1", "i2", "i3", "i4", "homePhone"],
   },
   {
-    description: "The duplicated phones of a single one and a set with ac, prefix, suffix.",
+    description:
+      "The duplicated phones of a single one and a set with ac, prefix, suffix.",
     document: `<form>
                  <input id="i1" autocomplete="shipping given-name">
                  <input id="i2" autocomplete="shipping family-name">
@@ -376,32 +862,120 @@ const TESTCASES = [
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "given-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "family-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "street-address",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "email",
+        },
 
         // NOTES: Ideally, there is only one full telephone field(s) in a form for
         // this case. We can see if there is any better solution later.
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "tel",
+        },
 
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-area-code"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-prefix"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-suffix"},
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "tel-area-code",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "tel-local-prefix",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "tel-local-suffix",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-area-code"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-prefix"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-suffix"},
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "given-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "family-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "street-address",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "email",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "tel",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "tel-area-code",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "tel-local-prefix",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "tel-local-suffix",
+      },
     ],
-    ids: ["i1", "i2", "i3", "i4", "singlePhone",
-      "shippingAreaCode", "shippingPrefix", "shippingSuffix"],
+    ids: [
+      "i1",
+      "i2",
+      "i3",
+      "i4",
+      "singlePhone",
+      "shippingAreaCode",
+      "shippingPrefix",
+      "shippingSuffix",
+    ],
   },
   {
     description: "Always adopt the info from autocomplete attribute.",
@@ -414,15 +988,45 @@ const TESTCASES = [
                </form>`,
     sections: [
       [
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "given-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "family-name",
+        },
+        {
+          section: "",
+          addressType: "shipping",
+          contactType: "",
+          fieldName: "tel",
+        },
       ],
     ],
     validFieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "given-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "family-name",
+      },
+      {
+        section: "",
+        addressType: "shipping",
+        contactType: "",
+        fieldName: "tel",
+      },
     ],
     ids: ["given-name", "family-name", "dummyAreaCode"],
   },
@@ -434,8 +1038,10 @@ for (let tc of TESTCASES) {
     add_task(async function() {
       info("Starting testcase: " + testcase.description);
 
-      let doc = MockDocument.createTestDocument("http://localhost:8080/test/",
-                                                testcase.document);
+      let doc = MockDocument.createTestDocument(
+        "http://localhost:8080/test/",
+        testcase.document
+      );
       let form = doc.querySelector("form");
       let formLike = FormLikeFactory.createFromForm(form);
 
@@ -449,7 +1055,9 @@ for (let tc of TESTCASES) {
           if (testcase.ids && testcase.ids[index]) {
             elementRef = doc.getElementById(testcase.ids[index]);
           } else {
-            elementRef = doc.querySelector("*[autocomplete*='" + detail.fieldName + "']");
+            elementRef = doc.querySelector(
+              "*[autocomplete*='" + detail.fieldName + "']"
+            );
           }
           detail.elementWeakRef = Cu.getWeakReference(elementRef);
         });
@@ -460,25 +1068,57 @@ for (let tc of TESTCASES) {
           Assert.equal(handlerDetails, testCaseDetails);
           return;
         }
-        Assert.equal(handlerDetails.length, testCaseDetails.length, "field count");
+        Assert.equal(
+          handlerDetails.length,
+          testCaseDetails.length,
+          "field count"
+        );
         handlerDetails.forEach((detail, index) => {
-          Assert.equal(detail.fieldName, testCaseDetails[index].fieldName, "fieldName");
-          Assert.equal(detail.section, testCaseDetails[index].section, "section");
-          Assert.equal(detail.addressType, testCaseDetails[index].addressType, "addressType");
-          Assert.equal(detail.contactType, testCaseDetails[index].contactType, "contactType");
-          Assert.equal(detail.elementWeakRef.get(), testCaseDetails[index].elementWeakRef.get(), "DOM reference");
+          Assert.equal(
+            detail.fieldName,
+            testCaseDetails[index].fieldName,
+            "fieldName"
+          );
+          Assert.equal(
+            detail.section,
+            testCaseDetails[index].section,
+            "section"
+          );
+          Assert.equal(
+            detail.addressType,
+            testCaseDetails[index].addressType,
+            "addressType"
+          );
+          Assert.equal(
+            detail.contactType,
+            testCaseDetails[index].contactType,
+            "contactType"
+          );
+          Assert.equal(
+            detail.elementWeakRef.get(),
+            testCaseDetails[index].elementWeakRef.get(),
+            "DOM reference"
+          );
         });
       }
-      setElementWeakRef(testcase.sections.reduce((fieldDetails, section) => {
-        fieldDetails.push(...section);
-        return fieldDetails;
-      }, []));
+      setElementWeakRef(
+        testcase.sections.reduce((fieldDetails, section) => {
+          fieldDetails.push(...section);
+          return fieldDetails;
+        }, [])
+      );
       setElementWeakRef(testcase.validFieldDetails);
 
       let handler = new FormAutofillHandler(formLike);
-      let validFieldDetails = handler.collectFormFields(testcase.allowDuplicates);
+      let validFieldDetails = handler.collectFormFields(
+        testcase.allowDuplicates
+      );
 
-      Assert.equal(handler.sections.length, testcase.sections.length, "section count");
+      Assert.equal(
+        handler.sections.length,
+        testcase.sections.length,
+        "section count"
+      );
       for (let i = 0; i < handler.sections.length; i++) {
         let section = handler.sections[i];
         verifyDetails(section.fieldDetails, testcase.sections[i]);

@@ -37,8 +37,10 @@ async function checkClipboard(expectedText, node) {
     await waitForClipboardPromise(() => fireCopyEvent(node), expectedText);
     ok(true, "Clipboard successfully filled with : " + expectedText);
   } catch (e) {
-    ok(false, "Clipboard could not be filled with the expected text : " +
-              expectedText);
+    ok(
+      false,
+      "Clipboard could not be filled with the expected text : " + expectedText
+    );
   }
 }
 

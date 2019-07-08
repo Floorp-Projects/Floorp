@@ -42,11 +42,11 @@ function MutationEventChecker() {
     }
 
     this.expectedEvents = [];
-    this.element        = element;
-    this.attr           = attr;
-    this.oldValue       = element.getAttribute(attr);
-    this.giveUp         = false;
-    this.ignore         = false;
+    this.element = element;
+    this.attr = attr;
+    this.oldValue = element.getAttribute(attr);
+    this.giveUp = false;
+    this.ignore = false;
 
     this.element.addEventListener("DOMAttrModified", this._listener);
   };
@@ -56,10 +56,14 @@ function MutationEventChecker() {
       return;
     }
 
-    ok(this.expectedEvents.length == 0,
-       "Expecting new events for " + this.attr +
-       " but the following previously expected events have still not been " +
-       "received: " + this._stillExpecting());
+    ok(
+      this.expectedEvents.length == 0,
+      "Expecting new events for " +
+        this.attr +
+        " but the following previously expected events have still not been " +
+        "received: " +
+        this._stillExpecting()
+    );
     if (this.expectedEvents.length != 0) {
       this.giveUp = true;
       return;
@@ -67,16 +71,21 @@ function MutationEventChecker() {
 
     this.ignore = false;
 
-    if (arguments.length == 0 ||
-        arguments.length == 1 && arguments[0] == "") {
+    if (
+      arguments.length == 0 ||
+      (arguments.length == 1 && arguments[0] == "")
+    ) {
       return;
     }
 
     // Turn arguments object into an array
     var args = Array.prototype.slice.call(arguments);
     // Check for whitespace separated keywords
-    if (args.length == 1 && typeof args[0] === "string" &&
-        args[0].indexOf(" ") > 0) {
+    if (
+      args.length == 1 &&
+      typeof args[0] === "string" &&
+      args[0].indexOf(" ") > 0
+    ) {
       args = args[0].split(" ");
     }
     // Convert strings to event Ids
@@ -86,20 +95,26 @@ function MutationEventChecker() {
   // Temporarily disable event checking
   this.ignoreEvents = function() {
     // Check all events have been received
-    ok(this.giveUp || this.expectedEvents.length == 0,
-      "Going to ignore subsequent events on " + this.attr +
-      " attribute, but we're still expecting the following events: " +
-      this._stillExpecting());
+    ok(
+      this.giveUp || this.expectedEvents.length == 0,
+      "Going to ignore subsequent events on " +
+        this.attr +
+        " attribute, but we're still expecting the following events: " +
+        this._stillExpecting()
+    );
 
     this.ignore = true;
   };
 
   this.finish = function() {
     // Check all events have been received
-    ok(this.giveUp || this.expectedEvents.length == 0,
-      "Finishing listening to " + this.attr +
-      " attribute, but we're still expecting the following events: " +
-      this._stillExpecting());
+    ok(
+      this.giveUp || this.expectedEvents.length == 0,
+      "Finishing listening to " +
+        this.attr +
+        " attribute, but we're still expecting the following events: " +
+        this._stillExpecting()
+    );
 
     this.element.removeEventListener("DOMAttrModified", this._listener);
     this.attr = "";
@@ -113,8 +128,14 @@ function MutationEventChecker() {
 
     // Make sure we're expecting something at all
     if (this.expectedEvents.length == 0) {
-      ok(false, "Unexpected " + this._eventToName(e.attrChange) +
-         " event when none expected on " + this.attr + " attribute.");
+      ok(
+        false,
+        "Unexpected " +
+          this._eventToName(e.attrChange) +
+          " event when none expected on " +
+          this.attr +
+          " attribute."
+      );
       return;
     }
 
@@ -122,10 +143,18 @@ function MutationEventChecker() {
 
     // Make sure we got the event we expected
     if (e.attrChange != expectedEvent) {
-      ok(false, "Unexpected " + this._eventToName(e.attrChange) +
-        " on " + this.attr + " attribute. Expected " +
-        this._eventToName(expectedEvent) + " (followed by: " +
-        this._stillExpecting() + ")");
+      ok(
+        false,
+        "Unexpected " +
+          this._eventToName(e.attrChange) +
+          " on " +
+          this.attr +
+          " attribute. Expected " +
+          this._eventToName(expectedEvent) +
+          " (followed by: " +
+          this._stillExpecting() +
+          ")"
+      );
       // If we get events out of sequence, it doesn't make sense to do any
       // further testing since we don't really know what to expect
       this.giveUp = true;
@@ -133,8 +162,11 @@ function MutationEventChecker() {
     }
 
     // Common param checking
-    is(e.target, this.element,
-       "Unexpected node for mutation event on " + this.attr + " attribute");
+    is(
+      e.target,
+      this.element,
+      "Unexpected node for mutation event on " + this.attr + " attribute"
+    );
     is(e.attrName, this.attr, "Unexpected attribute name for mutation event");
 
     // Don't bother testing e.relatedNode since Attr nodes are on the way
@@ -142,37 +174,50 @@ function MutationEventChecker() {
 
     // Event-specific checking
     if (e.attrChange == MutationEvent.MODIFICATION) {
-      ok(this.element.hasAttribute(this.attr),
-         "Attribute not set after modification");
-      is(e.prevValue, this.oldValue,
-         "Unexpected old value for modification to " + this.attr +
-         " attribute");
-      isnot(e.newValue, this.oldValue,
-         "Unexpected new value for modification to " + this.attr +
-         " attribute");
+      ok(
+        this.element.hasAttribute(this.attr),
+        "Attribute not set after modification"
+      );
+      is(
+        e.prevValue,
+        this.oldValue,
+        "Unexpected old value for modification to " + this.attr + " attribute"
+      );
+      isnot(
+        e.newValue,
+        this.oldValue,
+        "Unexpected new value for modification to " + this.attr + " attribute"
+      );
     } else if (e.attrChange == MutationEvent.REMOVAL) {
       ok(!this.element.hasAttribute(this.attr), "Attribute set after removal");
-      is(e.prevValue, this.oldValue,
-         "Unexpected old value for removal of " + this.attr +
-         " attribute");
+      is(
+        e.prevValue,
+        this.oldValue,
+        "Unexpected old value for removal of " + this.attr + " attribute"
+      );
       // DOM 3 Events doesn't say what value newValue will be for a removal
       // event but generally empty strings are used for other events when an
       // attribute isn't relevant
-      ok(e.newValue === "",
-         "Unexpected new value for removal of " + this.attr +
-         " attribute");
+      ok(
+        e.newValue === "",
+        "Unexpected new value for removal of " + this.attr + " attribute"
+      );
     } else if (e.attrChange == MutationEvent.ADDITION) {
-      ok(this.element.hasAttribute(this.attr),
-         "Attribute not set after addition");
+      ok(
+        this.element.hasAttribute(this.attr),
+        "Attribute not set after addition"
+      );
       // DOM 3 Events doesn't say what value prevValue will be for an addition
       // event but generally empty strings are used for other events when an
       // attribute isn't relevant
-      ok(e.prevValue === "",
-         "Unexpected old value for addition of " + this.attr +
-         " attribute");
-      ok(typeof(e.newValue) == "string" && e.newValue !== "",
-         "Unexpected new value for addition of " + this.attr +
-         " attribute");
+      ok(
+        e.prevValue === "",
+        "Unexpected old value for addition of " + this.attr + " attribute"
+      );
+      ok(
+        typeof e.newValue == "string" && e.newValue !== "",
+        "Unexpected new value for addition of " + this.attr + " attribute"
+      );
     } else {
       ok(false, "Unexpected mutation event type: " + e.attrChange);
       this.giveUp = true;
@@ -194,19 +239,20 @@ function MutationEventChecker() {
 
   this._eventToName = function(evtId) {
     switch (evtId) {
-    case MutationEvent.MODIFICATION:
-      return "modification";
-    case MutationEvent.ADDITION:
-      return "addition";
-    case MutationEvent.REMOVAL:
-      return "removal";
+      case MutationEvent.MODIFICATION:
+        return "modification";
+      case MutationEvent.ADDITION:
+        return "addition";
+      case MutationEvent.REMOVAL:
+        return "removal";
     }
     return "Unknown MutationEvent Type";
   };
 
   this._argToEventId = function(arg) {
-    if (typeof arg === "number")
+    if (typeof arg === "number") {
       return arg;
+    }
 
     if (typeof arg !== "string") {
       ok(false, "Unexpected event type: " + arg);
@@ -214,22 +260,22 @@ function MutationEventChecker() {
     }
 
     switch (arg.toLowerCase()) {
-    case "mod":
-    case "modify":
-    case "modification":
-      return MutationEvent.MODIFICATION;
+      case "mod":
+      case "modify":
+      case "modification":
+        return MutationEvent.MODIFICATION;
 
-    case "add":
-    case "addition":
-      return MutationEvent.ADDITION;
+      case "add":
+      case "addition":
+        return MutationEvent.ADDITION;
 
-    case "removal":
-    case "remove":
-      return MutationEvent.REMOVAL;
+      case "removal":
+      case "remove":
+        return MutationEvent.REMOVAL;
 
-    default:
-      ok(false, "Unexpected event name: " + arg);
-      return 0;
+      default:
+        ok(false, "Unexpected event name: " + arg);
+        return 0;
     }
   };
 }

@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * Test OS.File.open for reading:
@@ -32,15 +32,22 @@ add_task(async function() {
     Assert.ok(false, "File opening 2 succeeded (it should fail)" + fd);
   } catch (err) {
     info("File opening 2 failed " + err);
-    Assert.equal(false, err instanceof OS.File.Error,
-                 "File opening 2 returned something that is not a file error");
-    Assert.ok(err.constructor.name == "TypeError",
-              "File opening 2 returned a TypeError");
+    Assert.equal(
+      false,
+      err instanceof OS.File.Error,
+      "File opening 2 returned something that is not a file error"
+    );
+    Assert.ok(
+      err.constructor.name == "TypeError",
+      "File opening 2 returned a TypeError"
+    );
   }
 
   // Attempt to open a file correctly
   info("Attempting to open a file correctly");
-  let openedFile = await OS.File.open(OS.Path.join(do_get_cwd().path, "test_open.js"));
+  let openedFile = await OS.File.open(
+    OS.Path.join(do_get_cwd().path, "test_open.js")
+  );
   info("File opened correctly");
 
   info("Attempting to close a file correctly");
@@ -59,7 +66,7 @@ add_task(async function test_error_attributes() {
   let fpath = OS.Path.join(dir, "test_error_attributes.txt");
 
   try {
-    await OS.File.open(fpath, {truncate: true}, {});
+    await OS.File.open(fpath, { truncate: true }, {});
     Assert.ok(false, "Opening path suceeded (it should fail) " + fpath);
   } catch (err) {
     Assert.ok(err instanceof OS.File.Error);

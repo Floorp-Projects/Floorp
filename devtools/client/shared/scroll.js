@@ -42,13 +42,23 @@ define(function(require, exports, module) {
     // Whatever `centered` is, the behavior is the same if the box is
     // (even partially) visible.
     if ((topToBottom > 0 || !centered) && topToBottom <= elem.offsetHeight) {
-      win.scrollBy(Object.assign(
-        {left: 0, top: topToBottom - elem.offsetHeight}, options));
+      win.scrollBy(
+        Object.assign(
+          { left: 0, top: topToBottom - elem.offsetHeight },
+          options
+        )
+      );
       yAllowed = false;
-    } else if ((bottomToTop < 0 || !centered) &&
-              bottomToTop >= -elem.offsetHeight) {
-      win.scrollBy(Object.assign(
-        {left: 0, top: bottomToTop + elem.offsetHeight}, options));
+    } else if (
+      (bottomToTop < 0 || !centered) &&
+      bottomToTop >= -elem.offsetHeight
+    ) {
+      win.scrollBy(
+        Object.assign(
+          { left: 0, top: bottomToTop + elem.offsetHeight },
+          options
+        )
+      );
 
       yAllowed = false;
     }
@@ -58,9 +68,11 @@ define(function(require, exports, module) {
     if (centered) {
       if (yAllowed && (topToBottom <= 0 || bottomToTop >= 0)) {
         const x = win.scrollX;
-        const y = win.scrollY + clientRect.top -
+        const y =
+          win.scrollY +
+          clientRect.top -
           (win.innerHeight - elem.offsetHeight) / 2;
-        win.scroll(Object.assign({left: x, top: y}, options));
+        win.scroll(Object.assign({ left: x, top: y }, options));
       }
     }
   }
@@ -101,10 +113,14 @@ define(function(require, exports, module) {
     const { alignTo, center, container } = options;
 
     const { top, bottom } = element.getBoundingClientRect();
-    const scrolledParent = closestScrolledParent(container || element.parentNode);
-    const scrolledParentRect = scrolledParent ? scrolledParent.getBoundingClientRect() :
-                                                null;
-    const isVisible = !scrolledParent ||
+    const scrolledParent = closestScrolledParent(
+      container || element.parentNode
+    );
+    const scrolledParentRect = scrolledParent
+      ? scrolledParent.getBoundingClientRect()
+      : null;
+    const isVisible =
+      !scrolledParent ||
       (top >= scrolledParentRect.top && bottom <= scrolledParentRect.bottom);
 
     if (isVisible) {
@@ -116,8 +132,9 @@ define(function(require, exports, module) {
       return;
     }
 
-    const scrollToTop = alignTo ?
-      alignTo === "top" : !scrolledParentRect || top < scrolledParentRect.top;
+    const scrollToTop = alignTo
+      ? alignTo === "top"
+      : !scrolledParentRect || top < scrolledParentRect.top;
     element.scrollIntoView(scrollToTop);
   }
 

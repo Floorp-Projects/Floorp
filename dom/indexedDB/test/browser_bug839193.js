@@ -32,7 +32,10 @@ function test() {
 
   // This test relies on the test timing out in order to indicate failure so
   // let's add a dummy pass.
-  ok(true, "Each test requires at least one pass, fail or todo so here is a pass.");
+  ok(
+    true,
+    "Each test requires at least one pass, fail or todo so here is a pass."
+  );
 
   Services.obs.addObserver(onLoad, "bug839193-loaded");
   Services.obs.addObserver(onUnload, "bug839193-unloaded");

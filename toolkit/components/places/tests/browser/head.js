@@ -1,16 +1,26 @@
-var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                               "resource://testing-common/PlacesTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
-                               "resource://testing-common/BrowserTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserTestUtils",
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
 
 const TRANSITION_LINK = PlacesUtils.history.TRANSITION_LINK;
 const TRANSITION_TYPED = PlacesUtils.history.TRANSITION_TYPED;
 const TRANSITION_BOOKMARK = PlacesUtils.history.TRANSITION_BOOKMARK;
-const TRANSITION_REDIRECT_PERMANENT = PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT;
-const TRANSITION_REDIRECT_TEMPORARY = PlacesUtils.history.TRANSITION_REDIRECT_TEMPORARY;
+const TRANSITION_REDIRECT_PERMANENT =
+  PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT;
+const TRANSITION_REDIRECT_TEMPORARY =
+  PlacesUtils.history.TRANSITION_REDIRECT_TEMPORARY;
 const TRANSITION_EMBED = PlacesUtils.history.TRANSITION_EMBED;
 const TRANSITION_FRAMED_LINK = PlacesUtils.history.TRANSITION_FRAMED_LINK;
 const TRANSITION_DOWNLOAD = PlacesUtils.history.TRANSITION_DOWNLOAD;
@@ -35,14 +45,16 @@ function fieldForUrl(aURI, aFieldName, aCallback) {
     _value: -1,
     handleResult(aResultSet) {
       let row = aResultSet.getNextRow();
-      if (!row)
+      if (!row) {
         ok(false, "The page should exist in the database");
+      }
       this._value = row.getResultByName(aFieldName);
     },
     handleError() {},
     handleCompletion(aReason) {
-      if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED)
-         ok(false, "The statement should properly succeed");
+      if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+        ok(false, "The statement should properly succeed");
+      }
       aCallback(this._value);
     },
   });
@@ -82,9 +94,7 @@ NavHistoryObserver.prototype = {
   onClearHistory() {},
   onPageChanged() {},
   onDeleteVisits() {},
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsINavHistoryObserver,
-  ]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
 };
 
 function whenNewWindowLoaded(aOptions, aCallback) {

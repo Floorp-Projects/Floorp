@@ -6,14 +6,19 @@
  * be resolved in bug 1539000.
  */
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/Too many characters in placeable/);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Too many characters in placeable/
+);
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.aboutconfig.modify.boolean", true],
       ["test.aboutconfig.modify.number", 1337],
-      ["test.aboutconfig.modify.string", "the answer to the life the universe and everything"],
+      [
+        "test.aboutconfig.modify.string",
+        "the answer to the life the universe and everything",
+      ],
     ],
   });
 
@@ -25,8 +30,10 @@ add_task(async function setup() {
 });
 
 add_task(async function test_add_user_pref() {
-  Assert.equal(Services.prefs.getPrefType(PREF_NEW),
-               Ci.nsIPrefBranch.PREF_INVALID);
+  Assert.equal(
+    Services.prefs.getPrefType(PREF_NEW),
+    Ci.nsIPrefBranch.PREF_INVALID
+  );
 
   await AboutConfigTest.withNewTab(async function() {
     // The row for a new preference appears when searching for its name.
@@ -57,26 +64,26 @@ add_task(async function test_add_user_pref() {
 
       // Reset the preference, then continue by adding a different type.
       row.resetColumnButton.click();
-      Assert.equal(Services.prefs.getPrefType(PREF_NEW),
-                   Ci.nsIPrefBranch.PREF_INVALID);
+      Assert.equal(
+        Services.prefs.getPrefType(PREF_NEW),
+        Ci.nsIPrefBranch.PREF_INVALID
+      );
     }
   });
 });
 
 add_task(async function test_delete_user_pref() {
-  for (let [radioIndex, testValue] of [
-    [0, false],
-    [1, -1],
-    [2, "value"],
-  ]) {
+  for (let [radioIndex, testValue] of [[0, false], [1, -1], [2, "value"]]) {
     Preferences.set(PREF_NEW, testValue);
     await AboutConfigTest.withNewTab(async function() {
       // Deleting the preference should keep the row.
       let row = this.getRow(PREF_NEW);
       row.resetColumnButton.click();
       Assert.ok(row.hasClass("deleted"));
-      Assert.equal(Services.prefs.getPrefType(PREF_NEW),
-                   Ci.nsIPrefBranch.PREF_INVALID);
+      Assert.equal(
+        Services.prefs.getPrefType(PREF_NEW),
+        Ci.nsIPrefBranch.PREF_INVALID
+      );
 
       // Re-adding the preference should keep the same value.
       Assert.ok(row.element.querySelectorAll("input")[radioIndex].checked);
@@ -94,7 +101,7 @@ add_task(async function test_delete_user_pref() {
 
 add_task(async function test_reset_user_pref() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
+    set: [
       [PREF_BOOLEAN_DEFAULT_TRUE, false],
       [PREF_STRING_LOCALIZED_MISSING, "user-value"],
     ],
@@ -141,8 +148,10 @@ add_task(async function test_modify() {
       for (let i = 0; i < 2; i++) {
         row.editColumnButton.click();
         // Check new layout and saving in backend.
-        Assert.equal(this.getRow(nameOfBoolPref).value,
-          "" + Preferences.get(nameOfBoolPref));
+        Assert.equal(
+          this.getRow(nameOfBoolPref).value,
+          "" + Preferences.get(nameOfBoolPref)
+        );
         let prefHasUserValue = Services.prefs.prefHasUserValue(nameOfBoolPref);
         Assert.equal(row.hasClass("has-user-value"), prefHasUserValue);
         Assert.equal(!!row.resetColumnButton, prefHasUserValue);
@@ -155,14 +164,22 @@ add_task(async function test_modify() {
     row.valueInput.value = "test";
     let intRow = this.getRow("test.aboutconfig.modify.number");
     intRow.editColumnButton.click();
-    Assert.equal(intRow.valueInput.value,
-      Preferences.get("test.aboutconfig.modify.number"));
+    Assert.equal(
+      intRow.valueInput.value,
+      Preferences.get("test.aboutconfig.modify.number")
+    );
     Assert.ok(!row.valueInput);
     Assert.equal(row.value, Preferences.get("test.aboutconfig.modify.string"));
 
     // Test validation of integer values.
-    for (let invalidValue of
-         ["", " ", "a", "1.5", "-2147483649", "2147483648"]) {
+    for (let invalidValue of [
+      "",
+      " ",
+      "a",
+      "1.5",
+      "-2147483649",
+      "2147483648",
+    ]) {
       intRow.valueInput.value = invalidValue;
       intRow.editColumnButton.click();
       // We should still be in edit mode.

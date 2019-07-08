@@ -38,68 +38,104 @@ add_task(async function() {
   await ensureFocusedUrlbar();
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
-  let textBoxRect = document.getAnonymousElementByAttribute(gURLBar.textbox,
-    "anonid", "moz-input-box").getBoundingClientRect();
-  let urlbarDropmarkerRect = document.getAnonymousElementByAttribute(gURLBar.textbox,
-    "anonid", "historydropmarker").getBoundingClientRect();
+  let textBoxRect = document
+    .getAnonymousElementByAttribute(gURLBar.textbox, "anonid", "moz-input-box")
+    .getBoundingClientRect();
+  let urlbarDropmarkerRect = document
+    .getAnonymousElementByAttribute(
+      gURLBar.textbox,
+      "anonid",
+      "historydropmarker"
+    )
+    .getBoundingClientRect();
 
   let ignoreTabstripRects = {
-    filter: rects => rects.filter(r => !(
-      // We expect plenty of changed rects within the tab strip.
-      r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
-      r.x1 >= tabStripRect.left && r.x2 <= tabStripRect.right
-    )),
+    filter: rects =>
+      rects.filter(
+        r =>
+          !// We expect plenty of changed rects within the tab strip.
+          (
+            r.y1 >= tabStripRect.top &&
+            r.y2 <= tabStripRect.bottom &&
+            r.x1 >= tabStripRect.left &&
+            r.x2 <= tabStripRect.right
+          )
+      ),
     exceptions: [
-      {name: "the urlbar placeolder moves up and down by a few pixels",
-       condition: r =>
-         r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
-         r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom,
+      {
+        name: "the urlbar placeolder moves up and down by a few pixels",
+        condition: r =>
+          r.x1 >= textBoxRect.left &&
+          r.x2 <= textBoxRect.right &&
+          r.y1 >= textBoxRect.top &&
+          r.y2 <= textBoxRect.bottom,
       },
-      {name: "bug 1446449 - spurious tab switch spinner",
-       condition: r =>
-         // In the content area
-         r.y1 >= document.getElementById("appcontent").getBoundingClientRect().top,
+      {
+        name: "bug 1446449 - spurious tab switch spinner",
+        condition: r =>
+          // In the content area
+          r.y1 >=
+          document.getElementById("appcontent").getBoundingClientRect().top,
       },
-      {name: "bug 1520032 - the urlbar dropmarker disappears periodically",
-       condition: r =>
-         AppConstants.DEBUG &&
-         r.x1 >= urlbarDropmarkerRect.left &&
-         r.x2 <= urlbarDropmarkerRect.right &&
-         r.y1 >= urlbarDropmarkerRect.top &&
-         r.y2 <= urlbarDropmarkerRect.bottom,
+      {
+        name: "bug 1520032 - the urlbar dropmarker disappears periodically",
+        condition: r =>
+          AppConstants.DEBUG &&
+          r.x1 >= urlbarDropmarkerRect.left &&
+          r.x2 <= urlbarDropmarkerRect.right &&
+          r.y1 >= urlbarDropmarkerRect.top &&
+          r.y2 <= urlbarDropmarkerRect.bottom,
       },
     ],
   };
 
-  await withPerfObserver(async function() {
-    let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-    BrowserOpenTab();
-    await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabAnimationEnd");
-    await switchDone;
-    await BrowserTestUtils.waitForCondition(() => {
-      return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtoend");
-    });
-  }, {expectedReflows: EXPECTED_OVERFLOW_REFLOWS, frames: ignoreTabstripRects});
+  await withPerfObserver(
+    async function() {
+      let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+      BrowserOpenTab();
+      await BrowserTestUtils.waitForEvent(
+        gBrowser.selectedTab,
+        "TabAnimationEnd"
+      );
+      await switchDone;
+      await BrowserTestUtils.waitForCondition(() => {
+        return gBrowser.tabContainer.arrowScrollbox.hasAttribute(
+          "scrolledtoend"
+        );
+      });
+    },
+    { expectedReflows: EXPECTED_OVERFLOW_REFLOWS, frames: ignoreTabstripRects }
+  );
 
-  Assert.ok(gBrowser.tabContainer.hasAttribute("overflow"),
-            "Tabs should now be overflowed.");
+  Assert.ok(
+    gBrowser.tabContainer.hasAttribute("overflow"),
+    "Tabs should now be overflowed."
+  );
 
   // Now test that opening and closing a tab while overflowed doesn't cause
   // us to reflow.
-  await withPerfObserver(async function() {
-    let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-    BrowserOpenTab();
-    await switchDone;
-    await BrowserTestUtils.waitForCondition(() => {
-      return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtoend");
-    });
-  }, {expectedReflows: [], frames: ignoreTabstripRects});
+  await withPerfObserver(
+    async function() {
+      let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+      BrowserOpenTab();
+      await switchDone;
+      await BrowserTestUtils.waitForCondition(() => {
+        return gBrowser.tabContainer.arrowScrollbox.hasAttribute(
+          "scrolledtoend"
+        );
+      });
+    },
+    { expectedReflows: [], frames: ignoreTabstripRects }
+  );
 
-  await withPerfObserver(async function() {
-    let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-    BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
-    await switchDone;
-  }, {expectedReflows: [], frames: ignoreTabstripRects});
+  await withPerfObserver(
+    async function() {
+      let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+      BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
+      await switchDone;
+    },
+    { expectedReflows: [], frames: ignoreTabstripRects }
+  );
 
   // At this point, we have an overflowed tab strip, and we've got the last tab
   // selected. This should mean that the first tab is scrolled out of view.
@@ -109,24 +145,33 @@ add_task(async function() {
 
   // First, we'll check that the first tab is actually scrolled
   // at least partially out of view.
-  Assert.ok(arrowScrollbox.scrollPosition > 0,
-            "First tab should be partially scrolled out of view.");
+  Assert.ok(
+    arrowScrollbox.scrollPosition > 0,
+    "First tab should be partially scrolled out of view."
+  );
 
   // Now switch to the first tab. We shouldn't flush layout at all.
-  await withPerfObserver(async function() {
-    let firstTab = gBrowser.tabs[0];
-    await BrowserTestUtils.switchTab(gBrowser, firstTab);
-    await BrowserTestUtils.waitForCondition(() => {
-      return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtostart");
-    });
-  }, {expectedReflows: [], frames: ignoreTabstripRects});
+  await withPerfObserver(
+    async function() {
+      let firstTab = gBrowser.tabs[0];
+      await BrowserTestUtils.switchTab(gBrowser, firstTab);
+      await BrowserTestUtils.waitForCondition(() => {
+        return gBrowser.tabContainer.arrowScrollbox.hasAttribute(
+          "scrolledtostart"
+        );
+      });
+    },
+    { expectedReflows: [], frames: ignoreTabstripRects }
+  );
 
   // Okay, now close the last tab. The tabstrip should stay overflowed, but removing
   // one more after that should underflow it.
   BrowserTestUtils.removeTab(lastTab);
 
-  Assert.ok(gBrowser.tabContainer.hasAttribute("overflow"),
-            "Tabs should still be overflowed.");
+  Assert.ok(
+    gBrowser.tabContainer.hasAttribute("overflow"),
+    "Tabs should still be overflowed."
+  );
 
   // Depending on the size of the window, it might take one or more tab
   // removals to put the tab strip out of the overflow state, so we'll just
@@ -139,13 +184,18 @@ add_task(async function() {
 
     // ... and make sure we don't flush layout when closing it, and exiting
     // the overflowed state.
-    await withPerfObserver(async function() {
-      let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-      BrowserTestUtils.removeTab(lastTab, { animate: true });
-      await switchDone;
-      await BrowserTestUtils.waitForCondition(() => !lastTab.isConnected);
-    }, {expectedReflows: EXPECTED_UNDERFLOW_REFLOWS,
-        frames: ignoreTabstripRects});
+    await withPerfObserver(
+      async function() {
+        let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+        BrowserTestUtils.removeTab(lastTab, { animate: true });
+        await switchDone;
+        await BrowserTestUtils.waitForCondition(() => !lastTab.isConnected);
+      },
+      {
+        expectedReflows: EXPECTED_UNDERFLOW_REFLOWS,
+        frames: ignoreTabstripRects,
+      }
+    );
   }
 
   await removeAllButFirstTab();

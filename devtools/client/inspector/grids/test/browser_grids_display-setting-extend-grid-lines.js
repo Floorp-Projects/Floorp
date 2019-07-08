@@ -29,23 +29,31 @@ add_task(async function() {
   await selectNode("#grid", inspector);
   const checkbox = doc.getElementById("grid-setting-extend-grid-lines");
 
-  ok(!Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF),
-    "'Extend grid lines infinitely' is pref off by default.");
+  ok(
+    !Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF),
+    "'Extend grid lines infinitely' is pref off by default."
+  );
 
   info("Toggling ON the 'Extend grid lines infinitely' setting.");
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.highlighterSettings.showInfiniteLines);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state => state.highlighterSettings.showInfiniteLines
+  );
   checkbox.click();
   await onCheckboxChange;
 
   info("Toggling OFF the 'Extend grid lines infinitely' setting.");
-  onCheckboxChange = waitUntilState(store, state =>
-    !state.highlighterSettings.showInfiniteLines);
+  onCheckboxChange = waitUntilState(
+    store,
+    state => !state.highlighterSettings.showInfiniteLines
+  );
   checkbox.click();
   await onCheckboxChange;
 
-  ok(!Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF),
-    "'Extend grid lines infinitely' is pref off.");
+  ok(
+    !Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF),
+    "'Extend grid lines infinitely' is pref off."
+  );
 
   Services.prefs.clearUserPref(SHOW_INFINITE_LINES_PREF);
 });

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /**
  * Implementation of a CommonJS module loader for workers.
  *
@@ -39,7 +38,6 @@
  * modules in the same worker may be affected.
  */
 
-
 (function(exports) {
   "use strict";
 
@@ -63,8 +61,7 @@
      *
      * @type {string}
      */
-    Object.defineProperty(Error.prototype, "moduleStack",
-    {
+    Object.defineProperty(Error.prototype, "moduleStack", {
       get() {
         return this.stack;
       },
@@ -74,8 +71,7 @@
      *
      * @type {string}
      */
-    Object.defineProperty(Error.prototype, "moduleName",
-    {
+    Object.defineProperty(Error.prototype, "moduleName", {
       get() {
         let match = this.stack.match(/\@(.*):.*:/);
         if (match) {
@@ -93,7 +89,9 @@
      */
     return function require(path) {
       if (typeof path != "string" || !path.includes("://")) {
-        throw new TypeError("The argument to require() must be a string uri, got " + path);
+        throw new TypeError(
+          "The argument to require() must be a string uri, got " + path
+        );
       }
       // Automatically add ".js" if there is no extension
       let uri;
@@ -127,7 +125,6 @@
         xhr.responseType = "text";
         xhr.send();
 
-
         let source = xhr.responseText;
         if (source == "") {
           // There doesn't seem to be a better way to detect that the file couldn't be found
@@ -137,8 +134,12 @@
         // number from 1 that is observed by `source` and the error message
         // thrown from the module, and also use `arguments` for accessing
         // `source` and `uri` to avoid polluting the module's environment.
-        let code = new Function("exports", "require", "module",
-          `eval(arguments[3] + "\\n//# sourceURL=" + arguments[4] + "\\n")`);
+        let code = new Function(
+          "exports",
+          "require",
+          "module",
+          `eval(arguments[3] + "\\n//# sourceURL=" + arguments[4] + "\\n")`
+        );
         code(exports, require, module, source, uri);
       } catch (ex) {
         // Module loading has failed, exports should not be made available

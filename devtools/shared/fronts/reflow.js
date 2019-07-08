@@ -4,8 +4,11 @@
 
 "use strict";
 
-const {reflowSpec} = require("devtools/shared/specs/reflow");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const { reflowSpec } = require("devtools/shared/specs/reflow");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 
 /**
  * Usage example of the reflow front:

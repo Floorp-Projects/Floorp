@@ -4,8 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Shared Places Import - change other consumers if you change this: */
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   LightweightThemeChild: "resource:///actors/LightweightThemeChild.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -13,11 +15,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
-XPCOMUtils.defineLazyScriptGetter(this, "PlacesTreeView",
-                                  "chrome://browser/content/places/treeView.js");
-XPCOMUtils.defineLazyScriptGetter(this, ["PlacesInsertionPoint", "PlacesController",
-                                         "PlacesControllerDragHelper"],
-                                  "chrome://browser/content/places/controller.js");
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  "PlacesTreeView",
+  "chrome://browser/content/places/treeView.js"
+);
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
+  "chrome://browser/content/places/controller.js"
+);
 /* End Shared Places Import */
 
 var gHistoryTree;
@@ -45,19 +52,21 @@ function HistorySidebarInit() {
   gHistoryTree = document.getElementById("historyTree");
   gSearchBox = document.getElementById("search-box");
 
-  gHistoryGrouping = document.getElementById("viewButton").
-                              getAttribute("selectedsort");
+  gHistoryGrouping = document
+    .getElementById("viewButton")
+    .getAttribute("selectedsort");
 
-  if (gHistoryGrouping == "site")
+  if (gHistoryGrouping == "site") {
     document.getElementById("bysite").setAttribute("checked", "true");
-  else if (gHistoryGrouping == "visited")
+  } else if (gHistoryGrouping == "visited") {
     document.getElementById("byvisited").setAttribute("checked", "true");
-  else if (gHistoryGrouping == "lastvisited")
+  } else if (gHistoryGrouping == "lastvisited") {
     document.getElementById("bylastvisited").setAttribute("checked", "true");
-  else if (gHistoryGrouping == "dayandsite")
+  } else if (gHistoryGrouping == "dayandsite") {
     document.getElementById("bydayandsite").setAttribute("checked", "true");
-  else
+  } else {
     document.getElementById("byday").setAttribute("checked", "true");
+  }
 
   searchHistory("");
 }
@@ -109,17 +118,18 @@ function searchHistory(aInput) {
   options.resultType = resultType;
   options.includeHidden = !!aInput;
 
-  if (gHistoryGrouping == "lastvisited")
+  if (gHistoryGrouping == "lastvisited") {
     TelemetryStopwatch.start("HISTORY_LASTVISITED_TREE_QUERY_TIME_MS");
+  }
 
   // call load() on the tree manually
   // instead of setting the place attribute in historySidebar.xul
   // otherwise, we will end up calling load() twice
   gHistoryTree.load(query, options);
 
-  if (gHistoryGrouping == "lastvisited")
+  if (gHistoryGrouping == "lastvisited") {
     TelemetryStopwatch.finish("HISTORY_LASTVISITED_TREE_QUERY_TIME_MS");
+  }
 }
 
-window.addEventListener("SidebarFocused",
-                        () => gSearchBox.focus());
+window.addEventListener("SidebarFocused", () => gSearchBox.focus());

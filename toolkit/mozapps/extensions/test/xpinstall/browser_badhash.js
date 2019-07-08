@@ -9,15 +9,22 @@ function test() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": {
-      URL: TESTROOT + "amosigned.xpi",
-      Hash: "sha1:643b08418599ddbd1ea8a511c90696578fb844b9",
-      toString() { return this.URL; },
-    },
-  }));
+  var triggers = encodeURIComponent(
+    JSON.stringify({
+      "Unsigned XPI": {
+        URL: TESTROOT + "amosigned.xpi",
+        Hash: "sha1:643b08418599ddbd1ea8a511c90696578fb844b9",
+        toString() {
+          return this.URL;
+        },
+      },
+    })
+  );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    TESTROOT + "installtrigger.html?" + triggers
+  );
 }
 
 function download_failed(install) {

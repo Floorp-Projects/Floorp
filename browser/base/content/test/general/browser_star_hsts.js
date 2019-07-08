@@ -3,21 +3,27 @@
  */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-var secureURL = "https://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
-var unsecureURL = "http://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
+var secureURL =
+  "https://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
+var unsecureURL =
+  "http://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
 
 add_task(async function test_star_redirect() {
   registerCleanupFunction(async () => {
     // Ensure to remove example.com from the HSTS list.
-    let sss = Cc["@mozilla.org/ssservice;1"]
-                .getService(Ci.nsISiteSecurityService);
-    sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS,
-                    NetUtil.newURI("http://example.com/"), 0);
+    let sss = Cc["@mozilla.org/ssservice;1"].getService(
+      Ci.nsISiteSecurityService
+    );
+    sss.removeState(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      NetUtil.newURI("http://example.com/"),
+      0
+    );
     await PlacesUtils.bookmarks.eraseEverything();
     gBrowser.removeCurrentTab();
   });
 
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
   // This will add the page to the HSTS cache.
   await promiseTabLoadEvent(tab, secureURL, secureURL);
   // This should transparently be redirected to the secure page.
@@ -38,11 +44,14 @@ add_task(async function test_star_redirect() {
  */
 function promiseStarState(aValue) {
   return new Promise(resolve => {
-    let expectedStatus = aValue ? BookmarkingUI.STATUS_STARRED
-                                : BookmarkingUI.STATUS_UNSTARRED;
+    let expectedStatus = aValue
+      ? BookmarkingUI.STATUS_STARRED
+      : BookmarkingUI.STATUS_UNSTARRED;
     (function checkState() {
-      if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING ||
-          BookmarkingUI.status != expectedStatus) {
+      if (
+        BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING ||
+        BookmarkingUI.status != expectedStatus
+      ) {
         info("Waiting for star button change.");
         setTimeout(checkState, 1000);
       } else {
@@ -64,8 +73,9 @@ function promiseStarState(aValue) {
  * @return {Promise} resolved when the event is handled.
  */
 function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
-  if (!aFinalURL)
+  if (!aFinalURL) {
     aFinalURL = aURL;
+  }
 
   info("Wait for load tab event");
   BrowserTestUtils.loadURI(aTab.linkedBrowser, aURL);

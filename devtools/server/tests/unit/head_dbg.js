@@ -18,8 +18,12 @@ _appInfo.updateAppInfo({
   crashReporter: true,
 });
 
-const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { worker } = ChromeUtils.import("resource://devtools/shared/worker/loader.js");
+const { require, loader } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
+const { worker } = ChromeUtils.import(
+  "resource://devtools/shared/worker/loader.js"
+);
 const defer = require("devtools/shared/defer");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 
@@ -31,18 +35,25 @@ Services.prefs.setBoolPref("devtools.debugger.log", true);
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+const {
+  ActorRegistry,
+} = require("devtools/server/actors/utils/actor-registry");
 const { DebuggerServer } = require("devtools/server/main");
-const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
+const { DebuggerServer: WorkerDebuggerServer } = worker.require(
+  "devtools/server/main"
+);
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const ObjectClient = require("devtools/shared/client/object-client");
 const { LongStringFront } = require("devtools/shared/fronts/string");
-const {TargetFactory} = require("devtools/client/framework/target");
+const { TargetFactory } = require("devtools/client/framework/target");
 
-const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+const { addDebuggerToGlobal } = ChromeUtils.import(
+  "resource://gre/modules/jsdebugger.jsm"
+);
 
-const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
-                        .createInstance(Ci.nsIPrincipal);
+const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+  Ci.nsIPrincipal
+);
 
 var { loadSubScript, loadSubScriptWithOptions } = Services.scriptloader;
 
@@ -178,8 +189,9 @@ function createLongStringFront(conn, form) {
 }
 
 function createTestGlobal(name) {
-  const sandbox = Cu.Sandbox(Cc["@mozilla.org/systemprincipal;1"]
-                           .createInstance(Ci.nsIPrincipal));
+  const sandbox = Cu.Sandbox(
+    Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+  );
   sandbox.__name = name;
   return sandbox;
 }
@@ -277,7 +289,7 @@ function testExceptionHook(ex) {
   try {
     do_report_unexpected_exception(ex);
   } catch (e) {
-    return {throw: e};
+    return { throw: e };
   }
   return undefined;
 }
@@ -313,9 +325,15 @@ var listener = {
         // If we've been given an nsIScriptError, then we can print out
         // something nicely formatted, for tools like Emacs to pick up.
         message.QueryInterface(Ci.nsIScriptError);
-        dumpn(message.sourceName + ":" + message.lineNumber + ": " +
-              scriptErrorFlagsToKind(message.flags) + ": " +
-              message.errorMessage);
+        dumpn(
+          message.sourceName +
+            ":" +
+            message.lineNumber +
+            ": " +
+            scriptErrorFlagsToKind(message.flags) +
+            ": " +
+            message.errorMessage
+        );
         string = message.errorMessage;
       } catch (e1) {
         // Be a little paranoid with message, as the whole goal here is to lose
@@ -328,9 +346,11 @@ var listener = {
       }
 
       // Make sure we exit all nested event loops so that the test can finish.
-      while (DebuggerServer
-             && DebuggerServer.xpcInspector
-             && DebuggerServer.xpcInspector.eventLoopNestLevel > 0) {
+      while (
+        DebuggerServer &&
+        DebuggerServer.xpcInspector &&
+        DebuggerServer.xpcInspector.eventLoopNestLevel > 0
+      ) {
         DebuggerServer.xpcInspector.exitNestedEventLoop();
       }
 
@@ -354,8 +374,9 @@ var listener = {
 Services.console.registerListener(listener);
 
 function testGlobal(name) {
-  const sandbox = Cu.Sandbox(Cc["@mozilla.org/systemprincipal;1"]
-                           .createInstance(Ci.nsIPrincipal));
+  const sandbox = Cu.Sandbox(
+    Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+  );
   sandbox.__name = name;
   return sandbox;
 }
@@ -467,12 +488,15 @@ function getFileUrl(name, allowMissing = false) {
  * Returns the full path of the file with the specified name in a
  * platform-independent and URL-like form.
  */
-function getFilePath(name, allowMissing = false, usePlatformPathSeparator = false) {
+function getFilePath(
+  name,
+  allowMissing = false,
+  usePlatformPathSeparator = false
+) {
   const file = do_get_file(name, allowMissing);
   let path = Services.io.newFileURI(file).spec;
   let filePrePath = "file://";
-  if ("nsILocalFileWin" in Ci &&
-      file instanceof Ci.nsILocalFileWin) {
+  if ("nsILocalFileWin" in Ci && file instanceof Ci.nsILocalFileWin) {
     filePrePath += "/";
   }
 
@@ -490,8 +514,9 @@ function getFilePath(name, allowMissing = false, usePlatformPathSeparator = fals
  */
 function readFile(fileName) {
   const f = do_get_file(fileName);
-  const s = Cc["@mozilla.org/network/file-input-stream;1"]
-    .createInstance(Ci.nsIFileInputStream);
+  const s = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   s.init(f, -1, -1, false);
   try {
     return NetUtil.readInputStreamToString(s, s.available());
@@ -502,8 +527,9 @@ function readFile(fileName) {
 
 function writeFile(fileName, content) {
   const file = do_get_file(fileName, true);
-  const stream = Cc["@mozilla.org/network/file-output-stream;1"]
-    .createInstance(Ci.nsIFileOutputStream);
+  const stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   stream.init(file, -1, -1, 0);
   try {
     do {
@@ -532,12 +558,14 @@ function TracingTransport(childTransport) {
 TracingTransport.prototype = {
   // Remove actor names
   normalize: function(packet) {
-    return JSON.parse(JSON.stringify(packet, (key, value) => {
-      if (key === "to" || key === "from" || key === "actor") {
-        return "<actorid>";
-      }
-      return value;
-    }));
+    return JSON.parse(
+      JSON.stringify(packet, (key, value) => {
+        if (key === "to" || key === "from" || key === "actor") {
+          return "<actorid>";
+        }
+        return value;
+      })
+    );
   },
   send: function(packet) {
     this.packets.push({
@@ -588,7 +616,7 @@ TracingTransport.prototype = {
   },
 };
 
-function StubTransport() { }
+function StubTransport() {}
 StubTransport.prototype.ready = function() {};
 StubTransport.prototype.send = function() {};
 StubTransport.prototype.close = function() {};
@@ -598,8 +626,9 @@ StubTransport.prototype.close = function() {};
 // destructuring objects with methods that take callbacks.
 const Async = target => new Proxy(target, Async);
 Async.get = (target, name) =>
-  typeof (target[name]) === "function" ? asyncall.bind(null, target[name], target) :
-  target[name];
+  typeof target[name] === "function"
+    ? asyncall.bind(null, target[name], target)
+    : target[name];
 
 // Calls async function that takes callback and errorback and returns
 // returns promise representing result.
@@ -661,13 +690,7 @@ function executeOnNextTickAndWaitForPause(action, threadClient) {
 }
 
 function evalCallback(debuggeeGlobal, func) {
-  Cu.evalInSandbox(
-    "(" + func + ")()",
-    debuggeeGlobal,
-    "1.8",
-    "test.js",
-    1
-  );
+  Cu.evalInSandbox("(" + func + ")()", debuggeeGlobal, "1.8", "test.js", 1);
 }
 
 /**
@@ -704,8 +727,7 @@ function resumeAndWaitForPause(threadClient) {
 function stepIn(threadClient) {
   dumpn("Stepping in.");
   const paused = waitForPause(threadClient);
-  return threadClient.stepIn()
-    .then(() => paused);
+  return threadClient.stepIn().then(() => paused);
 }
 
 /**
@@ -717,8 +739,7 @@ function stepIn(threadClient) {
  */
 function stepOver(threadClient) {
   dumpn("Stepping over.");
-  return threadClient.stepOver()
-    .then(() => waitForPause(threadClient));
+  return threadClient.stepOver().then(() => waitForPause(threadClient));
 }
 
 /**
@@ -731,8 +752,7 @@ function stepOver(threadClient) {
  */
 function stepOut(threadClient) {
   dumpn("Stepping out.");
-  return threadClient.stepOut()
-    .then(() => waitForPause(threadClient));
+  return threadClient.stepOut().then(() => waitForPause(threadClient));
 }
 
 /**
@@ -808,8 +828,8 @@ async function getSourceById(threadClient, id) {
 }
 
 async function getSourceForm(threadClient, url) {
-  const {sources} = await threadClient.getSources();
-  return sources.find((s) => s.url === url);
+  const { sources } = await threadClient.getSources();
+  return sources.find(s => s.url === url);
 }
 
 async function getSourceFormById(threadClient, id) {
@@ -922,7 +942,7 @@ function threadClientTest(test, options = {}) {
     // Create a custom debuggee and register it to the server.
     // We are using a custom Sandbox as debuggee. Create a new zone because
     // debugger and debuggee must be in different compartments.
-    const debuggee = Cu.Sandbox(principal, {freshZone: true});
+    const debuggee = Cu.Sandbox(principal, { freshZone: true });
     const scriptName = "debuggee.js";
     debuggee.__name = scriptName;
     server.addTestGlobal(debuggee);
@@ -932,8 +952,10 @@ function threadClientTest(test, options = {}) {
 
     // Attach to the fake tab target and retrieve the ThreadClient instance.
     // Automatically resume as the thread is paused by default after attach.
-    const { targetFront, threadClient } =
-      await attachTestTabAndResume(client, scriptName);
+    const { targetFront, threadClient } = await attachTestTabAndResume(
+      client,
+      scriptName
+    );
 
     // Run the test function
     await test({ threadClient, debuggee, client, server, targetFront });

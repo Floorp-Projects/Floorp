@@ -7,11 +7,23 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { synthesizeProfile } = require("devtools/client/performance/test/helpers/synth-utils");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
-const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  synthesizeProfile,
+} = require("devtools/client/performance/test/helpers/synth-utils");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  ThreadNode,
+} = require("devtools/client/performance/modules/logic/tree-model");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -19,7 +31,13 @@ add_task(async function() {
     win: window,
   });
 
-  const { EVENTS, $, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
+  const {
+    EVENTS,
+    $,
+    DetailsView,
+    OverviewView,
+    JsCallTreeView,
+  } = panel.panelWin;
 
   await startRecording(panel);
   await stopRecording(panel);
@@ -30,7 +48,10 @@ add_task(async function() {
 
   // Mock the profile used so we can get a deterministic tree created.
   const profile = synthesizeProfile();
-  const threadNode = new ThreadNode(profile.threads[0], OverviewView.getTimeInterval());
+  const threadNode = new ThreadNode(
+    profile.threads[0],
+    OverviewView.getTimeInterval()
+  );
   JsCallTreeView._populateCallTree(threadNode);
   JsCallTreeView.emit(EVENTS.UI_JS_CALL_TREE_RENDERED);
 

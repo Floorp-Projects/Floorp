@@ -2,30 +2,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* This is a JavaScript module (JSM) to be imported via
+/* This is a JavaScript module (JSM) to be imported via
    Components.utils.import() and acts as a singleton.
    Only the following listed symbols will exposed on import, and only when
    and where imported. */
 
 const EXPORTED_SYMBOLS = ["BrowserTabs"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
-const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
-const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+const { TabStateFlusher } = ChromeUtils.import(
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
+const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
 // Unfortunately, due to where TPS is run, we can't directly reuse the logic from
 // BrowserTestUtils.jsm. Moreover, we can't resolve the URI it loads the content
 // frame script from ("chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js"),
 // hence the hackiness here and in BrowserTabs.Add.
-Services
-.mm
-.loadFrameScript("data:application/javascript;charset=utf-8," + encodeURIComponent(`
+Services.mm.loadFrameScript(
+  "data:application/javascript;charset=utf-8," +
+    encodeURIComponent(`
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
   addEventListener("load", function(event) {
     let subframe = event.target != content.document;
     sendAsyncMessage("tps:loadEvent", {subframe: subframe, url: event.target.documentURI});
-  }, true)`), true, true);
+  }, true)`),
+  true,
+  true
+);
 
 var BrowserTabs = {
   /**
@@ -85,8 +90,10 @@ var BrowserTabs = {
           }
         }
       }
-      Logger.logInfo(`Dumping tabs for ${client.name}...\n` +
-                     JSON.stringify(tabClient.tabs, null, 2));
+      Logger.logInfo(
+        `Dumping tabs for ${client.name}...\n` +
+          JSON.stringify(tabClient.tabs, null, 2)
+      );
     }
     return false;
   },

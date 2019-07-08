@@ -2,29 +2,27 @@
 
 var CC = Components.Constructor;
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-var obs = Cc["@mozilla.org/observer-service;1"]
-            .getService(Ci.nsIObserverService);
+var obs = Cc["@mozilla.org/observer-service;1"].getService(
+  Ci.nsIObserverService
+);
 
-var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
+var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 // baseUrl is always the initial connection attempt and is handled by
 // failResponseHandler since every test expects that request will either be
 // redirected or cancelled.
 var baseUrl;
 
-function failResponseHandler(metadata, response)
-{
+function failResponseHandler(metadata, response) {
   var text = "failure response";
   response.setHeader("Content-Type", "text/plain", false);
   response.bodyOutputStream.write(text, text.length);
   Assert.ok(false, "Received request when we shouldn't.");
 }
 
-function successResponseHandler(metadata, response)
-{
+function successResponseHandler(metadata, response) {
   var text = "success response";
   response.setHeader("Content-Type", "text/plain", false);
   response.bodyOutputStream.write(text, text.length);
@@ -32,31 +30,39 @@ function successResponseHandler(metadata, response)
 }
 
 function onModifyListener(callback) {
-  obs.addObserver({
-    observe(subject, topic, data) {
-      var obs = Cc["@mozilla.org/observer-service;1"].getService();
-      obs = obs.QueryInterface(Ci.nsIObserverService);
-      obs.removeObserver(this, "http-on-modify-request");
-      callback(subject.QueryInterface(Ci.nsIHttpChannel));
-    }
-  }, "http-on-modify-request");
+  obs.addObserver(
+    {
+      observe(subject, topic, data) {
+        var obs = Cc["@mozilla.org/observer-service;1"].getService();
+        obs = obs.QueryInterface(Ci.nsIObserverService);
+        obs.removeObserver(this, "http-on-modify-request");
+        callback(subject.QueryInterface(Ci.nsIHttpChannel));
+      },
+    },
+    "http-on-modify-request"
+  );
 }
 
-function startChannelRequest(baseUrl, flags, expectedResponse=null) {
+function startChannelRequest(baseUrl, flags, expectedResponse = null) {
   var chan = NetUtil.newChannel({
     uri: baseUrl,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
-  chan.asyncOpen(new ChannelListener((request, data, context) => {
-    if (expectedResponse) {
-      Assert.equal(data, expectedResponse);
-    } else {
-      Assert.ok(!data, "no response");
-    }
-    executeSoon(run_next_test)
-  }, null, flags));
+  chan.asyncOpen(
+    new ChannelListener(
+      (request, data, context) => {
+        if (expectedResponse) {
+          Assert.equal(data, expectedResponse);
+        } else {
+          Assert.ok(!data, "no response");
+        }
+        executeSoon(run_next_test);
+      },
+      null,
+      flags
+    )
+  );
 }
-
 
 add_test(function testSimpleRedirect() {
   onModifyListener(chan => {
@@ -168,7 +174,7 @@ function run_test() {
 
   run_next_test();
 
-  registerCleanupFunction(function(){
+  registerCleanupFunction(function() {
     httpServer.stop(() => {});
   });
 }

@@ -28,14 +28,16 @@ const TEST_DATA = [
     expectedOrder: ["T1", "T3", "E1", "T4", "T2", "T5"],
   },
   {
-    description: "Test for drag a tab to left end in case hidden tab was left end",
+    description:
+      "Test for drag a tab to left end in case hidden tab was left end",
     preferenceOrder: ["E1", "T1", "T2", "T3", "T4", "T5"],
     currentTabsOrder: ["T4", "T1", "T2", "T3", "T5"],
     dragTarget: "T4",
     expectedOrder: ["E1", "T4", "T1", "T2", "T3", "T5"],
   },
   {
-    description: "Test for drag a tab to right end in case hidden tab was right end",
+    description:
+      "Test for drag a tab to right end in case hidden tab was right end",
     preferenceOrder: ["T1", "T2", "T3", "T4", "T5", "E1"],
     currentTabsOrder: ["T2", "T3", "T4", "T5", "T1"],
     dragTarget: "T1",
@@ -51,13 +53,27 @@ const TEST_DATA = [
 ];
 
 function run_test() {
-  const { toAbsoluteOrder } =
-    require("devtools/client/framework/toolbox-tabs-order-manager");
+  const {
+    toAbsoluteOrder,
+  } = require("devtools/client/framework/toolbox-tabs-order-manager");
 
-  for (const { description, preferenceOrder,
-               currentTabsOrder, dragTarget, expectedOrder} of TEST_DATA) {
+  for (const {
+    description,
+    preferenceOrder,
+    currentTabsOrder,
+    dragTarget,
+    expectedOrder,
+  } of TEST_DATA) {
     info(description);
-    const resultOrder = toAbsoluteOrder(preferenceOrder, currentTabsOrder, dragTarget);
-    equal(resultOrder.join(","), expectedOrder.join(","), "Result should be correct");
+    const resultOrder = toAbsoluteOrder(
+      preferenceOrder,
+      currentTabsOrder,
+      dragTarget
+    );
+    equal(
+      resultOrder.join(","),
+      expectedOrder.join(","),
+      "Result should be correct"
+    );
   }
 }

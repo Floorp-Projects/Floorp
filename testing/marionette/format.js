@@ -4,10 +4,15 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
-const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", null);
+const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+const { MarionettePrefs } = ChromeUtils.import(
+  "chrome://marionette/content/prefs.js",
+  null
+);
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
@@ -36,8 +41,12 @@ const MAX_STRING_LENGTH = 250;
 function pprint(ss, ...values) {
   function pretty(val) {
     let proto = Object.prototype.toString.call(val);
-    if (typeof val == "object" && val !== null &&
-        "nodeType" in val && val.nodeType === ELEMENT_NODE) {
+    if (
+      typeof val == "object" &&
+      val !== null &&
+      "nodeType" in val &&
+      val.nodeType === ELEMENT_NODE
+    ) {
       return prettyElement(val);
     } else if (["[object Window]", "[object ChromeWindow]"].includes(proto)) {
       return prettyWindowGlobal(val);
@@ -138,8 +147,8 @@ function truncate(strings, ...values) {
       case "[object String]":
         if (MarionettePrefs.truncateLog) {
           if (obj.length > MAX_STRING_LENGTH) {
-            let s1 = obj.substring(0, (MAX_STRING_LENGTH / 2));
-            let s2 = obj.substring(obj.length - (MAX_STRING_LENGTH / 2));
+            let s1 = obj.substring(0, MAX_STRING_LENGTH / 2);
+            let s2 = obj.substring(obj.length - MAX_STRING_LENGTH / 2);
             return `${s1} ... ${s2}`;
           }
         }
@@ -150,8 +159,10 @@ function truncate(strings, ...values) {
 
       // arbitrary object
       default:
-        if (Object.getOwnPropertyNames(obj).includes("toString") &&
-          typeof obj.toString == "function") {
+        if (
+          Object.getOwnPropertyNames(obj).includes("toString") &&
+          typeof obj.toString == "function"
+        ) {
           return walk(obj.toString());
         }
 

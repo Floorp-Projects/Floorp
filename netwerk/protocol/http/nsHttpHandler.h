@@ -429,6 +429,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   uint32_t DefaultHpackBuffer() const { return mDefaultHpackBuffer; }
 
+  bool Bug1563538() const { return mBug1563538; }
+
   uint32_t MaxHttpResponseHeaderSize() const {
     return mMaxHttpResponseHeaderSize;
   }
@@ -670,6 +672,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   // The default size (in bytes) of the HPACK decompressor table.
   uint32_t mDefaultHpackBuffer;
+
+  // Pref for the whole fix that bug provides
+  Atomic<bool, Relaxed> mBug1563538;
 
   // The max size (in bytes) for received Http response header.
   uint32_t mMaxHttpResponseHeaderSize;

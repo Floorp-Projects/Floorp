@@ -306,7 +306,8 @@ bool UnscaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback,
   }
 
   RefPtr<IDWriteFontFileStream> stream;
-  hr = loader->CreateStreamFromKey(referenceKey, refKeySize, getter_AddRefs(stream));
+  hr = loader->CreateStreamFromKey(referenceKey, refKeySize,
+                                   getter_AddRefs(stream));
   if (FAILED(hr)) {
     return false;
   }

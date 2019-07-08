@@ -14,46 +14,130 @@ add_task(async function test() {
 
   // The first state will be loaded using setBrowserState, followed by the 2nd
   // state also being loaded using setBrowserState, interrupting the first restore.
-  let state1 = { windows: [
-    {
-      tabs: [
-        { entries: [{ url: "http://example.org#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-      ],
-      selected: 1,
-    },
-    {
-      tabs: [
-        { entries: [{ url: "http://example.com#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-      ],
-      selected: 3,
-    },
-  ] };
-  let state2 = { windows: [
-    {
-      tabs: [
-        { entries: [{ url: "http://example.org#5", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#6", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#7", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#8", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-      ],
-      selected: 3,
-    },
-    {
-      tabs: [
-        { entries: [{ url: "http://example.com#5", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#6", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#7", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#8", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-      ],
-      selected: 1,
-    },
-  ] };
+  let state1 = {
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [
+              { url: "http://example.org#1", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.org#2", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.org#3", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.org#4", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+        ],
+        selected: 1,
+      },
+      {
+        tabs: [
+          {
+            entries: [
+              { url: "http://example.com#1", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#2", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#3", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#4", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+        ],
+        selected: 3,
+      },
+    ],
+  };
+  let state2 = {
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [
+              { url: "http://example.org#5", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.org#6", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.org#7", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.org#8", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+        ],
+        selected: 3,
+      },
+      {
+        tabs: [
+          {
+            entries: [
+              { url: "http://example.com#5", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#6", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#7", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+          {
+            entries: [
+              { url: "http://example.com#8", triggeringPrincipal_base64 },
+            ],
+            extData: { uniq: r() },
+          },
+        ],
+        selected: 1,
+      },
+    ],
+  };
 
   // interruptedAfter will be set after the selected tab from each window have loaded.
   let interruptedAfter = 0;
@@ -63,13 +147,24 @@ add_task(async function test() {
 
   let loadCount = 0;
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function(aBrowser, aNeedRestore, aRestoring, aRestored) {
+    gProgressListener.setCallback(function(
+      aBrowser,
+      aNeedRestore,
+      aRestoring,
+      aRestored
+    ) {
       loadCount++;
 
-      if (aBrowser.currentURI.spec == state1.windows[0].tabs[2].entries[0].url)
+      if (
+        aBrowser.currentURI.spec == state1.windows[0].tabs[2].entries[0].url
+      ) {
         loadedWindow1 = true;
-      if (aBrowser.currentURI.spec == state1.windows[1].tabs[0].entries[0].url)
+      }
+      if (
+        aBrowser.currentURI.spec == state1.windows[1].tabs[0].entries[0].url
+      ) {
         loadedWindow2 = true;
+      }
 
       if (!interruptedAfter && loadedWindow1 && loadedWindow2) {
         interruptedAfter = loadCount;
@@ -77,8 +172,9 @@ add_task(async function test() {
         return;
       }
 
-      if (loadCount < numTabs + interruptedAfter)
+      if (loadCount < numTabs + interruptedAfter) {
         return;
+      }
 
       // We don't actually care about load order in this test, just that they all
       // do load.
@@ -95,10 +191,14 @@ add_task(async function test() {
   Services.ww.registerNotification(function observer(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function() {
-        Services.ww.unregisterNotification(observer);
-        win.gBrowser.addTabsProgressListener(gProgressListener);
-      }, {once: true});
+      win.addEventListener(
+        "load",
+        function() {
+          Services.ww.unregisterNotification(observer);
+          win.gBrowser.addTabsProgressListener(gProgressListener);
+        },
+        { once: true }
+      );
     }
   });
 

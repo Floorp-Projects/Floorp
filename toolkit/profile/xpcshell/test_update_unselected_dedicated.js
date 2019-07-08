@@ -16,11 +16,13 @@ add_task(async () => {
   writeCompatibilityIni(defaultProfile, greDir, greDir);
 
   writeProfilesIni({
-    profiles: [{
-      name: PROFILE_DEFAULT,
-      path: defaultProfile.leafName,
-      default: true,
-    }],
+    profiles: [
+      {
+        name: PROFILE_DEFAULT,
+        path: defaultProfile.leafName,
+        default: true,
+      },
+    ],
   });
 
   let service = getProfileService();
@@ -29,30 +31,64 @@ add_task(async () => {
 
   let profileData = readProfilesIni();
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
-  Assert.equal(profileData.profiles.length, 2, "Should have the right number of profiles.");
+  Assert.ok(
+    profileData.options.startWithLastProfile,
+    "Should be set to start with the last profile."
+  );
+  Assert.equal(
+    profileData.profiles.length,
+    2,
+    "Should have the right number of profiles."
+  );
 
   // Since there is already a profile with the desired name on dev-edition, a
   // unique version will be used.
-  let expectedName = AppConstants.MOZ_DEV_EDITION ? `${DEDICATED_NAME}-1` : DEDICATED_NAME;
+  let expectedName = AppConstants.MOZ_DEV_EDITION
+    ? `${DEDICATED_NAME}-1`
+    : DEDICATED_NAME;
 
   let profile = profileData.profiles[0];
   Assert.equal(profile.name, PROFILE_DEFAULT, "Should have the right name.");
-  Assert.equal(profile.path, defaultProfile.leafName, "Should be the original default profile.");
+  Assert.equal(
+    profile.path,
+    defaultProfile.leafName,
+    "Should be the original default profile."
+  );
   Assert.ok(profile.default, "Should be marked as the old-style default.");
   profile = profileData.profiles[1];
   Assert.equal(profile.name, expectedName, "Should have the right name.");
-  Assert.notEqual(profile.path, defaultProfile.leafName, "Should not be the original default profile.");
+  Assert.notEqual(
+    profile.path,
+    defaultProfile.leafName,
+    "Should not be the original default profile."
+  );
   Assert.ok(!profile.default, "Should not be marked as the old-style default.");
 
-  Assert.equal(Object.keys(profileData.installs).length, 1, "Should be a default for this install.");
-  Assert.equal(profileData.installs[hash].default, profile.path, "Should have marked the new profile as the default for this install.");
-  Assert.ok(profileData.installs[hash].locked, "Should have locked as we created this profile for this install.");
+  Assert.equal(
+    Object.keys(profileData.installs).length,
+    1,
+    "Should be a default for this install."
+  );
+  Assert.equal(
+    profileData.installs[hash].default,
+    profile.path,
+    "Should have marked the new profile as the default for this install."
+  );
+  Assert.ok(
+    profileData.installs[hash].locked,
+    "Should have locked as we created this profile for this install."
+  );
 
   checkProfileService(profileData);
 
   Assert.ok(didCreate, "Should have created a new profile.");
-  Assert.ok(service.createdAlternateProfile, "Should have created an alternate profile.");
-  Assert.ok(!selectedProfile.rootDir.equals(defaultProfile), "Should be using the right directory.");
+  Assert.ok(
+    service.createdAlternateProfile,
+    "Should have created an alternate profile."
+  );
+  Assert.ok(
+    !selectedProfile.rootDir.equals(defaultProfile),
+    "Should be using the right directory."
+  );
   Assert.equal(selectedProfile.name, expectedName);
 });

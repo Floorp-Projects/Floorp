@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("div", inspector);
 
   // Add a property to the element's style declaration, add some text,
@@ -27,8 +27,11 @@ add_task(async function() {
   const elementRuleEditor = getRuleViewRuleEditor(view, 1);
   const editor = await focusNewRuleViewProperty(elementRuleEditor);
 
-  is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
-    "Next focused editor should be the new property editor.");
+  is(
+    inplaceEditor(elementRuleEditor.newPropSpan),
+    editor,
+    "Next focused editor should be the new property editor."
+  );
 
   EventUtils.sendString("background", view.styleWindow);
 
@@ -36,8 +39,14 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Escape");
   await onBlur;
 
-  is(elementRuleEditor.rule.textProps.length, 1,
-    "Should have canceled creating a new text property.");
-  is(view.styleDocument.activeElement, view.styleDocument.body,
-    "Correct element has focus");
+  is(
+    elementRuleEditor.rule.textProps.length,
+    1,
+    "Should have canceled creating a new text property."
+  );
+  is(
+    view.styleDocument.activeElement,
+    view.styleDocument.body,
+    "Correct element has focus"
+  );
 });

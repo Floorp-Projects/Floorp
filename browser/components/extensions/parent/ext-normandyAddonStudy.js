@@ -1,14 +1,19 @@
 "use strict";
 
-const {AddonStudies} = ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm");
-const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { AddonStudies } = ChromeUtils.import(
+  "resource://normandy/lib/AddonStudies.jsm"
+);
+const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 this.normandyAddonStudy = class extends ExtensionAPI {
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
 
     return {
       normandyAddonStudy: {
@@ -57,8 +62,8 @@ this.normandyAddonStudy = class extends ExtensionAPI {
         onUnenroll: new EventManager({
           context,
           name: "normandyAddonStudy.onUnenroll",
-          register: (fire) => {
-            const listener = async (reason) => {
+          register: fire => {
+            const listener = async reason => {
               await fire.async(reason);
             };
 

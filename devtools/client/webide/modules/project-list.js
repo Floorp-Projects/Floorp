@@ -1,16 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Services = require("Services");
-const {AppProjects} = require("devtools/client/webide/modules/app-projects");
-const {AppManager} = require("devtools/client/webide/modules/app-manager");
+const { AppProjects } = require("devtools/client/webide/modules/app-projects");
+const { AppManager } = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const utils = require("devtools/client/webide/modules/utils");
 const Telemetry = require("devtools/client/shared/telemetry");
 
-const Strings =
-  Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+const Strings = Services.strings.createBundle(
+  "chrome://devtools/locale/webide.properties"
+);
 
 const TELEMETRY_WEBIDE_NEW_PROJECT_COUNT = "DEVTOOLS_WEBIDE_NEW_PROJECT_COUNT";
 
@@ -69,51 +70,70 @@ ProjectList.prototype = {
   newApp: function(testOptions) {
     const parentWindow = this._parentWindow;
     const self = this;
-    return this._UI.busyUntil((async function() {
-      // Open newapp.xul, which will feed ret.location
-      const ret = {location: null, testOptions: testOptions};
-      parentWindow.openDialog("chrome://webide/content/newapp.xul", "newapp", "chrome,modal", ret);
-      if (!ret.location) {
-        return;
-      }
+    return this._UI.busyUntil(
+      (async function() {
+        // Open newapp.xul, which will feed ret.location
+        const ret = { location: null, testOptions: testOptions };
+        parentWindow.openDialog(
+          "chrome://webide/content/newapp.xul",
+          "newapp",
+          "chrome,modal",
+          ret
+        );
+        if (!ret.location) {
+          return;
+        }
 
-      // Retrieve added project
-      const project = AppProjects.get(ret.location);
+        // Retrieve added project
+        const project = AppProjects.get(ret.location);
 
-      // Select project
-      AppManager.selectedProject = project;
+        // Select project
+        AppManager.selectedProject = project;
 
-      self._telemetry.getHistogramById(TELEMETRY_WEBIDE_NEW_PROJECT_COUNT).add(true);
-    })(), "creating new app");
+        self._telemetry
+          .getHistogramById(TELEMETRY_WEBIDE_NEW_PROJECT_COUNT)
+          .add(true);
+      })(),
+      "creating new app"
+    );
   },
 
   importPackagedApp: function(location) {
     const parentWindow = this._parentWindow;
     const UI = this._UI;
-    return UI.busyUntil((async function() {
-      const directory = await utils.getPackagedDirectory(parentWindow, location);
+    return UI.busyUntil(
+      (async function() {
+        const directory = await utils.getPackagedDirectory(
+          parentWindow,
+          location
+        );
 
-      if (!directory) {
-        // User cancelled directory selection
-        return;
-      }
+        if (!directory) {
+          // User cancelled directory selection
+          return;
+        }
 
-      await UI.importAndSelectApp(directory);
-    })(), "importing packaged app");
+        await UI.importAndSelectApp(directory);
+      })(),
+      "importing packaged app"
+    );
   },
 
   importHostedApp: function(location) {
     const parentWindow = this._parentWindow;
     const UI = this._UI;
-    return UI.busyUntil((async function() {
-      const url = utils.getHostedURL(parentWindow, location);
+    return UI.busyUntil(
+      (async function() {
+        const url = utils.getHostedURL(parentWindow, location);
 
-      if (!url) {
-        return;
-      }
+        if (!url) {
+          return;
+        }
 
-      await UI.importAndSelectApp(url);
-    })(), "importing hosted app");
+        await UI.importAndSelectApp(url);
+      })(),
+      "importing hosted app"
+    );
   },
 
   /**
@@ -124,9 +144,11 @@ ProjectList.prototype = {
    * }
    */
   _renderProjectItem: function(opts) {
-    const span = opts.panel.querySelector("span") || this._doc.createElement("span");
+    const span =
+      opts.panel.querySelector("span") || this._doc.createElement("span");
     span.textContent = opts.name;
-    const icon = opts.panel.querySelector("img") || this._doc.createElement("img");
+    const icon =
+      opts.panel.querySelector("img") || this._doc.createElement("img");
     icon.className = "project-image";
     icon.setAttribute("src", opts.icon);
     opts.panel.appendChild(icon);
@@ -136,9 +158,11 @@ ProjectList.prototype = {
 
   refreshTabs: function() {
     if (AppManager.connected) {
-      return AppManager.listTabs().then(() => {
-        this.updateTabs();
-      }).catch(console.error);
+      return AppManager.listTabs()
+        .then(() => {
+          this.updateTabs();
+        })
+        .catch(console.error);
     }
   },
 
@@ -188,15 +212,19 @@ ProjectList.prototype = {
         name: tab.name,
         icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON,
       });
-      panelItemNode.addEventListener("click", () => {
-        AppManager.selectedProject = {
-          type: "tab",
-          app: tab,
-          icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON,
-          location: tab.url,
-          name: tab.name,
-        };
-      }, true);
+      panelItemNode.addEventListener(
+        "click",
+        () => {
+          AppManager.selectedProject = {
+            type: "tab",
+            app: tab,
+            icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON,
+            location: tab.url,
+            name: tab.name,
+          };
+        },
+        true
+      );
     }
 
     return Promise.resolve();
@@ -204,9 +232,11 @@ ProjectList.prototype = {
 
   updateApps: function() {
     const doc = this._doc;
-    const runtimeappsHeaderNode = doc.querySelector("#panel-header-runtimeapps");
+    const runtimeappsHeaderNode = doc.querySelector(
+      "#panel-header-runtimeapps"
+    );
     let sortedApps = [];
-    for (const [/* manifestURL */, app] of AppManager.apps) {
+    for (const [, /* manifestURL */ app] of AppManager.apps) {
       sortedApps.push(app);
     }
     sortedApps = sortedApps.sort((a, b) => {
@@ -233,13 +263,17 @@ ProjectList.prototype = {
         icon: AppManager.DEFAULT_PROJECT_ICON,
       });
       runtimeAppsNode.appendChild(panelItemNode);
-      panelItemNode.addEventListener("click", () => {
-        AppManager.selectedProject = {
-          type: "mainProcess",
-          name: Strings.GetStringFromName("mainProcess_label"),
-          icon: AppManager.DEFAULT_PROJECT_ICON,
-        };
-      }, true);
+      panelItemNode.addEventListener(
+        "click",
+        () => {
+          AppManager.selectedProject = {
+            type: "mainProcess",
+            name: Strings.GetStringFromName("mainProcess_label"),
+            icon: AppManager.DEFAULT_PROJECT_ICON,
+          };
+        },
+        true
+      );
     }
 
     for (let i = 0; i < sortedApps.length; i++) {
@@ -252,14 +286,18 @@ ProjectList.prototype = {
         icon: app.iconURL || AppManager.DEFAULT_PROJECT_ICON,
       });
       runtimeAppsNode.appendChild(panelItemNode);
-      panelItemNode.addEventListener("click", () => {
-        AppManager.selectedProject = {
-          type: "runtimeApp",
-          app: app.manifest,
-          icon: app.iconURL || AppManager.DEFAULT_PROJECT_ICON,
-          name: app.manifest.name,
-        };
-      }, true);
+      panelItemNode.addEventListener(
+        "click",
+        () => {
+          AppManager.selectedProject = {
+            type: "runtimeApp",
+            app: app.manifest,
+            icon: app.iconURL || AppManager.DEFAULT_PROJECT_ICON,
+            name: app.manifest.name,
+          };
+        },
+        true
+      );
     }
 
     return Promise.resolve();
@@ -276,7 +314,11 @@ ProjectList.prototype = {
       return;
     }
 
-    if (this._parentWindow.document.querySelector("window").classList.contains("busy")) {
+    if (
+      this._parentWindow.document
+        .querySelector("window")
+        .classList.contains("busy")
+    ) {
       newAppCmd.setAttribute("disabled", "true");
       packagedAppCmd.setAttribute("disabled", "true");
       hostedAppCmd.setAttribute("disabled", "true");
@@ -334,9 +376,13 @@ ProjectList.prototype = {
               icon: project.icon || AppManager.DEFAULT_PROJECT_ICON,
             });
           }
-          panelItemNode.addEventListener("click", () => {
-            AppManager.selectedProject = project;
-          }, true);
+          panelItemNode.addEventListener(
+            "click",
+            () => {
+              AppManager.selectedProject = project;
+            },
+            true
+          );
         }
 
         resolve();
@@ -351,9 +397,11 @@ ProjectList.prototype = {
       // But re-list them and rebuild, in case any tabs navigated since the last
       // time they were listed.
       if (AppManager.connected) {
-        AppManager.listTabs().then(() => {
-          this.updateTabs();
-        }).catch(console.error);
+        AppManager.listTabs()
+          .then(() => {
+            this.updateTabs();
+          })
+          .catch(console.error);
       }
     });
   },

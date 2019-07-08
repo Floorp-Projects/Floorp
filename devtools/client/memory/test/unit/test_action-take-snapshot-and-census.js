@@ -8,7 +8,10 @@
  * taking a snapshot, and its sub-actions.
  */
 
-const { snapshotState: states, treeMapState } = require("devtools/client/memory/constants");
+const {
+  snapshotState: states,
+  treeMapState,
+} = require("devtools/client/memory/constants");
 const actions = require("devtools/client/memory/actions/snapshot");
 
 add_task(async function() {
@@ -27,7 +30,8 @@ add_task(async function() {
       return;
     }
     if (snapshotI < snapshotStates.length) {
-      const isCorrectState = snapshot.state === states[snapshotStates[snapshotI]];
+      const isCorrectState =
+        snapshot.state === states[snapshotStates[snapshotI]];
       if (isCorrectState) {
         ok(true, `Found expected snapshot state ${snapshotStates[snapshotI]}`);
         snapshotI++;
@@ -45,13 +49,16 @@ add_task(async function() {
   store.dispatch(actions.takeSnapshotAndCensus(front, heapWorker));
 
   await waitUntilState(store, () => {
-    return snapshotI === snapshotStates.length &&
-           censusI === censusStates.length;
+    return (
+      snapshotI === snapshotStates.length && censusI === censusStates.length
+    );
   });
   unsubscribe();
 
-  ok(true,
-    "takeSnapshotAndCensus() produces the correct sequence of states in a snapshot");
+  ok(
+    true,
+    "takeSnapshotAndCensus() produces the correct sequence of states in a snapshot"
+  );
   const snapshot = store.getState().snapshots[0];
   ok(snapshot.treeMap, "snapshot has tree map census data");
   ok(snapshot.selected, "snapshot is selected");

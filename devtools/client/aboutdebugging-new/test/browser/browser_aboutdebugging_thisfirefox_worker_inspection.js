@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+const {
+  gDevToolsBrowser,
+} = require("devtools/client/framework/devtools-browser");
 
 add_task(async function() {
   const thisFirefoxClient = createThisFirefoxClientMock();
@@ -29,7 +31,9 @@ add_task(async function() {
 
   const runtimeClientFactoryMock = createRuntimeClientFactoryMock();
   runtimeClientFactoryMock.createClientForRuntime = runtime => {
-    const { RUNTIMES } = require("devtools/client/aboutdebugging-new/src/constants");
+    const {
+      RUNTIMES,
+    } = require("devtools/client/aboutdebugging-new/src/constants");
     if (runtime.id === RUNTIMES.THIS_FIREFOX) {
       return thisFirefoxClient;
     }
@@ -38,7 +42,7 @@ add_task(async function() {
 
   info("Enable mocks");
   enableRuntimeClientFactoryMock(runtimeClientFactoryMock);
-  const originalOpenWorkerForToolbox =  gDevToolsBrowser.openWorkerToolbox;
+  const originalOpenWorkerForToolbox = gDevToolsBrowser.openWorkerToolbox;
   registerCleanupFunction(() => {
     disableRuntimeClientFactoryMock();
     gDevToolsBrowser.openWorkerToolbox = originalOpenWorkerForToolbox;
@@ -48,14 +52,24 @@ add_task(async function() {
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Open a toolbox to debug the worker");
-  const { devtoolsTab, devtoolsWindow } =
-    await openAboutDevtoolsToolbox(document, tab, window, testWorker.name, false);
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window,
+    testWorker.name,
+    false
+  );
 
-  info("Check whether the correct actor front will be opened in worker toolbox");
+  info(
+    "Check whether the correct actor front will be opened in worker toolbox"
+  );
   const url = new window.URL(devtoolsWindow.location.href);
   const workerID = url.searchParams.get("id");
-  is(workerID, testWorker.id,
-     "Correct actor front will be opened in worker toolbox");
+  is(
+    workerID,
+    testWorker.id,
+    "Correct actor front will be opened in worker toolbox"
+  );
 
   await removeTab(devtoolsTab);
   await waitUntil(() => !findDebugTargetByText("Toolbox - ", document));

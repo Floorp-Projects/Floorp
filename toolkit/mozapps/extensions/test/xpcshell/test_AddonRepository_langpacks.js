@@ -1,7 +1,10 @@
 const PREF_GET_LANGPACKS = "extensions.getAddons.langpacks.url";
 
-let server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-Services.prefs.setStringPref(PREF_GET_LANGPACKS, "http://example.com/langpacks.json");
+let server = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
+Services.prefs.setStringPref(
+  PREF_GET_LANGPACKS,
+  "http://example.com/langpacks.json"
+);
 
 add_task(async function test_getlangpacks() {
   function setData(data) {
@@ -83,11 +86,18 @@ add_task(async function test_getlangpacks() {
   equal(result.length, 2, "Got 2 results");
 
   deepEqual(result[0], EXPECTED[0], "Got expected result for simple entry");
-  deepEqual(result[1], EXPECTED[1], "Got expected result for multi-platform entry");
+  deepEqual(
+    result[1],
+    EXPECTED[1],
+    "Got expected result for multi-platform entry"
+  );
 
   setData("not valid json");
-  await Assert.rejects(AddonRepository.getAvailableLangpacks(),
-                       /SyntaxError/, "Got parse error on invalid JSON");
+  await Assert.rejects(
+    AddonRepository.getAvailableLangpacks(),
+    /SyntaxError/,
+    "Got parse error on invalid JSON"
+  );
 });
 
 // Tests that cookies are not sent with langpack requests.
@@ -95,17 +105,30 @@ add_task(async function test_cookies() {
   let lastRequest = null;
   server.registerPathHandler("/langpacks.json", (request, response) => {
     lastRequest = request;
-    response.write(JSON.stringify({results: []}));
+    response.write(JSON.stringify({ results: [] }));
   });
 
   const COOKIE = "test";
   let expiration = Date.now() / 1000 + 60 * 60;
-  Services.cookies.add("example.com", "/", COOKIE, "testing",
-                       false, false, false, expiration, {},
-                       Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    "example.com",
+    "/",
+    COOKIE,
+    "testing",
+    false,
+    false,
+    false,
+    expiration,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
 
   await AddonRepository.getAvailableLangpacks();
 
   notEqual(lastRequest, null, "Received langpack request");
-  equal(lastRequest.hasHeader("Cookie"), false, "Langpack request has no cookies");
+  equal(
+    lastRequest.hasHeader("Cookie"),
+    false,
+    "Langpack request has no cookies"
+  );
 });

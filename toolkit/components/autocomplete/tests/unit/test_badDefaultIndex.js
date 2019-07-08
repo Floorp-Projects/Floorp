@@ -9,7 +9,9 @@
 function AutoCompleteNoMatchResult() {
   this.defaultIndex = 0;
 }
-AutoCompleteNoMatchResult.prototype = Object.create(AutoCompleteResultBase.prototype);
+AutoCompleteNoMatchResult.prototype = Object.create(
+  AutoCompleteResultBase.prototype
+);
 
 /**
  * A results that wants to defaultComplete to an index greater than the number
@@ -20,14 +22,17 @@ function AutoCompleteBadIndexResult(aValues, aDefaultIndex) {
   this._values = aValues;
   this.defaultIndex = aDefaultIndex;
 }
-AutoCompleteBadIndexResult.prototype = Object.create(AutoCompleteResultBase.prototype);
+AutoCompleteBadIndexResult.prototype = Object.create(
+  AutoCompleteResultBase.prototype
+);
 
 add_test(function autocomplete_noMatch_success() {
   const INPUT_STR = "moz";
 
-  let searchNoMatch =
-    new AutoCompleteSearchBase("searchNoMatch",
-                               new AutoCompleteNoMatchResult());
+  let searchNoMatch = new AutoCompleteSearchBase(
+    "searchNoMatch",
+    new AutoCompleteNoMatchResult()
+  );
   registerAutoCompleteSearch(searchNoMatch);
 
   // Make an AutoCompleteInput that uses our search and confirms results.
@@ -41,8 +46,9 @@ add_test(function autocomplete_noMatch_success() {
   Assert.equal(input.selectionStart, strLen);
   Assert.equal(input.selectionEnd, strLen);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
   controller.input = input;
   controller.startSearch(INPUT_STR);
 
@@ -60,9 +66,10 @@ add_test(function autocomplete_defaultIndex_exceeds_matchCount() {
   const INPUT_STR = "moz";
 
   // Result returning matches, but a bad defaultIndex.
-  let searchBadIndex =
-    new AutoCompleteSearchBase("searchBadIndex",
-                               new AutoCompleteBadIndexResult(["mozillaTest"], 1));
+  let searchBadIndex = new AutoCompleteSearchBase(
+    "searchBadIndex",
+    new AutoCompleteBadIndexResult(["mozillaTest"], 1)
+  );
   registerAutoCompleteSearch(searchBadIndex);
 
   // Make an AutoCompleteInput that uses our search and confirms results.
@@ -76,8 +83,9 @@ add_test(function autocomplete_defaultIndex_exceeds_matchCount() {
   Assert.equal(input.selectionStart, strLen);
   Assert.equal(input.selectionEnd, strLen);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
   controller.input = input;
   controller.startSearch(INPUT_STR);
 

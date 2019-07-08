@@ -6,11 +6,16 @@
 /* global EVENTS */
 
 // React & Redux
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const TreeView = createFactory(require("devtools/client/shared/components/tree/TreeView"));
+const TreeView = createFactory(
+  require("devtools/client/shared/components/tree/TreeView")
+);
 // Reps
 const { MODE } = require("devtools/client/shared/components/reps/reps");
 
@@ -112,8 +117,10 @@ class AccessibilityTree extends Component {
     const { accessibles, walker, dispatch } = this.props;
     parent = parent || walker;
 
-    if (accessibles.has(accessible.actorID) ||
-        accessibles.has(parent.actorID)) {
+    if (
+      accessibles.has(accessible.actorID) ||
+      accessibles.has(parent.actorID)
+    ) {
       dispatch(fetchChildren(parent));
     }
   }
@@ -141,13 +148,16 @@ class AccessibilityTree extends Component {
    * Render Accessibility panel content
    */
   render() {
-    const columns = [{
-      "id": "default",
-      "title": L10N.getStr("accessibility.role"),
-    }, {
-      "id": "value",
-      "title": L10N.getStr("accessibility.name"),
-    }];
+    const columns = [
+      {
+        id: "default",
+        title: L10N.getStr("accessibility.role"),
+      },
+      {
+        id: "value",
+        title: L10N.getStr("accessibility.name"),
+      },
+    ];
 
     const {
       accessibles,
@@ -167,42 +177,46 @@ class AccessibilityTree extends Component {
     const renderRow = rowProps => {
       const { object } = rowProps.member;
       const highlighted = object === highlightedItem;
-      return AccessibilityRow(Object.assign({}, rowProps, {
-        walker,
-        hasContextMenu,
-        highlighted,
-        decorator: {
-          getRowClass: function() {
-            return highlighted ? ["highlighted"] : [];
+      return AccessibilityRow(
+        Object.assign({}, rowProps, {
+          walker,
+          hasContextMenu,
+          highlighted,
+          decorator: {
+            getRowClass: function() {
+              return highlighted ? ["highlighted"] : [];
+            },
           },
-        },
-      }));
+        })
+      );
     };
     const className = filtered ? "filtered" : undefined;
 
-    return (
-      TreeView({
-        object: walker,
-        mode: MODE.SHORT,
-        provider: new Provider(accessibles, filtered, dispatch),
-        columns: columns,
-        className,
-        renderValue: this.renderValue,
-        renderRow,
-        label: L10N.getStr("accessibility.treeName"),
-        header: true,
-        expandedNodes: expanded,
-        selected,
-        onClickRow(nodePath, event) {
-          if (event.target.classList.contains("theme-twisty")) {
-            this.toggle(nodePath);
-          }
+    return TreeView({
+      object: walker,
+      mode: MODE.SHORT,
+      provider: new Provider(accessibles, filtered, dispatch),
+      columns: columns,
+      className,
+      renderValue: this.renderValue,
+      renderRow,
+      label: L10N.getStr("accessibility.treeName"),
+      header: true,
+      expandedNodes: expanded,
+      selected,
+      onClickRow(nodePath, event) {
+        if (event.target.classList.contains("theme-twisty")) {
+          this.toggle(nodePath);
+        }
 
-          this.selectRow(
-            this.rows.find(row => row.props.member.path === nodePath),
-            { preventAutoScroll: true });
-        },
-        onContextMenuTree: hasContextMenu && function(e) {
+        this.selectRow(
+          this.rows.find(row => row.props.member.path === nodePath),
+          { preventAutoScroll: true }
+        );
+      },
+      onContextMenuTree:
+        hasContextMenu &&
+        function(e) {
           // If context menu event is triggered on (or bubbled to) the TreeView, it was
           // done via keyboard. Open context menu for currently selected row.
           let row = this.getSelectedRow();
@@ -213,8 +227,7 @@ class AccessibilityTree extends Component {
           row = row.getWrappedInstance();
           row.onContextMenu(e);
         },
-      })
-    );
+    });
   }
 }
 

@@ -6,13 +6,15 @@
 do_get_profile();
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  // OS.File doesn't like to be first imported during shutdown
-const {Sqlite} = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
-const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+// OS.File doesn't like to be first imported during shutdown
+const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 
 function getConnection(dbName, extraOptions = {}) {
   let path = dbName + ".sqlite";
-  let options = {path};
+  let options = { path };
   for (let [k, v] of Object.entries(extraOptions)) {
     options[k] = v;
   }
@@ -39,17 +41,19 @@ async function getDummyDatabase(name, extraOptions = {}) {
 
 function sleep(ms) {
   return new Promise(resolve => {
-    let timer = Cc["@mozilla.org/timer;1"]
-                  .createInstance(Ci.nsITimer);
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
-    timer.initWithCallback({
-      notify() {
-        resolve();
+    timer.initWithCallback(
+      {
+        notify() {
+          resolve();
+        },
       },
-    }, ms, timer.TYPE_ONE_SHOT);
+      ms,
+      timer.TYPE_ONE_SHOT
+    );
   });
 }
-
 
 //
 // -----------  Don't add a test after this one, as it shuts down Sqlite.jsm
@@ -61,40 +65,43 @@ add_task(async function test_shutdown_clients() {
 
   let sleepStarted = false;
   let sleepComplete = false;
-  Sqlite.shutdown.addBlocker("test_sqlite.js shutdown blocker (sleep)",
+  Sqlite.shutdown.addBlocker(
+    "test_sqlite.js shutdown blocker (sleep)",
     async function() {
       sleepStarted = true;
       await sleep(100);
       sleepComplete = true;
-    });
-  assertions.push({name: "sleepStarted", value: () => sleepStarted});
-  assertions.push({name: "sleepComplete", value: () => sleepComplete});
+    }
+  );
+  assertions.push({ name: "sleepStarted", value: () => sleepStarted });
+  assertions.push({ name: "sleepComplete", value: () => sleepComplete });
 
-  Sqlite.shutdown.addBlocker("test_sqlite.js shutdown blocker (immediate)",
-    true);
+  Sqlite.shutdown.addBlocker(
+    "test_sqlite.js shutdown blocker (immediate)",
+    true
+  );
 
   let dbOpened = false;
   let dbClosed = false;
 
-  Sqlite.shutdown.addBlocker("test_sqlite.js shutdown blocker (open a connection during shutdown)",
+  Sqlite.shutdown.addBlocker(
+    "test_sqlite.js shutdown blocker (open a connection during shutdown)",
     async function() {
       let db = await getDummyDatabase("opened during shutdown");
       dbOpened = true;
-      db.close().then(
-        () => dbClosed = true
-      ); // Don't wait for this task to complete, Sqlite.jsm must wait automatically
-  });
+      db.close().then(() => (dbClosed = true)); // Don't wait for this task to complete, Sqlite.jsm must wait automatically
+    }
+  );
 
-  assertions.push({name: "dbOpened", value: () => dbOpened});
-  assertions.push({name: "dbClosed", value: () => dbClosed});
+  assertions.push({ name: "dbOpened", value: () => dbOpened });
+  assertions.push({ name: "dbClosed", value: () => dbClosed });
 
   info("Now shutdown Sqlite.jsm synchronously");
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   AsyncShutdown.profileBeforeChange._trigger();
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 
-
-  for (let {name, value} of assertions) {
+  for (let { name, value } of assertions) {
     info("Checking: " + name);
     Assert.ok(value());
   }

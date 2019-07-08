@@ -6,8 +6,11 @@
 /* import-globals-from ext-utils.js */
 
 // Import the android BrowserActions module.
-ChromeUtils.defineModuleGetter(this, "BrowserActions",
-                               "resource://gre/modules/BrowserActions.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserActions",
+  "resource://gre/modules/BrowserActions.jsm"
+);
 
 // WeakMap[Extension -> BrowserAction]
 let browserActionMap = new WeakMap();
@@ -27,10 +30,14 @@ class BrowserAction extends EventEmitter {
 
     this.tabManager = extension.tabManager;
 
-    this.tabContext.on("tab-selected", // eslint-disable-line mozilla/balanced-listeners
-                       (evt, tabId) => { this.onTabSelected(tabId); });
-    this.tabContext.on("tab-closed", // eslint-disable-line mozilla/balanced-listeners
-                       (evt, tabId) => { this.onTabClosed(tabId); });
+    // eslint-disable-next-line mozilla/balanced-listeners
+    this.tabContext.on("tab-selected", (evt, tabId) => {
+      this.onTabSelected(tabId);
+    });
+    // eslint-disable-next-line mozilla/balanced-listeners
+    this.tabContext.on("tab-closed", (evt, tabId) => {
+      this.onTabClosed(tabId);
+    });
 
     BrowserActions.register(this);
   }
@@ -58,7 +65,7 @@ class BrowserAction extends EventEmitter {
    */
   onTabSelected(tabId) {
     let name = this.tabContext.get(tabId).name || this.defaults.name;
-    BrowserActions.update(this.uuid, {name});
+    BrowserActions.update(this.uuid, { name });
   }
 
   /**
@@ -92,7 +99,7 @@ class BrowserAction extends EventEmitter {
     }
 
     if (!tab || tab.getActive()) {
-      BrowserActions.update(this.uuid, {[prop]: value});
+      BrowserActions.update(this.uuid, { [prop]: value });
     }
   }
 
@@ -123,15 +130,15 @@ class BrowserAction extends EventEmitter {
 
 this.browserAction = class extends ExtensionAPI {
   onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
+    let { extension } = this;
+    let { manifest } = extension;
 
     let browserAction = new BrowserAction(manifest.browser_action, extension);
     browserActionMap.set(extension, browserAction);
   }
 
   onShutdown() {
-    let {extension} = this;
+    let { extension } = this;
 
     if (browserActionMap.has(extension)) {
       browserActionMap.get(extension).shutdown();
@@ -140,8 +147,8 @@ this.browserAction = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    const {extension} = context;
-    const {tabManager} = extension;
+    const { extension } = context;
+    const { tabManager } = extension;
 
     function getTab(tabId) {
       if (tabId !== null) {
@@ -167,13 +174,13 @@ this.browserAction = class extends ExtensionAPI {
         }).api(),
 
         setTitle: function(details) {
-          let {tabId, title} = details;
+          let { tabId, title } = details;
           let tab = getTab(tabId);
           browserActionMap.get(extension).setProperty(tab, "name", title);
         },
 
         getTitle: function(details) {
-          let {tabId} = details;
+          let { tabId } = details;
           let tab = getTab(tabId);
           let title = browserActionMap.get(extension).getProperty(tab, "name");
           return Promise.resolve(title);

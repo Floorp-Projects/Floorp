@@ -21,7 +21,7 @@
 #include "mozilla/ipc/MessageChannel.h"  // for MessageChannel, etc
 #include "mozilla/ipc/Transport.h"       // for Transport
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/gfx/Point.h"           // for IntSize
+#include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/media/MediaSystemResourceManager.h"  // for MediaSystemResourceManager
 #include "mozilla/media/MediaSystemResourceManagerChild.h"  // for MediaSystemResourceManagerChild

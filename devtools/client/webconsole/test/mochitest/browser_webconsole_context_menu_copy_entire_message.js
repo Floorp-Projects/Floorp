@@ -32,7 +32,7 @@ httpServer.registerPathHandler("/test.js", function(request, response) {
 
 const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/`;
 
- // RegExp that validates copied text for log lines.
+// RegExp that validates copied text for log lines.
 const LOG_FORMAT_WITH_TIMESTAMP = /^[\d:.]+ .+/;
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 
@@ -54,7 +54,9 @@ add_task(async function() {
 
   // Disable timestamp and wait until timestamp are not displayed anymore.
   await pushPref(PREF_MESSAGE_TIMESTAMP, false);
-  await waitFor(() => hud.ui.outputNode.querySelector(".message .timestamp") === null);
+  await waitFor(
+    () => hud.ui.outputNode.querySelector(".message .timestamp") === null
+  );
 
   info("Test copy menu item without timestamp");
   await testMessagesCopy(hud, false);
@@ -72,12 +74,18 @@ async function testMessagesCopy(hud, timestamp) {
   let lines = clipboardText.split(newLineString);
   is(lines.length, 2, "There are 2 lines in the copied text");
   is(lines[1], "", "The last line is an empty new line");
-  is(lines[0],
-    `${timestamp ? getTimestampText(message) + " " : ""}simple text message test.js:3:15`,
-    "Line of simple log message has expected text");
+  is(
+    lines[0],
+    `${
+      timestamp ? getTimestampText(message) + " " : ""
+    }simple text message test.js:3:15`,
+    "Line of simple log message has expected text"
+  );
   if (timestamp) {
-    ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
-      "Log line has the right format:\n" + lines[0]);
+    ok(
+      LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
+      "Log line has the right format:\n" + lines[0]
+    );
   }
 
   info("Test copy menu item for the console.trace message");
@@ -91,17 +99,29 @@ async function testMessagesCopy(hud, timestamp) {
   lines = clipboardText.split(newLineString);
   is(lines.length, 4, "There are 4 lines in the copied text");
   is(lines[lines.length - 1], "", "The last line is an empty new line");
-  is(lines[0],
-    `${timestamp ? getTimestampText(message) + " " : ""}console.trace() test.js:6:17`,
-    "Stacktrace first line has the expected text");
+  is(
+    lines[0],
+    `${
+      timestamp ? getTimestampText(message) + " " : ""
+    }console.trace() test.js:6:17`,
+    "Stacktrace first line has the expected text"
+  );
   if (timestamp) {
-    ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
-      "Log line has the right format:\n" + lines[0]);
+    ok(
+      LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
+      "Log line has the right format:\n" + lines[0]
+    );
   }
-  is(lines[1], `    wrapper ${TEST_URI}test.js:6`,
-    "Stacktrace first line has the expected text");
-  is(lines[2], `    logStuff ${TEST_URI}test.js:9`,
-    "Stacktrace second line has the expected text");
+  is(
+    lines[1],
+    `    wrapper ${TEST_URI}test.js:6`,
+    "Stacktrace first line has the expected text"
+  );
+  is(
+    lines[2],
+    `    logStuff ${TEST_URI}test.js:9`,
+    "Stacktrace second line has the expected text"
+  );
 
   info("Test copy menu item for the error message");
   message = await waitFor(() => findMessage(hud, "Error:"));
@@ -110,33 +130,54 @@ async function testMessagesCopy(hud, timestamp) {
   clipboardText = await copyMessageContent(hud, message);
   ok(true, "Clipboard text was found and saved");
   lines = clipboardText.split(newLineString);
-  is(lines[0], `${timestamp ? getTimestampText(message) + " " : ""}Error: "error object"`,
-    "Error object first line has expected text");
+  is(
+    lines[0],
+    `${timestamp ? getTimestampText(message) + " " : ""}Error: "error object"`,
+    "Error object first line has expected text"
+  );
   if (timestamp) {
-    ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
-      "Log line has the right format:\n" + lines[0]);
+    ok(
+      LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
+      "Log line has the right format:\n" + lines[0]
+    );
   }
-  is(lines[1], `    wrapper ${TEST_URI}test.js:5`,
-    "Error Stacktrace first line has the expected text");
-  is(lines[2], `    logStuff ${TEST_URI}test.js:9`,
-    "Error Stacktrace second line has the expected text");
+  is(
+    lines[1],
+    `    wrapper ${TEST_URI}test.js:5`,
+    "Error Stacktrace first line has the expected text"
+  );
+  is(
+    lines[2],
+    `    logStuff ${TEST_URI}test.js:9`,
+    "Error Stacktrace second line has the expected text"
+  );
 
   info("Test copy menu item for the reference error message");
   message = await waitFor(() => findMessage(hud, "ReferenceError:"));
   clipboardText = await copyMessageContent(hud, message);
   ok(true, "Clipboard text was found and saved");
   lines = clipboardText.split(newLineString);
-  is(lines[0], (timestamp ? getTimestampText(message) + " " : "") +
-    "ReferenceError: z is not defined test.js:11:5",
-    "ReferenceError first line has expected text");
+  is(
+    lines[0],
+    (timestamp ? getTimestampText(message) + " " : "") +
+      "ReferenceError: z is not defined test.js:11:5",
+    "ReferenceError first line has expected text"
+  );
   if (timestamp) {
-    ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
-      "Log line has the right format:\n" + lines[0]);
+    ok(
+      LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
+      "Log line has the right format:\n" + lines[0]
+    );
   }
-  ok(!!message.querySelector(".learn-more-link"),
-    "There is a Learn More link in the ReferenceError message");
-  is(clipboardText.toLowerCase().includes("Learn More"), false,
-    "The Learn More text wasn't put in the clipboard");
+  ok(
+    !!message.querySelector(".learn-more-link"),
+    "There is a Learn More link in the ReferenceError message"
+  );
+  is(
+    clipboardText.toLowerCase().includes("Learn More"),
+    false,
+    "The Learn More text wasn't put in the clipboard"
+  );
 
   message = await waitFor(() => findMessage(hud, "repeated 2"));
   clipboardText = await copyMessageContent(hud, message);

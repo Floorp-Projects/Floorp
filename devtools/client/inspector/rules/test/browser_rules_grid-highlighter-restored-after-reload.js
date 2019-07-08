@@ -35,8 +35,8 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   info("Check that the grid highlighter can be displayed");
-  const {inspector, view} = await openRuleView();
-  const {highlighters} = view;
+  const { inspector, view } = await openRuleView();
+  const { highlighters } = view;
 
   await selectNode("#grid", inspector);
   const container = getRuleViewProperty(view, "#grid", "display").valueSpan;
@@ -55,11 +55,14 @@ add_task(async function() {
   let { restored } = await onStateRestored;
   ok(restored, "The highlighter state was restored");
 
-  info("Check that the grid highlighter can be displayed after reloading the page");
+  info(
+    "Check that the grid highlighter can be displayed after reloading the page"
+  );
   is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
 
   info("Navigate to another URL, and check that the highlighter is hidden");
-  const otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
+  const otherUri =
+    "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
   onStateRestored = highlighters.once("grid-state-restored");
   await navigateTo(inspector, otherUri);
   ({ restored } = await onStateRestored);

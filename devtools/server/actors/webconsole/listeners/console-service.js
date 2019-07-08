@@ -4,11 +4,11 @@
 
 "use strict";
 
-const {Ci} = require("chrome");
-const {isWindowIncluded} = require("devtools/shared/layout/utils");
+const { Ci } = require("chrome");
+const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
-const {WebConsoleUtils} = require("devtools/server/actors/webconsole/utils");
+const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
 
 // The page errors listener
 
@@ -31,8 +31,7 @@ function ConsoleServiceListener(window, listener) {
 }
 exports.ConsoleServiceListener = ConsoleServiceListener;
 
-ConsoleServiceListener.prototype =
-{
+ConsoleServiceListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
 
   /**
@@ -68,13 +67,17 @@ ConsoleServiceListener.prototype =
     }
 
     if (this.window) {
-      if (!(message instanceof Ci.nsIScriptError) ||
-          !message.outerWindowID ||
-          !this.isCategoryAllowed(message.category)) {
+      if (
+        !(message instanceof Ci.nsIScriptError) ||
+        !message.outerWindowID ||
+        !this.isCategoryAllowed(message.category)
+      ) {
         return;
       }
 
-      const errorWindow = Services.wm.getOuterWindowWithId(message.outerWindowID);
+      const errorWindow = Services.wm.getOuterWindowWithId(
+        message.outerWindowID
+      );
       if (!errorWindow || !isWindowIncluded(this.window, errorWindow)) {
         return;
       }
@@ -128,7 +131,7 @@ ConsoleServiceListener.prototype =
     // if !this.window, we're in a browser console. Still need to filter
     // private messages.
     if (!this.window) {
-      return errors.filter((error) => {
+      return errors.filter(error => {
         if (error instanceof Ci.nsIScriptError) {
           if (!includePrivate && error.isFromPrivateWindow) {
             return false;
@@ -141,14 +144,16 @@ ConsoleServiceListener.prototype =
 
     const ids = WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
 
-    return errors.filter((error) => {
+    return errors.filter(error => {
       if (error instanceof Ci.nsIScriptError) {
         if (!includePrivate && error.isFromPrivateWindow) {
           return false;
         }
-        if (ids &&
-            (!ids.includes(error.innerWindowID) ||
-             !this.isCategoryAllowed(error.category))) {
+        if (
+          ids &&
+          (!ids.includes(error.innerWindowID) ||
+            !this.isCategoryAllowed(error.category))
+        ) {
           return false;
         }
       } else if (ids && ids[0]) {
@@ -167,8 +172,9 @@ ConsoleServiceListener.prototype =
     if (!this.window) {
       Services.console.reset();
     } else {
-      WebConsoleUtils.getInnerWindowIDsForFrames(this.window)
-        .forEach(id => Services.console.resetWindow(id));
+      WebConsoleUtils.getInnerWindowIDsForFrames(this.window).forEach(id =>
+        Services.console.resetWindow(id)
+      );
     }
   },
 

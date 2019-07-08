@@ -14,7 +14,9 @@ const { CallView } = require("../modules/widgets/tree-view");
 const { ThreadNode } = require("../modules/logic/tree-model");
 const { DetailsSubview } = require("./details-abstract-subview");
 
-const JITOptimizationsView = React.createFactory(require("../components/JITOptimizations"));
+const JITOptimizationsView = React.createFactory(
+  require("../components/JITOptimizations")
+);
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -22,7 +24,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
  * CallTree view containing profiler call tree, controlled by DetailsView.
  */
 const JsCallTreeView = extend(DetailsSubview, {
-
   rerenderPrefs: [
     "invert-call-tree",
     "show-platform-data",
@@ -67,16 +68,23 @@ const JsCallTreeView = extend(DetailsSubview, {
   render: function(interval = {}) {
     const recording = PerformanceController.getCurrentRecording();
     const profile = recording.getProfile();
-    const showOptimizations = PerformanceController.getOption("show-jit-optimizations");
+    const showOptimizations = PerformanceController.getOption(
+      "show-jit-optimizations"
+    );
 
     const options = {
       contentOnly: !PerformanceController.getOption("show-platform-data"),
       invertTree: PerformanceController.getOption("invert-call-tree"),
-      flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
+      flattenRecursion: PerformanceController.getOption(
+        "flatten-tree-recursion"
+      ),
       showOptimizationHint: showOptimizations,
     };
-    const threadNode =
-      this.threadNode = this._prepareCallTree(profile, interval, options);
+    const threadNode = (this.threadNode = this._prepareCallTree(
+      profile,
+      interval,
+      options
+    ));
     this._populateCallTree(threadNode, options);
 
     // For better or worse, re-rendering loses frame selection,
@@ -95,11 +103,14 @@ const JsCallTreeView = extend(DetailsSubview, {
   },
 
   _onFocus: function(treeItem) {
-    const showOptimizations = PerformanceController.getOption("show-jit-optimizations");
+    const showOptimizations = PerformanceController.getOption(
+      "show-jit-optimizations"
+    );
     const frameNode = treeItem.frame;
-    const optimizationSites = frameNode && frameNode.hasOptimizations()
-                            ? frameNode.getOptimizations().optimizationSites
-                            : [];
+    const optimizationSites =
+      frameNode && frameNode.hasOptimizations()
+        ? frameNode.getOptimizations().optimizationSites
+        : [];
 
     if (!showOptimizations || !frameNode || optimizationSites.length === 0) {
       this.hideOptimizations();
@@ -114,14 +125,15 @@ const JsCallTreeView = extend(DetailsSubview, {
       frameData,
       optimizationSites,
       onViewSourceInDebugger: (url, line, column) => {
-        PerformanceController.toolbox.viewSourceInDebugger(url, line, column)
-        .then(success => {
-          if (success) {
-            this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
-          } else {
-            this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
-          }
-        });
+        PerformanceController.toolbox
+          .viewSourceInDebugger(url, line, column)
+          .then(success => {
+            if (success) {
+              this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
+            } else {
+              this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
+            }
+          });
       },
     });
 
@@ -135,14 +147,15 @@ const JsCallTreeView = extend(DetailsSubview, {
    */
   _onLink: function(treeItem) {
     const { url, line, column } = treeItem.frame.getInfo();
-    PerformanceController.toolbox.viewSourceInDebugger(url, line, column)
-    .then(success => {
-      if (success) {
-        this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
-      } else {
-        this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
-      }
-    });
+    PerformanceController.toolbox
+      .viewSourceInDebugger(url, line, column)
+      .then(success => {
+        if (success) {
+          this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
+        } else {
+          this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
+        }
+      });
   },
 
   /**
@@ -152,8 +165,13 @@ const JsCallTreeView = extend(DetailsSubview, {
   _prepareCallTree: function(profile, { startTime, endTime }, options) {
     const thread = profile.threads[0];
     const { contentOnly, invertTree, flattenRecursion } = options;
-    const threadNode = new ThreadNode(thread,
-      { startTime, endTime, contentOnly, invertTree, flattenRecursion });
+    const threadNode = new ThreadNode(thread, {
+      startTime,
+      endTime,
+      contentOnly,
+      invertTree,
+      flattenRecursion,
+    });
 
     // Real profiles from nsProfiler (i.e. not synthesized from allocation
     // logs) always have a (root) node. Go down one level in the uninverted

@@ -4,13 +4,15 @@
 // Check that bookmarklets are returned by searches with searchTerms.
 
 var testData = [
-  { isInQuery: true,
+  {
+    isInQuery: true,
     isBookmark: true,
     title: "bookmark 1",
     uri: "http://mozilla.org/script/",
   },
 
-  { isInQuery: true,
+  {
+    isInQuery: true,
     isBookmark: true,
     title: "bookmark 2",
     uri: "javascript:alert('moz');",

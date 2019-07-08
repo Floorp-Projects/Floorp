@@ -11,20 +11,42 @@
     // require
     const { Cc, Ci, Cu, ChromeWorker } = require("chrome");
     const dumpn = require("devtools/shared/DevToolsUtils").dumpn;
-    factory.call(this, require, exports, module, { Cc, Ci, Cu }, ChromeWorker, dumpn);
+    factory.call(
+      this,
+      require,
+      exports,
+      module,
+      { Cc, Ci, Cu },
+      ChromeWorker,
+      dumpn
+    );
   } else {
     // Cu.import
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+    const { require } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
+    );
     this.isWorker = false;
     this.Promise = require("resource://gre/modules/Promise.jsm").Promise;
     this.console = console;
     factory.call(
-      this, require, this, { exports: this },
-      { Cc, Ci, Cu }, ChromeWorker, null
+      this,
+      require,
+      this,
+      { exports: this },
+      { Cc, Ci, Cu },
+      ChromeWorker,
+      null
     );
     this.EXPORTED_SYMBOLS = ["DevToolsWorker"];
   }
-}).call(this, function(require, exports, module, { Ci, Cc }, ChromeWorker, dumpn) {
+}.call(this, function(
+  require,
+  exports,
+  module,
+  { Ci, Cc },
+  ChromeWorker,
+  dumpn
+) {
   let MESSAGE_COUNTER = 0;
 
   /**
@@ -66,27 +88,33 @@
    */
   DevToolsWorker.prototype.performTask = function(task, data, transfer) {
     if (this._destroyed) {
-      return Promise.reject("Cannot call performTask on a destroyed DevToolsWorker");
+      return Promise.reject(
+        "Cannot call performTask on a destroyed DevToolsWorker"
+      );
     }
     const worker = this._worker;
     const id = ++MESSAGE_COUNTER;
     const payload = { task, id, data };
 
     if (this._verbose && dumpn) {
-      dumpn("Sending message to worker" +
-            (this._name ? (" (" + this._name + ")") : "") +
-            ": " +
-            JSON.stringify(payload, null, 2));
+      dumpn(
+        "Sending message to worker" +
+          (this._name ? " (" + this._name + ")" : "") +
+          ": " +
+          JSON.stringify(payload, null, 2)
+      );
     }
     worker.postMessage(payload, transfer);
 
     return new Promise((resolve, reject) => {
       const listener = ({ data: result }) => {
         if (this._verbose && dumpn) {
-          dumpn("Received message from worker" +
-                (this._name ? (" (" + this._name + ")") : "") +
-                ": " +
-                JSON.stringify(result, null, 2));
+          dumpn(
+            "Received message from worker" +
+              (this._name ? " (" + this._name + ")" : "") +
+              ": " +
+              JSON.stringify(result, null, 2)
+          );
         }
 
         if (result.id !== id) {
@@ -137,9 +165,11 @@
    * @return {function}
    */
   function workerify(fn) {
-    console.warn("`workerify` should only be used in tests or measuring performance. " +
-                 "This creates an object URL on the browser window, and should not be " +
-                 "used in production.");
+    console.warn(
+      "`workerify` should only be used in tests or measuring performance. " +
+        "This creates an object URL on the browser window, and should not be " +
+        "used in production."
+    );
     // Fetch modules here as we don't want to include it normally.
     const Services = require("Services");
     const { URL, Blob } = Services.wm.getMostRecentWindow("navigator:browser");
@@ -169,4 +199,4 @@
             const { createTask } = require("resource://devtools/shared/worker/helper.js");
             createTask(self, "workerifiedTask", ${fn.toString()});`;
   }
-});
+}));

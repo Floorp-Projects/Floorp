@@ -8,13 +8,19 @@ const { shallow, mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
-const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
-const { setupStore } = require("devtools/client/accessibility/test/jest/helpers");
+const Provider = createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
+const {
+  setupStore,
+} = require("devtools/client/accessibility/test/jest/helpers");
 
 const Badge = require("devtools/client/accessibility/components/Badge");
 const TextLabelBadgeClass = require("devtools/client/accessibility/components/TextLabelBadge");
 const TextLabelBadge = createFactory(TextLabelBadgeClass);
-const { accessibility: { SCORES } } = require("devtools/shared/constants");
+const {
+  accessibility: { SCORES },
+} = require("devtools/shared/constants");
 
 function testBadge(wrapper) {
   expect(wrapper.html()).toMatchSnapshot();
@@ -38,25 +44,40 @@ describe("TextLabelBadge component:", () => {
   });
 
   it("fail render", () => {
-    const wrapper = mount(Provider({ store }, TextLabelBadge({
-      score: SCORES.FAIL,
-    })));
+    const wrapper = mount(
+      Provider(
+        { store },
+        TextLabelBadge({
+          score: SCORES.FAIL,
+        })
+      )
+    );
 
     testBadge(wrapper);
   });
 
   it("warning render", () => {
-    const wrapper = mount(Provider({ store }, TextLabelBadge({
-      score: SCORES.WARNING,
-    })));
+    const wrapper = mount(
+      Provider(
+        { store },
+        TextLabelBadge({
+          score: SCORES.WARNING,
+        })
+      )
+    );
 
     testBadge(wrapper);
   });
 
   it("best practices render", () => {
-    const wrapper = mount(Provider({ store }, TextLabelBadge({
-      score: SCORES.BEST_PRACTICES,
-    })));
+    const wrapper = mount(
+      Provider(
+        { store },
+        TextLabelBadge({
+          score: SCORES.BEST_PRACTICES,
+        })
+      )
+    );
 
     testBadge(wrapper);
   });

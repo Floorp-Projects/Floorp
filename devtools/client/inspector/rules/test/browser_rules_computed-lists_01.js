@@ -18,7 +18,7 @@ var TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   await testExpandersShown(inspector, view);
 });
@@ -32,16 +32,30 @@ function testExpandersShown(inspector, view) {
   is(rule.textProps[1].name, "top", "Second property is top.");
 
   info("Check that the expanders are shown correctly");
-  is(rule.textProps[0].editor.expander.style.display, "inline-block",
-      "margin expander is displayed.");
-  is(rule.textProps[1].editor.expander.style.display, "none",
-      "top expander is hidden.");
-  ok(!rule.textProps[0].editor.expander.hasAttribute("open"),
-      "margin computed list is closed.");
-  ok(!rule.textProps[1].editor.expander.hasAttribute("open"),
-      "top computed list is closed.");
-  ok(!rule.textProps[0].editor.computed.hasChildNodes(),
-      "margin computed list is empty before opening.");
-  ok(!rule.textProps[1].editor.computed.hasChildNodes(),
-      "top computed list is empty.");
+  is(
+    rule.textProps[0].editor.expander.style.display,
+    "inline-block",
+    "margin expander is displayed."
+  );
+  is(
+    rule.textProps[1].editor.expander.style.display,
+    "none",
+    "top expander is hidden."
+  );
+  ok(
+    !rule.textProps[0].editor.expander.hasAttribute("open"),
+    "margin computed list is closed."
+  );
+  ok(
+    !rule.textProps[1].editor.expander.hasAttribute("open"),
+    "top computed list is closed."
+  );
+  ok(
+    !rule.textProps[0].editor.computed.hasChildNodes(),
+    "margin computed list is empty before opening."
+  );
+  ok(
+    !rule.textProps[1].editor.computed.hasChildNodes(),
+    "top computed list is empty."
+  );
 }

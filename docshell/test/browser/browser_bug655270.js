@@ -11,7 +11,7 @@
 function test() {
   const testDir = "http://mochi.test:8888/browser/docshell/test/browser/";
   const origURL = testDir + "file_bug655270.html";
-  const newURL  = origURL + "?new_page";
+  const newURL = origURL + "?new_page";
 
   const faviconURL = testDir + "favicon_bug655270.ico";
 
@@ -26,8 +26,9 @@ function test() {
 
   let observer = {
     onPageChanged(aURI, aWhat, aValue) {
-      if (aWhat != Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON)
+      if (aWhat != Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
         return;
+      }
 
       if (aURI.spec == origURL) {
         is(aValue, faviconURL, "FaviconURL for original URI");
@@ -46,12 +47,12 @@ function test() {
       }
     },
 
-    onBeginUpdateBatch() { },
-    onEndUpdateBatch() { },
-    onTitleChanged() { },
-    onDeleteURI() { },
-    onClearHistory() { },
-    onDeleteVisits() { },
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onTitleChanged() {},
+    onDeleteURI() {},
+    onClearHistory() {},
+    onDeleteVisits() {},
     QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
   };
 

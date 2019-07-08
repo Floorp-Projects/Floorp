@@ -28,8 +28,12 @@ class RequestListColumnSetCookies extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    let { responseCookies: currResponseCookies = { cookies: [] } } = this.props.item;
-    let { responseCookies: nextResponseCookies = { cookies: [] } } = nextProps.item;
+    let {
+      responseCookies: currResponseCookies = { cookies: [] },
+    } = this.props.item;
+    let {
+      responseCookies: nextResponseCookies = { cookies: [] },
+    } = nextProps.item;
     currResponseCookies = currResponseCookies.cookies || currResponseCookies;
     nextResponseCookies = nextResponseCookies.cookies || nextResponseCookies;
     return currResponseCookies !== nextResponseCookies;
@@ -38,14 +42,14 @@ class RequestListColumnSetCookies extends Component {
   render() {
     let { responseCookies = { cookies: [] } } = this.props.item;
     responseCookies = responseCookies.cookies || responseCookies;
-    const responseCookiesLength = responseCookies.length > 0
-      ? responseCookies.length
-      : "";
-    return (
-      dom.td({
+    const responseCookiesLength =
+      responseCookies.length > 0 ? responseCookies.length : "";
+    return dom.td(
+      {
         className: "requests-list-column requests-list-set-cookies",
         title: responseCookiesLength,
-      }, responseCookiesLength)
+      },
+      responseCookiesLength
     );
   }
 }

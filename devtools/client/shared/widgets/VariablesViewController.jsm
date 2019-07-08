@@ -5,13 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-var {VariablesView} = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+var {
+  VariablesView,
+} = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
-var {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
+var { LocalizationHelper, ELLIPSIS } = require("devtools/shared/l10n");
 
 XPCOMUtils.defineLazyGetter(this, "VARIABLES_SORTING_ENABLED", () =>
   Services.prefs.getBoolPref("devtools.debugger.ui.variables-sorting-enabled")
@@ -212,7 +214,9 @@ VariablesViewController.prototype = {
     // We started slicing properties, and the slice is now small enough to be displayed
     const deferred = defer();
     // eslint-disable-next-line mozilla/use-returnValue
-    aGrip.propertyIterator.slice(aGrip.start, aGrip.count,
+    aGrip.propertyIterator.slice(
+      aGrip.start,
+      aGrip.count,
       ({ ownProperties }) => {
         // Add all the variable properties.
         if (Object.keys(ownProperties).length > 0) {
@@ -223,7 +227,8 @@ VariablesViewController.prototype = {
           });
         }
         deferred.resolve();
-      });
+      }
+    );
     return deferred.promise;
   },
 
@@ -257,36 +262,38 @@ VariablesViewController.prototype = {
           start: 0,
           count: iterator.count,
         };
-        this._populatePropertySlices(aTarget, sliceGrip)
-            .then(() => {
+        this._populatePropertySlices(aTarget, sliceGrip).then(() => {
           // Then enumerate the rest of the properties, like length, buffer, etc.
-              const options = {
-                ignoreIndexedProperties: true,
-                sort: true,
-                query: aQuery,
-              };
-              objectClient.enumProperties(options, ({ iterator }) => {
-                const sliceGrip = {
-                  type: "property-iterator",
-                  propertyIterator: iterator,
-                  start: 0,
-                  count: iterator.count,
-                };
-                deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
-              });
-            });
+          const options = {
+            ignoreIndexedProperties: true,
+            sort: true,
+            query: aQuery,
+          };
+          objectClient.enumProperties(options, ({ iterator }) => {
+            const sliceGrip = {
+              type: "property-iterator",
+              propertyIterator: iterator,
+              start: 0,
+              count: iterator.count,
+            };
+            deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
+          });
+        });
       });
     } else {
       // For objects, we just enumerate all the properties sorted by name.
-      objectClient.enumProperties({ sort: true, query: aQuery }, ({ iterator }) => {
-        const sliceGrip = {
-          type: "property-iterator",
-          propertyIterator: iterator,
-          start: 0,
-          count: iterator.count,
-        };
-        deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
-      });
+      objectClient.enumProperties(
+        { sort: true, query: aQuery },
+        ({ iterator }) => {
+          const sliceGrip = {
+            type: "property-iterator",
+            propertyIterator: iterator,
+            start: 0,
+            count: iterator.count,
+          };
+          deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
+        }
+      );
     }
     return deferred.promise;
   },
@@ -322,11 +329,17 @@ VariablesViewController.prototype = {
       const deferred = defer();
       const objectClient = this._getObjectClient(aGrip);
       objectClient.getProxySlots(aResponse => {
-        const target = aTarget.addItem("<target>", { value: aResponse.proxyTarget },
-          { internalItem: true });
+        const target = aTarget.addItem(
+          "<target>",
+          { value: aResponse.proxyTarget },
+          { internalItem: true }
+        );
         this.addExpander(target, aResponse.proxyTarget);
-        const handler = aTarget.addItem("<handler>", { value: aResponse.proxyHandler },
-          { internalItem: true });
+        const handler = aTarget.addItem(
+          "<handler>",
+          { value: aResponse.proxyHandler },
+          { internalItem: true }
+        );
         this.addExpander(handler, aResponse.proxyHandler);
         deferred.resolve();
       });
@@ -339,14 +352,24 @@ VariablesViewController.prototype = {
       if (state === "fulfilled") {
         this.addExpander(
           aTarget.addItem("<value>", { value }, { internalItem: true }),
-          value);
+          value
+        );
       } else if (state === "rejected") {
         this.addExpander(
-          aTarget.addItem("<reason>", { value: reason }, { internalItem: true }),
-          reason);
+          aTarget.addItem(
+            "<reason>",
+            { value: reason },
+            { internalItem: true }
+          ),
+          reason
+        );
       }
     } else if (["Map", "WeakMap", "Set", "WeakSet"].includes(aGrip.class)) {
-      const entriesList = aTarget.addItem("<entries>", {}, { internalItem: true });
+      const entriesList = aTarget.addItem(
+        "<entries>",
+        {},
+        { internalItem: true }
+      );
       entriesList.showArrow();
       this.addExpander(entriesList, {
         type: "entries-list",
@@ -355,17 +378,19 @@ VariablesViewController.prototype = {
     }
 
     // Fetch properties by slices if there is too many in order to prevent UI freeze.
-    if ("ownPropertyLength" in aGrip && aGrip.ownPropertyLength >= MAX_PROPERTY_ITEMS) {
-      return this._populateFromObjectWithIterator(aTarget, aGrip)
-                 .then(() => {
-                   const deferred = defer();
-                   const objectClient = this._getObjectClient(aGrip);
-                   objectClient.getPrototype(({ prototype }) => {
-                     this._populateObjectPrototype(aTarget, prototype);
-                     deferred.resolve();
-                   });
-                   return deferred.promise;
-                 });
+    if (
+      "ownPropertyLength" in aGrip &&
+      aGrip.ownPropertyLength >= MAX_PROPERTY_ITEMS
+    ) {
+      return this._populateFromObjectWithIterator(aTarget, aGrip).then(() => {
+        const deferred = defer();
+        const objectClient = this._getObjectClient(aGrip);
+        objectClient.getPrototype(({ prototype }) => {
+          this._populateObjectPrototype(aTarget, prototype);
+          deferred.resolve();
+        });
+        return deferred.promise;
+      });
     }
 
     return this._populateProperties(aTarget, aGrip);
@@ -416,7 +441,9 @@ VariablesViewController.prototype = {
             console.warn(aResponse.error + ": " + aResponse.message);
             return void deferred.resolve();
           }
-          this._populateWithClosure(aTarget, aResponse.scope).then(deferred.resolve);
+          this._populateWithClosure(aTarget, aResponse.scope).then(
+            deferred.resolve
+          );
         });
       } else {
         deferred.resolve();
@@ -446,7 +473,7 @@ VariablesViewController.prototype = {
       const label = StackFrameUtils.getScopeLabel(environment);
 
       // Block scopes may have the same label, so make addItem allow duplicates.
-      const closure = funcScope.addItem(label, undefined, {relaxed: true});
+      const closure = funcScope.addItem(label, undefined, { relaxed: true });
       closure.target.setAttribute("scope", "");
       closure.showArrow();
 
@@ -479,17 +506,20 @@ VariablesViewController.prototype = {
    */
   _populateWithEnvironmentBindings: function(aTarget, aBindings) {
     // Add nodes for every argument in the scope.
-    aTarget.addItems(aBindings.arguments.reduce((accumulator, arg) => {
-      const name = Object.getOwnPropertyNames(arg)[0];
-      const descriptor = arg[name];
-      accumulator[name] = descriptor;
-      return accumulator;
-    }, {}), {
-      // Arguments aren't sorted.
-      sorted: false,
-      // Expansion handlers must be set after the properties are added.
-      callback: this.addExpander,
-    });
+    aTarget.addItems(
+      aBindings.arguments.reduce((accumulator, arg) => {
+        const name = Object.getOwnPropertyNames(arg)[0];
+        const descriptor = arg[name];
+        accumulator[name] = descriptor;
+        return accumulator;
+      }, {}),
+      {
+        // Arguments aren't sorted.
+        sorted: false,
+        // Expansion handlers must be set after the properties are added.
+        callback: this.addExpander,
+      }
+    );
 
     // Add nodes for every other variable in the scope.
     aTarget.addItems(aBindings.variables, {
@@ -506,7 +536,7 @@ VariablesViewController.prototype = {
 
     // eslint-disable-next-line new-cap
     return new promise((resolve, reject) => {
-      objectClient.enumEntries((response) => {
+      objectClient.enumEntries(response => {
         if (response.error) {
           // Older server might not support the enumEntries method
           console.warn(response.error + ": " + response.message);
@@ -597,7 +627,9 @@ VariablesViewController.prototype = {
     }
     // Make sure the source grip is available.
     if (!aSource) {
-      return promise.reject(new Error("No actor grip was given for the variable."));
+      return promise.reject(
+        new Error("No actor grip was given for the variable.")
+      );
     }
 
     const deferred = defer();
@@ -612,12 +644,15 @@ VariablesViewController.prototype = {
     }
 
     if (aSource.type === "mapEntry" || aSource.type === "storageEntry") {
-      aTarget.addItems({
-        key: { value: aSource.preview.key },
-        value: { value: aSource.preview.value },
-      }, {
-        callback: this.addExpander,
-      });
+      aTarget.addItems(
+        {
+          key: { value: aSource.preview.key },
+          value: { value: aSource.preview.value },
+        },
+        {
+          callback: this.addExpander,
+        }
+      );
 
       return promise.resolve();
     }
@@ -679,7 +714,7 @@ VariablesViewController.prototype = {
   supportsSearch: function() {
     // FF40+ starts exposing ownPropertyLength on object actor's grip
     // as well as enumProperty which allows to query a subset of properties.
-    return this.objectActor && ("ownPropertyLength" in this.objectActor);
+    return this.objectActor && "ownPropertyLength" in this.objectActor;
   },
 
   /**
@@ -691,10 +726,11 @@ VariablesViewController.prototype = {
    *        The query string
    */
   performSearch: function(aScope, aToken) {
-    this._populateFromObjectWithIterator(aScope, this.objectActor, aToken)
-        .then(() => {
-          this.view.emit("fetched", "search", aScope);
-        });
+    this._populateFromObjectWithIterator(aScope, this.objectActor, aToken).then(
+      () => {
+        this.view.emit("fetched", "search", aScope);
+      }
+    );
   },
 
   /**
@@ -793,7 +829,7 @@ VariablesViewController.attach = function(aView, aOptions) {
 /**
  * Utility functions for handling stackframes.
  */
-var StackFrameUtils = this.StackFrameUtils = {
+var StackFrameUtils = (this.StackFrameUtils = {
   /**
    * Create a textual representation for the specified stack frame
    * to display in the stackframes container.
@@ -804,7 +840,7 @@ var StackFrameUtils = this.StackFrameUtils = {
   getFrameTitle: function(aFrame) {
     if (aFrame.type == "call") {
       const c = aFrame.callee;
-      return (c.name || c.userDisplayName || c.displayName || "(anonymous)");
+      return c.name || c.userDisplayName || c.displayName || "(anonymous)";
     }
     return "(" + aFrame.type + ")";
   },
@@ -836,14 +872,15 @@ var StackFrameUtils = this.StackFrameUtils = {
         break;
       case "function":
         const f = aEnv.function;
-        label += " [" +
+        label +=
+          " [" +
           (f.name || f.userDisplayName || f.displayName || "(anonymous)") +
-        "]";
+          "]";
         break;
     }
     return label;
   },
-};
+});
 
 /**
  * Check if the given value is a grip with an actor.
@@ -854,5 +891,5 @@ var StackFrameUtils = this.StackFrameUtils = {
  *         True if the given value is a grip with an actor.
  */
 function isActorGrip(grip) {
-  return grip && typeof (grip) == "object" && grip.actor;
+  return grip && typeof grip == "object" && grip.actor;
 }

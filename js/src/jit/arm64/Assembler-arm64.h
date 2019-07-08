@@ -69,6 +69,8 @@ static constexpr Register CallTempReg5{Registers::x14};
 
 static constexpr Register PreBarrierReg{Registers::x1};
 
+static constexpr Register InterpreterPCReg{Registers::x9};
+
 static constexpr Register ReturnReg{Registers::x0};
 static constexpr Register64 ReturnReg64(ReturnReg);
 static constexpr Register JSReturnReg{Registers::x2};

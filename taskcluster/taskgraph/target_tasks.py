@@ -474,7 +474,10 @@ def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
     def filter(task):
         # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be
         # uploaded
-        return task.kind in ('beetmover-geckoview', 'upload-symbols')
+        return (
+            task.attributes.get('shipping_product') == 'fennec' and
+            task.kind in ('beetmover-geckoview', 'upload-symbols')
+        )
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
@@ -494,6 +497,31 @@ def target_tasks_fennec_v64(full_task_graph, parameters, graph_config):
             return False
         if '-fennec64-' in attributes.get('raptor_try_name'):
             return True
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('android_power')
+def target_tasks_android_power(full_task_graph, parameters, graph_config):
+    """
+    Select tasks required for running android power tests
+    """
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        attributes = task.attributes
+
+        if platform and 'android' not in platform:
+            return False
+        if attributes.get('unittest_suite') != 'raptor':
+            return False
+        try_name = attributes.get('raptor_try_name')
+        if 'geckoview' not in try_name:
+            return False
+        if '-power' in try_name and 'pgo' in platform:
+            if '-speedometer-' in try_name:
+                return True
+            if '-scn-power-idle' in try_name:
+                return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 

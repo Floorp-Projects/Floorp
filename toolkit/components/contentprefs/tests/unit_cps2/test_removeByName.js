@@ -10,11 +10,10 @@ add_task(async function nonexistent() {
   await set("a.com", "foo", 1);
   await setGlobal("foo", 2);
 
-  await new Promise(resolve => cps.removeByName("bogus", null, makeCallback(resolve)));
-  await dbOK([
-    ["a.com", "foo", 1],
-    [null, "foo", 2],
-  ]);
+  await new Promise(resolve =>
+    cps.removeByName("bogus", null, makeCallback(resolve))
+  );
+  await dbOK([["a.com", "foo", 1], [null, "foo", 2]]);
   await getOK(["a.com", "foo"], 1);
   await getGlobalOK(["foo"], 2);
   await reset();
@@ -28,12 +27,10 @@ add_task(async function names() {
   await set("b.com", "foo", 5);
   await set("b.com", "bar", 6);
 
-  await new Promise(resolve => cps.removeByName("foo", null, makeCallback(resolve)));
-  await dbOK([
-    ["a.com", "bar", 2],
-    [null, "bar", 4],
-    ["b.com", "bar", 6],
-  ]);
+  await new Promise(resolve =>
+    cps.removeByName("foo", null, makeCallback(resolve))
+  );
+  await dbOK([["a.com", "bar", 2], [null, "bar", 4], ["b.com", "bar", 6]]);
   await getOK(["a.com", "foo"], undefined);
   await getOK(["a.com", "bar"], 2);
   await getGlobalOK(["foo"], undefined);
@@ -55,12 +52,10 @@ add_task(async function privateBrowsing() {
   await set("a.com", "foo", 7, context);
   await setGlobal("foo", 8, context);
   await set("b.com", "bar", 9, context);
-  await new Promise(resolve => cps.removeByName("bar", context, makeCallback(resolve)));
-  await dbOK([
-    ["a.com", "foo", 1],
-    [null, "foo", 3],
-    ["b.com", "foo", 5],
-  ]);
+  await new Promise(resolve =>
+    cps.removeByName("bar", context, makeCallback(resolve))
+  );
+  await dbOK([["a.com", "foo", 1], [null, "foo", 3], ["b.com", "foo", 5]]);
   await getOK(["a.com", "foo", context], 7);
   await getOK(["a.com", "bar", context], undefined);
   await getGlobalOK(["foo", context], 8);

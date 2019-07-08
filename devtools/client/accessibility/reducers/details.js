@@ -42,7 +42,7 @@ function onUpdateDetails(state, action) {
     return getInitialState();
   }
 
-  const [ DOMNode, relationObjects, audit ] = response;
+  const [DOMNode, relationObjects, audit] = response;
   const relations = {};
   relationObjects.forEach(({ type, targets }) => {
     relations[type] = targets.length === 1 ? targets[0] : targets;

@@ -15,10 +15,9 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -46,7 +45,8 @@ add_task(async function() {
       fullMimeType: "text/json; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 41),
       time: true,
-    });
+    }
+  );
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
@@ -60,13 +60,16 @@ add_task(async function() {
       fullMimeType: "text/json; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 54),
       time: true,
-    });
+    }
+  );
 
   info("Testing first request");
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
   await wait;
 
   testResponseTab("$_0123Fun", "Hello JSONP!");
@@ -74,8 +77,10 @@ add_task(async function() {
   info("Testing second request");
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[1]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[1]
+  );
   await wait;
 
   testResponseTab("$_4567Sad", "Hello weird JSONP!");
@@ -85,31 +90,59 @@ add_task(async function() {
   function testResponseTab(func, greeting) {
     const tabpanel = document.querySelector("#response-panel");
 
-    is(tabpanel.querySelector(".response-error-header") === null, true,
-      "The response error header doesn't have the intended visibility.");
-    is(tabpanel.querySelector(".tree-section .treeLabel").textContent,
+    is(
+      tabpanel.querySelector(".response-error-header") === null,
+      true,
+      "The response error header doesn't have the intended visibility."
+    );
+    is(
+      tabpanel.querySelector(".tree-section .treeLabel").textContent,
       L10N.getFormatStr("jsonpScopeName", func),
-      "The response json view has the intened visibility and correct title.");
-    is(tabpanel.querySelector(".CodeMirror-code") === null, false,
-      "The response editor has the intended visibility.");
-    is(tabpanel.querySelector(".responseImageBox") === null, true,
-      "The response image box doesn't have the intended visibility.");
+      "The response json view has the intened visibility and correct title."
+    );
+    is(
+      tabpanel.querySelector(".CodeMirror-code") === null,
+      false,
+      "The response editor has the intended visibility."
+    );
+    is(
+      tabpanel.querySelector(".responseImageBox") === null,
+      true,
+      "The response image box doesn't have the intended visibility."
+    );
 
-    is(tabpanel.querySelectorAll(".tree-section").length, 2,
-      "There should be 2 tree sections displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length, 1,
-      "There should be 1 json properties displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".empty-notice").length, 0,
-      "The empty notice should not be displayed in this tabpanel.");
+    is(
+      tabpanel.querySelectorAll(".tree-section").length,
+      2,
+      "There should be 2 tree sections displayed in this tabpanel."
+    );
+    is(
+      tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length,
+      1,
+      "There should be 1 json properties displayed in this tabpanel."
+    );
+    is(
+      tabpanel.querySelectorAll(".empty-notice").length,
+      0,
+      "The empty notice should not be displayed in this tabpanel."
+    );
 
-    const labels = tabpanel
-      .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    const values = tabpanel
-      .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
+    const labels = tabpanel.querySelectorAll(
+      "tr:not(.tree-section) .treeLabelCell .treeLabel"
+    );
+    const values = tabpanel.querySelectorAll(
+      "tr:not(.tree-section) .treeValueCell .objectBox"
+    );
 
-    is(labels[0].textContent, "greeting",
-      "The first json property name was incorrect.");
-    is(values[0].textContent, greeting,
-      "The first json property value was incorrect.");
+    is(
+      labels[0].textContent,
+      "greeting",
+      "The first json property name was incorrect."
+    );
+    is(
+      values[0].textContent,
+      greeting,
+      "The first json property value was incorrect."
+    );
   }
 });

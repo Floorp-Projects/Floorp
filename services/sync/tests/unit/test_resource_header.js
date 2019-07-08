@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
 
 var httpServer = new HttpServer();
 httpServer.registerPathHandler("/content", contentHandler);
@@ -15,11 +15,11 @@ const BODY = "response body";
 
 // Keep headers for later inspection.
 var auth = null;
-var foo  = null;
+var foo = null;
 function contentHandler(metadata, response) {
   _("Handling request.");
   auth = metadata.getHeader("Authorization");
-  foo  = metadata.getHeader("X-Foo");
+  foo = metadata.getHeader("X-Foo");
 
   _("Extracted headers. " + auth + ", " + foo);
 
@@ -29,10 +29,13 @@ function contentHandler(metadata, response) {
 
 // Set a proxy function to cause an internal redirect.
 function triggerRedirect() {
-  const PROXY_FUNCTION = "function FindProxyForURL(url, host) {" +
-                         "  return 'PROXY a_non_existent_domain_x7x6c572v:80; " +
-                                   "PROXY localhost:" + HTTP_PORT + "';" +
-                         "}";
+  const PROXY_FUNCTION =
+    "function FindProxyForURL(url, host) {" +
+    "  return 'PROXY a_non_existent_domain_x7x6c572v:80; " +
+    "PROXY localhost:" +
+    HTTP_PORT +
+    "';" +
+    "}";
 
   let prefs = Services.prefs.getBranch("network.proxy.");
   prefs.setIntPref("type", 2);

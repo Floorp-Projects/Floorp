@@ -21,7 +21,8 @@ function runTest() {
     SimpleTest.finish();
   });
 
-  iframe.src = "data:text/html,<html><body><script>window.close()</script></body></html>";
+  iframe.src =
+    "data:text/html,<html><body><script>window.close()</script></body></html>";
 }
 
 addEventListener("testready", runTest);

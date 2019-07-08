@@ -11,7 +11,9 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 async function getResultText(element) {
   await initAccessibilityService();
-  await BrowserTestUtils.waitForCondition(() => accService.getAccessibleFor(element));
+  await BrowserTestUtils.waitForCondition(() =>
+    accService.getAccessibleFor(element)
+  );
   let accessible = accService.getAccessibleFor(element);
   return accessible.name;
 }
@@ -22,7 +24,8 @@ async function initAccessibilityService() {
     return;
   }
   accService = Cc["@mozilla.org/accessibilityService;1"].getService(
-    Ci.nsIAccessibilityService);
+    Ci.nsIAccessibilityService
+  );
   if (Services.appinfo.accessibilityEnabled) {
     return;
   }
@@ -47,22 +50,30 @@ async function initAccessibilityService() {
 }
 
 add_task(async function switchToTab() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:about");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:about"
+  );
 
   await promiseAutocompleteResultPopup("% about");
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-    "Should have a switch tab result");
+  Assert.equal(
+    result.type,
+    UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+    "Should have a switch tab result"
+  );
 
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
-  is(await getResultText(element),
-     UrlbarPrefs.get("quantumbar") ?
-       // The extra spaces are here due to bug 1550644.
-       "about : about— Switch to Tab" :
-       "about:about about:about Tab",
-     UrlbarPrefs.get("quantumbar") ?
-       "Result a11y label should be: <title>— Switch to Tab" :
-       "Result a11y label should be: <title> <url> Tab");
+  is(
+    await getResultText(element),
+    UrlbarPrefs.get("quantumbar")
+      ? // The extra spaces are here due to bug 1550644.
+        "about : about— Switch to Tab"
+      : "about:about about:about Tab",
+    UrlbarPrefs.get("quantumbar")
+      ? "Result a11y label should be: <title>— Switch to Tab"
+      : "Result a11y label should be: <title> <url> Tab"
+  );
 
   await UrlbarTestUtils.promisePopupClose(window);
   gBrowser.removeTab(tab);
@@ -70,7 +81,8 @@ add_task(async function switchToTab() {
 
 add_task(async function searchSuggestions() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
@@ -86,8 +98,11 @@ add_task(async function searchSuggestions() {
   let length = await UrlbarTestUtils.getResultCount(window);
   // Don't assume that the search doesn't match history or bookmarks left around
   // by earlier tests.
-  Assert.greaterOrEqual(length, 3,
-    "Should get at least heuristic result + two search suggestions");
+  Assert.greaterOrEqual(
+    length,
+    3,
+    "Should get at least heuristic result + two search suggestions"
+  );
   // The first expected search is the search term itself since the heuristic
   // result will come before the search suggestions.
   let expectedSearches = [
@@ -99,22 +114,32 @@ add_task(async function searchSuggestions() {
   for (let i = 0; i < length; i++) {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
     if (result.type === UrlbarUtils.RESULT_TYPE.SEARCH) {
-      Assert.greaterOrEqual(expectedSearches.length, 0,
-        "Should still have expected searches remaining");
+      Assert.greaterOrEqual(
+        expectedSearches.length,
+        0,
+        "Should still have expected searches remaining"
+      );
       let suggestion = expectedSearches.shift();
-      let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, i);
+      let element = await UrlbarTestUtils.waitForAutocompleteResultAt(
+        window,
+        i
+      );
       let selected = element.hasAttribute("selected");
       if (!selected) {
         // Simulate the result being selected so we see the expanded text.
         element.toggleAttribute("selected", true);
       }
-      Assert.equal(await getResultText(element),
-        UrlbarPrefs.get("quantumbar") ?
-          suggestion + "— Search with browser_searchSuggestionEngine searchSuggestionEngine.xml" :
-          suggestion + " browser_searchSuggestionEngine searchSuggestionEngine.xml Search",
-        UrlbarPrefs.get("quantumbar") ?
-          "Result label should be: <search term>— Search with <engine name>" :
-          "Result label should be: <search term> <engine name> Search");
+      Assert.equal(
+        await getResultText(element),
+        UrlbarPrefs.get("quantumbar")
+          ? suggestion +
+              "— Search with browser_searchSuggestionEngine searchSuggestionEngine.xml"
+          : suggestion +
+              " browser_searchSuggestionEngine searchSuggestionEngine.xml Search",
+        UrlbarPrefs.get("quantumbar")
+          ? "Result label should be: <search term>— Search with <engine name>"
+          : "Result label should be: <search term> <engine name> Search"
+      );
       if (!selected) {
         element.toggleAttribute("selected", false);
       }

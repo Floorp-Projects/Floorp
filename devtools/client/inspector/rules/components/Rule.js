@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { createFactory, createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
@@ -49,13 +53,19 @@ class Rule extends PureComponent {
       return;
     }
 
-    editableItem({
-      element: this.closeBraceSpan.current,
-    }, () => {
-      this.setState({ isNewDeclarationEditorVisible: true });
-      this.props.showNewDeclarationEditor(this.newDeclarationSpan.current,
-        this.props.rule.id, this.onEditorBlur);
-    });
+    editableItem(
+      {
+        element: this.closeBraceSpan.current,
+      },
+      () => {
+        this.setState({ isNewDeclarationEditorVisible: true });
+        this.props.showNewDeclarationEditor(
+          this.newDeclarationSpan.current,
+          this.props.rule.id,
+          this.onEditorBlur
+        );
+      }
+    );
   }
 
   onEditorBlur() {
@@ -82,66 +92,70 @@ class Rule extends PureComponent {
       type,
     } = rule;
 
-    return (
+    return dom.div(
+      {
+        className:
+          "ruleview-rule devtools-monospace" +
+          (isUnmatched ? " unmatched" : "") +
+          (isUserAgentStyle ? " uneditable" : ""),
+      },
+      SourceLink({
+        id,
+        isUserAgentStyle,
+        onOpenSourceLink,
+        sourceLink,
+        type,
+      }),
       dom.div(
-        {
-          className: "ruleview-rule devtools-monospace" +
-                     (isUnmatched ? " unmatched" : "") +
-                     (isUserAgentStyle ? " uneditable" : ""),
-        },
-        SourceLink({
-          id,
-          isUserAgentStyle,
-          onOpenSourceLink,
-          sourceLink,
-          type,
-        }),
-        dom.div({ className: "ruleview-code" },
-          dom.div({},
-            Selector({
-              id,
-              isUserAgentStyle,
-              selector,
-              showSelectorEditor,
-              type,
-            }),
-            type !== CSSRule.KEYFRAME_RULE ?
-              SelectorHighlighter({
+        { className: "ruleview-code" },
+        dom.div(
+          {},
+          Selector({
+            id,
+            isUserAgentStyle,
+            selector,
+            showSelectorEditor,
+            type,
+          }),
+          type !== CSSRule.KEYFRAME_RULE
+            ? SelectorHighlighter({
                 onToggleSelectorHighlighter,
                 selector,
               })
-              :
-              null,
-            dom.span({ className: "ruleview-ruleopen" }, " {")
-          ),
-          Declarations({
-            declarations,
-            isUserAgentStyle,
-            onToggleDeclaration,
-            showDeclarationNameEditor,
-            showDeclarationValueEditor,
-          }),
-          dom.li(
-            {
-              className: "ruleview-property ruleview-newproperty",
-              style: {
-                display: this.state.isNewDeclarationEditorVisible ? "block" : "none",
-              },
+            : null,
+          dom.span({ className: "ruleview-ruleopen" }, " {")
+        ),
+        Declarations({
+          declarations,
+          isUserAgentStyle,
+          onToggleDeclaration,
+          showDeclarationNameEditor,
+          showDeclarationValueEditor,
+        }),
+        dom.li(
+          {
+            className: "ruleview-property ruleview-newproperty",
+            style: {
+              display: this.state.isNewDeclarationEditorVisible
+                ? "block"
+                : "none",
             },
-            dom.span({
-              className: "ruleview-propertyname",
-              ref: this.newDeclarationSpan,
-            })
-          ),
-          dom.div(
-            {
-              className: "ruleview-ruleclose",
-              ref: this.closeBraceSpan,
-              tabIndex: !isUserAgentStyle && !this.state.isNewDeclarationEditorVisible ?
-                0 : -1,
-            },
-            "}"
-          )
+          },
+          dom.span({
+            className: "ruleview-propertyname",
+            ref: this.newDeclarationSpan,
+          })
+        ),
+        dom.div(
+          {
+            className: "ruleview-ruleclose",
+            ref: this.closeBraceSpan,
+            tabIndex:
+              !isUserAgentStyle && !this.state.isNewDeclarationEditorVisible
+                ? 0
+                : -1,
+          },
+          "}"
         )
       )
     );

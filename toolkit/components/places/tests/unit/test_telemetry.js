@@ -3,7 +3,9 @@
 
 // Tests common Places telemetry probes by faking the telemetry service.
 
-const {PlacesDBUtils} = ChromeUtils.import("resource://gre/modules/PlacesDBUtils.jsm");
+const { PlacesDBUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesDBUtils.jsm"
+);
 
 var histograms = {
   PLACES_PAGES_COUNT: val => Assert.equal(val, 1),
@@ -37,7 +39,9 @@ var histograms = {
  */
 function promiseForceExpirationStep(aLimit) {
   let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-  let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
+  let expire = Cc["@mozilla.org/places/expiration;1"].getService(
+    Ci.nsIObserver
+  );
   expire.observe(null, "places-debug-start-expiration", aLimit);
   return promise;
 }
@@ -67,18 +71,22 @@ add_task(async function test_execute() {
 
   let bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "moz test",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      children: [{
+    children: [
+      {
         title: "moz test",
-        url: uri,
-      }],
-    }],
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        children: [
+          {
+            title: "moz test",
+            url: uri,
+          },
+        ],
+      },
+    ],
   });
 
   PlacesUtils.tagging.tagURI(uri, ["tag"]);
-  await PlacesUtils.keywords.insert({ url: uri.spec, keyword: "keyword"});
+  await PlacesUtils.keywords.insert({ url: uri.spec, keyword: "keyword" });
 
   // Set a large annotation.
   let content = "";
@@ -118,8 +126,9 @@ add_task(async function test_execute() {
   await promiseForceExpirationStep(2);
 
   // Test idle probes.
-  PlacesUtils.history.QueryInterface(Ci.nsIObserver)
-                     .observe(null, "idle-daily", null);
+  PlacesUtils.history
+    .QueryInterface(Ci.nsIObserver)
+    .observe(null, "idle-daily", null);
   await PlacesDBUtils.maintenanceOnIdle();
 
   for (let histogramId in histograms) {

@@ -4,22 +4,34 @@
 
 "use strict";
 
-const TEST_URL = "https://example.com/browser/dom/webauthn/tests/browser/tab_webauthn_result.html";
+const TEST_URL =
+  "https://example.com/browser/dom/webauthn/tests/browser/tab_webauthn_result.html";
 
 async function assertStatus(tab, expected) {
-  let actual = await ContentTask.spawn(tab.linkedBrowser, null, async function () {
+  let actual = await ContentTask.spawn(
+    tab.linkedBrowser,
+    null,
+    async function() {
       info("visbility state: " + content.document.visibilityState);
       info("docshell active: " + docShell.isActive);
-    return content.document.getElementById("status").value;
-  });
+      return content.document.getElementById("status").value;
+    }
+  );
   is(actual, expected, "webauthn request " + expected);
 }
 
 async function waitForStatus(tab, expected) {
   /* eslint-disable no-shadow */
-  await ContentTask.spawn(tab.linkedBrowser, [expected], async function (expected) {
+  await ContentTask.spawn(tab.linkedBrowser, [expected], async function(
+    expected
+  ) {
     return ContentTaskUtils.waitForCondition(() => {
-      info("expecting " + expected + ", visbility state: " + content.document.visibilityState);
+      info(
+        "expecting " +
+          expected +
+          ", visbility state: " +
+          content.document.visibilityState
+      );
       info("expecting " + expected + ", docshell active: " + docShell.isActive);
       return content.document.getElementById("status").value == expected;
     });
@@ -30,32 +42,43 @@ async function waitForStatus(tab, expected) {
 }
 
 function startMakeCredentialRequest(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, async function () {
+  return ContentTask.spawn(tab.linkedBrowser, null, async function() {
     const cose_alg_ECDSA_w_SHA256 = -7;
 
     let publicKey = {
-      rp: {id: content.document.domain, name: "none", icon: "none"},
-      user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+      rp: { id: content.document.domain, name: "none", icon: "none" },
+      user: {
+        id: new Uint8Array(),
+        name: "none",
+        icon: "none",
+        displayName: "none",
+      },
       challenge: content.crypto.getRandomValues(new Uint8Array(16)),
       timeout: 5000, // the minimum timeout is actually 15 seconds
-      pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+      pubKeyCredParams: [{ type: "public-key", alg: cose_alg_ECDSA_w_SHA256 }],
     };
 
     let status = content.document.getElementById("status");
 
-    info("Attempting to create credential for origin: " + content.document.nodePrincipal.origin);
-    content.navigator.credentials.create({publicKey}).then(() => {
-      status.value = "completed";
-    }).catch(() => {
-      status.value = "aborted";
-    });
+    info(
+      "Attempting to create credential for origin: " +
+        content.document.nodePrincipal.origin
+    );
+    content.navigator.credentials
+      .create({ publicKey })
+      .then(() => {
+        status.value = "completed";
+      })
+      .catch(() => {
+        status.value = "aborted";
+      });
 
     status.value = "pending";
   });
 }
 
 function startGetAssertionRequest(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, async function () {
+  return ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let newCredential = {
       type: "public-key",
       id: content.crypto.getRandomValues(new Uint8Array(16)),
@@ -66,18 +89,24 @@ function startGetAssertionRequest(tab) {
       challenge: content.crypto.getRandomValues(new Uint8Array(16)),
       timeout: 5000, // the minimum timeout is actually 15 seconds
       rpId: content.document.domain,
-      allowCredentials: [newCredential]
+      allowCredentials: [newCredential],
     };
 
     let status = content.document.getElementById("status");
 
-    info("Attempting to get credential for origin: " + content.document.nodePrincipal.origin);
-    content.navigator.credentials.get({publicKey}).then(() => {
-      status.value = "completed";
-    }).catch((ex) => {
-      info("aborted: " + ex);
-      status.value = "aborted";
-    });
+    info(
+      "Attempting to get credential for origin: " +
+        content.document.nodePrincipal.origin
+    );
+    content.navigator.credentials
+      .get({ publicKey })
+      .then(() => {
+        status.value = "completed";
+      })
+      .catch(ex => {
+        info("aborted: " + ex);
+        status.value = "aborted";
+      });
 
     status.value = "pending";
   });
@@ -85,12 +114,12 @@ function startGetAssertionRequest(tab) {
 
 add_task(async function test_setup() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
+    set: [
       ["security.webauth.webauthn", true],
       ["security.webauth.webauthn_enable_softtoken", false],
       ["security.webauth.webauthn_enable_android_fido2", false],
-      ["security.webauth.webauthn_enable_usbtoken", true]
-    ]
+      ["security.webauth.webauthn_enable_usbtoken", true],
+    ],
   });
 });
 
@@ -98,7 +127,10 @@ add_task(async function test_setup() {
 // are aborted when the current tab loses its focus.
 add_task(async function test_switch_tab() {
   // Create a new tab for the MakeCredential() request.
-  let tab_create = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  let tab_create = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_URL
+  );
 
   // Start the request.
   await startMakeCredentialRequest(tab_create);
@@ -174,8 +206,9 @@ add_task(async function test_new_window_get() {
 });
 
 add_task(async function test_minimize_make() {
-  let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   // Minimizing windows doesn't supported in headless mode.
   if (env.get("MOZ_HEADLESS")) {
     return;
@@ -206,8 +239,9 @@ add_task(async function test_minimize_make() {
 });
 
 add_task(async function test_minimize_get() {
-  let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   // Minimizing windows doesn't supported in headless mode.
   if (env.get("MOZ_HEADLESS")) {
     return;

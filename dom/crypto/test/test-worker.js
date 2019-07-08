@@ -42,7 +42,7 @@ onmessage = function(msg) {
   var test = eval("(" + msg.data + ")");
 
   try {
-    test.call({complete: finish});
+    test.call({ complete: finish });
   } catch (err) {
     error(`Failed to run worker test: ${err}\n`);
   }

@@ -12,7 +12,7 @@ const IFRAME2 = URL_ROOT + "doc_boxmodel_iframe2.html";
 
 add_task(async function() {
   await addTab(IFRAME1);
-  const {inspector, boxmodel, testActor} = await openLayoutView();
+  const { inspector, boxmodel, testActor } = await openLayoutView();
 
   await testFirstPage(inspector, boxmodel, testActor);
 
@@ -38,7 +38,8 @@ async function testFirstPage(inspector, boxmodel, testActor) {
 
   info("Checking that the box model view shows the right value");
   const paddingElt = boxmodel.document.querySelector(
-    ".boxmodel-padding.boxmodel-top > span");
+    ".boxmodel-padding.boxmodel-top > span"
+  );
   is(paddingElt.textContent, "50");
 
   info("Listening for box model view changes and modifying the padding");
@@ -75,10 +76,13 @@ async function testBackToFirstPage(inspector, boxmodel, testActor) {
 
   await selectNode("p", inspector);
 
-  info("Checking that the box model view shows the right value, which is the" +
-    "modified value from step one because of the bfcache");
+  info(
+    "Checking that the box model view shows the right value, which is the" +
+      "modified value from step one because of the bfcache"
+  );
   const paddingElt = boxmodel.document.querySelector(
-    ".boxmodel-padding.boxmodel-top > span");
+    ".boxmodel-padding.boxmodel-top > span"
+  );
   is(paddingElt.textContent, "20");
 
   info("Listening for box model view changes and modifying the padding");

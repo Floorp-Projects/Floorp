@@ -5,11 +5,15 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { getCurrentZoom,
-  setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
+const {
+  getCurrentZoom,
+  setIgnoreLayoutChanges,
+} = require("devtools/shared/layout/utils");
 const {
   CanvasFrameAnonymousContentHelper,
-  createSVGNode, createNode } = require("./utils/markup");
+  createSVGNode,
+  createNode,
+} = require("./utils/markup");
 
 // Maximum size, in pixel, for the horizontal ruler and vertical ruler
 // used by RulersHighlighter
@@ -28,8 +32,10 @@ const RULERS_TEXT_STEP = 100;
  */
 function RulersHighlighter(highlighterEnv) {
   this.env = highlighterEnv;
-  this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
-    this._buildMarkup.bind(this));
+  this.markup = new CanvasFrameAnonymousContentHelper(
+    highlighterEnv,
+    this._buildMarkup.bind(this)
+  );
 
   const { pageListenerTarget } = highlighterEnv;
   pageListenerTarget.addEventListener("scroll", this);
@@ -58,7 +64,8 @@ RulersHighlighter.prototype = {
         isHorizontal = false;
       } else {
         throw new Error(
-          `Invalid type of axis given; expected "x" or "y" but got "${axis}"`);
+          `Invalid type of axis given; expected "x" or "y" but got "${axis}"`
+        );
       }
 
       const g = createSVGNode(window, {
@@ -92,7 +99,7 @@ RulersHighlighter.prototype = {
       const pathGraduations = createSVGNode(window, {
         nodeType: "path",
         attributes: {
-          "class": "ruler-graduations",
+          class: "ruler-graduations",
           width,
           height,
         },
@@ -103,7 +110,7 @@ RulersHighlighter.prototype = {
       const pathMarkers = createSVGNode(window, {
         nodeType: "path",
         attributes: {
-          "class": "ruler-markers",
+          class: "ruler-markers",
           width,
           height,
         },
@@ -115,7 +122,7 @@ RulersHighlighter.prototype = {
         nodeType: "g",
         attributes: {
           id: `${axis}-axis-text`,
-          "class": (isHorizontal ? "horizontal" : "vertical") + "-labels",
+          class: (isHorizontal ? "horizontal" : "vertical") + "-labels",
         },
         parent: g,
         prefix,
@@ -130,7 +137,7 @@ RulersHighlighter.prototype = {
           continue;
         }
 
-        graduationLength = (i % 2 === 0) ? 6 : 4;
+        graduationLength = i % 2 === 0 ? 6 : 4;
 
         if (i % RULERS_TEXT_STEP === 0) {
           graduationLength = 8;
@@ -164,14 +171,14 @@ RulersHighlighter.prototype = {
     }
 
     const container = createNode(window, {
-      attributes: {"class": "highlighter-container"},
+      attributes: { class: "highlighter-container" },
     });
 
     const root = createNode(window, {
       parent: container,
       attributes: {
-        "id": "root",
-        "class": "root",
+        id: "root",
+        class: "root",
       },
       prefix,
     });
@@ -181,7 +188,7 @@ RulersHighlighter.prototype = {
       parent: root,
       attributes: {
         id: "elements",
-        "class": "elements",
+        class: "elements",
         width: "100%",
         height: "100%",
         hidden: "true",
@@ -195,9 +202,9 @@ RulersHighlighter.prototype = {
     createNode(window, {
       parent: container,
       attributes: {
-        "class": "viewport-infobar-container",
-        "id": "viewport-infobar-container",
-        "position": "top",
+        class: "viewport-infobar-container",
+        id: "viewport-infobar-container",
+        position: "top",
       },
       prefix,
     });
@@ -224,14 +231,18 @@ RulersHighlighter.prototype = {
     const prefix = this.ID_CLASS_PREFIX;
     const { scrollX, scrollY } = event.view;
 
-    this.markup.getElement(`${prefix}x-axis-ruler`)
-                        .setAttribute("transform", `translate(${-scrollX})`);
-    this.markup.getElement(`${prefix}x-axis-text`)
-                        .setAttribute("transform", `translate(${-scrollX})`);
-    this.markup.getElement(`${prefix}y-axis-ruler`)
-                        .setAttribute("transform", `translate(0, ${-scrollY})`);
-    this.markup.getElement(`${prefix}y-axis-text`)
-                        .setAttribute("transform", `translate(0, ${-scrollY})`);
+    this.markup
+      .getElement(`${prefix}x-axis-ruler`)
+      .setAttribute("transform", `translate(${-scrollX})`);
+    this.markup
+      .getElement(`${prefix}x-axis-text`)
+      .setAttribute("transform", `translate(${-scrollX})`);
+    this.markup
+      .getElement(`${prefix}y-axis-ruler`)
+      .setAttribute("transform", `translate(0, ${-scrollY})`);
+    this.markup
+      .getElement(`${prefix}y-axis-text`)
+      .setAttribute("transform", `translate(0, ${-scrollY})`);
   },
 
   _update: function() {
@@ -273,8 +284,9 @@ RulersHighlighter.prototype = {
     const minWidth = 1 / pixelRatio;
     const strokeWidth = Math.min(minWidth, minWidth / this._zoom);
 
-    this.markup.getElement(this.ID_CLASS_PREFIX + "root").setAttribute("style",
-      `stroke-width:${strokeWidth};`);
+    this.markup
+      .getElement(this.ID_CLASS_PREFIX + "root")
+      .setAttribute("style", `stroke-width:${strokeWidth};`);
   },
 
   updateViewportInfobar: function() {
@@ -301,8 +313,10 @@ RulersHighlighter.prototype = {
   },
 
   show: function() {
-    this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + "elements",
-      "hidden");
+    this.markup.removeAttributeForElement(
+      this.ID_CLASS_PREFIX + "elements",
+      "hidden"
+    );
 
     this._update();
 
@@ -310,8 +324,11 @@ RulersHighlighter.prototype = {
   },
 
   hide: function() {
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + "elements",
-      "hidden", "true");
+    this.markup.setAttributeForElement(
+      this.ID_CLASS_PREFIX + "elements",
+      "hidden",
+      "true"
+    );
 
     this._cancelUpdate();
   },

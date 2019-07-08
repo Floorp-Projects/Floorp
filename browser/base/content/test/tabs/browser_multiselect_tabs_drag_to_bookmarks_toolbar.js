@@ -3,10 +3,7 @@ const PREF_ANIMATIONS_ENABLED = "toolkit.cosmeticAnimations.enabled";
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_MULTISELECT_TABS, true],
-      [PREF_ANIMATIONS_ENABLED, false],
-    ],
+    set: [[PREF_MULTISELECT_TABS, true], [PREF_ANIMATIONS_ENABLED, false]],
   });
 });
 
@@ -35,21 +32,41 @@ add_task(async function test() {
   is(gBrowser.multiSelectedTabsCount, 2, "Two multiselected tabs");
 
   // Use getElementsByClassName so the list is live and will update as items change.
-  let currentBookmarks = bookmarksToolbar.getElementsByClassName("bookmark-item");
+  let currentBookmarks = bookmarksToolbar.getElementsByClassName(
+    "bookmark-item"
+  );
   let startBookmarksLength = currentBookmarks.length;
 
   let lastBookmark = currentBookmarks[currentBookmarks.length - 1];
-  await EventUtils.synthesizePlainDragAndDrop({srcElement: tab1, destElement: lastBookmark});
-  await TestUtils.waitForCondition(() => currentBookmarks.length == startBookmarksLength + 2,
-    "waiting for 2 bookmarks");
-  is(currentBookmarks.length, startBookmarksLength + 2, "Bookmark count should have increased by 2");
+  await EventUtils.synthesizePlainDragAndDrop({
+    srcElement: tab1,
+    destElement: lastBookmark,
+  });
+  await TestUtils.waitForCondition(
+    () => currentBookmarks.length == startBookmarksLength + 2,
+    "waiting for 2 bookmarks"
+  );
+  is(
+    currentBookmarks.length,
+    startBookmarksLength + 2,
+    "Bookmark count should have increased by 2"
+  );
 
   // Drag non-selection to the bookmarks toolbar
   startBookmarksLength = currentBookmarks.length;
-  await EventUtils.synthesizePlainDragAndDrop({srcElement: tab3, destElement: lastBookmark});
-  await TestUtils.waitForCondition(() => currentBookmarks.length == startBookmarksLength + 1,
-    "waiting for 1 bookmark");
-  is(currentBookmarks.length, startBookmarksLength + 1, "Bookmark count should have increased by 1");
+  await EventUtils.synthesizePlainDragAndDrop({
+    srcElement: tab3,
+    destElement: lastBookmark,
+  });
+  await TestUtils.waitForCondition(
+    () => currentBookmarks.length == startBookmarksLength + 1,
+    "waiting for 1 bookmark"
+  );
+  is(
+    currentBookmarks.length,
+    startBookmarksLength + 1,
+    "Bookmark count should have increased by 1"
+  );
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);

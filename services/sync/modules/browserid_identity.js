@@ -6,25 +6,49 @@
 
 var EXPORTED_SYMBOLS = ["BrowserIDManager", "AuthenticationError"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {fxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-const {Async} = ChromeUtils.import("resource://services-common/async.js");
-const {TokenServerClient} = ChromeUtils.import("resource://services-common/tokenserverclient.js");
-const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
-const {LOGIN_FAILED_LOGIN_REJECTED, LOGIN_FAILED_NETWORK_ERROR, LOGIN_FAILED_NO_USERNAME, LOGIN_SUCCEEDED, MASTER_PASSWORD_LOCKED, STATUS_OK} = ChromeUtils.import("resource://services-sync/constants.js");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { fxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+const { Async } = ChromeUtils.import("resource://services-common/async.js");
+const { TokenServerClient } = ChromeUtils.import(
+  "resource://services-common/tokenserverclient.js"
+);
+const { CryptoUtils } = ChromeUtils.import(
+  "resource://services-crypto/utils.js"
+);
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const {
+  LOGIN_FAILED_LOGIN_REJECTED,
+  LOGIN_FAILED_NETWORK_ERROR,
+  LOGIN_FAILED_NO_USERNAME,
+  LOGIN_SUCCEEDED,
+  MASTER_PASSWORD_LOCKED,
+  STATUS_OK,
+} = ChromeUtils.import("resource://services-sync/constants.js");
 
 // Lazy imports to prevent unnecessary load on startup.
-ChromeUtils.defineModuleGetter(this, "Weave",
-                               "resource://services-sync/main.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Weave",
+  "resource://services-sync/main.js"
+);
 
-ChromeUtils.defineModuleGetter(this, "BulkKeyBundle",
-                               "resource://services-sync/keys.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BulkKeyBundle",
+  "resource://services-sync/keys.js"
+);
 
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
-                               "resource://gre/modules/FxAccounts.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "log", function() {
   let log = Log.repository.getLogger("Sync.BrowserIDManager");
@@ -32,12 +56,18 @@ XPCOMUtils.defineLazyGetter(this, "log", function() {
   return log;
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "IGNORE_CACHED_AUTH_CREDENTIALS",
-                                      "services.sync.debug.ignoreCachedAuthCredentials");
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "IGNORE_CACHED_AUTH_CREDENTIALS",
+  "services.sync.debug.ignoreCachedAuthCredentials"
+);
 
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
 var fxAccountsCommon = {};
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
+ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js",
+  fxAccountsCommon
+);
 
 const OBSERVER_TOPICS = [
   fxAccountsCommon.ONLOGIN_NOTIFICATION,
@@ -61,7 +91,8 @@ var telemetryHelper = {
 
   PREFS: {
     REJECTED_AT: "identity.telemetry.loginRejectedAt",
-    APPEARS_PERMANENTLY_REJECTED: "identity.telemetry.loginAppearsPermanentlyRejected",
+    APPEARS_PERMANENTLY_REJECTED:
+      "identity.telemetry.loginAppearsPermanentlyRejected",
     LAST_RECORDED_STATE: "identity.telemetry.lastRecordedState",
   },
 
@@ -101,7 +132,9 @@ var telemetryHelper = {
         // If we are "permanently rejected" we've already recorded for how
         // long, so don't do it again.
         if (!Svc.Prefs.get(this.PREFS.APPEARS_PERMANENTLY_REJECTED)) {
-          Services.telemetry.getHistogramById("WEAVE_LOGIN_FAILED_FOR").add(howLong);
+          Services.telemetry
+            .getHistogramById("WEAVE_LOGIN_FAILED_FOR")
+            .add(howLong);
         }
       }
       Svc.Prefs.reset(this.PREFS.REJECTED_AT);
@@ -118,7 +151,9 @@ var telemetryHelper = {
       if (howLong > this.NUM_MINUTES_TO_RECORD_REJECTED_TELEMETRY) {
         // We are giving up for this user, so report this "max time" as how
         // long they were in this state for.
-        Services.telemetry.getHistogramById("WEAVE_LOGIN_FAILED_FOR").add(howLong);
+        Services.telemetry
+          .getHistogramById("WEAVE_LOGIN_FAILED_FOR")
+          .add(howLong);
         Svc.Prefs.set(this.PREFS.APPEARS_PERMANENTLY_REJECTED, true);
       }
       if (!Svc.Prefs.has(this.PREFS.REJECTED_AT)) {
@@ -158,7 +193,11 @@ function BrowserIDManager() {
   this._tokenServerClient = new TokenServerClient();
   this._tokenServerClient.observerPrefix = "weave:service";
   this._log = log;
-  XPCOMUtils.defineLazyPreferenceGetter(this, "_username", "services.sync.username");
+  XPCOMUtils.defineLazyPreferenceGetter(
+    this,
+    "_username",
+    "services.sync.username"
+  );
 
   this.asyncObserver = Async.asyncObserver(this, log);
   for (let topic of OBSERVER_TOPICS) {
@@ -221,60 +260,63 @@ this.BrowserIDManager.prototype = {
   async observe(subject, topic, data) {
     this._log.debug("observed " + topic);
     switch (topic) {
-    case fxAccountsCommon.ONLOGIN_NOTIFICATION: {
-      this._log.info("A user has logged in");
-      this.resetCredentials();
-      let accountData = await this._fxaService.getSignedInUser();
-      this._updateSignedInUser(accountData);
+      case fxAccountsCommon.ONLOGIN_NOTIFICATION: {
+        this._log.info("A user has logged in");
+        this.resetCredentials();
+        let accountData = await this._fxaService.getSignedInUser();
+        this._updateSignedInUser(accountData);
 
-      if (!accountData.verified) {
-        // wait for a verified notification before we kick sync off.
-        this._log.info("The user is not verified");
+        if (!accountData.verified) {
+          // wait for a verified notification before we kick sync off.
+          this._log.info("The user is not verified");
+          break;
+        }
+        // intentional fall-through - the user is verified.
+      }
+      // We've been configured with an already verified user, so fall-through.
+      case fxAccountsCommon.ONVERIFIED_NOTIFICATION: {
+        this._log.info("The user became verified");
+
+        // Set the username now - that will cause Sync to know it is configured
+        let accountData = await this._fxaService.getSignedInUser();
+        this.username = accountData.email;
+        Weave.Status.login = LOGIN_SUCCEEDED;
+
+        // And actually sync. If we've never synced before, we force a full sync.
+        // If we have, then we are probably just reauthenticating so it's a normal sync.
+        // We can use any pref that must be set if we've synced before, and check
+        // the sync lock state because we might already be doing that first sync.
+        let isFirstSync =
+          !Weave.Service.locked && !Svc.Prefs.get("client.syncID", null);
+        if (isFirstSync) {
+          this._log.info("Doing initial sync actions");
+          Svc.Prefs.set("firstSync", "resetClient");
+          Services.obs.notifyObservers(null, "weave:service:setup-complete");
+        }
+        // There's no need to wait for sync to complete and it would deadlock
+        // our AsyncObserver.
+        if (!Svc.Prefs.get("testing.tps", false)) {
+          Weave.Service.sync({ why: "login" });
+        }
         break;
       }
-      // intentional fall-through - the user is verified.
-    }
-    // We've been configured with an already verified user, so fall-through.
-    case fxAccountsCommon.ONVERIFIED_NOTIFICATION: {
-      this._log.info("The user became verified");
 
-      // Set the username now - that will cause Sync to know it is configured
-      let accountData = await this._fxaService.getSignedInUser();
-      this.username = accountData.email;
-      Weave.Status.login = LOGIN_SUCCEEDED;
+      case fxAccountsCommon.ONLOGOUT_NOTIFICATION:
+        Weave.Service.startOver()
+          .then(() => {
+            this._log.trace("startOver completed");
+          })
+          .catch(err => {
+            this._log.warn("Failed to reset sync", err);
+          });
+        // startOver will cause this instance to be thrown away, so there's
+        // nothing else to do.
+        break;
 
-      // And actually sync. If we've never synced before, we force a full sync.
-      // If we have, then we are probably just reauthenticating so it's a normal sync.
-      // We can use any pref that must be set if we've synced before, and check
-      // the sync lock state because we might already be doing that first sync.
-      let isFirstSync = !Weave.Service.locked && !Svc.Prefs.get("client.syncID", null);
-      if (isFirstSync) {
-        this._log.info("Doing initial sync actions");
-        Svc.Prefs.set("firstSync", "resetClient");
-        Services.obs.notifyObservers(null, "weave:service:setup-complete");
-      }
-      // There's no need to wait for sync to complete and it would deadlock
-      // our AsyncObserver.
-      if (!Svc.Prefs.get("testing.tps", false)) {
-        Weave.Service.sync({why: "login"});
-      }
-      break;
-    }
-
-    case fxAccountsCommon.ONLOGOUT_NOTIFICATION:
-      Weave.Service.startOver().then(() => {
-        this._log.trace("startOver completed");
-      }).catch(err => {
-        this._log.warn("Failed to reset sync", err);
-      });
-      // startOver will cause this instance to be thrown away, so there's
-      // nothing else to do.
-      break;
-
-    case fxAccountsCommon.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION:
-      // throw away token forcing us to fetch a new one later.
-      this.resetCredentials();
-      break;
+      case fxAccountsCommon.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION:
+        // throw away token forcing us to fetch a new one later.
+        this.resetCredentials();
+        break;
     }
   },
 
@@ -375,15 +417,19 @@ this.BrowserIDManager.prototype = {
       return LOGIN_FAILED_LOGIN_REJECTED;
     }
     this._updateSignedInUser(data);
-    if ((await this._fxaService.canGetKeys())) {
-      log.debug("unlockAndVerifyAuthState already has (or can fetch) sync keys");
+    if (await this._fxaService.canGetKeys()) {
+      log.debug(
+        "unlockAndVerifyAuthState already has (or can fetch) sync keys"
+      );
       telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
       return STATUS_OK;
     }
     // so no keys - ensure MP unlocked.
     if (!Utils.ensureMPUnlocked()) {
       // user declined to unlock, so we don't know if they are stored there.
-      log.debug("unlockAndVerifyAuthState: user declined to unlock master-password");
+      log.debug(
+        "unlockAndVerifyAuthState: user declined to unlock master-password"
+      );
       return MASTER_PASSWORD_LOCKED;
     }
     // now we are unlocked we must re-fetch the user data as we may now have
@@ -393,14 +439,17 @@ this.BrowserIDManager.prototype = {
     // without unlocking the MP or cleared the saved logins, so we've now
     // lost them - the user will need to reauth before continuing.
     let result;
-    if ((await this._fxaService.canGetKeys())) {
+    if (await this._fxaService.canGetKeys()) {
       telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
       result = STATUS_OK;
     } else {
       telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.REJECTED);
       result = LOGIN_FAILED_LOGIN_REJECTED;
     }
-    log.debug("unlockAndVerifyAuthState re-fetched credentials and is returning", result);
+    log.debug(
+      "unlockAndVerifyAuthState re-fetched credentials and is returning",
+      result
+    );
     return result;
   },
 
@@ -432,7 +481,8 @@ this.BrowserIDManager.prototype = {
     if (!url) {
       url = Services.prefs.getCharPref("identity.sync.tokenserver.uri");
     }
-    while (url.endsWith("/")) { // trailing slashes cause problems...
+    while (url.endsWith("/")) {
+      // trailing slashes cause problems...
       url = url.slice(0, -1);
     }
     return url;
@@ -450,7 +500,9 @@ this.BrowserIDManager.prototype = {
     // return null for the token - sync calling unlockAndVerifyAuthState()
     // before actually syncing will setup the error states if necessary.
     if (!(await this._fxaService.canGetKeys())) {
-      this._log.info("Unable to fetch keys (master-password locked?), so aborting token fetch");
+      this._log.info(
+        "Unable to fetch keys (master-password locked?), so aborting token fetch"
+      );
       throw new Error("Can't fetch a token as we can't get keys");
     }
 
@@ -461,9 +513,12 @@ this.BrowserIDManager.prototype = {
       const assertion = await this._fxaService.getAssertion(audience);
 
       this._log.debug("Getting a token");
-      const headers = {"X-Client-State": this._signedInUser.kXCS};
+      const headers = { "X-Client-State": this._signedInUser.kXCS };
       const token = await this._tokenServerClient.getTokenFromBrowserIDAssertion(
-                            this._tokenServerUrl, assertion, headers);
+        this._tokenServerUrl,
+        assertion,
+        headers
+      );
       this._log.trace("Successfully got a token");
       return token;
     };
@@ -481,7 +536,9 @@ this.BrowserIDManager.prototype = {
         if (!err.response || err.response.status !== 401) {
           throw err;
         }
-        this._log.warn("Token server returned 401, refreshing certificate and retrying token fetch");
+        this._log.warn(
+          "Token server returned 401, refreshing certificate and retrying token fetch"
+        );
         await this._fxaService.invalidateCertificate();
         token = await getToken();
       }
@@ -489,9 +546,11 @@ this.BrowserIDManager.prototype = {
       // before it actually expires. This is to avoid sync storage errors
       // otherwise, we may briefly enter a "needs reauthentication" state.
       // (XXX - the above may no longer be true - someone should check ;)
-      token.expiration = this._now() + (token.duration * 1000) * 0.80;
+      token.expiration = this._now() + token.duration * 1000 * 0.8;
       if (!this._syncKeyBundle) {
-        this._syncKeyBundle = BulkKeyBundle.fromHexKey(this._signedInUser.kSync);
+        this._syncKeyBundle = BulkKeyBundle.fromHexKey(
+          this._signedInUser.kSync
+        );
       }
       telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
       Weave.Status.login = LOGIN_SUCCEEDED;
@@ -504,10 +563,10 @@ this.BrowserIDManager.prototype = {
       // A tokenserver error thrown based on a bad response.
       if (err.response && err.response.status === 401) {
         err = new AuthenticationError(err, "tokenserver");
-      // A hawkclient error.
+        // A hawkclient error.
       } else if (err.code && err.code === 401) {
         err = new AuthenticationError(err, "hawkclient");
-      // An FxAccounts.jsm error.
+        // An FxAccounts.jsm error.
       } else if (err.message == fxAccountsCommon.ERROR_AUTH_ERROR) {
         err = new AuthenticationError(err, "fxaccounts");
       }
@@ -600,9 +659,7 @@ this.BrowserIDManager.prototype = {
     if (!this._token) {
       return null;
     }
-    let credentials = {id: this._token.id,
-                       key: this._token.key,
-                      };
+    let credentials = { id: this._token.id, key: this._token.key };
     method = method || httpObject.method;
 
     // Get the local clock offset from the Firefox Accounts server.  This should
@@ -613,8 +670,12 @@ this.BrowserIDManager.prototype = {
       credentials,
     };
 
-    let headerValue = await CryptoUtils.computeHAWK(httpObject.uri, method, options);
-    return {headers: {authorization: headerValue.field}};
+    let headerValue = await CryptoUtils.computeHAWK(
+      httpObject.uri,
+      method,
+      options
+    );
+    return { headers: { authorization: headerValue.field } };
   },
 
   /**
@@ -653,7 +714,9 @@ this.BrowserIDManager.prototype = {
       // case we just discard the existing token and fetch a new one.
       let forceNewToken = false;
       if (Weave.Service.clusterURL) {
-        this._log.debug("_findCluster has a pre-existing clusterURL, so fetching a new token token");
+        this._log.debug(
+          "_findCluster has a pre-existing clusterURL, so fetching a new token token"
+        );
         forceNewToken = true;
       }
       let token = await this._ensureValidToken(forceNewToken);

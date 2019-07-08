@@ -1,12 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function run_test() {
   validate_all_future_pings();
   let debug = [];
-  let info  = [];
+  let info = [];
 
   function augmentLogger(old) {
     let d = old.debug;
@@ -36,7 +36,10 @@ add_task(async function run_test() {
   await Service.sync();
   Service._locked = false;
 
-  Assert.ok(debug[debug.length - 2].startsWith("Exception calling WrappedLock: Could not acquire lock. Label: \"service.js: login\"."));
+  Assert.ok(
+    debug[debug.length - 2].startsWith(
+      'Exception calling WrappedLock: Could not acquire lock. Label: "service.js: login".'
+    )
+  );
   Assert.equal(info[info.length - 1], "Cannot start sync: already syncing?");
 });
-

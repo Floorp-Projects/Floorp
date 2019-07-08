@@ -13,7 +13,9 @@ const { nsIAboutModule } = Ci;
 function AboutDevtools() {}
 
 AboutDevtools.prototype = {
-  uri: Services.io.newURI("chrome://devtools-startup/content/aboutdevtools/aboutdevtools.xhtml"),
+  uri: Services.io.newURI(
+    "chrome://devtools-startup/content/aboutdevtools/aboutdevtools.xhtml"
+  ),
   classDescription: "about:devtools",
   classID: Components.ID("3a16d383-92bd-4c24-ac10-0e2bd66883ab"),
   contractID: "@mozilla.org/network/protocol/about;1?what=devtools",
@@ -21,10 +23,7 @@ AboutDevtools.prototype = {
   QueryInterface: ChromeUtils.generateQI([nsIAboutModule]),
 
   newChannel: function(uri, loadInfo) {
-    const chan = Services.io.newChannelFromURIWithLoadInfo(
-      this.uri,
-      loadInfo
-    );
+    const chan = Services.io.newChannelFromURIWithLoadInfo(this.uri, loadInfo);
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return chan;
   },

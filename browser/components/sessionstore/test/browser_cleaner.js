@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-
 /*
  * This test ensures that Session Restore eventually forgets about
  * tabs and windows that have been closed a long time ago.
@@ -14,9 +13,12 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 
 const LONG_TIME_AGO = 1;
 
-const URL_TAB1 = "http://example.com/browser_cleaner.js?newtab1=" + Math.random();
-const URL_TAB2 = "http://example.com/browser_cleaner.js?newtab2=" + Math.random();
-const URL_NEWWIN = "http://example.com/browser_cleaner.js?newwin=" + Math.random();
+const URL_TAB1 =
+  "http://example.com/browser_cleaner.js?newtab1=" + Math.random();
+const URL_TAB2 =
+  "http://example.com/browser_cleaner.js?newtab2=" + Math.random();
+const URL_NEWWIN =
+  "http://example.com/browser_cleaner.js?newwin=" + Math.random();
 
 function isRecent(stamp) {
   is(typeof stamp, "number", "This is a timestamp");
@@ -60,10 +62,26 @@ add_task(async function test_open_and_close() {
   info("1. Making sure that before closing, we don't have closedAt");
   // For the moment, no "closedAt"
   let state = JSON.parse(ss.getBrowserState());
-  is(state.windows[0].closedAt || false, false, "1. Main window doesn't have closedAt");
-  is(state.windows[1].closedAt || false, false, "1. Second window doesn't have closedAt");
-  is(state.windows[0].tabs[0].closedAt || false, false, "1. First tab doesn't have closedAt");
-  is(state.windows[0].tabs[1].closedAt || false, false, "1. Second tab doesn't have closedAt");
+  is(
+    state.windows[0].closedAt || false,
+    false,
+    "1. Main window doesn't have closedAt"
+  );
+  is(
+    state.windows[1].closedAt || false,
+    false,
+    "1. Second window doesn't have closedAt"
+  );
+  is(
+    state.windows[0].tabs[0].closedAt || false,
+    false,
+    "1. First tab doesn't have closedAt"
+  );
+  is(
+    state.windows[0].tabs[1].closedAt || false,
+    false,
+    "1. Second tab doesn't have closedAt"
+  );
 
   info("2. Making sure that after closing, we have closedAt");
 
@@ -74,12 +92,24 @@ add_task(async function test_open_and_close() {
 
   state = CLOSED_STATE = JSON.parse(ss.getBrowserState());
 
-  is(state.windows[0].closedAt || false, false, "2. Main window doesn't have closedAt");
-  ok(isRecent(state._closedWindows[0].closedAt), "2. Second window was closed recently");
-  ok(isRecent(state.windows[0]._closedTabs[0].closedAt), "2. First tab was closed recently");
-  ok(isRecent(state.windows[0]._closedTabs[1].closedAt), "2. Second tab was closed recently");
+  is(
+    state.windows[0].closedAt || false,
+    false,
+    "2. Main window doesn't have closedAt"
+  );
+  ok(
+    isRecent(state._closedWindows[0].closedAt),
+    "2. Second window was closed recently"
+  );
+  ok(
+    isRecent(state.windows[0]._closedTabs[0].closedAt),
+    "2. First tab was closed recently"
+  );
+  ok(
+    isRecent(state.windows[0]._closedTabs[1].closedAt),
+    "2. Second tab was closed recently"
+  );
 });
-
 
 add_task(async function test_restore() {
   info("3. Making sure that after restoring, we don't have closedAt");
@@ -96,19 +126,36 @@ add_task(async function test_restore() {
 
   let state = JSON.parse(ss.getBrowserState());
 
-  is(state.windows[0].closedAt || false, false, "3. Main window doesn't have closedAt");
-  is(state.windows[1].closedAt || false, false, "3. Second window doesn't have closedAt");
-  is(state.windows[0].tabs[0].closedAt || false, false, "3. First tab doesn't have closedAt");
-  is(state.windows[0].tabs[1].closedAt || false, false, "3. Second tab doesn't have closedAt");
+  is(
+    state.windows[0].closedAt || false,
+    false,
+    "3. Main window doesn't have closedAt"
+  );
+  is(
+    state.windows[1].closedAt || false,
+    false,
+    "3. Second window doesn't have closedAt"
+  );
+  is(
+    state.windows[0].tabs[0].closedAt || false,
+    false,
+    "3. First tab doesn't have closedAt"
+  );
+  is(
+    state.windows[0].tabs[1].closedAt || false,
+    false,
+    "3. Second tab doesn't have closedAt"
+  );
 
   await BrowserTestUtils.closeWindow(newWin);
   gBrowser.removeTab(newTab1);
   gBrowser.removeTab(newTab2);
 });
 
-
 add_task(async function test_old_data() {
-  info("4. Removing closedAt from the sessionstore, making sure that it is added upon idle-daily");
+  info(
+    "4. Removing closedAt from the sessionstore, making sure that it is added upon idle-daily"
+  );
 
   let state = getClosedState();
   delete state._closedWindows[0].closedAt;
@@ -121,16 +168,30 @@ add_task(async function test_old_data() {
   info("Sent idle-daily");
 
   state = JSON.parse(ss.getBrowserState());
-  is(state.windows[0].closedAt || false, false, "4. Main window doesn't have closedAt");
-  ok(isRecent(state._closedWindows[0].closedAt), "4. Second window was closed recently");
-  ok(isRecent(state.windows[0]._closedTabs[0].closedAt), "4. First tab was closed recently");
-  ok(isRecent(state.windows[0]._closedTabs[1].closedAt), "4. Second tab was closed recently");
+  is(
+    state.windows[0].closedAt || false,
+    false,
+    "4. Main window doesn't have closedAt"
+  );
+  ok(
+    isRecent(state._closedWindows[0].closedAt),
+    "4. Second window was closed recently"
+  );
+  ok(
+    isRecent(state.windows[0]._closedTabs[0].closedAt),
+    "4. First tab was closed recently"
+  );
+  ok(
+    isRecent(state.windows[0]._closedTabs[1].closedAt),
+    "4. Second tab was closed recently"
+  );
   await promiseCleanup();
 });
 
-
 add_task(async function test_cleanup() {
-  info("5. Altering closedAt to an old date, making sure that stuff gets collected, eventually");
+  info(
+    "5. Altering closedAt to an old date, making sure that stuff gets collected, eventually"
+  );
   await promiseCleanup();
 
   let state = getClosedState();
@@ -149,7 +210,10 @@ add_task(async function test_cleanup() {
   is(state._closedWindows[0], undefined, "5. Second window was forgotten");
 
   is(state.windows[0]._closedTabs.length, 1, "5. Only one closed tab left");
-  is(state.windows[0]._closedTabs[0].state.entries[0].url, url, "5. The second tab is still here");
+  is(
+    state.windows[0]._closedTabs[0].state.entries[0].url,
+    url,
+    "5. The second tab is still here"
+  );
   await promiseCleanup();
 });
-

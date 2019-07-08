@@ -40,6 +40,8 @@ async function performTests() {
   await onPopUpOpen;
 
   ok(autocompletePopup.isOpen, "popup is open");
-  ok(autocompletePopup.items.some(item => item.label === "Promise"),
-    "popup has expected `Promise` item");
+  ok(
+    autocompletePopup.items.some(item => item.label === "Promise"),
+    "popup has expected `Promise` item"
+  );
 }

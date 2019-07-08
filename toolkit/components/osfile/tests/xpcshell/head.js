@@ -3,20 +3,29 @@
 
 "use strict";
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 // Bug 1014484 can only be reproduced by loading OS.File first from the
 // CommonJS loader, so we do not want OS.File to be loaded eagerly for
 // all the tests in this directory.
-ChromeUtils.defineModuleGetter(this, "OS",
-  "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-  "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-  "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 Services.prefs.setBoolPref("toolkit.osfile.log", true);
 
@@ -50,10 +59,12 @@ function reference_fetch_file(path, test) {
   info("Fetching file " + path);
   return new Promise((resolve, reject) => {
     let file = new FileUtils.File(path);
-    NetUtil.asyncFetch({
-      uri: NetUtil.newURI(file),
-      loadUsingSystemPrincipal: true,
-    }, function(stream, status) {
+    NetUtil.asyncFetch(
+      {
+        uri: NetUtil.newURI(file),
+        loadUsingSystemPrincipal: true,
+      },
+      function(stream, status) {
         if (!Components.isSuccessCode(status)) {
           reject(status);
           return;
@@ -70,7 +81,8 @@ function reference_fetch_file(path, test) {
         } else {
           resolve(result);
         }
-      });
+      }
+    );
   });
 }
 

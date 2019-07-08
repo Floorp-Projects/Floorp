@@ -10,7 +10,8 @@
  *   - targetNextSibling
  *   - targetPrevSibling
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <div id="parent">
     <div id="previous"></div>
     <div id="to-hide"></div>
@@ -23,11 +24,20 @@ addAccessibleTask(`
     let event = await onHide;
     let hideEvent = event.QueryInterface(Ci.nsIAccessibleHideEvent);
 
-    is(getAccessibleDOMNodeID(hideEvent.targetParent), "parent",
-      "Correct target parent.");
-    is(getAccessibleDOMNodeID(hideEvent.targetNextSibling), "next",
-      "Correct target next sibling.");
-    is(getAccessibleDOMNodeID(hideEvent.targetPrevSibling), "previous",
-      "Correct target previous sibling.");
+    is(
+      getAccessibleDOMNodeID(hideEvent.targetParent),
+      "parent",
+      "Correct target parent."
+    );
+    is(
+      getAccessibleDOMNodeID(hideEvent.targetNextSibling),
+      "next",
+      "Correct target next sibling."
+    );
+    is(
+      getAccessibleDOMNodeID(hideEvent.targetPrevSibling),
+      "previous",
+      "Correct target previous sibling."
+    );
   }
 );

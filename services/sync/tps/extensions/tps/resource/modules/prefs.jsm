@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* This is a JavaScript module (JSM) to be imported via
+/* This is a JavaScript module (JSM) to be imported via
    Components.utils.import() and acts as a singleton.
    Only the following listed symbols will exposed on import, and only when
    and where imported. */
@@ -11,8 +11,8 @@ var EXPORTED_SYMBOLS = ["Preference"];
 
 const WEAVE_PREF_PREFIX = "services.sync.prefs.sync.";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
 /**
  * Preference class constructor
@@ -20,8 +20,10 @@ const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
  * Initializes instance properties.
  */
 function Preference(props) {
-  Logger.AssertTrue("name" in props && "value" in props,
-    "Preference must have both name and value");
+  Logger.AssertTrue(
+    "name" in props && "value" in props,
+    "Preference must have both name and value"
+  );
 
   this.name = props.name;
   this.value = props.value;
@@ -56,18 +58,27 @@ Preference.prototype = {
     let prefType = Services.prefs.getPrefType(this.name);
     switch (prefType) {
       case Ci.nsIPrefBranch.PREF_INT:
-        Logger.AssertEqual(typeof(this.value), "number",
-          "Wrong type used for preference value");
+        Logger.AssertEqual(
+          typeof this.value,
+          "number",
+          "Wrong type used for preference value"
+        );
         Services.prefs.setIntPref(this.name, this.value);
         break;
       case Ci.nsIPrefBranch.PREF_STRING:
-        Logger.AssertEqual(typeof(this.value), "string",
-          "Wrong type used for preference value");
+        Logger.AssertEqual(
+          typeof this.value,
+          "string",
+          "Wrong type used for preference value"
+        );
         Services.prefs.setCharPref(this.name, this.value);
         break;
       case Ci.nsIPrefBranch.PREF_BOOL:
-        Logger.AssertEqual(typeof(this.value), "boolean",
-          "Wrong type used for preference value");
+        Logger.AssertEqual(
+          typeof this.value,
+          "boolean",
+          "Wrong type used for preference value"
+        );
         Services.prefs.setBoolPref(this.name, this.value);
         break;
     }
@@ -104,8 +115,11 @@ Preference.prototype = {
 
     // Throw an exception if the current and expected values aren't of
     // the same type, or don't have the same values.
-    Logger.AssertEqual(typeof(value), typeof(this.value),
-      "Value types don't match");
+    Logger.AssertEqual(
+      typeof value,
+      typeof this.value,
+      "Value types don't match"
+    );
     Logger.AssertEqual(value, this.value, "Preference values don't match");
   },
 };

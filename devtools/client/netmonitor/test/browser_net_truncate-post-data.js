@@ -4,9 +4,9 @@
 "use strict";
 
 /**
-  * Bug 1542172 -
-  * Verifies that requests with large post data are truncated and error is displayed.
-*/
+ * Bug 1542172 -
+ * Verifies that requests with large post data are truncated and error is displayed.
+ */
 add_task(async function() {
   const { monitor, tab } = await initNetMonitor(POST_JSON_URL);
 
@@ -29,19 +29,34 @@ add_task(async function() {
 
   wait = waitForDOM(document, "#params-panel .tree-section", 1);
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent({ type: "click" }, document.querySelector("#params-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#params-tab")
+  );
   await wait;
 
   const tabpanel = document.querySelector("#params-panel");
-  is(tabpanel.querySelector(".request-error-header") === null, false,
-    "The request error header doesn't have the intended visibility.");
-  is(tabpanel.querySelector(".request-error-header").textContent,
-    "Request has been truncated", "The error message shown is incorrect");
+  is(
+    tabpanel.querySelector(".request-error-header") === null,
+    false,
+    "The request error header doesn't have the intended visibility."
+  );
+  is(
+    tabpanel.querySelector(".request-error-header").textContent,
+    "Request has been truncated",
+    "The error message shown is incorrect"
+  );
   const jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
-  is(jsonView.textContent === L10N.getStr("jsonScopeName"), false,
-    "The params json view doesn't have the intended visibility.");
-  is(tabpanel.querySelector("pre") === null, false,
-    "The Request Payload has the intended visibility.");
+  is(
+    jsonView.textContent === L10N.getStr("jsonScopeName"),
+    false,
+    "The params json view doesn't have the intended visibility."
+  );
+  is(
+    tabpanel.querySelector("pre") === null,
+    false,
+    "The Request Payload has the intended visibility."
+  );
 
   return teardown(monitor);
   async function performRequestsAndWait() {

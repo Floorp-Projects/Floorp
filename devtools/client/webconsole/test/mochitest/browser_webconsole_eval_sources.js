@@ -5,8 +5,9 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-eval-sources.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-eval-sources.html";
 
 async function clickFirstStackElement(hud, message, needsExpansion) {
   if (needsExpansion) {

@@ -10,8 +10,8 @@
 
 requestLongerTimeout(2);
 
-const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/";
+const TEST_PATH =
+  "http://example.com/browser/devtools/client/webconsole/" + "test/mochitest/";
 const TEST_URI_WARNING = `${TEST_PATH}test-ineffective-iframe-sandbox-warning0.html`;
 const TEST_URI_NOWARNING = [
   `${TEST_PATH}test-ineffective-iframe-sandbox-warning1.html`,
@@ -21,7 +21,8 @@ const TEST_URI_NOWARNING = [
   `${TEST_PATH}test-ineffective-iframe-sandbox-warning5.html`,
 ];
 
-const INEFFECTIVE_IFRAME_SANDBOXING_MSG = "An iframe which has both " +
+const INEFFECTIVE_IFRAME_SANDBOXING_MSG =
+  "An iframe which has both " +
   "allow-scripts and allow-same-origin for its sandbox attribute can remove " +
   "its sandboxing.";
 const SENTINEL_MSG = "testing ineffective sandboxing message";
@@ -45,7 +46,14 @@ async function testWarningMessageVisibility(uri, visible) {
   });
   await onSentinelMessage;
 
-  const warning = findMessage(hud, INEFFECTIVE_IFRAME_SANDBOXING_MSG, ".message.warn");
-  is(!!warning, visible,
-    `The warning message is${visible ? "" : " not"} visible on ${uri}`);
+  const warning = findMessage(
+    hud,
+    INEFFECTIVE_IFRAME_SANDBOXING_MSG,
+    ".message.warn"
+  );
+  is(
+    !!warning,
+    visible,
+    `The warning message is${visible ? "" : " not"} visible on ${uri}`
+  );
 }

@@ -5,7 +5,7 @@
 
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {
   parsePseudoClassesAndAttributes,
   SELECTOR_ATTRIBUTE,
@@ -26,27 +26,19 @@ const TEST_DATA = [
   },
   {
     input: ":root",
-    expected: [
-      { value: ":root", type: SELECTOR_PSEUDO_CLASS },
-    ],
+    expected: [{ value: ":root", type: SELECTOR_PSEUDO_CLASS }],
   },
   {
     input: ".testclass",
-    expected: [
-      { value: ".testclass", type: SELECTOR_ELEMENT },
-    ],
+    expected: [{ value: ".testclass", type: SELECTOR_ELEMENT }],
   },
   {
     input: "div p",
-    expected: [
-      { value: "div p", type: SELECTOR_ELEMENT },
-    ],
+    expected: [{ value: "div p", type: SELECTOR_ELEMENT }],
   },
   {
     input: "div > p",
-    expected: [
-      { value: "div > p", type: SELECTOR_ELEMENT },
-    ],
+    expected: [{ value: "div > p", type: SELECTOR_ELEMENT }],
   },
   {
     input: "a[hidden]",
@@ -72,10 +64,10 @@ const TEST_DATA = [
     ],
   },
   {
-    input: "a[checked=\"true\"]",
+    input: 'a[checked="true"]',
     expected: [
       { value: "a", type: SELECTOR_ELEMENT },
-      { value: "[checked=\"true\"]", type: SELECTOR_ATTRIBUTE },
+      { value: '[checked="true"]', type: SELECTOR_ATTRIBUTE },
     ],
   },
   {
@@ -86,11 +78,11 @@ const TEST_DATA = [
     ],
   },
   {
-    input: "h1[hidden=\"true\"][title^=\"Important\"]",
+    input: 'h1[hidden="true"][title^="Important"]',
     expected: [
       { value: "h1", type: SELECTOR_ELEMENT },
-      { value: "[hidden=\"true\"]", type: SELECTOR_ATTRIBUTE },
-      { value: "[title^=\"Important\"]", type: SELECTOR_ATTRIBUTE},
+      { value: '[hidden="true"]', type: SELECTOR_ATTRIBUTE },
+      { value: '[title^="Important"]', type: SELECTOR_ATTRIBUTE },
     ],
   },
   {
@@ -122,24 +114,20 @@ const TEST_DATA = [
     ],
   },
   {
-    input: "p:not([title=\"test\"]) .testclass",
+    input: 'p:not([title="test"]) .testclass',
     expected: [
       { value: "p", type: SELECTOR_ELEMENT },
-      { value: ":not([title=\"test\"])", type: SELECTOR_PSEUDO_CLASS },
+      { value: ':not([title="test"])', type: SELECTOR_PSEUDO_CLASS },
       { value: " .testclass", type: SELECTOR_ELEMENT },
     ],
   },
   {
     input: "a\\:hover",
-    expected: [
-      { value: "a\\:hover", type: SELECTOR_ELEMENT },
-    ],
+    expected: [{ value: "a\\:hover", type: SELECTOR_ELEMENT }],
   },
   {
     input: ":not(:lang(it))",
-    expected: [
-      { value: ":not(:lang(it))", type: SELECTOR_PSEUDO_CLASS },
-    ],
+    expected: [{ value: ":not(:lang(it))", type: SELECTOR_PSEUDO_CLASS }],
   },
   {
     input: "p:not(:lang(it))",
@@ -157,9 +145,7 @@ const TEST_DATA = [
   },
   {
     input: ":not(:lang(it)",
-    expected: [
-      { value: ":not(:lang(it)", type: SELECTOR_ELEMENT },
-    ],
+    expected: [{ value: ":not(:lang(it)", type: SELECTOR_ELEMENT }],
   },
   {
     input: ":not(:lang(it)))",
@@ -178,8 +164,10 @@ function run_test() {
     try {
       output = parsePseudoClassesAndAttributes(test.input);
     } catch (e) {
-      dump("parsePseudoClassesAndAttributes threw an exception with the " +
-        "given input string\n");
+      dump(
+        "parsePseudoClassesAndAttributes threw an exception with the " +
+          "given input string\n"
+      );
       if (test.throws) {
         ok(true, "Exception expected");
       } else {
@@ -204,8 +192,13 @@ function assertOutput(actual, expected) {
     }
   } else {
     for (const prop of actual) {
-      dump("Actual output contained: {value: " + prop.value + ", type: " +
-        prop.type + "}\n");
+      dump(
+        "Actual output contained: {value: " +
+          prop.value +
+          ", type: " +
+          prop.type +
+          "}\n"
+      );
     }
     equal(actual.length, expected.length);
   }

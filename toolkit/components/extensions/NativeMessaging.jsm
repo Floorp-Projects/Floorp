@@ -7,9 +7,13 @@
 
 var EXPORTED_SYMBOLS = ["NativeApp"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -41,7 +45,8 @@ const MAX_WRITE = 0xffffffff;
 // Preferences that can lower the message size limits above,
 // used for testing the limits.
 const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
-const PREF_MAX_WRITE = "webextensions.native-messaging.max-output-message-bytes";
+const PREF_MAX_WRITE =
+  "webextensions.native-messaging.max-output-message-bytes";
 
 const global = this;
 
@@ -65,12 +70,18 @@ var NativeApp = class extends EventEmitter {
     this.writePromise = null;
     this.sentDisconnect = false;
 
-    this.startupPromise = NativeManifests.lookupManifest("stdio", application, context)
+    this.startupPromise = NativeManifests.lookupManifest(
+      "stdio",
+      application,
+      context
+    )
       .then(hostInfo => {
         // Report a generic error to not leak information about whether a native
         // application is installed to addons that do not have the right permission.
         if (!hostInfo) {
-          throw new context.cloneScope.Error(`No such native application ${application}`);
+          throw new context.cloneScope.Error(
+            `No such native application ${application}`
+          );
         }
 
         let command = hostInfo.manifest.path;
@@ -88,13 +99,15 @@ var NativeApp = class extends EventEmitter {
           stderr: "pipe",
         };
         return Subprocess.call(subprocessOpts);
-      }).then(proc => {
+      })
+      .then(proc => {
         this.startupPromise = null;
         this.proc = proc;
         this._startRead();
         this._startWrite();
         this._startStderrRead();
-      }).catch(err => {
+      })
+      .catch(err => {
         this.startupPromise = null;
         Cu.reportError(err instanceof Error ? err : err.message);
         this._cleanup(err);
@@ -114,7 +127,15 @@ var NativeApp = class extends EventEmitter {
    */
   static onConnectNative(context, messageManager, portId, sender, application) {
     let app = new NativeApp(context, application);
-    let port = new ExtensionChild.Port(context, messageManager, [Services.mm], "", portId, sender, sender);
+    let port = new ExtensionChild.Port(
+      context,
+      messageManager,
+      [Services.mm],
+      "",
+      portId,
+      sender,
+      sender
+    );
     app.once("disconnect", (what, err) => port.disconnect(err));
 
     /* eslint-disable mozilla/balanced-listeners */
@@ -144,24 +165,31 @@ var NativeApp = class extends EventEmitter {
   // need to consider a port alive if proc is null but the startupPromise
   // is still pending.
   get _isDisconnected() {
-    return (!this.proc && !this.startupPromise);
+    return !this.proc && !this.startupPromise;
   }
 
   _startRead() {
     if (this.readPromise) {
       throw new Error("Entered _startRead() while readPromise is non-null");
     }
-    this.readPromise = this.proc.stdout.readUint32()
+    this.readPromise = this.proc.stdout
+      .readUint32()
       .then(len => {
         if (len > NativeApp.maxRead) {
-          throw new this.context.cloneScope.Error(`Native application tried to send a message of ${len} bytes, which exceeds the limit of ${NativeApp.maxRead} bytes.`);
+          throw new this.context.cloneScope.Error(
+            `Native application tried to send a message of ${len} bytes, which exceeds the limit of ${
+              NativeApp.maxRead
+            } bytes.`
+          );
         }
         return this.proc.stdout.readJSON(len);
-      }).then(msg => {
+      })
+      .then(msg => {
         this.emit("message", msg);
         this.readPromise = null;
         this._startRead();
-      }).catch(err => {
+      })
+      .catch(err => {
         if (err.errorCode != Subprocess.ERROR_END_OF_FILE) {
           Cu.reportError(err instanceof Error ? err : err.message);
         }
@@ -184,13 +212,15 @@ var NativeApp = class extends EventEmitter {
     this.writePromise = Promise.all([
       this.proc.stdin.write(uintArray.buffer),
       this.proc.stdin.write(buffer),
-    ]).then(() => {
-      this.writePromise = null;
-      this._startWrite();
-    }).catch(err => {
-      Cu.reportError(err.message);
-      this._cleanup(err);
-    });
+    ])
+      .then(() => {
+        this.writePromise = null;
+        this._startWrite();
+      })
+      .catch(err => {
+        Cu.reportError(err.message);
+        this._cleanup(err);
+      });
   }
 
   _startStderrRead() {
@@ -203,7 +233,9 @@ var NativeApp = class extends EventEmitter {
         if (data.length == 0) {
           // We have hit EOF, just stop reading
           if (partial) {
-            Services.console.logStringMessage(`stderr output from native app ${app}: ${partial}`);
+            Services.console.logStringMessage(
+              `stderr output from native app ${app}: ${partial}`
+            );
           }
           break;
         }
@@ -213,7 +245,9 @@ var NativeApp = class extends EventEmitter {
         partial = lines.pop();
 
         for (let line of lines) {
-          Services.console.logStringMessage(`stderr output from native app ${app}: ${line}`);
+          Services.console.logStringMessage(
+            `stderr output from native app ${app}: ${line}`
+          );
         }
       }
     })();
@@ -221,13 +255,17 @@ var NativeApp = class extends EventEmitter {
 
   send(holder) {
     if (this._isDisconnected) {
-      throw new this.context.cloneScope.Error("Attempt to postMessage on disconnected port");
+      throw new this.context.cloneScope.Error(
+        "Attempt to postMessage on disconnected port"
+      );
     }
     let msg = holder.deserialize(global);
     if (Cu.getClassName(msg, true) != "ArrayBuffer") {
       // This error cannot be triggered by extensions; it indicates an error in
       // our implementation.
-      throw new Error("The message to the native messaging host is not an ArrayBuffer");
+      throw new Error(
+        "The message to the native messaging host is not an ArrayBuffer"
+      );
     }
 
     let buffer = msg;
@@ -257,12 +295,11 @@ var NativeApp = class extends EventEmitter {
       }, GRACEFUL_SHUTDOWN_TIME);
 
       let promise = Promise.all([
-        this.proc.stdin.close()
-          .catch(err => {
-            if (err.errorCode != Subprocess.ERROR_END_OF_FILE) {
-              throw err;
-            }
-          }),
+        this.proc.stdin.close().catch(err => {
+          if (err.errorCode != Subprocess.ERROR_END_OF_FILE) {
+            throw err;
+          }
+        }),
         this.proc.wait(),
       ]).then(() => {
         this.proc = null;
@@ -271,7 +308,8 @@ var NativeApp = class extends EventEmitter {
 
       AsyncShutdown.profileBeforeChange.addBlocker(
         `Native Messaging: Wait for application ${this.name} to exit`,
-        promise);
+        promise
+      );
 
       promise.then(() => {
         AsyncShutdown.profileBeforeChange.removeBlocker(promise);
@@ -302,8 +340,12 @@ var NativeApp = class extends EventEmitter {
 
   sendMessage(holder) {
     let responsePromise = new Promise((resolve, reject) => {
-      this.once("message", (what, msg) => { resolve(msg); });
-      this.once("disconnect", (what, err) => { reject(err); });
+      this.once("message", (what, msg) => {
+        resolve(msg);
+      });
+      this.once("disconnect", (what, err) => {
+        reject(err);
+      });
     });
 
     let result = this.startupPromise.then(() => {
@@ -311,19 +353,32 @@ var NativeApp = class extends EventEmitter {
       return responsePromise;
     });
 
-    result.then(() => {
-      this._cleanup();
-    }, () => {
-      // Prevent the response promise from being reported as an
-      // unchecked rejection if the startup promise fails.
-      responsePromise.catch(() => {});
+    result.then(
+      () => {
+        this._cleanup();
+      },
+      () => {
+        // Prevent the response promise from being reported as an
+        // unchecked rejection if the startup promise fails.
+        responsePromise.catch(() => {});
 
-      this._cleanup();
-    });
+        this._cleanup();
+      }
+    );
 
     return result;
   }
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(NativeApp, "maxRead", PREF_MAX_READ, MAX_READ);
-XPCOMUtils.defineLazyPreferenceGetter(NativeApp, "maxWrite", PREF_MAX_WRITE, MAX_WRITE);
+XPCOMUtils.defineLazyPreferenceGetter(
+  NativeApp,
+  "maxRead",
+  PREF_MAX_READ,
+  MAX_READ
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  NativeApp,
+  "maxWrite",
+  PREF_MAX_WRITE,
+  MAX_WRITE
+);

@@ -29,14 +29,14 @@ const TEST_URI = `data:text/html;charset=utf-8,
 add_task(async function() {
   await addTab(TEST_URI);
 
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Expand the shadow-root parent");
   const divFront = await getNodeFront("div", inspector);
   await inspector.markup.expandNode(divFront);
   await waitForMultipleChildrenUpdates(inspector);
 
-  const {markup} = inspector;
+  const { markup } = inspector;
   const divContainer = markup.getContainer(divFront);
 
   info("Expand the shadow-root");
@@ -47,12 +47,14 @@ add_task(async function() {
   const spanContainer = shadowRootContainer.getChildContainers()[0];
   const rules = await getKeyframeRules(spanContainer.node, inspector, view);
 
-  is(convertTextPropsToString(rules.keyframeRules[0].textProps),
+  is(
+    convertTextPropsToString(rules.keyframeRules[0].textProps),
     "border: rgba(255,0,0,1) 2px dashed",
     "Keyframe blink (0%) property is correct"
   );
 
-  is(convertTextPropsToString(rules.keyframeRules[1].textProps),
+  is(
+    convertTextPropsToString(rules.keyframeRules[1].textProps),
     "border: rgba(255,0,0,0) 2px dashed",
     "Keyframe blink (100%) property is correct"
   );

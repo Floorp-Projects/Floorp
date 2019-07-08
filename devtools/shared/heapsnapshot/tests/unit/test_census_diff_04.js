@@ -11,49 +11,49 @@ const BREAKDOWN = {
 };
 
 const REPORT1 = {
-  "Array": {
+  Array: {
     count: 1,
     bytes: 100,
   },
-  "Function": {
+  Function: {
     count: 10,
     bytes: 10,
   },
-  "other": {
+  other: {
     count: 10,
     bytes: 100,
   },
 };
 
 const REPORT2 = {
-  "Object": {
+  Object: {
     count: 1,
     bytes: 100,
   },
-  "Function": {
+  Function: {
     count: 20,
     bytes: 20,
   },
-  "other": {
+  other: {
     count: 10,
     bytes: 100,
   },
 };
 
 const EXPECTED = {
-  "Array": {
+  Array: {
     count: -1,
     bytes: -100,
   },
-  "Function": {
+  Function: {
     count: 10,
     bytes: 10,
   },
-  "other": {
+  other: {
     count: 0,
     bytes: 0,
   },
-  "Object": {
+  Object: {
     count: 1,
     bytes: 100,
   },

@@ -5,9 +5,7 @@
 
 const URL = ROOT + "browser_456342_sample.xhtml";
 
-const EXPECTED_IDS = new Set([
-  "searchTerm",
-]);
+const EXPECTED_IDS = new Set(["searchTerm"]);
 
 const EXPECTED_XPATHS = new Set([
   "/xhtml:html/xhtml:body/xhtml:form/xhtml:p[2]/xhtml:input",
@@ -27,7 +25,7 @@ add_task(async function test_restore_nonstandard_input_values() {
 
   // Fill in form values.
   let expectedValue = Math.random();
-  await setFormElementValues(browser, {value: expectedValue});
+  await setFormElementValues(browser, { value: expectedValue });
 
   // Remove tab and check collected form data.
   await promiseRemoveTabAndSessionState(tab);
@@ -49,7 +47,11 @@ add_task(async function test_restore_nonstandard_input_values() {
   }
 
   is(foundIds, EXPECTED_IDS.size, "Check number of fields saved by ID");
-  is(foundXpaths, EXPECTED_XPATHS.size, "Check number of fields saved by xpath");
+  is(
+    foundXpaths,
+    EXPECTED_XPATHS.size,
+    "Check number of fields saved by xpath"
+  );
 });
 
 function setFormElementValues(browser, data) {

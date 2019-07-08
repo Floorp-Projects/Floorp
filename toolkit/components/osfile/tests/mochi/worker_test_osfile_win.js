@@ -26,12 +26,28 @@ function test_init() {
 
 function test_OpenClose() {
   info("Starting test_OpenClose");
-  is(typeof OS.Win.File.CreateFile, "function", "OS.Win.File.CreateFile is a function");
-  is(OS.Win.File.CloseHandle(OS.Constants.Win.INVALID_HANDLE_VALUE), true, "CloseHandle returns true given the invalid handle");
-  is(OS.Win.File.FindClose(OS.Constants.Win.INVALID_HANDLE_VALUE), true, "FindClose returns true given the invalid handle");
+  is(
+    typeof OS.Win.File.CreateFile,
+    "function",
+    "OS.Win.File.CreateFile is a function"
+  );
+  is(
+    OS.Win.File.CloseHandle(OS.Constants.Win.INVALID_HANDLE_VALUE),
+    true,
+    "CloseHandle returns true given the invalid handle"
+  );
+  is(
+    OS.Win.File.FindClose(OS.Constants.Win.INVALID_HANDLE_VALUE),
+    true,
+    "FindClose returns true given the invalid handle"
+  );
   isnot(OS.Constants.Win.GENERIC_READ, undefined, "GENERIC_READ exists");
   isnot(OS.Constants.Win.FILE_SHARE_READ, undefined, "FILE_SHARE_READ exists");
-  isnot(OS.Constants.Win.FILE_ATTRIBUTE_NORMAL, undefined, "FILE_ATTRIBUTE_NORMAL exists");
+  isnot(
+    OS.Constants.Win.FILE_ATTRIBUTE_NORMAL,
+    undefined,
+    "FILE_ATTRIBUTE_NORMAL exists"
+  );
   let file = OS.Win.File.CreateFile(
     "chrome\\toolkit\\components\\osfile\\tests\\mochi\\worker_test_osfile_win.js",
     OS.Constants.Win.GENERIC_READ,
@@ -39,9 +55,14 @@ function test_OpenClose() {
     null,
     OS.Constants.Win.OPEN_EXISTING,
     0,
-    null);
+    null
+  );
   info("test_OpenClose: Passed open");
-  isnot(file, OS.Constants.Win.INVALID_HANDLE_VALUE, "test_OpenClose: file opened");
+  isnot(
+    file,
+    OS.Constants.Win.INVALID_HANDLE_VALUE,
+    "test_OpenClose: file opened"
+  );
   let result = OS.Win.File.CloseHandle(file);
   isnot(result, 0, "test_OpenClose: close succeeded");
 
@@ -52,9 +73,18 @@ function test_OpenClose() {
     null,
     OS.Constants.Win.OPEN_EXISTING,
     OS.Constants.Win.FILE_ATTRIBUTE_NORMAL,
-    null);
-  is(file, OS.Constants.Win.INVALID_HANDLE_VALUE, "test_OpenClose: cannot open non-existing file");
-  is(ctypes.winLastError, OS.Constants.Win.ERROR_FILE_NOT_FOUND, "test_OpenClose: error is ERROR_FILE_NOT_FOUND");
+    null
+  );
+  is(
+    file,
+    OS.Constants.Win.INVALID_HANDLE_VALUE,
+    "test_OpenClose: cannot open non-existing file"
+  );
+  is(
+    ctypes.winLastError,
+    OS.Constants.Win.ERROR_FILE_NOT_FOUND,
+    "test_OpenClose: error is ERROR_FILE_NOT_FOUND"
+  );
 }
 
 function test_CreateFile() {
@@ -66,8 +96,13 @@ function test_CreateFile() {
     null,
     OS.Constants.Win.CREATE_ALWAYS,
     OS.Constants.Win.FILE_ATTRIBUTE_NORMAL,
-    null);
-  isnot(file, OS.Constants.Win.INVALID_HANDLE_VALUE, "test_CreateFile: opening succeeded");
+    null
+  );
+  isnot(
+    file,
+    OS.Constants.Win.INVALID_HANDLE_VALUE,
+    "test_CreateFile: opening succeeded"
+  );
   let result = OS.Win.File.CloseHandle(file);
   isnot(result, 0, "test_CreateFile: close succeeded");
 }
@@ -85,22 +120,32 @@ function test_ReadWrite() {
   // Copy file
   let input = OS.Win.File.CreateFile(
     "chrome\\toolkit\\components\\osfile\\tests\\mochi\\worker_test_osfile_win.js",
-     OS.Constants.Win.GENERIC_READ,
-     0,
-     null,
-     OS.Constants.Win.OPEN_EXISTING,
-     0,
-     null);
-  isnot(input, OS.Constants.Win.INVALID_HANDLE_VALUE, "test_ReadWrite: input file opened");
+    OS.Constants.Win.GENERIC_READ,
+    0,
+    null,
+    OS.Constants.Win.OPEN_EXISTING,
+    0,
+    null
+  );
+  isnot(
+    input,
+    OS.Constants.Win.INVALID_HANDLE_VALUE,
+    "test_ReadWrite: input file opened"
+  );
   let output = OS.Win.File.CreateFile(
-     "osfile_copy.tmp",
-     OS.Constants.Win.GENERIC_READ | OS.Constants.Win.GENERIC_WRITE,
-     0,
-     null,
-     OS.Constants.Win.CREATE_ALWAYS,
-     OS.Constants.Win.FILE_ATTRIBUTE_NORMAL,
-     null);
-  isnot(output, OS.Constants.Win.INVALID_HANDLE_VALUE, "test_ReadWrite: output file opened");
+    "osfile_copy.tmp",
+    OS.Constants.Win.GENERIC_READ | OS.Constants.Win.GENERIC_WRITE,
+    0,
+    null,
+    OS.Constants.Win.CREATE_ALWAYS,
+    OS.Constants.Win.FILE_ATTRIBUTE_NORMAL,
+    null
+  );
+  isnot(
+    output,
+    OS.Constants.Win.INVALID_HANDLE_VALUE,
+    "test_ReadWrite: output file opened"
+  );
   let array = new (ctypes.ArrayType(ctypes.char, 4096))();
   let bytes_read = new ctypes.uint32_t(0);
   let bytes_read_ptr = bytes_read.address();
@@ -124,7 +169,13 @@ function test_ReadWrite() {
       log("test_ReadWrite: writing " + bytes_left.value);
       array.addressOfElement(write_from);
       // Note: |WriteFile| launches an exception in case of error
-      result = OS.Win.File.WriteFile(output, array, bytes_left, bytes_written_ptr, null);
+      result = OS.Win.File.WriteFile(
+        output,
+        array,
+        bytes_left,
+        bytes_written_ptr,
+        null
+      );
       isnot(result, 0, "test_ReadWrite: write success");
       write_from += bytes_written;
       bytes_left -= bytes_written;
@@ -133,11 +184,29 @@ function test_ReadWrite() {
   info("test_ReadWrite: copy complete");
 
   // Compare files
-  result = OS.Win.File.SetFilePointer(input, 0, null, OS.Constants.Win.FILE_BEGIN);
-  isnot(result, OS.Constants.Win.INVALID_SET_FILE_POINTER, "test_ReadWrite: input reset");
+  result = OS.Win.File.SetFilePointer(
+    input,
+    0,
+    null,
+    OS.Constants.Win.FILE_BEGIN
+  );
+  isnot(
+    result,
+    OS.Constants.Win.INVALID_SET_FILE_POINTER,
+    "test_ReadWrite: input reset"
+  );
 
-  result = OS.Win.File.SetFilePointer(output, 0, null, OS.Constants.Win.FILE_BEGIN);
-  isnot(result, OS.Constants.Win.INVALID_SET_FILE_POINTER, "test_ReadWrite: output reset");
+  result = OS.Win.File.SetFilePointer(
+    output,
+    0,
+    null,
+    OS.Constants.Win.FILE_BEGIN
+  );
+  isnot(
+    result,
+    OS.Constants.Win.INVALID_SET_FILE_POINTER,
+    "test_ReadWrite: output reset"
+  );
 
   let array2 = new (ctypes.ArrayType(ctypes.char, 4096))();
   let bytes_read2 = new ctypes.uint32_t(0);
@@ -150,8 +219,14 @@ function test_ReadWrite() {
     result = OS.Win.File.ReadFile(output, array2, 4096, bytes_read2_ptr, null);
     isnot(result, 0, "test_ReadWrite: output read succeeded");
 
-    is(bytes_read.value > 0, bytes_read2.value > 0,
-       "Both files contain data or neither does " + bytes_read.value + ", " + bytes_read2.value);
+    is(
+      bytes_read.value > 0,
+      bytes_read2.value > 0,
+      "Both files contain data or neither does " +
+        bytes_read.value +
+        ", " +
+        bytes_read2.value
+    );
     if (bytes_read.value == 0) {
       break;
     }
@@ -161,10 +236,20 @@ function test_ReadWrite() {
       // remote file system, I believe.
       bytes = Math.min(bytes_read.value, bytes_read2.value);
       pos += bytes;
-      result = OS.Win.File.SetFilePointer(input, pos, null, OS.Constants.Win.FILE_BEGIN);
+      result = OS.Win.File.SetFilePointer(
+        input,
+        pos,
+        null,
+        OS.Constants.Win.FILE_BEGIN
+      );
       isnot(result, 0, "test_ReadWrite: input seek succeeded");
 
-      result = OS.Win.File.SetFilePointer(output, pos, null, OS.Constants.Win.FILE_BEGIN);
+      result = OS.Win.File.SetFilePointer(
+        output,
+        pos,
+        null,
+        OS.Constants.Win.FILE_BEGIN
+      );
       isnot(result, 0, "test_ReadWrite: output seek succeeded");
     } else {
       bytes = bytes_read.value;
@@ -172,8 +257,16 @@ function test_ReadWrite() {
     }
     for (let i = 0; i < bytes; ++i) {
       if (array[i] != array2[i]) {
-        ok(false, "Files do not match at position " + i
-           + " (" + array[i] + "/" + array2[i] + ")");
+        ok(
+          false,
+          "Files do not match at position " +
+            i +
+            " (" +
+            array[i] +
+            "/" +
+            array2[i] +
+            ")"
+        );
       }
     }
   }
@@ -188,7 +281,9 @@ function test_ReadWrite() {
 }
 
 function test_passing_undefined() {
-  info("Testing that an exception gets thrown when an FFI function is passed undefined");
+  info(
+    "Testing that an exception gets thrown when an FFI function is passed undefined"
+  );
   let exceptionRaised = false;
 
   try {
@@ -199,7 +294,8 @@ function test_passing_undefined() {
       null,
       OS.Constants.Win.OPEN_EXISTING,
       0,
-      null);
+      null
+    );
   } catch (e) {
     if (e instanceof TypeError && e.message.indexOf("CreateFile") > -1) {
       exceptionRaised = true;

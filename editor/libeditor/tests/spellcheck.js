@@ -3,7 +3,11 @@ function isSpellingCheckOk(aEditor, aMisspelledWords) {
   var sel = selcon.getSelection(selcon.SELECTION_SPELLCHECK);
   var numWords = sel.rangeCount;
 
-  is(numWords, aMisspelledWords.length, "Correct number of misspellings and words.");
+  is(
+    numWords,
+    aMisspelledWords.length,
+    "Correct number of misspellings and words."
+  );
 
   if (numWords !== aMisspelledWords.length) {
     return false;

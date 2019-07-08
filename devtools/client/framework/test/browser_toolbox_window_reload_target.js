@@ -12,13 +12,16 @@
 
 requestLongerTimeout(10);
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-                 "<html><head><title>Test reload</title></head>" +
-                 "<body><h1>Testing reload from devtools</h1></body></html>";
+const TEST_URL =
+  "data:text/html;charset=utf-8," +
+  "<html><head><title>Test reload</title></head>" +
+  "<body><h1>Testing reload from devtools</h1></body></html>";
 
 const { Toolbox } = require("devtools/client/framework/toolbox");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/toolbox.properties"
+);
 
 // Track how many page reloads we've sent to the page.
 var reloadsSent = 0;
@@ -30,22 +33,37 @@ add_task(async function() {
   loadFrameScriptUtils();
 
   info("Getting the entire list of tools supported in this tab");
-  const toolIDs = gDevTools.getToolDefinitionArray()
-                           .filter(def => def.isTargetSupported(target))
-                           .map(def => def.id);
+  const toolIDs = gDevTools
+    .getToolDefinitionArray()
+    .filter(def => def.isTargetSupported(target))
+    .map(def => def.id);
 
-  info("Display the toolbox, docked at the bottom, with the first tool selected");
-  const toolbox = await gDevTools.showToolbox(target, toolIDs[0],
-    Toolbox.HostType.BOTTOM);
+  info(
+    "Display the toolbox, docked at the bottom, with the first tool selected"
+  );
+  const toolbox = await gDevTools.showToolbox(
+    target,
+    toolIDs[0],
+    Toolbox.HostType.BOTTOM
+  );
 
-  info("Listen to page reloads to check that they are indeed sent by the toolbox");
+  info(
+    "Listen to page reloads to check that they are indeed sent by the toolbox"
+  );
   let reloadDetected = 0;
   const reloadCounter = msg => {
     reloadDetected++;
     info("Detected reload #" + reloadDetected);
-    is(reloadDetected, reloadsSent, "Detected the right number of reloads in the page");
+    is(
+      reloadDetected,
+      reloadsSent,
+      "Detected the right number of reloads in the page"
+    );
   };
-  gBrowser.selectedBrowser.messageManager.addMessageListener("devtools:test:load", reloadCounter);
+  gBrowser.selectedBrowser.messageManager.addMessageListener(
+    "devtools:test:load",
+    reloadCounter
+  );
 
   info("Start testing with the toolbox docked");
   // Note that we actually only test 1 tool in docked mode, to cut down on test time.
@@ -63,7 +81,10 @@ add_task(async function() {
   info("Switch back to docked mode");
   await toolbox.switchHost(Toolbox.HostType.BOTTOM);
 
-  gBrowser.selectedBrowser.messageManager.removeMessageListener("devtools:test:load", reloadCounter);
+  gBrowser.selectedBrowser.messageManager.removeMessageListener(
+    "devtools:test:load",
+    reloadCounter
+  );
 
   await toolbox.destroy();
   gBrowser.removeCurrentTab();

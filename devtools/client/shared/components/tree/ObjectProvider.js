@@ -24,7 +24,7 @@ define(function(require, exports, module) {
         return [];
       }
 
-      if (typeof (object) == "string") {
+      if (typeof object == "string") {
         return [];
       }
 
@@ -59,23 +59,21 @@ define(function(require, exports, module) {
     },
 
     getLabel: function(object) {
-      return (object instanceof ObjectProperty) ?
-        object.name : null;
+      return object instanceof ObjectProperty ? object.name : null;
     },
 
     getValue: function(object) {
-      return (object instanceof ObjectProperty) ?
-        object.value : null;
+      return object instanceof ObjectProperty ? object.value : null;
     },
 
     getKey: function(object) {
-      return (object instanceof ObjectProperty) ?
-        object.name : null;
+      return object instanceof ObjectProperty ? object.name : null;
     },
 
     getType: function(object) {
-      return (object instanceof ObjectProperty) ?
-        typeof object.value : typeof object;
+      return object instanceof ObjectProperty
+        ? typeof object.value
+        : typeof object;
     },
   };
 

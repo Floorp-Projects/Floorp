@@ -26,8 +26,7 @@ const THEME_PREF = "devtools.theme";
  */
 function getThemeFile(name) {
   // If there's no theme expected for this name, use `light` as default.
-  const selector = THEME_SELECTOR_STRINGS[name] ||
-                 THEME_SELECTOR_STRINGS.light;
+  const selector = THEME_SELECTOR_STRINGS[name] || THEME_SELECTOR_STRINGS.light;
 
   // This is a pretty naive way to find the contents between:
   // selector {
@@ -46,9 +45,9 @@ function getThemeFile(name) {
  * Returns the string value of the current theme,
  * like "dark" or "light".
  */
-const getTheme = exports.getTheme = () => {
+const getTheme = (exports.getTheme = () => {
   return Services.prefs.getCharPref(THEME_PREF);
-};
+});
 
 /**
  * Returns a color indicated by `type` (like "toolbar-background", or
@@ -57,7 +56,7 @@ const getTheme = exports.getTheme = () => {
  * theme. Returns null if the type cannot be found for the theme given.
  */
 /* eslint-disable no-unused-vars */
-const getColor = exports.getColor = (type, theme) => {
+const getColor = (exports.getColor = (type, theme) => {
   const themeName = theme || getTheme();
   let themeFile = getThemeFile(themeName);
   let match = themeFile.match(new RegExp("--theme-" + type + ": (.*);"));
@@ -72,26 +71,26 @@ const getColor = exports.getColor = (type, theme) => {
 
   // Return the appropriate variable in the theme, or otherwise, null.
   return match ? match[1] : null;
-};
+});
 
 /**
  * Set the theme preference.
  */
-const setTheme = exports.setTheme = (newTheme) => {
+const setTheme = (exports.setTheme = newTheme => {
   Services.prefs.setCharPref(THEME_PREF, newTheme);
-};
+});
 
 /**
  * Add an observer for theme changes.
  */
-const addThemeObserver = exports.addThemeObserver = observer => {
+const addThemeObserver = (exports.addThemeObserver = observer => {
   Services.prefs.addObserver(THEME_PREF, observer);
-};
+});
 
 /**
  * Remove an observer for theme changes.
  */
-const removeThemeObserver = exports.removeThemeObserver = observer => {
+const removeThemeObserver = (exports.removeThemeObserver = observer => {
   Services.prefs.removeObserver(THEME_PREF, observer);
-};
+});
 /* eslint-enable */

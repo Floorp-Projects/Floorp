@@ -16,4 +16,3 @@ function finishJSTest() {
 function description(str) {
   info(str);
 }
-

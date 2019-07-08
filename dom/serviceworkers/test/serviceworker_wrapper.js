@@ -7,12 +7,16 @@ var client;
 
 function ok(a, msg) {
   dump("OK: " + !!a + "  =>  " + a + ": " + msg + "\n");
-  client.postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
+  client.postMessage({ type: "status", status: !!a, msg: a + ": " + msg });
 }
 
 function is(a, b, msg) {
-  dump("IS: " + (a===b) + "  =>  " + a + " | " + b + ": " + msg + "\n");
-  client.postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
+  dump("IS: " + (a === b) + "  =>  " + a + " | " + b + ": " + msg + "\n");
+  client.postMessage({
+    type: "status",
+    status: a === b,
+    msg: a + " === " + b + ": " + msg,
+  });
 }
 
 function workerTestArrayEquals(a, b) {
@@ -28,39 +32,39 @@ function workerTestArrayEquals(a, b) {
 }
 
 function workerTestDone() {
-  client.postMessage({ type: 'finish' });
+  client.postMessage({ type: "finish" });
 }
 
 function workerTestGetHelperData(cb) {
-  addEventListener('message', function workerTestGetHelperDataCB(e) {
-    if (e.data.type !== 'returnHelperData') {
+  addEventListener("message", function workerTestGetHelperDataCB(e) {
+    if (e.data.type !== "returnHelperData") {
       return;
     }
-    removeEventListener('message', workerTestGetHelperDataCB);
+    removeEventListener("message", workerTestGetHelperDataCB);
     cb(e.data.result);
   });
   client.postMessage({
-    type: 'getHelperData'
+    type: "getHelperData",
   });
 }
 
 function workerTestGetStorageManager(cb) {
-  addEventListener('message', function workerTestGetStorageManagerCB(e) {
-    if (e.data.type !== 'returnStorageManager') {
+  addEventListener("message", function workerTestGetStorageManagerCB(e) {
+    if (e.data.type !== "returnStorageManager") {
       return;
     }
-    removeEventListener('message', workerTestGetStorageManagerCB);
+    removeEventListener("message", workerTestGetStorageManagerCB);
     cb(e.data.result);
   });
   client.postMessage({
-    type: 'getStorageManager'
+    type: "getStorageManager",
   });
 }
 
 var completeInstall;
 
-addEventListener('message', function workerWrapperOnMessage(e) {
-  removeEventListener('message', workerWrapperOnMessage);
+addEventListener("message", function workerWrapperOnMessage(e) {
+  removeEventListener("message", workerWrapperOnMessage);
   var data = e.data;
   self.clients.matchAll({ includeUncontrolled: true }).then(function(clients) {
     for (var i = 0; i < clients.length; ++i) {
@@ -71,17 +75,18 @@ addEventListener('message', function workerWrapperOnMessage(e) {
     }
     try {
       importScripts(data.script);
-    } catch(ex) {
+    } catch (ex) {
       client.postMessage({
-        type: 'status',
+        type: "status",
         status: false,
-        msg: 'worker failed to import ' + data.script + "; error: " + ex.message
+        msg:
+          "worker failed to import " + data.script + "; error: " + ex.message,
       });
     }
     completeInstall();
   });
 });
 
-addEventListener('install', e => {
-  e.waitUntil(new Promise(resolve => completeInstall = resolve));
+addEventListener("install", e => {
+  e.waitUntil(new Promise(resolve => (completeInstall = resolve)));
 });

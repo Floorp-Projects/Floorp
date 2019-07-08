@@ -7,10 +7,13 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "WebRequestCommon",
-                               "resource://gre/modules/WebRequestCommon.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebRequestCommon",
+  "resource://gre/modules/WebRequestCommon.jsm"
+);
 
 // Websockets will get handled via httpchannel notifications same as http
 // requests, treat them the same as http in ContentPolicy.
@@ -21,13 +24,20 @@ var ContentPolicy = {
   _classID: Components.ID("938e5d24-9ccc-4b55-883e-c252a41f7ce9"),
   _contractID: "@mozilla.org/webrequest/policy;1",
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPolicy,
-                                          Ci.nsIFactory,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIContentPolicy,
+    Ci.nsIFactory,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   init() {
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.registerFactory(this._classID, this._classDescription, this._contractID, this);
+    registrar.registerFactory(
+      this._classID,
+      this._classDescription,
+      this._contractID,
+      this
+    );
 
     this.contentPolicies = new Map();
     Services.cpmm.addMessageListener("WebRequest:AddContentPolicy", this);
@@ -40,14 +50,14 @@ var ContentPolicy = {
     }
   },
 
-  addContentPolicy({id, blocking, filter}) {
+  addContentPolicy({ id, blocking, filter }) {
     if (this.contentPolicies.size == 0) {
       this.register();
     }
     if (filter.urls) {
       filter.urls = new MatchPatternSet(filter.urls);
     }
-    this.contentPolicies.set(id, {blocking, filter});
+    this.contentPolicies.set(id, { blocking, filter });
   },
 
   receiveMessage(msg) {
@@ -66,13 +76,21 @@ var ContentPolicy = {
   },
 
   register() {
-    Services.catMan.addCategoryEntry("content-policy",
-                                     this._contractID,
-                                     this._contractID, false, true);
+    Services.catMan.addCategoryEntry(
+      "content-policy",
+      this._contractID,
+      this._contractID,
+      false,
+      true
+    );
   },
 
   unregister() {
-    Services.catMan.deleteCategoryEntry("content-policy", this._contractID, false);
+    Services.catMan.deleteCategoryEntry(
+      "content-policy",
+      this._contractID,
+      false
+    );
   },
 
   shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
@@ -91,8 +109,7 @@ var ContentPolicy = {
       return Ci.nsIContentPolicy.ACCEPT;
     }
 
-    if (requestPrincipal &&
-        requestPrincipal.isSystemPrincipal) {
+    if (requestPrincipal && requestPrincipal.isSystemPrincipal) {
       return Ci.nsIContentPolicy.ACCEPT;
     }
     let url = contentLocation.spec;
@@ -103,9 +120,11 @@ var ContentPolicy = {
 
     // Break out early if there are no extension listeners.
     let haveListeners = false;
-    for (let {filter} of this.contentPolicies.values()) {
-      if (WebRequestCommon.typeMatches(policyType, filter.types) &&
-          WebRequestCommon.urlMatches(contentLocation, filter.urls)) {
+    for (let { filter } of this.contentPolicies.values()) {
+      if (
+        WebRequestCommon.typeMatches(policyType, filter.types) &&
+        WebRequestCommon.urlMatches(contentLocation, filter.urls)
+      ) {
         haveListeners = true;
         break;
       }
@@ -125,10 +144,12 @@ var ContentPolicy = {
     }
 
     let node = loadInfo.loadingContext;
-    if (node &&
-        (policyType == Ci.nsIContentPolicy.TYPE_SUBDOCUMENT ||
+    if (
+      node &&
+      (policyType == Ci.nsIContentPolicy.TYPE_SUBDOCUMENT ||
         (ChromeUtils.getClassName(node) == "XULFrameElement" &&
-          node.localName == "browser"))) {
+          node.localName == "browser"))
+    ) {
       // Chrome sets frameId to the ID of the sub-window. But when
       // Firefox loads an iframe, it sets |node| to the <iframe>
       // element, whose window is the parent window. We adopt the
@@ -173,10 +194,12 @@ var ContentPolicy = {
       }
     }
 
-    let data = {url,
-                type: WebRequestCommon.typeForPolicyType(policyType),
-                windowId,
-                parentWindowId};
+    let data = {
+      url,
+      type: WebRequestCommon.typeForPolicyType(policyType),
+      windowId,
+      parentWindowId,
+    };
     if (frameAncestors.length > 0) {
       data.frameAncestors = frameAncestors;
     }

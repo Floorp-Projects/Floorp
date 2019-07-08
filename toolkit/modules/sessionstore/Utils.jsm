@@ -9,16 +9,19 @@ var EXPORTED_SYMBOLS = ["Utils"];
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "eTLDService",
-                                   "@mozilla.org/network/effective-tld-service;1",
-                                   "nsIEffectiveTLDService");
-
-
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "eTLDService",
+  "@mozilla.org/network/effective-tld-service;1",
+  "nsIEffectiveTLDService"
+);
 
 var Utils = Object.freeze({
-
   serializeInputStream(aStream) {
     let data = {
       content: NetUtil.readInputStreamToString(aStream, aStream.available()),
@@ -50,7 +53,7 @@ var Utils = Object.freeze({
       return false;
     }
 
-   return eTLDService.hasRootDomain(host, domain);
+    return eTLDService.hasRootDomain(host, domain);
   },
 
   shallowCopy(obj) {

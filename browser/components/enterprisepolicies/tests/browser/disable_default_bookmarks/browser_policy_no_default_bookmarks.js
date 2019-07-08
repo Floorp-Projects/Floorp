@@ -9,11 +9,15 @@
 // like most of the policies tested in the main test folder.
 
 add_task(async function test_no_default_bookmarks() {
-  let firstBookmarkOnToolbar =
-    await PlacesUtils.bookmarks.fetch({parentGuid: PlacesUtils.bookmarks.toolbarGuid, index: 0});
+  let firstBookmarkOnToolbar = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    index: 0,
+  });
 
-  let firstBookmarkOnMenu =
-    await PlacesUtils.bookmarks.fetch({parentGuid: PlacesUtils.bookmarks.menuGuid, index: 0});
+  let firstBookmarkOnMenu = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 0,
+  });
 
   is(firstBookmarkOnToolbar, null, "No bookmarks on toolbar");
   is(firstBookmarkOnMenu, null, "No bookmarks on menu");

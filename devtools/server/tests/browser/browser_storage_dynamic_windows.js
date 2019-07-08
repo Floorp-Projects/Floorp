@@ -7,7 +7,8 @@
 /* import-globals-from storage-helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js",
-  this);
+  this
+);
 
 // beforeReload references an object representing the initialized state of the
 // storage actor.
@@ -40,12 +41,18 @@ const afterIframeAdded = {
   cookies: {
     "https://sectest1.example.org": [
       getCookieId("cs2", ".example.org", "/"),
-      getCookieId("sc1", "sectest1.example.org",
-                  "/browser/devtools/server/tests/browser"),
+      getCookieId(
+        "sc1",
+        "sectest1.example.org",
+        "/browser/devtools/server/tests/browser"
+      ),
     ],
     "http://sectest1.example.org": [
-      getCookieId("sc1", "sectest1.example.org",
-                  "/browser/devtools/server/tests/browser"),
+      getCookieId(
+        "sc1",
+        "sectest1.example.org",
+        "/browser/devtools/server/tests/browser"
+      ),
     ],
   },
   indexedDB: {
@@ -79,8 +86,9 @@ const afterIframeRemoved = {
 };
 
 add_task(async function() {
-  const { target, front } =
-    await openTabAndSetupStorage(MAIN_DOMAIN + "storage-dynamic-windows.html");
+  const { target, front } = await openTabAndSetupStorage(
+    MAIN_DOMAIN + "storage-dynamic-windows.html"
+  );
 
   const data = await front.listStores();
 
@@ -114,9 +122,11 @@ function testWindowsBeforeReload(data) {
       delete data[storageType].hosts.chrome;
     }
 
-    is(Object.keys(data[storageType].hosts).length,
-       Object.keys(beforeReload[storageType]).length,
-        `Number of hosts for ${storageType} match`);
+    is(
+      Object.keys(data[storageType].hosts).length,
+      Object.keys(beforeReload[storageType]).length,
+      `Number of hosts for ${storageType} match`
+    );
     for (const host in beforeReload[storageType]) {
       ok(data[storageType].hosts[host], `Host ${host} is present`);
     }
@@ -128,7 +138,9 @@ async function testAddIframe(front) {
 
   const update = front.once("stores-update");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, ALT_DOMAIN_SECURED,
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    ALT_DOMAIN_SECURED,
     secured => {
       const doc = content.document;
 
@@ -181,14 +193,20 @@ function validateStorage(actual, expected, category = "") {
 
     const actualKeys = Object.keys(actualData);
     const expectedKeys = Object.keys(expectedData);
-    is(actualKeys.length, expectedKeys.length, `${type} data is the correct length.`);
+    is(
+      actualKeys.length,
+      expectedKeys.length,
+      `${type} data is the correct length.`
+    );
 
     for (const [key, dataValues] of Object.entries(expectedData)) {
       ok(actualData[key], `${type} data contains the key ${key}.`);
 
       for (const dataValue of dataValues) {
-        ok(actualData[key].includes(dataValue),
-          `${type}[${key}] contains "${dataValue}".`);
+        ok(
+          actualData[key].includes(dataValue),
+          `${type}[${key}] contains "${dataValue}".`
+        );
       }
     }
   }

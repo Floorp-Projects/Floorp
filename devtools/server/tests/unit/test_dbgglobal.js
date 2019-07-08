@@ -9,27 +9,37 @@ function run_test() {
   // Should get an exception if we try to interact with DebuggerServer
   // before we initialize it...
   const socketListener = new SocketListener(DebuggerServer, {});
-  Assert.throws(() => DebuggerServer.addSocketListener(socketListener),
+  Assert.throws(
+    () => DebuggerServer.addSocketListener(socketListener),
     /DebuggerServer has not been initialized/,
-    "addSocketListener should throw before it has been initialized");
-  Assert.throws(DebuggerServer.closeAllSocketListeners,
+    "addSocketListener should throw before it has been initialized"
+  );
+  Assert.throws(
+    DebuggerServer.closeAllSocketListeners,
     /this is undefined/,
-    "closeAllSocketListeners should throw before it has been initialized");
-  Assert.throws(DebuggerServer.connectPipe,
+    "closeAllSocketListeners should throw before it has been initialized"
+  );
+  Assert.throws(
+    DebuggerServer.connectPipe,
     /this is undefined/,
-    "connectPipe should throw before it has been initialized");
+    "connectPipe should throw before it has been initialized"
+  );
 
   // Allow incoming connections.
   DebuggerServer.init();
 
   // These should still fail because we haven't added a createRootActor
   // implementation yet.
-  Assert.throws(DebuggerServer.closeAllSocketListeners,
+  Assert.throws(
+    DebuggerServer.closeAllSocketListeners,
     /this is undefined/,
-    "closeAllSocketListeners should throw if createRootActor hasn't been added");
-  Assert.throws(DebuggerServer.connectPipe,
+    "closeAllSocketListeners should throw if createRootActor hasn't been added"
+  );
+  Assert.throws(
+    DebuggerServer.connectPipe,
     /this is undefined/,
-    "closeAllSocketListeners should throw if createRootActor hasn't been added");
+    "closeAllSocketListeners should throw if createRootActor hasn't been added"
+  );
 
   const { createRootActor } = require("xpcshell-test/testactors");
   DebuggerServer.setRootActor(createRootActor);
@@ -51,8 +61,10 @@ function run_test() {
       client2.hooks = {
         onPacket: function(packet2) {
           Assert.equal(packet2.from, "root");
-          Assert.notEqual(packet1.testConnectionPrefix,
-                          packet2.testConnectionPrefix);
+          Assert.notEqual(
+            packet1.testConnectionPrefix,
+            packet2.testConnectionPrefix
+          );
           client2.close();
         },
         onClosed: function(result) {

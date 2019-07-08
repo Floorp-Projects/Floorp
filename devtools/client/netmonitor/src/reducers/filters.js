@@ -20,16 +20,21 @@ function FilterTypes(overrideParams = {}) {
       obj[key] = overrideParams[key];
       return obj;
     }, {});
-  const filterTypes = allFilterTypes
-    .reduce((o, tag) => Object.assign(o, { [tag]: false }), {});
+  const filterTypes = allFilterTypes.reduce(
+    (o, tag) => Object.assign(o, { [tag]: false }),
+    {}
+  );
   return Object.assign({}, filterTypes, overrideParams);
 }
 
 function Filters(overrideParams = {}) {
-  return Object.assign({
-    requestFilterTypes: new FilterTypes({ all: true }),
-    requestFilterText: "",
-  }, overrideParams);
+  return Object.assign(
+    {
+      requestFilterTypes: new FilterTypes({ all: true }),
+      requestFilterText: "",
+    },
+    overrideParams
+  );
 }
 
 function toggleRequestFilterType(state, action) {
@@ -70,12 +75,16 @@ function filters(state = new Filters(), action) {
   state = { ...state };
   switch (action.type) {
     case ENABLE_REQUEST_FILTER_TYPE_ONLY:
-      state.requestFilterTypes =
-        enableRequestFilterTypeOnly(state.requestFilterTypes, action);
+      state.requestFilterTypes = enableRequestFilterTypeOnly(
+        state.requestFilterTypes,
+        action
+      );
       break;
     case TOGGLE_REQUEST_FILTER_TYPE:
-      state.requestFilterTypes =
-        toggleRequestFilterType(state.requestFilterTypes, action);
+      state.requestFilterTypes = toggleRequestFilterType(
+        state.requestFilterTypes,
+        action
+      );
       break;
     case SET_REQUEST_FILTER_TEXT:
       state.requestFilterText = action.text;

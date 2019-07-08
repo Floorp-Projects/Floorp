@@ -8,14 +8,20 @@ add_task(async function() {
   // Calls focus event on the TabContextMenu early in the test.
   testWindow.gBrowser.selectedTab.focus();
 
-  BrowserTestUtils.loadURI(testWindow.gBrowser, "data:text/html,<h1>A Page</h1>");
+  BrowserTestUtils.loadURI(
+    testWindow.gBrowser,
+    "data:text/html,<h1>A Page</h1>"
+  );
   await BrowserTestUtils.browserLoaded(testWindow.gBrowser.selectedBrowser);
 
   await SimpleTest.promiseFocus(testWindow.gBrowser.selectedBrowser);
 
   ok(!testWindow.gFindBarInitialized, "find bar is not initialized");
 
-  let findBarOpenPromise = BrowserTestUtils.waitForEvent(testWindow.gBrowser, "findbaropen");
+  let findBarOpenPromise = BrowserTestUtils.waitForEvent(
+    testWindow.gBrowser,
+    "findbaropen"
+  );
   EventUtils.synthesizeKey("/", {}, testWindow);
   await findBarOpenPromise;
 

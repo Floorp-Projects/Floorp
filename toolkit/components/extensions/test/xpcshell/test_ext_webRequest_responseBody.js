@@ -3,14 +3,14 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 /* eslint-disable no-shadow */
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { ExtensionTestCommon } = ChromeUtils.import(
+  "resource://testing-common/ExtensionTestCommon.jsm"
+);
 
-const HOSTS = new Set([
-  "example.com",
-]);
+const HOSTS = new Set(["example.com"]);
 
-const server = createHttpServer({hosts: HOSTS});
+const server = createHttpServer({ hosts: HOSTS });
 
 const BASE_URL = "http://example.com";
 const FETCH_ORIGIN = "http://example.com/data/file_sample.html";
@@ -68,7 +68,11 @@ server.registerPathHandler("/slow_response.sjs", async (request, response) => {
 server.registerPathHandler("/lorem.html.gz", async (request, response) => {
   response.processAsync();
 
-  response.setHeader("Content-Type", "Content-Type: text/html; charset=utf-8", false);
+  response.setHeader(
+    "Content-Type",
+    "Content-Type: text/html; charset=utf-8",
+    false
+  );
   response.setHeader("Content-Encoding", "gzip", false);
 
   let data = await OS.File.read(do_get_file("data/lorem.html.gz").path);
@@ -85,26 +89,36 @@ const TASKS = [
     task(filter, resolve, num) {
       let decoder = new TextDecoder("utf-8");
 
-      browser.test.assertEq("uninitialized", filter.status,
-                            `(${num}): Got expected initial status`);
+      browser.test.assertEq(
+        "uninitialized",
+        filter.status,
+        `(${num}): Got expected initial status`
+      );
 
       filter.onstart = event => {
-        browser.test.assertEq("transferringdata", filter.status,
-                              `(${num}): Got expected onStart status`);
+        browser.test.assertEq(
+          "transferringdata",
+          filter.status,
+          `(${num}): Got expected onStart status`
+        );
       };
 
       filter.onstop = event => {
-        browser.test.fail(`(${num}): Got unexpected onStop event while disconnected`);
+        browser.test.fail(
+          `(${num}): Got unexpected onStop event while disconnected`
+        );
       };
 
       let n = 0;
       filter.ondata = async event => {
-        let str = decoder.decode(event.data, {stream: true});
+        let str = decoder.decode(event.data, { stream: true });
 
         if (n < 3) {
-          browser.test.assertEq(JSON.stringify(PARTS[n]),
-                                JSON.stringify(str),
-                                `(${num}): Got expected part`);
+          browser.test.assertEq(
+            JSON.stringify(PARTS[n]),
+            JSON.stringify(str),
+            `(${num}): Got expected part`
+          );
         }
         n++;
 
@@ -113,39 +127,57 @@ const TASKS = [
         if (n == 3) {
           filter.suspend();
 
-          browser.test.assertEq("suspended", filter.status,
-                                `(${num}): Got expected suspended status`);
+          browser.test.assertEq(
+            "suspended",
+            filter.status,
+            `(${num}): Got expected suspended status`
+          );
 
           let fail = () => {
-            browser.test.fail(`(${num}): Got unexpected data event while suspended`);
+            browser.test.fail(
+              `(${num}): Got unexpected data event while suspended`
+            );
           };
           filter.addEventListener("data", fail);
 
           await delay(TIMEOUT * 3);
 
-          browser.test.assertEq("suspended", filter.status,
-                                `(${num}): Got expected suspended status`);
+          browser.test.assertEq(
+            "suspended",
+            filter.status,
+            `(${num}): Got expected suspended status`
+          );
 
           filter.removeEventListener("data", fail);
           filter.resume();
-          browser.test.assertEq("transferringdata", filter.status,
-                                `(${num}): Got expected resumed status`);
+          browser.test.assertEq(
+            "transferringdata",
+            filter.status,
+            `(${num}): Got expected resumed status`
+          );
         } else if (n > 4) {
           filter.disconnect();
 
           filter.addEventListener("data", () => {
-            browser.test.fail(`(${num}): Got unexpected data event while disconnected`);
+            browser.test.fail(
+              `(${num}): Got unexpected data event while disconnected`
+            );
           });
 
-          browser.test.assertEq("disconnected", filter.status,
-                                `(${num}): Got expected disconnected status`);
+          browser.test.assertEq(
+            "disconnected",
+            filter.status,
+            `(${num}): Got expected disconnected status`
+          );
 
           resolve();
         }
       };
 
       filter.onerror = event => {
-        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+        browser.test.fail(
+          `(${num}): Got unexpected error event: ${filter.error}`
+        );
       };
     },
     verify(response) {
@@ -158,17 +190,21 @@ const TASKS = [
       let decoder = new TextDecoder("utf-8");
 
       filter.onstop = event => {
-        browser.test.fail(`(${num}): Got unexpected onStop event while disconnected`);
+        browser.test.fail(
+          `(${num}): Got unexpected onStop event while disconnected`
+        );
       };
 
       let n = 0;
       filter.ondata = async event => {
-        let str = decoder.decode(event.data, {stream: true});
+        let str = decoder.decode(event.data, { stream: true });
 
         if (n < 3) {
-          browser.test.assertEq(JSON.stringify(PARTS[n]),
-                                JSON.stringify(str),
-                                `(${num}): Got expected part`);
+          browser.test.assertEq(
+            JSON.stringify(PARTS[n]),
+            JSON.stringify(str),
+            `(${num}): Got expected part`
+          );
         }
         n++;
 
@@ -186,7 +222,9 @@ const TASKS = [
       };
 
       filter.onerror = event => {
-        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+        browser.test.fail(
+          `(${num}): Got unexpected error event: ${filter.error}`
+        );
       };
     },
     verify(response) {
@@ -199,7 +237,9 @@ const TASKS = [
       let encoder = new TextEncoder("utf-8");
 
       filter.onstop = event => {
-        browser.test.fail(`(${num}): Got unexpected onStop event while disconnected`);
+        browser.test.fail(
+          `(${num}): Got unexpected onStop event while disconnected`
+        );
       };
 
       let n = 0;
@@ -209,7 +249,11 @@ const TASKS = [
         filter.write(event.data);
 
         function checkState(state) {
-          browser.test.assertEq(state, filter.status, `(${num}): Got expected status`);
+          browser.test.assertEq(
+            state,
+            filter.status,
+            `(${num}): Got expected status`
+          );
         }
         if (n == 3) {
           filter.resume();
@@ -235,7 +279,8 @@ const TASKS = [
                 filter[method]();
               },
               /.*/,
-              `(${num}): ${method}() should throw while disconnected`);
+              `(${num}): ${method}() should throw while disconnected`
+            );
           }
 
           browser.test.assertThrows(
@@ -243,7 +288,8 @@ const TASKS = [
               filter.write(encoder.encode("Foo bar"));
             },
             /.*/,
-            `(${num}): write() should throw while disconnected`);
+            `(${num}): write() should throw while disconnected`
+          );
 
           filter.disconnect();
 
@@ -252,7 +298,9 @@ const TASKS = [
       };
 
       filter.onerror = event => {
-        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+        browser.test.fail(
+          `(${num}): Got unexpected error event: ${filter.error}`
+        );
       };
     },
     verify(response) {
@@ -274,7 +322,8 @@ const TASKS = [
           filter.write(encoder.encode("Foo bar"));
         },
         /.*/,
-        `(${num}): write() should throw prior to connection`);
+        `(${num}): write() should throw prior to connection`
+      );
 
       let n = 0;
       filter.ondata = async event => {
@@ -282,10 +331,18 @@ const TASKS = [
 
         filter.write(event.data);
 
-        browser.test.log(`(${num}): Got part ${n}: ${JSON.stringify(decoder.decode(event.data))}`);
+        browser.test.log(
+          `(${num}): Got part ${n}: ${JSON.stringify(
+            decoder.decode(event.data)
+          )}`
+        );
 
         function checkState(state) {
-          browser.test.assertEq(state, filter.status, `(${num}): Got expected status`);
+          browser.test.assertEq(
+            state,
+            filter.status,
+            `(${num}): Got expected status`
+          );
         }
         if (n == 3) {
           filter.close();
@@ -298,7 +355,8 @@ const TASKS = [
                 filter[method]();
               },
               /.*/,
-              `(${num}): ${method}() should throw while closed`);
+              `(${num}): ${method}() should throw while closed`
+            );
           }
 
           browser.test.assertThrows(
@@ -306,7 +364,8 @@ const TASKS = [
               filter.write(encoder.encode("Foo bar"));
             },
             /.*/,
-            `(${num}): write() should throw while closed`);
+            `(${num}): write() should throw while closed`
+          );
 
           filter.close();
 
@@ -315,7 +374,9 @@ const TASKS = [
       };
 
       filter.onerror = event => {
-        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+        browser.test.fail(
+          `(${num}): Got unexpected error event: ${filter.error}`
+        );
       };
     },
     verify(response) {
@@ -333,30 +394,39 @@ const TASKS = [
       };
 
       filter.onstop = event => {
-        browser.test.assertEq("finishedtransferringdata", filter.status,
-                              `(${num}): Got expected onStop status`);
+        browser.test.assertEq(
+          "finishedtransferringdata",
+          filter.status,
+          `(${num}): Got expected onStop status`
+        );
 
         filter.close();
-        browser.test.assertEq("closed", filter.status,
-                              `Got expected closed status`);
+        browser.test.assertEq(
+          "closed",
+          filter.status,
+          `Got expected closed status`
+        );
 
-
-        browser.test.assertEq(JSON.stringify(PARTS.join("")),
-                              JSON.stringify(response),
-                              `(${num}): Got expected response`);
+        browser.test.assertEq(
+          JSON.stringify(PARTS.join("")),
+          JSON.stringify(response),
+          `(${num}): Got expected response`
+        );
 
         resolve();
       };
 
       filter.ondata = event => {
-        let str = decoder.decode(event.data, {stream: true});
+        let str = decoder.decode(event.data, { stream: true });
         response += str;
 
         filter.write(event.data);
       };
 
       filter.onerror = event => {
-        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+        browser.test.fail(
+          `(${num}): Got unexpected error event: ${filter.error}`
+        );
       };
     },
     verify(response) {
@@ -384,7 +454,9 @@ add_task(async function() {
           test.task(filter, resolve, num, details);
         });
       } catch (e) {
-        browser.test.fail(`Task #${num} threw an unexpected exception: ${e} :: ${e.stack}`);
+        browser.test.fail(
+          `Task #${num} threw an unexpected exception: ${e} :: ${e.stack}`
+        );
       }
 
       browser.test.log(`Finished test #${num}: ${details.url}`);
@@ -399,10 +471,12 @@ add_task(async function() {
             break;
           }
         }
-      }, {
+      },
+      {
         urls: ["http://example.com/*?test_num=*"],
       },
-      ["blocking"]);
+      ["blocking"]
+    );
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -416,11 +490,7 @@ add_task(async function() {
     `,
 
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        "http://example.com/",
-      ],
+      permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],
     },
   });
 
@@ -471,18 +541,16 @@ add_task(async function test_cachedResponse() {
           if (data.fromCache) {
             browser.test.sendMessage("from-cache");
           }
-        }, {
+        },
+        {
           urls: ["http://example.com/*/file_sample.html?r=*"],
         },
-        ["blocking"]);
+        ["blocking"]
+      );
     },
 
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        "http://example.com/",
-      ],
+      permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],
     },
   });
 
@@ -506,9 +574,14 @@ add_task(async function test_late_close() {
 
           filter.onstop = event => {
             browser.test.fail("Should not receive onstop after close()");
-            browser.test.assertEq("closed", filter.status,
-                                  "Filter status should still be 'closed'");
-            browser.test.assertThrows(() => { filter.close(); });
+            browser.test.assertEq(
+              "closed",
+              filter.status,
+              "Filter status should still be 'closed'"
+            );
+            browser.test.assertThrows(() => {
+              filter.close();
+            });
           };
           filter.ondata = event => {
             filter.write(event.data);
@@ -516,18 +589,16 @@ add_task(async function test_late_close() {
 
             browser.test.sendMessage(`done-${data.url}`);
           };
-        }, {
+        },
+        {
           urls: ["http://example.com/*/file_sample.html?*"],
         },
-        ["blocking"]);
+        ["blocking"]
+      );
     },
 
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        "http://example.com/",
-      ],
+      permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],
     },
   });
 
@@ -540,7 +611,9 @@ add_task(async function test_late_close() {
     urls.push(`${BASE_URL}/data/file_sample.html?r=${Math.random()}`);
   }
 
-  await Promise.all(urls.map(url => ExtensionTestUtils.fetch(FETCH_ORIGIN, url)));
+  await Promise.all(
+    urls.map(url => ExtensionTestUtils.fetch(FETCH_ORIGIN, url))
+  );
   await Promise.all(urls.map(url => extension.awaitMessage(`done-${url}`)));
 
   await extension.unload();
@@ -552,14 +625,12 @@ add_task(async function test_permissions() {
       browser.test.assertEq(
         undefined,
         browser.webRequest.filterResponseData,
-        "filterResponseData is undefined without blocking permissions");
+        "filterResponseData is undefined without blocking permissions"
+      );
     },
 
     manifest: {
-      permissions: [
-        "webRequest",
-        "http://example.com/",
-      ],
+      permissions: ["webRequest", "http://example.com/"],
     },
   });
 
@@ -572,21 +643,21 @@ add_task(async function test_invalidId() {
     async background() {
       let filter = browser.webRequest.filterResponseData("34159628");
 
-      await new Promise(resolve => { filter.onerror = resolve; });
+      await new Promise(resolve => {
+        filter.onerror = resolve;
+      });
 
-      browser.test.assertEq("Invalid request ID",
-                            filter.error,
-                            "Got expected error");
+      browser.test.assertEq(
+        "Invalid request ID",
+        filter.error,
+        "Got expected error"
+      );
 
       browser.test.notifyPass("invalid-request-id");
     },
 
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        "http://example.com/",
-      ],
+      permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],
     },
   });
 

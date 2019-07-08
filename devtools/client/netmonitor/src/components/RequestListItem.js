@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
@@ -244,9 +247,15 @@ class RequestListItem extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return !propertiesEqual(UPDATED_REQ_ITEM_PROPS, this.props.item, nextProps.item) ||
+    return (
+      !propertiesEqual(
+        UPDATED_REQ_ITEM_PROPS,
+        this.props.item,
+        nextProps.item
+      ) ||
       !propertiesEqual(UPDATED_REQ_PROPS, this.props, nextProps) ||
-      this.props.columns !== nextProps.columns;
+      this.props.columns !== nextProps.columns
+    );
   }
 
   componentDidUpdate(prevProps) {
@@ -279,8 +288,8 @@ class RequestListItem extends Component {
     fromCache && classList.push("fromCache");
     blocked && classList.push("blocked");
 
-    return (
-      dom.tr({
+    return dom.tr(
+      {
         ref: "listItem",
         className: classList.join(" "),
         "data-id": item.id,
@@ -289,37 +298,38 @@ class RequestListItem extends Component {
         onMouseDown,
         onDoubleClick,
       },
-        ...COLUMN_COMPONENTS.filter(({ column }) => columns[column]).map(
-          ({ column, ColumnComponent, props: columnProps }) =>
-            column && ColumnComponent({
-              item,
-              ...(columnProps || []).reduce(
-                (acc, keyOrObject) => {
-                  if (typeof keyOrObject == "string") {
-                    acc[keyOrObject] = this.props[keyOrObject];
-                  } else {
-                    Object.assign(acc, keyOrObject);
-                  }
-                  return acc;
-                },
-                { item }
-              ),
-            })
-        ),
-        ...RESPONSE_HEADERS.filter(header => columns[header]).map(
-          header => RequestListColumnResponseHeader({
-            connector,
+      ...COLUMN_COMPONENTS.filter(({ column }) => columns[column]).map(
+        ({ column, ColumnComponent, props: columnProps }) =>
+          column &&
+          ColumnComponent({
             item,
-            header,
-          }),
-        ),
-        columns.waterfall && RequestListColumnWaterfall({
+            ...(columnProps || []).reduce(
+              (acc, keyOrObject) => {
+                if (typeof keyOrObject == "string") {
+                  acc[keyOrObject] = this.props[keyOrObject];
+                } else {
+                  Object.assign(acc, keyOrObject);
+                }
+                return acc;
+              },
+              { item }
+            ),
+          })
+      ),
+      ...RESPONSE_HEADERS.filter(header => columns[header]).map(header =>
+        RequestListColumnResponseHeader({
+          connector,
+          item,
+          header,
+        })
+      ),
+      columns.waterfall &&
+        RequestListColumnWaterfall({
           connector,
           firstRequestStartedMillis,
           item,
           onWaterfallMouseDown,
-        }),
-      )
+        })
     );
   }
 }

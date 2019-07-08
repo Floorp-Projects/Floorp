@@ -4,10 +4,10 @@
 
 // Locked status should be communicated to children.
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function isParentProcess() {
-  return (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
+  return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 function run_test() {
@@ -34,5 +34,8 @@ function run_test() {
 
   ok(pb.prefIsLocked(bprefname), bprefname + " should be locked in the child");
   ok(pb.prefIsLocked(iprefname), iprefname + " should be locked in the child");
-  ok(!pb.prefIsLocked(sprefname), sprefname + " should be unlocked in the child");
+  ok(
+    !pb.prefIsLocked(sprefname),
+    sprefname + " should be unlocked in the child"
+  );
 }

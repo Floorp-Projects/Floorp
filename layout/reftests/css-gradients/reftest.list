@@ -47,7 +47,7 @@ fails-if(gtkWidget&&/x86_64-/.test(xulRuntime.XPCOMABI)) fuzzy(0-1,0-1622) fuzzy
 fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
 fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
 fuzzy-if(webrender,0-2,0-12) == radial-size-1a.html radial-size-1-ref.html
-fuzzy(1-2,1048-1446) == radial-size-1b.html radial-size-1-ref.html
+fuzzy-if(!(geckoview&&webrender),1-2,1048-1446) == radial-size-1b.html radial-size-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1a.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1b.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1c.html radial-zero-length-1-ref.html

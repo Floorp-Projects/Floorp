@@ -64,8 +64,8 @@ packed_simd = { git = "https://github.com/hsivonen/packed_simd", branch = "rust_
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/CraneStation/Cranelift"
-rev = "e455f6ae0f3577ceb210c0ce167181c33c133a69"
+rev = "312516a69da03dc06eace32f61412389a8dcadf3"
 
 [patch.crates-io.cranelift-wasm]
 git = "https://github.com/CraneStation/Cranelift"
-rev = "e455f6ae0f3577ceb210c0ce167181c33c133a69"
+rev = "312516a69da03dc06eace32f61412389a8dcadf3"

@@ -11,16 +11,25 @@
 // was in a private context.
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-const certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 const SERVER_PORT = 8888;
 
-function start_ocsp_responder(expectedCertNames, expectedPaths,
-                              expectedMethods) {
-  return startOCSPResponder(SERVER_PORT, "www.example.com",
-                            "test_ocsp_fetch_method", expectedCertNames,
-                            expectedPaths, expectedMethods);
+function start_ocsp_responder(
+  expectedCertNames,
+  expectedPaths,
+  expectedMethods
+) {
+  return startOCSPResponder(
+    SERVER_PORT,
+    "www.example.com",
+    "test_ocsp_fetch_method",
+    expectedCertNames,
+    expectedPaths,
+    expectedMethods
+  );
 }
 
 function add_flush_cache() {
@@ -29,7 +38,8 @@ function add_flush_cache() {
     // observer that has ever been passed to flush. To prevent multiple calls to
     // run_next_test, keep track of if this observer has already called it.
     let observed = false;
-    let observer = { observe: () => {
+    let observer = {
+      observe: () => {
         if (!observed) {
           observed = true;
           run_next_test();
@@ -52,15 +62,28 @@ function add_ocsp_necko_cache_test(loadContext, shouldFindEntry) {
   add_test(() => {
     clearOCSPCache();
     clearSessionCache();
-    responder = startOCSPResponder(SERVER_PORT, "localhost", "ocsp_certs",
-                                   ["default-ee"], [], [], [],
-                                   [["Cache-Control", "max-age: 1000"]]);
+    responder = startOCSPResponder(
+      SERVER_PORT,
+      "localhost",
+      "ocsp_certs",
+      ["default-ee"],
+      [],
+      [],
+      [],
+      [["Cache-Control", "max-age: 1000"]]
+    );
     run_next_test();
   });
 
   // Prepare a connection that will cause an OCSP request.
-  add_connection_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
-                      null, null, null, loadContext.originAttributes);
+  add_connection_test(
+    "ocsp-stapling-none.example.com",
+    PRErrorCodeSuccess,
+    null,
+    null,
+    null,
+    loadContext.originAttributes
+  );
 
   add_flush_cache();
 
@@ -70,15 +93,29 @@ function add_ocsp_necko_cache_test(loadContext, shouldFindEntry) {
     let foundEntry = false;
     let visitor = {
       onCacheStorageInfo() {},
-      onCacheEntryInfo(aURI, aIdEnhance, aDataSize, aFetchCount,
-                       aLastModifiedTime, aExpirationTime, aPinned, aInfo) {
-        Assert.equal(aURI.spec, "http://localhost:8888/",
-                     "expected OCSP request URI should match");
+      onCacheEntryInfo(
+        aURI,
+        aIdEnhance,
+        aDataSize,
+        aFetchCount,
+        aLastModifiedTime,
+        aExpirationTime,
+        aPinned,
+        aInfo
+      ) {
+        Assert.equal(
+          aURI.spec,
+          "http://localhost:8888/",
+          "expected OCSP request URI should match"
+        );
         foundEntry = true;
       },
       onCacheEntryVisitCompleted() {
-        Assert.equal(foundEntry, shouldFindEntry,
-                     "should only find a cached entry if we're expecting one");
+        Assert.equal(
+          foundEntry,
+          shouldFindEntry,
+          "should only find a cached entry if we're expecting one"
+        );
         run_next_test();
       },
       QueryInterface: ChromeUtils.generateQI(["nsICacheStorageVisitor"]),

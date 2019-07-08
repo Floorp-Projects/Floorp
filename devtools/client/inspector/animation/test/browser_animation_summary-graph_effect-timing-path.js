@@ -31,25 +31,34 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { panel } = await openAnimationInspector();
 
   for (const { targetClass, expectedPath } of TEST_DATA) {
-    const animationItemEl =
-      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
+    const animationItemEl = findAnimationItemElementsByTargetSelector(
+      panel,
+      `.${targetClass}`
+    );
 
-    info(`Checking effect timing path existance for ${ targetClass }`);
-    const effectTimingPathEl =
-      animationItemEl.querySelector(".animation-effect-timing-path");
+    info(`Checking effect timing path existance for ${targetClass}`);
+    const effectTimingPathEl = animationItemEl.querySelector(
+      ".animation-effect-timing-path"
+    );
 
     if (expectedPath) {
-      ok(effectTimingPathEl,
-        "The effect timing path element should be in animation item element");
-      const pathEl = effectTimingPathEl.querySelector(".animation-iteration-path");
+      ok(
+        effectTimingPathEl,
+        "The effect timing path element should be in animation item element"
+      );
+      const pathEl = effectTimingPathEl.querySelector(
+        ".animation-iteration-path"
+      );
       assertPathSegments(pathEl, false, expectedPath);
     } else {
-      ok(!effectTimingPathEl,
-        "The effect timing path element should not be in animation item element");
+      ok(
+        !effectTimingPathEl,
+        "The effect timing path element should not be in animation item element"
+      );
     }
   }
 });

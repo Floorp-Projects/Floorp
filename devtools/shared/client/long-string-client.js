@@ -4,7 +4,10 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
+const {
+  arg,
+  DebuggerClient,
+} = require("devtools/shared/client/debugger-client");
 /**
  * A LongStringClient provides a way to access "very long" strings from the
  * debugger server.

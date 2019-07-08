@@ -8,7 +8,10 @@ function start_test_prefNotSet() {
     zoomLevel = ZoomManager.zoom;
     isnot(zoomLevel, 1, "zoom level should have changed");
 
-    await FullZoomHelper.load(gBrowser.selectedTab, "http://mochi.test:8888/browser/browser/base/content/test/general/moz.png");
+    await FullZoomHelper.load(
+      gBrowser.selectedTab,
+      "http://mochi.test:8888/browser/browser/base/content/test/general/moz.png"
+    );
   })().then(continue_test_prefNotSet, FullZoomHelper.failAndContinue(finish));
 }
 
@@ -17,7 +20,10 @@ function continue_test_prefNotSet() {
     is(ZoomManager.zoom, 1, "zoom level pref should not apply to an image");
     await FullZoom.reset();
 
-    await FullZoomHelper.load(gBrowser.selectedTab, "http://mochi.test:8888/browser/browser/base/content/test/general/zoom_test.html");
+    await FullZoomHelper.load(
+      gBrowser.selectedTab,
+      "http://mochi.test:8888/browser/browser/base/content/test/general/zoom_test.html"
+    );
   })().then(end_test_prefNotSet, FullZoomHelper.failAndContinue(finish));
 }
 
@@ -38,6 +44,9 @@ function test() {
   (async function() {
     tabElm = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.selectTabAndWaitForLocationChange(tabElm);
-    await FullZoomHelper.load(tabElm, "http://mochi.test:8888/browser/browser/base/content/test/general/zoom_test.html");
+    await FullZoomHelper.load(
+      tabElm,
+      "http://mochi.test:8888/browser/browser/base/content/test/general/zoom_test.html"
+    );
   })().then(start_test_prefNotSet, FullZoomHelper.failAndContinue(finish));
 }

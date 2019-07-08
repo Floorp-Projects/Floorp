@@ -1,10 +1,13 @@
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // We want the actual global to get at the internals since Scheduler is not
 // exported.
-var AsyncFrontGlobal = ChromeUtils.import("resource://gre/modules/osfile/osfile_async_front.jsm", null);
+var AsyncFrontGlobal = ChromeUtils.import(
+  "resource://gre/modules/osfile/osfile_async_front.jsm",
+  null
+);
 var Scheduler = AsyncFrontGlobal.Scheduler;
 
 /**
@@ -89,6 +92,8 @@ add_task(async function test_kill_race() {
   // resolved or lost.
   await OS.File.exists("foo.goz");
 
-  ok(secondResolved,
-     "The second request was resolved so we avoided the bug. Victory!");
+  ok(
+    secondResolved,
+    "The second request was resolved so we avoided the bug. Victory!"
+  );
 });

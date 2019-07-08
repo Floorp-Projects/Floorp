@@ -1,4 +1,4 @@
-import {Dedupe} from "common/Dedupe.jsm";
+import { Dedupe } from "common/Dedupe.jsm";
 
 describe("Dedupe", () => {
   let instance;
@@ -18,8 +18,12 @@ describe("Dedupe", () => {
     });
     it("should remove duplicates from groups of objects", () => {
       instance = new Dedupe(item => item.id);
-      const beforeItems = [[{id: 1}, {id: 1}, {id: 2}], [{id: 1}, {id: 3}, {id: 2}], [{id: 1}, {id: 2}, {id: 5}]];
-      const afterItems = [[{id: 1}, {id: 2}], [{id: 3}], [{id: 5}]];
+      const beforeItems = [
+        [{ id: 1 }, { id: 1 }, { id: 2 }],
+        [{ id: 1 }, { id: 3 }, { id: 2 }],
+        [{ id: 1 }, { id: 2 }, { id: 5 }],
+      ];
+      const afterItems = [[{ id: 1 }, { id: 2 }], [{ id: 3 }], [{ id: 5 }]];
       assert.deepEqual(instance.group(...beforeItems), afterItems);
     });
   });

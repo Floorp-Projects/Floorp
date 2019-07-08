@@ -3,8 +3,12 @@
 
 "use strict";
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
-const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domain.jsm"
+);
+const { Domains } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domains.jsm"
+);
 
 class MockSession {
   onEvent() {}
@@ -20,7 +24,7 @@ add_test(function test_Domains_constructor() {
 
 add_test(function test_Domains_domainSupportsMethod() {
   const modules = {
-    "Foo": class extends Domain {
+    Foo: class extends Domain {
       bar() {}
     },
   };
@@ -35,7 +39,7 @@ add_test(function test_Domains_domainSupportsMethod() {
 
 add_test(function test_Domains_get_invalidModule() {
   Assert.throws(() => {
-    const domains = new Domains(noopSession, {Foo: undefined});
+    const domains = new Domains(noopSession, { Foo: undefined });
     domains.get("Foo");
   }, /UnknownMethodError/);
 
@@ -44,7 +48,7 @@ add_test(function test_Domains_get_invalidModule() {
 
 add_test(function test_Domains_get_missingConstructor() {
   Assert.throws(() => {
-    const domains = new Domains(noopSession, {Foo: {}});
+    const domains = new Domains(noopSession, { Foo: {} });
     domains.get("Foo");
   }, /TypeError/);
 
@@ -53,7 +57,7 @@ add_test(function test_Domains_get_missingConstructor() {
 
 add_test(function test_Domain_get_superClassNotDomain() {
   Assert.throws(() => {
-    const domains = new Domain(noopSession, {Foo: class {}});
+    const domains = new Domain(noopSession, { Foo: class {} });
     domains.get("Foo");
   }, /TypeError/);
 
@@ -77,7 +81,7 @@ add_test(function test_Domains_get_constructs() {
   }
 
   const session = new Session();
-  const domains = new Domains(session, {Foo});
+  const domains = new Domains(session, { Foo });
 
   const foo = domains.get("Foo");
   ok(constructed);
@@ -92,7 +96,7 @@ add_test(function test_Domains_get_constructs() {
 
 add_test(function test_Domains_size() {
   class Foo extends Domain {}
-  const domains = new Domains(noopSession, {Foo});
+  const domains = new Domains(noopSession, { Foo });
 
   equal(domains.size, 0);
   domains.get("Foo");
@@ -109,7 +113,7 @@ add_test(function test_Domains_clear() {
     }
   }
 
-  const domains = new Domains(noopSession, {Foo});
+  const domains = new Domains(noopSession, { Foo });
 
   equal(domains.size, 0);
   domains.get("Foo");
@@ -124,12 +128,20 @@ add_test(function test_Domains_clear() {
 
 add_test(function test_Domains_splitMethod() {
   for (const t of [42, null, true, {}, [], undefined]) {
-    Assert.throws(() => Domains.splitMethod(t), /TypeError/, `${typeof t} throws`);
+    Assert.throws(
+      () => Domains.splitMethod(t),
+      /TypeError/,
+      `${typeof t} throws`
+    );
   }
   for (const s of ["", ".", "foo.", ".bar", "foo.bar.baz"]) {
-    Assert.throws(() => Domains.splitMethod(s), /Invalid method format: ".*"/, `"${s}" throws`);
+    Assert.throws(
+      () => Domains.splitMethod(s),
+      /Invalid method format: ".*"/,
+      `"${s}" throws`
+    );
   }
-  deepEqual(Domains.splitMethod("foo.bar"), {domain: "foo", command: "bar"});
+  deepEqual(Domains.splitMethod("foo.bar"), { domain: "foo", command: "bar" });
 
   run_next_test();
 });

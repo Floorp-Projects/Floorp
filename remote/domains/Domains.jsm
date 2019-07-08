@@ -6,8 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["Domains"];
 
-const {UnknownMethodError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
-const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
+const { UnknownMethodError } = ChromeUtils.import(
+  "chrome://remote/content/Error.jsm"
+);
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domain.jsm"
+);
 
 /**
  * Lazy domain instance cache.

@@ -4,14 +4,19 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
+const ConnectionPromptSetting = createFactory(
+  require("./ConnectionPromptSetting")
+);
 
 const Actions = require("../actions/index");
 const { RUNTIMES } = require("../constants");
@@ -35,30 +40,30 @@ class RuntimeActions extends PureComponent {
     const { connectionPromptEnabled } = runtimeDetails;
     // do not show the connection prompt setting in 'This Firefox'
     return runtimeId !== RUNTIMES.THIS_FIREFOX
-             ? ConnectionPromptSetting({
-                 connectionPromptEnabled,
-                 dispatch,
-             })
-             : null;
+      ? ConnectionPromptSetting({
+          connectionPromptEnabled,
+          dispatch,
+        })
+      : null;
   }
 
   renderProfileButton() {
     const { runtimeId } = this.props;
 
     return runtimeId !== RUNTIMES.THIS_FIREFOX
-         ? Localized(
-           {
-             id: "about-debugging-runtime-profile-button2",
-           },
-           dom.button(
-             {
-               className: "default-button qa-profile-runtime-button",
-               onClick: () => this.onProfilerButtonClick(),
-             },
-             "about-debugging-runtime-profile-button2"
-           ),
-         )
-         : null;
+      ? Localized(
+          {
+            id: "about-debugging-runtime-profile-button2",
+          },
+          dom.button(
+            {
+              className: "default-button qa-profile-runtime-button",
+              onClick: () => this.onProfilerButtonClick(),
+            },
+            "about-debugging-runtime-profile-button2"
+          )
+        )
+      : null;
   }
 
   render() {
@@ -67,7 +72,7 @@ class RuntimeActions extends PureComponent {
         className: "runtime-actions__toolbar",
       },
       this.renderProfileButton(),
-      this.renderConnectionPromptSetting(),
+      this.renderConnectionPromptSetting()
     );
   }
 }

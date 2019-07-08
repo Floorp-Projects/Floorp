@@ -23,8 +23,8 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm, ui} = hud;
-  const {autocompletePopup} = jsterm;
+  const { jsterm, ui } = hud;
+  const { autocompletePopup } = jsterm;
 
   // Test typing 'docu'.
   await setInputValueForAutocompletion(hud, "foob");
@@ -37,7 +37,11 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_Tab");
   is(getInputValue(hud), "foobar", "'foob' tab completion");
 
-  checkInputCursorPosition(hud, "foobar".length, "cursor is at the end of 'foobar'");
+  checkInputCursorPosition(
+    hud,
+    "foobar".length,
+    "cursor is at the end of 'foobar'"
+  );
   is(getInputCompletionValue(hud).replace(/ /g, ""), "", "'foob' completed");
 
   // Test typing 'window.Ob' and press tab.  Just 'window.O' is
@@ -50,22 +54,35 @@ async function performTests() {
   const onPopupOpened = autocompletePopup.once("popup-opened");
   await setInputValueForAutocompletion(hud, "document.getElem");
   is(getInputValue(hud), "document.getElem", "'document.getElem' completion");
-  checkInputCompletionValue(hud, "                entById",
-     "'document.getElem' completion");
+  checkInputCompletionValue(
+    hud,
+    "                entById",
+    "'document.getElem' completion"
+  );
 
   // Test pressing key down.
   await onPopupOpened;
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(getInputValue(hud), "document.getElem", "'document.getElem' completion");
-  checkInputCompletionValue(hud, "                entsByClassName",
-     "'document.getElem' another tab completion");
+  checkInputCompletionValue(
+    hud,
+    "                entsByClassName",
+    "'document.getElem' another tab completion"
+  );
 
   // Test pressing key up.
   EventUtils.synthesizeKey("KEY_ArrowUp");
   await waitFor(() => (getInputCompletionValue(hud) || "").includes("entById"));
-  is(getInputValue(hud), "document.getElem", "'document.getElem' untab completion");
-  checkInputCompletionValue(hud, "                entById",
-     "'document.getElem' completion");
+  is(
+    getInputValue(hud),
+    "document.getElem",
+    "'document.getElem' untab completion"
+  );
+  checkInputCompletionValue(
+    hud,
+    "                entById",
+    "'document.getElem' completion"
+  );
 
   ui.clearOutput();
 

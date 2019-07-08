@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 /**
  * Test the status of menu items when open about:devtools-toolbox.
@@ -15,8 +18,11 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const { devtoolsTab, devtoolsWindow } =
-    await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window
+  );
 
   info("Check whether the menu items are disabled");
   const rootDocument = devtoolsTab.ownerDocument;
@@ -48,10 +54,14 @@ async function assertMenusItems(rootDocument, shouldBeEnabled) {
   const menuItem = rootDocument.getElementById("menu_devToolbox");
   await waitUntil(() => menuItem.hidden === !shouldBeEnabled);
 
-  info("Check that the state of the Toggle Tools menu-item depends on the page");
+  info(
+    "Check that the state of the Toggle Tools menu-item depends on the page"
+  );
   assertMenuItem(rootDocument, "menu_devToolbox", shouldBeEnabled);
 
-  info("Check that the tools menu-items are always enabled regardless of the page");
+  info(
+    "Check that the tools menu-items are always enabled regardless of the page"
+  );
   for (const toolDefinition of gDevTools.getToolDefinitionArray()) {
     if (!toolDefinition.inMenu) {
       continue;
@@ -63,6 +73,9 @@ async function assertMenusItems(rootDocument, shouldBeEnabled) {
 
 function assertMenuItem(rootDocument, menuItemId, shouldBeEnabled) {
   const menuItem = rootDocument.getElementById(menuItemId);
-  is(menuItem.hidden, !shouldBeEnabled,
-     `"hidden" attribute of menu item(${ menuItemId }) should be correct`);
+  is(
+    menuItem.hidden,
+    !shouldBeEnabled,
+    `"hidden" attribute of menu item(${menuItemId}) should be correct`
+  );
 }

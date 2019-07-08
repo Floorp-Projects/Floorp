@@ -13,7 +13,10 @@ add_task(async function() {
   const { walker } = inspector;
 
   info("Retrieve the children of #textnode-container");
-  const div = await walker.querySelector(walker.rootNode, "#textnode-container");
+  const div = await walker.querySelector(
+    walker.rootNode,
+    "#textnode-container"
+  );
   const { nodes } = await inspector.walker.children(div);
 
   // Children 0, 2 and 4 are text nodes, for which we expect to see an infobar containing
@@ -37,10 +40,12 @@ add_task(async function() {
 
 async function checkTextNodeInfoBar(testActor) {
   const tag = await testActor.getHighlighterNodeTextContent(
-    "box-model-infobar-tagname");
+    "box-model-infobar-tagname"
+  );
   is(tag, "#text", "node display name is #text");
   const dims = await testActor.getHighlighterNodeTextContent(
-      "box-model-infobar-dimensions");
+    "box-model-infobar-dimensions"
+  );
   // Do not assert dimensions as they might be platform specific.
   ok(!!dims, "node has dims");
 }

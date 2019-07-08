@@ -8,12 +8,16 @@
  * presses the override button.
  */
 
- add_task(async function() {
-  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                url: "http://example.com/?q=%s",
-                                                title: "test" });
-  await PlacesUtils.keywords.insert({ keyword: "keyword",
-                                      url: "http://example.com/?q=%s" });
+add_task(async function() {
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://example.com/?q=%s",
+    title: "test",
+  });
+  await PlacesUtils.keywords.insert({
+    keyword: "keyword",
+    url: "http://example.com/?q=%s",
+  });
 
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);
@@ -23,10 +27,16 @@
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
 
   info("Before override");
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.KEYWORD,
-    "Should have a keyword result");
-  Assert.equal(result.displayed.title, "example.com: search",
-    "Node should contain the name of the bookmark and query");
+  Assert.equal(
+    result.type,
+    UrlbarUtils.RESULT_TYPE.KEYWORD,
+    "Should have a keyword result"
+  );
+  Assert.equal(
+    result.displayed.title,
+    "example.com: search",
+    "Node should contain the name of the bookmark and query"
+  );
   Assert.ok(!result.displayed.action, "Should have an empty action");
 
   if (!UrlbarPrefs.get("quantumbar")) {
@@ -34,17 +44,26 @@
 
     // QuantumBar doesn't have separate boxes for items.
     let urlHbox = element._urlText.parentNode.parentNode;
-    Assert.ok(urlHbox.classList.contains("ac-url"), "URL hbox element sanity check");
+    Assert.ok(
+      urlHbox.classList.contains("ac-url"),
+      "URL hbox element sanity check"
+    );
     BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
   }
 
   info("During override");
   EventUtils.synthesizeKey("VK_SHIFT", { type: "keydown" });
 
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.KEYWORD,
-    "Should have a keyword result");
-  Assert.equal(result.displayed.title, "example.com: search",
-    "Node should contain the name of the bookmark and query");
+  Assert.equal(
+    result.type,
+    UrlbarUtils.RESULT_TYPE.KEYWORD,
+    "Should have a keyword result"
+  );
+  Assert.equal(
+    result.displayed.title,
+    "example.com: search",
+    "Node should contain the name of the bookmark and query"
+  );
   Assert.ok(!result.displayed.action, "Should have an empty action");
 
   if (!UrlbarPrefs.get("quantumbar")) {
@@ -52,7 +71,10 @@
 
     // QuantumBar doesn't have separate boxes for items.
     let urlHbox = element._urlText.parentNode.parentNode;
-    Assert.ok(urlHbox.classList.contains("ac-url"), "URL hbox element sanity check");
+    Assert.ok(
+      urlHbox.classList.contains("ac-url"),
+      "URL hbox element sanity check"
+    );
     BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
   }
 

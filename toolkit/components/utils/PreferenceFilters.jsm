@@ -4,7 +4,9 @@
 
 "use strict";
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["PreferenceFilters"];
 

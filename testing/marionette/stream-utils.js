@@ -6,12 +6,17 @@
 
 const CC = Components.Constructor;
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const IOUtil = Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);
-const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",
-    "nsIScriptableInputStream", "init");
+const ScriptableInputStream = CC(
+  "@mozilla.org/scriptableinputstream;1",
+  "nsIScriptableInputStream",
+  "init"
+);
 
 this.EXPORTED_SYMBOLS = ["StreamUtils"];
 
@@ -68,8 +73,9 @@ function StreamCopier(input, output, length) {
   if (IOUtil.outputStreamIsBuffered(output)) {
     this.output = output;
   } else {
-    this.output = Cc["@mozilla.org/network/buffered-output-stream;1"]
-                  .createInstance(Ci.nsIBufferedOutputStream);
+    this.output = Cc[
+      "@mozilla.org/network/buffered-output-stream;1"
+    ].createInstance(Ci.nsIBufferedOutputStream);
     this.output.init(output, BUFFER_SIZE);
   }
   this._length = length;
@@ -100,7 +106,6 @@ function StreamCopier(input, output, length) {
 StreamCopier._nextId = 0;
 
 StreamCopier.prototype = {
-
   copy() {
     // Dispatch to the next tick so that it's possible to attach a progress
     // event listener, even for extremely fast copies (like when testing).
@@ -133,8 +138,7 @@ StreamCopier.prototype = {
     }
 
     this._amountLeft -= bytesCopied;
-    this._debug("Copied: " + bytesCopied +
-                ", Left: " + this._amountLeft);
+    this._debug("Copied: " + bytesCopied + ", Left: " + this._amountLeft);
     this._emitProgress();
 
     if (this._amountLeft === 0) {
@@ -158,8 +162,10 @@ StreamCopier.prototype = {
     try {
       this.output.flush();
     } catch (e) {
-      if (e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK ||
-          e.result == Cr.NS_ERROR_FAILURE) {
+      if (
+        e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK ||
+        e.result == Cr.NS_ERROR_FAILURE
+      ) {
         this._debug("Flush would block, will retry");
         this._streamReadyCallback = this._flush;
         this._debug("Waiting for output stream");
@@ -189,9 +195,7 @@ StreamCopier.prototype = {
     this._streamReadyCallback();
   },
 
-  _debug() {
-  },
-
+  _debug() {},
 };
 
 /**

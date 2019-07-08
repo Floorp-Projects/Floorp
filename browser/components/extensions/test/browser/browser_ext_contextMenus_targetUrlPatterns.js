@@ -3,89 +3,89 @@
 "use strict";
 
 add_task(async function unsupportedSchemes() {
-  const testcases = [{
-    // Link to URL with query string parameters only.
-    testUrl: "magnet:?xt=urn:btih:somesha1hash&dn=displayname.txt",
-    matchingPatterns: [
-      "magnet:*",
-      "magnet:?xt=*",
-      "magnet:?xt=*txt",
-      "magnet:*?xt=*txt",
-    ],
-    nonmatchingPatterns: [
-      // Although <all_urls> matches unsupported schemes in Chromium,
-      // we have specified that <all_urls> only matches all supported
-      // schemes. To match any scheme, an extension should not set the
-      // targetUrlPatterns field - this is checked below in subtest
-      // unsupportedSchemeWithoutTargetUrlPatterns.
-      "<all_urls>",
-      "agnet:*",
-      "magne:*",
-    ],
-  }, {
-    // Link to bookmarklet.
-    testUrl: "javascript:-URL",
-    matchingPatterns: [
-      "javascript:*",
-      "javascript:*URL",
-      "javascript:-URL",
-    ],
-    nonmatchingPatterns: [
-      "<all_urls>",
-      "javascript://-URL",
-      "javascript:javascript:-URL",
-    ],
-  }, {
-    // Link to bookmarklet with comment.
-    testUrl: "javascript://-URL",
-    matchingPatterns: [
-      "javascript:*",
-      "javascript://-URL",
-      "javascript:*URL",
-    ],
-    nonmatchingPatterns: [
-      "<all_urls>",
-      "javascript:-URL",
-    ],
-  }, {
-    // Link to data-URI.
-    testUrl: "data:application/foo,bar",
-    matchingPatterns: [
-      "<all_urls>",
-      "data:application/foo,bar",
-      "data:*,*",
-      "data:*",
-    ],
-    nonmatchingPatterns: [
-      "data:,bar",
-      "data:application/foo,",
-    ],
-  }, {
-    // Extension page.
-    testUrl: "moz-extension://uuid/manifest.json",
-    matchingPatterns: [
-      "moz-extension://*/*",
-    ],
-    nonmatchingPatterns: [
-      "<all_urls>",
-      "moz-extension://uuid/not/manifest.json*",
-    ],
-  }];
+  const testcases = [
+    {
+      // Link to URL with query string parameters only.
+      testUrl: "magnet:?xt=urn:btih:somesha1hash&dn=displayname.txt",
+      matchingPatterns: [
+        "magnet:*",
+        "magnet:?xt=*",
+        "magnet:?xt=*txt",
+        "magnet:*?xt=*txt",
+      ],
+      nonmatchingPatterns: [
+        // Although <all_urls> matches unsupported schemes in Chromium,
+        // we have specified that <all_urls> only matches all supported
+        // schemes. To match any scheme, an extension should not set the
+        // targetUrlPatterns field - this is checked below in subtest
+        // unsupportedSchemeWithoutTargetUrlPatterns.
+        "<all_urls>",
+        "agnet:*",
+        "magne:*",
+      ],
+    },
+    {
+      // Link to bookmarklet.
+      testUrl: "javascript:-URL",
+      matchingPatterns: ["javascript:*", "javascript:*URL", "javascript:-URL"],
+      nonmatchingPatterns: [
+        "<all_urls>",
+        "javascript://-URL",
+        "javascript:javascript:-URL",
+      ],
+    },
+    {
+      // Link to bookmarklet with comment.
+      testUrl: "javascript://-URL",
+      matchingPatterns: [
+        "javascript:*",
+        "javascript://-URL",
+        "javascript:*URL",
+      ],
+      nonmatchingPatterns: ["<all_urls>", "javascript:-URL"],
+    },
+    {
+      // Link to data-URI.
+      testUrl: "data:application/foo,bar",
+      matchingPatterns: [
+        "<all_urls>",
+        "data:application/foo,bar",
+        "data:*,*",
+        "data:*",
+      ],
+      nonmatchingPatterns: ["data:,bar", "data:application/foo,"],
+    },
+    {
+      // Extension page.
+      testUrl: "moz-extension://uuid/manifest.json",
+      matchingPatterns: ["moz-extension://*/*"],
+      nonmatchingPatterns: [
+        "<all_urls>",
+        "moz-extension://uuid/not/manifest.json*",
+      ],
+    },
+  ];
 
   async function testScript(testcases) {
     let testcase;
 
-    browser.contextMenus.onShown.addListener(({menuIds, linkUrl}) => {
+    browser.contextMenus.onShown.addListener(({ menuIds, linkUrl }) => {
       browser.test.assertEq(testcase.testUrl, linkUrl, "Expected linkUrl");
       for (let pattern of testcase.matchingPatterns) {
         browser.test.assertTrue(
           menuIds.includes(pattern),
-          `Menu item with targetUrlPattern="${pattern}" should be shown at ${testcase.testUrl}`);
+          `Menu item with targetUrlPattern="${pattern}" should be shown at ${
+            testcase.testUrl
+          }`
+        );
       }
       for (let pattern of testcase.nonmatchingPatterns) {
         browser.test.assertFalse(
           menuIds.includes(pattern),
-          `Menu item with targetUrlPattern="${pattern}" should not be shown at ${testcase.testUrl}`);
+          `Menu item with targetUrlPattern="${pattern}" should not be shown at ${
+            testcase.testUrl
+          }`
+        );
       }
       testcase = null;
       browser.test.sendMessage("onShown_checked");
@@ -99,15 +99,21 @@ add_task(async function unsupportedSchemes() {
       browser.test.log(`Running test for link with URL: ${testcase.testUrl}`);
       document.getElementById("test_link_element").href = testcase.testUrl;
       await browser.contextMenus.removeAll();
-      for (let targetUrlPattern of [...testcase.matchingPatterns, ...testcase.nonmatchingPatterns]) {
+      for (let targetUrlPattern of [
+        ...testcase.matchingPatterns,
+        ...testcase.nonmatchingPatterns,
+      ]) {
         await new Promise(resolve => {
           browser.test.log(`Creating menu with "${targetUrlPattern}"`);
-          browser.contextMenus.create({
-            id: targetUrlPattern,
-            contexts: ["link"],
-            title: "Some menu item",
-            targetUrlPatterns: [targetUrlPattern],
-          }, resolve);
+          browser.contextMenus.create(
+            {
+              id: targetUrlPattern,
+              contexts: ["link"],
+              title: "Some menu item",
+              targetUrlPatterns: [targetUrlPattern],
+            },
+            resolve
+          );
         });
       }
       browser.test.sendMessage("setupTest_ready");
@@ -120,7 +126,7 @@ add_task(async function unsupportedSchemes() {
       permissions: ["contextMenus"],
     },
     background() {
-      browser.tabs.create({url: "testrunner.html"});
+      browser.tabs.create({ url: "testrunner.html" });
     },
     files: {
       "testrunner.js": `(${testScript})()`,
@@ -152,18 +158,25 @@ add_task(async function unsupportedSchemes() {
 add_task(async function unsupportedSchemeWithoutPattern() {
   function background() {
     let menuId;
-    browser.contextMenus.onShown.addListener(({menuIds, linkUrl}) => {
+    browser.contextMenus.onShown.addListener(({ menuIds, linkUrl }) => {
       browser.test.assertEq(1, menuIds.length, "Expected number of menus");
       browser.test.assertEq(menuId, menuIds[0], "Expected menu ID");
-      browser.test.assertEq("unsupported-scheme:data", linkUrl, "Expected linkUrl");
+      browser.test.assertEq(
+        "unsupported-scheme:data",
+        linkUrl,
+        "Expected linkUrl"
+      );
       browser.test.sendMessage("done");
     });
-    menuId = browser.contextMenus.create({
-      contexts: ["link"],
-      title: "Test menu item without targetUrlPattern",
-    }, () => {
-      browser.tabs.create({url: "testpage.html"});
-    });
+    menuId = browser.contextMenus.create(
+      {
+        contexts: ["link"],
+        title: "Test menu item without targetUrlPattern",
+      },
+      () => {
+        browser.tabs.create({ url: "testpage.html" });
+      }
+    );
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -210,7 +223,7 @@ add_task(async function privileged_are_allowed_to_use_restrictedSchemes() {
         }
       });
 
-      browser.test.onMessage.addListener(async (msg) => {
+      browser.test.onMessage.addListener(async msg => {
         if (msg !== "enterReaderMode") {
           browser.test.fail(`Received unexpected test message: ${msg}`);
           return;
@@ -236,9 +249,17 @@ add_task(async function privileged_are_allowed_to_use_restrictedSchemes() {
     },
   });
 
-  const baseUrl = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+  const baseUrl = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "http://example.com"
+  );
   const url = `${baseUrl}/readerModeArticle.html`;
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, true, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    url,
+    true,
+    true
+  );
 
   await Promise.all([
     privilegedExtension.startup(),
@@ -250,11 +271,25 @@ add_task(async function privileged_are_allowed_to_use_restrictedSchemes() {
 
   const contextMenu = await openContextMenu("body > h1");
 
-  let item = contextMenu.getElementsByAttribute("label", "Privileged Extension");
-  is(item.length, 1, "Privileged extension's contextMenu item found as expected");
+  let item = contextMenu.getElementsByAttribute(
+    "label",
+    "Privileged Extension"
+  );
+  is(
+    item.length,
+    1,
+    "Privileged extension's contextMenu item found as expected"
+  );
 
-  item = contextMenu.getElementsByAttribute("label", "Non Privileged Extension");
-  is(item.length, 0, "Non privileged extension's contextMenu not found as expected");
+  item = contextMenu.getElementsByAttribute(
+    "label",
+    "Non Privileged Extension"
+  );
+  is(
+    item.length,
+    0,
+    "Non privileged extension's contextMenu not found as expected"
+  );
 
   await closeContextMenu();
 

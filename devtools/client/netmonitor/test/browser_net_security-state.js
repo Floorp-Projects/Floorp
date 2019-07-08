@@ -13,7 +13,7 @@ add_task(async function() {
     "test1.example.com": "security-state-insecure",
     "example.com": "security-state-secure",
     "nocert.example.com": "security-state-broken",
-    "localhost": "security-state-secure",
+    localhost: "security-state-secure",
   };
 
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
@@ -24,8 +24,9 @@ add_task(async function() {
 
   await performRequests();
 
-  for (const subitemNode of Array.from(document.querySelectorAll(
-    ".requests-list-column.requests-list-domain"))) {
+  for (const subitemNode of Array.from(
+    document.querySelectorAll(".requests-list-column.requests-list-domain")
+  )) {
     // Skip header
     const icon = subitemNode.querySelector(".requests-security-state-icon");
     if (!icon) {
@@ -40,7 +41,10 @@ add_task(async function() {
 
     info("Classes of security state icon are: " + classes);
     info("Security state icon is expected to contain class: " + expectedClass);
-    ok(classes.contains(expectedClass), "Icon contained the correct class name.");
+    ok(
+      classes.contains(expectedClass),
+      "Icon contained the correct class name."
+    );
   }
 
   return teardown(monitor);
@@ -55,9 +59,13 @@ add_task(async function() {
    */
   async function performRequests() {
     function executeRequests(count, url) {
-      return ContentTask.spawn(tab.linkedBrowser, {count, url}, async function(args) {
-        content.wrappedJSObject.performRequests(args.count, args.url);
-      });
+      return ContentTask.spawn(
+        tab.linkedBrowser,
+        { count, url },
+        async function(args) {
+          content.wrappedJSObject.performRequests(args.count, args.url);
+        }
+      );
     }
 
     let done = waitForNetworkEvents(monitor, 1);
@@ -87,8 +95,10 @@ add_task(async function() {
     await done;
 
     const expectedCount = Object.keys(EXPECTED_SECURITY_STATES).length;
-    is(store.getState().requests.requests.size,
+    is(
+      store.getState().requests.requests.size,
       expectedCount,
-      expectedCount + " events logged.");
+      expectedCount + " events logged."
+    );
   }
 });

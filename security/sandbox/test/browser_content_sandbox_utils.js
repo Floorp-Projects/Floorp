@@ -2,22 +2,30 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                      .getService(Ci.nsIUUIDGenerator);
-const environment = Cc["@mozilla.org/process/environment;1"]
-                    .getService(Ci.nsIEnvironment);
+const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
+const environment = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 
 /*
  * Utility functions for the browser content sandbox tests.
  */
 
-function isMac() { return Services.appinfo.OS == "Darwin"; }
-function isWin() { return Services.appinfo.OS == "WINNT"; }
-function isLinux() { return Services.appinfo.OS == "Linux"; }
+function isMac() {
+  return Services.appinfo.OS == "Darwin";
+}
+function isWin() {
+  return Services.appinfo.OS == "WINNT";
+}
+function isLinux() {
+  return Services.appinfo.OS == "Linux";
+}
 
 function isNightly() {
   let version = SpecialPowers.Services.appinfo.version;
-  return (version.endsWith("a1"));
+  return version.endsWith("a1");
 }
 
 function uuid() {
@@ -35,7 +43,7 @@ function fileInHomeDir() {
   let homeFile = homeDir.clone();
   homeFile.appendRelativePath(uuid());
   Assert.ok(!homeFile.exists(), homeFile.path + " does not exist");
-  return (homeFile);
+  return homeFile;
 }
 
 // Returns a file object for a new file in the content temp dir (.../<UUID>).
@@ -51,19 +59,19 @@ function fileInTempDir() {
   let tempFile = ctmp.clone();
   tempFile.appendRelativePath(uuid());
   Assert.ok(!tempFile.exists(), tempFile.path + " does not exist");
-  return (tempFile);
+  return tempFile;
 }
 
 function GetProfileDir() {
   // get profile directory
   let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  return (profileDir);
+  return profileDir;
 }
 
 function GetHomeDir() {
   // get home directory
   let homeDir = Services.dirsvc.get("Home", Ci.nsIFile);
-  return (homeDir);
+  return homeDir;
 }
 
 function GetSystemExtensionsDevDir() {
@@ -79,14 +87,14 @@ function GetPerUserExtensionDir() {
 function GetProfileEntry(name) {
   let entry = GetProfileDir();
   entry.append(name);
-  return (entry);
+  return entry;
 }
 
 function GetDir(path) {
   let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   dir.initWithPath(path);
   Assert.ok(dir.isDirectory(), `${path} is a directory`);
-  return (dir);
+  return dir;
 }
 
 function GetDirFromEnvVariable(varName) {
@@ -96,5 +104,5 @@ function GetDirFromEnvVariable(varName) {
 function GetFile(path) {
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(path);
-  return (file);
+  return file;
 }

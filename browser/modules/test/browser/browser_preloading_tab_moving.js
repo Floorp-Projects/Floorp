@@ -9,9 +9,12 @@ registerCleanupFunction(() => {
 });
 
 async function openWinWithPreloadBrowser(options = {}) {
-  let idleFinishedPromise = TestUtils.topicObserved("browser-idle-startup-tasks-finished", w => {
-    return w != window;
-  });
+  let idleFinishedPromise = TestUtils.topicObserved(
+    "browser-idle-startup-tasks-finished",
+    w => {
+      return w != window;
+    }
+  );
   let newWin = await BrowserTestUtils.openNewBrowserWindow(options);
   await idleFinishedPromise;
   await TestUtils.waitForCondition(() => newWin.gBrowser.preloadedBrowser);
@@ -34,11 +37,26 @@ add_task(async function moving_works() {
 
   let newWin = await openWinWithPreloadBrowser();
   is(gBrowser.preloadedBrowser, null, "Preloaded browser should be gone");
-  isnot(newWin.gBrowser.preloadedBrowser, null, "Should have moved the preload browser");
-  is(newWin.gBrowser.preloadedBrowser.permanentKey, oldKey, "Should have the same permanent key");
+  isnot(
+    newWin.gBrowser.preloadedBrowser,
+    null,
+    "Should have moved the preload browser"
+  );
+  is(
+    newWin.gBrowser.preloadedBrowser.permanentKey,
+    oldKey,
+    "Should have the same permanent key"
+  );
   let browser = newWin.gBrowser.preloadedBrowser;
-  let tab = BrowserTestUtils.addTab(newWin.gBrowser, newWin.BROWSER_NEW_TAB_URL);
-  is(tab.linkedBrowser, browser, "Preloaded browser is usable when opening a new tab.");
+  let tab = BrowserTestUtils.addTab(
+    newWin.gBrowser,
+    newWin.BROWSER_NEW_TAB_URL
+  );
+  is(
+    tab.linkedBrowser,
+    browser,
+    "Preloaded browser is usable when opening a new tab."
+  );
   await ContentTask.spawn(browser, null, function() {
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.readyState == "complete";
@@ -70,14 +88,33 @@ add_task(async function moving_shouldnt_move_across_private_state() {
   isnot(gBrowser.preloadedBrowser, null, "Should have preloaded browser");
 
   let oldKey = gBrowser.preloadedBrowser.permanentKey;
-  let newWin = await openWinWithPreloadBrowser({private: true});
+  let newWin = await openWinWithPreloadBrowser({ private: true });
 
-  isnot(gBrowser.preloadedBrowser, null, "Preloaded browser in original window should persist");
-  isnot(newWin.gBrowser.preloadedBrowser, null, "Should have created another preload browser");
-  isnot(newWin.gBrowser.preloadedBrowser.permanentKey, oldKey, "Should not have the same permanent key");
+  isnot(
+    gBrowser.preloadedBrowser,
+    null,
+    "Preloaded browser in original window should persist"
+  );
+  isnot(
+    newWin.gBrowser.preloadedBrowser,
+    null,
+    "Should have created another preload browser"
+  );
+  isnot(
+    newWin.gBrowser.preloadedBrowser.permanentKey,
+    oldKey,
+    "Should not have the same permanent key"
+  );
   let browser = newWin.gBrowser.preloadedBrowser;
-  let tab = BrowserTestUtils.addTab(newWin.gBrowser, newWin.BROWSER_NEW_TAB_URL);
-  is(tab.linkedBrowser, browser, "Preloaded browser is usable when opening a new tab.");
+  let tab = BrowserTestUtils.addTab(
+    newWin.gBrowser,
+    newWin.BROWSER_NEW_TAB_URL
+  );
+  is(
+    tab.linkedBrowser,
+    browser,
+    "Preloaded browser is usable when opening a new tab."
+  );
   await ContentTask.spawn(browser, null, function() {
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.readyState == "complete";
@@ -88,4 +125,3 @@ add_task(async function moving_shouldnt_move_across_private_state() {
   tab = browser = null;
   await BrowserTestUtils.closeWindow(newWin);
 });
-

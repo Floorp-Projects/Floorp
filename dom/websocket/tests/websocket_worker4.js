@@ -1,10 +1,10 @@
-importScripts('websocket_helpers.js');
-importScripts('websocket_tests.js');
-importScripts('websocket_worker_helpers.js');
+importScripts("websocket_helpers.js");
+importScripts("websocket_tests.js");
+importScripts("websocket_worker_helpers.js");
 
 var tests = [
   test31, // ctor using valid 2 element sub-protocol array with 1 element server
-          // will reject and one server will accept
+  // will reject and one server will accept
   test32, // ctor using invalid sub-protocol array that contains duplicate items
   test33, // test for sending/receiving custom close code (but no close reason)
   test34, // test for receiving custom close code and reason

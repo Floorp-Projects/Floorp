@@ -52,7 +52,9 @@ class SourceEditor extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return nextProps.mode !== this.props.mode || nextProps.text !== this.props.text;
+    return (
+      nextProps.mode !== this.props.mode || nextProps.text !== this.props.text
+    );
   }
 
   componentDidUpdate(prevProps) {
@@ -90,12 +92,10 @@ class SourceEditor extends Component {
   }
 
   render() {
-    return (
-      div({
-        ref: "editorElement",
-        className: "source-editor-mount devtools-monospace",
-      })
-    );
+    return div({
+      ref: "editorElement",
+      className: "source-editor-mount devtools-monospace",
+    });
   }
 }
 

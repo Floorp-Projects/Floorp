@@ -3,7 +3,7 @@ onfetch = function(e) {
     e.respondWith(new Response(e.clientId));
     return;
   }
-}
+};
 
 onmessage = function(e) {
   dump("MatchAllPropertiesWorker:" + e.data + "\n");
@@ -20,9 +20,9 @@ onmessage = function(e) {
         url: client.url,
         visibilityState: client.visibilityState,
         focused: client.focused,
-        frameType: client.frameType
+        frameType: client.frameType,
       };
       client.postMessage(response);
     }
   });
-}
+};

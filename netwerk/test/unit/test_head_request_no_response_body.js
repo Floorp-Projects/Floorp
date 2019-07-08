@@ -15,7 +15,7 @@ Test that a response to HEAD method should not have a body.
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const responseContent = "response body";
 
@@ -29,18 +29,22 @@ function test_handler(metadata, response) {
 }
 
 function make_channel(url, method) {
-  let channel = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                  .QueryInterface(Ci.nsIHttpChannel);
+  let channel = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
   channel.requestMethod = method;
   return channel;
 }
 
 async function get_response(channel, fromCache) {
   return new Promise(resolve => {
-    channel.asyncOpen(new ChannelListener((request, buffer, ctx, isFromCache) => {
-      ok(fromCache == isFromCache, `got response from cache = ${fromCache}`);
-      resolve(buffer);
-    }));
+    channel.asyncOpen(
+      new ChannelListener((request, buffer, ctx, isFromCache) => {
+        ok(fromCache == isFromCache, `got response from cache = ${fromCache}`);
+        resolve(buffer);
+      })
+    );
   });
 }
 

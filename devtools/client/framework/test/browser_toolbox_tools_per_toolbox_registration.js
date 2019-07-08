@@ -18,29 +18,30 @@ var toolbox;
 var target;
 
 function test() {
-  addTab(TEST_URL).then(async (tab) => {
+  addTab(TEST_URL).then(async tab => {
     target = await TargetFactory.forTab(tab);
 
-    gDevTools.showToolbox(target)
+    gDevTools
+      .showToolbox(target)
       .then(toolboxRegister)
       .then(testToolRegistered);
   });
 }
 
 var resolveToolInstanceBuild;
-var waitForToolInstanceBuild = new Promise((resolve) => {
+var waitForToolInstanceBuild = new Promise(resolve => {
   resolveToolInstanceBuild = resolve;
 });
 
 var resolveToolInstanceDestroyed;
-var waitForToolInstanceDestroyed = new Promise((resolve) => {
+var waitForToolInstanceDestroyed = new Promise(resolve => {
   resolveToolInstanceDestroyed = resolve;
 });
 
 function toolboxRegister(aToolbox) {
   toolbox = aToolbox;
 
-  waitForToolInstanceBuild = new Promise((resolve) => {
+  waitForToolInstanceBuild = new Promise(resolve => {
     resolveToolInstanceBuild = resolve;
   });
 
@@ -67,9 +68,14 @@ function toolboxRegister(aToolbox) {
 }
 
 function testToolRegistered() {
-  ok(!gDevTools.getToolDefinitionMap().has(TOOL_ID), "per-toolbox tool is not registered globally");
-  ok(toolbox.hasAdditionalTool(TOOL_ID),
-     "per-toolbox tool registered to the specific toolbox");
+  ok(
+    !gDevTools.getToolDefinitionMap().has(TOOL_ID),
+    "per-toolbox tool is not registered globally"
+  );
+  ok(
+    toolbox.hasAdditionalTool(TOOL_ID),
+    "per-toolbox tool registered to the specific toolbox"
+  );
 
   // Test that the tool appeared in the UI.
   const doc = toolbox.doc;
@@ -91,9 +97,10 @@ function testToolRegistered() {
 
   // Test that the tool is built once selected and then test its unregistering.
   info("select per-toolbox tool in the opened toolbox.");
-  gDevTools.showToolbox(target, TOOL_ID)
-           .then(waitForToolInstanceBuild)
-           .then(testUnregister);
+  gDevTools
+    .showToolbox(target, TOOL_ID)
+    .then(waitForToolInstanceBuild)
+    .then(testUnregister);
 }
 
 function getAllBrowserWindows() {
@@ -104,14 +111,14 @@ function testUnregister() {
   info("remove per-toolbox tool in the opened toolbox.");
   toolbox.removeAdditionalTool(TOOL_ID);
 
-  Promise.all([
-    waitForToolInstanceDestroyed,
-  ]).then(toolboxToolUnregistered);
+  Promise.all([waitForToolInstanceDestroyed]).then(toolboxToolUnregistered);
 }
 
 function toolboxToolUnregistered() {
-  ok(!toolbox.hasAdditionalTool(TOOL_ID),
-     "per-toolbox tool unregistered from the specific toolbox");
+  ok(
+    !toolbox.hasAdditionalTool(TOOL_ID),
+    "per-toolbox tool unregistered from the specific toolbox"
+  );
 
   // test that it disappeared from the UI
   const doc = toolbox.doc;

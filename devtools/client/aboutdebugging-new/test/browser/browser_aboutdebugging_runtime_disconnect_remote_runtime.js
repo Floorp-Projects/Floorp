@@ -28,12 +28,12 @@ add_task(async function() {
   await connectToRuntime(USB_DEVICE_NAME, document);
   await selectRuntime(USB_DEVICE_NAME, USB_APP_NAME, document);
 
-  const disconnectRemoteRuntimeButton =
-  document.querySelector(".qa-runtime-info__action");
+  const disconnectRemoteRuntimeButton = document.querySelector(
+    ".qa-runtime-info__action"
+  );
 
   info("Check whether disconnect remote runtime button exists");
-  ok(!!disconnectRemoteRuntimeButton,
-    "Runtime contains the disconnect button");
+  ok(!!disconnectRemoteRuntimeButton, "Runtime contains the disconnect button");
 
   info("Click on the disconnect button");
   disconnectRemoteRuntimeButton.click();
@@ -41,8 +41,11 @@ add_task(async function() {
   info("Wait until the runtime is disconnected");
   await waitUntil(() => document.querySelector(".qa-connect-button"));
 
-  is(document.location.hash, DEFAULT_PAGE,
-    "Redirection to the default page (this-firefox)");
+  is(
+    document.location.hash,
+    DEFAULT_PAGE,
+    "Redirection to the default page (this-firefox)"
+  );
 
   await removeTab(tab);
 });

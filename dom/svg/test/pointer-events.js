@@ -13,23 +13,11 @@ var pointer_events_values = [
   "none",
 ];
 
-var paint_values = [
-  "blue",
-  "transparent",
-  "none",
-];
+var paint_values = ["blue", "transparent", "none"];
 
-var opacity_values = [
-  "1",
-  "0.5",
-  "0",
-];
+var opacity_values = ["1", "0.5", "0"];
 
-var visibility_values = [
-  "visible",
-  "hidden",
-  "collapse",
-];
+var visibility_values = ["visible", "hidden", "collapse"];
 
 /**
  * List of attributes and various values for which we want to test permutations
@@ -43,27 +31,27 @@ var visibility_values = [
  */
 var hit_test_inputs = {
   fill: [
-    { name: "pointer-events",  values: pointer_events_values },
-    { name: "fill",            values: paint_values },
-    { name: "fill-opacity",    values: opacity_values },
-    { name: "opacity",         values: opacity_values },
-    { name: "visibility",      values: visibility_values },
+    { name: "pointer-events", values: pointer_events_values },
+    { name: "fill", values: paint_values },
+    { name: "fill-opacity", values: opacity_values },
+    { name: "opacity", values: opacity_values },
+    { name: "visibility", values: visibility_values },
   ],
   stroke: [
-    { name: "pointer-events",  values: pointer_events_values },
-    { name: "stroke",          values: paint_values },
-    { name: "stroke-opacity",  values: opacity_values },
-    { name: "opacity",         values: opacity_values },
-    { name: "visibility",      values: visibility_values },
+    { name: "pointer-events", values: pointer_events_values },
+    { name: "stroke", values: paint_values },
+    { name: "stroke-opacity", values: opacity_values },
+    { name: "opacity", values: opacity_values },
+    { name: "visibility", values: visibility_values },
   ],
   both: [
-    { name: "pointer-events",  values: pointer_events_values },
-    { name: "fill",            values: paint_values },
-    { name: "fill-opacity",    values: opacity_values },
-    { name: "stroke",          values: paint_values },
-    { name: "stroke-opacity",  values: opacity_values },
-    { name: "opacity",         values: opacity_values },
-    { name: "visibility",      values: visibility_values },
+    { name: "pointer-events", values: pointer_events_values },
+    { name: "fill", values: paint_values },
+    { name: "fill-opacity", values: opacity_values },
+    { name: "stroke", values: paint_values },
+    { name: "stroke-opacity", values: opacity_values },
+    { name: "opacity", values: opacity_values },
+    { name: "visibility", values: visibility_values },
   ],
 };
 
@@ -87,21 +75,21 @@ var hit_test_inputs = {
 var hit_conditions = {
   auto: {
     "fill-intercepts-iff": {
-      "visibility": ["visible"],
+      visibility: ["visible"],
       "fill!": ["none"],
     },
     "stroke-intercepts-iff": {
-      "visibility": ["visible"],
+      visibility: ["visible"],
       "stroke!": ["none"],
     },
   },
   visiblePainted: {
     "fill-intercepts-iff": {
-      "visibility": ["visible"],
+      visibility: ["visible"],
       "fill!": ["none"],
     },
     "stroke-intercepts-iff": {
-      "visibility": ["visible"],
+      visibility: ["visible"],
       "stroke!": ["none"],
     },
   },
@@ -159,7 +147,7 @@ var hit_conditions = {
 };
 
 // bit flags
-var POINT_OVER_FILL   = 0x1;
+var POINT_OVER_FILL = 0x1;
 var POINT_OVER_STROKE = 0x2;
 
 /**
@@ -167,10 +155,15 @@ var POINT_OVER_STROKE = 0x2;
  * element that the pointer event is over (fill and/or stroke areas), return
  * true if the element is expected to intercept the event, otherwise false.
  */
-function hit_expected(element, over /* bit flags indicating which area(s) of the element the pointer is over */) {
+function hit_expected(
+  element,
+  over /* bit flags indicating which area(s) of the element the pointer is over */
+) {
   function expect_hit(target) {
     var intercepts_iff =
-      hit_conditions[element.getAttribute("pointer-events")][target + "-intercepts-iff"];
+      hit_conditions[element.getAttribute("pointer-events")][
+        target + "-intercepts-iff"
+      ];
 
     if (!intercepts_iff) {
       return false; // never intercepts events
@@ -195,8 +188,10 @@ function hit_expected(element, over /* bit flags indicating which area(s) of the
     return true;
   }
 
-  return (over & POINT_OVER_FILL) != 0 && expect_hit("fill") ||
-         (over & POINT_OVER_STROKE) != 0 && expect_hit("stroke");
+  return (
+    ((over & POINT_OVER_FILL) != 0 && expect_hit("fill")) ||
+    ((over & POINT_OVER_STROKE) != 0 && expect_hit("stroke"))
+  );
 }
 
 function for_all_permutations(inputs, callback) {
@@ -227,7 +222,12 @@ function make_log_msg(over, tag, attributes) {
   } else {
     throw new Error("unexpected bit combination in 'over'");
   }
-  var msg = "Check if events are intercepted at a point over the " + target + " on <" + tag + "> for";
+  var msg =
+    "Check if events are intercepted at a point over the " +
+    target +
+    " on <" +
+    tag +
+    "> for";
   for (var attr in attributes) {
     msg += " " + attr + "=" + attributes[attr];
   }
@@ -236,7 +236,12 @@ function make_log_msg(over, tag, attributes) {
 
 var dx, dy; // offset of <svg> element from pointer coordinates origin
 
-function test_element(id, x, y, over /* bit flags indicating which area(s) of the element the pointer is over */) {
+function test_element(
+  id,
+  x,
+  y,
+  over /* bit flags indicating which area(s) of the element the pointer is over */
+) {
   var element = document.getElementById(id);
   var tag = element.tagName;
 

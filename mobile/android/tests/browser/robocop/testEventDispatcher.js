@@ -1,5 +1,7 @@
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var java = new JavaBridge(this);
 
@@ -73,39 +75,48 @@ function dispatch_test_message(scope, type) {
 }
 
 function send_message_for_response(scope, type, mode, key) {
-  get_dispatcher(scope).sendRequestForResult({
-    type: type,
-    mode: mode,
-    key: key,
-  }).then(result => {
-    do_check_eq(mode, "success");
-    check_response(key, result);
-  }, error => {
-    do_check_eq(mode, "error");
-    check_response(key, error);
-  });
+  get_dispatcher(scope)
+    .sendRequestForResult({
+      type: type,
+      mode: mode,
+      key: key,
+    })
+    .then(
+      result => {
+        do_check_eq(mode, "success");
+        check_response(key, result);
+      },
+      error => {
+        do_check_eq(mode, "error");
+        check_response(key, error);
+      }
+    );
 }
 
 function dispatch_message_for_response(scope, type, mode, key) {
   // Gecko thread callbacks should be synchronous.
-  let sync = (type === "Robocop:TestGeckoResponse");
+  let sync = type === "Robocop:TestGeckoResponse";
   let dispatching = true;
 
-  get_dispatcher(scope).dispatch(type, {
-    mode: mode,
-    key: key,
-  }, {
-    onSuccess: result => {
-      do_check_eq(mode, "success");
-      check_response(key, result);
-      sync && do_check_eq(dispatching, true);
+  get_dispatcher(scope).dispatch(
+    type,
+    {
+      mode: mode,
+      key: key,
     },
-    onError: error => {
-      do_check_eq(mode, "error");
-      check_response(key, error);
-      sync && do_check_eq(dispatching, true);
-    },
-  });
+    {
+      onSuccess: result => {
+        do_check_eq(mode, "success");
+        check_response(key, result);
+        sync && do_check_eq(dispatching, true);
+      },
+      onError: error => {
+        do_check_eq(mode, "error");
+        check_response(key, error);
+        sync && do_check_eq(dispatching, true);
+      },
+    }
+  );
 
   dispatching = false;
 }

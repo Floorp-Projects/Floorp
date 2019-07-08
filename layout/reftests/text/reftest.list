@@ -193,7 +193,7 @@ fuzzy-if(!webrender,12-66,288-1660) == 1522857-1.html 1522857-1-ref.html # antia
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
 # should at least render hexboxes if there's no font support
-!= emoji-01.html emoji-01-notref.html
+random-if(geckoview&&webrender) != emoji-01.html emoji-01-notref.html
 != emoji-02.html emoji-02-notref.html
 
 # Bug 727276: tests with variation selectors 15 and 16 to control emoji rendering style

@@ -12,24 +12,29 @@ add_task(async () => {
     options: {
       startWithLastProfile: true,
     },
-    profiles: [{
-      name: "Profile1",
-      path: dir.leafName,
-    }, {
-      name: "Profile2",
-      path: "Path2",
-      default: true,
-    }, {
-      name: "Profile3",
-      path: "Path3",
-    }],
+    profiles: [
+      {
+        name: "Profile1",
+        path: dir.leafName,
+      },
+      {
+        name: "Profile2",
+        path: "Path2",
+        default: true,
+      },
+      {
+        name: "Profile3",
+        path: "Path3",
+      },
+    ],
   };
 
   writeProfilesIni(profileData);
   checkProfileService(profileData);
 
-  let env = Cc["@mozilla.org/process/environment;1"].
-            getService(Ci.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   env.set("XRE_PROFILE_PATH", dir.path);
   env.set("XRE_PROFILE_LOCAL_PATH", dir.path);
 

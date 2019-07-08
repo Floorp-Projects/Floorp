@@ -6,8 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["UAWidgetsChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const HANDLED_ELEMENTS = ["video", "audio", "embed", "object", "marquee"];
 
 class UAWidgetsChild extends ActorChild {
   constructor(dispatcher) {
@@ -18,18 +22,20 @@ class UAWidgetsChild extends ActorChild {
   }
 
   handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case "UAWidgetSetupOrChange":
-        this.setupOrNotifyWidget(aEvent.target);
-        break;
-      case "UAWidgetTeardown":
-        this.teardownWidget(aEvent.target);
-        break;
-    }
+    if (HANDLED_ELEMENTS.includes(aEvent.target.localName)) {
+      switch (aEvent.type) {
+        case "UAWidgetSetupOrChange":
+          this.setupOrNotifyWidget(aEvent.target);
+          break;
+        case "UAWidgetTeardown":
+          this.teardownWidget(aEvent.target);
+          break;
+      }
 
-    // In case we are a nested frame, prevent the message manager of the
-    // parent frame from receving the event.
-    aEvent.stopPropagation();
+      // In case we are a nested frame, prevent the message manager of the
+      // parent frame from receving the event.
+      aEvent.stopPropagation();
+    }
   }
 
   setupOrNotifyWidget(aElement) {
@@ -61,10 +67,6 @@ class UAWidgetsChild extends ActorChild {
           "media.videocontrols.picture-in-picture.video-toggle.always-show",
         ];
         break;
-      case "input":
-        uri = "chrome://global/content/elements/datetimebox.js";
-        widgetName = "DateTimeBoxWidget";
-        break;
       case "embed":
       case "object":
         uri = "chrome://global/content/elements/pluginProblem.js";
@@ -77,25 +79,33 @@ class UAWidgetsChild extends ActorChild {
     }
 
     if (!uri || !widgetName) {
-      Cu.reportError("Getting a UAWidgetSetupOrChange event on undefined element.");
+      Cu.reportError(
+        "Getting a UAWidgetSetupOrChange event on undefined element."
+      );
       return;
     }
 
     let shadowRoot = aElement.openOrClosedShadowRoot;
     if (!shadowRoot) {
-      Cu.reportError("Getting a UAWidgetSetupOrChange event without the Shadow Root.");
+      Cu.reportError(
+        "Getting a UAWidgetSetupOrChange event without the Shadow Root."
+      );
       return;
     }
 
     let isSystemPrincipal = aElement.nodePrincipal.isSystemPrincipal;
-    let sandbox = isSystemPrincipal ?
-      Object.create(null) : Cu.getUAWidgetScope(aElement.nodePrincipal);
+    let sandbox = isSystemPrincipal
+      ? Object.create(null)
+      : Cu.getUAWidgetScope(aElement.nodePrincipal);
 
     if (!sandbox[widgetName]) {
       Services.scriptloader.loadSubScript(uri, sandbox);
     }
 
-    let prefs = Cu.cloneInto(this.getPrefsForUAWidget(widgetName, prefKeys), sandbox);
+    let prefs = Cu.cloneInto(
+      this.getPrefsForUAWidget(widgetName, prefKeys),
+      sandbox
+    );
 
     let widget = new sandbox[widgetName](shadowRoot, prefs);
     if (!isSystemPrincipal) {

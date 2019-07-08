@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  PureComponent,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -17,7 +20,7 @@ class ConnectSteps extends PureComponent {
       steps: PropTypes.arrayOf(
         PropTypes.shape({
           localizationId: PropTypes.string.isRequired,
-        }).isRequired,
+        }).isRequired
       ),
     };
   }

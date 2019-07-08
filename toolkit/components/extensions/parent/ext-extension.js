@@ -19,4 +19,3 @@ this.extension = class extends ExtensionAPI {
     };
   }
 };
-

@@ -23,19 +23,29 @@ add_task(async function() {
   // Ensure that global actors are available. Just test the device actor.
   const deviceFront = await client.mainRoot.getFront("device");
   const desc = await deviceFront.getDescription();
-  equal(desc.geckobuildid, Services.appinfo.platformBuildID, "device actor works");
+  equal(
+    desc.geckobuildid,
+    Services.appinfo.platformBuildID,
+    "device actor works"
+  );
 
   // Even though we have no tabs, getMainProcess gives us the chrome debugger.
   const front = await client.mainRoot.getMainProcess();
   const [, threadClient] = await front.attachThread();
   const onResumed = new Promise(resolve => {
-    threadClient.once("paused", (packet) => {
-      equal(packet.why.type, "breakpoint",
-          "yay - hit the breakpoint at the first line in our script");
+    threadClient.once("paused", packet => {
+      equal(
+        packet.why.type,
+        "breakpoint",
+        "yay - hit the breakpoint at the first line in our script"
+      );
       // Resume again - next stop should be our "debugger" statement.
-      threadClient.once("paused", (packet) => {
-        equal(packet.why.type, "debuggerStatement",
-              "yay - hit the 'debugger' statement in our script");
+      threadClient.once("paused", packet => {
+        equal(
+          packet.why.type,
+          "debuggerStatement",
+          "yay - hit the 'debugger' statement in our script"
+        );
         threadClient.resume().then(resolve);
       });
       threadClient.resume();

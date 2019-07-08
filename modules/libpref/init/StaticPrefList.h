@@ -3364,18 +3364,12 @@ VARCACHE_PREF(
   bool, false
 )
 
-#ifdef MOZ_ENABLE_WEBRENDER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   Once,
   "gfx.webrender.enabled",
    gfx_webrender_enabled_do_not_use_directly,
-  bool, PREF_VALUE
+  bool, false
 )
-#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -5973,6 +5967,14 @@ VARCACHE_PREF(
   bool, true
 )
 
+// This pref controls whether dispatch testing-only events.
+VARCACHE_PREF(
+  Live,
+  "media.webvtt.testing.events",
+  media_webvtt_testing_events,
+  bool, true
+)
+
 VARCACHE_PREF(
   Live,
   "media.webspeech.synth.force_global_queue",
@@ -6297,7 +6299,7 @@ VARCACHE_PREF(
   Live,
   "media.devices.insecure.enabled",
   media_devices_insecure_enabled,
-  bool, true
+  bool, false
 )
 
 // If the above pref is also enabled, this pref enabled getUserMedia() support
@@ -6855,6 +6857,13 @@ VARCACHE_PREF(
 //---------------------------------------------------------------------------
 // Prefs starting with "privacy."
 //---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  Live,
+  "privacy.file_unique_origin",
+   privacy_file_unique_origin,
+  bool, true
+)
 
 // Annotate trackers using the strict list. If set to false, the basic list will
 // be used instead.

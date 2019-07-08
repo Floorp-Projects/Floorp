@@ -11,11 +11,13 @@
 
 var EXPORTED_SYMBOLS = ["DeclinedEngines"];
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
-
-
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const { Observers } = ChromeUtils.import(
+  "resource://services-common/observers.js"
+);
 
 var DeclinedEngines = function(service) {
   this._log = Log.repository.getLogger("Sync.Declined");
@@ -30,15 +32,22 @@ this.DeclinedEngines.prototype = {
     let remoteDeclined = new Set(meta.payload.declined || []);
     let localDeclined = new Set(engineManager.getDeclined());
 
-    this._log.debug("Handling remote declined: " + JSON.stringify([...remoteDeclined]));
-    this._log.debug("Handling local declined: " + JSON.stringify([...localDeclined]));
+    this._log.debug(
+      "Handling remote declined: " + JSON.stringify([...remoteDeclined])
+    );
+    this._log.debug(
+      "Handling local declined: " + JSON.stringify([...localDeclined])
+    );
 
     // Any engines that are locally enabled should be removed from the remote
     // declined list.
     //
     // Any engines that are locally declined should be added to the remote
     // declined list.
-    let newDeclined = CommonUtils.union(localDeclined, CommonUtils.difference(remoteDeclined, enabled));
+    let newDeclined = CommonUtils.union(
+      localDeclined,
+      CommonUtils.difference(remoteDeclined, enabled)
+    );
 
     // If our declined set has changed, put it into the meta object and mark
     // it as changed.
@@ -54,7 +63,10 @@ this.DeclinedEngines.prototype = {
 
     // Any engines that are locally known, locally disabled, and not remotely
     // or locally declined, are candidates for enablement.
-    let undecided = CommonUtils.difference(CommonUtils.difference(known, enabled), newDeclined);
+    let undecided = CommonUtils.difference(
+      CommonUtils.difference(known, enabled),
+      newDeclined
+    );
     if (undecided.size) {
       let subject = {
         declined: newDeclined,

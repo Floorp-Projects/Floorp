@@ -27,16 +27,17 @@
 
 function workerTestExec(script) {
   SimpleTest.waitForExplicitFinish();
-  var worker = new Worker('worker_wrapper.js');
+  var worker = new Worker("worker_wrapper.js");
   worker.onmessage = function(event) {
-    if (event.data.type == 'finish') {
+    if (event.data.type == "finish") {
       SimpleTest.finish();
-
-    } else if (event.data.type == 'status') {
+    } else if (event.data.type == "status") {
       ok(event.data.status, event.data.msg);
-
-    } else if (event.data.type == 'getHelperData') {
-      const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+    } else if (event.data.type == "getHelperData") {
+      const { AppConstants } = SpecialPowers.Cu.import(
+        "resource://gre/modules/AppConstants.jsm",
+        {}
+      );
       const isNightly = AppConstants.NIGHTLY_BUILD;
       const isEarlyBetaOrEarlier = AppConstants.EARLY_BETA_OR_EARLIER;
       const isRelease = AppConstants.RELEASE_OR_BETA;
@@ -47,21 +48,34 @@ function workerTestExec(script) {
       const isLinux = AppConstants.platform == "linux";
       const isInsecureContext = !window.isSecureContext;
       // Currently, MOZ_APP_NAME is always "fennec" for all mobile builds, so we can't use AppConstants for this
-      const isFennec = isAndroid && SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(SpecialPowers.Ci.nsIAndroidBridge).isFennec;
+      const isFennec =
+        isAndroid &&
+        SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(
+          SpecialPowers.Ci.nsIAndroidBridge
+        ).isFennec;
 
       const result = {
-        isNightly, isEarlyBetaOrEarlier, isRelease, isDesktop, isMac,
-        isWindows, isAndroid, isLinux, isInsecureContext, isFennec
+        isNightly,
+        isEarlyBetaOrEarlier,
+        isRelease,
+        isDesktop,
+        isMac,
+        isWindows,
+        isAndroid,
+        isLinux,
+        isInsecureContext,
+        isFennec,
       };
 
       worker.postMessage({
-        type: 'returnHelperData', result
+        type: "returnHelperData",
+        result,
       });
     }
-  }
+  };
 
   worker.onerror = function(event) {
-    ok(false, 'Worker had an error: ' + event.data);
+    ok(false, "Worker had an error: " + event.data);
     SimpleTest.finish();
   };
 

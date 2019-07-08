@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["AutoScrollController"];
 
@@ -26,22 +26,33 @@ class AutoScrollController {
 
   isAutoscrollBlocker(node) {
     let mmPaste = Services.prefs.getBoolPref("middlemouse.paste");
-    let mmScrollbarPosition = Services.prefs.getBoolPref("middlemouse.scrollbarPosition");
+    let mmScrollbarPosition = Services.prefs.getBoolPref(
+      "middlemouse.scrollbarPosition"
+    );
     let content = node.ownerGlobal;
 
     while (node) {
-      if ((node instanceof content.HTMLAnchorElement || node instanceof content.HTMLAreaElement) &&
-          node.hasAttribute("href")) {
+      if (
+        (node instanceof content.HTMLAnchorElement ||
+          node instanceof content.HTMLAreaElement) &&
+        node.hasAttribute("href")
+      ) {
         return true;
       }
 
-      if (mmPaste && (node instanceof content.HTMLInputElement ||
-                      node instanceof content.HTMLTextAreaElement)) {
+      if (
+        mmPaste &&
+        (node instanceof content.HTMLInputElement ||
+          node instanceof content.HTMLTextAreaElement)
+      ) {
         return true;
       }
 
-      if (node instanceof content.XULElement && mmScrollbarPosition
-          && (node.localName == "scrollbar" || node.localName == "scrollcorner")) {
+      if (
+        node instanceof content.XULElement &&
+        mmScrollbarPosition &&
+        (node.localName == "scrollbar" || node.localName == "scrollcorner")
+      ) {
         return true;
       }
 
@@ -75,7 +86,7 @@ class AutoScrollController {
     return false;
   }
 
-  * parentNodeIterator(aNode) {
+  *parentNodeIterator(aNode) {
     let content = aNode.ownerGlobal;
 
     while (aNode) {
@@ -117,23 +128,26 @@ class AutoScrollController {
       }
 
       var overflowx = node.ownerGlobal
-                          .getComputedStyle(node)
-                          .getPropertyValue("overflow-x");
+        .getComputedStyle(node)
+        .getPropertyValue("overflow-x");
       var overflowy = node.ownerGlobal
-                          .getComputedStyle(node)
-                          .getPropertyValue("overflow-y");
+        .getComputedStyle(node)
+        .getPropertyValue("overflow-y");
       // we already discarded non-multiline selects so allow vertical
       // scroll for multiline ones directly without checking for a
       // overflow property
-      var scrollVert = node.scrollTopMax &&
+      var scrollVert =
+        node.scrollTopMax &&
         (node instanceof content.HTMLSelectElement ||
-         scrollingAllowed.includes(overflowy));
+          scrollingAllowed.includes(overflowy));
 
       // do not allow horizontal scrolling for select elements, it leads
       // to visual artifacts and is not the expected behavior anyway
-      if (!(node instanceof content.HTMLSelectElement) &&
-          node.scrollLeftMin != node.scrollLeftMax &&
-          scrollingAllowed.includes(overflowx)) {
+      if (
+        !(node instanceof content.HTMLSelectElement) &&
+        node.scrollLeftMin != node.scrollLeftMax &&
+        scrollingAllowed.includes(overflowx)
+      ) {
         this._scrolldir = scrollVert ? "NSEW" : "EW";
         this._scrollable = node;
         break;
@@ -147,8 +161,10 @@ class AutoScrollController {
     if (!this._scrollable) {
       this._scrollable = aNode.ownerGlobal;
       if (this._scrollable.scrollMaxX != this._scrollable.scrollMinX) {
-        this._scrolldir = this._scrollable.scrollMaxY !=
-                          this._scrollable.scrollMinY ? "NSEW" : "EW";
+        this._scrolldir =
+          this._scrollable.scrollMaxY != this._scrollable.scrollMinY
+            ? "NSEW"
+            : "EW";
       } else if (this._scrollable.scrollMaxY != this._scrollable.scrollMinY) {
         this._scrolldir = "NS";
       } else if (this._scrollable.frameElement) {
@@ -162,16 +178,18 @@ class AutoScrollController {
   startScroll(event) {
     this.findNearestScrollableElement(event.originalTarget);
 
-    if (!this._scrollable)
+    if (!this._scrollable) {
       return;
+    }
 
     let content = event.originalTarget.ownerGlobal;
 
     // In some configurations like Print Preview, content.performance
     // (which we use below) is null. Autoscrolling is broken in Print
     // Preview anyways (see bug 1393494), so just don't start it at all.
-    if (!content.performance)
+    if (!content.performance) {
       return;
+    }
 
     let domUtils = content.windowUtils;
     let scrollable = this._scrollable;
@@ -186,12 +204,13 @@ class AutoScrollController {
       // No view ID - leave this._scrollId as null. Receiving side will check.
     }
     let presShellId = domUtils.getPresShellId();
-    let [result] = this._global.sendSyncMessage("Autoscroll:Start",
-                                                {scrolldir: this._scrolldir,
-                                                 screenX: event.screenX,
-                                                 screenY: event.screenY,
-                                                 scrollId: this._scrollId,
-                                                 presShellId});
+    let [result] = this._global.sendSyncMessage("Autoscroll:Start", {
+      scrolldir: this._scrolldir,
+      screenX: event.screenX,
+      screenY: event.screenY,
+      scrollId: this._scrollId,
+      presShellId,
+    });
     if (!result.autoscrollEnabled) {
       this._scrollable = null;
       return;
@@ -232,7 +251,12 @@ class AutoScrollController {
       this._scrollable.mozScrollSnap();
       this._scrollable = null;
 
-      Services.els.removeSystemEventListener(this._global, "mousemove", this, true);
+      Services.els.removeSystemEventListener(
+        this._global,
+        "mousemove",
+        this,
+        true
+      );
       this._global.removeEventListener("pagehide", this, true);
       if (this._autoscrollHandledByApz) {
         Services.obs.removeObserver(this, "autoscroll-rejected-by-apz");
@@ -244,16 +268,19 @@ class AutoScrollController {
     const speed = 12;
     var val = (curr - start) / speed;
 
-    if (val > 1)
+    if (val > 1) {
       return val * Math.sqrt(val) - 1;
-    if (val < -1)
+    }
+    if (val < -1) {
       return val * Math.sqrt(-val) + 1;
+    }
     return 0;
   }
 
   roundToZero(num) {
-    if (num > 0)
+    if (num > 0) {
       return Math.floor(num);
+    }
     return Math.ceil(num);
   }
 
@@ -279,13 +306,13 @@ class AutoScrollController {
       var y = this.accelerate(this._screenY, this._startY) * timeCompensation;
       var desiredScrollY = this._scrollErrorY + y;
       actualScrollY = this.roundToZero(desiredScrollY);
-      this._scrollErrorY = (desiredScrollY - actualScrollY);
+      this._scrollErrorY = desiredScrollY - actualScrollY;
     }
     if (this._scrolldir != "NS") {
       var x = this.accelerate(this._screenX, this._startX) * timeCompensation;
       var desiredScrollX = this._scrollErrorX + x;
       actualScrollX = this.roundToZero(desiredScrollX);
-      this._scrollErrorX = (desiredScrollX - actualScrollX);
+      this._scrollErrorX = desiredScrollX - actualScrollX;
     }
 
     this._scrollable.scrollBy({
@@ -302,14 +329,15 @@ class AutoScrollController {
       this._screenX = event.screenX;
       this._screenY = event.screenY;
     } else if (event.type == "mousedown") {
-      if (!this._scrollable &&
-          !this.isAutoscrollBlocker(event.originalTarget)) {
+      if (
+        !this._scrollable &&
+        !this.isAutoscrollBlocker(event.originalTarget)
+      ) {
         this.startScroll(event);
       }
     } else if (event.type == "pagehide") {
       if (this._scrollable) {
-        var doc =
-          this._scrollable.ownerDocument || this._scrollable.document;
+        var doc = this._scrollable.ownerDocument || this._scrollable.document;
         if (doc == event.target) {
           this._global.sendAsyncMessage("Autoscroll:Cancel");
         }

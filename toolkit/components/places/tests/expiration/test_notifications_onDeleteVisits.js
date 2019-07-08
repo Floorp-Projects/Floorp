@@ -11,12 +11,13 @@
  * onDeleteVisits notification.
  */
 
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+  Ci.nsINavHistoryService
+);
 
 var tests = [
-
-  { desc: "Add 1 bookmarked page.",
+  {
+    desc: "Add 1 bookmarked page.",
     addPages: 1,
     visitsPerPage: 1,
     addBookmarks: 1,
@@ -25,7 +26,8 @@ var tests = [
     expectedIsPartialRemoval: true,
   },
 
-  { desc: "Add 2 pages, 1 bookmarked.",
+  {
+    desc: "Add 2 pages, 1 bookmarked.",
     addPages: 2,
     visitsPerPage: 1,
     addBookmarks: 1,
@@ -34,7 +36,8 @@ var tests = [
     expectedIsPartialRemoval: true,
   },
 
-  { desc: "Add 10 pages, none bookmarked.",
+  {
+    desc: "Add 10 pages, none bookmarked.",
     addPages: 10,
     visitsPerPage: 1,
     addBookmarks: 0,
@@ -43,7 +46,8 @@ var tests = [
     expectedIsPartialRemoval: false,
   },
 
-  { desc: "Add 10 pages, all bookmarked.",
+  {
+    desc: "Add 10 pages, all bookmarked.",
     addPages: 10,
     visitsPerPage: 1,
     addBookmarks: 10,
@@ -52,16 +56,16 @@ var tests = [
     expectedIsPartialRemoval: true,
   },
 
-  { desc: "Add 10 pages with lot of visits, none bookmarked.",
+  {
+    desc: "Add 10 pages with lot of visits, none bookmarked.",
     addPages: 10,
     visitsPerPage: 10,
     addBookmarks: 0,
     limitExpiration: 10,
     expectedNotifications: 10, // Will expire 1 visit for each page, but won't
-                               // expire pages since they still have visits.
+    // expire pages since they still have visits.
     expectedIsPartialRemoval: true,
   },
-
 ];
 
 add_task(async function test_notifications_onDeleteVisits() {
@@ -87,7 +91,10 @@ add_task(async function test_notifications_onDeleteVisits() {
     for (let j = 0; j < currentTest.visitsPerPage; j++) {
       for (let i = 0; i < currentTest.addPages; i++) {
         let page = "http://" + testIndex + "." + i + ".mozilla.org/";
-        await PlacesTestUtils.addVisits({ uri: uri(page), visitDate: newTimeInMicroseconds() });
+        await PlacesTestUtils.addVisits({
+          uri: uri(page),
+          visitDate: newTimeInMicroseconds(),
+        });
       }
     }
 
@@ -119,8 +126,11 @@ add_task(async function test_notifications_onDeleteVisits() {
       onDeleteVisits(aURI, aPartialRemoval, aGUID, aReason) {
         currentTest.receivedNotifications++;
         do_check_guid_for_uri(aURI, aGUID);
-        Assert.equal(aPartialRemoval, currentTest.expectedIsPartialRemoval,
-          "Should have the correct flag setting for partial removal");
+        Assert.equal(
+          aPartialRemoval,
+          currentTest.expectedIsPartialRemoval,
+          "Should have the correct flag setting for partial removal"
+        );
         Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
     };
@@ -131,8 +141,10 @@ add_task(async function test_notifications_onDeleteVisits() {
 
     hs.removeObserver(historyObserver, false);
 
-    Assert.equal(currentTest.receivedNotifications,
-                 currentTest.expectedNotifications);
+    Assert.equal(
+      currentTest.receivedNotifications,
+      currentTest.expectedNotifications
+    );
 
     // Clean up.
     await PlacesUtils.bookmarks.eraseEverything();

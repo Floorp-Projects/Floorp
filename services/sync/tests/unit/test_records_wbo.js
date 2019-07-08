@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { WBORecord } = ChromeUtils.import("resource://services-sync/record.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_test(function test_toJSON() {
   _("Create a record, for now without a TTL.");
@@ -11,7 +11,9 @@ add_test(function test_toJSON() {
   wbo.sortindex = 42;
   wbo.payload = {};
 
-  _("Verify that the JSON representation contains the WBO properties, but not TTL.");
+  _(
+    "Verify that the JSON representation contains the WBO properties, but not TTL."
+  );
   let json = JSON.parse(JSON.stringify(wbo));
   Assert.equal(json.modified, 12345);
   Assert.equal(json.sortindex, 42);
@@ -25,23 +27,30 @@ add_test(function test_toJSON() {
   run_next_test();
 });
 
-
 add_task(async function test_fetch() {
-  let record = {id: "asdf-1234-asdf-1234",
-                modified: 2454725.98283,
-                payload: JSON.stringify({cheese: "roquefort"})};
-  let record2 = {id: "record2",
-                 modified: 2454725.98284,
-                 payload: JSON.stringify({cheese: "gruyere"})};
-  let coll = [{id: "record2",
-               modified: 2454725.98284,
-               payload: JSON.stringify({cheese: "gruyere"})}];
+  let record = {
+    id: "asdf-1234-asdf-1234",
+    modified: 2454725.98283,
+    payload: JSON.stringify({ cheese: "roquefort" }),
+  };
+  let record2 = {
+    id: "record2",
+    modified: 2454725.98284,
+    payload: JSON.stringify({ cheese: "gruyere" }),
+  };
+  let coll = [
+    {
+      id: "record2",
+      modified: 2454725.98284,
+      payload: JSON.stringify({ cheese: "gruyere" }),
+    },
+  ];
 
   _("Setting up server.");
   let server = httpd_setup({
-    "/record":  httpd_handler(200, "OK", JSON.stringify(record)),
+    "/record": httpd_handler(200, "OK", JSON.stringify(record)),
     "/record2": httpd_handler(200, "OK", JSON.stringify(record2)),
-    "/coll":    httpd_handler(200, "OK", JSON.stringify(coll)),
+    "/coll": httpd_handler(200, "OK", JSON.stringify(coll)),
   });
 
   try {
@@ -51,14 +60,14 @@ add_task(async function test_fetch() {
     Assert.equal(rec.id, "asdf-1234-asdf-1234"); // NOT "record"!
 
     Assert.equal(rec.modified, 2454725.98283);
-    Assert.equal(typeof(rec.payload), "object");
+    Assert.equal(typeof rec.payload, "object");
     Assert.equal(rec.payload.cheese, "roquefort");
 
     _("Fetching a WBO record using the record manager");
     let rec2 = await Service.recordManager.get(server.baseURI + "/record2");
     Assert.equal(rec2.id, "record2");
     Assert.equal(rec2.modified, 2454725.98284);
-    Assert.equal(typeof(rec2.payload), "object");
+    Assert.equal(typeof rec2.payload, "object");
     Assert.equal(rec2.payload.cheese, "gruyere");
     Assert.equal(Service.recordManager.response.status, 200);
 

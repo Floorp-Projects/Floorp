@@ -1,21 +1,25 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {RotaryEngine} = ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
+const { WBORecord } = ChromeUtils.import("resource://services-sync/record.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { RotaryEngine } = ChromeUtils.import(
+  "resource://testing-common/services/sync/rotaryengine.js"
+);
 
 add_task(async function test_processIncoming_abort() {
-  _("An abort exception, raised in applyIncoming, will abort _processIncoming.");
+  _(
+    "An abort exception, raised in applyIncoming, will abort _processIncoming."
+  );
   let engine = new RotaryEngine(Service);
 
   let collection = new ServerCollection();
   let id = Utils.makeGUID();
-  let payload = encryptPayload({id, denomination: "Record No. " + id});
+  let payload = encryptPayload({ id, denomination: "Record No. " + id });
   collection.insert(id, payload);
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler(),
+    "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -23,13 +27,17 @@ add_task(async function test_processIncoming_abort() {
 
   _("Create some server data.");
   let syncID = await engine.resetLocalSyncID();
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
+  let meta_global = Service.recordManager.set(
+    engine.metaURL,
+    new WBORecord(engine.metaURL)
+  );
+  meta_global.payload.engines = { rotary: { version: engine.version, syncID } };
   _("Fake applyIncoming to abort.");
   engine._store.applyIncoming = async function(record) {
-    let ex = {code: SyncEngine.prototype.eEngineAbortApplyIncoming,
-              cause: "Nooo"};
+    let ex = {
+      code: SyncEngine.prototype.eEngineAbortApplyIncoming,
+      cause: "Nooo",
+    };
     _("Throwing: " + JSON.stringify(ex));
     throw ex;
   };

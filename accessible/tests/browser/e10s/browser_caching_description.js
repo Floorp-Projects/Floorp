@@ -17,123 +17,173 @@ loadScripts({ name: "name.js", dir: MOCHITESTS_DIR });
  *                        attributes are updated
  * }
  */
-const tests = [{
-  desc: "No description when there are no @alt, @title and @aria-describedby",
-  expected: ""
-}, {
-  desc: "Description from @aria-describedby attribute",
-  attrs: [{
-    attr: "aria-describedby",
-    value: "description"
-  }],
-  waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
-  expected: "aria description"
-}, {
-  desc: "No description from @aria-describedby since it is the same as the " +
-        "@alt attribute which is used as the name",
-  attrs: [{
-    attr: "alt",
-    value: "aria description"
-  }],
-  waitFor: [[EVENT_REORDER, "body"]],
-  expected: ""
-}, {
-  desc: "Description from @aria-describedby attribute when @alt and " +
-        "@aria-describedby are not the same",
-  attrs: [{
-    attr: "aria-describedby",
-    value: "description2"
-  }],
-  waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
-  expected: "another description"
-}, {
-  desc: "Description from @aria-describedby attribute when @title (used for " +
-        "name) and @aria-describedby are not the same",
-  attrs: [{
-    attr: "alt"
-  }, {
-    attr: "title",
-    value: "title"
-  }],
-  waitFor: [[EVENT_REORDER, "body"]],
-  expected: "another description"
-}, {
-  desc: "No description from @aria-describedby since it is the same as the " +
-        "@title attribute which is used as the name",
-  attrs: [{
-    attr: "title",
-    value: "another description"
-  }],
-  waitFor: [[EVENT_NAME_CHANGE, "image"]],
-  expected: ""
-}, {
-  desc: "No description with only @title attribute which is used as the name",
-  attrs: [{
-    attr: "aria-describedby"
-  }],
-  waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
-  expected: ""
-}, {
-  desc: "Description from @title attribute when @alt and @atitle are not the " +
-        "same",
-  attrs: [{
-    attr: "alt",
-    value: "aria description"
-  }],
-  waitFor: [[EVENT_REORDER, "body"]],
-  expected: "another description"
-}, {
-  desc: "No description from @title since it is the same as the @alt " +
-        "attribute which is used as the name",
-  attrs: [{
-    attr: "alt",
-    value: "another description"
-  }],
-  waitFor: [[EVENT_NAME_CHANGE, "image"]],
-  expected: ""
-}, {
-  desc: "No description from @aria-describedby since it is the same as the " +
-        "@alt (used for name) and @title attributes",
-  attrs: [{
-    attr: "aria-describedby",
-    value: "description2"
-  }],
-  waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
-  expected: ""
-}, {
-  desc: "Description from @aria-describedby attribute when it is different " +
-        "from @alt (used for name) and @title attributes",
-  attrs: [{
-    attr: "aria-describedby",
-    value: "description"
-  }],
-  waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
-  expected: "aria description"
-}, {
-  desc: "No description from @aria-describedby since it is the same as the " +
-        "@alt attribute (used for name) but different from title",
-  attrs: [{
-    attr: "alt",
-    value: "aria description"
-  }],
-  waitFor: [[EVENT_NAME_CHANGE, "image"]],
-  expected: ""
-}, {
-  desc: "Description from @aria-describedby attribute when @alt (used for " +
-        "name) and @aria-describedby are not the same but @title and " +
-        "aria-describedby are",
-  attrs: [{
-    attr: "aria-describedby",
-    value: "description2"
-  }],
-  waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
-  expected: "another description"
-}];
+const tests = [
+  {
+    desc: "No description when there are no @alt, @title and @aria-describedby",
+    expected: "",
+  },
+  {
+    desc: "Description from @aria-describedby attribute",
+    attrs: [
+      {
+        attr: "aria-describedby",
+        value: "description",
+      },
+    ],
+    waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
+    expected: "aria description",
+  },
+  {
+    desc:
+      "No description from @aria-describedby since it is the same as the " +
+      "@alt attribute which is used as the name",
+    attrs: [
+      {
+        attr: "alt",
+        value: "aria description",
+      },
+    ],
+    waitFor: [[EVENT_REORDER, "body"]],
+    expected: "",
+  },
+  {
+    desc:
+      "Description from @aria-describedby attribute when @alt and " +
+      "@aria-describedby are not the same",
+    attrs: [
+      {
+        attr: "aria-describedby",
+        value: "description2",
+      },
+    ],
+    waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
+    expected: "another description",
+  },
+  {
+    desc:
+      "Description from @aria-describedby attribute when @title (used for " +
+      "name) and @aria-describedby are not the same",
+    attrs: [
+      {
+        attr: "alt",
+      },
+      {
+        attr: "title",
+        value: "title",
+      },
+    ],
+    waitFor: [[EVENT_REORDER, "body"]],
+    expected: "another description",
+  },
+  {
+    desc:
+      "No description from @aria-describedby since it is the same as the " +
+      "@title attribute which is used as the name",
+    attrs: [
+      {
+        attr: "title",
+        value: "another description",
+      },
+    ],
+    waitFor: [[EVENT_NAME_CHANGE, "image"]],
+    expected: "",
+  },
+  {
+    desc: "No description with only @title attribute which is used as the name",
+    attrs: [
+      {
+        attr: "aria-describedby",
+      },
+    ],
+    waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
+    expected: "",
+  },
+  {
+    desc:
+      "Description from @title attribute when @alt and @atitle are not the " +
+      "same",
+    attrs: [
+      {
+        attr: "alt",
+        value: "aria description",
+      },
+    ],
+    waitFor: [[EVENT_REORDER, "body"]],
+    expected: "another description",
+  },
+  {
+    desc:
+      "No description from @title since it is the same as the @alt " +
+      "attribute which is used as the name",
+    attrs: [
+      {
+        attr: "alt",
+        value: "another description",
+      },
+    ],
+    waitFor: [[EVENT_NAME_CHANGE, "image"]],
+    expected: "",
+  },
+  {
+    desc:
+      "No description from @aria-describedby since it is the same as the " +
+      "@alt (used for name) and @title attributes",
+    attrs: [
+      {
+        attr: "aria-describedby",
+        value: "description2",
+      },
+    ],
+    waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
+    expected: "",
+  },
+  {
+    desc:
+      "Description from @aria-describedby attribute when it is different " +
+      "from @alt (used for name) and @title attributes",
+    attrs: [
+      {
+        attr: "aria-describedby",
+        value: "description",
+      },
+    ],
+    waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
+    expected: "aria description",
+  },
+  {
+    desc:
+      "No description from @aria-describedby since it is the same as the " +
+      "@alt attribute (used for name) but different from title",
+    attrs: [
+      {
+        attr: "alt",
+        value: "aria description",
+      },
+    ],
+    waitFor: [[EVENT_NAME_CHANGE, "image"]],
+    expected: "",
+  },
+  {
+    desc:
+      "Description from @aria-describedby attribute when @alt (used for " +
+      "name) and @aria-describedby are not the same but @title and " +
+      "aria-describedby are",
+    attrs: [
+      {
+        attr: "aria-describedby",
+        value: "description2",
+      },
+    ],
+    waitFor: [[EVENT_DESCRIPTION_CHANGE, "image"]],
+    expected: "another description",
+  },
+];
 
 /**
  * Test caching of accessible object description
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <p id="description">aria description</p>
   <p id="description2">another description</p>
   <img id="image" />`,

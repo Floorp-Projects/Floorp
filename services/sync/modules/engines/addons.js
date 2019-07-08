@@ -36,20 +36,40 @@
  */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {AddonUtils} = ChromeUtils.import("resource://services-sync/addonutils.js");
-const {AddonsReconciler} = ChromeUtils.import("resource://services-sync/addonsreconciler.js");
-const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
-const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
-const {SCORE_INCREMENT_XLARGE} = ChromeUtils.import("resource://services-sync/constants.js");
-const {CollectionValidator} = ChromeUtils.import("resource://services-sync/collection_validator.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { AddonUtils } = ChromeUtils.import(
+  "resource://services-sync/addonutils.js"
+);
+const { AddonsReconciler } = ChromeUtils.import(
+  "resource://services-sync/addonsreconciler.js"
+);
+const { Store, SyncEngine, Tracker } = ChromeUtils.import(
+  "resource://services-sync/engines.js"
+);
+const { CryptoWrapper } = ChromeUtils.import(
+  "resource://services-sync/record.js"
+);
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
+  "resource://services-sync/constants.js"
+);
+const { CollectionValidator } = ChromeUtils.import(
+  "resource://services-sync/collection_validator.js"
+);
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonRepository",
-                               "resource://gre/modules/addons/AddonRepository.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonRepository",
+  "resource://gre/modules/addons/AddonRepository.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["AddonsEngine", "AddonValidator"];
 
@@ -93,10 +113,12 @@ AddonRecord.prototype = {
   _logName: "Record.Addon",
 };
 
-Utils.deferGetSet(AddonRecord, "cleartext", ["addonID",
-                                             "applicationID",
-                                             "enabled",
-                                             "source"]);
+Utils.deferGetSet(AddonRecord, "cleartext", [
+  "addonID",
+  "applicationID",
+  "enabled",
+  "source",
+]);
 
 /**
  * The AddonsEngine handles synchronization of add-ons between clients.
@@ -114,15 +136,15 @@ function AddonsEngine(service) {
   this._reconciler = new AddonsReconciler(this._tracker.asyncObserver);
 }
 AddonsEngine.prototype = {
-  __proto__:              SyncEngine.prototype,
-  _storeObj:              AddonsStore,
-  _trackerObj:            AddonsTracker,
-  _recordObj:             AddonRecord,
-  version:                1,
+  __proto__: SyncEngine.prototype,
+  _storeObj: AddonsStore,
+  _trackerObj: AddonsTracker,
+  _recordObj: AddonRecord,
+  version: 1,
 
-  syncPriority:           5,
+  syncPriority: 5,
 
-  _reconciler:            null,
+  _reconciler: null,
 
   async initialize() {
     await SyncEngine.prototype.initialize.call(this);
@@ -178,7 +200,7 @@ AddonsEngine.prototype = {
 
       // Keep newest modified time.
       if (id in changes && changeTime < changes[id]) {
-          continue;
+        continue;
       }
 
       if (!(await this.isAddonSyncable(addons[id]))) {
@@ -274,16 +296,22 @@ AddonsStore.prototype = {
       // Ignore records not belonging to our application ID because that is the
       // current policy.
       if (record.applicationID != Services.appinfo.ID) {
-        this._log.info("Ignoring incoming record from other App ID: " +
-                        record.id);
+        this._log.info(
+          "Ignoring incoming record from other App ID: " + record.id
+        );
         return;
       }
 
       // Ignore records that aren't from the official add-on repository, as that
       // is our current policy.
       if (record.source != "amo") {
-        this._log.info("Ignoring unknown add-on source (" + record.source + ")" +
-                       " for " + record.id);
+        this._log.info(
+          "Ignoring unknown add-on source (" +
+            record.source +
+            ")" +
+            " for " +
+            record.id
+        );
         return;
       }
     }
@@ -297,14 +325,19 @@ AddonsStore.prototype = {
     // doesn't get this treatment because that cache self-repairs after some
     // time - but it only re-populates addons which are currently installed.)
     let existingMeta = this.reconciler.addons[record.addonID];
-    if (existingMeta && !(await this.isAddonSyncable(existingMeta, /* ignoreRepoCheck */ true))) {
-      this._log.info("Ignoring incoming record for an existing but non-syncable addon", record.addonID);
+    if (
+      existingMeta &&
+      !(await this.isAddonSyncable(existingMeta, /* ignoreRepoCheck */ true))
+    ) {
+      this._log.info(
+        "Ignoring incoming record for an existing but non-syncable addon",
+        record.addonID
+      );
       return;
     }
 
     await Store.prototype.applyIncoming.call(this, record);
   },
-
 
   /**
    * Provides core Store API to create/install an add-on from a record.
@@ -312,12 +345,17 @@ AddonsStore.prototype = {
   async create(record) {
     // This will throw if there was an error. This will get caught by the sync
     // engine and the record will try to be applied later.
-    const results = await AddonUtils.installAddons([{
-      id:               record.addonID,
-      syncGUID:         record.id,
-      enabled:          record.enabled,
-      requireSecureURI: this._extensionsPrefs.get("install.requireSecureOrigin", true),
-    }]);
+    const results = await AddonUtils.installAddons([
+      {
+        id: record.addonID,
+        syncGUID: record.id,
+        enabled: record.enabled,
+        requireSecureURI: this._extensionsPrefs.get(
+          "install.requireSecureOrigin",
+          true
+        ),
+      },
+    ]);
 
     if (results.skipped.includes(record.addonID)) {
       this._log.info("Add-on skipped: " + record.addonID);
@@ -449,8 +487,13 @@ AddonsStore.prototype = {
 
     let addon = await this.getAddonByGUID(oldID);
     if (!addon) {
-      this._log.debug("Cannot change item ID (" + oldID + ") in Add-on " +
-                      "Manager because old add-on not present: " + oldID);
+      this._log.debug(
+        "Cannot change item ID (" +
+          oldID +
+          ") in Add-on " +
+          "Manager because old add-on not present: " +
+          oldID
+      );
       return;
     }
 
@@ -468,7 +511,7 @@ AddonsStore.prototype = {
     let addons = this.reconciler.addons;
     for (let id in addons) {
       let addon = addons[id];
-      if ((await this.isAddonSyncable(addon))) {
+      if (await this.isAddonSyncable(addon)) {
         ids[addon.guid] = true;
       }
     }
@@ -493,8 +536,9 @@ AddonsStore.prototype = {
     for (let guid in ids) {
       let addon = await this.getAddonByGUID(guid);
       if (!addon) {
-        this._log.debug("Ignoring add-on because it couldn't be obtained: " +
-                        guid);
+        this._log.debug(
+          "Ignoring add-on because it couldn't be obtained: " + guid
+        );
         continue;
       }
 
@@ -559,8 +603,9 @@ AddonsStore.prototype = {
     }
 
     if (!this._syncableTypes.includes(addon.type)) {
-      this._log.debug(addon.id + " not syncable: type not in whitelist: " +
-                      addon.type);
+      this._log.debug(
+        addon.id + " not syncable: type not in whitelist: " + addon.type
+      );
       return false;
     }
 
@@ -597,8 +642,9 @@ AddonsStore.prototype = {
     });
 
     if (!result) {
-      this._log.debug(addon.id + " not syncable: add-on not found in add-on " +
-                      "repository.");
+      this._log.debug(
+        addon.id + " not syncable: add-on not found in add-on repository."
+      );
       return false;
     }
 
@@ -620,8 +666,10 @@ AddonsStore.prototype = {
     // For security reasons, we currently limit synced add-ons to those
     // installed from trusted hostname(s). We additionally require TLS with
     // the add-ons site to help prevent forgeries.
-    let trustedHostnames = Svc.Prefs.get("addons.trustedSourceHostnames", "")
-                           .split(",");
+    let trustedHostnames = Svc.Prefs.get(
+      "addons.trustedSourceHostnames",
+      ""
+    ).split(",");
 
     if (!uri) {
       this._log.debug("Undefined argument to isSourceURITrusted().");
@@ -663,8 +711,9 @@ AddonsStore.prototype = {
 
     // A pref allows changes to the enabled flag to be ignored.
     if (Svc.Prefs.get("addons.ignoreUserEnabledChanges", false)) {
-      this._log.info("Ignoring enabled state change due to preference: " +
-                     addon.id);
+      this._log.info(
+        "Ignoring enabled state change due to preference: " + addon.id
+      );
       return;
     }
 
@@ -709,8 +758,9 @@ AddonsTracker.prototype = {
     }
 
     if (!(await this.store.isAddonSyncable(addon))) {
-      this._log.debug("Ignoring change because add-on isn't syncable: " +
-                      addon.id);
+      this._log.debug(
+        "Ignoring change because add-on isn't syncable: " + addon.id
+      );
       return;
     }
 
@@ -733,12 +783,7 @@ AddonsTracker.prototype = {
 
 class AddonValidator extends CollectionValidator {
   constructor(engine = null) {
-    super("addons", "id", [
-      "addonID",
-      "enabled",
-      "applicationID",
-      "source",
-    ]);
+    super("addons", "id", ["addonID", "enabled", "applicationID", "source"]);
     this.engine = engine;
   }
 
@@ -776,11 +821,13 @@ class AddonValidator extends CollectionValidator {
   }
 
   async syncedByClient(item) {
-    return !item.original.hidden &&
-           !item.original.isSystem &&
-           !(item.original.pendingOperations & AddonManager.PENDING_UNINSTALL) &&
-           // No need to await the returned promise explicitely:
-           // |expr1 && expr2| evaluates to expr2 if expr1 is true.
-           this.engine.isAddonSyncable(item.original, true);
+    return (
+      !item.original.hidden &&
+      !item.original.isSystem &&
+      !(item.original.pendingOperations & AddonManager.PENDING_UNINSTALL) &&
+      // No need to await the returned promise explicitely:
+      // |expr1 && expr2| evaluates to expr2 if expr1 is true.
+      this.engine.isAddonSyncable(item.original, true)
+    );
   }
 }

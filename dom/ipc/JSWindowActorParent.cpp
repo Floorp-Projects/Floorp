@@ -14,6 +14,10 @@ namespace dom {
 
 JSWindowActorParent::~JSWindowActorParent() { MOZ_ASSERT(!mManager); }
 
+nsIGlobalObject* JSWindowActorParent::GetParentObject() const {
+  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
+
 JSObject* JSWindowActorParent::WrapObject(JSContext* aCx,
                                           JS::Handle<JSObject*> aGivenProto) {
   return JSWindowActorParent_Binding::Wrap(aCx, this, aGivenProto);

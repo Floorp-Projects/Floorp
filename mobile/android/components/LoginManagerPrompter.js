@@ -1,8 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   DoorHanger: "resource://gre/modules/Prompt.jsm",
@@ -10,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 /* Constants for password prompt telemetry.
-* Mirrored in nsLoginManagerPrompter.js */
+ * Mirrored in nsLoginManagerPrompter.js */
 const PROMPT_DISPLAYED = 0;
 
 const PROMPT_ADD = 1;
@@ -28,8 +30,7 @@ const PROMPT_UPDATE = 1;
  * nsILoginManagerPrompter: Used by Login Manager for saving/changing logins
  * found in HTML forms.
  */
-function LoginManagerPrompter() {
-}
+function LoginManagerPrompter() {}
 
 LoginManagerPrompter.prototype = {
   classID: Components.ID("97d12931-abe2-11df-94e2-0800200c9a66"),
@@ -43,12 +44,17 @@ LoginManagerPrompter.prototype = {
   get _strBundle() {
     if (!this.__strBundle) {
       this.__strBundle = {
-        pwmgr: Services.strings.createBundle("chrome://browser/locale/passwordmgr.properties"),
-        brand: Services.strings.createBundle("chrome://branding/locale/brand.properties"),
+        pwmgr: Services.strings.createBundle(
+          "chrome://browser/locale/passwordmgr.properties"
+        ),
+        brand: Services.strings.createBundle(
+          "chrome://branding/locale/brand.properties"
+        ),
       };
 
-      if (!this.__strBundle)
+      if (!this.__strBundle) {
         throw new Error("String bundle for Login Manager not present!");
+      }
     }
 
     return this.__strBundle;
@@ -56,14 +62,16 @@ LoginManagerPrompter.prototype = {
 
   __ellipsis: null,
   get _ellipsis() {
-  if (!this.__ellipsis) {
-    this.__ellipsis = "\u2026";
-    try {
-      this.__ellipsis = Services.prefs.getComplexValue(
-                        "intl.ellipsis", Ci.nsIPrefLocalizedString).data;
-    } catch (e) { }
-  }
-  return this.__ellipsis;
+    if (!this.__ellipsis) {
+      this.__ellipsis = "\u2026";
+      try {
+        this.__ellipsis = Services.prefs.getComplexValue(
+          "intl.ellipsis",
+          Ci.nsIPrefLocalizedString
+        ).data;
+      } catch (e) {}
+    }
+    return this.__ellipsis;
   },
 
   /*
@@ -72,8 +80,9 @@ LoginManagerPrompter.prototype = {
    * Internal function for logging debug messages to the Error Console window.
    */
   log: function(message) {
-    if (!this._debug)
+    if (!this._debug) {
       return;
+    }
 
     dump("Pwmgr Prompter: " + message + "\n");
     Services.console.logStringMessage("Pwmgr Prompter: " + message);
@@ -101,7 +110,7 @@ LoginManagerPrompter.prototype = {
 
   // setting this attribute is ignored because Android does not consider
   // opener windows when displaying login notifications
-  set opener(aOpener) { },
+  set opener(aOpener) {},
 
   /*
    * promptToSavePassword
@@ -109,7 +118,9 @@ LoginManagerPrompter.prototype = {
    */
   promptToSavePassword: function(aLogin, dismissed) {
     this._showSaveLoginNotification(aLogin, dismissed);
-      Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION").add(PROMPT_DISPLAYED);
+    Services.telemetry
+      .getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION")
+      .add(PROMPT_DISPLAYED);
     Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
   },
 
@@ -128,12 +139,17 @@ LoginManagerPrompter.prototype = {
    * @param dismissed
    *        A boolean indicating if a prompt is dismissed by default.
    */
-  _showLoginNotification: function(aBody, aButtons, aUsername, aPassword, dismissed = false) {
+  _showLoginNotification: function(
+    aBody,
+    aButtons,
+    aUsername,
+    aPassword,
+    dismissed = false
+  ) {
     let actionText = {
       text: aUsername,
       type: "EDIT",
-      bundle: { username: aUsername,
-      password: aPassword },
+      bundle: { username: aUsername, password: aPassword },
     };
 
     // The page we're going to hasn't loaded yet, so we want to persist
@@ -163,14 +179,20 @@ LoginManagerPrompter.prototype = {
    *
    */
   _showSaveLoginNotification: function(aLogin, dismissed) {
-    let brandShortName = this._strBundle.brand.GetStringFromName("brandShortName");
-    let notificationText  = this._getLocalizedString("saveLogin", [brandShortName]);
+    let brandShortName = this._strBundle.brand.GetStringFromName(
+      "brandShortName"
+    );
+    let notificationText = this._getLocalizedString("saveLogin", [
+      brandShortName,
+    ]);
 
     // The callbacks in |buttons| have a closure to access the variables
     // in scope here; set one to |Services.logins| so we can get back to pwmgr
     // without a getService() call.
     var pwmgr = Services.logins;
-    let promptHistogram = Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION");
+    let promptHistogram = Services.telemetry.getHistogramById(
+      "PWMGR_PROMPT_REMEMBER_ACTION"
+    );
 
     var buttons = [
       {
@@ -194,7 +216,13 @@ LoginManagerPrompter.prototype = {
       },
     ];
 
-    this._showLoginNotification(notificationText, buttons, aLogin.username, aLogin.password, dismissed);
+    this._showLoginNotification(
+      notificationText,
+      buttons,
+      aLogin.username,
+      aLogin.password,
+      dismissed
+    );
   },
 
   /*
@@ -207,9 +235,15 @@ LoginManagerPrompter.prototype = {
    */
   promptToChangePassword: function(aOldLogin, aNewLogin, dismissed) {
     this._showChangeLoginNotification(aOldLogin, aNewLogin.password);
-    Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION").add(PROMPT_DISPLAYED);
+    Services.telemetry
+      .getHistogramById("PWMGR_PROMPT_UPDATE_ACTION")
+      .add(PROMPT_DISPLAYED);
     let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
-    Services.obs.notifyObservers(aNewLogin, "passwordmgr-prompt-change", oldGUID);
+    Services.obs.notifyObservers(
+      aNewLogin,
+      "passwordmgr-prompt-change",
+      oldGUID
+    );
   },
 
   /*
@@ -222,25 +256,29 @@ LoginManagerPrompter.prototype = {
     var notificationText;
     if (aOldLogin.username) {
       let displayUser = this._sanitizeUsername(aOldLogin.username);
-      notificationText  = this._getLocalizedString("updatePassword", [displayUser]);
+      notificationText = this._getLocalizedString("updatePassword", [
+        displayUser,
+      ]);
     } else {
-      notificationText  = this._getLocalizedString("updatePasswordNoUser");
+      notificationText = this._getLocalizedString("updatePasswordNoUser");
     }
 
     var self = this;
-    let promptHistogram = Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION");
+    let promptHistogram = Services.telemetry.getHistogramById(
+      "PWMGR_PROMPT_UPDATE_ACTION"
+    );
 
     var buttons = [
       {
         label: this._getLocalizedString("dontUpdateButton"),
-        callback:  function() {
+        callback: function() {
           promptHistogram.add(PROMPT_NOTNOW);
           // do nothing
         },
       },
       {
         label: this._getLocalizedString("updateButton"),
-        callback:  function(checked, response) {
+        callback: function(checked, response) {
           let password = response ? response.password : aNewPassword;
           self._updateLogin(aOldLogin, password);
 
@@ -250,7 +288,13 @@ LoginManagerPrompter.prototype = {
       },
     ];
 
-    this._showLoginNotification(notificationText, buttons, aOldLogin.username, aNewPassword, dismissed);
+    this._showLoginNotification(
+      notificationText,
+      buttons,
+      aOldLogin.username,
+      aNewPassword,
+      dismissed
+    );
   },
 
   /*
@@ -266,16 +310,20 @@ LoginManagerPrompter.prototype = {
    */
   promptToChangePasswordWithUsernames: function(logins, aNewLogin) {
     var usernames = logins.map(l => l.username);
-    var dialogText  = this._getLocalizedString("userSelectText2");
+    var dialogText = this._getLocalizedString("userSelectText2");
     var dialogTitle = this._getLocalizedString("passwordChangeTitle");
     var selectedIndex = { value: null };
 
     // If user selects ok, outparam.value is set to the index
     // of the selected username.
-    var ok = Services.prompt.select(null,
-      dialogTitle, dialogText,
-      usernames.length, usernames,
-      selectedIndex);
+    var ok = Services.prompt.select(
+      null,
+      dialogTitle,
+      dialogText,
+      usernames.length,
+      usernames,
+      selectedIndex
+    );
     if (ok) {
       // Now that we know which login to use, modify its password.
       let selectedLogin = logins[selectedIndex.value];
@@ -291,8 +339,9 @@ LoginManagerPrompter.prototype = {
    */
   _updateLogin: function(login, newPassword) {
     var now = Date.now();
-    var propBag = Cc["@mozilla.org/hash-property-bag;1"].
-      createInstance(Ci.nsIWritablePropertyBag);
+    var propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag
+    );
     if (newPassword) {
       propBag.setProperty("password", newPassword);
       // Explicitly set the password change time here (even though it would
@@ -319,9 +368,9 @@ LoginManagerPrompter.prototype = {
    *
    */
   _getLocalizedString: function(key, formatArgs) {
-    if (formatArgs)
-      return this._strBundle.pwmgr.formatStringFromName(
-        key, formatArgs);
+    if (formatArgs) {
+      return this._strBundle.pwmgr.formatStringFromName(key, formatArgs);
+    }
     return this._strBundle.pwmgr.GetStringFromName(key);
   },
 
@@ -340,7 +389,6 @@ LoginManagerPrompter.prototype = {
     return username.replace(/['"]/g, "");
   },
 }; // end of LoginManagerPrompter implementation
-
 
 var component = [LoginManagerPrompter];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

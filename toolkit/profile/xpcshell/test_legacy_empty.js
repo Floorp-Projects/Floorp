@@ -13,7 +13,11 @@ add_task(async () => {
   checkStartupReason("firstrun-created-default");
 
   Assert.ok(didCreate, "Should have created a new profile.");
-  Assert.equal(profile.name, PROFILE_DEFAULT, "Should have used the normal name.");
+  Assert.equal(
+    profile.name,
+    PROFILE_DEFAULT,
+    "Should have used the normal name."
+  );
   if (AppConstants.MOZ_DEV_EDITION) {
     Assert.equal(service.profileCount, 2, "Should be two profiles.");
   } else {

@@ -8,7 +8,8 @@
 
 // The origin for the test URIs.
 const TEST_ORIGIN = "https://example.com";
-const MULTIPLE_FORMS_PAGE_PATH = "/browser/toolkit/components/passwordmgr/test/browser/multiple_forms.html";
+const MULTIPLE_FORMS_PAGE_PATH =
+  "/browser/toolkit/components/passwordmgr/test/browser/multiple_forms.html";
 
 const CONTEXT_MENU = document.getElementById("contentAreaContextMenu");
 const POPUP_HEADER = document.getElementById("fill-login");
@@ -34,18 +35,21 @@ add_task(async function test_initialize() {
  */
 add_task(async function test_context_menu_populate_password_noSchemeUpgrades() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", false);
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
-  }, async function(browser) {
-    await openPasswordContextMenu(browser, "#test-password-1");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
+    },
+    async function(browser) {
+      await openPasswordContextMenu(browser, "#test-password-1");
 
-    // Check the content of the password manager popup
-    let popupMenu = document.getElementById("fill-login-popup");
-    checkMenu(popupMenu, 2);
+      // Check the content of the password manager popup
+      let popupMenu = document.getElementById("fill-login-popup");
+      checkMenu(popupMenu, 2);
 
-    CONTEXT_MENU.hidePopup();
-  });
+      CONTEXT_MENU.hidePopup();
+    }
+  );
 });
 
 /**
@@ -54,60 +58,77 @@ add_task(async function test_context_menu_populate_password_noSchemeUpgrades() {
  */
 add_task(async function test_context_menu_populate_password_schemeUpgrades() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
-  }, async function(browser) {
-    await openPasswordContextMenu(browser, "#test-password-1");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
+    },
+    async function(browser) {
+      await openPasswordContextMenu(browser, "#test-password-1");
 
-    // Check the content of the password manager popup
-    let popupMenu = document.getElementById("fill-login-popup");
-    checkMenu(popupMenu, 3);
+      // Check the content of the password manager popup
+      let popupMenu = document.getElementById("fill-login-popup");
+      checkMenu(popupMenu, 3);
 
-    CONTEXT_MENU.hidePopup();
-  });
+      CONTEXT_MENU.hidePopup();
+    }
+  );
 });
 
 /**
  * Check if the context menu is populated with the right menuitems
  * for the target username field with a password field present.
  */
-add_task(async function test_context_menu_populate_username_with_password_noSchemeUpgrades() {
-  Services.prefs.setBoolPref("signon.schemeUpgrades", false);
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + "/browser/toolkit/components/" +
-         "passwordmgr/test/browser/multiple_forms.html",
-  }, async function(browser) {
-    await openPasswordContextMenu(browser, "#test-username-2");
+add_task(
+  async function test_context_menu_populate_username_with_password_noSchemeUpgrades() {
+    Services.prefs.setBoolPref("signon.schemeUpgrades", false);
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url:
+          TEST_ORIGIN +
+          "/browser/toolkit/components/" +
+          "passwordmgr/test/browser/multiple_forms.html",
+      },
+      async function(browser) {
+        await openPasswordContextMenu(browser, "#test-username-2");
 
-    // Check the content of the password manager popup
-    let popupMenu = document.getElementById("fill-login-popup");
-    checkMenu(popupMenu, 2);
+        // Check the content of the password manager popup
+        let popupMenu = document.getElementById("fill-login-popup");
+        checkMenu(popupMenu, 2);
 
-    CONTEXT_MENU.hidePopup();
-  });
-});
+        CONTEXT_MENU.hidePopup();
+      }
+    );
+  }
+);
 /**
  * Check if the context menu is populated with the right menuitems
  * for the target username field with a password field present.
  */
-add_task(async function test_context_menu_populate_username_with_password_schemeUpgrades() {
-  Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + "/browser/toolkit/components/" +
-         "passwordmgr/test/browser/multiple_forms.html",
-  }, async function(browser) {
-    await openPasswordContextMenu(browser, "#test-username-2");
+add_task(
+  async function test_context_menu_populate_username_with_password_schemeUpgrades() {
+    Services.prefs.setBoolPref("signon.schemeUpgrades", true);
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url:
+          TEST_ORIGIN +
+          "/browser/toolkit/components/" +
+          "passwordmgr/test/browser/multiple_forms.html",
+      },
+      async function(browser) {
+        await openPasswordContextMenu(browser, "#test-username-2");
 
-    // Check the content of the password manager popup
-    let popupMenu = document.getElementById("fill-login-popup");
-    checkMenu(popupMenu, 3);
+        // Check the content of the password manager popup
+        let popupMenu = document.getElementById("fill-login-popup");
+        checkMenu(popupMenu, 3);
 
-    CONTEXT_MENU.hidePopup();
-  });
-});
+        CONTEXT_MENU.hidePopup();
+      }
+    );
+  }
+);
 
 /**
  * Check if the password field is correctly filled when one
@@ -115,62 +136,92 @@ add_task(async function test_context_menu_populate_username_with_password_scheme
  */
 add_task(async function test_context_menu_password_fill() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
-  }, async function(browser) {
-    let formDescriptions = await ContentTask.spawn(browser, {}, async function() {
-      let forms = Array.from(content.document.getElementsByClassName("test-form"));
-      return forms.map((f) => f.getAttribute("description"));
-    });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
+    },
+    async function(browser) {
+      let formDescriptions = await ContentTask.spawn(
+        browser,
+        {},
+        async function() {
+          let forms = Array.from(
+            content.document.getElementsByClassName("test-form")
+          );
+          return forms.map(f => f.getAttribute("description"));
+        }
+      );
 
-    for (let description of formDescriptions) {
-      info("Testing form: " + description);
+      for (let description of formDescriptions) {
+        info("Testing form: " + description);
 
-      let passwordInputIds = await ContentTask.spawn(browser, {description}, async function({description}) {
-        let formElement = content.document.querySelector(`[description="${description}"]`);
-        let passwords = Array.from(formElement.querySelectorAll("input[type='password']"));
-        return passwords.map((p) => p.id);
-      });
+        let passwordInputIds = await ContentTask.spawn(
+          browser,
+          { description },
+          async function({ description }) {
+            let formElement = content.document.querySelector(
+              `[description="${description}"]`
+            );
+            let passwords = Array.from(
+              formElement.querySelectorAll("input[type='password']")
+            );
+            return passwords.map(p => p.id);
+          }
+        );
 
-      for (let inputId of passwordInputIds) {
-        info("Testing password field: " + inputId);
+        for (let inputId of passwordInputIds) {
+          info("Testing password field: " + inputId);
 
-        // Synthesize a right mouse click over the username input element.
-        await openPasswordContextMenu(browser, "#" + inputId, async function() {
-          let inputDisabled = await ContentTask
-            .spawn(browser, {inputId}, async function({inputId}) {
-              let input = content.document.getElementById(inputId);
-              return input.disabled || input.readOnly;
-            });
+          // Synthesize a right mouse click over the username input element.
+          await openPasswordContextMenu(
+            browser,
+            "#" + inputId,
+            async function() {
+              let inputDisabled = await ContentTask.spawn(
+                browser,
+                { inputId },
+                async function({ inputId }) {
+                  let input = content.document.getElementById(inputId);
+                  return input.disabled || input.readOnly;
+                }
+              );
 
-          // If the password field is disabled or read-only, we want to see
-          // the disabled Fill Password popup header.
-          if (inputDisabled) {
-            Assert.ok(!POPUP_HEADER.hidden, "Popup menu is not hidden.");
-            Assert.ok(POPUP_HEADER.disabled, "Popup menu is disabled.");
-            CONTEXT_MENU.hidePopup();
+              // If the password field is disabled or read-only, we want to see
+              // the disabled Fill Password popup header.
+              if (inputDisabled) {
+                Assert.ok(!POPUP_HEADER.hidden, "Popup menu is not hidden.");
+                Assert.ok(POPUP_HEADER.disabled, "Popup menu is disabled.");
+                CONTEXT_MENU.hidePopup();
+              }
+
+              return !inputDisabled;
+            }
+          );
+
+          if (CONTEXT_MENU.state != "open") {
+            continue;
           }
 
-          return !inputDisabled;
-        });
+          // The only field affected by the password fill
+          // should be the target password field itself.
+          await assertContextMenuFill(browser, description, null, inputId, 1);
+          await ContentTask.spawn(browser, { inputId }, async function({
+            inputId,
+          }) {
+            let passwordField = content.document.getElementById(inputId);
+            Assert.equal(
+              passwordField.value,
+              "password1",
+              "Check upgraded login was actually used"
+            );
+          });
 
-        if (CONTEXT_MENU.state != "open") {
-          continue;
+          CONTEXT_MENU.hidePopup();
         }
-
-        // The only field affected by the password fill
-        // should be the target password field itself.
-        await assertContextMenuFill(browser, description, null, inputId, 1);
-        await ContentTask.spawn(browser, {inputId}, async function({inputId}) {
-          let passwordField = content.document.getElementById(inputId);
-          Assert.equal(passwordField.value, "password1", "Check upgraded login was actually used");
-        });
-
-        CONTEXT_MENU.hidePopup();
       }
     }
-  });
+  );
 });
 
 /**
@@ -179,87 +230,144 @@ add_task(async function test_context_menu_password_fill() {
  */
 add_task(async function test_context_menu_username_login_fill() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
-  }, async function(browser) {
-    let formDescriptions = await ContentTask.spawn(browser, {}, async function() {
-      let forms = Array.from(content.document.getElementsByClassName("test-form"));
-      return forms.map((f) => f.getAttribute("description"));
-    });
-
-    for (let description of formDescriptions) {
-      info("Testing form: " + description);
-      let usernameInputIds = await ContentTask
-        .spawn(browser, {description}, async function({description}) {
-          let formElement = content.document.querySelector(`[description="${description}"]`);
-          let inputs = Array.from(formElement.querySelectorAll("input[type='text']"));
-          return inputs.map((p) => p.id);
-        });
-
-      for (let inputId of usernameInputIds) {
-        info("Testing username field: " + inputId);
-
-        // Synthesize a right mouse click over the username input element.
-        await openPasswordContextMenu(browser, "#" + inputId, async function() {
-          let headerHidden = POPUP_HEADER.hidden;
-          let headerDisabled = POPUP_HEADER.disabled;
-
-          let data = {description, inputId, headerHidden, headerDisabled};
-          let shouldContinue = await ContentTask.spawn(browser, data, async function(data) {
-            let {description, inputId, headerHidden, headerDisabled} = data;
-            let formElement = content.document.querySelector(`[description="${description}"]`);
-            let usernameField = content.document.getElementById(inputId);
-            // We always want to check if the first password field is filled,
-            // since this is the current behavior from the _fillForm function.
-            let passwordField = formElement.querySelector("input[type='password']");
-
-            // If we don't want to see the actual popup menu,
-            // check if the popup is hidden or disabled.
-            if (!passwordField || usernameField.disabled || usernameField.readOnly ||
-                passwordField.disabled || passwordField.readOnly) {
-              if (!passwordField) {
-                Assert.ok(headerHidden, "Popup menu is hidden.");
-              } else {
-                Assert.ok(!headerHidden, "Popup menu is not hidden.");
-                Assert.ok(headerDisabled, "Popup menu is disabled.");
-              }
-              return false;
-            }
-            return true;
-          });
-
-          if (!shouldContinue) {
-            CONTEXT_MENU.hidePopup();
-          }
-
-          return shouldContinue;
-        });
-
-        if (CONTEXT_MENU.state != "open") {
-          continue;
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
+    },
+    async function(browser) {
+      let formDescriptions = await ContentTask.spawn(
+        browser,
+        {},
+        async function() {
+          let forms = Array.from(
+            content.document.getElementsByClassName("test-form")
+          );
+          return forms.map(f => f.getAttribute("description"));
         }
+      );
 
-        let passwordFieldId = await ContentTask
-          .spawn(browser, {description}, async function({description}) {
-            let formElement = content.document.querySelector(`[description="${description}"]`);
-            return formElement.querySelector("input[type='password']").id;
+      for (let description of formDescriptions) {
+        info("Testing form: " + description);
+        let usernameInputIds = await ContentTask.spawn(
+          browser,
+          { description },
+          async function({ description }) {
+            let formElement = content.document.querySelector(
+              `[description="${description}"]`
+            );
+            let inputs = Array.from(
+              formElement.querySelectorAll("input[type='text']")
+            );
+            return inputs.map(p => p.id);
+          }
+        );
+
+        for (let inputId of usernameInputIds) {
+          info("Testing username field: " + inputId);
+
+          // Synthesize a right mouse click over the username input element.
+          await openPasswordContextMenu(
+            browser,
+            "#" + inputId,
+            async function() {
+              let headerHidden = POPUP_HEADER.hidden;
+              let headerDisabled = POPUP_HEADER.disabled;
+
+              let data = { description, inputId, headerHidden, headerDisabled };
+              let shouldContinue = await ContentTask.spawn(
+                browser,
+                data,
+                async function(data) {
+                  let {
+                    description,
+                    inputId,
+                    headerHidden,
+                    headerDisabled,
+                  } = data;
+                  let formElement = content.document.querySelector(
+                    `[description="${description}"]`
+                  );
+                  let usernameField = content.document.getElementById(inputId);
+                  // We always want to check if the first password field is filled,
+                  // since this is the current behavior from the _fillForm function.
+                  let passwordField = formElement.querySelector(
+                    "input[type='password']"
+                  );
+
+                  // If we don't want to see the actual popup menu,
+                  // check if the popup is hidden or disabled.
+                  if (
+                    !passwordField ||
+                    usernameField.disabled ||
+                    usernameField.readOnly ||
+                    passwordField.disabled ||
+                    passwordField.readOnly
+                  ) {
+                    if (!passwordField) {
+                      Assert.ok(headerHidden, "Popup menu is hidden.");
+                    } else {
+                      Assert.ok(!headerHidden, "Popup menu is not hidden.");
+                      Assert.ok(headerDisabled, "Popup menu is disabled.");
+                    }
+                    return false;
+                  }
+                  return true;
+                }
+              );
+
+              if (!shouldContinue) {
+                CONTEXT_MENU.hidePopup();
+              }
+
+              return shouldContinue;
+            }
+          );
+
+          if (CONTEXT_MENU.state != "open") {
+            continue;
+          }
+
+          let passwordFieldId = await ContentTask.spawn(
+            browser,
+            { description },
+            async function({ description }) {
+              let formElement = content.document.querySelector(
+                `[description="${description}"]`
+              );
+              return formElement.querySelector("input[type='password']").id;
+            }
+          );
+
+          // We shouldn't change any field that's not the target username field or the first password field
+          await assertContextMenuFill(
+            browser,
+            description,
+            inputId,
+            passwordFieldId,
+            1
+          );
+
+          await ContentTask.spawn(browser, { passwordFieldId }, async function({
+            passwordFieldId,
+          }) {
+            let passwordField = content.document.getElementById(
+              passwordFieldId
+            );
+            if (!passwordField.hasAttribute("expectedFail")) {
+              Assert.equal(
+                passwordField.value,
+                "password1",
+                "Check upgraded login was actually used"
+              );
+            }
           });
 
-        // We shouldn't change any field that's not the target username field or the first password field
-        await assertContextMenuFill(browser, description, inputId, passwordFieldId, 1);
-
-        await ContentTask.spawn(browser, {passwordFieldId}, async function({passwordFieldId}) {
-          let passwordField = content.document.getElementById(passwordFieldId);
-          if (!passwordField.hasAttribute("expectedFail")) {
-            Assert.equal(passwordField.value, "password1", "Check upgraded login was actually used");
-          }
-        });
-
-        CONTEXT_MENU.hidePopup();
+          CONTEXT_MENU.hidePopup();
+        }
       }
     }
-  });
+  );
 });
 
 /**
@@ -268,30 +376,40 @@ add_task(async function test_context_menu_username_login_fill() {
  */
 add_task(async function test_context_menu_open_management() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", false);
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
-  }, async function(browser) {
-    await openPasswordContextMenu(browser, "#test-password-1");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + MULTIPLE_FORMS_PAGE_PATH,
+    },
+    async function(browser) {
+      await openPasswordContextMenu(browser, "#test-password-1");
 
-    gContextMenu.openPasswordManager();
-    // wait until the management UI opens
-    let dialogWindow = await waitForPasswordManagerDialog();
-    info("Management UI dialog was opened");
+      gContextMenu.openPasswordManager();
+      // wait until the management UI opens
+      let dialogWindow = await waitForPasswordManagerDialog();
+      info("Management UI dialog was opened");
 
-    TelemetryTestUtils.assertEvents(
-      [["pwmgr", "open_management", "contextmenu"]],
-      {category: "pwmgr", method: "open_management"});
+      TelemetryTestUtils.assertEvents(
+        [["pwmgr", "open_management", "contextmenu"]],
+        { category: "pwmgr", method: "open_management" }
+      );
 
-    dialogWindow.close();
-    CONTEXT_MENU.hidePopup();
-  });
+      dialogWindow.close();
+      CONTEXT_MENU.hidePopup();
+    }
+  );
 });
 
 /**
  * Verify that only the expected form fields are filled.
  */
-async function assertContextMenuFill(browser, formId, usernameFieldId, passwordFieldId, loginIndex) {
+async function assertContextMenuFill(
+  browser,
+  formId,
+  usernameFieldId,
+  passwordFieldId,
+  loginIndex
+) {
   let popupMenu = document.getElementById("fill-login-popup");
   let unchangedSelector = `[description="${formId}"] input:not(#${passwordFieldId})`;
 
@@ -299,7 +417,9 @@ async function assertContextMenuFill(browser, formId, usernameFieldId, passwordF
     unchangedSelector += `:not(#${usernameFieldId})`;
   }
 
-  await ContentTask.spawn(browser, {unchangedSelector}, async function({unchangedSelector}) {
+  await ContentTask.spawn(browser, { unchangedSelector }, async function({
+    unchangedSelector,
+  }) {
     let unchangedFields = content.document.querySelectorAll(unchangedSelector);
 
     // Store the value of fields that should remain unchanged.
@@ -311,23 +431,47 @@ async function assertContextMenuFill(browser, formId, usernameFieldId, passwordF
   });
 
   // Execute the default command of the specified login menuitem found in the context menu.
-  let loginItem = popupMenu.getElementsByClassName("context-login-item")[loginIndex];
+  let loginItem = popupMenu.getElementsByClassName("context-login-item")[
+    loginIndex
+  ];
 
   // Find the used login by it's username (Use only unique usernames in this test).
-  let {username, password} = getLoginFromUsername(loginItem.label);
+  let { username, password } = getLoginFromUsername(loginItem.label);
 
-  let data = {username, password, usernameFieldId, passwordFieldId, formId, unchangedSelector};
+  let data = {
+    username,
+    password,
+    usernameFieldId,
+    passwordFieldId,
+    formId,
+    unchangedSelector,
+  };
   let continuePromise = ContentTask.spawn(browser, data, async function(data) {
-    let {username, password, usernameFieldId, passwordFieldId, formId, unchangedSelector} = data;
+    let {
+      username,
+      password,
+      usernameFieldId,
+      passwordFieldId,
+      formId,
+      unchangedSelector,
+    } = data;
     let form = content.document.querySelector(`[description="${formId}"]`);
-    await ContentTaskUtils.waitForEvent(form, "input", "Username input value changed");
+    await ContentTaskUtils.waitForEvent(
+      form,
+      "input",
+      "Username input value changed"
+    );
 
     if (usernameFieldId) {
       let usernameField = content.document.getElementById(usernameFieldId);
 
       // If we have an username field, check if it's correctly filled
       if (usernameField.getAttribute("expectedFail") == null) {
-        Assert.equal(username, usernameField.value, "Username filled and correct.");
+        Assert.equal(
+          username,
+          usernameField.value,
+          "Username filled and correct."
+        );
       }
     }
 
@@ -336,7 +480,11 @@ async function assertContextMenuFill(browser, formId, usernameFieldId, passwordF
 
       // If we have a password field, check if it's correctly filled
       if (passwordField && passwordField.getAttribute("expectedFail") == null) {
-        Assert.equal(password, passwordField.value, "Password filled and correct.");
+        Assert.equal(
+          password,
+          passwordField.value,
+          "Password filled and correct."
+        );
       }
     }
 
@@ -364,7 +512,7 @@ async function assertContextMenuFill(browser, formId, usernameFieldId, passwordF
  * Check if every login that matches the page origin are available at the context menu.
  * @param {Element} contextMenu
  * @param {Number} expectedCount - Number of logins expected in the context menu. Used to ensure
-*                                  we continue testing something useful.
+ *                                  we continue testing something useful.
  */
 function checkMenu(contextMenu, expectedCount) {
   let logins = loginList().filter(login => {
@@ -373,9 +521,18 @@ function checkMenu(contextMenu, expectedCount) {
     });
   });
   // Make an array of menuitems for easier comparison.
-  let menuitems = [...CONTEXT_MENU.getElementsByClassName("context-login-item")];
-  Assert.equal(menuitems.length, expectedCount, "Expected number of menu items");
-  Assert.ok(logins.every(l => menuitems.some(m => l.username == m.label)), "Every login have an item at the menu.");
+  let menuitems = [
+    ...CONTEXT_MENU.getElementsByClassName("context-login-item"),
+  ];
+  Assert.equal(
+    menuitems.length,
+    expectedCount,
+    "Expected number of menu items"
+  );
+  Assert.ok(
+    logins.every(l => menuitems.some(m => l.username == m.label)),
+    "Every login have an item at the menu."
+  );
 }
 
 /**

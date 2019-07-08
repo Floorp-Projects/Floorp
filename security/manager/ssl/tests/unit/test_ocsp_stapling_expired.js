@@ -16,13 +16,18 @@
 // this to "try later" responses and responses where the signing certificate
 // doesn't verify successfully.
 
-
 var gCurrentOCSPResponse = null;
 var gOCSPRequestCount = 0;
 
-function add_ocsp_test(aHost, aExpectedResult, aOCSPResponseToServe,
-                       aExpectedRequestCount) {
-  add_connection_test(aHost, aExpectedResult,
+function add_ocsp_test(
+  aHost,
+  aExpectedResult,
+  aOCSPResponseToServe,
+  aExpectedRequestCount
+) {
+  add_connection_test(
+    aHost,
+    aExpectedResult,
     function() {
       clearOCSPCache();
       clearSessionCache();
@@ -30,10 +35,16 @@ function add_ocsp_test(aHost, aExpectedResult, aOCSPResponseToServe,
       gOCSPRequestCount = 0;
     },
     function() {
-      equal(gOCSPRequestCount, aExpectedRequestCount,
-            "Should have made " + aExpectedRequestCount +
-            " fallback OCSP request" + (aExpectedRequestCount == 1 ? "" : "s"));
-    });
+      equal(
+        gOCSPRequestCount,
+        aExpectedRequestCount,
+        "Should have made " +
+          aExpectedRequestCount +
+          " fallback OCSP request" +
+          (aExpectedRequestCount == 1 ? "" : "s")
+      );
+    }
+  );
 }
 
 do_get_profile();
@@ -44,13 +55,14 @@ Services.prefs.setIntPref("security.OCSP.enabled", 1);
 // bump the timeout and hopefully avoid these failures.
 Services.prefs.setIntPref("security.OCSP.timeoutMilliseconds.soft", 5000);
 Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 4);
-var args = [["good", "default-ee", "unused", 0],
-             ["expiredresponse", "default-ee", "unused", 0],
-             ["oldvalidperiod", "default-ee", "unused", 0],
-             ["revoked", "default-ee", "unused", 0],
-             ["unknown", "default-ee", "unused", 0],
-             ["good", "must-staple-ee", "unused", 0],
-            ];
+var args = [
+  ["good", "default-ee", "unused", 0],
+  ["expiredresponse", "default-ee", "unused", 0],
+  ["oldvalidperiod", "default-ee", "unused", 0],
+  ["revoked", "default-ee", "unused", 0],
+  ["unknown", "default-ee", "unused", 0],
+  ["good", "must-staple-ee", "unused", 0],
+];
 var ocspResponses = generateOCSPResponses(args, "ocsp_certs");
 // Fresh response, certificate is good.
 var ocspResponseGood = ocspResponses[0];
@@ -97,82 +109,150 @@ function run_test() {
   // For ocsp-stapling-expired-fresh-ca.example.com, the OCSP stapling
   // server staples an OCSP response with a recent signature but with an
   // out-of-date validity period. The certificate has not expired.
-  add_ocsp_test("ocsp-stapling-expired.example.com", PRErrorCodeSuccess,
-                ocspResponseGood, willNotRetry);
-  add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com", PRErrorCodeSuccess,
-                ocspResponseGood, willNotRetry);
+  add_ocsp_test(
+    "ocsp-stapling-expired.example.com",
+    PRErrorCodeSuccess,
+    ocspResponseGood,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired-fresh-ca.example.com",
+    PRErrorCodeSuccess,
+    ocspResponseGood,
+    willNotRetry
+  );
   // if we can't fetch a more recent response when
   // given an expired stapled response, we terminate the connection.
-  add_ocsp_test("ocsp-stapling-expired.example.com",
-                SEC_ERROR_OCSP_OLD_RESPONSE,
-                expiredOCSPResponseGood, willRetry);
-  add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com",
-                SEC_ERROR_OCSP_OLD_RESPONSE,
-                expiredOCSPResponseGood, willRetry);
-  add_ocsp_test("ocsp-stapling-expired.example.com",
-                SEC_ERROR_OCSP_OLD_RESPONSE,
-                oldValidityPeriodOCSPResponseGood, willRetry);
-  add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com",
-                SEC_ERROR_OCSP_OLD_RESPONSE,
-                oldValidityPeriodOCSPResponseGood, willRetry);
-  add_ocsp_test("ocsp-stapling-expired.example.com",
-                SEC_ERROR_OCSP_OLD_RESPONSE,
-                null, willNotRetry);
-  add_ocsp_test("ocsp-stapling-expired.example.com",
-                SEC_ERROR_OCSP_OLD_RESPONSE,
-                null, willNotRetry);
+  add_ocsp_test(
+    "ocsp-stapling-expired.example.com",
+    SEC_ERROR_OCSP_OLD_RESPONSE,
+    expiredOCSPResponseGood,
+    willRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired-fresh-ca.example.com",
+    SEC_ERROR_OCSP_OLD_RESPONSE,
+    expiredOCSPResponseGood,
+    willRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired.example.com",
+    SEC_ERROR_OCSP_OLD_RESPONSE,
+    oldValidityPeriodOCSPResponseGood,
+    willRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired-fresh-ca.example.com",
+    SEC_ERROR_OCSP_OLD_RESPONSE,
+    oldValidityPeriodOCSPResponseGood,
+    willRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired.example.com",
+    SEC_ERROR_OCSP_OLD_RESPONSE,
+    null,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired.example.com",
+    SEC_ERROR_OCSP_OLD_RESPONSE,
+    null,
+    willNotRetry
+  );
   // Of course, if the newer response indicates Revoked or Unknown,
   // that status must be returned.
-  add_ocsp_test("ocsp-stapling-expired.example.com",
-                SEC_ERROR_REVOKED_CERTIFICATE,
-                ocspResponseRevoked, willNotRetry);
-  add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com",
-                SEC_ERROR_REVOKED_CERTIFICATE,
-                ocspResponseRevoked, willNotRetry);
-  add_ocsp_test("ocsp-stapling-expired.example.com",
-                SEC_ERROR_OCSP_UNKNOWN_CERT,
-                ocspResponseUnknown, willRetry);
-  add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com",
-                SEC_ERROR_OCSP_UNKNOWN_CERT,
-                ocspResponseUnknown, willRetry);
+  add_ocsp_test(
+    "ocsp-stapling-expired.example.com",
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    ocspResponseRevoked,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired-fresh-ca.example.com",
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    ocspResponseRevoked,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired.example.com",
+    SEC_ERROR_OCSP_UNKNOWN_CERT,
+    ocspResponseUnknown,
+    willRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-expired-fresh-ca.example.com",
+    SEC_ERROR_OCSP_UNKNOWN_CERT,
+    ocspResponseUnknown,
+    willRetry
+  );
 
   // If the response is expired but indicates Revoked or Unknown and a
   // newer status can't be fetched, the Revoked or Unknown status will
   // be returned.
-  add_ocsp_test("ocsp-stapling-revoked-old.example.com",
-                SEC_ERROR_REVOKED_CERTIFICATE,
-                null, willNotRetry);
-  add_ocsp_test("ocsp-stapling-unknown-old.example.com",
-                SEC_ERROR_OCSP_UNKNOWN_CERT,
-                null, willNotRetry);
+  add_ocsp_test(
+    "ocsp-stapling-revoked-old.example.com",
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    null,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-unknown-old.example.com",
+    SEC_ERROR_OCSP_UNKNOWN_CERT,
+    null,
+    willNotRetry
+  );
   // If the response is expired but indicates Revoked or Unknown and
   // a newer status can be fetched and successfully verified, this
   // should result in a successful certificate verification.
-  add_ocsp_test("ocsp-stapling-revoked-old.example.com", PRErrorCodeSuccess,
-                ocspResponseGood, willNotRetry);
-  add_ocsp_test("ocsp-stapling-unknown-old.example.com", PRErrorCodeSuccess,
-                ocspResponseGood, willNotRetry);
+  add_ocsp_test(
+    "ocsp-stapling-revoked-old.example.com",
+    PRErrorCodeSuccess,
+    ocspResponseGood,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-unknown-old.example.com",
+    PRErrorCodeSuccess,
+    ocspResponseGood,
+    willNotRetry
+  );
   // If a newer status can be fetched but it fails to verify, the
   // Revoked or Unknown status of the expired stapled response
   // should be returned.
-  add_ocsp_test("ocsp-stapling-revoked-old.example.com",
-                SEC_ERROR_REVOKED_CERTIFICATE,
-                expiredOCSPResponseGood, willRetry);
-  add_ocsp_test("ocsp-stapling-unknown-old.example.com",
-                SEC_ERROR_OCSP_UNKNOWN_CERT,
-                expiredOCSPResponseGood, willRetry);
+  add_ocsp_test(
+    "ocsp-stapling-revoked-old.example.com",
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    expiredOCSPResponseGood,
+    willRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-unknown-old.example.com",
+    SEC_ERROR_OCSP_UNKNOWN_CERT,
+    expiredOCSPResponseGood,
+    willRetry
+  );
 
   // These tests are verifying that an valid but very old response
   // is rejected as a valid stapled response, requiring a fetch
   // from the ocsp responder.
-  add_ocsp_test("ocsp-stapling-ancient-valid.example.com", PRErrorCodeSuccess,
-                ocspResponseGood, willNotRetry);
-  add_ocsp_test("ocsp-stapling-ancient-valid.example.com",
-                SEC_ERROR_REVOKED_CERTIFICATE,
-                ocspResponseRevoked, willNotRetry);
-  add_ocsp_test("ocsp-stapling-ancient-valid.example.com",
-                SEC_ERROR_OCSP_UNKNOWN_CERT,
-                ocspResponseUnknown, willRetry);
+  add_ocsp_test(
+    "ocsp-stapling-ancient-valid.example.com",
+    PRErrorCodeSuccess,
+    ocspResponseGood,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-ancient-valid.example.com",
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    ocspResponseRevoked,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-ancient-valid.example.com",
+    SEC_ERROR_OCSP_UNKNOWN_CERT,
+    ocspResponseUnknown,
+    willRetry
+  );
 
   // Test how OCSP-must-staple (i.e. TLS feature) interacts with stapled OCSP
   // responses that don't successfully verify.
@@ -180,31 +260,60 @@ function run_test() {
   // should all fail because a satisfactory stapled OCSP response is not
   // present, but for compatibility reasons we fall back to active OCSP fetching
   // in these situations. If the fetch succeeds, then connection succeeds.
-  add_ocsp_test("ocsp-stapling-must-staple-expired.example.com",
-                PRErrorCodeSuccess, ocspResponseGoodMustStaple, willNotRetry);
-  add_ocsp_test("ocsp-stapling-must-staple-try-later.example.com",
-                PRErrorCodeSuccess, ocspResponseGoodMustStaple, willNotRetry);
-  add_ocsp_test("ocsp-stapling-must-staple-invalid-signer.example.com",
-                PRErrorCodeSuccess, ocspResponseGoodMustStaple, willNotRetry);
+  add_ocsp_test(
+    "ocsp-stapling-must-staple-expired.example.com",
+    PRErrorCodeSuccess,
+    ocspResponseGoodMustStaple,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-must-staple-try-later.example.com",
+    PRErrorCodeSuccess,
+    ocspResponseGoodMustStaple,
+    willNotRetry
+  );
+  add_ocsp_test(
+    "ocsp-stapling-must-staple-invalid-signer.example.com",
+    PRErrorCodeSuccess,
+    ocspResponseGoodMustStaple,
+    willNotRetry
+  );
 
-  add_test(function () { ocspResponder.stop(run_next_test); });
+  add_test(function() {
+    ocspResponder.stop(run_next_test);
+  });
   add_test(check_ocsp_stapling_telemetry);
   run_next_test();
 }
 
 function check_ocsp_stapling_telemetry() {
   let histogram = Services.telemetry
-                    .getHistogramById("SSL_OCSP_STAPLING")
-                    .snapshot();
-  equal(histogram.values[0] || 0, 0,
-        "Should have 0 connections for unused histogram bucket 0");
-  equal(histogram.values[1] || 0, 0,
-        "Actual and expected connections with a good response should match");
-  equal(histogram.values[2] || 0, 0,
-        "Actual and expected connections with no stapled response should match");
-  equal(histogram.values[3], 22,
-        "Actual and expected connections with an expired response should match");
-  equal(histogram.values[4], 2,
-        "Actual and expected connections with bad responses should match");
+    .getHistogramById("SSL_OCSP_STAPLING")
+    .snapshot();
+  equal(
+    histogram.values[0] || 0,
+    0,
+    "Should have 0 connections for unused histogram bucket 0"
+  );
+  equal(
+    histogram.values[1] || 0,
+    0,
+    "Actual and expected connections with a good response should match"
+  );
+  equal(
+    histogram.values[2] || 0,
+    0,
+    "Actual and expected connections with no stapled response should match"
+  );
+  equal(
+    histogram.values[3],
+    22,
+    "Actual and expected connections with an expired response should match"
+  );
+  equal(
+    histogram.values[4],
+    2,
+    "Actual and expected connections with bad responses should match"
+  );
   run_next_test();
 }

@@ -6,37 +6,62 @@
  */
 function testSelectableSelection(aIdentifier, aSelectedChildren, aMsg) {
   var acc = getAccessible(aIdentifier, [nsIAccessibleSelectable]);
-  if (!acc)
+  if (!acc) {
     return;
+  }
 
   var msg = aMsg ? aMsg : "";
   var len = aSelectedChildren.length;
 
   // getSelectedChildren
   var selectedChildren = acc.selectedItems;
-  is(selectedChildren ? selectedChildren.length : 0, len,
-     msg + "getSelectedChildren: wrong selected children count for " +
-     prettyName(aIdentifier));
+  is(
+    selectedChildren ? selectedChildren.length : 0,
+    len,
+    msg +
+      "getSelectedChildren: wrong selected children count for " +
+      prettyName(aIdentifier)
+  );
 
   for (let idx = 0; idx < len; idx++) {
     let expectedAcc = getAccessible(aSelectedChildren[idx]);
     var actualAcc = selectedChildren.queryElementAt(idx, nsIAccessible);
-    is(actualAcc, expectedAcc,
-       msg + "getSelectedChildren: wrong selected child at index " + idx +
-       " for " + prettyName(aIdentifier) + " { actual : " +
-       prettyName(actualAcc) + ", expected: " + prettyName(expectedAcc) + "}");
+    is(
+      actualAcc,
+      expectedAcc,
+      msg +
+        "getSelectedChildren: wrong selected child at index " +
+        idx +
+        " for " +
+        prettyName(aIdentifier) +
+        " { actual : " +
+        prettyName(actualAcc) +
+        ", expected: " +
+        prettyName(expectedAcc) +
+        "}"
+    );
   }
 
   // selectedItemCount
-  is(acc.selectedItemCount, aSelectedChildren.length,
-     "selectedItemCount: wrong selected children count for " + prettyName(aIdentifier));
+  is(
+    acc.selectedItemCount,
+    aSelectedChildren.length,
+    "selectedItemCount: wrong selected children count for " +
+      prettyName(aIdentifier)
+  );
 
   // getSelectedItemAt
   for (let idx = 0; idx < len; idx++) {
     let expectedAcc = getAccessible(aSelectedChildren[idx]);
-    is(acc.getSelectedItemAt(idx), expectedAcc,
-       msg + "getSelectedItemAt: wrong selected child at index " + idx + " for " +
-       prettyName(aIdentifier));
+    is(
+      acc.getSelectedItemAt(idx),
+      expectedAcc,
+      msg +
+        "getSelectedItemAt: wrong selected child at index " +
+        idx +
+        " for " +
+        prettyName(aIdentifier)
+    );
   }
 
   // isItemSelected
@@ -46,7 +71,13 @@ function testSelectableSelection(aIdentifier, aSelectedChildren, aMsg) {
 /**
  * Test isItemSelected method, helper for testSelectableSelection
  */
-function testIsItemSelected(aSelectAcc, aTraversedAcc, aIndexObj, aSelectedChildren, aMsg) {
+function testIsItemSelected(
+  aSelectAcc,
+  aTraversedAcc,
+  aIndexObj,
+  aSelectedChildren,
+  aMsg
+) {
   var childCount = aTraversedAcc.childCount;
   for (var idx = 0; idx < childCount; idx++) {
     var child = aTraversedAcc.getChildAt(idx);
@@ -62,13 +93,24 @@ function testIsItemSelected(aSelectAcc, aTraversedAcc, aIndexObj, aSelectedChild
       }
 
       // isItemSelected
-      is(aSelectAcc.isItemSelected(aIndexObj.value++), isSelected,
-         aMsg + "isItemSelected: wrong selected child " + prettyName(child) +
-         " for " + prettyName(aSelectAcc));
+      is(
+        aSelectAcc.isItemSelected(aIndexObj.value++),
+        isSelected,
+        aMsg +
+          "isItemSelected: wrong selected child " +
+          prettyName(child) +
+          " for " +
+          prettyName(aSelectAcc)
+      );
 
       // selected state
-      testStates(child, isSelected ? STATE_SELECTED : 0, 0,
-                 !isSelected ? STATE_SELECTED : 0, 0);
+      testStates(
+        child,
+        isSelected ? STATE_SELECTED : 0,
+        0,
+        !isSelected ? STATE_SELECTED : 0,
+        0
+      );
 
       continue;
     }

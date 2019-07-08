@@ -4,9 +4,10 @@
 
 // Tests that state menu is displayed correctly (enabled or disabled) in the add-on manager
 // when the preference is unlocked / locked
-const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-const gIsLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc) ||
-  ("@mozilla.org/gio-service;1" in Cc);
+const gIsWindows = "@mozilla.org/windows-registry-key;1" in Cc;
+const gIsLinux =
+  "@mozilla.org/gnome-gconf-service;1" in Cc ||
+  "@mozilla.org/gio-service;1" in Cc;
 
 var gManagerWindow;
 var gCategoryUtilities;
@@ -14,10 +15,12 @@ var gPluginElement;
 
 function getTestPluginPref() {
   let prefix = "plugin.state.";
-  if (gIsWindows)
+  if (gIsWindows) {
     return `${prefix}nptest`;
-  if (gIsLinux)
+  }
+  if (gIsLinux) {
     return `${prefix}libnptest`;
+  }
   return `${prefix}test`;
 }
 
@@ -55,32 +58,55 @@ function getTestPlugin(aPlugins) {
 }
 
 function checkStateMenu(locked) {
-  Assert.equal(Services.prefs.prefIsLocked(getTestPluginPref()), locked,
-    "Preference lock state should be correct.");
-  let menuList = gManagerWindow.document.getAnonymousElementByAttribute(gPluginElement, "anonid", "state-menulist");
+  Assert.equal(
+    Services.prefs.prefIsLocked(getTestPluginPref()),
+    locked,
+    "Preference lock state should be correct."
+  );
+  let menuList = gManagerWindow.document.getAnonymousElementByAttribute(
+    gPluginElement,
+    "anonid",
+    "state-menulist"
+  );
   //  State menu should always have a selected item which must be visible
-  let selectedMenuItem = menuList.querySelector(".addon-control[selected=\"true\"]");
+  let selectedMenuItem = menuList.querySelector(
+    '.addon-control[selected="true"]'
+  );
 
   is_element_visible(menuList, "State menu should be visible.");
-  Assert.equal(menuList.disabled, locked,
-    "State menu should" + (locked === true ? "" : " not") + " be disabled.");
+  Assert.equal(
+    menuList.disabled,
+    locked,
+    "State menu should" + (locked === true ? "" : " not") + " be disabled."
+  );
 
-  is_element_visible(selectedMenuItem, "State menu's selected item should be visible.");
+  is_element_visible(
+    selectedMenuItem,
+    "State menu's selected item should be visible."
+  );
 }
 
 function checkStateMenuDetail(locked) {
-  Assert.equal(Services.prefs.prefIsLocked(getTestPluginPref()), locked,
-    "Preference should be " + (locked === true ? "" : "un") + "locked.");
+  Assert.equal(
+    Services.prefs.prefIsLocked(getTestPluginPref()),
+    locked,
+    "Preference should be " + (locked === true ? "" : "un") + "locked."
+  );
 
   // open details menu
   EventUtils.synthesizeMouseAtCenter(gPluginElement, {}, gManagerWindow);
 
   return new Promise(async resolve => {
     await wait_for_view_load(gManagerWindow);
-    let menuList = gManagerWindow.document.getElementById("detail-state-menulist");
+    let menuList = gManagerWindow.document.getElementById(
+      "detail-state-menulist"
+    );
     is_element_visible(menuList, "Details state menu should be visible.");
-    Assert.equal(menuList.disabled, locked,
-      "Details state menu enabled state should be correct.");
+    Assert.equal(
+      menuList.disabled,
+      locked,
+      "Details state menu enabled state should be correct."
+    );
     resolve();
   });
 }

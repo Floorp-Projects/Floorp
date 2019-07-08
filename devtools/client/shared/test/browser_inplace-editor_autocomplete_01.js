@@ -43,19 +43,23 @@ const mockGetCSSPropertyList = function() {
 };
 
 add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," +
-    "inplace editor CSS property autocomplete");
+  await addTab(
+    "data:text/html;charset=utf-8," + "inplace editor CSS property autocomplete"
+  );
   const [host, win, doc] = await createHost();
 
   const xulDocument = win.top.document;
   const popup = new AutocompletePopup(xulDocument, { autoSelect: true });
   await new Promise(resolve => {
-    createInplaceEditorAndClick({
-      start: runPropertyAutocompletionTest,
-      contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
-      done: resolve,
-      popup: popup,
-    }, doc);
+    createInplaceEditorAndClick(
+      {
+        start: runPropertyAutocompletionTest,
+        contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
+        done: resolve,
+        popup: popup,
+      },
+      doc
+    );
   });
 
   popup.destroy();

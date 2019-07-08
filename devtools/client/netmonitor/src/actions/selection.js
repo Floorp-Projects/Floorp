@@ -51,7 +51,9 @@ function selectDelta(delta) {
       return;
     }
 
-    const selIndex = requests.findIndex(r => r.id === state.requests.selectedId);
+    const selIndex = requests.findIndex(
+      r => r.id === state.requests.selectedId
+    );
 
     if (delta === "PAGE_DOWN") {
       delta = Math.ceil(requests.size / PAGE_SIZE_ITEM_COUNT_RATIO);

@@ -4,10 +4,12 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Sqlite} = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 
 const SCHEMA_VERSION = 1;
 
@@ -15,8 +17,11 @@ XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "protections.sqlite");
 });
 
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 
 /**
  * All SQL statements should be defined here.
@@ -24,31 +29,26 @@ ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
 const SQL = {
   createEvents:
     "CREATE TABLE events (" +
-      "id INTEGER PRIMARY KEY, " +
-      "type INTEGER NOT NULL, " +
-      "count INTEGER NOT NULL, " +
-      "timestamp DATE " +
+    "id INTEGER PRIMARY KEY, " +
+    "type INTEGER NOT NULL, " +
+    "count INTEGER NOT NULL, " +
+    "timestamp DATE " +
     ");",
 
   addEvent:
     "INSERT INTO events (type, count, timestamp) " +
     "VALUES (:type, 1, date(:date));",
 
-  incrementEvent:
-    "UPDATE events " +
-    "SET count = count + 1 " +
-    "WHERE id = :id;",
+  incrementEvent: "UPDATE events SET count = count + 1 WHERE id = :id;",
 
   selectByTypeAndDate:
     "SELECT * FROM events " +
     "WHERE type = :type " +
     "AND timestamp = date(:date);",
 
-  deleteEventsRecords:
-    "DELETE FROM events;",
+  deleteEventsRecords: "DELETE FROM events;",
 
-  removeRecordsSince:
-    "DELETE FROM events WHERE timestamp >= date(:date);",
+  removeRecordsSince: "DELETE FROM events WHERE timestamp >= date(:date);",
 };
 
 /**
@@ -63,7 +63,7 @@ async function removeAllRecords(db) {
 }
 
 async function removeRecordsSince(db, date) {
-  await db.execute(SQL.removeRecordsSince, {date});
+  await db.execute(SQL.removeRecordsSince, { date });
 }
 
 this.TrackingDBService = function() {
@@ -92,10 +92,10 @@ TrackingDBService.prototype = {
       // getSchemaVersion() returns a 0 int if the schema
       // version is undefined.
       if (dbVersion === 0) {
-       await createDatabase(db);
+        await createDatabase(db);
       } else if (dbVersion < SCHEMA_VERSION) {
-       // TODO
-       // await upgradeDatabase(db, dbVersion, SCHEMA_VERSION);
+        // TODO
+        // await upgradeDatabase(db, dbVersion, SCHEMA_VERSION);
       }
 
       await db.setSchemaVersion(SCHEMA_VERSION);
@@ -107,7 +107,7 @@ TrackingDBService.prototype = {
 
     AsyncShutdown.profileBeforeChange.addBlocker(
       "TrackingDBService: Shutting down the content blocking database.",
-      () => this._shutdown(),
+      () => this._shutdown()
     );
 
     this._db = db;
@@ -121,8 +121,9 @@ TrackingDBService.prototype = {
   _readAsyncStream(stream) {
     return new Promise(function(resolve, reject) {
       let result = "";
-      let source = Cc["@mozilla.org/binaryinputstream;1"]
-        .createInstance(Ci.nsIBinaryInputStream);
+      let source = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+        Ci.nsIBinaryInputStream
+      );
       source.setInputStream(stream);
       function readData() {
         try {
@@ -156,25 +157,35 @@ TrackingDBService.prototype = {
         if (state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
           result = Ci.nsITrackingDBService.TRACKERS_ID;
         }
-        if (state & Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT) {
+        if (
+          state & Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT
+        ) {
           result = Ci.nsITrackingDBService.FINGERPRINTERS_ID;
         }
-        if (state & Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT) {
+        if (
+          state & Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT
+        ) {
           result = Ci.nsITrackingDBService.CRYPTOMINERS_ID;
         }
         if (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) {
           result = Ci.nsITrackingDBService.TRACKING_COOKIES_ID;
         }
-        if ((state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_BY_PERMISSION) ||
-            (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL) ||
-            (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN)) {
+        if (
+          state &
+            Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_BY_PERMISSION ||
+          state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL ||
+          state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN
+        ) {
           result = Ci.nsITrackingDBService.OTHER_COOKIES_BLOCKED_ID;
         }
       }
     }
     // if a cookie is blocked for any reason, and it is identified as a tracker,
     // then add to the tracking cookies count.
-    if (result == Ci.nsITrackingDBService.OTHER_COOKIES_BLOCKED_ID && isTracker) {
+    if (
+      result == Ci.nsITrackingDBService.OTHER_COOKIES_BLOCKED_ID &&
+      isTracker
+    ) {
       result = Ci.nsITrackingDBService.TRACKING_COOKIES_ID;
     }
 
@@ -182,10 +193,10 @@ TrackingDBService.prototype = {
   },
 
   /**
-    * Saves data rows to the DB.
-    * @param data
-    *        An array of JS objects representing row items to save.
-    */
+   * Saves data rows to the DB.
+   * @param data
+   *        An array of JS objects representing row items to save.
+   */
   async saveEvents(data) {
     let db = await this.ensureDB();
     let log = JSON.parse(data);
@@ -199,16 +210,19 @@ TrackingDBService.prototype = {
             // today is a date "YYY-MM-DD" which can compare with what is
             // already saved in the database.
             let today = new Date().toISOString().split("T")[0];
-            let row = await db.executeCached(SQL.selectByTypeAndDate, {type, date: today});
+            let row = await db.executeCached(SQL.selectByTypeAndDate, {
+              type,
+              date: today,
+            });
             let todayEntry = row[0];
 
             // If previous events happened today (local time), aggregate them.
             if (todayEntry) {
               let id = todayEntry.getResultByName("id");
-              await db.executeCached(SQL.incrementEvent, {id});
+              await db.executeCached(SQL.incrementEvent, { id });
             } else {
               // Event is created on a new day, add a new entry.
-              await db.executeCached(SQL.addEvent, {type, date: today});
+              await db.executeCached(SQL.addEvent, { type, date: today });
             }
           }
         }

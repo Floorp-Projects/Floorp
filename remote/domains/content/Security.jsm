@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["Security"];
 
-const {ContentProcessDomain} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomain.jsm");
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/domains/ContentProcessDomain.jsm"
+);
 
 class Security extends ContentProcessDomain {
   constructor(session) {

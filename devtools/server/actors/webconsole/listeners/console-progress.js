@@ -63,8 +63,10 @@ ConsoleProgressListener.prototype = {
 
   _webProgress: null,
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   /**
    * Initialize the ConsoleProgressListener.
@@ -76,8 +78,10 @@ ConsoleProgressListener.prototype = {
     }
 
     this._webProgress = this.window.docShell.QueryInterface(Ci.nsIWebProgress);
-    this._webProgress.addProgressListener(this,
-                                          Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+    this._webProgress.addProgressListener(
+      this,
+      Ci.nsIWebProgress.NOTIFY_STATE_ALL
+    );
 
     this._initialized = true;
   },
@@ -102,8 +106,9 @@ ConsoleProgressListener.prototype = {
         this._locationChange = true;
         break;
       default:
-        throw new Error("ConsoleProgressListener: unknown monitor type " +
-                        monitor + "!");
+        throw new Error(
+          "ConsoleProgressListener: unknown monitor type " + monitor + "!"
+        );
     }
     this._init();
   },
@@ -124,8 +129,9 @@ ConsoleProgressListener.prototype = {
         this._locationChange = false;
         break;
       default:
-        throw new Error("ConsoleProgressListener: unknown monitor type " +
-                        monitor + "!");
+        throw new Error(
+          "ConsoleProgressListener: unknown monitor type " + monitor + "!"
+        );
     }
 
     if (!this._fileActivity && !this._locationChange) {
@@ -167,7 +173,7 @@ ConsoleProgressListener.prototype = {
       uri = nsIChannel.URI;
     }
 
-    if (!uri || !uri.schemeIs("file") && !uri.schemeIs("ftp")) {
+    if (!uri || (!uri.schemeIs("file") && !uri.schemeIs("ftp"))) {
       return;
     }
 
@@ -194,8 +200,11 @@ ConsoleProgressListener.prototype = {
     if (isStart && request instanceof Ci.nsIChannel) {
       this.owner.onLocationChange("start", request.URI.spec, "");
     } else if (isStop) {
-      this.owner.onLocationChange("stop", this.window.location.href,
-                                  this.window.document.title);
+      this.owner.onLocationChange(
+        "stop",
+        this.window.location.href,
+        this.window.document.title
+      );
     }
   },
 

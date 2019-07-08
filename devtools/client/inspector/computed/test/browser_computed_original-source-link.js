@@ -17,7 +17,7 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
   await addTab(TESTCASE_URI);
-  const {toolbox, inspector, view} = await openComputedView();
+  const { toolbox, inspector, view } = await openComputedView();
   let onLinksUpdated = inspector.once("computed-view-sourcelinks-updated");
   await selectNode("div", inspector);
 
@@ -58,12 +58,15 @@ async function testClickingLink(toolbox, view) {
 
   const editor = await onEditor;
 
-  const {line} = editor.sourceEditor.getCursor();
+  const { line } = editor.sourceEditor.getCursor();
   is(line, 3, "cursor is at correct line number in original source");
 }
 
 function verifyLinkText(view, text) {
   const link = getComputedViewLinkByIndex(view, 0);
-  is(link.textContent, text,
-    "Linked text changed to display the correct location");
+  is(
+    link.textContent,
+    text,
+    "Linked text changed to display the correct location"
+  );
 }

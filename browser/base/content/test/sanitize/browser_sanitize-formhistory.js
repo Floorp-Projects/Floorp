@@ -9,18 +9,21 @@ add_task(async function test() {
   // Calls focus event on the TabContextMenu early in the test.
   gBrowser.selectedTab.focus();
   await new Promise((resolve, reject) => {
-    FormHistory.update({ op: "remove" },
-                       { handleError(error) {
-                           reject(error);
-                         },
-                         handleCompletion(reason) {
-                           if (!reason) {
-                             resolve();
-                           } else {
-                             reject();
-                           }
-                         },
-                       });
+    FormHistory.update(
+      { op: "remove" },
+      {
+        handleError(error) {
+          reject(error);
+        },
+        handleCompletion(reason) {
+          if (!reason) {
+            resolve();
+          } else {
+            reject();
+          }
+        },
+      }
+    );
   });
 
   // Sanitize now so we can test the baseline point.
@@ -32,6 +35,10 @@ add_task(async function test() {
   ok(gFindBar.hasTransactions, "formdata can be cleared after input");
 
   await Sanitizer.sanitize(["formdata"]);
-  is(gFindBar.getElement("findbar-textbox").value, "", "findBar textbox should be empty after sanitize");
+  is(
+    gFindBar.getElement("findbar-textbox").value,
+    "",
+    "findBar textbox should be empty after sanitize"
+  );
   ok(!gFindBar.hasTransactions, "No transactions after sanitize");
 });

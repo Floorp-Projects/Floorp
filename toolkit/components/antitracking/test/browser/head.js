@@ -28,29 +28,40 @@ const TEST_TOP_PAGE_6 = TEST_DOMAIN_6 + TEST_PATH + "page.html";
 const TEST_EMBEDDER_PAGE = TEST_DOMAIN + TEST_PATH + "embedder.html";
 const TEST_POPUP_PAGE = TEST_DOMAIN + TEST_PATH + "popup.html";
 const TEST_3RD_PARTY_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
-const TEST_3RD_PARTY_PAGE_WO = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyWO.html";
-const TEST_3RD_PARTY_PAGE_UI = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyUI.html";
-const TEST_3RD_PARTY_PAGE_WITH_SVG = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartySVG.html";
+const TEST_3RD_PARTY_PAGE_WO =
+  TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyWO.html";
+const TEST_3RD_PARTY_PAGE_UI =
+  TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyUI.html";
+const TEST_3RD_PARTY_PAGE_WITH_SVG =
+  TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartySVG.html";
 const TEST_4TH_PARTY_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
-const TEST_ANOTHER_3RD_PARTY_PAGE = TEST_ANOTHER_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
-const TEST_3RD_PARTY_STORAGE_PAGE = TEST_3RD_PARTY_DOMAIN_HTTP + TEST_PATH + "3rdPartyStorage.html";
-const TEST_4TH_PARTY_STORAGE_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdPartyStorage.html";
-const TEST_4TH_PARTY_PARTITIONED_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdPartyPartitioned.html";
+const TEST_ANOTHER_3RD_PARTY_PAGE =
+  TEST_ANOTHER_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
+const TEST_3RD_PARTY_STORAGE_PAGE =
+  TEST_3RD_PARTY_DOMAIN_HTTP + TEST_PATH + "3rdPartyStorage.html";
+const TEST_4TH_PARTY_STORAGE_PAGE =
+  TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdPartyStorage.html";
+const TEST_4TH_PARTY_PARTITIONED_PAGE =
+  TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdPartyPartitioned.html";
 
-const BEHAVIOR_ACCEPT         = Ci.nsICookieService.BEHAVIOR_ACCEPT;
-const BEHAVIOR_REJECT         = Ci.nsICookieService.BEHAVIOR_REJECT;
-const BEHAVIOR_LIMIT_FOREIGN  = Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
+const BEHAVIOR_ACCEPT = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+const BEHAVIOR_REJECT = Ci.nsICookieService.BEHAVIOR_REJECT;
+const BEHAVIOR_LIMIT_FOREIGN = Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
 const BEHAVIOR_REJECT_FOREIGN = Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
 const BEHAVIOR_REJECT_TRACKER = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
 
 requestLongerTimeout(3);
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/antitracking/test/browser/antitracking_head.js",
-  this);
+  this
+);
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/antitracking/test/browser/partitionedstorage_head.js",
-  this);
+  this
+);

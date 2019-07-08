@@ -8,8 +8,9 @@
 // node after getAnimationPlayersForNode was called on that node.
 
 add_task(async function() {
-  const {target, walker, animations} =
-    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+  const { target, walker, animations } = await initAnimationsFrontForUrl(
+    MAIN_DOMAIN + "animation.html"
+  );
 
   info("Retrieve a non-animated node");
   const node = await walker.querySelector(walker.rootNode, ".not-animated");
@@ -23,13 +24,16 @@ add_task(async function() {
 
   info("Add a couple of animation on the node");
   await node.modifyAttributes([
-    {attributeName: "class", newValue: "multiple-animations"},
+    { attributeName: "class", newValue: "multiple-animations" },
   ]);
   let changes = await onMutations;
 
   ok(true, "The mutations event was emitted");
   is(changes.length, 2, "There are 2 changes in the mutation event");
-  ok(changes.every(({type}) => type === "added"), "Both changes are additions");
+  ok(
+    changes.every(({ type }) => type === "added"),
+    "Both changes are additions"
+  );
 
   const names = changes.map(c => c.player.initialState.name).sort();
   is(names[0], "glow", "The animation 'glow' was added");
@@ -44,18 +48,22 @@ add_task(async function() {
 
   info("Remove the animation css class on the node");
   await node.modifyAttributes([
-    {attributeName: "class", newValue: "not-animated"},
+    { attributeName: "class", newValue: "not-animated" },
   ]);
 
   changes = await onMutations;
 
   ok(true, "The mutations event was emitted");
   is(changes.length, 2, "There are 2 changes in the mutation event");
-  ok(changes.every(({type}) => type === "removed"), "Both are removals");
-  ok(changes[0].player === p1 || changes[0].player === p2,
-    "The first removed player was one of the previously added players");
-  ok(changes[1].player === p1 || changes[1].player === p2,
-    "The second removed player was one of the previously added players");
+  ok(changes.every(({ type }) => type === "removed"), "Both are removals");
+  ok(
+    changes[0].player === p1 || changes[0].player === p2,
+    "The first removed player was one of the previously added players"
+  );
+  ok(
+    changes[1].player === p1 || changes[1].player === p2,
+    "The second removed player was one of the previously added players"
+  );
 
   await target.destroy();
   gBrowser.removeCurrentTab();

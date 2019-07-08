@@ -3,8 +3,7 @@
 
 "use strict";
 
-const networkLocationsModule =
-  require("devtools/client/aboutdebugging-new/src/modules/network-locations.js");
+const networkLocationsModule = require("devtools/client/aboutdebugging-new/src/modules/network-locations.js");
 
 /**
  * Test the sidebar is updated correctly when network runtimes are added/removed.
@@ -25,16 +24,20 @@ add_task(async function() {
 
   info("Wait for 'no devices' element to disappear");
   waitUntil(() => !document.querySelector(".qa-sidebar-no-devices"));
-  ok(findSidebarItemByText("localhost:6080", document),
-    "Found a sidebar item for localhost:6080");
+  ok(
+    findSidebarItemByText("localhost:6080", document),
+    "Found a sidebar item for localhost:6080"
+  );
 
   info("Remove the network location");
   networkLocationsModule.removeNetworkLocation("localhost:6080");
 
   info("Wait for 'no devices' element to reappear");
   waitUntil(() => document.querySelector(".qa-sidebar-no-devices"));
-  ok(!findSidebarItemByText("localhost:6080", document),
-    "Sidebar item for localhost:6080 removed");
+  ok(
+    !findSidebarItemByText("localhost:6080", document),
+    "Sidebar item for localhost:6080 removed"
+  );
 
   await removeTab(tab);
 });

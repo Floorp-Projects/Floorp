@@ -3,8 +3,7 @@
 
 "use strict";
 
-const TEST_URI =
-  "data:text/html;charset=utf-8,Test syntax highlighted output";
+const TEST_URI = "data:text/html;charset=utf-8,Test syntax highlighted output";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.jsterm.codeMirror", true);
@@ -19,7 +18,10 @@ async function performTests() {
   const jsterm = hud.jsterm;
 
   // Syntax highlighting is implemented with a Custom Element:
-  ok(hud.iframeWindow.customElements.get("syntax-highlighted"), "Custom Element exists");
+  ok(
+    hud.iframeWindow.customElements.get("syntax-highlighted"),
+    "Custom Element exists"
+  );
 
   // Check that we syntax highlight output to look like the inputed text.
   // See Bug 1463669.

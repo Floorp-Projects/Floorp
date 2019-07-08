@@ -7,7 +7,7 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-let testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+let testserver = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 
 const ID = "updateid@tests.mozilla.org";
 
@@ -31,7 +31,7 @@ add_task(async function test_update_new_id() {
   let xpi = await createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: { gecko: {id: "differentid@tests.mozilla.org"}},
+      applications: { gecko: { id: "differentid@tests.mozilla.org" } },
     },
   });
 
@@ -59,7 +59,10 @@ add_task(async function test_update_new_id() {
   Assert.notEqual(addon, null);
   Assert.equal(addon.version, "1.0");
 
-  let update = await promiseFindAddonUpdates(addon, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  let update = await promiseFindAddonUpdates(
+    addon,
+    AddonManager.UPDATE_WHEN_USER_REQUESTED
+  );
   let install = update.updateAvailable;
   Assert.notEqual(install, null, "Found available update");
   Assert.equal(install.name, addon.name);
@@ -67,9 +70,11 @@ add_task(async function test_update_new_id() {
   Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
   Assert.equal(install.existingAddon, addon);
 
-  await Assert.rejects(install.install(),
-                       err => (install.error == AddonManager.ERROR_INCORRECT_ID),
-                       "Upgrade to a different ID fails");
+  await Assert.rejects(
+    install.install(),
+    err => install.error == AddonManager.ERROR_INCORRECT_ID,
+    "Upgrade to a different ID fails"
+  );
 
   await addon.uninstall();
 });

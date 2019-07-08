@@ -4,7 +4,9 @@
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
 
 // Avoid test timeouts that can occur while waiting for the "addon-console-works" message.
@@ -39,7 +41,7 @@ function makeWidgetId(id) {
 add_task(async function testWebExtensionsToolboxSwitchToPopup() {
   const addonFile = ExtensionTestCommon.generateXPI({
     background: function() {
-      const {browser} = this;
+      const { browser } = this;
       window.myWebExtensionShowPopup = function() {
         browser.test.sendMessage("readyForOpenPopup");
       };
@@ -47,7 +49,7 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
     manifest: {
       name: ADDON_NAME,
       applications: {
-        gecko: {id: ADDON_ID},
+        gecko: { id: ADDON_ID },
       },
       browser_action: {
         default_title: "WebExtension Popup Debugging",
@@ -67,10 +69,12 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
         </html>
       `,
       "popup.js": function() {
-        const {browser} = this;
+        const { browser } = this;
         window.myWebExtensionPopupAddonFunction = function() {
-          browser.test.sendMessage("popupPageFunctionCalled",
-                                   browser.runtime.getManifest());
+          browser.test.sendMessage(
+            "popupPageFunctionCalled",
+            browser.runtime.getManifest()
+          );
         };
       },
     },
@@ -80,8 +84,11 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
   let onReadyForOpenPopup;
   let onPopupCustomMessage;
 
-  is(Services.prefs.getBoolPref("ui.popup.disable_autohide"), false,
-     "disable_autohide shoult be initially false");
+  is(
+    Services.prefs.getBoolPref("ui.popup.disable_autohide"),
+    false,
+    "disable_autohide shoult be initially false"
+  );
 
   Management.on("startup", function listener(event, extension) {
     if (extension.name != ADDON_NAME) {
@@ -93,7 +100,7 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
     function waitForExtensionTestMessage(expectedMessage) {
       return new Promise(done => {
         extension.on("test-message", function testLogListener(evt, ...args) {
-          const [message ] = args;
+          const [message] = args;
 
           if (message !== expectedMessage) {
             return;
@@ -111,12 +118,15 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
 
     // Wait for a notification sent by a script evaluated the test addon via
     // the web console.
-    onPopupCustomMessage = waitForExtensionTestMessage("popupPageFunctionCalled");
+    onPopupCustomMessage = waitForExtensionTestMessage(
+      "popupPageFunctionCalled"
+    );
   });
 
-  const {
-    tab, document, debugBtn,
-  } = await setupTestAboutDebuggingWebExtension(ADDON_NAME, addonFile);
+  const { tab, document, debugBtn } = await setupTestAboutDebuggingWebExtension(
+    ADDON_NAME,
+    addonFile
+  );
 
   const onToolboxReady = gDevTools.once("toolbox-ready");
   const onToolboxClose = gDevTools.once("toolbox-destroyed");
@@ -136,16 +146,22 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
   const args = await onPopupCustomMessage;
   ok(true, "Received console message from the popup page function as expected");
   is(args[0], "popupPageFunctionCalled", "Got the expected console message");
-  is(args[1] && args[1].name, ADDON_NAME,
-     "Got the expected manifest from WebExtension API");
+  is(
+    args[1] && args[1].name,
+    ADDON_NAME,
+    "Got the expected manifest from WebExtension API"
+  );
 
   await onToolboxClose;
   info("Addon toolbox closed");
 
-  is(Services.prefs.getBoolPref("ui.popup.disable_autohide"), false,
-     "disable_autohide should be reset to false when the toolbox is closed");
+  is(
+    Services.prefs.getBoolPref("ui.popup.disable_autohide"),
+    false,
+    "disable_autohide should be reset to false when the toolbox is closed"
+  );
 
-  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  await uninstallAddon({ document, id: ADDON_ID, name: ADDON_NAME });
   await closeAboutDebugging(tab);
 });
 
@@ -153,7 +169,7 @@ const testScript = function(toolbox) {
   let jsterm;
   const popupFramePromise = new Promise(resolve => {
     const listener = data => {
-      if (data.frames.some(({url}) => url && url.endsWith("popup.html"))) {
+      if (data.frames.some(({ url }) => url && url.endsWith("popup.html"))) {
         toolbox.target.off("frame-update", listener);
         resolve();
       }
@@ -163,67 +179,80 @@ const testScript = function(toolbox) {
 
   const waitForFrameListUpdate = toolbox.target.once("frame-update");
 
-  toolbox.selectTool("webconsole")
-         .then(async (console) => {
-           const clickNoAutoHideMenu = () => {
-             return new Promise(resolve => {
-               toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
-               toolbox.doc.addEventListener("popupshown", () => {
-                 const menuItem =
-                   toolbox.doc.getElementById("toolbox-meatball-menu-noautohide");
-                 menuItem.click();
-                 resolve();
-               }, { once: true });
-             });
-           };
+  toolbox
+    .selectTool("webconsole")
+    .then(async console => {
+      const clickNoAutoHideMenu = () => {
+        return new Promise(resolve => {
+          toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
+          toolbox.doc.addEventListener(
+            "popupshown",
+            () => {
+              const menuItem = toolbox.doc.getElementById(
+                "toolbox-meatball-menu-noautohide"
+              );
+              menuItem.click();
+              resolve();
+            },
+            { once: true }
+          );
+        });
+      };
 
-           dump(`Clicking the menu button\n`);
-           await clickNoAutoHideMenu();
-           dump(`Clicked the menu button\n`);
+      dump(`Clicking the menu button\n`);
+      await clickNoAutoHideMenu();
+      dump(`Clicked the menu button\n`);
 
-           jsterm = console.hud.jsterm;
-           jsterm.execute("myWebExtensionShowPopup()");
+      jsterm = console.hud.jsterm;
+      jsterm.execute("myWebExtensionShowPopup()");
 
-           await Promise.all([
-             // Wait the initial frame update (which list the background page).
-             waitForFrameListUpdate,
-             // Wait the new frame update (once the extension popup has been opened).
-             popupFramePromise,
-           ]);
+      await Promise.all([
+        // Wait the initial frame update (which list the background page).
+        waitForFrameListUpdate,
+        // Wait the new frame update (once the extension popup has been opened).
+        popupFramePromise,
+      ]);
 
-           dump(`Clicking the frame list button\n`);
-           const btn = toolbox.doc.getElementById("command-button-frames");
-           btn.click();
+      dump(`Clicking the frame list button\n`);
+      const btn = toolbox.doc.getElementById("command-button-frames");
+      btn.click();
 
-           const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
-           const frames = Array.from(menuList.querySelectorAll(".command"));
+      const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
+      const frames = Array.from(menuList.querySelectorAll(".command"));
 
-           if (frames.length != 2) {
-             throw Error(`Number of frames found is wrong: ${frames.length} != 2`);
-           }
+      if (frames.length != 2) {
+        throw Error(`Number of frames found is wrong: ${frames.length} != 2`);
+      }
 
-           const popupFrameBtn = frames.filter((frame) => {
-             return frame.querySelector(".label").textContent.endsWith("popup.html");
-           }).pop();
+      const popupFrameBtn = frames
+        .filter(frame => {
+          return frame
+            .querySelector(".label")
+            .textContent.endsWith("popup.html");
+        })
+        .pop();
 
-           if (!popupFrameBtn) {
-             throw Error("Extension Popup frame not found in the listed frames");
-           }
+      if (!popupFrameBtn) {
+        throw Error("Extension Popup frame not found in the listed frames");
+      }
 
-           const waitForNavigated = toolbox.target.once("navigate");
-           popupFrameBtn.click();
-           // Clicking the menu item may do highlighting.
-           await waitUntil(() => toolbox.highlighter);
-           await Promise.race([toolbox.highlighter.once("node-highlight"), wait(1000)]);
-           await waitForNavigated;
+      const waitForNavigated = toolbox.target.once("navigate");
+      popupFrameBtn.click();
+      // Clicking the menu item may do highlighting.
+      await waitUntil(() => toolbox.highlighter);
+      await Promise.race([
+        toolbox.highlighter.once("node-highlight"),
+        wait(1000),
+      ]);
+      await waitForNavigated;
 
-           await jsterm.execute("myWebExtensionPopupAddonFunction()");
+      await jsterm.execute("myWebExtensionPopupAddonFunction()");
 
-           await toolbox.destroy();
-         })
-         .catch((error) => {
-           dump("Error while running code in the browser toolbox process:\n");
-           dump(error + "\n");
-           dump("stack:\n" + error.stack + "\n");
-         });
+      await toolbox.destroy();
+    })
+    .catch(error => {
+      dump("Error while running code in the browser toolbox process:\n");
+      dump(error + "\n");
+      dump("stack:\n" + error.stack + "\n");
+    });
 };

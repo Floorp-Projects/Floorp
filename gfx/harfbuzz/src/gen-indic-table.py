@@ -245,7 +245,7 @@ print ("}")
 print ()
 print ("#undef _")
 for i in range (2):
-	print
+	print()
 	vv = sorted (values[i].keys ())
 	for v in vv:
 		print ("#undef %s_%s" %

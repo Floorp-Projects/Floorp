@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function skipTests(tests, startTestPattern, endTestPattern) {
-  var startIndex = 0, endIndex = tests.length - 1;
+  var startIndex = 0,
+    endIndex = tests.length - 1;
   for (var i = 0; i < tests.length; ++i) {
     var test_path;
-    if ((tests[i] instanceof Object) && ("test" in tests[i])) {
+    if (tests[i] instanceof Object && "test" in tests[i]) {
       test_path = tests[i].test.url;
-    } else if ((tests[i] instanceof Object) && ("url" in tests[i])) {
+    } else if (tests[i] instanceof Object && "url" in tests[i]) {
       test_path = tests[i].url;
     } else {
       test_path = tests[i];

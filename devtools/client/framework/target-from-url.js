@@ -6,8 +6,9 @@
 
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const { remoteClientManager } =
-  require("devtools/client/shared/remote-debugging/remote-client-manager");
+const {
+  remoteClientManager,
+} = require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 /**
  * Construct a Target for a given URL object having various query parameters:
@@ -75,13 +76,17 @@ async function _targetFromURL(client, id, type, chrome) {
     // Fetch target for a remote tab
     id = parseInt(id, 10);
     if (isNaN(id)) {
-      throw new Error(`targetFromURL, wrong tab id '${id}', should be a number`);
+      throw new Error(
+        `targetFromURL, wrong tab id '${id}', should be a number`
+      );
     }
     try {
       front = await client.mainRoot.getTab({ outerWindowID: id });
     } catch (ex) {
       if (ex.startsWith("Protocol error (noTab)")) {
-        throw new Error(`targetFromURL, tab with outerWindowID '${id}' doesn't exist`);
+        throw new Error(
+          `targetFromURL, tab with outerWindowID '${id}' doesn't exist`
+        );
       }
       throw ex;
     }
@@ -97,7 +102,9 @@ async function _targetFromURL(client, id, type, chrome) {
     front = await client.mainRoot.getWorker(id);
 
     if (!front) {
-      throw new Error(`targetFromURL, worker with actor id '${id}' doesn't exist`);
+      throw new Error(
+        `targetFromURL, worker with actor id '${id}' doesn't exist`
+      );
     }
   } else if (type == "process") {
     // Fetch target for a remote chrome actor

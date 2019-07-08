@@ -11192,7 +11192,7 @@ void Document::SetReadyStateInternal(ReadyState rs,
   // At the time of loading start, we don't have timing object, record time.
 
   if (READYSTATE_INTERACTIVE == rs) {
-    if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
+    if (!mXULPersist && nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
       mXULPersist = new XULPersist(this);
       mXULPersist->Init();
     }

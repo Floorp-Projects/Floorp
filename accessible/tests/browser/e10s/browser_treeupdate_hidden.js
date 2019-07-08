@@ -13,17 +13,19 @@ async function setHidden(browser, value) {
   await onReorder;
 }
 
-addAccessibleTask('<div id="container"><input id="child"></div>',
+addAccessibleTask(
+  '<div id="container"><input id="child"></div>',
   async function(browser, accDoc) {
     let container = findAccessibleChildByID(accDoc, "container");
 
-    testAccessibleTree(container, { SECTION: [ { ENTRY: [ ] } ] });
+    testAccessibleTree(container, { SECTION: [{ ENTRY: [] }] });
 
     // Set @hidden attribute
     await setHidden(browser, "true");
-    testAccessibleTree(container, { SECTION: [ ] });
+    testAccessibleTree(container, { SECTION: [] });
 
     // Remove @hidden attribute
     await setHidden(browser);
-    testAccessibleTree(container, { SECTION: [ { ENTRY: [ ] } ] });
-  });
+    testAccessibleTree(container, { SECTION: [{ ENTRY: [] }] });
+  }
+);

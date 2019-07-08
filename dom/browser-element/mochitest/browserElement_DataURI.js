@@ -16,10 +16,14 @@ function runTest() {
   var iframe1 = document.createElement("iframe");
   iframe1.setAttribute("mozbrowser", "true");
   iframe1.id = "iframe1";
-  iframe1.addEventListener("mozbrowserloadend", function() {
-    ok(true, "Got first loadend event.");
-    SimpleTest.executeSoon(runTest2);
-  }, {once: true});
+  iframe1.addEventListener(
+    "mozbrowserloadend",
+    function() {
+      ok(true, "Got first loadend event.");
+      SimpleTest.executeSoon(runTest2);
+    },
+    { once: true }
+  );
   iframe1.src = browserElementTestHelpers.emptyPage1;
   document.body.appendChild(iframe1);
 
@@ -59,7 +63,6 @@ function runTest2() {
     SimpleTest.finish();
   }
   iframe2.addEventListener("load", iframe2Load);
-
 
   iframe1.src = "data:text/html,1";
 

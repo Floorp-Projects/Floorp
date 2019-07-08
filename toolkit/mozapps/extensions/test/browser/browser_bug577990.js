@@ -9,10 +9,12 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 var gInstall;
-var gInstallProperties = [{
-  name: "Locale Category Test",
-  type: "locale",
-}];
+var gInstallProperties = [
+  {
+    name: "Locale Category Test",
+    type: "locale",
+  },
+];
 
 async function test() {
   try {
@@ -50,7 +52,12 @@ function check_hidden(aExpectedHidden) {
   is(hidden, !!aExpectedHidden, "Should have correct hidden state");
 }
 
-async function run_open_test(aTestSetup, aLoadHidden, aInitializedHidden, aSelected) {
+async function run_open_test(
+  aTestSetup,
+  aLoadHidden,
+  aInitializedHidden,
+  aSelected
+) {
   function loadCallback(aManagerWindow) {
     gManagerWindow = aManagerWindow;
     gCategoryUtilities = new CategoryUtilities(gManagerWindow);
@@ -60,7 +67,7 @@ async function run_open_test(aTestSetup, aLoadHidden, aInitializedHidden, aSelec
   async function run() {
     await open_manager(null, null, loadCallback);
     check_hidden(aInitializedHidden);
-    var selected = (gCategoryUtilities.selectedCategory == "locale");
+    var selected = gCategoryUtilities.selectedCategory == "locale";
     is(selected, !!aSelected, "Should have correct selected state");
 
     run_next_test();
@@ -69,7 +76,6 @@ async function run_open_test(aTestSetup, aLoadHidden, aInitializedHidden, aSelec
   await close_manager(gManagerWindow);
   aTestSetup ? aTestSetup(run) : run();
 }
-
 
 // Tests that the locale category is hidden when there are no locales installed
 add_test(function() {
@@ -124,4 +130,3 @@ add_test(function() {
   gInstall.cancel();
   run_open_test(null, false, true);
 });
-

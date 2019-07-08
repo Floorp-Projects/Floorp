@@ -21,16 +21,26 @@ add_task(async function() {
   });
   await wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
 
-  await waitForClipboardPromise(function setup() {
-    getContextMenuItem(monitor, "request-list-context-copy-image-as-data-uri").click();
-  }, function check(text) {
-    return text.startsWith("data:") && !/undefined/.test(text);
-  });
+  await waitForClipboardPromise(
+    function setup() {
+      getContextMenuItem(
+        monitor,
+        "request-list-context-copy-image-as-data-uri"
+      ).click();
+    },
+    function check(text) {
+      return text.startsWith("data:") && !/undefined/.test(text);
+    }
+  );
 
   await teardown(monitor);
 });

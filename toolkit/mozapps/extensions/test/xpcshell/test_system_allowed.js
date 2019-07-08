@@ -18,7 +18,9 @@ add_task(async function test_allowed_addons() {
   registerDirectory("XREAppFeat", distroDir);
 
   // 1 and 2 are allowed, 3 is not.
-  let validAddons = { "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org"]};
+  let validAddons = {
+    system: ["system1@tests.mozilla.org", "system2@tests.mozilla.org"],
+  };
   await overrideBuiltIns(validAddons);
 
   await promiseStartupManager();
@@ -34,7 +36,7 @@ add_task(async function test_allowed_addons() {
   equal(addon, null);
 
   // 3 is now allowed, 1 and 2 are not.
-  validAddons = { "system": ["system3@tests.mozilla.org"]};
+  validAddons = { system: ["system3@tests.mozilla.org"] };
   await overrideBuiltIns(validAddons);
 
   await promiseRestartManager();

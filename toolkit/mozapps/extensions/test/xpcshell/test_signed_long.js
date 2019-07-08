@@ -14,8 +14,10 @@ add_task(async function test_long_id() {
   let addon = await promiseAddonByID(ID);
 
   Assert.notEqual(addon, null, "Addon install properly");
-  Assert.ok(addon.signedState > AddonManager.SIGNEDSTATE_MISSING,
-            "Signature verification worked properly");
+  Assert.ok(
+    addon.signedState > AddonManager.SIGNEDSTATE_MISSING,
+    "Signature verification worked properly"
+  );
 
   await addon.uninstall();
 });

@@ -13,11 +13,14 @@
 
 "use strict";
 
-const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-mixedcontent-securityerrors.html";
-const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/Security/" +
-                       "Mixed_content" + DOCS_GA_PARAMS;
+const TEST_URI =
+  "https://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-mixedcontent-securityerrors.html";
+const LEARN_MORE_URI =
+  "https://developer.mozilla.org/docs/Web/Security/" +
+  "Mixed_content" +
+  DOCS_GA_PARAMS;
 
 add_task(async function() {
   await Promise.all([
@@ -28,9 +31,11 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const activeContentText = "Loading mixed (insecure) active content " +
+  const activeContentText =
+    "Loading mixed (insecure) active content " +
     "\u201chttp://example.com/\u201d on a secure page";
-  const displayContentText = "Loading mixed (insecure) display content " +
+  const displayContentText =
+    "Loading mixed (insecure) display content " +
     "\u201chttp://example.com/tests/image/test/mochitest/blue.png\u201d on a secure page";
 
   const waitUntilWarningMessage = text =>
@@ -51,7 +56,9 @@ add_task(async function() {
   };
 
   info("Clicking on the Learn More link");
-  const learnMoreLink = mixedActiveContentMessage.querySelector(".learn-more-link");
+  const learnMoreLink = mixedActiveContentMessage.querySelector(
+    ".learn-more-link"
+  );
   const linkSimulation = await simulateLinkClick(learnMoreLink);
   checkLink({
     ...linkSimulation,

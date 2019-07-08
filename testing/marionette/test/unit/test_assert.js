@@ -5,7 +5,7 @@
 "use strict";
 /* eslint-disable no-array-constructor, no-new-object */
 
-const {assert} = ChromeUtils.import("chrome://marionette/content/assert.js");
+const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
 const {
   InvalidArgumentError,
   InvalidSessionIDError,
@@ -30,18 +30,24 @@ add_test(function test_acyclic() {
   cyclic.reference = cyclic;
   Assert.throws(() => assert.acyclic(cyclic, "", RangeError), RangeError);
   Assert.throws(() => assert.acyclic(cyclic, "foo"), /JavaScriptError: foo/);
-  Assert.throws(() => assert.acyclic(cyclic, "bar", RangeError), /RangeError: bar/);
+  Assert.throws(
+    () => assert.acyclic(cyclic, "bar", RangeError),
+    /RangeError: bar/
+  );
 
   run_next_test();
 });
 
 add_test(function test_session() {
-  assert.session({sessionID: "foo"});
+  assert.session({ sessionID: "foo" });
   for (let typ of [null, undefined, ""]) {
-    Assert.throws(() => assert.session({sessionId: typ}), InvalidSessionIDError);
+    Assert.throws(
+      () => assert.session({ sessionId: typ }),
+      InvalidSessionIDError
+    );
   }
 
-  Assert.throws(() => assert.session({sessionId: null}, "custom"), /custom/);
+  Assert.throws(() => assert.session({ sessionId: null }, "custom"), /custom/);
 
   run_next_test();
 });
@@ -152,9 +158,9 @@ add_test(function test_string() {
 });
 
 add_test(function test_open() {
-  assert.open({closed: false});
+  assert.open({ closed: false });
 
-  for (let typ of [null, undefined, {closed: true}]) {
+  for (let typ of [null, undefined, { closed: true }]) {
     Assert.throws(() => assert.open(typ), NoSuchWindowError);
   }
 
@@ -176,12 +182,12 @@ add_test(function test_object() {
 });
 
 add_test(function test_in() {
-  assert.in("foo", {foo: 42});
+  assert.in("foo", { foo: 42 });
   for (let typ of [{}, 42, true, null, undefined]) {
     Assert.throws(() => assert.in("foo", typ), InvalidArgumentError);
   }
 
-  Assert.throws(() => assert.in("foo", {bar: 42}, "custom"), /custom/);
+  Assert.throws(() => assert.in("foo", { bar: 42 }, "custom"), /custom/);
 
   run_next_test();
 });
@@ -201,8 +207,10 @@ add_test(function test_that() {
   equal(1, assert.that(n => n + 1)(1));
   Assert.throws(() => assert.that(() => false)(), InvalidArgumentError);
   Assert.throws(() => assert.that(val => val)(false), InvalidArgumentError);
-  Assert.throws(() => assert.that(val => val, "foo", SessionNotCreatedError)(false),
-      SessionNotCreatedError);
+  Assert.throws(
+    () => assert.that(val => val, "foo", SessionNotCreatedError)(false),
+    SessionNotCreatedError
+  );
 
   Assert.throws(() => assert.that(() => false, "custom")(), /custom/);
 

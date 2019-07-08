@@ -12,7 +12,7 @@ add_task(async function() {
 
   await promiseInstallWebExtension({
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
     },
   });
 

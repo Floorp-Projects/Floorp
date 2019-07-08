@@ -8,11 +8,12 @@
 "use strict";
 
 const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+const { BrowserLoader } = ChromeUtils.import(
+  "resource://devtools/client/shared/browser-loader.js"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-loader.lazyRequireGetter(this, "Telemetry",
-  "devtools/client/shared/telemetry");
+loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 
 const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/aboutdebugging/",
@@ -20,7 +21,10 @@ const { require } = BrowserLoader({
 });
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
+const {
+  render,
+  unmountComponentAtNode,
+} = require("devtools/client/shared/vendor/react-dom");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const AboutDebuggingApp = createFactory(require("./components/Aboutdebugging"));
@@ -34,15 +38,17 @@ var AboutDebugging = {
       return;
     }
 
-    const {connect, client} = await createClient();
+    const { connect, client } = await createClient();
 
     this.client = client;
     await this.client.connect();
 
     const telemetry = new Telemetry();
 
-    render(AboutDebuggingApp({ client, connect, telemetry }),
-      document.querySelector("#root"));
+    render(
+      AboutDebuggingApp({ client, connect, telemetry }),
+      document.querySelector("#root")
+    );
   },
 
   destroy() {
@@ -58,10 +64,18 @@ var AboutDebugging = {
 // Used to track async requests in tests.  See bug 1444424 for better ideas.
 EventEmitter.decorate(AboutDebugging);
 
-window.addEventListener("DOMContentLoaded", function() {
-  AboutDebugging.init();
-}, {once: true});
+window.addEventListener(
+  "DOMContentLoaded",
+  function() {
+    AboutDebugging.init();
+  },
+  { once: true }
+);
 
-window.addEventListener("unload", function() {
-  AboutDebugging.destroy();
-}, {once: true});
+window.addEventListener(
+  "unload",
+  function() {
+    AboutDebugging.destroy();
+  },
+  { once: true }
+);

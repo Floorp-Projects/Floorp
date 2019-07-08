@@ -63,10 +63,13 @@ add_task(async function() {
 
   // For the time being, the actor does not update the style's owning
   // node's textContent.  See bug 1205380.
-  const textContent = await ContentTask.spawn(gBrowser.selectedBrowser, null,
+  const textContent = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    null,
     async function() {
       return content.document.querySelector("style").textContent;
-    });
+    }
+  );
 
   isnot(textContent, expectedText, "changes not written back to style node");
 });

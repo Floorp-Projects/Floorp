@@ -7,7 +7,9 @@
 // Test that the inspector is correctly updated when shadow roots are attached to
 // components after displaying them in the markup view.
 
-const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
+const TEST_URL =
+  `data:text/html;charset=utf-8,` +
+  encodeURIComponent(`
   <div id="root">
     <test-component>
       <div slot="slot1" id="el1">slot1-1</div>
@@ -60,7 +62,7 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
   </script>`);
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   const tree = `
     div
@@ -119,7 +121,9 @@ add_task(async function() {
       inline text`;
   await assertMarkupViewAsTree(treeAfterOtherAttach, "#root", inspector);
 
-  info("Attach a shadow root to inline-component, check the inline text child.");
+  info(
+    "Attach a shadow root to inline-component, check the inline text child."
+  );
   mutated = waitForMutation(inspector, "shadowRootAttached");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.attachInlineComponent();

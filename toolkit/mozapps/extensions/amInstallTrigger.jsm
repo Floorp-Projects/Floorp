@@ -4,19 +4,23 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
-const XPINSTALL_MIMETYPE   = "application/x-xpinstall";
+const XPINSTALL_MIMETYPE = "application/x-xpinstall";
 
-const MSG_INSTALL_ENABLED  = "WebInstallerIsInstallEnabled";
-const MSG_INSTALL_ADDON    = "WebInstallerInstallAddonFromWebpage";
+const MSG_INSTALL_ENABLED = "WebInstallerIsInstallEnabled";
+const MSG_INSTALL_ADDON = "WebInstallerInstallAddonFromWebpage";
 const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
 
-
 var log = Log.repository.getLogger("AddonManager.InstallTrigger");
-log.level = Log.Level[Preferences.get("extensions.logging.enabled", false) ? "Warn" : "Trace"];
+log.level =
+  Log.Level[
+    Preferences.get("extensions.logging.enabled", false) ? "Warn" : "Trace"
+  ];
 
 function CallbackObject(id, callback, mediator) {
   this.id = id;
@@ -73,8 +77,12 @@ RemoteMediator.prototype = {
       // in-content UI page, walk up to find the first frame element in a chrome
       // privileged document
       let element = window.frameElement;
-      while (element && !element.ownerDocument.nodePrincipal.isSystemPrincipal)
+      while (
+        element &&
+        !element.ownerDocument.nodePrincipal.isSystemPrincipal
+      ) {
         element = element.ownerGlobal.frameElement;
+      }
 
       if (element) {
         let listener = Cc["@mozilla.org/addons/integration;1"].getService();
@@ -93,8 +101,9 @@ RemoteMediator.prototype = {
   },
 
   _addCallback(callback) {
-    if (!callback || typeof callback != "function")
+    if (!callback || typeof callback != "function") {
       return -1;
+    }
 
     let callbackID = this._windowID + "-" + ++this._lastCallbackID;
     let callbackObject = new CallbackObject(callbackID, callback, this);
@@ -105,9 +114,7 @@ RemoteMediator.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
 };
 
-
-function InstallTrigger() {
-}
+function InstallTrigger() {}
 
 InstallTrigger.prototype = {
   // We've declared ourselves as providing the nsIDOMGlobalPropertyInitializer
@@ -148,12 +155,16 @@ InstallTrigger.prototype = {
       item = { URL: item };
     }
     if (!item.URL) {
-      throw new this._window.Error("Missing URL property for '" + keys[0] + "'");
+      throw new this._window.Error(
+        "Missing URL property for '" + keys[0] + "'"
+      );
     }
 
     let url = this._resolveURL(item.URL);
     if (!this._checkLoadURIFromScript(url)) {
-      throw new this._window.Error("Insufficient permissions to install: " + url.spec);
+      throw new this._window.Error(
+        "Insufficient permissions to install: " + url.spec
+      );
     }
 
     let iconUrl = null;
@@ -182,15 +193,18 @@ InstallTrigger.prototype = {
       sourceHost,
     };
 
-    return this._mediator.install(installData, this._principal, callback, this._window);
+    return this._mediator.install(
+      installData,
+      this._principal,
+      callback,
+      this._window
+    );
   },
 
   startSoftwareUpdate(url, flags) {
-    let filename = Services.io.newURI(url)
-                              .QueryInterface(Ci.nsIURL)
-                              .filename;
+    let filename = Services.io.newURI(url).QueryInterface(Ci.nsIURL).filename;
     let args = {};
-    args[filename] = { "URL": url };
+    args[filename] = { URL: url };
     return this.install(args);
   },
 
@@ -205,9 +219,11 @@ InstallTrigger.prototype = {
   _checkLoadURIFromScript(uri) {
     let secman = Services.scriptSecurityManager;
     try {
-      secman.checkLoadURIWithPrincipal(this._principal,
-                                       uri,
-                                       secman.DISALLOW_INHERIT_PRINCIPAL);
+      secman.checkLoadURIWithPrincipal(
+        this._principal,
+        uri,
+        secman.DISALLOW_INHERIT_PRINCIPAL
+      );
       return true;
     } catch (e) {
       return false;

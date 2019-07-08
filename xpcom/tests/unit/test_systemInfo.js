@@ -3,10 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  const PROPERTIES = ["name", "arch", "version", "pagesize",
-                      "pageshift", "memmapalign", "cpucount", "memsize"];
-  let sysInfo = Cc["@mozilla.org/system-info;1"].
-                getService(Ci.nsIPropertyBag2);
+  const PROPERTIES = [
+    "name",
+    "arch",
+    "version",
+    "pagesize",
+    "pageshift",
+    "memmapalign",
+    "cpucount",
+    "memsize",
+  ];
+  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
 
   PROPERTIES.forEach(function(aPropertyName) {
     print("Testing property: " + aPropertyName);

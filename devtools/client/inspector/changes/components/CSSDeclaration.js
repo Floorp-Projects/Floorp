@@ -28,11 +28,18 @@ class CSSDeclaration extends PureComponent {
   render() {
     const { className, marker, property, value } = this.props;
 
-    return dom.div({ className: `changes__declaration ${className}` },
+    return dom.div(
+      { className: `changes__declaration ${className}` },
       marker,
-      dom.span({ className: "changes__declaration-name theme-fg-color3"}, property),
+      dom.span(
+        { className: "changes__declaration-name theme-fg-color3" },
+        property
+      ),
       ": ",
-      dom.span({ className: "changes__declaration-value theme-fg-color1"}, value),
+      dom.span(
+        { className: "changes__declaration-value theme-fg-color1" },
+        value
+      ),
       ";"
     );
   }

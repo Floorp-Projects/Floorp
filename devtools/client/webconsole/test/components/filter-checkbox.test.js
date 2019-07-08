@@ -7,7 +7,9 @@ const { render } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
-const FilterCheckbox = createFactory(require("devtools/client/webconsole/components/FilterBar/FilterCheckbox"));
+const FilterCheckbox = createFactory(
+  require("devtools/client/webconsole/components/FilterBar/FilterCheckbox")
+);
 
 describe("FilterCheckbox component:", () => {
   const props = {
@@ -26,7 +28,7 @@ describe("FilterCheckbox component:", () => {
   });
 
   it("displays as unchecked", () => {
-    const wrapper = render(FilterCheckbox({...props, checked: false}));
+    const wrapper = render(FilterCheckbox({ ...props, checked: false }));
     expect(wrapper.is("label")).toBe(true);
     expect(wrapper.attr("title")).toBe("test title");
     expect(wrapper.hasClass("filter-checkbox")).toBe(true);

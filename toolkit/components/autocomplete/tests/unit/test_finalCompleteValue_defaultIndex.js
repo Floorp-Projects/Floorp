@@ -60,19 +60,23 @@ add_test(function test_handleEnter_otherSelected_nocompleteselectedindex() {
     ["mozilla.com", "https://www.mozilla.com"],
     ["gomozilla.org", "http://www.gomozilla.org"],
   ];
-  doSearch("moz", results, { selectedIndex: 1,
-                             completeSelectedIndex: false }, controller => {
-    let input = controller.input;
-    Assert.equal(input.textValue, "mozilla.com");
-    Assert.equal(controller.getFinalCompleteValueAt(0), results[0][1]);
-    Assert.equal(controller.getFinalCompleteValueAt(1), results[1][1]);
-    Assert.equal(input.popup.selectedIndex, 1);
+  doSearch(
+    "moz",
+    results,
+    { selectedIndex: 1, completeSelectedIndex: false },
+    controller => {
+      let input = controller.input;
+      Assert.equal(input.textValue, "mozilla.com");
+      Assert.equal(controller.getFinalCompleteValueAt(0), results[0][1]);
+      Assert.equal(controller.getFinalCompleteValueAt(1), results[1][1]);
+      Assert.equal(input.popup.selectedIndex, 1);
 
-    controller.handleEnter(false);
-    // Verify that the keyboard-selected result is inserted, not the
-    // defaultComplete.
-    Assert.equal(controller.input.textValue, "http://www.gomozilla.org");
-  });
+      controller.handleEnter(false);
+      // Verify that the keyboard-selected result is inserted, not the
+      // defaultComplete.
+      Assert.equal(controller.input.textValue, "http://www.gomozilla.org");
+    }
+  );
 });
 
 function doSearch(aSearchString, aResults, aOptions, aOnCompleteCallback) {
@@ -82,7 +86,7 @@ function doSearch(aSearchString, aResults, aOptions, aOnCompleteCallback) {
   );
   registerAutoCompleteSearch(search);
 
-  let input = new AutoCompleteInput([ search.name ]);
+  let input = new AutoCompleteInput([search.name]);
   input.textValue = aSearchString;
   if ("selectedIndex" in aOptions) {
     input.popup.selectedIndex = aOptions.selectedIndex;
@@ -93,8 +97,9 @@ function doSearch(aSearchString, aResults, aOptions, aOnCompleteCallback) {
   // Needed for defaultIndex completion.
   input.selectTextRange(aSearchString.length, aSearchString.length);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
   controller.input = input;
   controller.startSearch(aSearchString);
 

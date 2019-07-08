@@ -11,60 +11,88 @@
  * failure. */
 let whitelist = [
   // CodeMirror is imported as-is, see bug 1004423.
-  {sourceName: /codemirror\.css$/i,
-   isFromDevTools: true},
-  {sourceName: /devtools\/client\/debugger\/src\/components\/([A-z\/]+).css/i,
-  isFromDevTools: true},
+  { sourceName: /codemirror\.css$/i, isFromDevTools: true },
+  {
+    sourceName: /devtools\/client\/debugger\/src\/components\/([A-z\/]+).css/i,
+    isFromDevTools: true,
+  },
   // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
-  {sourceName: /highlighters\.css$/i,
-   errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
-   isFromDevTools: true},
+  {
+    sourceName: /highlighters\.css$/i,
+    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
+    isFromDevTools: true,
+  },
   // UA-only media features.
-  {sourceName: /\b(autocomplete-item|svg)\.css$/,
-   errorMessage: /Expected media feature name but found \u2018-moz.*/i,
-   isFromDevTools: false},
+  {
+    sourceName: /\b(autocomplete-item|svg)\.css$/,
+    errorMessage: /Expected media feature name but found \u2018-moz.*/i,
+    isFromDevTools: false,
+  },
 
-  {sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua|pluginproblem)\.css$/i,
-   errorMessage: /Unknown pseudo-class.*-moz-/i,
-   isFromDevTools: false},
-  {sourceName: /\b(html|mathml|ua)\.css$/i,
-   errorMessage: /Unknown property.*-moz-/i,
-   isFromDevTools: false},
-  {sourceName: /minimal-xul\.css$/i,
-   errorMessage: /Unknown property.*-moz-list-reversed/i,
-   isFromDevTools: false},
+  {
+    sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua|pluginproblem)\.css$/i,
+    errorMessage: /Unknown pseudo-class.*-moz-/i,
+    isFromDevTools: false,
+  },
+  {
+    sourceName: /\b(html|mathml|ua)\.css$/i,
+    errorMessage: /Unknown property.*-moz-/i,
+    isFromDevTools: false,
+  },
+  {
+    sourceName: /minimal-xul\.css$/i,
+    errorMessage: /Unknown property.*-moz-list-reversed/i,
+    isFromDevTools: false,
+  },
   // Reserved to UA sheets unless layout.css.overflow-clip-box.enabled flipped to true.
-  {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
-   errorMessage: /Unknown property.*overflow-clip-box/i,
-   isFromDevTools: false},
+  {
+    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+    errorMessage: /Unknown property.*overflow-clip-box/i,
+    isFromDevTools: false,
+  },
   // System colors reserved to UA / chrome sheets
-  {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
-   errorMessage: /Expected color but found \u2018-moz.*/i,
-   platforms: ["linux"], isFromDevTools: false},
+  {
+    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+    errorMessage: /Expected color but found \u2018-moz.*/i,
+    platforms: ["linux"],
+    isFromDevTools: false,
+  },
   // The '-moz-menulist-button' value is only supported in chrome and UA sheets
   // but forms.css is loaded as a document sheet by this test.
   // Maybe bug 1261237 will fix this?
-  {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
-   errorMessage: /Error in parsing value for \u2018-moz-appearance\u2019/iu,
-   isFromDevTools: false},
+  {
+    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+    errorMessage: /Error in parsing value for \u2018-moz-appearance\u2019/iu,
+    isFromDevTools: false,
+  },
   // These variables are declared somewhere else, and error when we load the
   // files directly. They're all marked intermittent because their appearance
   // in the error console seems to not be consistent.
-  {sourceName: /jsonview\/css\/general\.css$/i,
-   intermittent: true,
-   errorMessage: /Property contained reference to invalid variable.*color/i,
-   isFromDevTools: true},
-  {sourceName: /webide\/skin\/logs\.css$/i,
-   intermittent: true,
-   errorMessage: /Property contained reference to invalid variable.*color/i,
-   isFromDevTools: true},
-  {sourceName: /webide\/skin\/logs\.css$/i,
-   intermittent: true,
-   errorMessage: /Property contained reference to invalid variable.*background/i,
-   isFromDevTools: true},
+  {
+    sourceName: /jsonview\/css\/general\.css$/i,
+    intermittent: true,
+    errorMessage: /Property contained reference to invalid variable.*color/i,
+    isFromDevTools: true,
+  },
+  {
+    sourceName: /webide\/skin\/logs\.css$/i,
+    intermittent: true,
+    errorMessage: /Property contained reference to invalid variable.*color/i,
+    isFromDevTools: true,
+  },
+  {
+    sourceName: /webide\/skin\/logs\.css$/i,
+    intermittent: true,
+    errorMessage: /Property contained reference to invalid variable.*background/i,
+    isFromDevTools: true,
+  },
 ];
 
-if (!Services.prefs.getBoolPref("layout.css.xul-box-display-values.content.enabled")) {
+if (
+  !Services.prefs.getBoolPref(
+    "layout.css.xul-box-display-values.content.enabled"
+  )
+) {
   // These are UA sheets which use non-content-exposed `display` values.
   whitelist.push({
     sourceName: /(skin\/shared\/Heartbeat|((?:res|gre-resources)\/(ua|html)))\.css$/i,
@@ -73,7 +101,11 @@ if (!Services.prefs.getBoolPref("layout.css.xul-box-display-values.content.enabl
   });
 }
 
-if (!Services.prefs.getBoolPref("layout.css.line-height-moz-block-height.content.enabled")) {
+if (
+  !Services.prefs.getBoolPref(
+    "layout.css.line-height-moz-block-height.content.enabled"
+  )
+) {
   // -moz-block-height is used in form controls but not exposed to the web.
   whitelist.push({
     sourceName: /(?:res|gre-resources)\/forms\.css$/i,
@@ -83,16 +115,19 @@ if (!Services.prefs.getBoolPref("layout.css.line-height-moz-block-height.content
 }
 
 if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
-  whitelist.push({
-    sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
-    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
-    isFromDevTools: false,
-  }, {
-    // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
-    sourceName: /web\/viewer\.css$/i,
-    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
-    isFromDevTools: false,
-  });
+  whitelist.push(
+    {
+      sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
+      errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
+      isFromDevTools: false,
+    },
+    {
+      // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
+      sourceName: /web\/viewer\.css$/i,
+      errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
+      isFromDevTools: false,
+    }
+  );
 }
 
 if (!Services.prefs.getBoolPref("layout.css.scrollbar-width.enabled")) {
@@ -115,33 +150,21 @@ let propNameWhitelist = [
   // These custom properties are retrieved directly from CSSOM
   // in videocontrols.xml to get pre-defined style instead of computed
   // dimensions, which is why they are not referenced by CSS.
-  {propName: "--clickToPlay-width",
-   isFromDevTools: false},
-  {propName: "--playButton-width",
-   isFromDevTools: false},
-  {propName: "--muteButton-width",
-   isFromDevTools: false},
-  {propName: "--castingButton-width",
-   isFromDevTools: false},
-  {propName: "--closedCaptionButton-width",
-   isFromDevTools: false},
-  {propName: "--fullscreenButton-width",
-   isFromDevTools: false},
-  {propName: "--durationSpan-width",
-   isFromDevTools: false},
-  {propName: "--durationSpan-width-long",
-   isFromDevTools: false},
-  {propName: "--positionDurationBox-width",
-   isFromDevTools: false},
-  {propName: "--positionDurationBox-width-long",
-   isFromDevTools: false},
+  { propName: "--clickToPlay-width", isFromDevTools: false },
+  { propName: "--playButton-width", isFromDevTools: false },
+  { propName: "--muteButton-width", isFromDevTools: false },
+  { propName: "--castingButton-width", isFromDevTools: false },
+  { propName: "--closedCaptionButton-width", isFromDevTools: false },
+  { propName: "--fullscreenButton-width", isFromDevTools: false },
+  { propName: "--durationSpan-width", isFromDevTools: false },
+  { propName: "--durationSpan-width-long", isFromDevTools: false },
+  { propName: "--positionDurationBox-width", isFromDevTools: false },
+  { propName: "--positionDurationBox-width-long", isFromDevTools: false },
 
   // These variables are used in a shorthand, but the CSS parser deletes the values
   // when expanding the shorthands. See https://github.com/w3c/csswg-drafts/issues/2515
-  {propName: "--bezier-diagonal-color",
-   isFromDevTools: true},
-  {propName: "--bezier-grid-color",
-   isFromDevTools: true},
+  { propName: "--bezier-diagonal-color", isFromDevTools: true },
+  { propName: "--bezier-grid-color", isFromDevTools: true },
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and
@@ -176,27 +199,35 @@ function ignoredError(aErrorObject) {
       }
     }
     if (catchAll) {
-      ok(false, "A whitelist item is catching all errors. " +
-         dumpWhitelistItem(whitelistItem));
+      ok(
+        false,
+        "A whitelist item is catching all errors. " +
+          dumpWhitelistItem(whitelistItem)
+      );
       continue;
     }
     if (matches) {
       whitelistItem.used = true;
-      let {sourceName, errorMessage} = aErrorObject;
-      info(`Ignored error "${errorMessage}" on ${sourceName} ` +
-           "because of whitelist item " + dumpWhitelistItem(whitelistItem));
+      let { sourceName, errorMessage } = aErrorObject;
+      info(
+        `Ignored error "${errorMessage}" on ${sourceName} ` +
+          "because of whitelist item " +
+          dumpWhitelistItem(whitelistItem)
+      );
       return true;
     }
   }
   return false;
 }
 
-var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                 .getService(Ci.nsIChromeRegistry);
+var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+  Ci.nsIChromeRegistry
+);
 var gChromeMap = new Map();
 
-var resHandler = Services.io.getProtocolHandler("resource")
-                         .QueryInterface(Ci.nsIResProtocolHandler);
+var resHandler = Services.io
+  .getProtocolHandler("resource")
+  .QueryInterface(Ci.nsIResProtocolHandler);
 var gResourceMap = [];
 function trackResourcePrefix(prefix) {
   let uri = Services.io.newURI("resource://" + prefix + "/");
@@ -234,24 +265,28 @@ function convertToCodeURI(fileUri) {
     if (slashPos <= 0) {
       // File not accessible from chrome protocol, try resource://
       for (let res of gResourceMap) {
-        if (fileUri.startsWith(res[1]))
+        if (fileUri.startsWith(res[1])) {
           return fileUri.replace(res[1], "resource://" + res[0] + "/");
+        }
       }
       // Give up and return the original URL.
       return fileUri;
     }
     path = baseUri.slice(slashPos + 1) + path;
     baseUri = baseUri.slice(0, slashPos + 1);
-    if (gChromeMap.has(baseUri))
+    if (gChromeMap.has(baseUri)) {
       return gChromeMap.get(baseUri) + path;
+    }
   }
 }
 
 function messageIsCSSError(msg) {
   // Only care about CSS errors generated by our iframe:
-  if ((msg instanceof Ci.nsIScriptError) &&
-      msg.category.includes("CSS") &&
-      msg.sourceName.endsWith(kPathSuffix)) {
+  if (
+    msg instanceof Ci.nsIScriptError &&
+    msg.category.includes("CSS") &&
+    msg.sourceName.endsWith(kPathSuffix)
+  ) {
     let sourceName = msg.sourceName.slice(0, -kPathSuffix.length);
     let msgInfo = { sourceName, errorMessage: msg.errorMessage };
     // Check if this error is whitelisted in whitelist
@@ -272,8 +307,9 @@ function processCSSRules(sheet) {
       processCSSRules(rule);
       continue;
     }
-    if (!(rule instanceof CSSStyleRule) && !(rule instanceof CSSKeyframeRule))
+    if (!(rule instanceof CSSStyleRule) && !(rule instanceof CSSKeyframeRule)) {
       continue;
+    }
 
     // Extract urls from the css text.
     // Note: CSSRule.cssText always has double quotes around URLs even
@@ -282,14 +318,16 @@ function processCSSRules(sheet) {
     // Extract props by searching all "--" preceeded by "var(" or a non-word
     // character.
     let props = rule.cssText.match(/(var\(|\W)(--[\w\-]+)/g);
-    if (!urls && !props)
+    if (!urls && !props) {
       continue;
+    }
 
-    for (let url of (urls || [])) {
+    for (let url of urls || []) {
       // Remove the url(" prefix and the ") suffix.
       url = url.replace(/url\("(.*)"\)/, "$1");
-      if (url.startsWith("data:"))
+      if (url.startsWith("data:")) {
         continue;
+      }
 
       // Make the url absolute and remove the ref.
       let baseURI = Services.io.newURI(rule.parentStyleSheet.href);
@@ -304,7 +342,7 @@ function processCSSRules(sheet) {
       }
     }
 
-    for (let prop of (props || [])) {
+    for (let prop of props || []) {
       if (prop.startsWith("var(")) {
         prop = prop.substring(4);
         let prevValue = customPropsToReferencesMap.get(prop) || 0;
@@ -324,10 +362,14 @@ function processCSSRules(sheet) {
 function chromeFileExists(aURI) {
   let available = 0;
   try {
-    let channel = NetUtil.newChannel({uri: aURI, loadUsingSystemPrincipal: true});
+    let channel = NetUtil.newChannel({
+      uri: aURI,
+      loadUsingSystemPrincipal: true,
+    });
     let stream = channel.open();
-    let sstream = Cc["@mozilla.org/scriptableinputstream;1"]
-                    .createInstance(Ci.nsIScriptableInputStream);
+    let sstream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+      Ci.nsIScriptableInputStream
+    );
     sstream.init(stream);
     available = sstream.available();
     sstream.close();
@@ -354,10 +396,16 @@ add_task(async function checkAllTheCSS() {
   // Create a clean iframe to load all the files into. This needs to live at a
   // chrome URI so that it's allowed to load and parse any styles.
   let testFile = getRootDirectory(gTestPath) + "dummy_page.html";
-  let HiddenFrame = ChromeUtils.import("resource://testing-common/HiddenFrame.jsm", {}).HiddenFrame;
+  let HiddenFrame = ChromeUtils.import(
+    "resource://testing-common/HiddenFrame.jsm",
+    {}
+  ).HiddenFrame;
   let hiddenFrame = new HiddenFrame();
   let win = await hiddenFrame.get();
-  let iframe = win.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
+  let iframe = win.document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "html:iframe"
+  );
   win.document.documentElement.appendChild(iframe);
   let iframeLoaded = BrowserTestUtils.waitForEvent(iframe, "load", true);
   iframe.contentWindow.location = testFile;
@@ -382,36 +430,43 @@ add_task(async function checkAllTheCSS() {
   // filter out either the devtools paths or the non-devtools paths:
   let isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
   let devtoolsPathBits = ["webide", "devtools"];
-  uris = uris.filter(uri => isDevtools == devtoolsPathBits.some(path => uri.spec.includes(path)));
+  uris = uris.filter(
+    uri => isDevtools == devtoolsPathBits.some(path => uri.spec.includes(path))
+  );
 
-  let loadCSS = chromeUri => new Promise(resolve => {
-    let linkEl, onLoad, onError;
-    onLoad = e => {
-      processCSSRules(linkEl.sheet);
-      resolve();
-      linkEl.removeEventListener("load", onLoad);
-      linkEl.removeEventListener("error", onError);
-    };
-    onError = e => {
-      ok(false, "Loading " + linkEl.getAttribute("href") + " threw an error!");
-      resolve();
-      linkEl.removeEventListener("load", onLoad);
-      linkEl.removeEventListener("error", onError);
-    };
-    linkEl = doc.createElement("link");
-    linkEl.setAttribute("rel", "stylesheet");
-    linkEl.setAttribute("type", "text/css");
-    linkEl.addEventListener("load", onLoad);
-    linkEl.addEventListener("error", onError);
-    linkEl.setAttribute("href", chromeUri + kPathSuffix);
-    doc.head.appendChild(linkEl);
-  });
+  let loadCSS = chromeUri =>
+    new Promise(resolve => {
+      let linkEl, onLoad, onError;
+      onLoad = e => {
+        processCSSRules(linkEl.sheet);
+        resolve();
+        linkEl.removeEventListener("load", onLoad);
+        linkEl.removeEventListener("error", onError);
+      };
+      onError = e => {
+        ok(
+          false,
+          "Loading " + linkEl.getAttribute("href") + " threw an error!"
+        );
+        resolve();
+        linkEl.removeEventListener("load", onLoad);
+        linkEl.removeEventListener("error", onError);
+      };
+      linkEl = doc.createElement("link");
+      linkEl.setAttribute("rel", "stylesheet");
+      linkEl.setAttribute("type", "text/css");
+      linkEl.addEventListener("load", onLoad);
+      linkEl.addEventListener("error", onError);
+      linkEl.setAttribute("href", chromeUri + kPathSuffix);
+      doc.head.appendChild(linkEl);
+    });
 
   // We build a list of promises that get resolved when their respective
   // files have loaded and produced no errors.
   const kInContentCommonCSS = "chrome://global/skin/in-content/common.css";
-  let allPromises = uris.map((uri) => convertToCodeURI(uri.spec))
-                    .filter((uri) => uri !== kInContentCommonCSS);
+  let allPromises = uris
+    .map(uri => convertToCodeURI(uri.spec))
+    .filter(uri => uri !== kInContentCommonCSS);
 
   // Make sure chrome://global/skin/in-content/common.css is loaded before other
   // stylesheets in order to guarantee the --in-content variables can be
@@ -437,10 +492,12 @@ add_task(async function checkAllTheCSS() {
     if (!refCount) {
       let ignored = false;
       for (let item of propNameWhitelist) {
-        if (item.propName == prop &&
-            isDevtools == item.isFromDevTools) {
+        if (item.propName == prop && isDevtools == item.isFromDevTools) {
           item.used = true;
-          if (!item.platforms || item.platforms.includes(AppConstants.platform)) {
+          if (
+            !item.platforms ||
+            item.platforms.includes(AppConstants.platform)
+          ) {
             ignored = true;
           }
           break;
@@ -456,14 +513,21 @@ add_task(async function checkAllTheCSS() {
   // Count errors (the test output will list actual issues for us, as well
   // as the ok(false) in messageIsCSSError.
   let errors = messages.filter(messageIsCSSError);
-  is(errors.length, 0, "All the styles (" + allPromises.length + ") loaded without errors.");
+  is(
+    errors.length,
+    0,
+    "All the styles (" + allPromises.length + ") loaded without errors."
+  );
 
   // Confirm that all whitelist rules have been used.
   function checkWhitelist(list) {
     for (let item of list) {
-      if (!item.used && isDevtools == item.isFromDevTools &&
-          (!item.platforms || item.platforms.includes(AppConstants.platform)) &&
-          !item.intermittent) {
+      if (
+        !item.used &&
+        isDevtools == item.isFromDevTools &&
+        (!item.platforms || item.platforms.includes(AppConstants.platform)) &&
+        !item.intermittent
+      ) {
         ok(false, "Unused whitelist item: " + dumpWhitelistItem(item));
       }
     }

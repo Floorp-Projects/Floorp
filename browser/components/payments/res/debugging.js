@@ -13,22 +13,23 @@ const paymentOptionsUpdater = {
     this.render(state);
   },
   render(state) {
-    let {
-      completeStatus,
-      paymentOptions,
-    } = state.request;
+    let { completeStatus, paymentOptions } = state.request;
 
-    document.getElementById("setChangesPrevented").checked = state.changesPrevented;
+    document.getElementById("setChangesPrevented").checked =
+      state.changesPrevented;
 
-    let paymentOptionInputs = document.querySelectorAll("#paymentOptions input[type='checkbox']");
+    let paymentOptionInputs = document.querySelectorAll(
+      "#paymentOptions input[type='checkbox']"
+    );
     for (let input of paymentOptionInputs) {
       if (paymentOptions.hasOwnProperty(input.name)) {
         input.checked = paymentOptions[input.name];
       }
     }
 
-    let completeStatusInputs = document
-                                 .querySelectorAll("input[type='radio'][name='setCompleteStatus']");
+    let completeStatusInputs = document.querySelectorAll(
+      "input[type='radio'][name='setCompleteStatus']"
+    );
     for (let input of completeStatusInputs) {
       input.checked = input.value == completeStatus;
     }
@@ -37,13 +38,17 @@ const paymentOptionsUpdater = {
 
 let REQUEST_1 = {
   tabId: 9,
-  topLevelPrincipal: {URI: {displayHost: "debugging.example.com"}},
+  topLevelPrincipal: { URI: { displayHost: "debugging.example.com" } },
   requestId: "3797081f-a96b-c34b-a58b-1083c6e66e25",
   completeStatus: "",
   paymentMethods: [],
   paymentDetails: {
     id: "",
-    totalItem: {label: "Demo total", amount: {currency: "EUR", value: "1.00"}, pending: false},
+    totalItem: {
+      label: "Demo total",
+      amount: { currency: "EUR", value: "1.00" },
+      pending: false,
+    },
     displayItems: [
       {
         label: "Square",
@@ -72,7 +77,7 @@ let REQUEST_1 = {
         label: "Ssssssssuuuuuuuuupppppeeeeeeerrrrr sssssllllllloooooowwwwww",
         amount: {
           currency: "USD",
-          value: 1.50,
+          value: 1.5,
         },
         selected: true,
       },
@@ -92,25 +97,24 @@ let REQUEST_1 = {
 
 let REQUEST_2 = {
   tabId: 9,
-  topLevelPrincipal: {URI: {displayHost: "example.com"}},
+  topLevelPrincipal: { URI: { displayHost: "example.com" } },
   requestId: "3797081f-a96b-c34b-a58b-1083c6e66e25",
   completeStatus: "",
   paymentMethods: [
     {
-      "supportedMethods": "basic-card",
-      "data": {
-        "supportedNetworks": [
-          "amex",
-          "discover",
-          "mastercard",
-          "visa",
-        ],
+      supportedMethods: "basic-card",
+      data: {
+        supportedNetworks: ["amex", "discover", "mastercard", "visa"],
       },
     },
   ],
   paymentDetails: {
     id: "",
-    totalItem: {label: "", amount: {currency: "CAD", value: "25.75"}, pending: false},
+    totalItem: {
+      label: "",
+      amount: { currency: "CAD", value: "25.75" },
+      pending: false,
+    },
     displayItems: [
       {
         label: "Triangle",
@@ -197,54 +201,54 @@ let ADDRESSES_1 = {
   "48bnds6854t": {
     "address-level1": "MI",
     "address-level2": "Some City",
-    "country": "US",
-    "email": "foo@bar.com",
+    country: "US",
+    email: "foo@bar.com",
     "family-name": "Smith",
     "given-name": "John",
-    "guid": "48bnds6854t",
-    "name": "John Smith",
+    guid: "48bnds6854t",
+    name: "John Smith",
     "postal-code": "90210",
     "street-address": "123 Sesame Street,\nApt 40",
-    "tel": "+1 519 555-5555",
+    tel: "+1 519 555-5555",
     timeLastUsed: 50000,
   },
   "68gjdh354j": {
     "additional-name": "Z.",
     "address-level1": "CA",
     "address-level2": "Mountain View",
-    "country": "US",
+    country: "US",
     "family-name": "Doe",
     "given-name": "Jane",
-    "guid": "68gjdh354j",
-    "name": "Jane Z. Doe",
+    guid: "68gjdh354j",
+    name: "Jane Z. Doe",
     "postal-code": "94041",
     "street-address": "P.O. Box 123",
-    "tel": "+1 650 555-5555",
+    tel: "+1 650 555-5555",
     timeLastUsed: 30000,
   },
-  "abcde12345": {
+  abcde12345: {
     "address-level2": "Mountain View",
-    "country": "US",
+    country: "US",
     "family-name": "Fields",
     "given-name": "Mrs.",
-    "guid": "abcde12345",
-    "name": "Mrs. Fields",
+    guid: "abcde12345",
+    name: "Mrs. Fields",
     timeLastUsed: 70000,
   },
-  "german1": {
+  german1: {
     "additional-name": "Y.",
     "address-level1": "",
     "address-level2": "Berlin",
-    "country": "DE",
-    "email": "de@example.com",
+    country: "DE",
+    email: "de@example.com",
     "family-name": "Mouse",
     "given-name": "Anon",
-    "guid": "german1",
-    "name": "Anon Y. Mouse",
-    "organization": "Mozilla",
+    guid: "german1",
+    name: "Anon Y. Mouse",
+    organization: "Mozilla",
     "postal-code": "10997",
     "street-address": "Schlesische Str. 27",
-    "tel": "+49 30 983333002",
+    tel: "+49 30 983333002",
     timeLastUsed: 10000,
   },
   "missing-country": {
@@ -252,11 +256,11 @@ let ADDRESSES_1 = {
     "address-level2": "Toronto",
     "family-name": "Bogard",
     "given-name": "Kristin",
-    "guid": "missing-country",
-    "name": "Kristin Bogard",
+    guid: "missing-country",
+    name: "Kristin Bogard",
     "postal-code": "H0H 0H0",
     "street-address": "123 Yonge Street\nSuite 2300",
-    "tel": "+1 416 555-5555",
+    tel: "+1 416 555-5555",
     timeLastUsed: 90000,
   },
   TimBR: {
@@ -277,18 +281,18 @@ let ADDRESSES_1 = {
 };
 
 let DUPED_ADDRESSES = {
-  "a9e830667189": {
+  a9e830667189: {
     "street-address": "Unit 1\n1505 Northeast Kentucky Industrial Parkway \n",
     "address-level2": "Greenup",
     "address-level1": "KY",
     "postal-code": "41144",
-    "country": "US",
-    "email": "bob@example.com",
+    country: "US",
+    email: "bob@example.com",
     "family-name": "Smith",
     "given-name": "Bob",
-    "guid": "a9e830667189",
-    "tel": "+19871234567",
-    "name": "Bob Smith",
+    guid: "a9e830667189",
+    tel: "+19871234567",
+    name: "Bob Smith",
     timeLastUsed: 10001,
   },
   "72a15aed206d": {
@@ -296,11 +300,11 @@ let DUPED_ADDRESSES = {
     "address-level2": "York",
     "address-level1": "SC",
     "postal-code": "29745",
-    "country": "US",
+    country: "US",
     "given-name": "Mary Sue",
-    "guid": "72a15aed206d",
-    "tel": "+19871234567",
-    "name": "Mary Sue",
+    guid: "72a15aed206d",
+    tel: "+19871234567",
+    name: "Mary Sue",
     "address-line1": "1 New St",
     timeLastUsed: 10009,
   },
@@ -309,12 +313,12 @@ let DUPED_ADDRESSES = {
     "address-level2": "Springfield",
     "address-level1": "OR",
     "postal-code": "97403",
-    "country": "US",
-    "email": "rita@foo.com",
+    country: "US",
+    email: "rita@foo.com",
     "family-name": "Foo",
     "given-name": "Rita",
-    "guid": "2b4dce0fbc1f",
-    "name": "Rita Foo",
+    guid: "2b4dce0fbc1f",
+    name: "Rita Foo",
     "address-line1": "123 Park St",
     timeLastUsed: 10005,
   },
@@ -323,12 +327,12 @@ let DUPED_ADDRESSES = {
     "address-level2": "Springfield",
     "address-level1": "OR",
     "postal-code": "97402",
-    "country": "US",
-    "email": "rita@foo.com",
+    country: "US",
+    email: "rita@foo.com",
     "family-name": "Foo",
     "given-name": "Rita",
-    "guid": "46b2635a5b26",
-    "name": "Rita Foo",
+    guid: "46b2635a5b26",
+    name: "Rita Foo",
     "address-line1": "432 Another St",
     timeLastUsed: 10003,
   },
@@ -339,12 +343,12 @@ let BASIC_CARDS_1 = {
     billingAddressGUID: "68gjdh354j",
     methodName: "basic-card",
     "cc-number": "************5461",
-    "guid": "53f9d009aed2",
-    "version": 2,
-    "timeCreated": 1505240896213,
-    "timeLastModified": 1515609524588,
-    "timeLastUsed": 10000,
-    "timesUsed": 0,
+    guid: "53f9d009aed2",
+    version: 2,
+    timeCreated: 1505240896213,
+    timeLastModified: 1515609524588,
+    timeLastUsed: 10000,
+    timesUsed: 0,
     "cc-name": "John Smith",
     "cc-exp-month": 6,
     "cc-exp-year": 2024,
@@ -357,12 +361,12 @@ let BASIC_CARDS_1 = {
   "9h5d4h6f4d1s": {
     methodName: "basic-card",
     "cc-number": "************0954",
-    "guid": "9h5d4h6f4d1s",
-    "version": 2,
-    "timeCreated": 1517890536491,
-    "timeLastModified": 1517890564518,
-    "timeLastUsed": 50000,
-    "timesUsed": 0,
+    guid: "9h5d4h6f4d1s",
+    version: 2,
+    timeCreated: 1517890536491,
+    timeLastModified: 1517890564518,
+    timeLastUsed: 50000,
+    timesUsed: 0,
     "cc-name": "Jane Doe",
     "cc-exp-month": 5,
     "cc-exp-year": 2023,
@@ -375,12 +379,12 @@ let BASIC_CARDS_1 = {
   "123456789abc": {
     methodName: "basic-card",
     "cc-number": "************1234",
-    "guid": "123456789abc",
-    "version": 2,
-    "timeCreated": 1517890536491,
-    "timeLastModified": 1517890564518,
-    "timeLastUsed": 90000,
-    "timesUsed": 0,
+    guid: "123456789abc",
+    version: 2,
+    timeCreated: 1517890536491,
+    timeLastModified: 1517890564518,
+    timeLastUsed: 90000,
+    timesUsed: 0,
     "cc-name": "Jane Fields",
     "cc-given-name": "Jane",
     "cc-additional-name": "",
@@ -391,12 +395,12 @@ let BASIC_CARDS_1 = {
     methodName: "basic-card",
     billingAddressGUID: "68gjdh354j",
     "cc-number": "************1941",
-    "guid": "amex-card",
-    "version": 1,
-    "timeCreated": 1517890536491,
-    "timeLastModified": 1517890564518,
-    "timeLastUsed": 70000,
-    "timesUsed": 0,
+    guid: "amex-card",
+    version: 1,
+    timeCreated: 1517890536491,
+    timeLastModified: 1517890564518,
+    timeLastUsed: 70000,
+    timesUsed: 0,
     "cc-name": "Capt America",
     "cc-given-name": "Capt",
     "cc-additional-name": "",
@@ -409,12 +413,12 @@ let BASIC_CARDS_1 = {
   "missing-cc-name": {
     methodName: "basic-card",
     "cc-number": "************8563",
-    "guid": "missing-cc-name",
-    "version": 2,
-    "timeCreated": 1517890536491,
-    "timeLastModified": 1517890564518,
-    "timeLastUsed": 30000,
-    "timesUsed": 0,
+    guid: "missing-cc-name",
+    version: 2,
+    timeCreated: 1517890536491,
+    timeLastModified: 1517890564518,
+    timeLastUsed: 30000,
+    timesUsed: 0,
     "cc-exp-month": 8,
     "cc-exp-year": 2024,
     "cc-exp": "2024-08",
@@ -433,7 +437,10 @@ let buttonActions = {
   },
 
   delete1Address() {
-    let savedAddresses = Object.assign({}, requestStore.getState().savedAddresses);
+    let savedAddresses = Object.assign(
+      {},
+      requestStore.getState().savedAddresses
+    );
     delete savedAddresses[Object.keys(savedAddresses)[0]];
     // Use setStateFromParent since it ensures there is no dangling
     // `selectedShippingAddress` foreign key (FK) reference.
@@ -443,7 +450,10 @@ let buttonActions = {
   },
 
   delete1Card() {
-    let savedBasicCards = Object.assign({}, requestStore.getState().savedBasicCards);
+    let savedBasicCards = Object.assign(
+      {},
+      requestStore.getState().savedBasicCards
+    );
     delete savedBasicCards[Object.keys(savedBasicCards)[0]];
     // Use setStateFromParent since it ensures there is no dangling
     // `selectedPaymentCard` foreign key (FK) reference.
@@ -469,24 +479,29 @@ let buttonActions = {
 
   saveVisibleForm() {
     // Bypasses field validation which is useful to test error handling.
-    paymentDialog.querySelector("#main-container > .page:not([hidden])").saveRecord();
+    paymentDialog
+      .querySelector("#main-container > .page:not([hidden])")
+      .saveRecord();
   },
 
   setAddresses1() {
-    paymentDialog.setStateFromParent({savedAddresses: ADDRESSES_1});
+    paymentDialog.setStateFromParent({ savedAddresses: ADDRESSES_1 });
   },
 
   setDupesAddresses() {
-    paymentDialog.setStateFromParent({savedAddresses: DUPED_ADDRESSES});
+    paymentDialog.setStateFromParent({ savedAddresses: DUPED_ADDRESSES });
   },
 
   setBasicCards1() {
-    paymentDialog.setStateFromParent({savedBasicCards: BASIC_CARDS_1});
+    paymentDialog.setStateFromParent({ savedBasicCards: BASIC_CARDS_1 });
   },
 
   setBasicCardErrors() {
     let request = Object.assign({}, requestStore.getState().request);
-    request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
+    request.paymentDetails = Object.assign(
+      {},
+      requestStore.getState().request.paymentDetails
+    );
     request.paymentDetails.paymentMethodErrors = {
       cardNumber: "",
       cardholderName: "",
@@ -494,7 +509,8 @@ let buttonActions = {
       expiryMonth: "",
       expiryYear: "",
       billingAddress: {
-        addressLine: "Can only buy from ROADS, not DRIVES, BOULEVARDS, or STREETS",
+        addressLine:
+          "Can only buy from ROADS, not DRIVES, BOULEVARDS, or STREETS",
         city: "Can only buy from CITIES, not TOWNSHIPS or VILLAGES",
         country: "Can only buy from US, not CA",
         dependentLocality: "Can only be SUBURBS, not NEIGHBORHOODS",
@@ -510,7 +526,6 @@ let buttonActions = {
       request,
     });
   },
-
 
   setChangesPrevented(evt) {
     requestStore.setState({
@@ -529,7 +544,10 @@ let buttonActions = {
 
   setPayerErrors() {
     let request = Object.assign({}, requestStore.getState().request);
-    request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
+    request.paymentDetails = Object.assign(
+      {},
+      requestStore.getState().request.paymentDetails
+    );
     request.paymentDetails.payerErrors = {
       email: "Only @mozilla.com emails are supported",
       name: "Payer name must start with M",
@@ -542,7 +560,9 @@ let buttonActions = {
 
   setPaymentOptions() {
     let options = {};
-    let checkboxes = document.querySelectorAll("#paymentOptions input[type='checkbox']");
+    let checkboxes = document.querySelectorAll(
+      "#paymentOptions input[type='checkbox']"
+    );
     for (let input of checkboxes) {
       options[input.name] = input.checked;
     }
@@ -553,11 +573,11 @@ let buttonActions = {
   },
 
   setRequest1() {
-    paymentDialog.setStateFromParent({request: REQUEST_1});
+    paymentDialog.setStateFromParent({ request: REQUEST_1 });
   },
 
   setRequest2() {
-    paymentDialog.setStateFromParent({request: REQUEST_2});
+    paymentDialog.setStateFromParent({ request: REQUEST_2 });
   },
 
   setRequestPayerName() {
@@ -575,7 +595,10 @@ let buttonActions = {
 
   setShippingError() {
     let request = Object.assign({}, requestStore.getState().request);
-    request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
+    request.paymentDetails = Object.assign(
+      {},
+      requestStore.getState().request.paymentDetails
+    );
     request.paymentDetails.error = "Shipping Error!";
     request.paymentDetails.shippingOptions = [];
     requestStore.setState({
@@ -585,7 +608,10 @@ let buttonActions = {
 
   setShippingAddressErrors() {
     let request = Object.assign({}, requestStore.getState().request);
-    request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
+    request.paymentDetails = Object.assign(
+      {},
+      requestStore.getState().request.paymentDetails
+    );
     request.paymentDetails.shippingAddressErrors = {
       addressLine: "Can only ship to ROADS, not DRIVES, BOULEVARDS, or STREETS",
       city: "Can only ship to CITIES, not TOWNSHIPS or VILLAGES",
@@ -617,7 +643,7 @@ let buttonActions = {
 
 window.addEventListener("click", function onButtonClick(evt) {
   let id = evt.target.id || evt.target.name;
-  if (!id || typeof(buttonActions[id]) != "function") {
+  if (!id || typeof buttonActions[id] != "function") {
     return;
   }
 

@@ -2,14 +2,23 @@ function paintCountIs(plugin, expected, msg) {
   var count = plugin.getPaintCount();
   var realExpected = expected;
   ++realExpected; // extra paint at startup for all async-rendering plugins
-  ok(realExpected == count, msg + " (expected " + expected +
-     " independent paints, expected " + realExpected + " logged paints, got " +
-     count + " actual paints)");
+  ok(
+    realExpected == count,
+    msg +
+      " (expected " +
+      expected +
+      " independent paints, expected " +
+      realExpected +
+      " logged paints, got " +
+      count +
+      " actual paints)"
+  );
 }
 
 function getTestPlugin(pluginName) {
-  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
-                                 .getService(SpecialPowers.Ci.nsIPluginHost);
+  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"].getService(
+    SpecialPowers.Ci.nsIPluginHost
+  );
   var tags = ph.getPluginTags();
   var name = pluginName || "Test Plug-in";
   for (var tag of tags) {
@@ -26,68 +35,84 @@ function getTestPlugin(pluginName) {
 // it will automatically be reset to it's previous value after the test
 // ends
 function setTestPluginEnabledState(newEnabledState, pluginName) {
-  var oldEnabledState = SpecialPowers.setTestPluginEnabledState(newEnabledState, pluginName);
+  var oldEnabledState = SpecialPowers.setTestPluginEnabledState(
+    newEnabledState,
+    pluginName
+  );
   var plugin = getTestPlugin(pluginName);
   // Run a nested event loop to wait for the preference change to
   // propagate to the child. Yuck!
   SpecialPowers.Services.tm.spinEventLoopUntil(() => {
     return plugin.enabledState == newEnabledState;
   });
-  SimpleTest.registerCleanupFunction(function() {
-    SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
+  SimpleTest.registerCleanupFunction(async function() {
+    return SpecialPowers.setTestPluginEnabledState(
+      await oldEnabledState,
+      pluginName
+    );
   });
 }
 
 function crashAndGetCrashServiceRecord(crashMethodName, callback) {
-  var crashMan =
-    SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").
-    Services.crashmanager;
+  var crashMan = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm")
+    .Services.crashmanager;
 
   // First, clear the crash record store.
   info("Waiting for pruneOldCrashes");
   var future = new Date(Date.now() + 1000 * 60 * 60 * 24);
-  crashMan.pruneOldCrashes(future).then(function() {
-    var iframe = document.getElementById("iframe1");
-    var p = iframe.contentDocument.getElementById("plugin1");
+  crashMan.pruneOldCrashes(future).then(
+    function() {
+      var iframe = document.getElementById("iframe1");
+      var p = iframe.contentDocument.getElementById("plugin1");
 
-    var crashDateMS = Date.now();
-    try {
-      p[crashMethodName]();
-      ok(false, "p." + crashMethodName + "() should throw an exception");
-    } catch (e) {
-      ok(true, "p." + crashMethodName + "() should throw an exception");
-    }
+      var crashDateMS = Date.now();
+      try {
+        p[crashMethodName]();
+        ok(false, "p." + crashMethodName + "() should throw an exception");
+      } catch (e) {
+        ok(true, "p." + crashMethodName + "() should throw an exception");
+      }
 
-    // The crash record store is written and read back asyncly, so poll for
-    // the new record.
-    function tryGetCrash() {
-      info("Waiting for getCrashes");
-      crashMan.getCrashes().then(SpecialPowers.wrapCallback(function(crashes) {
-        if (crashes.length) {
-          is(crashes.length, 1, "There should be only one record");
-          var crash = SpecialPowers.wrap(crashes[0]);
-          ok(!!crash.id, "Record should have an ID");
-          ok(!!crash.crashDate, "Record should have a crash date");
-          var dateMS = crash.crashDate.valueOf();
-          var twoMin = 1000 * 60 * 2;
-          ok(crashDateMS - twoMin <= dateMS &&
-             dateMS <= crashDateMS + twoMin,
-             "Record's crash date should be nowish: " +
-             "now=" + crashDateMS + " recordDate=" + dateMS);
-          callback(crashMan, crash);
-        } else {
-          setTimeout(tryGetCrash, 1000);
-        }
-      }), function(err) {
-        ok(false, "Error getting crashes: " + err);
-        SimpleTest.finish();
-      });
+      // The crash record store is written and read back asyncly, so poll for
+      // the new record.
+      function tryGetCrash() {
+        info("Waiting for getCrashes");
+        crashMan.getCrashes().then(
+          SpecialPowers.wrapCallback(function(crashes) {
+            if (crashes.length) {
+              is(crashes.length, 1, "There should be only one record");
+              var crash = SpecialPowers.wrap(crashes[0]);
+              ok(!!crash.id, "Record should have an ID");
+              ok(!!crash.crashDate, "Record should have a crash date");
+              var dateMS = crash.crashDate.valueOf();
+              var twoMin = 1000 * 60 * 2;
+              ok(
+                crashDateMS - twoMin <= dateMS &&
+                  dateMS <= crashDateMS + twoMin,
+                "Record's crash date should be nowish: " +
+                  "now=" +
+                  crashDateMS +
+                  " recordDate=" +
+                  dateMS
+              );
+              callback(crashMan, crash);
+            } else {
+              setTimeout(tryGetCrash, 1000);
+            }
+          }),
+          function(err) {
+            ok(false, "Error getting crashes: " + err);
+            SimpleTest.finish();
+          }
+        );
+      }
+      setTimeout(tryGetCrash, 1000);
+    },
+    function() {
+      ok(false, "pruneOldCrashes error");
+      SimpleTest.finish();
     }
-    setTimeout(tryGetCrash, 1000);
-  }, function() {
-    ok(false, "pruneOldCrashes error");
-    SimpleTest.finish();
-  });
+  );
 }
 
 /**
@@ -95,9 +120,13 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
  */
 function promiseFullScreenChange() {
   return new Promise(resolve => {
-    document.addEventListener("fullscreenchange", function(e) {
-      resolve();
-    }, {once: true});
+    document.addEventListener(
+      "fullscreenchange",
+      function(e) {
+        resolve();
+      },
+      { once: true }
+    );
   });
 }
 
@@ -107,7 +136,7 @@ function promiseFullScreenChange() {
  * @param plugin  Target plugin to attempt to crash.
  */
 function crashPlugin(plugin) {
-  return new Promise( (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       plugin.crash();
       reject();

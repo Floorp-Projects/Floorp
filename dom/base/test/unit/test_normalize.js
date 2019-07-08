@@ -36,7 +36,6 @@ function test_element() {
   x.normalize();
   Assert.equal(x.childNodes.length, 0);
 
-
   // multiple empty Text nodes
   x.appendChild(doc.createTextNode(""));
   x.appendChild(doc.createTextNode(""));
@@ -44,7 +43,6 @@ function test_element() {
 
   x.normalize();
   Assert.equal(x.childNodes.length, 0);
-
 
   // empty Text node followed by other Text node
   x.appendChild(doc.createTextNode(""));
@@ -55,7 +53,6 @@ function test_element() {
   Assert.equal(x.childNodes.length, 1);
   Assert.equal(x.childNodes.item(0).nodeValue, "Guaraldi");
 
-
   // Text node followed by empty Text node
   clearKids(x);
   x.appendChild(doc.createTextNode("Guaraldi"));
@@ -64,7 +61,6 @@ function test_element() {
 
   x.normalize();
   Assert.equal(x.childNodes.item(0).nodeValue, "Guaraldi");
-
 
   // Text node followed by empty Text node followed by other Node
   clearKids(x);
@@ -77,7 +73,6 @@ function test_element() {
   Assert.equal(x.childNodes.length, 2);
   Assert.equal(x.childNodes.item(0).nodeValue, "Guaraldi");
   Assert.equal(x.childNodes.item(1).nodeName, "jazzy");
-
 
   // Nodes are recursively normalized
   clearKids(x);
@@ -96,10 +91,10 @@ function test_element() {
   Assert.equal(x.childNodes.item(1).childNodes.length, 0);
 }
 
-
 // UTILITY FUNCTIONS
 
 function clearKids(node) {
-  while (node.hasChildNodes())
+  while (node.hasChildNodes()) {
     node.removeChild(node.childNodes.item(0));
+  }
 }

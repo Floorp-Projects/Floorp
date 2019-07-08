@@ -6,7 +6,7 @@ function f() {
   const a = 1;
   const b = 2;
   const c = 3;
-  return {a, b, c};
+  return { a, b, c };
 }
 
 self.onmessage = function(event) {

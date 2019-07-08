@@ -4,9 +4,10 @@
 
 "use strict";
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const INSPECTOR_L10N =
-  new LocalizationHelper("devtools/client/locales/inspector.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const INSPECTOR_L10N = new LocalizationHelper(
+  "devtools/client/locales/inspector.properties"
+);
 
 function SlottedNodeEditor(container, node) {
   this.container = container;
@@ -32,7 +33,9 @@ SlottedNodeEditor.prototype = {
     this.revealLink = doc.createElement("span");
     this.revealLink.setAttribute("role", "link");
     this.revealLink.setAttribute("tabindex", -1);
-    this.revealLink.title = INSPECTOR_L10N.getStr("markupView.revealLink.tooltip");
+    this.revealLink.title = INSPECTOR_L10N.getStr(
+      "markupView.revealLink.tooltip"
+    );
     this.revealLink.classList.add("reveal-link");
     this.elt.appendChild(this.revealLink);
   },

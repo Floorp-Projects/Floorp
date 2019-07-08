@@ -3,18 +3,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this,
-  "CommonUtils", "resource://services-common/utils.js");
-ChromeUtils.defineModuleGetter(this,
-  "Log", "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this,
-  "PromiseUtils", "resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.defineModuleGetter(this,
-  "ServiceRequest", "resource://gre/modules/ServiceRequest.jsm");
-ChromeUtils.defineModuleGetter(this,
-  "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CommonUtils",
+  "resource://services-common/utils.js"
+);
+ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ServiceRequest",
+  "resource://gre/modules/ServiceRequest.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["CoveragePing"];
 
@@ -70,11 +81,11 @@ var CoveragePing = Object.freeze({
     const enabled = Services.prefs.getBoolPref(TELEMETRY_ENABLED_PREF, false);
 
     const payload = {
-      "appVersion": Services.appinfo.version,
-      "appUpdateChannel": UpdateUtils.getUpdateChannel(false),
-      "osName": Services.sysinfo.getProperty("name"),
-      "osVersion": Services.sysinfo.getProperty("version"),
-      "telemetryEnabled": enabled,
+      appVersion: Services.appinfo.version,
+      appUpdateChannel: UpdateUtils.getUpdateChannel(false),
+      osName: Services.sysinfo.getProperty("name"),
+      osVersion: Services.sysinfo.getProperty("version"),
+      telemetryEnabled: enabled,
     };
 
     let cachedUuid = Services.prefs.getCharPref(COVERAGE_UUID_PREF, null);
@@ -84,7 +95,10 @@ var CoveragePing = Object.freeze({
       Services.prefs.setCharPref(COVERAGE_UUID_PREF, cachedUuid);
     }
 
-    let reportingEndpointBase = Services.prefs.getCharPref(REPORTING_ENDPOINT_BASE_PREF, null);
+    let reportingEndpointBase = Services.prefs.getCharPref(
+      REPORTING_ENDPOINT_BASE_PREF,
+      null
+    );
 
     let endpoint = `${reportingEndpointBase}/${REPORTING_ENDPOINT}/${COVERAGE_VERSION}/${cachedUuid}`;
 
@@ -92,7 +106,7 @@ var CoveragePing = Object.freeze({
 
     let deferred = PromiseUtils.defer();
 
-    let request = new ServiceRequest({mozAnon: true});
+    let request = new ServiceRequest({ mozAnon: true });
     request.mozBackgroundRequest = true;
     request.timeout = PING_SUBMISSION_TIMEOUT;
 
@@ -101,7 +115,7 @@ var CoveragePing = Object.freeze({
     request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     request.setRequestHeader("Date", new Date().toUTCString());
 
-    let errorhandler = (event) => {
+    let errorhandler = event => {
       let failure = event.type;
       log.error(`error making request to ${endpoint}: ${failure}`);
       deferred.reject(event);
@@ -111,7 +125,7 @@ var CoveragePing = Object.freeze({
     request.ontimeout = errorhandler;
     request.onabort = errorhandler;
 
-    request.onloadend = (event) => {
+    request.onloadend = event => {
       let status = request.status;
       let statusClass = status - (status % 100);
       let success = false;
@@ -126,13 +140,21 @@ var CoveragePing = Object.freeze({
         // TODO: we should handle this better, but for now we should avoid resubmitting
         // broken requests by pretending success.
         success = true;
-        log.error(`error submitting to ${endpoint}, status: ${status} - ping request broken?`);
+        log.error(
+          `error submitting to ${endpoint}, status: ${status} - ping request broken?`
+        );
       } else if (statusClass === 500) {
         // 5XX means there was a server-side error and we should try again later.
-        log.error(`error submitting to ${endpoint}, status: ${status} - server error, should retry later`);
+        log.error(
+          `error submitting to ${endpoint}, status: ${status} - server error, should retry later`
+        );
       } else {
         // We received an unexpected status code.
-        log.error(`error submitting to ${endpoint}, status: ${status}, type: ${event.type}`);
+        log.error(
+          `error submitting to ${endpoint}, status: ${status}, type: ${
+            event.type
+          }`
+        );
       }
 
       if (success) {

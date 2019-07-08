@@ -5,15 +5,18 @@
 
 add_task(async function test_dupe_urls() {
   info("Searching for urls with dupes should only show one");
-  await PlacesTestUtils.addVisits({
-    uri: NetUtil.newURI("http://mozilla.org/"),
-  }, {
-    uri: NetUtil.newURI("http://mozilla.org/?"),
-  });
+  await PlacesTestUtils.addVisits(
+    {
+      uri: NetUtil.newURI("http://mozilla.org/"),
+    },
+    {
+      uri: NetUtil.newURI("http://mozilla.org/?"),
+    }
+  );
   await check_autocomplete({
     search: "moz",
     autofilled: "mozilla.org/",
-    completed:  "http://mozilla.org/",
+    completed: "http://mozilla.org/",
     matches: [
       {
         value: "mozilla.org/",
@@ -25,11 +28,14 @@ add_task(async function test_dupe_urls() {
 });
 
 add_task(async function test_dupe_secure_urls() {
-  await PlacesTestUtils.addVisits({
-    uri: NetUtil.newURI("https://example.org/"),
-  }, {
-    uri: NetUtil.newURI("https://example.org/?"),
-  });
+  await PlacesTestUtils.addVisits(
+    {
+      uri: NetUtil.newURI("https://example.org/"),
+    },
+    {
+      uri: NetUtil.newURI("https://example.org/?"),
+    }
+  );
   await check_autocomplete({
     search: "exam",
     autofilled: "example.org/",

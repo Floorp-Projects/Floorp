@@ -1,8 +1,10 @@
 "use strict";
 
-var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
+var { WebRequest } = ChromeUtils.import(
+  "resource://gre/modules/WebRequest.jsm"
+);
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerPathHandler("/", (request, response) => {
   response.setStatusLine(request.httpVersion, 200, "OK");
   if (request.hasHeader("Cookie")) {
@@ -32,20 +34,20 @@ function onBeforeSendHeaders(details) {
   info(`onBeforeSendHeaders ${details.url}`);
   let found = false;
   let headers = [];
-  for (let {name, value} of details.requestHeaders) {
+  for (let { name, value } of details.requestHeaders) {
     info(`Saw header ${name} '${value}'`);
     if (name == "Cookie") {
       equal(value, "foopy=1", "Cookie is correct");
-      headers.push({name, value: "blinky=1"});
+      headers.push({ name, value: "blinky=1" });
       found = true;
     } else {
-      headers.push({name, value});
+      headers.push({ name, value });
     }
   }
   ok(found, "Saw cookie header");
   equal(countBefore, 1, "onBeforeSendHeaders hit once");
 
-  return {requestHeaders: headers};
+  return { requestHeaders: headers };
 }
 
 function onResponseStarted(details) {
@@ -57,7 +59,7 @@ function onResponseStarted(details) {
 
   info(`onResponseStarted ${details.url}`);
   let found = false;
-  for (let {name, value} of details.responseHeaders) {
+  for (let { name, value } of details.responseHeaders) {
     info(`Saw header ${name} '${value}'`);
     if (name == "set-cookie") {
       equal(value, "dinky=1", "Cookie is correct");
@@ -74,8 +76,13 @@ add_task(async function filter_urls() {
   await contentPage.close();
 
   // Now load with WebRequest set up.
-  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, null, ["blocking", "requestHeaders"]);
-  WebRequest.onResponseStarted.addListener(onResponseStarted, null, ["responseHeaders"]);
+  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, null, [
+    "blocking",
+    "requestHeaders",
+  ]);
+  WebRequest.onResponseStarted.addListener(onResponseStarted, null, [
+    "responseHeaders",
+  ]);
 
   contentPage = await ExtensionTestUtils.loadContentPage(URL);
   await contentPage.close();

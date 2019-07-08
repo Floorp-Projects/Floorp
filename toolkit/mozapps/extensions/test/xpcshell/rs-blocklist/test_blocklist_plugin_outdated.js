@@ -8,31 +8,34 @@ const nsIBLS = Ci.nsIBlocklistService;
 
 var gBlocklist = null;
 
-var PLUGINS = [{
-  // Tests a plugin whose state goes from not-blocked, to outdated
-  name: "test_bug514327_outdated",
-  version: "5",
-  disabled: false,
-  blocklisted: false,
-}, {
-  // Used to trigger the blocklist dialog, which indicates the blocklist has updated
-  name: "test_bug514327_1",
-  version: "5",
-  disabled: false,
-  blocklisted: false,
-}, {
-  // Used to trigger the blocklist dialog, which indicates the blocklist has updated
-  name: "test_bug514327_2",
-  version: "5",
-  disabled: false,
-  blocklisted: false,
-}].map(opts => new MockPluginTag(opts, opts.enabledState));
+var PLUGINS = [
+  {
+    // Tests a plugin whose state goes from not-blocked, to outdated
+    name: "test_bug514327_outdated",
+    version: "5",
+    disabled: false,
+    blocklisted: false,
+  },
+  {
+    // Used to trigger the blocklist dialog, which indicates the blocklist has updated
+    name: "test_bug514327_1",
+    version: "5",
+    disabled: false,
+    blocklisted: false,
+  },
+  {
+    // Used to trigger the blocklist dialog, which indicates the blocklist has updated
+    name: "test_bug514327_2",
+    version: "5",
+    disabled: false,
+    blocklisted: false,
+  },
+].map(opts => new MockPluginTag(opts, opts.enabledState));
 
 mockPluginHost(PLUGINS);
 
 const BLOCKLIST_DATA = {
-  empty: {
-  },
+  empty: {},
   outdated_1: {
     plugins: [
       {
@@ -41,7 +44,7 @@ const BLOCKLIST_DATA = {
       },
       {
         matchName: "test_bug514327_outdated",
-        versionRange: [{severity: "0"}],
+        versionRange: [{ severity: "0" }],
       },
     ],
   },
@@ -53,14 +56,16 @@ const BLOCKLIST_DATA = {
       },
       {
         matchName: "test_bug514327_outdated",
-        versionRange: [{severity: "0"}],
+        versionRange: [{ severity: "0" }],
       },
     ],
   },
 };
 
 var BlocklistPrompt = {
-  get wrappedJSObject() { return this; },
+  get wrappedJSObject() {
+    return this;
+  },
 
   prompt(list) {
     // Should only include one item
@@ -74,15 +79,18 @@ var BlocklistPrompt = {
   QueryInterface: ChromeUtils.generateQI([]),
 };
 
-
-let factory = XPCOMUtils.generateSingletonFactory(function() { return BlocklistPrompt; });
-Cm.registerFactory(Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
-                   "Blocklist Prompt",
-                   "@mozilla.org/addons/blocklist-prompt;1", factory);
+let factory = XPCOMUtils.generateSingletonFactory(function() {
+  return BlocklistPrompt;
+});
+Cm.registerFactory(
+  Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
+  "Blocklist Prompt",
+  "@mozilla.org/addons/blocklist-prompt;1",
+  factory
+);
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
-
 
   await promiseStartupManager();
   // initialize the blocklist with no entries
@@ -97,7 +105,10 @@ add_task(async function setup() {
   });
 
   // should NOT be marked as outdated by the blocklist
-  Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_NOT_BLOCKED);
+  Assert.equal(
+    await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"),
+    nsIBLS.STATE_NOT_BLOCKED
+  );
 });
 
 add_task(async function test_part_1() {
@@ -105,7 +116,10 @@ add_task(async function test_part_1() {
   await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA.outdated_1);
 
   // plugin should now be marked as outdated
-  Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);
+  Assert.equal(
+    await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"),
+    nsIBLS.STATE_OUTDATED
+  );
 });
 
 add_task(async function test_part_2() {
@@ -113,5 +127,8 @@ add_task(async function test_part_2() {
   await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA.outdated_2);
 
   // plugin should still be marked as outdated
-  Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);
+  Assert.equal(
+    await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"),
+    nsIBLS.STATE_OUTDATED
+  );
 });

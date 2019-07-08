@@ -1,6 +1,9 @@
 "use strict";
 
-const ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://example.com/");
+const ROOT = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content/",
+  "http://example.com/"
+);
 let pageWithAlert = ROOT + "openPromptOffTimeout.html";
 
 registerCleanupFunction(function() {
@@ -17,28 +20,46 @@ registerCleanupFunction(function() {
 add_task(async function() {
   let firstTab = gBrowser.selectedTab;
   // load page that opens prompt when page is hidden
-  let openedTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageWithAlert, true);
-  let openedTabGotAttentionPromise = BrowserTestUtils.waitForAttribute("attention", openedTab, "true");
+  let openedTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    pageWithAlert,
+    true
+  );
+  let openedTabGotAttentionPromise = BrowserTestUtils.waitForAttribute(
+    "attention",
+    openedTab,
+    "true"
+  );
   // switch away from that tab again - this triggers the alert.
   await BrowserTestUtils.switchTab(gBrowser, firstTab);
   // ... but that's async on e10s...
   await openedTabGotAttentionPromise;
   // check for attention attribute
-  is(openedTab.getAttribute("attention"), "true", "Tab with alert should have 'attention' attribute.");
+  is(
+    openedTab.getAttribute("attention"),
+    "true",
+    "Tab with alert should have 'attention' attribute."
+  );
   ok(!openedTab.selected, "Tab with alert should not be selected");
 
   // switch tab back, and check the checkbox is displayed:
   await BrowserTestUtils.switchTab(gBrowser, openedTab);
   // check the prompt is there, and the extra row is present
-  let promptElements = openedTab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
+  let promptElements = openedTab.linkedBrowser.parentNode.querySelectorAll(
+    "tabmodalprompt"
+  );
   is(promptElements.length, 1, "There should be 1 prompt");
   let ourPromptElement = promptElements[0];
-  let checkbox = ourPromptElement.querySelector("checkbox[label*='example.com']");
+  let checkbox = ourPromptElement.querySelector(
+    "checkbox[label*='example.com']"
+  );
   ok(checkbox, "The checkbox should be there");
   ok(!checkbox.checked, "Checkbox shouldn't be checked");
   // tick box and accept dialog
   checkbox.checked = true;
-  let ourPrompt = openedTab.linkedBrowser.tabModalPromptBox.prompts.get(ourPromptElement);
+  let ourPrompt = openedTab.linkedBrowser.tabModalPromptBox.prompts.get(
+    ourPromptElement
+  );
   ourPrompt.onButtonClick(0);
   // Wait for that click to actually be handled completely.
   await new Promise(function(resolve) {
@@ -46,24 +67,38 @@ add_task(async function() {
   });
   // check permission is set
   let ps = Services.perms;
-  is(ps.ALLOW_ACTION, ps.testPermission(makeURI(pageWithAlert), "focus-tab-by-prompt"),
-     "Tab switching should now be allowed");
+  is(
+    ps.ALLOW_ACTION,
+    ps.testPermission(makeURI(pageWithAlert), "focus-tab-by-prompt"),
+    "Tab switching should now be allowed"
+  );
 
   // Check if the control center shows the correct permission.
-  let shown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+  let shown = BrowserTestUtils.waitForEvent(
+    gIdentityHandler._identityPopup,
+    "popupshown"
+  );
   gIdentityHandler._identityBox.click();
   await shown;
   let labelText = SitePermissions.getPermissionLabel("focus-tab-by-prompt");
-  let permissionsList = document.getElementById("identity-popup-permission-list");
+  let permissionsList = document.getElementById(
+    "identity-popup-permission-list"
+  );
   let label = permissionsList.querySelector(".identity-popup-permission-label");
   is(label.textContent, labelText);
   gIdentityHandler._identityPopup.hidePopup();
 
   // Check if the identity icon signals granted permission.
-  ok(gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
-    "identity-box signals granted permissions");
+  ok(
+    gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
+    "identity-box signals granted permissions"
+  );
 
-  let openedTabSelectedPromise = BrowserTestUtils.waitForAttribute("selected", openedTab, "true");
+  let openedTabSelectedPromise = BrowserTestUtils.waitForAttribute(
+    "selected",
+    openedTab,
+    "true"
+  );
   // switch to other tab again
   await BrowserTestUtils.switchTab(gBrowser, firstTab);
 

@@ -2,13 +2,20 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-const {HomePage} = ChromeUtils.import("resource:///modules/HomePage.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
@@ -37,22 +44,21 @@ add_task(async function test_overrides_update_removal() {
     });
   }
 
-
   let extensionInfo = {
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
         },
       },
-      "chrome_settings_overrides": {
-        "homepage": HOMEPAGE_URI,
-        "search_provider": {
-          "name": "DuckDuckGo",
-          "search_url": "https://example.com/?q={searchTerms}",
-          "is_default": true,
+      chrome_settings_overrides: {
+        homepage: HOMEPAGE_URI,
+        search_provider: {
+          name: "DuckDuckGo",
+          search_url: "https://example.com/?q={searchTerms}",
+          is_default: true,
         },
       },
     },
@@ -61,26 +67,33 @@ add_task(async function test_overrides_update_removal() {
 
   let defaultHomepageURL = HomePage.get();
   let defaultEngineName = (await Services.search.getDefault()).name;
-  ok(defaultEngineName !== "DuckDuckGo",
-     "Default engine is not DuckDuckGo.");
+  ok(defaultEngineName !== "DuckDuckGo", "Default engine is not DuckDuckGo.");
 
   let prefPromise = promisePrefChanged(HOMEPAGE_URI);
   await extension.startup();
   await AddonTestUtils.waitForSearchProviderStartup(extension);
   await prefPromise;
 
-  equal(extension.version, "1.0", "The installed addon has the expected version.");
-  ok(HomePage.get().endsWith(HOMEPAGE_URI),
-     "Home page url is overridden by the extension.");
-  equal((await Services.search.getDefault()).name,
-        "DuckDuckGo",
-        "Builtin default engine was set default by extension");
+  equal(
+    extension.version,
+    "1.0",
+    "The installed addon has the expected version."
+  );
+  ok(
+    HomePage.get().endsWith(HOMEPAGE_URI),
+    "Home page url is overridden by the extension."
+  );
+  equal(
+    (await Services.search.getDefault()).name,
+    "DuckDuckGo",
+    "Builtin default engine was set default by extension"
+  );
 
   extensionInfo.manifest = {
-    "version": "2.0",
-    "applications": {
-      "gecko": {
-        "id": EXTENSION_ID,
+    version: "2.0",
+    applications: {
+      gecko: {
+        id: EXTENSION_ID,
       },
     },
   };
@@ -89,13 +102,21 @@ add_task(async function test_overrides_update_removal() {
   await extension.upgrade(extensionInfo);
   await prefPromise;
 
-  equal(extension.version, "2.0", "The updated addon has the expected version.");
-  equal(HomePage.get(),
-        defaultHomepageURL,
-        "Home page url reverted to the default after update.");
-  equal((await Services.search.getDefault()).name,
-        defaultEngineName,
-        "Default engine reverted to the default after update.");
+  equal(
+    extension.version,
+    "2.0",
+    "The updated addon has the expected version."
+  );
+  equal(
+    HomePage.get(),
+    defaultHomepageURL,
+    "Home page url reverted to the default after update."
+  );
+  equal(
+    (await Services.search.getDefault()).name,
+    defaultEngineName,
+    "Default engine reverted to the default after update."
+  );
 
   await extension.unload();
 });
@@ -114,10 +135,10 @@ add_task(async function test_overrides_update_adding() {
   let extensionInfo = {
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
         },
       },
     },
@@ -126,32 +147,39 @@ add_task(async function test_overrides_update_adding() {
 
   let defaultHomepageURL = HomePage.get();
   let defaultEngineName = (await Services.search.getDefault()).name;
-  ok(defaultEngineName !== "DuckDuckGo",
-     "Home page url is not DuckDuckGo.");
+  ok(defaultEngineName !== "DuckDuckGo", "Home page url is not DuckDuckGo.");
 
   await extension.startup();
 
-  equal(extension.version, "1.0", "The installed addon has the expected version.");
-  equal(HomePage.get(),
-        defaultHomepageURL,
-        "Home page url is the default after startup.");
-  equal((await Services.search.getDefault()).name,
-        defaultEngineName,
-        "Default engine is the default after startup.");
+  equal(
+    extension.version,
+    "1.0",
+    "The installed addon has the expected version."
+  );
+  equal(
+    HomePage.get(),
+    defaultHomepageURL,
+    "Home page url is the default after startup."
+  );
+  equal(
+    (await Services.search.getDefault()).name,
+    defaultEngineName,
+    "Default engine is the default after startup."
+  );
 
   extensionInfo.manifest = {
-    "version": "2.0",
-    "applications": {
-      "gecko": {
-        "id": EXTENSION_ID,
+    version: "2.0",
+    applications: {
+      gecko: {
+        id: EXTENSION_ID,
       },
     },
-    "chrome_settings_overrides": {
-      "homepage": HOMEPAGE_URI,
-      "search_provider": {
-        "name": "DuckDuckGo",
-        "search_url": "https://example.com/?q={searchTerms}",
-        "is_default": true,
+    chrome_settings_overrides: {
+      homepage: HOMEPAGE_URI,
+      search_provider: {
+        name: "DuckDuckGo",
+        search_url: "https://example.com/?q={searchTerms}",
+        is_default: true,
       },
     },
   };
@@ -159,14 +187,23 @@ add_task(async function test_overrides_update_adding() {
   await extension.upgrade(extensionInfo);
   await AddonTestUtils.waitForSearchProviderStartup(extension);
 
-  equal(extension.version, "2.0", "The updated addon has the expected version.");
-  equal(HomePage.get(), defaultHomepageURL,
-        "Home page url is not overridden by the extension during upgrade.");
+  equal(
+    extension.version,
+    "2.0",
+    "The updated addon has the expected version."
+  );
+  equal(
+    HomePage.get(),
+    defaultHomepageURL,
+    "Home page url is not overridden by the extension during upgrade."
+  );
   // An upgraded extension adding a search engine cannot override
   // the default engine.
-  equal((await Services.search.getDefault()).name,
-        defaultEngineName,
-        "Default engine is still the default after startup.");
+  equal(
+    (await Services.search.getDefault()).name,
+    defaultEngineName,
+    "Default engine is still the default after startup."
+  );
 
   await extension.unload();
 });

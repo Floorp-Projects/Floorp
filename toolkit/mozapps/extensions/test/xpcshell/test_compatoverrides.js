@@ -4,10 +4,9 @@
 // Tests compatibility overrides, for when strict compatibility checking is
 // disabled. See bug 693906.
 
-
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 
-let testserver = createHttpServer({hosts: ["example.com"]});
+let testserver = createHttpServer({ hosts: ["example.com"] });
 
 const GETADDONS_RESPONSE = {
   next: null,
@@ -177,19 +176,27 @@ AddonTestUtils.registerJSON(testserver, "/compat.json", COMPAT_RESPONSE);
 
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, "http://example.com/addons.json");
-Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES, "http://example.com/compat.json");
+Services.prefs.setCharPref(
+  PREF_GETADDONS_BYIDS,
+  "http://example.com/addons.json"
+);
+Services.prefs.setCharPref(
+  PREF_COMPAT_OVERRIDES,
+  "http://example.com/compat.json"
+);
 
 const ADDONS = [
   // Not hosted, no overrides
   {
-    manifest:  {
+    manifest: {
       id: "addon1@tests.mozilla.org",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
     compatible: true,
     overrides: 0,
@@ -199,11 +206,13 @@ const ADDONS = [
   {
     manifest: {
       id: "addon2@tests.mozilla.org",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
     compatible: true,
     overrides: 0,
@@ -213,11 +222,13 @@ const ADDONS = [
   {
     manifest: {
       id: "addon3@tests.mozilla.org",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
     compatible: false,
     overrides: 1,
@@ -228,11 +239,13 @@ const ADDONS = [
   {
     manifest: {
       id: "addon4@tests.mozilla.org",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "0.1",
-        maxVersion: "0.2",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "0.1",
+          maxVersion: "0.2",
+        },
+      ],
     },
     compatible: false,
     overrides: 1,
@@ -243,11 +256,13 @@ const ADDONS = [
     manifest: {
       id: "addon5@tests.mozilla.org",
       version: "1.0",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
     compatible: true,
     overrides: 0,
@@ -257,11 +272,13 @@ const ADDONS = [
   {
     manifest: {
       id: "addon6@tests.mozilla.org",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
     compatible: true,
     overrides: 1,
@@ -271,11 +288,13 @@ const ADDONS = [
   {
     manifest: {
       id: "addon7@tests.mozilla.org",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
     compatible: true,
     overrides: 1,
@@ -285,11 +304,13 @@ const ADDONS = [
   {
     manifest: {
       id: "addon8@tests.mozilla.org",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
     compatible: false,
     overrides: 3,
@@ -299,11 +320,13 @@ const ADDONS = [
   {
     manifest: {
       id: "addon9@tests.mozilla.org",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
     compatible: false,
     overrides: 1,
@@ -315,8 +338,11 @@ add_task(async function run_tests() {
 
   for (let addon of ADDONS) {
     let xpi = await createAddon(addon.manifest);
-    await manuallyInstall(xpi, AddonTestUtils.profileExtensions,
-                          addon.manifest.id);
+    await manuallyInstall(
+      xpi,
+      AddonTestUtils.profileExtensions,
+      addon.manifest.id
+    );
   }
   await promiseStartupManager();
 
@@ -324,7 +350,7 @@ add_task(async function run_tests() {
 
   async function check() {
     for (let info of ADDONS) {
-      let {id} = info.manifest;
+      let { id } = info.manifest;
       let addon = await promiseAddonByID(id);
       Assert.notEqual(addon, null, `Found ${id}`);
       let overrides = AddonRepository.getCompatibilityOverridesSync(id);
@@ -332,13 +358,22 @@ add_task(async function run_tests() {
         Assert.equal(overrides, null, `Got no overrides for ${id}`);
       } else {
         Assert.notEqual(overrides, null, `Got overrides for ${id}`);
-        Assert.equal(overrides.length, info.overrides,
-                     `Got right number of overrides for ${id}`);
+        Assert.equal(
+          overrides.length,
+          info.overrides,
+          `Got right number of overrides for ${id}`
+        );
       }
-      Assert.equal(addon.isCompatible, info.compatible,
-                   `Got expected compatibility for ${id}`);
-      Assert.equal(addon.appDisabled, !info.compatible,
-                   `Got expected appDisabled for ${id}`);
+      Assert.equal(
+        addon.isCompatible,
+        info.compatible,
+        `Got expected compatibility for ${id}`
+      );
+      Assert.equal(
+        addon.appDisabled,
+        !info.compatible,
+        `Got expected appDisabled for ${id}`
+      );
     }
   }
 

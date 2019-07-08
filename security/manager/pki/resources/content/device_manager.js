@@ -4,24 +4,28 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 var secmoddb;
 var skip_enable_buttons = false;
 
 /* Do the initial load of all PKCS# modules and list them. */
 function LoadModules() {
-  secmoddb = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
+  secmoddb = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
+    Ci.nsIPKCS11ModuleDB
+  );
   RefreshDeviceList();
 }
 
 async function doPrompt(l10n_id) {
-  let [msg] = await document.l10n.formatValues([{id: l10n_id}]);
+  let [msg] = await document.l10n.formatValues([{ id: l10n_id }]);
   Services.prompt.alert(window, null, msg);
 }
 
 async function doConfirm(l10n_id) {
-  let [msg] = await document.l10n.formatValues([{id: l10n_id}]);
+  let [msg] = await document.l10n.formatValues([{ id: l10n_id }]);
   return Services.prompt.confirm(window, null, msg);
 }
 
@@ -56,8 +60,8 @@ function SetFIPSButton() {
  */
 function AddModule(module, slots) {
   var tree = document.getElementById("device_list");
-  var item  = document.createXULElement("treeitem");
-  var row  = document.createXULElement("treerow");
+  var item = document.createXULElement("treeitem");
+  var row = document.createXULElement("treerow");
   var cell = document.createXULElement("treecell");
   cell.setAttribute("label", module.name);
   row.appendChild(cell);
@@ -99,7 +103,8 @@ function getSelectedItem() {
     let kind = item.getAttribute("pk11kind");
     if (kind == "slot") {
       selected_slot = item.slotObject;
-    } else { // (kind == "module")
+    } else {
+      // (kind == "module")
       selected_module = item.module;
     }
   }
@@ -123,7 +128,7 @@ function enableButtons() {
     // so grab the token type
     var selected_token = selected_slot.getToken();
     if (selected_token != null) {
-      if (selected_token.needsLogin() || !(selected_token.needsUserInit)) {
+      if (selected_token.needsLogin() || !selected_token.needsUserInit) {
         pw_toggle = "false";
         if (selected_token.needsLogin()) {
           if (selected_token.isLoggedIn()) {
@@ -134,22 +139,28 @@ function enableButtons() {
         }
       }
 
-      if (!Services.policies.isAllowed("createMasterPassword") &&
-          selected_token.isInternalKeyToken &&
-          !selected_token.hasPassword) {
+      if (
+        !Services.policies.isAllowed("createMasterPassword") &&
+        selected_token.isInternalKeyToken &&
+        !selected_token.hasPassword
+      ) {
         pw_toggle = "true";
       }
     }
     showSlotInfo();
   }
-  document.getElementById("login_button")
-          .setAttribute("disabled", login_toggle);
-  document.getElementById("logout_button")
-          .setAttribute("disabled", logout_toggle);
-  document.getElementById("change_pw_button")
-          .setAttribute("disabled", pw_toggle);
-  document.getElementById("unload_button")
-          .setAttribute("disabled", unload_toggle);
+  document
+    .getElementById("login_button")
+    .setAttribute("disabled", login_toggle);
+  document
+    .getElementById("logout_button")
+    .setAttribute("disabled", logout_toggle);
+  document
+    .getElementById("change_pw_button")
+    .setAttribute("disabled", pw_toggle);
+  document
+    .getElementById("unload_button")
+    .setAttribute("disabled", unload_toggle);
 }
 
 // clear the display of information for the slot
@@ -176,55 +187,90 @@ function ClearDeviceList() {
   }
 }
 
-
 // show a list of info about a slot
 function showSlotInfo() {
   var present = true;
   ClearInfoList();
   switch (selected_slot.status) {
-   case Ci.nsIPKCS11Slot.SLOT_DISABLED:
-     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-disabled"}, "tok_status");
-     present = false;
-     break;
-   case Ci.nsIPKCS11Slot.SLOT_NOT_PRESENT:
-     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-not-present"}, "tok_status");
-     present = false;
-     break;
-   case Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED:
-     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-uninitialized"}, "tok_status");
-     break;
-   case Ci.nsIPKCS11Slot.SLOT_NOT_LOGGED_IN:
-     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-not-logged-in"}, "tok_status");
-     break;
-   case Ci.nsIPKCS11Slot.SLOT_LOGGED_IN:
-     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-logged-in"}, "tok_status");
-     break;
-   case Ci.nsIPKCS11Slot.SLOT_READY:
-     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-ready"}, "tok_status");
-     break;
-   default:
-     return;
+    case Ci.nsIPKCS11Slot.SLOT_DISABLED:
+      AddInfoRow(
+        "devinfo-status",
+        { l10nID: "devinfo-status-disabled" },
+        "tok_status"
+      );
+      present = false;
+      break;
+    case Ci.nsIPKCS11Slot.SLOT_NOT_PRESENT:
+      AddInfoRow(
+        "devinfo-status",
+        { l10nID: "devinfo-status-not-present" },
+        "tok_status"
+      );
+      present = false;
+      break;
+    case Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED:
+      AddInfoRow(
+        "devinfo-status",
+        { l10nID: "devinfo-status-uninitialized" },
+        "tok_status"
+      );
+      break;
+    case Ci.nsIPKCS11Slot.SLOT_NOT_LOGGED_IN:
+      AddInfoRow(
+        "devinfo-status",
+        { l10nID: "devinfo-status-not-logged-in" },
+        "tok_status"
+      );
+      break;
+    case Ci.nsIPKCS11Slot.SLOT_LOGGED_IN:
+      AddInfoRow(
+        "devinfo-status",
+        { l10nID: "devinfo-status-logged-in" },
+        "tok_status"
+      );
+      break;
+    case Ci.nsIPKCS11Slot.SLOT_READY:
+      AddInfoRow(
+        "devinfo-status",
+        { l10nID: "devinfo-status-ready" },
+        "tok_status"
+      );
+      break;
+    default:
+      return;
   }
-  AddInfoRow("devinfo-desc", {label: selected_slot.desc}, "slot_desc");
-  AddInfoRow("devinfo-man-id", {label: selected_slot.manID}, "slot_manID");
-  AddInfoRow("devinfo-hwversion", {label: selected_slot.HWVersion}, "slot_hwv");
-  AddInfoRow("devinfo-fwversion", {label: selected_slot.FWVersion}, "slot_fwv");
+  AddInfoRow("devinfo-desc", { label: selected_slot.desc }, "slot_desc");
+  AddInfoRow("devinfo-man-id", { label: selected_slot.manID }, "slot_manID");
+  AddInfoRow(
+    "devinfo-hwversion",
+    { label: selected_slot.HWVersion },
+    "slot_hwv"
+  );
+  AddInfoRow(
+    "devinfo-fwversion",
+    { label: selected_slot.FWVersion },
+    "slot_fwv"
+  );
   if (present) {
-     showTokenInfo();
+    showTokenInfo();
   }
 }
 
 function showModuleInfo() {
   ClearInfoList();
-  AddInfoRow("devinfo-modname", {label: selected_module.name}, "module_name");
-  AddInfoRow("devinfo-modpath", {label: selected_module.libName}, "module_path");
+  AddInfoRow("devinfo-modname", { label: selected_module.name }, "module_name");
+  AddInfoRow(
+    "devinfo-modpath",
+    { label: selected_module.libName },
+    "module_path"
+  );
 }
 
 // add a row to the info list, as [col1 col2] (ex.: ["status" "logged in"])
 function AddInfoRow(l10nID, col2, cell_id) {
   var tree = document.getElementById("info_list");
-  var item  = document.createXULElement("treeitem");
-  var row  = document.createXULElement("treerow");
+  var item = document.createXULElement("treeitem");
+  var row = document.createXULElement("treerow");
   var cell1 = document.createXULElement("treecell");
   document.l10n.setAttributes(cell1, l10nID);
   cell1.setAttribute("crop", "never");
@@ -274,8 +320,7 @@ function doLogout() {
     } else {
       document.l10n.setAttributes(tok_status, "devinfo-status-not-logged-in");
     }
-  } catch (e) {
-  }
+  } catch (e) {}
   enableButtons();
 }
 
@@ -288,8 +333,7 @@ function doLoad() {
 
 async function deleteSelected() {
   getSelectedItem();
-  if (selected_module &&
-      (await doConfirm("del-module-warning"))) {
+  if (selected_module && (await doConfirm("del-module-warning"))) {
     try {
       secmoddb.deleteModule(selected_module.name);
     } catch (e) {
@@ -311,13 +355,18 @@ async function doUnload() {
 
 function changePassword() {
   getSelectedItem();
-  let params = Cc["@mozilla.org/embedcomp/dialogparam;1"]
-                 .createInstance(Ci.nsIDialogParamBlock);
+  let params = Cc["@mozilla.org/embedcomp/dialogparam;1"].createInstance(
+    Ci.nsIDialogParamBlock
+  );
   let objects = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   objects.appendElement(selected_slot.getToken());
   params.objects = objects;
-  window.openDialog("changepassword.xul", "", "chrome,centerscreen,modal",
-                    params);
+  window.openDialog(
+    "changepassword.xul",
+    "",
+    "chrome,centerscreen,modal",
+    params
+  );
   showSlotInfo();
   enableButtons();
 }
@@ -326,11 +375,27 @@ function changePassword() {
 
 function showTokenInfo() {
   var selected_token = selected_slot.getToken();
-  AddInfoRow("devinfo-label", {label: selected_token.tokenName}, "tok_label");
-  AddInfoRow("devinfo-man-id", {label: selected_token.tokenManID}, "tok_manID");
-  AddInfoRow("devinfo-serialnum", {label: selected_token.tokenSerialNumber}, "tok_sNum");
-  AddInfoRow("devinfo-hwversion", {label: selected_token.tokenHWVersion}, "tok_hwv");
-  AddInfoRow("devinfo-fwversion", {label: selected_token.tokenFWVersion}, "tok_fwv");
+  AddInfoRow("devinfo-label", { label: selected_token.tokenName }, "tok_label");
+  AddInfoRow(
+    "devinfo-man-id",
+    { label: selected_token.tokenManID },
+    "tok_manID"
+  );
+  AddInfoRow(
+    "devinfo-serialnum",
+    { label: selected_token.tokenSerialNumber },
+    "tok_sNum"
+  );
+  AddInfoRow(
+    "devinfo-hwversion",
+    { label: selected_token.tokenHWVersion },
+    "tok_hwv"
+  );
+  AddInfoRow(
+    "devinfo-fwversion",
+    { label: selected_token.tokenFWVersion },
+    "tok_fwv"
+  );
 }
 
 function toggleFIPS() {
@@ -339,7 +404,9 @@ function toggleFIPS() {
     // In FIPS mode the password must be non-empty.
     // This is different from what we allow in NON-Fips mode.
 
-    var tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
+    var tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+      Ci.nsIPK11TokenDB
+    );
     var internal_token = tokendb.getInternalKeyToken(); // nsIPK11Token
     if (!internal_token.hasPassword) {
       // Token has either no or an empty password.

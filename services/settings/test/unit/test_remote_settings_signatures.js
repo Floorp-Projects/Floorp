@@ -1,25 +1,31 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
-const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js");
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
+const { UptakeTelemetry } = ChromeUtils.import(
+  "resource://services-common/uptake-telemetry.js"
+);
 
 const PREF_SETTINGS_SERVER = "services.settings.server";
-const PREF_SIGNATURE_ROOT  = "security.content.signature.root_hash";
-const SIGNER_NAME          = "onecrl.content-signature.mozilla.org";
+const PREF_SIGNATURE_ROOT = "security.content.signature.root_hash";
+const SIGNER_NAME = "onecrl.content-signature.mozilla.org";
 
 const CERT_DIR = "test_remote_settings_signatures/";
-const CHAIN_FILES =
-    ["collection_signing_ee.pem",
-     "collection_signing_int.pem",
-     "collection_signing_root.pem"];
+const CHAIN_FILES = [
+  "collection_signing_ee.pem",
+  "collection_signing_int.pem",
+  "collection_signing_root.pem",
+];
 
 function getFileData(file) {
-  const stream = Cc["@mozilla.org/network/file-input-stream;1"]
-                   .createInstance(Ci.nsIFileInputStream);
+  const stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   stream.init(file, -1, 0, 0);
   const data = NetUtil.readInputStreamToString(stream, stream.available());
   stream.close();
@@ -31,11 +37,12 @@ function setRoot() {
 
   const certFile = do_get_file(filename, false);
   const b64cert = getFileData(certFile)
-                    .replace(/-----BEGIN CERTIFICATE-----/, "")
-                    .replace(/-----END CERTIFICATE-----/, "")
-                    .replace(/[\r\n]/g, "");
-  const certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                   .getService(Ci.nsIX509CertDB);
+    .replace(/-----BEGIN CERTIFICATE-----/, "")
+    .replace(/-----END CERTIFICATE-----/, "")
+    .replace(/[\r\n]/g, "");
+  const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   const cert = certdb.constructX509FromBase64(b64cert);
   Services.prefs.setCharPref(PREF_SIGNATURE_ROOT, cert.sha256Fingerprint);
 }
@@ -71,18 +78,36 @@ function run_test() {
 add_task(async function test_check_signatures() {
   // First, perform a signature verification with known data and signature
   // to ensure things are working correctly
-  let verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
-                   .createInstance(Ci.nsIContentSignatureVerifier);
+  let verifier = Cc[
+    "@mozilla.org/security/contentsignatureverifier;1"
+  ].createInstance(Ci.nsIContentSignatureVerifier);
 
   const emptyData = "[]";
-  const emptySignature = "p384ecdsa=zbugm2FDitsHwk5-IWsas1PpWwY29f0Fg5ZHeqD8fzep7AVl2vfcaHA7LdmCZ28qZLOioGKvco3qT117Q4-HlqFTJM7COHzxGyU2MMJ0ZTnhJrPOC1fP3cVQjU1PTWi9";
+  const emptySignature =
+    "p384ecdsa=zbugm2FDitsHwk5-IWsas1PpWwY29f0Fg5ZHeqD8fzep7AVl2vfcaHA7LdmCZ28qZLOioGKvco3qT117Q4-HlqFTJM7COHzxGyU2MMJ0ZTnhJrPOC1fP3cVQjU1PTWi9";
 
-  ok(await verifier.asyncVerifyContentSignature(emptyData, emptySignature, getCertChain(), SIGNER_NAME));
+  ok(
+    await verifier.asyncVerifyContentSignature(
+      emptyData,
+      emptySignature,
+      getCertChain(),
+      SIGNER_NAME
+    )
+  );
 
-  const collectionData = '[{"details":{"bug":"https://bugzilla.mozilla.org/show_bug.cgi?id=1155145","created":"2016-01-18T14:43:37Z","name":"GlobalSign certs","who":".","why":"."},"enabled":true,"id":"97fbf7c4-3ef2-f54f-0029-1ba6540c63ea","issuerName":"MHExKDAmBgNVBAMTH0dsb2JhbFNpZ24gUm9vdFNpZ24gUGFydG5lcnMgQ0ExHTAbBgNVBAsTFFJvb3RTaWduIFBhcnRuZXJzIENBMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMQswCQYDVQQGEwJCRQ==","last_modified":2000,"serialNumber":"BAAAAAABA/A35EU="},{"details":{"bug":"https://bugzilla.mozilla.org/show_bug.cgi?id=1155145","created":"2016-01-18T14:48:11Z","name":"GlobalSign certs","who":".","why":"."},"enabled":true,"id":"e3bd531e-1ee4-7407-27ce-6fdc9cecbbdc","issuerName":"MIGBMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTElMCMGA1UECxMcUHJpbWFyeSBPYmplY3QgUHVibGlzaGluZyBDQTEwMC4GA1UEAxMnR2xvYmFsU2lnbiBQcmltYXJ5IE9iamVjdCBQdWJsaXNoaW5nIENB","last_modified":3000,"serialNumber":"BAAAAAABI54PryQ="}]';
-  const collectionSignature = "p384ecdsa=f4pA2tYM5jQgWY6YUmhUwQiBLj6QO5sHLD_5MqLePz95qv-7cNCuQoZnPQwxoptDtW8hcWH3kLb0quR7SB-r82gkpR9POVofsnWJRA-ETb0BcIz6VvI3pDT49ZLlNg3p";
+  const collectionData =
+    '[{"details":{"bug":"https://bugzilla.mozilla.org/show_bug.cgi?id=1155145","created":"2016-01-18T14:43:37Z","name":"GlobalSign certs","who":".","why":"."},"enabled":true,"id":"97fbf7c4-3ef2-f54f-0029-1ba6540c63ea","issuerName":"MHExKDAmBgNVBAMTH0dsb2JhbFNpZ24gUm9vdFNpZ24gUGFydG5lcnMgQ0ExHTAbBgNVBAsTFFJvb3RTaWduIFBhcnRuZXJzIENBMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMQswCQYDVQQGEwJCRQ==","last_modified":2000,"serialNumber":"BAAAAAABA/A35EU="},{"details":{"bug":"https://bugzilla.mozilla.org/show_bug.cgi?id=1155145","created":"2016-01-18T14:48:11Z","name":"GlobalSign certs","who":".","why":"."},"enabled":true,"id":"e3bd531e-1ee4-7407-27ce-6fdc9cecbbdc","issuerName":"MIGBMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTElMCMGA1UECxMcUHJpbWFyeSBPYmplY3QgUHVibGlzaGluZyBDQTEwMC4GA1UEAxMnR2xvYmFsU2lnbiBQcmltYXJ5IE9iamVjdCBQdWJsaXNoaW5nIENB","last_modified":3000,"serialNumber":"BAAAAAABI54PryQ="}]';
+  const collectionSignature =
+    "p384ecdsa=f4pA2tYM5jQgWY6YUmhUwQiBLj6QO5sHLD_5MqLePz95qv-7cNCuQoZnPQwxoptDtW8hcWH3kLb0quR7SB-r82gkpR9POVofsnWJRA-ETb0BcIz6VvI3pDT49ZLlNg3p";
 
-  ok(await verifier.asyncVerifyContentSignature(collectionData, collectionSignature, getCertChain(), SIGNER_NAME));
+  ok(
+    await verifier.asyncVerifyContentSignature(
+      collectionData,
+      collectionSignature,
+      getCertChain(),
+      SIGNER_NAME
+    )
+  );
 });
 
 add_task(async function test_check_synchronization_with_signatures() {
@@ -117,7 +142,7 @@ add_task(async function test_check_synchronization_with_signatures() {
         "Content-Type: application/json; charset=UTF-8",
         `ETag: \"${eTag}\"`,
       ],
-      status: {status: 200, statusText: "OK"},
+      status: { status: 200, statusText: "OK" },
       responseBody: JSON.stringify(body),
     };
   }
@@ -128,11 +153,18 @@ add_task(async function test_check_synchronization_with_signatures() {
       const available = responses[key];
       const sampled = available.length > 1 ? available.shift() : available[0];
       if (!sampled) {
-        do_throw(`unexpected ${request.method} request for ${request.path}?${request.queryString}`);
+        do_throw(
+          `unexpected ${request.method} request for ${request.path}?${
+            request.queryString
+          }`
+        );
       }
 
-      response.setStatusLine(null, sampled.status.status,
-                            sampled.status.statusText);
+      response.setStatusLine(
+        null,
+        sampled.status.status,
+        sampled.status.statusText
+      );
       // send the headers
       for (let headerLine of sampled.sampleHeaders) {
         let headerElements = headerLine.split(":");
@@ -140,7 +172,7 @@ add_task(async function test_check_synchronization_with_signatures() {
       }
 
       // set the server date
-      response.setHeader("Date", (new Date(serverTimeMillis)).toUTCString());
+      response.setHeader("Date", new Date(serverTimeMillis).toUTCString());
 
       response.write(sampled.responseBody);
     }
@@ -155,8 +187,10 @@ add_task(async function test_check_synchronization_with_signatures() {
   }
 
   // set up prefs so the kinto updater talks to the test server
-  Services.prefs.setCharPref(PREF_SETTINGS_SERVER,
-    `http://localhost:${server.identity.primaryPort}/v1`);
+  Services.prefs.setCharPref(
+    PREF_SETTINGS_SERVER,
+    `http://localhost:${server.identity.primaryPort}/v1`
+  );
 
   // These are records we'll use in the test collections
   const RECORD1 = {
@@ -169,7 +203,8 @@ add_task(async function test_check_synchronization_with_signatures() {
     },
     enabled: true,
     id: "97fbf7c4-3ef2-f54f-0029-1ba6540c63ea",
-    issuerName: "MHExKDAmBgNVBAMTH0dsb2JhbFNpZ24gUm9vdFNpZ24gUGFydG5lcnMgQ0ExHTAbBgNVBAsTFFJvb3RTaWduIFBhcnRuZXJzIENBMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMQswCQYDVQQGEwJCRQ==",
+    issuerName:
+      "MHExKDAmBgNVBAMTH0dsb2JhbFNpZ24gUm9vdFNpZ24gUGFydG5lcnMgQ0ExHTAbBgNVBAsTFFJvb3RTaWduIFBhcnRuZXJzIENBMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMQswCQYDVQQGEwJCRQ==",
     last_modified: 2000,
     serialNumber: "BAAAAAABA/A35EU=",
   };
@@ -184,7 +219,8 @@ add_task(async function test_check_synchronization_with_signatures() {
     },
     enabled: true,
     id: "e3bd531e-1ee4-7407-27ce-6fdc9cecbbdc",
-    issuerName: "MIGBMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTElMCMGA1UECxMcUHJpbWFyeSBPYmplY3QgUHVibGlzaGluZyBDQTEwMC4GA1UEAxMnR2xvYmFsU2lnbiBQcmltYXJ5IE9iamVjdCBQdWJsaXNoaW5nIENB",
+    issuerName:
+      "MIGBMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTElMCMGA1UECxMcUHJpbWFyeSBPYmplY3QgUHVibGlzaGluZyBDQTEwMC4GA1UEAxMnR2xvYmFsU2lnbiBQcmltYXJ5IE9iamVjdCBQdWJsaXNoaW5nIENB",
     last_modified: 3000,
     serialNumber: "BAAAAAABI54PryQ=",
   };
@@ -199,7 +235,8 @@ add_task(async function test_check_synchronization_with_signatures() {
     },
     enabled: true,
     id: "c7c49b69-a4ab-418e-92a9-e1961459aa7f",
-    issuerName: "MIGBMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTElMCMGA1UECxMcUHJpbWFyeSBPYmplY3QgUHVibGlzaGluZyBDQTEwMC4GA1UEAxMnR2xvYmFsU2lnbiBQcmltYXJ5IE9iamVjdCBQdWJsaXNoaW5nIENB",
+    issuerName:
+      "MIGBMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTElMCMGA1UECxMcUHJpbWFyeSBPYmplY3QgUHVibGlzaGluZyBDQTEwMC4GA1UEAxMnR2xvYmFsU2lnbiBQcmltYXJ5IE9iamVjdCBQdWJsaXNoaW5nIENB",
     last_modified: 4000,
     serialNumber: "BAAAAAABI54PryQ=",
   };
@@ -220,10 +257,8 @@ add_task(async function test_check_synchronization_with_signatures() {
   // sync.
   const RESPONSE_CERT_CHAIN = {
     comment: "RESPONSE_CERT_CHAIN",
-    sampleHeaders: [
-      "Content-Type: text/plain; charset=UTF-8",
-    ],
-    status: {status: 200, statusText: "OK"},
+    sampleHeaders: ["Content-Type: text/plain; charset=UTF-8"],
+    status: { status: 200, statusText: "OK" },
     responseBody: getCertChain(),
   };
 
@@ -236,16 +271,16 @@ add_task(async function test_check_synchronization_with_signatures() {
       "Content-Type: application/json; charset=UTF-8",
       "Server: waitress",
     ],
-    status: {status: 200, statusText: "OK"},
+    status: { status: 200, statusText: "OK" },
     responseBody: JSON.stringify({
-      "settings": {
-        "batch_max_requests": 25,
+      settings: {
+        batch_max_requests: 25,
       },
-      "url": `http://localhost:${port}/v1/`,
-      "documentation": "https://kinto.readthedocs.org/",
-      "version": "1.5.1",
-      "commit": "cbc6f58",
-      "hello": "kinto",
+      url: `http://localhost:${port}/v1/`,
+      documentation: "https://kinto.readthedocs.org/",
+      version: "1.5.1",
+      commit: "cbc6f58",
+      hello: "kinto",
     }),
   };
 
@@ -255,21 +290,23 @@ add_task(async function test_check_synchronization_with_signatures() {
     comment: "RESPONSE_EMPTY_INITIAL",
     sampleHeaders: [
       "Content-Type: application/json; charset=UTF-8",
-      "ETag: \"1000\"",
+      'ETag: "1000"',
     ],
-    status: {status: 200, statusText: "OK"},
-    responseBody: JSON.stringify({"data": []}),
+    status: { status: 200, statusText: "OK" },
+    responseBody: JSON.stringify({ data: [] }),
   };
 
-  const RESPONSE_BODY_META_EMPTY_SIG = makeMetaResponseBody(1000,
-    "vxuAg5rDCB-1pul4a91vqSBQRXJG_j7WOYUTswxRSMltdYmbhLRH8R8brQ9YKuNDF56F-w6pn4HWxb076qgKPwgcEBtUeZAO_RtaHXRkRUUgVzAr86yQL4-aJTbv3D6u");
+  const RESPONSE_BODY_META_EMPTY_SIG = makeMetaResponseBody(
+    1000,
+    "vxuAg5rDCB-1pul4a91vqSBQRXJG_j7WOYUTswxRSMltdYmbhLRH8R8brQ9YKuNDF56F-w6pn4HWxb076qgKPwgcEBtUeZAO_RtaHXRkRUUgVzAr86yQL4-aJTbv3D6u"
+  );
 
   const RESPONSE_META_NO_SIG = {
     sampleHeaders: [
       "Content-Type: application/json; charset=UTF-8",
       `ETag: \"123456\"`,
     ],
-    status: {status: 200, statusText: "OK"},
+    status: { status: 200, statusText: "OK" },
     responseBody: JSON.stringify({
       data: {
         last_modified: 123456,
@@ -279,18 +316,24 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   // The collection metadata containing the signature for the empty
   // collection.
-  const RESPONSE_META_EMPTY_SIG =
-    makeMetaResponse(1000, RESPONSE_BODY_META_EMPTY_SIG,
-                     "RESPONSE_META_EMPTY_SIG");
+  const RESPONSE_META_EMPTY_SIG = makeMetaResponse(
+    1000,
+    RESPONSE_BODY_META_EMPTY_SIG,
+    "RESPONSE_META_EMPTY_SIG"
+  );
 
   // Here, we map request method and path to the available responses
   const emptyCollectionResponses = {
-    "GET:/test_remote_settings_signatures/test_cert_chain.pem?": [RESPONSE_CERT_CHAIN],
+    "GET:/test_remote_settings_signatures/test_cert_chain.pem?": [
+      RESPONSE_CERT_CHAIN,
+    ],
     "GET:/v1/?": [RESPONSE_SERVER_SETTINGS],
-    "GET:/v1/buckets/main/collections/signed/records?_expected=1000&_sort=-last_modified":
-      [RESPONSE_EMPTY_INITIAL],
-    "GET:/v1/buckets/main/collections/signed?_expected=1000":
-      [RESPONSE_META_EMPTY_SIG],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=1000&_sort=-last_modified": [
+      RESPONSE_EMPTY_INITIAL,
+    ],
+    "GET:/v1/buckets/main/collections/signed?_expected=1000": [
+      RESPONSE_META_EMPTY_SIG,
+    ],
   };
 
   // .. and use this map to register handlers for each path
@@ -305,9 +348,8 @@ add_task(async function test_check_synchronization_with_signatures() {
   let endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 
   // ensure that a success histogram is tracked when a succesful sync occurs.
-  let expectedIncrements = {[UptakeTelemetry.STATUS.SUCCESS]: 1};
+  let expectedIncrements = { [UptakeTelemetry.STATUS.SUCCESS]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
-
 
   // Check that some additions (2 records) to the collection have a valid
   // signature.
@@ -316,30 +358,35 @@ add_task(async function test_check_synchronization_with_signatures() {
   const RESPONSE_TWO_ADDED = {
     comment: "RESPONSE_TWO_ADDED",
     sampleHeaders: [
-        "Content-Type: application/json; charset=UTF-8",
-        "ETag: \"3000\"",
+      "Content-Type: application/json; charset=UTF-8",
+      'ETag: "3000"',
     ],
-    status: {status: 200, statusText: "OK"},
-    responseBody: JSON.stringify({"data": [RECORD2, RECORD1]}),
+    status: { status: 200, statusText: "OK" },
+    responseBody: JSON.stringify({ data: [RECORD2, RECORD1] }),
   };
 
-  const RESPONSE_BODY_META_TWO_ITEMS_SIG = makeMetaResponseBody(3000,
-    "dwhJeypadNIyzGj3QdI0KMRTPnHhFPF_j73mNrsPAHKMW46S2Ftf4BzsPMvPMB8h0TjDus13wo_R4l432DHe7tYyMIWXY0PBeMcoe5BREhFIxMxTsh9eGVXBD1e3UwRy");
+  const RESPONSE_BODY_META_TWO_ITEMS_SIG = makeMetaResponseBody(
+    3000,
+    "dwhJeypadNIyzGj3QdI0KMRTPnHhFPF_j73mNrsPAHKMW46S2Ftf4BzsPMvPMB8h0TjDus13wo_R4l432DHe7tYyMIWXY0PBeMcoe5BREhFIxMxTsh9eGVXBD1e3UwRy"
+  );
 
   // A signature response for the collection containg RECORD1 and RECORD2
-  const RESPONSE_META_TWO_ITEMS_SIG =
-    makeMetaResponse(3000, RESPONSE_BODY_META_TWO_ITEMS_SIG,
-                     "RESPONSE_META_TWO_ITEMS_SIG");
+  const RESPONSE_META_TWO_ITEMS_SIG = makeMetaResponse(
+    3000,
+    RESPONSE_BODY_META_TWO_ITEMS_SIG,
+    "RESPONSE_META_TWO_ITEMS_SIG"
+  );
 
   const twoItemsResponses = {
-    "GET:/v1/buckets/main/collections/signed/records?_expected=3000&_sort=-last_modified&_since=1000":
-      [RESPONSE_TWO_ADDED],
-    "GET:/v1/buckets/main/collections/signed?_expected=3000":
-      [RESPONSE_META_TWO_ITEMS_SIG],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=3000&_sort=-last_modified&_since=1000": [
+      RESPONSE_TWO_ADDED,
+    ],
+    "GET:/v1/buckets/main/collections/signed?_expected=3000": [
+      RESPONSE_META_TWO_ITEMS_SIG,
+    ],
   };
   registerHandlers(twoItemsResponses);
   await client.maybeSync(3000);
-
 
   // Check the collection with one addition and one removal has a valid
   // signature
@@ -349,25 +396,31 @@ add_task(async function test_check_synchronization_with_signatures() {
     comment: "RESPONSE_ONE_ADDED_ONE_REMOVED ",
     sampleHeaders: [
       "Content-Type: application/json; charset=UTF-8",
-      "ETag: \"4000\"",
+      'ETag: "4000"',
     ],
-    status: {status: 200, statusText: "OK"},
-    responseBody: JSON.stringify({"data": [RECORD3, RECORD1_DELETION]}),
+    status: { status: 200, statusText: "OK" },
+    responseBody: JSON.stringify({ data: [RECORD3, RECORD1_DELETION] }),
   };
 
-  const RESPONSE_BODY_META_THREE_ITEMS_SIG = makeMetaResponseBody(4000,
-    "MIEmNghKnkz12UodAAIc3q_Y4a3IJJ7GhHF4JYNYmm8avAGyPM9fYU7NzVo94pzjotG7vmtiYuHyIX2rTHTbT587w0LdRWxipgFd_PC1mHiwUyjFYNqBBG-kifYk7kEw");
+  const RESPONSE_BODY_META_THREE_ITEMS_SIG = makeMetaResponseBody(
+    4000,
+    "MIEmNghKnkz12UodAAIc3q_Y4a3IJJ7GhHF4JYNYmm8avAGyPM9fYU7NzVo94pzjotG7vmtiYuHyIX2rTHTbT587w0LdRWxipgFd_PC1mHiwUyjFYNqBBG-kifYk7kEw"
+  );
 
   // signature response for the collection containing RECORD2 and RECORD3
-  const RESPONSE_META_THREE_ITEMS_SIG =
-    makeMetaResponse(4000, RESPONSE_BODY_META_THREE_ITEMS_SIG,
-                     "RESPONSE_META_THREE_ITEMS_SIG");
+  const RESPONSE_META_THREE_ITEMS_SIG = makeMetaResponse(
+    4000,
+    RESPONSE_BODY_META_THREE_ITEMS_SIG,
+    "RESPONSE_META_THREE_ITEMS_SIG"
+  );
 
   const oneAddedOneRemovedResponses = {
-    "GET:/v1/buckets/main/collections/signed/records?_expected=4000&_sort=-last_modified&_since=3000":
-      [RESPONSE_ONE_ADDED_ONE_REMOVED],
-    "GET:/v1/buckets/main/collections/signed?_expected=4000":
-      [RESPONSE_META_THREE_ITEMS_SIG],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=4000&_sort=-last_modified&_since=3000": [
+      RESPONSE_ONE_ADDED_ONE_REMOVED,
+    ],
+    "GET:/v1/buckets/main/collections/signed?_expected=4000": [
+      RESPONSE_META_THREE_ITEMS_SIG,
+    ],
   };
   registerHandlers(oneAddedOneRemovedResponses);
   await client.maybeSync(4000);
@@ -379,21 +432,22 @@ add_task(async function test_check_synchronization_with_signatures() {
     comment: "RESPONSE_EMPTY_NO_UPDATE ",
     sampleHeaders: [
       "Content-Type: application/json; charset=UTF-8",
-      "ETag: \"4000\"",
+      'ETag: "4000"',
     ],
-    status: {status: 200, statusText: "OK"},
-    responseBody: JSON.stringify({"data": []}),
+    status: { status: 200, statusText: "OK" },
+    responseBody: JSON.stringify({ data: [] }),
   };
 
   const noOpResponses = {
-    "GET:/v1/buckets/main/collections/signed/records?_expected=4100&_sort=-last_modified&_since=4000":
-      [RESPONSE_EMPTY_NO_UPDATE],
-    "GET:/v1/buckets/main/collections/signed?_expected=4100":
-      [RESPONSE_META_THREE_ITEMS_SIG],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=4100&_sort=-last_modified&_since=4000": [
+      RESPONSE_EMPTY_NO_UPDATE,
+    ],
+    "GET:/v1/buckets/main/collections/signed?_expected=4100": [
+      RESPONSE_META_THREE_ITEMS_SIG,
+    ],
   };
   registerHandlers(noOpResponses);
   await client.maybeSync(4100);
-
 
   // Check the collection is reset when the signature is invalid
 
@@ -403,47 +457,57 @@ add_task(async function test_check_synchronization_with_signatures() {
     comment: "RESPONSE_COMPLETE_INITIAL ",
     sampleHeaders: [
       "Content-Type: application/json; charset=UTF-8",
-      "ETag: \"4000\"",
+      'ETag: "4000"',
     ],
-    status: {status: 200, statusText: "OK"},
-    responseBody: JSON.stringify({"data": [RECORD2, RECORD3]}),
+    status: { status: 200, statusText: "OK" },
+    responseBody: JSON.stringify({ data: [RECORD2, RECORD3] }),
   };
 
   const RESPONSE_COMPLETE_INITIAL_SORTED_BY_ID = {
     comment: "RESPONSE_COMPLETE_INITIAL ",
     sampleHeaders: [
       "Content-Type: application/json; charset=UTF-8",
-      "ETag: \"4000\"",
+      'ETag: "4000"',
     ],
-    status: {status: 200, statusText: "OK"},
-    responseBody: JSON.stringify({"data": [RECORD3, RECORD2]}),
+    status: { status: 200, statusText: "OK" },
+    responseBody: JSON.stringify({ data: [RECORD3, RECORD2] }),
   };
 
-  const RESPONSE_BODY_META_BAD_SIG = makeMetaResponseBody(4000,
-      "aW52YWxpZCBzaWduYXR1cmUK");
+  const RESPONSE_BODY_META_BAD_SIG = makeMetaResponseBody(
+    4000,
+    "aW52YWxpZCBzaWduYXR1cmUK"
+  );
 
-  const RESPONSE_META_BAD_SIG =
-      makeMetaResponse(4000, RESPONSE_BODY_META_BAD_SIG, "RESPONSE_META_BAD_SIG");
+  const RESPONSE_META_BAD_SIG = makeMetaResponse(
+    4000,
+    RESPONSE_BODY_META_BAD_SIG,
+    "RESPONSE_META_BAD_SIG"
+  );
 
   const badSigGoodSigResponses = {
     // In this test, we deliberately serve a bad signature initially. The
     // subsequent signature returned is a valid one for the three item
     // collection.
-    "GET:/v1/buckets/main/collections/signed?_expected=5000":
-      [RESPONSE_META_BAD_SIG, RESPONSE_META_THREE_ITEMS_SIG],
+    "GET:/v1/buckets/main/collections/signed?_expected=5000": [
+      RESPONSE_META_BAD_SIG,
+      RESPONSE_META_THREE_ITEMS_SIG,
+    ],
     // The first collection state is the three item collection (since
     // there's a sync with no updates) - but, since the signature is wrong,
     // another request will be made...
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified&_since=4000":
-      [RESPONSE_EMPTY_NO_UPDATE],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified&_since=4000": [
+      RESPONSE_EMPTY_NO_UPDATE,
+    ],
     // The next request is for the full collection. This will be checked
     // against the valid signature - so the sync should succeed.
-    "GET:/v1/buckets/main/collections/signed/records?_sort=-last_modified":
-      [RESPONSE_COMPLETE_INITIAL],
+    "GET:/v1/buckets/main/collections/signed/records?_sort=-last_modified": [
+      RESPONSE_COMPLETE_INITIAL,
+    ],
     // The next request is for the full collection sorted by id. This will be
     // checked against the valid signature - so the sync should succeed.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=id":
-      [RESPONSE_COMPLETE_INITIAL_SORTED_BY_ID],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=id": [
+      RESPONSE_COMPLETE_INITIAL_SORTED_BY_ID,
+    ],
   };
 
   registerHandlers(badSigGoodSigResponses);
@@ -451,7 +515,9 @@ add_task(async function test_check_synchronization_with_signatures() {
   startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 
   let syncEventSent = false;
-  client.on("sync", ({ data }) => { syncEventSent = true; });
+  client.on("sync", ({ data }) => {
+    syncEventSent = true;
+  });
 
   await client.maybeSync(5000);
 
@@ -464,26 +530,29 @@ add_task(async function test_check_synchronization_with_signatures() {
   // ensure that the failure count is incremented for a succesful sync with an
   // (initial) bad signature - only SERVICES_SETTINGS_SYNC_SIG_FAIL should
   // increment.
-  expectedIncrements = {[UptakeTelemetry.STATUS.SIGNATURE_ERROR]: 1};
+  expectedIncrements = { [UptakeTelemetry.STATUS.SIGNATURE_ERROR]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
-
 
   const badSigGoodOldResponses = {
     // In this test, we deliberately serve a bad signature initially. The
     // subsequent sitnature returned is a valid one for the three item
     // collection.
-    "GET:/v1/buckets/main/collections/signed?_expected=5000":
-      [RESPONSE_META_BAD_SIG, RESPONSE_META_EMPTY_SIG],
+    "GET:/v1/buckets/main/collections/signed?_expected=5000": [
+      RESPONSE_META_BAD_SIG,
+      RESPONSE_META_EMPTY_SIG,
+    ],
     // The first collection state is the current state (since there's no update
     // - but, since the signature is wrong, another request will be made)
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified&_since=4000":
-      [RESPONSE_EMPTY_NO_UPDATE],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified&_since=4000": [
+      RESPONSE_EMPTY_NO_UPDATE,
+    ],
     // The next request is for the full collection sorted by id. This will be
     // checked against the valid signature and last_modified times will be
     // compared. Sync should fail, even though the signature is good,
     // because the local collection is newer.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=id":
-      [RESPONSE_EMPTY_INITIAL],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=id": [
+      RESPONSE_EMPTY_INITIAL,
+    ],
   };
 
   // ensure our collection hasn't been replaced with an older, empty one
@@ -492,7 +561,9 @@ add_task(async function test_check_synchronization_with_signatures() {
   registerHandlers(badSigGoodOldResponses);
 
   syncEventSent = false;
-  client.on("sync", ({ data }) => { syncEventSent = true; });
+  client.on("sync", ({ data }) => {
+    syncEventSent = true;
+  });
 
   await client.maybeSync(5000);
 
@@ -504,16 +575,20 @@ add_task(async function test_check_synchronization_with_signatures() {
     // In this test, we deliberately serve a bad signature initially. The
     // subsequent signature returned is a valid one for the three item
     // collection.
-    "GET:/v1/buckets/main/collections/signed?_expected=5000":
-      [RESPONSE_META_BAD_SIG, RESPONSE_META_THREE_ITEMS_SIG],
+    "GET:/v1/buckets/main/collections/signed?_expected=5000": [
+      RESPONSE_META_BAD_SIG,
+      RESPONSE_META_THREE_ITEMS_SIG,
+    ],
     // The next request is for the full collection. This will be checked
     // against the valid signature - so the sync should succeed.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified":
-      [RESPONSE_COMPLETE_INITIAL],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified": [
+      RESPONSE_COMPLETE_INITIAL,
+    ],
     // The next request is for the full collection sorted by id. This will be
     // checked against the valid signature - so the sync should succeed.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=id":
-      [RESPONSE_COMPLETE_INITIAL_SORTED_BY_ID],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=id": [
+      RESPONSE_COMPLETE_INITIAL_SORTED_BY_ID,
+    ],
   };
 
   registerHandlers(badLocalContentGoodSigResponses);
@@ -523,12 +598,17 @@ add_task(async function test_check_synchronization_with_signatures() {
   // the final server collection contains RECORD2 and RECORD3
   const kintoCol = await client.openCollection();
   await kintoCol.clear();
-  await kintoCol.create({ ...RECORD2, last_modified: 1234567890, serialNumber: "abc" }, { synced: true, useRecordId: true });
+  await kintoCol.create(
+    { ...RECORD2, last_modified: 1234567890, serialNumber: "abc" },
+    { synced: true, useRecordId: true }
+  );
   const localId = "0602b1b2-12ab-4d3a-b6fb-593244e7b035";
   await kintoCol.create({ id: localId }, { synced: true, useRecordId: true });
 
   let syncData;
-  client.on("sync", ({ data }) => { syncData = data; });
+  client.on("sync", ({ data }) => {
+    syncData = data;
+  });
 
   await client.maybeSync(5000);
 
@@ -542,20 +622,22 @@ add_task(async function test_check_synchronization_with_signatures() {
   equal(syncData.deleted.length, 1);
   equal(syncData.deleted[0].id, localId);
 
-
   const allBadSigResponses = {
     // In this test, we deliberately serve only a bad signature.
-    "GET:/v1/buckets/main/collections/signed?_expected=6000":
-      [RESPONSE_META_BAD_SIG],
+    "GET:/v1/buckets/main/collections/signed?_expected=6000": [
+      RESPONSE_META_BAD_SIG,
+    ],
     // The first collection state is the three item collection (since
     // there's a sync with no updates) - but, since the signature is wrong,
     // another request will be made...
-    "GET:/v1/buckets/main/collections/signed/records?_expected=6000&_sort=-last_modified&_since=4000":
-      [RESPONSE_EMPTY_NO_UPDATE],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=6000&_sort=-last_modified&_since=4000": [
+      RESPONSE_EMPTY_NO_UPDATE,
+    ],
     // The next request is for the full collection sorted by id. This will be
     // checked against the valid signature - so the sync should succeed.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=6000&_sort=id":
-      [RESPONSE_COMPLETE_INITIAL_SORTED_BY_ID],
+    "GET:/v1/buckets/main/collections/signed/records?_expected=6000&_sort=id": [
+      RESPONSE_COMPLETE_INITIAL_SORTED_BY_ID,
+    ],
   };
 
   startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
@@ -569,15 +651,15 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   // Ensure that the failure is reflected in the accumulated telemetry:
   endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
-  expectedIncrements = {[UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 1};
+  expectedIncrements = { [UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
-
 
   const missingSigResponses = {
     // In this test, we deliberately serve metadata without the signature attribute.
     // As if the collection was not signed.
-    "GET:/v1/buckets/main/collections/signed?_expected=6000":
-      [RESPONSE_META_NO_SIG],
+    "GET:/v1/buckets/main/collections/signed?_expected=6000": [
+      RESPONSE_META_NO_SIG,
+    ],
   };
 
   startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
@@ -593,7 +675,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
   expectedIncrements = {
     [UptakeTelemetry.STATUS.SIGNATURE_ERROR]: 1,
-    [UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 0,  // Not retried since missing.
+    [UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 0, // Not retried since missing.
   };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
 });

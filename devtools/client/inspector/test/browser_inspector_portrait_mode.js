@@ -9,13 +9,17 @@
 
 add_task(async function() {
   let { inspector, toolbox } = await openInspectorForURL(
-    "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>", "window");
+    "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>",
+    "window"
+  );
 
   const hostWindow = toolbox.win.parent;
   const originalWidth = hostWindow.outerWidth;
   const originalHeight = hostWindow.outerHeight;
 
-  let splitter = inspector.panelDoc.querySelector(".inspector-sidebar-splitter");
+  let splitter = inspector.panelDoc.querySelector(
+    ".inspector-sidebar-splitter"
+  );
 
   // If the inspector is not already in landscape mode.
   if (!splitter.classList.contains("vert")) {
@@ -59,7 +63,7 @@ add_task(async function() {
  */
 function waitForClassMutation(target) {
   return new Promise(resolve => {
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         if (mutation.attributeName === "class") {
           observer.disconnect();

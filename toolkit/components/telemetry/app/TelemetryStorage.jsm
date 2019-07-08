@@ -8,7 +8,7 @@
 var EXPORTED_SYMBOLS = ["TelemetryStorage"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
@@ -36,10 +36,16 @@ XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
 XPCOMUtils.defineLazyGetter(this, "gAbortedSessionFilePath", function() {
   return OS.Path.join(gDataReportingDir, ABORTED_SESSION_FILE_NAME);
 });
-ChromeUtils.defineModuleGetter(this, "CommonUtils",
-                               "resource://services-common/utils.js");
-ChromeUtils.defineModuleGetter(this, "TelemetryHealthPing",
-                               "resource://gre/modules/HealthPing.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CommonUtils",
+  "resource://services-common/utils.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryHealthPing",
+  "resource://gre/modules/HealthPing.jsm"
+);
 // Maxmimum time, in milliseconds, archive pings should be retained.
 const MAX_ARCHIVED_PINGS_RETENTION_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
 
@@ -66,7 +72,10 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * This is thrown by |TelemetryStorage.loadPingFile| when reading the ping
  * from the disk fails.
  */
-function PingReadError(message = "Error reading the ping file", becauseNoSuchFile = false) {
+function PingReadError(
+  message = "Error reading the ping file",
+  becauseNoSuchFile = false
+) {
   Error.call(this, message);
   let error = new Error();
   this.name = "PingReadError";
@@ -97,9 +106,10 @@ PingParseError.prototype.constructor = PingParseError;
 var Policy = {
   now: () => new Date(),
   getArchiveQuota: () => ARCHIVE_QUOTA_BYTES,
-  getPendingPingsQuota: () => (AppConstants.platform == "android")
-                                ? PENDING_PINGS_QUOTA_BYTES_MOBILE
-                                : PENDING_PINGS_QUOTA_BYTES_DESKTOP,
+  getPendingPingsQuota: () =>
+    AppConstants.platform == "android"
+      ? PENDING_PINGS_QUOTA_BYTES_MOBILE
+      : PENDING_PINGS_QUOTA_BYTES_DESKTOP,
 };
 
 /**
@@ -219,14 +229,16 @@ var TelemetryStorage = {
    * Test method that allows waiting on the archive clean task to finish.
    */
   testCleanupTaskPromise() {
-    return (TelemetryStorageImpl._cleanArchiveTask || Promise.resolve());
+    return TelemetryStorageImpl._cleanArchiveTask || Promise.resolve();
   },
 
   /**
    * Test method that allows waiting on the pending pings quota task to finish.
    */
   testPendingQuotaTaskPromise() {
-    return (TelemetryStorageImpl._enforcePendingPingsQuotaTask || Promise.resolve());
+    return (
+      TelemetryStorageImpl._enforcePendingPingsQuotaTask || Promise.resolve()
+    );
   },
 
   /**
@@ -288,7 +300,7 @@ var TelemetryStorage = {
    */
   loadPendingPingList() {
     return TelemetryStorageImpl.loadPendingPingList();
-   },
+  },
 
   /**
    * Returns a list of the currently pending pings in the format:
@@ -302,7 +314,7 @@ var TelemetryStorage = {
    */
   getPendingPingList() {
     return TelemetryStorageImpl.getPendingPingList();
-   },
+  },
 
   /**
    * Save an aborted-session ping to disk. This goes to a special location so
@@ -443,7 +455,10 @@ var TelemetryStorage = {
 function SaveSerializer() {
   this._queuedOperations = [];
   this._queuedInProgress = false;
-  this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+  this._log = Log.repository.getLoggerWithMessagePrefix(
+    LOGGER_NAME,
+    LOGGER_PREFIX
+  );
 }
 
 SaveSerializer.prototype = {
@@ -456,7 +471,8 @@ SaveSerializer.prototype = {
    */
   enqueueTask(aFunction) {
     let promise = new Promise((resolve, reject) =>
-      this._queuedOperations.push([aFunction, resolve, reject]));
+      this._queuedOperations.push([aFunction, resolve, reject])
+    );
 
     if (this._queuedOperations.length == 1) {
       this._popAndPerformQueuedOperation();
@@ -482,7 +498,9 @@ SaveSerializer.prototype = {
       return;
     }
 
-    this._log.trace("_popAndPerformQueuedOperation - Performing queued operation.");
+    this._log.trace(
+      "_popAndPerformQueuedOperation - Performing queued operation."
+    );
     let [func, resolve, reject] = this._queuedOperations.shift();
     let promise;
 
@@ -490,15 +508,17 @@ SaveSerializer.prototype = {
       this._queuedInProgress = true;
       promise = func();
     } catch (ex) {
-      this._log.warn("_popAndPerformQueuedOperation - Queued operation threw during execution. ",
-                     ex);
+      this._log.warn(
+        "_popAndPerformQueuedOperation - Queued operation threw during execution. ",
+        ex
+      );
       this._queuedInProgress = false;
       reject(ex);
       this._popAndPerformQueuedOperation();
       return;
     }
 
-    if (!promise || typeof(promise.then) != "function") {
+    if (!promise || typeof promise.then != "function") {
       let msg = "Queued operation did not return a promise: " + func;
       this._log.warn("_popAndPerformQueuedOperation - " + msg);
 
@@ -508,18 +528,22 @@ SaveSerializer.prototype = {
       return;
     }
 
-    promise.then(result => {
+    promise.then(
+      result => {
         this._queuedInProgress = false;
         resolve(result);
         this._popAndPerformQueuedOperation();
       },
       error => {
-        this._log.warn("_popAndPerformQueuedOperation - Failure when performing queued operation.",
-                       error);
+        this._log.warn(
+          "_popAndPerformQueuedOperation - Failure when performing queued operation.",
+          error
+        );
         this._queuedInProgress = false;
         reject(error);
         this._popAndPerformQueuedOperation();
-      });
+      }
+    );
   },
 };
 
@@ -560,7 +584,10 @@ var TelemetryStorageImpl = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX
+      );
     }
 
     return this._logger;
@@ -614,8 +641,14 @@ var TelemetryStorageImpl = {
   saveArchivedPing(ping) {
     let promise = this._saveArchivedPingTask(ping);
     this._activelyArchiving.add(promise);
-    promise.then((r) => { this._activelyArchiving.delete(promise); },
-                 (e) => { this._activelyArchiving.delete(promise); });
+    promise.then(
+      r => {
+        this._activelyArchiving.delete(promise);
+      },
+      e => {
+        this._activelyArchiving.delete(promise);
+      }
+    );
     return promise;
   },
 
@@ -624,17 +657,31 @@ var TelemetryStorageImpl = {
     if (this._archivedPings.has(ping.id)) {
       const data = this._archivedPings.get(ping.id);
       if (data.timestampCreated > creationDate.getTime()) {
-        this._log.error("saveArchivedPing - trying to overwrite newer ping with the same id");
-        return Promise.reject(new Error("trying to overwrite newer ping with the same id"));
+        this._log.error(
+          "saveArchivedPing - trying to overwrite newer ping with the same id"
+        );
+        return Promise.reject(
+          new Error("trying to overwrite newer ping with the same id")
+        );
       }
-      this._log.warn("saveArchivedPing - overwriting older ping with the same id");
+      this._log.warn(
+        "saveArchivedPing - overwriting older ping with the same id"
+      );
     }
 
     // Get the archived ping path and append the lz4 suffix to it (so we have 'jsonlz4').
-    const filePath = getArchivedPingPath(ping.id, creationDate, ping.type) + "lz4";
-    await OS.File.makeDir(OS.Path.dirname(filePath), { ignoreExisting: true,
-                                                       from: OS.Constants.Path.profileDir });
-    await this.savePingToFile(ping, filePath, /* overwrite*/ true, /* compressed*/ true);
+    const filePath =
+      getArchivedPingPath(ping.id, creationDate, ping.type) + "lz4";
+    await OS.File.makeDir(OS.Path.dirname(filePath), {
+      ignoreExisting: true,
+      from: OS.Constants.Path.profileDir,
+    });
+    await this.savePingToFile(
+      ping,
+      filePath,
+      /* overwrite*/ true,
+      /* compressed*/ true
+    );
 
     this._archivedPings.set(ping.id, {
       timestampCreated: creationDate.getTime(),
@@ -655,28 +702,41 @@ var TelemetryStorageImpl = {
     const data = this._archivedPings.get(id);
     if (!data) {
       this._log.trace("loadArchivedPing - no ping with id: " + id);
-      return Promise.reject(new Error("TelemetryStorage.loadArchivedPing - no ping with id " + id));
+      return Promise.reject(
+        new Error("TelemetryStorage.loadArchivedPing - no ping with id " + id)
+      );
     }
 
-    const path = getArchivedPingPath(id, new Date(data.timestampCreated), data.type);
+    const path = getArchivedPingPath(
+      id,
+      new Date(data.timestampCreated),
+      data.type
+    );
     const pathCompressed = path + "lz4";
 
     // Purge pings which are too big.
     let checkSize = async function(path) {
       const fileSize = (await OS.File.stat(path)).size;
       if (fileSize > PING_FILE_MAXIMUM_SIZE_BYTES) {
-        Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB")
-                 .add(Math.floor(fileSize / 1024 / 1024));
-        Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED").add();
-        await OS.File.remove(path, {ignoreAbsent: true});
-        throw new Error("loadArchivedPing - exceeded the maximum ping size: " + fileSize);
+        Telemetry.getHistogramById(
+          "TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB"
+        ).add(Math.floor(fileSize / 1024 / 1024));
+        Telemetry.getHistogramById(
+          "TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED"
+        ).add();
+        await OS.File.remove(path, { ignoreAbsent: true });
+        throw new Error(
+          "loadArchivedPing - exceeded the maximum ping size: " + fileSize
+        );
       }
     };
 
     let ping;
     try {
       // Try to load a compressed version of the archived ping first.
-      this._log.trace("loadArchivedPing - loading ping from: " + pathCompressed);
+      this._log.trace(
+        "loadArchivedPing - loading ping from: " + pathCompressed
+      );
       await checkSize(pathCompressed);
       ping = await this.loadPingFile(pathCompressed, /* compressed*/ true);
     } catch (ex) {
@@ -684,7 +744,9 @@ var TelemetryStorageImpl = {
         throw ex;
       }
       // If that fails, look for the uncompressed version.
-      this._log.trace("loadArchivedPing - compressed ping not found, loading: " + path);
+      this._log.trace(
+        "loadArchivedPing - compressed ping not found, loading: " + path
+      );
       await checkSize(path);
       ping = await this.loadPingFile(path, /* compressed*/ false);
     }
@@ -696,7 +758,9 @@ var TelemetryStorageImpl = {
    * Saves session data to disk.
    */
   saveSessionData(sessionData) {
-    return this._stateSaveSerializer.enqueueTask(() => this._saveSessionData(sessionData));
+    return this._stateSaveSerializer.enqueueTask(() =>
+      this._saveSessionData(sessionData)
+    );
   },
 
   async _saveSessionData(sessionData) {
@@ -707,7 +771,10 @@ var TelemetryStorageImpl = {
     try {
       await CommonUtils.writeJSON(sessionData, filePath);
     } catch (e) {
-      this._log.error("_saveSessionData - Failed to write session data to " + filePath, e);
+      this._log.error(
+        "_saveSessionData - Failed to write session data to " + filePath,
+        e
+      );
       Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_SAVE").add(1);
     }
   },
@@ -722,8 +789,11 @@ var TelemetryStorageImpl = {
   },
 
   async _loadSessionData() {
-    const dataFile = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR,
-                                  SESSION_STATE_FILE_NAME);
+    const dataFile = OS.Path.join(
+      OS.Constants.Path.profileDir,
+      DATAREPORTING_DIR,
+      SESSION_STATE_FILE_NAME
+    );
     let content;
     try {
       content = await OS.File.read(dataFile, { encoding: "utf-8" });
@@ -754,13 +824,20 @@ var TelemetryStorageImpl = {
    * @return {promise<object>} Promise that is resolved when the pings is removed.
    */
   async _removeArchivedPing(id, timestampCreated, type) {
-    this._log.trace("_removeArchivedPing - id: " + id + ", timestampCreated: " + timestampCreated + ", type: " + type);
+    this._log.trace(
+      "_removeArchivedPing - id: " +
+        id +
+        ", timestampCreated: " +
+        timestampCreated +
+        ", type: " +
+        type
+    );
     const path = getArchivedPingPath(id, new Date(timestampCreated), type);
     const pathCompressed = path + "lz4";
 
     this._log.trace("_removeArchivedPing - removing ping from: " + path);
-    await OS.File.remove(path, {ignoreAbsent: true});
-    await OS.File.remove(pathCompressed, {ignoreAbsent: true});
+    await OS.File.remove(path, { ignoreAbsent: true });
+    await OS.File.remove(pathCompressed, { ignoreAbsent: true });
     // Remove the ping from the cache.
     this._archivedPings.delete(id);
   },
@@ -777,7 +854,7 @@ var TelemetryStorageImpl = {
     }
 
     // Make sure to clear |_cleanArchiveTask| once done.
-    let clear = () => this._cleanArchiveTask = null;
+    let clear = () => (this._cleanArchiveTask = null);
     // Since there's no archive cleaning task running, start it.
     this._cleanArchiveTask = this._cleanArchive().then(clear, clear);
     return this._cleanArchiveTask;
@@ -804,35 +881,50 @@ var TelemetryStorageImpl = {
     // Walk through the monthly subdirs of the form <YYYY-MM>/
     for (let dir of subdirs) {
       if (this._shutdown) {
-        this._log.trace("_purgeOldPings - Terminating the clean up task due to shutdown");
+        this._log.trace(
+          "_purgeOldPings - Terminating the clean up task due to shutdown"
+        );
         return;
       }
 
       if (!isValidArchiveDir(dir.name)) {
-        this._log.warn("_purgeOldPings - skipping invalidly named subdirectory " + dir.path);
+        this._log.warn(
+          "_purgeOldPings - skipping invalidly named subdirectory " + dir.path
+        );
         continue;
       }
 
       const archiveDate = getDateFromArchiveDir(dir.name);
       if (!archiveDate) {
-        this._log.warn("_purgeOldPings - skipping invalid subdirectory date " + dir.path);
+        this._log.warn(
+          "_purgeOldPings - skipping invalid subdirectory date " + dir.path
+        );
         continue;
       }
 
       // If this archive directory is older than allowed, remove it.
-      if ((startTimeStamp - archiveDate.getTime()) > MAX_ARCHIVED_PINGS_RETENTION_MS) {
+      if (
+        startTimeStamp - archiveDate.getTime() >
+        MAX_ARCHIVED_PINGS_RETENTION_MS
+      ) {
         try {
           await OS.File.removeDir(dir.path);
           evictedDirsCount++;
 
           // Update the newest removed month.
-          newestRemovedMonthTimestamp = Math.max(archiveDate, newestRemovedMonthTimestamp);
+          newestRemovedMonthTimestamp = Math.max(
+            archiveDate,
+            newestRemovedMonthTimestamp
+          );
         } catch (ex) {
           this._log.error("_purgeOldPings - Unable to remove " + dir.path, ex);
         }
       } else {
         // We're not removing this directory, so record the age for the oldest directory.
-        const dirAgeInMonths = Utils.getElapsedTimeInMonths(archiveDate, nowDate);
+        const dirAgeInMonths = Utils.getElapsedTimeInMonths(
+          archiveDate,
+          nowDate
+        );
         maxDirAgeInMonths = Math.max(dirAgeInMonths, maxDirAgeInMonths);
       }
     }
@@ -857,12 +949,15 @@ var TelemetryStorageImpl = {
     const endTimeStamp = Policy.now().getTime();
 
     // Save the time it takes to evict old directories and the eviction count.
-    Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OLD_DIRS")
-             .add(evictedDirsCount);
-    Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTING_DIRS_MS")
-             .add(Math.ceil(endTimeStamp - startTimeStamp));
-    Telemetry.getHistogramById("TELEMETRY_ARCHIVE_OLDEST_DIRECTORY_AGE")
-             .add(maxDirAgeInMonths);
+    Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OLD_DIRS").add(
+      evictedDirsCount
+    );
+    Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTING_DIRS_MS").add(
+      Math.ceil(endTimeStamp - startTimeStamp)
+    );
+    Telemetry.getHistogramById("TELEMETRY_ARCHIVE_OLDEST_DIRECTORY_AGE").add(
+      maxDirAgeInMonths
+    );
   },
 
   /**
@@ -892,30 +987,50 @@ var TelemetryStorageImpl = {
     // Find the disk size of the archive.
     for (let i = 0; i < pingList.length; i++) {
       if (this._shutdown) {
-        this._log.trace("_enforceArchiveQuota - Terminating the clean up task due to shutdown");
+        this._log.trace(
+          "_enforceArchiveQuota - Terminating the clean up task due to shutdown"
+        );
         return;
       }
 
       let ping = pingList[i];
 
       // Get the size for this ping.
-      const fileSize =
-        await getArchivedPingSize(ping.id, new Date(ping.timestampCreated), ping.type);
+      const fileSize = await getArchivedPingSize(
+        ping.id,
+        new Date(ping.timestampCreated),
+        ping.type
+      );
       if (!fileSize) {
-        this._log.warn("_enforceArchiveQuota - Unable to find the size of ping " + ping.id);
+        this._log.warn(
+          "_enforceArchiveQuota - Unable to find the size of ping " + ping.id
+        );
         continue;
       }
 
       // Enforce a maximum file size limit on archived pings.
       if (fileSize > PING_FILE_MAXIMUM_SIZE_BYTES) {
-        this._log.error("_enforceArchiveQuota - removing file exceeding size limit, size: " + fileSize);
+        this._log.error(
+          "_enforceArchiveQuota - removing file exceeding size limit, size: " +
+            fileSize
+        );
         // We just remove the ping from the disk, we don't bother removing it from pingList
         // since it won't contribute to the quota.
-        await this._removeArchivedPing(ping.id, ping.timestampCreated, ping.type)
-                  .catch(e => this._log.error("_enforceArchiveQuota - failed to remove archived ping" + ping.id));
-        Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB")
-                 .add(Math.floor(fileSize / 1024 / 1024));
-        Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED").add();
+        await this._removeArchivedPing(
+          ping.id,
+          ping.timestampCreated,
+          ping.type
+        ).catch(e =>
+          this._log.error(
+            "_enforceArchiveQuota - failed to remove archived ping" + ping.id
+          )
+        );
+        Telemetry.getHistogramById(
+          "TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB"
+        ).add(Math.floor(fileSize / 1024 / 1024));
+        Telemetry.getHistogramById(
+          "TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED"
+        ).add();
         continue;
       }
 
@@ -932,13 +1047,18 @@ var TelemetryStorageImpl = {
     }
 
     // Save the time it takes to check if the archive is over-quota.
-    Telemetry.getHistogramById("TELEMETRY_ARCHIVE_CHECKING_OVER_QUOTA_MS")
-             .add(Math.round(Policy.now().getTime() - startTimeStamp));
+    Telemetry.getHistogramById("TELEMETRY_ARCHIVE_CHECKING_OVER_QUOTA_MS").add(
+      Math.round(Policy.now().getTime() - startTimeStamp)
+    );
 
     let submitProbes = (sizeInMB, evictedPings, elapsedMs) => {
       Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SIZE_MB").add(sizeInMB);
-      Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OVER_QUOTA").add(evictedPings);
-      Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTING_OVER_QUOTA_MS").add(elapsedMs);
+      Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OVER_QUOTA").add(
+        evictedPings
+      );
+      Telemetry.getHistogramById(
+        "TELEMETRY_ARCHIVE_EVICTING_OVER_QUOTA_MS"
+      ).add(elapsedMs);
     };
 
     // Check if we're using too much space. If not, submit the archive size and bail out.
@@ -947,8 +1067,14 @@ var TelemetryStorageImpl = {
       return;
     }
 
-    this._log.info("_enforceArchiveQuota - archive size: " + archiveSizeInBytes + "bytes"
-                   + ", safety quota: " + SAFE_QUOTA + "bytes");
+    this._log.info(
+      "_enforceArchiveQuota - archive size: " +
+        archiveSizeInBytes +
+        "bytes" +
+        ", safety quota: " +
+        SAFE_QUOTA +
+        "bytes"
+    );
 
     startTimeStamp = Policy.now().getTime();
     let pingsToPurge = pingList.slice(lastPingIndexToKeep + 1);
@@ -956,7 +1082,9 @@ var TelemetryStorageImpl = {
     // Remove all the pings older than the last one which we are safe to keep.
     for (let ping of pingsToPurge) {
       if (this._shutdown) {
-        this._log.trace("_enforceArchiveQuota - Terminating the clean up task due to shutdown");
+        this._log.trace(
+          "_enforceArchiveQuota - Terminating the clean up task due to shutdown"
+        );
         return;
       }
 
@@ -966,8 +1094,11 @@ var TelemetryStorageImpl = {
     }
 
     const endTimeStamp = Policy.now().getTime();
-    submitProbes(ARCHIVE_SIZE_PROBE_SPECIAL_VALUE, pingsToPurge.length,
-                 Math.ceil(endTimeStamp - startTimeStamp));
+    submitProbes(
+      ARCHIVE_SIZE_PROBE_SPECIAL_VALUE,
+      pingsToPurge.length,
+      Math.ceil(endTimeStamp - startTimeStamp)
+    );
   },
 
   async _cleanArchive() {
@@ -981,7 +1112,10 @@ var TelemetryStorageImpl = {
     try {
       await this._purgeOldPings();
     } catch (ex) {
-      this._log.error("_cleanArchive - There was an error removing old directories", ex);
+      this._log.error(
+        "_cleanArchive - There was an error removing old directories",
+        ex
+      );
     }
 
     // Make sure we respect the archive disk quota.
@@ -1035,7 +1169,9 @@ var TelemetryStorageImpl = {
     // Find the disk size of the pending pings directory.
     for (let i = 0; i < pingList.length; i++) {
       if (this._shutdown) {
-        this._log.trace("_enforcePendingPingsQuota - Terminating the clean up task due to shutdown");
+        this._log.trace(
+          "_enforcePendingPingsQuota - Terminating the clean up task due to shutdown"
+        );
         return;
       }
 
@@ -1044,7 +1180,10 @@ var TelemetryStorageImpl = {
       // Get the size for this ping.
       const fileSize = await getPendingPingSize(ping.id);
       if (!fileSize) {
-        this._log.warn("_enforcePendingPingsQuota - Unable to find the size of ping " + ping.id);
+        this._log.warn(
+          "_enforcePendingPingsQuota - Unable to find the size of ping " +
+            ping.id
+        );
         continue;
       }
 
@@ -1060,13 +1199,20 @@ var TelemetryStorageImpl = {
     }
 
     // Save the time it takes to check if the pending pings are over-quota.
-    Telemetry.getHistogramById("TELEMETRY_PENDING_CHECKING_OVER_QUOTA_MS")
-             .add(Math.round(Policy.now().getTime() - startTimeStamp));
+    Telemetry.getHistogramById("TELEMETRY_PENDING_CHECKING_OVER_QUOTA_MS").add(
+      Math.round(Policy.now().getTime() - startTimeStamp)
+    );
 
     let recordHistograms = (sizeInMB, evictedPings, elapsedMs) => {
-      Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").add(sizeInMB);
-      Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").add(evictedPings);
-      Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").add(elapsedMs);
+      Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").add(
+        sizeInMB
+      );
+      Telemetry.getHistogramById(
+        "TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA"
+      ).add(evictedPings);
+      Telemetry.getHistogramById(
+        "TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS"
+      ).add(elapsedMs);
     };
 
     // Check if we're using too much space. If not, bail out.
@@ -1075,8 +1221,14 @@ var TelemetryStorageImpl = {
       return;
     }
 
-    this._log.info("_enforcePendingPingsQuota - size: " + pendingPingsSizeInBytes + "bytes"
-                   + ", safety quota: " + SAFE_QUOTA + "bytes");
+    this._log.info(
+      "_enforcePendingPingsQuota - size: " +
+        pendingPingsSizeInBytes +
+        "bytes" +
+        ", safety quota: " +
+        SAFE_QUOTA +
+        "bytes"
+    );
 
     startTimeStamp = Policy.now().getTime();
     let pingsToPurge = pingList.slice(lastPingIndexToKeep + 1);
@@ -1084,7 +1236,9 @@ var TelemetryStorageImpl = {
     // Remove all the pings older than the last one which we are safe to keep.
     for (let ping of pingsToPurge) {
       if (this._shutdown) {
-        this._log.trace("_enforcePendingPingsQuota - Terminating the clean up task due to shutdown");
+        this._log.trace(
+          "_enforcePendingPingsQuota - Terminating the clean up task due to shutdown"
+        );
         return;
       }
 
@@ -1097,8 +1251,11 @@ var TelemetryStorageImpl = {
     // We don't know the size of the pending pings directory if we are above the quota,
     // since we stop scanning once we reach the quota. We use a special value to show
     // this condition.
-    recordHistograms(PENDING_PINGS_SIZE_PROBE_SPECIAL_VALUE, pingsToPurge.length,
-                 Math.ceil(endTimeStamp - startTimeStamp));
+    recordHistograms(
+      PENDING_PINGS_SIZE_PROBE_SPECIAL_VALUE,
+      pingsToPurge.length,
+      Math.ceil(endTimeStamp - startTimeStamp)
+    );
   },
 
   /**
@@ -1128,7 +1285,9 @@ var TelemetryStorageImpl = {
     await waitForAll(this._activelyArchiving);
 
     if (this._scannedArchiveDirectory) {
-      this._log.trace("loadArchivedPingList - Archive already scanned, hitting cache.");
+      this._log.trace(
+        "loadArchivedPingList - Archive already scanned, hitting cache."
+      );
       return this._archivedPings;
     }
 
@@ -1147,10 +1306,12 @@ var TelemetryStorageImpl = {
     this._log.trace("_scanArchive");
 
     let submitProbes = (pingCount, dirCount) => {
-      Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT")
-               .add(pingCount);
-      Telemetry.getHistogramById("TELEMETRY_ARCHIVE_DIRECTORIES_COUNT")
-               .add(dirCount);
+      Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT").add(
+        pingCount
+      );
+      Telemetry.getHistogramById("TELEMETRY_ARCHIVE_DIRECTORIES_COUNT").add(
+        dirCount
+      );
     };
 
     if (!(await OS.File.exists(gPingsArchivePath))) {
@@ -1159,8 +1320,9 @@ var TelemetryStorageImpl = {
     }
 
     let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
-    let subdirs =
-        (await dirIterator.nextBatch()).filter(e => e.isDir).filter(e => isValidArchiveDir(e.name));
+    let subdirs = (await dirIterator.nextBatch())
+      .filter(e => e.isDir)
+      .filter(e => isValidArchiveDir(e.name));
     dirIterator.close();
 
     // Walk through the monthly subdirs of the form <YYYY-MM>/
@@ -1180,15 +1342,25 @@ var TelemetryStorageImpl = {
 
         // In case of conflicts, overwrite only with newer pings.
         if (this._archivedPings.has(data.id)) {
-          const overwrite = data.timestamp > this._archivedPings.get(data.id).timestampCreated;
-          this._log.warn("_scanArchive - have seen this id before: " + data.id +
-                         ", overwrite: " + overwrite);
+          const overwrite =
+            data.timestamp > this._archivedPings.get(data.id).timestampCreated;
+          this._log.warn(
+            "_scanArchive - have seen this id before: " +
+              data.id +
+              ", overwrite: " +
+              overwrite
+          );
           if (!overwrite) {
             continue;
           }
 
-          await this._removeArchivedPing(data.id, data.timestampCreated, data.type)
-                    .catch((e) => this._log.warn("_scanArchive - failed to remove ping", e));
+          await this._removeArchivedPing(
+            data.id,
+            data.timestampCreated,
+            data.type
+          ).catch(e =>
+            this._log.warn("_scanArchive - failed to remove ping", e)
+          );
         }
 
         this._archivedPings.set(data.id, {
@@ -1271,7 +1443,7 @@ var TelemetryStorageImpl = {
   },
 
   savePendingPing(ping) {
-    let p = this.savePing(ping, true).then((path) => {
+    let p = this.savePing(ping, true).then(path => {
       this._pendingPings.set(ping.id, {
         path,
         lastModificationDate: Policy.now().getTime(),
@@ -1287,7 +1459,9 @@ var TelemetryStorageImpl = {
     let info = this._pendingPings.get(id);
     if (!info) {
       this._log.trace("loadPendingPing - unknown id " + id);
-      throw new Error("TelemetryStorage.loadPendingPing - no ping with id " + id);
+      throw new Error(
+        "TelemetryStorage.loadPendingPing - no ping with id " + id
+      );
     }
 
     // Try to get the dimension of the ping. If that fails, update the histograms.
@@ -1304,14 +1478,17 @@ var TelemetryStorageImpl = {
     // Purge pings which are too big.
     if (fileSize > PING_FILE_MAXIMUM_SIZE_BYTES) {
       await this.removePendingPing(id);
-      Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB")
-               .add(Math.floor(fileSize / 1024 / 1024));
+      Telemetry.getHistogramById(
+        "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB"
+      ).add(Math.floor(fileSize / 1024 / 1024));
       Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").add();
 
       // Currently we don't have the ping type available without loading the ping from disk.
       // Bug 1384903 will fix that.
       TelemetryHealthPing.recordDiscardedPing("<unknown>");
-      throw new Error("loadPendingPing - exceeded the maximum ping size: " + fileSize);
+      throw new Error(
+        "loadPendingPing - exceeded the maximum ping size: " + fileSize
+      );
     }
 
     // Try to load the ping file. Update the related histograms on failure.
@@ -1323,7 +1500,9 @@ var TelemetryStorageImpl = {
       if (e instanceof PingReadError) {
         Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").add();
       } else if (e instanceof PingParseError) {
-        Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").add();
+        Telemetry.getHistogramById(
+          "TELEMETRY_PENDING_LOAD_FAILURE_PARSE"
+        ).add();
       }
 
       // Remove the ping from the cache, so we don't try to load it again.
@@ -1342,11 +1521,16 @@ var TelemetryStorageImpl = {
       return Promise.resolve();
     }
 
-    this._log.trace("removePendingPing - deleting ping with id: " + id +
-                    ", path: " + info.path);
+    this._log.trace(
+      "removePendingPing - deleting ping with id: " +
+        id +
+        ", path: " +
+        info.path
+    );
     this._pendingPings.delete(id);
-    return OS.File.remove(info.path).catch((ex) =>
-      this._log.error("removePendingPing - failed to remove ping", ex));
+    return OS.File.remove(info.path).catch(ex =>
+      this._log.error("removePendingPing - failed to remove ping", ex)
+    );
   },
 
   /**
@@ -1406,7 +1590,9 @@ var TelemetryStorageImpl = {
 
     try {
       if (!(await iter.exists())) {
-        this._log.trace("removePendingPings - the pending pings directory doesn't exist");
+        this._log.trace(
+          "removePendingPings - the pending pings directory doesn't exist"
+        );
         return;
       }
 
@@ -1415,7 +1601,10 @@ var TelemetryStorageImpl = {
         try {
           await OS.File.remove(file.path);
         } catch (ex) {
-          this._log.error("removePendingPings - failed to remove file " + file.path, ex);
+          this._log.error(
+            "removePendingPings - failed to remove file " + file.path,
+            ex
+          );
           continue;
         }
       }
@@ -1428,26 +1617,32 @@ var TelemetryStorageImpl = {
    * Iterate through all pings in the userApplicationDataDir under the "Pending Pings" sub-directory
    * and yield each file.
    */
-  async* _iterateAppDataPings() {
+  async *_iterateAppDataPings() {
     this._log.trace("_iterateAppDataPings");
 
     // The test suites might not create and define the "UAppData" directory.
     // We account for that here instead of manually going through each test using
     // telemetry to manually create the directory and define the constant.
     if (!OS.Constants.Path.userApplicationDataDir) {
-      this._log.trace("_iterateAppDataPings - userApplicationDataDir is not defined. Is this a test?");
+      this._log.trace(
+        "_iterateAppDataPings - userApplicationDataDir is not defined. Is this a test?"
+      );
       return;
     }
 
-    const appDataPendingPings =
-      OS.Path.join(OS.Constants.Path.userApplicationDataDir, "Pending Pings");
+    const appDataPendingPings = OS.Path.join(
+      OS.Constants.Path.userApplicationDataDir,
+      "Pending Pings"
+    );
 
     // Iterate through the pending ping files.
     let iter = new OS.File.DirectoryIterator(appDataPendingPings);
     try {
       // Check if appDataPendingPings exists and bail out if it doesn't.
       if (!(await iter.exists())) {
-        this._log.trace("_iterateAppDataPings - the AppData pending pings directory doesn't exist.");
+        this._log.trace(
+          "_iterateAppDataPings - the AppData pending pings directory doesn't exist."
+        );
         return;
       }
 
@@ -1471,7 +1666,10 @@ var TelemetryStorageImpl = {
       try {
         await OS.File.remove(file.path);
       } catch (ex) {
-        this._log.error("removeAppDataPings - failed to remove file " + file.path, ex);
+        this._log.error(
+          "removeAppDataPings - failed to remove file " + file.path,
+          ex
+        );
       }
     }
   },
@@ -1495,7 +1693,10 @@ var TelemetryStorageImpl = {
         // Finally remove the file.
         await OS.File.remove(file.path);
       } catch (ex) {
-        this._log.error("_migrateAppDataPings - failed to remove file " + file.path, ex);
+        this._log.error(
+          "_migrateAppDataPings - failed to remove file " + file.path,
+          ex
+        );
       }
     }
   },
@@ -1507,19 +1708,24 @@ var TelemetryStorageImpl = {
     }
 
     if (this._scannedPendingDirectory) {
-      this._log.trace("loadPendingPingList - Pending already scanned, hitting cache.");
+      this._log.trace(
+        "loadPendingPingList - Pending already scanned, hitting cache."
+      );
       return Promise.resolve(this._buildPingList());
     }
 
     // Since there's no pending pings scan task running, start it.
     // Also make sure to clear the task once done.
-    this._scanPendingPingsTask = this._scanPendingPings().then(pings => {
-      this._scanPendingPingsTask = null;
-      return pings;
-    }, ex => {
-      this._scanPendingPingsTask = null;
-      throw ex;
-    });
+    this._scanPendingPingsTask = this._scanPendingPings().then(
+      pings => {
+        this._scanPendingPingsTask = null;
+        return pings;
+      },
+      ex => {
+        this._scanPendingPingsTask = null;
+        throw ex;
+      }
+    );
     return this._scanPendingPingsTask;
   },
 
@@ -1554,21 +1760,33 @@ var TelemetryStorageImpl = {
         try {
           info = await OS.File.stat(file.path);
         } catch (ex) {
-          this._log.error("_scanPendingPings - failed to stat file " + file.path, ex);
+          this._log.error(
+            "_scanPendingPings - failed to stat file " + file.path,
+            ex
+          );
           continue;
         }
 
         // Enforce a maximum file size limit on pending pings.
         if (info.size > PING_FILE_MAXIMUM_SIZE_BYTES) {
-          this._log.error("_scanPendingPings - removing file exceeding size limit " + file.path);
+          this._log.error(
+            "_scanPendingPings - removing file exceeding size limit " +
+              file.path
+          );
           try {
             await OS.File.remove(file.path);
           } catch (ex) {
-            this._log.error("_scanPendingPings - failed to remove file " + file.path, ex);
+            this._log.error(
+              "_scanPendingPings - failed to remove file " + file.path,
+              ex
+            );
           } finally {
-            Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB")
-                     .add(Math.floor(info.size / 1024 / 1024));
-            Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").add();
+            Telemetry.getHistogramById(
+              "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB"
+            ).add(Math.floor(info.size / 1024 / 1024));
+            Telemetry.getHistogramById(
+              "TELEMETRY_PING_SIZE_EXCEEDED_PENDING"
+            ).add();
 
             // Currently we don't have the ping type available without loading the ping from disk.
             // Bug 1384903 will fix that.
@@ -1636,8 +1854,11 @@ var TelemetryStorageImpl = {
       ping = JSON.parse(string);
     } catch (e) {
       this._log.trace("loadPingfile - unparseable ping " + aFilePath, e);
-      await OS.File.remove(aFilePath).catch((ex) => {
-        this._log.error("loadPingFile - failed removing unparseable ping file", ex);
+      await OS.File.remove(aFilePath).catch(ex => {
+        this._log.error(
+          "loadPingFile - failed removing unparseable ping file",
+          ex
+        );
       });
       throw new PingParseError(e.message);
     }
@@ -1667,27 +1888,35 @@ var TelemetryStorageImpl = {
 
     let [timestamp, uuid, type, extension] = parts;
     if (extension != "json" && extension != "jsonlz4") {
-      this._log.trace("_getArchivedPingDataFromFileName - should have 'json' or 'jsonlz4' extension");
+      this._log.trace(
+        "_getArchivedPingDataFromFileName - should have 'json' or 'jsonlz4' extension"
+      );
       return null;
     }
 
     // Check for a valid timestamp.
     timestamp = parseInt(timestamp);
     if (Number.isNaN(timestamp)) {
-      this._log.trace("_getArchivedPingDataFromFileName - should have a valid timestamp");
+      this._log.trace(
+        "_getArchivedPingDataFromFileName - should have a valid timestamp"
+      );
       return null;
     }
 
     // Check for a valid UUID.
     if (!UUID_REGEX.test(uuid)) {
-      this._log.trace("_getArchivedPingDataFromFileName - should have a valid id");
+      this._log.trace(
+        "_getArchivedPingDataFromFileName - should have a valid id"
+      );
       return null;
     }
 
     // Check for a valid type string.
     const typeRegex = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i;
     if (!typeRegex.test(type)) {
-      this._log.trace("_getArchivedPingDataFromFileName - should have a valid type");
+      this._log.trace(
+        "_getArchivedPingDataFromFileName - should have a valid type"
+      );
       return null;
     }
 
@@ -1699,11 +1928,14 @@ var TelemetryStorageImpl = {
   },
 
   async saveAbortedSessionPing(ping) {
-    this._log.trace("saveAbortedSessionPing - ping path: " + gAbortedSessionFilePath);
+    this._log.trace(
+      "saveAbortedSessionPing - ping path: " + gAbortedSessionFilePath
+    );
     await OS.File.makeDir(gDataReportingDir, { ignoreExisting: true });
 
     return this._abortedSessionSerializer.enqueueTask(() =>
-      this.savePingToFile(ping, gAbortedSessionFilePath, true));
+      this.savePingToFile(ping, gAbortedSessionFilePath, true)
+    );
   },
 
   async loadAbortedSessionPing() {
@@ -1750,24 +1982,40 @@ var TelemetryStorageImpl = {
     // (-wal) file and a "shared memory file" (-shm). We need to remove them as well.
     let FILES_TO_REMOVE = [
       OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_DEFAULT_FILENAME),
-      OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_DEFAULT_FILENAME + "-wal"),
-      OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_DEFAULT_FILENAME + "-shm"),
+      OS.Path.join(
+        OS.Constants.Path.profileDir,
+        FHR_DB_DEFAULT_FILENAME + "-wal"
+      ),
+      OS.Path.join(
+        OS.Constants.Path.profileDir,
+        FHR_DB_DEFAULT_FILENAME + "-shm"
+      ),
     ];
 
     // FHR could have used either the default DB file name or a custom one
     // through this preference.
-    const FHR_DB_CUSTOM_FILENAME =
-      Preferences.get("datareporting.healthreport.dbName", undefined);
+    const FHR_DB_CUSTOM_FILENAME = Preferences.get(
+      "datareporting.healthreport.dbName",
+      undefined
+    );
     if (FHR_DB_CUSTOM_FILENAME) {
       FILES_TO_REMOVE.push(
         OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_CUSTOM_FILENAME),
-        OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_CUSTOM_FILENAME + "-wal"),
-        OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_CUSTOM_FILENAME + "-shm"));
+        OS.Path.join(
+          OS.Constants.Path.profileDir,
+          FHR_DB_CUSTOM_FILENAME + "-wal"
+        ),
+        OS.Path.join(
+          OS.Constants.Path.profileDir,
+          FHR_DB_CUSTOM_FILENAME + "-shm"
+        )
+      );
     }
 
     for (let f of FILES_TO_REMOVE) {
-      await OS.File.remove(f, {ignoreAbsent: true})
-                   .catch(e => this._log.error("removeFHRDatabase - failed to remove " + f, e));
+      await OS.File.remove(f, { ignoreAbsent: true }).catch(e =>
+        this._log.error("removeFHRDatabase - failed to remove " + f, e)
+      );
     }
   },
 };
@@ -1776,7 +2024,7 @@ var TelemetryStorageImpl = {
 
 function pingFilePath(ping) {
   // Support legacy ping formats, who don't have an "id" field, but a "slug" field.
-  let pingIdentifier = (ping.slug) ? ping.slug : ping.id;
+  let pingIdentifier = ping.slug ? ping.slug : ping.id;
   return OS.Path.join(TelemetryStorage.pingDirectoryPath, pingIdentifier);
 }
 
@@ -1803,8 +2051,10 @@ function getArchivedPingPath(aPingId, aDate, aType) {
   // Get the ping creation date and generate the archive directory to hold it. Note
   // that getMonth returns a 0-based month, so we need to add an offset.
   let month = String(aDate.getMonth() + 1);
-  let archivedPingDir = OS.Path.join(gPingsArchivePath,
-    aDate.getFullYear() + "-" + month.padStart(2, "0"));
+  let archivedPingDir = OS.Path.join(
+    gPingsArchivePath,
+    aDate.getFullYear() + "-" + month.padStart(2, "0")
+  );
   // Generate the archived ping file path as YYYY-MM/<TIMESTAMP>.UUID.type.json
   let fileName = [aDate.getTime(), aPingId, aType, "json"].join(".");
   return OS.Path.join(archivedPingDir, fileName);
@@ -1816,7 +2066,7 @@ function getArchivedPingPath(aPingId, aDate, aType) {
  */
 var getArchivedPingSize = async function(aPingId, aDate, aType) {
   const path = getArchivedPingPath(aPingId, aDate, aType);
-  let filePaths = [ path + "lz4", path ];
+  let filePaths = [path + "lz4", path];
 
   for (let path of filePaths) {
     try {
@@ -1863,7 +2113,12 @@ function getDateFromArchiveDir(aDirName) {
   year = parseInt(year);
   month = parseInt(month);
   // Make sure to have sane numbers.
-  if (!Number.isFinite(month) || !Number.isFinite(year) || month < 1 || month > 12) {
+  if (
+    !Number.isFinite(month) ||
+    !Number.isFinite(year) ||
+    month < 1 ||
+    month > 12
+  ) {
     return null;
   }
   return new Date(year, month - 1, 1, 0, 0, 0);

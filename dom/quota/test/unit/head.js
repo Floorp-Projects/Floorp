@@ -11,24 +11,20 @@ const NS_ERROR_FILE_NO_DEVICE_SPACE = Cr.NS_ERROR_FILE_NO_DEVICE_SPACE;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-function is(a, b, msg)
-{
+function is(a, b, msg) {
   Assert.equal(a, b, msg);
 }
 
-function ok(cond, msg)
-{
+function ok(cond, msg) {
   Assert.ok(!!cond, msg);
 }
 
-function run_test()
-{
+function run_test() {
   runTest();
-};
+}
 
 if (!this.runTest) {
-  this.runTest = function()
-  {
+  this.runTest = function() {
     do_get_profile();
 
     enableTesting();
@@ -38,8 +34,10 @@ if (!this.runTest) {
     // In order to support converting tests to using async functions from using
     // generator functions, we detect async functions by checking the name of
     // function's constructor.
-    Assert.ok(typeof testSteps === "function",
-              "There should be a testSteps function");
+    Assert.ok(
+      typeof testSteps === "function",
+      "There should be a testSteps function"
+    );
     if (testSteps.constructor.name === "AsyncFunction") {
       // Do run our existing cleanup function that would normally be called by
       // the generator's call to finishTest().
@@ -51,146 +49,140 @@ if (!this.runTest) {
       // async test.
       run_next_test();
     } else {
-      Assert.ok(testSteps.constructor.name === "GeneratorFunction",
-                "Unsupported function type");
+      Assert.ok(
+        testSteps.constructor.name === "GeneratorFunction",
+        "Unsupported function type"
+      );
 
       do_test_pending();
 
       testGenerator.next();
     }
-  }
+  };
 }
 
-function finishTest()
-{
+function finishTest() {
   resetTesting();
 
   executeSoon(function() {
     do_test_finished();
-  })
+  });
 }
 
-function grabArgAndContinueHandler(arg)
-{
+function grabArgAndContinueHandler(arg) {
   testGenerator.next(arg);
 }
 
-function continueToNextStep()
-{
+function continueToNextStep() {
   executeSoon(function() {
     testGenerator.next();
   });
 }
 
-function continueToNextStepSync()
-{
+function continueToNextStepSync() {
   testGenerator.next();
 }
 
-function enableTesting()
-{
+function enableTesting() {
   SpecialPowers.setBoolPref("dom.quotaManager.testing", true);
   SpecialPowers.setBoolPref("dom.simpleDB.enabled", true);
 }
 
-function resetTesting()
-{
+function resetTesting() {
   SpecialPowers.clearUserPref("dom.quotaManager.testing");
   SpecialPowers.clearUserPref("dom.simpleDB.enabled");
 }
 
-function setGlobalLimit(globalLimit)
-{
-  SpecialPowers.setIntPref("dom.quotaManager.temporaryStorage.fixedLimit",
-                           globalLimit);
+function setGlobalLimit(globalLimit) {
+  SpecialPowers.setIntPref(
+    "dom.quotaManager.temporaryStorage.fixedLimit",
+    globalLimit
+  );
 }
 
-function resetGlobalLimit()
-{
+function resetGlobalLimit() {
   SpecialPowers.clearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
 }
 
-function init(callback)
-{
+function init(callback) {
   let request = SpecialPowers._getQuotaManager().init();
   request.callback = callback;
 
   return request;
 }
 
-function initTemporaryStorage(callback)
-{
+function initTemporaryStorage(callback) {
   let request = SpecialPowers._getQuotaManager().initTemporaryStorage();
   request.callback = callback;
 
   return request;
 }
 
-function initOrigin(principal, persistence, callback)
-{
-  let request =
-    SpecialPowers._getQuotaManager().initStoragesForPrincipal(principal,
-                                                              persistence);
+function initOrigin(principal, persistence, callback) {
+  let request = SpecialPowers._getQuotaManager().initStoragesForPrincipal(
+    principal,
+    persistence
+  );
   request.callback = callback;
 
   return request;
 }
 
-function initChromeOrigin(persistence, callback)
-{
-  let principal = Cc["@mozilla.org/systemprincipal;1"]
-                    .createInstance(Ci.nsIPrincipal);
-  let request =
-    SpecialPowers._getQuotaManager().initStoragesForPrincipal(principal,
-                                                              persistence);
+function initChromeOrigin(persistence, callback) {
+  let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
+  let request = SpecialPowers._getQuotaManager().initStoragesForPrincipal(
+    principal,
+    persistence
+  );
   request.callback = callback;
 
   return request;
 }
 
-function clear(callback)
-{
+function clear(callback) {
   let request = SpecialPowers._getQuotaManager().clear();
   request.callback = callback;
 
   return request;
 }
 
-function clearClient(principal, persistence, client, callback)
-{
-  let request =
-    SpecialPowers._getQuotaManager().clearStoragesForPrincipal(principal,
-                                                               persistence,
-                                                               client);
+function clearClient(principal, persistence, client, callback) {
+  let request = SpecialPowers._getQuotaManager().clearStoragesForPrincipal(
+    principal,
+    persistence,
+    client
+  );
   request.callback = callback;
 
   return request;
 }
 
-function clearOrigin(principal, persistence, callback)
-{
-  let request =
-    SpecialPowers._getQuotaManager().clearStoragesForPrincipal(principal,
-                                                               persistence);
+function clearOrigin(principal, persistence, callback) {
+  let request = SpecialPowers._getQuotaManager().clearStoragesForPrincipal(
+    principal,
+    persistence
+  );
   request.callback = callback;
 
   return request;
 }
 
-function clearChromeOrigin(callback)
-{
-  let principal = Cc["@mozilla.org/systemprincipal;1"]
-                    .createInstance(Ci.nsIPrincipal);
-  let request =
-    SpecialPowers._getQuotaManager().clearStoragesForPrincipal(principal,
-                                                              "persistent");
+function clearChromeOrigin(callback) {
+  let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
+  let request = SpecialPowers._getQuotaManager().clearStoragesForPrincipal(
+    principal,
+    "persistent"
+  );
   request.callback = callback;
 
   return request;
 }
 
-function reset(callback)
-{
+function reset(callback) {
   let request = SpecialPowers._getQuotaManager().reset();
   request.callback = callback;
 
@@ -212,25 +204,27 @@ function persisted(principal, callback) {
 }
 
 function listInitializedOrigins(callback) {
-  let request =
-      SpecialPowers._getQuotaManager().listInitializedOrigins(callback);
+  let request = SpecialPowers._getQuotaManager().listInitializedOrigins(
+    callback
+  );
   request.callback = callback;
 
   return request;
 }
 
-function installPackage(packageName)
-{
-  let directoryService = Cc["@mozilla.org/file/directory_service;1"]
-                         .getService(Ci.nsIProperties);
+function installPackage(packageName) {
+  let directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(
+    Ci.nsIProperties
+  );
 
   let currentDir = directoryService.get("CurWorkD", Ci.nsIFile);
 
   let packageFile = currentDir.clone();
   packageFile.append(packageName + ".zip");
 
-  let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
-                  .createInstance(Ci.nsIZipReader);
+  let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+    Ci.nsIZipReader
+  );
   zipReader.open(packageFile);
 
   let entryNames = Array.from(zipReader.findEntries(null));
@@ -248,12 +242,14 @@ function installPackage(packageName)
     } else {
       let istream = zipReader.getInputStream(entryName);
 
-      var ostream = Cc["@mozilla.org/network/file-output-stream;1"]
-                    .createInstance(Ci.nsIFileOutputStream);
+      var ostream = Cc[
+        "@mozilla.org/network/file-output-stream;1"
+      ].createInstance(Ci.nsIFileOutputStream);
       ostream.init(file, -1, parseInt("0644", 8), 0);
 
-      let bostream = Cc['@mozilla.org/network/buffered-output-stream;1']
-                     .createInstance(Ci.nsIBufferedOutputStream);
+      let bostream = Cc[
+        "@mozilla.org/network/buffered-output-stream;1"
+      ].createInstance(Ci.nsIBufferedOutputStream);
       bostream.init(ostream, 32768);
 
       bostream.writeFrom(istream, istream.available());
@@ -266,10 +262,10 @@ function installPackage(packageName)
   zipReader.close();
 }
 
-function getProfileDir()
-{
-  let directoryService =
-    Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+function getProfileDir() {
+  let directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(
+    Ci.nsIProperties
+  );
 
   return directoryService.get("ProfD", Ci.nsIFile);
 }
@@ -279,20 +275,18 @@ function getProfileDir()
 // for the existence of the file or parent directories.
 // It is safe even on Windows where the directory separator is not "/",
 // but make sure you're not passing in a "\"-delimited path.
-function getRelativeFile(relativePath)
-{
+function getRelativeFile(relativePath) {
   let profileDir = getProfileDir();
 
   let file = profileDir.clone();
-  relativePath.split('/').forEach(function(component) {
+  relativePath.split("/").forEach(function(component) {
     file.append(component);
   });
 
   return file;
 }
 
-function getPersistedFromMetadata(readBuffer)
-{
+function getPersistedFromMetadata(readBuffer) {
   const persistedPosition = 8; // Persisted state is stored in the 9th byte
   let view =
     readBuffer instanceof Uint8Array ? readBuffer : new Uint8Array(readBuffer);
@@ -300,53 +294,50 @@ function getPersistedFromMetadata(readBuffer)
   return !!view[persistedPosition];
 }
 
-function grabResultAndContinueHandler(request)
-{
+function grabResultAndContinueHandler(request) {
   testGenerator.next(request.result);
 }
 
-function grabUsageAndContinueHandler(request)
-{
+function grabUsageAndContinueHandler(request) {
   testGenerator.next(request.result.usage);
 }
 
-function getUsage(usageHandler, getAll)
-{
+function getUsage(usageHandler, getAll) {
   let request = SpecialPowers._getQuotaManager().getUsage(usageHandler, getAll);
 
   return request;
 }
 
-function getCurrentUsage(usageHandler)
-{
-  let principal = Cc["@mozilla.org/systemprincipal;1"]
-                    .createInstance(Ci.nsIPrincipal);
-  let request =
-    SpecialPowers._getQuotaManager().getUsageForPrincipal(principal,
-                                                          usageHandler);
+function getCurrentUsage(usageHandler) {
+  let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
+  let request = SpecialPowers._getQuotaManager().getUsageForPrincipal(
+    principal,
+    usageHandler
+  );
 
   return request;
 }
 
-function getPrincipal(url)
-{
+function getPrincipal(url) {
   let uri = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService)
-              .newURI(url);
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(Ci.nsIScriptSecurityManager);
+    .getService(Ci.nsIIOService)
+    .newURI(url);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
+    Ci.nsIScriptSecurityManager
+  );
   return ssm.createCodebasePrincipal(uri, {});
 }
 
-function getCurrentPrincipal()
-{
+function getCurrentPrincipal() {
   return Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 }
 
-function getSimpleDatabase(principal)
-{
-  let connection = Cc["@mozilla.org/dom/sdb-connection;1"]
-    .createInstance(Ci.nsISDBConnection);
+function getSimpleDatabase(principal) {
+  let connection = Cc["@mozilla.org/dom/sdb-connection;1"].createInstance(
+    Ci.nsISDBConnection
+  );
 
   if (!principal) {
     principal = getCurrentPrincipal();
@@ -365,7 +356,7 @@ function requestFinished(request) {
       } else {
         reject(req.resultCode);
       }
-    }
+    };
   });
 }
 
@@ -387,24 +378,27 @@ var SpecialPowers = {
   },
 
   _getPrefs: function() {
-    let prefService =
-      Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+    let prefService = Cc["@mozilla.org/preferences-service;1"].getService(
+      Ci.nsIPrefService
+    );
     return prefService.getBranch(null);
   },
 
   _getQuotaManager: function() {
-    return Cc["@mozilla.org/dom/quota-manager-service;1"]
-             .getService(Ci.nsIQuotaManagerService);
+    return Cc["@mozilla.org/dom/quota-manager-service;1"].getService(
+      Ci.nsIQuotaManagerService
+    );
   },
 };
 
-function loadSubscript(path)
-{
+function loadSubscript(path) {
   let file = do_get_file(path, false);
   let uri = Cc["@mozilla.org/network/io-service;1"]
-    .getService(Ci.nsIIOService).newFileURI(file);
-  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Ci.mozIJSSubScriptLoader);
+    .getService(Ci.nsIIOService)
+    .newFileURI(file);
+  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(
+    Ci.mozIJSSubScriptLoader
+  );
   scriptLoader.loadSubScript(uri.spec);
 }
 

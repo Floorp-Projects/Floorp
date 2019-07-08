@@ -4,13 +4,9 @@
 
 "use strict";
 
-const {
-  UPDATE_CLASSES,
-  UPDATE_CLASS_PANEL_EXPANDED,
-} = require("./index");
+const { UPDATE_CLASSES, UPDATE_CLASS_PANEL_EXPANDED } = require("./index");
 
 module.exports = {
-
   /**
    * Updates the entire class list state with the new list of classes.
    *
@@ -36,5 +32,4 @@ module.exports = {
       isClassPanelExpanded,
     };
   },
-
 };

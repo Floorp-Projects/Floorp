@@ -1,11 +1,16 @@
 "use strict";
 
 const { extend } = require("devtools/shared/extend");
-const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
+const {
+  AbstractCanvasGraph,
+  CanvasGraphUtils,
+} = require("devtools/client/shared/widgets/Graphs");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const L10N = new LocalizationHelper("devtools/client/locales/graphs.properties");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/graphs.properties"
+);
 
 // Line graph constants.
 
@@ -75,15 +80,24 @@ this.LineGraphWidget = function(parent, options = {}, ...args) {
     this._gutter = this._createGutter();
     this._maxGutterLine = this._createGutterLine("maximum");
     this._maxTooltip = this._createTooltip(
-      "maximum", "start", L10N.getStr("graphs.label.maximum"), metric
+      "maximum",
+      "start",
+      L10N.getStr("graphs.label.maximum"),
+      metric
     );
     this._minGutterLine = this._createGutterLine("minimum");
     this._minTooltip = this._createTooltip(
-      "minimum", "start", L10N.getStr("graphs.label.minimum"), metric
+      "minimum",
+      "start",
+      L10N.getStr("graphs.label.minimum"),
+      metric
     );
     this._avgGutterLine = this._createGutterLine("average");
     this._avgTooltip = this._createTooltip(
-      "average", "end", L10N.getStr("graphs.label.average"), metric
+      "average",
+      "end",
+      L10N.getStr("graphs.label.average"),
+      metric
     );
   });
 };
@@ -150,7 +164,9 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
       plottedData,
       plottedMinMaxSum,
     } = await CanvasGraphUtils._performTaskInWorker("plotTimestampsGraph", {
-      timestamps, interval, duration,
+      timestamps,
+      interval,
+      duration,
     });
 
     this._tempMinMaxSum = plottedMinMaxSum;
@@ -188,9 +204,10 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     }
 
     const duration = this.dataDuration || lastTick;
-    const dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);
-    const dataScaleY =
-      this.dataScaleY = height / maxValue * this.dampenValuesFactor;
+    const dataScaleX = (this.dataScaleX =
+      width / (duration - this.dataOffsetX));
+    const dataScaleY = (this.dataScaleY =
+      (height / maxValue) * this.dampenValuesFactor);
 
     // Draw the background.
 
@@ -285,30 +302,51 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
 
     // Update the tooltips text and gutter lines.
 
-    this._maxTooltip.querySelector("[text=value]").textContent =
-      L10N.numberWithDecimals(maxValue, 2);
-    this._avgTooltip.querySelector("[text=value]").textContent =
-      L10N.numberWithDecimals(avgValue, 2);
-    this._minTooltip.querySelector("[text=value]").textContent =
-      L10N.numberWithDecimals(minValue, 2);
+    this._maxTooltip.querySelector(
+      "[text=value]"
+    ).textContent = L10N.numberWithDecimals(maxValue, 2);
+    this._avgTooltip.querySelector(
+      "[text=value]"
+    ).textContent = L10N.numberWithDecimals(avgValue, 2);
+    this._minTooltip.querySelector(
+      "[text=value]"
+    ).textContent = L10N.numberWithDecimals(minValue, 2);
 
     const bottom = height / this._pixelRatio;
-    const maxPosY = CanvasGraphUtils.map(maxValue * this.dampenValuesFactor, 0,
-                                       maxValue, bottom, 0);
-    const avgPosY = CanvasGraphUtils.map(avgValue * this.dampenValuesFactor, 0,
-                                       maxValue, bottom, 0);
-    const minPosY = CanvasGraphUtils.map(minValue * this.dampenValuesFactor, 0,
-                                       maxValue, bottom, 0);
+    const maxPosY = CanvasGraphUtils.map(
+      maxValue * this.dampenValuesFactor,
+      0,
+      maxValue,
+      bottom,
+      0
+    );
+    const avgPosY = CanvasGraphUtils.map(
+      avgValue * this.dampenValuesFactor,
+      0,
+      maxValue,
+      bottom,
+      0
+    );
+    const minPosY = CanvasGraphUtils.map(
+      minValue * this.dampenValuesFactor,
+      0,
+      maxValue,
+      bottom,
+      0
+    );
 
     const safeTop = GRAPH_TOOLTIP_SAFE_BOUNDS;
     const safeBottom = bottom - GRAPH_TOOLTIP_SAFE_BOUNDS;
 
-    const maxTooltipTop = (this.withFixedTooltipPositions
-      ? safeTop : CanvasGraphUtils.clamp(maxPosY, safeTop, safeBottom));
-    const avgTooltipTop = (this.withFixedTooltipPositions
-      ? safeTop : CanvasGraphUtils.clamp(avgPosY, safeTop, safeBottom));
-    const minTooltipTop = (this.withFixedTooltipPositions
-      ? safeBottom : CanvasGraphUtils.clamp(minPosY, safeTop, safeBottom));
+    const maxTooltipTop = this.withFixedTooltipPositions
+      ? safeTop
+      : CanvasGraphUtils.clamp(maxPosY, safeTop, safeBottom);
+    const avgTooltipTop = this.withFixedTooltipPositions
+      ? safeTop
+      : CanvasGraphUtils.clamp(avgPosY, safeTop, safeBottom);
+    const minTooltipTop = this.withFixedTooltipPositions
+      ? safeBottom
+      : CanvasGraphUtils.clamp(minPosY, safeTop, safeBottom);
 
     this._maxTooltip.style.top = maxTooltipTop + "px";
     this._avgTooltip.style.top = avgTooltipTop + "px";
@@ -323,14 +361,17 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     this._minTooltip.setAttribute("with-arrows", this.withTooltipArrows);
 
     const distanceMinMax = Math.abs(maxTooltipTop - minTooltipTop);
-    this._maxTooltip.hidden = this._showMax === false
-                            || !totalTicks
-                            || distanceMinMax < GRAPH_MIN_MAX_TOOLTIP_DISTANCE;
+    this._maxTooltip.hidden =
+      this._showMax === false ||
+      !totalTicks ||
+      distanceMinMax < GRAPH_MIN_MAX_TOOLTIP_DISTANCE;
     this._avgTooltip.hidden = this._showAvg === false || !totalTicks;
     this._minTooltip.hidden = this._showMin === false || !totalTicks;
-    this._gutter.hidden = (this._showMin === false &&
-                           this._showAvg === false &&
-                           this._showMax === false) || !totalTicks;
+    this._gutter.hidden =
+      (this._showMin === false &&
+        this._showAvg === false &&
+        this._showMax === false) ||
+      !totalTicks;
 
     this._maxGutterLine.hidden = this._showMax === false;
     this._avgGutterLine.hidden = this._showAvg === false;

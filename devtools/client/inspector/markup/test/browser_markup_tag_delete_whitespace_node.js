@@ -8,8 +8,7 @@
 // longer have any impact. This tests that the markup view is correctly rendered after
 // deleting a node that triggers such a change.
 
-const HTML =
-  `<div>
+const HTML = `<div>
     <p id="container">
       <span id="before-whitespace">1</span>      <span id="after-whitespace">2</span>
     </p>
@@ -18,10 +17,12 @@ const HTML =
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
 add_task(async function deleteNodeAfterWhitespace() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
-  info("Test deleting a node that will modify the whitespace nodes rendered in the " +
-    "markup view.");
+  info(
+    "Test deleting a node that will modify the whitespace nodes rendered in the " +
+      "markup view."
+  );
 
   await selectAndFocusNode("#after-whitespace", inspector);
   await deleteCurrentSelection(inspector);
@@ -43,8 +44,10 @@ add_task(async function deleteNodeAfterWhitespace() {
   node = await getNodeFront("#after-whitespace", inspector);
   ok(node, "The node is back");
 
-  info("Test deleting the node before the whitespace and performing an undo preserves " +
-       "the node order");
+  info(
+    "Test deleting the node before the whitespace and performing an undo preserves " +
+      "the node order"
+  );
 
   await selectAndFocusNode("#before-whitespace", inspector);
   await deleteCurrentSelection(inspector);
@@ -56,7 +59,11 @@ add_task(async function deleteNodeAfterWhitespace() {
 
   const nextSibling = await getNodeFront("#before-whitespace + *", inspector);
   const afterWhitespace = await getNodeFront("#after-whitespace", inspector);
-  is(nextSibling, afterWhitespace, "Order has been preserved after restoring the node");
+  is(
+    nextSibling,
+    afterWhitespace,
+    "Order has been preserved after restoring the node"
+  );
 });
 
 async function selectAndFocusNode(selector, inspector) {

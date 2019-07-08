@@ -24,13 +24,16 @@ function run_test() {
       }
       return origRequest.call(this, request, onResponse);
     };
-  }(gClient.request));
+  })(gClient.request);
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_simple_listsources();
-                           });
+    attachTestTabAndResume(gClient, "test-stack", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_simple_listsources();
+    });
   });
   do_test_pending();
 }
@@ -38,13 +41,17 @@ function run_test() {
 function test_simple_listsources() {
   gThreadClient.once("paused", function(packet) {
     gThreadClient.getSources().then(function(response) {
-      Assert.ok(response.sources.some(function(s) {
-        return s.url && s.url.match(/test_listsources-01.js/);
-      }));
+      Assert.ok(
+        response.sources.some(function(s) {
+          return s.url && s.url.match(/test_listsources-01.js/);
+        })
+      );
 
-      Assert.ok(gNumTimesSourcesSent <= 1,
-                "Should only send one sources request at most, even though we"
-                + " might have had to send one to determine feature support.");
+      Assert.ok(
+        gNumTimesSourcesSent <= 1,
+        "Should only send one sources request at most, even though we" +
+          " might have had to send one to determine feature support."
+      );
 
       gThreadClient.resume().then(function() {
         finishClient(gClient);

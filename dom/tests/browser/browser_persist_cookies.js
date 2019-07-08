@@ -3,8 +3,14 @@
 
 "use strict";
 
-const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.org");
-const TEST_PATH2 = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
+const TEST_PATH = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "https://example.org"
+);
+const TEST_PATH2 = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "https://example.com"
+);
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
@@ -31,15 +37,22 @@ registerCleanupFunction(async function() {
 
 let gTestDir = null;
 
-
 function checkRequest(subject) {
   let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
   let spec = httpChannel.URI.spec;
   // Ignore initial requests for page that sets cookies and its favicon, which may not have
   // cookies.
-  if (httpChannel.URI.host == "example.org" && !spec.endsWith("favicon.ico") && !spec.includes("redirect.sjs")) {
+  if (
+    httpChannel.URI.host == "example.org" &&
+    !spec.endsWith("favicon.ico") &&
+    !spec.includes("redirect.sjs")
+  ) {
     let cookie = httpChannel.getRequestHeader("cookie");
-    is(cookie.trim(), "normalCookie=true", "Should have correct cookie in request for " + spec);
+    is(
+      cookie.trim(),
+      "normalCookie=true",
+      "Should have correct cookie in request for " + spec
+    );
   }
 }
 
@@ -57,9 +70,16 @@ function createTemporarySaveDirectory() {
 add_task(async function() {
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     Services.obs.addObserver(checkRequest, "http-on-modify-request");
-    BrowserTestUtils.loadURI(browser, TEST_PATH + "set-samesite-cookies-and-redirect.sjs");
+    BrowserTestUtils.loadURI(
+      browser,
+      TEST_PATH + "set-samesite-cookies-and-redirect.sjs"
+    );
     // Test that the original document load doesn't send same-site cookies.
-    await BrowserTestUtils.browserLoaded(browser, true, TEST_PATH2 + "set-samesite-cookies-and-redirect.sjs");
+    await BrowserTestUtils.browserLoaded(
+      browser,
+      true,
+      TEST_PATH2 + "set-samesite-cookies-and-redirect.sjs"
+    );
     // Now check the saved page.
     // Create the folder the link will be saved into.
     gTestDir = createTemporarySaveDirectory();
@@ -78,7 +98,7 @@ add_task(async function() {
       info("done showCallback");
     };
     saveBrowser(browser);
-    await new Promise(async (resolve) => {
+    await new Promise(async resolve => {
       let dls = await Downloads.getList(Downloads.PUBLIC);
       dls.addView({
         onDownloadChanged(download) {

@@ -18,8 +18,11 @@ function confirm_install(panel) {
 }
 
 function install_ended(install, addon) {
-  Assert.deepEqual(install.installTelemetryInfo, {source: "unknown", method: "link"},
-                   "Got the expected install.installTelemetryInfo");
+  Assert.deepEqual(
+    install.installTelemetryInfo,
+    { source: "unknown", method: "link" },
+    "Got the expected install.installTelemetryInfo"
+  );
   install.cancel();
 }
 

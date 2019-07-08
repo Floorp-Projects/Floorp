@@ -6,8 +6,10 @@
 
 /* import-globals-from ../../mochitest/role.js */
 /* import-globals-from ../../mochitest/states.js */
-loadScripts({ name: "role.js", dir: MOCHITESTS_DIR },
-            { name: "states.js", dir: MOCHITESTS_DIR });
+loadScripts(
+  { name: "role.js", dir: MOCHITESTS_DIR },
+  { name: "states.js", dir: MOCHITESTS_DIR }
+);
 
 async function runTests(browser, accDoc) {
   let getAcc = id => findAccessibleChildByID(accDoc, id);
@@ -18,8 +20,13 @@ async function runTests(browser, accDoc) {
   let onStateChanged = waitForEvent(EVENT_STATE_CHANGE, "link_traversed");
   let newWinOpened = BrowserTestUtils.waitForNewWindow();
 
-  await BrowserTestUtils.synthesizeMouse("#link_traversed",
-    1, 1, { shiftKey: true }, browser);
+  await BrowserTestUtils.synthesizeMouse(
+    "#link_traversed",
+    1,
+    1,
+    { shiftKey: true },
+    browser
+  );
 
   await onStateChanged;
   testStates(getAcc("link_traversed"), STATE_TRAVERSED);
@@ -31,8 +38,10 @@ async function runTests(browser, accDoc) {
 /**
  * Test caching of accessible object states
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <a id="link_traversed" href="http://www.example.com" target="_top">
     example.com
-  </a>`, runTests
+  </a>`,
+  runTests
 );

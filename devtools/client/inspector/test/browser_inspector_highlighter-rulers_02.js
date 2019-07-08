@@ -6,9 +6,10 @@
 
 // Test the creation of the geometry highlighter elements.
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-                 "<div style='position:absolute;left: 0; top: 0; " +
-                 "width: 40000px; height: 8000px'></div>";
+const TEST_URL =
+  "data:text/html;charset=utf-8," +
+  "<div style='position:absolute;left: 0; top: 0; " +
+  "width: 40000px; height: 8000px'></div>";
 
 const ID = "rulers-highlighter-";
 
@@ -32,13 +33,25 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
   info("Check the rulers' position by default");
 
   let xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}x-axis-ruler`, "transform", highlighterFront);
+    `${ID}x-axis-ruler`,
+    "transform",
+    highlighterFront
+  );
   let xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}x-axis-text`, "transform", highlighterFront);
+    `${ID}x-axis-text`,
+    "transform",
+    highlighterFront
+  );
   let yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}y-axis-ruler`, "transform", highlighterFront);
+    `${ID}y-axis-ruler`,
+    "transform",
+    highlighterFront
+  );
   let yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}y-axis-text`, "transform", highlighterFront);
+    `${ID}y-axis-text`,
+    "transform",
+    highlighterFront
+  );
 
   is(xAxisRulerTransform, null, "x axis ruler is positioned properly");
   is(xAxisTextTransform, null, "x axis text are positioned properly");
@@ -47,7 +60,8 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
 
   info("Ask the content window to scroll to specific coords");
 
-  const x = 200, y = 300;
+  const x = 200,
+    y = 300;
 
   let data = await testActor.scrollWindow(x, y);
 
@@ -57,22 +71,46 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
   info("Check the rulers are properly positioned after the scrolling");
 
   xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}x-axis-ruler`, "transform", highlighterFront);
+    `${ID}x-axis-ruler`,
+    "transform",
+    highlighterFront
+  );
   xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}x-axis-text`, "transform", highlighterFront);
+    `${ID}x-axis-text`,
+    "transform",
+    highlighterFront
+  );
   yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}y-axis-ruler`, "transform", highlighterFront);
+    `${ID}y-axis-ruler`,
+    "transform",
+    highlighterFront
+  );
   yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}y-axis-text`, "transform", highlighterFront);
+    `${ID}y-axis-text`,
+    "transform",
+    highlighterFront
+  );
 
-  is(xAxisRulerTransform, `translate(-${x})`,
-     "x axis ruler is positioned properly");
-  is(xAxisTextTransform, `translate(-${x})`,
-     "x axis text are positioned properly");
-  is(yAxisRulerTransform, `translate(0, -${y})`,
-     "y axis ruler is positioned properly");
-  is(yAxisTextTransform, `translate(0, -${y})`,
-     "y axis text are positioned properly");
+  is(
+    xAxisRulerTransform,
+    `translate(-${x})`,
+    "x axis ruler is positioned properly"
+  );
+  is(
+    xAxisTextTransform,
+    `translate(-${x})`,
+    "x axis text are positioned properly"
+  );
+  is(
+    yAxisRulerTransform,
+    `translate(0, -${y})`,
+    "y axis ruler is positioned properly"
+  );
+  is(
+    yAxisTextTransform,
+    `translate(0, -${y})`,
+    "y axis text are positioned properly"
+  );
 
   info("Ask the content window to scroll relative to the current position");
 
@@ -84,20 +122,44 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
   info("Check the rulers are properly positioned after the relative scrolling");
 
   xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}x-axis-ruler`, "transform", highlighterFront);
+    `${ID}x-axis-ruler`,
+    "transform",
+    highlighterFront
+  );
   xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}x-axis-text`, "transform", highlighterFront);
+    `${ID}x-axis-text`,
+    "transform",
+    highlighterFront
+  );
   yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}y-axis-ruler`, "transform", highlighterFront);
+    `${ID}y-axis-ruler`,
+    "transform",
+    highlighterFront
+  );
   yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
-    `${ID}y-axis-text`, "transform", highlighterFront);
+    `${ID}y-axis-text`,
+    "transform",
+    highlighterFront
+  );
 
-  is(xAxisRulerTransform, `translate(-${x - 50})`,
-     "x axis ruler is positioned properly");
-  is(xAxisTextTransform, `translate(-${x - 50})`,
-     "x axis text are positioned properly");
-  is(yAxisRulerTransform, `translate(0, -${y - 60})`,
-     "y axis ruler is positioned properly");
-  is(yAxisTextTransform, `translate(0, -${y - 60})`,
-     "y axis text are positioned properly");
+  is(
+    xAxisRulerTransform,
+    `translate(-${x - 50})`,
+    "x axis ruler is positioned properly"
+  );
+  is(
+    xAxisTextTransform,
+    `translate(-${x - 50})`,
+    "x axis text are positioned properly"
+  );
+  is(
+    yAxisRulerTransform,
+    `translate(0, -${y - 60})`,
+    "y axis ruler is positioned properly"
+  );
+  is(
+    yAxisTextTransform,
+    `translate(0, -${y - 60})`,
+    "y axis text are positioned properly"
+  );
 }

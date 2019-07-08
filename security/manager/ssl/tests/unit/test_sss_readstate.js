@@ -15,55 +15,121 @@ function checkStateRead(aSubject, aTopic, aData) {
 
   equal(aData, SSS_STATE_FILE_NAME);
 
-  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             Services.io.newURI("https://expired.example.com"),
-                             0));
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://notexpired.example.com"),
-                            0));
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://includesubdomains.preloaded.test"),
-                            0));
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://sub.includesubdomains.preloaded.test"), 0));
-  ok(gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://incsubdomain.example.com"), 0));
-  ok(gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://sub.incsubdomain.example.com"), 0));
-  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             Services.io.newURI("https://includesubdomains2.preloaded.test"),
-                             0));
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://sub.includesubdomains2.preloaded.test"), 0));
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://expired.example.com"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://notexpired.example.com"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://includesubdomains.preloaded.test"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://sub.includesubdomains.preloaded.test"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://incsubdomain.example.com"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://sub.incsubdomain.example.com"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://includesubdomains2.preloaded.test"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
+      0
+    )
+  );
 
   // Clearing the data should make everything go back to default.
   gSSService.clearAll();
-  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             Services.io.newURI("https://expired.example.com"),
-                             0));
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://notexpired.example.com"), 0));
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://includesubdomains.preloaded.test"),
-                            0));
-  ok(gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://sub.includesubdomains.preloaded.test"), 0));
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://incsubdomain.example.com"), 0));
-  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://sub.incsubdomain.example.com"), 0));
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://includesubdomains2.preloaded.test"), 0));
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
-                            0));
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://expired.example.com"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://notexpired.example.com"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://includesubdomains.preloaded.test"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://sub.includesubdomains.preloaded.test"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://incsubdomain.example.com"),
+      0
+    )
+  );
+  ok(
+    !gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://sub.incsubdomain.example.com"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://includesubdomains2.preloaded.test"),
+      0
+    )
+  );
+  ok(
+    gSSService.isSecureURI(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
+      0
+    )
+  );
   do_test_finished();
 }
 
@@ -88,7 +154,8 @@ function run_test() {
   writeLinesAndClose(lines, outputStream);
   Services.obs.addObserver(checkStateRead, "data-storage-ready");
   do_test_pending();
-  gSSService = Cc["@mozilla.org/ssservice;1"]
-                 .getService(Ci.nsISiteSecurityService);
+  gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
   notEqual(gSSService, null);
 }

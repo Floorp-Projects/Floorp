@@ -107,6 +107,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
     }
 
+    @Ignore // TODO: Reenable when 1501574 is fixed.
     @Test fun alertTest() {
         sessionRule.session.evaluateJS("alert('Alert!');")
 
@@ -137,6 +138,7 @@ class PromptDelegateTest : BaseSessionTest() {
         }
     }
 
+    @Ignore // TODO: Reenable when 1501574 is fixed.
     @Test fun buttonTest() {
         sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)

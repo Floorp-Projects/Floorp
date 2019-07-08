@@ -11,12 +11,19 @@ const TXT_URL = BASE + "/" + TXT_FILE;
 
 function setup() {
   let downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
-  downloadDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  downloadDir.createUnique(
+    Ci.nsIFile.DIRECTORY_TYPE,
+    FileUtils.PERMS_DIRECTORY
+  );
   info(`Using download directory ${downloadDir.path}`);
 
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
   Services.prefs.setIntPref("browser.download.folderList", 2);
-  Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, downloadDir);
+  Services.prefs.setComplexValue(
+    "browser.download.dir",
+    Ci.nsIFile,
+    downloadDir
+  );
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
@@ -51,14 +58,18 @@ add_task(async function test_private_download() {
         });
       }
       let startTestPromise = promiseEvent(browser.test.onMessage);
-      let removeTestPromise = promiseEvent(browser.test.onMessage, msg => msg == "remove");
+      let removeTestPromise = promiseEvent(
+        browser.test.onMessage,
+        msg => msg == "remove"
+      );
       let onCreatedPromise = promiseEvent(browser.downloads.onCreated);
       let onDonePromise = promiseEvent(
         browser.downloads.onChanged,
-        delta => delta.state && delta.state.current === "complete");
+        delta => delta.state && delta.state.current === "complete"
+      );
 
       browser.test.sendMessage("ready");
-      let {url, filename} = await startTestPromise;
+      let { url, filename } = await startTestPromise;
 
       browser.test.log("Starting private download");
       let downloadId = await browser.downloads.download({
@@ -78,13 +89,17 @@ add_task(async function test_private_download() {
       // in the file system. Here we will only verify that the  downloads API
       // behaves in a meaningful way.
 
-      let [downloadItem] = await browser.downloads.search({id: downloadId});
+      let [downloadItem] = await browser.downloads.search({ id: downloadId });
       browser.test.assertEq(url, createdItem.url, "onCreated url should match");
       browser.test.assertEq(url, downloadItem.url, "download url should match");
-      browser.test.assertTrue(createdItem.incognito,
-                              "created download should be private");
-      browser.test.assertTrue(downloadItem.incognito,
-                              "stored download should be private");
+      browser.test.assertTrue(
+        createdItem.incognito,
+        "created download should be private"
+      );
+      browser.test.assertTrue(
+        downloadItem.incognito,
+        "stored download should be private"
+      );
 
       await removeTestPromise;
       browser.test.log("Removing downloaded file");
@@ -97,14 +112,17 @@ add_task(async function test_private_download() {
 
       browser.test.log("Erasing private download from history");
       let erasePromise = promiseEvent(browser.downloads.onErased);
-      await browser.downloads.erase({id: downloadId});
-      browser.test.assertEq(downloadId, await erasePromise,
-                            "onErased should be fired for the erased private download");
+      await browser.downloads.erase({ id: downloadId });
+      browser.test.assertEq(
+        downloadId,
+        await erasePromise,
+        "onErased should be fired for the erased private download"
+      );
 
       browser.test.notifyPass("private download test done");
     },
     manifest: {
-      applications: {gecko: {id: "@spanning"}},
+      applications: { gecko: { id: "@spanning" } },
       permissions: ["downloads"],
     },
     incognitoOverride: "spanning",
@@ -112,7 +130,7 @@ add_task(async function test_private_download() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id: "@not_allowed"}},
+      applications: { gecko: { id: "@not_allowed" } },
       permissions: ["downloads", "downloads.open"],
     },
     background: async function() {
@@ -127,7 +145,7 @@ add_task(async function test_private_download() {
       });
       browser.test.onMessage.addListener(async (msg, data) => {
         if (msg == "download") {
-          let {url, filename, downloadId} = data;
+          let { url, filename, downloadId } = data;
           await browser.test.assertRejects(
             browser.downloads.download({
               url,
@@ -135,48 +153,65 @@ add_task(async function test_private_download() {
               incognito: true,
             }),
             /private browsing access not allowed/,
-            "cannot download using incognito without permission.");
+            "cannot download using incognito without permission."
+          );
 
-          let downloads = await browser.downloads.search({id: downloadId});
-          browser.test.assertEq(downloads.length, 0, "cannot search for incognito downloads");
-          let erasing = await browser.downloads.erase({id: downloadId});
-          browser.test.assertEq(erasing.length, 0, "cannot erase incognito download");
+          let downloads = await browser.downloads.search({ id: downloadId });
+          browser.test.assertEq(
+            downloads.length,
+            0,
+            "cannot search for incognito downloads"
+          );
+          let erasing = await browser.downloads.erase({ id: downloadId });
+          browser.test.assertEq(
+            erasing.length,
+            0,
+            "cannot erase incognito download"
+          );
 
           await browser.test.assertRejects(
             browser.downloads.removeFile(downloadId),
             /Invalid download id/,
-            "cannot remove incognito download");
+            "cannot remove incognito download"
+          );
           await browser.test.assertRejects(
             browser.downloads.pause(downloadId),
             /Invalid download id/,
-            "cannot pause incognito download");
+            "cannot pause incognito download"
+          );
           await browser.test.assertRejects(
             browser.downloads.resume(downloadId),
             /Invalid download id/,
-            "cannot resume incognito download");
+            "cannot resume incognito download"
+          );
           await browser.test.assertRejects(
             browser.downloads.cancel(downloadId),
             /Invalid download id/,
-            "cannot cancel incognito download");
+            "cannot cancel incognito download"
+          );
           await browser.test.assertRejects(
             browser.downloads.removeFile(downloadId),
             /Invalid download id/,
-            "cannot remove incognito download");
+            "cannot remove incognito download"
+          );
           await browser.test.assertRejects(
             browser.downloads.show(downloadId),
             /Invalid download id/,
-            "cannot show incognito download");
+            "cannot show incognito download"
+          );
           await browser.test.assertRejects(
             browser.downloads.getFileIcon(downloadId),
             /Invalid download id/,
-            "cannot show incognito download");
+            "cannot show incognito download"
+          );
         }
         if (msg == "download.open") {
-          let {downloadId} = data;
+          let { downloadId } = data;
           await browser.test.assertRejects(
             browser.downloads.open(downloadId),
             /Invalid download id/,
-            "cannot open incognito download");
+            "cannot open incognito download"
+          );
         }
         browser.test.sendMessage("continue");
       });
@@ -198,7 +233,7 @@ add_task(async function test_private_download() {
   });
   await extension.awaitMessage("continue");
   await withHandlingUserInput(extension, async () => {
-    extension.sendMessage("download.open", {downloadId});
+    extension.sendMessage("download.open", { downloadId });
     await extension.awaitMessage("continue");
   });
   pb_extension.sendMessage("remove");

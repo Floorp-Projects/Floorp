@@ -36,16 +36,25 @@ add_task(async function() {
 
   info("Checking the initial state of the Grid Inspector.");
   is(gridList.childNodes.length, 2, "2 grid containers are listed.");
-  ok(!checkbox1.checked, `Grid item ${checkbox1.value} is unchecked in the grid list.`);
-  ok(!checkbox2.checked, `Grid item ${checkbox2.value} is unchecked in the grid list.`);
+  ok(
+    !checkbox1.checked,
+    `Grid item ${checkbox1.value} is unchecked in the grid list.`
+  );
+  ok(
+    !checkbox2.checked,
+    `Grid item ${checkbox2.value} is unchecked in the grid list.`
+  );
   ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
 
   info("Toggling ON the CSS grid highlighter for #grid1.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 2 &&
-    state.grids[0].highlighted &&
-    !state.grids[1].highlighted);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state =>
+      state.grids.length == 2 &&
+      state.grids[0].highlighted &&
+      !state.grids[1].highlighted
+  );
   checkbox1.click();
   await onHighlighterShown;
   await onCheckboxChange;
@@ -55,10 +64,13 @@ add_task(async function() {
 
   info("Toggling ON the CSS grid highlighter for #grid2.");
   onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 2 &&
-    !state.grids[0].highlighted &&
-    state.grids[1].highlighted);
+  onCheckboxChange = waitUntilState(
+    store,
+    state =>
+      state.grids.length == 2 &&
+      !state.grids[0].highlighted &&
+      state.grids[1].highlighted
+  );
   checkbox2.click();
   await onHighlighterShown;
   await onCheckboxChange;
@@ -68,10 +80,13 @@ add_task(async function() {
 
   info("Toggling OFF the CSS grid highlighter from the layout panel.");
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 2 &&
-    !state.grids[0].highlighted &&
-    !state.grids[1].highlighted);
+  onCheckboxChange = waitUntilState(
+    store,
+    state =>
+      state.grids.length == 2 &&
+      !state.grids[0].highlighted &&
+      !state.grids[1].highlighted
+  );
   checkbox2.click();
   await onHighlighterHidden;
   await onCheckboxChange;

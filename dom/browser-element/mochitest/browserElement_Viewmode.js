@@ -12,14 +12,16 @@ browserElementTestHelpers.addPermission();
 
 function runTest() {
   function loadFrameScript(script) {
-    SpecialPowers.getBrowserFrameMessageManager(iframe1)
-                 .loadFrameScript("data:," + script,
-                                  /* allowDelayedLoad = */ false);
+    SpecialPowers.getBrowserFrameMessageManager(iframe1).loadFrameScript(
+      "data:," + script,
+      /* allowDelayedLoad = */ false
+    );
   }
 
   let iframe1 = document.createElement("iframe");
   iframe1.setAttribute("mozbrowser", "true");
-  iframe1.src = "http://test/tests/dom/browser-element/mochitest/file_browserElement_Viewmode.html";
+  iframe1.src =
+    "http://test/tests/dom/browser-element/mochitest/file_browserElement_Viewmode.html";
   iframe1.addEventListener("mozbrowsermetachange", tests);
   document.body.appendChild(iframe1);
 

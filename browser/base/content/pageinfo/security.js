@@ -3,15 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {SiteDataManager} = ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
-const {DownloadUtils} = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+const { SiteDataManager } = ChromeUtils.import(
+  "resource:///modules/SiteDataManager.jsm"
+);
+const { DownloadUtils } = ChromeUtils.import(
+  "resource://gre/modules/DownloadUtils.jsm"
+);
 
 /* import-globals-from pageInfo.js */
 
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
-ChromeUtils.defineModuleGetter(this, "PluralForm",
-                               "resource://gre/modules/PluralForm.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PluralForm",
+  "resource://gre/modules/PluralForm.jsm"
+);
 
 var security = {
   init(uri, windowInfo) {
@@ -28,24 +38,24 @@ var security = {
   _getSecurityInfo() {
     // We don't have separate info for a frame, return null until further notice
     // (see bug 138479)
-    if (!this.windowInfo.isTopWindow)
+    if (!this.windowInfo.isTopWindow) {
       return null;
+    }
 
     var hostName = this.windowInfo.hostName;
 
     var ui = security._getSecurityUI();
-    if (!ui)
+    if (!ui) {
       return null;
+    }
 
-    var isBroken =
-      (ui.state & Ci.nsIWebProgressListener.STATE_IS_BROKEN);
+    var isBroken = ui.state & Ci.nsIWebProgressListener.STATE_IS_BROKEN;
     var isMixed =
-      (ui.state & (Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT |
-                   Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT));
-    var isInsecure =
-      (ui.state & Ci.nsIWebProgressListener.STATE_IS_INSECURE);
-    var isEV =
-      (ui.state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
+      ui.state &
+      (Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT |
+        Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT);
+    var isInsecure = ui.state & Ci.nsIWebProgressListener.STATE_IS_INSECURE;
+    var isEV = ui.state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
     var secInfo = ui.secInfo;
 
     if (!isInsecure && secInfo) {
@@ -70,8 +80,7 @@ var security = {
         retval.encryptionAlgorithm = secInfo.cipherName;
         retval.encryptionStrength = secInfo.secretKeyLength;
         version = secInfo.protocolVersion;
-      } catch (e) {
-      }
+      } catch (e) {}
 
       switch (version) {
         case Ci.nsITransportSecurityInfo.SSL_VERSION_3:
@@ -96,16 +105,16 @@ var security = {
       // we must not complain on policy discompliance (it might be viewed
       // as a security issue by the user).
       switch (secInfo.certificateTransparencyStatus) {
-        case Ci.nsITransportSecurityInfo.
-                CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE:
-        case Ci.nsITransportSecurityInfo.
-                CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS:
-        case Ci.nsITransportSecurityInfo.
-                CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS:
+        case Ci.nsITransportSecurityInfo
+          .CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE:
+        case Ci.nsITransportSecurityInfo
+          .CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS:
+        case Ci.nsITransportSecurityInfo
+          .CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS:
           retval.certificateTransparency = null;
           break;
-        case Ci.nsITransportSecurityInfo.
-                CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT:
+        case Ci.nsITransportSecurityInfo
+          .CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT:
           retval.certificateTransparency = "Compliant";
           break;
       }
@@ -128,18 +137,24 @@ var security = {
 
   // Find the secureBrowserUI object (if present)
   _getSecurityUI() {
-    if (window.opener.gBrowser)
+    if (window.opener.gBrowser) {
       return window.opener.gBrowser.securityUI;
+    }
     return null;
   },
 
   async _updateSiteDataInfo() {
     // Save site data info for deleting.
     this.siteData = await SiteDataManager.getSites(
-      SiteDataManager.getBaseDomainFromHost(this.uri.host));
+      SiteDataManager.getBaseDomainFromHost(this.uri.host)
+    );
 
-    let clearSiteDataButton = document.getElementById("security-clear-sitedata");
-    let siteDataLabel = document.getElementById("security-privacy-sitedata-value");
+    let clearSiteDataButton = document.getElementById(
+      "security-clear-sitedata"
+    );
+    let siteDataLabel = document.getElementById(
+      "security-privacy-sitedata-value"
+    );
 
     if (!this.siteData.length) {
       document.l10n.setAttributes(siteDataLabel, "security-site-data-no");
@@ -152,13 +167,23 @@ var security = {
       let size = DownloadUtils.convertByteUnits(usage);
       let hasCookies = this.siteData.some(site => site.cookies.length > 0);
       if (hasCookies) {
-        document.l10n.setAttributes(siteDataLabel, "security-site-data-cookies", {"value": size[0], "unit": size[1]});
+        document.l10n.setAttributes(
+          siteDataLabel,
+          "security-site-data-cookies",
+          { value: size[0], unit: size[1] }
+        );
       } else {
-         document.l10n.setAttributes(siteDataLabel, "security-site-data-only", {"value": size[0], "unit": size[1]});
+        document.l10n.setAttributes(siteDataLabel, "security-site-data-only", {
+          value: size[0],
+          unit: size[1],
+        });
       }
     } else {
       // We're storing cookies, else the list would have been empty.
-       document.l10n.setAttributes(siteDataLabel, "security-site-data-cookies-only");
+      document.l10n.setAttributes(
+        siteDataLabel,
+        "security-site-data-cookies-only"
+      );
     }
 
     clearSiteDataButton.removeAttribute("disabled");
@@ -193,7 +218,10 @@ function securityOnLoad(uri, windowInfo) {
   security.init(uri, windowInfo);
 
   var info = security._getSecurityInfo();
-  if (!info || (uri.scheme === "about" && !uri.spec.startsWith("about:certerror"))) {
+  if (
+    !info ||
+    (uri.scheme === "about" && !uri.spec.startsWith("about:certerror"))
+  ) {
     document.getElementById("securityTab").hidden = true;
     return;
   }
@@ -218,16 +246,25 @@ function securityOnLoad(uri, windowInfo) {
       // way to tell those apart, and no policy way to establish which organization
       // vetting standards are good enough (that's what EV is for) so we default to
       // treating these certs as domain-validated only.
-      document.l10n.setAttributes(document.getElementById("security-identity-owner-value"),
-        "security-no-owner");
-      setText("security-identity-verifier-value", info.cAName || info.cert.issuerCommonName || info.cert.issuerName);
+      document.l10n.setAttributes(
+        document.getElementById("security-identity-owner-value"),
+        "security-no-owner"
+      );
+      setText(
+        "security-identity-verifier-value",
+        info.cAName || info.cert.issuerCommonName || info.cert.issuerName
+      );
     }
   } else {
     // We don't have valid identity credentials.
-    document.l10n.setAttributes(document.getElementById("security-identity-owner-value"),
-                                "security-no-owner");
-    document.l10n.setAttributes(document.getElementById("security-identity-verifier-value"),
-                                "not-set-verified-by");
+    document.l10n.setAttributes(
+      document.getElementById("security-identity-owner-value"),
+      "security-no-owner"
+    );
+    document.l10n.setAttributes(
+      document.getElementById("security-identity-verifier-value"),
+      "not-set-verified-by"
+    );
   }
 
   if (validity) {
@@ -255,15 +292,22 @@ function securityOnLoad(uri, windowInfo) {
   }
 
   if (realmHasPasswords(uri)) {
-    document.l10n.setAttributes(document.getElementById("security-privacy-passwords-value"),
-                                "saved-passwords-yes");
+    document.l10n.setAttributes(
+      document.getElementById("security-privacy-passwords-value"),
+      "saved-passwords-yes"
+    );
   } else {
-    document.l10n.setAttributes(document.getElementById("security-privacy-passwords-value"),
-                                "saved-passwords-no");
+    document.l10n.setAttributes(
+      document.getElementById("security-privacy-passwords-value"),
+      "saved-passwords-no"
+    );
   }
 
-  document.l10n.setAttributes(document.getElementById("security-privacy-history-value"),
-                              "security-visits-number", {"visits": previousVisitCount(info.hostName)});
+  document.l10n.setAttributes(
+    document.getElementById("security-privacy-history-value"),
+    "security-visits-number",
+    { visits: previousVisitCount(info.hostName) }
+  );
 
   /* Set the Technical Detail section messages */
   const pkiBundle = document.getElementById("pkiBundle");
@@ -276,39 +320,45 @@ function securityOnLoad(uri, windowInfo) {
       hdr = pkiBundle.getString("pageInfo_MixedContent");
       msg1 = pkiBundle.getString("pageInfo_MixedContent2");
     } else {
-      hdr = pkiBundle.getFormattedString("pageInfo_BrokenEncryption",
-                                         [info.encryptionAlgorithm,
-                                          info.encryptionStrength + "",
-                                          info.version]);
+      hdr = pkiBundle.getFormattedString("pageInfo_BrokenEncryption", [
+        info.encryptionAlgorithm,
+        info.encryptionStrength + "",
+        info.version,
+      ]);
       msg1 = pkiBundle.getString("pageInfo_WeakCipher");
     }
     msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
   } else if (info.encryptionStrength > 0) {
-    hdr = pkiBundle.getFormattedString("pageInfo_EncryptionWithBitsAndProtocol",
-                                       [info.encryptionAlgorithm,
-                                        info.encryptionStrength + "",
-                                        info.version]);
+    hdr = pkiBundle.getFormattedString(
+      "pageInfo_EncryptionWithBitsAndProtocol",
+      [info.encryptionAlgorithm, info.encryptionStrength + "", info.version]
+    );
     msg1 = pkiBundle.getString("pageInfo_Privacy_Encrypted1");
     msg2 = pkiBundle.getString("pageInfo_Privacy_Encrypted2");
     security._cert = info.cert;
   } else {
     hdr = pkiBundle.getString("pageInfo_NoEncryption");
-    if (info.hostName != null)
-      msg1 = pkiBundle.getFormattedString("pageInfo_Privacy_None1", [info.hostName]);
-    else
+    if (info.hostName != null) {
+      msg1 = pkiBundle.getFormattedString("pageInfo_Privacy_None1", [
+        info.hostName,
+      ]);
+    } else {
       msg1 = pkiBundle.getString("pageInfo_Privacy_None4");
+    }
     msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
   }
   setText("security-technical-shortform", hdr);
   setText("security-technical-longform1", msg1);
   setText("security-technical-longform2", msg2);
 
-  const ctStatus =
-    document.getElementById("security-technical-certificate-transparency");
+  const ctStatus = document.getElementById(
+    "security-technical-certificate-transparency"
+  );
   if (info.certificateTransparency) {
     ctStatus.hidden = false;
     ctStatus.value = pkiBundle.getString(
-      "pageInfo_CertificateTransparency_" + info.certificateTransparency);
+      "pageInfo_CertificateTransparency_" + info.certificateTransparency
+    );
   } else {
     ctStatus.hidden = true;
   }
@@ -316,20 +366,28 @@ function securityOnLoad(uri, windowInfo) {
 
 function setText(id, value) {
   var element = document.getElementById(id);
-  if (!element)
+  if (!element) {
     return;
-  if (element.localName == "textbox" || element.localName == "label")
+  }
+  if (element.localName == "textbox" || element.localName == "label") {
     element.value = value;
-  else
+  } else {
     element.textContent = value;
+  }
 }
 
 function viewCertHelper(parent, cert) {
-  if (!cert)
+  if (!cert) {
     return;
+  }
 
-  Services.ww.openWindow(parent, "chrome://pippki/content/certViewer.xul",
-                         "_blank", "centerscreen,chrome", cert);
+  Services.ww.openWindow(
+    parent,
+    "chrome://pippki/content/certViewer.xul",
+    "_blank",
+    "centerscreen,chrome",
+    cert
+  );
 }
 
 /**
@@ -346,11 +404,13 @@ function realmHasPasswords(uri) {
  * @param host - the domain name to look for in history
  */
 function previousVisitCount(host, endTimeReference) {
-  if (!host)
+  if (!host) {
     return 0;
+  }
 
-  var historyService = Cc["@mozilla.org/browser/nav-history-service;1"]
-                         .getService(Ci.nsINavHistoryService);
+  var historyService = Cc[
+    "@mozilla.org/browser/nav-history-service;1"
+  ].getService(Ci.nsINavHistoryService);
 
   var options = historyService.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_VISIT;

@@ -6,8 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["BrowserTabChild"];
 
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
-                               "resource://gre/modules/E10SUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
 class BrowserTabChild extends JSWindowActorChild {
   constructor() {
@@ -18,37 +21,37 @@ class BrowserTabChild extends JSWindowActorChild {
 
   handleEvent(event) {
     switch (event.type) {
-    case "DOMWindowCreated": {
-      if (this.handledWindowCreated) {
-        return;
+      case "DOMWindowCreated": {
+        if (this.handledWindowCreated) {
+          return;
+        }
+        this.handledWindowCreated = true;
+
+        let context = this.manager.browsingContext;
+        let loadContext = context.docShell.QueryInterface(Ci.nsILoadContext);
+        let userContextId = loadContext.originAttributes.userContextId;
+
+        this.sendAsyncMessage("Browser:WindowCreated", { userContextId });
+        break;
       }
-      this.handledWindowCreated = true;
 
-      let context = this.manager.browsingContext;
-      let loadContext = context.docShell.QueryInterface(Ci.nsILoadContext);
-      let userContextId = loadContext.originAttributes.userContextId;
+      case "MozAfterPaint":
+        if (this.handledFirstPaint) {
+          return;
+        }
+        this.handledFirstPaint = true;
+        this.sendAsyncMessage("Browser:FirstPaint", {});
+        break;
 
-      this.sendAsyncMessage("Browser:WindowCreated", { userContextId });
-      break;
-    }
+      case "MozDOMPointerLock:Entered":
+        this.sendAsyncMessage("PointerLock:Entered", {
+          originNoSuffix: event.target.nodePrincipal.originNoSuffix,
+        });
+        break;
 
-    case "MozAfterPaint":
-      if (this.handledFirstPaint) {
-        return;
-      }
-      this.handledFirstPaint = true;
-      this.sendAsyncMessage("Browser:FirstPaint", {});
-      break;
-
-    case "MozDOMPointerLock:Entered":
-      this.sendAsyncMessage("PointerLock:Entered", {
-        originNoSuffix: event.target.nodePrincipal.originNoSuffix,
-      });
-      break;
-
-    case "MozDOMPointerLock:Exited":
-      this.sendAsyncMessage("PointerLock:Exited");
-      break;
+      case "MozDOMPointerLock:Exited":
+        this.sendAsyncMessage("PointerLock:Exited");
+        break;
     }
   }
 
@@ -65,12 +68,12 @@ class BrowserTabChild extends JSWindowActorChild {
 
       case "Browser:HasSiblings":
         try {
-          let browserChild = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIBrowserChild);
+          let browserChild = docShell
+            .QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIBrowserChild);
           let hasSiblings = message.data;
           browserChild.hasSiblings = hasSiblings;
-        } catch (e) {
-        }
+        } catch (e) {}
         break;
 
       // XXX(nika): Should we try to call this in the parent process instead?
@@ -85,16 +88,16 @@ class BrowserTabChild extends JSWindowActorChild {
           if (webNav.sessionHistory) {
             webNav = webNav.sessionHistory;
           }
-        } catch (e) {
-        }
+        } catch (e) {}
 
         let reloadFlags = message.data.flags;
         try {
-          E10SUtils.wrapHandlingUserInput(this.document.defaultView,
-                                          message.data.handlingUserInput,
-                                          () => webNav.reload(reloadFlags));
-        } catch (e) {
-        }
+          E10SUtils.wrapHandlingUserInput(
+            this.document.defaultView,
+            message.data.handlingUserInput,
+            () => webNav.reload(reloadFlags)
+          );
+        } catch (e) {}
         break;
 
       case "MixedContent:ReenableProtection":

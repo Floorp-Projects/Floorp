@@ -4,7 +4,8 @@
  */
 "use strict";
 
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_outside_viewport_videos.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_outside_viewport_videos.html";
 
 async function test_suspend_video_decoding() {
   let videos = content.document.getElementsByTagName("video");
@@ -17,17 +18,22 @@ async function test_suspend_video_decoding() {
 }
 
 add_task(async function setup_test_preference() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.suspend-bkgnd-video.enabled", true],
-    ["media.suspend-bkgnd-video.delay-ms", 0],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.suspend-bkgnd-video.enabled", true],
+      ["media.suspend-bkgnd-video.delay-ms", 0],
+    ],
+  });
 });
 
 add_task(async function start_test() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE,
-  }, async browser => {
-    await ContentTask.spawn(browser, null, test_suspend_video_decoding);
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: PAGE,
+    },
+    async browser => {
+      await ContentTask.spawn(browser, null, test_suspend_video_decoding);
+    }
+  );
 });

@@ -28,7 +28,7 @@ add_task(async function test_first_create_and_add() {
       "number REAL, " +
       "nuller NULL, " +
       "blober BLOB" +
-    ")"
+      ")"
   );
 
   let stmts = [];
@@ -49,14 +49,16 @@ add_task(async function test_first_create_and_add() {
   stmts[1].bindBlobByIndex(3, BLOB, BLOB.length);
 
   // asynchronously execute the statements
-  let execResult = await executeMultipleStatementsAsync(
-    db,
-    stmts,
-    function(aResultSet) {
-      ok(false, "we only did inserts so we should not have gotten results!");
-    });
-  equal(Ci.mozIStorageStatementCallback.REASON_FINISHED, execResult,
-        "execution should have finished successfully.");
+  let execResult = await executeMultipleStatementsAsync(db, stmts, function(
+    aResultSet
+  ) {
+    ok(false, "we only did inserts so we should not have gotten results!");
+  });
+  equal(
+    Ci.mozIStorageStatementCallback.REASON_FINISHED,
+    execResult,
+    "execution should have finished successfully."
+  );
 
   // Check that the result is in the table
   let stmt = db.createStatement(
@@ -72,16 +74,15 @@ add_task(async function test_first_create_and_add() {
     let blob = { value: null };
     stmt.getBlob(3, count, blob);
     Assert.equal(BLOB.length, count.value);
-    for (let i = 0; i < BLOB.length; i++)
+    for (let i = 0; i < BLOB.length; i++) {
       Assert.equal(BLOB[i], blob.value[i]);
+    }
   } finally {
     stmt.finalize();
   }
 
   // Make sure we have two rows in the table
-  stmt = db.createStatement(
-    "SELECT COUNT(1) FROM test"
-  );
+  stmt = db.createStatement("SELECT COUNT(1) FROM test");
   try {
     Assert.ok(stmt.executeStep());
     Assert.equal(2, stmt.getInt32(0));
@@ -101,15 +102,17 @@ add_task(async function test_last_multiple_bindings_on_statements() {
 
   let stmts = [];
   let db = getOpenedDatabase();
-  let sqlString = "INSERT INTO test (id, string, number, nuller, blober) " +
-                    "VALUES (:int, :text, :real, :null, :blob)";
+  let sqlString =
+    "INSERT INTO test (id, string, number, nuller, blober) " +
+    "VALUES (:int, :text, :real, :null, :blob)";
   // We run the same statement twice, and should insert 2 * AMOUNT_TO_ADD.
   for (let i = 0; i < ITERATIONS; i++) {
     // alternate the type of statement we create
-    if (i % 2)
+    if (i % 2) {
       stmts[i] = db.createStatement(sqlString);
-    else
+    } else {
       stmts[i] = db.createAsyncStatement(sqlString);
+    }
 
     let params = stmts[i].newBindingParamsArray();
     for (let j = 0; j < AMOUNT_TO_ADD; j++) {
@@ -137,20 +140,21 @@ add_task(async function test_last_multiple_bindings_on_statements() {
   }
 
   // Execute asynchronously.
-  let execResult = await executeMultipleStatementsAsync(
-    db,
-    stmts,
-    function(aResultSet) {
-      ok(false, "we only did inserts so we should not have gotten results!");
-    });
-  equal(Ci.mozIStorageStatementCallback.REASON_FINISHED, execResult,
-        "execution should have finished successfully.");
+  let execResult = await executeMultipleStatementsAsync(db, stmts, function(
+    aResultSet
+  ) {
+    ok(false, "we only did inserts so we should not have gotten results!");
+  });
+  equal(
+    Ci.mozIStorageStatementCallback.REASON_FINISHED,
+    execResult,
+    "execution should have finished successfully."
+  );
 
   // Check to make sure we added all of our rows.
   try {
     Assert.ok(countStmt.executeStep());
-    Assert.equal(currentRows + (ITERATIONS * AMOUNT_TO_ADD),
-                 countStmt.row.count);
+    Assert.equal(currentRows + ITERATIONS * AMOUNT_TO_ADD, countStmt.row.count);
   } finally {
     countStmt.finalize();
   }

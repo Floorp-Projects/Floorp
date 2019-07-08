@@ -1,9 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
-const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
-const {BrowserIDManager} = ChromeUtils.import("resource://services-sync/browserid_identity.js");
+const { Observers } = ChromeUtils.import(
+  "resource://services-common/observers.js"
+);
+const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
+const { BrowserIDManager } = ChromeUtils.import(
+  "resource://services-sync/browserid_identity.js"
+);
 
 var logger;
 
@@ -49,7 +53,11 @@ function server_pac(metadata, response) {
   pacFetched = true;
   let body = 'function FindProxyForURL(url, host) { return "DIRECT"; }';
   response.setStatusLine(metadata.httpVersion, 200, "OK");
-  response.setHeader("Content-Type", "application/x-ns-proxy-autoconfig", false);
+  response.setHeader(
+    "Content-Type",
+    "application/x-ns-proxy-autoconfig",
+    false
+  );
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -123,10 +131,19 @@ function server_quota_error(request, response) {
 }
 
 function server_headers(metadata, response) {
-  let ignore_headers = ["host", "user-agent", "accept-language",
-                        "accept-encoding", "accept-charset", "keep-alive",
-                        "connection", "pragma", "origin", "cache-control",
-                        "content-length"];
+  let ignore_headers = [
+    "host",
+    "user-agent",
+    "accept-language",
+    "accept-encoding",
+    "accept-charset",
+    "keep-alive",
+    "connection",
+    "pragma",
+    "origin",
+    "cache-control",
+    "content-length",
+  ];
   let headers = metadata.headers;
   let header_names = [];
   while (headers.hasMoreElements()) {
@@ -147,8 +164,9 @@ function server_headers(metadata, response) {
 }
 
 var quotaValue;
-Observers.add("weave:service:quota:remaining",
-              function(subject) { quotaValue = subject; });
+Observers.add("weave:service:quota:remaining", function(subject) {
+  quotaValue = subject;
+});
 
 function run_test() {
   logger = Log.repository.getLogger("Test");
@@ -161,8 +179,10 @@ function run_test() {
 // This apparently has to come first in order for our PAC URL to be hit.
 // Don't put any other HTTP requests earlier in the file!
 add_task(async function test_proxy_auth_redirect() {
-  _("Ensure that a proxy auth redirect (which switches out our channel) " +
-    "doesn't break Resource.");
+  _(
+    "Ensure that a proxy auth redirect (which switches out our channel) " +
+      "doesn't break Resource."
+  );
   let server = httpd_setup({
     "/open": server_open,
     "/pac2": server_pac,
@@ -200,8 +220,10 @@ add_task(async function test_new_channel() {
     response.bodyOutputStream.write(body, body.length);
   }
 
-  let server = httpd_setup({"/resource": resourceHandler,
-                            "/redirect": redirectHandler});
+  let server = httpd_setup({
+    "/resource": resourceHandler,
+    "/redirect": redirectHandler,
+  });
   locationURL = server.baseURI + "/resource";
 
   let request = new Resource(server.baseURI + "/redirect");
@@ -213,7 +235,6 @@ add_task(async function test_new_channel() {
 
   await promiseStopServer(server);
 });
-
 
 var server;
 
@@ -259,7 +280,7 @@ add_task(async function test_get() {
 
   // Observe logging messages.
   let resLogger = res._log;
-  let dbg    = resLogger.debug;
+  let dbg = resLogger.debug;
   let debugMessages = [];
   resLogger.debug = function(msg, extra) {
     debugMessages.push(`${msg}: ${JSON.stringify(extra)}`);
@@ -276,8 +297,10 @@ add_task(async function test_get() {
   }
   Assert.ok(didThrow);
   Assert.equal(debugMessages.length, 1);
-  Assert.equal(debugMessages[0],
-               "Parse fail: Response body starts: \"This path exists\"");
+  Assert.equal(
+    debugMessages[0],
+    'Parse fail: Response body starts: "This path exists"'
+  );
   resLogger.debug = dbg;
 });
 
@@ -292,7 +315,9 @@ add_test(function test_basicauth() {
 });
 
 add_task(async function test_get_protected_fail() {
-  _("GET a password protected resource (test that it'll fail w/o pass, no throw)");
+  _(
+    "GET a password protected resource (test that it'll fail w/o pass, no throw)"
+  );
   let res2 = new Resource(server.baseURI + "/protected");
   let content = await res2.get();
   Assert.equal(content.data, "This path exists and is protected - failed");
@@ -396,7 +421,9 @@ add_task(async function test_get_default_headers() {
 });
 
 add_task(async function test_put_default_headers() {
-  _("PUT: Accept defaults to application/json, Content-Type defaults to text/plain");
+  _(
+    "PUT: Accept defaults to application/json, Content-Type defaults to text/plain"
+  );
   let res_headers = new Resource(server.baseURI + "/headers");
   let content = JSON.parse((await res_headers.put("data")).data);
   Assert.equal(content.accept, "application/json;q=0.9,*/*;q=0.2");
@@ -404,7 +431,9 @@ add_task(async function test_put_default_headers() {
 });
 
 add_task(async function test_post_default_headers() {
-  _("POST: Accept defaults to application/json, Content-Type defaults to text/plain");
+  _(
+    "POST: Accept defaults to application/json, Content-Type defaults to text/plain"
+  );
   let res_headers = new Resource(server.baseURI + "/headers");
   let content = JSON.parse((await res_headers.post("data")).data);
   Assert.equal(content.accept, "application/json;q=0.9,*/*;q=0.2");
@@ -507,14 +536,15 @@ add_test(function test_uri_construction() {
 
   let query = "?" + args.join("&");
 
-  let uri1 = CommonUtils.makeURI("http://foo/" + query)
-                  .QueryInterface(Ci.nsIURL);
-  let uri2 = CommonUtils.makeURI("http://foo/")
-                  .QueryInterface(Ci.nsIURL);
-  uri2 = uri2.mutate()
-             .setQuery(query)
-             .finalize()
-             .QueryInterface(Ci.nsIURL);
+  let uri1 = CommonUtils.makeURI("http://foo/" + query).QueryInterface(
+    Ci.nsIURL
+  );
+  let uri2 = CommonUtils.makeURI("http://foo/").QueryInterface(Ci.nsIURL);
+  uri2 = uri2
+    .mutate()
+    .setQuery(query)
+    .finalize()
+    .QueryInterface(Ci.nsIURL);
   Assert.equal(uri1.query, uri2.query);
 
   run_next_test();

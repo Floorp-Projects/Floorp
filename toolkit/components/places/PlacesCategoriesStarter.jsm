@@ -10,11 +10,17 @@ const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesDBUtils",
-                               "resource://gre/modules/PlacesDBUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesDBUtils",
+  "resource://gre/modules/PlacesDBUtils.jsm"
+);
 
 /**
  * This component can be used as a starter for modules that have to run when
@@ -40,8 +46,10 @@ PlacesCategoriesStarter.prototype = {
         break;
       case "idle-daily":
         // Once a week run places.sqlite maintenance tasks.
-        let lastMaintenance =
-          Services.prefs.getIntPref("places.database.lastMaintenance", 0);
+        let lastMaintenance = Services.prefs.getIntPref(
+          "places.database.lastMaintenance",
+          0
+        );
         let nowSeconds = parseInt(Date.now() / 1000);
         if (lastMaintenance < nowSeconds - MAINTENANCE_INTERVAL_SECONDS) {
           PlacesDBUtils.maintenanceOnIdle();
@@ -53,9 +61,7 @@ PlacesCategoriesStarter.prototype = {
   },
 
   classID: Components.ID("803938d5-e26d-4453-bf46-ad4b26e41114"),
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-  ]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 };
 
 var EXPORTED_SYMBOLS = ["PlacesCategoriesStarter"];

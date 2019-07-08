@@ -9,7 +9,9 @@ add_task(async function runTests() {
 
   // Check if all history listeners are always notified.
   info("# part 1");
-  await whenPageShown(browser, () => BrowserTestUtils.loadURI(browser, "http://www.example.com/"));
+  await whenPageShown(browser, () =>
+    BrowserTestUtils.loadURI(browser, "http://www.example.com/")
+  );
   await checkListeners("newentry", "shistory has a new entry");
   ok(browser.canGoBack, "we can go back");
 
@@ -28,7 +30,7 @@ add_task(async function runTests() {
 
   // Check nsISHistory.notifyOnHistoryReload
   info("# part 2");
-  ok((await notifyReload()), "reloading has not been canceled");
+  ok(await notifyReload(), "reloading has not been canceled");
   await checkListeners("reload", "saw the reload notification");
 
   // Let the first listener cancel the reload action.
@@ -66,7 +68,7 @@ function listenOnce(message, arg = {}) {
 }
 
 function checkListeners(aLast, aMessage) {
-  return listenOnce("bug422543:getListenerStatus").then((listenerStatuses) => {
+  return listenOnce("bug422543:getListenerStatus").then(listenerStatuses => {
     is(listenerStatuses[0], aLast, aMessage);
     is(listenerStatuses[1], aLast, aMessage);
   });
@@ -87,27 +89,34 @@ function setListenerRetval(num, val) {
 }
 
 function setup() {
-  return BrowserTestUtils.openNewForegroundTab(gBrowser,
-                                               "http://mochi.test:8888")
-                         .then(function(tab) {
+  return BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888"
+  ).then(function(tab) {
     let browser = tab.linkedBrowser;
     registerCleanupFunction(async function() {
       await listenOnce("bug422543:cleanup");
       gBrowser.removeTab(tab);
     });
 
-    browser.messageManager
-           .loadFrameScript(getRootDirectory(gTestPath) + "file_bug422543_script.js", false);
+    browser.messageManager.loadFrameScript(
+      getRootDirectory(gTestPath) + "file_bug422543_script.js",
+      false
+    );
   });
 }
 
 function whenPageShown(aBrowser, aNavigation) {
   let listener = ContentTask.spawn(aBrowser, null, function() {
     return new Promise(resolve => {
-      addEventListener("pageshow", function onLoad() {
-        removeEventListener("pageshow", onLoad, true);
-        resolve();
-      }, true);
+      addEventListener(
+        "pageshow",
+        function onLoad() {
+          removeEventListener("pageshow", onLoad, true);
+          resolve();
+        },
+        true
+      );
     });
   });
 

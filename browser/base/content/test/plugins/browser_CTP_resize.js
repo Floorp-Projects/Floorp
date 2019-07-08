@@ -1,12 +1,18 @@
 var rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+const gTestRoot = rootDir.replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 var gTestBrowser = null;
 
 add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    setTestPluginEnabledState(
+      Ci.nsIPluginTag.STATE_ENABLED,
+      "Second Test Plug-in"
+    );
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     gBrowser.removeCurrentTab();
     window.focus();
@@ -23,8 +29,14 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 1, Should not have a click-to-play notification");
+  let popupNotification = PopupNotifications.getNotification(
+    "click-to-play-plugins",
+    gTestBrowser
+  );
+  ok(
+    !popupNotification,
+    "Test 1, Should not have a click-to-play notification"
+  );
 
   await promiseTabLoadEvent(newTab, gTestRoot + "plugin_small.html"); // 10x10 plugin
 
@@ -37,15 +49,20 @@ add_task(async function() {
 // Test that the overlay is hidden for "small" plugin elements and is shown
 // once they are resized to a size that can hold the overlay
 add_task(async function() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  let popupNotification = PopupNotifications.getNotification(
+    "click-to-play-plugins",
+    gTestBrowser
+  );
   ok(popupNotification, "Test 2, Should have a click-to-play notification");
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
-    Assert.ok(!overlay || overlay.getAttribute("sizing") == "blank",
-      "Test 2, overlay should be blank.");
+    Assert.ok(
+      !overlay || overlay.getAttribute("sizing") == "blank",
+      "Test 2, overlay should be blank."
+    );
   });
 });
 
@@ -62,11 +79,12 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
-    Assert.ok(!overlay || overlay.getAttribute("sizing") == "blank",
-      "Test 3, overlay should be blank.");
+    Assert.ok(
+      !overlay || overlay.getAttribute("sizing") == "blank",
+      "Test 3, overlay should be blank."
+    );
   });
 });
-
 
 add_task(async function() {
   await ContentTask.spawn(gTestBrowser, {}, async function() {
@@ -82,8 +100,10 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
-    Assert.ok(overlay && overlay.getAttribute("sizing") != "blank",
-      "Test 4, overlay should be visible.");
+    Assert.ok(
+      overlay && overlay.getAttribute("sizing") != "blank",
+      "Test 4, overlay should be visible."
+    );
   });
 });
 
@@ -102,8 +122,10 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
-    Assert.ok(!overlay || overlay.getAttribute("sizing") == "blank",
-      "Test 5, overlay should be blank.");
+    Assert.ok(
+      !overlay || overlay.getAttribute("sizing") == "blank",
+      "Test 5, overlay should be blank."
+    );
   });
 });
 
@@ -122,7 +144,9 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
-    Assert.ok(overlay && overlay.getAttribute("sizing") != "blank",
-      "Test 6, overlay should be visible.");
+    Assert.ok(
+      overlay && overlay.getAttribute("sizing") != "blank",
+      "Test 6, overlay should be visible."
+    );
   });
 });

@@ -18,7 +18,11 @@ add_task(async function test_browser_open_newtab_start_observer_notification() {
   const tab = gBrowser.selectedTab;
 
   ok(true, "browser-open-newtab-start observer not called");
-  Assert.deepEqual(browser, tab.linkedBrowser, "browser-open-newtab-start notified with the created browser");
+  Assert.deepEqual(
+    browser,
+    tab.linkedBrowser,
+    "browser-open-newtab-start notified with the created browser"
+  );
 
   BrowserTestUtils.removeTab(tab);
 });

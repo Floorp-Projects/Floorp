@@ -5,12 +5,17 @@
 "use strict";
 
 /* import-globals-from inspector-helpers.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js",
+  this
+);
 
 async function loadChildSelector(walker, selector) {
   const frame = await walker.querySelector(walker.rootNode, "#childFrame");
-  ok(frame.numChildren > 0,
-     "Child frame should consider its loaded document as a child.");
+  ok(
+    frame.numChildren > 0,
+    "Child frame should consider its loaded document as a child."
+  );
   const children = await walker.children(frame);
   const nodeList = await walker.querySelectorAll(children.nodes[0], selector);
   return nodeList.items();
@@ -26,8 +31,9 @@ function getUnloadedDoc(mutations) {
 }
 
 add_task(async function loadNewChild() {
-  const { target, walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { target, walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
   // Load a bunch of fronts for actors inside the child frame.
   await loadChildSelector(walker, "#longlist div");
   const onMutations = waitForMutation(walker, isChildList);
@@ -50,8 +56,9 @@ add_task(async function loadNewChild() {
 });
 
 add_task(async function loadNewChild() {
-  const { walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
   // Load a bunch of fronts for actors inside the child frame.
   await loadChildSelector(walker, "#longlist div");
   let onMutations = waitForMutation(walker, isChildList);
@@ -81,8 +88,9 @@ add_task(async function loadNewChild() {
 });
 
 add_task(async function loadNewChildTwiceAndCareAboutIt() {
-  const { target, walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { target, walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
   // Load a bunch of fronts for actors inside the child frame.
   await loadChildSelector(walker, "#longlist div");
   let onMutations = waitForMutation(walker, isChildList);
@@ -116,8 +124,9 @@ add_task(async function loadNewChildTwiceAndCareAboutIt() {
 });
 
 add_task(async function testBack() {
-  const { target, walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { target, walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
   // Load a bunch of fronts for actors inside the child frame.
   await loadChildSelector(walker, "#longlist div");
   let onMutations = waitForMutation(walker, isChildList);

@@ -212,7 +212,7 @@ add_task(async function test_uninistall_with_storage_local_file_backend() {
     ...(storageTestHelpers.storageLocal),
   });
 
-  await SpecialPowers.pushPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });
 
 // Repeat the cleanup test when the storage.local IndexedDB backend is enabled.
@@ -226,7 +226,7 @@ add_task(async function test_uninistall_with_storage_local_idb_backend() {
     ...(storageTestHelpers.storageLocal),
   });
 
-  await SpecialPowers.pushPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });
 
 </script>

@@ -4,9 +4,16 @@ function test() {
   waitForExplicitFinish();
 
   let pageLoaded = {
-    onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+    onStateChange: function onStateChange(
+      aWebProgress,
+      aRequest,
+      aStateFlags,
+      aStatus
+    ) {
+      if (
+        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
+      ) {
         gBrowser.removeProgressListener(this);
         executeSoon(checkURLBarRevert);
       }

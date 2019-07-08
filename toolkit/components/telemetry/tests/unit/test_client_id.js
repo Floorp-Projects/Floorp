@@ -3,9 +3,11 @@
 
 "use strict";
 
-const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
 
@@ -15,7 +17,11 @@ function run_test() {
 }
 
 add_task(async function() {
-  const drsPath = OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "state.json");
+  const drsPath = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "datareporting",
+    "state.json"
+  );
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const invalidIDs = [
     [-1, "setIntPref"],
@@ -29,22 +35,25 @@ add_task(async function() {
   // If there is no DRS file, we should get a new client ID.
   await ClientID._reset();
   let clientID = await ClientID.getClientID();
-  Assert.equal(typeof(clientID), "string");
+  Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
 
   // We should be guarded against invalid DRS json.
   await ClientID._reset();
-  await OS.File.writeAtomic(drsPath, "abcd", {encoding: "utf-8", tmpPath: drsPath + ".tmp"});
+  await OS.File.writeAtomic(drsPath, "abcd", {
+    encoding: "utf-8",
+    tmpPath: drsPath + ".tmp",
+  });
   clientID = await ClientID.getClientID();
-  Assert.equal(typeof(clientID), "string");
+  Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
 
   // If the DRS data is broken, we should end up with a new client ID.
-  for (let [invalidID ] of invalidIDs) {
+  for (let [invalidID] of invalidIDs) {
     await ClientID._reset();
-    await CommonUtils.writeJSON({clientID: invalidID}, drsPath);
+    await CommonUtils.writeJSON({ clientID: invalidID }, drsPath);
     clientID = await ClientID.getClientID();
-    Assert.equal(typeof(clientID), "string");
+    Assert.equal(typeof clientID, "string");
     Assert.ok(uuidRegex.test(clientID));
   }
 
@@ -53,11 +62,20 @@ add_task(async function() {
     await ClientID._reset();
     Services.prefs[prefFunc](PREF_CACHED_CLIENTID, invalidID);
     let cachedID = ClientID.getCachedClientID();
-    Assert.strictEqual(cachedID, null, "ClientID should ignore invalid cached IDs");
-    Assert.ok(!Services.prefs.prefHasUserValue(PREF_CACHED_CLIENTID),
-              "ClientID should reset invalid cached IDs");
-    Assert.ok(Services.prefs.getPrefType(PREF_CACHED_CLIENTID) == Ci.nsIPrefBranch.PREF_INVALID,
-              "ClientID should reset invalid cached IDs");
+    Assert.strictEqual(
+      cachedID,
+      null,
+      "ClientID should ignore invalid cached IDs"
+    );
+    Assert.ok(
+      !Services.prefs.prefHasUserValue(PREF_CACHED_CLIENTID),
+      "ClientID should reset invalid cached IDs"
+    );
+    Assert.ok(
+      Services.prefs.getPrefType(PREF_CACHED_CLIENTID) ==
+        Ci.nsIPrefBranch.PREF_INVALID,
+      "ClientID should reset invalid cached IDs"
+    );
   }
 });
 
@@ -85,11 +103,13 @@ add_task(async function test_setClientID() {
     await ClientID._reset();
     let prevClientID = await ClientID.getClientID();
     await ClientID.setClientID(invalidID)
-      .then(() => Assert.ok(false, `Invalid client ID '${invalidID}' should be rejected`))
+      .then(() =>
+        Assert.ok(false, `Invalid client ID '${invalidID}' should be rejected`)
+      )
       .catch(() => Assert.ok(true));
 
     clientID = await ClientID.getClientID();
-    Assert.equal(typeof(clientID), "string");
+    Assert.equal(typeof clientID, "string");
     Assert.ok(uuidRegex.test(clientID));
     Assert.equal(prevClientID, clientID);
   }
@@ -101,14 +121,18 @@ add_task(async function test_resetClientID() {
   // We should get a valid UUID after reset
   await ClientID._reset();
   let firstClientID = await ClientID.getClientID();
-  Assert.equal(typeof(firstClientID), "string");
+  Assert.equal(typeof firstClientID, "string");
   Assert.ok(uuidRegex.test(firstClientID));
 
   // When resetting again we should get a new ID
   let nextClientID = await ClientID.resetClientID();
-  Assert.equal(typeof(nextClientID), "string");
+  Assert.equal(typeof nextClientID, "string");
   Assert.ok(uuidRegex.test(nextClientID));
-  Assert.notEqual(firstClientID, nextClientID, "After reset client ID should be different.");
+  Assert.notEqual(
+    firstClientID,
+    nextClientID,
+    "After reset client ID should be different."
+  );
 
   let cachedID = ClientID.getCachedClientID();
   Assert.equal(nextClientID, cachedID);
@@ -126,30 +150,67 @@ add_task(async function test_resetParallelGet() {
   let newClientID = await ClientID.getClientID();
   let otherClientID = await p;
 
-  Assert.notEqual(firstClientID, newClientID, "After reset client ID should be different.");
-  Assert.equal(newClientID, otherClientID, "Getting the client ID in parallel to a reset should give the same id.");
+  Assert.notEqual(
+    firstClientID,
+    newClientID,
+    "After reset client ID should be different."
+  );
+  Assert.equal(
+    newClientID,
+    otherClientID,
+    "Getting the client ID in parallel to a reset should give the same id."
+  );
 });
 
-add_task({
-  skip_if: () => AppConstants.platform != "android",
-}, async function test_FennecCanaryDetect() {
-  const KNOWN_UUID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
+add_task(
+  {
+    skip_if: () => AppConstants.platform != "android",
+  },
+  async function test_FennecCanaryDetect() {
+    const KNOWN_UUID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
 
-  // We should get a valid UUID after reset
-  let firstClientID = await ClientID.resetClientID();
-  Assert.notEqual(KNOWN_UUID, firstClientID, "Client ID should be random.");
+    // We should get a valid UUID after reset
+    let firstClientID = await ClientID.resetClientID();
+    Assert.notEqual(KNOWN_UUID, firstClientID, "Client ID should be random.");
 
-  // Set the canary client ID.
-  await ClientID.setClientID(KNOWN_UUID);
-  Assert.equal(KNOWN_UUID, await ClientID.getClientID(), "Client ID should be known canary.");
+    // Set the canary client ID.
+    await ClientID.setClientID(KNOWN_UUID);
+    Assert.equal(
+      KNOWN_UUID,
+      await ClientID.getClientID(),
+      "Client ID should be known canary."
+    );
 
-  let newClientID = await ClientID.resetClientID();
-  Assert.notEqual(KNOWN_UUID, newClientID, "After reset Client ID should be random.");
-  Assert.notEqual(firstClientID, newClientID, "After reset Client ID should be new.");
-  Assert.ok(ClientID.wasCanaryClientID(), "After reset we should have detected a canary client ID");
+    let newClientID = await ClientID.resetClientID();
+    Assert.notEqual(
+      KNOWN_UUID,
+      newClientID,
+      "After reset Client ID should be random."
+    );
+    Assert.notEqual(
+      firstClientID,
+      newClientID,
+      "After reset Client ID should be new."
+    );
+    Assert.ok(
+      ClientID.wasCanaryClientID(),
+      "After reset we should have detected a canary client ID"
+    );
 
-  let clientID = await ClientID.resetClientID();
-  Assert.notEqual(KNOWN_UUID, clientID, "After reset Client ID should be random.");
-  Assert.notEqual(newClientID, clientID, "After reset Client ID should be new.");
-  Assert.ok(!ClientID.wasCanaryClientID(), "After reset we should not have detected a canary client ID");
-});
+    let clientID = await ClientID.resetClientID();
+    Assert.notEqual(
+      KNOWN_UUID,
+      clientID,
+      "After reset Client ID should be random."
+    );
+    Assert.notEqual(
+      newClientID,
+      clientID,
+      "After reset Client ID should be new."
+    );
+    Assert.ok(
+      !ClientID.wasCanaryClientID(),
+      "After reset we should not have detected a canary client ID"
+    );
+  }
+);

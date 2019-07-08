@@ -6,18 +6,21 @@
 
 var EXPORTED_SYMBOLS = ["AppMenu"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
 
 var AppMenu = {
-
   init(libDir) {},
 
   configurations: {
     appMenuMainView: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
         await reopenAppMenu(browserWindow);
       },
     },
@@ -25,7 +28,9 @@ var AppMenu = {
     appMenuHistorySubview: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
         await reopenAppMenu(browserWindow);
 
         let view = browserWindow.document.getElementById("appMenu-libraryView");
@@ -40,7 +45,9 @@ var AppMenu = {
     appMenuHelpSubview: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
         await reopenAppMenu(browserWindow);
 
         let view = browserWindow.document.getElementById("PanelUI-helpView");
@@ -51,7 +58,6 @@ var AppMenu = {
 
       verifyConfig: verifyConfigHelper,
     },
-
   },
 };
 

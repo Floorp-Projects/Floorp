@@ -3,15 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "FilePicker",
-                                   "@mozilla.org/filepicker;1", "nsIFilePicker");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "FilePicker",
+  "@mozilla.org/filepicker;1",
+  "nsIFilePicker"
+);
 XPCOMUtils.defineLazyGetter(this, "strings", () => {
-  return Services.strings.createBundle("chrome://global/locale/aboutWebrtc.properties");
+  return Services.strings.createBundle(
+    "chrome://global/locale/aboutWebrtc.properties"
+  );
 });
 
 const getString = strings.GetStringFromName;
@@ -22,12 +33,14 @@ const WEBRTC_TRACE_ALL = 65535;
 
 function getStats() {
   return new Promise(resolve =>
-    WebrtcGlobalInformation.getAllStats(stats => resolve(stats)));
+    WebrtcGlobalInformation.getAllStats(stats => resolve(stats))
+  );
 }
 
 function getLog() {
   return new Promise(resolve =>
-    WebrtcGlobalInformation.getLogging("", log => resolve(log)));
+    WebrtcGlobalInformation.getLogging("", log => resolve(log))
+  );
 }
 
 // Begin initial data queries as page loads. Store returned Promises for
@@ -57,29 +70,29 @@ window.onload = function() {
   };
 
   Promise.all([reportsRetrieved, logRetrieved])
-    .then(([stats, log]) => contentInit({reports: stats.reports, log}))
-    .catch(error => contentInit({error}));
+    .then(([stats, log]) => contentInit({ reports: stats.reports, log }))
+    .catch(error => contentInit({ error }));
 };
 
 function onClearLog() {
   WebrtcGlobalInformation.clearLogging();
   getLog()
-    .then(log => AboutWebRTC.refresh({log}))
-    .catch(error => AboutWebRTC.refresh({logError: error}));
+    .then(log => AboutWebRTC.refresh({ log }))
+    .catch(error => AboutWebRTC.refresh({ logError: error }));
 }
 
 function onClearStats() {
   WebrtcGlobalInformation.clearAllStats();
   getStats()
-    .then(stats => AboutWebRTC.refresh({reports: stats.reports}))
-    .catch(error => AboutWebRTC.refresh({reportError: error}));
+    .then(stats => AboutWebRTC.refresh({ reports: stats.reports }))
+    .catch(error => AboutWebRTC.refresh({ reportError: error }));
 }
 
 var ControlSet = {
   render() {
-    let controls = renderElement("div", null, {className: "controls"});
-    this.controlSection = renderElement("div", null, {className: "control"});
-    this.messageSection = renderElement("div", null, {className: "message"});
+    let controls = renderElement("div", null, { className: "controls" });
+    this.controlSection = renderElement("div", null, { className: "control" });
+    this.messageSection = renderElement("div", null, { className: "message" });
 
     controls.appendChild(this.controlSection);
     controls.appendChild(this.messageSection);
@@ -114,7 +127,7 @@ Control.prototype = {
   },
 
   set label(val) {
-    return this._labelVal = val || "\xA0";
+    return (this._labelVal = val || "\xA0");
   },
 
   get label() {
@@ -122,7 +135,7 @@ Control.prototype = {
   },
 
   set message(val) {
-    return this._messageVal = val;
+    return (this._messageVal = val);
   },
 
   get message() {
@@ -134,10 +147,12 @@ Control.prototype = {
 
     this.msg.textContent = "";
     if (this._message) {
-      this.msg.appendChild(Object.assign(document.createElement("span"), {
-        className: "info-label",
-        textContent: `${this._messageHeader}: `,
-      }));
+      this.msg.appendChild(
+        Object.assign(document.createElement("span"), {
+          className: "info-label",
+          textContent: `${this._messageHeader}: `,
+        })
+      );
       this.msg.appendChild(document.createTextNode(this._message));
     }
   },
@@ -159,16 +174,23 @@ SavePage.prototype.constructor = SavePage;
 SavePage.prototype.onClick = function() {
   let content = document.querySelector("#content");
 
-  if (!content)
+  if (!content) {
     return;
+  }
 
   FoldEffect.expandAll();
-  FilePicker.init(window, getString("save_page_dialog_title"), FilePicker.modeSave);
+  FilePicker.init(
+    window,
+    getString("save_page_dialog_title"),
+    FilePicker.modeSave
+  );
   FilePicker.defaultString = LOGFILE_NAME_DEFAULT;
   FilePicker.open(rv => {
     if (rv == FilePicker.returnOK || rv == FilePicker.returnReplace) {
       let fout = FileUtils.openAtomicFileOutputStream(
-        FilePicker.file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
+        FilePicker.file,
+        FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE
+      );
 
       let nodes = content.querySelectorAll(".no-print");
       let noPrintList = [];
@@ -298,7 +320,8 @@ var AboutWebRTC = {
     if (data.error) {
       parent.appendChild(renderElement("h3", getString("cannot_retrieve_log")));
       parent.appendChild(
-          renderElement("p", `${data.error.name}: ${data.error.message}`));
+        renderElement("p", `${data.error.name}: ${data.error.message}`)
+      );
       return;
     }
 
@@ -329,15 +352,17 @@ var AboutWebRTC = {
   },
 
   renderPeerConnections() {
-    let connections = renderElement("div", null, {className: "stats"});
+    let connections = renderElement("div", null, { className: "stats" });
 
-    let heading = renderElement("span", null, {className: "section-heading"});
+    let heading = renderElement("span", null, { className: "section-heading" });
     heading.appendChild(renderElement("h3", getString("stats_heading")));
 
-    heading.appendChild(renderElement("button", getString("stats_clear"), {
-      className: "no-print",
-      onclick: this._onClearStats,
-    }));
+    heading.appendChild(
+      renderElement("button", getString("stats_clear"), {
+        className: "no-print",
+        onclick: this._onClearStats,
+      })
+    );
     connections.appendChild(heading);
 
     if (!this._reports || !this._reports.length) {
@@ -355,14 +380,16 @@ var AboutWebRTC = {
   },
 
   renderConnectionLog() {
-    let content = renderElement("div", null, {className: "log"});
+    let content = renderElement("div", null, { className: "log" });
 
-    let heading = renderElement("span", null, {className: "section-heading"});
+    let heading = renderElement("span", null, { className: "section-heading" });
     heading.appendChild(renderElement("h3", getString("log_heading")));
-    heading.appendChild(renderElement("button", getString("log_clear"), {
-      className: "no-print",
-      onclick: this._onClearLog,
-    }));
+    heading.appendChild(
+      renderElement("button", getString("log_clear"), {
+        className: "no-print",
+        onclick: this._onClearLog,
+      })
+    );
     content.appendChild(heading);
 
     if (!this._log || !this._log.length) {
@@ -389,7 +416,7 @@ function PeerConnection(report) {
 
 PeerConnection.prototype = {
   render() {
-    let pc = renderElement("div", null, {className: "peer-connection"});
+    let pc = renderElement("div", null, { className: "peer-connection" });
     pc.appendChild(this.renderHeading());
 
     let div = new FoldableSection(pc).render();
@@ -407,8 +434,9 @@ PeerConnection.prototype = {
     let pcInfo = this.getPCInfo(this._report);
     let heading = document.createElement("h3");
     let now = new Date(this._report.timestamp).toString();
-    heading.textContent =
-      `[ ${pcInfo.id} ] ${pcInfo.url} ${pcInfo.closed ? `(${getString("connection_closed")})` : ""} ${now}`;
+    heading.textContent = `[ ${pcInfo.id} ] ${pcInfo.url} ${
+      pcInfo.closed ? `(${getString("connection_closed")})` : ""
+    } ${now}`;
     return heading;
   },
 
@@ -416,13 +444,17 @@ PeerConnection.prototype = {
     let info = document.createElement("div");
 
     info.appendChild(
-        renderElement("span", `${getString("peer_connection_id_label")}: `), {
-          className: "info-label",
-        });
+      renderElement("span", `${getString("peer_connection_id_label")}: `),
+      {
+        className: "info-label",
+      }
+    );
 
-    info.appendChild(renderElement("span", this._report.pcid, {
-      className: "info-body",
-    }));
+    info.appendChild(
+      renderElement("span", this._report.pcid, {
+        className: "info-body",
+      })
+    );
 
     return info;
   },
@@ -458,10 +490,12 @@ SDPStats.prototype = {
 
     let offerLabel = `(${getString("offer")})`;
     let answerLabel = `(${getString("answer")})`;
-    let localSdpHeading =
-      `${getString("local_sdp_heading")} ${this._report.offerer ? offerLabel : answerLabel}`;
-    let remoteSdpHeading =
-      `${getString("remote_sdp_heading")} ${this._report.offerer ? answerLabel : offerLabel}`;
+    let localSdpHeading = `${getString("local_sdp_heading")} ${
+      this._report.offerer ? offerLabel : answerLabel
+    }`;
+    let remoteSdpHeading = `${getString("remote_sdp_heading")} ${
+      this._report.offerer ? answerLabel : offerLabel
+    }`;
 
     div.appendChild(renderElement("h5", localSdpHeading));
     div.appendChild(renderElement("pre", this._report.localSdp));
@@ -494,8 +528,10 @@ RTPStats.prototype = {
 
   generateRTPStats() {
     let remoteRtpStats = {};
-    let rtpStats = [].concat((this._report.inboundRTPStreamStats || []),
-                             (this._report.outboundRTPStreamStats || []));
+    let rtpStats = [].concat(
+      this._report.inboundRTPStreamStats || [],
+      this._report.outboundRTPStreamStats || []
+    );
 
     // Generate an id-to-streamStat index for each streamStat that is marked
     // as a remote. This will be used next to link the remote to its local side.
@@ -522,28 +558,38 @@ RTPStats.prototype = {
     let label;
 
     if (stats.bitrateMean) {
-      statsString += ` ${getString("avg_bitrate_label")}: ${(stats.bitrateMean / 1000000).toFixed(2)} Mbps`;
+      statsString += ` ${getString("avg_bitrate_label")}: ${(
+        stats.bitrateMean / 1000000
+      ).toFixed(2)} Mbps`;
       if (stats.bitrateStdDev) {
         statsString += ` (${(stats.bitrateStdDev / 1000000).toFixed(2)} SD)`;
       }
     }
 
     if (stats.framerateMean) {
-      statsString += ` ${getString("avg_framerate_label")}: ${(stats.framerateMean).toFixed(2)} fps`;
+      statsString += ` ${getString(
+        "avg_framerate_label"
+      )}: ${stats.framerateMean.toFixed(2)} fps`;
       if (stats.framerateStdDev) {
         statsString += ` (${stats.framerateStdDev.toFixed(2)} SD)`;
       }
     }
 
     if (stats.droppedFrames) {
-      statsString += ` ${getString("dropped_frames_label")}: ${stats.droppedFrames}`;
+      statsString += ` ${getString("dropped_frames_label")}: ${
+        stats.droppedFrames
+      }`;
     }
     if (stats.discardedPackets) {
-      statsString += ` ${getString("discarded_packets_label")}: ${stats.discardedPackets}`;
+      statsString += ` ${getString("discarded_packets_label")}: ${
+        stats.discardedPackets
+      }`;
     }
 
     if (statsString) {
-      label = (stats.packetsReceived ? ` ${getString("decoder_label")}:` : ` ${getString("encoder_label")}:`);
+      label = stats.packetsReceived
+        ? ` ${getString("decoder_label")}:`
+        : ` ${getString("encoder_label")}:`;
       statsString = label + statsString;
     }
 
@@ -551,23 +597,29 @@ RTPStats.prototype = {
   },
 
   renderTransportStats(stats, typeLabel) {
-    let time  = new Date(stats.timestamp).toTimeString();
+    let time = new Date(stats.timestamp).toTimeString();
     let statsString = `${typeLabel}: ${time} ${stats.type} SSRC: ${stats.ssrc}`;
 
     if (stats.packetsReceived) {
-      statsString += ` ${getString("received_label")}: ${stats.packetsReceived} ${getString("packets")}`;
+      statsString += ` ${getString("received_label")}: ${
+        stats.packetsReceived
+      } ${getString("packets")}`;
 
       if (stats.bytesReceived) {
         statsString += ` (${(stats.bytesReceived / 1024).toFixed(2)} Kb)`;
       }
 
-      statsString += ` ${getString("lost_label")}: ${stats.packetsLost} ${getString("jitter_label")}: ${stats.jitter}`;
+      statsString += ` ${getString("lost_label")}: ${
+        stats.packetsLost
+      } ${getString("jitter_label")}: ${stats.jitter}`;
 
       if (stats.roundTripTime) {
         statsString += ` RTT: ${stats.roundTripTime * 1000} ms`;
       }
     } else if (stats.packetsSent) {
-      statsString += ` ${getString("sent_label")}: ${stats.packetsSent} ${getString("packets")}`;
+      statsString += ` ${getString("sent_label")}: ${
+        stats.packetsSent
+      } ${getString("packets")}`;
       if (stats.bytesSent) {
         statsString += ` (${(stats.bytesSent / 1024).toFixed(2)} Kb)`;
       }
@@ -584,7 +636,9 @@ RTPStats.prototype = {
     div.appendChild(this.renderTransportStats(stats, getString("typeLocal")));
 
     if (stats.remoteId && stats.remoteRtpStats) {
-      div.appendChild(this.renderTransportStats(stats.remoteRtpStats, getString("typeRemote")));
+      div.appendChild(
+        this.renderTransportStats(stats.remoteRtpStats, getString("typeRemote"))
+      );
     }
 
     return div;
@@ -604,10 +658,15 @@ ICEStats.prototype = {
     // add just a bit of vertical space between the restart/rollback
     // counts and the ICE candidate pair table above.
     div.appendChild(document.createElement("br"));
-    div.appendChild(this.renderIceMetric("ice_restart_count_label",
-                                         this._report.iceRestarts));
-    div.appendChild(this.renderIceMetric("ice_rollback_count_label",
-                                         this._report.iceRollbacks));
+    div.appendChild(
+      this.renderIceMetric("ice_restart_count_label", this._report.iceRestarts)
+    );
+    div.appendChild(
+      this.renderIceMetric(
+        "ice_rollback_count_label",
+        this._report.iceRollbacks
+      )
+    );
 
     div.appendChild(this.renderRawICECandidateSection());
 
@@ -615,7 +674,7 @@ ICEStats.prototype = {
   },
 
   renderICECandidateTable() {
-    let caption = renderElement("caption", null, {className: "no-print"});
+    let caption = renderElement("caption", null, { className: "no-print" });
 
     // This takes the caption message with the replacement token, breaks
     // it around the token, and builds the spans for each portion of the
@@ -627,40 +686,49 @@ ICEStats.prototype = {
 
     // only append span if non-whitespace chars present
     if (/\S/.test(start)) {
-      caption.appendChild(
-          renderElement("span", `${start}`));
+      caption.appendChild(renderElement("span", `${start}`));
     }
     caption.appendChild(
-        renderElement("span", getString("trickle_highlight_color_name2"), {
-          className: "trickled",
-        }));
+      renderElement("span", getString("trickle_highlight_color_name2"), {
+        className: "trickled",
+      })
+    );
     // only append span if non-whitespace chars present
     if (/\S/.test(end)) {
-      caption.appendChild(
-          renderElement("span", `${end}`));
+      caption.appendChild(renderElement("span", `${end}`));
     }
 
     let stats = this.generateICEStats();
     // don't use |stat.x || ""| here because it hides 0 values
-    let tbody = stats.map(stat => [
-      stat["local-candidate"],
-      stat["remote-candidate"],
-      stat.componentId,
-      stat.state,
-      stat.priority,
-      stat.nominated,
-      stat.selected,
-      stat.bytesSent,
-      stat.bytesReceived,
-    ].map(entry => Object.is(entry, undefined) ? "" : entry));
+    let tbody = stats.map(stat =>
+      [
+        stat["local-candidate"],
+        stat["remote-candidate"],
+        stat.componentId,
+        stat.state,
+        stat.priority,
+        stat.nominated,
+        stat.selected,
+        stat.bytesSent,
+        stat.bytesReceived,
+      ].map(entry => (Object.is(entry, undefined) ? "" : entry))
+    );
 
     let statsTable = new SimpleTable(
-      ["local_candidate", "remote_candidate",
-       "ice_component_id", "ice_state",
-       "priority", "nominated", "selected",
-       "ice_pair_bytes_sent", "ice_pair_bytes_received",
+      [
+        "local_candidate",
+        "remote_candidate",
+        "ice_component_id",
+        "ice_state",
+        "priority",
+        "nominated",
+        "selected",
+        "ice_pair_bytes_sent",
+        "ice_pair_bytes_received",
       ].map(columnName => getString(columnName)),
-      tbody, caption).render();
+      tbody,
+      caption
+    ).render();
 
     // after rendering the table, we need to change the class name for each
     // candidate pair's local or remote candidate if it was trickled.
@@ -680,8 +748,10 @@ ICEStats.prototype = {
     // component id grouping.
     let rowCount = statsTable.rows.length - 1;
     for (var i = 0; i < rowCount; i++) {
-      if (statsTable.rows[i].cells[2].innerHTML !==
-          statsTable.rows[i + 1].cells[2].innerHTML) {
+      if (
+        statsTable.rows[i].cells[2].innerHTML !==
+        statsTable.rows[i + 1].cells[2].innerHTML
+      ) {
         statsTable.rows[i].className = "bottom-border";
       }
     }
@@ -700,7 +770,8 @@ ICEStats.prototype = {
 
     let statsTable = new SimpleTable(
       [getString("raw_local_candidate"), getString("raw_remote_candidate")],
-      tbody).render();
+      tbody
+    ).render();
 
     // we want different formatting on the raw stats table (namely, left-align)
     statsTable.className = "raw-candidate";
@@ -712,7 +783,8 @@ ICEStats.prototype = {
   renderRawICECandidateSection() {
     let section = document.createElement("div");
     section.appendChild(
-        renderElement("h4", getString("raw_candidates_heading")));
+      renderElement("h4", getString("raw_candidates_heading"))
+    );
 
     let div = new FoldableSection(section, {
       showMsg: getString("raw_cand_show_msg"),
@@ -753,11 +825,11 @@ ICEStats.prototype = {
     let info = document.createElement("div");
 
     info.appendChild(
-        renderElement("span", `${getString(labelName)}: `, {
-          className: "info-label",
-        }));
-    info.appendChild(
-        renderElement("span", value, {className: "info-body"}));
+      renderElement("span", `${getString(labelName)}: `, {
+        className: "info-label",
+      })
+    );
+    info.appendChild(renderElement("span", value, { className: "info-body" }));
 
     return info;
   },
@@ -773,8 +845,10 @@ ICEStats.prototype = {
 
     // a method to see if a given candidate id is in the array of tickled
     // candidates.
-    let isTrickled = id => [...this._report.trickledIceCandidateStats].some(
-      candidate => candidate.id == id);
+    let isTrickled = id =>
+      [...this._report.trickledIceCandidateStats].some(
+        candidate => candidate.id == id
+      );
 
     // A component may have a remote or local candidate address or both.
     // Combine those with both; these will be the peer candidates.
@@ -798,7 +872,7 @@ ICEStats.prototype = {
         };
         matched[local.id] = true;
         if (isTrickled(local.id)) {
-            stat["local-trickled"] = true;
+          stat["local-trickled"] = true;
         }
 
         if (remote) {
@@ -815,14 +889,13 @@ ICEStats.prototype = {
     // sort (group by) componentId first, then bytesSent if available, else by
     // priority
     return stats.sort((a, b) => {
-        if (a.componentId != b.componentId) {
-          return a.componentId - b.componentId;
-        }
-        return (b.bytesSent ?
-                (b.bytesSent || 0) - (a.bytesSent || 0) :
-                (b.priority || 0) - (a.priority || 0)
-               );
-      });
+      if (a.componentId != b.componentId) {
+        return a.componentId - b.componentId;
+      }
+      return b.bytesSent
+        ? (b.bytesSent || 0) - (a.bytesSent || 0)
+        : (b.priority || 0) - (a.priority || 0);
+    });
   },
 
   candidateToString(c) {
@@ -867,7 +940,7 @@ function SimpleTable(heading, data, caption) {
 SimpleTable.prototype = {
   renderRow(list, header) {
     let row = document.createElement("tr");
-    let elemType = (header ? "th" : "td");
+    let elemType = header ? "th" : "td";
 
     for (let elem of list) {
       row.appendChild(renderElement(elemType, elem));
@@ -909,7 +982,7 @@ FoldEffect.prototype = {
   render() {
     this._target.classList.add("fold-target");
 
-    let ctrl = renderElement("div", null, {className: "fold-trigger"});
+    let ctrl = renderElement("div", null, { className: "fold-trigger" });
     this._trigger = ctrl;
     ctrl.addEventListener("click", this.onClick.bind(this));
     this.close();

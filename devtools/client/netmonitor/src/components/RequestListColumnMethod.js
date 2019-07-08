@@ -21,7 +21,10 @@ class RequestListColumnMethod extends Component {
 
   render() {
     const { method } = this.props.item;
-    return dom.td({ className: "requests-list-column requests-list-method" }, method);
+    return dom.td(
+      { className: "requests-list-column requests-list-method" },
+      method
+    );
   }
 }
 

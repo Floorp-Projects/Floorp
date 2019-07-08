@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   const str = "javascript:10";
@@ -18,9 +18,9 @@ function run_test() {
   Assert.ok(!uri2.equals(uri3));
 
   var simple = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-                 .createInstance(Ci.nsIURIMutator)
-                 .setSpec(str)
-                 .finalize();
+    .createInstance(Ci.nsIURIMutator)
+    .setSpec(str)
+    .finalize();
   Assert.equal(simple.spec, uri.spec);
   Assert.ok(!simple.equals(uri));
   Assert.ok(!uri.equals(simple));

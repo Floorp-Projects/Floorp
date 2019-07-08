@@ -4,9 +4,13 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 // The chrome window and friends.
 let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
@@ -46,8 +50,10 @@ add_task(async function testThemeInstall() {
   registrar.registerFactory(PROMPT_CLASSID, "", PROMPT_CONTRACTID, factory);
 
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webapi.testing", true],
-          ["extensions.install.requireBuiltInCerts", false]],
+    set: [
+      ["extensions.webapi.testing", true],
+      ["extensions.install.requireBuiltInCerts", false],
+    ],
   });
 
   tabTest = BrowserApp.addTab(PAGE);
@@ -62,17 +68,23 @@ add_task(async function testThemeInstall() {
   Services.obs.addObserver(observer, "lightweight-theme-styling-update");
 
   let installPromise = promiseNotification("lightweight-theme-styling-update");
-  let install = await content.navigator.mozAddonManager.createInstall({url: XPI});
+  let install = await content.navigator.mozAddonManager.createInstall({
+    url: XPI,
+  });
   install.install();
   await installPromise;
   ok(true, "Theme install completed");
 
   is(updates.length, 1, "Got a single theme update");
   let parsed = JSON.parse(updates[0]);
-  ok(parsed.theme.headerURL.endsWith("/testImage.png"),
-     "Theme update has the expected headerURL");
-  ok(parsed.theme.headerURL.startsWith("moz-extension"),
-     "headerURL references resource inside extension file");
+  ok(
+    parsed.theme.headerURL.endsWith("/testImage.png"),
+    "Theme update has the expected headerURL"
+  );
+  ok(
+    parsed.theme.headerURL.startsWith("moz-extension"),
+    "headerURL references resource inside extension file"
+  );
 
   await EventDispatcher.instance.sendRequestForResult({
     type: "Robocop:WaitOnUI",

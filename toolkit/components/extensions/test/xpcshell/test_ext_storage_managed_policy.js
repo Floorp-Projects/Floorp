@@ -1,9 +1,12 @@
 "use strict";
 
-const PREF_DISABLE_SECURITY = ("security.turn_off_all_security_so_that_" +
-                               "viruses_can_take_over_this_computer");
+const PREF_DISABLE_SECURITY =
+  "security.turn_off_all_security_so_that_" +
+  "viruses_can_take_over_this_computer";
 
-const {EnterprisePolicyTesting} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm");
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
+);
 
 // Setting PREF_DISABLE_SECURITY tells the policy engine that we are in testing
 // mode and enables restarting the policy engine without restarting the browser.
@@ -21,11 +24,11 @@ add_task(async function test_storage_managed_policy() {
   await ExtensionTestUtils.startAddonManager();
 
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
-    "policies": {
+    policies: {
       "3rdparty": {
-        "Extensions": {
+        Extensions: {
           "test-storage-managed-policy@mozilla.com": {
-            "string": "value",
+            string: "value",
           },
         },
       },
@@ -34,7 +37,9 @@ add_task(async function test_storage_managed_policy() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id: "test-storage-managed-policy@mozilla.com"}},
+      applications: {
+        gecko: { id: "test-storage-managed-policy@mozilla.com" },
+      },
       permissions: ["storage"],
     },
 
@@ -45,6 +50,6 @@ add_task(async function test_storage_managed_policy() {
   });
 
   await extension.startup();
-  deepEqual(await extension.awaitMessage("results"), {"string": "value"});
+  deepEqual(await extension.awaitMessage("results"), { string: "value" });
   await extension.unload();
 });

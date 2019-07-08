@@ -14,24 +14,41 @@ function testEventTarget(event) {
   postMessage(event.data);
 }
 
-addEventListener(fakeEventType, function(event) {
-  throw new Error("Trusted event listener received untrusted event!");
-}, false, false);
+addEventListener(
+  fakeEventType,
+  function(event) {
+    throw new Error("Trusted event listener received untrusted event!");
+  },
+  false,
+  false
+);
 
-addEventListener(fakeEventType, function(event) {
-  if (event.target !== self || event.currentTarget !== self) {
-    throw new Error("Fake event has bad target!");
-  }
-  if (event.isTrusted) {
-    throw new Error("Event should be untrusted!");
-  }
-  event.stopImmediatePropagation();
-  postMessage(event.data);
-}, false, true);
+addEventListener(
+  fakeEventType,
+  function(event) {
+    if (event.target !== self || event.currentTarget !== self) {
+      throw new Error("Fake event has bad target!");
+    }
+    if (event.isTrusted) {
+      throw new Error("Event should be untrusted!");
+    }
+    event.stopImmediatePropagation();
+    postMessage(event.data);
+  },
+  false,
+  true
+);
 
-addEventListener(fakeEventType, function(event) {
-  throw new Error("This shouldn't get called because of stopImmediatePropagation.");
-}, false, true);
+addEventListener(
+  fakeEventType,
+  function(event) {
+    throw new Error(
+      "This shouldn't get called because of stopImmediatePropagation."
+    );
+  },
+  false,
+  true
+);
 
 var count = 0;
 onmessage = function(event) {
@@ -43,8 +60,7 @@ onmessage = function(event) {
     var exception;
     try {
       self.dispatchEvent(event);
-    }
-    catch(e) {
+    } catch (e) {
       exception = e;
     }
 
@@ -52,12 +68,13 @@ onmessage = function(event) {
       throw new Error("Recursive dispatch didn't fail!");
     }
 
-    event = new MessageEvent(fakeEventType, { bubbles: event.bubbles,
-                                              cancelable: event.cancelable,
-                                              data: event.data,
-                                              origin: "*",
-                                              source: null
-                                            });
+    event = new MessageEvent(fakeEventType, {
+      bubbles: event.bubbles,
+      cancelable: event.cancelable,
+      data: event.data,
+      origin: "*",
+      source: null,
+    });
     self.dispatchEvent(event);
 
     return;

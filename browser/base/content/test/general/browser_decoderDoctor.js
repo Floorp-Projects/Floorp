@@ -13,8 +13,13 @@
 // 'accessKey': Expected access key for the button.
 // 'tabChecker': function(openedTab) called with the opened tab that resulted
 //   from clicking the button.
-async function test_decoder_doctor_notification(data, notificationMessage,
-                                           label, accessKey, tabChecker) {
+async function test_decoder_doctor_notification(
+  data,
+  notificationMessage,
+  label,
+  accessKey,
+  tabChecker
+) {
   if (typeof data.type === "undefined") {
     ok(false, "Test implementation error: data.type must be provided");
     return;
@@ -24,17 +29,25 @@ async function test_decoder_doctor_notification(data, notificationMessage,
     data.decoderDoctorReportId = "testReportId";
   }
   await BrowserTestUtils.withNewTab({ gBrowser }, async function(browser) {
-    let awaitNotificationBar =
-      BrowserTestUtils.waitForNotificationBar(gBrowser, browser, "decoder-doctor-notification");
+    let awaitNotificationBar = BrowserTestUtils.waitForNotificationBar(
+      gBrowser,
+      browser,
+      "decoder-doctor-notification"
+    );
 
     await ContentTask.spawn(browser, data, async function(aData) {
-      Services.obs.notifyObservers(content.window,
-                                   "decoder-doctor-notification",
-                                   JSON.stringify(aData));
+      Services.obs.notifyObservers(
+        content.window,
+        "decoder-doctor-notification",
+        JSON.stringify(aData)
+      );
     });
 
     if (!notificationMessage) {
-      ok(true, "Tested notifying observers with a nonsensical message, no effects expected");
+      ok(
+        true,
+        "Tested notifying observers with a nonsensical message, no effects expected"
+      );
       return;
     }
 
@@ -47,8 +60,11 @@ async function test_decoder_doctor_notification(data, notificationMessage,
     }
     ok(notification, "Got decoder-doctor-notification notification");
 
-    is(notification.messageText.textContent, notificationMessage,
-       "notification message should match expectation");
+    is(
+      notification.messageText.textContent,
+      notificationMessage,
+      "notification message should match expectation"
+    );
 
     let button = notification.querySelector("button");
     if (!label) {
@@ -56,12 +72,16 @@ async function test_decoder_doctor_notification(data, notificationMessage,
       return;
     }
 
-    is(button.getAttribute("label"),
-       label,
-       `notification button should be '${label}'`);
-    is(button.getAttribute("accesskey"),
-       accessKey,
-       "notification button should have accesskey");
+    is(
+      button.getAttribute("label"),
+      label,
+      `notification button should be '${label}'`
+    );
+    is(
+      button.getAttribute("accesskey"),
+      accessKey,
+      "notification button should have accesskey"
+    );
 
     if (!tabChecker) {
       ok(false, "Test implementation error: Missing tabChecker");
@@ -79,24 +99,35 @@ function tab_checker_for_sumo(expectedPath) {
   return function(openedTab) {
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     let url = baseURL + expectedPath;
-    is(openedTab.linkedBrowser.currentURI.spec, url,
-       `Expected '${url}' in new tab`);
+    is(
+      openedTab.linkedBrowser.currentURI.spec,
+      url,
+      `Expected '${url}' in new tab`
+    );
   };
 }
 
 function tab_checker_for_webcompat(expectedParams) {
   return function(openedTab) {
     let urlString = openedTab.linkedBrowser.currentURI.spec;
-    let endpoint = Services.prefs.getStringPref("media.decoder-doctor.new-issue-endpoint", "");
-    ok(urlString.startsWith(endpoint),
-       `Expected URL starting with '${endpoint}', got '${urlString}'`);
+    let endpoint = Services.prefs.getStringPref(
+      "media.decoder-doctor.new-issue-endpoint",
+      ""
+    );
+    ok(
+      urlString.startsWith(endpoint),
+      `Expected URL starting with '${endpoint}', got '${urlString}'`
+    );
     let params = new URL(urlString).searchParams;
     for (let k in expectedParams) {
       if (!params.has(k)) {
         ok(false, `Expected ${k} in webcompat URL`);
       } else {
-        is(params.get(k), expectedParams[k],
-           `Expected ${k}='${expectedParams[k]}' in webcompat URL`);
+        is(
+          params.get(k),
+          expectedParams[k],
+          `Expected ${k}='${expectedParams[k]}' in webcompat URL`
+        );
       }
     }
   };
@@ -112,11 +143,12 @@ add_task(async function test_platform_decoder_not_found() {
   }
 
   await test_decoder_doctor_notification(
-    {type: "platform-decoder-not-found", formats: "testFormat"},
+    { type: "platform-decoder-not-found", formats: "testFormat" },
     message,
     isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.button"),
     isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
-    tab_checker_for_sumo("fix-video-audio-problems-firefox-windows"));
+    tab_checker_for_sumo("fix-video-audio-problems-firefox-windows")
+  );
 });
 
 add_task(async function test_cannot_initialize_pulseaudio() {
@@ -127,53 +159,83 @@ add_task(async function test_cannot_initialize_pulseaudio() {
   }
 
   await test_decoder_doctor_notification(
-    {type: "cannot-initialize-pulseaudio", formats: "testFormat"},
+    { type: "cannot-initialize-pulseaudio", formats: "testFormat" },
     message,
     gNavigatorBundle.getString("decoder.noCodecs.button"),
     gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
-    tab_checker_for_sumo("fix-common-audio-and-video-issues"));
+    tab_checker_for_sumo("fix-common-audio-and-video-issues")
+  );
 });
 
 add_task(async function test_unsupported_libavcodec() {
   let message = "";
   // This is only sent on Linux.
   if (AppConstants.platform == "linux") {
-    message =
-      gNavigatorBundle.getString("decoder.unsupportedLibavcodec.message");
+    message = gNavigatorBundle.getString(
+      "decoder.unsupportedLibavcodec.message"
+    );
   }
 
   await test_decoder_doctor_notification(
-    {type: "unsupported-libavcodec", formats: "testFormat"}, message);
+    { type: "unsupported-libavcodec", formats: "testFormat" },
+    message
+  );
 });
 
 add_task(async function test_decode_error() {
-  await SpecialPowers.pushPrefEnv(
-    { set: [["media.decoder-doctor.new-issue-endpoint",
-             "http://127.0.0.1/webcompat"]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.decoder-doctor.new-issue-endpoint", "http://127.0.0.1/webcompat"],
+    ],
+  });
   let message = gNavigatorBundle.getString("decoder.decodeError.message");
   await test_decoder_doctor_notification(
-    {type: "decode-error", decodeIssue: "DecodeIssue",
-     docURL: "DocURL", resourceURL: "ResURL"},
+    {
+      type: "decode-error",
+      decodeIssue: "DecodeIssue",
+      docURL: "DocURL",
+      resourceURL: "ResURL",
+    },
     message,
     gNavigatorBundle.getString("decoder.decodeError.button"),
     gNavigatorBundle.getString("decoder.decodeError.accesskey"),
-    tab_checker_for_webcompat(
-      {url: "DocURL", label: "type-media", problem_type: "video_bug",
-       details: JSON.stringify({"Technical Information:": "DecodeIssue", "Resource:": "ResURL"})}));
+    tab_checker_for_webcompat({
+      url: "DocURL",
+      label: "type-media",
+      problem_type: "video_bug",
+      details: JSON.stringify({
+        "Technical Information:": "DecodeIssue",
+        "Resource:": "ResURL",
+      }),
+    })
+  );
 });
 
 add_task(async function test_decode_warning() {
-  await SpecialPowers.pushPrefEnv(
-    { set: [["media.decoder-doctor.new-issue-endpoint",
-             "http://127.0.0.1/webcompat"]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.decoder-doctor.new-issue-endpoint", "http://127.0.0.1/webcompat"],
+    ],
+  });
   let message = gNavigatorBundle.getString("decoder.decodeWarning.message");
   await test_decoder_doctor_notification(
-    {type: "decode-warning", decodeIssue: "DecodeIssue",
-     docURL: "DocURL", resourceURL: "ResURL"},
+    {
+      type: "decode-warning",
+      decodeIssue: "DecodeIssue",
+      docURL: "DocURL",
+      resourceURL: "ResURL",
+    },
     message,
     gNavigatorBundle.getString("decoder.decodeError.button"),
     gNavigatorBundle.getString("decoder.decodeError.accesskey"),
-    tab_checker_for_webcompat(
-      {url: "DocURL", label: "type-media", problem_type: "video_bug",
-      details: JSON.stringify({"Technical Information:": "DecodeIssue", "Resource:": "ResURL"})}));
+    tab_checker_for_webcompat({
+      url: "DocURL",
+      label: "type-media",
+      problem_type: "video_bug",
+      details: JSON.stringify({
+        "Technical Information:": "DecodeIssue",
+        "Resource:": "ResURL",
+      }),
+    })
+  );
 });

@@ -57,18 +57,29 @@
  * @see nsINavBookmarkObserver
  */
 
-var EXPORTED_SYMBOLS = [ "Bookmarks" ];
+var EXPORTED_SYMBOLS = ["Bookmarks"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesSyncUtils",
-                               "resource://gre/modules/PlacesSyncUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesSyncUtils",
+  "resource://gre/modules/PlacesSyncUtils.jsm"
+);
 
 // This is an helper to temporarily cover the need to know the tags folder
 // itemId until bug 424160 is fixed.  This exists so that startup paths won't
@@ -78,17 +89,19 @@ ChromeUtils.defineModuleGetter(this, "PlacesSyncUtils",
 // directly use the PlacesUtils.tagsFolderId property.
 var gTagsFolderId;
 async function promiseTagsFolderId() {
-  if (gTagsFolderId)
+  if (gTagsFolderId) {
     return gTagsFolderId;
-  let db =  await PlacesUtils.promiseDBConnection();
+  }
+  let db = await PlacesUtils.promiseDBConnection();
   let rows = await db.execute(
     "SELECT id FROM moz_bookmarks WHERE guid = :guid",
     { guid: Bookmarks.tagsGuid }
   );
-  return gTagsFolderId = rows[0].getResultByName("id");
+  return (gTagsFolderId = rows[0].getResultByName("id"));
 }
 
-const MATCH_ANYWHERE_UNMODIFIED = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE_UNMODIFIED;
+const MATCH_ANYWHERE_UNMODIFIED =
+  Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE_UNMODIFIED;
 const BEHAVIOR_BOOKMARK = Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
 const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
@@ -130,7 +143,8 @@ var Bookmarks = Object.freeze({
     DEFAULT: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
     SYNC: Ci.nsINavBookmarksService.SOURCE_SYNC,
     IMPORT: Ci.nsINavBookmarksService.SOURCE_IMPORT,
-    SYNC_REPARENT_REMOVED_FOLDER_CHILDREN: Ci.nsINavBookmarksService.SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
+    SYNC_REPARENT_REMOVED_FOLDER_CHILDREN:
+      Ci.nsINavBookmarksService.SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
     RESTORE: Ci.nsINavBookmarksService.SOURCE_RESTORE,
     RESTORE_ON_STARTUP: Ci.nsINavBookmarksService.SOURCE_RESTORE_ON_STARTUP,
   },
@@ -139,21 +153,26 @@ var Bookmarks = Object.freeze({
    * Special GUIDs associated with bookmark roots.
    * It's guaranteed that the roots will always have these guids.
    */
-  rootGuid:    "root________",
-  menuGuid:    "menu________",
+  rootGuid: "root________",
+  menuGuid: "menu________",
   toolbarGuid: "toolbar_____",
   unfiledGuid: "unfiled_____",
-  mobileGuid:  "mobile______",
+  mobileGuid: "mobile______",
 
   // With bug 424160, tags will stop being bookmarks, thus this root will
   // be removed.  Do not rely on this, rather use the tagging service API.
-  tagsGuid:    "tags________",
+  tagsGuid: "tags________",
 
   /**
    * The GUIDs of the user content root folders that we support, for easy access
    * as a set.
    */
-  userContentRoots: ["toolbar_____", "menu________", "unfiled_____", "mobile______"],
+  userContentRoots: [
+    "toolbar_____",
+    "menu________",
+    "unfiled_____",
+    "mobile______",
+  ],
 
   /**
    * GUIDs associated with virtual queries that are used for displaying bookmark
@@ -171,10 +190,12 @@ var Bookmarks = Object.freeze({
    * @returns {Boolean} true if guid is a virtual root, false otherwise.
    */
   isVirtualRootItem(guid) {
-    return guid == PlacesUtils.bookmarks.virtualMenuGuid ||
-           guid == PlacesUtils.bookmarks.virtualToolbarGuid ||
-           guid == PlacesUtils.bookmarks.virtualUnfiledGuid ||
-           guid == PlacesUtils.bookmarks.virtualMobileGuid;
+    return (
+      guid == PlacesUtils.bookmarks.virtualMenuGuid ||
+      guid == PlacesUtils.bookmarks.virtualToolbarGuid ||
+      guid == PlacesUtils.bookmarks.virtualUnfiledGuid ||
+      guid == PlacesUtils.bookmarks.virtualMobileGuid
+    );
   },
 
   /**
@@ -205,7 +226,9 @@ var Bookmarks = Object.freeze({
       case PlacesUtils.bookmarks.mobileGuid:
         return PlacesUtils.getString("MobileBookmarksFolderTitle");
       default:
-        throw new Error(`Unsupported guid ${info.guid} passed to getLocalizedTitle!`);
+        throw new Error(
+          `Unsupported guid ${info.guid} passed to getLocalizedTitle!`
+        );
     }
   },
 
@@ -240,33 +263,47 @@ var Bookmarks = Object.freeze({
     if (addedTime > now) {
       modTime = now;
     }
-    let insertInfo = validateBookmarkObject("Bookmarks.jsm: insert", info,
-      { type: { defaultValue: this.TYPE_BOOKMARK },
-        index: { defaultValue: this.DEFAULT_INDEX },
-        url: { requiredIf: b => b.type == this.TYPE_BOOKMARK,
-               validIf: b => b.type == this.TYPE_BOOKMARK },
-        parentGuid: { required: true,
-                      // Inserting into the root folder is not allowed.
-                      validIf: b => b.parentGuid != this.rootGuid },
-        title: { defaultValue: "",
-                 validIf: b => b.type == this.TYPE_BOOKMARK ||
-                               b.type == this.TYPE_FOLDER ||
-                               b.title === "" },
-        dateAdded: { defaultValue: addedTime },
-        lastModified: { defaultValue: modTime,
-                        validIf: b => b.lastModified >= now || (b.dateAdded && b.lastModified >= b.dateAdded) },
-        source: { defaultValue: this.SOURCES.DEFAULT },
-      });
+    let insertInfo = validateBookmarkObject("Bookmarks.jsm: insert", info, {
+      type: { defaultValue: this.TYPE_BOOKMARK },
+      index: { defaultValue: this.DEFAULT_INDEX },
+      url: {
+        requiredIf: b => b.type == this.TYPE_BOOKMARK,
+        validIf: b => b.type == this.TYPE_BOOKMARK,
+      },
+      parentGuid: {
+        required: true,
+        // Inserting into the root folder is not allowed.
+        validIf: b => b.parentGuid != this.rootGuid,
+      },
+      title: {
+        defaultValue: "",
+        validIf: b =>
+          b.type == this.TYPE_BOOKMARK ||
+          b.type == this.TYPE_FOLDER ||
+          b.title === "",
+      },
+      dateAdded: { defaultValue: addedTime },
+      lastModified: {
+        defaultValue: modTime,
+        validIf: b =>
+          b.lastModified >= now ||
+          (b.dateAdded && b.lastModified >= b.dateAdded),
+      },
+      source: { defaultValue: this.SOURCES.DEFAULT },
+    });
 
     return (async () => {
       // Ensure the parent exists.
       let parent = await fetchBookmark({ guid: insertInfo.parentGuid });
-      if (!parent)
+      if (!parent) {
         throw new Error("parentGuid must be valid");
+      }
 
       // Set index in the appending case.
-      if (insertInfo.index == this.DEFAULT_INDEX ||
-          insertInfo.index > parent._childCount) {
+      if (
+        insertInfo.index == this.DEFAULT_INDEX ||
+        insertInfo.index > parent._childCount
+      ) {
         insertInfo.index = parent._childCount;
       }
 
@@ -302,12 +339,22 @@ var Bookmarks = Object.freeze({
       // If it's a tag, notify OnItemChanged to all bookmarks for this URL.
       if (isTagging) {
         let observers = PlacesUtils.bookmarks.getObservers();
-        for (let entry of (await fetchBookmarksByURL(item, {concurrent: true}))) {
-          notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
-                                               PlacesUtils.toPRTime(entry.lastModified),
-                                               entry.type, entry._parentId,
-                                               entry.guid, entry.parentGuid,
-                                               "", item.source ]);
+        for (let entry of await fetchBookmarksByURL(item, {
+          concurrent: true,
+        })) {
+          notify(observers, "onItemChanged", [
+            entry._id,
+            "tags",
+            false,
+            "",
+            PlacesUtils.toPRTime(entry.lastModified),
+            entry.type,
+            entry._parentId,
+            entry.guid,
+            entry.parentGuid,
+            "",
+            item.source,
+          ]);
         }
       }
 
@@ -316,7 +363,6 @@ var Bookmarks = Object.freeze({
       return Object.assign({}, item);
     })();
   },
-
 
   /**
    * Inserts a bookmark-tree into the existing bookmarks tree.
@@ -362,7 +408,9 @@ var Bookmarks = Object.freeze({
       throw new Error("Should have a non-zero number of children to insert.");
     }
     if (!PlacesUtils.isValidGuid(tree.guid)) {
-      throw new Error(`The parent guid is not valid (${tree.guid} ${tree.title}).`);
+      throw new Error(
+        `The parent guid is not valid (${tree.guid} ${tree.title}).`
+      );
     }
     if (tree.guid == this.rootGuid) {
       throw new Error("Can't insert into the root.");
@@ -370,14 +418,17 @@ var Bookmarks = Object.freeze({
     if (tree.guid == this.tagsGuid) {
       throw new Error("Can't use insertTree to insert tags.");
     }
-    if (tree.hasOwnProperty("source") &&
-        !Object.values(this.SOURCES).includes(tree.source)) {
+    if (
+      tree.hasOwnProperty("source") &&
+      !Object.values(this.SOURCES).includes(tree.source)
+    ) {
       throw new Error("Can't use source value " + tree.source);
     }
     if (options && typeof options != "object") {
       throw new Error("Options should be a valid object");
     }
-    let fixupOrSkipInvalidEntries = options && !!options.fixupOrSkipInvalidEntries;
+    let fixupOrSkipInvalidEntries =
+      options && !!options.fixupOrSkipInvalidEntries;
 
     // Serialize the tree into an array of items to insert into the db.
     let insertInfos = [];
@@ -389,7 +440,7 @@ var Bookmarks = Object.freeze({
     // multiple dates).
     let fallbackLastAdded = new Date();
 
-    const {TYPE_BOOKMARK, TYPE_FOLDER, SOURCES} = this;
+    const { TYPE_BOOKMARK, TYPE_FOLDER, SOURCES } = this;
 
     // Reuse the 'source' property for all the entries.
     let source = tree.source || SOURCES.DEFAULT;
@@ -421,34 +472,50 @@ var Bookmarks = Object.freeze({
         let insertInfo = {
           guid: { defaultValue: PlacesUtils.history.makeGuid() },
           type: { defaultValue: TYPE_BOOKMARK },
-          url: { requiredIf: b => b.type == TYPE_BOOKMARK,
-                 validIf: b => b.type == TYPE_BOOKMARK },
+          url: {
+            requiredIf: b => b.type == TYPE_BOOKMARK,
+            validIf: b => b.type == TYPE_BOOKMARK,
+          },
           parentGuid: { replaceWith: parentGuid }, // Set the correct parent guid.
-          title: { defaultValue: "",
-                   validIf: b => b.type == TYPE_BOOKMARK ||
-                                 b.type == TYPE_FOLDER ||
-                                 b.title === "" },
-          dateAdded: { defaultValue: time,
-                       validIf: b => !b.lastModified ||
-                                     b.dateAdded <= b.lastModified },
-          lastModified: { defaultValue: time,
-                          validIf: b => (!b.dateAdded && b.lastModified >= time) ||
-                                        (b.dateAdded && b.lastModified >= b.dateAdded) },
+          title: {
+            defaultValue: "",
+            validIf: b =>
+              b.type == TYPE_BOOKMARK ||
+              b.type == TYPE_FOLDER ||
+              b.title === "",
+          },
+          dateAdded: {
+            defaultValue: time,
+            validIf: b => !b.lastModified || b.dateAdded <= b.lastModified,
+          },
+          lastModified: {
+            defaultValue: time,
+            validIf: b =>
+              (!b.dateAdded && b.lastModified >= time) ||
+              (b.dateAdded && b.lastModified >= b.dateAdded),
+          },
           index: { replaceWith: indexToUse++ },
           source: { replaceWith: source },
           keyword: { validIf: b => b.type == TYPE_BOOKMARK },
           charset: { validIf: b => b.type == TYPE_BOOKMARK },
           postData: { validIf: b => b.type == TYPE_BOOKMARK },
           tags: { validIf: b => b.type == TYPE_BOOKMARK },
-          children: { validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children) },
+          children: {
+            validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children),
+          },
         };
         if (fixupOrSkipInvalidEntries) {
-          insertInfo.guid.fixup = b => b.guid = PlacesUtils.history.makeGuid();
-          insertInfo.dateAdded.fixup = insertInfo.lastModified.fixup =
-            b => b.lastModified = b.dateAdded = fallbackLastAdded;
+          insertInfo.guid.fixup = b =>
+            (b.guid = PlacesUtils.history.makeGuid());
+          insertInfo.dateAdded.fixup = insertInfo.lastModified.fixup = b =>
+            (b.lastModified = b.dateAdded = fallbackLastAdded);
         }
         try {
-          insertInfo = validateBookmarkObject("Bookmarks.jsm: insertTree", info, insertInfo);
+          insertInfo = validateBookmarkObject(
+            "Bookmarks.jsm: insertTree",
+            info,
+            insertInfo
+          );
         } catch (ex) {
           if (fixupOrSkipInvalidEntries) {
             indexToUse--;
@@ -474,7 +541,11 @@ var Bookmarks = Object.freeze({
         // know about children.
         if (info.children) {
           // start children of this item off at index 0.
-          let childrenLastAdded = appendInsertionInfoForInfoArray(info.children, 0, insertInfo.guid);
+          let childrenLastAdded = appendInsertionInfoForInfoArray(
+            info.children,
+            0,
+            insertInfo.guid
+          );
           if (childrenLastAdded > insertInfo.lastModified) {
             insertInfo.lastModified = childrenLastAdded;
           }
@@ -494,7 +565,11 @@ var Bookmarks = Object.freeze({
     // We want to validate synchronously, but we can't know the index at which
     // we're inserting into the parent. We just use NULL instead,
     // and the SQL query with which we insert will update it as necessary.
-    let lastAddedForParent = appendInsertionInfoForInfoArray(tree.children, null, tree.guid);
+    let lastAddedForParent = appendInsertionInfoForInfoArray(
+      tree.children,
+      null,
+      tree.guid
+    );
 
     // appendInsertionInfoForInfoArray will remove invalid items and may leave
     // us with nothing to insert, if so, just return early.
@@ -512,8 +587,13 @@ var Bookmarks = Object.freeze({
         throw new Error("Can't use insertTree to insert tags.");
       }
 
-      await insertBookmarkTree(insertInfos, source, treeParent,
-                               urlsThatMightNeedPlaces, lastAddedForParent);
+      await insertBookmarkTree(
+        insertInfos,
+        source,
+        treeParent,
+        urlsThatMightNeedPlaces,
+        lastAddedForParent
+      );
 
       // Now update the indices of root items in the objects we return.
       // These may be wrong if someone else modified the table between
@@ -528,7 +608,9 @@ var Bookmarks = Object.freeze({
       }
       // We need the itemIds to notify, though once the switch to guids is
       // complete we may stop using them.
-      let itemIdMap = await PlacesUtils.promiseManyItemIds(insertInfos.map(info => info.guid));
+      let itemIdMap = await PlacesUtils.promiseManyItemIds(
+        insertInfos.map(info => info.guid)
+      );
 
       let notifications = [];
       for (let i = 0; i < insertInfos.length; i++) {
@@ -548,29 +630,33 @@ var Bookmarks = Object.freeze({
 
         let url = "";
         if (item.type == Bookmarks.TYPE_BOOKMARK) {
-          url = (item.url instanceof URL) ? item.url.href : item.url;
+          url = item.url instanceof URL ? item.url.href : item.url;
         }
 
-        notifications.push(new PlacesBookmarkAddition({
-          id: itemId,
-          url,
-          itemType: item.type,
-          parentId,
-          index: item.index,
-          title: item.title,
-          dateAdded: item.dateAdded,
-          guid: item.guid,
-          parentGuid: item.parentGuid,
-          source: item.source,
-          isTagging: false,
-        }));
+        notifications.push(
+          new PlacesBookmarkAddition({
+            id: itemId,
+            url,
+            itemType: item.type,
+            parentId,
+            index: item.index,
+            title: item.title,
+            dateAdded: item.dateAdded,
+            guid: item.guid,
+            parentGuid: item.parentGuid,
+            source: item.source,
+            isTagging: false,
+          })
+        );
 
         try {
           await handleBookmarkItemSpecialData(itemId, item);
         } catch (ex) {
           // This is not critical, regardless the bookmark has been created
           // and we should continue notifying the next ones.
-          Cu.reportError(`An error occured while handling special bookmark data: ${ex}`);
+          Cu.reportError(
+            `An error occured while handling special bookmark data: ${ex}`
+          );
         }
 
         // Remove non-enumerable properties.
@@ -608,25 +694,30 @@ var Bookmarks = Object.freeze({
     // The info object is first validated here to ensure it's consistent, then
     // it's compared to the existing item to remove any properties that don't
     // need to be updated.
-    let updateInfo = validateBookmarkObject("Bookmarks.jsm: update", info,
-      { guid: { required: true },
-        index: { requiredIf: b => b.hasOwnProperty("parentGuid"),
-                 validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX },
-        parentGuid: { validIf: b => b.parentGuid != this.rootGuid },
-        source: { defaultValue: this.SOURCES.DEFAULT },
-      });
+    let updateInfo = validateBookmarkObject("Bookmarks.jsm: update", info, {
+      guid: { required: true },
+      index: {
+        requiredIf: b => b.hasOwnProperty("parentGuid"),
+        validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX,
+      },
+      parentGuid: { validIf: b => b.parentGuid != this.rootGuid },
+      source: { defaultValue: this.SOURCES.DEFAULT },
+    });
 
     // There should be at last one more property in addition to guid and source.
-    if (Object.keys(updateInfo).length < 3)
+    if (Object.keys(updateInfo).length < 3) {
       throw new Error("Not enough properties to update");
+    }
 
     return (async () => {
       // Ensure the item exists.
       let item = await fetchBookmark(updateInfo);
-      if (!item)
+      if (!item) {
         throw new Error("No bookmarks found for the provided GUID");
-      if (updateInfo.hasOwnProperty("type") && updateInfo.type != item.type)
+      }
+      if (updateInfo.hasOwnProperty("type") && updateInfo.type != item.type) {
         throw new Error("The bookmark type cannot be changed");
+      }
 
       // Remove any property that will stay the same.
       removeSameValueProperties(updateInfo, item);
@@ -639,32 +730,39 @@ var Bookmarks = Object.freeze({
       let lastModifiedDefault = now;
       // In the case where `dateAdded` is specified, but `lastModified` is not,
       // we only update `lastModified` if it is older than the new `dateAdded`.
-      if (!("lastModified" in updateInfo) &&
-          "dateAdded" in updateInfo) {
-        lastModifiedDefault = new Date(Math.max(item.lastModified, updateInfo.dateAdded));
+      if (!("lastModified" in updateInfo) && "dateAdded" in updateInfo) {
+        lastModifiedDefault = new Date(
+          Math.max(item.lastModified, updateInfo.dateAdded)
+        );
       }
-      updateInfo = validateBookmarkObject("Bookmarks.jsm: update", updateInfo,
-        { url: { validIf: () => item.type == this.TYPE_BOOKMARK },
-          title: { validIf: () => [ this.TYPE_BOOKMARK,
-                                    this.TYPE_FOLDER ].includes(item.type) },
-          lastModified: { defaultValue: lastModifiedDefault,
-                          validIf: b => b.lastModified >= now ||
-                                        b.lastModified >= (b.dateAdded || item.dateAdded) },
-          dateAdded: { defaultValue: item.dateAdded },
-        });
+      updateInfo = validateBookmarkObject("Bookmarks.jsm: update", updateInfo, {
+        url: { validIf: () => item.type == this.TYPE_BOOKMARK },
+        title: {
+          validIf: () =>
+            [this.TYPE_BOOKMARK, this.TYPE_FOLDER].includes(item.type),
+        },
+        lastModified: {
+          defaultValue: lastModifiedDefault,
+          validIf: b =>
+            b.lastModified >= now ||
+            b.lastModified >= (b.dateAdded || item.dateAdded),
+        },
+        dateAdded: { defaultValue: item.dateAdded },
+      });
 
-      return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: update",
+      return PlacesUtils.withConnectionWrapper(
+        "Bookmarks.jsm: update",
         async db => {
-        let parent;
-        if (updateInfo.hasOwnProperty("parentGuid")) {
-          if (PlacesUtils.isRootItem(item.guid)) {
-            throw new Error("It's not possible to move Places root folders.");
-          }
-          if (item.type == this.TYPE_FOLDER) {
-            // Make sure we are not moving a folder into itself or one of its
-            // descendants.
-            let rows = await db.executeCached(
-              `WITH RECURSIVE
+          let parent;
+          if (updateInfo.hasOwnProperty("parentGuid")) {
+            if (PlacesUtils.isRootItem(item.guid)) {
+              throw new Error("It's not possible to move Places root folders.");
+            }
+            if (item.type == this.TYPE_FOLDER) {
+              // Make sure we are not moving a folder into itself or one of its
+              // descendants.
+              let rows = await db.executeCached(
+                `WITH RECURSIVE
                descendants(did) AS (
                  VALUES(:id)
                  UNION ALL
@@ -674,139 +772,212 @@ var Bookmarks = Object.freeze({
                )
                SELECT guid FROM moz_bookmarks
                WHERE id IN descendants
-              `, { id: item._id, type: this.TYPE_FOLDER });
-            if (rows.map(r => r.getResultByName("guid")).includes(updateInfo.parentGuid))
-              throw new Error("Cannot insert a folder into itself or one of its descendants");
-          }
+              `,
+                { id: item._id, type: this.TYPE_FOLDER }
+              );
+              if (
+                rows
+                  .map(r => r.getResultByName("guid"))
+                  .includes(updateInfo.parentGuid)
+              ) {
+                throw new Error(
+                  "Cannot insert a folder into itself or one of its descendants"
+                );
+              }
+            }
 
-          parent = await fetchBookmark({ guid: updateInfo.parentGuid });
-          if (!parent)
-            throw new Error("No bookmarks found for the provided parentGuid");
-        }
-
-        if (updateInfo.hasOwnProperty("index")) {
-          if (PlacesUtils.isRootItem(item.guid)) {
-            throw new Error("It's not possible to move Places root folders.");
-          }
-          // If at this point we don't have a parent yet, we are moving into
-          // the same container.  Thus we know it exists.
-          if (!parent)
-            parent = await fetchBookmark({ guid: item.parentGuid });
-
-          if (updateInfo.index >= parent._childCount ||
-              updateInfo.index == this.DEFAULT_INDEX) {
-             updateInfo.index = parent._childCount;
-
-            // Fix the index when moving within the same container.
-            if (parent.guid == item.parentGuid)
-               updateInfo.index--;
-          }
-        }
-
-        let syncChangeDelta =
-          PlacesSyncUtils.bookmarks.determineSyncChangeDelta(info.source);
-
-        let updatedItem = await db.executeTransaction(async function() {
-          let updatedItem = await updateBookmark(db, updateInfo, item,
-                                                 item.index, parent,
-                                                 syncChangeDelta);
-          if (parent) {
-            await setAncestorsLastModified(db, parent.guid, updatedItem.lastModified,
-                                           syncChangeDelta);
-          }
-          return updatedItem;
-        });
-
-        if (item.type == this.TYPE_BOOKMARK &&
-            item.url.href != updatedItem.url.href) {
-          // ...though we don't wait for the calculation.
-          updateFrecency(db, [item.url]).catch(Cu.reportError);
-          updateFrecency(db, [updatedItem.url]).catch(Cu.reportError);
-        }
-
-        // Notify onItemChanged to listeners.
-        let observers = PlacesUtils.bookmarks.getObservers();
-        // For lastModified, we only care about the original input, since we
-        // should not notify implciit lastModified changes.
-        if (info.hasOwnProperty("lastModified") &&
-            updateInfo.hasOwnProperty("lastModified") &&
-            item.lastModified != updatedItem.lastModified) {
-          notify(observers, "onItemChanged", [ updatedItem._id, "lastModified",
-                                               false,
-                                               `${PlacesUtils.toPRTime(updatedItem.lastModified)}`,
-                                               PlacesUtils.toPRTime(updatedItem.lastModified),
-                                               updatedItem.type,
-                                               updatedItem._parentId,
-                                               updatedItem.guid,
-                                               updatedItem.parentGuid, "",
-                                               updatedItem.source ]);
-        }
-        if (info.hasOwnProperty("dateAdded") &&
-            updateInfo.hasOwnProperty("dateAdded") &&
-            item.dateAdded != updatedItem.dateAdded) {
-          notify(observers, "onItemChanged", [ updatedItem._id, "dateAdded",
-                                               false, `${PlacesUtils.toPRTime(updatedItem.dateAdded)}`,
-                                               PlacesUtils.toPRTime(updatedItem.lastModified),
-                                               updatedItem.type,
-                                               updatedItem._parentId,
-                                               updatedItem.guid,
-                                               updatedItem.parentGuid,
-                                               "",
-                                               updatedItem.source ]);
-        }
-        if (updateInfo.hasOwnProperty("title")) {
-          let isTagging = updatedItem.parentGuid == Bookmarks.tagsGuid;
-          notify(observers, "onItemChanged", [ updatedItem._id, "title",
-                                               false, updatedItem.title,
-                                               PlacesUtils.toPRTime(updatedItem.lastModified),
-                                               updatedItem.type,
-                                               updatedItem._parentId,
-                                               updatedItem.guid,
-                                               updatedItem.parentGuid, "",
-                                               updatedItem.source ],
-                                               { isTagging });
-          // If we're updating a tag, we must notify all the tagged bookmarks
-          // about the change.
-          if (isTagging) {
-            for (let entry of (await fetchBookmarksByTags({tags: [updatedItem.title]},
-                                                          {concurrent: true}))) {
-              notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
-                                                    PlacesUtils.toPRTime(entry.lastModified),
-                                                    entry.type, entry._parentId,
-                                                    entry.guid, entry.parentGuid,
-                                                    "", updatedItem.source ]);
+            parent = await fetchBookmark({ guid: updateInfo.parentGuid });
+            if (!parent) {
+              throw new Error("No bookmarks found for the provided parentGuid");
             }
           }
-        }
-        if (updateInfo.hasOwnProperty("url")) {
-          await PlacesUtils.keywords.reassign(item.url, updatedItem.url,
-                                              updatedItem.source);
-          notify(observers, "onItemChanged", [ updatedItem._id, "uri",
-                                               false, updatedItem.url.href,
-                                               PlacesUtils.toPRTime(updatedItem.lastModified),
-                                               updatedItem.type,
-                                               updatedItem._parentId,
-                                               updatedItem.guid,
-                                               updatedItem.parentGuid,
-                                               item.url.href,
-                                               updatedItem.source ]);
-        }
-        // If the item was moved, notify onItemMoved.
-        if (item.parentGuid != updatedItem.parentGuid ||
-            item.index != updatedItem.index) {
-          notify(observers, "onItemMoved", [ updatedItem._id, item._parentId,
-                                             item.index, updatedItem._parentId,
-                                             updatedItem.index, updatedItem.type,
-                                             updatedItem.guid, item.parentGuid,
-                                             updatedItem.parentGuid,
-                                             updatedItem.source,
-                                             updatedItem.url && updatedItem.url.href ]);
-        }
 
-        // Remove non-enumerable properties.
-        delete updatedItem.source;
-        return Object.assign({}, updatedItem);
-      });
+          if (updateInfo.hasOwnProperty("index")) {
+            if (PlacesUtils.isRootItem(item.guid)) {
+              throw new Error("It's not possible to move Places root folders.");
+            }
+            // If at this point we don't have a parent yet, we are moving into
+            // the same container.  Thus we know it exists.
+            if (!parent) {
+              parent = await fetchBookmark({ guid: item.parentGuid });
+            }
+
+            if (
+              updateInfo.index >= parent._childCount ||
+              updateInfo.index == this.DEFAULT_INDEX
+            ) {
+              updateInfo.index = parent._childCount;
+
+              // Fix the index when moving within the same container.
+              if (parent.guid == item.parentGuid) {
+                updateInfo.index--;
+              }
+            }
+          }
+
+          let syncChangeDelta = PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+            info.source
+          );
+
+          let updatedItem = await db.executeTransaction(async function() {
+            let updatedItem = await updateBookmark(
+              db,
+              updateInfo,
+              item,
+              item.index,
+              parent,
+              syncChangeDelta
+            );
+            if (parent) {
+              await setAncestorsLastModified(
+                db,
+                parent.guid,
+                updatedItem.lastModified,
+                syncChangeDelta
+              );
+            }
+            return updatedItem;
+          });
+
+          if (
+            item.type == this.TYPE_BOOKMARK &&
+            item.url.href != updatedItem.url.href
+          ) {
+            // ...though we don't wait for the calculation.
+            updateFrecency(db, [item.url]).catch(Cu.reportError);
+            updateFrecency(db, [updatedItem.url]).catch(Cu.reportError);
+          }
+
+          // Notify onItemChanged to listeners.
+          let observers = PlacesUtils.bookmarks.getObservers();
+          // For lastModified, we only care about the original input, since we
+          // should not notify implciit lastModified changes.
+          if (
+            info.hasOwnProperty("lastModified") &&
+            updateInfo.hasOwnProperty("lastModified") &&
+            item.lastModified != updatedItem.lastModified
+          ) {
+            notify(observers, "onItemChanged", [
+              updatedItem._id,
+              "lastModified",
+              false,
+              `${PlacesUtils.toPRTime(updatedItem.lastModified)}`,
+              PlacesUtils.toPRTime(updatedItem.lastModified),
+              updatedItem.type,
+              updatedItem._parentId,
+              updatedItem.guid,
+              updatedItem.parentGuid,
+              "",
+              updatedItem.source,
+            ]);
+          }
+          if (
+            info.hasOwnProperty("dateAdded") &&
+            updateInfo.hasOwnProperty("dateAdded") &&
+            item.dateAdded != updatedItem.dateAdded
+          ) {
+            notify(observers, "onItemChanged", [
+              updatedItem._id,
+              "dateAdded",
+              false,
+              `${PlacesUtils.toPRTime(updatedItem.dateAdded)}`,
+              PlacesUtils.toPRTime(updatedItem.lastModified),
+              updatedItem.type,
+              updatedItem._parentId,
+              updatedItem.guid,
+              updatedItem.parentGuid,
+              "",
+              updatedItem.source,
+            ]);
+          }
+          if (updateInfo.hasOwnProperty("title")) {
+            let isTagging = updatedItem.parentGuid == Bookmarks.tagsGuid;
+            notify(
+              observers,
+              "onItemChanged",
+              [
+                updatedItem._id,
+                "title",
+                false,
+                updatedItem.title,
+                PlacesUtils.toPRTime(updatedItem.lastModified),
+                updatedItem.type,
+                updatedItem._parentId,
+                updatedItem.guid,
+                updatedItem.parentGuid,
+                "",
+                updatedItem.source,
+              ],
+              { isTagging }
+            );
+            // If we're updating a tag, we must notify all the tagged bookmarks
+            // about the change.
+            if (isTagging) {
+              for (let entry of await fetchBookmarksByTags(
+                { tags: [updatedItem.title] },
+                { concurrent: true }
+              )) {
+                notify(observers, "onItemChanged", [
+                  entry._id,
+                  "tags",
+                  false,
+                  "",
+                  PlacesUtils.toPRTime(entry.lastModified),
+                  entry.type,
+                  entry._parentId,
+                  entry.guid,
+                  entry.parentGuid,
+                  "",
+                  updatedItem.source,
+                ]);
+              }
+            }
+          }
+          if (updateInfo.hasOwnProperty("url")) {
+            await PlacesUtils.keywords.reassign(
+              item.url,
+              updatedItem.url,
+              updatedItem.source
+            );
+            notify(observers, "onItemChanged", [
+              updatedItem._id,
+              "uri",
+              false,
+              updatedItem.url.href,
+              PlacesUtils.toPRTime(updatedItem.lastModified),
+              updatedItem.type,
+              updatedItem._parentId,
+              updatedItem.guid,
+              updatedItem.parentGuid,
+              item.url.href,
+              updatedItem.source,
+            ]);
+          }
+          // If the item was moved, notify onItemMoved.
+          if (
+            item.parentGuid != updatedItem.parentGuid ||
+            item.index != updatedItem.index
+          ) {
+            notify(observers, "onItemMoved", [
+              updatedItem._id,
+              item._parentId,
+              item.index,
+              updatedItem._parentId,
+              updatedItem.index,
+              updatedItem.type,
+              updatedItem.guid,
+              item.parentGuid,
+              updatedItem.parentGuid,
+              updatedItem.source,
+              updatedItem.url && updatedItem.url.href,
+            ]);
+          }
+
+          // Remove non-enumerable properties.
+          delete updatedItem.source;
+          return Object.assign({}, updatedItem);
+        }
+      );
     })();
   },
 
@@ -845,7 +1016,9 @@ var Bookmarks = Object.freeze({
       throw new Error("Cannot move bookmarks into root.");
     }
     if (typeof index != "number" || index < this.DEFAULT_INDEX) {
-      throw new Error(`index should be a number greater than ${this.DEFAULT_INDEX}`);
+      throw new Error(
+        `index should be a number greater than ${this.DEFAULT_INDEX}`
+      );
     }
 
     if (!source) {
@@ -854,27 +1027,31 @@ var Bookmarks = Object.freeze({
 
     return (async () => {
       let updateInfos = [];
-      let syncChangeDelta =
-        PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source);
+      let syncChangeDelta = PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+        source
+      );
 
-      await PlacesUtils.withConnectionWrapper("Bookmarks.jsm: moveToFolder", async db => {
-        const lastModified = new Date();
+      await PlacesUtils.withConnectionWrapper(
+        "Bookmarks.jsm: moveToFolder",
+        async db => {
+          const lastModified = new Date();
 
-        let targetParentGuid = parentGuid || undefined;
+          let targetParentGuid = parentGuid || undefined;
 
-        for (let guid of guids) {
-          // Ensure the item exists.
-          let existingItem = await fetchBookmark({guid}, {db});
-          if (!existingItem)
-            throw new Error("No bookmarks found for the provided GUID");
+          for (let guid of guids) {
+            // Ensure the item exists.
+            let existingItem = await fetchBookmark({ guid }, { db });
+            if (!existingItem) {
+              throw new Error("No bookmarks found for the provided GUID");
+            }
 
-          if (parentGuid) {
-            // We're moving to a different folder.
-            if (existingItem.type == this.TYPE_FOLDER) {
-              // Make sure we are not moving a folder into itself or one of its
-              // descendants.
-              let rows = await db.executeCached(
-                `WITH RECURSIVE
+            if (parentGuid) {
+              // We're moving to a different folder.
+              if (existingItem.type == this.TYPE_FOLDER) {
+                // Make sure we are not moving a folder into itself or one of its
+                // descendants.
+                let rows = await db.executeCached(
+                  `WITH RECURSIVE
                  descendants(did) AS (
                    VALUES(:id)
                    UNION ALL
@@ -884,123 +1061,153 @@ var Bookmarks = Object.freeze({
                  )
                  SELECT guid FROM moz_bookmarks
                  WHERE id IN descendants
-                `, { id: existingItem._id, type: this.TYPE_FOLDER });
-              if (rows.map(r => r.getResultByName("guid")).includes(parentGuid))
-                throw new Error("Cannot insert a folder into itself or one of its descendants");
+                `,
+                  { id: existingItem._id, type: this.TYPE_FOLDER }
+                );
+                if (
+                  rows.map(r => r.getResultByName("guid")).includes(parentGuid)
+                ) {
+                  throw new Error(
+                    "Cannot insert a folder into itself or one of its descendants"
+                  );
+                }
+              }
+            } else if (!targetParentGuid) {
+              targetParentGuid = existingItem.parentGuid;
+            } else if (existingItem.parentGuid != targetParentGuid) {
+              throw new Error(
+                "All bookmarks should be in the same folder if no parent is specified"
+              );
             }
-          } else if (!targetParentGuid) {
-            targetParentGuid = existingItem.parentGuid;
-          } else if (existingItem.parentGuid != targetParentGuid) {
-            throw new Error("All bookmarks should be in the same folder if no parent is specified");
+
+            updateInfos.push({ existingItem, currIndex: existingItem.index });
           }
 
-          updateInfos.push({existingItem, currIndex: existingItem.index});
-        }
+          let newParent = await fetchBookmark(
+            { guid: targetParentGuid },
+            { db }
+          );
 
-        let newParent = await fetchBookmark({guid: targetParentGuid}, {db});
+          if (newParent._grandParentId == PlacesUtils.tagsFolderId) {
+            throw new Error("Can't move to a tags folder");
+          }
 
-        if (newParent._grandParentId == PlacesUtils.tagsFolderId) {
-          throw new Error("Can't move to a tags folder");
-        }
+          let newParentChildCount = newParent._childCount;
 
-        let newParentChildCount = newParent._childCount;
+          await db.executeTransaction(async () => {
+            // Now that we have all the existing items, we can do the actual updates.
+            for (let i = 0; i < updateInfos.length; i++) {
+              let info = updateInfos[i];
+              if (index != this.DEFAULT_INDEX) {
+                // If we're dropping on the same folder, then we may need to adjust
+                // the index to insert at the correct place.
+                if (info.existingItem.parentGuid == newParent.guid) {
+                  if (index > info.existingItem.index) {
+                    // If we're dragging down, we need to go one lower to insert at
+                    // the real point as moving the element changes the index of
+                    // everything below by 1.
+                    index--;
+                  } else if (index == info.existingItem.index) {
+                    // This isn't moving so we skip it, but copy the data so we have
+                    // an easy way for the notifications to check.
+                    info.updatedItem = { ...info.existingItem };
+                    continue;
+                  }
+                }
+              }
 
-        await db.executeTransaction(async () => {
-          // Now that we have all the existing items, we can do the actual updates.
-          for (let i = 0; i < updateInfos.length; i++) {
-            let info = updateInfos[i];
-            if (index != this.DEFAULT_INDEX) {
-              // If we're dropping on the same folder, then we may need to adjust
-              // the index to insert at the correct place.
-              if (info.existingItem.parentGuid == newParent.guid) {
-                if (index > info.existingItem.index) {
-                  // If we're dragging down, we need to go one lower to insert at
-                  // the real point as moving the element changes the index of
-                  // everything below by 1.
+              // Never let the index go higher than the max count of the folder.
+              if (index == this.DEFAULT_INDEX || index >= newParentChildCount) {
+                index = newParentChildCount;
+
+                // If this is moving within the same folder, then we need to drop the
+                // index by one to compensate for "removing" it, then re-inserting.
+                if (info.existingItem.parentGuid == newParent.guid) {
                   index--;
-                } else if (index == info.existingItem.index) {
-                  // This isn't moving so we skip it, but copy the data so we have
-                  // an easy way for the notifications to check.
-                  info.updatedItem = {...info.existingItem};
-                  continue;
                 }
               }
-            }
 
-            // Never let the index go higher than the max count of the folder.
-            if (index == this.DEFAULT_INDEX ||
-                index >= newParentChildCount) {
-              index = newParentChildCount;
+              info.updatedItem = await updateBookmark(
+                db,
+                { lastModified, index },
+                info.existingItem,
+                info.currIndex,
+                newParent,
+                syncChangeDelta
+              );
 
-              // If this is moving within the same folder, then we need to drop the
-              // index by one to compensate for "removing" it, then re-inserting.
+              // For items moving within the same folder, we have to keep track
+              // of their indexes. Otherwise we run the risk of not correctly
+              // updating the indexes of other items in the folder.
+              // This section simulates the database write in moveBookmark, which
+              // allows us to avoid re-reading the database.
               if (info.existingItem.parentGuid == newParent.guid) {
-                index--;
-              }
-            }
-
-            info.updatedItem = await updateBookmark(db,
-              { lastModified, index },
-              info.existingItem,
-              info.currIndex,
-              newParent,
-              syncChangeDelta);
-
-            // For items moving within the same folder, we have to keep track
-            // of their indexes. Otherwise we run the risk of not correctly
-            // updating the indexes of other items in the folder.
-            // This section simulates the database write in moveBookmark, which
-            // allows us to avoid re-reading the database.
-            if (info.existingItem.parentGuid == newParent.guid) {
-              let sign = index < info.currIndex ? 1 : -1;
-              for (let j = 0; j < updateInfos.length; j++) {
-                if (j == i) {
-                  continue;
-                }
-                if (updateInfos[j].currIndex >= Math.min(info.currIndex, index) &&
-                    updateInfos[j].currIndex <= Math.max(info.currIndex, index)) {
-                  updateInfos[j].currIndex += sign;
+                let sign = index < info.currIndex ? 1 : -1;
+                for (let j = 0; j < updateInfos.length; j++) {
+                  if (j == i) {
+                    continue;
+                  }
+                  if (
+                    updateInfos[j].currIndex >=
+                      Math.min(info.currIndex, index) &&
+                    updateInfos[j].currIndex <= Math.max(info.currIndex, index)
+                  ) {
+                    updateInfos[j].currIndex += sign;
+                  }
                 }
               }
-            }
-            info.currIndex = index;
+              info.currIndex = index;
 
-            // We only bump the parent count if we're moving from a different folder.
-            if (info.existingItem.parentGuid != newParent.guid) {
-              newParentChildCount++;
+              // We only bump the parent count if we're moving from a different folder.
+              if (info.existingItem.parentGuid != newParent.guid) {
+                newParentChildCount++;
+              }
+              index++;
             }
-            index++;
-          }
 
-          await setAncestorsLastModified(db,
-            newParent.guid,
-            lastModified,
-            syncChangeDelta);
-        });
-      });
+            await setAncestorsLastModified(
+              db,
+              newParent.guid,
+              lastModified,
+              syncChangeDelta
+            );
+          });
+        }
+      );
 
       // Updates complete, time to notify everyone.
-      for (let {updatedItem, existingItem} of updateInfos) {
+      for (let { updatedItem, existingItem } of updateInfos) {
         // Notify onItemChanged to listeners.
         let observers = PlacesUtils.bookmarks.getObservers();
         // If the item was moved, notify onItemMoved.
         // We use the updatedItem.index here, rather than currIndex, as the views
         // need to know where we inserted the item as opposed to where it ended
         // up.
-        if (existingItem.parentGuid != updatedItem.parentGuid ||
-            existingItem.index != updatedItem.index) {
-          notify(observers, "onItemMoved", [ updatedItem._id, existingItem._parentId,
-                                             existingItem.index, updatedItem._parentId,
-                                             updatedItem.index, updatedItem.type,
-                                             updatedItem.guid, existingItem.parentGuid,
-                                             updatedItem.parentGuid,
-                                             source, existingItem.url ]);
+        if (
+          existingItem.parentGuid != updatedItem.parentGuid ||
+          existingItem.index != updatedItem.index
+        ) {
+          notify(observers, "onItemMoved", [
+            updatedItem._id,
+            existingItem._parentId,
+            existingItem.index,
+            updatedItem._parentId,
+            updatedItem.index,
+            updatedItem.type,
+            updatedItem.guid,
+            existingItem.parentGuid,
+            updatedItem.parentGuid,
+            source,
+            existingItem.url,
+          ]);
         }
         // Remove non-enumerable properties.
         delete updatedItem.source;
       }
 
-      return updateInfos.map(updateInfo => Object.assign({}, updateInfo.updatedItem));
+      return updateInfos.map(updateInfo =>
+        Object.assign({}, updateInfo.updatedItem)
+      );
     })();
   },
 
@@ -1026,10 +1233,11 @@ var Bookmarks = Object.freeze({
    */
   remove(guidOrInfo, options = {}) {
     let infos = guidOrInfo;
-    if (!infos)
+    if (!infos) {
       throw new Error("Input should be a valid object");
+    }
     if (!Array.isArray(guidOrInfo)) {
-      if (typeof(guidOrInfo) != "object") {
+      if (typeof guidOrInfo != "object") {
         infos = [{ guid: guidOrInfo }];
       } else {
         infos = [guidOrInfo];
@@ -1043,10 +1251,16 @@ var Bookmarks = Object.freeze({
     let removeInfos = [];
     for (let info of infos) {
       // Disallow removing the root folders.
-      if ([
-        Bookmarks.rootGuid, Bookmarks.menuGuid, Bookmarks.toolbarGuid,
-        Bookmarks.unfiledGuid, Bookmarks.tagsGuid, Bookmarks.mobileGuid,
-      ].includes(info.guid)) {
+      if (
+        [
+          Bookmarks.rootGuid,
+          Bookmarks.menuGuid,
+          Bookmarks.toolbarGuid,
+          Bookmarks.unfiledGuid,
+          Bookmarks.tagsGuid,
+          Bookmarks.mobileGuid,
+        ].includes(info.guid)
+      ) {
         throw new Error("It's not possible to remove Places root folders.");
       }
 
@@ -1061,9 +1275,10 @@ var Bookmarks = Object.freeze({
       for (let info of removeInfos) {
         // We must be able to remove a bookmark even if it has an invalid url.
         // In that case the item won't have a url property.
-        let item = await fetchBookmark(info, {ignoreInvalidURLs: true});
-        if (!item)
+        let item = await fetchBookmark(info, { ignoreInvalidURLs: true });
+        if (!item) {
           throw new Error("No bookmarks found for the provided GUID.");
+        }
 
         removeItems.push(item);
       }
@@ -1073,21 +1288,43 @@ var Bookmarks = Object.freeze({
       // Notify onItemRemoved to listeners.
       for (let item of removeItems) {
         let observers = PlacesUtils.bookmarks.getObservers();
-        let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
+        let uri = item.hasOwnProperty("url")
+          ? PlacesUtils.toURI(item.url)
+          : null;
         let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
-        notify(observers, "onItemRemoved", [ item._id, item._parentId, item.index,
-                                             item.type, uri, item.guid,
-                                             item.parentGuid,
-                                             options.source ],
-                                           { isTagging: isUntagging });
+        notify(
+          observers,
+          "onItemRemoved",
+          [
+            item._id,
+            item._parentId,
+            item.index,
+            item.type,
+            uri,
+            item.guid,
+            item.parentGuid,
+            options.source,
+          ],
+          { isTagging: isUntagging }
+        );
 
         if (isUntagging) {
-          for (let entry of (await fetchBookmarksByURL(item, {concurrent: true}))) {
-            notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
-                                                 PlacesUtils.toPRTime(entry.lastModified),
-                                                 entry.type, entry._parentId,
-                                                 entry.guid, entry.parentGuid,
-                                                 "", options.source ]);
+          for (let entry of await fetchBookmarksByURL(item, {
+            concurrent: true,
+          })) {
+            notify(observers, "onItemChanged", [
+              entry._id,
+              "tags",
+              false,
+              "",
+              PlacesUtils.toPRTime(entry.lastModified),
+              entry.type,
+              entry._parentId,
+              entry.guid,
+              entry.parentGuid,
+              "",
+              options.source,
+            ]);
           }
         }
       }
@@ -1112,21 +1349,29 @@ var Bookmarks = Object.freeze({
       options.source = Bookmarks.SOURCES.DEFAULT;
     }
 
-    return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: eraseEverything",
+    return PlacesUtils.withConnectionWrapper(
+      "Bookmarks.jsm: eraseEverything",
       async function(db) {
         let urls;
 
         await db.executeTransaction(async function() {
-          urls = await removeFoldersContents(db, Bookmarks.userContentRoots, options);
+          urls = await removeFoldersContents(
+            db,
+            Bookmarks.userContentRoots,
+            options
+          );
           const time = PlacesUtils.toPRTime(new Date());
-          const syncChangeDelta =
-            PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
+          const syncChangeDelta = PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+            options.source
+          );
           for (let folderGuid of Bookmarks.userContentRoots) {
             await db.executeCached(
               `UPDATE moz_bookmarks SET lastModified = :time,
                                         syncChangeCounter = syncChangeCounter + :syncChangeDelta
                WHERE id IN (SELECT id FROM moz_bookmarks WHERE guid = :folderGuid )
-              `, { folderGuid, time, syncChangeDelta });
+              `,
+              { folderGuid, time, syncChangeDelta }
+            );
           }
 
           await PlacesSyncUtils.bookmarks.resetSyncMetadata(db, options.source);
@@ -1156,7 +1401,7 @@ var Bookmarks = Object.freeze({
     if (numberOfItems === undefined) {
       throw new Error("numberOfItems argument is required");
     }
-    if (!typeof numberOfItems === "number" || (numberOfItems % 1) !== 0) {
+    if (!typeof numberOfItems === "number" || numberOfItems % 1 !== 0) {
       throw new Error("numberOfItems argument must be an integer");
     }
     if (numberOfItems <= 0) {
@@ -1218,17 +1463,22 @@ var Bookmarks = Object.freeze({
    *       may be overwritten.
    */
   fetch(guidOrInfo, onResult = null, options = {}) {
-    if (onResult && typeof onResult != "function")
+    if (onResult && typeof onResult != "function") {
       throw new Error("onResult callback must be a valid function");
+    }
     let info = guidOrInfo;
-    if (!info)
+    if (!info) {
       throw new Error("Input should be a valid object");
-    if (typeof(info) != "object") {
+    }
+    if (typeof info != "object") {
       info = { guid: guidOrInfo };
     } else if (Object.keys(info).length == 1) {
       // Just a faster code path.
-      if (!["url", "guid", "parentGuid",
-            "index", "guidPrefix", "tags"].includes(Object.keys(info)[0])) {
+      if (
+        !["url", "guid", "parentGuid", "index", "guidPrefix", "tags"].includes(
+          Object.keys(info)[0]
+        )
+      ) {
         throw new Error(`Unexpected number of conditions provided: 0`);
       }
     } else {
@@ -1239,9 +1489,12 @@ var Bookmarks = Object.freeze({
         v => v.hasOwnProperty("url"),
         v => v.hasOwnProperty("guidPrefix"),
         v => v.hasOwnProperty("tags"),
-      ].reduce((old, fn) => old + fn(info) | 0, 0);
-      if (conditionsCount != 1)
-        throw new Error(`Unexpected number of conditions provided: ${conditionsCount}`);
+      ].reduce((old, fn) => (old + fn(info)) | 0, 0);
+      if (conditionsCount != 1) {
+        throw new Error(
+          `Unexpected number of conditions provided: ${conditionsCount}`
+        );
+      }
     }
 
     // Create a new options object with just the support properties, because
@@ -1254,16 +1507,22 @@ var Bookmarks = Object.freeze({
     if (info.hasOwnProperty("parentGuid") || info.hasOwnProperty("index")) {
       behavior = {
         parentGuid: { requiredIf: b => b.hasOwnProperty("index") },
-        index: { requiredIf: b => b.hasOwnProperty("parentGuid"),
-                 validIf: b => typeof(b.index) == "number" &&
-                               b.index >= 0 || b.index == this.DEFAULT_INDEX },
+        index: {
+          requiredIf: b => b.hasOwnProperty("parentGuid"),
+          validIf: b =>
+            (typeof b.index == "number" && b.index >= 0) ||
+            b.index == this.DEFAULT_INDEX,
+        },
       };
     }
 
     // Even if we ignore any other unneeded property, we still validate any
     // known property to reduce likelihood of hidden bugs.
-    let fetchInfo = validateBookmarkObject("Bookmarks.jsm: fetch", info,
-                                           behavior);
+    let fetchInfo = validateBookmarkObject(
+      "Bookmarks.jsm: fetch",
+      info,
+      behavior
+    );
 
     return (async function() {
       let results;
@@ -1271,7 +1530,10 @@ var Bookmarks = Object.freeze({
         results = await fetchBookmarksByURL(fetchInfo, options);
       } else if (fetchInfo.hasOwnProperty("guid")) {
         results = await fetchBookmark(fetchInfo, options);
-      } else if (fetchInfo.hasOwnProperty("parentGuid") && fetchInfo.hasOwnProperty("index")) {
+      } else if (
+        fetchInfo.hasOwnProperty("parentGuid") &&
+        fetchInfo.hasOwnProperty("index")
+      ) {
         results = await fetchBookmarkByPosition(fetchInfo, options);
       } else if (fetchInfo.hasOwnProperty("guidPrefix")) {
         results = await fetchBookmarksByGUIDPrefix(fetchInfo, options);
@@ -1279,11 +1541,13 @@ var Bookmarks = Object.freeze({
         results = await fetchBookmarksByTags(fetchInfo, options);
       }
 
-      if (!results)
+      if (!results) {
         return null;
+      }
 
-      if (!Array.isArray(results))
+      if (!Array.isArray(results)) {
         results = [results];
+      }
       // Remove non-enumerable properties.
       results = results.map(r => Object.assign({}, r));
 
@@ -1382,7 +1646,8 @@ var Bookmarks = Object.freeze({
     // TODO: Once the tagging API is implemented in Bookmarks.jsm, we can cache
     // the list of tags, instead of querying every time.
     let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.executeCached(`
+    let rows = await db.executeCached(
+      `
       SELECT b.title AS name, count(*) AS count
       FROM moz_bookmarks b
       JOIN moz_bookmarks p ON b.parent = p.id
@@ -1390,7 +1655,9 @@ var Bookmarks = Object.freeze({
       WHERE p.guid = :tagsGuid
       GROUP BY name
       ORDER BY name COLLATE nocase ASC
-    `, { tagsGuid: this.tagsGuid });
+    `,
+      { tagsGuid: this.tagsGuid }
+    );
     return rows.map(r => ({
       name: r.getResultByName("name"),
       count: r.getResultByName("count"),
@@ -1423,43 +1690,57 @@ var Bookmarks = Object.freeze({
    */
   reorder(parentGuid, orderedChildrenGuids, options = {}) {
     let info = { guid: parentGuid };
-    info = validateBookmarkObject("Bookmarks.jsm: reorder", info,
-                                  { guid: { required: true } });
+    info = validateBookmarkObject("Bookmarks.jsm: reorder", info, {
+      guid: { required: true },
+    });
 
-    if (!Array.isArray(orderedChildrenGuids) || !orderedChildrenGuids.length)
+    if (!Array.isArray(orderedChildrenGuids) || !orderedChildrenGuids.length) {
       throw new Error("Must provide a sorted array of children GUIDs.");
+    }
     try {
       orderedChildrenGuids.forEach(PlacesUtils.BOOKMARK_VALIDATORS.guid);
     } catch (ex) {
       throw new Error("Invalid GUID found in the sorted children array.");
     }
 
-    options.source = "source" in options ?
-      PlacesUtils.BOOKMARK_VALIDATORS.source(options.source) :
-      Bookmarks.SOURCES.DEFAULT;
-    options.lastModified = "lastModified" in options ?
-      PlacesUtils.BOOKMARK_VALIDATORS.lastModified(options.lastModified) :
-      new Date();
+    options.source =
+      "source" in options
+        ? PlacesUtils.BOOKMARK_VALIDATORS.source(options.source)
+        : Bookmarks.SOURCES.DEFAULT;
+    options.lastModified =
+      "lastModified" in options
+        ? PlacesUtils.BOOKMARK_VALIDATORS.lastModified(options.lastModified)
+        : new Date();
 
     return (async () => {
       let parent = await fetchBookmark(info);
-      if (!parent || parent.type != this.TYPE_FOLDER)
+      if (!parent || parent.type != this.TYPE_FOLDER) {
         throw new Error("No folder found for the provided GUID.");
+      }
 
-      let sortedChildren = await reorderChildren(parent, orderedChildrenGuids,
-                                                 options);
+      let sortedChildren = await reorderChildren(
+        parent,
+        orderedChildrenGuids,
+        options
+      );
 
       let observers = PlacesUtils.bookmarks.getObservers();
       // Note that child.index is the old index.
       for (let i = 0; i < sortedChildren.length; ++i) {
         let child = sortedChildren[i];
-        notify(observers, "onItemMoved", [ child._id, child._parentId,
-                                           child.index, child._parentId,
-                                           i, child.type,
-                                           child.guid, child.parentGuid,
-                                           child.parentGuid,
-                                           options.source,
-                                           child.url && child.url.href ]);
+        notify(observers, "onItemMoved", [
+          child._id,
+          child._parentId,
+          child.index,
+          child._parentId,
+          i,
+          child.type,
+          child.guid,
+          child.parentGuid,
+          child.parentGuid,
+          options.source,
+          child.url && child.url.href,
+        ]);
       }
     })();
   },
@@ -1507,7 +1788,7 @@ var Bookmarks = Object.freeze({
     }
 
     if (query.url) {
-      if (typeof query.url === "string" || (query.url instanceof URL)) {
+      if (typeof query.url === "string" || query.url instanceof URL) {
         query.url = new URL(query.url).href;
       } else if (query.url instanceof Ci.nsIURI) {
         query.url = query.url.spec;
@@ -1541,8 +1822,11 @@ function notify(observers, notification, args = [], information = {}) {
       continue;
     }
 
-    if (information.isDescendantRemoval && observer.skipDescendantsOnItemRemoval &&
-        !(PlacesUtils.bookmarks.userContentRoots.includes(information.parentGuid))) {
+    if (
+      information.isDescendantRemoval &&
+      observer.skipDescendantsOnItemRemoval &&
+      !PlacesUtils.bookmarks.userContentRoots.includes(information.parentGuid)
+    ) {
       continue;
     }
 
@@ -1566,12 +1850,23 @@ function notify(observers, notification, args = [], information = {}) {
  *                           the existing folder.
  * @param {Integer} syncChangeDelta The change delta to be applied.
  */
-async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDelta) {
+async function updateBookmark(
+  db,
+  info,
+  item,
+  oldIndex,
+  newParent,
+  syncChangeDelta
+) {
   let tuples = new Map();
-  tuples.set("lastModified", { value: PlacesUtils.toPRTime(info.lastModified) });
+  tuples.set("lastModified", {
+    value: PlacesUtils.toPRTime(info.lastModified),
+  });
   if (info.hasOwnProperty("title")) {
-    tuples.set("title", { value: info.title,
-                          fragment: `title = NULLIF(:title, "")` });
+    tuples.set("title", {
+      value: info.title,
+      fragment: `title = NULLIF(:title, "")`,
+    });
   }
   if (info.hasOwnProperty("dateAdded")) {
     tuples.set("dateAdded", { value: PlacesUtils.toPRTime(info.dateAdded) });
@@ -1581,8 +1876,11 @@ async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDel
     // Ensure a page exists in moz_places for this URL.
     await maybeInsertPlace(db, info.url);
     // Update tuples for the update query.
-    tuples.set("url", { value: info.url.href,
-                        fragment: "fk = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)" });
+    tuples.set("url", {
+      value: info.url.href,
+      fragment:
+        "fk = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)",
+    });
   }
 
   let newIndex = info.hasOwnProperty("index") ? info.index : item.index;
@@ -1592,41 +1890,55 @@ async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDel
 
     // For moving within the same parent, we've already updated the indexes.
     if (newParent.guid == item.parentGuid) {
-        // Moving inside the original container.
-        // When moving "up", add 1 to each index in the interval.
-        // Otherwise when moving down, we subtract 1.
-        // Only the parent needs a sync change, which is handled in
-        // `setAncestorsLastModified`.
-        await db.executeCached(
-          `UPDATE moz_bookmarks
+      // Moving inside the original container.
+      // When moving "up", add 1 to each index in the interval.
+      // Otherwise when moving down, we subtract 1.
+      // Only the parent needs a sync change, which is handled in
+      // `setAncestorsLastModified`.
+      await db.executeCached(
+        `UPDATE moz_bookmarks
            SET position = CASE WHEN :newIndex < :currIndex
              THEN position + 1
              ELSE position - 1
            END
            WHERE parent = :newParentId
              AND position BETWEEN :lowIndex AND :highIndex
-          `, { newIndex, currIndex: oldIndex, newParentId: newParent._id,
-               lowIndex: Math.min(oldIndex, newIndex),
-               highIndex: Math.max(oldIndex, newIndex) });
+          `,
+        {
+          newIndex,
+          currIndex: oldIndex,
+          newParentId: newParent._id,
+          lowIndex: Math.min(oldIndex, newIndex),
+          highIndex: Math.max(oldIndex, newIndex),
+        }
+      );
     } else {
       // Moving across different containers. In this case, both parents and
       // the child need sync changes. `setAncestorsLastModified`, below and in
       // `update` and `moveToFolder`, handles the parents. The `needsSyncChange`
       // check below handles the child.
-      tuples.set("parent", { value: newParent._id} );
+      tuples.set("parent", { value: newParent._id });
       await db.executeCached(
         `UPDATE moz_bookmarks SET position = position - 1
          WHERE parent = :oldParentId
            AND position >= :oldIndex
-        `, { oldParentId: item._parentId, oldIndex });
+        `,
+        { oldParentId: item._parentId, oldIndex }
+      );
       await db.executeCached(
         `UPDATE moz_bookmarks SET position = position + 1
          WHERE parent = :newParentId
            AND position >= :newIndex
-        `, { newParentId: newParent._id, newIndex });
+        `,
+        { newParentId: newParent._id, newIndex }
+      );
 
-      await setAncestorsLastModified(db, item.parentGuid, info.lastModified,
-                                     syncChangeDelta);
+      await setAncestorsLastModified(
+        db,
+        item.parentGuid,
+        info.lastModified,
+        syncChangeDelta
+      );
     }
   }
 
@@ -1643,8 +1955,10 @@ async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDel
     }
     let needsSyncChange = tuples.size > sizeThreshold;
     if (needsSyncChange) {
-      tuples.set("syncChangeDelta", { value: syncChangeDelta,
-                                      fragment: "syncChangeCounter = syncChangeCounter + :syncChangeDelta" });
+      tuples.set("syncChangeDelta", {
+        value: syncChangeDelta,
+        fragment: "syncChangeCounter = syncChangeCounter + :syncChangeDelta",
+      });
     }
   }
 
@@ -1653,13 +1967,19 @@ async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDel
     // If we're updating a tag entry, bump the sync change counter for
     // bookmarks with the tagged URL.
     await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
-      db, item.url, syncChangeDelta);
+      db,
+      item.url,
+      syncChangeDelta
+    );
     if (info.hasOwnProperty("url")) {
       // Changing the URL of a tag entry is equivalent to untagging the
       // old URL and tagging the new one, so we bump the change counter
       // for the new URL here.
       await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
-        db, info.url, syncChangeDelta);
+        db,
+        info.url,
+        syncChangeDelta
+      );
     }
   }
 
@@ -1667,32 +1987,58 @@ async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDel
   if (isChangingTagFolder && syncChangeDelta) {
     // If we're updating a tag folder (for example, changing a tag's title),
     // bump the change counter for all tagged bookmarks.
-    await db.executeCached(`
+    await db.executeCached(
+      `
       UPDATE moz_bookmarks SET
         syncChangeCounter = syncChangeCounter + :syncChangeDelta
       WHERE type = :type AND
             fk = (SELECT fk FROM moz_bookmarks WHERE parent = :parent)
       `,
-      { syncChangeDelta, type: Bookmarks.TYPE_BOOKMARK, parent: item._id });
+      { syncChangeDelta, type: Bookmarks.TYPE_BOOKMARK, parent: item._id }
+    );
   }
 
   await db.executeCached(
     `UPDATE moz_bookmarks
-     SET ${Array.from(tuples.keys()).map(v => tuples.get(v).fragment || `${v} = :${v}`).join(", ")}
+     SET ${Array.from(tuples.keys())
+       .map(v => tuples.get(v).fragment || `${v} = :${v}`)
+       .join(", ")}
      WHERE guid = :guid
-    `, Object.assign({ guid: item.guid },
-                     [...tuples.entries()].reduce((p, c) => { p[c[0]] = c[1].value; return p; }, {})));
+    `,
+    Object.assign(
+      { guid: item.guid },
+      [...tuples.entries()].reduce((p, c) => {
+        p[c[0]] = c[1].value;
+        return p;
+      }, {})
+    )
+  );
 
   if (newParent) {
     if (newParent.guid == item.parentGuid) {
       // Mark all affected separators as changed
       // Also bumps the change counter if the item itself is a separator
       const startIndex = Math.min(newIndex, oldIndex);
-      await adjustSeparatorsSyncCounter(db, newParent._id, startIndex, syncChangeDelta);
+      await adjustSeparatorsSyncCounter(
+        db,
+        newParent._id,
+        startIndex,
+        syncChangeDelta
+      );
     } else {
       // Mark all affected separators as changed
-      await adjustSeparatorsSyncCounter(db, item._parentId, oldIndex, syncChangeDelta);
-      await adjustSeparatorsSyncCounter(db, newParent._id, newIndex, syncChangeDelta);
+      await adjustSeparatorsSyncCounter(
+        db,
+        item._parentId,
+        oldIndex,
+        syncChangeDelta
+      );
+      await adjustSeparatorsSyncCounter(
+        db,
+        newParent._id,
+        newIndex,
+        syncChangeDelta
+      );
     }
     // Remove the Sync orphan annotation from reparented items. We don't
     // notify annotation observers about this because this is a temporary,
@@ -1702,18 +2048,22 @@ async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDel
        WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
                                   WHERE name = :orphanAnno) AND
              item_id = :id`,
-      { orphanAnno: PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO,
-        id: item._id });
+      { orphanAnno: PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO, id: item._id }
+    );
   }
 
   // If the parent changed, update related non-enumerable properties.
   let additionalParentInfo = {};
   if (newParent) {
     additionalParentInfo.parentGuid = newParent.guid;
-    Object.defineProperty(additionalParentInfo, "_parentId",
-                          { value: newParent._id, enumerable: false });
-    Object.defineProperty(additionalParentInfo, "_grandParentId",
-                          { value: newParent._parentId, enumerable: false });
+    Object.defineProperty(additionalParentInfo, "_parentId", {
+      value: newParent._id,
+      enumerable: false,
+    });
+    Object.defineProperty(additionalParentInfo, "_grandParentId", {
+      value: newParent._parentId,
+      enumerable: false,
+    });
   }
 
   return mergeIntoNewObject(item, info, additionalParentInfo);
@@ -1722,127 +2072,176 @@ async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDel
 // Insert implementation.
 
 function insertBookmark(item, parent) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: insertBookmark",
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: insertBookmark",
     async function(db) {
-    // If a guid was not provided, generate one, so we won't need to fetch the
-    // bookmark just after having created it.
-    let hasExistingGuid = item.hasOwnProperty("guid");
-    if (!hasExistingGuid)
-      item.guid = PlacesUtils.history.makeGuid();
-
-    let isTagging = parent._parentId == PlacesUtils.tagsFolderId;
-
-    await db.executeTransaction(async function transaction() {
-      if (item.type == Bookmarks.TYPE_BOOKMARK) {
-        // Ensure a page exists in moz_places for this URL.
-        // The IGNORE conflict can trigger on `guid`.
-        await maybeInsertPlace(db, item.url);
+      // If a guid was not provided, generate one, so we won't need to fetch the
+      // bookmark just after having created it.
+      let hasExistingGuid = item.hasOwnProperty("guid");
+      if (!hasExistingGuid) {
+        item.guid = PlacesUtils.history.makeGuid();
       }
 
-      // Adjust indices.
-      await db.executeCached(
-        `UPDATE moz_bookmarks SET position = position + 1
+      let isTagging = parent._parentId == PlacesUtils.tagsFolderId;
+
+      await db.executeTransaction(async function transaction() {
+        if (item.type == Bookmarks.TYPE_BOOKMARK) {
+          // Ensure a page exists in moz_places for this URL.
+          // The IGNORE conflict can trigger on `guid`.
+          await maybeInsertPlace(db, item.url);
+        }
+
+        // Adjust indices.
+        await db.executeCached(
+          `UPDATE moz_bookmarks SET position = position + 1
          WHERE parent = :parent
          AND position >= :index
-        `, { parent: parent._id, index: item.index });
+        `,
+          { parent: parent._id, index: item.index }
+        );
 
-      let syncChangeDelta =
-        PlacesSyncUtils.bookmarks.determineSyncChangeDelta(item.source);
-      let syncStatus =
-        PlacesSyncUtils.bookmarks.determineInitialSyncStatus(item.source);
+        let syncChangeDelta = PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+          item.source
+        );
+        let syncStatus = PlacesSyncUtils.bookmarks.determineInitialSyncStatus(
+          item.source
+        );
 
-      // Insert the bookmark into the database.
-      await db.executeCached(
-        `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
+        // Insert the bookmark into the database.
+        await db.executeCached(
+          `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
                                     dateAdded, lastModified, guid,
                                     syncChangeCounter, syncStatus)
          VALUES (CASE WHEN :url ISNULL THEN NULL ELSE (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) END,
                  :type, :parent, :index, NULLIF(:title, ""), :date_added,
                  :last_modified, :guid, :syncChangeCounter, :syncStatus)
-        `, { url: item.hasOwnProperty("url") ? item.url.href : null,
-             type: item.type, parent: parent._id, index: item.index,
-             title: item.title, date_added: PlacesUtils.toPRTime(item.dateAdded),
-             last_modified: PlacesUtils.toPRTime(item.lastModified), guid: item.guid,
-             syncChangeCounter: syncChangeDelta, syncStatus });
+        `,
+          {
+            url: item.hasOwnProperty("url") ? item.url.href : null,
+            type: item.type,
+            parent: parent._id,
+            index: item.index,
+            title: item.title,
+            date_added: PlacesUtils.toPRTime(item.dateAdded),
+            last_modified: PlacesUtils.toPRTime(item.lastModified),
+            guid: item.guid,
+            syncChangeCounter: syncChangeDelta,
+            syncStatus,
+          }
+        );
 
-      // Mark all affected separators as changed
-      await adjustSeparatorsSyncCounter(db, parent._id, item.index + 1, syncChangeDelta);
+        // Mark all affected separators as changed
+        await adjustSeparatorsSyncCounter(
+          db,
+          parent._id,
+          item.index + 1,
+          syncChangeDelta
+        );
 
-      if (hasExistingGuid) {
-        // Remove stale tombstones if we're reinserting an item.
-        await db.executeCached(
-          `DELETE FROM moz_bookmarks_deleted WHERE guid = :guid`,
-          { guid: item.guid });
+        if (hasExistingGuid) {
+          // Remove stale tombstones if we're reinserting an item.
+          await db.executeCached(
+            `DELETE FROM moz_bookmarks_deleted WHERE guid = :guid`,
+            { guid: item.guid }
+          );
+        }
+
+        if (isTagging) {
+          // New tag entry; bump the change counter for bookmarks with the
+          // tagged URL.
+          await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+            db,
+            item.url,
+            syncChangeDelta
+          );
+        }
+
+        await setAncestorsLastModified(
+          db,
+          item.parentGuid,
+          item.dateAdded,
+          syncChangeDelta
+        );
+      });
+
+      // If not a tag recalculate frecency...
+      if (item.type == Bookmarks.TYPE_BOOKMARK && !isTagging) {
+        // ...though we don't wait for the calculation.
+        updateFrecency(db, [item.url]).catch(Cu.reportError);
       }
 
-      if (isTagging) {
-        // New tag entry; bump the change counter for bookmarks with the
-        // tagged URL.
-        await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
-          db, item.url, syncChangeDelta);
-      }
-
-      await setAncestorsLastModified(db, item.parentGuid, item.dateAdded,
-                                     syncChangeDelta);
-    });
-
-    // If not a tag recalculate frecency...
-    if (item.type == Bookmarks.TYPE_BOOKMARK && !isTagging) {
-      // ...though we don't wait for the calculation.
-      updateFrecency(db, [item.url]).catch(Cu.reportError);
+      return item;
     }
-
-    return item;
-  });
+  );
 }
 
 function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: insertBookmarkTree", async function(db) {
-    await db.executeTransaction(async function transaction() {
-      await maybeInsertManyPlaces(db, urls);
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: insertBookmarkTree",
+    async function(db) {
+      await db.executeTransaction(async function transaction() {
+        await maybeInsertManyPlaces(db, urls);
 
-      let syncChangeDelta =
-        PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source);
-      let syncStatus =
-        PlacesSyncUtils.bookmarks.determineInitialSyncStatus(source);
+        let syncChangeDelta = PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+          source
+        );
+        let syncStatus = PlacesSyncUtils.bookmarks.determineInitialSyncStatus(
+          source
+        );
 
-      let rootId = parent._id;
+        let rootId = parent._id;
 
-      items = items.map(item => ({
-        url: item.url && item.url.href,
-        type: item.type, parentGuid: item.parentGuid, index: item.index,
-        title: item.title, date_added: PlacesUtils.toPRTime(item.dateAdded),
-        last_modified: PlacesUtils.toPRTime(item.lastModified), guid: item.guid,
-        syncChangeCounter: syncChangeDelta, syncStatus, rootId,
-      }));
-      await db.executeCached(
-        `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
+        items = items.map(item => ({
+          url: item.url && item.url.href,
+          type: item.type,
+          parentGuid: item.parentGuid,
+          index: item.index,
+          title: item.title,
+          date_added: PlacesUtils.toPRTime(item.dateAdded),
+          last_modified: PlacesUtils.toPRTime(item.lastModified),
+          guid: item.guid,
+          syncChangeCounter: syncChangeDelta,
+          syncStatus,
+          rootId,
+        }));
+        await db.executeCached(
+          `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
                                     dateAdded, lastModified, guid,
                                     syncChangeCounter, syncStatus)
          VALUES (CASE WHEN :url ISNULL THEN NULL ELSE (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) END, :type,
          (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
          IFNULL(:index, (SELECT count(*) FROM moz_bookmarks WHERE parent = :rootId)),
          NULLIF(:title, ""), :date_added, :last_modified, :guid,
-         :syncChangeCounter, :syncStatus)`, items);
-
-      // Remove stale tombstones for new items.
-      for (let chunk of chunkArray(items, SQLITE_MAX_VARIABLE_NUMBER)) {
-        await db.executeCached(
-          `DELETE FROM moz_bookmarks_deleted WHERE guid IN (${
-            new Array(chunk.length).fill("?").join(",")})`,
-          chunk.map(item => item.guid)
+         :syncChangeCounter, :syncStatus)`,
+          items
         );
-      }
 
-      await setAncestorsLastModified(db, parent.guid, lastAddedForParent,
-                                     syncChangeDelta);
-    });
+        // Remove stale tombstones for new items.
+        for (let chunk of chunkArray(items, SQLITE_MAX_VARIABLE_NUMBER)) {
+          await db.executeCached(
+            `DELETE FROM moz_bookmarks_deleted WHERE guid IN (${new Array(
+              chunk.length
+            )
+              .fill("?")
+              .join(",")})`,
+            chunk.map(item => item.guid)
+          );
+        }
 
-    // We don't wait for the frecency calculation.
-    updateFrecency(db, urls, true).catch(Cu.reportError);
+        await setAncestorsLastModified(
+          db,
+          parent.guid,
+          lastAddedForParent,
+          syncChangeDelta
+        );
+      });
 
-    return items;
-  });
+      // We don't wait for the frecency calculation.
+      updateFrecency(db, urls, true).catch(Cu.reportError);
+
+      return items;
+    }
+  );
 }
 
 /**
@@ -1862,15 +2261,23 @@ async function handleBookmarkItemSpecialData(itemId, item) {
         source: item.source,
       });
     } catch (ex) {
-      Cu.reportError(`Failed to insert keyword "${item.keyword} for ${item.url}": ${ex}`);
+      Cu.reportError(
+        `Failed to insert keyword "${item.keyword} for ${item.url}": ${ex}`
+      );
     }
   }
   if ("tags" in item) {
     try {
-      PlacesUtils.tagging.tagURI(NetUtil.newURI(item.url), item.tags, item.source);
+      PlacesUtils.tagging.tagURI(
+        NetUtil.newURI(item.url),
+        item.tags,
+        item.source
+      );
     } catch (ex) {
       // Invalid tag child, skip it.
-      Cu.reportError(`Unable to set tags "${item.tags.join(", ")}" for ${item.url}: ${ex}`);
+      Cu.reportError(
+        `Unable to set tags "${item.tags.join(", ")}" for ${item.url}: ${ex}`
+      );
     }
   }
   if ("charset" in item && item.charset) {
@@ -1887,7 +2294,9 @@ async function handleBookmarkItemSpecialData(itemId, item) {
         annotations: new Map([[PlacesUtils.CHARSET_ANNO, charset]]),
       });
     } catch (ex) {
-      Cu.reportError(`Failed to set charset "${item.charset}" for ${item.url}: ${ex}`);
+      Cu.reportError(
+        `Failed to set charset "${item.charset}" for ${item.url}: ${ex}`
+      );
     }
   }
 }
@@ -1913,13 +2322,15 @@ async function queryBookmarks(info) {
   }
 
   if (info.query) {
-    queryString += " AND AUTOCOMPLETE_MATCH(:query, h.url, b.title, NULL, NULL, 1, 1, NULL, :matchBehavior, :searchBehavior) ";
+    queryString +=
+      " AND AUTOCOMPLETE_MATCH(:query, h.url, b.title, NULL, NULL, 1, 1, NULL, :matchBehavior, :searchBehavior) ";
     queryParams.query = info.query;
     queryParams.matchBehavior = MATCH_ANYWHERE_UNMODIFIED;
     queryParams.searchBehavior = BEHAVIOR_BOOKMARK;
   }
 
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: queryBookmarks",
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: queryBookmarks",
     async function(db) {
       // _id, _childCount, _grandParentId and _parentId fields
       // are required to be in the result by the converting function
@@ -1937,13 +2348,14 @@ async function queryBookmarks(info) {
          LEFT JOIN moz_bookmarks p ON p.id = b.parent
          LEFT JOIN moz_places h ON h.id = b.fk
          ${queryString}
-        `, queryParams);
+        `,
+        queryParams
+      );
 
       return rowsToItemsArray(rows);
     }
   );
 }
-
 
 /**
  * Internal fetch implementation.
@@ -1971,9 +2383,13 @@ async function fetchBookmark(info, options = {}) {
        LEFT JOIN moz_bookmarks p ON p.id = b.parent
        LEFT JOIN moz_places h ON h.id = b.fk
        WHERE b.guid = :guid
-      `, { guid: info.guid });
+      `,
+      { guid: info.guid }
+    );
 
-    return rows.length ? rowsToItemsArray(rows, !!options.ignoreInvalidURLs)[0] : null;
+    return rows.length
+      ? rowsToItemsArray(rows, !!options.ignoreInvalidURLs)[0]
+      : null;
   };
   if (options.concurrent) {
     let db = await PlacesUtils.promiseDBConnection();
@@ -1982,8 +2398,10 @@ async function fetchBookmark(info, options = {}) {
   if (options.db) {
     return query(options.db);
   }
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmark",
-                                           query);
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: fetchBookmark",
+    query
+  );
 }
 
 async function fetchBookmarkByPosition(info, options = {}) {
@@ -2002,7 +2420,9 @@ async function fetchBookmarkByPosition(info, options = {}) {
        AND b.position = IFNULL(:index, (SELECT count(*) - 1
                                         FROM moz_bookmarks
                                         WHERE parent = p.id))
-      `, { parentGuid: info.parentGuid, index });
+      `,
+      { parentGuid: info.parentGuid, index }
+    );
 
     return rows.length ? rowsToItemsArray(rows)[0] : null;
   };
@@ -2010,8 +2430,10 @@ async function fetchBookmarkByPosition(info, options = {}) {
     let db = await PlacesUtils.promiseDBConnection();
     return query(db);
   }
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarkByPosition",
-                                           query);
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: fetchBookmarkByPosition",
+    query
+  );
 }
 
 async function fetchBookmarksByTags(info, options = {}) {
@@ -2037,7 +2459,11 @@ async function fetchBookmarksByTags(info, options = {}) {
           GROUP BY b2.fk HAVING count(*) = ${info.tags.length}
        )
        ORDER BY b.lastModified DESC
-      `, [Bookmarks.tagsGuid, Bookmarks.tagsGuid].concat(info.tags.map(t => t.toLowerCase())));
+      `,
+      [Bookmarks.tagsGuid, Bookmarks.tagsGuid].concat(
+        info.tags.map(t => t.toLowerCase())
+      )
+    );
 
     return rows.length ? rowsToItemsArray(rows) : null;
   };
@@ -2046,8 +2472,10 @@ async function fetchBookmarksByTags(info, options = {}) {
     let db = await PlacesUtils.promiseDBConnection();
     return query(db);
   }
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByTags",
-                                           query);
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: fetchBookmarksByTags",
+    query
+  );
 }
 
 async function fetchBookmarksByGUIDPrefix(info, options = {}) {
@@ -2063,7 +2491,9 @@ async function fetchBookmarksByGUIDPrefix(info, options = {}) {
        LEFT JOIN moz_places h ON h.id = b.fk
        WHERE b.guid LIKE :guidPrefix
        ORDER BY b.lastModified DESC
-      `, { guidPrefix: info.guidPrefix + "%" });
+      `,
+      { guidPrefix: info.guidPrefix + "%" }
+    );
 
     return rows.length ? rowsToItemsArray(rows) : null;
   };
@@ -2072,8 +2502,10 @@ async function fetchBookmarksByGUIDPrefix(info, options = {}) {
     let db = await PlacesUtils.promiseDBConnection();
     return query(db);
   }
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByGUIDPrefix",
-                                           query);
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: fetchBookmarksByGUIDPrefix",
+    query
+  );
 }
 
 async function fetchBookmarksByURL(info, options = {}) {
@@ -2092,7 +2524,9 @@ async function fetchBookmarksByURL(info, options = {}) {
       WHERE h.url_hash = hash(:url) AND h.url = :url
       AND _grandParentId <> :tagsFolderId
       ORDER BY b.lastModified DESC
-      `, { url: info.url.href, tagsFolderId });
+      `,
+      { url: info.url.href, tagsFolderId }
+    );
 
     return rows.length ? rowsToItemsArray(rows) : null;
   };
@@ -2101,12 +2535,15 @@ async function fetchBookmarksByURL(info, options = {}) {
     let db = await PlacesUtils.promiseDBConnection();
     return query(db);
   }
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByURL",
-                                           query);
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: fetchBookmarksByURL",
+    query
+  );
 }
 
 function fetchRecentBookmarks(numberOfItems) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchRecentBookmarks",
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: fetchRecentBookmarks",
     async function(db) {
       let tagsFolderId = await promiseTagsFolderId();
       let rows = await db.executeCached(
@@ -2124,11 +2561,13 @@ function fetchRecentBookmarks(numberOfItems) {
                               AND hash("place", "prefix_hi")
         ORDER BY b.dateAdded DESC, b.ROWID DESC
         LIMIT :numberOfItems
-        `, {
+        `,
+        {
           tagsFolderId,
           type: Bookmarks.TYPE_BOOKMARK,
           numberOfItems,
-        });
+        }
+      );
 
       return rows.length ? rowsToItemsArray(rows) : [];
     }
@@ -2147,7 +2586,9 @@ async function fetchBookmarksByParent(db, info) {
      LEFT JOIN moz_places h ON h.id = b.fk
      WHERE p.guid = :parentGuid
      ORDER BY b.position ASC
-    `, { parentGuid: info.parentGuid });
+    `,
+    { parentGuid: info.parentGuid }
+  );
 
   return rowsToItemsArray(rows);
 }
@@ -2155,46 +2596,54 @@ async function fetchBookmarksByParent(db, info) {
 // Remove implementation.
 
 function removeBookmarks(items, options) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: removeBookmarks",
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: removeBookmarks",
     async function(db) {
-    let urls = [];
+      let urls = [];
 
-    await db.executeTransaction(async function transaction() {
-      // We use a map for its de-duplication properties.
-      let parents = new Map();
-      let syncChangeDelta =
-        PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
-
-      for (let item of items) {
-        parents.set(item.parentGuid, item._parentId);
-
-        // If it's a folder, remove its contents first.
-        if (item.type == Bookmarks.TYPE_FOLDER) {
-          if (options.preventRemovalOfNonEmptyFolders && item._childCount > 0) {
-            throw new Error("Cannot remove a non-empty folder.");
-          }
-          urls = urls.concat(await removeFoldersContents(db, [item.guid], options));
-        }
-      }
-
-      for (let chunk of chunkArray(items, SQLITE_MAX_VARIABLE_NUMBER)) {
-        // We don't go through the annotations service for this cause otherwise
-        // we'd get a pointless onItemChanged notification and it would also
-        // set lastModified to an unexpected value.
-        await removeAnnotationsForItems(db, chunk);
-
-        // Remove the bookmarks.
-        await db.executeCached(
-          `DELETE FROM moz_bookmarks WHERE guid IN (${
-            new Array(chunk.length).fill("?").join(",")})`,
-          chunk.map(item => item.guid)
+      await db.executeTransaction(async function transaction() {
+        // We use a map for its de-duplication properties.
+        let parents = new Map();
+        let syncChangeDelta = PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+          options.source
         );
-      }
 
-      for (let [parentGuid, parentId] of parents.entries()) {
-        // Now recalculate the positions.
-        await db.executeCached(
-          `WITH positions(id, pos, seq) AS (
+        for (let item of items) {
+          parents.set(item.parentGuid, item._parentId);
+
+          // If it's a folder, remove its contents first.
+          if (item.type == Bookmarks.TYPE_FOLDER) {
+            if (
+              options.preventRemovalOfNonEmptyFolders &&
+              item._childCount > 0
+            ) {
+              throw new Error("Cannot remove a non-empty folder.");
+            }
+            urls = urls.concat(
+              await removeFoldersContents(db, [item.guid], options)
+            );
+          }
+        }
+
+        for (let chunk of chunkArray(items, SQLITE_MAX_VARIABLE_NUMBER)) {
+          // We don't go through the annotations service for this cause otherwise
+          // we'd get a pointless onItemChanged notification and it would also
+          // set lastModified to an unexpected value.
+          await removeAnnotationsForItems(db, chunk);
+
+          // Remove the bookmarks.
+          await db.executeCached(
+            `DELETE FROM moz_bookmarks WHERE guid IN (${new Array(chunk.length)
+              .fill("?")
+              .join(",")})`,
+            chunk.map(item => item.guid)
+          );
+        }
+
+        for (let [parentGuid, parentId] of parents.entries()) {
+          // Now recalculate the positions.
+          await db.executeCached(
+            `WITH positions(id, pos, seq) AS (
             SELECT id, position AS pos,
                    (row_number() OVER (ORDER BY position)) - 1 AS seq
             FROM moz_bookmarks
@@ -2203,122 +2652,151 @@ function removeBookmarks(items, options) {
           UPDATE moz_bookmarks
             SET position = (SELECT seq FROM positions WHERE positions.id = moz_bookmarks.id)
             WHERE id IN (SELECT id FROM positions WHERE seq <> pos)
-        `, { parentId });
+        `,
+            { parentId }
+          );
 
-        // Mark this parent as changed.
-        await setAncestorsLastModified(db, parentGuid, new Date(), syncChangeDelta);
-      }
+          // Mark this parent as changed.
+          await setAncestorsLastModified(
+            db,
+            parentGuid,
+            new Date(),
+            syncChangeDelta
+          );
+        }
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        // For the notifications, we may need to adjust indexes if there are more
-        // than one of the same item in the folder. This makes sure that we notify
-        // the index of the item when it was removed, rather than the original index.
-        for (let j = i + 1; j < items.length; j++) {
-          if (items[j]._parentId == item._parentId &&
-              items[j].index > item.index) {
-            items[j].index--;
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          // For the notifications, we may need to adjust indexes if there are more
+          // than one of the same item in the folder. This makes sure that we notify
+          // the index of the item when it was removed, rather than the original index.
+          for (let j = i + 1; j < items.length; j++) {
+            if (
+              items[j]._parentId == item._parentId &&
+              items[j].index > item.index
+            ) {
+              items[j].index--;
+            }
           }
-        }
-        if (item._grandParentId == PlacesUtils.tagsFolderId) {
-          // If we're removing a tag entry, increment the change counter for all
-          // bookmarks with the tagged URL.
-          await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
-            db, item.url, syncChangeDelta);
+          if (item._grandParentId == PlacesUtils.tagsFolderId) {
+            // If we're removing a tag entry, increment the change counter for all
+            // bookmarks with the tagged URL.
+            await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+              db,
+              item.url,
+              syncChangeDelta
+            );
+          }
+
+          await adjustSeparatorsSyncCounter(
+            db,
+            item._parentId,
+            item.index,
+            syncChangeDelta
+          );
         }
 
-        await adjustSeparatorsSyncCounter(db, item._parentId, item.index, syncChangeDelta);
+        // Write tombstones for the removed items.
+        await insertTombstones(db, items, syncChangeDelta);
+      });
+
+      // Update the frecencies outside of the transaction, excluding tags, so that
+      // the updates can progress in the background.
+      urls = urls.concat(
+        items
+          .filter(item => {
+            let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
+            return !isUntagging && "url" in item;
+          })
+          .map(item => item.url)
+      );
+
+      if (urls.length) {
+        await PlacesUtils.keywords.removeFromURLsIfNotBookmarked(urls);
+        updateFrecency(db, urls, urls.length > 1).catch(Cu.reportError);
       }
-
-      // Write tombstones for the removed items.
-      await insertTombstones(db, items, syncChangeDelta);
-    });
-
-    // Update the frecencies outside of the transaction, excluding tags, so that
-    // the updates can progress in the background.
-    urls = urls.concat(items.filter(item => {
-      let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
-      return !isUntagging && "url" in item;
-    }).map(item => item.url));
-
-    if (urls.length) {
-      await PlacesUtils.keywords.removeFromURLsIfNotBookmarked(urls);
-      updateFrecency(db, urls, urls.length > 1).catch(Cu.reportError);
     }
-  });
+  );
 }
 
 // Reorder implementation.
 
 function reorderChildren(parent, orderedChildrenGuids, options) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: reorderChildren",
-    db => db.executeTransaction(async function() {
-      // Select all of the direct children for the given parent.
-      let children = await fetchBookmarksByParent(db, { parentGuid: parent.guid });
-      if (!children.length) {
-        return [];
-      }
-
-      // Maps of GUIDs to indices for fast lookups in the comparator function.
-      let guidIndices = new Map();
-      let currentIndices = new Map();
-      for (let i = 0; i < orderedChildrenGuids.length; ++i) {
-        let guid = orderedChildrenGuids[i];
-        guidIndices.set(guid, i);
-      }
-
-      // If we got an incomplete list but everything we have is in the right
-      // order, we do nothing.
-      let needReorder = true;
-      let requestedChildIndices = [];
-      for (let i = 0; i < children.length; ++i) {
-        // Take the opportunity to build currentIndices here, since we already
-        // are iterating over the children array.
-        currentIndices.set(children[i].guid, i);
-
-        if (guidIndices.has(children[i].guid)) {
-          let index = guidIndices.get(children[i].guid);
-          requestedChildIndices.push(index);
-        }
-      }
-
-      if (requestedChildIndices.length) {
-        needReorder = false;
-        for (let i = 1; i < requestedChildIndices.length; ++i) {
-          if (requestedChildIndices[i - 1] > requestedChildIndices[i]) {
-            needReorder = true;
-            break;
-          }
-        }
-      }
-
-      if (needReorder) {
-        // Reorder the children array according to the specified order, provided
-        // GUIDs come first, others are appended in somehow random order.
-        children.sort((a, b) => {
-          // This works provided fetchBookmarksByParent returns sorted children.
-          if (!guidIndices.has(a.guid) && !guidIndices.has(b.guid)) {
-            return currentIndices.get(a.guid) < currentIndices.get(b.guid) ? -1 : 1;
-          }
-          if (!guidIndices.has(a.guid)) {
-            return 1;
-          }
-          if (!guidIndices.has(b.guid)) {
-            return -1;
-          }
-          return guidIndices.get(a.guid) < guidIndices.get(b.guid) ? -1 : 1;
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: reorderChildren",
+    db =>
+      db.executeTransaction(async function() {
+        // Select all of the direct children for the given parent.
+        let children = await fetchBookmarksByParent(db, {
+          parentGuid: parent.guid,
         });
+        if (!children.length) {
+          return [];
+        }
 
-        // Update the bookmarks position now.  If any unknown guid have been
-        // inserted meanwhile, its position will be set to -position, and we'll
-        // handle it later.
-        // To do the update in a single step, we build a VALUES (guid, position)
-        // table.  We then use count() in the sorting table to avoid skipping values
-        // when no more existing GUIDs have been provided.
-        let valuesTable = children.map((child, i) => `("${child.guid}", ${i})`)
-                                  .join();
-        await db.execute(
-          `WITH sorting(g, p) AS (
+        // Maps of GUIDs to indices for fast lookups in the comparator function.
+        let guidIndices = new Map();
+        let currentIndices = new Map();
+        for (let i = 0; i < orderedChildrenGuids.length; ++i) {
+          let guid = orderedChildrenGuids[i];
+          guidIndices.set(guid, i);
+        }
+
+        // If we got an incomplete list but everything we have is in the right
+        // order, we do nothing.
+        let needReorder = true;
+        let requestedChildIndices = [];
+        for (let i = 0; i < children.length; ++i) {
+          // Take the opportunity to build currentIndices here, since we already
+          // are iterating over the children array.
+          currentIndices.set(children[i].guid, i);
+
+          if (guidIndices.has(children[i].guid)) {
+            let index = guidIndices.get(children[i].guid);
+            requestedChildIndices.push(index);
+          }
+        }
+
+        if (requestedChildIndices.length) {
+          needReorder = false;
+          for (let i = 1; i < requestedChildIndices.length; ++i) {
+            if (requestedChildIndices[i - 1] > requestedChildIndices[i]) {
+              needReorder = true;
+              break;
+            }
+          }
+        }
+
+        if (needReorder) {
+          // Reorder the children array according to the specified order, provided
+          // GUIDs come first, others are appended in somehow random order.
+          children.sort((a, b) => {
+            // This works provided fetchBookmarksByParent returns sorted children.
+            if (!guidIndices.has(a.guid) && !guidIndices.has(b.guid)) {
+              return currentIndices.get(a.guid) < currentIndices.get(b.guid)
+                ? -1
+                : 1;
+            }
+            if (!guidIndices.has(a.guid)) {
+              return 1;
+            }
+            if (!guidIndices.has(b.guid)) {
+              return -1;
+            }
+            return guidIndices.get(a.guid) < guidIndices.get(b.guid) ? -1 : 1;
+          });
+
+          // Update the bookmarks position now.  If any unknown guid have been
+          // inserted meanwhile, its position will be set to -position, and we'll
+          // handle it later.
+          // To do the update in a single step, we build a VALUES (guid, position)
+          // table.  We then use count() in the sorting table to avoid skipping values
+          // when no more existing GUIDs have been provided.
+          let valuesTable = children
+            .map((child, i) => `("${child.guid}", ${i})`)
+            .join();
+          await db.execute(
+            `WITH sorting(g, p) AS (
              VALUES ${valuesTable}
            )
            UPDATE moz_bookmarks SET
@@ -2332,19 +2810,28 @@ function reorderChildren(parent, orderedChildrenGuids, options) {
              ),
              lastModified = :lastModified
            WHERE parent = :parentId
-          `, { parentId: parent._id,
-               lastModified: PlacesUtils.toPRTime(options.lastModified) });
+          `,
+            {
+              parentId: parent._id,
+              lastModified: PlacesUtils.toPRTime(options.lastModified),
+            }
+          );
 
-        let syncChangeDelta =
-          PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
-        await setAncestorsLastModified(db, parent.guid, options.lastModified,
-                                       syncChangeDelta);
+          let syncChangeDelta = PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+            options.source
+          );
+          await setAncestorsLastModified(
+            db,
+            parent.guid,
+            options.lastModified,
+            syncChangeDelta
+          );
 
-        // Update position of items that could have been inserted in the meanwhile.
-        // Since this can happen rarely and it's only done for schema coherence
-        // resonds, we won't notify about these changes.
-        await db.executeCached(
-          `CREATE TEMP TRIGGER moz_bookmarks_reorder_trigger
+          // Update position of items that could have been inserted in the meanwhile.
+          // Since this can happen rarely and it's only done for schema coherence
+          // resonds, we won't notify about these changes.
+          await db.executeCached(
+            `CREATE TEMP TRIGGER moz_bookmarks_reorder_trigger
              AFTER UPDATE OF position ON moz_bookmarks
              WHEN NEW.position = -1
            BEGIN
@@ -2356,33 +2843,36 @@ function reorderChildren(parent, orderedChildrenGuids, options) {
                                AND position BETWEEN OLD.position AND -1)
              WHERE guid = NEW.guid;
            END
-          `);
+          `
+          );
 
-        await db.executeCached(
-          `UPDATE moz_bookmarks SET position = -1 WHERE position < 0`);
+          await db.executeCached(
+            `UPDATE moz_bookmarks SET position = -1 WHERE position < 0`
+          );
 
-        await db.executeCached(`DROP TRIGGER moz_bookmarks_reorder_trigger`);
-      }
-
-      // Remove the Sync orphan annotation from the reordered children, so that
-      // Sync doesn't try to reparent them once it sees the original parents. We
-      // only do this for explicitly ordered children, to avoid removing orphan
-      // annos set by Sync.
-      let possibleOrphanIds = [];
-      for (let child of children) {
-        if (guidIndices.has(child.guid)) {
-          possibleOrphanIds.push(child._id);
+          await db.executeCached(`DROP TRIGGER moz_bookmarks_reorder_trigger`);
         }
-      }
-      await db.executeCached(
-        `DELETE FROM moz_items_annos
+
+        // Remove the Sync orphan annotation from the reordered children, so that
+        // Sync doesn't try to reparent them once it sees the original parents. We
+        // only do this for explicitly ordered children, to avoid removing orphan
+        // annos set by Sync.
+        let possibleOrphanIds = [];
+        for (let child of children) {
+          if (guidIndices.has(child.guid)) {
+            possibleOrphanIds.push(child._id);
+          }
+        }
+        await db.executeCached(
+          `DELETE FROM moz_items_annos
          WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
                                     WHERE name = :orphanAnno) AND
                item_id IN (${possibleOrphanIds.join(", ")})`,
-        { orphanAnno: PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO });
+          { orphanAnno: PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO }
+        );
 
-      return children;
-    })
+        return children;
+      })
   );
 }
 
@@ -2399,7 +2889,11 @@ function mergeIntoNewObject(...sources) {
   let dest = {};
   for (let src of sources) {
     for (let prop of Object.getOwnPropertyNames(src)) {
-      Object.defineProperty(dest, prop, Object.getOwnPropertyDescriptor(src, prop));
+      Object.defineProperty(
+        dest,
+        prop,
+        Object.getOwnPropertyDescriptor(src, prop)
+      );
     }
   }
   return dest;
@@ -2421,7 +2915,9 @@ function removeSameValueProperties(dest, src) {
     switch (prop) {
       case "lastModified":
       case "dateAdded":
-        remove = src.hasOwnProperty(prop) && dest[prop].getTime() == src[prop].getTime();
+        remove =
+          src.hasOwnProperty(prop) &&
+          dest[prop].getTime() == src[prop].getTime();
         break;
       case "url":
         remove = src.hasOwnProperty(prop) && dest[prop].href == src[prop].href;
@@ -2429,8 +2925,9 @@ function removeSameValueProperties(dest, src) {
       default:
         remove = dest[prop] == src[prop];
     }
-    if (remove && prop != "guid")
+    if (remove && prop != "guid") {
       delete dest[prop];
+    }
   }
 }
 
@@ -2452,8 +2949,9 @@ function rowsToItemsArray(rows, ignoreInvalidURLs = false) {
     }
     for (let prop of ["dateAdded", "lastModified"]) {
       let value = row.getResultByName(prop);
-      if (value)
+      if (value) {
         item[prop] = PlacesUtils.toDate(value);
+      }
     }
     let parentGuid = row.getResultByName("parentGuid");
     if (parentGuid) {
@@ -2470,16 +2968,24 @@ function rowsToItemsArray(rows, ignoreInvalidURLs = false) {
       }
     }
 
-    for (let prop of ["_id", "_parentId", "_childCount", "_grandParentId",
-                      "_syncStatus"]) {
+    for (let prop of [
+      "_id",
+      "_parentId",
+      "_childCount",
+      "_grandParentId",
+      "_syncStatus",
+    ]) {
       let val = row.getResultByName(prop);
       if (val !== null) {
         // These properties should not be returned to the API consumer, thus
         // they are non-enumerable and removed through Object.assign just before
         // the object is returned.
         // Configurable is set to support mergeIntoNewObject overwrites.
-        Object.defineProperty(item, prop, { value: val, enumerable: false,
-                                                        configurable: true });
+        Object.defineProperty(item, prop, {
+          value: val,
+          enumerable: false,
+          configurable: true,
+        });
       }
     }
 
@@ -2488,8 +2994,12 @@ function rowsToItemsArray(rows, ignoreInvalidURLs = false) {
 }
 
 function validateBookmarkObject(name, input, behavior) {
-  return PlacesUtils.validateItemProperties(name,
-    PlacesUtils.BOOKMARK_VALIDATORS, input, behavior);
+  return PlacesUtils.validateItemProperties(
+    name,
+    PlacesUtils.BOOKMARK_VALIDATORS,
+    input,
+    behavior
+  );
 }
 
 /**
@@ -2508,8 +3018,10 @@ var updateFrecency = async function(db, urls, collapseNotifications = false) {
 
   let frecencyClause = "CALCULATE_FRECENCY(id)";
   if (!collapseNotifications) {
-    frecencyClause = "NOTIFY_FRECENCY(" + frecencyClause +
-                     ", url, guid, hidden, last_visit_date)";
+    frecencyClause =
+      "NOTIFY_FRECENCY(" +
+      frecencyClause +
+      ", url, guid, hidden, last_visit_date)";
   }
   // We just use the hashes, since updating a few additional urls won't hurt.
   await db.execute(
@@ -2517,7 +3029,8 @@ var updateFrecency = async function(db, urls, collapseNotifications = false) {
      SET hidden = (url_hash BETWEEN hash("place", "prefix_lo") AND hash("place", "prefix_hi")),
          frecency = ${frecencyClause}
      WHERE url_hash IN ( ${urlQuery} )
-    `);
+    `
+  );
 
   // Trigger frecency updates for all affected origins.
   await db.executeCached(`DELETE FROM moz_updateoriginsupdate_temp`);
@@ -2540,14 +3053,16 @@ var removeOrphanAnnotations = async function(db) {
      WHERE id IN (SELECT a.id from moz_items_annos a
                   LEFT JOIN moz_bookmarks b ON a.item_id = b.id
                   WHERE b.id ISNULL)
-    `);
+    `
+  );
   await db.executeCached(
     `DELETE FROM moz_anno_attributes
      WHERE id IN (SELECT n.id from moz_anno_attributes n
                   LEFT JOIN moz_annos a1 ON a1.anno_attribute_id = n.id
                   LEFT JOIN moz_items_annos a2 ON a2.anno_attribute_id = n.id
                   WHERE a1.id ISNULL AND a2.id ISNULL)
-    `);
+    `
+  );
 };
 
 /**
@@ -2562,7 +3077,7 @@ var removeAnnotationsForItems = async function(db, items) {
   // Remove the annotations.
   let ids = sqlList(items.map(item => item._id));
   await db.executeCached(
-    `DELETE FROM moz_items_annos WHERE item_id IN (${ids})`,
+    `DELETE FROM moz_items_annos WHERE item_id IN (${ids})`
   );
   await db.executeCached(
     `DELETE FROM moz_anno_attributes
@@ -2570,7 +3085,8 @@ var removeAnnotationsForItems = async function(db, items) {
                   LEFT JOIN moz_annos a1 ON a1.anno_attribute_id = n.id
                   LEFT JOIN moz_items_annos a2 ON a2.anno_attribute_id = n.id
                   WHERE a1.id ISNULL AND a2.id ISNULL)
-    `);
+    `
+  );
 };
 
 /**
@@ -2585,7 +3101,12 @@ var removeAnnotationsForItems = async function(db, items) {
  *
  * @note the folder itself is also updated.
  */
-var setAncestorsLastModified = async function(db, folderGuid, time, syncChangeDelta) {
+var setAncestorsLastModified = async function(
+  db,
+  folderGuid,
+  time,
+  syncChangeDelta
+) {
   await db.executeCached(
     `WITH RECURSIVE
      ancestors(aid) AS (
@@ -2597,16 +3118,23 @@ var setAncestorsLastModified = async function(db, folderGuid, time, syncChangeDe
      )
      UPDATE moz_bookmarks SET lastModified = :time
      WHERE id IN ancestors
-    `, { guid: folderGuid, type: Bookmarks.TYPE_FOLDER,
-         time: PlacesUtils.toPRTime(time) });
+    `,
+    {
+      guid: folderGuid,
+      type: Bookmarks.TYPE_FOLDER,
+      time: PlacesUtils.toPRTime(time),
+    }
+  );
 
   if (syncChangeDelta) {
     // Flag the folder as having a change.
-    await db.executeCached(`
+    await db.executeCached(
+      `
       UPDATE moz_bookmarks SET
         syncChangeCounter = syncChangeCounter + :syncChangeDelta
       WHERE guid = :guid`,
-      { guid: folderGuid, syncChangeDelta });
+      { guid: folderGuid, syncChangeDelta }
+    );
   }
 };
 
@@ -2623,10 +3151,10 @@ var setAncestorsLastModified = async function(db, folderGuid, time, syncChangeDe
  *         can decide when they need to be updated - they do not need to
  *         stop this function from completing.
  */
-var removeFoldersContents =
-async function(db, folderGuids, options) {
-  let syncChangeDelta =
-    PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
+var removeFoldersContents = async function(db, folderGuids, options) {
+  let syncChangeDelta = PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+    options.source
+  );
 
   let itemsRemoved = [];
   for (let folderGuid of folderGuids) {
@@ -2650,7 +3178,9 @@ async function(db, folderGuids, options) {
           to retain the original rows order, so the hierarchy is respected */
        CROSS JOIN moz_bookmarks b ON did = b.id
        JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON b.fk = h.id`, { folderGuid });
+       LEFT JOIN moz_places h ON b.fk = h.id`,
+      { folderGuid }
+    );
 
     itemsRemoved = itemsRemoved.concat(rowsToItemsArray(rows, true));
 
@@ -2664,7 +3194,9 @@ async function(db, folderGuids, options) {
          SELECT id FROM moz_bookmarks
          JOIN descendants ON parent = did
        )
-       DELETE FROM moz_bookmarks WHERE id IN descendants`, { folderGuid });
+       DELETE FROM moz_bookmarks WHERE id IN descendants`,
+      { folderGuid }
+    );
   }
 
   // Write tombstones for removed items.
@@ -2689,25 +3221,43 @@ async function(db, folderGuids, options) {
   let observers = PlacesUtils.bookmarks.getObservers();
   for (let item of itemsRemoved.reverse()) {
     let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
-    notify(observers, "onItemRemoved", [ item._id, item._parentId,
-                                         item.index, item.type, uri,
-                                         item.guid, item.parentGuid,
-                                         source ],
-                                       // Notify observers that this item is being
-                                       // removed as a descendent.
-                                       {
-                                         isDescendantRemoval: true,
-                                         parentGuid: item.parentGuid,
-                                       });
+    notify(
+      observers,
+      "onItemRemoved",
+      [
+        item._id,
+        item._parentId,
+        item.index,
+        item.type,
+        uri,
+        item.guid,
+        item.parentGuid,
+        source,
+      ],
+      // Notify observers that this item is being
+      // removed as a descendent.
+      {
+        isDescendantRemoval: true,
+        parentGuid: item.parentGuid,
+      }
+    );
 
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
     if (isUntagging) {
-      for (let entry of (await fetchBookmarksByURL(item, true))) {
-        notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
-                                             PlacesUtils.toPRTime(entry.lastModified),
-                                             entry.type, entry._parentId,
-                                             entry.guid, entry.parentGuid,
-                                             "", source ]);
+      for (let entry of await fetchBookmarksByURL(item, true)) {
+        notify(observers, "onItemChanged", [
+          entry._id,
+          "tags",
+          false,
+          "",
+          PlacesUtils.toPRTime(entry.lastModified),
+          entry.type,
+          entry._parentId,
+          entry.guid,
+          entry.parentGuid,
+          "",
+          source,
+        ]);
       }
     }
   }
@@ -2727,9 +3277,13 @@ async function maybeInsertPlace(db, url) {
      VALUES (:url, hash(:url), :rev_host, 0, :frecency,
              IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
                     GENERATE_GUID()))
-    `, { url: url.href,
-         rev_host: PlacesUtils.getReversedHost(url),
-         frecency: url.protocol == "place:" ? 0 : -1 });
+    `,
+    {
+      url: url.href,
+      rev_host: PlacesUtils.getReversedHost(url),
+      frecency: url.protocol == "place:" ? 0 : -1,
+    }
+  );
   await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
 }
 
@@ -2746,12 +3300,13 @@ async function maybeInsertManyPlaces(db, urls) {
     `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid) VALUES
      (:url, hash(:url), :rev_host, 0, :frecency,
      IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :maybeguid))`,
-     urls.map(url => ({
-       url: url.href,
-       rev_host: PlacesUtils.getReversedHost(url),
-       frecency: url.protocol == "place:" ? 0 : -1,
-       maybeguid: PlacesUtils.history.makeGuid(),
-     })));
+    urls.map(url => ({
+      url: url.href,
+      rev_host: PlacesUtils.getReversedHost(url),
+      frecency: url.protocol == "place:" ? 0 : -1,
+      maybeguid: PlacesUtils.history.makeGuid(),
+    }))
+  );
   await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
 }
 
@@ -2773,19 +3328,26 @@ function insertTombstones(db, itemsRemoved, syncChangeDelta) {
     return Promise.resolve();
   }
   let dateRemoved = PlacesUtils.toPRTime(Date.now());
-  let valuesTable = syncedItems.map(item => `(
+  let valuesTable = syncedItems
+    .map(
+      item => `(
     ${JSON.stringify(item.guid)},
     ${dateRemoved}
-  )`).join(",");
+  )`
+    )
+    .join(",");
   return db.execute(`
     INSERT INTO moz_bookmarks_deleted (guid, dateRemoved)
-    VALUES ${valuesTable}`
-  );
+    VALUES ${valuesTable}`);
 }
 
 // Bumps the change counter for all bookmarks with URLs referenced in removed
 // tag folders.
-var addSyncChangesForRemovedTagFolders = async function(db, itemsRemoved, syncChangeDelta) {
+var addSyncChangesForRemovedTagFolders = async function(
+  db,
+  itemsRemoved,
+  syncChangeDelta
+) {
   if (!syncChangeDelta) {
     return;
   }
@@ -2793,17 +3355,26 @@ var addSyncChangesForRemovedTagFolders = async function(db, itemsRemoved, syncCh
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
     if (isUntagging) {
       await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
-        db, item.url, syncChangeDelta);
+        db,
+        item.url,
+        syncChangeDelta
+      );
     }
   }
 };
 
-function adjustSeparatorsSyncCounter(db, parentId, startIndex, syncChangeDelta) {
+function adjustSeparatorsSyncCounter(
+  db,
+  parentId,
+  startIndex,
+  syncChangeDelta
+) {
   if (!syncChangeDelta) {
     return Promise.resolve();
   }
 
-  return db.executeCached(`
+  return db.executeCached(
+    `
     UPDATE moz_bookmarks
     SET syncChangeCounter = syncChangeCounter + :delta
     WHERE parent = :parent AND position >= :start_index
@@ -2814,7 +3385,8 @@ function adjustSeparatorsSyncCounter(db, parentId, startIndex, syncChangeDelta) 
       parent: parentId,
       start_index: startIndex,
       item_type: Bookmarks.TYPE_SEPARATOR,
-    });
+    }
+  );
 }
 
 function* chunkArray(array, chunkLength) {
@@ -2824,7 +3396,7 @@ function* chunkArray(array, chunkLength) {
   }
   let startIndex = 0;
   while (startIndex < array.length) {
-    yield array.slice(startIndex, startIndex += chunkLength);
+    yield array.slice(startIndex, (startIndex += chunkLength));
   }
 }
 

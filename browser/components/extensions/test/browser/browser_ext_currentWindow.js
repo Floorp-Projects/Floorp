@@ -13,32 +13,44 @@ function genericChecker() {
 
   browser.test.onMessage.addListener((msg, ...args) => {
     if (msg == kind + "-check-current1") {
-      browser.tabs.query({
-        currentWindow: true,
-      }, function(tabs) {
-        browser.test.sendMessage("result", tabs[0].windowId);
-      });
+      browser.tabs.query(
+        {
+          currentWindow: true,
+        },
+        function(tabs) {
+          browser.test.sendMessage("result", tabs[0].windowId);
+        }
+      );
     } else if (msg == kind + "-check-current2") {
-      browser.tabs.query({
-        windowId: browser.windows.WINDOW_ID_CURRENT,
-      }, function(tabs) {
-        browser.test.sendMessage("result", tabs[0].windowId);
-      });
+      browser.tabs.query(
+        {
+          windowId: browser.windows.WINDOW_ID_CURRENT,
+        },
+        function(tabs) {
+          browser.test.sendMessage("result", tabs[0].windowId);
+        }
+      );
     } else if (msg == kind + "-check-current3") {
       browser.windows.getCurrent(function(window) {
         browser.test.sendMessage("result", window.id);
       });
     } else if (msg == kind + "-open-page") {
-      browser.tabs.create({windowId: args[0], url: browser.runtime.getURL("page.html")});
-    } else if (msg == kind + "-close-page") {
-      browser.tabs.query({
+      browser.tabs.create({
         windowId: args[0],
-      }, tabs => {
-        let tab = tabs.find(tab => tab.url.includes("/page.html"));
-        browser.tabs.remove(tab.id, () => {
-          browser.test.sendMessage("closed");
-        });
+        url: browser.runtime.getURL("page.html"),
       });
+    } else if (msg == kind + "-close-page") {
+      browser.tabs.query(
+        {
+          windowId: args[0],
+        },
+        tabs => {
+          let tab = tabs.find(tab => tab.url.includes("/page.html"));
+          browser.tabs.remove(tab.id, () => {
+            browser.test.sendMessage("closed");
+          });
+        }
+      );
     }
   });
   browser.test.sendMessage(kind + "-ready");
@@ -58,10 +70,10 @@ add_task(async function() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
 
-      "browser_action": {
-        "default_popup": "popup.html",
+      browser_action: {
+        default_popup: "popup.html",
       },
     },
 
@@ -88,20 +100,39 @@ add_task(async function() {
     background: genericChecker,
   });
 
-  await Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
+  await Promise.all([
+    extension.startup(),
+    extension.awaitMessage("background-ready"),
+  ]);
 
-  let {Management: {global: {windowTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  let {
+    Management: {
+      global: { windowTracker },
+    },
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   let winId1 = windowTracker.getId(win1);
   let winId2 = windowTracker.getId(win2);
 
   async function checkWindow(kind, winId, name) {
     extension.sendMessage(kind + "-check-current1");
-    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 1) [${kind}]`);
+    is(
+      await extension.awaitMessage("result"),
+      winId,
+      `${name} is on top (check 1) [${kind}]`
+    );
     extension.sendMessage(kind + "-check-current2");
-    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 2) [${kind}]`);
+    is(
+      await extension.awaitMessage("result"),
+      winId,
+      `${name} is on top (check 2) [${kind}]`
+    );
     extension.sendMessage(kind + "-check-current3");
-    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 3) [${kind}]`);
+    is(
+      await extension.awaitMessage("result"),
+      winId,
+      `${name} is on top (check 3) [${kind}]`
+    );
   }
 
   async function triggerPopup(win, callback) {

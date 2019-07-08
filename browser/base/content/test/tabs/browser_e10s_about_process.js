@@ -16,15 +16,15 @@ const MUSTREMOTE = {
 const CANPRIVILEGEDREMOTE = {
   id: "a04ffafe-6c63-4266-acae-0f4b093165aa",
   path: "test-canprivilegedremote",
-  flags: Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD |
-         Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS,
+  flags:
+    Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD |
+    Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS,
 };
 const MUSTEXTENSION = {
   id: "f7a1798f-965b-49e9-be83-ec6ee4d7d675",
   path: "test-mustextension",
   flags: Ci.nsIAboutModule.URI_MUST_LOAD_IN_EXTENSION_PROCESS,
 };
-
 
 const TEST_MODULES = [
   CHROME,
@@ -34,8 +34,7 @@ const TEST_MODULES = [
   MUSTEXTENSION,
 ];
 
-function AboutModule() {
-}
+function AboutModule() {}
 
 AboutModule.prototype = {
   newChannel(aURI, aLoadInfo) {
@@ -62,8 +61,9 @@ AboutModule.prototype = {
 
 var AboutModuleFactory = {
   createInstance(aOuter, aIID) {
-    if (aOuter)
+    if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
     return new AboutModule().QueryInterface(aIID);
   },
 
@@ -75,17 +75,25 @@ var AboutModuleFactory = {
 };
 
 add_task(async function init() {
-  SpecialPowers.setBoolPref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
+  SpecialPowers.setBoolPref(
+    "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
+    true
+  );
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   for (let module of TEST_MODULES) {
-    registrar.registerFactory(Components.ID(module.id), "",
-                              "@mozilla.org/network/protocol/about;1?what=" + module.path,
-                              AboutModuleFactory);
+    registrar.registerFactory(
+      Components.ID(module.id),
+      "",
+      "@mozilla.org/network/protocol/about;1?what=" + module.path,
+      AboutModuleFactory
+    );
   }
 });
 
 registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess");
+  SpecialPowers.clearUserPref(
+    "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess"
+  );
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   for (let module of TEST_MODULES) {
     registrar.unregisterFactory(Components.ID(module.id), AboutModuleFactory);
@@ -93,43 +101,81 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function test_chrome() {
-  test_url_for_process_types("about:" + CHROME.path, true, false, false, false, false);
+  test_url_for_process_types(
+    "about:" + CHROME.path,
+    true,
+    false,
+    false,
+    false,
+    false
+  );
 });
 
 add_task(async function test_any() {
-  test_url_for_process_types("about:" + CANREMOTE.path, true, true, false, false, false);
+  test_url_for_process_types(
+    "about:" + CANREMOTE.path,
+    true,
+    true,
+    false,
+    false,
+    false
+  );
 });
 
 add_task(async function test_remote() {
-  test_url_for_process_types("about:" + MUSTREMOTE.path, false, true, false, false, false);
+  test_url_for_process_types(
+    "about:" + MUSTREMOTE.path,
+    false,
+    true,
+    false,
+    false,
+    false
+  );
 });
 
 add_task(async function test_privileged_remote_true() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.tabs.remote.separatePrivilegedContentProcess", true],
-    ],
+    set: [["browser.tabs.remote.separatePrivilegedContentProcess", true]],
   });
 
   // This shouldn't be taken literally. We will always use the privleged about
   // content type if the URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS flag is enabled and
   // the pref is turned on.
-  test_url_for_process_types("about:" + CANPRIVILEGEDREMOTE.path, false, false, true, false, false);
+  test_url_for_process_types(
+    "about:" + CANPRIVILEGEDREMOTE.path,
+    false,
+    false,
+    true,
+    false,
+    false
+  );
 });
 
 add_task(async function test_privileged_remote_false() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.tabs.remote.separatePrivilegedContentProcess", false],
-    ],
+    set: [["browser.tabs.remote.separatePrivilegedContentProcess", false]],
   });
 
   // This shouldn't be taken literally. We will always use the privleged about
   // content type if the URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS flag is enabled and
   // the pref is turned on.
-  test_url_for_process_types("about:" + CANPRIVILEGEDREMOTE.path, false, true, false, false, false);
+  test_url_for_process_types(
+    "about:" + CANPRIVILEGEDREMOTE.path,
+    false,
+    true,
+    false,
+    false,
+    false
+  );
 });
 
 add_task(async function test_extension() {
-  test_url_for_process_types("about:" + MUSTEXTENSION.path, false, false, false, false, true);
+  test_url_for_process_types(
+    "about:" + MUSTEXTENSION.path,
+    false,
+    false,
+    false,
+    false,
+    true
+  );
 });

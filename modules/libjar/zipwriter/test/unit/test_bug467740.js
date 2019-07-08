@@ -18,11 +18,15 @@ function run_test() {
     // Opening the invalid file should fail (but not crash)
     try {
       zipW.open(invalidFile, PR_RDWR);
-      do_throw("Should have thrown NS_ERROR_FILE_CORRUPTED on " +
-               invalidArchive + " !");
+      do_throw(
+        "Should have thrown NS_ERROR_FILE_CORRUPTED on " + invalidArchive + " !"
+      );
     } catch (e) {
-      if (!(e instanceof Ci.nsIException &&
-            e.result == Cr.NS_ERROR_FILE_CORRUPTED)) {
+      if (
+        !(
+          e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FILE_CORRUPTED
+        )
+      ) {
         throw e;
       }
       // do nothing

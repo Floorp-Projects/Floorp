@@ -14,9 +14,11 @@ add_task(async function bookmark_leak_window() {
   let tree = library.document.getElementById("placesList");
   tree.selectItems(["toolbar_____"]);
 
-  await synthesizeClickOnSelectedTreeCell(tree, {type: "mousedown"});
+  await synthesizeClickOnSelectedTreeCell(tree, { type: "mousedown" });
   await promiseLibraryClosed(library);
 
-  Assert.ok(true, "Closing a window after selecting a node in the tree should not cause a leak");
+  Assert.ok(
+    true,
+    "Closing a window after selecting a node in the tree should not cause a leak"
+  );
 });
-

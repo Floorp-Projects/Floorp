@@ -6,12 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["Preferences"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+const { ContentTask } = ChromeUtils.import(
+  "resource://testing-common/ContentTask.jsm"
+);
 
 var Preferences = {
-
   init(libDir) {
     let panes = [
       ["paneGeneral"],
@@ -36,10 +39,14 @@ var Preferences = {
       this.configurations[configName].selectors = ["#browser"];
       if (primary == "panePrivacy" && customFn) {
         this.configurations[configName].applyConfig = async () => {
-          return {todo: `${configName} times out on the try server`};
+          return { todo: `${configName} times out on the try server` };
         };
       } else {
-        this.configurations[configName].applyConfig = prefHelper.bind(null, primary, customFn);
+        this.configurations[configName].applyConfig = prefHelper.bind(
+          null,
+          primary,
+          customFn
+        );
       }
     }
   },
@@ -63,7 +70,10 @@ let prefHelper = async function(primary, customFn = null) {
 
   let readyPromise = null;
   if (selectedBrowser.currentURI.specIgnoringRef == "about:preferences") {
-    if (selectedBrowser.currentURI.spec == "about:preferences#" + primary.replace(/^pane/, "")) {
+    if (
+      selectedBrowser.currentURI.spec ==
+      "about:preferences#" + primary.replace(/^pane/, "")
+    ) {
       // We're already on the correct pane.
       readyPromise = Promise.resolve();
     } else {
@@ -87,10 +97,14 @@ let prefHelper = async function(primary, customFn = null) {
 };
 
 function paintPromise(browserWindow) {
-  return new Promise((resolve) => {
-    browserWindow.addEventListener("MozAfterPaint", function() {
-      resolve();
-    }, {once: true});
+  return new Promise(resolve => {
+    browserWindow.addEventListener(
+      "MozAfterPaint",
+      function() {
+        resolve();
+      },
+      { once: true }
+    );
   });
 }
 
@@ -110,7 +124,9 @@ async function DNTDialog(aBrowser) {
   return ContentTask.spawn(aBrowser, null, async function() {
     const button = content.document.getElementById("doNotTrackSettings");
     if (!button) {
-      return {todo: "The dialog may have exited before we could click the button"};
+      return {
+        todo: "The dialog may have exited before we could click the button",
+      };
     }
     button.click();
     return undefined;

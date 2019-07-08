@@ -6,19 +6,28 @@
 
 var EXPORTED_SYMBOLS = ["FormAutofill"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ADDRESSES_FIRST_TIME_USE_PREF = "extensions.formautofill.firstTimeUse";
-const AUTOFILL_CREDITCARDS_AVAILABLE_PREF = "extensions.formautofill.creditCards.available";
+const AUTOFILL_CREDITCARDS_AVAILABLE_PREF =
+  "extensions.formautofill.creditCards.available";
 const CREDITCARDS_USED_STATUS_PREF = "extensions.formautofill.creditCards.used";
 const DEFAULT_REGION_PREF = "browser.search.region";
-const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabled";
-const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.enabled";
+const ENABLED_AUTOFILL_ADDRESSES_PREF =
+  "extensions.formautofill.addresses.enabled";
+const ENABLED_AUTOFILL_CREDITCARDS_PREF =
+  "extensions.formautofill.creditCards.enabled";
 const SUPPORTED_COUNTRIES_PREF = "extensions.formautofill.supportedCountries";
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "logLevel", "extensions.formautofill.loglevel",
-                                      "Warn");
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "logLevel",
+  "extensions.formautofill.loglevel",
+  "Warn"
+);
 
 // A logging helper for debug logging to avoid creating Console objects
 // or triggering expensive JS -> C++ calls when debug logging is not
@@ -43,14 +52,27 @@ var FormAutofill = {
   ADDRESSES_FIRST_TIME_USE_PREF,
   CREDITCARDS_USED_STATUS_PREF,
 
-  get isAutofillEnabled() { return FormAutofill.isAutofillAddressesEnabled || this.isAutofillCreditCardsEnabled; },
-  get isAutofillCreditCardsEnabled() { return FormAutofill.isAutofillCreditCardsAvailable && FormAutofill._isAutofillCreditCardsEnabled; },
+  get isAutofillEnabled() {
+    return (
+      FormAutofill.isAutofillAddressesEnabled ||
+      this.isAutofillCreditCardsEnabled
+    );
+  },
+  get isAutofillCreditCardsEnabled() {
+    return (
+      FormAutofill.isAutofillCreditCardsAvailable &&
+      FormAutofill._isAutofillCreditCardsEnabled
+    );
+  },
 
   defineLazyLogGetter(scope, logPrefix) {
     scope.debug = debug;
 
     XPCOMUtils.defineLazyGetter(scope, "log", () => {
-      let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
+      let ConsoleAPI = ChromeUtils.import(
+        "resource://gre/modules/Console.jsm",
+        {}
+      ).ConsoleAPI;
       return new ConsoleAPI({
         maxLogLevelPref: "extensions.formautofill.loglevel",
         prefix: logPrefix,
@@ -59,30 +81,58 @@ var FormAutofill = {
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
-                                      "DEFAULT_REGION", DEFAULT_REGION_PREF, "US");
-XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
-                                      "isAutofillAddressesEnabled", ENABLED_AUTOFILL_ADDRESSES_PREF);
-XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
-                                      "isAutofillCreditCardsAvailable", AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
-XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
-                                      "_isAutofillCreditCardsEnabled", ENABLED_AUTOFILL_CREDITCARDS_PREF);
-XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
-                                      "isAutofillAddressesFirstTimeUse", ADDRESSES_FIRST_TIME_USE_PREF);
-XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
-                                      "AutofillCreditCardsUsedStatus", CREDITCARDS_USED_STATUS_PREF);
-XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
-                                      "supportedCountries", SUPPORTED_COUNTRIES_PREF, null, null,
-                                      val => val.split(","));
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "DEFAULT_REGION",
+  DEFAULT_REGION_PREF,
+  "US"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "isAutofillAddressesEnabled",
+  ENABLED_AUTOFILL_ADDRESSES_PREF
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "isAutofillCreditCardsAvailable",
+  AUTOFILL_CREDITCARDS_AVAILABLE_PREF
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "_isAutofillCreditCardsEnabled",
+  ENABLED_AUTOFILL_CREDITCARDS_PREF
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "isAutofillAddressesFirstTimeUse",
+  ADDRESSES_FIRST_TIME_USE_PREF
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "AutofillCreditCardsUsedStatus",
+  CREDITCARDS_USED_STATUS_PREF
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "supportedCountries",
+  SUPPORTED_COUNTRIES_PREF,
+  null,
+  null,
+  val => val.split(",")
+);
 
 // XXX: This should be invalidated on intl:app-locales-changed.
 XPCOMUtils.defineLazyGetter(FormAutofill, "countries", () => {
-  let availableRegionCodes = Services.intl.getAvailableLocaleDisplayNames("region");
-  let displayNames = Services.intl.getRegionDisplayNames(undefined, availableRegionCodes);
+  let availableRegionCodes = Services.intl.getAvailableLocaleDisplayNames(
+    "region"
+  );
+  let displayNames = Services.intl.getRegionDisplayNames(
+    undefined,
+    availableRegionCodes
+  );
   let result = new Map();
   for (let i = 0; i < availableRegionCodes.length; i++) {
     result.set(availableRegionCodes[i].toUpperCase(), displayNames[i]);
   }
   return result;
 });
-

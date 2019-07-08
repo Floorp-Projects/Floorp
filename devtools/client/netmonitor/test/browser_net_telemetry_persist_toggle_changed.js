@@ -6,7 +6,9 @@
 /**
  * Tests the log persistence telemetry event
  */
-const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 add_task(async function() {
   const { monitor } = await initNetMonitor(SINGLE_GET_URL);
@@ -24,7 +26,9 @@ add_task(async function() {
   TelemetryTestUtils.assertNumberOfEvents(0);
 
   // Get log persistence toggle button
-  const logPersistToggle = document.getElementById("devtools-persistlog-checkbox");
+  const logPersistToggle = document.getElementById(
+    "devtools-persistlog-checkbox"
+  );
 
   // Click on the toggle - "true" and make sure it was set to correct value
   logPersistToggle.click();

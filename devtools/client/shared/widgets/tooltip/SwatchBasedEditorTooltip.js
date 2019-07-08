@@ -6,7 +6,9 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const {
+  HTMLTooltip,
+} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const InlineTooltip = require("devtools/client/shared/widgets/tooltip/InlineTooltip");
 
 const INLINE_TOOLTIP_CLASS = "inline-tooltip-container";
@@ -78,7 +80,7 @@ class SwatchBasedEditorTooltip {
     this._onSwatchClick = this._onSwatchClick.bind(this);
   }
 
- /**
+  /**
    * Reports if the tooltip is currently shown
    *
    * @return {Boolean} True if the tooltip is displayed.
@@ -103,9 +105,9 @@ class SwatchBasedEditorTooltip {
    *         immediately if there is no currently active swatch.
    */
   show() {
-    const tooltipAnchor = this.useInline ?
-      this.activeSwatch.closest(`.${INLINE_TOOLTIP_CLASS}`) :
-      this.activeSwatch;
+    const tooltipAnchor = this.useInline
+      ? this.activeSwatch.closest(`.${INLINE_TOOLTIP_CLASS}`)
+      : this.activeSwatch;
 
     if (tooltipAnchor) {
       const onShown = this.tooltip.once("shown");

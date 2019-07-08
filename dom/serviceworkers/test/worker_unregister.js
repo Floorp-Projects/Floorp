@@ -5,12 +5,18 @@ onmessage = function(e) {
       return;
     }
 
-    registration.unregister().then(function() {
-      c[0].postMessage('DONE');
-    }, function() {
-      c[0].postMessage('ERROR');
-    }).then(function() {
-      c[0].postMessage('FINISH');
-    });
+    registration
+      .unregister()
+      .then(
+        function() {
+          c[0].postMessage("DONE");
+        },
+        function() {
+          c[0].postMessage("ERROR");
+        }
+      )
+      .then(function() {
+        c[0].postMessage("FINISH");
+      });
   });
-}
+};

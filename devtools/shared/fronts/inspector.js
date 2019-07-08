@@ -7,8 +7,10 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const telemetry = new Telemetry();
 const { NodePicker } = require("devtools/shared/fronts/inspector/node-picker");
 const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
-const TELEMETRY_EYEDROPPER_OPENED_MENU = "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
-const SHOW_ALL_ANONYMOUS_CONTENT_PREF = "devtools.inspector.showAllAnonymousContent";
+const TELEMETRY_EYEDROPPER_OPENED_MENU =
+  "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
+const SHOW_ALL_ANONYMOUS_CONTENT_PREF =
+  "devtools.inspector.showAllAnonymousContent";
 const SHOW_UA_SHADOW_ROOTS_PREF = "devtools.inspector.showUserAgentShadowRoots";
 
 const {
@@ -23,12 +25,18 @@ const {
 
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
-loader.lazyRequireGetter(this, "nodeConstants",
-  "devtools/shared/dom-node-constants");
-loader.lazyRequireGetter(this, "Selection",
-  "devtools/client/framework/selection", true);
-loader.lazyRequireGetter(this, "flags",
-  "devtools/shared/flags");
+loader.lazyRequireGetter(
+  this,
+  "nodeConstants",
+  "devtools/shared/dom-node-constants"
+);
+loader.lazyRequireGetter(
+  this,
+  "Selection",
+  "devtools/client/framework/selection",
+  true
+);
+loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 
 /**
  * Client side of the DOM walker.
@@ -163,7 +171,9 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     const response = await this.getNodeActorFromObjectActor(grip.actor);
     const nodeFront = response ? response.node : null;
     if (!nodeFront) {
-      throw new Error("The ValueGrip passed could not be translated to a NodeFront");
+      throw new Error(
+        "The ValueGrip passed could not be translated to a NodeFront"
+      );
     }
     return nodeFront;
   }
@@ -197,8 +207,8 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
    * @param {Object} options
    *    - "reverse": search backwards
    */
-  async search(query, options = { }) {
-    const searchData = this.searchData = this.searchData || { };
+  async search(query, options = {}) {
+    const searchData = (this.searchData = this.searchData || {});
     const result = await super.search(query, options);
     const nodeList = result.list;
 
@@ -213,8 +223,9 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     }
 
     // Move search result cursor and cycle if necessary.
-    searchData.index = options.reverse ? searchData.index - 1 :
-                                         searchData.index + 1;
+    searchData.index = options.reverse
+      ? searchData.index - 1
+      : searchData.index + 1;
     if (searchData.index >= nodeList.length) {
       searchData.index = 0;
     }
@@ -282,24 +293,30 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
         }
 
         if (!targetFront) {
-          console.warn("Got a mutation for an unexpected actor: " + targetID +
-            ", please file a bug on bugzilla.mozilla.org!");
+          console.warn(
+            "Got a mutation for an unexpected actor: " +
+              targetID +
+              ", please file a bug on bugzilla.mozilla.org!"
+          );
           console.trace();
           continue;
         }
 
         const emittedMutation = Object.assign(change, { target: targetFront });
 
-        if (change.type === "childList" ||
-            change.type === "nativeAnonymousChildList") {
+        if (
+          change.type === "childList" ||
+          change.type === "nativeAnonymousChildList"
+        ) {
           // Update the ownership tree according to the mutation record.
           const addedFronts = [];
           const removedFronts = [];
           for (const removed of change.removed) {
             const removedFront = this.get(removed);
             if (!removedFront) {
-              console.error("Got a removal of an actor we didn't know about: " +
-                removed);
+              console.error(
+                "Got a removal of an actor we didn't know about: " + removed
+              );
               continue;
             }
             // Remove from the ownership tree
@@ -313,8 +330,11 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           for (const added of change.added) {
             const addedFront = this.get(added);
             if (!addedFront) {
-              console.error("Got an addition of an actor we didn't know " +
-                "about: " + added);
+              console.error(
+                "Got an addition of an actor we didn't know " +
+                  "about: " +
+                  added
+              );
               continue;
             }
             addedFront.reparent(targetFront);
@@ -342,8 +362,10 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           // first.
           for (const child of targetFront.treeChildren()) {
             if (child.nodeType === nodeConstants.DOCUMENT_NODE) {
-              console.warn("Got an unexpected frameLoad in the inspector, " +
-                "please file a bug on bugzilla.mozilla.org!");
+              console.warn(
+                "Got an unexpected frameLoad in the inspector, " +
+                  "please file a bug on bugzilla.mozilla.org!"
+              );
               console.trace();
             }
           }
@@ -362,7 +384,8 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
         } else if (change.type === "shadowRootAttached") {
           targetFront._form.isShadowHost = true;
         } else if (change.type === "customElementDefined") {
-          targetFront._form.customElementLocation = change.customElementLocation;
+          targetFront._form.customElementLocation =
+            change.customElementLocation;
         } else if (change.type === "unretained") {
           // Retained orphans were force-released without the intervention of
           // client (probably a navigated frame).
@@ -377,13 +400,16 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
 
         // Update the inlineTextChild property of the target for a selected list of
         // mutation types.
-        if (change.type === "inlineTextChild" ||
-            change.type === "childList" ||
-            change.type === "shadowRootAttached" ||
-            change.type === "nativeAnonymousChildList") {
+        if (
+          change.type === "inlineTextChild" ||
+          change.type === "childList" ||
+          change.type === "shadowRootAttached" ||
+          change.type === "nativeAnonymousChildList"
+        ) {
           if (change.inlineTextChild) {
-            targetFront.inlineTextChild =
-              types.getType("domnode").read(change.inlineTextChild, this);
+            targetFront.inlineTextChild = types
+              .getType("domnode")
+              .read(change.inlineTextChild, this);
           } else {
             targetFront.inlineTextChild = undefined;
           }
@@ -411,7 +437,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
    */
   onMutations() {
     // Fetch and process the mutations.
-    this.getMutations({cleanup: this.autoCleanup}).catch(() => {});
+    this.getMutations({ cleanup: this.autoCleanup }).catch(() => {});
   }
 
   isLocal() {
@@ -448,20 +474,23 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   // async initialization
   async initialize() {
-    await Promise.all([
-      this._getWalker(),
-      this._getHighlighter(),
-    ]);
+    await Promise.all([this._getWalker(), this._getHighlighter()]);
 
     this.selection = new Selection(this.walker);
-    this.nodePicker = new NodePicker(this.highlighter, this.walker, this.selection);
+    this.nodePicker = new NodePicker(
+      this.highlighter,
+      this.walker,
+      this.selection
+    );
   }
 
   async _getWalker() {
     const showAllAnonymousContent = Services.prefs.getBoolPref(
-      SHOW_ALL_ANONYMOUS_CONTENT_PREF);
+      SHOW_ALL_ANONYMOUS_CONTENT_PREF
+    );
     const showUserAgentShadowRoots = Services.prefs.getBoolPref(
-      SHOW_UA_SHADOW_ROOTS_PREF);
+      SHOW_UA_SHADOW_ROOTS_PREF
+    );
     this.walker = await this.getWalker({
       showAllAnonymousContent,
       showUserAgentShadowRoots,
@@ -502,8 +531,10 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     try {
       highlighter = await super.getHighlighterByType(typeName);
     } catch (_) {
-      throw new Error("The target doesn't support " +
-        `creating highlighters by types or ${typeName} is unknown`);
+      throw new Error(
+        "The target doesn't support " +
+          `creating highlighters by types or ${typeName} is unknown`
+      );
     }
     return highlighter;
   }
@@ -513,7 +544,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   }
 
   async getOrCreateHighlighterByType(type) {
-    let front =  this._highlighters.get(type);
+    let front = this._highlighters.get(type);
     if (!front) {
       front = await this.getHighlighterByType(type);
       this._highlighters.set(type, front);

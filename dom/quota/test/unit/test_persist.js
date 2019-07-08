@@ -5,12 +5,11 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const origin = {
     url: "http://default.test.persist",
     path: "storage/default/http+++default.test.persist",
-    persistence: "default"
+    persistence: "default",
   };
 
   const metadataFileName = ".metadata-v2";

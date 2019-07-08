@@ -32,9 +32,11 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function test_normal() {
-  await DevToolsUtils.fetch(NORMAL_URL).then(({content}) => {
-    ok(content.includes("The content looks correct."),
-      "The content looks correct.");
+  await DevToolsUtils.fetch(NORMAL_URL).then(({ content }) => {
+    ok(
+      content.includes("The content looks correct."),
+      "The content looks correct."
+    );
   });
 });
 
@@ -42,20 +44,23 @@ add_task(async function test_caching() {
   let initialContent = null;
 
   info("Performing the first request.");
-  await DevToolsUtils.fetch(CACHED_URL).then(({content}) => {
+  await DevToolsUtils.fetch(CACHED_URL).then(({ content }) => {
     info("Got the first response: " + content);
     initialContent = content;
   });
 
   info("Performing another request, expecting to get cached response.");
-  await DevToolsUtils.fetch(CACHED_URL).then(({content}) => {
+  await DevToolsUtils.fetch(CACHED_URL).then(({ content }) => {
     deepEqual(content, initialContent, "The content was loaded from cache.");
   });
 
   info("Performing a third request with cache bypassed.");
   const opts = { loadFromCache: false };
-  await DevToolsUtils.fetch(CACHED_URL, opts).then(({content}) => {
-    notDeepEqual(content, initialContent,
-      "The URL wasn't loaded from cache with loadFromCache: false.");
+  await DevToolsUtils.fetch(CACHED_URL, opts).then(({ content }) => {
+    notDeepEqual(
+      content,
+      initialContent,
+      "The URL wasn't loaded from cache with loadFromCache: false."
+    );
   });
 });

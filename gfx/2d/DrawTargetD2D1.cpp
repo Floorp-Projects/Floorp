@@ -2172,7 +2172,8 @@ already_AddRefed<ID2D1Image> DrawTargetD2D1::GetImageForSurface(
     case SurfaceType::DUAL_DT: {
       // Sometimes we have a dual drawtarget but the underlying targets
       // are d2d surfaces. Let's not readback and reupload in those cases.
-      SourceSurfaceDual* dualSurface = static_cast<SourceSurfaceDual*>(surface.get());
+      SourceSurfaceDual* dualSurface =
+          static_cast<SourceSurfaceDual*>(surface.get());
       SourceSurface* first = dualSurface->GetFirstSurface();
       if (first->GetType() == SurfaceType::D2D1_1_IMAGE) {
         MOZ_ASSERT(dualSurface->SameSurfaceTypes());

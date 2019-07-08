@@ -15,15 +15,15 @@
 "use strict";
 add_task(async _ => {
   let uri = Services.io.newURI("https://example.net");
-  Services.perms.add(uri, "trackingprotection-pb",
-                     Services.perms.ALLOW_ACTION);
+  Services.perms.add(uri, "trackingprotection-pb", Services.perms.ALLOW_ACTION);
 
   registerCleanupFunction(_ => {
     Services.perms.removeAll();
   });
 });
 
-AntiTracking.runTest("Test that we don't honour a private allow list exception in a normal window",
+AntiTracking.runTest(
+  "Test that we don't honour a private allow list exception in a normal window",
   // Blocking callback
   async _ => {
     document.cookie = "name=value";
@@ -37,12 +37,14 @@ AntiTracking.runTest("Test that we don't honour a private allow list exception i
   // Cleanup callback
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
     });
   },
   null, // no extra prefs
   false, // run the window.open() test
   false, // run the user interaction test
   Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
-  false); // run in a normal window
-
+  false
+); // run in a normal window

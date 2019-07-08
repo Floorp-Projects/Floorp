@@ -27,23 +27,32 @@ function buildMarkerSidebar(blueprint, props) {
 
   const label = MarkerBlueprintUtils.getMarkerLabel(marker);
 
-  const name = dom.div({
-    className: "plain waterfall-marker-name",
-    style: { transform: `translateX(${level * LEVEL_INDENT}px)` },
-    title: label,
-  }, label);
+  const name = dom.div(
+    {
+      className: "plain waterfall-marker-name",
+      style: { transform: `translateX(${level * LEVEL_INDENT}px)` },
+      title: label,
+    },
+    label
+  );
 
-  return dom.div({
-    className: "waterfall-sidebar theme-sidebar",
-    style: { width: sidebarWidth + "px" },
-  }, bullet, name);
+  return dom.div(
+    {
+      className: "waterfall-sidebar theme-sidebar",
+      style: { width: sidebarWidth + "px" },
+    },
+    bullet,
+    name
+  );
 }
 
 function buildMarkerTimebar(blueprint, props) {
   const { marker, startTime, dataScale, arrow } = props;
   const offset = (marker.start - startTime) * dataScale + ARROW_NODE_OFFSET;
-  const width = Math.max((marker.end - marker.start) * dataScale,
-                         WATERFALL_MARKER_TIMEBAR_WIDTH_MIN);
+  const width = Math.max(
+    (marker.end - marker.start) * dataScale,
+    WATERFALL_MARKER_TIMEBAR_WIDTH_MIN
+  );
 
   const bar = dom.div(
     {

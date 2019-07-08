@@ -6,8 +6,11 @@
 
 /* global ExtensionAPI, ExtensionCommon */
 
-const {Management: {global: {windowTracker}}} =
-            ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+const {
+  Management: {
+    global: { windowTracker },
+  },
+} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
 function getNativeWindow() {
   return windowTracker.topWindow.NativeWindow;
@@ -31,7 +34,7 @@ this.nativeMenu = class extends ExtensionAPI {
         onClicked: new ExtensionCommon.EventManager({
           context,
           name: "nativeMenu.onClicked",
-          register: (fire) => {
+          register: fire => {
             const callback = () => {
               fire.async().catch(() => {}); // ignore Message Manager disconnects
             };
@@ -42,19 +45,19 @@ this.nativeMenu = class extends ExtensionAPI {
           },
         }).api(),
         async disable() {
-          getNativeWindow().menu.update(menuItem, {enabled: false});
+          getNativeWindow().menu.update(menuItem, { enabled: false });
         },
         async enable() {
-          getNativeWindow().menu.update(menuItem, {enabled: true});
+          getNativeWindow().menu.update(menuItem, { enabled: true });
         },
         async hide() {
-          getNativeWindow().menu.update(menuItem, {visible: false});
+          getNativeWindow().menu.update(menuItem, { visible: false });
         },
         async show() {
-          getNativeWindow().menu.update(menuItem, {visible: true});
+          getNativeWindow().menu.update(menuItem, { visible: true });
         },
         async setLabel(label) {
-          getNativeWindow().menu.update(menuItem, {name: label});
+          getNativeWindow().menu.update(menuItem, { name: label });
         },
       },
     };

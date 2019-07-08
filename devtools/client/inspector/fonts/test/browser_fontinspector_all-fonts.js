@@ -14,44 +14,55 @@ add_task(async function() {
 
   const allFontsAccordion = getFontsAccordion(viewDoc);
   ok(allFontsAccordion, "There's an accordion in the panel");
-  is(allFontsAccordion.textContent, "All fonts on page", "It has the right title");
+  is(
+    allFontsAccordion.textContent,
+    "All fonts on page",
+    "It has the right title"
+  );
 
   await expandAccordion(allFontsAccordion);
   const allFontsEls = getAllFontsEls(viewDoc);
 
-  const FONTS = [{
-    familyName: ["bar"],
-    name: ["Ostrich Sans Medium"],
-    remote: true,
-    url: URL_ROOT + "ostrich-regular.ttf",
-  }, {
-    familyName: ["bar"],
-    name: ["Ostrich Sans Black"],
-    remote: true,
-    url: URL_ROOT + "ostrich-black.ttf",
-  }, {
-    familyName: ["bar"],
-    name: ["Ostrich Sans Black"],
-    remote: true,
-    url: URL_ROOT + "ostrich-black.ttf",
-  }, {
-    familyName: ["barnormal"],
-    name: ["Ostrich Sans Medium"],
-    remote: true,
-    url: URL_ROOT + "ostrich-regular.ttf",
-  }, {
-    // On Linux, Arial does not exist. Liberation Sans is used instead.
-    familyName: ["Arial", "Liberation Sans"],
-    name: ["Arial", "Liberation Sans"],
-    remote: false,
-    url: "system",
-  }, {
-    // On Linux, Times New Roman does not exist. Liberation Serif is used instead.
-    familyName: ["Times New Roman", "Liberation Serif"],
-    name: ["Times New Roman", "Liberation Serif"],
-    remote: false,
-    url: "system",
-  }];
+  const FONTS = [
+    {
+      familyName: ["bar"],
+      name: ["Ostrich Sans Medium"],
+      remote: true,
+      url: URL_ROOT + "ostrich-regular.ttf",
+    },
+    {
+      familyName: ["bar"],
+      name: ["Ostrich Sans Black"],
+      remote: true,
+      url: URL_ROOT + "ostrich-black.ttf",
+    },
+    {
+      familyName: ["bar"],
+      name: ["Ostrich Sans Black"],
+      remote: true,
+      url: URL_ROOT + "ostrich-black.ttf",
+    },
+    {
+      familyName: ["barnormal"],
+      name: ["Ostrich Sans Medium"],
+      remote: true,
+      url: URL_ROOT + "ostrich-regular.ttf",
+    },
+    {
+      // On Linux, Arial does not exist. Liberation Sans is used instead.
+      familyName: ["Arial", "Liberation Sans"],
+      name: ["Arial", "Liberation Sans"],
+      remote: false,
+      url: "system",
+    },
+    {
+      // On Linux, Times New Roman does not exist. Liberation Serif is used instead.
+      familyName: ["Times New Roman", "Liberation Serif"],
+      name: ["Times New Roman", "Liberation Serif"],
+      remote: false,
+      url: "system",
+    },
+  ];
 
   is(allFontsEls.length, FONTS.length, "All fonts used are listed");
 
@@ -61,7 +72,10 @@ add_task(async function() {
 
     ok(font.name.includes(getName(li)), "The DIV font has the right name");
     info(getName(li));
-    ok(font.familyName.includes(getFamilyName(li)), `font has the right family name`);
+    ok(
+      font.familyName.includes(getFamilyName(li)),
+      `font has the right family name`
+    );
     info(getFamilyName(li));
     is(isRemote(li), font.remote, `font remote value correct`);
     is(getURL(li), font.url, `font url correct`);

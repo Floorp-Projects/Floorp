@@ -1,11 +1,17 @@
 var rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+const gTestRoot = rootDir.replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 
 add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    setTestPluginEnabledState(
+      Ci.nsIPluginTag.STATE_ENABLED,
+      "Second Test Plug-in"
+    );
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     gBrowser.removeCurrentTab();
     window.focus();
@@ -19,12 +25,24 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
-  let bindingPromise = BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "PluginBindingAttached", true, null, true);
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+  let bindingPromise = BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "PluginBindingAttached",
+    true,
+    null,
+    true
+  );
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot + "plugin_test.html"
+  );
   await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
   await bindingPromise;
 
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);
+  let popupNotification = PopupNotifications.getNotification(
+    "click-to-play-plugins",
+    gBrowser.selectedBrowser
+  );
   ok(popupNotification, "Test 1, Should have a click-to-play notification");
 
   // check plugin state
@@ -42,7 +60,10 @@ add_task(async function() {
     utils.sendMouseEvent("contextmenu", left, top, 2, 1, 0);
   });
 
-  popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);
+  popupNotification = PopupNotifications.getNotification(
+    "click-to-play-plugins",
+    gBrowser.selectedBrowser
+  );
   ok(popupNotification, "Should have a click-to-play notification");
   ok(popupNotification.dismissed, "notification should be dismissed");
 
@@ -55,7 +76,11 @@ add_task(async function() {
   // Activate the plugin via the context menu
   EventUtils.synthesizeMouseAtCenter(actMenuItem, {});
 
-  await promiseForCondition(() => !PopupNotifications.panel.dismissed && PopupNotifications.panel.firstElementChild);
+  await promiseForCondition(
+    () =>
+      !PopupNotifications.panel.dismissed &&
+      PopupNotifications.panel.firstElementChild
+  );
 
   // Activate the plugin
   PopupNotifications.panel.firstElementChild.button.click();

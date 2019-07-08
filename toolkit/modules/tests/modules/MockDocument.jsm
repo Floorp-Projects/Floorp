@@ -68,18 +68,23 @@ const MockDocument = {
   mockNodePrincipalProperty(aElement, aURL) {
     Object.defineProperty(aElement, "nodePrincipal", {
       value: Services.scriptSecurityManager.createCodebasePrincipal(
-               Services.io.newURI(aURL), {}),
+        Services.io.newURI(aURL),
+        {}
+      ),
     });
   },
 
   createTestDocumentFromFile(aDocumentURL, aFile) {
-    let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                     createInstance(Ci.nsIFileInputStream);
+    let fileStream = Cc[
+      "@mozilla.org/network/file-input-stream;1"
+    ].createInstance(Ci.nsIFileInputStream);
     fileStream.init(aFile, -1, -1, 0);
 
-    let data = NetUtil.readInputStreamToString(fileStream, fileStream.available());
+    let data = NetUtil.readInputStreamToString(
+      fileStream,
+      fileStream.available()
+    );
 
     return this.createTestDocument(aDocumentURL, data);
   },
-
 };

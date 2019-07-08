@@ -1496,18 +1496,6 @@ void Gecko_SetToSVGPath(StyleShapeSource* aShape,
   aShape->SetPath(MakeUnique<StyleSVGPath>(aCommands, aFill));
 }
 
-void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* aDest,
-                                    const nsStyleSVGPaint* aSrc) {
-  *aDest = *aSrc;
-}
-
-void Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* aPaint,
-                                       const StyleComputedUrl* aURL) {
-  aPaint->SetPaintServer(*aURL);
-}
-
-void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* aPaint) { aPaint->SetNone(); }
-
 void Gecko_nsStyleSVG_SetDashArrayLength(nsStyleSVG* aSvg, uint32_t aLen) {
   aSvg->mStrokeDasharray.Clear();
   aSvg->mStrokeDasharray.SetLength(aLen);

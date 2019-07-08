@@ -13,10 +13,14 @@ var gAppManagerDialog = {
 
   async init() {
     this.handlerInfo = window.arguments[0];
-    Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content/main.js",
-      window);
+    Services.scriptloader.loadSubScript(
+      "chrome://browser/content/preferences/in-content/main.js",
+      window
+    );
 
-    document.addEventListener("dialogaccept", function() { gAppManagerDialog.onOK(); });
+    document.addEventListener("dialogaccept", function() {
+      gAppManagerDialog.onOK();
+    });
 
     const appDescElem = document.getElementById("appDescription");
     if (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) {
@@ -31,8 +35,9 @@ var gAppManagerDialog = {
 
     var list = document.getElementById("appList");
     for (let app of this.handlerInfo.possibleApplicationHandlers.enumerate()) {
-      if (!gMainPane.isValidHandlerApp(app))
+      if (!gMainPane.isValidHandlerApp(app)) {
         continue;
+      }
 
       // Ensure the XBL binding is created eagerly.
       // eslint-disable-next-line no-undef
@@ -62,8 +67,9 @@ var gAppManagerDialog = {
 
   onOK: function appManager_onOK() {
     if (this._removed.length) {
-      for (var i = 0; i < this._removed.length; ++i)
+      for (var i = 0; i < this._removed.length; ++i) {
         this.handlerInfo.removePossibleApplicationHandler(this._removed[i]);
+      }
 
       this.handlerInfo.store();
     }
@@ -82,8 +88,9 @@ var gAppManagerDialog = {
     } else {
       // Select the item at the same index, if we removed the last
       // item of the list, select the previous item
-      if (index == list.itemCount)
+      if (index == list.itemCount) {
         --index;
+      }
       list.selectedIndex = index;
     }
   },
@@ -97,13 +104,16 @@ var gAppManagerDialog = {
     document.getElementById("remove").disabled = false;
     var app = list.selectedItem.app;
     var address = "";
-    if (app instanceof Ci.nsILocalHandlerApp)
+    if (app instanceof Ci.nsILocalHandlerApp) {
       address = app.executable.path;
-    else if (app instanceof Ci.nsIWebHandlerApp)
+    } else if (app instanceof Ci.nsIWebHandlerApp) {
       address = app.uriTemplate;
+    }
     document.getElementById("appLocation").value = address;
-    const l10nId = app instanceof Ci.nsILocalHandlerApp ? "app-manager-local-app-info"
-                                                        : "app-manager-web-app-info";
+    const l10nId =
+      app instanceof Ci.nsILocalHandlerApp
+        ? "app-manager-local-app-info"
+        : "app-manager-web-app-info";
     const appTypeElem = document.getElementById("appType");
     document.l10n.setAttributes(appTypeElem, l10nId);
   },

@@ -11,10 +11,13 @@ const TEST_FILE =
 const TEST_URI = "http://example.org/" + TEST_FILE;
 
 const TRACKER_URL = "http://tracking.example.com/";
-const BLOCKED_URL = TRACKER_URL +
+const BLOCKED_URL =
+  TRACKER_URL +
   "browser/devtools/client/webconsole/test/mochitest/test-image.png";
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
@@ -33,14 +36,22 @@ add_task(async function testContentBlockingMessage() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Log a few content blocking messages and simple ones");
-  let onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
+  let onContentBlockingWarningMessage = waitForMessage(
+    hud,
+    BLOCKED_URL,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
   await logStrings(hud, "simple message A");
-  let onContentBlockingWarningGroupMessage =
-    waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
+  let onContentBlockingWarningGroupMessage = waitForMessage(
+    hud,
+    CONTENT_BLOCKING_GROUP_LABEL,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
-  const warningGroupMessage1 = (await onContentBlockingWarningGroupMessage).node;
+  const warningGroupMessage1 = (await onContentBlockingWarningGroupMessage)
+    .node;
   await logStrings(hud, "simple message B");
   emitContentBlockedMessage(hud);
   await waitForBadgeNumber(warningGroupMessage1, "3");
@@ -57,10 +68,14 @@ add_task(async function testContentBlockingMessage() {
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
   await logStrings(hud, "simple message C");
-  onContentBlockingWarningGroupMessage =
-    waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
+  onContentBlockingWarningGroupMessage = waitForMessage(
+    hud,
+    CONTENT_BLOCKING_GROUP_LABEL,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
-  const warningGroupMessage2 = (await onContentBlockingWarningGroupMessage).node;
+  const warningGroupMessage2 = (await onContentBlockingWarningGroupMessage)
+    .node;
   emitContentBlockedMessage(hud);
   await waitForBadgeNumber(warningGroupMessage2, "3");
 
@@ -77,7 +92,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Filter warnings");
-  await setFilterState(hud, {warn: false});
+  await setFilterState(hud, { warn: false });
   await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
   checkConsoleOutputForWarningGroup(hud, [
@@ -91,7 +106,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Display warning messages again");
-  await setFilterState(hud, {warn: true});
+  await setFilterState(hud, { warn: true });
   await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
   checkConsoleOutputForWarningGroup(hud, [
@@ -107,7 +122,9 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Expand the first warning group");
-  findMessages(hud, CONTENT_BLOCKING_GROUP_LABEL)[0].querySelector(".arrow").click();
+  findMessages(hud, CONTENT_BLOCKING_GROUP_LABEL)[0]
+    .querySelector(".arrow")
+    .click();
   await waitFor(() => findMessage(hud, BLOCKED_URL));
 
   checkConsoleOutputForWarningGroup(hud, [
@@ -127,7 +144,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Filter warnings");
-  await setFilterState(hud, {warn: false});
+  await setFilterState(hud, { warn: false });
   await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
   checkConsoleOutputForWarningGroup(hud, [
@@ -141,7 +158,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Display warning messages again");
-  await setFilterState(hud, {warn: true});
+  await setFilterState(hud, { warn: true });
   await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
   checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -160,7 +177,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Filter on warning group text");
-  await setFilterState(hud, {text: CONTENT_BLOCKING_GROUP_LABEL});
+  await setFilterState(hud, { text: CONTENT_BLOCKING_GROUP_LABEL });
   await waitFor(() => !findMessage(hud, "simple message"));
   checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -173,7 +190,9 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Open the second warning group");
-  findMessages(hud, CONTENT_BLOCKING_GROUP_LABEL)[1].querySelector(".arrow").click();
+  findMessages(hud, CONTENT_BLOCKING_GROUP_LABEL)[1]
+    .querySelector(".arrow")
+    .click();
   await waitFor(() => findMessage(hud, "?6"));
 
   checkConsoleOutputForWarningGroup(hud, [
@@ -190,7 +209,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Filter on warning message text from a single warning group");
-  await setFilterState(hud, {text: "/\\?(2|4)/"});
+  await setFilterState(hud, { text: "/\\?(2|4)/" });
   await waitFor(() => !findMessage(hud, "?1"));
   checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -200,7 +219,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Filter on warning message text from two warning groups");
-  await setFilterState(hud, {text: "/\\?(3|6|7)/"});
+  await setFilterState(hud, { text: "/\\?(3|6|7)/" });
   await waitFor(() => findMessage(hud, "?7"));
   checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -212,7 +231,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Clearing text filter");
-  await setFilterState(hud, {text: ""});
+  await setFilterState(hud, { text: "" });
   checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
@@ -233,7 +252,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Filter warnings with two opened warning groups");
-  await setFilterState(hud, {warn: false});
+  await setFilterState(hud, { warn: false });
   await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
   checkConsoleOutputForWarningGroup(hud, [
     `simple message A #1`,
@@ -246,7 +265,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Display warning messages again with two opened warning groups");
-  await setFilterState(hud, {warn: true});
+  await setFilterState(hud, { warn: true });
   await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
   checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -300,6 +319,9 @@ function logStrings(hud, str) {
 }
 
 function waitForBadgeNumber(message, expectedNumber) {
-  return waitFor(() =>
-    message.querySelector(".warning-group-badge").textContent == expectedNumber);
+  return waitFor(
+    () =>
+      message.querySelector(".warning-group-badge").textContent ==
+      expectedNumber
+  );
 }

@@ -4,14 +4,18 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "PermissionUITelemetry",
-];
+var EXPORTED_SYMBOLS = ["PermissionUITelemetry"];
 
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "CryptoUtils",
-  "resource://services-crypto/utils.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "CryptoUtils",
+  "resource://services-crypto/utils.js"
+);
 
 const TELEMETRY_STAT_REMOVAL_LEAVE_PAGE = 6;
 
@@ -22,10 +26,15 @@ var PermissionUITelemetry = {
   _uniqueHostHash(host) {
     // Gets a unique user ID as salt, that needs to stay local to this profile and not be
     // sent to any server!
-    let salt = Services.prefs.getStringPref("permissions.eventTelemetry.salt", null);
+    let salt = Services.prefs.getStringPref(
+      "permissions.eventTelemetry.salt",
+      null
+    );
     if (!salt) {
-      salt = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
-               .generateUUID().toString();
+      salt = Cc["@mozilla.org/uuid-generator;1"]
+        .getService(Ci.nsIUUIDGenerator)
+        .generateUUID()
+        .toString();
       Services.prefs.setStringPref("permissions.eventTelemetry.salt", salt);
     }
 
@@ -40,8 +49,9 @@ var PermissionUITelemetry = {
   },
 
   _previousVisitCount(host) {
-    let historyService = Cc["@mozilla.org/browser/nav-history-service;1"]
-                           .getService(Ci.nsINavHistoryService);
+    let historyService = Cc[
+      "@mozilla.org/browser/nav-history-service;1"
+    ].getService(Ci.nsINavHistoryService);
 
     let options = historyService.getNewQueryOptions();
     options.resultType = options.RESULTS_AS_VISIT;
@@ -64,7 +74,10 @@ var PermissionUITelemetry = {
     // "storageAccessAPI" is the name of the permission that tells us whether the
     // user has interacted with a particular site in the first-party context before.
     let interactionPermission = Services.perms.getPermissionObject(
-      prompt.principal, "storageAccessAPI", false);
+      prompt.principal,
+      "storageAccessAPI",
+      false
+    );
     if (interactionPermission) {
       lastInteraction = interactionPermission.modificationTime;
     }
@@ -74,7 +87,13 @@ var PermissionUITelemetry = {
     let thisPermDenied = 0;
     let thisPermGranted = 0;
 
-    let commonPermissions = ["geo", "desktop-notification", "camera", "microphone", "screen"];
+    let commonPermissions = [
+      "geo",
+      "desktop-notification",
+      "camera",
+      "microphone",
+      "screen",
+    ];
     for (let perm of Services.perms.enumerator) {
       if (!commonPermissions.includes(perm.type)) {
         continue;
@@ -99,7 +118,9 @@ var PermissionUITelemetry = {
 
     return {
       previousVisits: this._previousVisitCount(promptHost).toString(),
-      timeOnPage: (Date.now() - prompt.documentDOMContentLoadedTimestamp).toString(),
+      timeOnPage: (
+        Date.now() - prompt.documentDOMContentLoadedTimestamp
+      ).toString(),
       hasUserInput: prompt.isHandlingUserInput.toString(),
       docHasUserInput: prompt.userHadInteractedWithDocument.toString(),
       lastInteraction: lastInteraction.toString(),
@@ -118,8 +139,13 @@ var PermissionUITelemetry = {
 
     let extraKeys = this._collectExtraKeys(prompt);
     let hostHash = this._uniqueHostHash(prompt.principal.URI.host);
-    Services.telemetry.recordEvent("security.ui.permissionprompt",
-      "show", object, hostHash, extraKeys);
+    Services.telemetry.recordEvent(
+      "security.ui.permissionprompt",
+      "show",
+      object,
+      hostHash,
+      extraKeys
+    );
   },
 
   onRemoved(prompt, buttonAction, telemetryReason) {
@@ -141,7 +167,12 @@ var PermissionUITelemetry = {
 
     let extraKeys = this._collectExtraKeys(prompt);
     let hostHash = this._uniqueHostHash(prompt.principal.URI.host);
-    Services.telemetry.recordEvent("security.ui.permissionprompt",
-      method, object, hostHash, extraKeys);
+    Services.telemetry.recordEvent(
+      "security.ui.permissionprompt",
+      method,
+      object,
+      hostHash,
+      extraKeys
+    );
   },
 };

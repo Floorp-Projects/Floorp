@@ -79,7 +79,7 @@ let Logger = {
     if (this.dumpToAppConsole) {
       Services.console.logStringMessage(`${msg}`);
     }
-  }
+  },
 };
 
 /**
@@ -98,7 +98,9 @@ function invokeSetAttribute(browser, id, attr, value) {
   } else {
     Logger.log(`Removing ${attr} attribute from node with id: ${id}`);
   }
-  return ContentTask.spawn(browser, [id, attr, value],
+  return ContentTask.spawn(
+    browser,
+    [id, attr, value],
     ([contentId, contentAttr, contentValue]) => {
       let elm = content.document.getElementById(contentId);
       if (contentValue) {
@@ -106,7 +108,8 @@ function invokeSetAttribute(browser, id, attr, value) {
       } else {
         elm.removeAttribute(contentAttr);
       }
-    });
+    }
+  );
 }
 
 /**
@@ -125,7 +128,9 @@ function invokeSetStyle(browser, id, style, value) {
   } else {
     Logger.log(`Removing ${style} style from node with id: ${id}`);
   }
-  return ContentTask.spawn(browser, [id, style, value],
+  return ContentTask.spawn(
+    browser,
+    [id, style, value],
     ([contentId, contentStyle, contentValue]) => {
       let elm = content.document.getElementById(contentId);
       if (contentValue) {
@@ -133,7 +138,8 @@ function invokeSetStyle(browser, id, style, value) {
       } else {
         delete elm.style[contentStyle];
       }
-    });
+    }
+  );
 }
 
 /**
@@ -160,8 +166,10 @@ function invokeFocus(browser, id) {
  */
 function loadScripts(...scripts) {
   for (let script of scripts) {
-    let path = typeof script === "string" ? `${CURRENT_DIR}${script}` :
-      `${script.dir}${script.name}`;
+    let path =
+      typeof script === "string"
+        ? `${CURRENT_DIR}${script}`
+        : `${script.dir}${script.name}`;
     Services.scriptloader.loadSubScript(path, this);
   }
 }
@@ -213,8 +221,9 @@ function loadFrameScripts(browser, ...scripts) {
  **/
 function snippetToURL(snippet, bodyAttrs = {}) {
   let attrs = Object.assign({}, { id: "body" }, bodyAttrs);
-  let attrsString = Object.entries(attrs).map(
-    ([attr, value]) => `${attr}=${JSON.stringify(value)}`).join(" ");
+  let attrsString = Object.entries(attrs)
+    .map(([attr, value]) => `${attr}=${JSON.stringify(value)}`)
+    .join(" ");
   let encodedDoc = encodeURIComponent(
     `<html>
       <head>
@@ -222,7 +231,8 @@ function snippetToURL(snippet, bodyAttrs = {}) {
         <title>Accessibility Test</title>
       </head>
       <body ${attrsString}>${snippet}</body>
-    </html>`);
+    </html>`
+  );
 
   return `data:text/html;charset=utf-8,${encodedDoc}`;
 }
@@ -246,39 +256,47 @@ function addAccessibleTask(doc, task) {
     }
 
     registerCleanupFunction(() => {
-      for (let observer of Services.obs.enumerateObservers("accessible-event")) {
+      for (let observer of Services.obs.enumerateObservers(
+        "accessible-event"
+      )) {
         Services.obs.removeObserver(observer, "accessible-event");
       }
     });
 
     let onDocLoad = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, "body");
 
-    await BrowserTestUtils.withNewTab({
-      gBrowser,
-      url
-    }, async function(browser) {
-      registerCleanupFunction(() => {
-        if (browser) {
-          let tab = gBrowser.getTabForBrowser(browser);
-          if (tab && !tab.closing && tab.linkedBrowser) {
-            gBrowser.removeTab(tab);
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url,
+      },
+      async function(browser) {
+        registerCleanupFunction(() => {
+          if (browser) {
+            let tab = gBrowser.getTabForBrowser(browser);
+            if (tab && !tab.closing && tab.linkedBrowser) {
+              gBrowser.removeTab(tab);
+            }
           }
-        }
-      });
+        });
 
-      await SimpleTest.promiseFocus(browser);
+        await SimpleTest.promiseFocus(browser);
 
-      loadFrameScripts(browser,
-        "let { document, window, navigator } = content;",
-        { name: "common.js", dir: MOCHITESTS_DIR });
+        loadFrameScripts(
+          browser,
+          "let { document, window, navigator } = content;",
+          { name: "common.js", dir: MOCHITESTS_DIR }
+        );
 
-      Logger.log(
-        `e10s enabled: ${Services.appinfo.browserTabsRemoteAutostart}`);
-      Logger.log(`Actually remote browser: ${browser.isRemoteBrowser}`);
+        Logger.log(
+          `e10s enabled: ${Services.appinfo.browserTabsRemoteAutostart}`
+        );
+        Logger.log(`Actually remote browser: ${browser.isRemoteBrowser}`);
 
-      let event = await onDocLoad;
-      await task(browser, event.accessible);
-    });
+        let event = await onDocLoad;
+        await task(browser, event.accessible);
+      }
+    );
   });
 }
 
@@ -356,7 +374,8 @@ function queryInterfaces(accessible, interfaces) {
 
 function arrayFromChildren(accessible) {
   return Array.from({ length: accessible.childCount }, (c, i) =>
-    accessible.getChildAt(i));
+    accessible.getChildAt(i)
+  );
 }
 
 /**

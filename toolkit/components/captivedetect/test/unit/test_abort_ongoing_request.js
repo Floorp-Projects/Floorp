@@ -67,5 +67,9 @@ function test_multiple_requests_abort() {
 }
 
 function run_test() {
-  run_captivedetect_test(xhr_handler, fakeUIResponse, test_multiple_requests_abort);
+  run_captivedetect_test(
+    xhr_handler,
+    fakeUIResponse,
+    test_multiple_requests_abort
+  );
 }

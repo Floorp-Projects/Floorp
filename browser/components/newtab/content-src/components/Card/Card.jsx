@@ -1,9 +1,9 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {cardContextTypes} from "./types";
-import {connect} from "react-redux";
-import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import { cardContextTypes } from "./types";
+import { connect } from "react-redux";
+import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
-import {ScreenshotUtils} from "content-src/lib/screenshot-utils";
+import { ScreenshotUtils } from "content-src/lib/screenshot-utils";
 
 // Keep track of pending image loads to only request once
 const gImageLoading = new Map();
@@ -36,7 +36,7 @@ export class _Card extends React.PureComponent {
    */
   async maybeLoadImage() {
     // No need to load if it's already loaded or no image
-    const {cardImage} = this.state;
+    const { cardImage } = this.state;
     if (!cardImage) {
       return;
     }
@@ -54,16 +54,24 @@ export class _Card extends React.PureComponent {
 
         // Save and remove the promise only while it's pending
         gImageLoading.set(imageUrl, loaderPromise);
-        loaderPromise.catch(ex => ex).then(() => gImageLoading.delete(imageUrl)).catch();
+        loaderPromise
+          .catch(ex => ex)
+          .then(() => gImageLoading.delete(imageUrl))
+          .catch();
       }
 
       // Wait for the image whether just started loading or reused promise
       await gImageLoading.get(imageUrl);
 
       // Only update state if we're still waiting to load the original image
-      if (ScreenshotUtils.isRemoteImageLocal(this.state.cardImage, this.props.link.image) &&
-          !this.state.imageLoaded) {
-        this.setState({imageLoaded: true});
+      if (
+        ScreenshotUtils.isRemoteImageLocal(
+          this.state.cardImage,
+          this.props.link.image
+        ) &&
+        !this.state.imageLoaded
+      ) {
+        this.setState({ imageLoaded: true });
       }
     }
   }
@@ -80,13 +88,16 @@ export class _Card extends React.PureComponent {
    * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
    */
   static getNextStateFromProps(nextProps, prevState) {
-    const {image} = nextProps.link;
-    const imageInState = ScreenshotUtils.isRemoteImageLocal(prevState.cardImage, image);
+    const { image } = nextProps.link;
+    const imageInState = ScreenshotUtils.isRemoteImageLocal(
+      prevState.cardImage,
+      image
+    );
     let nextState = null;
 
     // Image is updating.
     if (!imageInState && nextProps.link) {
-      nextState = {imageLoaded: false};
+      nextState = { imageLoaded: false };
     }
 
     if (imageInState) {
@@ -116,7 +127,7 @@ export class _Card extends React.PureComponent {
   _getTelemetryInfo() {
     // Filter out "history" type for being the default
     if (this.props.link.type !== "history") {
-      return {value: {card_type: this.props.link.type}};
+      return { value: { card_type: this.props.link.type } };
     }
 
     return null;
@@ -125,42 +136,59 @@ export class _Card extends React.PureComponent {
   onLinkClick(event) {
     event.preventDefault();
     if (this.props.link.type === "download") {
-      this.props.dispatch(ac.OnlyToMain({
-        type: at.SHOW_DOWNLOAD_FILE,
-        data: this.props.link,
-      }));
+      this.props.dispatch(
+        ac.OnlyToMain({
+          type: at.SHOW_DOWNLOAD_FILE,
+          data: this.props.link,
+        })
+      );
     } else {
-      const {altKey, button, ctrlKey, metaKey, shiftKey} = event;
-      this.props.dispatch(ac.OnlyToMain({
-        type: at.OPEN_LINK,
-        data: Object.assign(this.props.link, {event: {altKey, button, ctrlKey, metaKey, shiftKey}}),
-      }));
+      const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
+      this.props.dispatch(
+        ac.OnlyToMain({
+          type: at.OPEN_LINK,
+          data: Object.assign(this.props.link, {
+            event: { altKey, button, ctrlKey, metaKey, shiftKey },
+          }),
+        })
+      );
     }
     if (this.props.isWebExtension) {
-      this.props.dispatch(ac.WebExtEvent(at.WEBEXT_CLICK, {
-        source: this.props.eventSource,
-        url: this.props.link.url,
-        action_position: this.props.index,
-      }));
+      this.props.dispatch(
+        ac.WebExtEvent(at.WEBEXT_CLICK, {
+          source: this.props.eventSource,
+          url: this.props.link.url,
+          action_position: this.props.index,
+        })
+      );
     } else {
-      this.props.dispatch(ac.UserEvent(Object.assign({
-        event: "CLICK",
-        source: this.props.eventSource,
-        action_position: this.props.index,
-      }, this._getTelemetryInfo())));
+      this.props.dispatch(
+        ac.UserEvent(
+          Object.assign(
+            {
+              event: "CLICK",
+              source: this.props.eventSource,
+              action_position: this.props.index,
+            },
+            this._getTelemetryInfo()
+          )
+        )
+      );
 
       if (this.props.shouldSendImpressionStats) {
-        this.props.dispatch(ac.ImpressionStats({
-          source: this.props.eventSource,
-          click: 0,
-          tiles: [{id: this.props.link.guid, pos: this.props.index}],
-        }));
+        this.props.dispatch(
+          ac.ImpressionStats({
+            source: this.props.eventSource,
+            click: 0,
+            tiles: [{ id: this.props.link.guid, pos: this.props.index }],
+          })
+        );
       }
     }
   }
 
   onMenuUpdate(showContextMenu) {
-    this.setState({showContextMenu});
+    this.setState({ showContextMenu });
   }
 
   componentDidMount() {
@@ -196,73 +224,135 @@ export class _Card extends React.PureComponent {
   }
 
   render() {
-    const {index, className, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats} = this.props;
-    const {props} = this;
+    const {
+      index,
+      className,
+      link,
+      dispatch,
+      contextMenuOptions,
+      eventSource,
+      shouldSendImpressionStats,
+    } = this.props;
+    const { props } = this;
     const title = link.title || link.hostname;
-    const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
+    const isContextMenuOpen =
+      this.state.showContextMenu && this.state.activeCard === index;
     // Display "now" as "trending" until we have new strings #3402
-    const {icon, fluentID} = cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
+    const { icon, fluentID } =
+      cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
     const hasImage = this.state.cardImage || link.hasImage;
-    const imageStyle = {backgroundImage: this.state.cardImage ? `url(${this.state.cardImage.url})` : "none"};
+    const imageStyle = {
+      backgroundImage: this.state.cardImage
+        ? `url(${this.state.cardImage.url})`
+        : "none",
+    };
     const outerClassName = [
       "card-outer",
       className,
       isContextMenuOpen && "active",
       props.placeholder && "placeholder",
-    ].filter(v => v).join(" ");
+    ]
+      .filter(v => v)
+      .join(" ");
 
-    return (<li className={outerClassName}>
-      <a href={link.type === "pocket" ? link.open_url : link.url} onClick={!props.placeholder ? this.onLinkClick : undefined}>
-        <div className="card">
-          <div className="card-preview-image-outer">
-            {hasImage &&
-              <div className={`card-preview-image${this.state.imageLoaded ? " loaded" : ""}`} style={imageStyle} />
-            }
-          </div>
-          <div className="card-details">
-          {link.type === "download" && <div className="card-host-name alternate" data-l10n-id="newtab-menu-show-file" />}
-            {link.hostname &&
-              <div className="card-host-name">
-                {link.hostname.slice(0, 100)}{link.type === "download" && `  \u2014 ${link.description}`}
+    return (
+      <li className={outerClassName}>
+        <a
+          href={link.type === "pocket" ? link.open_url : link.url}
+          onClick={!props.placeholder ? this.onLinkClick : undefined}
+        >
+          <div className="card">
+            <div className="card-preview-image-outer">
+              {hasImage && (
+                <div
+                  className={`card-preview-image${
+                    this.state.imageLoaded ? " loaded" : ""
+                  }`}
+                  style={imageStyle}
+                />
+              )}
+            </div>
+            <div className="card-details">
+              {link.type === "download" && (
+                <div
+                  className="card-host-name alternate"
+                  data-l10n-id="newtab-menu-show-file"
+                />
+              )}
+              {link.hostname && (
+                <div className="card-host-name">
+                  {link.hostname.slice(0, 100)}
+                  {link.type === "download" && `  \u2014 ${link.description}`}
+                </div>
+              )}
+              <div
+                className={[
+                  "card-text",
+                  icon ? "" : "no-context",
+                  link.description ? "" : "no-description",
+                  link.hostname ? "" : "no-host-name",
+                ].join(" ")}
+              >
+                <h4 className="card-title" dir="auto">
+                  {link.title}
+                </h4>
+                <p className="card-description" dir="auto">
+                  {link.description}
+                </p>
               </div>
-            }
-            <div className={[
-              "card-text",
-              icon ? "" : "no-context",
-              link.description ? "" : "no-description",
-              link.hostname ? "" : "no-host-name",
-            ].join(" ")}>
-              <h4 className="card-title" dir="auto">{link.title}</h4>
-              <p className="card-description" dir="auto">{link.description}</p>
-            </div>
-            <div className="card-context">
-              {icon && !link.context && <span aria-haspopup="true" className={`card-context-icon icon icon-${icon}`} />}
-              {link.icon && link.context && <span aria-haspopup="true" className="card-context-icon icon" style={{backgroundImage: `url('${link.icon}')`}} />}
-              {fluentID && !link.context && <div className="card-context-label" data-l10n-id={fluentID} />}
-              {link.context && <div className="card-context-label">{link.context}</div>}
+              <div className="card-context">
+                {icon && !link.context && (
+                  <span
+                    aria-haspopup="true"
+                    className={`card-context-icon icon icon-${icon}`}
+                  />
+                )}
+                {link.icon && link.context && (
+                  <span
+                    aria-haspopup="true"
+                    className="card-context-icon icon"
+                    style={{ backgroundImage: `url('${link.icon}')` }}
+                  />
+                )}
+                {fluentID && !link.context && (
+                  <div className="card-context-label" data-l10n-id={fluentID} />
+                )}
+                {link.context && (
+                  <div className="card-context-label">{link.context}</div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </a>
-      {!props.placeholder && <button aria-haspopup="true"
-        data-l10n-id="newtab-menu-content-tooltip"
-        data-l10n-args={JSON.stringify({title})}
-        className="context-menu-button icon"
-        onClick={this.onMenuButtonClick} />}
-      {isContextMenuOpen &&
-        <LinkMenu
-          dispatch={dispatch}
-          index={index}
-          source={eventSource}
-          onUpdate={this.onMenuUpdate}
-          options={link.contextMenuOptions || contextMenuOptions}
-          site={link}
-          siteInfo={this._getTelemetryInfo()}
-          shouldSendImpressionStats={shouldSendImpressionStats} />
-      }
-   </li>);
+        </a>
+        {!props.placeholder && (
+          <button
+            aria-haspopup="true"
+            data-l10n-id="newtab-menu-content-tooltip"
+            data-l10n-args={JSON.stringify({ title })}
+            className="context-menu-button icon"
+            onClick={this.onMenuButtonClick}
+          />
+        )}
+        {isContextMenuOpen && (
+          <LinkMenu
+            dispatch={dispatch}
+            index={index}
+            source={eventSource}
+            onUpdate={this.onMenuUpdate}
+            options={link.contextMenuOptions || contextMenuOptions}
+            site={link}
+            siteInfo={this._getTelemetryInfo()}
+            shouldSendImpressionStats={shouldSendImpressionStats}
+          />
+        )}
+      </li>
+    );
   }
 }
-_Card.defaultProps = {link: {}};
-export const Card = connect(state => ({platform: state.Prefs.values.platform}))(_Card);
-export const PlaceholderCard = props => <Card placeholder={true} className={props.className} />;
+_Card.defaultProps = { link: {} };
+export const Card = connect(state => ({
+  platform: state.Prefs.values.platform,
+}))(_Card);
+export const PlaceholderCard = props => (
+  <Card placeholder={true} className={props.className} />
+);

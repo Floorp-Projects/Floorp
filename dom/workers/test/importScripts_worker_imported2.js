@@ -6,5 +6,4 @@
 var myConstructor2 = {}.constructor;
 
 // Try to call a function defined in the imported script.
-function importedScriptFunction2() {
-}
+function importedScriptFunction2() {}

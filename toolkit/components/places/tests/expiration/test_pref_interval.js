@@ -16,33 +16,36 @@ const DEFAULT_TIMER_DELAY_SECONDS = 3 * 60;
 const EXPIRE_AGGRESSIVITY_MULTIPLIER = 3;
 
 var tests = [
-
-  { desc: "Set interval to 1s.",
+  {
+    desc: "Set interval to 1s.",
     interval: 1,
     expectedTimerDelay: 1 * EXPIRE_AGGRESSIVITY_MULTIPLIER,
   },
 
-  { desc: "Set interval to a negative value.",
+  {
+    desc: "Set interval to a negative value.",
     interval: -1,
-    expectedTimerDelay: DEFAULT_TIMER_DELAY_SECONDS * EXPIRE_AGGRESSIVITY_MULTIPLIER,
+    expectedTimerDelay:
+      DEFAULT_TIMER_DELAY_SECONDS * EXPIRE_AGGRESSIVITY_MULTIPLIER,
   },
 
-  { desc: "Set interval to 0.",
+  {
+    desc: "Set interval to 0.",
     interval: 0,
-    expectedTimerDelay: DEFAULT_TIMER_DELAY_SECONDS * EXPIRE_AGGRESSIVITY_MULTIPLIER,
+    expectedTimerDelay:
+      DEFAULT_TIMER_DELAY_SECONDS * EXPIRE_AGGRESSIVITY_MULTIPLIER,
   },
 
-  { desc: "Set interval to a large value.",
+  {
+    desc: "Set interval to a large value.",
     interval: 100,
     expectedTimerDelay: 100 * EXPIRE_AGGRESSIVITY_MULTIPLIER,
   },
-
 ];
 
 add_task(async function test() {
   // The pref should not exist by default.
-  Assert.throws(() => getInterval(),
-    /NS_ERROR_UNEXPECTED/);
+  Assert.throws(() => getInterval(), /NS_ERROR_UNEXPECTED/);
 
   // Force the component, so it will start observing preferences.
   force_expiration_start();

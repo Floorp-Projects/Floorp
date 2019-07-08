@@ -32,7 +32,12 @@ add_task(async function() {
   const tab = await addTab(TEST_URL);
   let target = await TargetFactory.forTab(tab);
   const options = { customIframe: iframe };
-  let toolbox = await gDevTools.showToolbox(target, null, Toolbox.HostType.CUSTOM, options);
+  let toolbox = await gDevTools.showToolbox(
+    target,
+    null,
+    Toolbox.HostType.CUSTOM,
+    options
+  );
 
   is(toolbox.win.top, window, "Toolbox is included in browser.xhtml");
   is(toolbox.doc, iframe.contentDocument, "Toolbox is in the custom iframe");

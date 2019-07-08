@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const {ContentProcessDomain} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomain.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/domains/ContentProcessDomain.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class Log extends ContentProcessDomain {
   constructor(session) {
@@ -57,7 +59,7 @@ class Log extends ContentProcessDomain {
       entry = fromConsoleAPI(message.wrappedJSObject);
     }
 
-    this.emit("Log.entryAdded", {entry});
+    this.emit("Log.entryAdded", { entry });
   }
 
   // XPCOM
@@ -91,12 +93,11 @@ function fromConsoleAPI(message) {
   // A couple of possible level are defined here:
   // https://searchfox.org/mozilla-central/rev/00c0d068ece99717bea7475f7dc07e61f7f35984/dom/console/Console.cpp#1086-1100
   const levels = {
-    "log": "verbose",
-    "info": "info",
-    "warn": "warning",
-    "error": "error",
-    "exception": "error",
-
+    log: "verbose",
+    info: "info",
+    warn: "warning",
+    error: "error",
+    exception: "error",
   };
   const level = levels[message.level] || "info";
 
@@ -112,15 +113,19 @@ function fromConsoleAPI(message) {
 }
 
 function fromScriptError(error) {
-  const {flags, errorMessage, sourceName, lineNumber, stack} = error;
+  const { flags, errorMessage, sourceName, lineNumber, stack } = error;
 
   // lossy reduction from bitmask to CDP string level
   let level = "verbose";
-  if ((flags & Ci.nsIScriptError.exceptionFlag) ||
-      (flags & Ci.nsIScriptError.errorFlag)) {
+  if (
+    flags & Ci.nsIScriptError.exceptionFlag ||
+    flags & Ci.nsIScriptError.errorFlag
+  ) {
     level = "error";
-  } else if ((flags & Ci.nsIScriptError.warningFlag) ||
-      (flags & Ci.nsIScriptError.strictFlag)) {
+  } else if (
+    flags & Ci.nsIScriptError.warningFlag ||
+    flags & Ci.nsIScriptError.strictFlag
+  ) {
     level = "warning";
   } else if (flags & Ci.nsIScriptError.infoFlag) {
     level = "info";

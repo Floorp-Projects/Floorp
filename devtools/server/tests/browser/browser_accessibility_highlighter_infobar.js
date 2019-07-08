@@ -1,17 +1,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
 // Test the accessible highlighter's infobar content.
 
 const { truncateString } = require("devtools/shared/inspector/utils");
-const { MAX_STRING_LENGTH } = require("devtools/server/actors/highlighters/utils/accessibility");
+const {
+  MAX_STRING_LENGTH,
+} = require("devtools/server/actors/highlighters/utils/accessibility");
 
 add_task(async function() {
-  const { target, walker, accessibility } =
-    await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility_infobar.html");
+  const { target, walker, accessibility } = await initAccessibilityFrontForUrl(
+    MAIN_DOMAIN + "doc_accessibility_infobar.html"
+  );
 
   const a11yWalker = await accessibility.getWalker();
   await accessibility.enable();
@@ -20,8 +23,12 @@ add_task(async function() {
   await checkNameAndRole(walker, "#button", a11yWalker, "Accessible Button");
 
   info("Front with long name checks");
-  await checkNameAndRole(walker, "#h1", a11yWalker,
-    "Lorem ipsum dolor sit ame" + "\u2026" + "e et dolore magna aliqua.");
+  await checkNameAndRole(
+    walker,
+    "#h1",
+    a11yWalker,
+    "Lorem ipsum dolor sit ame" + "\u2026" + "e et dolore magna aliqua."
+  );
 
   await accessibility.disable();
   await waitForA11yShutdown();
@@ -42,7 +49,12 @@ add_task(async function() {
  *         Expected string content for displaying the accessible's name.
  *         We are testing this in particular because name can be truncated.
  */
-async function checkNameAndRole(walker, querySelector, a11yWalker, expectedName) {
+async function checkNameAndRole(
+  walker,
+  querySelector,
+  a11yWalker,
+  expectedName
+) {
   const node = await walker.querySelector(walker.rootNode, querySelector);
   const accessibleFront = await a11yWalker.getAccessibleFor(node);
 
@@ -54,6 +66,9 @@ async function checkNameAndRole(walker, querySelector, a11yWalker, expectedName)
   is(options.name, name, "Accessible highlight has correct name option");
   is(options.role, role, "Accessible highlight has correct role option");
 
-  is(`"${truncateString(name, MAX_STRING_LENGTH)}"`, `"${expectedName}"`,
-    "Accessible has correct displayed name.");
+  is(
+    `"${truncateString(name, MAX_STRING_LENGTH)}"`,
+    `"${expectedName}"`,
+    "Accessible has correct displayed name."
+  );
 }

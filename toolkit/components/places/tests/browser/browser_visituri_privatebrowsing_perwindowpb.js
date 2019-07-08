@@ -5,7 +5,7 @@
 const initialURL =
   "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
 const finalURL =
- "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
+  "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
 
 var observer;
 var visitSavedPromise;
@@ -38,11 +38,11 @@ add_task(async function setup() {
 // to the first uri-visit-saved notification, and we expect this test to not
 // fire any, so we'll just find the non-private window test notification.
 add_task(async function test_private_browsing_window() {
-  await testLoadInWindow({private: true}, initialURL);
+  await testLoadInWindow({ private: true }, initialURL);
 });
 
 add_task(async function test_normal_window() {
-  await testLoadInWindow({private: false}, finalURL);
+  await testLoadInWindow({ private: false }, finalURL);
 
   let url = await visitSavedPromise;
   Assert.equal(url, finalURL, "Check received expected visit");
@@ -55,7 +55,9 @@ async function testLoadInWindow(options, url) {
     await BrowserTestUtils.closeWindow(win);
   });
 
-  let loadedPromise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  let loadedPromise = BrowserTestUtils.browserLoaded(
+    win.gBrowser.selectedBrowser
+  );
   await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
   await loadedPromise;
 }

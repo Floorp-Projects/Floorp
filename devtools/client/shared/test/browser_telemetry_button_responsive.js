@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8," +
+const TEST_URI =
+  "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_responsive.js</p>";
 
 // Because we need to gather stats for the period of time that a tool has been
@@ -19,8 +20,10 @@ requestLongerTimeout(2);
 
 Services.prefs.setBoolPref("devtools.testing", true);
 Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
-Services.prefs.setCharPref("devtools.devices.url",
-  "http://example.com/browser/devtools/client/responsive.html/test/browser/devices.json");
+Services.prefs.setCharPref(
+  "devtools.devices.url",
+  "http://example.com/browser/devtools/client/responsive.html/test/browser/devices.json"
+);
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.testing");
@@ -30,7 +33,12 @@ registerCleanupFunction(() => {
   asyncStorage.removeItem("devtools.devices.local");
 });
 
-loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
+loader.lazyRequireGetter(
+  this,
+  "ResponsiveUIManager",
+  "devtools/client/responsive.html/manager",
+  true
+);
 
 add_task(async function() {
   await addTab(TEST_URI);
@@ -84,6 +92,16 @@ var delayedClicks = async function(node, clicks) {
 function checkResults() {
   // For help generating these tests use generateTelemetryTests("DEVTOOLS_RESPONSIVE_")
   // here.
-  checkTelemetry("DEVTOOLS_RESPONSIVE_OPENED_COUNT", "", {0: 2, 1: 0}, "array");
-  checkTelemetry("DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS", "", null, "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_RESPONSIVE_OPENED_COUNT",
+    "",
+    { 0: 2, 1: 0 },
+    "array"
+  );
+  checkTelemetry(
+    "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
+  );
 }

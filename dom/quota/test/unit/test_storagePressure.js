@@ -3,8 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function awaitStoragePressure()
-{
+function awaitStoragePressure() {
   let promise_resolve;
 
   let promise = new Promise(function(resolve) {
@@ -32,8 +31,7 @@ function awaitStoragePressure()
  * below the global usage.
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const globalLimitKB = 2;
 
   const principal = getPrincipal("https://example.com");
@@ -62,7 +60,7 @@ async function testSteps()
     await requestFinished(request);
 
     ok(true, "Should not have thrown");
-  } catch(ex) {
+  } catch (ex) {
     ok(false, "Should not have thrown");
   }
 
@@ -77,7 +75,7 @@ async function testSteps()
     await requestFinished(request);
 
     ok(false, "Should have thrown");
-  } catch(ex) {
+  } catch (ex) {
     ok(true, "Should have thrown");
     ok(ex === NS_ERROR_FILE_NO_DEVICE_SPACE, "Threw right code");
   }
@@ -89,8 +87,10 @@ async function testSteps()
 
   info("Testing storage pressure by reducing the global limit");
 
-  info("Reducing the global limit to get the storage pressuse event while the" +
-       " temporary storage is being initialized");
+  info(
+    "Reducing the global limit to get the storage pressuse event while the" +
+      " temporary storage is being initialized"
+  );
 
   setGlobalLimit(globalLimitKB - 1);
 

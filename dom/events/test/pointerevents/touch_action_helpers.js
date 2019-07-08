@@ -2,7 +2,7 @@
 
 function touchActionSetup(testDriver) {
   add_completion_callback(subtestDone);
-  document.body.addEventListener('touchend', testDriver, { passive: true });
+  document.body.addEventListener("touchend", testDriver, { passive: true });
 }
 
 function touchActionSetupAndWaitTestDone(testDriver) {
@@ -10,26 +10,32 @@ function touchActionSetupAndWaitTestDone(testDriver) {
     add_completion_callback(resolve);
   });
 
-  document.body.addEventListener('touchend', testDriver, { passive: true });
+  document.body.addEventListener("touchend", testDriver, { passive: true });
   return testDone;
 }
 
-function touchScrollRight(aSelector = '#target0', aX = 20, aY = 20) {
+function touchScrollRight(aSelector = "#target0", aX = 20, aY = 20) {
   var target = document.querySelector(aSelector);
-  return ok(synthesizeNativeTouchDrag(target, aX + 40, aY, -40, 0), "Synthesized horizontal drag");
+  return ok(
+    synthesizeNativeTouchDrag(target, aX + 40, aY, -40, 0),
+    "Synthesized horizontal drag"
+  );
 }
 
-function touchScrollDown(aSelector = '#target0', aX = 20, aY = 20) {
+function touchScrollDown(aSelector = "#target0", aX = 20, aY = 20) {
   var target = document.querySelector(aSelector);
-  return ok(synthesizeNativeTouchDrag(target, aX, aY + 40, 0, -40), "Synthesized vertical drag");
+  return ok(
+    synthesizeNativeTouchDrag(target, aX, aY + 40, 0, -40),
+    "Synthesized vertical drag"
+  );
 }
 
 function tapComplete() {
-  var button = document.getElementById('btnComplete');
+  var button = document.getElementById("btnComplete");
   return button.click();
 }
 
-function waitForResetScrollLeft(aSelector = '#target0') {
+function waitForResetScrollLeft(aSelector = "#target0") {
   var target = document.querySelector(aSelector);
   return new Promise(resolve => {
     target.addEventListener("scroll", function onScroll() {
@@ -66,64 +72,76 @@ function* pointerevent_touch_action_button_test_touch_manual(testDriver) {
   // Wait for resetting target0's scrollLeft to avoid the reset break the
   // following scroll behaviors.
   yield resetScrollLeft.then(testDriver);
-  yield touchScrollDown('#target0 > button');
+  yield touchScrollDown("#target0 > button");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#target0 > button');
+  yield touchScrollRight("#target0 > button");
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
 
-function* pointerevent_touch_action_inherit_child_auto_child_none_touch_manual(testDriver) {
+function* pointerevent_touch_action_inherit_child_auto_child_none_touch_manual(
+  testDriver
+) {
   touchActionSetup(testDriver);
 
-  yield touchScrollDown('#target0 > div div');
+  yield touchScrollDown("#target0 > div div");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#target0 > div div');
+  yield touchScrollRight("#target0 > div div");
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
 
-function* pointerevent_touch_action_inherit_child_none_touch_manual(testDriver) {
+function* pointerevent_touch_action_inherit_child_none_touch_manual(
+  testDriver
+) {
   touchActionSetup(testDriver);
 
-  yield touchScrollDown('#target0 > div');
+  yield touchScrollDown("#target0 > div");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#target0 > div');
+  yield touchScrollRight("#target0 > div");
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
 
-function* pointerevent_touch_action_inherit_child_pan_x_child_pan_x_touch_manual(testDriver) {
+function* pointerevent_touch_action_inherit_child_pan_x_child_pan_x_touch_manual(
+  testDriver
+) {
   touchActionSetup(testDriver);
 
-  yield touchScrollDown('#target0 > div div');
+  yield touchScrollDown("#target0 > div div");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#target0 > div div');
+  yield touchScrollRight("#target0 > div div");
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
 
-function* pointerevent_touch_action_inherit_child_pan_x_child_pan_y_touch_manual(testDriver) {
+function* pointerevent_touch_action_inherit_child_pan_x_child_pan_y_touch_manual(
+  testDriver
+) {
   touchActionSetup(testDriver);
 
-  yield touchScrollDown('#target0 > div div');
+  yield touchScrollDown("#target0 > div div");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#target0 > div div');
+  yield touchScrollRight("#target0 > div div");
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
 
-function* pointerevent_touch_action_inherit_highest_parent_none_touch_manual(testDriver) {
+function* pointerevent_touch_action_inherit_highest_parent_none_touch_manual(
+  testDriver
+) {
   let testDone = touchActionSetupAndWaitTestDone(testDriver);
 
-  yield touchScrollDown('#target0 > div');
+  yield touchScrollDown("#target0 > div");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#target0 > div');
+  yield touchScrollRight("#target0 > div");
   yield testDone.then(testDriver);
   subtestDone();
 }
 
-function* pointerevent_touch_action_inherit_parent_none_touch_manual(testDriver) {
+function* pointerevent_touch_action_inherit_parent_none_touch_manual(
+  testDriver
+) {
   touchActionSetup(testDriver);
 
   yield touchScrollDown();
@@ -156,9 +174,9 @@ function* pointerevent_touch_action_pan_x_css_touch_manual(testDriver) {
 function* pointerevent_touch_action_pan_x_pan_y_pan_y_touch_manual(testDriver) {
   touchActionSetup(testDriver);
 
-  yield touchScrollDown('#target0 > div div');
+  yield touchScrollDown("#target0 > div div");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#target0 > div div');
+  yield touchScrollRight("#target0 > div div");
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
@@ -196,9 +214,9 @@ function* pointerevent_touch_action_span_test_touch_manual(testDriver) {
   // Wait for resetting target0's scrollLeft to avoid the reset break the
   // following scroll behaviors.
   yield resetScrollLeft.then(testDriver);
-  yield touchScrollDown('#testspan');
+  yield touchScrollDown("#testspan");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#testspan');
+  yield touchScrollRight("#testspan");
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
@@ -212,9 +230,9 @@ function* pointerevent_touch_action_svg_test_touch_manual(testDriver) {
   yield touchScrollRight();
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
-  yield touchScrollDown('#target0', 250, 250);
+  yield touchScrollDown("#target0", 250, 250);
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#target0', 250, 250);
+  yield touchScrollRight("#target0", 250, 250);
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
@@ -222,24 +240,24 @@ function* pointerevent_touch_action_svg_test_touch_manual(testDriver) {
 function* pointerevent_touch_action_table_test_touch_manual(testDriver) {
   touchActionSetup(testDriver);
 
-  yield touchScrollDown('#row1');
+  yield touchScrollDown("#row1");
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
-  yield touchScrollRight('#row1');
+  yield touchScrollRight("#row1");
   let resetScrollLeft = waitForResetScrollLeft();
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
   // Wait for resetting target0's scrollLeft to avoid the reset break the
   // following scroll behaviors.
   yield resetScrollLeft.then(testDriver);
-  yield touchScrollDown('#cell3');
+  yield touchScrollDown("#cell3");
   yield waitForApzFlushedRepaints(testDriver);
-  yield touchScrollRight('#cell3');
+  yield touchScrollRight("#cell3");
   yield waitForApzFlushedRepaints(testDriver);
   yield tapComplete();
 }
 
 // This the stuff that runs the appropriate body function above
 
-var test = eval(_ACTIVE_TEST_NAME.replace(/-/g, '_'));
+var test = eval(_ACTIVE_TEST_NAME.replace(/-/g, "_"));
 waitUntilApzStable().then(runContinuation(test));

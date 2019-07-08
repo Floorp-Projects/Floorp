@@ -19,12 +19,16 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   const wait = waitForDOM(document, ".headers-overview");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
   await wait;
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#params-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#params-tab")
+  );
 
   // The Params panel should render the following
   // POSTed JSON data structure:
@@ -59,14 +63,24 @@ add_task(async function() {
     "Request payload",
   ];
 
-  const waitForTreeRow = waitForDOM(document, ".treeTable .treeRow", expectedKeys.length);
+  const waitForTreeRow = waitForDOM(
+    document,
+    ".treeTable .treeRow",
+    expectedKeys.length
+  );
   await waitForTreeRow;
   const actualKeys = document.querySelectorAll(".treeTable .treeRow");
 
   for (let i = 0; i < actualKeys.length; i++) {
     const text = actualKeys[i].innerText.trim();
-    is(text, expectedKeys[i],
-      "Actual value " + text + " is equal to the " +
-      "expected value " + expectedKeys[i]);
+    is(
+      text,
+      expectedKeys[i],
+      "Actual value " +
+        text +
+        " is equal to the " +
+        "expected value " +
+        expectedKeys[i]
+    );
   }
 });

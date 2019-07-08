@@ -27,7 +27,7 @@ const TYPE = "CssTransformHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   // Mock the highlighter front to get the reference of the NodeFront
   const HighlighterFront = {
@@ -52,11 +52,11 @@ add_task(async function() {
   const hs = view.highlighters;
   hs.highlighters[TYPE] = HighlighterFront;
 
-  let {valueSpan} = getRuleViewProperty(view, "body", "transform");
+  let { valueSpan } = getRuleViewProperty(view, "body", "transform");
 
   info("Checking that the HighlighterFront's show/hide methods are called");
   let onHighlighterShown = hs.once("highlighter-shown");
-  hs.onMouseMove({target: valueSpan});
+  hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
   ok(HighlighterFront.isShown, "The highlighter is shown");
   let onHighlighterHidden = hs.once("highlighter-hidden");
@@ -64,40 +64,53 @@ add_task(async function() {
   await onHighlighterHidden;
   ok(!HighlighterFront.isShown, "The highlighter is hidden");
 
-  info("Checking that hovering several times over the same property doesn't" +
-    " show the highlighter several times");
+  info(
+    "Checking that hovering several times over the same property doesn't" +
+      " show the highlighter several times"
+  );
   const nb = HighlighterFront.nbOfTimesShown;
   onHighlighterShown = hs.once("highlighter-shown");
-  hs.onMouseMove({target: valueSpan});
+  hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
   is(HighlighterFront.nbOfTimesShown, nb + 1, "The highlighter was shown once");
-  hs.onMouseMove({target: valueSpan});
-  hs.onMouseMove({target: valueSpan});
-  is(HighlighterFront.nbOfTimesShown, nb + 1,
-    "The highlighter was shown once, after several mousemove");
+  hs.onMouseMove({ target: valueSpan });
+  hs.onMouseMove({ target: valueSpan });
+  is(
+    HighlighterFront.nbOfTimesShown,
+    nb + 1,
+    "The highlighter was shown once, after several mousemove"
+  );
 
   info("Checking that the right NodeFront reference is passed");
   await selectNode("html", inspector);
-  ({valueSpan} = getRuleViewProperty(view, "html", "transform"));
+  ({ valueSpan } = getRuleViewProperty(view, "html", "transform"));
   onHighlighterShown = hs.once("highlighter-shown");
-  hs.onMouseMove({target: valueSpan});
+  hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
-  is(HighlighterFront.nodeFront.tagName, "HTML",
-    "The right NodeFront is passed to the highlighter (1)");
+  is(
+    HighlighterFront.nodeFront.tagName,
+    "HTML",
+    "The right NodeFront is passed to the highlighter (1)"
+  );
 
   await selectNode("body", inspector);
-  ({valueSpan} = getRuleViewProperty(view, "body", "transform"));
+  ({ valueSpan } = getRuleViewProperty(view, "body", "transform"));
   onHighlighterShown = hs.once("highlighter-shown");
-  hs.onMouseMove({target: valueSpan});
+  hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
-  is(HighlighterFront.nodeFront.tagName, "BODY",
-    "The right NodeFront is passed to the highlighter (2)");
+  is(
+    HighlighterFront.nodeFront.tagName,
+    "BODY",
+    "The right NodeFront is passed to the highlighter (2)"
+  );
 
-  info("Checking that the highlighter gets hidden when hovering a " +
-    "non-transform property");
-  ({valueSpan} = getRuleViewProperty(view, "body", "color"));
+  info(
+    "Checking that the highlighter gets hidden when hovering a " +
+      "non-transform property"
+  );
+  ({ valueSpan } = getRuleViewProperty(view, "body", "color"));
   onHighlighterHidden = hs.once("highlighter-hidden");
-  hs.onMouseMove({target: valueSpan});
+  hs.onMouseMove({ target: valueSpan });
   await onHighlighterHidden;
   ok(!HighlighterFront.isShown, "The highlighter is hidden");
 });

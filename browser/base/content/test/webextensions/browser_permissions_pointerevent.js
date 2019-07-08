@@ -4,20 +4,20 @@
 
 add_task(async function test_pointerevent() {
   async function contentScript() {
-    document.addEventListener("pointerdown", async (e) => {
+    document.addEventListener("pointerdown", async e => {
       browser.test.assertTrue(true, "Should receive pointerdown");
       e.preventDefault();
     });
 
-    document.addEventListener("mousedown", (e) => {
+    document.addEventListener("mousedown", e => {
       browser.test.assertTrue(true, "Should receive mousedown");
     });
 
-    document.addEventListener("mouseup", (e) => {
+    document.addEventListener("mouseup", e => {
       browser.test.assertTrue(true, "Should receive mouseup");
     });
 
-    document.addEventListener("pointerup", (e) => {
+    document.addEventListener("pointerup", e => {
       browser.test.assertTrue(true, "Should receive pointerup");
       browser.test.sendMessage("done");
     });
@@ -35,13 +35,24 @@ add_task(async function test_pointerevent() {
   });
   await extension.startup();
   await new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, resolve);
+    SpecialPowers.pushPrefEnv(
+      { set: [["dom.w3c_pointer_events.enabled", true]] },
+      resolve
+    );
   });
   let url = await extension.awaitMessage("ready");
-  await BrowserTestUtils.withNewTab({gBrowser, url}, async browser => {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
     await extension.awaitMessage("pageReady");
-    await BrowserTestUtils.synthesizeMouseAtCenter("html", {type: "mousedown", button: 0}, browser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("html", {type: "mouseup", button: 0}, browser);
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "html",
+      { type: "mousedown", button: 0 },
+      browser
+    );
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "html",
+      { type: "mouseup", button: 0 },
+      browser
+    );
     await extension.awaitMessage("done");
   });
   await extension.unload();

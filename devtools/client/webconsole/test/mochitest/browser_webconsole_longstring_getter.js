@@ -27,7 +27,9 @@ add_task(async function() {
   ok(arrow, "longString expand arrow is shown");
 
   info("wait for long string expansion");
-  const onLongStringFullTextDisplayed = waitFor(() => findMessage(hud, LONGSTRING));
+  const onLongStringFullTextDisplayed = waitFor(() =>
+    findMessage(hud, LONGSTRING)
+  );
   arrow.click();
   await onLongStringFullTextDisplayed;
 

@@ -14,8 +14,11 @@ add_task(async function() {
 
   info("Check selecting an animated node by clicking on the target node");
   await clickOnTargetNode(animationInspector, panel, 0);
-  is(panel.querySelectorAll(".animation-target").length, 2,
-     "The length of animations should be 2, because .multi node has two animations");
+  is(
+    panel.querySelectorAll(".animation-target").length,
+    2,
+    "The length of animations should be 2, because .multi node has two animations"
+  );
 
   info("Check to avoid reselecting the already selected node");
   let isUpdated = false;

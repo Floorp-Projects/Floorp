@@ -2,7 +2,9 @@
 
 add_task(async function test_setup() {
   let clearValue = Services.prefs.prefHasUserValue("extensions.pocket.enabled");
-  let enabledOnStartup = Services.prefs.getBoolPref("extensions.pocket.enabled");
+  let enabledOnStartup = Services.prefs.getBoolPref(
+    "extensions.pocket.enabled"
+  );
   registerCleanupFunction(() => {
     if (clearValue) {
       Services.prefs.clearUserPref("extensions.pocket.enabled");
@@ -21,15 +23,22 @@ add_task(async function() {
 
   // check context menu exists
   info("checking content context menu");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/browser/browser/components/pocket/test/test.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com/browser/browser/components/pocket/test/test.html"
+  );
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
   let popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   let popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
-  await BrowserTestUtils.synthesizeMouseAtCenter("body", {
-    type: "contextmenu",
-    button: 2,
-  }, tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "body",
+    {
+      type: "contextmenu",
+      button: 2,
+    },
+    tab.linkedBrowser
+  );
   await popupShown;
 
   checkElements(true, ["context-pocket"]);
@@ -38,10 +47,14 @@ add_task(async function() {
   await popupHidden;
   popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
-  await BrowserTestUtils.synthesizeMouseAtCenter("a", {
-    type: "contextmenu",
-    button: 2,
-  }, tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "a",
+    {
+      type: "contextmenu",
+      button: 2,
+    },
+    tab.linkedBrowser
+  );
   await popupShown;
 
   checkElements(true, ["context-savelinktopocket"]);
@@ -52,15 +65,24 @@ add_task(async function() {
 
   await promisePocketDisabled();
 
-  checkElements(false, ["appMenu-library-pocket-button",
-                        "context-pocket", "context-savelinktopocket"]);
+  checkElements(false, [
+    "appMenu-library-pocket-button",
+    "context-pocket",
+    "context-savelinktopocket",
+  ]);
   buttonBox = document.getElementById("pocket-button-box");
   is(buttonBox.hidden, true, "Button should have been hidden");
 
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  checkElements(false, ["appMenu-library-pocket-button",
-                        "context-pocket", "context-savelinktopocket"],
-                newWin);
+  checkElements(
+    false,
+    [
+      "appMenu-library-pocket-button",
+      "context-pocket",
+      "context-savelinktopocket",
+    ],
+    newWin
+  );
   buttonBox = newWin.document.getElementById("pocket-button-box");
   is(buttonBox.hidden, true, "Button should have been hidden");
 

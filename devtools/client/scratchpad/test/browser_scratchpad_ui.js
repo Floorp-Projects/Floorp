@@ -10,8 +10,11 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<title>foobarBug636725</title>" +
-                   "<p>test inspect() in Scratchpad");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,<title>foobarBug636725</title>" +
+      "<p>test inspect() in Scratchpad"
+  );
 }
 
 function runTests() {
@@ -56,11 +59,16 @@ function runTests() {
     try {
       menu.doCommand();
     } catch (ex) {
-      ok(false, "exception thrown while executing the command of menuitem #" + id);
+      ok(
+        false,
+        "exception thrown while executing the command of menuitem #" + id
+      );
     }
 
-    ok(lastMethodCalled == methodName,
-       "method " + methodName + " invoked by the associated menuitem");
+    ok(
+      lastMethodCalled == methodName,
+      "method " + methodName + " invoked by the associated menuitem"
+    );
 
     sp[methodName] = oldMethod;
   }

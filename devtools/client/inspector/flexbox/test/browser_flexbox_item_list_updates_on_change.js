@@ -28,8 +28,11 @@ add_task(async function() {
 
   info("Checking the initial state of the flex item list.");
   ok(flexItemList, "The flex item list is rendered.");
-  is(flexItemList.querySelectorAll("button").length, 1,
-    "Got the correct number of flex items in the list.");
+  is(
+    flexItemList.querySelectorAll("button").length,
+    1,
+    "Got the correct number of flex items in the list."
+  );
 
   info("Changing the flexbox in the page.");
   const onFlexItemListChanged = waitForDOM(doc, ".flex-item-list > button", 2);

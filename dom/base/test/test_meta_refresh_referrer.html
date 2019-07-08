@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name='referrer' content='origin'>
+  <title>Test for referrer of meta refresh request</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * Listen for notifications from the child.
+ */
+window.addEventListener("message", function(event) {
+    if (event.data == "childLoadComplete") {
+      advance();
+    }
+});
+
+var tests = (function*() {
+  var iframe = document.getElementById("testframe");
+
+  // reset counter to make the test pass --repeat test
+  yield reset();
+
+  // load the test frame
+  yield iframe.src =
+    '/tests/dom/base/test/iframe_meta_refresh.sjs?action=test&load=refresh';
+
+  // check the test result
+  yield checkResults(referrerHeaderChecker);
+
+  // complete.
+  SimpleTest.finish();
+})();
+
+function referrerHeaderChecker(results) {
+  var expected = {'count': 2, 'referrers': ['origin', 'none']};
+  is(results.count, expected.count, "Correct number of referrer header");
+  is(results.referrers[0], expected.referrers[0], "Correct load referrer header");
+  is(results.referrers[1], expected.referrers[1], "Correct refresh referrer header");
+
+  advance();
+}
+
+/**
+ * helper to perform an XHR.
+ */
+function doXHR(url, onSuccess, onFail) {
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    if (xhr.status == 200) {
+      onSuccess(xhr);
+    } else {
+      onFail(xhr);
+    }
+  };
+  xhr.open('GET', url, true);
+  xhr.send(null);
+}
+
+/**
+ * Grabs the results via XHR and passes to checker.
+ */
+function checkResults(checker) {
+  doXHR('/tests/dom/base/test/iframe_meta_refresh.sjs?action=results',
+        function(xhr) {
+          checker(JSON.parse(xhr.responseText));
+        },
+        function(xhr) {
+          ok(false, "Can't get results from server.");
+        });
+}
+
+/**
+ * Reset the counter.
+ */
+function reset() {
+  doXHR('/tests/dom/base/test/iframe_meta_refresh.sjs?action=reset',
+    advance,
+    function(xhr) {
+      ok(false, "error in reset state");
+      SimpleTest.finish();
+    });
+}
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html></html>

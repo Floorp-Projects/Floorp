@@ -4,7 +4,11 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["CleanupManager"];
 
@@ -38,7 +42,7 @@ class CleanupManagerClass {
       // finished.
       AsyncShutdown.profileBeforeChange.addBlocker(
         "ShieldRecipeClient: Cleaning up",
-        this.cleanupPromise,
+        this.cleanupPromise
       );
     }
 

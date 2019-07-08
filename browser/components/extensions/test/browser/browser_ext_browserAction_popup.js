@@ -2,10 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+const { GlobalManager } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm",
+  null
+);
 
 function getBrowserAction(extension) {
-  const {global: {browserActionFor}} = Management;
+  const {
+    global: { browserActionFor },
+  } = Management;
 
   let ext = GlobalManager.extensionMap.get(extension.id);
   return browserActionFor(ext);
@@ -18,7 +23,11 @@ async function assertViewCount(extension, count, waitForPromise) {
     await waitForPromise;
   }
 
-  is(ext.views.size, count, "Should have the expected number of extension views");
+  is(
+    ext.views.size,
+    count,
+    "Should have the expected number of extension views"
+  );
 }
 
 function promiseExtensionPageClosed(extension, viewType) {
@@ -38,7 +47,8 @@ function promiseExtensionPageClosed(extension, viewType) {
   });
 }
 
-let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
+let scriptPage = url =>
+  `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
 async function testInArea(area) {
   let extension = ExtensionTestUtils.loadExtension({
@@ -47,15 +57,18 @@ async function testInArea(area) {
         browser.test.sendMessage("browserAction-onClicked");
       });
 
-      browser.test.onMessage.addListener(async (msg) => {
+      browser.test.onMessage.addListener(async msg => {
         if (msg.type === "setBrowserActionPopup") {
-          let opts = {popup: msg.popup};
+          let opts = { popup: msg.popup };
           if (msg.onCurrentWindowId) {
-            let {id} = await browser.windows.getCurrent();
-            opts = {...opts, windowId: id};
+            let { id } = await browser.windows.getCurrent();
+            opts = { ...opts, windowId: id };
           } else if (msg.onActiveTabId) {
-            let [{id}] = await browser.tabs.query({active: true, currentWindow: true});
-            opts = {...opts, tabId: id};
+            let [{ id }] = await browser.tabs.query({
+              active: true,
+              currentWindow: true,
+            });
+            opts = { ...opts, tabId: id };
           }
           await browser.browserAction.setPopup(opts);
           browser.test.sendMessage("setBrowserActionPopup:done");
@@ -65,9 +78,9 @@ async function testInArea(area) {
       browser.test.sendMessage("background-page-ready");
     },
     manifest: {
-      "browser_action": {
-        "default_popup": "popup-a.html",
-        "browser_style": true,
+      browser_action: {
+        default_popup: "popup-a.html",
+        browser_style: true,
       },
     },
 
@@ -115,19 +128,21 @@ async function testInArea(area) {
   CustomizableUI.addWidgetToArea(widget.id, area);
 
   async function setBrowserActionPopup(opts) {
-    extension.sendMessage({type: "setBrowserActionPopup", ...opts});
+    extension.sendMessage({ type: "setBrowserActionPopup", ...opts });
     await extension.awaitMessage("setBrowserActionPopup:done");
   }
 
   async function runTest({
     actionType,
     waitForPopupLoaded,
-    expectPopup, expectOnClicked,
+    expectPopup,
+    expectOnClicked,
     closePopup,
   }) {
     const oncePopupPageClosed = promiseExtensionPageClosed(extension, "popup");
-    const oncePopupLoaded = waitForPopupLoaded ?
-      awaitExtensionPanel(extension) : undefined;
+    const oncePopupLoaded = waitForPopupLoaded
+      ? awaitExtensionPanel(extension)
+      : undefined;
 
     if (actionType === "click") {
       clickBrowserAction(extension);
@@ -137,7 +152,11 @@ async function testInArea(area) {
 
     if (expectPopup) {
       info(`Waiting for popup: ${expectPopup}`);
-      is(await extension.awaitMessage("from-popup"), expectPopup, "expected popup opened");
+      is(
+        await extension.awaitMessage("from-popup"),
+        expectPopup,
+        "expected popup opened"
+      );
     } else if (expectOnClicked) {
       await extension.awaitMessage("browserAction-onClicked");
     }
@@ -150,7 +169,7 @@ async function testInArea(area) {
       await assertViewCount(extension, 1, oncePopupPageClosed);
     }
 
-    return {oncePopupPageClosed};
+    return { oncePopupPageClosed };
   }
 
   // Run the sequence of test cases.
@@ -177,7 +196,7 @@ async function testInArea(area) {
     async () => {
       info(`Call triggerAction, expect popup "a" again. Leave popup open.`);
 
-      const {oncePopupPageClosed} = await runTest({
+      const { oncePopupPageClosed } = await runTest({
         actionType: "trigger",
         expectPopup: "popup-a",
         waitForPopupLoaded: true,
@@ -202,9 +221,9 @@ async function testInArea(area) {
     async () => {
       info(`Set popup to "c" and click browser action. Expect popup "c".`);
 
-      await setBrowserActionPopup({popup: "data/popup-c.html"});
+      await setBrowserActionPopup({ popup: "data/popup-c.html" });
 
-      const {oncePopupPageClosed} = await runTest({
+      const { oncePopupPageClosed } = await runTest({
         actionType: "click",
         expectPopup: "popup-c",
       });
@@ -214,7 +233,7 @@ async function testInArea(area) {
     async () => {
       info(`Set popup to "b" and click browser action. Expect popup "b".`);
 
-      await setBrowserActionPopup({popup: "data/popup-b.html"});
+      await setBrowserActionPopup({ popup: "data/popup-b.html" });
 
       await runTest({
         actionType: "click",
@@ -234,7 +253,7 @@ async function testInArea(area) {
     async () => {
       info(`Clear popup URL. Click browser action. Expect click event.`);
 
-      await setBrowserActionPopup({popup: ""});
+      await setBrowserActionPopup({ popup: "" });
 
       await runTest({
         actionType: "click",
@@ -258,9 +277,14 @@ async function testInArea(area) {
       });
     },
     async () => {
-      info(`Set window-specific popup to "b" and click browser action. Expect popup "b".`);
+      info(
+        `Set window-specific popup to "b" and click browser action. Expect popup "b".`
+      );
 
-      await setBrowserActionPopup({popup: "data/popup-b.html", onCurrentWindowId: true});
+      await setBrowserActionPopup({
+        popup: "data/popup-b.html",
+        onCurrentWindowId: true,
+      });
 
       await runTest({
         actionType: "click",
@@ -269,11 +293,16 @@ async function testInArea(area) {
       });
     },
     async () => {
-      info(`Set tab-specific popup to "a" and click browser action. Expect popup "a", and leave open.`);
+      info(
+        `Set tab-specific popup to "a" and click browser action. Expect popup "a", and leave open.`
+      );
 
-      await setBrowserActionPopup({popup: "/popup-a.html", onActiveTabId: true});
+      await setBrowserActionPopup({
+        popup: "/popup-a.html",
+        onActiveTabId: true,
+      });
 
-      const {oncePopupPageClosed} = await runTest({
+      const { oncePopupPageClosed } = await runTest({
         actionType: "click",
         expectPopup: "popup-a",
       });

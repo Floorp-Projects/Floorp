@@ -24,7 +24,8 @@ function runTest() {
   });
 
   document.body.appendChild(iframe);
-  iframe.src = "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptionsSameOrigin.html";
+  iframe.src =
+    "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptionsSameOrigin.html";
 }
 
 addEventListener("testready", runTest);

@@ -5,10 +5,10 @@
 /* globals Cu, do_register_cleanup, do_test_finished */
 /* globals run_test_in_child, sendCommand, do_await_remote_message */
 
-'use strict';
+"use strict";
 
 /* globals HttpServer */
-const {HttpServer} = ChromeUtils.import('resource://testing-common/httpd.js');
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let httpserver;
 let port;
@@ -16,17 +16,17 @@ let port;
 function startHttpServer() {
   httpserver = new HttpServer();
 
-  httpserver.registerPathHandler('/resource', (metadata, response) => {
-    response.setStatusLine(metadata.httpVersion, 200, 'OK');
-    response.setHeader('Content-Type', 'text/plain', false);
-    response.setHeader('Cache-Control', 'no-cache', false);
+  httpserver.registerPathHandler("/resource", (metadata, response) => {
+    response.setStatusLine(metadata.httpVersion, 200, "OK");
+    response.setHeader("Content-Type", "text/plain", false);
+    response.setHeader("Cache-Control", "no-cache", false);
     response.bodyOutputStream.write("data", 4);
   });
 
-  httpserver.registerPathHandler('/redirect', (metadata, response) => {
-    response.setStatusLine(metadata.httpVersion, 302, 'Redirect');
-    response.setHeader('Location', '/resource', false);
-    response.setHeader('Cache-Control', 'no-cache', false);
+  httpserver.registerPathHandler("/redirect", (metadata, response) => {
+    response.setStatusLine(metadata.httpVersion, 302, "Redirect");
+    response.setHeader("Location", "/resource", false);
+    response.setHeader("Cache-Control", "no-cache", false);
   });
 
   httpserver.start(-1);
@@ -34,16 +34,17 @@ function startHttpServer() {
 }
 
 function stopHttpServer() {
-  httpserver.stop(()=>{});
+  httpserver.stop(() => {});
 }
 
-function run_test() { // jshint ignore:line
+function run_test() {
+  // jshint ignore:line
   registerCleanupFunction(stopHttpServer);
 
-  run_test_in_child('../unit/test_channel_priority.js', () => {
+  run_test_in_child("../unit/test_channel_priority.js", () => {
     startHttpServer();
     sendCommand(`configPort(${port});`);
-    do_await_remote_message('finished').then(() => {
+    do_await_remote_message("finished").then(() => {
       do_test_finished();
     });
   });

@@ -4,14 +4,14 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "BulkKeyBundle",
-];
+var EXPORTED_SYMBOLS = ["BulkKeyBundle"];
 
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
-const {Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
 /**
  * Represents a pair of keys.
@@ -40,9 +40,11 @@ KeyBundle.prototype = {
   _sha256HMACHasher: null,
 
   equals: function equals(bundle) {
-    return bundle &&
-           (bundle.hmacKey == this.hmacKey) &&
-           (bundle.encryptionKey == this.encryptionKey);
+    return (
+      bundle &&
+      bundle.hmacKey == this.hmacKey &&
+      bundle.encryptionKey == this.encryptionKey
+    );
   },
 
   /*
@@ -85,8 +87,9 @@ KeyBundle.prototype = {
     this._hmac = value;
     this._hmacB64 = btoa(value);
     this._hmacObj = value ? Utils.makeHMACKey(value) : null;
-    this._sha256HMACHasher = value ? Utils.makeHMACHasher(
-      Ci.nsICryptoHMAC.SHA256, this._hmacObj) : null;
+    this._sha256HMACHasher = value
+      ? Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, this._hmacObj)
+      : null;
   },
 
   get hmacKeyB64() {
@@ -112,7 +115,6 @@ KeyBundle.prototype = {
     ]);
     this.keyPairB64 = [generatedEncr, generatedHMAC];
   },
-
 };
 
 /**
@@ -157,7 +159,7 @@ BulkKeyBundle.prototype = {
     }
 
     this.encryptionKey = value[0];
-    this.hmacKey       = value[1];
+    this.hmacKey = value[1];
   },
 
   get keyPairB64() {
@@ -166,11 +168,12 @@ BulkKeyBundle.prototype = {
 
   set keyPairB64(value) {
     if (!Array.isArray(value) || value.length != 2) {
-      throw new Error("BulkKeyBundle.keyPairB64 value must be an array of 2 " +
-                      "keys.");
+      throw new Error(
+        "BulkKeyBundle.keyPairB64 value must be an array of 2 keys."
+      );
     }
 
-    this.encryptionKey  = CommonUtils.safeAtoB(value[0]);
-    this.hmacKey        = CommonUtils.safeAtoB(value[1]);
+    this.encryptionKey = CommonUtils.safeAtoB(value[0]);
+    this.hmacKey = CommonUtils.safeAtoB(value[1]);
   },
 };

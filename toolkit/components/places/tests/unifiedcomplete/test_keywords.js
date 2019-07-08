@@ -21,7 +21,10 @@ add_task(async function test_keyword() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({ uri: Services.io.newURI("http://mozilla.org/test/"), keyword: "moz" });
+  await addBookmark({
+    uri: Services.io.newURI("http://mozilla.org/test/"),
+    keyword: "moz",
+  });
   await check_autocomplete({
     search: "moz",
     autofilled: "moz",
@@ -35,7 +38,10 @@ add_task(async function test_more_than_keyword() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({ uri: Services.io.newURI("http://mozilla.org/test/"), keyword: "moz" });
+  await addBookmark({
+    uri: Services.io.newURI("http://mozilla.org/test/"),
+    keyword: "moz",
+  });
   await check_autocomplete({
     search: "mozi",
     autofilled: "mozilla.org/",
@@ -49,7 +55,10 @@ add_task(async function test_less_than_keyword() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({ uri: Services.io.newURI("http://mozilla.org/test/"), keyword: "moz" });
+  await addBookmark({
+    uri: Services.io.newURI("http://mozilla.org/test/"),
+    keyword: "moz",
+  });
   await check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
@@ -63,7 +72,10 @@ add_task(async function test_keyword_casing() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
-  await addBookmark({ uri: Services.io.newURI("http://mozilla.org/test/"), keyword: "moz" });
+  await addBookmark({
+    uri: Services.io.newURI("http://mozilla.org/test/"),
+    keyword: "moz",
+  });
   await check_autocomplete({
     search: "MoZ",
     autofilled: "MoZ",
@@ -79,7 +91,10 @@ add_task(async function test_less_then_equal_than_keyword_bug_1124238() {
     transition: TRANSITION_TYPED,
   });
   await PlacesTestUtils.addVisits("http://mozilla.com/");
-  addBookmark({ uri: Services.io.newURI("http://mozilla.com/"), keyword: "moz" });
+  addBookmark({
+    uri: Services.io.newURI("http://mozilla.com/"),
+    keyword: "moz",
+  });
 
   let input = await check_autocomplete({
     search: "mo",

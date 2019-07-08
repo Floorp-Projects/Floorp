@@ -18,6 +18,7 @@ from mach.decorators import (
 from mozboot.util import get_state_dir
 from mozbuild.base import BuildEnvironmentNotFoundException, MachCommandBase
 
+
 CONFIG_ENVIRONMENT_NOT_FOUND = '''
 No config environment detected. This means we are unable to properly
 detect test files in the specified paths or tags. Please run:
@@ -157,12 +158,13 @@ class TrySelect(MachCommandBase):
 
         return kwargs
 
-    def handle_templates(self, **kwargs):
-        kwargs.setdefault('templates', {})
+    def handle_try_config(self, **kwargs):
+        from tryselect.util.dicttools import merge
+        kwargs.setdefault('try_config', {})
         for cls in self.parser.templates.itervalues():
-            context = cls.context(**kwargs)
-            if context is not None:
-                kwargs['templates'].update(context)
+            try_config = cls.try_config(**kwargs)
+            if try_config is not None:
+                kwargs['try_config'] = merge(kwargs['try_config'], try_config)
 
             for name in cls.dests:
                 del kwargs[name]
@@ -174,7 +176,7 @@ class TrySelect(MachCommandBase):
             kwargs = self.handle_presets(**kwargs)
 
         if self.parser.templates:
-            kwargs = self.handle_templates(**kwargs)
+            kwargs = self.handle_try_config(**kwargs)
 
         mod = importlib.import_module('tryselect.selectors.{}'.format(self.subcommand))
         return mod.run(**kwargs)

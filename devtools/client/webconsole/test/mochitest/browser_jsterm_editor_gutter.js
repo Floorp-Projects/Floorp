@@ -16,18 +16,29 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Check that the line numbers gutter is rendered when in editor layout");
-  ok(getLineNumbersGutterElement(hud),
-    "line numbers gutter is rendered on the input when in editor mode.");
+  ok(
+    getLineNumbersGutterElement(hud),
+    "line numbers gutter is rendered on the input when in editor mode."
+  );
 
-  info("Check that the line numbers gutter is hidden we switch to the inline layout");
+  info(
+    "Check that the line numbers gutter is hidden we switch to the inline layout"
+  );
   await toggleLayout(hud);
-  ok(!getLineNumbersGutterElement(hud),
-    "line numbers gutter is hidden on the input when in inline mode.");
+  ok(
+    !getLineNumbersGutterElement(hud),
+    "line numbers gutter is hidden on the input when in inline mode."
+  );
 
-  info("Check that the line numbers gutter is rendered again we switch back to editor");
+  info(
+    "Check that the line numbers gutter is rendered again we switch back to editor"
+  );
   await toggleLayout(hud);
-  ok(getLineNumbersGutterElement(hud), "line numbers gutter is rendered again on the " +
-    " input when switching back to editor mode.");
+  ok(
+    getLineNumbersGutterElement(hud),
+    "line numbers gutter is rendered again on the " +
+      " input when switching back to editor mode."
+  );
 });
 
 function getLineNumbersGutterElement(hud) {

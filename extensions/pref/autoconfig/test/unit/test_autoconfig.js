@@ -5,11 +5,12 @@
 /* Turning off this rule to allow control flow operations in finally block
  * http://eslint.org/docs/rules/no-unsafe-finally  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
-  let env = Cc["@mozilla.org/process/environment;1"]
-    .getService(Ci.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   let prefs = Services.prefs.getBranch(null);
   let defPrefs = Services.prefs.getDefaultBranch(null);
 
@@ -32,12 +33,18 @@ function run_test() {
 
     env.set("AUTOCONFIG_TEST_GETENV", "getenv");
 
-    Services.obs.notifyObservers(Services.prefs, "prefservice:before-read-userprefs");
+    Services.obs.notifyObservers(
+      Services.prefs,
+      "prefservice:before-read-userprefs"
+    );
 
     ok(prefs.prefHasUserValue("_autoconfig_.test.userpref"));
     equal("userpref", prefs.getStringPref("_autoconfig_.test.userpref"));
 
-    equal("defaultpref", defPrefs.getStringPref("_autoconfig_.test.defaultpref"));
+    equal(
+      "defaultpref",
+      defPrefs.getStringPref("_autoconfig_.test.defaultpref")
+    );
     equal("defaultpref", prefs.getStringPref("_autoconfig_.test.defaultpref"));
 
     ok(prefs.prefIsLocked("_autoconfig_.test.lockpref"));

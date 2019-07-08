@@ -18,14 +18,14 @@ class RecordingList extends Component {
   }
 
   render() {
-    const {
-      items,
-      itemComponent: Item,
-    } = this.props;
+    const { items, itemComponent: Item } = this.props;
 
     return items.length > 0
       ? ul({ className: "recording-list" }, ...items.map(Item))
-      : div({ className: "recording-list-empty" }, L10N.getStr("noRecordingsText"));
+      : div(
+          { className: "recording-list-empty" },
+          L10N.getStr("noRecordingsText")
+        );
   }
 }
 

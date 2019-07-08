@@ -172,7 +172,7 @@ function lazyRequire(obj, moduleId, ...args) {
 
   for (let props of args) {
     if (typeof props !== "object") {
-      props = {[props]: props};
+      props = { [props]: props };
     }
 
     for (const [fromName, toName] of Object.entries(props)) {
@@ -273,8 +273,9 @@ function WorkerDebuggerLoader(options) {
       loadSubScript(url, sandbox);
     } catch (error) {
       if (/^Error opening input stream/.test(String(error))) {
-        throw new Error("Can't load module '" + module.id + "' with url '" +
-                        url + "'!");
+        throw new Error(
+          "Can't load module '" + module.id + "' with url '" + url + "'!"
+        );
       }
       throw error;
     }
@@ -313,8 +314,12 @@ function WorkerDebuggerLoader(options) {
         // If the id is relative, convert it to an absolute id.
         if (id.startsWith(".")) {
           if (requirer === undefined) {
-            throw new Error("Can't require top-level module with relative id " +
-                            "'" + id + "'!");
+            throw new Error(
+              "Can't require top-level module with relative id " +
+                "'" +
+                id +
+                "'!"
+            );
           }
           id = resolve(id, requirer.id);
         }
@@ -379,8 +384,8 @@ function WorkerDebuggerLoader(options) {
   // longest path is always the first to be found.
   let paths = options.paths || Object.create(null);
   paths = Object.keys(paths)
-                .sort((a, b) => b.length - a.length)
-                .map(path => [path, paths[path]]);
+    .sort((a, b) => b.length - a.length)
+    .map(path => [path, paths[path]]);
 
   const resolve = options.resolve || resolveId;
 
@@ -424,8 +429,10 @@ var loader = {
   },
   lazyRequireGetter: function(obj, property, module, destructure) {
     Object.defineProperty(obj, property, {
-      get: () => destructure ? worker.require(module)[property]
-                             : worker.require(module || property),
+      get: () =>
+        destructure
+          ? worker.require(module)[property]
+          : worker.require(module || property),
     });
   },
 };
@@ -446,7 +453,7 @@ var {
   reportError,
   setImmediate,
   xpcInspector,
-} = (function() {
+} = function() {
   // Main thread
   if (typeof Components === "object") {
     const { Constructor: CC } = Components;
@@ -458,7 +465,7 @@ var {
     const sandbox = Cu.Sandbox(principal, {});
     Cu.evalInSandbox(
       "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
-      "addDebuggerToGlobal(this);",
+        "addDebuggerToGlobal(this);",
       sandbox
     );
     const Debugger = sandbox.Debugger;
@@ -476,8 +483,9 @@ var {
     const rpc = undefined;
 
     // eslint-disable-next-line mozilla/use-services
-    const subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                 .getService(Ci.mozIJSSubScriptLoader);
+    const subScriptLoader = Cc[
+      "@mozilla.org/moz/jssubscript-loader;1"
+    ].getService(Ci.mozIJSSubScriptLoader);
 
     const loadSubScript = function(url, sandbox) {
       subScriptLoader.loadSubScript(url, sandbox);
@@ -491,8 +499,9 @@ var {
       Timer.setTimeout(callback, 0);
     };
 
-    const xpcInspector = Cc["@mozilla.org/jsinspector;1"]
-                       .getService(Ci.nsIJSInspector);
+    const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(
+      Ci.nsIJSInspector
+    );
 
     return {
       Debugger,
@@ -544,7 +553,7 @@ var {
     setImmediate: this.setImmediate,
     xpcInspector: xpcInspector,
   };
-}).call(this);
+}.call(this);
 /* eslint-enable no-shadow */
 
 // Create the default instance of the worker loader, using the APIs we defined
@@ -553,36 +562,36 @@ var {
 this.worker = new WorkerDebuggerLoader({
   createSandbox: createSandbox,
   globals: {
-    "isWorker": true,
-    "isReplaying": false,
-    "dump": dump,
-    "loader": loader,
-    "reportError": reportError,
-    "rpc": rpc,
-    "URL": URL,
-    "setImmediate": setImmediate,
-    "lazyRequire": lazyRequire,
-    "lazyRequireModule": lazyRequireModule,
-    "retrieveConsoleEvents": this.retrieveConsoleEvents,
-    "setConsoleEventHandler": this.setConsoleEventHandler,
-    "console": console,
-    "btoa": this.btoa,
-    "atob": this.atob,
+    isWorker: true,
+    isReplaying: false,
+    dump: dump,
+    loader: loader,
+    reportError: reportError,
+    rpc: rpc,
+    URL: URL,
+    setImmediate: setImmediate,
+    lazyRequire: lazyRequire,
+    lazyRequireModule: lazyRequireModule,
+    retrieveConsoleEvents: this.retrieveConsoleEvents,
+    setConsoleEventHandler: this.setConsoleEventHandler,
+    console: console,
+    btoa: this.btoa,
+    atob: this.atob,
   },
   loadSubScript: loadSubScript,
   modules: {
-    "Debugger": Debugger,
-    "Services": Object.create(null),
-    "chrome": chrome,
-    "xpcInspector": xpcInspector,
-    "ChromeUtils": ChromeUtils,
-    "DebuggerNotificationObserver": DebuggerNotificationObserver,
+    Debugger: Debugger,
+    Services: Object.create(null),
+    chrome: chrome,
+    xpcInspector: xpcInspector,
+    ChromeUtils: ChromeUtils,
+    DebuggerNotificationObserver: DebuggerNotificationObserver,
   },
   paths: {
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "devtools": "resource://devtools",
+    devtools: "resource://devtools",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "promise": "resource://gre/modules/Promise-backend.js",
+    promise: "resource://gre/modules/Promise-backend.js",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "xpcshell-test": "resource://test",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠

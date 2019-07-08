@@ -13,9 +13,14 @@
 /* globals exportFunction */
 
 if (!navigator.platform.includes("Win")) {
-  console.info("The user agent has been overridden for compatibility reasons. See https://webcompat.com/issues/2787 for details.");
+  console.info(
+    "The user agent has been overridden for compatibility reasons. See https://webcompat.com/issues/2787 for details."
+  );
 
-  const WINDOWS_UA = navigator.userAgent.replace(/\(.*; rv:/i, "(Windows NT 10.0; Win64; x64; rv:");
+  const WINDOWS_UA = navigator.userAgent.replace(
+    /\(.*; rv:/i,
+    "(Windows NT 10.0; Win64; x64; rv:"
+  );
 
   Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
     get: exportFunction(function() {

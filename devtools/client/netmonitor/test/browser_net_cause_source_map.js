@@ -44,9 +44,12 @@ add_task(async function() {
   info("Waiting for source maps to be applied");
   await waitUntil(() => {
     const frames = document.querySelectorAll(".frame-link");
-    return frames && frames.length >= 2 &&
+    return (
+      frames &&
+      frames.length >= 2 &&
       frames[0].textContent.includes("xhr_original") &&
-      frames[1].textContent.includes("xhr_original");
+      frames[1].textContent.includes("xhr_original")
+    );
   });
 
   const frames = document.querySelectorAll(".frame-link");

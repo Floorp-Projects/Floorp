@@ -20,201 +20,215 @@ var gVersion;
 var gIsUTF8;
 
 function getPrefBranch() {
-    var prefService = Cc[PrefServiceContractID]
-                        .getService(nsIPrefService);
-    return prefService.getBranch(null);
+  var prefService = Cc[PrefServiceContractID].getService(nsIPrefService);
+  return prefService.getBranch(null);
 }
 
 function pref(prefName, value) {
-    try {
-        var prefBranch = getPrefBranch();
+  try {
+    var prefBranch = getPrefBranch();
 
-        if (typeof value == "string") {
-            if (gIsUTF8) {
-                prefBranch.setStringPref(prefName, value);
-                return;
-            }
-            prefBranch.setCharPref(prefName, value);
-        } else if (typeof value == "number") {
-            prefBranch.setIntPref(prefName, value);
-        } else if (typeof value == "boolean") {
-            prefBranch.setBoolPref(prefName, value);
-        }
-    } catch (e) {
-        displayError("pref", e);
+    if (typeof value == "string") {
+      if (gIsUTF8) {
+        prefBranch.setStringPref(prefName, value);
+        return;
+      }
+      prefBranch.setCharPref(prefName, value);
+    } else if (typeof value == "number") {
+      prefBranch.setIntPref(prefName, value);
+    } else if (typeof value == "boolean") {
+      prefBranch.setBoolPref(prefName, value);
     }
+  } catch (e) {
+    displayError("pref", e);
+  }
 }
 
 function defaultPref(prefName, value) {
-    try {
-        var prefService = Cc[PrefServiceContractID]
-                            .getService(nsIPrefService);
-        var prefBranch = prefService.getDefaultBranch(null);
-        if (typeof value == "string") {
-            if (gIsUTF8) {
-                prefBranch.setStringPref(prefName, value);
-                return;
-            }
-            prefBranch.setCharPref(prefName, value);
-        } else if (typeof value == "number") {
-            prefBranch.setIntPref(prefName, value);
-        } else if (typeof value == "boolean") {
-            prefBranch.setBoolPref(prefName, value);
-        }
-    } catch (e) {
-        displayError("defaultPref", e);
+  try {
+    var prefService = Cc[PrefServiceContractID].getService(nsIPrefService);
+    var prefBranch = prefService.getDefaultBranch(null);
+    if (typeof value == "string") {
+      if (gIsUTF8) {
+        prefBranch.setStringPref(prefName, value);
+        return;
+      }
+      prefBranch.setCharPref(prefName, value);
+    } else if (typeof value == "number") {
+      prefBranch.setIntPref(prefName, value);
+    } else if (typeof value == "boolean") {
+      prefBranch.setBoolPref(prefName, value);
     }
+  } catch (e) {
+    displayError("defaultPref", e);
+  }
 }
 
 function lockPref(prefName, value) {
-    try {
-        var prefBranch = getPrefBranch();
+  try {
+    var prefBranch = getPrefBranch();
 
-        if (prefBranch.prefIsLocked(prefName))
-            prefBranch.unlockPref(prefName);
-
-        defaultPref(prefName, value);
-
-        prefBranch.lockPref(prefName);
-    } catch (e) {
-        displayError("lockPref", e);
+    if (prefBranch.prefIsLocked(prefName)) {
+      prefBranch.unlockPref(prefName);
     }
+
+    defaultPref(prefName, value);
+
+    prefBranch.lockPref(prefName);
+  } catch (e) {
+    displayError("lockPref", e);
+  }
 }
 
 function unlockPref(prefName) {
-    try {
-        var prefBranch = getPrefBranch();
-        prefBranch.unlockPref(prefName);
-    } catch (e) {
-        displayError("unlockPref", e);
-    }
+  try {
+    var prefBranch = getPrefBranch();
+    prefBranch.unlockPref(prefName);
+  } catch (e) {
+    displayError("unlockPref", e);
+  }
 }
 
 function getPref(prefName) {
-    try {
-        var prefBranch = getPrefBranch();
+  try {
+    var prefBranch = getPrefBranch();
 
-        switch (prefBranch.getPrefType(prefName)) {
-        case prefBranch.PREF_STRING:
-            if (gIsUTF8) {
-                return prefBranch.getStringPref(prefName);
-            }
-            return prefBranch.getCharPref(prefName);
-
-        case prefBranch.PREF_INT:
-            return prefBranch.getIntPref(prefName);
-
-        case prefBranch.PREF_BOOL:
-            return prefBranch.getBoolPref(prefName);
-        default:
-            return null;
+    switch (prefBranch.getPrefType(prefName)) {
+      case prefBranch.PREF_STRING:
+        if (gIsUTF8) {
+          return prefBranch.getStringPref(prefName);
         }
-    } catch (e) {
-        displayError("getPref", e);
+        return prefBranch.getCharPref(prefName);
+
+      case prefBranch.PREF_INT:
+        return prefBranch.getIntPref(prefName);
+
+      case prefBranch.PREF_BOOL:
+        return prefBranch.getBoolPref(prefName);
+      default:
+        return null;
     }
-    return undefined;
+  } catch (e) {
+    displayError("getPref", e);
+  }
+  return undefined;
 }
 
 function clearPref(prefName) {
-    try {
-        var prefBranch = getPrefBranch();
-            prefBranch.clearUserPref(prefName);
-    } catch (e) {
-    }
+  try {
+    var prefBranch = getPrefBranch();
+    prefBranch.clearUserPref(prefName);
+  } catch (e) {}
 }
 
 function setLDAPVersion(version) {
-    gVersion = version;
+  gVersion = version;
 }
 
-
 function getLDAPAttributes(host, base, filter, attribs, isSecure) {
-    try {
-        var urlSpec = "ldap" + (isSecure ? "s" : "") + "://" + host + (isSecure ? ":636" : "") + "/" + base + "?" + attribs + "?sub?" +
-                      filter;
+  try {
+    var urlSpec =
+      "ldap" +
+      (isSecure ? "s" : "") +
+      "://" +
+      host +
+      (isSecure ? ":636" : "") +
+      "/" +
+      base +
+      "?" +
+      attribs +
+      "?sub?" +
+      filter;
 
-        var url = Cc["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService)
-                    .newURI(urlSpec)
-                    .QueryInterface(Ci.nsILDAPURL);
+    var url = Cc["@mozilla.org/network/io-service;1"]
+      .getService(Ci.nsIIOService)
+      .newURI(urlSpec)
+      .QueryInterface(Ci.nsILDAPURL);
 
-        var ldapquery = Cc[LDAPSyncQueryContractID]
-                          .createInstance(nsILDAPSyncQuery);
-        // default to LDAP v3
-        if (!gVersion)
-          gVersion = Ci.nsILDAPConnection.VERSION3;
-        // user supplied method
-        processLDAPValues(ldapquery.getQueryResults(url, gVersion));
-    } catch (e) {
-        displayError("getLDAPAttibutes", e);
+    var ldapquery = Cc[LDAPSyncQueryContractID].createInstance(
+      nsILDAPSyncQuery
+    );
+    // default to LDAP v3
+    if (!gVersion) {
+      gVersion = Ci.nsILDAPConnection.VERSION3;
     }
+    // user supplied method
+    processLDAPValues(ldapquery.getQueryResults(url, gVersion));
+  } catch (e) {
+    displayError("getLDAPAttibutes", e);
+  }
 }
 
 function getLDAPValue(str, key) {
-    try {
-        if (str == null || key == null)
-            return null;
-
-        var search_key = "\n" + key + "=";
-
-        var start_pos = str.indexOf(search_key);
-        if (start_pos == -1)
-            return null;
-
-        start_pos += search_key.length;
-
-        var end_pos = str.indexOf("\n", start_pos);
-        if (end_pos == -1)
-            end_pos = str.length;
-
-        return str.substring(start_pos, end_pos);
-    } catch (e) {
-        displayError("getLDAPValue", e);
+  try {
+    if (str == null || key == null) {
+      return null;
     }
-    return undefined;
+
+    var search_key = "\n" + key + "=";
+
+    var start_pos = str.indexOf(search_key);
+    if (start_pos == -1) {
+      return null;
+    }
+
+    start_pos += search_key.length;
+
+    var end_pos = str.indexOf("\n", start_pos);
+    if (end_pos == -1) {
+      end_pos = str.length;
+    }
+
+    return str.substring(start_pos, end_pos);
+  } catch (e) {
+    displayError("getLDAPValue", e);
+  }
+  return undefined;
 }
 
 function displayError(funcname, message) {
-    try {
-        var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
-                              .getService(Ci.nsIPromptService);
-        var bundle = Cc["@mozilla.org/intl/stringbundle;1"]
-                       .getService(Ci.nsIStringBundleService)
-                       .createBundle("chrome://autoconfig/locale/autoconfig.properties");
+  try {
+    var promptService = Cc[
+      "@mozilla.org/embedcomp/prompt-service;1"
+    ].getService(Ci.nsIPromptService);
+    var bundle = Cc["@mozilla.org/intl/stringbundle;1"]
+      .getService(Ci.nsIStringBundleService)
+      .createBundle("chrome://autoconfig/locale/autoconfig.properties");
 
-         var title = bundle.GetStringFromName("autoConfigTitle");
-         var msg = bundle.formatStringFromName("autoConfigMsg", [funcname]);
-         promptService.alert(null, title, msg + " " + message);
-    } catch (e) { }
+    var title = bundle.GetStringFromName("autoConfigTitle");
+    var msg = bundle.formatStringFromName("autoConfigMsg", [funcname]);
+    promptService.alert(null, title, msg + " " + message);
+  } catch (e) {}
 }
 
 function getenv(name) {
-    try {
-        var environment = Cc["@mozilla.org/process/environment;1"].
-            getService(Ci.nsIEnvironment);
-        return environment.get(name);
-    } catch (e) {
-        displayError("getEnvironment", e);
-    }
-    return undefined;
+  try {
+    var environment = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    return environment.get(name);
+  } catch (e) {
+    displayError("getEnvironment", e);
+  }
+  return undefined;
 }
 
 var APIs = {
-    pref,
-    defaultPref,
-    lockPref,
-    unlockPref,
-    getPref,
-    clearPref,
-    setLDAPVersion,
-    getLDAPAttributes,
-    getLDAPValue,
-    displayError,
-    getenv,
+  pref,
+  defaultPref,
+  lockPref,
+  unlockPref,
+  getPref,
+  clearPref,
+  setLDAPVersion,
+  getLDAPAttributes,
+  getLDAPValue,
+  displayError,
+  getenv,
 };
 
 for (let [defineAs, func] of Object.entries(APIs)) {
-    Cu.exportFunction(func, gSandbox, {defineAs});
+  Cu.exportFunction(func, gSandbox, { defineAs });
 }
 
 Object.defineProperty(Cu.waiveXrays(gSandbox), "gIsUTF8", {

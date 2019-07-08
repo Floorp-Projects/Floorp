@@ -5,7 +5,9 @@
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
+const l10n = new LocalizationHelper(
+  "devtools/client/locales/components.properties"
+);
 const UNKNOWN_SOURCE_STRING = l10n.getStr("frame.unknownSource");
 
 // Character codes used in various parsing helper functions.
@@ -81,9 +83,9 @@ function parseURL(location) {
     // `host`: "foo.com:8888"
     const isChrome = isChromeScheme(location);
 
-    url.fileName = url.pathname ?
-      (url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/") :
-      "/";
+    url.fileName = url.pathname
+      ? url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/"
+      : "/";
 
     if (isChrome) {
       url.hostname = null;
@@ -190,34 +192,40 @@ function getSourceNames(source) {
 // being content or chrome when processing the profile.
 
 function isColonSlashSlash(location, i = 0) {
-  return location.charCodeAt(++i) === CHAR_CODE_COLON &&
-         location.charCodeAt(++i) === CHAR_CODE_SLASH &&
-         location.charCodeAt(++i) === CHAR_CODE_SLASH;
+  return (
+    location.charCodeAt(++i) === CHAR_CODE_COLON &&
+    location.charCodeAt(++i) === CHAR_CODE_SLASH &&
+    location.charCodeAt(++i) === CHAR_CODE_SLASH
+  );
 }
 
 /**
  * Checks for a Scratchpad URI, like "Scratchpad/1"
  */
 function isScratchpadScheme(location, i = 0) {
-  return location.charCodeAt(i) === CHAR_CODE_CAP_S &&
-         location.charCodeAt(++i) === CHAR_CODE_C &&
-         location.charCodeAt(++i) === CHAR_CODE_R &&
-         location.charCodeAt(++i) === CHAR_CODE_A &&
-         location.charCodeAt(++i) === CHAR_CODE_T &&
-         location.charCodeAt(++i) === CHAR_CODE_C &&
-         location.charCodeAt(++i) === CHAR_CODE_H &&
-         location.charCodeAt(++i) === CHAR_CODE_P &&
-         location.charCodeAt(++i) === CHAR_CODE_A &&
-         location.charCodeAt(++i) === CHAR_CODE_D &&
-         location.charCodeAt(++i) === CHAR_CODE_SLASH;
+  return (
+    location.charCodeAt(i) === CHAR_CODE_CAP_S &&
+    location.charCodeAt(++i) === CHAR_CODE_C &&
+    location.charCodeAt(++i) === CHAR_CODE_R &&
+    location.charCodeAt(++i) === CHAR_CODE_A &&
+    location.charCodeAt(++i) === CHAR_CODE_T &&
+    location.charCodeAt(++i) === CHAR_CODE_C &&
+    location.charCodeAt(++i) === CHAR_CODE_H &&
+    location.charCodeAt(++i) === CHAR_CODE_P &&
+    location.charCodeAt(++i) === CHAR_CODE_A &&
+    location.charCodeAt(++i) === CHAR_CODE_D &&
+    location.charCodeAt(++i) === CHAR_CODE_SLASH
+  );
 }
 
 function isDataScheme(location, i = 0) {
-  return location.charCodeAt(i) === CHAR_CODE_D &&
-         location.charCodeAt(++i) === CHAR_CODE_A &&
-         location.charCodeAt(++i) === CHAR_CODE_T &&
-         location.charCodeAt(++i) === CHAR_CODE_A &&
-         location.charCodeAt(++i) === CHAR_CODE_COLON;
+  return (
+    location.charCodeAt(i) === CHAR_CODE_D &&
+    location.charCodeAt(++i) === CHAR_CODE_A &&
+    location.charCodeAt(++i) === CHAR_CODE_T &&
+    location.charCodeAt(++i) === CHAR_CODE_A &&
+    location.charCodeAt(++i) === CHAR_CODE_COLON
+  );
 }
 
 function isContentScheme(location, i = 0) {
@@ -226,9 +234,11 @@ function isContentScheme(location, i = 0) {
   switch (firstChar) {
     // "http://" or "https://"
     case CHAR_CODE_H:
-      if (location.charCodeAt(++i) === CHAR_CODE_T &&
-          location.charCodeAt(++i) === CHAR_CODE_T &&
-          location.charCodeAt(++i) === CHAR_CODE_P) {
+      if (
+        location.charCodeAt(++i) === CHAR_CODE_T &&
+        location.charCodeAt(++i) === CHAR_CODE_T &&
+        location.charCodeAt(++i) === CHAR_CODE_P
+      ) {
         if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
           ++i;
         }
@@ -238,17 +248,21 @@ function isContentScheme(location, i = 0) {
 
     // "file://"
     case CHAR_CODE_F:
-      if (location.charCodeAt(++i) === CHAR_CODE_I &&
-          location.charCodeAt(++i) === CHAR_CODE_L &&
-          location.charCodeAt(++i) === CHAR_CODE_E) {
+      if (
+        location.charCodeAt(++i) === CHAR_CODE_I &&
+        location.charCodeAt(++i) === CHAR_CODE_L &&
+        location.charCodeAt(++i) === CHAR_CODE_E
+      ) {
         return isColonSlashSlash(location, i);
       }
       return false;
 
     // "app://"
     case CHAR_CODE_A:
-      if (location.charCodeAt(++i) == CHAR_CODE_P &&
-          location.charCodeAt(++i) == CHAR_CODE_P) {
+      if (
+        location.charCodeAt(++i) == CHAR_CODE_P &&
+        location.charCodeAt(++i) == CHAR_CODE_P
+      ) {
         return isColonSlashSlash(location, i);
       }
       return false;
@@ -277,37 +291,43 @@ function isChromeScheme(location, i = 0) {
   switch (firstChar) {
     // "chrome://"
     case CHAR_CODE_C:
-      if (location.charCodeAt(++i) === CHAR_CODE_H &&
-          location.charCodeAt(++i) === CHAR_CODE_R &&
-          location.charCodeAt(++i) === CHAR_CODE_O &&
-          location.charCodeAt(++i) === CHAR_CODE_M &&
-          location.charCodeAt(++i) === CHAR_CODE_E) {
+      if (
+        location.charCodeAt(++i) === CHAR_CODE_H &&
+        location.charCodeAt(++i) === CHAR_CODE_R &&
+        location.charCodeAt(++i) === CHAR_CODE_O &&
+        location.charCodeAt(++i) === CHAR_CODE_M &&
+        location.charCodeAt(++i) === CHAR_CODE_E
+      ) {
         return isColonSlashSlash(location, i);
       }
       return false;
 
     // "resource://"
     case CHAR_CODE_R:
-      if (location.charCodeAt(++i) === CHAR_CODE_E &&
-          location.charCodeAt(++i) === CHAR_CODE_S &&
-          location.charCodeAt(++i) === CHAR_CODE_O &&
-          location.charCodeAt(++i) === CHAR_CODE_U &&
-          location.charCodeAt(++i) === CHAR_CODE_R &&
-          location.charCodeAt(++i) === CHAR_CODE_C &&
-          location.charCodeAt(++i) === CHAR_CODE_E) {
+      if (
+        location.charCodeAt(++i) === CHAR_CODE_E &&
+        location.charCodeAt(++i) === CHAR_CODE_S &&
+        location.charCodeAt(++i) === CHAR_CODE_O &&
+        location.charCodeAt(++i) === CHAR_CODE_U &&
+        location.charCodeAt(++i) === CHAR_CODE_R &&
+        location.charCodeAt(++i) === CHAR_CODE_C &&
+        location.charCodeAt(++i) === CHAR_CODE_E
+      ) {
         return isColonSlashSlash(location, i);
       }
       return false;
 
     // "jar:file://"
     case CHAR_CODE_J:
-      if (location.charCodeAt(++i) === CHAR_CODE_A &&
-          location.charCodeAt(++i) === CHAR_CODE_R &&
-          location.charCodeAt(++i) === CHAR_CODE_COLON &&
-          location.charCodeAt(++i) === CHAR_CODE_F &&
-          location.charCodeAt(++i) === CHAR_CODE_I &&
-          location.charCodeAt(++i) === CHAR_CODE_L &&
-          location.charCodeAt(++i) === CHAR_CODE_E) {
+      if (
+        location.charCodeAt(++i) === CHAR_CODE_A &&
+        location.charCodeAt(++i) === CHAR_CODE_R &&
+        location.charCodeAt(++i) === CHAR_CODE_COLON &&
+        location.charCodeAt(++i) === CHAR_CODE_F &&
+        location.charCodeAt(++i) === CHAR_CODE_I &&
+        location.charCodeAt(++i) === CHAR_CODE_L &&
+        location.charCodeAt(++i) === CHAR_CODE_E
+      ) {
         return isColonSlashSlash(location, i);
       }
       return false;

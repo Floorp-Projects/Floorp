@@ -47,27 +47,30 @@ const ReplayInspector = {
 
   // Create the InspectorUtils object to bind for other server users.
   createInspectorUtils(utils) {
-    return new Proxy({}, {
-      get(_, name) {
-        switch (name) {
-        case "getAllStyleSheets":
-        case "getCSSStyleRules":
-        case "getRuleLine":
-        case "getRuleColumn":
-        case "getRelativeRuleLine":
-        case "getSelectorCount":
-        case "getSelectorText":
-        case "selectorMatchesElement":
-        case "hasRulesModifiedByCSSOM":
-        case "getSpecificity":
-          return gFixedProxy.InspectorUtils[name];
-        case "hasPseudoClassLock":
-          return () => false;
-        default:
-          return utils[name];
-        }
-      },
-    });
+    return new Proxy(
+      {},
+      {
+        get(_, name) {
+          switch (name) {
+            case "getAllStyleSheets":
+            case "getCSSStyleRules":
+            case "getRuleLine":
+            case "getRuleColumn":
+            case "getRelativeRuleLine":
+            case "getSelectorCount":
+            case "getSelectorText":
+            case "selectorMatchesElement":
+            case "hasRulesModifiedByCSSOM":
+            case "getSpecificity":
+              return gFixedProxy.InspectorUtils[name];
+            case "hasPseudoClassLock":
+              return () => false;
+            default:
+              return utils[name];
+          }
+        },
+      }
+    );
   },
 
   // Create the CSSRule object to bind for other server users.
@@ -114,14 +117,17 @@ const ReplayInspector = {
 // equivalent implementations so that things work smoothly.
 
 function newSubstituteProxy(target, mapping) {
-  return new Proxy({}, {
-    get(_, name) {
-      if (mapping[name]) {
-        return mapping[name];
-      }
-      return target[name];
-    },
-  });
+  return new Proxy(
+    {},
+    {
+      get(_, name) {
+        if (mapping[name]) {
+          return mapping[name];
+        }
+        return target[name];
+      },
+    }
+  );
 }
 
 function createSubstituteChrome(chrome) {
@@ -132,7 +138,9 @@ function createSubstituteChrome(chrome) {
       "@mozilla.org/inspector/deep-tree-walker;1": {
         createInstance() {
           // Return a proxy for a new tree walker in the replaying process.
-          const data = dbg()._sendRequestAllowDiverge({ type: "newDeepTreeWalker" });
+          const data = dbg()._sendRequestAllowDiverge({
+            type: "newDeepTreeWalker",
+          });
           const obj = dbg()._getObject(data.id);
           return wrapObject(obj);
         },
@@ -172,8 +180,10 @@ function createSubstituteServices(Services) {
 
 function createSubstitute(id, rv) {
   switch (id) {
-  case "chrome": return createSubstituteChrome(rv);
-  case "Services": return createSubstituteServices(rv);
+    case "chrome":
+      return createSubstituteChrome(rv);
+    case "Services":
+      return createSubstituteServices(rv);
   }
   return null;
 }
@@ -373,7 +383,10 @@ const ReplayInspectorProxyHandler = {
   apply(target, thisArg, args) {
     target = getTargetObject(target);
 
-    const rv = target.apply(unwrapValue(thisArg), args.map(v => unwrapValue(v)));
+    const rv = target.apply(
+      unwrapValue(thisArg),
+      args.map(v => unwrapValue(v))
+    );
     if ("return" in rv) {
       return wrapValue(rv.return);
     }
@@ -423,12 +436,22 @@ const ReplayInspectorProxyHandler = {
     return target.getOwnPropertyNames();
   },
 
-  isExtensible(target) { NYI(); },
+  isExtensible(target) {
+    NYI();
+  },
 
-  setPrototypeOf() { NotAllowed(); },
-  preventExtensions() { NotAllowed(); },
-  defineProperty() { NotAllowed(); },
-  deleteProperty() { NotAllowed(); },
+  setPrototypeOf() {
+    NotAllowed();
+  },
+  preventExtensions() {
+    NotAllowed();
+  },
+  defineProperty() {
+    NotAllowed();
+  },
+  deleteProperty() {
+    NotAllowed();
+  },
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -453,9 +476,16 @@ function updateFixedProxies() {
   for (const [key, value] of Object.entries(data)) {
     if (!gFixedProxyTargets[key]) {
       gFixedProxyTargets[key] = { object: {} };
-      gFixedProxy[key] = new Proxy(gFixedProxyTargets[key], ReplayInspectorProxyHandler);
+      gFixedProxy[key] = new Proxy(
+        gFixedProxyTargets[key],
+        ReplayInspectorProxyHandler
+      );
     }
-    initFixedProxy(gFixedProxy[key], gFixedProxyTargets[key], dbg()._getObject(value));
+    initFixedProxy(
+      gFixedProxy[key],
+      gFixedProxyTargets[key],
+      dbg()._getObject(value)
+    );
   }
 }
 
@@ -473,7 +503,9 @@ function NotAllowed() {
 
 function ThrowError(msg) {
   const error = new Error(msg);
-  dump("ReplayInspector Server Error: " + msg + " Stack: " + error.stack + "\n");
+  dump(
+    "ReplayInspector Server Error: " + msg + " Stack: " + error.stack + "\n"
+  );
   throw error;
 }
 

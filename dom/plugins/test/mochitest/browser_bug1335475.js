@@ -1,63 +1,95 @@
 var rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+const gTestRoot = rootDir.replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 
 add_task(async function() {
-  is(navigator.plugins.length, 0,
-     "plugins should not be available to chrome-privilege pages");
-  ok(!("application/x-test" in navigator.mimeTypes),
-     "plugins should not be available to chrome-privilege pages");
+  is(
+    navigator.plugins.length,
+    0,
+    "plugins should not be available to chrome-privilege pages"
+  );
+  ok(
+    !("application/x-test" in navigator.mimeTypes),
+    "plugins should not be available to chrome-privilege pages"
+  );
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(browser) {
-    // about:blank triggered from a toplevel load should not inherit permissions
-    await ContentTask.spawn(browser, null, async function() {
-      is(content.window.navigator.plugins.length, 0,
-         "plugins should not be available to null-principal about:blank");
-      ok(!("application/x-test" in content.window.navigator.mimeTypes),
-         "plugins should not be available to null-principal about:blank");
-    });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
+    async function(browser) {
+      // about:blank triggered from a toplevel load should not inherit permissions
+      await ContentTask.spawn(browser, null, async function() {
+        is(
+          content.window.navigator.plugins.length,
+          0,
+          "plugins should not be available to null-principal about:blank"
+        );
+        ok(
+          !("application/x-test" in content.window.navigator.mimeTypes),
+          "plugins should not be available to null-principal about:blank"
+        );
+      });
 
-    let promise = BrowserTestUtils.browserLoaded(browser);
-    BrowserTestUtils.loadURI(browser, gTestRoot + "plugin_test.html");
-    await promise;
+      let promise = BrowserTestUtils.browserLoaded(browser);
+      BrowserTestUtils.loadURI(browser, gTestRoot + "plugin_test.html");
+      await promise;
 
-    await ContentTask.spawn(browser, null, async function() {
-      ok(content.window.navigator.plugins.length > 0,
-         "plugins should be available to HTTP-loaded pages");
-      ok("application/x-test" in content.window.navigator.mimeTypes,
-         "plugins should be available to HTTP-loaded pages");
+      await ContentTask.spawn(browser, null, async function() {
+        ok(
+          content.window.navigator.plugins.length > 0,
+          "plugins should be available to HTTP-loaded pages"
+        );
+        ok(
+          "application/x-test" in content.window.navigator.mimeTypes,
+          "plugins should be available to HTTP-loaded pages"
+        );
 
-      let subwindow = content.document.getElementById("subf").contentWindow;
+        let subwindow = content.document.getElementById("subf").contentWindow;
 
-      ok("application/x-test" in subwindow.navigator.mimeTypes,
-         "plugins should be available to an about:blank subframe loaded from a site");
-    });
+        ok(
+          "application/x-test" in subwindow.navigator.mimeTypes,
+          "plugins should be available to an about:blank subframe loaded from a site"
+        );
+      });
 
-    // navigate from the HTTP page to an about:blank page which ought to
-    // inherit permissions
-    promise = BrowserTestUtils.browserLoaded(browser);
-    await ContentTask.spawn(browser, null, async function() {
-      content.document.getElementById("aboutlink").click();
-    });
-    await promise;
+      // navigate from the HTTP page to an about:blank page which ought to
+      // inherit permissions
+      promise = BrowserTestUtils.browserLoaded(browser);
+      await ContentTask.spawn(browser, null, async function() {
+        content.document.getElementById("aboutlink").click();
+      });
+      await promise;
 
-    await ContentTask.spawn(browser, null, async function() {
-      is(content.window.location.href, "about:blank", "sanity-check about:blank load");
-      ok("application/x-test" in content.window.navigator.mimeTypes,
-         "plugins should be available when a site triggers an about:blank load");
-    });
+      await ContentTask.spawn(browser, null, async function() {
+        is(
+          content.window.location.href,
+          "about:blank",
+          "sanity-check about:blank load"
+        );
+        ok(
+          "application/x-test" in content.window.navigator.mimeTypes,
+          "plugins should be available when a site triggers an about:blank load"
+        );
+      });
 
-    // navigate to the file: URI, which shouldn't allow plugins. This might
-    // be wrapped in jar:, but that shouldn't matter for this test
-    promise = BrowserTestUtils.browserLoaded(browser);
-    let converteduri = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry).convertChromeURL(Services.io.newURI(rootDir + "plugin_test.html"));
-    BrowserTestUtils.loadURI(browser, converteduri.spec);
-    await promise;
+      // navigate to the file: URI, which shouldn't allow plugins. This might
+      // be wrapped in jar:, but that shouldn't matter for this test
+      promise = BrowserTestUtils.browserLoaded(browser);
+      let converteduri = Cc["@mozilla.org/chrome/chrome-registry;1"]
+        .getService(Ci.nsIChromeRegistry)
+        .convertChromeURL(Services.io.newURI(rootDir + "plugin_test.html"));
+      BrowserTestUtils.loadURI(browser, converteduri.spec);
+      await promise;
 
-    await ContentTask.spawn(browser, null, async function() {
-      ok(!("application/x-test" in content.window.navigator.mimeTypes),
-         "plugins should not be available to file: URI content");
-    });
-  });
+      await ContentTask.spawn(browser, null, async function() {
+        ok(
+          !("application/x-test" in content.window.navigator.mimeTypes),
+          "plugins should not be available to file: URI content"
+        );
+      });
+    }
+  );
 
   // As much as it would be nice, this doesn't actually check ftp:// because
   // we don't have a synthetic server.

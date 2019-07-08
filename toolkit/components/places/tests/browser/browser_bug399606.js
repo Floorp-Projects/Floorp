@@ -41,7 +41,10 @@ add_task(async function() {
 
   for (let uri of URIS) {
     await promiseLoadedThreeTimes(uri);
-    is(count, 1,
-      "'page-visited' has been received right number of times for " + uri);
+    is(
+      count,
+      1,
+      "'page-visited' has been received right number of times for " + uri
+    );
   }
 });

@@ -180,11 +180,11 @@
           content.document.body.removeChild(
             content.document.getElementById("ifr_" + test));
         }
-      }).then(() => {
+      }).then(async () => {
         currentround = "";
 
         if (!isPrivate) {
-          clean_up_sts_state(isPrivate);
+          await clean_up_sts_state(isPrivate);
         }
         // Close test window.
         win.close();
@@ -219,11 +219,11 @@
     });
   }
 
-  function clean_up_sts_state(isPrivate) {
+  async function clean_up_sts_state(isPrivate) {
     // erase all signs that this test ran.
     SimpleTest.info("Cleaning up STS data");
     let flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
-    SpecialPowers.cleanUpSTSData("http://example.com", flags);
+    await SpecialPowers.cleanUpSTSData("http://example.com", flags);
     dump_STSState(isPrivate);
   }
 

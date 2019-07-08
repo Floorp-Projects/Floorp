@@ -28,13 +28,13 @@ function run_test() {
   runRawTests(tests, testComplete(srv));
 }
 
-
 function checkException(fun, err, msg) {
   try {
     fun();
   } catch (e) {
-    if (e !== err && e.result !== err)
+    if (e !== err && e.result !== err) {
       do_throw(msg);
+    }
     return;
   }
   do_throw(msg);
@@ -47,7 +47,6 @@ function callASAPLater(fun) {
     },
   });
 }
-
 
 /** ***************
  * PATH HANDLERS *
@@ -65,33 +64,50 @@ function handleTooLate(request, response) {
 
   response.seizePower();
 
-  if (response.bodyOutputStream !== output)
+  if (response.bodyOutputStream !== output) {
     response.write("bodyOutputStream changed!");
-  else
+  } else {
     response.write("too-late passed");
+  }
   response.finish();
 }
 
 function handleExceptions(request, response) {
   response.seizePower();
-  checkException(function() { response.setStatusLine("1.0", 500, "ISE"); },
-                 Cr.NS_ERROR_NOT_AVAILABLE,
-                 "setStatusLine should throw not-available after seizePower");
-  checkException(function() { response.setHeader("X-Fail", "FAIL", false); },
-                 Cr.NS_ERROR_NOT_AVAILABLE,
-                 "setHeader should throw not-available after seizePower");
-  checkException(function() { response.processAsync(); },
-                 Cr.NS_ERROR_NOT_AVAILABLE,
-                 "processAsync should throw not-available after seizePower");
+  checkException(
+    function() {
+      response.setStatusLine("1.0", 500, "ISE");
+    },
+    Cr.NS_ERROR_NOT_AVAILABLE,
+    "setStatusLine should throw not-available after seizePower"
+  );
+  checkException(
+    function() {
+      response.setHeader("X-Fail", "FAIL", false);
+    },
+    Cr.NS_ERROR_NOT_AVAILABLE,
+    "setHeader should throw not-available after seizePower"
+  );
+  checkException(
+    function() {
+      response.processAsync();
+    },
+    Cr.NS_ERROR_NOT_AVAILABLE,
+    "processAsync should throw not-available after seizePower"
+  );
   var out = response.bodyOutputStream;
   var data = "exceptions test passed";
   out.write(data, data.length);
   response.seizePower(); // idempotency test of seizePower
   response.finish();
   response.finish(); // idempotency test of finish after seizePower
-  checkException(function() { response.seizePower(); },
-                 Cr.NS_ERROR_UNEXPECTED,
-                 "seizePower should throw unexpected after finish");
+  checkException(
+    function() {
+      response.seizePower();
+    },
+    Cr.NS_ERROR_UNEXPECTED,
+    "seizePower should throw unexpected after finish"
+  );
 }
 
 function handleAsyncSeizure(request, response) {
@@ -108,14 +124,17 @@ function handleAsyncSeizure(request, response) {
 function handleSeizeAfterAsync(request, response) {
   response.setStatusLine(request.httpVersion, 200, "async seizure pass");
   response.processAsync();
-  checkException(function() { response.seizePower(); },
-                 Cr.NS_ERROR_NOT_AVAILABLE,
-                 "seizePower should throw not-available after processAsync");
+  checkException(
+    function() {
+      response.seizePower();
+    },
+    Cr.NS_ERROR_NOT_AVAILABLE,
+    "seizePower should throw not-available after processAsync"
+  );
   callLater(1, function() {
     response.finish();
   });
 }
-
 
 /** *************
  * BEGIN TESTS *
@@ -131,32 +150,35 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
   ];
 });
 
-var data0 = "GET /raw-data HTTP/1.0\r\n" +
-       "\r\n";
+// eslint-disable-next-line no-useless-concat
+var data0 = "GET /raw-data HTTP/1.0\r\n" + "\r\n";
 function checkRawData(data) {
   Assert.equal(data, "Raw data!");
 }
 
-var data1 = "GET /called-too-late HTTP/1.0\r\n" +
-       "\r\n";
+// eslint-disable-next-line no-useless-concat
+var data1 = "GET /called-too-late HTTP/1.0\r\n" + "\r\n";
 function checkTooLate(data) {
   Assert.equal(LineIterator(data).next().value, "too-late passed");
 }
 
-var data2 = "GET /exceptions HTTP/1.0\r\n" +
-       "\r\n";
+// eslint-disable-next-line no-useless-concat
+var data2 = "GET /exceptions HTTP/1.0\r\n" + "\r\n";
 function checkExceptions(data) {
   Assert.equal("exceptions test passed", data);
 }
 
-var data3 = "GET /async-seizure HTTP/1.0\r\n" +
-       "\r\n";
+// eslint-disable-next-line no-useless-concat
+var data3 = "GET /async-seizure HTTP/1.0\r\n" + "\r\n";
 function checkAsyncSeizure(data) {
   Assert.equal(data, "async seizure passed");
 }
 
-var data4 = "GET /seize-after-async HTTP/1.0\r\n" +
-       "\r\n";
+// eslint-disable-next-line no-useless-concat
+var data4 = "GET /seize-after-async HTTP/1.0\r\n" + "\r\n";
 function checkSeizeAfterAsync(data) {
-  Assert.equal(LineIterator(data).next().value, "HTTP/1.0 200 async seizure pass");
+  Assert.equal(
+    LineIterator(data).next().value,
+    "HTTP/1.0 200 async seizure pass"
+  );
 }

@@ -27,7 +27,7 @@ let proxy_port;
 let server_port;
 
 // See moz-http2
-const proxy_auth = 'authorization-token';
+const proxy_auth = "authorization-token";
 let proxy_isolation;
 
 class ProxyFilter {
@@ -43,11 +43,20 @@ class ProxyFilter {
       cb.onProxyFilterResult(pi);
       return;
     }
-    cb.onProxyFilterResult(pps.newProxyInfo(
-      this._type, this._host, this._port,
-      proxy_auth, proxy_isolation, this._flags, 1000, null));
+    cb.onProxyFilterResult(
+      pps.newProxyInfo(
+        this._type,
+        this._host,
+        this._port,
+        proxy_auth,
+        proxy_isolation,
+        this._flags,
+        1000,
+        null
+      )
+    );
   }
-};
+}
 
 class UnxpectedAuthPrompt2 {
   constructor(signal) {
@@ -58,7 +67,7 @@ class UnxpectedAuthPrompt2 {
     this.signal.triggered = true;
     throw Cr.ERROR_UNEXPECTED;
   }
-};
+}
 
 class AuthRequestor {
   constructor(prompt) {
@@ -71,7 +80,7 @@ class AuthRequestor {
     }
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
-};
+}
 
 function make_channel(url) {
   return NetUtil.newChannel({
@@ -84,13 +93,19 @@ function make_channel(url) {
 
 function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL) {
   return new Promise(resolve => {
-    channel.asyncOpen(new ChannelListener((request, data) => {
-      request.QueryInterface(Ci.nsIHttpChannel);
-      const status = request.status;
-      const http_code = status ? undefined : request.responseStatus;
+    channel.asyncOpen(
+      new ChannelListener(
+        (request, data) => {
+          request.QueryInterface(Ci.nsIHttpChannel);
+          const status = request.status;
+          const http_code = status ? undefined : request.responseStatus;
 
-      resolve({ status, http_code, data });
-    }, null, flags));
+          resolve({ status, http_code, data });
+        },
+        null,
+        flags
+      )
+    );
   });
 }
 
@@ -98,14 +113,18 @@ let initial_session_count = 0;
 
 function proxy_session_counter() {
   return new Promise(async resolve => {
-    const channel = make_channel(`https://localhost:${server_port}/proxy-session-counter`);
+    const channel = make_channel(
+      `https://localhost:${server_port}/proxy-session-counter`
+    );
     const { data } = await get_response(channel);
     resolve(parseInt(data) - initial_session_count);
   });
 }
 
 add_task(async function setup() {
-  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   server_port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(server_port, null);
   proxy_port = env.get("MOZHTTP2_PROXY_PORT");
@@ -122,8 +141,9 @@ add_task(async function setup() {
 
   // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert.
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-    .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   pps.registerFilter(new ProxyFilter("https", "localhost", proxy_port, 0), 10);
@@ -147,8 +167,12 @@ registerCleanupFunction(() => {
 add_task(async function proxy_success_one_session() {
   proxy_isolation = "TOKEN1";
 
-  const foo = await get_response(make_channel(`https://foo.example.com/random-request-1`));
-  const alt1 = await get_response(make_channel(`https://alt1.example.com/random-request-2`));
+  const foo = await get_response(
+    make_channel(`https://foo.example.com/random-request-1`)
+  );
+  const alt1 = await get_response(
+    make_channel(`https://alt1.example.com/random-request-2`)
+  );
 
   Assert.equal(foo.status, Cr.NS_OK);
   Assert.equal(foo.http_code, 200);
@@ -158,7 +182,11 @@ add_task(async function proxy_success_one_session() {
   Assert.equal(alt1.http_code, 200);
   Assert.ok(alt1.data.match("random-request-2"));
   Assert.ok(alt1.data.match("You Win!"));
-  Assert.equal(await proxy_session_counter(), 1, "Created just one session with the proxy");
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "Created just one session with the proxy"
+  );
 });
 
 // The proxy responses with 407 instead of 200 Connected, make sure we get a proper error
@@ -166,58 +194,111 @@ add_task(async function proxy_success_one_session() {
 add_task(async function proxy_auth_failure() {
   const chan = make_channel(`https://407.example.com/`);
   const auth_prompt = { triggered: false };
-  chan.notificationCallbacks = new AuthRequestor(() => new UnxpectedAuthPrompt2(auth_prompt));
+  chan.notificationCallbacks = new AuthRequestor(
+    () => new UnxpectedAuthPrompt2(auth_prompt)
+  );
   const { status, http_code } = await get_response(chan, CL_EXPECT_FAILURE);
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_AUTHENTICATION_FAILED);
   Assert.equal(http_code, undefined);
   Assert.equal(auth_prompt.triggered, false, "Auth prompt didn't trigger");
-  Assert.equal(await proxy_session_counter(), 1, "No new session created by 407");
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by 407"
+  );
 });
 
 // 502 Bad gateway code returned by the proxy, still one session only, proper different code
 // from the channel.
 add_task(async function proxy_bad_gateway_failure() {
-  const { status, http_code } = await get_response(make_channel(`https://502.example.com/`), CL_EXPECT_FAILURE);
+  const { status, http_code } = await get_response(
+    make_channel(`https://502.example.com/`),
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
   Assert.equal(http_code, undefined);
-  Assert.equal(await proxy_session_counter(), 1, "No new session created by 502 after 407");
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by 502 after 407"
+  );
 });
 
 // Second 502 Bad gateway code returned by the proxy, still one session only with the proxy.
 add_task(async function proxy_bad_gateway_failure_two() {
-  const { status, http_code } = await get_response(make_channel(`https://502.example.com/`), CL_EXPECT_FAILURE);
+  const { status, http_code } = await get_response(
+    make_channel(`https://502.example.com/`),
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
   Assert.equal(http_code, undefined);
-  Assert.equal(await proxy_session_counter(), 1, "No new session created by second 502");
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by second 502"
+  );
 });
 
 // 504 Gateway timeout code returned by the proxy, still one session only, proper different code
 // from the channel.
 add_task(async function proxy_gateway_timeout_failure() {
-  const { status, http_code } = await get_response(make_channel(`https://504.example.com/`), CL_EXPECT_FAILURE);
+  const { status, http_code } = await get_response(
+    make_channel(`https://504.example.com/`),
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_GATEWAY_TIMEOUT);
   Assert.equal(http_code, undefined);
-  Assert.equal(await proxy_session_counter(), 1, "No new session created by 504 after 502");
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by 504 after 502"
+  );
 });
 
 // 404 Not Found means the proxy could not resolve the host.  As for other error responses
 // we still expect this not to close the existing session.
 add_task(async function proxy_host_not_found_failure() {
-  const { status, http_code } = await get_response(make_channel(`https://404.example.com/`), CL_EXPECT_FAILURE);
+  const { status, http_code } = await get_response(
+    make_channel(`https://404.example.com/`),
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_UNKNOWN_HOST);
   Assert.equal(http_code, undefined);
-  Assert.equal(await proxy_session_counter(), 1, "No new session created by 404 after 504");
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by 404 after 504"
+  );
+});
+
+add_task(async function proxy_too_many_requests_failure() {
+  const { status, http_code } = await get_response(
+    make_channel(`https://429.example.com/`),
+    CL_EXPECT_FAILURE
+  );
+
+  Assert.equal(status, Cr.NS_ERROR_TOO_MANY_REQUESTS);
+  Assert.equal(http_code, undefined);
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by 429 after 504"
+  );
 });
 
 // Make sure that the above error codes don't kill the session and we still reach the end server
 add_task(async function proxy_success_still_one_session() {
-  const foo = await get_response(make_channel(`https://foo.example.com/random-request-1`));
-  const alt1 = await get_response(make_channel(`https://alt1.example.com/random-request-2`));
+  const foo = await get_response(
+    make_channel(`https://foo.example.com/random-request-1`)
+  );
+  const alt1 = await get_response(
+    make_channel(`https://alt1.example.com/random-request-2`)
+  );
 
   Assert.equal(foo.status, Cr.NS_OK);
   Assert.equal(foo.http_code, 200);
@@ -225,7 +306,11 @@ add_task(async function proxy_success_still_one_session() {
   Assert.equal(alt1.status, Cr.NS_OK);
   Assert.equal(alt1.http_code, 200);
   Assert.ok(alt1.data.match("random-request-2"));
-  Assert.equal(await proxy_session_counter(), 1, "No new session created after proxy error codes");
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created after proxy error codes"
+  );
 });
 
 // Have a new isolation key, this means we are expected to create a new, and again one only,
@@ -234,9 +319,15 @@ add_task(async function proxy_success_isolated_session() {
   Assert.notEqual(proxy_isolation, "TOKEN2");
   proxy_isolation = "TOKEN2";
 
-  const foo = await get_response(make_channel(`https://foo.example.com/random-request-1`));
-  const alt1 = await get_response(make_channel(`https://alt1.example.com/random-request-2`));
-  const lh = await get_response(make_channel(`https://localhost/random-request-3`));
+  const foo = await get_response(
+    make_channel(`https://foo.example.com/random-request-1`)
+  );
+  const alt1 = await get_response(
+    make_channel(`https://alt1.example.com/random-request-2`)
+  );
+  const lh = await get_response(
+    make_channel(`https://localhost/random-request-3`)
+  );
 
   Assert.equal(foo.status, Cr.NS_OK);
   Assert.equal(foo.http_code, 200);
@@ -250,17 +341,31 @@ add_task(async function proxy_success_isolated_session() {
   Assert.equal(lh.http_code, 200);
   Assert.ok(lh.data.match("random-request-3"));
   Assert.ok(lh.data.match("You Win!"));
-  Assert.equal(await proxy_session_counter(), 2, "Just one new session seen after changing the isolation key");
+  Assert.equal(
+    await proxy_session_counter(),
+    2,
+    "Just one new session seen after changing the isolation key"
+  );
 });
 
 // Check that error codes are still handled the same way with new isolation, just in case.
 add_task(async function proxy_bad_gateway_failure_isolated() {
-  const failure1 = await get_response(make_channel(`https://502.example.com/`), CL_EXPECT_FAILURE);
-  const failure2 = await get_response(make_channel(`https://502.example.com/`), CL_EXPECT_FAILURE);
+  const failure1 = await get_response(
+    make_channel(`https://502.example.com/`),
+    CL_EXPECT_FAILURE
+  );
+  const failure2 = await get_response(
+    make_channel(`https://502.example.com/`),
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(failure1.status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
   Assert.equal(failure1.http_code, undefined);
   Assert.equal(failure2.status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
   Assert.equal(failure2.http_code, undefined);
-  Assert.equal(await proxy_session_counter(), 2, "No new session created by 502");
+  Assert.equal(
+    await proxy_session_counter(),
+    2,
+    "No new session created by 502"
+  );
 });

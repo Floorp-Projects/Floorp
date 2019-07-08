@@ -4,7 +4,6 @@
 
 requestLongerTimeout(2);
 
-
 const RELATIVE_DIR = "browser/extensions/pdfjs/test/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 
@@ -17,7 +16,6 @@ const TESTS = [
     },
     expectedPage: 2,
     message: "navigated to next page using NEXT button",
-
   },
   {
     action: {
@@ -143,21 +141,36 @@ const TESTS = [
 
 add_task(async function test() {
   let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-  let handlerInfo = mimeService.getFromTypeAndExtension("application/pdf", "pdf");
+  let handlerInfo = mimeService.getFromTypeAndExtension(
+    "application/pdf",
+    "pdf"
+  );
 
   // Make sure pdf.js is the default handler.
-  is(handlerInfo.alwaysAskBeforeHandling, false, "pdf handler defaults to always-ask is false");
-  is(handlerInfo.preferredAction, Ci.nsIHandlerInfo.handleInternally, "pdf handler defaults to internal");
+  is(
+    handlerInfo.alwaysAskBeforeHandling,
+    false,
+    "pdf handler defaults to always-ask is false"
+  );
+  is(
+    handlerInfo.preferredAction,
+    Ci.nsIHandlerInfo.handleInternally,
+    "pdf handler defaults to internal"
+  );
 
   info("Pref action: " + handlerInfo.preferredAction);
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
     async function(newTabBrowser) {
       await waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf");
 
       await ContentTask.spawn(newTabBrowser, null, async function() {
         // Check if PDF is opened with internal viewer
-        Assert.ok(content.document.querySelector("div#viewer"), "document content has viewer UI");
+        Assert.ok(
+          content.document.querySelector("div#viewer"),
+          "document content has viewer UI"
+        );
       });
 
       await ContentTask.spawn(newTabBrowser, null, contentSetUp);
@@ -166,9 +179,14 @@ add_task(async function test() {
 
       await ContentTask.spawn(newTabBrowser, null, async function() {
         let pageNumber = content.document.querySelector("input#pageNumber");
-        Assert.equal(pageNumber.value, pageNumber.max, "Document is left on the last page");
+        Assert.equal(
+          pageNumber.value,
+          pageNumber.max,
+          "Document is left on the last page"
+        );
       });
-    });
+    }
+  );
 });
 
 async function contentSetUp() {
@@ -181,15 +199,21 @@ async function contentSetUp() {
    */
   function waitForOutlineItems(document) {
     return new Promise((resolve, reject) => {
-      document.addEventListener("outlineloaded", function(evt) {
-        var outlineCount = evt.detail.outlineCount;
+      document.addEventListener(
+        "outlineloaded",
+        function(evt) {
+          var outlineCount = evt.detail.outlineCount;
 
-        if (document.querySelectorAll(".outlineItem").length === outlineCount) {
-          resolve();
-        } else {
-          reject();
-        }
-      }, {once: true});
+          if (
+            document.querySelectorAll(".outlineItem").length === outlineCount
+          ) {
+            resolve();
+          } else {
+            reject();
+          }
+        },
+        { once: true }
+      );
     });
   }
 
@@ -201,11 +225,15 @@ async function contentSetUp() {
    * @returns {deferred.promise|*}
    */
   function setZoomToPageFit(document) {
-    return new Promise((resolve) => {
-      document.addEventListener("pagerendered", function(e) {
-        document.querySelector("#viewer").click();
-        resolve();
-      }, {once: true});
+    return new Promise(resolve => {
+      document.addEventListener(
+        "pagerendered",
+        function(e) {
+          document.querySelector("#viewer").click();
+          resolve();
+        },
+        { once: true }
+      );
 
       var select = document.querySelector("select#scaleSelect");
       select.selectedIndex = 2;
@@ -255,15 +283,26 @@ async function runTests(browser) {
       Assert.ok(el, "Element '" + test.action.selector + "' has been found");
 
       // The value option is for input case
-      if (test.action.value)
+      if (test.action.value) {
         el.value = test.action.value;
+      }
 
       // Dispatch the event for changing the page
       var ev;
       if (test.action.event == "keydown") {
         ev = document.createEvent("KeyboardEvent");
-        ev.initKeyEvent("keydown", true, true, null, false, false, false, false,
-                        test.action.keyCode, 0);
+        ev.initKeyEvent(
+          "keydown",
+          true,
+          true,
+          null,
+          false,
+          false,
+          false,
+          false,
+          test.action.keyCode,
+          0
+        );
         el.dispatchEvent(ev);
       } else {
         ev = new Event(test.action.event);

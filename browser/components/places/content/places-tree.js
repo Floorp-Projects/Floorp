@@ -12,7 +12,7 @@
     constructor() {
       super();
 
-      this.addEventListener("focus", (event) => {
+      this.addEventListener("focus", event => {
         this._cachedInsertionPoint = undefined;
 
         // See select handler. We need the sidebar's places commandset to be
@@ -20,23 +20,25 @@
         document.commandDispatcher.updateCommands("focus");
       });
 
-      this.addEventListener("select", (event) => {
+      this.addEventListener("select", event => {
         this._cachedInsertionPoint = undefined;
 
         // This additional complexity is here for the sidebars
         var win = window;
         while (true) {
           win.document.commandDispatcher.updateCommands("focus");
-          if (win == window.top)
+          if (win == window.top) {
             break;
+          }
 
           win = win.parent;
         }
       });
 
-      this.addEventListener("dragstart", (event) => {
-        if (event.target.localName != "treechildren")
+      this.addEventListener("dragstart", event => {
+        if (event.target.localName != "treechildren") {
           return;
+        }
 
         if (this.disableUserActions) {
           event.preventDefault();
@@ -67,21 +69,25 @@
         event.stopPropagation();
       });
 
-      this.addEventListener("dragover", (event) => {
-        if (event.target.localName != "treechildren")
+      this.addEventListener("dragover", event => {
+        if (event.target.localName != "treechildren") {
           return;
+        }
 
         let cell = this.getCellAt(event.clientX, event.clientY);
-        let node = cell.row != -1 ?
-          this.view.nodeForTreeIndex(cell.row) :
-          this.result.root;
+        let node =
+          cell.row != -1
+            ? this.view.nodeForTreeIndex(cell.row)
+            : this.result.root;
         // cache the dropTarget for the view
         PlacesControllerDragHelper.currentDropTarget = node;
 
         // We have to calculate the orientation since view.canDrop will use
         // it and we want to be consistent with the dropfeedback.
         let rowHeight = this.rowHeight;
-        let eventY = event.clientY - this.treeBody.getBoundingClientRect().y -
+        let eventY =
+          event.clientY -
+          this.treeBody.getBoundingClientRect().y -
           rowHeight * (cell.row - this.getFirstVisibleRow());
 
         let orientation = Ci.nsITreeView.DROP_BEFORE;
@@ -89,26 +95,31 @@
         if (cell.row == -1) {
           // If the row is not valid we try to insert inside the resultNode.
           orientation = Ci.nsITreeView.DROP_ON;
-        } else if (PlacesUtils.nodeIsContainer(node) &&
-          eventY > rowHeight * 0.75) {
+        } else if (
+          PlacesUtils.nodeIsContainer(node) &&
+          eventY > rowHeight * 0.75
+        ) {
           // If we are below the 75% of a container the treeview we try
           // to drop after the node.
           orientation = Ci.nsITreeView.DROP_AFTER;
-        } else if (PlacesUtils.nodeIsContainer(node) &&
-          eventY > rowHeight * 0.25) {
+        } else if (
+          PlacesUtils.nodeIsContainer(node) &&
+          eventY > rowHeight * 0.25
+        ) {
           // If we are below the 25% of a container the treeview we try
           // to drop inside the node.
           orientation = Ci.nsITreeView.DROP_ON;
         }
 
-        if (!this.view.canDrop(cell.row, orientation, event.dataTransfer))
+        if (!this.view.canDrop(cell.row, orientation, event.dataTransfer)) {
           return;
+        }
 
         event.preventDefault();
         event.stopPropagation();
       });
 
-      this.addEventListener("dragend", (event) => {
+      this.addEventListener("dragend", event => {
         PlacesControllerDragHelper.currentDropTarget = null;
       });
     }
@@ -123,8 +134,9 @@
       this._active = true;
 
       // Force an initial build.
-      if (this.place)
+      if (this.place) {
         this.place = this.place;
+      }
     }
 
     get controller() {
@@ -132,8 +144,11 @@
     }
 
     set disableUserActions(val) {
-      if (val) this.setAttribute("disableUserActions", "true");
-      else this.removeAttribute("disableUserActions");
+      if (val) {
+        this.setAttribute("disableUserActions", "true");
+      } else {
+        this.removeAttribute("disableUserActions");
+      }
       return val;
     }
 
@@ -145,15 +160,22 @@
      */
     set view(val) {
       /* eslint-disable no-undef */
-      return Object.getOwnPropertyDescriptor(XULTreeElement.prototype, "view").set.call(this, val);
+      return Object.getOwnPropertyDescriptor(
+        XULTreeElement.prototype,
+        "view"
+      ).set.call(this, val);
       /* eslint-enable no-undef */
     }
 
     get view() {
       try {
         /* eslint-disable no-undef */
-        return Object.getOwnPropertyDescriptor(XULTreeElement.prototype, "view").get.
-        call(this).wrappedJSObject || null;
+        return (
+          Object.getOwnPropertyDescriptor(
+            XULTreeElement.prototype,
+            "view"
+          ).get.call(this).wrappedJSObject || null
+        );
         /* eslint-enable no-undef */
       } catch (e) {
         return null;
@@ -168,8 +190,9 @@
       if (this.flatList != val) {
         this.setAttribute("flatList", val);
         // reload with the last place set
-        if (this.place)
+        if (this.place) {
           this.place = this.place;
+        }
       }
       return val;
     }
@@ -216,8 +239,9 @@
      */
     get selectedNodes() {
       let nodes = [];
-      if (!this.hasSelection)
+      if (!this.hasSelection) {
         return nodes;
+      }
 
       let selection = this.view.selection;
       let rc = selection.getRangeCount();
@@ -260,8 +284,9 @@
       // the folder's children may be selected.
       //
       let nodes = [];
-      if (!this.hasSelection)
+      if (!this.hasSelection) {
         return nodes;
+      }
 
       var selection = this.view.selection;
       var rc = selection.getRangeCount();
@@ -278,10 +303,12 @@
         selection.getRangeAt(i, min, max);
 
         for (var j = min.value; j <= max.value; ++j) {
-          if (this.view.isContainer(j))
+          if (this.view.isContainer(j)) {
             containers[j] = true;
-          if (!(this.view.getParentIndex(j) in containers))
+          }
+          if (!(this.view.getParentIndex(j) in containers)) {
             range.push(resultview.nodeForTreeIndex(j));
+          }
         }
         nodes.push(range);
       }
@@ -298,8 +325,9 @@
      */
     get selectedNode() {
       var view = this.view;
-      if (!view || view.selection.count != 1)
+      if (!view || view.selection.count != 1) {
         return null;
+      }
 
       var selection = view.selection;
       var min = {},
@@ -313,23 +341,29 @@
      */
     get insertionPoint() {
       // invalidated on selection and focus changes
-      if (this._cachedInsertionPoint !== undefined)
+      if (this._cachedInsertionPoint !== undefined) {
         return this._cachedInsertionPoint;
+      }
 
       // there is no insertion point for history queries
       // so bail out now and save a lot of work when updating commands
       var resultNode = this.result.root;
-      if (PlacesUtils.nodeIsQuery(resultNode) &&
+      if (
+        PlacesUtils.nodeIsQuery(resultNode) &&
         PlacesUtils.asQuery(resultNode).queryOptions.queryType ==
-        Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY)
-        return this._cachedInsertionPoint = null;
+          Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY
+      ) {
+        return (this._cachedInsertionPoint = null);
+      }
 
       var orientation = Ci.nsITreeView.DROP_BEFORE;
       // If there is no selection, insert at the end of the container.
       if (!this.hasSelection) {
         var index = this.view.rowCount - 1;
-        this._cachedInsertionPoint =
-          this._getInsertionPoint(index, orientation);
+        this._cachedInsertionPoint = this._getInsertionPoint(
+          index,
+          orientation
+        );
         return this._cachedInsertionPoint;
       }
 
@@ -361,12 +395,18 @@
       //
       // If the sole selection is the bookmarks toolbar folder, we insert
       // into it even if it is not opened
-      if (selection.count == 1 && resultView.isContainer(max.value) &&
-        !this.flatList)
+      if (
+        selection.count == 1 &&
+        resultView.isContainer(max.value) &&
+        !this.flatList
+      ) {
         orientation = Ci.nsITreeView.DROP_ON;
+      }
 
-      this._cachedInsertionPoint =
-        this._getInsertionPoint(max.value, orientation);
+      this._cachedInsertionPoint = this._getInsertionPoint(
+        max.value,
+        orientation
+      );
       return this._cachedInsertionPoint;
     }
 
@@ -375,7 +415,7 @@
     }
 
     set active(val) {
-      return this._active = val;
+      return (this._active = val);
     }
 
     get active() {
@@ -390,11 +430,14 @@
       // Make sure we're getting uri results.
       // We do not yet support searching into grouped queries or into
       // tag containers, so we must fall to the default case.
-      if (PlacesUtils.nodeIsHistoryContainer(queryNode) ||
+      if (
+        PlacesUtils.nodeIsHistoryContainer(queryNode) ||
         PlacesUtils.nodeIsTagQuery(queryNode) ||
         options.resultType == options.RESULTS_AS_TAGS_ROOT ||
-        options.resultType == options.RESULTS_AS_ROOTS_QUERY)
+        options.resultType == options.RESULTS_AS_ROOTS_QUERY
+      ) {
         options.resultType = options.RESULTS_AS_URI;
+      }
 
       var query = PlacesUtils.history.getNewQuery();
       query.searchTerms = filterString;
@@ -410,8 +453,7 @@
     }
 
     load(query, options) {
-      let result = PlacesUtils.history
-        .executeQuery(query, options);
+      let result = PlacesUtils.history.executeQuery(query, options);
 
       if (!this._controller) {
         this._controller = new PlacesController(this);
@@ -427,7 +469,10 @@
       result.addObserver(treeView);
       this.view = treeView;
 
-      if (this.getAttribute("selectfirstnode") == "true" && treeView.rowCount > 0) {
+      if (
+        this.getAttribute("selectfirstnode") == "true" &&
+        treeView.rowCount > 0
+      ) {
         treeView.selection.select(0);
       }
 
@@ -441,44 +486,54 @@
      */
     selectPlaceURI(placeURI) {
       // Do nothing if a node matching the given uri is already selected
-      if (this.hasSelection && this.selectedNode.uri == placeURI)
+      if (this.hasSelection && this.selectedNode.uri == placeURI) {
         return;
+      }
 
       function findNode(container, nodesURIChecked) {
         var containerURI = container.uri;
-        if (containerURI == placeURI)
+        if (containerURI == placeURI) {
           return container;
-        if (nodesURIChecked.includes(containerURI))
+        }
+        if (nodesURIChecked.includes(containerURI)) {
           return null;
+        }
 
         // never check the contents of the same query
         nodesURIChecked.push(containerURI);
 
         var wasOpen = container.containerOpen;
-        if (!wasOpen)
+        if (!wasOpen) {
           container.containerOpen = true;
+        }
         for (var i = 0; i < container.childCount; ++i) {
           var child = container.getChild(i);
           var childURI = child.uri;
           if (childURI == placeURI) {
             return child;
           } else if (PlacesUtils.nodeIsContainer(child)) {
-            var nested = findNode(PlacesUtils.asContainer(child), nodesURIChecked);
-            if (nested)
+            var nested = findNode(
+              PlacesUtils.asContainer(child),
+              nodesURIChecked
+            );
+            if (nested) {
               return nested;
+            }
           }
         }
 
-        if (!wasOpen)
+        if (!wasOpen) {
           container.containerOpen = false;
+        }
 
         return null;
       }
 
       var container = this.result.root;
       console.assert(container, "No result, cannot select place URI!");
-      if (!container)
+      if (!container) {
         return;
+      }
 
       var child = findNode(container, []);
       if (child) {
@@ -513,16 +568,21 @@
         // opening each folder as we go.
         for (var i = parents.length - 1; i >= 0; --i) {
           let index = view.treeIndexForNode(parents[i]);
-          if (index != -1 &&
-            view.isContainer(index) && !view.isContainerOpen(index))
+          if (
+            index != -1 &&
+            view.isContainer(index) &&
+            !view.isContainerOpen(index)
+          ) {
             view.toggleOpenState(index);
+          }
         }
         // Select the specified node...
       }
 
       let index = view.treeIndexForNode(node);
-      if (index == -1)
+      if (index == -1) {
         return;
+      }
 
       view.selection.select(index);
       // ... and ensure it's visible, not scrolled off somewhere.
@@ -543,14 +603,19 @@
       // the view is populated from (i.e. the result's itemId).
       if (index != -1) {
         var lastSelected = resultview.nodeForTreeIndex(index);
-        if (resultview.isContainer(index) && orientation == Ci.nsITreeView.DROP_ON) {
+        if (
+          resultview.isContainer(index) &&
+          orientation == Ci.nsITreeView.DROP_ON
+        ) {
           // If the last selected item is an open container, append _into_
           // it, rather than insert adjacent to it.
           container = lastSelected;
           index = -1;
-        } else if (lastSelected.containerOpen &&
+        } else if (
+          lastSelected.containerOpen &&
           orientation == Ci.nsITreeView.DROP_AFTER &&
-          lastSelected.hasChildren) {
+          lastSelected.hasChildren
+        ) {
           // If the last selected item is an open container and the user is
           // trying to drag into it as a first item, really insert into it.
           container = lastSelected;
@@ -561,21 +626,24 @@
           container = lastSelected.parent;
 
           // See comment in the treeView.js's copy of this method
-          if (!container || !container.containerOpen)
+          if (!container || !container.containerOpen) {
             return null;
+          }
 
           // Avoid the potentially expensive call to getChildIndex
           // if we know this container doesn't allow insertion
-          if (this.controller.disallowInsertion(container))
+          if (this.controller.disallowInsertion(container)) {
             return null;
+          }
 
           var queryOptions = PlacesUtils.asQuery(result.root).queryOptions;
-          if (queryOptions.sortingMode !=
-            Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
+          if (
+            queryOptions.sortingMode !=
+            Ci.nsINavHistoryQueryOptions.SORT_BY_NONE
+          ) {
             // If we are within a sorted view, insert at the end
             index = -1;
-          } else if (queryOptions.excludeItems ||
-            queryOptions.excludeQueries) {
+          } else if (queryOptions.excludeItems || queryOptions.excludeQueries) {
             // Some item may be invisible, insert near last selected one.
             // We don't replace index here to avoid requests to the db,
             // instead it will be calculated later by the controller.
@@ -588,11 +656,13 @@
         }
       }
 
-      if (this.controller.disallowInsertion(container))
+      if (this.controller.disallowInsertion(container)) {
         return null;
+      }
 
-      let tagName = PlacesUtils.nodeIsTagQuery(container) ?
-        PlacesUtils.asQuery(container).query.tags[0] : null;
+      let tagName = PlacesUtils.nodeIsTagQuery(container)
+        ? PlacesUtils.asQuery(container).query.tags[0]
+        : null;
 
       return new PlacesInsertionPoint({
         parentId: PlacesUtils.getConcreteItemId(container),
@@ -618,13 +688,15 @@
      */
     selectItems(aGuids, aOpenContainers) {
       // Never open containers in flat lists.
-      if (this.flatList)
+      if (this.flatList) {
         aOpenContainers = false;
+      }
       // By default, we do search and select within containers which were
       // closed (note that containers in which nodes were not found are
       // closed).
-      if (aOpenContainers === undefined)
+      if (aOpenContainers === undefined) {
         aOpenContainers = true;
+      }
 
       var guids = aGuids; // don't manipulate the caller's array
 
@@ -668,19 +740,27 @@
         }
 
         var concreteGuid = PlacesUtils.getConcreteItemGuid(node);
-        if (guids.length == 0 || !PlacesUtils.nodeIsContainer(node) ||
-          checkedGuidsSet.has(concreteGuid))
+        if (
+          guids.length == 0 ||
+          !PlacesUtils.nodeIsContainer(node) ||
+          checkedGuidsSet.has(concreteGuid)
+        ) {
           return foundOne;
+        }
 
         // Only follow a query if it has been been explicitly opened by the
         // caller. We support the "AllBookmarks" case to allow callers to
         // specify just the top-level bookmark folders.
-        let shouldOpen = aOpenContainers && (PlacesUtils.nodeIsFolder(node) ||
-          (PlacesUtils.nodeIsQuery(node) && node.bookmarkGuid == PlacesUIUtils.virtualAllBookmarksGuid));
+        let shouldOpen =
+          aOpenContainers &&
+          (PlacesUtils.nodeIsFolder(node) ||
+            (PlacesUtils.nodeIsQuery(node) &&
+              node.bookmarkGuid == PlacesUIUtils.virtualAllBookmarksGuid));
 
         PlacesUtils.asContainer(node);
-        if (!node.containerOpen && !shouldOpen)
+        if (!node.containerOpen && !shouldOpen) {
           return foundOne;
+        }
 
         checkedGuidsSet.add(concreteGuid);
 
@@ -688,17 +768,23 @@
         // this node if we don't find any additional results here.
         var previousOpenness = node.containerOpen;
         node.containerOpen = true;
-        for (var child = 0; child < node.childCount && guids.length > 0; child++) {
+        for (
+          var child = 0;
+          child < node.childCount && guids.length > 0;
+          child++
+        ) {
           var childNode = node.getChild(child);
           var found = findNodes(childNode);
-          if (!foundOne)
+          if (!foundOne) {
             foundOne = found;
+          }
         }
 
         // If we didn't find any additional matches in this node's
         // subtree, revert the node to its previous openness.
-        if (foundOne)
+        if (foundOne) {
           nodesToOpen.unshift(node);
+        }
         node.containerOpen = previousOpenness;
         return foundOne;
       }
@@ -706,13 +792,15 @@
       // Disable notifications while looking for nodes.
       let result = this.result;
       let didSuppressNotifications = result.suppressNotifications;
-      if (!didSuppressNotifications)
+      if (!didSuppressNotifications) {
         result.suppressNotifications = true;
+      }
       try {
         findNodes(this.result.root);
       } finally {
-        if (!didSuppressNotifications)
+        if (!didSuppressNotifications) {
           result.suppressNotifications = false;
+        }
       }
 
       // For all the nodes we've found, highlight the corresponding
@@ -727,8 +815,9 @@
       }
       for (let i = 0; i < nodes.length; i++) {
         var index = resultview.treeIndexForNode(nodes[i]);
-        if (index == -1)
+        if (index == -1) {
           continue;
+        }
         selection.rangedSelect(index, index, true);
       }
       selection.selectEventsSuppressed = false;

@@ -11,7 +11,6 @@ const {
 } = require("./index");
 
 module.exports = {
-
   /**
    * Updates the color used for the grid's highlighter.
    *
@@ -53,5 +52,4 @@ module.exports = {
       grids,
     };
   },
-
 };

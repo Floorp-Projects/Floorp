@@ -11,13 +11,22 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 
-loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/debugger-client", true);
-loader.lazyRequireGetter(this, "gDevToolsBrowser",
-  "devtools/client/framework/devtools-browser", true);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerClient",
+  "devtools/shared/client/debugger-client",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "gDevToolsBrowser",
+  "devtools/client/framework/devtools-browser",
+  true
+);
 
 const Strings = Services.strings.createBundle(
-  "chrome://devtools/locale/aboutdebugging.properties");
+  "chrome://devtools/locale/aboutdebugging.properties"
+);
 
 class ServiceWorkerTarget extends Component {
   static get propTypes() {
@@ -141,23 +150,32 @@ class ServiceWorkerTarget extends Component {
   }
 
   renderButtons() {
-    const pushButton = dom.button({
-      className: "push-button",
-      onClick: this.push,
-      disabled: this.props.debugDisabled,
-    }, Strings.GetStringFromName("push"));
+    const pushButton = dom.button(
+      {
+        className: "push-button",
+        onClick: this.push,
+        disabled: this.props.debugDisabled,
+      },
+      Strings.GetStringFromName("push")
+    );
 
-    const debugButton = dom.button({
-      className: "debug-button",
-      onClick: this.debug,
-      disabled: this.props.debugDisabled,
-    }, Strings.GetStringFromName("debug"));
+    const debugButton = dom.button(
+      {
+        className: "debug-button",
+        onClick: this.debug,
+        disabled: this.props.debugDisabled,
+      },
+      Strings.GetStringFromName("debug")
+    );
 
-    const startButton = dom.button({
-      className: "start-button",
-      onClick: this.start,
-      disabled: this.props.debugDisabled,
-    }, Strings.GetStringFromName("start"));
+    const startButton = dom.button(
+      {
+        className: "start-button",
+        onClick: this.start,
+        disabled: this.props.debugDisabled,
+      },
+      Strings.GetStringFromName("start")
+    );
 
     if (this.isRunning()) {
       if (this.isActive()) {
@@ -175,10 +193,13 @@ class ServiceWorkerTarget extends Component {
       return null;
     }
 
-    return dom.a({
-      onClick: this.unregister,
-      className: "unregister-link",
-    }, Strings.GetStringFromName("unregister"));
+    return dom.a(
+      {
+        onClick: this.unregister,
+        className: "unregister-link",
+      },
+      Strings.GetStringFromName("unregister")
+    );
   }
 
   render() {
@@ -186,41 +207,60 @@ class ServiceWorkerTarget extends Component {
     const { pushSubscription } = this.state;
     const status = this.getServiceWorkerStatus();
 
-    const fetch = target.fetch ? Strings.GetStringFromName("listeningForFetchEvents") :
-      Strings.GetStringFromName("notListeningForFetchEvents");
+    const fetch = target.fetch
+      ? Strings.GetStringFromName("listeningForFetchEvents")
+      : Strings.GetStringFromName("notListeningForFetchEvents");
 
-    return dom.div({ className: "target-container" },
+    return dom.div(
+      { className: "target-container" },
       dom.img({
         className: "target-icon",
         role: "presentation",
         src: target.icon,
       }),
-      dom.span({ className: `target-status target-status-${status}` },
-        Strings.GetStringFromName(status)),
-      dom.div({ className: "target" },
+      dom.span(
+        { className: `target-status target-status-${status}` },
+        Strings.GetStringFromName(status)
+      ),
+      dom.div(
+        { className: "target" },
         dom.div({ className: "target-name", title: target.name }, target.name),
-        dom.ul({ className: "target-details" },
-          (pushSubscription ?
-            dom.li({ className: "target-detail" },
-              dom.strong(null, Strings.GetStringFromName("pushService")),
-              dom.span({
-                className: "service-worker-push-url",
-                title: pushSubscription.endpoint,
-              }, pushSubscription.endpoint)) :
-            null
-          ),
-          dom.li({ className: "target-detail" },
+        dom.ul(
+          { className: "target-details" },
+          pushSubscription
+            ? dom.li(
+                { className: "target-detail" },
+                dom.strong(null, Strings.GetStringFromName("pushService")),
+                dom.span(
+                  {
+                    className: "service-worker-push-url",
+                    title: pushSubscription.endpoint,
+                  },
+                  pushSubscription.endpoint
+                )
+              )
+            : null,
+          dom.li(
+            { className: "target-detail" },
             dom.strong(null, Strings.GetStringFromName("fetch")),
-            dom.span({
-              className: "service-worker-fetch-flag",
-              title: fetch,
-            }, fetch)),
-          dom.li({ className: "target-detail" },
+            dom.span(
+              {
+                className: "service-worker-fetch-flag",
+                title: fetch,
+              },
+              fetch
+            )
+          ),
+          dom.li(
+            { className: "target-detail" },
             dom.strong(null, Strings.GetStringFromName("scope")),
-            dom.span({
-              className: "service-worker-scope",
-              title: target.scope,
-            }, target.scope),
+            dom.span(
+              {
+                className: "service-worker-scope",
+                title: target.scope,
+              },
+              target.scope
+            ),
             this.renderUnregisterLink()
           )
         )

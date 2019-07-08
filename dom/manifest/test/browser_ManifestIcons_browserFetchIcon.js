@@ -1,20 +1,29 @@
 // Used by JSHint:
 /* global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
-const { ManifestIcons } = ChromeUtils.import("resource://gre/modules/ManifestIcons.jsm");
-const { ManifestObtainer } = ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm");
+const { ManifestIcons } = ChromeUtils.import(
+  "resource://gre/modules/ManifestIcons.jsm"
+);
+const { ManifestObtainer } = ChromeUtils.import(
+  "resource://gre/modules/ManifestObtainer.jsm"
+);
 
-const defaultURL = new URL("http://example.org/browser/dom/manifest/test/resource.sjs");
+const defaultURL = new URL(
+  "http://example.org/browser/dom/manifest/test/resource.sjs"
+);
 defaultURL.searchParams.set("Content-Type", "application/manifest+json");
 
 const manifestMock = JSON.stringify({
-  icons: [{
-    sizes: "50x50",
-    src: "red-50.png?Content-type=image/png",
-  }, {
-    sizes: "150x150",
-    src: "blue-150.png?Content-type=image/png",
-  }],
+  icons: [
+    {
+      sizes: "50x50",
+      src: "red-50.png?Content-type=image/png",
+    },
+    {
+      sizes: "150x150",
+      src: "blue-150.png?Content-type=image/png",
+    },
+  ],
 });
 
 function makeTestURL() {
@@ -42,7 +51,7 @@ function getIconColor(icon) {
 }
 
 add_task(async function() {
-  const tabOptions = {gBrowser, url: makeTestURL()};
+  const tabOptions = { gBrowser, url: makeTestURL() };
   await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
     const manifest = await ManifestObtainer.browserObtainManifest(browser);
     let icon = await ManifestIcons.browserFetchIcon(browser, manifest, 25);

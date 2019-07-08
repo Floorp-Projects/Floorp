@@ -1,6 +1,7 @@
 function run_test() {
-  var tld = Cc["@mozilla.org/network/effective-tld-service;1"]
-              .getService(Ci.nsIEffectiveTLDService);
+  var tld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(
+    Ci.nsIEffectiveTLDService
+  );
 
   var tests = [
     { data: "bar.foo.co.uk", result: "foo.co.uk" },

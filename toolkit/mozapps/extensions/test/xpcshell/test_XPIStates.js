@@ -4,7 +4,6 @@
 
 // Test that we only check manifest age for disabled extensions
 
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
 const profileDir = gProfD.clone();
@@ -16,12 +15,12 @@ add_task(async function setup() {
 
   await promiseInstallWebExtension({
     manifest: {
-      applications: {gecko: {id: "enabled@tests.mozilla.org"}},
+      applications: { gecko: { id: "enabled@tests.mozilla.org" } },
     },
   });
   await promiseInstallWebExtension({
     manifest: {
-      applications: {gecko: {id: "disabled@tests.mozilla.org"}},
+      applications: { gecko: { id: "disabled@tests.mozilla.org" } },
     },
   });
 
@@ -53,7 +52,10 @@ function checkChange(XS, aPath, aChange) {
 
 // Get a reference to the XPIState (loaded by startupManager) so we can unit test it.
 function getXS() {
-  let XPI = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
+  let XPI = ChromeUtils.import(
+    "resource://gre/modules/addons/XPIProvider.jsm",
+    null
+  );
   return XPI.XPIStates;
 }
 
@@ -102,7 +104,10 @@ add_task(async function uninstall_bootstrap() {
   await pe.uninstall();
 
   let xpiState = await getXSJSON();
-  Assert.equal(false, "enabled@tests.mozilla.org" in xpiState["app-profile"].addons);
+  Assert.equal(
+    false,
+    "enabled@tests.mozilla.org" in xpiState["app-profile"].addons
+  );
 });
 
 /*
@@ -114,7 +119,7 @@ add_task(async function install_bootstrap() {
 
   await promiseInstallWebExtension({
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
     },
   });
   let addon = await promiseAddonByID(ID);

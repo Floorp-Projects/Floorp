@@ -4,18 +4,30 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "Authentication",
-];
+var EXPORTED_SYMBOLS = ["Authentication"];
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const {fxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-const {FxAccountsConfig} = ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
-const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { clearTimeout, setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
+const { fxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
+const { FxAccountsConfig } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsConfig.jsm"
+);
+const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -23,7 +35,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
  * Helper object for Firefox Accounts authentication
  */
 var Authentication = {
-
   /**
    * Check if an user has been logged in
    */
@@ -54,8 +65,7 @@ var Authentication = {
       }, ms);
     });
     await Promise.race([
-      fxAccounts.whenVerified(userData)
-                .finally(() => clearTimeout(timeoutID)),
+      fxAccounts.whenVerified(userData).finally(() => clearTimeout(timeoutID)),
       timeoutPromise,
     ]);
     userData = await this.getSignedInUser();
@@ -77,11 +87,15 @@ var Authentication = {
   async _completeVerification(user) {
     let username = this._getRestmailUsername(user);
     if (!username) {
-      Logger.logInfo(`Username "${user}" isn't a restmail username so can't complete verification`);
+      Logger.logInfo(
+        `Username "${user}" isn't a restmail username so can't complete verification`
+      );
       return false;
     }
     Logger.logInfo("Fetching mail (from restmail) for user " + username);
-    let restmailURI = `https://www.restmail.net/mail/${encodeURIComponent(username)}`;
+    let restmailURI = `https://www.restmail.net/mail/${encodeURIComponent(
+      username
+    )}`;
     let triedAlready = new Set();
     const tries = 10;
     const normalWait = 2000;
@@ -103,7 +117,10 @@ var Authentication = {
             return true;
           }
         } catch (e) {
-          Logger.logInfo("Warning: Failed to follow confirmation link: " + Log.exceptionStr(e));
+          Logger.logInfo(
+            "Warning: Failed to follow confirmation link: " +
+              Log.exceptionStr(e)
+          );
         }
       }
       if (i === 0) {
@@ -125,16 +142,24 @@ var Authentication = {
       return false;
     }
     Logger.logInfo("Deleting mail (from restmail) for user " + username);
-    let restmailURI = `https://www.restmail.net/mail/${encodeURIComponent(username)}`;
+    let restmailURI = `https://www.restmail.net/mail/${encodeURIComponent(
+      username
+    )}`;
     try {
       // Clean up after ourselves.
       let deleteResult = await fetch(restmailURI, { method: "DELETE" });
       if (!deleteResult.ok) {
-        Logger.logInfo(`Warning: Got non-success status ${deleteResult.status} when deleting emails`);
+        Logger.logInfo(
+          `Warning: Got non-success status ${
+            deleteResult.status
+          } when deleting emails`
+        );
         return false;
       }
     } catch (e) {
-      Logger.logInfo("Warning: Failed to delete old emails: " + Log.exceptionStr(e));
+      Logger.logInfo(
+        "Warning: Failed to delete old emails: " + Log.exceptionStr(e)
+      );
       return false;
     }
     return true;
@@ -147,9 +172,11 @@ var Authentication = {
    */
   async getSignedInUser() {
     try {
-      return (await fxAccounts.getSignedInUser());
+      return await fxAccounts.getSignedInUser();
     } catch (error) {
-      Logger.logError("getSignedInUser() failed with: " + JSON.stringify(error));
+      Logger.logError(
+        "getSignedInUser() failed with: " + JSON.stringify(error)
+      );
       throw error;
     }
   },
@@ -175,7 +202,11 @@ var Authentication = {
       await FxAccountsConfig.ensureConfigured();
 
       let client = new FxAccountsClient();
-      let credentials = await client.signIn(account.username, account.password, true);
+      let credentials = await client.signIn(
+        account.username,
+        account.password,
+        true
+      );
       await fxAccounts.setSignedInUser(credentials);
       if (!credentials.verified) {
         await this._completeVerification(account.username);

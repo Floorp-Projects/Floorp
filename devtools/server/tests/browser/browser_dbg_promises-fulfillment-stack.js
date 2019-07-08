@@ -51,8 +51,10 @@ async function testGetFulfillmentStack(tab, target) {
   const onNewPromise = new Promise(resolve => {
     front.on("new-promises", promises => {
       for (const p of promises) {
-        if (p.preview.ownProperties.name &&
-            p.preview.ownProperties.name.value === "p") {
+        if (
+          p.preview.ownProperties.name &&
+          p.preview.ownProperties.name.value === "p"
+        ) {
           resolve(p);
         }
       }
@@ -76,8 +78,11 @@ async function testGetFulfillmentStack(tab, target) {
     const stack = response.fulfillmentStack[i];
     const data = TEST_DATA[i];
     is(stack.source.url, TAB_URL, "Got correct source URL.");
-    is(stack.functionDisplayName, data.functionDisplayName,
-       "Got correct function display name.");
+    is(
+      stack.functionDisplayName,
+      data.functionDisplayName,
+      "Got correct function display name."
+    );
     is(stack.line, data.line, "Got correct stack line number.");
     is(stack.column, data.column, "Got correct stack column number.");
   }

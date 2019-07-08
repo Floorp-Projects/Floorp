@@ -3,14 +3,22 @@
 /* globals browser */
 let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
 Services.prefs.setIntPref("extensions.enabledScopes", scopes);
-Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
 
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "1"
+);
 
 async function getWrapper(id, hidden) {
   let wrapper = await installBuiltinExtension({
     manifest: {
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
       hidden,
     },
     background() {

@@ -77,7 +77,6 @@ class nsITimeoutHandler;
 class nsIWebBrowserChrome;
 class mozIDOMWindowProxy;
 
-class nsDOMWindowList;
 class nsScreen;
 class nsHistory;
 class nsGlobalWindowObserver;
@@ -381,7 +380,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // WebIDL interface.
-  already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> IndexedGetter(
+      uint32_t aIndex);
 
   static bool IsPrivilegedChromeWindow(JSContext* /* unused */, JSObject* aObj);
 
@@ -612,7 +612,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void Focus(mozilla::ErrorResult& aError);
   nsresult Focus() override;
   void Blur(mozilla::ErrorResult& aError);
-  nsDOMWindowList* GetFrames() final;
   mozilla::dom::BrowsingContext* GetFrames(mozilla::ErrorResult& aError);
   uint32_t Length();
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetTop(
@@ -1444,7 +1443,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
         : Runnable("DeprioritizedLoadRunner"), mInner(aInner) {}
 
     NS_IMETHOD Run() override {
-      if (mInner) {;
+      if (mInner) {
         RefPtr<nsIRunnable> inner = std::move(mInner);
         inner->Run();
       }

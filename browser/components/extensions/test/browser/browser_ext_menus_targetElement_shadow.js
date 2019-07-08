@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+const PAGE =
+  "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
 add_task(async function menuInShadowDOM() {
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -16,9 +17,20 @@ add_task(async function menuInShadowDOM() {
 
   async function background() {
     browser.menus.onShown.addListener(async (info, tab) => {
-      browser.test.assertTrue(Number.isInteger(info.targetElementId), `${info.targetElementId} should be an integer`);
-      browser.test.assertEq("all,link", info.contexts.sort().join(","), "Expected context");
-      browser.test.assertEq("http://example.com/?shadowlink", info.linkUrl, "Menu target should be a link in the shadow DOM");
+      browser.test.assertTrue(
+        Number.isInteger(info.targetElementId),
+        `${info.targetElementId} should be an integer`
+      );
+      browser.test.assertEq(
+        "all,link",
+        info.contexts.sort().join(","),
+        "Expected context"
+      );
+      browser.test.assertEq(
+        "http://example.com/?shadowlink",
+        info.linkUrl,
+        "Menu target should be a link in the shadow DOM"
+      );
 
       let code = `{
         try {
@@ -29,8 +41,11 @@ add_task(async function menuInShadowDOM() {
           browser.test.fail("Unexpected error in getTargetElement: " + e);
         }
       }`;
-      await browser.tabs.executeScript(tab.id, {code});
-      browser.test.sendMessage("onShownMenuAndCheckedInfo", info.targetElementId);
+      await browser.tabs.executeScript(tab.id, { code });
+      browser.test.sendMessage(
+        "onShownMenuAndCheckedInfo",
+        info.targetElementId
+      );
     });
 
     // Ensure that onShown is registered (workaround for bug 1300234):
@@ -58,7 +73,7 @@ add_task(async function menuInShadowDOM() {
   await testShadowMenu(() => {
     let doc = content.document;
     doc.body.innerHTML = `<div></div>`;
-    let host = doc.body.firstElementChild.attachShadow({mode: "open"});
+    let host = doc.body.firstElementChild.attachShadow({ mode: "open" });
     host.innerHTML = `<a href="http://example.com/?shadowlink">Test open</a>`;
     content.testTarget = host.firstElementChild;
     return content.testTarget;
@@ -68,7 +83,7 @@ add_task(async function menuInShadowDOM() {
   await testShadowMenu(() => {
     let doc = content.document;
     doc.body.innerHTML = `<div></div>`;
-    let host = doc.body.firstElementChild.attachShadow({mode: "closed"});
+    let host = doc.body.firstElementChild.attachShadow({ mode: "closed" });
     host.innerHTML = `<a href="http://example.com/?shadowlink">Test closed</a>`;
     content.testTarget = host.firstElementChild;
     return content.testTarget;
@@ -80,7 +95,7 @@ add_task(async function menuInShadowDOM() {
     let host;
     for (let container = doc.body, i = 0; i < 10; ++i) {
       container.innerHTML = `<div id="level"></div>`;
-      host = container.firstElementChild.attachShadow({mode: "open"});
+      host = container.firstElementChild.attachShadow({ mode: "open" });
       container = host;
     }
     host.innerHTML = `<a href="http://example.com/?shadowlink">Test nested</a>`;

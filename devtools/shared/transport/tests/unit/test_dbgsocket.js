@@ -53,19 +53,21 @@ async function test_socket_conn() {
   Assert.equal(settings.port, gPort);
 
   const onDebuggerConnectionClosed = DebuggerServer.once("connectionchange");
-  await new Promise((resolve) => {
+  await new Promise(resolve => {
     transport.hooks = {
       onPacket: function(packet) {
-        this.onPacket = function({unicode}) {
+        this.onPacket = function({ unicode }) {
           Assert.equal(unicode, unicodeString);
           transport.close();
         };
         // Verify that things work correctly when bigger than the output
         // transport buffers and when transporting unicode...
-        transport.send({to: "root",
-                        type: "echo",
-                        reallylong: really_long(),
-                        unicode: unicodeString});
+        transport.send({
+          to: "root",
+          type: "echo",
+          reallylong: really_long(),
+          unicode: unicodeString,
+        });
         Assert.equal(packet.from, "root");
       },
       onClosed: function(status) {
@@ -96,8 +98,10 @@ async function test_socket_shutdown() {
       port: gPort,
     });
   } catch (e) {
-    if (e.result == Cr.NS_ERROR_CONNECTION_REFUSED ||
-        e.result == Cr.NS_ERROR_NET_TIMEOUT) {
+    if (
+      e.result == Cr.NS_ERROR_CONNECTION_REFUSED ||
+      e.result == Cr.NS_ERROR_NET_TIMEOUT
+    ) {
       // The connection should be refused here, but on slow or overloaded
       // machines it may just time out.
       Assert.ok(true);

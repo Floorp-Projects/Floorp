@@ -16,9 +16,10 @@ add_task(async function test_failsafe_close_of_async_connection() {
   let db = getOpenedDatabase();
 
   // do something async
-  let callbackInvoked = new Promise((resolve) => {
-    db.executeSimpleSQLAsync("CREATE TABLE test (id INTEGER)",
-                             { handleCompletion: resolve });
+  let callbackInvoked = new Promise(resolve => {
+    db.executeSimpleSQLAsync("CREATE TABLE test (id INTEGER)", {
+      handleCompletion: resolve,
+    });
   });
 
   // drop our reference and force a GC so the only live reference is owned by

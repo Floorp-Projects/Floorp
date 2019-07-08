@@ -32,8 +32,9 @@ module.exports = async function() {
   const { jsterm } = hud;
 
   // Wait for all the logs to be displayed.
-  await waitFor(() =>
-    hud.ui.outputNode.querySelectorAll(".message").length >= LOGS_NUMBER);
+  await waitFor(
+    () => hud.ui.outputNode.querySelectorAll(".message").length >= LOGS_NUMBER
+  );
 
   jsterm.focus();
 
@@ -55,8 +56,9 @@ module.exports = async function() {
   await onPopupClosed;
 
   // Let's clear the output as it looks like not doing it could impact the next tests.
-  const onMessagesCleared = waitFor(() =>
-    hud.ui.outputNode.querySelectorAll(".message").length === 0);
+  const onMessagesCleared = waitFor(
+    () => hud.ui.outputNode.querySelectorAll(".message").length === 0
+  );
   hud.ui.clearOutput();
   await onMessagesCleared;
 

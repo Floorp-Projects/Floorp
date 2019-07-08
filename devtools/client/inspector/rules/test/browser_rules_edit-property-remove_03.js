@@ -20,7 +20,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Getting the second property in the rule");
@@ -31,7 +31,7 @@ add_task(async function() {
   let editor = await focusEditableField(view, prop.editor.valueSpan);
   const onValueDone = view.once("ruleview-changed");
   editor.input.value = "";
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, view.styleWindow);
   await onValueDone;
 
   let newValue = await executeInContent("Test:GetRulePropertyValue", {
@@ -40,30 +40,36 @@ add_task(async function() {
     name: "color",
   });
   is(newValue, "", "color should have been unset.");
-  is(prop.editor.valueSpan.textContent, "",
-    "'' property value is correctly set.");
+  is(
+    prop.editor.valueSpan.textContent,
+    "",
+    "'' property value is correctly set."
+  );
 
   info("Pressing shift-tab again to focus the previous property value");
   const onValueFocused = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, view.styleWindow);
   await onValueFocused;
 
   info("Getting the first property in the rule");
   prop = rule.textProps[0];
 
   editor = inplaceEditor(view.styleDocument.activeElement);
-  is(inplaceEditor(prop.editor.valueSpan), editor,
-    "Focus should have moved to the previous property value");
+  is(
+    inplaceEditor(prop.editor.valueSpan),
+    editor,
+    "Focus should have moved to the previous property value"
+  );
 
   info("Pressing shift-tab again to focus the property name");
   const onNameFocused = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, view.styleWindow);
   await onNameFocused;
 
   info("Removing the name and pressing shift-tab to focus the selector");
   const onNameDeleted = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, view.styleWindow);
   await onNameDeleted;
 
   newValue = await executeInContent("Test:GetRulePropertyValue", {
@@ -74,10 +80,14 @@ add_task(async function() {
   is(newValue, "", "background-color should have been unset.");
 
   editor = inplaceEditor(view.styleDocument.activeElement);
-  is(inplaceEditor(rule.editor.selectorText), editor,
-    "Focus should have moved to the selector text.");
-  is(rule.textProps.length, 0,
-    "All properties should have been removed.");
-  ok(!rule.editor.propertyList.hasChildNodes(),
-    "Should not have any properties.");
+  is(
+    inplaceEditor(rule.editor.selectorText),
+    editor,
+    "Focus should have moved to the selector text."
+  );
+  is(rule.textProps.length, 0, "All properties should have been removed.");
+  ok(
+    !rule.editor.propertyList.hasChildNodes(),
+    "Should not have any properties."
+  );
 });

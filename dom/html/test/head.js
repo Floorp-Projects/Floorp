@@ -1,9 +1,14 @@
 function pushPrefs(...aPrefs) {
-  return SpecialPowers.pushPrefEnv({"set": aPrefs});
+  return SpecialPowers.pushPrefEnv({ set: aPrefs });
 }
 
-function promiseWaitForEvent(object, eventName, capturing = false, chrome = false) {
-  return new Promise((resolve) => {
+function promiseWaitForEvent(
+  object,
+  eventName,
+  capturing = false,
+  chrome = false
+) {
+  return new Promise(resolve => {
     function listener(event) {
       info("Saw " + eventName);
       object.removeEventListener(eventName, listener, capturing, chrome);
@@ -21,13 +26,19 @@ function promiseWaitForEvent(object, eventName, capturing = false, chrome = fals
  *
  * @return promise
  */
-function waitForDocLoadComplete(aBrowser=gBrowser) {
+function waitForDocLoadComplete(aBrowser = gBrowser) {
   return new Promise(resolve => {
     let listener = {
-      onStateChange: function (webProgress, req, flags, status) {
-        let docStop = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
-                      Ci.nsIWebProgressListener.STATE_STOP;
-        info("Saw state " + flags.toString(16) + " and status " + status.toString(16));
+      onStateChange: function(webProgress, req, flags, status) {
+        let docStop =
+          Ci.nsIWebProgressListener.STATE_IS_NETWORK |
+          Ci.nsIWebProgressListener.STATE_STOP;
+        info(
+          "Saw state " +
+            flags.toString(16) +
+            " and status " +
+            status.toString(16)
+        );
         // When a load needs to be retargetted to a new process it is cancelled
         // with NS_BINDING_ABORTED so ignore that case
         if ((flags & docStop) == docStop && status != Cr.NS_BINDING_ABORTED) {
@@ -38,8 +49,10 @@ function waitForDocLoadComplete(aBrowser=gBrowser) {
           resolve();
         }
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                              Ci.nsISupportsWeakReference])
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIWebProgressListener,
+        Ci.nsISupportsWeakReference,
+      ]),
     };
     aBrowser.addProgressListener(listener);
     waitForDocLoadComplete.listeners.add(listener);

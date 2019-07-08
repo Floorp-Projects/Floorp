@@ -6,19 +6,26 @@
 
 const protocol = require("devtools/shared/protocol");
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+const { Cc, Ci, Cu, Cr } = require("chrome");
 
-const {DebuggerServer} = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/main");
 const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 
-loader.lazyGetter(this, "NodeActor", () => require("devtools/server/actors/inspector/node").NodeActor, true);
+loader.lazyGetter(
+  this,
+  "NodeActor",
+  () => require("devtools/server/actors/inspector/node").NodeActor,
+  true
+);
 
 const {
   webExtensionInspectedWindowSpec,
 } = require("devtools/shared/specs/addon/webextension-inspected-window");
 
-const {WebExtensionPolicy} = Cu.getGlobalForObject(require("resource://gre/modules/XPCOMUtils.jsm"));
+const { WebExtensionPolicy } = Cu.getGlobalForObject(
+  require("resource://gre/modules/XPCOMUtils.jsm")
+);
 
 // A weak set of the documents for which a warning message has been
 // already logged (so that we don't keep emitting the same warning if an
@@ -59,22 +66,27 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
 
   deniedWarningDocuments.add(window.document);
 
-  const {name} = extensionPolicy;
+  const { name } = extensionPolicy;
 
   // System principals have a null nodePrincipal.URI and so we use
   // the url from window.location.href.
-  const reportedURI = isSystemPrincipalWindow(window) ?
-    Services.io.newURI(window.location.href) : window.document.nodePrincipal.URI;
+  const reportedURI = isSystemPrincipalWindow(window)
+    ? Services.io.newURI(window.location.href)
+    : window.document.nodePrincipal.URI;
 
-  const error = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+  const error = Cc["@mozilla.org/scripterror;1"].createInstance(
+    Ci.nsIScriptError
+  );
 
-  const msg = `The extension "${name}" is not allowed to access ${reportedURI.spec}`;
+  const msg = `The extension "${name}" is not allowed to access ${
+    reportedURI.spec
+  }`;
 
   const innerWindowId = window.windowUtils.currentInnerWindowID;
 
   const errorFlag = 0;
 
-  let {url, lineNumber} = callerInfo;
+  let { url, lineNumber } = callerInfo;
 
   const callerURI = callerInfo.url && Services.io.newURI(callerInfo.url);
 
@@ -86,8 +98,16 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
     lineNumber = null;
   }
 
-  error.initWithWindowID(msg, url, lineNumber, 0, 0, errorFlag, "webExtensions",
-                         innerWindowId);
+  error.initWithWindowID(
+    msg,
+    url,
+    lineNumber,
+    0,
+    0,
+    errorFlag,
+    "webExtensions",
+    innerWindowId
+  );
   Services.console.logMessage(error);
 }
 
@@ -106,16 +126,18 @@ function CustomizedReload(params) {
 }
 
 CustomizedReload.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ]),
   get window() {
     return this.docShell.DOMWindow;
   },
 
   get webNavigation() {
     return this.docShell
-               .QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation);
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebNavigation);
   },
 
   start() {
@@ -143,8 +165,10 @@ CustomizedReload.prototype = {
 
           // Watch the loading progress and clear the current CustomizedReload once the
           // page has been reloaded (or if its reloading has been interrupted).
-          this.docShell.addProgressListener(this,
-                                            Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+          this.docShell.addProgressListener(
+            this,
+            Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
+          );
 
           this.webNavigation.reload(reloadFlags);
         } catch (err) {
@@ -186,9 +210,12 @@ CustomizedReload.prototype = {
     }
 
     if (this.customizedReloadWindows.has(window)) {
-      const {
-        apiErrorResult,
-      } = this.inspectedWindowEval(this.callerInfo, this.injectedScript, {}, window);
+      const { apiErrorResult } = this.inspectedWindowEval(
+        this.callerInfo,
+        this.injectedScript,
+        {},
+        window
+      );
 
       // Log only apiErrorResult, because no one is waiting for the
       // injectedScript result, and any exception is going to be logged
@@ -213,9 +240,11 @@ CustomizedReload.prototype = {
         // The customized reload has been interrupted and we can clear
         // the CustomizedReload and reject the promise.
         const url = this.window.location.href;
-        this.stop(new Error(
-          `devtools.inspectedWindow.reload on ${url} has been interrupted`
-        ));
+        this.stop(
+          new Error(
+            `devtools.inspectedWindow.reload on ${url} has been interrupted`
+          )
+        );
       } else {
         // Once the top level frame has been loaded, we can clear the customized reload
         // and resolve the promise.
@@ -326,15 +355,17 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       Object.defineProperty(bindings, "inspect", {
         enumerable: true,
         configurable: true,
-        value: dbgWindow.makeDebuggeeValue((object) => {
+        value: dbgWindow.makeDebuggeeValue(object => {
           const dbgObj = dbgWindow.makeDebuggeeValue(object);
 
           const consoleActor = DebuggerServer.searchAllConnectionsForActor(
             options.toolboxConsoleActorID
           );
           if (consoleActor) {
-            consoleActor.inspectObject(dbgObj,
-                                       "webextension-devtools-inspectedWindow-eval");
+            consoleActor.inspectObject(
+              dbgObj,
+              "webextension-devtools-inspectedWindow-eval"
+            );
           } else {
             // TODO(rpl): evaluate if it would be better to raise an exception
             // to the caller code instead.
@@ -366,10 +397,12 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
      *   created during the page reload, before any other script in the page has been
      *   executed.
      */
-    reload(callerInfo, {ignoreCache, userAgent, injectedScript}) {
+    reload(callerInfo, { ignoreCache, userAgent, injectedScript }) {
       if (isSystemPrincipalWindow(this.window)) {
-        console.error("Ignored inspectedWindow.reload on system principal target for " +
-                      `${callerInfo.url}:${callerInfo.lineNumber}`);
+        console.error(
+          "Ignored inspectedWindow.reload on system principal target for " +
+            `${callerInfo.url}:${callerInfo.lineNumber}`
+        );
         return {};
       }
 
@@ -386,7 +419,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
             // after the current one has been completed.
             console.error(
               "Reload already in progress. Ignored inspectedWindow.reload for " +
-              `${callerInfo.url}:${callerInfo.lineNumber}`
+                `${callerInfo.url}:${callerInfo.lineNumber}`
             );
             return;
           }
@@ -395,17 +428,21 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
             this.customizedReload = new CustomizedReload({
               targetActor: this.targetActor,
               inspectedWindowEval: this.eval.bind(this),
-              callerInfo, injectedScript, userAgent, ignoreCache,
+              callerInfo,
+              injectedScript,
+              userAgent,
+              ignoreCache,
             });
 
-            this.customizedReload.start()
-                .then(() => {
-                  delete this.customizedReload;
-                })
-                .catch(err => {
-                  delete this.customizedReload;
-                  console.error(err);
-                });
+            this.customizedReload
+              .start()
+              .then(() => {
+                delete this.customizedReload;
+              })
+              .catch(err => {
+                delete this.customizedReload;
+                console.error(err);
+              });
           } catch (err) {
             // Cancel the customized reload (if any) on exception during the
             // reload setup.
@@ -473,10 +510,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       if (!extensionPolicy) {
         return createExceptionInfoResult({
           description: "Inspector protocol error: %s %s",
-          details: [
-            "Caller extension not found for",
-            callerInfo.url,
-          ],
+          details: ["Caller extension not found for", callerInfo.url],
         });
       }
 
@@ -515,8 +549,10 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       // related to the about: pages (only about:blank and about:srcdoc are
       // allowed and their are expected to not have their about URI associated
       // to the principal).
-      if (WebExtensionPolicy.isRestrictedURI(docPrincipalURI) ||
-          docPrincipalURI.schemeIs("about")) {
+      if (
+        WebExtensionPolicy.isRestrictedURI(docPrincipalURI) ||
+        docPrincipalURI.schemeIs("about")
+      ) {
         logEvalDenied();
 
         return createExceptionInfoResult({
@@ -543,8 +579,11 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       }
 
       // Raise an error on the unsupported options.
-      if (options.frameURL || options.contextSecurityOrigin ||
-          options.useContentScriptContext) {
+      if (
+        options.frameURL ||
+        options.contextSecurityOrigin ||
+        options.useContentScriptContext
+      ) {
         return createExceptionInfoResult({
           description: "Inspector protocol error: %s",
           details: [
@@ -562,9 +601,13 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
 
       const bindings = this.createEvalBindings(dbgWindow, options);
 
-      const result = dbgWindow.executeInGlobalWithBindings(expression, bindings, {
-        url: `debugger eval called from ${evalCalledFrom} - eval code`,
-      });
+      const result = dbgWindow.executeInGlobalWithBindings(
+        expression,
+        bindings,
+        {
+          url: `debugger eval called from ${evalCalledFrom} - eval code`,
+        }
+      );
 
       let evalResult;
 
@@ -578,12 +621,18 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
 
           // XXXworkers: Calling unsafeDereference() returns an object with no
           // toString method in workers. See Bug 1215120.
-          const unsafeDereference = throwErr && (typeof throwErr === "object") &&
+          const unsafeDereference =
+            throwErr &&
+            typeof throwErr === "object" &&
             throwErr.unsafeDereference();
-          const message = unsafeDereference && unsafeDereference.toString ?
-            unsafeDereference.toString() : String(throwErr);
-          const stack = unsafeDereference && unsafeDereference.stack ?
-            unsafeDereference.stack : null;
+          const message =
+            unsafeDereference && unsafeDereference.toString
+              ? unsafeDereference.toString()
+              : String(throwErr);
+          const stack =
+            unsafeDereference && unsafeDereference.stack
+              ? unsafeDereference.stack
+              : null;
 
           return {
             exceptionInfo: {
@@ -595,8 +644,10 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       } else {
         // TODO(rpl): can the result of executeInGlobalWithBinding be null or
         // undefined? (which means that it is not a return, a yield or a throw).
-        console.error("Unexpected empty inspectedWindow.eval result for",
-                      `${callerInfo.url}:${callerInfo.lineNumber}`);
+        console.error(
+          "Unexpected empty inspectedWindow.eval result for",
+          `${callerInfo.url}:${callerInfo.lineNumber}`
+        );
       }
 
       if (evalResult) {
@@ -618,7 +669,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
               options.toolboxConsoleActorID
             );
 
-            return {valueGrip: consoleActor.createValueGrip(evalResult)};
+            return { valueGrip: consoleActor.createValueGrip(evalResult) };
           }
 
           if (evalResult && typeof evalResult === "object") {
@@ -631,14 +682,12 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
           // chrome API method.
           return createExceptionInfoResult({
             description: "Inspector protocol error: %s",
-            details: [
-              String(err),
-            ],
+            details: [String(err)],
           });
         }
       }
 
-      return {value: evalResult};
+      return { value: evalResult };
     },
     /* eslint-enable complexity */
   }

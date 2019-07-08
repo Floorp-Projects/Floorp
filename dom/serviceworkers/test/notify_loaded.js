@@ -1,1 +1,1 @@
-parent.postMessage('SCRIPT_LOADED', '*');
+parent.postMessage("SCRIPT_LOADED", "*");

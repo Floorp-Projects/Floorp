@@ -3,17 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["EventDispatcher"];
 
-XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
-const IS_PARENT_PROCESS = (Services.appinfo.processType ==
-                           Services.appinfo.PROCESS_TYPE_DEFAULT);
+const IS_PARENT_PROCESS =
+  Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT;
 
 function DispatcherDelegate(aDispatcher, aMessageManager) {
   this._dispatcher = aDispatcher;
@@ -23,7 +28,9 @@ function DispatcherDelegate(aDispatcher, aMessageManager) {
     // Child process.
     this._replies = new Map();
     (aMessageManager || Services.cpmm).addMessageListener(
-      "GeckoView:MessagingReply", this);
+      "GeckoView:MessagingReply",
+      this
+    );
   }
 }
 
@@ -145,7 +152,7 @@ DispatcherDelegate.prototype = {
   },
 
   receiveMessage: function(aMsg) {
-    const {uuid, type} = aMsg.data;
+    const { uuid, type } = aMsg.data;
     const reply = this._replies.get(uuid);
     if (!reply) {
       return;
@@ -169,7 +176,9 @@ DispatcherDelegate.prototype = {
 };
 
 var EventDispatcher = {
-  instance: new DispatcherDelegate(IS_PARENT_PROCESS ? Services.androidBridge : undefined),
+  instance: new DispatcherDelegate(
+    IS_PARENT_PROCESS ? Services.androidBridge : undefined
+  ),
 
   /**
    * Return an EventDispatcher instance for a chrome DOM window. In a content
@@ -182,14 +191,19 @@ var EventDispatcher = {
    * @param aWindow a chrome DOM window.
    */
   for: function(aWindow) {
-    const view = aWindow && aWindow.arguments && aWindow.arguments[0] &&
-                 aWindow.arguments[0].QueryInterface(Ci.nsIAndroidView);
+    const view =
+      aWindow &&
+      aWindow.arguments &&
+      aWindow.arguments[0] &&
+      aWindow.arguments[0].QueryInterface(Ci.nsIAndroidView);
 
     if (!view) {
       const mm = !IS_PARENT_PROCESS && aWindow && aWindow.messageManager;
       if (!mm) {
-        throw new Error("window is not a GeckoView-connected window and does" +
-                        " not have a message manager");
+        throw new Error(
+          "window is not a GeckoView-connected window and does" +
+            " not have a message manager"
+        );
       }
       return this.forMessageManager(mm);
     }
@@ -220,7 +234,9 @@ var EventDispatcher = {
             // having no message manager.
             return;
           }
-          throw Error(`No message manager for ${aMsg.data.event}:${type} reply`);
+          throw Error(
+            `No message manager for ${aMsg.data.event}:${type} reply`
+          );
         }
         mm.sendAsyncMessage("GeckoView:MessagingReply", {
           type,
@@ -236,8 +252,12 @@ var EventDispatcher = {
     }
 
     if (aMsg.data.global) {
-      this.instance.dispatch(aMsg.data.event, aMsg.data.data,
-                             callback, callback);
+      this.instance.dispatch(
+        aMsg.data.event,
+        aMsg.data.data,
+        callback,
+        callback
+      );
       return;
     }
 

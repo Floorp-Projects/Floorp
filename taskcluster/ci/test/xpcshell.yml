@@ -20,7 +20,7 @@ job-defaults:
                     - android/androidarm_4_3.py
                 android-em-7.*:
                     - android/android_common.py
-                    - android/androidx86_7_0.py
+                    - android/androidx86_7_0-old.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py

@@ -9,8 +9,10 @@ var EXPORTED_SYMBOLS = ["ExtensionContent"];
 
 /* globals ExtensionContent */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
@@ -21,15 +23,28 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
-                                   "@mozilla.org/content/style-sheet-service;1",
-                                   "nsIStyleSheetService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "styleSheetService",
+  "@mozilla.org/content/style-sheet-service;1",
+  "nsIStyleSheetService"
+);
 
-const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
+const Timer = Components.Constructor(
+  "@mozilla.org/timer;1",
+  "nsITimer",
+  "initWithCallback"
+);
 
-const {ExtensionChild} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { ExtensionChild } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionChild.jsm"
+);
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 
@@ -51,24 +66,22 @@ const {
   runSafeSyncWithoutClone,
 } = ExtensionCommon;
 
-const {
-  BrowserExtensionContent,
-  ChildAPIManager,
-  Messenger,
-} = ExtensionChild;
+const { BrowserExtensionContent, ChildAPIManager, Messenger } = ExtensionChild;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionCommon.getConsole);
 
 XPCOMUtils.defineLazyGetter(this, "isContentScriptProcess", () => {
-  return Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT ||
-         !WebExtensionPolicy.useRemoteWebExtensions;
+  return (
+    Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT ||
+    !WebExtensionPolicy.useRemoteWebExtensions
+  );
 });
 
 var DocumentManager;
 
 const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
 
-var apiManager = new class extends SchemaAPIManager {
+var apiManager = new (class extends SchemaAPIManager {
   constructor() {
     super("content", Schemas);
     this.initialized = false;
@@ -78,12 +91,14 @@ var apiManager = new class extends SchemaAPIManager {
     if (!this.initialized) {
       this.initialized = true;
       this.initGlobal();
-      for (let {value} of Services.catMan.enumerateCategory(CATEGORY_EXTENSION_SCRIPTS_CONTENT)) {
+      for (let { value } of Services.catMan.enumerateCategory(
+        CATEGORY_EXTENSION_SCRIPTS_CONTENT
+      )) {
         this.loadScript(value);
       }
     }
   }
-}();
+})();
 
 const SCRIPT_EXPIRY_TIMEOUT_MS = 5 * 60 * 1000;
 const SCRIPT_CLEAR_TIMEOUT_MS = 5 * 1000;
@@ -117,9 +132,11 @@ class CacheMap extends DefaultMap {
     if (promise.timer) {
       promise.timer.cancel();
     }
-    promise.timer = Timer(this.delete.bind(this, url),
-                          this.expiryTimeout,
-                          Ci.nsITimer.TYPE_ONE_SHOT);
+    promise.timer = Timer(
+      this.delete.bind(this, url),
+      this.expiryTimeout,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
 
     return promise;
   }
@@ -138,7 +155,7 @@ class CacheMap extends DefaultMap {
       // Delete the entry if expired or if clear has been called with timeout -1
       // (which is used to force the cache to clear all the entries, e.g. when the
       // extension is shutting down).
-      if (timeout === -1 || (now - promise.lastUsed >= timeout)) {
+      if (timeout === -1 || now - promise.lastUsed >= timeout) {
         this.delete(url);
       }
     }
@@ -186,7 +203,9 @@ class BaseCSSCache extends CacheMap {
       // document. Rule processors can be shared between documents with the
       // same preloaded sheet, so we only lose by removing them while they're
       // still in use.
-      let docs = ChromeUtils.nondeterministicGetWeakSetKeys(sheetCacheDocuments.get(promise));
+      let docs = ChromeUtils.nondeterministicGetWeakSetKeys(
+        sheetCacheDocuments.get(promise)
+      );
       if (docs.length) {
         return;
       }
@@ -201,12 +220,18 @@ class BaseCSSCache extends CacheMap {
  */
 class CSSCache extends BaseCSSCache {
   constructor(sheetType, extension) {
-    super(CSS_EXPIRY_TIMEOUT_MS, url => {
-      let uri = Services.io.newURI(url);
-      return styleSheetService.preloadSheetAsync(uri, sheetType).then(sheet => {
-        return {url, sheet};
-      });
-    }, extension);
+    super(
+      CSS_EXPIRY_TIMEOUT_MS,
+      url => {
+        let uri = Services.io.newURI(url);
+        return styleSheetService
+          .preloadSheetAsync(uri, sheetType)
+          .then(sheet => {
+            return { url, sheet };
+          });
+      },
+      extension
+    );
   }
 }
 
@@ -216,15 +241,21 @@ class CSSCache extends BaseCSSCache {
  */
 class CSSCodeCache extends BaseCSSCache {
   constructor(sheetType, extension) {
-    super(CSSCODE_EXPIRY_TIMEOUT_MS, (hash) => {
-      if (!this.has(hash)) {
-        // Do not allow the getter to be used to lazily create the cached stylesheet,
-        // the cached CSSCode stylesheet has to be explicitly set.
-        throw new Error("Unexistent cached cssCode stylesheet: " + Error().stack);
-      }
+    super(
+      CSSCODE_EXPIRY_TIMEOUT_MS,
+      hash => {
+        if (!this.has(hash)) {
+          // Do not allow the getter to be used to lazily create the cached stylesheet,
+          // the cached CSSCode stylesheet has to be explicitly set.
+          throw new Error(
+            "Unexistent cached cssCode stylesheet: " + Error().stack
+          );
+        }
 
-      return super.get(hash);
-    }, extension);
+        return super.get(hash);
+      },
+      extension
+    );
 
     // Store the preferred sheetType (used to preload the expected stylesheet type in
     // the addCSSCode method).
@@ -236,22 +267,34 @@ class CSSCodeCache extends BaseCSSCache {
       // This cssCode have been already cached, no need to create it again.
       return;
     }
-    const uri = Services.io.newURI("data:text/css;charset=utf-8," + encodeURIComponent(cssCode));
-    const value = styleSheetService.preloadSheetAsync(uri, this.sheetType).then(sheet => {
-      return {sheet, uri};
-    });
+    const uri = Services.io.newURI(
+      "data:text/css;charset=utf-8," + encodeURIComponent(cssCode)
+    );
+    const value = styleSheetService
+      .preloadSheetAsync(uri, this.sheetType)
+      .then(sheet => {
+        return { sheet, uri };
+      });
 
     super.set(hash, value);
   }
 }
 
-defineLazyGetter(BrowserExtensionContent.prototype, "staticScripts", function() {
-  return new ScriptCache({hasReturnValue: false}, this);
-});
+defineLazyGetter(
+  BrowserExtensionContent.prototype,
+  "staticScripts",
+  function() {
+    return new ScriptCache({ hasReturnValue: false }, this);
+  }
+);
 
-defineLazyGetter(BrowserExtensionContent.prototype, "dynamicScripts", function() {
-  return new ScriptCache({hasReturnValue: true}, this);
-});
+defineLazyGetter(
+  BrowserExtensionContent.prototype,
+  "dynamicScripts",
+  function() {
+    return new ScriptCache({ hasReturnValue: true }, this);
+  }
+);
 
 defineLazyGetter(BrowserExtensionContent.prototype, "userCSS", function() {
   return new CSSCache(Ci.nsIStyleSheetService.USER_SHEET, this);
@@ -268,9 +311,13 @@ defineLazyGetter(BrowserExtensionContent.prototype, "userCSSCode", function() {
   return new CSSCodeCache(Ci.nsIStyleSheetService.USER_SHEET, this);
 });
 
-defineLazyGetter(BrowserExtensionContent.prototype, "authorCSSCode", function() {
-  return new CSSCodeCache(Ci.nsIStyleSheetService.AUTHOR_SHEET, this);
-});
+defineLazyGetter(
+  BrowserExtensionContent.prototype,
+  "authorCSSCode",
+  function() {
+    return new CSSCodeCache(Ci.nsIStyleSheetService.AUTHOR_SHEET, this);
+  }
+);
 
 // Represents a content script.
 class Script {
@@ -295,15 +342,12 @@ class Script {
     this.removeCSS = this.matcher.removeCSS;
     this.cssOrigin = this.matcher.cssOrigin;
 
-    this.cssCache = extension[
-      this.cssOrigin === "user" ? "userCSS" : "authorCSS"
-    ];
-    this.cssCodeCache = extension[
-      this.cssOrigin === "user" ? "userCSSCode" : "authorCSSCode"
-    ];
-    this.scriptCache = extension[
-      matcher.wantReturnValue ? "dynamicScripts" : "staticScripts"
-    ];
+    this.cssCache =
+      extension[this.cssOrigin === "user" ? "userCSS" : "authorCSS"];
+    this.cssCodeCache =
+      extension[this.cssOrigin === "user" ? "userCSSCode" : "authorCSSCode"];
+    this.scriptCache =
+      extension[matcher.wantReturnValue ? "dynamicScripts" : "staticScripts"];
 
     if (matcher.wantReturnValue) {
       this.compileScripts();
@@ -321,7 +365,10 @@ class Script {
     }
 
     // Store the hash of the cssCode.
-    const buffer = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(cssCode));
+    const buffer = await crypto.subtle.digest(
+      "SHA-1",
+      new TextEncoder().encode(cssCode)
+    );
     this.cssCodeHash = String.fromCharCode(...new Uint16Array(buffer));
 
     // Cache and preload the cssCode stylesheet.
@@ -346,17 +393,24 @@ class Script {
       if (window) {
         let winUtils = getWinUtils(window);
 
-        let type = this.cssOrigin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
+        let type =
+          this.cssOrigin === "user"
+            ? winUtils.USER_SHEET
+            : winUtils.AUTHOR_SHEET;
 
         for (let url of this.css) {
           this.cssCache.deleteDocument(url, window.document);
-          runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
+          runSafeSyncWithoutClone(
+            winUtils.removeSheetUsingURIString,
+            url,
+            type
+          );
         }
 
-        const {cssCodeHash} = this;
+        const { cssCodeHash } = this;
 
         if (cssCodeHash && this.cssCodeCache.has(cssCodeHash)) {
-          this.cssCodeCache.get(cssCodeHash).then(({uri}) => {
+          this.cssCodeCache.get(cssCodeHash).then(({ uri }) => {
             runSafeSyncWithoutClone(winUtils.removeSheet, uri, type);
           });
           this.cssCodeCache.deleteDocument(cssCodeHash, window.document);
@@ -412,24 +466,29 @@ class Script {
       context.addScript(this);
     }
 
-    const {cssCodeHash} = this;
+    const { cssCodeHash } = this;
 
     let cssPromise;
     if (this.css.length || cssCodeHash) {
       let window = context.contentWindow;
       let winUtils = getWinUtils(window);
 
-      let type = this.cssOrigin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
+      let type =
+        this.cssOrigin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
 
       if (this.removeCSS) {
         for (let url of this.css) {
           this.cssCache.deleteDocument(url, window.document);
 
-          runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
+          runSafeSyncWithoutClone(
+            winUtils.removeSheetUsingURIString,
+            url,
+            type
+          );
         }
 
         if (cssCodeHash && this.cssCodeCache.has(cssCodeHash)) {
-          const {uri} = await this.cssCodeCache.get(cssCodeHash);
+          const { uri } = await this.cssCodeCache.get(cssCodeHash);
           this.cssCodeCache.deleteDocument(cssCodeHash, window.document);
 
           runSafeSyncWithoutClone(winUtils.removeSheet, uri, type);
@@ -441,7 +500,7 @@ class Script {
             return;
           }
 
-          for (let {url, sheet} of sheets) {
+          for (let { url, sheet } of sheets) {
             this.cssCache.addDocument(url, window.document);
 
             runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
@@ -450,7 +509,7 @@ class Script {
 
         if (cssCodeHash) {
           cssPromise = cssPromise.then(async () => {
-            const {sheet} = await this.cssCodeCache.get(cssCodeHash);
+            const { sheet } = await this.cssCodeCache.get(cssCodeHash);
             this.cssCodeCache.addDocument(cssCodeHash, window.document);
 
             runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
@@ -468,7 +527,9 @@ class Script {
         // the stylesheets on first load. We should fix this up if it does becomes
         // a problem.
         if (this.css.length > 0) {
-          context.contentWindow.document.blockParsing(cssPromise, {blockScriptCreated: false});
+          context.contentWindow.document.blockParsing(cssPromise, {
+            blockScriptCreated: false,
+          });
         }
       }
     }
@@ -480,21 +541,31 @@ class Script {
 
     let result;
 
-    const {extension} = context;
+    const { extension } = context;
 
     // The evaluations below may throw, in which case the promise will be
     // automatically rejected.
-    ExtensionTelemetry.contentScriptInjection.stopwatchStart(extension, context);
+    ExtensionTelemetry.contentScriptInjection.stopwatchStart(
+      extension,
+      context
+    );
     try {
       for (let script of scripts) {
         result = script.executeInGlobal(context.cloneScope);
       }
 
       if (this.matcher.jsCode) {
-        result = Cu.evalInSandbox(this.matcher.jsCode, context.cloneScope, "latest");
+        result = Cu.evalInSandbox(
+          this.matcher.jsCode,
+          context.cloneScope,
+          "latest"
+        );
       }
     } finally {
-      ExtensionTelemetry.contentScriptInjection.stopwatchFinish(extension, context);
+      ExtensionTelemetry.contentScriptInjection.stopwatchFinish(
+        extension,
+        context
+      );
     }
 
     await cssPromise;
@@ -524,9 +595,12 @@ class Script {
       // If we're supposed to inject at the start of the document load,
       // and we haven't already missed that point, block further parsing
       // until the scripts have been loaded.
-      const {document} = context.contentWindow;
-      if (this.runAt === "document_start" && document.readyState !== "complete") {
-        document.blockParsing(promise, {blockScriptCreated: false});
+      const { document } = context.contentWindow;
+      if (
+        this.runAt === "document_start" &&
+        document.readyState !== "complete"
+      ) {
+        document.blockParsing(promise, { blockScriptCreated: false });
       }
 
       return promise;
@@ -551,7 +625,9 @@ class UserScript extends Script {
     // the particular userScript and it is passed as a parameter to the custom
     // userScripts APIs defined by the extension.
     this.scriptMetadata = matcher.userScriptOptions.scriptMetadata;
-    this.apiScriptURL = extension.manifest.user_scripts && extension.manifest.user_scripts.api_script;
+    this.apiScriptURL =
+      extension.manifest.user_scripts &&
+      extension.manifest.user_scripts.api_script;
 
     // Add the apiScript to the js scripts to compile.
     if (this.apiScriptURL) {
@@ -559,13 +635,13 @@ class UserScript extends Script {
     }
 
     // WeakMap<ContentScriptContextChild, Sandbox>
-    this.sandboxes = new DefaultWeakMap((context) => {
+    this.sandboxes = new DefaultWeakMap(context => {
       return this.createSandbox(context);
     });
   }
 
   async inject(context) {
-    const {extension} = context;
+    const { extension } = context;
 
     DocumentManager.lazyInit();
 
@@ -605,19 +681,26 @@ class UserScript extends Script {
       // Notify listeners subscribed to the userScripts.onBeforeScript API event,
       // to allow extension API script to provide its custom APIs to the userScript.
       if (apiScript) {
-        context.userScriptsEvents.emit("on-before-script", this.scriptMetadata, userScriptSandbox);
+        context.userScriptsEvents.emit(
+          "on-before-script",
+          this.scriptMetadata,
+          userScriptSandbox
+        );
       }
 
       for (let script of sandboxScripts) {
         script.executeInGlobal(userScriptSandbox);
       }
     } finally {
-      ExtensionTelemetry.userScriptInjection.stopwatchFinish(extension, context);
+      ExtensionTelemetry.userScriptInjection.stopwatchFinish(
+        extension,
+        context
+      );
     }
   }
 
   createSandbox(context) {
-    const {contentWindow} = context;
+    const { contentWindow } = context;
     const contentPrincipal = contentWindow.document.nodePrincipal;
     const ssm = Services.scriptSecurityManager;
 
@@ -629,7 +712,9 @@ class UserScript extends Script {
     }
 
     const sandbox = Cu.Sandbox(principal, {
-      sandboxName: `User Script registered by ${this.extension.policy.debugName}`,
+      sandboxName: `User Script registered by ${
+        this.extension.policy.debugName
+      }`,
       sandboxPrototype: contentWindow,
       sameZoneAs: contentWindow,
       wantXrays: true,
@@ -678,7 +763,10 @@ class ContentScriptContextChild extends BaseContext {
     // Copy origin attributes from the content window origin attributes to
     // preserve the user context id.
     let attrs = contentPrincipal.originAttributes;
-    let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, attrs);
+    let extensionPrincipal = ssm.createCodebasePrincipal(
+      this.extension.baseURI,
+      attrs
+    );
 
     this.isExtensionPage = contentPrincipal.equals(extensionPrincipal);
 
@@ -689,7 +777,9 @@ class ContentScriptContextChild extends BaseContext {
       // enables us to create the APIs object in this sandbox object and then
       // copying it into the iframe's window.  See bug 1214658.
       this.sandbox = Cu.Sandbox(contentWindow, {
-        sandboxName: `Web-Accessible Extension Page ${extension.policy.debugName}`,
+        sandboxName: `Web-Accessible Extension Page ${
+          extension.policy.debugName
+        }`,
         sandboxPrototype: contentWindow,
         sameZoneAs: contentWindow,
         wantXrays: false,
@@ -734,7 +824,8 @@ class ContentScriptContextChild extends BaseContext {
       // in a content object (fetch is manually binded to the window
       // to prevent it from raising a TypeError because content object is not
       // a real window).
-      Cu.evalInSandbox(`
+      Cu.evalInSandbox(
+        `
         this.content = {
           XMLHttpRequest: window.XMLHttpRequest,
           fetch: window.fetch.bind(window),
@@ -743,7 +834,9 @@ class ContentScriptContextChild extends BaseContext {
         window.JSON = JSON;
         window.XMLHttpRequest = XMLHttpRequest;
         window.fetch = fetch;
-      `, this.sandbox);
+      `,
+        this.sandbox
+      );
     }
 
     Object.defineProperty(this, "principal", {
@@ -781,10 +874,16 @@ class ContentScriptContextChild extends BaseContext {
     }
 
     // This is an iframe with content script API enabled (See Bug 1214658)
-    Schemas.exportLazyGetter(this.contentWindow,
-                             "browser", () => this.chromeObj);
-    Schemas.exportLazyGetter(this.contentWindow,
-                             "chrome", () => this.chromeObj);
+    Schemas.exportLazyGetter(
+      this.contentWindow,
+      "browser",
+      () => this.chromeObj
+    );
+    Schemas.exportLazyGetter(
+      this.contentWindow,
+      "chrome",
+      () => this.chromeObj
+    );
   }
 
   get cloneScope() {
@@ -818,8 +917,8 @@ class ContentScriptContextChild extends BaseContext {
       // Overwrite the content script APIs with an empty object if the APIs objects are still
       // defined in the content window (See Bug 1214658).
       if (this.isExtensionPage) {
-        Cu.createObjectIn(this.contentWindow, {defineAs: "browser"});
-        Cu.createObjectIn(this.contentWindow, {defineAs: "chrome"});
+        Cu.createObjectIn(this.contentWindow, { defineAs: "browser" });
+        Cu.createObjectIn(this.contentWindow, { defineAs: "chrome" });
       }
     }
     Cu.nukeSandbox(this.sandbox);
@@ -830,28 +929,38 @@ class ContentScriptContextChild extends BaseContext {
 
 defineLazyGetter(ContentScriptContextChild.prototype, "messenger", function() {
   // The |sender| parameter is passed directly to the extension.
-  let sender = {id: this.extension.id, frameId: this.frameId, url: this.url};
-  let filter = {extensionId: this.extension.id};
-  let optionalFilter = {frameId: this.frameId};
+  let sender = { id: this.extension.id, frameId: this.frameId, url: this.url };
+  let filter = { extensionId: this.extension.id };
+  let optionalFilter = { frameId: this.frameId };
 
-  return new Messenger(this, [this.messageManager], sender, filter, optionalFilter);
+  return new Messenger(
+    this,
+    [this.messageManager],
+    sender,
+    filter,
+    optionalFilter
+  );
 });
 
-defineLazyGetter(ContentScriptContextChild.prototype, "childManager", function() {
-  apiManager.lazyInit();
+defineLazyGetter(
+  ContentScriptContextChild.prototype,
+  "childManager",
+  function() {
+    apiManager.lazyInit();
 
-  let localApis = {};
-  let can = new CanOfAPIs(this, apiManager, localApis);
+    let localApis = {};
+    let can = new CanOfAPIs(this, apiManager, localApis);
 
-  let childManager = new ChildAPIManager(this, this.messageManager, can, {
-    envType: "content_parent",
-    url: this.url,
-  });
+    let childManager = new ChildAPIManager(this, this.messageManager, can, {
+      envType: "content_parent",
+      url: this.url,
+    });
 
-  this.callOnClose(childManager);
+    this.callOnClose(childManager);
 
-  return childManager;
-});
+    return childManager;
+  }
+);
 
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
@@ -880,7 +989,7 @@ DocumentManager = {
     "inner-window-destroyed"(subject, topic, data) {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
-      MessageChannel.abortResponses({innerWindowID: windowId});
+      MessageChannel.abortResponses({ innerWindowID: windowId });
 
       // Close any existent content-script context for the destroyed window.
       if (this.contexts.has(windowId)) {
@@ -895,7 +1004,9 @@ DocumentManager = {
     "memory-pressure"(subject, topic, data) {
       let timeout = data === "heap-minimize" ? 0 : undefined;
 
-      for (let cache of ChromeUtils.nondeterministicGetWeakSetKeys(scriptCaches)) {
+      for (let cache of ChromeUtils.nondeterministicGetWeakSetKeys(
+        scriptCaches
+      )) {
         cache.clear(timeout);
       }
     },
@@ -999,7 +1110,14 @@ var ExtensionContent = {
     // settings like full zoom come into play.
     ctx.scale(canvas.width / win.innerWidth, canvas.height / win.innerHeight);
 
-    ctx.drawWindow(win, win.scrollX, win.scrollY, win.innerWidth, win.innerHeight, "#fff");
+    ctx.drawWindow(
+      win,
+      win.scrollX,
+      win.scrollY,
+      win.innerWidth,
+      win.innerHeight,
+      "#fff"
+    );
 
     return canvas.toDataURL(`image/${options.format}`, options.quality / 100);
   },
@@ -1010,8 +1128,11 @@ var ExtensionContent = {
     return promiseDocumentReady(doc).then(() => {
       let elem = doc.documentElement;
 
-      let language = (elem.getAttribute("xml:lang") || elem.getAttribute("lang") ||
-                      doc.contentLanguage || null);
+      let language =
+        elem.getAttribute("xml:lang") ||
+        elem.getAttribute("lang") ||
+        doc.contentLanguage ||
+        null;
 
       // We only want the last element of the TLD here.
       // Only country codes have any effect on the results, but other
@@ -1024,19 +1145,27 @@ var ExtensionContent = {
       // its heap after it's grown, it has a performance cost.
       // So we send plain text instead.
       let encoder = Cu.createDocumentEncoder("text/plain");
-      encoder.init(doc, "text/plain", Ci.nsIDocumentEncoder.SkipInvisibleContent);
+      encoder.init(
+        doc,
+        "text/plain",
+        Ci.nsIDocumentEncoder.SkipInvisibleContent
+      );
       let text = encoder.encodeToStringWithMaxLength(60 * 1024);
 
       let encoding = doc.characterSet;
 
-      return LanguageDetector.detectLanguage({language, tld, text, encoding})
-        .then(result => result.language === "un" ? "und" : result.language);
+      return LanguageDetector.detectLanguage({
+        language,
+        tld,
+        text,
+        encoding,
+      }).then(result => (result.language === "un" ? "und" : result.language));
     });
   },
 
   // Used to executeScript, insertCSS and removeCSS.
   async handleExtensionExecute(global, target, options, script) {
-    let executeInWin = (window) => {
+    let executeInWin = window => {
       if (script.matchesWindow(window)) {
         return script.injectInto(window);
       }
@@ -1045,23 +1174,31 @@ var ExtensionContent = {
 
     let promises;
     try {
-      promises = Array.from(this.enumerateWindows(global.docShell), executeInWin)
-                      .filter(promise => promise);
+      promises = Array.from(
+        this.enumerateWindows(global.docShell),
+        executeInWin
+      ).filter(promise => promise);
     } catch (e) {
       Cu.reportError(e);
-      return Promise.reject({message: "An unexpected error occurred"});
+      return Promise.reject({ message: "An unexpected error occurred" });
     }
 
     if (!promises.length) {
       if (options.frameID) {
-        return Promise.reject({message: `Frame not found, or missing host permission`});
+        return Promise.reject({
+          message: `Frame not found, or missing host permission`,
+        });
       }
 
       let frames = options.allFrames ? ", and any iframes" : "";
-      return Promise.reject({message: `Missing host permission for the tab${frames}`});
+      return Promise.reject({
+        message: `Missing host permission for the tab${frames}`,
+      });
     }
     if (!options.allFrames && promises.length > 1) {
-      return Promise.reject({message: `Internal error: Script matched multiple windows`});
+      return Promise.reject({
+        message: `Internal error: Script matched multiple windows`,
+      });
     }
 
     let result = await Promise.all(promises);
@@ -1071,16 +1208,18 @@ var ExtensionContent = {
       // we try to send it back over the message manager.
       Cu.cloneInto(result, target);
     } catch (e) {
-      const {jsPaths} = options;
-      const fileName = jsPaths.length ? jsPaths[jsPaths.length - 1] : "<anonymous code>";
+      const { jsPaths } = options;
+      const fileName = jsPaths.length
+        ? jsPaths[jsPaths.length - 1]
+        : "<anonymous code>";
       const message = `Script '${fileName}' result is non-structured-clonable data`;
-      return Promise.reject({message, fileName});
+      return Promise.reject({ message, fileName });
     }
 
     return result;
   },
 
-  handleWebNavigationGetFrame(global, {frameId}) {
+  handleWebNavigationGetFrame(global, { frameId }) {
     return WebNavigationFrames.getFrame(global.docShell, frameId);
   },
 
@@ -1091,7 +1230,12 @@ var ExtensionContent = {
   async receiveMessage(global, name, target, data, recipient) {
     switch (name) {
       case "Extension:Capture":
-        return this.handleExtensionCapture(global, data.width, data.height, data.options);
+        return this.handleExtensionCapture(
+          global,
+          data.width,
+          data.height,
+          data.options
+        );
       case "Extension:DetectLanguage":
         return this.handleDetectLanguage(global, target);
       case "Extension:Execute":
@@ -1112,7 +1256,12 @@ var ExtensionContent = {
         await script.addCSSCode(data.options.cssCode);
         delete data.options.cssCode;
 
-        return this.handleExtensionExecute(global, target, data.options, script);
+        return this.handleExtensionExecute(
+          global,
+          target,
+          data.options,
+          script
+        );
       case "WebNavigation:GetFrame":
         return this.handleWebNavigationGetFrame(global, data.options);
       case "WebNavigation:GetAllFrames":
@@ -1123,9 +1272,11 @@ var ExtensionContent = {
 
   // Helpers
 
-  * enumerateWindows(docShell) {
-    let enum_ = docShell.getDocShellEnumerator(docShell.typeContent,
-                                               docShell.ENUMERATE_FORWARDS);
+  *enumerateWindows(docShell) {
+    let enum_ = docShell.getDocShellEnumerator(
+      docShell.typeContent,
+      docShell.ENUMERATE_FORWARDS
+    );
 
     for (let docShell of enum_) {
       try {

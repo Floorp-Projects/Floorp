@@ -15,14 +15,19 @@ var factory = {
   lockFactory() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
 };
 
-var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
+var newClassID = Cc["@mozilla.org/uuid-generator;1"]
+  .getService(Ci.nsIUUIDGenerator)
+  .generateUUID();
 
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = registrar.contractIDToCID(CONTRACT_ID);
-var oldFactory = Components.manager.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
+var oldFactory = Components.manager.getClassObject(
+  Cc[CONTRACT_ID],
+  Ci.nsIFactory
+);
 registrar.registerFactory(newClassID, "", CONTRACT_ID, factory);
 
 function cleanupFactory() {
@@ -30,8 +35,7 @@ function cleanupFactory() {
   registrar.registerFactory(oldClassID, "", CONTRACT_ID, null);
 }
 
-function GetPermissionsFile(profile)
-{
+function GetPermissionsFile(profile) {
   let file = profile.clone();
   file.append(PERMISSIONS_FILE_NAME);
   return file;
@@ -48,7 +52,9 @@ add_task(function test() {
 
   // Make sure that we can't resolve the nsINavHistoryService
   try {
-    Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService);
+    Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+      Ci.nsINavHistoryService
+    );
     Assert.ok(false, "There shouldn't have been a nsINavHistoryService");
   } catch (e) {
     Assert.ok(true, "There wasn't a nsINavHistoryService");
@@ -70,18 +76,29 @@ add_task(function test() {
       ",modificationTime INTEGER" +
       ",appId INTEGER" +
       ",isInBrowserElement INTEGER" +
-    ")");
+      ")"
+  );
 
   let stmtInsert = db.createStatement(
     "INSERT INTO moz_hosts (" +
       "id, host, type, permission, expireType, expireTime, modificationTime, appId, isInBrowserElement" +
-    ") VALUES (" +
+      ") VALUES (" +
       ":id, :host, :type, :permission, :expireType, :expireTime, :modificationTime, :appId, :isInBrowserElement" +
-    ")");
+      ")"
+  );
 
   let id = 0;
 
-  function insertHost(host, type, permission, expireType, expireTime, modificationTime, appId, isInBrowserElement) {
+  function insertHost(
+    host,
+    type,
+    permission,
+    expireType,
+    expireTime,
+    modificationTime,
+    appId,
+    isInBrowserElement
+  ) {
     let thisId = id++;
 
     stmtInsert.bindByName("id", thisId);
@@ -109,7 +126,7 @@ add_task(function test() {
       expireTime,
       modificationTime,
       appId,
-      isInBrowserElement
+      isInBrowserElement,
     };
   }
 
@@ -129,8 +146,26 @@ add_task(function test() {
     insertHost("263.123.555.676", "A", 1, 0, 0, 0, 0, false),
     insertHost("file:///some/path/to/file.html", "A", 1, 0, 0, 0, 0, false),
     insertHost("file:///another/file.html", "A", 1, 0, 0, 0, 0, false),
-    insertHost("moz-nullprincipal:{8695105a-adbe-4e4e-8083-851faa5ca2d7}", "A", 1, 0, 0, 0, 0, false),
-    insertHost("moz-nullprincipal:{12ahjksd-akjs-asd3-8393-asdu2189asdu}", "B", 1, 0, 0, 0, 0, false),
+    insertHost(
+      "moz-nullprincipal:{8695105a-adbe-4e4e-8083-851faa5ca2d7}",
+      "A",
+      1,
+      0,
+      0,
+      0,
+      0,
+      false
+    ),
+    insertHost(
+      "moz-nullprincipal:{12ahjksd-akjs-asd3-8393-asdu2189asdu}",
+      "B",
+      1,
+      0,
+      0,
+      0,
+      0,
+      false
+    ),
     insertHost("<file>", "A", 1, 0, 0, 0, 0, false),
     insertHost("<file>", "B", 1, 0, 0, 0, 0, false),
   ];
@@ -171,7 +206,7 @@ add_task(function test() {
     ["https://263.123.555.676", "A", 1, 0, 0],
   ];
 
-  let found = expected.map((it) => 0);
+  let found = expected.map(it => 0);
 
   // This will force the permission-manager to reload the data.
   Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
@@ -181,28 +216,43 @@ add_task(function test() {
     let isExpected = false;
 
     expected.forEach((it, i) => {
-      if (permission.principal.origin == it[0] &&
-          permission.type == it[1] &&
-          permission.capability == it[2] &&
-          permission.expireType == it[3] &&
-          permission.expireTime == it[4]) {
+      if (
+        permission.principal.origin == it[0] &&
+        permission.type == it[1] &&
+        permission.capability == it[2] &&
+        permission.expireType == it[3] &&
+        permission.expireTime == it[4]
+      ) {
         isExpected = true;
         found[i]++;
       }
     });
 
-    Assert.ok(isExpected,
-              "Permission " + (isExpected ? "should" : "shouldn't") +
-              " be in permission database: " +
-              permission.principal.origin + ", " +
-              permission.type + ", " +
-              permission.capability + ", " +
-              permission.expireType + ", " +
-              permission.expireTime);
+    Assert.ok(
+      isExpected,
+      "Permission " +
+        (isExpected ? "should" : "shouldn't") +
+        " be in permission database: " +
+        permission.principal.origin +
+        ", " +
+        permission.type +
+        ", " +
+        permission.capability +
+        ", " +
+        permission.expireType +
+        ", " +
+        permission.expireTime
+    );
   }
 
   found.forEach((count, i) => {
-    Assert.ok(count == 1, "Expected count = 1, got count = " + count + " for permission " + expected[i]);
+    Assert.ok(
+      count == 1,
+      "Expected count = 1, got count = " +
+        count +
+        " for permission " +
+        expected[i]
+    );
   });
 
   // Check to make sure that all of the tables which we care about are present

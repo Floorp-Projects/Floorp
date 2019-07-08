@@ -3,7 +3,9 @@
 
 "use strict";
 
-const {WebChannelBroker} = ChromeUtils.import("resource://gre/modules/WebChannel.jsm");
+const { WebChannelBroker } = ChromeUtils.import(
+  "resource://gre/modules/WebChannel.jsm"
+);
 
 const VALID_WEB_CHANNEL_ID = "id";
 const URL_STRING = "http://example.com";
@@ -40,7 +42,6 @@ add_test(function test_web_channel_broker_channel_map() {
   run_next_test();
 });
 
-
 /**
  * Test WebChannelBroker _listener test
  */
@@ -72,8 +73,7 @@ add_task(function test_web_channel_broker_listener() {
       principal: {
         origin: URL_STRING,
       },
-      objects: {
-      },
+      objects: {},
     };
 
     WebChannelBroker._listener(mockEvent);

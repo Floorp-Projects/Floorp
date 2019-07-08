@@ -19,7 +19,7 @@ add_task(async function() {
   await ui.selectStyleSheet(editor.styleSheet.href, LINE_NO);
 
   is(ui.selectedEditor, ui.editors[1], "Second editor is selected.");
-  const {line, ch} = ui.selectedEditor.sourceEditor.getCursor();
+  const { line, ch } = ui.selectedEditor.sourceEditor.getCursor();
 
   is(line, LINE_NO, "correct line selected");
   is(ch, COL_NO, "correct column selected");

@@ -21,31 +21,43 @@ module.exports = function(context) {
   //  --------------------------------------------------------------------------
 
   return {
-    "CallExpression": function(node) {
+    CallExpression(node) {
       let callee = node.callee;
-      if (callee.type !== "MemberExpression" ||
-          callee.property.type !== "Identifier" ||
-          callee.property.name != "removeChild" ||
-          node.arguments.length != 1) {
+      if (
+        callee.type !== "MemberExpression" ||
+        callee.property.type !== "Identifier" ||
+        callee.property.name != "removeChild" ||
+        node.arguments.length != 1
+      ) {
         return;
       }
 
-      if (callee.object.type == "MemberExpression" &&
-          callee.object.property.type == "Identifier" &&
-          callee.object.property.name == "parentNode" &&
-          helpers.getASTSource(callee.object.object, context) ==
-            helpers.getASTSource(node.arguments[0])) {
-        context.report(node, "use element.remove() instead of " +
-                             "element.parentNode.removeChild(element)");
+      if (
+        callee.object.type == "MemberExpression" &&
+        callee.object.property.type == "Identifier" &&
+        callee.object.property.name == "parentNode" &&
+        helpers.getASTSource(callee.object.object, context) ==
+          helpers.getASTSource(node.arguments[0])
+      ) {
+        context.report(
+          node,
+          "use element.remove() instead of " +
+            "element.parentNode.removeChild(element)"
+        );
       }
 
-      if (node.arguments[0].type == "MemberExpression" &&
-          node.arguments[0].property.type == "Identifier" &&
-          node.arguments[0].property.name == "firstChild" &&
-          helpers.getASTSource(callee.object, context) ==
-            helpers.getASTSource(node.arguments[0].object)) {
-        context.report(node, "use element.firstChild.remove() instead of " +
-                             "element.removeChild(element.firstChild)");
+      if (
+        node.arguments[0].type == "MemberExpression" &&
+        node.arguments[0].property.type == "Identifier" &&
+        node.arguments[0].property.name == "firstChild" &&
+        helpers.getASTSource(callee.object, context) ==
+          helpers.getASTSource(node.arguments[0].object)
+      ) {
+        context.report(
+          node,
+          "use element.firstChild.remove() instead of " +
+            "element.removeChild(element.firstChild)"
+        );
       }
     },
   };

@@ -6,7 +6,9 @@
 
 const URL = "http://example.com";
 
-const {LoginTestUtils} = ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm");
+const { LoginTestUtils } = ChromeUtils.import(
+  "resource://testing-common/LoginTestUtils.jsm"
+);
 
 add_task(async function test_principal_downloads() {
   // Store the strings "user" and "pass" using similarly looking glyphs.
@@ -23,14 +25,21 @@ add_task(async function test_principal_downloads() {
   Assert.equal(countLogins(URL), 1);
 
   let uri = Services.io.newURI(URL);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   await new Promise(resolve => {
-    Services.clearData.deleteDataFromPrincipal(principal, true /* user request */,
-                                               Ci.nsIClearDataService.CLEAR_PASSWORDS, value => {
-      Assert.equal(value, 0);
-      resolve();
-    });
+    Services.clearData.deleteDataFromPrincipal(
+      principal,
+      true /* user request */,
+      Ci.nsIClearDataService.CLEAR_PASSWORDS,
+      value => {
+        Assert.equal(value, 0);
+        resolve();
+      }
+    );
   });
 
   Assert.equal(countLogins(URL), 0);
@@ -53,10 +62,13 @@ add_task(async function test_all() {
   Assert.equal(countLogins(URL), 1);
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_PASSWORDS, value => {
-      Assert.equal(value, 0);
-      resolve();
-    });
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_PASSWORDS,
+      value => {
+        Assert.equal(value, 0);
+        resolve();
+      }
+    );
   });
 
   Assert.equal(countLogins(URL), 0);

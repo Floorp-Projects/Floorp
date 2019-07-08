@@ -44,8 +44,8 @@ async function runStyleAttributeAutocompleteTests(inspector, testData) {
 
     // Expect a markupmutation event at the last iteration since that's when the
     // attribute is actually created.
-    const onMutation = i === testData.length - 1
-                     ? inspector.once("markupmutation") : null;
+    const onMutation =
+      i === testData.length - 1 ? inspector.once("markupmutation") : null;
 
     info(`Entering test data ${i}: ${data[0]}, expecting: [${data[1]}]`);
     await enterData(data, editor, inspector);
@@ -95,7 +95,7 @@ function clickOnSuggestion(index, editor) {
 
 function sendKey(key, editor, inspector) {
   return new Promise(resolve => {
-    if (/(down|left|right|back_space|return)/ig.test(key)) {
+    if (/(down|left|right|back_space|return)/gi.test(key)) {
       info("Adding event listener for down|left|right|back_space|return keys");
       editor.input.addEventListener("keypress", function onKeypress() {
         if (editor.input) {
@@ -120,13 +120,27 @@ async function checkData(data, editor, inspector) {
 
   if (selEnd != -1) {
     is(editor.input.value, completion, "Completed value is correct");
-    is(editor.input.selectionStart, selStart, "Selection start position is correct");
+    is(
+      editor.input.selectionStart,
+      selStart,
+      "Selection start position is correct"
+    );
     is(editor.input.selectionEnd, selEnd, "Selection end position is correct");
-    is(editor.popup.isOpen, popupOpen, "Popup is " + (popupOpen ? "open" : "closed"));
+    is(
+      editor.popup.isOpen,
+      popupOpen,
+      "Popup is " + (popupOpen ? "open" : "closed")
+    );
   } else {
     const nodeFront = await getNodeFront("#node14", inspector);
     const container = getContainerForNodeFront(nodeFront, inspector);
-    const attr = container.editor.attrElements.get("style").querySelector(".editable");
-    is(attr.textContent, completion, "Correct value is persisted after pressing Enter");
+    const attr = container.editor.attrElements
+      .get("style")
+      .querySelector(".editable");
+    is(
+      attr.textContent,
+      completion,
+      "Correct value is persisted after pressing Enter"
+    );
   }
 }

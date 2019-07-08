@@ -1,1 +1,1 @@
-browser.runtime.sendMessage({"action": "showTab"});
+browser.runtime.sendMessage({ action: "showTab" });

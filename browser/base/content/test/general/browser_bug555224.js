@@ -6,7 +6,11 @@ var gTestTab, gBgTab, gTestZoom;
 
 function testBackgroundLoad() {
   (async function() {
-    is(ZoomManager.zoom, gTestZoom, "opening a background tab should not change foreground zoom");
+    is(
+      ZoomManager.zoom,
+      gTestZoom,
+      "opening a background tab should not change foreground zoom"
+    );
 
     await FullZoomHelper.removeTabAndWaitForLocationChange(gBgTab);
 

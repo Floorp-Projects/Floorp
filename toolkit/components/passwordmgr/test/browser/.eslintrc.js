@@ -2,7 +2,6 @@
 
 module.exports = {
   rules:  {
-    "brace-style": ["error", "1tbs", {"allowSingleLine": false}],
     "no-var": "off",
   },
 };

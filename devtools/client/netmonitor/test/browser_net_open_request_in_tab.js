@@ -28,15 +28,30 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 
   // Open POST request in new tab
-  await performRequest(monitor, tab, "POST", "application/x-www-form-urlencoded",
-    "foo=bar&baz=42");
+  await performRequest(
+    monitor,
+    tab,
+    "POST",
+    "application/x-www-form-urlencoded",
+    "foo=bar&baz=42"
+  );
   newTab = await openLastRequestInTab();
-  await checkTabResponse(newTab, "POST", "application/x-www-form-urlencoded",
-    "foo=bar&amp;baz=42");
+  await checkTabResponse(
+    newTab,
+    "POST",
+    "application/x-www-form-urlencoded",
+    "foo=bar&amp;baz=42"
+  );
   gBrowser.removeCurrentTab();
 
   // Open POST application/json request in new tab
-  await performRequest(monitor, tab, "POST", "application/json", '{"foo":"bar"}');
+  await performRequest(
+    monitor,
+    tab,
+    "POST",
+    "application/json",
+    '{"foo":"bar"}'
+  );
   newTab = await openLastRequestInTab();
   await checkTabResponse(newTab, "POST", "application/json", '{"foo":"bar"}');
   gBrowser.removeCurrentTab();
@@ -50,7 +65,8 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "mousedown" }, lastRequest);
     EventUtils.sendMouseEvent({ type: "contextmenu" }, lastRequest);
     await waitUntil(() =>
-      getContextMenuItem(monitor, "request-list-context-newtab"));
+      getContextMenuItem(monitor, "request-list-context-newtab")
+    );
 
     const onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
     getContextMenuItem(monitor, "request-list-context-newtab").click();
@@ -90,15 +106,30 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 
   // Open POST request in new tab
-  await performRequest(monitor, tab, "POST", "application/x-www-form-urlencoded",
-    "foo=bar&baz=42");
+  await performRequest(
+    monitor,
+    tab,
+    "POST",
+    "application/x-www-form-urlencoded",
+    "foo=bar&baz=42"
+  );
   newTab = await openLastRequestInTab();
-  await checkTabResponse(newTab, "POST", "application/x-www-form-urlencoded",
-    "foo=bar&amp;baz=42");
+  await checkTabResponse(
+    newTab,
+    "POST",
+    "application/x-www-form-urlencoded",
+    "foo=bar&amp;baz=42"
+  );
   gBrowser.removeCurrentTab();
 
   // Open POST application/json request in new tab
-  await performRequest(monitor, tab, "POST", "application/json", '{"foo":"bar"}');
+  await performRequest(
+    monitor,
+    tab,
+    "POST",
+    "application/json",
+    '{"foo":"bar"}'
+  );
   newTab = await openLastRequestInTab();
   await checkTabResponse(newTab, "POST", "application/json", '{"foo":"bar"}');
   gBrowser.removeCurrentTab();
@@ -125,7 +156,9 @@ add_task(async function() {
 
 async function performRequest(monitor, tab, method, contentType, payload) {
   const wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, [method, contentType, payload],
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    [method, contentType, payload],
     async function([method_, contentType_, payload_]) {
       content.wrappedJSObject.performRequest(method_, contentType_, payload_);
     }
@@ -135,13 +168,17 @@ async function performRequest(monitor, tab, method, contentType, payload) {
 }
 
 async function checkTabResponse(checkedTab, method, contentType, payload) {
-  await ContentTask.spawn(checkedTab.linkedBrowser, [method, contentType, payload],
+  await ContentTask.spawn(
+    checkedTab.linkedBrowser,
+    [method, contentType, payload],
     async function([method_, contentType_, payload_]) {
       const { body } = content.wrappedJSObject.document;
       const expected = [method_, contentType_, payload_].join("\n");
       info("Response from the server:" + body.innerHTML.replace(/\n/g, "\\n"));
-      ok(body.innerHTML.includes(expected),
-        "Tab method and data match original request");
+      ok(
+        body.innerHTML.includes(expected),
+        "Tab method and data match original request"
+      );
     }
   );
 }

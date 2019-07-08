@@ -1,20 +1,34 @@
 function scaleRatio(scale) {
   return {
-    "set": [
-      [ "layout.css.devPixelsPerPx", "" + scale ],
-      [ "apz.allow_zooming", true ],
-      [ "dom.meta-viewport.enabled", true ],
-    ]
+    set: [
+      ["layout.css.devPixelsPerPx", "" + scale],
+      ["apz.allow_zooming", true],
+      ["dom.meta-viewport.enabled", true],
+    ],
   };
 }
 
 function getViewportInfo(aDisplayWidth, aDisplayHeight) {
-  let defaultZoom = {}, allowZoom = {}, minZoom = {}, maxZoom = {},
-      width = {}, height = {}, autoSize = {};
+  let defaultZoom = {},
+    allowZoom = {},
+    minZoom = {},
+    maxZoom = {},
+    width = {},
+    height = {},
+    autoSize = {};
 
   let cwu = SpecialPowers.getDOMWindowUtils(window);
-  cwu.getViewportInfo(aDisplayWidth, aDisplayHeight, defaultZoom, allowZoom,
-                      minZoom, maxZoom, width, height, autoSize);
+  cwu.getViewportInfo(
+    aDisplayWidth,
+    aDisplayHeight,
+    defaultZoom,
+    allowZoom,
+    minZoom,
+    maxZoom,
+    width,
+    height,
+    autoSize
+  );
   return {
     defaultZoom: defaultZoom.value,
     minZoom: minZoom.value,
@@ -22,6 +36,6 @@ function getViewportInfo(aDisplayWidth, aDisplayHeight) {
     width: width.value,
     height: height.value,
     autoSize: autoSize.value,
-    allowZoom: allowZoom.value
+    allowZoom: allowZoom.value,
   };
 }

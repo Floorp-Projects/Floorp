@@ -2,15 +2,15 @@
 
 // These match what we add to IE via InsertIEHistory.exe.
 const TEST_ENTRIES = [
-{
-  url: "http://www.mozilla.org/1",
-  title: "Mozilla HTTP Test",
-},
-{
-  url: "https://www.mozilla.org/2",
-  // Test character encoding with a fox emoji:
-  title: "Mozilla HTTPS Test 🦊",
-},
+  {
+    url: "http://www.mozilla.org/1",
+    title: "Mozilla HTTP Test",
+  },
+  {
+    url: "https://www.mozilla.org/2",
+    // Test character encoding with a fox emoji:
+    title: "Mozilla HTTPS Test 🦊",
+  },
 ];
 
 function insertIEHistory() {
@@ -41,8 +41,8 @@ add_task(async function test_IE_history() {
 
   await promiseMigration(migrator, MigrationUtils.resourceTypes.HISTORY);
 
-  for (let {url, title} of TEST_ENTRIES) {
-    let entry = await PlacesUtils.history.fetch(url, {includeVisits: true});
+  for (let { url, title } of TEST_ENTRIES) {
+    let entry = await PlacesUtils.history.fetch(url, { includeVisits: true });
     Assert.equal(entry.url, url, "Should have the correct URL");
     Assert.equal(entry.title, title, "Should have the correct title");
     Assert.ok(entry.visits.length > 0, "Should have some visits");

@@ -15,11 +15,13 @@ async function throttleTest(actuallyThrottle) {
 
   const { monitor } = await initNetMonitor(SIMPLE_URL);
   const { store, windowRequire, connector } = monitor.panelWin;
-  const { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
+  const { ACTIVITY_TYPE } = windowRequire(
+    "devtools/client/netmonitor/src/constants"
+  );
   const { setPreferences, triggerActivity } = connector;
-  const {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 

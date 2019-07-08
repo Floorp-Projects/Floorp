@@ -3,13 +3,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const origins = [
     {
       path: "storage/default/file+++UNIVERSAL_FILE_URI_ORIGIN",
       url: "file:///Test/test.html",
-      persistence: "default"
+      persistence: "default",
     },
   ];
 
@@ -30,12 +29,11 @@ async function testSteps()
     let result;
 
     try {
-      let request = initOrigin(getPrincipal(origin.url),
-                               origin.persistence);
+      let request = initOrigin(getPrincipal(origin.url), origin.persistence);
       result = await requestFinished(request);
 
       ok(true, "Should not have thrown");
-    } catch(ex) {
+    } catch (ex) {
       ok(false, "Should not have thrown");
     }
 

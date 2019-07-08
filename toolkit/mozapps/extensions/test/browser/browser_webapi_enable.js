@@ -40,8 +40,8 @@ add_task(async function() {
 
     let events = await getListenerEvents(browser);
     let expected = [
-      {id: ID, event: "onDisabling"},
-      {id: ID, event: "onDisabled"},
+      { id: ID, event: "onDisabling" },
+      { id: ID, event: "onDisabled" },
     ];
     Assert.deepEqual(events, expected, "Got expected disable events");
 
@@ -54,8 +54,8 @@ add_task(async function() {
 
     events = await getListenerEvents(browser);
     expected = expected.concat([
-      {id: ID, event: "onEnabling"},
-      {id: ID, event: "onEnabled"},
+      { id: ID, event: "onEnabling" },
+      { id: ID, event: "onEnabled" },
     ]);
     Assert.deepEqual(events, expected, "Got expected enable events");
   });

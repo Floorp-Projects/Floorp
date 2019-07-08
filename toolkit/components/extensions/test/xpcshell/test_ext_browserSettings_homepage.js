@@ -15,14 +15,22 @@ add_task(async function test_homepage_get_without_set() {
     },
   });
 
-  let defaultHomepage = Services.prefs.getStringPref("browser.startup.homepage");
+  let defaultHomepage = Services.prefs.getStringPref(
+    "browser.startup.homepage"
+  );
 
   await extension.startup();
   let homepage = await extension.awaitMessage("homepage");
-  equal(homepage.value, defaultHomepage,
-        "The homepageOverride setting has the expected value.");
-  equal(homepage.levelOfControl, "not_controllable",
-        "The homepageOverride setting has the expected levelOfControl.");
+  equal(
+    homepage.value,
+    defaultHomepage,
+    "The homepageOverride setting has the expected value."
+  );
+  equal(
+    homepage.levelOfControl,
+    "not_controllable",
+    "The homepageOverride setting has the expected levelOfControl."
+  );
 
   await extension.unload();
 });

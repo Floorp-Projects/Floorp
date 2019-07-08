@@ -9,8 +9,7 @@
  * 3. checks presence of index.sql and files in the expected location
  */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpServer = null;
 var cacheUpdateObserver = null;
@@ -19,40 +18,39 @@ var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 function make_channel(url, callback, ctx) {
   return NetUtil.newChannel({
     uri: url,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
 }
 
 function make_uri(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   return ios.newURI(url);
 }
 
 // start the test with loading this master entry referencing the manifest
-function masterEntryHandler(metadata, response)
-{
+function masterEntryHandler(metadata, response) {
   var masterEntryContent = "<html manifest='/manifest'></html>";
   response.setHeader("Content-Type", "text/html");
-  response.bodyOutputStream.write(masterEntryContent, masterEntryContent.length);
+  response.bodyOutputStream.write(
+    masterEntryContent,
+    masterEntryContent.length
+  );
 }
 
 // manifest defines fallback namespace from any /redirect path to /content
-function manifestHandler(metadata, response)
-{
+function manifestHandler(metadata, response) {
   var manifestContent = "CACHE MANIFEST\n";
   response.setHeader("Content-Type", "text/cache-manifest");
   response.bodyOutputStream.write(manifestContent, manifestContent.length);
 }
 
 // finally check we got fallback content
-function finish_test(customDir)
-{
+function finish_test(customDir) {
   var offlineCacheDir = customDir.clone();
   offlineCacheDir.append("OfflineCache");
 
   var indexSqlFile = offlineCacheDir.clone();
-  indexSqlFile.append('index.sqlite');
+  indexSqlFile.append("index.sqlite");
   Assert.equal(indexSqlFile.exists(), true);
 
   var file1 = offlineCacheDir.clone();
@@ -78,16 +76,18 @@ function finish_test(customDir)
   try {
     indexSqlFile.remove(false);
     Assert.ok(true);
-  }
-  catch (ex) {
-    do_throw("Could not remove the sqlite.index file, we still keep it open \n" + ex + "\n");
+  } catch (ex) {
+    do_throw(
+      "Could not remove the sqlite.index file, we still keep it open \n" +
+        ex +
+        "\n"
+    );
   }
 
   httpServer.stop(do_test_finished);
 }
 
-function run_test()
-{
+function run_test() {
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/masterEntry", masterEntryHandler);
   httpServer.registerPathHandler("/manifest", manifestHandler);
@@ -97,52 +97,65 @@ function run_test()
   var customDir = profileDir.clone();
   customDir.append("customOfflineCacheDir" + Math.random());
 
-  var pm = Cc["@mozilla.org/permissionmanager;1"]
-    .getService(Ci.nsIPermissionManager);
-  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(Ci.nsIScriptSecurityManager);
+  var pm = Cc["@mozilla.org/permissionmanager;1"].getService(
+    Ci.nsIPermissionManager
+  );
+  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
+    Ci.nsIScriptSecurityManager
+  );
   var uri = make_uri("http://localhost:4444");
   var principal = ssm.createCodebasePrincipal(uri, {});
 
   if (pm.testPermissionFromPrincipal(principal, "offline-app") != 0) {
-    dump("Previous test failed to clear offline-app permission!  Expect failures.\n");
+    dump(
+      "Previous test failed to clear offline-app permission!  Expect failures.\n"
+    );
   }
-  pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+  pm.addFromPrincipal(
+    principal,
+    "offline-app",
+    Ci.nsIPermissionManager.ALLOW_ACTION
+  );
 
-  var ps = Cc["@mozilla.org/preferences-service;1"]
-    .getService(Ci.nsIPrefBranch);
+  var ps = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
   ps.setBoolPref("browser.cache.offline.enable", true);
   // Set this pref to mimic the default browser behavior.
-  ps.setComplexValue("browser.cache.offline.parent_directory", Ci.nsIFile, profileDir);
+  ps.setComplexValue(
+    "browser.cache.offline.parent_directory",
+    Ci.nsIFile,
+    profileDir
+  );
 
-  var us = Cc["@mozilla.org/offlinecacheupdate-service;1"].
-           getService(Ci.nsIOfflineCacheUpdateService);
+  var us = Cc["@mozilla.org/offlinecacheupdate-service;1"].getService(
+    Ci.nsIOfflineCacheUpdateService
+  );
   var update = us.scheduleAppUpdate(
-      make_uri("http://localhost:4444/manifest"),
-      make_uri("http://localhost:4444/masterEntry"),
-      systemPrincipal,
-      customDir);
+    make_uri("http://localhost:4444/manifest"),
+    make_uri("http://localhost:4444/masterEntry"),
+    systemPrincipal,
+    customDir
+  );
 
   var expectedStates = [
-      Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING,
-      Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED,
-      Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS,
-      Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMCOMPLETED,
-      Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED
+    Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING,
+    Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED,
+    Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS,
+    Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMCOMPLETED,
+    Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED,
   ];
 
   update.addObserver({
-    updateStateChanged(update, state)
-    {
+    updateStateChanged(update, state) {
       Assert.equal(state, expectedStates.shift());
 
-      if (state == Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED)
-          finish_test(customDir);
+      if (state == Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED) {
+        finish_test(customDir);
+      }
     },
 
-    applicationCacheAvailable(appCache)
-    {
-    }
+    applicationCacheAvailable(appCache) {},
   });
 
   do_test_pending();

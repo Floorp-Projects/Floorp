@@ -31,11 +31,18 @@ add_task(async function setPref() {
 add_task(async function testAppMenuButtonPress() {
   let button = document.getElementById("PanelUI-menu-button");
   forceFocus(button);
-  let focused = BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "focus", true);
+  let focused = BrowserTestUtils.waitForEvent(
+    window.PanelUI.mainView,
+    "focus",
+    true
+  );
   EventUtils.synthesizeKey(" ");
   await focused;
   ok(true, "Focus inside app menu after toolbar button pressed");
-  let hidden = BrowserTestUtils.waitForEvent(window.PanelUI.panel, "popuphidden");
+  let hidden = BrowserTestUtils.waitForEvent(
+    window.PanelUI.panel,
+    "popuphidden"
+  );
   EventUtils.synthesizeKey("KEY_Escape");
   await hidden;
 });
@@ -69,7 +76,10 @@ add_task(async function testLibraryButtonPress() {
 // This is a customizable widget of type "view".
 // The Developer menu should appear and focus should move inside it.
 add_task(async function testDeveloperButtonPress() {
-  CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea(
+    "developer-button",
+    CustomizableUI.AREA_NAVBAR
+  );
   let button = document.getElementById("developer-button");
   forceFocus(button);
   let view = document.getElementById("PanelUI-developer");
@@ -86,7 +96,10 @@ add_task(async function testDeveloperButtonPress() {
 // Test that the Developer menu doesn't open when a key other than space or
 // enter is pressed .
 add_task(async function testDeveloperButtonWrongKey() {
-  CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea(
+    "developer-button",
+    CustomizableUI.AREA_NAVBAR
+  );
   let button = document.getElementById("developer-button");
   forceFocus(button);
   EventUtils.synthesizeKey("KEY_Tab");
@@ -115,7 +128,9 @@ add_task(async function testPageActionsButtonPress() {
 
 // Test activation of the Back and Forward buttons from the keyboard.
 add_task(async function testBackForwardButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com/1", async function(aBrowser) {
+  await BrowserTestUtils.withNewTab("https://example.com/1", async function(
+    aBrowser
+  ) {
     BrowserTestUtils.loadURI(aBrowser, "https://example.com/2");
 
     await BrowserTestUtils.browserLoaded(aBrowser);
@@ -147,9 +162,13 @@ add_task(async function testSendTabToDeviceButtonPress() {
     let focused = BrowserTestUtils.waitForEvent(mainPopupSet, "focus", true);
     EventUtils.synthesizeKey(" ");
     await focused;
-    let view = document.getElementById("pageAction-urlbar-sendToDevice-subview");
-    ok(view.contains(document.activeElement),
-       "Focus inside Page Actions menu after toolbar button pressed");
+    let view = document.getElementById(
+      "pageAction-urlbar-sendToDevice-subview"
+    );
+    ok(
+      view.contains(document.activeElement),
+      "Focus inside Page Actions menu after toolbar button pressed"
+    );
     let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
     view.closest("panel").hidePopup();
     await hidden;
@@ -161,7 +180,9 @@ add_task(async function testSendTabToDeviceButtonPress() {
 // This is a toolbarbutton with a click handler and no command handler, but
 // the toolbar keyboard navigation code should handle keyboard activation.
 add_task(async function testReloadButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(aBrowser) {
+  await BrowserTestUtils.withNewTab("https://example.com", async function(
+    aBrowser
+  ) {
     let button = document.getElementById("reload-button");
     await TestUtils.waitForCondition(() => !button.disabled);
     forceFocus(button);
@@ -201,15 +222,18 @@ add_task(async function testSidebarsButtonPress() {
 // This is an image with a click handler on its parent and no command handler,
 // but the toolbar keyboard navigation code should handle keyboard activation.
 add_task(async function testBookmarkButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(aBrowser) {
+  await BrowserTestUtils.withNewTab("https://example.com", async function(
+    aBrowser
+  ) {
     let button = document.getElementById("star-button");
     forceFocus(button);
     let panel = document.getElementById("editBookmarkPanel");
     let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
     // The button ignores activation while the bookmarked status is being
     // updated. So, wait for it to finish updating.
-    await TestUtils.waitForCondition(() =>
-      BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING);
+    await TestUtils.waitForCondition(
+      () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING
+    );
     EventUtils.synthesizeKey(" ");
     await focused;
     ok(true, "Focus inside edit bookmark panel after Bookmark button pressed");
@@ -223,8 +247,10 @@ add_task(async function testBookmarkButtonPress() {
 // This is a button with type="menu".
 // The Bookmarks Menu should appear.
 add_task(async function testBookmarksmenuButtonPress() {
-  CustomizableUI.addWidgetToArea("bookmarks-menu-button",
-                                 CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea(
+    "bookmarks-menu-button",
+    CustomizableUI.AREA_NAVBAR
+  );
   let button = document.getElementById("bookmarks-menu-button");
   forceFocus(button);
   let menu = document.getElementById("BMB_bookmarksPopup");
@@ -242,7 +268,10 @@ add_task(async function testBookmarksmenuButtonPress() {
 // The overflow menu should appear and focus should move inside it.
 add_task(async function testOverflowButtonPress() {
   // Move something to the overflow menu to make the button appear.
-  CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "developer-button",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   let button = document.getElementById("nav-bar-overflow-button");
   forceFocus(button);
   let view = document.getElementById("widget-overflow-mainView");

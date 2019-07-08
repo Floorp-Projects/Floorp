@@ -10,7 +10,10 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    content.wrappedJSObject.console.log("oi-test", content.wrappedJSObject.Math);
+    content.wrappedJSObject.console.log(
+      "oi-test",
+      content.wrappedJSObject.Math
+    );
   });
 
   const node = await waitFor(() => findMessage(hud, "oi-test"));
@@ -43,8 +46,11 @@ add_task(async function() {
   EventUtils.synthesizeMouseAtCenter(lastNode, {}, view);
   await onOiMutation;
 
-  is(scrollTop, outputContainer.scrollTop,
-    "Scroll position did not changed when expanding a node");
+  is(
+    scrollTop,
+    outputContainer.scrollTop,
+    "Scroll position did not changed when expanding a node"
+  );
 });
 
 function hasVerticalOverflow(container) {

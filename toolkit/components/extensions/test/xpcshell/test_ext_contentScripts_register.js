@@ -1,8 +1,6 @@
 "use strict";
 
-const {
-  createAppInfo,
-} = AddonTestUtils;
+const { createAppInfo } = AddonTestUtils;
 
 AddonTestUtils.init(this);
 
@@ -14,8 +12,12 @@ server.registerDirectory("/data/", do_get_file("data"));
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 function check_applied_styles() {
-  const urlElStyle = getComputedStyle(document.querySelector("#registered-extension-url-style"));
-  const blobElStyle = getComputedStyle(document.querySelector("#registered-extension-text-style"));
+  const urlElStyle = getComputedStyle(
+    document.querySelector("#registered-extension-url-style")
+  );
+  const blobElStyle = getComputedStyle(
+    document.querySelector("#registered-extension-text-style")
+  );
 
   browser.test.sendMessage("registered-styles-results", {
     registeredExtensionUrlStyleBG: urlElStyle["background-color"],
@@ -33,30 +35,36 @@ add_task(async function test_contentscripts_register_css() {
 
     const matches = ["http://localhost/*/file_sample_registered_styles.html"];
 
-    browser.test.assertThrows(() => {
-      browser.contentScripts.register({
-        matches,
-        unknownParam: "unexpected property",
-      });
-    }, /Unexpected property "unknownParam"/, "contentScripts.register throws on unexpected properties");
+    browser.test.assertThrows(
+      () => {
+        browser.contentScripts.register({
+          matches,
+          unknownParam: "unexpected property",
+        });
+      },
+      /Unexpected property "unknownParam"/,
+      "contentScripts.register throws on unexpected properties"
+    );
 
     let fileScript = await browser.contentScripts.register({
-      css: [{file: "registered_ext_style.css"}],
+      css: [{ file: "registered_ext_style.css" }],
       matches,
       runAt: "document_start",
     });
 
     let textScript = await browser.contentScripts.register({
-      css: [{code: cssCode}],
+      css: [{ code: cssCode }],
       matches,
       runAt: "document_start",
     });
 
-    browser.test.onMessage.addListener(async (msg) => {
+    browser.test.onMessage.addListener(async msg => {
       switch (msg) {
         case "unregister-text":
           await textScript.unregister().catch(err => {
-            browser.test.fail(`Unexpected exception while unregistering text style: ${err}`);
+            browser.test.fail(
+              `Unexpected exception while unregistering text style: ${err}`
+            );
           });
 
           await browser.test.assertRejects(
@@ -69,7 +77,9 @@ add_task(async function test_contentscripts_register_css() {
           break;
         case "unregister-file":
           await fileScript.unregister().catch(err => {
-            browser.test.fail(`Unexpected exception while unregistering url style: ${err}`);
+            browser.test.fail(
+              `Unexpected exception while unregistering url style: ${err}`
+            );
           });
 
           await browser.test.assertRejects(
@@ -125,36 +135,60 @@ add_task(async function test_contentscripts_register_css() {
 
   await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
 
-  const registeredStylesResults = await extension.awaitMessage("registered-styles-results");
+  const registeredStylesResults = await extension.awaitMessage(
+    "registered-styles-results"
+  );
 
-  equal(registeredStylesResults.registeredExtensionUrlStyleBG, "rgb(255, 0, 0)",
-        "The expected style has been applied from the registered extension url style");
-  equal(registeredStylesResults.registeredExtensionBlobStyleBG, "rgb(0, 0, 255)",
-        "The expected style has been applied from the registered extension blob style");
+  equal(
+    registeredStylesResults.registeredExtensionUrlStyleBG,
+    "rgb(255, 0, 0)",
+    "The expected style has been applied from the registered extension url style"
+  );
+  equal(
+    registeredStylesResults.registeredExtensionBlobStyleBG,
+    "rgb(0, 0, 255)",
+    "The expected style has been applied from the registered extension blob style"
+  );
 
   extension.sendMessage("unregister-file");
   await extension.awaitMessage("unregister-file:done");
 
   await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
 
-  const unregisteredURLStylesResults = await extension.awaitMessage("registered-styles-results");
+  const unregisteredURLStylesResults = await extension.awaitMessage(
+    "registered-styles-results"
+  );
 
-  equal(unregisteredURLStylesResults.registeredExtensionUrlStyleBG, "rgba(0, 0, 0, 0)",
-        "The expected style has been applied once extension url style has been unregistered");
-  equal(unregisteredURLStylesResults.registeredExtensionBlobStyleBG, "rgb(0, 0, 255)",
-        "The expected style has been applied from the registered extension blob style");
+  equal(
+    unregisteredURLStylesResults.registeredExtensionUrlStyleBG,
+    "rgba(0, 0, 0, 0)",
+    "The expected style has been applied once extension url style has been unregistered"
+  );
+  equal(
+    unregisteredURLStylesResults.registeredExtensionBlobStyleBG,
+    "rgb(0, 0, 255)",
+    "The expected style has been applied from the registered extension blob style"
+  );
 
   extension.sendMessage("unregister-text");
   await extension.awaitMessage("unregister-text:done");
 
   await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
 
-  const unregisteredBlobStylesResults = await extension.awaitMessage("registered-styles-results");
+  const unregisteredBlobStylesResults = await extension.awaitMessage(
+    "registered-styles-results"
+  );
 
-  equal(unregisteredBlobStylesResults.registeredExtensionUrlStyleBG, "rgba(0, 0, 0, 0)",
-        "The expected style has been applied once extension url style has been unregistered");
-  equal(unregisteredBlobStylesResults.registeredExtensionBlobStyleBG, "rgba(0, 0, 0, 0)",
-        "The expected style has been applied once extension blob style has been unregistered");
+  equal(
+    unregisteredBlobStylesResults.registeredExtensionUrlStyleBG,
+    "rgba(0, 0, 0, 0)",
+    "The expected style has been applied once extension url style has been unregistered"
+  );
+  equal(
+    unregisteredBlobStylesResults.registeredExtensionBlobStyleBG,
+    "rgba(0, 0, 0, 0)",
+    "The expected style has been applied once extension blob style has been unregistered"
+  );
 
   await contentPage.close();
   await extension.unload();
@@ -167,7 +201,7 @@ add_task(async function test_contentscripts_unregister_on_context_unload() {
 
     document.body.appendChild(frame);
 
-    browser.test.onMessage.addListener((msg) => {
+    browser.test.onMessage.addListener(msg => {
       switch (msg) {
         case "unload-frame":
           frame.remove();
@@ -183,7 +217,7 @@ add_task(async function test_contentscripts_unregister_on_context_unload() {
 
   async function background_frame() {
     await browser.contentScripts.register({
-      css: [{file: "registered_ext_style.css"}],
+      css: [{ file: "registered_ext_style.css" }],
       matches: ["http://localhost/*/file_sample_registered_styles.html"],
       runAt: "document_start",
     });
@@ -193,9 +227,7 @@ add_task(async function test_contentscripts_unregister_on_context_unload() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "http://localhost/*/file_sample_registered_styles.html",
-      ],
+      permissions: ["http://localhost/*/file_sample_registered_styles.html"],
       content_scripts: [
         {
           matches: ["http://localhost/*/file_sample_registered_styles.html"],
@@ -241,20 +273,30 @@ add_task(async function test_contentscripts_unregister_on_context_unload() {
 
   await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
 
-  const registeredStylesResults = await extension.awaitMessage("registered-styles-results");
+  const registeredStylesResults = await extension.awaitMessage(
+    "registered-styles-results"
+  );
 
-  equal(registeredStylesResults.registeredExtensionUrlStyleBG, "rgb(255, 0, 0)",
-        "The expected style has been applied from the registered extension url style");
+  equal(
+    registeredStylesResults.registeredExtensionUrlStyleBG,
+    "rgb(255, 0, 0)",
+    "The expected style has been applied from the registered extension url style"
+  );
 
   extension.sendMessage("unload-frame");
   await extension.awaitMessage("unload-frame:done");
 
   await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
 
-  const unregisteredURLStylesResults = await extension.awaitMessage("registered-styles-results");
+  const unregisteredURLStylesResults = await extension.awaitMessage(
+    "registered-styles-results"
+  );
 
-  equal(unregisteredURLStylesResults.registeredExtensionUrlStyleBG, "rgba(0, 0, 0, 0)",
-        "The expected style has been applied once extension url style has been unregistered");
+  equal(
+    unregisteredURLStylesResults.registeredExtensionUrlStyleBG,
+    "rgba(0, 0, 0, 0)",
+    "The expected style has been applied once extension url style has been unregistered"
+  );
 
   await contentPage.close();
   await extension.unload();
@@ -262,17 +304,21 @@ add_task(async function test_contentscripts_unregister_on_context_unload() {
 
 add_task(async function test_contentscripts_register_js() {
   async function background() {
-    browser.runtime.onMessage.addListener(([msg, expectedStates, readyState], sender) => {
-      if (msg == "chrome-namespace-ok") {
-        browser.test.sendMessage(msg);
-        return;
-      }
+    browser.runtime.onMessage.addListener(
+      ([msg, expectedStates, readyState], sender) => {
+        if (msg == "chrome-namespace-ok") {
+          browser.test.sendMessage(msg);
+          return;
+        }
 
-      browser.test.assertEq("script-run", msg, "message type is correct");
-      browser.test.assertTrue(expectedStates.includes(readyState),
-                              `readyState "${readyState}" is one of [${expectedStates}]`);
-      browser.test.sendMessage("script-run-" + expectedStates[0]);
-    });
+        browser.test.assertEq("script-run", msg, "message type is correct");
+        browser.test.assertTrue(
+          expectedStates.includes(readyState),
+          `readyState "${readyState}" is one of [${expectedStates}]`
+        );
+        browser.test.sendMessage("script-run-" + expectedStates[0]);
+      }
+    );
 
     // Raise an exception when the content script cannot be registered
     // because the extension has no permission to access the specified origin.
@@ -280,7 +326,12 @@ add_task(async function test_contentscripts_register_js() {
     await browser.test.assertRejects(
       browser.contentScripts.register({
         matches: ["http://*/*"],
-        js: [{code: "browser.test.fail(\"content script with wrong matches should not run\")"}],
+        js: [
+          {
+            code:
+              'browser.test.fail("content script with wrong matches should not run")',
+          },
+        ],
       }),
       /Permission denied to register a content script for/,
       "The reject contains the expected error message"
@@ -289,13 +340,25 @@ add_task(async function test_contentscripts_register_js() {
     // Register a content script from a JS code string.
 
     function textScriptCodeStart() {
-      browser.runtime.sendMessage(["script-run", ["loading"], document.readyState]);
+      browser.runtime.sendMessage([
+        "script-run",
+        ["loading"],
+        document.readyState,
+      ]);
     }
     function textScriptCodeEnd() {
-      browser.runtime.sendMessage(["script-run", ["interactive", "complete"], document.readyState]);
+      browser.runtime.sendMessage([
+        "script-run",
+        ["interactive", "complete"],
+        document.readyState,
+      ]);
     }
     function textScriptCodeIdle() {
-      browser.runtime.sendMessage(["script-run", ["complete"], document.readyState]);
+      browser.runtime.sendMessage([
+        "script-run",
+        ["complete"],
+        document.readyState,
+      ]);
     }
 
     // Register content scripts from both extension URLs and plain JS code strings.
@@ -304,38 +367,38 @@ add_task(async function test_contentscripts_register_js() {
       // Plain JS code strings.
       {
         matches: ["http://localhost/*/file_sample.html"],
-        js: [{code: `(${textScriptCodeStart})()`}],
+        js: [{ code: `(${textScriptCodeStart})()` }],
         runAt: "document_start",
       },
       {
         matches: ["http://localhost/*/file_sample.html"],
-        js: [{code: `(${textScriptCodeEnd})()`}],
+        js: [{ code: `(${textScriptCodeEnd})()` }],
         runAt: "document_end",
       },
       {
         matches: ["http://localhost/*/file_sample.html"],
-        js: [{code: `(${textScriptCodeIdle})()`}],
+        js: [{ code: `(${textScriptCodeIdle})()` }],
         runAt: "document_idle",
       },
       // Extension URLs.
       {
         matches: ["http://localhost/*/file_sample.html"],
-        js: [{file: "content_script_start.js"}],
+        js: [{ file: "content_script_start.js" }],
         runAt: "document_start",
       },
       {
         matches: ["http://localhost/*/file_sample.html"],
-        js: [{file: "content_script_end.js"}],
+        js: [{ file: "content_script_end.js" }],
         runAt: "document_end",
       },
       {
         matches: ["http://localhost/*/file_sample.html"],
-        js: [{file: "content_script_idle.js"}],
+        js: [{ file: "content_script_idle.js" }],
         runAt: "document_idle",
       },
       {
         matches: ["http://localhost/*/file_sample.html"],
-        js: [{file: "content_script.js"}],
+        js: [{ file: "content_script.js" }],
         // "runAt" is not specified here to ensure that it defaults to document_idle when missing.
       },
     ];
@@ -346,22 +409,36 @@ add_task(async function test_contentscripts_register_js() {
       const script = await browser.contentScripts.register(scriptOptions);
       const actualAPIs = Object.keys(script);
 
-      browser.test.assertEq(JSON.stringify(expectedAPIs),
-                            JSON.stringify(actualAPIs),
-                            `Got a script API object for ${scriptOptions.js[0]}`);
+      browser.test.assertEq(
+        JSON.stringify(expectedAPIs),
+        JSON.stringify(actualAPIs),
+        `Got a script API object for ${scriptOptions.js[0]}`
+      );
     }
 
     browser.test.sendMessage("background-ready");
   }
 
   function contentScriptStart() {
-    browser.runtime.sendMessage(["script-run", ["loading"], document.readyState]);
+    browser.runtime.sendMessage([
+      "script-run",
+      ["loading"],
+      document.readyState,
+    ]);
   }
   function contentScriptEnd() {
-    browser.runtime.sendMessage(["script-run", ["interactive", "complete"], document.readyState]);
+    browser.runtime.sendMessage([
+      "script-run",
+      ["interactive", "complete"],
+      document.readyState,
+    ]);
   }
   function contentScriptIdle() {
-    browser.runtime.sendMessage(["script-run", ["complete"], document.readyState]);
+    browser.runtime.sendMessage([
+      "script-run",
+      ["complete"],
+      document.readyState,
+    ]);
   }
 
   function contentScript() {
@@ -372,9 +449,7 @@ add_task(async function test_contentscripts_register_js() {
 
   let extensionData = {
     manifest: {
-      permissions: [
-        "http://localhost/*/file_sample.html",
-      ],
+      permissions: ["http://localhost/*/file_sample.html"],
     },
     background,
 
@@ -391,11 +466,18 @@ add_task(async function test_contentscripts_register_js() {
   let loadingCount = 0;
   let interactiveCount = 0;
   let completeCount = 0;
-  extension.onMessage("script-run-loading", () => { loadingCount++; });
-  extension.onMessage("script-run-interactive", () => { interactiveCount++; });
+  extension.onMessage("script-run-loading", () => {
+    loadingCount++;
+  });
+  extension.onMessage("script-run-interactive", () => {
+    interactiveCount++;
+  });
 
   let completePromise = new Promise(resolve => {
-    extension.onMessage("script-run-complete", () => { completeCount++; resolve(); });
+    extension.onMessage("script-run-complete", () => {
+      completeCount++;
+      resolve();
+    });
   });
 
   let chromeNamespacePromise = extension.awaitMessage("chrome-namespace-ok");
@@ -428,8 +510,8 @@ add_task(async function test_contentscripts_register_js() {
 add_task(async function test_contentscripts_register_all_options() {
   async function background() {
     await browser.contentScripts.register({
-      js: [{file: "content_script.js"}],
-      css: [{file: "content_style.css"}],
+      js: [{ file: "content_script.js" }],
+      css: [{ file: "content_style.css" }],
       matches: ["http://localhost/*"],
       excludeMatches: ["http://localhost/exclude/*"],
       excludeGlobs: ["*_exclude.html"],
@@ -444,9 +526,7 @@ add_task(async function test_contentscripts_register_all_options() {
 
   const extensionData = {
     manifest: {
-      permissions: [
-        "http://localhost/*",
-      ],
+      permissions: ["http://localhost/*"],
     },
     background,
 
@@ -465,31 +545,47 @@ add_task(async function test_contentscripts_register_all_options() {
   const policy = WebExtensionPolicy.getByID(extension.id);
 
   ok(policy, "Got the WebExtensionPolicy for the test extension");
-  equal(policy.contentScripts.length, 1, "Got the expected number of registered content scripts");
+  equal(
+    policy.contentScripts.length,
+    1,
+    "Got the expected number of registered content scripts"
+  );
 
   const script = policy.contentScripts[0];
-  let {allFrames, cssPaths, jsPaths, matchAboutBlank, runAt} = script;
+  let { allFrames, cssPaths, jsPaths, matchAboutBlank, runAt } = script;
 
-  deepEqual({
-    allFrames,
-    cssPaths,
-    jsPaths,
-    matchAboutBlank,
-    runAt,
-  }, {
-    allFrames: true,
-    cssPaths: [`${baseExtURL}/content_style.css`],
-    jsPaths: [`${baseExtURL}/content_script.js`],
-    matchAboutBlank: true,
-    runAt: "document_start",
-  }, "Got the expected content script properties");
+  deepEqual(
+    {
+      allFrames,
+      cssPaths,
+      jsPaths,
+      matchAboutBlank,
+      runAt,
+    },
+    {
+      allFrames: true,
+      cssPaths: [`${baseExtURL}/content_style.css`],
+      jsPaths: [`${baseExtURL}/content_script.js`],
+      matchAboutBlank: true,
+      runAt: "document_start",
+    },
+    "Got the expected content script properties"
+  );
 
-  ok(script.matchesURI(Services.io.newURI("http://localhost/ok_include.html")),
-     "matched and include globs should match");
-  ok(!script.matchesURI(Services.io.newURI("http://localhost/exclude/ok_include.html")),
-     "exclude matches should not match");
-  ok(!script.matchesURI(Services.io.newURI("http://localhost/ok_exclude.html")),
-     "exclude globs should not match");
+  ok(
+    script.matchesURI(Services.io.newURI("http://localhost/ok_include.html")),
+    "matched and include globs should match"
+  );
+  ok(
+    !script.matchesURI(
+      Services.io.newURI("http://localhost/exclude/ok_include.html")
+    ),
+    "exclude matches should not match"
+  );
+  ok(
+    !script.matchesURI(Services.io.newURI("http://localhost/ok_exclude.html")),
+    "exclude globs should not match"
+  );
 
   await extension.unload();
 });

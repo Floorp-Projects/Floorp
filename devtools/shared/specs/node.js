@@ -105,7 +105,7 @@ const nodeSpec = generateActorSpec({
       response: {},
     },
     getImageData: {
-      request: {maxDim: Arg(0, "nullable:number")},
+      request: { maxDim: Arg(0, "nullable:number") },
       response: RetVal("imageData"),
     },
     getEventListenerInfo: {
@@ -121,7 +121,7 @@ const nodeSpec = generateActorSpec({
       response: {},
     },
     getFontFamilyDataURL: {
-      request: {font: Arg(0, "string"), fillStyle: Arg(1, "nullable:string")},
+      request: { font: Arg(0, "string"), fillStyle: Arg(1, "nullable:string") },
       response: RetVal("imageData"),
     },
     getClosestBackgroundColor: {

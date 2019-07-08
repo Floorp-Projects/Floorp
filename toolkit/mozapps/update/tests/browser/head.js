@@ -3,14 +3,22 @@
 
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "AppMenuNotifications",
-                               "resource://gre/modules/AppMenuNotifications.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateListener",
-                               "resource://gre/modules/UpdateListener.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppMenuNotifications",
+  "resource://gre/modules/AppMenuNotifications.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UpdateListener",
+  "resource://gre/modules/UpdateListener.jsm"
+);
 
-const BIN_SUFFIX = (AppConstants.platform == "win" ? ".exe" : "");
+const BIN_SUFFIX = AppConstants.platform == "win" ? ".exe" : "";
 const FILE_UPDATER_BIN =
   "updater" + (AppConstants.platform == "macosx" ? ".app" : BIN_SUFFIX);
 const FILE_UPDATER_BIN_BAK = FILE_UPDATER_BIN + ".bak";
@@ -143,8 +151,9 @@ async function continueFileHandler(leafName) {
     }
   }
   if (continueFile.exists()) {
-    logTestInfo("The continue file should not exist, path: " +
-                continueFile.path);
+    logTestInfo(
+      "The continue file should not exist, path: " + continueFile.path
+    );
     continueFile.remove(false);
   }
   debugDump("Creating continue file, path: " + continueFile.path);
@@ -154,18 +163,24 @@ async function continueFileHandler(leafName) {
   // after the test that created it.
   registerCleanupFunction(() => {
     if (continueFile.exists()) {
-      logTestInfo("Removing continue file during test cleanup, path: " +
-                  continueFile.path);
+      logTestInfo(
+        "Removing continue file during test cleanup, path: " + continueFile.path
+      );
       continueFile.remove(false);
     }
   });
-  return TestUtils.waitForCondition(() =>
-    (!continueFile.exists()),
+  return TestUtils.waitForCondition(
+    () => !continueFile.exists(),
     "Waiting for file to be deleted, path: " + continueFile.path,
-    interval, retries
+    interval,
+    retries
   ).catch(e => {
-    logTestInfo("Continue file was not removed after checking " +
-                retries + " times, path: " + continueFile.path);
+    logTestInfo(
+      "Continue file was not removed after checking " +
+        retries +
+        " times, path: " +
+        continueFile.path
+    );
   });
 }
 
@@ -182,7 +197,9 @@ function lockWriteTestFile() {
   if (AppConstants.platform != "win") {
     throw new Error("Windows only test function called");
   }
-  let file = getUpdateDirFile(FILE_UPDATE_TEST).QueryInterface(Ci.nsILocalFileWin);
+  let file = getUpdateDirFile(FILE_UPDATE_TEST).QueryInterface(
+    Ci.nsILocalFileWin
+  );
   // Remove the file if it exists just in case.
   if (file.exists()) {
     file.fileAttributesWin |= file.WFA_READWRITE;
@@ -273,8 +290,9 @@ async function setAppUpdateAutoEnabledHelper(enabled) {
  * @return The button element.
  */
 function getNotificationButton(win, notificationId, button) {
-  let notification =
-    win.document.getElementById(`appMenu-${notificationId}-notification`);
+  let notification = win.document.getElementById(
+    `appMenu-${notificationId}-notification`
+  );
   ok(!notification.hidden, `${notificationId} notification is showing`);
   return notification[button];
 }
@@ -308,8 +326,11 @@ function setupTestUpdater() {
       try {
         restoreUpdaterBackup();
       } catch (e) {
-        logTestInfo("Attempt to restore the backed up updater failed... " +
-                    "will try again, Exception: " + e);
+        logTestInfo(
+          "Attempt to restore the backed up updater failed... " +
+            "will try again, Exception: " +
+            e
+        );
         await TestUtils.waitForTick();
         await setupTestUpdater();
         return;
@@ -346,8 +367,11 @@ function moveRealUpdater() {
         precomplete.moveTo(greDir, FILE_PRECOMPLETE_BAK);
       }
     } catch (e) {
-      logTestInfo("Attempt to move the real updater out of the way failed... " +
-                  "will try again, Exception: " + e);
+      logTestInfo(
+        "Attempt to move the real updater out of the way failed... " +
+          "will try again, Exception: " +
+          e
+      );
       await TestUtils.waitForTick();
       await moveRealUpdater();
       return;
@@ -387,8 +411,11 @@ function copyTestUpdater(attempt = 0) {
       writeFile(precomplete, PRECOMPLETE_CONTENTS);
     } catch (e) {
       if (attempt < MAX_UPDATE_COPY_ATTEMPTS) {
-        logTestInfo("Attempt to copy the test updater failed... " +
-                    "will try again, Exception: " + e);
+        logTestInfo(
+          "Attempt to copy the test updater failed... " +
+            "will try again, Exception: " +
+            e
+        );
         await TestUtils.waitForTick();
         await copyTestUpdater(attempt++);
       }
@@ -455,8 +482,11 @@ function finishTestRestoreUpdaterBackup() {
       // time after the updater process exits.
       restoreUpdaterBackup();
     } catch (e) {
-      logTestInfo("Attempt to restore the backed up updater failed... " +
-                  "will try again, Exception: " + e);
+      logTestInfo(
+        "Attempt to restore the backed up updater failed... " +
+          "will try again, Exception: " +
+          e
+      );
 
       await TestUtils.waitForTick();
       await finishTestRestoreUpdaterBackup();
@@ -477,11 +507,14 @@ function waitForAboutDialog() {
         debugDump("About dialog shown...");
         Services.wm.removeListener(listener);
 
-         async function aboutDialogOnLoad() {
+        async function aboutDialogOnLoad() {
           domwindow.removeEventListener("load", aboutDialogOnLoad, true);
           let chromeURI = "chrome://browser/content/aboutDialog.xul";
-          is(domwindow.document.location.href, chromeURI,
-             "About dialog appeared");
+          is(
+            domwindow.document.location.href,
+            chromeURI,
+            "About dialog appeared"
+          );
           resolve(domwindow);
         }
 
@@ -529,31 +562,43 @@ function getPatchOfType(type) {
  */
 function runDoorhangerUpdateTest(params, steps) {
   function processDoorhangerStep(step) {
-    if (typeof(step) == "function") {
+    if (typeof step == "function") {
       return step();
     }
 
-    const {notificationId, button, checkActiveUpdate, pageURLs} = step;
+    const { notificationId, button, checkActiveUpdate, pageURLs } = step;
     return (async function() {
-      await BrowserTestUtils.waitForEvent(PanelUI.notificationPanel,
-                                          "popupshown");
+      await BrowserTestUtils.waitForEvent(
+        PanelUI.notificationPanel,
+        "popupshown"
+      );
       const shownNotificationId = AppMenuNotifications.activeNotification.id;
-      is(shownNotificationId, notificationId,
-         "The right notification showed up.");
+      is(
+        shownNotificationId,
+        notificationId,
+        "The right notification showed up."
+      );
 
       if (checkActiveUpdate) {
-        ok(!!gUpdateManager.activeUpdate,
-           "There should be an active update");
-        is(gUpdateManager.activeUpdate.state, checkActiveUpdate.state,
-           `The active update state should equal ${checkActiveUpdate.state}`);
+        ok(!!gUpdateManager.activeUpdate, "There should be an active update");
+        is(
+          gUpdateManager.activeUpdate.state,
+          checkActiveUpdate.state,
+          `The active update state should equal ${checkActiveUpdate.state}`
+        );
       } else {
-        ok(!gUpdateManager.activeUpdate,
-           "There should not be an active update");
+        ok(
+          !gUpdateManager.activeUpdate,
+          "There should not be an active update"
+        );
       }
 
       if (pageURLs && pageURLs.whatsNew !== undefined) {
-        checkWhatsNewLink(window, `${notificationId}-whats-new`,
-                          pageURLs.whatsNew);
+        checkWhatsNewLink(
+          window,
+          `${notificationId}-whats-new`,
+          pageURLs.whatsNew
+        );
       }
 
       let buttonEl = getNotificationButton(window, notificationId, button);
@@ -561,8 +606,11 @@ function runDoorhangerUpdateTest(params, steps) {
 
       if (pageURLs && pageURLs.manual !== undefined) {
         await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-        is(gBrowser.selectedBrowser.currentURI.spec, pageURLs.manual,
-           `The page's url should equal ${pageURLs.manual}`);
+        is(
+          gBrowser.selectedBrowser.currentURI.spec,
+          pageURLs.manual,
+          `The page's url should equal ${pageURLs.manual}`
+        );
         gBrowser.removeTab(gBrowser.selectedTab);
       }
     })();
@@ -581,8 +629,12 @@ function runDoorhangerUpdateTest(params, steps) {
     await setupTestUpdater();
 
     let queryString = params.queryString ? params.queryString : "";
-    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
-                    queryString + getVersionParams();
+    let updateURL =
+      URL_HTTP_UPDATE_SJS +
+      "?detailsURL=" +
+      gDetailsURL +
+      queryString +
+      getVersionParams();
     setUpdateURL(updateURL);
 
     if (params.checkAttempts) {
@@ -624,20 +676,23 @@ function runDoorhangerUpdateTest(params, steps) {
 function runAboutDialogUpdateTest(params, steps) {
   let aboutDialog;
   function processAboutDialogStep(step) {
-    if (typeof(step) == "function") {
+    if (typeof step == "function") {
       return step();
     }
 
-    const {panelId, checkActiveUpdate, continueFile, downloadInfo} = step;
+    const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
     return (async function() {
       let updateDeck = aboutDialog.document.getElementById("updateDeck");
       // Also continue if the selected panel ID is 'apply' since there are no
       // other panels after 'apply'.
-      await TestUtils.waitForCondition(() =>
-        (updateDeck.selectedPanel &&
-         (updateDeck.selectedPanel.id == panelId ||
-          updateDeck.selectedPanel.id == "apply")),
-        "Waiting for the expected panel ID: " + panelId, undefined, 200
+      await TestUtils.waitForCondition(
+        () =>
+          updateDeck.selectedPanel &&
+          (updateDeck.selectedPanel.id == panelId ||
+            updateDeck.selectedPanel.id == "apply"),
+        "Waiting for the expected panel ID: " + panelId,
+        undefined,
+        200
       ).catch(e => {
         // Instead of throwing let the check below fail the test so the panel
         // ID and the expected panel ID is printed in the log.
@@ -648,11 +703,16 @@ function runAboutDialogUpdateTest(params, steps) {
 
       if (checkActiveUpdate) {
         ok(!!gUpdateManager.activeUpdate, "There should be an active update");
-        is(gUpdateManager.activeUpdate.state, checkActiveUpdate.state,
-           "The active update state should equal " + checkActiveUpdate.state);
+        is(
+          gUpdateManager.activeUpdate.state,
+          checkActiveUpdate.state,
+          "The active update state should equal " + checkActiveUpdate.state
+        );
       } else {
-        ok(!gUpdateManager.activeUpdate,
-           "There should not be an active update");
+        ok(
+          !gUpdateManager.activeUpdate,
+          "There should not be an active update"
+        );
       }
 
       if (panelId == "downloading") {
@@ -663,23 +723,32 @@ function runAboutDialogUpdateTest(params, steps) {
           let patch = getPatchOfType(data.patchType);
           // The update is removed early when the last download fails so check
           // that there is a patch before proceeding.
-          let isLastPatch = (i == downloadInfo.length - 1);
+          let isLastPatch = i == downloadInfo.length - 1;
           if (!isLastPatch || patch) {
             let resultName = data.bitsResult ? "bitsResult" : "internalResult";
             patch.QueryInterface(Ci.nsIWritablePropertyBag);
-            await TestUtils.waitForCondition(() =>
-              (patch.getProperty(resultName) == data[resultName]),
-              "Waiting for expected patch property " + resultName + " value: " +
-              data[resultName], undefined, 200
+            await TestUtils.waitForCondition(
+              () => patch.getProperty(resultName) == data[resultName],
+              "Waiting for expected patch property " +
+                resultName +
+                " value: " +
+                data[resultName],
+              undefined,
+              200
             ).catch(e => {
               // Instead of throwing let the check below fail the test so the
               // property value and the expected property value is printed in
               // the log.
               logTestInfo(e);
             });
-            is(patch.getProperty(resultName), data[resultName],
-               "The patch property " + resultName + " value should equal " +
-               data[resultName]);
+            is(
+              patch.getProperty(resultName),
+              data[resultName],
+              "The patch property " +
+                resultName +
+                " value should equal " +
+                data[resultName]
+            );
           }
         }
       } else if (continueFile) {
@@ -692,16 +761,20 @@ function runAboutDialogUpdateTest(params, steps) {
         // downloadFailed and manualUpdate panels use the app.update.url.manual
         // preference.
         let link = selectedPanel.querySelector("label.text-link");
-        is(link.href, gDetailsURL,
-           `The panel's link href should equal ${gDetailsURL}`);
+        is(
+          link.href,
+          gDetailsURL,
+          `The panel's link href should equal ${gDetailsURL}`
+        );
       }
 
       let buttonPanels = ["downloadAndInstall", "apply"];
       if (buttonPanels.includes(panelId)) {
         let buttonEl = selectedPanel.querySelector("button");
-        await TestUtils.waitForCondition(() =>
-          (aboutDialog.document.activeElement == buttonEl),
-          "The button should receive focus");
+        await TestUtils.waitForCondition(
+          () => aboutDialog.document.activeElement == buttonEl,
+          "The button should receive focus"
+        );
         ok(!buttonEl.disabled, "The button should be enabled");
         // Don't click the button on the apply panel since this will restart the
         // application.
@@ -724,8 +797,12 @@ function runAboutDialogUpdateTest(params, steps) {
     await setupTestUpdater();
 
     let queryString = params.queryString ? params.queryString : "";
-    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
-                    queryString + getVersionParams();
+    let updateURL =
+      URL_HTTP_UPDATE_SJS +
+      "?detailsURL=" +
+      gDetailsURL +
+      queryString +
+      getVersionParams();
     if (params.backgroundUpdate) {
       setUpdateURL(updateURL);
       gAUS.checkForBackgroundUpdates();
@@ -733,19 +810,24 @@ function runAboutDialogUpdateTest(params, steps) {
         await continueFileHandler(params.continueFile);
       }
       if (params.waitForUpdateState) {
-        await TestUtils.waitForCondition(() =>
-          (gUpdateManager.activeUpdate &&
-           gUpdateManager.activeUpdate.state == params.waitForUpdateState),
+        await TestUtils.waitForCondition(
+          () =>
+            gUpdateManager.activeUpdate &&
+            gUpdateManager.activeUpdate.state == params.waitForUpdateState,
           "Waiting for update state: " + params.waitForUpdateState,
-          undefined, 200
+          undefined,
+          200
         ).catch(e => {
           // Instead of throwing let the check below fail the test so the panel
           // ID and the expected panel ID is printed in the log.
           logTestInfo(e);
         });
         // Display the UI after the update state equals the expected value.
-        is(gUpdateManager.activeUpdate.state, params.waitForUpdateState,
-           "The update state value should equal " + params.waitForUpdateState);
+        is(
+          gUpdateManager.activeUpdate.state,
+          params.waitForUpdateState,
+          "The update state value should equal " + params.waitForUpdateState
+        );
       }
     } else {
       updateURL += "&slowUpdateCheck=1&useSlowDownloadMar=1";
@@ -777,40 +859,54 @@ function runAboutDialogUpdateTest(params, steps) {
 function runAboutPrefsUpdateTest(params, steps) {
   let tab;
   function processAboutPrefsStep(step) {
-    if (typeof(step) == "function") {
+    if (typeof step == "function") {
       return step();
     }
 
-    const {panelId, checkActiveUpdate, continueFile, downloadInfo} = step;
+    const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
     return (async function() {
-      await ContentTask.spawn(tab.linkedBrowser, {panelId},
-                              async ({panelId}) => {
-        let updateDeck = content.document.getElementById("updateDeck");
-        // Also continue if the selected panel ID is 'apply' since there are no
-        // other panels after 'apply'.
-        await ContentTaskUtils.waitForCondition(() =>
-          (updateDeck.selectedPanel &&
-           (updateDeck.selectedPanel.id == panelId ||
-            updateDeck.selectedPanel.id == "apply")),
-          "Waiting for the expected panel ID: " + panelId, undefined, 200
-        ).catch(e => {
-          // Instead of throwing let the check below fail the test so the panel
-          // ID and the expected panel ID is printed in the log. Use info here
-          // instead of logTestInfo since logTestInfo isn't available in the
-          // content task.
-          info(e);
-        });
-        is(updateDeck.selectedPanel.id, panelId,
-           "The panel ID should equal " + panelId);
-      });
+      await ContentTask.spawn(
+        tab.linkedBrowser,
+        { panelId },
+        async ({ panelId }) => {
+          let updateDeck = content.document.getElementById("updateDeck");
+          // Also continue if the selected panel ID is 'apply' since there are no
+          // other panels after 'apply'.
+          await ContentTaskUtils.waitForCondition(
+            () =>
+              updateDeck.selectedPanel &&
+              (updateDeck.selectedPanel.id == panelId ||
+                updateDeck.selectedPanel.id == "apply"),
+            "Waiting for the expected panel ID: " + panelId,
+            undefined,
+            200
+          ).catch(e => {
+            // Instead of throwing let the check below fail the test so the panel
+            // ID and the expected panel ID is printed in the log. Use info here
+            // instead of logTestInfo since logTestInfo isn't available in the
+            // content task.
+            info(e);
+          });
+          is(
+            updateDeck.selectedPanel.id,
+            panelId,
+            "The panel ID should equal " + panelId
+          );
+        }
+      );
 
       if (checkActiveUpdate) {
         ok(!!gUpdateManager.activeUpdate, "There should be an active update");
-        is(gUpdateManager.activeUpdate.state, checkActiveUpdate.state,
-           "The active update state should equal " + checkActiveUpdate.state);
+        is(
+          gUpdateManager.activeUpdate.state,
+          checkActiveUpdate.state,
+          "The active update state should equal " + checkActiveUpdate.state
+        );
       } else {
-        ok(!gUpdateManager.activeUpdate,
-           "There should not be an active update");
+        ok(
+          !gUpdateManager.activeUpdate,
+          "There should not be an active update"
+        );
       }
 
       if (panelId == "downloading") {
@@ -821,64 +917,83 @@ function runAboutPrefsUpdateTest(params, steps) {
           let patch = getPatchOfType(data.patchType);
           // The update is removed early when the last download fails so check
           // that there is a patch before proceeding.
-          let isLastPatch = (i == downloadInfo.length - 1);
+          let isLastPatch = i == downloadInfo.length - 1;
           if (!isLastPatch || patch) {
             let resultName = data.bitsResult ? "bitsResult" : "internalResult";
             patch.QueryInterface(Ci.nsIWritablePropertyBag);
-            await TestUtils.waitForCondition(() =>
-              (patch.getProperty(resultName) == data[resultName]),
-              "Waiting for expected patch property " + resultName + " value: " +
-              data[resultName], undefined, 200
+            await TestUtils.waitForCondition(
+              () => patch.getProperty(resultName) == data[resultName],
+              "Waiting for expected patch property " +
+                resultName +
+                " value: " +
+                data[resultName],
+              undefined,
+              200
             ).catch(e => {
               // Instead of throwing let the check below fail the test so the
               // property value and the expected property value is printed in
               // the log.
               logTestInfo(e);
             });
-            is(patch.getProperty(resultName), data[resultName],
-               "The patch property " + resultName + " value should equal " +
-               data[resultName]);
+            is(
+              patch.getProperty(resultName),
+              data[resultName],
+              "The patch property " +
+                resultName +
+                " value should equal " +
+                data[resultName]
+            );
           }
         }
       } else if (continueFile) {
         await continueFileHandler(continueFile);
       }
 
-      await ContentTask.spawn(tab.linkedBrowser, {panelId, gDetailsURL},
-                              async ({panelId, gDetailsURL}) => {
-        let linkPanels = ["downloadFailed", "manualUpdate", "unsupportedSystem"];
-        if (linkPanels.includes(panelId)) {
-          let selectedPanel =
-            content.document.getElementById("updateDeck").selectedPanel;
-          // The unsupportedSystem panel uses the update's detailsURL and the
-          // downloadFailed and manualUpdate panels use the app.update.url.manual
-          // preference.
-          let selector = "label.text-link";
-          // The downloadFailed panel in about:preferences uses an anchor
-          // instead of a label for the link.
-          if (selectedPanel.id == "downloadFailed") {
-            selector = "a.text-link";
+      await ContentTask.spawn(
+        tab.linkedBrowser,
+        { panelId, gDetailsURL },
+        async ({ panelId, gDetailsURL }) => {
+          let linkPanels = [
+            "downloadFailed",
+            "manualUpdate",
+            "unsupportedSystem",
+          ];
+          if (linkPanels.includes(panelId)) {
+            let selectedPanel = content.document.getElementById("updateDeck")
+              .selectedPanel;
+            // The unsupportedSystem panel uses the update's detailsURL and the
+            // downloadFailed and manualUpdate panels use the app.update.url.manual
+            // preference.
+            let selector = "label.text-link";
+            // The downloadFailed panel in about:preferences uses an anchor
+            // instead of a label for the link.
+            if (selectedPanel.id == "downloadFailed") {
+              selector = "a.text-link";
+            }
+            let link = selectedPanel.querySelector(selector);
+            is(
+              link.href,
+              gDetailsURL,
+              `The panel's link href should equal ${gDetailsURL}`
+            );
           }
-          let link = selectedPanel.querySelector(selector);
-          is(link.href, gDetailsURL,
-             `The panel's link href should equal ${gDetailsURL}`);
-        }
 
-        let buttonPanels = ["downloadAndInstall", "apply"];
-        if (buttonPanels.includes(panelId)) {
-          let selectedPanel =
-            content.document.getElementById("updateDeck").selectedPanel;
-          let buttonEl = selectedPanel.querySelector("button");
-          // Note: The about:preferences doesn't focus the button like the
-          // About Dialog does.
-          ok(!buttonEl.disabled, "The button should be enabled");
-          // Don't click the button on the apply panel since this will restart
-          // the application.
-          if (selectedPanel.id != "apply") {
-            buttonEl.click();
+          let buttonPanels = ["downloadAndInstall", "apply"];
+          if (buttonPanels.includes(panelId)) {
+            let selectedPanel = content.document.getElementById("updateDeck")
+              .selectedPanel;
+            let buttonEl = selectedPanel.querySelector("button");
+            // Note: The about:preferences doesn't focus the button like the
+            // About Dialog does.
+            ok(!buttonEl.disabled, "The button should be enabled");
+            // Don't click the button on the apply panel since this will restart
+            // the application.
+            if (selectedPanel.id != "apply") {
+              buttonEl.click();
+            }
           }
         }
-      });
+      );
     })();
   }
 
@@ -894,8 +1009,12 @@ function runAboutPrefsUpdateTest(params, steps) {
     await setupTestUpdater();
 
     let queryString = params.queryString ? params.queryString : "";
-    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
-                    queryString + getVersionParams();
+    let updateURL =
+      URL_HTTP_UPDATE_SJS +
+      "?detailsURL=" +
+      gDetailsURL +
+      queryString +
+      getVersionParams();
     if (params.backgroundUpdate) {
       setUpdateURL(updateURL);
       gAUS.checkForBackgroundUpdates();
@@ -905,26 +1024,33 @@ function runAboutPrefsUpdateTest(params, steps) {
       if (params.waitForUpdateState) {
         // Wait until the update state equals the expected value before
         // displaying the UI.
-        await TestUtils.waitForCondition(() =>
-          (gUpdateManager.activeUpdate &&
-           gUpdateManager.activeUpdate.state == params.waitForUpdateState),
+        await TestUtils.waitForCondition(
+          () =>
+            gUpdateManager.activeUpdate &&
+            gUpdateManager.activeUpdate.state == params.waitForUpdateState,
           "Waiting for update state: " + params.waitForUpdateState,
-          undefined, 200
+          undefined,
+          200
         ).catch(e => {
           // Instead of throwing let the check below fail the test so the panel
           // ID and the expected panel ID is printed in the log.
           logTestInfo(e);
         });
-        is(gUpdateManager.activeUpdate.state, params.waitForUpdateState,
-           "The update state value should equal " + params.waitForUpdateState);
+        is(
+          gUpdateManager.activeUpdate.state,
+          params.waitForUpdateState,
+          "The update state value should equal " + params.waitForUpdateState
+        );
       }
     } else {
       updateURL += "&slowUpdateCheck=1&useSlowDownloadMar=1";
       setUpdateURL(updateURL);
     }
 
-    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-                                                      "about:preferences");
+    tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:preferences"
+    );
     registerCleanupFunction(async () => {
       await BrowserTestUtils.removeTab(tab);
     });
@@ -976,9 +1102,7 @@ function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
     Services.telemetry.clearScalars();
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
-      set: [
-        [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
-      ],
+      set: [[PREF_APP_UPDATE_DISABLEDFORTESTING, false]],
     });
 
     await setupTestUpdater();
@@ -987,8 +1111,12 @@ function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
       removeUpdateSettingsIni();
     }
 
-    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
-                    updateParams + getVersionParams();
+    let updateURL =
+      URL_HTTP_UPDATE_SJS +
+      "?detailsURL=" +
+      gDetailsURL +
+      updateParams +
+      getVersionParams();
     setUpdateURL(updateURL);
     gAUS.checkForBackgroundUpdates();
     await waitForEvent(event);
@@ -1030,8 +1158,12 @@ function getTelemetryUpdatePhaseValues(overrides) {
     }
   }
 
-  if (overrides.noPartialPatch || overrides.partialBadSize ||
-      overrides.noInternalPartial || overrides.noBitsPartial) {
+  if (
+    overrides.noPartialPatch ||
+    overrides.partialBadSize ||
+    overrides.noInternalPartial ||
+    overrides.noBitsPartial
+  ) {
     if (!overrides.noStagePartial) {
       overrides.noStagePartial = true;
     }
@@ -1040,8 +1172,12 @@ function getTelemetryUpdatePhaseValues(overrides) {
     }
   }
 
-  if (overrides.noCompletePatch || overrides.completeBadSize ||
-      overrides.noInternalComplete || overrides.noBitsComplete) {
+  if (
+    overrides.noCompletePatch ||
+    overrides.completeBadSize ||
+    overrides.noInternalComplete ||
+    overrides.noBitsComplete
+  ) {
     if (!overrides.noStageComplete) {
       overrides.noStageComplete = true;
     }
@@ -1060,51 +1196,56 @@ function getTelemetryUpdatePhaseValues(overrides) {
   }
 
   let marSize = parseInt(SIZE_SIMPLE_MAR);
-  let partialSize =
-    overrides.partialBadSize ? parseInt(SIZE_SIMPLE_MAR + "1") : marSize;
-  let completeSize =
-    overrides.completeBadSize ? parseInt(SIZE_SIMPLE_MAR + "1") : marSize;
+  let partialSize = overrides.partialBadSize
+    ? parseInt(SIZE_SIMPLE_MAR + "1")
+    : marSize;
+  let completeSize = overrides.completeBadSize
+    ? parseInt(SIZE_SIMPLE_MAR + "1")
+    : marSize;
 
   let partialDownloadBytes = overrides.partialBadSize ? 1 : marSize;
   let completeDownloadBytes = overrides.completeBadSize ? 1 : marSize;
 
   let obj = {};
-  obj.basePrefix =
-    overrides.forSession ? "update.session." : "update.startup.";
+  obj.basePrefix = overrides.forSession ? "update.session." : "update.startup.";
   obj.from_app_version = Services.appinfo.version;
 
   obj.mars = {};
-  obj.mars.mar_partial_size_bytes =
-    overrides.noPartialPatch ? null : partialSize;
-  obj.mars.mar_complete_size_bytes =
-    overrides.noCompletePatch ? null : completeSize;
+  obj.mars.mar_partial_size_bytes = overrides.noPartialPatch
+    ? null
+    : partialSize;
+  obj.mars.mar_complete_size_bytes = overrides.noCompletePatch
+    ? null
+    : completeSize;
 
   obj.intervals = {};
   obj.intervals.check = 1;
   if (bitsEnabled) {
-    obj.intervals.download_bits_partial =
-      overrides.noBitsPartial ? null : 1;
-    obj.intervals.download_bits_complete =
-      overrides.noBitsComplete ? null : 1;
+    obj.intervals.download_bits_partial = overrides.noBitsPartial ? null : 1;
+    obj.intervals.download_bits_complete = overrides.noBitsComplete ? null : 1;
     if (overrides.partialBadSize) {
-      obj.intervals.download_internal_partial =
-        overrides.noInternalPartial ? null : 1;
+      obj.intervals.download_internal_partial = overrides.noInternalPartial
+        ? null
+        : 1;
     } else {
       obj.intervals.download_internal_partial = null;
     }
     if (overrides.completeBadSize) {
-      obj.intervals.download_internal_complete =
-        overrides.noInternalComplete ? null : 1;
+      obj.intervals.download_internal_complete = overrides.noInternalComplete
+        ? null
+        : 1;
     } else {
       obj.intervals.download_internal_complete = null;
     }
   } else {
     obj.intervals.download_bits_partial = null;
     obj.intervals.download_bits_complete = null;
-    obj.intervals.download_internal_partial =
-      overrides.noInternalPartial ? null : 1;
-    obj.intervals.download_internal_complete =
-      overrides.noInternalComplete ? null : 1;
+    obj.intervals.download_internal_partial = overrides.noInternalPartial
+      ? null
+      : 1;
+    obj.intervals.download_internal_complete = overrides.noInternalComplete
+      ? null
+      : 1;
   }
   obj.intervals.stage_partial = overrides.noStagePartial ? null : 1;
   obj.intervals.stage_complete = overrides.noStageComplete ? null : 1;
@@ -1117,28 +1258,32 @@ function getTelemetryUpdatePhaseValues(overrides) {
   obj.downloads.internal_partial_ = {};
   obj.downloads.internal_complete_ = {};
   if (bitsEnabled) {
-    obj.downloads.bits_partial_.bytes =
-      overrides.noBitsPartial ? null : partialDownloadBytes;
-    obj.downloads.bits_partial_.seconds =
-      overrides.noBitsPartial ? null : 1;
-    obj.downloads.bits_complete_.bytes =
-      overrides.noBitsComplete ? null : completeDownloadBytes;
-    obj.downloads.bits_complete_.seconds =
-      overrides.noBitsComplete ? null : 1;
+    obj.downloads.bits_partial_.bytes = overrides.noBitsPartial
+      ? null
+      : partialDownloadBytes;
+    obj.downloads.bits_partial_.seconds = overrides.noBitsPartial ? null : 1;
+    obj.downloads.bits_complete_.bytes = overrides.noBitsComplete
+      ? null
+      : completeDownloadBytes;
+    obj.downloads.bits_complete_.seconds = overrides.noBitsComplete ? null : 1;
     if (overrides.partialBadSize) {
-      obj.downloads.internal_partial_.seconds =
-        overrides.noInternalPartial ? null : 1;
-      obj.downloads.internal_partial_.bytes =
-        overrides.noInternalPartial ? null : partialDownloadBytes;
+      obj.downloads.internal_partial_.seconds = overrides.noInternalPartial
+        ? null
+        : 1;
+      obj.downloads.internal_partial_.bytes = overrides.noInternalPartial
+        ? null
+        : partialDownloadBytes;
     } else {
       obj.downloads.internal_partial_.bytes = null;
       obj.downloads.internal_partial_.seconds = null;
     }
     if (overrides.completeBadSize) {
-      obj.downloads.internal_complete_.seconds =
-        overrides.noInternalComplete ? null : 1;
-      obj.downloads.internal_complete_.bytes =
-        overrides.noInternalComplete ? null : completeDownloadBytes;
+      obj.downloads.internal_complete_.seconds = overrides.noInternalComplete
+        ? null
+        : 1;
+      obj.downloads.internal_complete_.bytes = overrides.noInternalComplete
+        ? null
+        : completeDownloadBytes;
     } else {
       obj.downloads.internal_complete_.bytes = null;
       obj.downloads.internal_complete_.seconds = null;
@@ -1148,14 +1293,18 @@ function getTelemetryUpdatePhaseValues(overrides) {
     obj.downloads.bits_partial_.seconds = null;
     obj.downloads.bits_complete_.bytes = null;
     obj.downloads.bits_complete_.seconds = null;
-    obj.downloads.internal_partial_.bytes =
-      overrides.noInternalPartial ? null : partialDownloadBytes;
-    obj.downloads.internal_partial_.seconds =
-      overrides.noInternalPartial ? null : 1;
-    obj.downloads.internal_complete_.bytes =
-      overrides.noInternalComplete ? null : completeDownloadBytes;
-    obj.downloads.internal_complete_.seconds =
-      overrides.noInternalComplete ? null : 1;
+    obj.downloads.internal_partial_.bytes = overrides.noInternalPartial
+      ? null
+      : partialDownloadBytes;
+    obj.downloads.internal_partial_.seconds = overrides.noInternalPartial
+      ? null
+      : 1;
+    obj.downloads.internal_complete_.bytes = overrides.noInternalComplete
+      ? null
+      : completeDownloadBytes;
+    obj.downloads.internal_complete_.seconds = overrides.noInternalComplete
+      ? null
+      : 1;
   }
 
   return obj;
@@ -1176,27 +1325,28 @@ function checkTelemetryUpdatePhases(expected) {
   {
     let name = namePrefix + "from_app_version";
     if (expected.from_app_version) {
-      Assert.ok(!!scalars[name],
-                "The " + name + " value should exist.");
-      Assert.equal(scalars[name],
-                   expected.from_app_version,
-                   "The " + name + " value should equal the expected value.");
+      Assert.ok(!!scalars[name], "The " + name + " value should exist.");
+      Assert.equal(
+        scalars[name],
+        expected.from_app_version,
+        "The " + name + " value should equal the expected value."
+      );
     } else {
-      Assert.ok(!scalars[name],
-                "The " + name + " value should not exist.");
+      Assert.ok(!scalars[name], "The " + name + " value should not exist.");
     }
   }
 
   for (let [nameSuffix, value] of Object.entries(expected.mars)) {
     let name = namePrefix + nameSuffix;
     if (value) {
-      Assert.ok(!!scalars[name],
-                "The " + name + " value should exist.");
-      Assert.equal(scalars[name], value,
-                   "The " + name + " value should equal the expected value.");
+      Assert.ok(!!scalars[name], "The " + name + " value should exist.");
+      Assert.equal(
+        scalars[name],
+        value,
+        "The " + name + " value should equal the expected value."
+      );
     } else {
-      Assert.ok(!scalars[name],
-                "The " + name + " value should not exist.");
+      Assert.ok(!scalars[name], "The " + name + " value should not exist.");
     }
   }
 
@@ -1204,14 +1354,19 @@ function checkTelemetryUpdatePhases(expected) {
   for (let [suffix, value] of Object.entries(expected.intervals)) {
     let name = namePrefix + suffix;
     if (value) {
-      Assert.ok(!!scalars[name],
-                "The " + name + " value should exist.");
-      Assert.greaterOrEqual(scalars[name], value,
-                           "The " + name + " value should be equal to or " +
-                           "greater than " + value + ".");
+      Assert.ok(!!scalars[name], "The " + name + " value should exist.");
+      Assert.greaterOrEqual(
+        scalars[name],
+        value,
+        "The " +
+          name +
+          " value should be equal to or " +
+          "greater than " +
+          value +
+          "."
+      );
     } else {
-      Assert.ok(!scalars[name],
-                "The " + name + " value should not exist.");
+      Assert.ok(!scalars[name], "The " + name + " value should not exist.");
     }
   }
 
@@ -1219,26 +1374,36 @@ function checkTelemetryUpdatePhases(expected) {
   for (let [nameMid, values] of Object.entries(expected.downloads)) {
     let name = namePrefix + nameMid + "bytes";
     if (values.bytes) {
-      Assert.ok(!!scalars[name],
-                "The " + name + " value should exist.");
-      Assert.greaterOrEqual(scalars[name], values.bytes,
-                           "The " + name + " value should be equal to or " +
-                           "greater than " + values.bytes + ".");
+      Assert.ok(!!scalars[name], "The " + name + " value should exist.");
+      Assert.greaterOrEqual(
+        scalars[name],
+        values.bytes,
+        "The " +
+          name +
+          " value should be equal to or " +
+          "greater than " +
+          values.bytes +
+          "."
+      );
     } else {
-      Assert.ok(!scalars[name],
-                "The " + name + " value should not exist.");
+      Assert.ok(!scalars[name], "The " + name + " value should not exist.");
     }
 
     name = namePrefix + nameMid + "seconds";
     if (values.seconds) {
-      Assert.ok(!!scalars[name],
-              "The " + name + " value should exist.");
-      Assert.greaterOrEqual(scalars[name], values.seconds,
-                           "The " + name + " value should be equal to or " +
-                           "greater than " + values.seconds + ".");
+      Assert.ok(!!scalars[name], "The " + name + " value should exist.");
+      Assert.greaterOrEqual(
+        scalars[name],
+        values.seconds,
+        "The " +
+          name +
+          " value should be equal to or " +
+          "greater than " +
+          values.seconds +
+          "."
+      );
     } else {
-      Assert.ok(!scalars[name],
-              "The " + name + " value should not exist.");
+      Assert.ok(!scalars[name], "The " + name + " value should not exist.");
     }
   }
 }
@@ -1255,6 +1420,5 @@ function checkTelemetryUpdatePhaseEmpty(isStartup) {
   let scalars = TelemetryTestUtils.getProcessScalars("parent");
   let name =
     "update." + (isStartup ? "startup" : "session") + ".from_app_version";
-  Assert.ok(!scalars[name],
-            "The " + name + " value should not exist.");
+  Assert.ok(!scalars[name], "The " + name + " value should not exist.");
 }

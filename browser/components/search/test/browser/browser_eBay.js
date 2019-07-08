@@ -13,7 +13,8 @@ add_task(async function test() {
   let engine = Services.search.getEngineByName("eBay");
   ok(engine, "eBay");
 
-  let base = "https://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.com/sch/foo";
+  let base =
+    "https://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.com/sch/foo";
   let url;
 
   // Test search URLs (including purposes).

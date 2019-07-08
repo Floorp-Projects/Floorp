@@ -43,12 +43,12 @@ async function performTests() {
 
   await onPopUpOpen;
 
-  const {itemCount} = popup;
+  const { itemCount } = popup;
   ok(popup.isOpen, "popup is open");
   ok(itemCount > 0, "popup has items");
 
   info("Check that Ctrl+Space when the popup is opened has no effect");
-  EventUtils.synthesizeKey(" ", {ctrlKey: true});
+  EventUtils.synthesizeKey(" ", { ctrlKey: true });
   ok(popup.isOpen, "The popup wasn't closed on Ctrl+Space");
   is(popup.itemCount, itemCount, "The popup wasn't modified on Ctrl+Space");
 
@@ -60,7 +60,7 @@ async function performTests() {
 
   info("Check that Ctrl+Space opens the popup when it was closed");
   onPopUpOpen = popup.once("popup-opened");
-  EventUtils.synthesizeKey(" ", {ctrlKey: true});
+  EventUtils.synthesizeKey(" ", { ctrlKey: true });
   await onPopUpOpen;
 
   ok(popup.isOpen, "popup opens on Ctrl+Space");

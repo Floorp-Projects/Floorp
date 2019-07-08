@@ -120,6 +120,7 @@ PER_PROJECT_PARAMETERS = {
 try_task_config_schema = Schema({
     Required('tasks'): [basestring],
     Optional('templates'): {basestring: object},
+    Optional('disable-pgo'): bool,
 })
 
 
@@ -264,7 +265,7 @@ def get_decision_parameters(config, options):
     parameters['required_signoffs'] = []
     parameters['signoff_urls'] = {}
     parameters['try_mode'] = None
-    parameters['try_task_config'] = None
+    parameters['try_task_config'] = {}
     parameters['try_options'] = None
 
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which

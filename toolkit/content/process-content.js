@@ -7,13 +7,15 @@
 // Creates a new PageListener for this process. This will listen for page loads
 // and for those that match URLs provided by the parent process will set up
 // a dedicated message port and notify the parent process.
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const gInContentProcess = Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
+const gInContentProcess =
+  Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 
 Services.cpmm.addMessageListener("gmp-plugin-crash", msg => {
-  let gmpservice = Cc["@mozilla.org/gecko-media-plugin-service;1"]
-                     .getService(Ci.mozIGeckoMediaPluginService);
+  let gmpservice = Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
+    Ci.mozIGeckoMediaPluginService
+  );
 
   gmpservice.RunPluginCrashCallbacks(msg.data.pluginID, msg.data.pluginName);
 });
@@ -49,17 +51,21 @@ let ProcessObserver = {
         let window = subject;
         let url = window.document.documentURI.replace(/[\#|\?].*$/, "");
 
-        let registeredURLs = Services.cpmm.sharedData.get("RemotePageManager:urls");
+        let registeredURLs = Services.cpmm.sharedData.get(
+          "RemotePageManager:urls"
+        );
 
-        if (!registeredURLs || !registeredURLs.has(url))
+        if (!registeredURLs || !registeredURLs.has(url)) {
           return;
+        }
 
         // Get the frame message manager for this window so we can associate this
         // page with a browser element
         let messageManager = window.docShell.messageManager;
 
-        let { ChildMessagePort } =
-          ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerChild.jsm");
+        let { ChildMessagePort } = ChromeUtils.import(
+          "resource://gre/modules/remotepagemanager/RemotePageManagerChild.jsm"
+        );
         // Set up the child side of the message port
         new ChildMessagePort(messageManager, window);
         break;
@@ -68,10 +74,11 @@ let ProcessObserver = {
         // Forward inner-window-destroyed notifications with the
         // inner window ID, so that code in the parent that should
         // do something when content windows go away can do it
-        let innerWindowID =
-          subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-        Services.cpmm.sendAsyncMessage("Toolkit:inner-window-destroyed",
-                                       innerWindowID);
+        let innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+        Services.cpmm.sendAsyncMessage(
+          "Toolkit:inner-window-destroyed",
+          innerWindowID
+        );
         break;
       }
       case "xpcom-shutdown": {

@@ -4,10 +4,11 @@
 
 "use strict";
 
-const {MigrationUtils} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
+const { MigrationUtils } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
 
-function ProfileMigrator() {
-}
+function ProfileMigrator() {}
 
 ProfileMigrator.prototype = {
   migrate: MigrationUtils.startupMigration.bind(MigrationUtils),

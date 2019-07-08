@@ -27,7 +27,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(1, os.path.dirname(here))
 
 from mozharness.base.errors import BaseErrorList
-from mozharness.base.log import INFO
+from mozharness.base.log import INFO, WARNING
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.automation import TBPL_EXCEPTION, TBPL_RETRY
@@ -45,6 +45,7 @@ SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', '
                     'mozmill']
 SUITE_DEFAULT_E10S = ['mochitest', 'reftest']
 SUITE_NO_E10S = ['xpcshell']
+SUITE_REPEATABLE = ['mochitest', 'reftest']
 
 
 # DesktopUnittest {{{1
@@ -174,6 +175,14 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             "dest": "extra_prefs",
             "default": [],
             "help": "Defines an extra user preference."}
+         ],
+        [['--repeat', ], {
+            "action": "store",
+            "type": "int",
+            "dest": "repeat",
+            "default": 0,
+            "help": "Repeat the tests the given number of times. Supported "
+                    "by mochitest, reftest, crashtest, ignored otherwise."}
          ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
@@ -419,6 +428,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                     base_cmd.append('--disable-e10s')
                 elif suite_category not in SUITE_DEFAULT_E10S and c['e10s']:
                     base_cmd.append('--e10s')
+            if c.get('repeat'):
+                if suite_category in SUITE_REPEATABLE:
+                    base_cmd.extend(["--repeat=%s" % c.get('repeat')])
+                else:
+                    self.log("--repeat not supported in {}".format(suite_category), level=WARNING)
 
             # Ignore chunking if we have user specified test paths
             if not (self.verify_enabled or self.per_test_coverage):

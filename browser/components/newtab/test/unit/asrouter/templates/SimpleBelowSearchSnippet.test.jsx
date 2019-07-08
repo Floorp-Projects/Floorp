@@ -1,9 +1,9 @@
-import {mount} from "enzyme";
+import { mount } from "enzyme";
 import React from "react";
 import schema from "content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.schema.json";
-import {SimpleBelowSearchSnippet} from "content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.jsx";
+import { SimpleBelowSearchSnippet } from "content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.jsx";
 
-const DEFAULT_CONTENT = {text: "foo"};
+const DEFAULT_CONTENT = { text: "foo" };
 
 describe("SimpleBelowSearchSnippet", () => {
   let sandbox;
@@ -17,7 +17,7 @@ describe("SimpleBelowSearchSnippet", () => {
    */
   function mountAndCheckProps(content = {}, provider = "test-provider") {
     const props = {
-      content: {...DEFAULT_CONTENT, ...content},
+      content: { ...DEFAULT_CONTENT, ...content },
       provider,
       sendUserActionTelemetry: sendUserActionTelemetryStub,
       onAction: sandbox.stub(),
@@ -36,17 +36,27 @@ describe("SimpleBelowSearchSnippet", () => {
   });
 
   it("should render .text", () => {
-    const wrapper = mountAndCheckProps({text: "bar"});
+    const wrapper = mountAndCheckProps({ text: "bar" });
     assert.equal(wrapper.find(".body").text(), "bar");
   });
 
   it("should render .icon (light theme)", () => {
-    const wrapper = mountAndCheckProps({icon: "data:image/gif;base64,R0lGODl"});
-    assert.equal(wrapper.find(".icon-light-theme").prop("src"), "data:image/gif;base64,R0lGODl");
+    const wrapper = mountAndCheckProps({
+      icon: "data:image/gif;base64,R0lGODl",
+    });
+    assert.equal(
+      wrapper.find(".icon-light-theme").prop("src"),
+      "data:image/gif;base64,R0lGODl"
+    );
   });
 
   it("should render .icon (dark theme)", () => {
-    const wrapper = mountAndCheckProps({icon_dark_theme: "data:image/gif;base64,R0lGODl"});
-    assert.equal(wrapper.find(".icon-dark-theme").prop("src"), "data:image/gif;base64,R0lGODl");
+    const wrapper = mountAndCheckProps({
+      icon_dark_theme: "data:image/gif;base64,R0lGODl",
+    });
+    assert.equal(
+      wrapper.find(".icon-dark-theme").prop("src"),
+      "data:image/gif;base64,R0lGODl"
+    );
   });
 });

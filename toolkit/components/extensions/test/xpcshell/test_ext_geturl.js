@@ -1,6 +1,6 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function test_contentscript() {
@@ -12,8 +12,14 @@ add_task(async function test_contentscript() {
 
         browser.test.assertTrue(url1 !== undefined, "url1 defined");
 
-        browser.test.assertTrue(url1.startsWith("moz-extension://"), "url1 has correct scheme");
-        browser.test.assertTrue(url1.endsWith("test_file.html"), "url1 has correct leaf name");
+        browser.test.assertTrue(
+          url1.startsWith("moz-extension://"),
+          "url1 has correct scheme"
+        );
+        browser.test.assertTrue(
+          url1.endsWith("test_file.html"),
+          "url1 has correct leaf name"
+        );
 
         browser.test.assertEq(url1, url2, "url2 matches");
         browser.test.assertEq(url1, url3, "url3 matches");
@@ -24,11 +30,13 @@ add_task(async function test_contentscript() {
     },
 
     manifest: {
-      "content_scripts": [{
-        "matches": ["http://example.com/data/file_sample.html"],
-        "js": ["content_script.js"],
-        "run_at": "document_idle",
-      }],
+      content_scripts: [
+        {
+          matches: ["http://example.com/data/file_sample.html"],
+          js: ["content_script.js"],
+          run_at: "document_idle",
+        },
+      ],
     },
 
     files: {
@@ -42,7 +50,8 @@ add_task(async function test_contentscript() {
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/data/file_sample.html");
+    "http://example.com/data/file_sample.html"
+  );
 
   await extension.awaitFinish("geturl");
 

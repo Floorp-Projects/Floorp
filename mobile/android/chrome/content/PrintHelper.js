@@ -4,7 +4,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Snackbars",
+  "resource://gre/modules/Snackbars.jsm"
+);
 
 var PrintHelper = {
   onEvent: function(event, data, callback) {
@@ -12,22 +16,31 @@ var PrintHelper = {
 
     switch (event) {
       case "Print:PDF":
-        this.generatePDF(browser).then((data) => callback.onSuccess(data),
-                                       (error) => callback.onError(error));
+        this.generatePDF(browser).then(
+          data => callback.onSuccess(data),
+          error => callback.onError(error)
+        );
         break;
     }
   },
 
   generatePDF: function(aBrowser) {
     // Create the final destination file location
-    let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.currentURI, null, null);
+    let fileName = ContentAreaUtils.getDefaultFileName(
+      aBrowser.contentTitle,
+      aBrowser.currentURI,
+      null,
+      null
+    );
     fileName = fileName.trim() + ".pdf";
 
     let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
     file.append(fileName);
     file.createUnique(file.NORMAL_FILE_TYPE, parseInt("666", 8));
 
-    let printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(Ci.nsIPrintSettingsService).newPrintSettings;
+    let printSettings = Cc[
+      "@mozilla.org/gfx/printsettings-service;1"
+    ].getService(Ci.nsIPrintSettingsService).newPrintSettings;
     printSettings.printSilent = true;
     printSettings.showPrintProgress = false;
     printSettings.printBGImages = false;
@@ -36,19 +49,30 @@ var PrintHelper = {
     printSettings.toFileName = file.path;
     printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
 
-    let webBrowserPrint = aBrowser.contentWindow.getInterface(Ci.nsIWebBrowserPrint);
+    let webBrowserPrint = aBrowser.contentWindow.getInterface(
+      Ci.nsIWebBrowserPrint
+    );
 
     return new Promise((resolve, reject) => {
       webBrowserPrint.print(printSettings, {
         onStateChange: function(webProgress, request, stateFlags, status) {
           // We get two STATE_START calls, one for STATE_IS_DOCUMENT and one for STATE_IS_NETWORK
-          if (stateFlags & Ci.nsIWebProgressListener.STATE_START && stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+          if (
+            stateFlags & Ci.nsIWebProgressListener.STATE_START &&
+            stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
+          ) {
             // Let the user know something is happening. Generating the PDF can take some time.
-            Snackbars.show(Strings.browser.GetStringFromName("alertPrintjobToast"), Snackbars.LENGTH_LONG);
+            Snackbars.show(
+              Strings.browser.GetStringFromName("alertPrintjobToast"),
+              Snackbars.LENGTH_LONG
+            );
           }
 
           // We get two STATE_STOP calls, one for STATE_IS_DOCUMENT and one for STATE_IS_NETWORK
-          if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP && stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+          if (
+            stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+            stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
+          ) {
             if (Components.isSuccessCode(status)) {
               // Send the details to Java
               resolve({ file: file.path, title: fileName });

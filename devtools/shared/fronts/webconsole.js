@@ -8,7 +8,10 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const LongStringClient = require("devtools/shared/client/long-string-client");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 
 /**
@@ -256,9 +259,12 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
       onResponse(packet);
       this.pendingEvaluationResults.delete(packet.resultID);
     } else {
-      DevToolsUtils.reportException("onEvaluationResult",
+      DevToolsUtils.reportException(
+        "onEvaluationResult",
         "No response handler for an evaluateJSAsync result (resultID: " +
-                                    packet.resultID + ")");
+          packet.resultID +
+          ")"
+      );
     }
   }
 
@@ -488,8 +494,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     }
     this.off("evaluationResult", this.onEvaluationResult);
     this.off("serverNetworkEvent", this.onNetworkEvent);
-    this._client.off("networkEventUpdate",
-                                this.onNetworkEventUpdate);
+    this._client.off("networkEventUpdate", this.onNetworkEventUpdate);
     this._longStrings = null;
     this._client = null;
     this.pendingEvaluationResults.clear();
@@ -532,8 +537,10 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
 
       longStringClient.substring(initial.length, length, response => {
         if (response.error) {
-          DevToolsUtils.reportException("getString",
-              response.error + ": " + response.message);
+          DevToolsUtils.reportException(
+            "getString",
+            response.error + ": " + response.message
+          );
           reject(response);
         }
         resolve(initial + response.substring);

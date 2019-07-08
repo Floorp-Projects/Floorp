@@ -1,4 +1,4 @@
-default-preferences  pref(media.peerconnection.enabled,true) pref(media.navigator.permission.disabled,true) pref(dom.disable_open_during_load,false) pref(media.getusermedia.insecure.enabled,true) pref(media.getusermedia.insecure.enabled,true)
+default-preferences  pref(media.peerconnection.enabled,true) pref(media.navigator.permission.disabled,true) pref(dom.disable_open_during_load,false) pref(media.devices.insecure.enabled,true) pref(media.getusermedia.insecure.enabled,true)
 
 load 780790.html
 load 791270.html

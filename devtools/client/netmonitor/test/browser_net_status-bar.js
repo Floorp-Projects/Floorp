@@ -15,7 +15,9 @@ add_task(async () => {
 
   store.dispatch(Actions.batchEnable(false));
 
-  await SpecialPowers.pushPrefEnv({ "set": [["privacy.reduceTimerPrecision", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.reduceTimerPrecision", false]],
+  });
 
   const requestsDone = waitForAllRequestsFinished(monitor);
   const markersDone = waitForTimelineMarkers(monitor);
@@ -23,8 +25,12 @@ add_task(async () => {
   await Promise.all([requestsDone, markersDone]);
 
   const statusBar = document.querySelector(".devtools-toolbar-bottom");
-  const requestCount = statusBar.querySelector(".requests-list-network-summary-count");
-  const size = statusBar.querySelector(".requests-list-network-summary-transfer");
+  const requestCount = statusBar.querySelector(
+    ".requests-list-network-summary-count"
+  );
+  const size = statusBar.querySelector(
+    ".requests-list-network-summary-transfer"
+  );
   const onContentLoad = statusBar.querySelector(".dom-content-loaded");
   const onLoad = statusBar.querySelector(".load");
 

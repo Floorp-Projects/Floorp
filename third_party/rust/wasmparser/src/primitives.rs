@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+use core::result;
 use std::boxed::Box;
 use std::fmt;
-use std::result;
 
 #[cfg(feature = "std")]
 use std::error::Error;
@@ -227,7 +227,7 @@ impl V128 {
     }
 }
 
-pub type SIMDLineIndex = u8;
+pub type SIMDLaneIndex = u8;
 
 /// Instructions as defined [here].
 ///
@@ -513,27 +513,27 @@ pub enum Operator<'a> {
     V128Load { memarg: MemoryImmediate },
     V128Store { memarg: MemoryImmediate },
     V128Const { value: V128 },
-    V8x16Shuffle { lines: [SIMDLineIndex; 16] },
+    V8x16Shuffle { lanes: [SIMDLaneIndex; 16] },
     I8x16Splat,
-    I8x16ExtractLaneS { line: SIMDLineIndex },
-    I8x16ExtractLaneU { line: SIMDLineIndex },
-    I8x16ReplaceLane { line: SIMDLineIndex },
+    I8x16ExtractLaneS { lane: SIMDLaneIndex },
+    I8x16ExtractLaneU { lane: SIMDLaneIndex },
+    I8x16ReplaceLane { lane: SIMDLaneIndex },
     I16x8Splat,
-    I16x8ExtractLaneS { line: SIMDLineIndex },
-    I16x8ExtractLaneU { line: SIMDLineIndex },
-    I16x8ReplaceLane { line: SIMDLineIndex },
+    I16x8ExtractLaneS { lane: SIMDLaneIndex },
+    I16x8ExtractLaneU { lane: SIMDLaneIndex },
+    I16x8ReplaceLane { lane: SIMDLaneIndex },
     I32x4Splat,
-    I32x4ExtractLane { line: SIMDLineIndex },
-    I32x4ReplaceLane { line: SIMDLineIndex },
+    I32x4ExtractLane { lane: SIMDLaneIndex },
+    I32x4ReplaceLane { lane: SIMDLaneIndex },
     I64x2Splat,
-    I64x2ExtractLane { line: SIMDLineIndex },
-    I64x2ReplaceLane { line: SIMDLineIndex },
+    I64x2ExtractLane { lane: SIMDLaneIndex },
+    I64x2ReplaceLane { lane: SIMDLaneIndex },
     F32x4Splat,
-    F32x4ExtractLane { line: SIMDLineIndex },
-    F32x4ReplaceLane { line: SIMDLineIndex },
+    F32x4ExtractLane { lane: SIMDLaneIndex },
+    F32x4ReplaceLane { lane: SIMDLaneIndex },
     F64x2Splat,
-    F64x2ExtractLane { line: SIMDLineIndex },
-    F64x2ReplaceLane { line: SIMDLineIndex },
+    F64x2ExtractLane { lane: SIMDLaneIndex },
+    F64x2ReplaceLane { lane: SIMDLaneIndex },
     I8x16Eq,
     I8x16Ne,
     I8x16LtS,
@@ -650,4 +650,6 @@ pub enum Operator<'a> {
     F32x4ConvertUI32x4,
     F64x2ConvertSI64x2,
     F64x2ConvertUI64x2,
+    V8x16Shuffle1,
+    V8x16Shuffle2Imm { lanes: [SIMDLaneIndex; 16] },
 }

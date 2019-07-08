@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -12,7 +12,7 @@ const MAX_THEME_COUNT = 6; // Not exposed from CustomizeMode.jsm
 async function installTheme(id) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
       manifest_version: 2,
       name: "Theme " + id,
       description: "wow. such theme.",
@@ -29,8 +29,10 @@ async function installTheme(id) {
 add_task(async function() {
   await startCustomizing();
   // Check restore defaults button is disabled.
-  ok(document.getElementById("customization-reset-button").disabled,
-     "Reset button should start out disabled");
+  ok(
+    document.getElementById("customization-reset-button").disabled,
+    "Reset button should start out disabled"
+  );
 
   let themesButton = document.getElementById("customization-lwtheme-button");
   let themesButtonIcon = themesButton.icon;
@@ -40,11 +42,16 @@ add_task(async function() {
   // case the icon is determined by CSS (which will be the default
   // theme's icon).
   if (iconURL) {
-    ok((/default/i).test(themesButtonIcon.style.backgroundImage),
-       `Button should show default theme thumbnail - was: "${iconURL}"`);
+    ok(
+      /default/i.test(themesButtonIcon.style.backgroundImage),
+      `Button should show default theme thumbnail - was: "${iconURL}"`
+    );
   } else {
-    is(iconURL, "",
-       `Button should show default theme thumbnail (empty string) - was: "${iconURL}"`);
+    is(
+      iconURL,
+      "",
+      `Button should show default theme thumbnail (empty string) - was: "${iconURL}"`
+    );
   }
   let popup = document.getElementById("customization-lwtheme-menu");
 
@@ -66,16 +73,31 @@ add_task(async function() {
   let header = document.getElementById("customization-lwtheme-menu-header");
   let footer = document.getElementById("customization-lwtheme-menu-footer");
 
-  is(header.nextElementSibling.nextElementSibling.nextElementSibling.nextElementSibling, footer,
-     "There should only be three themes (default, light, dark) in the 'My Themes' section by default");
-  is(header.nextElementSibling.theme.id, DEFAULT_THEME_ID,
-     "The first theme should be the default theme");
-  is(header.nextElementSibling.nextElementSibling.theme.id, LIGHT_THEME_ID,
-     "The second theme should be the light theme");
-  is(header.nextElementSibling.nextElementSibling.nextElementSibling.theme.id, DARK_THEME_ID,
-     "The third theme should be the dark theme");
+  is(
+    header.nextElementSibling.nextElementSibling.nextElementSibling
+      .nextElementSibling,
+    footer,
+    "There should only be three themes (default, light, dark) in the 'My Themes' section by default"
+  );
+  is(
+    header.nextElementSibling.theme.id,
+    DEFAULT_THEME_ID,
+    "The first theme should be the default theme"
+  );
+  is(
+    header.nextElementSibling.nextElementSibling.theme.id,
+    LIGHT_THEME_ID,
+    "The second theme should be the light theme"
+  );
+  is(
+    header.nextElementSibling.nextElementSibling.nextElementSibling.theme.id,
+    DARK_THEME_ID,
+    "The third theme should be the dark theme"
+  );
 
-  let themeChangedPromise = promiseObserverNotified("lightweight-theme-styling-update");
+  let themeChangedPromise = promiseObserverNotified(
+    "lightweight-theme-styling-update"
+  );
   header.nextElementSibling.nextElementSibling.doCommand(); // Select light theme
   info("Clicked on light theme");
   await themeChangedPromise;
@@ -84,20 +106,29 @@ add_task(async function() {
   await TestUtils.waitForCondition(() => !button.disabled);
 
   // Check restore defaults button is enabled.
-  ok(!button.disabled,
-     "Reset button should not be disabled anymore");
-  ok((/light/i).test(themesButtonIcon.style.backgroundImage),
-     `Button should show light theme thumbnail - was: "${themesButtonIcon.style.backgroundImage}"`);
+  ok(!button.disabled, "Reset button should not be disabled anymore");
+  ok(
+    /light/i.test(themesButtonIcon.style.backgroundImage),
+    `Button should show light theme thumbnail - was: "${
+      themesButtonIcon.style.backgroundImage
+    }"`
+  );
 
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button a third time");
   await popupShownPromise;
 
-  let activeThemes = popup.querySelectorAll("toolbarbutton.customization-lwtheme-menu-theme[active]");
+  let activeThemes = popup.querySelectorAll(
+    "toolbarbutton.customization-lwtheme-menu-theme[active]"
+  );
   is(activeThemes.length, 1, "Exactly 1 theme should be selected");
   if (activeThemes.length > 0) {
-    is(activeThemes[0].theme.id, LIGHT_THEME_ID, "Light theme should be selected");
+    is(
+      activeThemes[0].theme.id,
+      LIGHT_THEME_ID,
+      "Light theme should be selected"
+    );
   }
   popup.hidePopup();
 
@@ -108,23 +139,35 @@ add_task(async function() {
   }
   addons = await Promise.all(addons);
 
-  ok(!themesButtonIcon.style.backgroundImage,
-     `Button should show fallback theme thumbnail - was: "${themesButtonIcon.style.backgroundImage}"`);
+  ok(
+    !themesButtonIcon.style.backgroundImage,
+    `Button should show fallback theme thumbnail - was: "${
+      themesButtonIcon.style.backgroundImage
+    }"`
+  );
 
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button a fourth time");
   await popupShownPromise;
 
-  activeThemes = popup.querySelectorAll("toolbarbutton.customization-lwtheme-menu-theme[active]");
+  activeThemes = popup.querySelectorAll(
+    "toolbarbutton.customization-lwtheme-menu-theme[active]"
+  );
   is(activeThemes.length, 1, "Exactly 1 theme should be selected");
   if (activeThemes.length > 0) {
-    is(activeThemes[0].theme.id, "my-theme-5@example.com", "Last installed theme should be selected");
+    is(
+      activeThemes[0].theme.id,
+      "my-theme-5@example.com",
+      "Last installed theme should be selected"
+    );
   }
 
   let firstLWTheme = footer.previousElementSibling;
   let firstLWThemeId = firstLWTheme.theme.id;
-  themeChangedPromise = promiseObserverNotified("lightweight-theme-styling-update");
+  themeChangedPromise = promiseObserverNotified(
+    "lightweight-theme-styling-update"
+  );
   firstLWTheme.doCommand();
   info("Clicked on first theme");
   await themeChangedPromise;
@@ -136,21 +179,34 @@ add_task(async function() {
   info("Clicked on themes button");
   await popupShownPromise;
 
-  activeThemes = popup.querySelectorAll("toolbarbutton.customization-lwtheme-menu-theme[active]");
+  activeThemes = popup.querySelectorAll(
+    "toolbarbutton.customization-lwtheme-menu-theme[active]"
+  );
   is(activeThemes.length, 1, "Exactly 1 theme should be selected");
   if (activeThemes.length > 0) {
-    is(activeThemes[0].theme.id, firstLWThemeId, "First theme should be selected");
+    is(
+      activeThemes[0].theme.id,
+      firstLWThemeId,
+      "First theme should be selected"
+    );
   }
 
-  is(header.nextElementSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
+  is(
+    header.nextElementSibling.theme.id,
+    DEFAULT_THEME_ID,
+    "The first theme should be the Default theme"
+  );
   let themeCount = 0;
   let iterNode = header;
   while (iterNode.nextElementSibling && iterNode.nextElementSibling.theme) {
     themeCount++;
     iterNode = iterNode.nextElementSibling;
   }
-  is(themeCount, MAX_THEME_COUNT,
-     "There should be the max number of themes in the 'My Themes' section");
+  is(
+    themeCount,
+    MAX_THEME_COUNT,
+    "There should be the max number of themes in the 'My Themes' section"
+  );
 
   let defaultTheme = header.nextElementSibling;
   defaultTheme.doCommand();
@@ -177,15 +233,27 @@ add_task(async function() {
   header = document.getElementById("customization-lwtheme-menu-header");
   is(header.hidden, false, "Header should never be hidden");
   let themeNode = header.nextElementSibling;
-  is(themeNode.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
+  is(
+    themeNode.theme.id,
+    DEFAULT_THEME_ID,
+    "The first theme should be the Default theme"
+  );
   is(themeNode.hidden, false, "The default theme should never be hidden");
 
   themeNode = themeNode.nextElementSibling;
-  is(themeNode.theme.id, LIGHT_THEME_ID, "The second theme should be the Light theme");
+  is(
+    themeNode.theme.id,
+    LIGHT_THEME_ID,
+    "The second theme should be the Light theme"
+  );
   is(themeNode.hidden, false, "The light theme should never be hidden");
 
   themeNode = themeNode.nextElementSibling;
-  is(themeNode.theme.id, DARK_THEME_ID, "The third theme should be the Dark theme");
+  is(
+    themeNode.theme.id,
+    DARK_THEME_ID,
+    "The third theme should be the Dark theme"
+  );
   is(themeNode.hidden, false, "The dark theme should never be hidden");
 
   await Promise.all(addons.map(a => a.unload()));

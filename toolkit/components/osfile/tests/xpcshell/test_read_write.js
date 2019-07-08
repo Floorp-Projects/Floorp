@@ -9,9 +9,11 @@ var EXISTING_FILE = do_get_file("xpcshell.ini").path;
 
 add_task(async function init() {
   do_get_profile();
-  SHARED_PATH = OS.Path.join(OS.Constants.Path.profileDir, "test_osfile_read.tmp");
+  SHARED_PATH = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "test_osfile_read.tmp"
+  );
 });
-
 
 // Check that OS.File.read() is executed after the previous operation
 add_test_pair(async function ordering() {
@@ -29,7 +31,9 @@ add_test_pair(async function read_write_all() {
 
   let test_with_options = function(options, suffix) {
     return (async function() {
-      info("Running test read_write_all with options " + JSON.stringify(options));
+      info(
+        "Running test read_write_all with options " + JSON.stringify(options)
+      );
       let TEST = "read_write_all " + suffix;
 
       let optionsBackup = JSON.parse(JSON.stringify(options));
@@ -41,7 +45,11 @@ add_test_pair(async function read_write_all() {
       Assert.ok(!!contents); // Content is not empty
       let bytesRead = contents.byteLength;
 
-      let bytesWritten = await OS.File.writeAtomic(DEST_PATH, contents, options);
+      let bytesWritten = await OS.File.writeAtomic(
+        DEST_PATH,
+        contents,
+        options
+      );
       Assert.equal(bytesRead, bytesWritten); // Correct number of bytes written
 
       // Check that options are not altered
@@ -59,10 +67,16 @@ add_test_pair(async function read_write_all() {
         let opt = JSON.parse(JSON.stringify(options));
         opt.noOverwrite = true;
         await OS.File.writeAtomic(DEST_PATH, view, opt);
-        do_throw("With noOverwrite, writeAtomic should have refused to overwrite file (" + suffix + ")");
+        do_throw(
+          "With noOverwrite, writeAtomic should have refused to overwrite file (" +
+            suffix +
+            ")"
+        );
       } catch (err) {
         if (err instanceof OS.File.Error && err.becauseExists) {
-          info("With noOverwrite, writeAtomic correctly failed (" + suffix + ")");
+          info(
+            "With noOverwrite, writeAtomic correctly failed (" + suffix + ")"
+          );
         } else {
           throw err;
         }
@@ -76,16 +90,18 @@ add_test_pair(async function read_write_all() {
       let START = 10;
       let LENGTH = 100;
       contents = new Uint8Array(300);
-      for (let i = 0; i < contents.byteLength; i++)
+      for (let i = 0; i < contents.byteLength; i++) {
         contents[i] = i % 256;
+      }
       view = new Uint8Array(contents.buffer, START, LENGTH);
       bytesWritten = await OS.File.writeAtomic(DEST_PATH, view, options);
       Assert.equal(bytesWritten, LENGTH);
 
       let array2 = await OS.File.read(DEST_PATH);
       Assert.equal(LENGTH, array2.length);
-      for (let j = 0; j < LENGTH; j++)
+      for (let j = 0; j < LENGTH; j++) {
         Assert.equal(array2[j], (j + START) % 256);
+      }
 
       // Cleanup.
       await OS.File.remove(DEST_PATH);
@@ -93,8 +109,11 @@ add_test_pair(async function read_write_all() {
     })();
   };
 
-  await test_with_options({tmpPath: TMP_PATH}, "Renaming, not flushing");
-  await test_with_options({tmpPath: TMP_PATH, flush: true}, "Renaming, flushing");
+  await test_with_options({ tmpPath: TMP_PATH }, "Renaming, not flushing");
+  await test_with_options(
+    { tmpPath: TMP_PATH, flush: true },
+    "Renaming, flushing"
+  );
   await test_with_options({}, "Not renaming, not flushing");
-  await test_with_options({flush: true}, "Not renaming, flushing");
+  await test_with_options({ flush: true }, "Not renaming, flushing");
 });

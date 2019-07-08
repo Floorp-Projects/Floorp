@@ -4,19 +4,25 @@
 
 "use strict";
 
-const {
-  EnterprisePolicyTesting,
-  PoliciesPrefTracker,
-} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", null);
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm", null);
+const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm",
+  null
+);
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm",
+  null
+);
 
 PoliciesPrefTracker.start();
 
 async function setupPolicyEngineWithJson(json, customSchema) {
   PoliciesPrefTracker.restoreDefaultValues();
-  if (typeof(json) != "object") {
+  if (typeof json != "object") {
     let filePath = getTestFilePath(json ? json : "non-existing-file.json");
-    return EnterprisePolicyTesting.setupPolicyEngineWithJson(filePath, customSchema);
+    return EnterprisePolicyTesting.setupPolicyEngineWithJson(
+      filePath,
+      customSchema
+    );
   }
   return EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
 }
@@ -31,33 +37,48 @@ function checkUnlockedPref(prefName, prefValue) {
 
 // Checks that a page was blocked by seeing if it was replaced with about:neterror
 async function checkBlockedPage(url, expectedBlocked) {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url,
-    waitForLoad: false,
-    waitForStateStop: true,
-  }, async function() {
-    await BrowserTestUtils.waitForCondition(async function() {
-      let blocked = await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-        return content.document.documentURI.startsWith("about:neterror");
-      });
-      return blocked == expectedBlocked;
-    }, `Page ${url} block was correct (expected=${expectedBlocked}).`);
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url,
+      waitForLoad: false,
+      waitForStateStop: true,
+    },
+    async function() {
+      await BrowserTestUtils.waitForCondition(async function() {
+        let blocked = await ContentTask.spawn(
+          gBrowser.selectedBrowser,
+          null,
+          async function() {
+            return content.document.documentURI.startsWith("about:neterror");
+          }
+        );
+        return blocked == expectedBlocked;
+      }, `Page ${url} block was correct (expected=${expectedBlocked}).`);
+    }
+  );
 }
 
 add_task(async function policies_headjs_startWithCleanSlate() {
   if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
     await setupPolicyEngineWithJson("");
   }
-  is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the start of the test");
+  is(
+    Services.policies.status,
+    Ci.nsIEnterprisePolicies.INACTIVE,
+    "Engine is inactive at the start of the test"
+  );
 });
 
 registerCleanupFunction(async function policies_headjs_finishWithCleanSlate() {
   if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
     await setupPolicyEngineWithJson("");
   }
-  is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the end of the test");
+  is(
+    Services.policies.status,
+    Ci.nsIEnterprisePolicies.INACTIVE,
+    "Engine is inactive at the end of the test"
+  );
 
   EnterprisePolicyTesting.resetRunOnceState();
   PoliciesPrefTracker.stop();
@@ -82,5 +103,3 @@ async function testOnAboutAddonsType(type, fn) {
   await fn();
   await SpecialPowers.popPrefEnv();
 }
-
-

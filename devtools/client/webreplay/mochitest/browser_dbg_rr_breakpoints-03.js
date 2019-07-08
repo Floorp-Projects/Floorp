@@ -9,7 +9,7 @@
 // Test some issues when stepping around after hitting a breakpoint while recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
-  const {threadClient, tab, toolbox} = dbg;
+  const { threadClient, tab, toolbox } = dbg;
 
   await threadClient.interrupt();
   const bp1 = await setBreakpoint(threadClient, "doc_rr_continuous.html", 19);

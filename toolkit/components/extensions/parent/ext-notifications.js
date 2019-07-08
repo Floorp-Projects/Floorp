@@ -2,12 +2,13 @@
 
 const ToolkitModules = {};
 
-ChromeUtils.defineModuleGetter(ToolkitModules, "EventEmitter",
-                               "resource://gre/modules/EventEmitter.jsm");
+ChromeUtils.defineModuleGetter(
+  ToolkitModules,
+  "EventEmitter",
+  "resource://gre/modules/EventEmitter.jsm"
+);
 
-var {
-  ignoreEvent,
-} = ExtensionCommon;
+var { ignoreEvent } = ExtensionCommon;
 
 // Manages a notification popup (notifications API) created by the extension.
 function Notification(extension, notificationsMap, id, options) {
@@ -21,14 +22,18 @@ function Notification(extension, notificationsMap, id, options) {
   }
 
   try {
-    let svc = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-    svc.showAlertNotification(imageURL,
-                              options.title,
-                              options.message,
-                              true, // textClickable
-                              this.id,
-                              this,
-                              this.id);
+    let svc = Cc["@mozilla.org/alerts-service;1"].getService(
+      Ci.nsIAlertsService
+    );
+    svc.showAlertNotification(
+      imageURL,
+      options.title,
+      options.message,
+      true, // textClickable
+      this.id,
+      this,
+      this.id
+    );
   } catch (e) {
     // This will fail if alerts aren't available on the system.
   }
@@ -37,7 +42,9 @@ function Notification(extension, notificationsMap, id, options) {
 Notification.prototype = {
   clear() {
     try {
-      let svc = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+      let svc = Cc["@mozilla.org/alerts-service;1"].getService(
+        Ci.nsIAlertsService
+      );
       svc.closeAlert(this.id);
     } catch (e) {
       // This will fail if the OS doesn't support this function.
@@ -81,7 +88,7 @@ this.notifications = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
     let notificationsMap = this.notificationsMap;
 
     return {
@@ -95,7 +102,12 @@ this.notifications = class extends ExtensionAPI {
             notificationsMap.get(notificationId).clear();
           }
 
-          let notification = new Notification(extension, notificationsMap, notificationId, options);
+          let notification = new Notification(
+            extension,
+            notificationsMap,
+            notificationId,
+            options
+          );
           notificationsMap.set(notificationId, notification);
 
           return Promise.resolve(notificationId);

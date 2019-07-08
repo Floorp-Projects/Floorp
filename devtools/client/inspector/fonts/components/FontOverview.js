@@ -4,11 +4,16 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Accordion = createFactory(require("devtools/client/inspector/layout/components/Accordion"));
+const Accordion = createFactory(
+  require("devtools/client/inspector/layout/components/Accordion")
+);
 const FontList = createFactory(require("./FontList"));
 
 const { getStr } = require("../utils/l10n");
@@ -32,11 +37,7 @@ class FontOverview extends PureComponent {
   }
 
   renderFonts() {
-    const {
-      fontData,
-      fontOptions,
-      onPreviewTextChange,
-    } = this.props;
+    const { fontData, fontOptions, onPreviewTextChange } = this.props;
 
     const fonts = fontData.allFonts;
 

@@ -50,11 +50,11 @@ define(function(require, exports, module) {
     }
 
     render() {
-      return (
-        input({className: "searchBox devtools-filterinput",
-               placeholder: JSONView.Locale.$STR("jsonViewer.filterJSON"),
-               onChange: this.onSearch})
-      );
+      return input({
+        className: "searchBox devtools-filterinput",
+        placeholder: JSONView.Locale.$STR("jsonViewer.filterJSON"),
+        onChange: this.onSearch,
+      });
     }
   }
 

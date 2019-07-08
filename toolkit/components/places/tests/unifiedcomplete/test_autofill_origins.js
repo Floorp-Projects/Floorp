@@ -9,18 +9,22 @@ addAutofillTasks(true);
 // "example.com/" should match http://example.com/.  i.e., the search string
 // should be treated as if it didn't have the trailing slash.
 add_task(async function trailingSlash() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com/",
+    },
+  ]);
   await check_autocomplete({
     search: "example.com/",
     autofilled: "example.com/",
     completed: "http://example.com/",
-    matches: [{
-      value: "example.com/",
-      comment: "example.com/",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "example.com/",
+        comment: "example.com/",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
   await cleanup();
 });
@@ -28,36 +32,44 @@ add_task(async function trailingSlash() {
 // "example.com/" should match http://www.example.com/.  i.e., the search string
 // should be treated as if it didn't have the trailing slash.
 add_task(async function trailingSlashWWW() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://www.example.com/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://www.example.com/",
+    },
+  ]);
   await check_autocomplete({
     search: "example.com/",
     autofilled: "example.com/",
     completed: "http://www.example.com/",
-    matches: [{
-      value: "example.com/",
-      comment: "www.example.com/",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "example.com/",
+        comment: "www.example.com/",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
   await cleanup();
 });
 
 // "ex" should match http://example.com:8888/, and the port should be completed.
 add_task(async function port() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com:8888/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com:8888/",
+    },
+  ]);
   await check_autocomplete({
     search: "ex",
     autofilled: "example.com:8888/",
     completed: "http://example.com:8888/",
-    matches: [{
-      value: "example.com:8888/",
-      comment: "example.com:8888",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "example.com:8888/",
+        comment: "example.com:8888",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
   await cleanup();
 });
@@ -65,18 +77,22 @@ add_task(async function port() {
 // "example.com:8" should match http://example.com:8888/, and the port should
 // be completed.
 add_task(async function portPartial() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com:8888/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com:8888/",
+    },
+  ]);
   await check_autocomplete({
     search: "example.com:8",
     autofilled: "example.com:8888/",
     completed: "http://example.com:8888/",
-    matches: [{
-      value: "example.com:8888/",
-      comment: "example.com:8888",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "example.com:8888/",
+        comment: "example.com:8888",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
   await cleanup();
 });
@@ -84,18 +100,22 @@ add_task(async function portPartial() {
 // "EXaM" should match http://example.com/ and the case of the search string
 // should be preserved in the autofilled value.
 add_task(async function preserveCase() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com/",
+    },
+  ]);
   await check_autocomplete({
     search: "EXaM",
     autofilled: "EXaMple.com/",
     completed: "http://example.com/",
-    matches: [{
-      value: "example.com/",
-      comment: "example.com",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "example.com/",
+        comment: "example.com",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
   await cleanup();
 });
@@ -104,27 +124,33 @@ add_task(async function preserveCase() {
 // and the case of the search string should be preserved in the autofilled
 // value.
 add_task(async function preserveCasePort() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com:8888/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com:8888/",
+    },
+  ]);
   await check_autocomplete({
     search: "EXaM",
     autofilled: "EXaMple.com:8888/",
     completed: "http://example.com:8888/",
-    matches: [{
-      value: "example.com:8888/",
-      comment: "example.com:8888",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "example.com:8888/",
+        comment: "example.com:8888",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
   await cleanup();
 });
 
 // "example.com:89" should *not* match http://example.com:8888/.
 add_task(async function portNoMatch1() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com:8888/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com:8888/",
+    },
+  ]);
   await check_autocomplete({
     search: "example.com:89",
     matches: [],
@@ -134,9 +160,11 @@ add_task(async function portNoMatch1() {
 
 // "example.com:9" should *not* match http://example.com:8888/.
 add_task(async function portNoMatch2() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com:8888/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com:8888/",
+    },
+  ]);
   await check_autocomplete({
     search: "example.com:9",
     matches: [],
@@ -146,9 +174,11 @@ add_task(async function portNoMatch2() {
 
 // "example/" should *not* match http://example.com/.
 add_task(async function trailingSlash() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://example.com/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com/",
+    },
+  ]);
   await check_autocomplete({
     search: "example/",
     matches: [],
@@ -158,17 +188,21 @@ add_task(async function trailingSlash() {
 
 // multi.dotted.domain, search up to dot.
 add_task(async function multidotted() {
-  await PlacesTestUtils.addVisits([{
-    uri: "http://www.example.co.jp:8888/",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://www.example.co.jp:8888/",
+    },
+  ]);
   await check_autocomplete({
     search: "www.example.co.",
     completed: "http://www.example.co.jp:8888/",
-    matches: [{
-      value: "www.example.co.jp:8888/",
-      comment: "www.example.co.jp:8888",
-      style: ["autofill", "heuristic"],
-    }],
+    matches: [
+      {
+        value: "www.example.co.jp:8888/",
+        comment: "www.example.co.jp:8888",
+        style: ["autofill", "heuristic"],
+      },
+    ],
   });
   await cleanup();
 });
@@ -187,11 +221,13 @@ add_task(async function test_ip() {
       await check_autocomplete({
         search: str.substring(0, i),
         completed: "http://" + str,
-        matches: [{
-          value: str,
-          comment: str.replace(/\/$/, ""), // strip trailing slash
-          style: ["autofill", "heuristic"],
-        }],
+        matches: [
+          {
+            value: str,
+            comment: str.replace(/\/$/, ""), // strip trailing slash
+            style: ["autofill", "heuristic"],
+          },
+        ],
       });
     }
     await cleanup();
@@ -233,8 +269,10 @@ add_task(async function groupByHost() {
   Assert.ok(httpsFrec < threshold, "https origin should be < threshold");
   Assert.ok(threshold <= otherFrec, "Other origin should cross threshold");
 
-  Assert.ok(threshold <= httpFrec + httpsFrec,
-            "http and https origin added together should cross threshold");
+  Assert.ok(
+    threshold <= httpFrec + httpsFrec,
+    "http and https origin added together should cross threshold"
+  );
 
   // The https origin should be autofilled.
   await check_autocomplete({
@@ -263,8 +301,10 @@ add_task(async function groupByHost() {
 // the pref is respected.
 add_task(async function groupByHostNonDefaultStddevMultiplier() {
   let stddevMultiplier = 1.5;
-  Services.prefs.setCharPref("browser.urlbar.autoFill.stddevMultiplier",
-                             Number(stddevMultiplier).toFixed(1));
+  Services.prefs.setCharPref(
+    "browser.urlbar.autoFill.stddevMultiplier",
+    Number(stddevMultiplier).toFixed(1)
+  );
 
   await PlacesTestUtils.addVisits([
     { uri: "http://example.com/" },
@@ -298,8 +338,10 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
   Assert.ok(httpsFrec < threshold, "https origin should be < threshold");
   Assert.ok(threshold <= otherFrec, "Other origin should cross threshold");
 
-  Assert.ok(threshold <= httpFrec + httpsFrec,
-            "http and https origin added together should cross threshold");
+  Assert.ok(
+    threshold <= httpFrec + httpsFrec,
+    "http and https origin added together should cross threshold"
+  );
 
   // The https origin should be autofilled.
   await check_autocomplete({
@@ -342,25 +384,31 @@ add_task(async function bookmarkedMultiple() {
   // bookmarked visit is to make sure our aggregate SQL query for determining
   // whether an origin is bookmarked is correct.
 
-  await PlacesTestUtils.addVisits([{
-    uri: baseURL + "other1",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: baseURL + "other1",
+    },
+  ]);
   await check_autocomplete({
     search,
     matches: [],
   });
 
-  await PlacesTestUtils.addVisits([{
-    uri: bookmarkedURL,
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: bookmarkedURL,
+    },
+  ]);
   await check_autocomplete({
     search,
     matches: [],
   });
 
-  await PlacesTestUtils.addVisits([{
-    uri: baseURL + "other2",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: baseURL + "other2",
+    },
+  ]);
   await check_autocomplete({
     search,
     matches: [],
@@ -408,25 +456,31 @@ add_task(async function bookmarkedPrefixMultiple() {
   // bookmarked visit is to make sure our aggregate SQL query for determining
   // whether an origin is bookmarked is correct.
 
-  await PlacesTestUtils.addVisits([{
-    uri: baseURL + "other1",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: baseURL + "other1",
+    },
+  ]);
   await check_autocomplete({
     search,
     matches: [],
   });
 
-  await PlacesTestUtils.addVisits([{
-    uri: bookmarkedURL,
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: bookmarkedURL,
+    },
+  ]);
   await check_autocomplete({
     search,
     matches: [],
   });
 
-  await PlacesTestUtils.addVisits([{
-    uri: baseURL + "other2",
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: baseURL + "other2",
+    },
+  ]);
   await check_autocomplete({
     search,
     matches: [],

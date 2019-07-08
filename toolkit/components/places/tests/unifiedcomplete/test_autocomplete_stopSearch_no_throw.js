@@ -9,8 +9,9 @@
  * AutoComplete implementation does not throw.
  */
 
-var ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"].
-         getService(Ci.nsIAutoCompleteSearch);
+var ac = Cc[
+  "@mozilla.org/autocomplete/search;1?name=unifiedcomplete"
+].getService(Ci.nsIAutoCompleteSearch);
 
 add_task(async function test_stopSearch() {
   try {

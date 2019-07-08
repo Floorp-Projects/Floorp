@@ -27,8 +27,9 @@ function build_tests() {
 function run_test() {
   build_tests();
 
-  var foStream = Cc["@mozilla.org/network/file-output-stream;1"].
-                 createInstance(Ci.nsIFileOutputStream);
+  var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
 
   var tmp = tmpDir.clone();
   tmp.append("temp-permissions");
@@ -48,12 +49,26 @@ function run_test() {
     // This reduces the coverage of the test but there isn't much we can do
     var perm = file.permissions & 0xfff;
     if (TESTS[i].permission != perm) {
-      dump("File permissions for " + TESTS[i].name + " were " + perm.toString(8) + "\n");
+      dump(
+        "File permissions for " +
+          TESTS[i].name +
+          " were " +
+          perm.toString(8) +
+          "\n"
+      );
       TESTS[i].permission = perm;
     }
 
-    zipW.addEntryFile(TESTS[i].name, Ci.nsIZipWriter.COMPRESSION_NONE, file, false);
-    Assert.equal(zipW.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
+    zipW.addEntryFile(
+      TESTS[i].name,
+      Ci.nsIZipWriter.COMPRESSION_NONE,
+      file,
+      false
+    );
+    Assert.equal(
+      zipW.getEntry(TESTS[i].name).permissions,
+      TESTS[i].permission | 0o400
+    );
     file.permissions = 0o600;
     file.remove(true);
   }
@@ -62,14 +77,20 @@ function run_test() {
   zipW.open(tmpFile, PR_RDWR);
   for (let i = 0; i < TESTS.length; i++) {
     dump("Testing zipwriter file permissions for " + TESTS[i].name + "\n");
-    Assert.equal(zipW.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
+    Assert.equal(
+      zipW.getEntry(TESTS[i].name).permissions,
+      TESTS[i].permission | 0o400
+    );
   }
   zipW.close();
 
   var zipR = new ZipReader(tmpFile);
   for (let i = 0; i < TESTS.length; i++) {
     dump("Testing zipreader file permissions for " + TESTS[i].name + "\n");
-    Assert.equal(zipR.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
+    Assert.equal(
+      zipR.getEntry(TESTS[i].name).permissions,
+      TESTS[i].permission | 0o400
+    );
     dump("Testing extracted file permissions for " + TESTS[i].name + "\n");
     zipR.extract(TESTS[i].name, file);
     Assert.equal(file.permissions & 0xfff, TESTS[i].permission);

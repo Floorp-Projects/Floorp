@@ -39,8 +39,9 @@ add_task(async function() {
     return content.document.location.href;
   });
 
-  const cookiePath = actualPath.substr(0, actualPath.lastIndexOf("/"))
-                               .replace(/file:\/\//g, "");
+  const cookiePath = actualPath
+    .substr(0, actualPath.lastIndexOf("/"))
+    .replace(/file:\/\//g, "");
   await checkState([
     [
       ["cookies", actualPath],
@@ -48,16 +49,13 @@ add_task(async function() {
         getCookieId("test1", "", cookiePath),
         getCookieId("test2", "", cookiePath),
       ],
-    ], [
+    ],
+    [
       ["indexedDB", actualPath, "MyDatabase (default)", "MyObjectStore"],
       [12345, 54321, 67890, 98765],
-    ], [
-      ["localStorage", actualPath],
-      ["test3", "test4"],
-    ], [
-      ["sessionStorage", actualPath],
-      ["test5", "test6"],
     ],
+    [["localStorage", actualPath], ["test3", "test4"]],
+    [["sessionStorage", actualPath], ["test5", "test6"]],
   ]);
 
   await finishTests();

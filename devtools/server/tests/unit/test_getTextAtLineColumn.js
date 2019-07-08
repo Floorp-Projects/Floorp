@@ -5,7 +5,7 @@
 
 "use strict";
 
-const {getTextAtLineColumn} = require("devtools/server/actors/styles");
+const { getTextAtLineColumn } = require("devtools/server/actors/styles");
 
 const TEST_DATA = [
   {
@@ -13,14 +13,14 @@ const TEST_DATA = [
     input: "#id{color:red;background:yellow;}",
     line: 1,
     column: 5,
-    expected: {offset: 4, text: "color:red;background:yellow;}"},
+    expected: { offset: 4, text: "color:red;background:yellow;}" },
   },
   {
     desc: "multiple lines",
     input: "one\n two\n  three",
     line: 3,
     column: 3,
-    expected: {offset: 11, text: "three"},
+    expected: { offset: 11, text: "three" },
   },
 ];
 

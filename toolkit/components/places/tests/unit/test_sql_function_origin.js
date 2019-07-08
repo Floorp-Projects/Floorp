@@ -22,9 +22,9 @@ add_task(async function urls() {
   for (let parts of permute(sets)) {
     let spec = parts.join("");
     let funcs = {
-      "get_prefix": parts.slice(0, 2).join(""),
-      "get_host_and_port": parts.slice(3, 5).join(""),
-      "strip_prefix_and_userinfo": parts.slice(3).join(""),
+      get_prefix: parts.slice(0, 2).join(""),
+      get_host_and_port: parts.slice(3, 5).join(""),
+      strip_prefix_and_userinfo: parts.slice(3).join(""),
     };
     for (let [func, expectedValue] of Object.entries(funcs)) {
       let rows = await db.execute(`
@@ -35,7 +35,6 @@ add_task(async function urls() {
     }
   }
 });
-
 
 // Tests strings that aren't URLs.
 add_task(async function nonURLs() {
@@ -56,7 +55,6 @@ add_task(async function nonURLs() {
   `))[0].getString(0);
   Assert.equal(value, "hello");
 });
-
 
 function permute(sets = []) {
   if (!sets.length) {

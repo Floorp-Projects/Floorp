@@ -2,21 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Prompt",
-                               "resource://gre/modules/Prompt.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Prompt",
+  "resource://gre/modules/Prompt.jsm"
+);
 
 // -----------------------------------------------------------------------
 // NSS Dialog Service
 // -----------------------------------------------------------------------
 
-function NSSDialogs() { }
+function NSSDialogs() {}
 
 NSSDialogs.prototype = {
   classID: Components.ID("{cbc08081-49b6-4561-9c18-a7707a50bda1}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs, Ci.nsIClientAuthDialogs]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsICertificateDialogs,
+    Ci.nsIClientAuthDialogs,
+  ]),
 
   /**
    * Escapes the given input via HTML entity encoding. Used to prevent HTML
@@ -27,25 +35,29 @@ NSSDialogs.prototype = {
    * @returns {String} The escaped input.
    */
   escapeHTML: function(input) {
-    return input.replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#x27;")
-                .replace(/\//g, "&#x2F;");
+    return input
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#x27;")
+      .replace(/\//g, "&#x2F;");
   },
 
   getString: function(aName) {
     if (!this.bundle) {
-        this.bundle = Services.strings.createBundle("chrome://browser/locale/pippki.properties");
+      this.bundle = Services.strings.createBundle(
+        "chrome://browser/locale/pippki.properties"
+      );
     }
     return this.bundle.GetStringFromName(aName);
   },
 
   formatString: function(aName, argList) {
     if (!this.bundle) {
-      this.bundle =
-        Services.strings.createBundle("chrome://browser/locale/pippki.properties");
+      this.bundle = Services.strings.createBundle(
+        "chrome://browser/locale/pippki.properties"
+      );
     }
     let escapedArgList = Array.from(argList, x => this.escapeHTML(x));
     return this.bundle.formatStringFromName(aName, escapedArgList);
@@ -55,8 +67,7 @@ NSSDialogs.prototype = {
     let win = null;
     try {
       win = aCtx.getInterface(Ci.nsIDOMWindow);
-    } catch (e) {
-    }
+    } catch (e) {}
     return new Prompt({
       window: win,
       title: aTitle,
@@ -79,15 +90,28 @@ NSSDialogs.prototype = {
 
   confirmDownloadCACert: function(aCtx, aCert, aTrust) {
     while (true) {
-      let prompt = this.getPrompt(this.getString("downloadCert.title"),
-                                  this.getString("downloadCert.message1"),
-                                  [ this.getString("nssdialogs.ok.label"),
-                                    this.getString("downloadCert.viewCert.label"),
-                                    this.getString("nssdialogs.cancel.label"),
-                                  ], aCtx);
+      let prompt = this.getPrompt(
+        this.getString("downloadCert.title"),
+        this.getString("downloadCert.message1"),
+        [
+          this.getString("nssdialogs.ok.label"),
+          this.getString("downloadCert.viewCert.label"),
+          this.getString("nssdialogs.cancel.label"),
+        ],
+        aCtx
+      );
 
-      prompt.addCheckbox({ id: "trustSSL", label: this.getString("downloadCert.trustSSL"), checked: false })
-            .addCheckbox({ id: "trustEmail", label: this.getString("downloadCert.trustEmail"), checked: false });
+      prompt
+        .addCheckbox({
+          id: "trustSSL",
+          label: this.getString("downloadCert.trustSSL"),
+          checked: false,
+        })
+        .addCheckbox({
+          id: "trustEmail",
+          label: this.getString("downloadCert.trustEmail"),
+          checked: false,
+        });
       let response = this.showPrompt(prompt);
 
       // they hit the "view cert" button, so show the cert and try again
@@ -99,8 +123,12 @@ NSSDialogs.prototype = {
       }
 
       aTrust.value = Ci.nsIX509CertDB.UNTRUSTED;
-      if (response.trustSSL) aTrust.value |= Ci.nsIX509CertDB.TRUSTED_SSL;
-      if (response.trustEmail) aTrust.value |= Ci.nsIX509CertDB.TRUSTED_EMAIL;
+      if (response.trustSSL) {
+        aTrust.value |= Ci.nsIX509CertDB.TRUSTED_SSL;
+      }
+      if (response.trustEmail) {
+        aTrust.value |= Ci.nsIX509CertDB.TRUSTED_EMAIL;
+      }
       return true;
     }
   },
@@ -112,11 +140,15 @@ NSSDialogs.prototype = {
   },
 
   getPKCS12FilePassword: function(aCtx, aPassword) {
-    let prompt = this.getPrompt(this.getString("pkcs12.getpassword.title"),
-                                this.getString("pkcs12.getpassword.message"),
-                                [ this.getString("nssdialogs.ok.label"),
-                                  this.getString("nssdialogs.cancel.label"),
-                                ], aCtx).addPassword({id: "pw"});
+    let prompt = this.getPrompt(
+      this.getString("pkcs12.getpassword.title"),
+      this.getString("pkcs12.getpassword.message"),
+      [
+        this.getString("nssdialogs.ok.label"),
+        this.getString("nssdialogs.cancel.label"),
+      ],
+      aCtx
+    ).addPassword({ id: "pw" });
     let response = this.showPrompt(prompt);
     if (response.button != 0) {
       return false;
@@ -127,9 +159,7 @@ NSSDialogs.prototype = {
   },
 
   certInfoSection: function(aHeading, aDataPairs, aTrailingNewline = true) {
-    let certInfoStrings = [
-      "<big>" + this.getString(aHeading) + "</big>",
-    ];
+    let certInfoStrings = ["<big>" + this.getString(aHeading) + "</big>"];
 
     for (let i = 0; i < aDataPairs.length; i += 2) {
       let key = aDataPairs[i];
@@ -145,25 +175,54 @@ NSSDialogs.prototype = {
   },
 
   viewCert: function(aCtx, aCert) {
-    let p = this.getPrompt(this.getString("certmgr.title"), "", [
-                             this.getString("nssdialogs.ok.label"),
-                           ], aCtx);
-    p.addLabel({ label: this.certInfoSection("certmgr.subjectinfo.label",
-                          ["certdetail.cn", aCert.commonName,
-                           "certdetail.o", aCert.organization,
-                           "certdetail.ou", aCert.organizationalUnit,
-                           "certdetail.serialnumber", aCert.serialNumber])})
-     .addLabel({ label: this.certInfoSection("certmgr.issuerinfo.label",
-                          ["certdetail.cn", aCert.issuerCommonName,
-                           "certdetail.o", aCert.issuerOrganization,
-                           "certdetail.ou", aCert.issuerOrganizationUnit])})
-     .addLabel({ label: this.certInfoSection("certmgr.periodofvalidity.label",
-                          ["certdetail.notBefore", aCert.validity.notBeforeLocalDay,
-                           "certdetail.notAfter", aCert.validity.notAfterLocalDay])})
-     .addLabel({ label: this.certInfoSection("certmgr.fingerprints.label",
-                          ["certdetail.sha256fingerprint", aCert.sha256Fingerprint,
-                           "certdetail.sha1fingerprint", aCert.sha1Fingerprint],
-                          false) });
+    let p = this.getPrompt(
+      this.getString("certmgr.title"),
+      "",
+      [this.getString("nssdialogs.ok.label")],
+      aCtx
+    );
+    p.addLabel({
+      label: this.certInfoSection("certmgr.subjectinfo.label", [
+        "certdetail.cn",
+        aCert.commonName,
+        "certdetail.o",
+        aCert.organization,
+        "certdetail.ou",
+        aCert.organizationalUnit,
+        "certdetail.serialnumber",
+        aCert.serialNumber,
+      ]),
+    })
+      .addLabel({
+        label: this.certInfoSection("certmgr.issuerinfo.label", [
+          "certdetail.cn",
+          aCert.issuerCommonName,
+          "certdetail.o",
+          aCert.issuerOrganization,
+          "certdetail.ou",
+          aCert.issuerOrganizationUnit,
+        ]),
+      })
+      .addLabel({
+        label: this.certInfoSection("certmgr.periodofvalidity.label", [
+          "certdetail.notBefore",
+          aCert.validity.notBeforeLocalDay,
+          "certdetail.notAfter",
+          aCert.validity.notAfterLocalDay,
+        ]),
+      })
+      .addLabel({
+        label: this.certInfoSection(
+          "certmgr.fingerprints.label",
+          [
+            "certdetail.sha256fingerprint",
+            aCert.sha256Fingerprint,
+            "certdetail.sha1fingerprint",
+            aCert.sha1Fingerprint,
+          ],
+          false
+        ),
+      });
     this.showPrompt(p);
   },
 
@@ -178,45 +237,63 @@ NSSDialogs.prototype = {
     let detailLines = [
       this.formatString("clientAuthAsk.issuedTo", [cert.subjectName]),
       this.formatString("clientAuthAsk.serial", [cert.serialNumber]),
-      this.formatString("clientAuthAsk.validityPeriod",
-                        [cert.validity.notBeforeLocalTime,
-                         cert.validity.notAfterLocalTime]),
+      this.formatString("clientAuthAsk.validityPeriod", [
+        cert.validity.notBeforeLocalTime,
+        cert.validity.notAfterLocalTime,
+      ]),
     ];
     let keyUsages = cert.keyUsages;
     if (keyUsages) {
-      detailLines.push(this.formatString("clientAuthAsk.keyUsages",
-                                         [keyUsages]));
+      detailLines.push(
+        this.formatString("clientAuthAsk.keyUsages", [keyUsages])
+      );
     }
     let emailAddresses = cert.getEmailAddresses();
     if (emailAddresses.length > 0) {
       let joinedAddresses = emailAddresses.join(", ");
-      detailLines.push(this.formatString("clientAuthAsk.emailAddresses",
-                                         [joinedAddresses]));
+      detailLines.push(
+        this.formatString("clientAuthAsk.emailAddresses", [joinedAddresses])
+      );
     }
-    detailLines.push(this.formatString("clientAuthAsk.issuedBy",
-                                       [cert.issuerName]));
-    detailLines.push(this.formatString("clientAuthAsk.storedOn",
-                                       [cert.tokenName]));
+    detailLines.push(
+      this.formatString("clientAuthAsk.issuedBy", [cert.issuerName])
+    );
+    detailLines.push(
+      this.formatString("clientAuthAsk.storedOn", [cert.tokenName])
+    );
 
     return detailLines.join("<br/>");
   },
 
   viewCertDetails: function(details, ctx) {
-    let p = this.getPrompt(this.getString("clientAuthAsk.message3"),
-                    "",
-                    [ this.getString("nssdialogs.ok.label") ], ctx);
+    let p = this.getPrompt(
+      this.getString("clientAuthAsk.message3"),
+      "",
+      [this.getString("nssdialogs.ok.label")],
+      ctx
+    );
     p.addLabel({ label: details });
     this.showPrompt(p);
   },
 
-  chooseCertificate: function(ctx, hostname, port, organization, issuerOrg,
-                              certList, selectedIndex) {
-    let rememberSetting =
-      Services.prefs.getBoolPref("security.remember_cert_checkbox_default_setting");
+  chooseCertificate: function(
+    ctx,
+    hostname,
+    port,
+    organization,
+    issuerOrg,
+    certList,
+    selectedIndex
+  ) {
+    let rememberSetting = Services.prefs.getBoolPref(
+      "security.remember_cert_checkbox_default_setting"
+    );
 
     let serverRequestedDetails = [
-      this.formatString("clientAuthAsk.hostnameAndPort",
-                        [hostname, port.toString()]),
+      this.formatString("clientAuthAsk.hostnameAndPort", [
+        hostname,
+        port.toString(),
+      ]),
       this.formatString("clientAuthAsk.organization", [organization]),
       this.formatString("clientAuthAsk.issuer", [issuerOrg]),
     ].join("<br/>");
@@ -225,8 +302,12 @@ NSSDialogs.prototype = {
     let certDetailsList = [];
     for (let i = 0; i < certList.length; i++) {
       let cert = certList.queryElementAt(i, Ci.nsIX509Cert);
-      certNickList.push(this.formatString("clientAuthAsk.nickAndSerial",
-                                          [cert.displayName, cert.serialNumber]));
+      certNickList.push(
+        this.formatString("clientAuthAsk.nickAndSerial", [
+          cert.displayName,
+          cert.serialNumber,
+        ])
+      );
       certDetailsList.push(this.getCertDetails(cert));
     }
 
@@ -237,20 +318,24 @@ NSSDialogs.prototype = {
         this.getString("clientAuthAsk.viewCert.label"),
         this.getString("nssdialogs.cancel.label"),
       ];
-      let prompt = this.getPrompt(this.getString("clientAuthAsk.title"),
-                                  this.getString("clientAuthAsk.message1"),
-                                  buttons, ctx)
-      .addLabel({ id: "requestedDetails", label: serverRequestedDetails } )
-      .addMenulist({
-        id: "nicknames",
-        label: this.getString("clientAuthAsk.message2"),
-        values: certNickList,
-        selected: selectedIndex.value,
-      }).addCheckbox({
-        id: "rememberBox",
-        label: this.getString("clientAuthAsk.remember.label"),
-        checked: rememberSetting,
-      });
+      let prompt = this.getPrompt(
+        this.getString("clientAuthAsk.title"),
+        this.getString("clientAuthAsk.message1"),
+        buttons,
+        ctx
+      )
+        .addLabel({ id: "requestedDetails", label: serverRequestedDetails })
+        .addMenulist({
+          id: "nicknames",
+          label: this.getString("clientAuthAsk.message2"),
+          values: certNickList,
+          selected: selectedIndex.value,
+        })
+        .addCheckbox({
+          id: "rememberBox",
+          label: this.getString("clientAuthAsk.remember.label"),
+          checked: rememberSetting,
+        });
       let response = this.showPrompt(prompt);
       selectedIndex.value = response.nicknames;
       if (response.button == 1 /* buttons[1] */) {

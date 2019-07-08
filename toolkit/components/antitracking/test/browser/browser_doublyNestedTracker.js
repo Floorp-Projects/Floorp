@@ -2,15 +2,23 @@ add_task(async function() {
   info("Starting doubly nested tracker test");
 
   await SpecialPowers.flushPrefEnv();
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["browser.contentblocking.allowlist.annotations.enabled", true],
-    ["browser.contentblocking.allowlist.storage.enabled", true],
-    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
-    ["privacy.trackingprotection.enabled", false],
-    ["privacy.trackingprotection.pbmode.enabled", false],
-    ["privacy.trackingprotection.annotate_channels", true],
-    ["privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "tracking.example.com,tracking.example.org"],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.contentblocking.allowlist.annotations.enabled", true],
+      ["browser.contentblocking.allowlist.storage.enabled", true],
+      [
+        "network.cookie.cookieBehavior",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      ],
+      ["privacy.trackingprotection.enabled", false],
+      ["privacy.trackingprotection.pbmode.enabled", false],
+      ["privacy.trackingprotection.annotate_channels", true],
+      [
+        "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
+        "tracking.example.com,tracking.example.org",
+      ],
+    ],
+  });
 
   await UrlClassifierTestUtils.addTestTrackers();
 
@@ -55,46 +63,47 @@ add_task(async function() {
       });
 
       document.body.appendChild(ifr);
-      ifr.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/3rdParty.html";
+      ifr.src =
+        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/3rdParty.html";
     });
   }
 
-  await ContentTask.spawn(browser,
-                          { page: TEST_ANOTHER_3RD_PARTY_PAGE,
-                            callback: loadSubpage.toString(),
-                          },
-                          async function(obj) {
-    await new content.Promise(resolve => {
-      let ifr = content.document.createElement("iframe");
-      ifr.onload = _ => {
-        info("Sending code to the 3rd party content");
-        ifr.contentWindow.postMessage(obj.callback, "*");
-      };
+  await ContentTask.spawn(
+    browser,
+    { page: TEST_ANOTHER_3RD_PARTY_PAGE, callback: loadSubpage.toString() },
+    async function(obj) {
+      await new content.Promise(resolve => {
+        let ifr = content.document.createElement("iframe");
+        ifr.onload = _ => {
+          info("Sending code to the 3rd party content");
+          ifr.contentWindow.postMessage(obj.callback, "*");
+        };
 
-      content.addEventListener("message", function msg(event) {
-        if (event.data.type == "finish") {
-          content.removeEventListener("message", msg);
-          resolve();
-          return;
-        }
+        content.addEventListener("message", function msg(event) {
+          if (event.data.type == "finish") {
+            content.removeEventListener("message", msg);
+            resolve();
+            return;
+          }
 
-        if (event.data.type == "ok") {
-          ok(event.data.what, event.data.msg);
-          return;
-        }
+          if (event.data.type == "ok") {
+            ok(event.data.what, event.data.msg);
+            return;
+          }
 
-        if (event.data.type == "info") {
-          info(event.data.msg);
-          return;
-        }
+          if (event.data.type == "info") {
+            info(event.data.msg);
+            return;
+          }
 
-        ok(false, "Unknown message");
+          ok(false, "Unknown message");
+        });
+
+        content.document.body.appendChild(ifr);
+        ifr.src = obj.page;
       });
-
-      content.document.body.appendChild(ifr);
-      ifr.src = obj.page;
-    });
-  });
+    }
+  );
 
   BrowserTestUtils.removeTab(tab);
 
@@ -104,7 +113,8 @@ add_task(async function() {
 add_task(async function() {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
   });
 });
-

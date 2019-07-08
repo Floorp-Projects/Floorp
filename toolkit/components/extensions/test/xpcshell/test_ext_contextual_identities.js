@@ -21,8 +21,10 @@ add_task(async function startup() {
 
 add_task(async function test_contextualIdentities_without_permissions() {
   function background() {
-    browser.test.assertTrue(!browser.contextualIdentities,
-                            "contextualIdentities API is not available when the contextualIdentities permission is not required");
+    browser.test.assertTrue(
+      !browser.contextualIdentities,
+      "contextualIdentities API is not available when the contextualIdentities permission is not required"
+    );
     browser.test.notifyPass("contextualIdentities_without_permission");
   }
 
@@ -31,7 +33,7 @@ add_task(async function test_contextualIdentities_without_permissions() {
     background,
     manifest: {
       applications: {
-        gecko: {id: "testing@thing.com"},
+        gecko: { id: "testing@thing.com" },
       },
       permissions: [],
     },
@@ -48,9 +50,15 @@ add_task(async function test_contextualIdentity_events() {
     function createOneTimeListener(type) {
       return new Promise((resolve, reject) => {
         try {
-          browser.test.assertTrue(type in browser.contextualIdentities, `Found API object browser.contextualIdentities.${type}`);
-          const listener = (change) => {
-            browser.test.assertTrue("contextualIdentity" in change, `Found identity in change`);
+          browser.test.assertTrue(
+            type in browser.contextualIdentities,
+            `Found API object browser.contextualIdentities.${type}`
+          );
+          const listener = change => {
+            browser.test.assertTrue(
+              "contextualIdentity" in change,
+              `Found identity in change`
+            );
             browser.contextualIdentities[type].removeListener(listener);
             resolve(change);
           };
@@ -66,36 +74,64 @@ add_task(async function test_contextualIdentity_events() {
       const createdCount = 2;
       for (let key of Object.keys(container)) {
         browser.test.assertTrue(key in expected, `found property ${key}`);
-        browser.test.assertEq(expected[key], container[key], `property value for ${key} is correct`);
+        browser.test.assertEq(
+          expected[key],
+          container[key],
+          `property value for ${key} is correct`
+        );
       }
       const hexMatch = /^#[0-9a-f]{6}$/;
-      browser.test.assertTrue(hexMatch.test(expected.colorCode), "Color code property was expected Hex shape");
+      browser.test.assertTrue(
+        hexMatch.test(expected.colorCode),
+        "Color code property was expected Hex shape"
+      );
       const iconMatch = /^resource:\/\/usercontext-content\/[a-z]+[.]svg$/;
-      browser.test.assertTrue(iconMatch.test(expected.iconUrl), "Icon url property was expected shape");
-      browser.test.assertEq(Object.keys(expected).length, Object.keys(container).length + createdCount, "all expected properties found");
+      browser.test.assertTrue(
+        iconMatch.test(expected.iconUrl),
+        "Icon url property was expected shape"
+      );
+      browser.test.assertEq(
+        Object.keys(expected).length,
+        Object.keys(container).length + createdCount,
+        "all expected properties found"
+      );
     }
 
     let onCreatePromise = createOneTimeListener("onCreated");
 
-    let containerObj = {name: "foobar", color: "red", icon: "circle"};
+    let containerObj = { name: "foobar", color: "red", icon: "circle" };
     let ci = await browser.contextualIdentities.create(containerObj);
     browser.test.assertTrue(!!ci, "We have an identity");
     const onCreateListenerResponse = await onCreatePromise;
     const cookieStoreId = ci.cookieStoreId;
-    assertExpected(onCreateListenerResponse.contextualIdentity, Object.assign(containerObj, {cookieStoreId}));
+    assertExpected(
+      onCreateListenerResponse.contextualIdentity,
+      Object.assign(containerObj, { cookieStoreId })
+    );
 
     let onUpdatedPromise = createOneTimeListener("onUpdated");
-    let updateContainerObj = {name: "testing", color: "blue", icon: "dollar"};
-    ci = await browser.contextualIdentities.update(cookieStoreId, updateContainerObj);
+    let updateContainerObj = { name: "testing", color: "blue", icon: "dollar" };
+    ci = await browser.contextualIdentities.update(
+      cookieStoreId,
+      updateContainerObj
+    );
     browser.test.assertTrue(!!ci, "We have an update identity");
     const onUpdatedListenerResponse = await onUpdatedPromise;
-    assertExpected(onUpdatedListenerResponse.contextualIdentity, Object.assign(updateContainerObj, {cookieStoreId}));
+    assertExpected(
+      onUpdatedListenerResponse.contextualIdentity,
+      Object.assign(updateContainerObj, { cookieStoreId })
+    );
 
     let onRemovePromise = createOneTimeListener("onRemoved");
-    ci = await browser.contextualIdentities.remove(updateContainerObj.cookieStoreId);
+    ci = await browser.contextualIdentities.remove(
+      updateContainerObj.cookieStoreId
+    );
     browser.test.assertTrue(!!ci, "We have an remove identity");
     const onRemoveListenerResponse = await onRemovePromise;
-    assertExpected(onRemoveListenerResponse.contextualIdentity, Object.assign(updateContainerObj, {cookieStoreId}));
+    assertExpected(
+      onRemoveListenerResponse.contextualIdentity,
+      Object.assign(updateContainerObj, { cookieStoreId })
+    );
 
     browser.test.notifyPass("contextualIdentities_events");
   }
@@ -105,7 +141,7 @@ add_task(async function test_contextualIdentity_events() {
     useAddonManager: "temporary",
     manifest: {
       applications: {
-        gecko: {id: "testing@thing.com"},
+        gecko: { id: "testing@thing.com" },
       },
       permissions: ["contextualIdentities"],
     },
@@ -126,9 +162,21 @@ add_task(async function test_contextualIdentity_with_permissions() {
 
   async function background() {
     let ci;
-    await browser.test.assertRejects(browser.contextualIdentities.get("foobar"), "Invalid contextual identity: foobar", "API should reject here");
-    await browser.test.assertRejects(browser.contextualIdentities.update("foobar", {name: "testing"}), "Invalid contextual identity: foobar", "API should reject for unknown updates");
-    await browser.test.assertRejects(browser.contextualIdentities.remove("foobar"), "Invalid contextual identity: foobar", "API should reject for removing unknown containers");
+    await browser.test.assertRejects(
+      browser.contextualIdentities.get("foobar"),
+      "Invalid contextual identity: foobar",
+      "API should reject here"
+    );
+    await browser.test.assertRejects(
+      browser.contextualIdentities.update("foobar", { name: "testing" }),
+      "Invalid contextual identity: foobar",
+      "API should reject for unknown updates"
+    );
+    await browser.test.assertRejects(
+      browser.contextualIdentities.remove("foobar"),
+      "Invalid contextual identity: foobar",
+      "API should reject for removing unknown containers"
+    );
 
     ci = await browser.contextualIdentities.get("firefox-container-1");
     browser.test.assertTrue(!!ci, "We have an identity");
@@ -136,10 +184,14 @@ add_task(async function test_contextualIdentity_with_permissions() {
     browser.test.assertTrue("color" in ci, "We have an identity.color");
     browser.test.assertTrue("icon" in ci, "We have an identity.icon");
     browser.test.assertEq("Personal", ci.name, "identity.name is correct");
-    browser.test.assertEq("firefox-container-1", ci.cookieStoreId, "identity.cookieStoreId is correct");
+    browser.test.assertEq(
+      "firefox-container-1",
+      ci.cookieStoreId,
+      "identity.cookieStoreId is correct"
+    );
 
     function listenForMessage(messageName, stateChangeBool) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         browser.test.onMessage.addListener(function listener(msg) {
           browser.test.log(`Got message from background: ${msg}`);
           if (msg === messageName + "-response") {
@@ -147,7 +199,9 @@ add_task(async function test_contextualIdentity_with_permissions() {
             resolve();
           }
         });
-        browser.test.log(`Sending message to background: ${messageName} ${stateChangeBool}`);
+        browser.test.log(
+          `Sending message to background: ${messageName} ${stateChangeBool}`
+        );
         browser.test.sendMessage(messageName, stateChangeBool);
       });
     }
@@ -163,35 +217,66 @@ add_task(async function test_contextualIdentity_with_permissions() {
     await listenForMessage("containers-state-change", true);
 
     let cis = await browser.contextualIdentities.query({});
-    browser.test.assertEq(4, cis.length, "by default we should have 4 containers");
+    browser.test.assertEq(
+      4,
+      cis.length,
+      "by default we should have 4 containers"
+    );
 
-    cis = await browser.contextualIdentities.query({name: "Personal"});
-    browser.test.assertEq(1, cis.length, "by default we should have 1 container called Personal");
+    cis = await browser.contextualIdentities.query({ name: "Personal" });
+    browser.test.assertEq(
+      1,
+      cis.length,
+      "by default we should have 1 container called Personal"
+    );
 
-    cis = await browser.contextualIdentities.query({name: "foobar"});
-    browser.test.assertEq(0, cis.length, "by default we should have 0 container called foobar");
+    cis = await browser.contextualIdentities.query({ name: "foobar" });
+    browser.test.assertEq(
+      0,
+      cis.length,
+      "by default we should have 0 container called foobar"
+    );
 
-    ci = await browser.contextualIdentities.create({name: "foobar", color: "red", icon: "gift"});
+    ci = await browser.contextualIdentities.create({
+      name: "foobar",
+      color: "red",
+      icon: "gift",
+    });
     browser.test.assertTrue(!!ci, "We have an identity");
     browser.test.assertEq("foobar", ci.name, "identity.name is correct");
     browser.test.assertEq("red", ci.color, "identity.color is correct");
     browser.test.assertEq("gift", ci.icon, "identity.icon is correct");
-    browser.test.assertTrue(!!ci.cookieStoreId, "identity.cookieStoreId is correct");
+    browser.test.assertTrue(
+      !!ci.cookieStoreId,
+      "identity.cookieStoreId is correct"
+    );
 
     browser.test.assertRejects(
-      browser.contextualIdentities.create({name: "foobar", color: "red", icon: "firefox"}),
+      browser.contextualIdentities.create({
+        name: "foobar",
+        color: "red",
+        icon: "firefox",
+      }),
       "Invalid icon firefox for container",
       "Create container called with an invalid icon"
     );
 
     browser.test.assertRejects(
-      browser.contextualIdentities.create({name: "foobar", color: "firefox-orange", icon: "gift"}),
+      browser.contextualIdentities.create({
+        name: "foobar",
+        color: "firefox-orange",
+        icon: "gift",
+      }),
       "Invalid color name firefox-orange for container",
       "Create container called with an invalid color"
     );
 
     cis = await browser.contextualIdentities.query({});
-    browser.test.assertEq(5, cis.length, "we should still have have 5 containers");
+    browser.test.assertEq(
+      5,
+      cis.length,
+      "we should still have have 5 containers"
+    );
 
     ci = await browser.contextualIdentities.get(ci.cookieStoreId);
     browser.test.assertTrue(!!ci, "We have an identity");
@@ -200,13 +285,21 @@ add_task(async function test_contextualIdentity_with_permissions() {
     browser.test.assertEq("gift", ci.icon, "identity.icon is correct");
 
     browser.test.assertRejects(
-      browser.contextualIdentities.update(ci.cookieStoreId, {name: "foobar", color: "red", icon: "firefox"}),
+      browser.contextualIdentities.update(ci.cookieStoreId, {
+        name: "foobar",
+        color: "red",
+        icon: "firefox",
+      }),
       "Invalid icon firefox for container",
       "Create container called with an invalid icon"
     );
 
     browser.test.assertRejects(
-      browser.contextualIdentities.update(ci.cookieStoreId, {name: "foobar", color: "firefox-orange", icon: "gift"}),
+      browser.contextualIdentities.update(ci.cookieStoreId, {
+        name: "foobar",
+        color: "firefox-orange",
+        icon: "gift",
+      }),
       "Invalid color name firefox-orange for container",
       "Create container called with an invalid color"
     );
@@ -214,7 +307,11 @@ add_task(async function test_contextualIdentity_with_permissions() {
     cis = await browser.contextualIdentities.query({});
     browser.test.assertEq(5, cis.length, "now we have 5 identities");
 
-    ci = await browser.contextualIdentities.update(ci.cookieStoreId, {name: "barfoo", color: "blue", icon: "cart"});
+    ci = await browser.contextualIdentities.update(ci.cookieStoreId, {
+      name: "barfoo",
+      color: "blue",
+      icon: "cart",
+    });
     browser.test.assertTrue(!!ci, "We have an identity");
     browser.test.assertEq("barfoo", ci.name, "identity.name is correct");
     browser.test.assertEq("blue", ci.color, "identity.color is correct");
@@ -244,7 +341,7 @@ add_task(async function test_contextualIdentity_with_permissions() {
       background,
       manifest: {
         applications: {
-          gecko: {id},
+          gecko: { id },
         },
         permissions: ["contextualIdentities"],
       },
@@ -253,7 +350,7 @@ add_task(async function test_contextualIdentity_with_permissions() {
 
   let extension = makeExtension("containers-test@mozilla.org");
 
-  extension.onMessage("containers-state-change", (stateBool) => {
+  extension.onMessage("containers-state-change", stateBool => {
     Cu.reportError(`Got message "containers-state-change", ${stateBool}`);
     Services.prefs.setBoolPref(CONTAINERS_PREF, stateBool);
     Cu.reportError("Changed pref");
@@ -262,13 +359,21 @@ add_task(async function test_contextualIdentity_with_permissions() {
 
   await extension.startup();
   await extension.awaitFinish("contextualIdentities");
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should now be enabled, whatever it's initial state"
+  );
   const prefChange = waitForPrefChange(CONTAINERS_PREF);
   await extension.unload();
   if (initial === false) {
     await prefChange;
   }
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), initial, "Pref should now be initial state");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    initial,
+    "Pref should now be initial state"
+  );
 
   Services.prefs.clearUserPref(CONTAINERS_PREF);
 });
@@ -288,7 +393,7 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
       background,
       manifest: {
         applications: {
-          gecko: {id},
+          gecko: { id },
         },
         permissions: ["contextualIdentities"],
       },
@@ -298,27 +403,43 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
   let extension = makeExtension("containers-test@mozilla.org");
   await extension.startup();
   await extension.awaitFinish("contextualIdentities");
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should now be enabled, whatever it's initial state"
+  );
   const prefChange = waitForPrefChange(CONTAINERS_PREF);
   await extension.unload();
   // If pref was false we should wait for the pref to change back here.
   if (initial === false) {
     await prefChange;
   }
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), initial, "Pref should now be initial state");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    initial,
+    "Pref should now be initial state"
+  );
 
   // Lets set containers explicitly to be off and test we keep it that way after removal
   Services.prefs.setBoolPref(CONTAINERS_PREF, false);
   let extension1 = makeExtension("containers-test-1@mozilla.org");
   await extension1.startup();
   await extension1.awaitFinish("contextualIdentities");
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should now be enabled, whatever it's initial state"
+  );
   const prefChange1 = waitForPrefChange(CONTAINERS_PREF);
   await extension1.unload();
   // We explicitly have a pref that was set off, extensions turned it on
   // Lets wait until the pref flips back to the user set value of off
   await prefChange1;
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), false, "Pref should now be disabled, whatever it's initial state");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    false,
+    "Pref should now be disabled, whatever it's initial state"
+  );
 
   // Lets set containers explicitly to be on and test we keep it that way after removal
   Services.prefs.setBoolPref(CONTAINERS_PREF, true);
@@ -331,11 +452,23 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
   await extension3.awaitFinish("contextualIdentities");
 
   // Flip the ordering to check it's still enabled
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled 1");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should now be enabled 1"
+  );
   await extension3.unload();
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled 2");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should now be enabled 2"
+  );
   await extension2.unload();
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled 3");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should now be enabled 3"
+  );
 
   Services.prefs.clearUserPref(CONTAINERS_PREF);
 });
@@ -346,7 +479,11 @@ add_task(async function test_contextualIdentity_preference_change() {
     let extensionInfo = await browser.management.getSelf();
     if (extensionInfo.version == "1.0.0") {
       const containers = await browser.contextualIdentities.query({});
-      browser.test.assertEq(containers.length, 4, "We still have the original containers");
+      browser.test.assertEq(
+        containers.length,
+        4,
+        "We still have the original containers"
+      );
       await browser.contextualIdentities.create({
         name: "foobar",
         color: "red",
@@ -367,7 +504,7 @@ add_task(async function test_contextualIdentity_preference_change() {
       manifest: {
         version,
         applications: {
-          gecko: {id},
+          gecko: { id },
         },
         permissions: ["contextualIdentities"],
       },
@@ -378,7 +515,11 @@ add_task(async function test_contextualIdentity_preference_change() {
   let extension = makeExtension("containers-pref-test@mozilla.org", "1.0.0");
   await extension.startup();
   await extension.awaitFinish("contextualIdentities");
-  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should now be enabled, whatever it's initial state"
+  );
 
   let extension2 = makeExtension("containers-pref-test@mozilla.org", "1.1.0");
   await extension2.startup();

@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { TabState } = ChromeUtils.import("resource:///modules/sessionstore/TabState.jsm");
+const { TabState } = ChromeUtils.import(
+  "resource:///modules/sessionstore/TabState.jsm"
+);
 
 /**
  * Simulate a restart of a tab by removing it, then add a lazy tab
@@ -17,7 +19,9 @@ const restartTab = async function(tab) {
   let tabData = TabState.clone(tab);
   BrowserTestUtils.removeTab(tab);
 
-  let restoredLazyTab = BrowserTestUtils.addTab(gBrowser, "", {createLazyBrowser: true});
+  let restoredLazyTab = BrowserTestUtils.addTab(gBrowser, "", {
+    createLazyBrowser: true,
+  });
   SessionStore.setTabState(restoredLazyTab, JSON.stringify(tabData));
   return restoredLazyTab;
 };
@@ -42,7 +46,10 @@ add_task(async function() {
   info("Restarting tab...");
   let restartedTab = await restartTab(tab);
 
-  ok("muted" in get_tab_state(restartedTab), "Restored tab should still be in a muted state after restart");
+  ok(
+    "muted" in get_tab_state(restartedTab),
+    "Restored tab should still be in a muted state after restart"
+  );
   ok(!restartedTab.linkedPanel, "Restored tab should not be inserted");
 
   BrowserTestUtils.removeTab(restartedTab);

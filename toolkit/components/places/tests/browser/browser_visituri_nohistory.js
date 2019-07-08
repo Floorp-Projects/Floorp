@@ -3,8 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const INITIAL_URL = "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
-const FINAL_URL = "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
+const INITIAL_URL =
+  "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
+const FINAL_URL =
+  "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
 
 /**
  * One-time observer callback.
@@ -19,7 +21,7 @@ function promiseObserve(name) {
 }
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [["places.history.enabled", false]]});
+  await SpecialPowers.pushPrefEnv({ set: [["places.history.enabled", false]] });
 
   let visitUriPromise = promiseObserve("uri-visit-saved");
 
@@ -27,7 +29,9 @@ add_task(async function() {
 
   await SpecialPowers.popPrefEnv();
 
-  let browserLoadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser
+  );
   BrowserTestUtils.loadURI(gBrowser, FINAL_URL);
   await browserLoadedPromise;
 

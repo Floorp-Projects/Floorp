@@ -13,9 +13,9 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -23,8 +23,10 @@ add_task(async function() {
   await performRequests(monitor, tab, 2);
 
   wait = waitForDOM(document, "#headers-panel .tree-section", 2);
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
   await wait;
 
   wait = waitForDOM(document, "textarea.raw-headers", 2);
@@ -56,15 +58,27 @@ add_task(async function() {
     const rawHeadersResponseToggle = getRawHeadersToggle("RESPONSE");
 
     if (checked) {
-      is(rawHeadersRequestToggle.checked, true,
-        "The 'Raw Request Headers' toggle should be 'checked'");
-      is(rawHeadersResponseToggle.checked, true,
-        "The 'Raw Response Headers' toggle should be 'checked'");
+      is(
+        rawHeadersRequestToggle.checked,
+        true,
+        "The 'Raw Request Headers' toggle should be 'checked'"
+      );
+      is(
+        rawHeadersResponseToggle.checked,
+        true,
+        "The 'Raw Response Headers' toggle should be 'checked'"
+      );
     } else {
-      is(rawHeadersRequestToggle.checked, false,
-        "The 'Raw Request Headers' toggle should NOT be 'checked'");
-      is(rawHeadersResponseToggle.checked, false,
-        "The 'Raw Response Headers' toggle should NOT be 'checked'");
+      is(
+        rawHeadersRequestToggle.checked,
+        false,
+        "The 'Raw Request Headers' toggle should NOT be 'checked'"
+      );
+      is(
+        rawHeadersResponseToggle.checked,
+        false,
+        "The 'Raw Response Headers' toggle should NOT be 'checked'"
+      );
     }
   }
 
@@ -73,18 +87,22 @@ add_task(async function() {
    */
   function testShowRawHeaders(data) {
     // Request headers are rendered first, so it is element with index 1
-    const requestHeaders = document
-      .querySelectorAll("textarea.raw-headers")[1].value;
+    const requestHeaders = document.querySelectorAll("textarea.raw-headers")[1]
+      .value;
     for (const header of data.requestHeaders.headers) {
-      ok(requestHeaders.includes(header.name + ": " + header.value),
-        "textarea contains request headers");
+      ok(
+        requestHeaders.includes(header.name + ": " + header.value),
+        "textarea contains request headers"
+      );
     }
     // Response headers are rendered first, so it is element with index 0
-    const responseHeaders = document
-      .querySelectorAll("textarea.raw-headers")[0].value;
+    const responseHeaders = document.querySelectorAll("textarea.raw-headers")[0]
+      .value;
     for (const header of data.responseHeaders.headers) {
-      ok(responseHeaders.includes(header.name + ": " + header.value),
-        "textarea contains response headers");
+      ok(
+        responseHeaders.includes(header.name + ": " + header.value),
+        "textarea contains response headers"
+      );
     }
   }
 
@@ -92,8 +110,10 @@ add_task(async function() {
    * Tests that raw headers textareas are hidden
    */
   function testHideRawHeaders() {
-    ok(!document.querySelector(".raw-headers-container"),
-      "raw request headers textarea is empty");
+    ok(
+      !document.querySelector(".raw-headers-container"),
+      "raw request headers textarea is empty"
+    );
   }
 
   /**

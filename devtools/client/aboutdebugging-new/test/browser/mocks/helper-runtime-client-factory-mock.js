@@ -12,9 +12,13 @@
  *        - createClientForRuntime(runtime)
  */
 function enableRuntimeClientFactoryMock(mock) {
-  const { setMockedModule } = require("devtools/client/shared/browser-loader-mocks");
-  setMockedModule(mock,
-    "devtools/client/aboutdebugging-new/src/modules/runtime-client-factory");
+  const {
+    setMockedModule,
+  } = require("devtools/client/shared/browser-loader-mocks");
+  setMockedModule(
+    mock,
+    "devtools/client/aboutdebugging-new/src/modules/runtime-client-factory"
+  );
 }
 /* exported enableRuntimeClientFactoryMock */
 
@@ -22,9 +26,12 @@ function enableRuntimeClientFactoryMock(mock) {
  * Update the loader to clear the mock entry for the runtime-client-factory module.
  */
 function disableRuntimeClientFactoryMock() {
-  const { removeMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  const {
+    removeMockedModule,
+  } = require("devtools/client/shared/browser-loader-mocks");
   removeMockedModule(
-    "devtools/client/aboutdebugging-new/src/modules/runtime-client-factory");
+    "devtools/client/aboutdebugging-new/src/modules/runtime-client-factory"
+  );
 }
 /* exported disableRuntimeClientFactoryMock */
 

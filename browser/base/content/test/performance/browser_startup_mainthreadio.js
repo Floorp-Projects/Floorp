@@ -21,7 +21,9 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 /* Set this to true only for debugging purpose; it makes the output noisy. */
 const kDumpAllStacks = false;
@@ -74,7 +76,8 @@ const startupPhases = {
   // Anything done before or during app-startup must have a compelling reason
   // to run before we have even selected the user profile.
   "before profile selection": [
-    { // bug 1541200
+    {
+      // bug 1541200
       path: "UAppData:Crash Reports/InstallTime20*",
       condition: AppConstants.MOZ_CRASHREPORTER,
       stat: 1, // only caught on Windows.
@@ -82,27 +85,31 @@ const startupPhases = {
       write: 2,
       close: 1,
     },
-    { // bug 1541200
+    {
+      // bug 1541200
       path: "UAppData:Crash Reports/LastCrash",
       condition: WIN && AppConstants.MOZ_CRASHREPORTER,
       stat: 1, // only caught on Windows.
       read: 1,
     },
-    { // bug 1541200
+    {
+      // bug 1541200
       path: "UAppData:Crash Reports/LastCrash",
       condition: !WIN && AppConstants.MOZ_CRASHREPORTER,
       ignoreIfUnused: true, // only if we ever crashed on this machine
       read: 1,
       close: 1,
     },
-    { // At least the read seems unavoidable for a regular startup.
+    {
+      // At least the read seems unavoidable for a regular startup.
       path: "UAppData:profiles.ini",
       condition: MAC,
       stat: 1,
       read: 1,
       close: 1,
     },
-    { // bug 1546931
+    {
+      // bug 1546931
       path: "UAppData:installs.ini",
       condition: WIN || MAC,
       ignoreIfUnused: true, // only if a real profile exists on the system.
@@ -110,14 +117,16 @@ const startupPhases = {
       stat: 2,
       close: 1,
     },
-    { // At least the read seems unavoidable for a regular startup.
+    {
+      // At least the read seems unavoidable for a regular startup.
       path: "UAppData:profiles.ini",
       condition: WIN,
       ignoreIfUnused: true, // only if a real profile exists on the system.
       read: 1,
       stat: 1,
     },
-    { // bug 1541226, bug 1363586, bug 1541593
+    {
+      // bug 1541226, bug 1363586, bug 1541593
       path: "ProfD:",
       condition: WIN,
       stat: 1,
@@ -127,7 +136,8 @@ const startupPhases = {
       condition: !WIN, // Visible on Windows with an open marker
       close: 1,
     },
-    { // bug 1541491 to stop using this file, bug 1541494 to write correctly.
+    {
+      // bug 1541491 to stop using this file, bug 1541494 to write correctly.
       path: "ProfLD:compatibility.ini",
       condition: !WIN, // Visible on Windows with an open marker
       write: 18,
@@ -138,7 +148,8 @@ const startupPhases = {
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // bug 1376994
+    {
+      // bug 1376994
       path: "XCurProcD:omni.ja",
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
@@ -148,49 +159,58 @@ const startupPhases = {
       condition: WIN,
       stat: 1,
     },
-    { // bug 1541603
+    {
+      // bug 1541603
       path: "ProfD:minidumps",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1543746
+    {
+      // bug 1543746
       path: "XCurProcD:defaults/preferences",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1544034
+    {
+      // bug 1544034
       path: "ProfLDS:startupCache/scriptCache-child-current.bin",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1544034
+    {
+      // bug 1544034
       path: "ProfLDS:startupCache/scriptCache-child.bin",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1544034
+    {
+      // bug 1544034
       path: "ProfLDS:startupCache/scriptCache-current.bin",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1544034
+    {
+      // bug 1544034
       path: "ProfLDS:startupCache/scriptCache.bin",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1541601
+    {
+      // bug 1541601
       path: "PrfDef:channel-prefs.js",
       stat: 1,
       read: 1,
       close: 1,
     },
-    { // At least the read seems unavoidable
+    {
+      // At least the read seems unavoidable
       path: "PrefD:prefs.js",
       stat: 1,
       read: 1,
       close: 1,
     },
-    { // bug 1543752
+    {
+      // bug 1543752
       path: "PrefD:user.js",
       stat: 1,
       read: 1,
@@ -203,7 +223,8 @@ const startupPhases = {
       read: 22,
       close: 11,
     },
-    { // bug 1546838
+    {
+      // bug 1546838
       path: "ProfD:xulstore/data.mdb",
       condition: WIN,
       write: 1,
@@ -212,7 +233,8 @@ const startupPhases = {
   ],
 
   "before opening first browser window": [
-    { // bug 1541226
+    {
+      // bug 1541226
       path: "ProfD:",
       condition: WIN,
       stat: 1,
@@ -222,25 +244,29 @@ const startupPhases = {
       condition: WIN,
       stat: 1,
     },
-    { // bug 1534745
+    {
+      // bug 1534745
       path: "ProfD:cookies.sqlite-journal",
       condition: !LINUX,
       stat: 3,
       write: 4,
     },
-    { // bug 1534745
+    {
+      // bug 1534745
       path: "ProfD:cookies.sqlite",
       condition: !LINUX,
       stat: 2,
       read: 2,
       write: 1,
     },
-    { // bug 1534745
+    {
+      // bug 1534745
       path: "ProfD:cookies.sqlite-wal",
       condition: WIN,
       stat: 2,
     },
-    { // bug 975996
+    {
+      // bug 975996
       path: "ProfD:permissions.sqlite",
       condition: WIN || MAC,
       fsync: 7,
@@ -248,19 +274,22 @@ const startupPhases = {
       stat: 1,
       write: 10,
     },
-    { // bug 975996
+    {
+      // bug 975996
       path: "ProfD:permissions.sqlite-journal",
       condition: WIN || MAC,
       fsync: 7,
       stat: 26,
       write: 38,
     },
-    { // bug 975996
+    {
+      // bug 975996
       path: "ProfD:permissions.sqlite-wal",
       condition: WIN,
       stat: 20,
     },
-    { // Seems done by OS X and outside of our control.
+    {
+      // Seems done by OS X and outside of our control.
       path: "*.savedState/restorecount.plist",
       condition: MAC,
       ignoreIfUnused: true,
@@ -273,30 +302,35 @@ const startupPhases = {
       read: 22,
       close: 11,
     },
-    { // bug 1545167
+    {
+      // bug 1545167
       path: "/etc/mime.types",
       condition: LINUX,
       read: 3,
       close: 3,
     },
-    { // bug 1541246
+    {
+      // bug 1541246
       path: "ProfD:extensions",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1541246
+    {
+      // bug 1541246
       path: "XCurProcD:extensions",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1541246
+    {
+      // bug 1541246
       path: "UAppData:",
       ignoreIfUnused: true, // sometimes before opening first browser window,
-                            // sometimes before first paint
+      // sometimes before first paint
       condition: WIN,
       stat: 1,
     },
-    { // bug 1546838
+    {
+      // bug 1546838
       path: "ProfD:xulstore/data.mdb",
       condition: WIN,
       read: 1,
@@ -306,68 +340,81 @@ const startupPhases = {
   // We reach this phase right after showing the first browser window.
   // This means that any I/O at this point delayed first paint.
   "before first paint": [
-    { // bug 1541226
+    {
+      // bug 1541226
       path: "ProfD:",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545119
+    {
+      // bug 1545119
       path: "OldUpdRootD:",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1446012
+    {
+      // bug 1446012
       path: "UpdRootD:updates/0/update.status",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "ProfD:pluginreg.dat",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "ProfD:pluginreg.dat.tmp",
       stat: 1,
       write: 64,
       close: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "ProfD:plugins",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "APlugns:",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "UserPlugins.parent:",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "UserPlugins:",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "ProfD:plugins/nptest.dll",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "ProfD:plugins/npsecondtest.dll",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "ProfD:plugins/npthirdtest.dll",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1545123
+    {
+      // bug 1545123
       path: "ProfD:plugins/npswftest.dll",
       condition: WIN,
       stat: 1,
@@ -378,13 +425,15 @@ const startupPhases = {
       stat: 1,
       close: 1,
     },
-    { // bug 1545167
+    {
+      // bug 1545167
       path: "/etc/mime.types",
       condition: LINUX,
       read: 1,
       close: 1,
     },
-    { // We only hit this for new profiles.
+    {
+      // We only hit this for new profiles.
       path: "XREAppDist:distribution.ini",
       condition: WIN,
       stat: 1,
@@ -395,40 +444,47 @@ const startupPhases = {
       ignoreIfUnused: true,
       stat: 3,
     },
-    { // bug 1545139
+    {
+      // bug 1545139
       path: "*Fonts/StaticCache.dat",
       condition: WIN,
       ignoreIfUnused: true, // Only on Win7
       read: 1,
     },
-    { // bug 1541246
+    {
+      // bug 1541246
       path: "UAppData:",
       ignoreIfUnused: true, // sometimes before opening first browser window,
-                            // sometimes before first paint
+      // sometimes before first paint
       condition: WIN,
       stat: 1,
     },
-    { // Not in packaged builds; useful for artifact builds.
+    {
+      // Not in packaged builds; useful for artifact builds.
       path: "GreD:ScalarArtifactDefinitions.json",
       condition: WIN && !AppConstants.MOZILLA_OFFICIAL,
       stat: 1,
     },
-    { // Not in packaged builds; useful for artifact builds.
+    {
+      // Not in packaged builds; useful for artifact builds.
       path: "GreD:EventArtifactDefinitions.json",
       condition: WIN && !AppConstants.MOZILLA_OFFICIAL,
       stat: 1,
     },
-    { // bug 1546838
+    {
+      // bug 1546838
       path: "ProfD:xulstore/data.mdb",
       condition: MAC,
       write: 3,
     },
-    { // bug 1543090
+    {
+      // bug 1543090
       path: "GreD:omni.ja",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1543090
+    {
+      // bug 1543090
       path: "XCurProcD:omni.ja",
       condition: WIN,
       stat: 2,
@@ -445,56 +501,65 @@ const startupPhases = {
       condition: LINUX,
       close: 1,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:cert9.db",
       condition: WIN,
       read: 2,
       stat: 2,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:cert9.db",
       condition: WIN,
       ignoreIfUnused: true, // if canonicalize(ProfD) == ProfD, we'll use the previous entry.
       canonicalize: true,
       stat: 2,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:cert9.db-journal",
       condition: WIN,
       canonicalize: true,
       stat: 2,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:cert9.db-wal",
       condition: WIN,
       canonicalize: true,
       stat: 2,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:pkcs11.txt",
       condition: WIN,
       read: 2,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:key4.db",
       condition: WIN,
       read: 2,
       stat: 2,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:key4.db",
       condition: WIN,
       ignoreIfUnused: true, // if canonicalize(ProfD) == ProfD, we'll use the previous entry.
       canonicalize: true,
       stat: 2,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:key4.db-journal",
       condition: WIN,
       canonicalize: true,
       stat: 5,
     },
-    { // bug 1370516 - NSS should be initialized off main thread.
+    {
+      // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:key4.db-wal",
       condition: WIN,
       canonicalize: true,
@@ -507,7 +572,8 @@ const startupPhases = {
       stat: 1,
       close: 1,
     },
-    { // bug 1003968
+    {
+      // bug 1003968
       path: "XREAppDist:searchplugins",
       condition: WIN,
       ignoreIfUnused: true, // with WebRender enabled this may happen during "before becoming idle"
@@ -518,12 +584,14 @@ const startupPhases = {
       condition: WIN,
       stat: 1,
     },
-    { // bug 1543090
+    {
+      // bug 1543090
       path: "GreD:omni.ja",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1543090
+    {
+      // bug 1543090
       path: "XCurProcD:omni.ja",
       condition: WIN,
       stat: 2,
@@ -545,27 +613,31 @@ const startupPhases = {
       stat: 1,
       close: 1,
     },
-    { // bug 1391590
+    {
+      // bug 1391590
       path: "ProfD:places.sqlite-journal",
       ignoreIfUnused: true,
       fsync: 1,
       stat: 4,
       write: 2,
     },
-    { // bug 1391590
+    {
+      // bug 1391590
       path: "ProfD:places.sqlite-wal",
       ignoreIfUnused: true,
       stat: 4,
       fsync: 3,
       write: 148,
     },
-    { // bug 1391590
+    {
+      // bug 1391590
       path: "ProfD:places.sqlite-shm",
       condition: WIN,
       ignoreIfUnused: true,
       stat: 1,
     },
-    { // bug 1391590
+    {
+      // bug 1391590
       path: "ProfD:places.sqlite",
       ignoreIfUnused: true,
       fsync: 2,
@@ -573,27 +645,31 @@ const startupPhases = {
       stat: 3,
       write: 1310,
     },
-    { // bug 1391590
+    {
+      // bug 1391590
       path: "ProfD:favicons.sqlite-journal",
       ignoreIfUnused: true,
       fsync: 2,
       stat: 7,
       write: 7,
     },
-    { // bug 1391590
+    {
+      // bug 1391590
       path: "ProfD:favicons.sqlite-wal",
       ignoreIfUnused: true,
       fsync: 2,
       stat: 7,
       write: 15,
     },
-    { // bug 1391590
+    {
+      // bug 1391590
       path: "ProfD:favicons.sqlite-shm",
       condition: WIN,
       ignoreIfUnused: true,
       stat: 2,
     },
-    { // bug 1391590
+    {
+      // bug 1391590
       path: "ProfD:favicons.sqlite",
       ignoreIfUnused: true,
       fsync: 3,
@@ -619,12 +695,14 @@ const startupPhases = {
       ignoreIfUnused: true,
       stat: 3,
     },
-    { // bug 1543090
+    {
+      // bug 1543090
       path: "XCurProcD:omni.ja",
       condition: WIN,
       stat: 7,
     },
-    { // bug 1003968
+    {
+      // bug 1003968
       path: "XREAppDist:searchplugins",
       condition: WIN,
       ignoreIfUnused: true, // with WebRender enabled this may happen during "before handling user events"
@@ -633,7 +711,13 @@ const startupPhases = {
   ],
 };
 
-for (let name of ["d3d11layers", "d3d9video", "glcontext", "d3d11video", "wmfvpxvideo"]) {
+for (let name of [
+  "d3d11layers",
+  "d3d9video",
+  "glcontext",
+  "d3d11video",
+  "wmfvpxvideo",
+]) {
   startupPhases["before first paint"].push({
     path: `ProfD:${name}.guard`,
     ignoreIfUnused: true,
@@ -695,21 +779,30 @@ function getStackFromProfile(profile, stack) {
 
 function pathMatches(path, filename) {
   path = path.toLowerCase();
-  return path == filename || // Full match
+  return (
+    path == filename || // Full match
     // Wildcard on both sides of the path
-    (path.startsWith("*") && path.endsWith("*") &&
-     filename.includes(path.slice(1, -1))) ||
+    (path.startsWith("*") &&
+      path.endsWith("*") &&
+      filename.includes(path.slice(1, -1))) ||
     // Wildcard suffix
     (path.endsWith("*") && filename.startsWith(path.slice(0, -1))) ||
     // Wildcard prefix
-    (path.startsWith("*") && filename.endsWith(path.slice(1)));
+    (path.startsWith("*") && filename.endsWith(path.slice(1)))
+  );
 }
 
 add_task(async function() {
-  if (!AppConstants.NIGHTLY_BUILD && !AppConstants.MOZ_DEV_EDITION && !AppConstants.DEBUG) {
-    ok(!("@mozilla.org/test/startuprecorder;1" in Cc),
-       "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
-       "non-debug build.");
+  if (
+    !AppConstants.NIGHTLY_BUILD &&
+    !AppConstants.MOZ_DEV_EDITION &&
+    !AppConstants.DEBUG
+  ) {
+    ok(
+      !("@mozilla.org/test/startuprecorder;1" in Cc),
+      "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
+        "non-debug build."
+    );
     return;
   }
 
@@ -717,13 +810,17 @@ add_task(async function() {
     let omniJa = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
     omniJa.append("omni.ja");
     if (!omniJa.exists()) {
-      ok(false, "This test requires a packaged build, " +
-                "run 'mach package' and then use --appname=dist");
+      ok(
+        false,
+        "This test requires a packaged build, " +
+          "run 'mach package' and then use --appname=dist"
+      );
       return;
     }
   }
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
+    .wrappedJSObject;
   await startupRecorder.done;
 
   // Add system add-ons to the whitelist dynamically.
@@ -760,13 +857,16 @@ add_task(async function() {
     for (let m of profile.markers.data) {
       let markerName = profile.stringTable[m[nameCol]];
       if (markerName.startsWith("startupRecorder:")) {
-        phases[markerName.split("startupRecorder:")[1]] = markersForCurrentPhase;
+        phases[
+          markerName.split("startupRecorder:")[1]
+        ] = markersForCurrentPhase;
         markersForCurrentPhase = [];
         continue;
       }
 
-      if (markerName != "FileIO")
+      if (markerName != "FileIO") {
         continue;
+      }
 
       let markerData = m[dataCol];
       if (markerData.source == "sqlite-mainthread") {
@@ -775,18 +875,23 @@ add_task(async function() {
 
       let samples = markerData.stack.samples;
       let stack = samples.data[0][samples.schema.stack];
-      markersForCurrentPhase.push({operation: markerData.operation,
-                                   filename: markerData.filename,
-                                   source: markerData.source,
-                                   stackId: stack});
+      markersForCurrentPhase.push({
+        operation: markerData.operation,
+        filename: markerData.filename,
+        source: markerData.source,
+        stackId: stack,
+      });
       foundIOMarkers = true;
     }
 
     // The I/O interposer is disabled if !RELEASE_OR_BETA, so we expect to have
     // no I/O marker in that case, but it's good to keep the test running to check
     // that we are still able to produce startup profiles.
-    is(foundIOMarkers, !AppConstants.RELEASE_OR_BETA,
-       "The IO interposer should be enabled in builds that are not RELEASE_OR_BETA");
+    is(
+      foundIOMarkers,
+      !AppConstants.RELEASE_OR_BETA,
+      "The IO interposer should be enabled in builds that are not RELEASE_OR_BETA"
+    );
     if (!foundIOMarkers) {
       // If a profile unexpectedly contains no I/O marker, it's better to return
       // early to avoid having plenty of confusing "unused whitelist entry" failures.
@@ -795,8 +900,9 @@ add_task(async function() {
   }
 
   for (let phase in startupPhases) {
-    startupPhases[phase] =
-      startupPhases[phase].filter(entry => !("condition" in entry) || entry.condition);
+    startupPhases[phase] = startupPhases[phase].filter(
+      entry => !("condition" in entry) || entry.condition
+    );
     startupPhases[phase].forEach(entry => {
       entry.path = expandWhitelistPath(entry.path, entry.canonicalize);
     });
@@ -806,12 +912,17 @@ add_task(async function() {
   let shouldPass = true;
   for (let phase in phases) {
     let whitelist = startupPhases[phase];
-    info(`whitelisted paths ${phase}:\n` +
-         whitelist.map(e => {
-           let operations = Object.keys(e).filter(k => k != "path")
-                                  .map(k => `${k}: ${e[k]}`);
-           return `  ${e.path} - ${operations.join(", ")}`;
-         }).join("\n"));
+    info(
+      `whitelisted paths ${phase}:\n` +
+        whitelist
+          .map(e => {
+            let operations = Object.keys(e)
+              .filter(k => k != "path")
+              .map(k => `${k}: ${e[k]}`);
+            return `  ${e.path} - ${operations.join(", ")}`;
+          })
+          .join("\n")
+    );
 
     let markers = phases[phase];
     for (let marker of markers) {
@@ -853,22 +964,35 @@ add_task(async function() {
         }
       }
       if (!expected) {
-        record(false,
-               `unexpected ${marker.operation} on ${marker.filename} ${phase}`,
-               undefined,
-               "  " + getStackFromProfile(profile, marker.stackId).join("\n  "));
+        record(
+          false,
+          `unexpected ${marker.operation} on ${marker.filename} ${phase}`,
+          undefined,
+          "  " + getStackFromProfile(profile, marker.stackId).join("\n  ")
+        );
         shouldPass = false;
       }
       info(`(${marker.source}) ${marker.operation} - ${marker.filename}`);
       if (kDumpAllStacks) {
-        info(getStackFromProfile(profile, marker.stackId).map(f => "  " + f)
-                                                         .join("\n"));
+        info(
+          getStackFromProfile(profile, marker.stackId)
+            .map(f => "  " + f)
+            .join("\n")
+        );
       }
     }
 
     for (let entry of whitelist) {
       for (let op in entry) {
-        if (["path", "condition", "canonicalize", "ignoreIfUnused", "_used"].includes(op)) {
+        if (
+          [
+            "path",
+            "condition",
+            "canonicalize",
+            "ignoreIfUnused",
+            "_used",
+          ].includes(op)
+        ) {
           continue;
         }
         let message = `${op} on ${entry.path} `;
@@ -893,14 +1017,18 @@ add_task(async function() {
   } else {
     const filename = "profile_startup_mainthreadio.json";
     let path = Cc["@mozilla.org/process/environment;1"]
-                 .getService(Ci.nsIEnvironment)
-                 .get("MOZ_UPLOAD_DIR");
+      .getService(Ci.nsIEnvironment)
+      .get("MOZ_UPLOAD_DIR");
     let encoder = new TextEncoder();
     let profilePath = OS.Path.join(path, filename);
-    await OS.File.writeAtomic(profilePath,
-                              encoder.encode(JSON.stringify(startupRecorder.data.profile)));
-    ok(false,
-       "Unexpected main thread I/O behavior during startup; open the " +
-       `${filename} artifact in the Firefox Profiler to see what happened`);
+    await OS.File.writeAtomic(
+      profilePath,
+      encoder.encode(JSON.stringify(startupRecorder.data.profile))
+    );
+    ok(
+      false,
+      "Unexpected main thread I/O behavior during startup; open the " +
+        `${filename} artifact in the Firefox Profiler to see what happened`
+    );
   }
 });

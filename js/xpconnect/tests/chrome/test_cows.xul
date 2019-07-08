@@ -17,12 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
+add_task(async () => {
 var sandbox = new Cu.Sandbox("about:blank");
 
 var test_utils = window.windowUtils;
 
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-                                    true]]});
+await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                          true]]});
 
 function getCOW(x) {
   if (typeof x != 'object' && typeof x != 'function')
@@ -224,5 +225,6 @@ try {
     todo(false, "COWs should be unwrapped when entering chrome space, " +
                 "not raise " + e);
 }
+});
   ]]></script>
 </window>

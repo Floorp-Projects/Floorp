@@ -9,13 +9,14 @@ var gCacheFlushCount = 0;
 
 var CacheFlushObserver = {
   observe(aSubject, aTopic, aData) {
-    if (aTopic != "flush-cache-entry")
+    if (aTopic != "flush-cache-entry") {
       return;
+    }
 
     // Ignore flushes from the fake cert DB or extension-process-script
-    if (aData == "cert-override" || aSubject == null)
+    if (aData == "cert-override" || aSubject == null) {
       return;
-
+    }
 
     if (!gExpectedFile) {
       return;
@@ -39,7 +40,7 @@ add_task(async function test_flush_restartless_install() {
     manifest: {
       name: "Cache Flush Test",
       version: "2.0",
-      applications: {gecko: {id: "addon2@tests.mozilla.org"}},
+      applications: { gecko: { id: "addon2@tests.mozilla.org" } },
     },
   });
 

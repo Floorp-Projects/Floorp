@@ -101,12 +101,19 @@ var EXPORTED_SYMBOLS = ["MessageChannel"];
 
 /* globals MessageChannel */
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "MessageManagerProxy",
-                               "resource://gre/modules/MessageManagerProxy.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "MessageManagerProxy",
+  "resource://gre/modules/MessageManagerProxy.jsm"
+);
 
 function getMessageManager(target) {
   if (typeof target.sendAsyncMessage === "function") {
@@ -119,7 +126,7 @@ function matches(target, messageManager) {
   return target === messageManager || target.messageManager === messageManager;
 }
 
-const {DEBUG} = AppConstants;
+const { DEBUG } = AppConstants;
 
 // Idle callback timeout for low-priority message dispatch.
 const LOW_PRIORITY_TIMEOUT_MS = 250;
@@ -207,12 +214,12 @@ class FilteringMessageManager {
    * Receives a set of messages from our message manager, maps each to a
    * handler, and passes the results to our message callbacks.
    */
-  receiveMessage({data, target}) {
+  receiveMessage({ data, target }) {
     data.forEach(msg => {
       if (msg) {
-        let handlers = Array.from(this.getHandlers(msg.messageName,
-                                                   msg.sender || null,
-                                                   msg.recipient));
+        let handlers = Array.from(
+          this.getHandlers(msg.messageName, msg.sender || null, msg.recipient)
+        );
 
         msg.target = target;
         this.callback(handlers, msg);
@@ -231,12 +238,21 @@ class FilteringMessageManager {
    * @param {object} recipient
    *     The recipient data on which to filter handlers.
    */
-  * getHandlers(messageName, sender, recipient) {
+  *getHandlers(messageName, sender, recipient) {
     let handlers = this.handlers.get(messageName) || new Set();
     for (let handler of handlers) {
-      if (MessageChannel.matchesFilter(handler.messageFilterStrict || null, recipient) &&
-          MessageChannel.matchesFilter(handler.messageFilterPermissive || null, recipient, false) &&
-          (!handler.filterMessage || handler.filterMessage(sender, recipient))) {
+      if (
+        MessageChannel.matchesFilter(
+          handler.messageFilterStrict || null,
+          recipient
+        ) &&
+        MessageChannel.matchesFilter(
+          handler.messageFilterPermissive || null,
+          recipient,
+          false
+        ) &&
+        (!handler.filterMessage || handler.filterMessage(sender, recipient))
+      ) {
         yield handler;
       }
     }
@@ -304,7 +320,9 @@ class ResponseManager extends FilteringMessageManager {
    */
   scheduleIdleCallback() {
     if (!this.idleScheduled) {
-      ChromeUtils.idleDispatch(this.onIdle, {timeout: LOW_PRIORITY_TIMEOUT_MS});
+      ChromeUtils.idleDispatch(this.onIdle, {
+        timeout: LOW_PRIORITY_TIMEOUT_MS,
+      });
       this.idleScheduled = true;
     }
   }
@@ -348,18 +366,19 @@ class ResponseManager extends FilteringMessageManager {
       this.idleMessages.push(message);
       this.scheduleIdleCallback();
     } else {
-      this.messageManager.sendAsyncMessage(MESSAGE_MESSAGES, [message.getMessage()]);
+      this.messageManager.sendAsyncMessage(MESSAGE_MESSAGES, [
+        message.getMessage(),
+      ]);
     }
   }
 
-  receiveMessage({data, target}) {
+  receiveMessage({ data, target }) {
     data.target = target;
 
-    this.callback(this.handlers.get(data.messageName),
-                  data);
+    this.callback(this.handlers.get(data.messageName), data);
   }
 
-  * getHandlers(messageName, sender, recipient) {
+  *getHandlers(messageName, sender, recipient) {
     let handler = this.handlers.get(messageName);
     if (handler) {
       yield handler;
@@ -368,7 +387,9 @@ class ResponseManager extends FilteringMessageManager {
 
   addHandler(messageName, handler) {
     if (DEBUG && this.handlers.has(messageName)) {
-      throw new Error(`Handler already registered for response ID ${messageName}`);
+      throw new Error(
+        `Handler already registered for response ID ${messageName}`
+      );
     }
     this.handlers.set(messageName, handler);
   }
@@ -383,7 +404,9 @@ class ResponseManager extends FilteringMessageManager {
    */
   removeHandler(messageName, handler) {
     if (DEBUG && this.handlers.get(messageName) !== handler) {
-      throw new Error(`Attempting to remove unexpected response handler for ${messageName}`);
+      Cu.reportError(
+        `Attempting to remove unexpected response handler for ${messageName}`
+      );
     }
     this.handlers.delete(messageName);
   }
@@ -553,11 +576,15 @@ this.MessageChannel = {
     Services.obs.addObserver(this, "message-manager-disconnect");
 
     this.messageManagers = new FilteringMessageManagerMap(
-      MESSAGE_MESSAGES, this._handleMessage.bind(this));
+      MESSAGE_MESSAGES,
+      this._handleMessage.bind(this)
+    );
 
     this.responseManagers = new FilteringMessageManagerMap(
-      MESSAGE_RESPONSE, this._handleResponse.bind(this),
-      ResponseManager);
+      MESSAGE_RESPONSE,
+      this._handleResponse.bind(this),
+      ResponseManager
+    );
 
     /**
      * @property {Set<Deferred>} pendingResponses
@@ -828,7 +855,14 @@ this.MessageChannel = {
     let responseType = options.responseType || this.RESPONSE_SINGLE;
 
     let channelId = ExtensionUtils.getUniqueId();
-    let message = {messageName, channelId, sender, recipient, data, responseType};
+    let message = {
+      messageName,
+      channelId,
+      sender,
+      recipient,
+      data,
+      responseType,
+    };
     data = null;
 
     if (responseType == this.RESPONSE_NONE) {
@@ -859,14 +893,18 @@ this.MessageChannel = {
     // At least one handler is required for all response types but
     // RESPONSE_ALL.
     if (handlers.length == 0 && responseType != this.RESPONSE_ALL) {
-      return Promise.reject({result: MessageChannel.RESULT_NO_HANDLER,
-                             message: "No matching message handler"});
+      return Promise.reject({
+        result: MessageChannel.RESULT_NO_HANDLER,
+        message: "No matching message handler",
+      });
     }
 
     if (responseType == this.RESPONSE_SINGLE) {
       if (handlers.length > 1) {
-        return Promise.reject({result: MessageChannel.RESULT_MULTIPLE_HANDLERS,
-                               message: `Multiple matching handlers for ${data.messageName}`});
+        return Promise.reject({
+          result: MessageChannel.RESULT_MULTIPLE_HANDLERS,
+          message: `Multiple matching handlers for ${data.messageName}`,
+        });
       }
 
       // Note: We use `new Promise` rather than `Promise.resolve` here
@@ -890,8 +928,10 @@ this.MessageChannel = {
     switch (responseType) {
       case this.RESPONSE_FIRST:
         if (responses.length == 0) {
-          return Promise.reject({result: MessageChannel.RESULT_NO_RESPONSE,
-                                 message: "No handler returned a response"});
+          return Promise.reject({
+            result: MessageChannel.RESULT_NO_RESPONSE,
+            message: "No handler returned a response",
+          });
         }
 
         return Promise.race(responses);
@@ -899,7 +939,7 @@ this.MessageChannel = {
       case this.RESPONSE_ALL:
         return Promise.all(responses);
     }
-    return Promise.reject({message: "Invalid response type"});
+    return Promise.reject({ message: "Invalid response type" });
   },
 
   /**
@@ -951,63 +991,76 @@ this.MessageChannel = {
 
       this._callHandlers(handlers, data).then(resolve, reject);
       data = null;
-    }).then(
-      value => {
-        let response = {
-          result: this.RESULT_SUCCESS,
-          messageName: deferred.channelId,
-          recipient: {},
-          value,
-        };
+    })
+      .then(
+        value => {
+          let response = {
+            result: this.RESULT_SUCCESS,
+            messageName: deferred.channelId,
+            recipient: {},
+            value,
+          };
 
-        if (target.isDisconnected) {
-          // Target is disconnected. We can't send an error response, so
-          // don't even try.
-          return;
-        }
-        target.sendAsyncMessage(MESSAGE_RESPONSE, response);
-      },
-      error => {
-        if (target.isDisconnected) {
-          // Target is disconnected. We can't send an error response, so
-          // don't even try.
-          if (error.result !== this.RESULT_DISCONNECTED &&
-              error.result !== this.RESULT_NO_RESPONSE) {
-            Cu.reportError(Cu.getClassName(error, false) === "Object" ? error.message : error);
+          if (target.isDisconnected) {
+            // Target is disconnected. We can't send an error response, so
+            // don't even try.
+            return;
           }
-          return;
-        }
-
-        let response = {
-          result: this.RESULT_ERROR,
-          messageName: deferred.channelId,
-          recipient: {},
-          error: {},
-        };
-
-        if (error && typeof(error) == "object") {
-          if (error.result) {
-            response.result = error.result;
+          target.sendAsyncMessage(MESSAGE_RESPONSE, response);
+        },
+        error => {
+          if (target.isDisconnected) {
+            // Target is disconnected. We can't send an error response, so
+            // don't even try.
+            if (
+              error.result !== this.RESULT_DISCONNECTED &&
+              error.result !== this.RESULT_NO_RESPONSE
+            ) {
+              Cu.reportError(
+                Cu.getClassName(error, false) === "Object"
+                  ? error.message
+                  : error
+              );
+            }
+            return;
           }
-          // Error objects are not structured-clonable, so just copy
-          // over the important properties.
-          for (let key of ["fileName", "filename", "lineNumber",
-                           "columnNumber", "message", "stack", "result",
-                           "mozWebExtLocation"]) {
-            if (key in error) {
-              response.error[key] = error[key];
+
+          let response = {
+            result: this.RESULT_ERROR,
+            messageName: deferred.channelId,
+            recipient: {},
+            error: {},
+          };
+
+          if (error && typeof error == "object") {
+            if (error.result) {
+              response.result = error.result;
+            }
+            // Error objects are not structured-clonable, so just copy
+            // over the important properties.
+            for (let key of [
+              "fileName",
+              "filename",
+              "lineNumber",
+              "columnNumber",
+              "message",
+              "stack",
+              "result",
+              "mozWebExtLocation",
+            ]) {
+              if (key in error) {
+                response.error[key] = error[key];
+              }
             }
           }
-        }
 
-        target.sendAsyncMessage(MESSAGE_RESPONSE, response);
-      })
-      .then(
-        cleanup,
-        e => {
-          cleanup();
-          Cu.reportError(e);
-        });
+          target.sendAsyncMessage(MESSAGE_RESPONSE, response);
+        }
+      )
+      .then(cleanup, e => {
+        cleanup();
+        Cu.reportError(e);
+      });
   },
 
   /**
@@ -1025,9 +1078,13 @@ this.MessageChannel = {
     if (!handler) {
       if (this.abortedResponses.has(data.messageName)) {
         this.abortedResponses.delete(data.messageName);
-        Services.console.logStringMessage(`Ignoring response to aborted listener for ${data.messageName}`);
+        Services.console.logStringMessage(
+          `Ignoring response to aborted listener for ${data.messageName}`
+        );
       } else {
-        Cu.reportError(`No matching message response handler for ${data.messageName}`);
+        Cu.reportError(
+          `No matching message response handler for ${data.messageName}`
+        );
       }
     } else if (data.result === this.RESULT_SUCCESS) {
       handler.resolve(data.value);

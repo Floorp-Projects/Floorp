@@ -1,7 +1,7 @@
 function toFixed(num, fixed) {
-    fixed = fixed || 0;
-    fixed = Math.pow(10, fixed);
-    return Math.floor(num * fixed) / fixed;
+  fixed = fixed || 0;
+  fixed = Math.pow(10, fixed);
+  return Math.floor(num * fixed) / fixed;
 }
 function createElement(name, props) {
   var el = document.createElement(name);
@@ -43,7 +43,9 @@ function parseDisplayList(lines) {
       root = layerObject;
     }
 
-    var matches = line.match("(\\s*)(\\w+)\\sp=(\\w+)\\sf=(.*?)\\((.*?)\\)\\s(z=(\\w+)\\s)?(.*?)?( layer=(\\w+))?$");
+    var matches = line.match(
+      "(\\s*)(\\w+)\\sp=(\\w+)\\sf=(.*?)\\((.*?)\\)\\s(z=(\\w+)\\s)?(.*?)?( layer=(\\w+))?$"
+    );
     if (!matches) {
       dump("Failed to match: " + line + "\n");
       continue;
@@ -62,7 +64,8 @@ function parseDisplayList(lines) {
     layerObject.contentDescriptor = matches[5];
     layerObject.z = matches[7];
     var rest = matches[8];
-    if (matches[10]) { // WrapList don't provide a layer
+    if (matches[10]) {
+      // WrapList don't provide a layer
       layerObject.layer = matches[10];
     }
     layerObject.rest = rest;
@@ -107,7 +110,7 @@ function parseDisplayList(lines) {
 }
 
 function trim(s) {
-  return ( s || "" ).replace( /^\s+|\s+$/g, "" );
+  return (s || "").replace(/^\s+|\s+$/g, "");
 }
 
 function getDataURI(str) {
@@ -115,9 +118,12 @@ function getDataURI(str) {
     return str;
   }
 
-  var matches = str.match("data:image/lz4bgra;base64,([0-9]+),([0-9]+),([0-9]+),(.*)");
-  if (!matches)
+  var matches = str.match(
+    "data:image/lz4bgra;base64,([0-9]+),([0-9]+),([0-9]+),(.*)"
+  );
+  if (!matches) {
     return null;
+  }
 
   var canvas = document.createElement("canvas");
   var w = parseInt(matches[1]);
@@ -212,8 +218,10 @@ function parseLayers(layersDumpLines) {
     }
 
     var rect = [
-      parseFloat(rectMatches[1]), parseFloat(rectMatches[2]),
-      parseFloat(rectMatches[3]), parseFloat(rectMatches[4]),
+      parseFloat(rectMatches[1]),
+      parseFloat(rectMatches[2]),
+      parseFloat(rectMatches[3]),
+      parseFloat(rectMatches[4]),
     ];
     return rect;
   }
@@ -228,14 +236,18 @@ function parseLayers(layersDumpLines) {
     var region = [];
     str = trim(str.substring(1, str.length - 1));
     while (str != "") {
-      var rectMatches = str.match("^\\(x=(.*?), y=(.*?), w=(.*?), h=(.*?)\\);(.*)$");
+      var rectMatches = str.match(
+        "^\\(x=(.*?), y=(.*?), w=(.*?), h=(.*?)\\);(.*)$"
+      );
       if (!rectMatches) {
         return null;
       }
 
       var rect = [
-        parseFloat(rectMatches[1]), parseFloat(rectMatches[2]),
-        parseFloat(rectMatches[3]), parseFloat(rectMatches[4]),
+        parseFloat(rectMatches[1]),
+        parseFloat(rectMatches[2]),
+        parseFloat(rectMatches[3]),
+        parseFloat(rectMatches[4]),
       ];
       str = trim(rectMatches[5]);
       region.push(rect);
@@ -271,16 +283,21 @@ function parseLayers(layersDumpLines) {
     var surfaceMatches = line.match("(\\s*)Surface: (.*)");
     if (surfaceMatches) {
       let indentation = Math.floor(matches[1].length / 2);
-      let parent = objectAtIndentation[indentation - 1] || objectAtIndentation[indentation - 2];
+      let parent =
+        objectAtIndentation[indentation - 1] ||
+        objectAtIndentation[indentation - 2];
 
       var surfaceURI = surfaceMatches[2];
       if (parent.surfaceURI != null) {
-        console.log("error: surfaceURI already set for this layer " + parent.line);
+        console.log(
+          "error: surfaceURI already set for this layer " + parent.line
+        );
       }
       parent.surfaceURI = surfaceURI;
 
       // Look for the buffer-rect offset
-      var contentHostLine = layersDumpLines[i - 2].name || layersDumpLines[i - 2];
+      var contentHostLine =
+        layersDumpLines[i - 2].name || layersDumpLines[i - 2];
       let matches = contentHostLine.match(LAYERS_LINE_REGEX);
       if (matches) {
         var contentHostRest = matches[4];
@@ -304,11 +321,13 @@ function parseLayers(layersDumpLines) {
       continue; // Something like a texturehost dump. Safe to ignore
     }
 
-    if (matches[2].includes("TiledContentHost") ||
-        matches[2].includes("ContentHost") ||
-        matches[2].includes("ContentClient") ||
-        matches[2].includes("MemoryTextureHost") ||
-        matches[2].includes("ImageHost")) {
+    if (
+      matches[2].includes("TiledContentHost") ||
+      matches[2].includes("ContentHost") ||
+      matches[2].includes("ContentClient") ||
+      matches[2].includes("MemoryTextureHost") ||
+      matches[2].includes("ImageHost")
+    ) {
       continue; // We're already pretty good at visualizing these
     }
 
@@ -414,10 +433,15 @@ function parseLayers(layersDumpLines) {
     // Compute screenTransformX/screenTransformY
     // TODO Fully support transforms
     if (layerObject["shadow-transform"] && layerObject.transform) {
-      layerObject["screen-transform"] = [layerObject["shadow-transform"][2][0], layerObject["shadow-transform"][2][1]];
+      layerObject["screen-transform"] = [
+        layerObject["shadow-transform"][2][0],
+        layerObject["shadow-transform"][2][1],
+      ];
       var currIndentation = indentation - 1;
       while (currIndentation >= 0) {
-        var transform = objectAtIndentation[currIndentation]["shadow-transform"] || objectAtIndentation[currIndentation].transform;
+        var transform =
+          objectAtIndentation[currIndentation]["shadow-transform"] ||
+          objectAtIndentation[currIndentation].transform;
         if (transform) {
           layerObject["screen-transform"][0] += transform[2][0];
           layerObject["screen-transform"][1] += transform[2][1];
@@ -432,7 +456,15 @@ function parseLayers(layersDumpLines) {
   // dump("OBJECTS: " + JSON.stringify(root) + "\n");
   return root;
 }
-function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, contentScale, rootPreviewParent) {
+function populateLayers(
+  root,
+  displayList,
+  pane,
+  previewParent,
+  hasSeenRoot,
+  contentScale,
+  rootPreviewParent
+) {
   contentScale = contentScale || 1;
   rootPreviewParent = rootPreviewParent || previewParent;
 
@@ -521,7 +553,8 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       });
       layerViewportMatrix[4] += -clip[0];
       layerViewportMatrix[5] += -clip[1];
-      layerViewport.style.transform = "translate(-" + clip[0] + "px, -" + clip[1] + "px)";
+      layerViewport.style.transform =
+        "translate(-" + clip[0] + "px, -" + clip[1] + "px)";
     }
     if (root["shadow-transform"] || root.transform) {
       var matrix = root["shadow-transform"] || root.transform;
@@ -532,10 +565,24 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       layerViewportMatrix[4] += matrix[2][0];
       layerViewportMatrix[5] += matrix[2][1];
     }
-    layerViewport.style.transform = "matrix(" + layerViewportMatrix[0] + "," + layerViewportMatrix[1] + "," + layerViewportMatrix[2] + "," + layerViewportMatrix[3] + "," + layerViewportMatrix[4] + "," + layerViewportMatrix[5] + ")";
+    layerViewport.style.transform =
+      "matrix(" +
+      layerViewportMatrix[0] +
+      "," +
+      layerViewportMatrix[1] +
+      "," +
+      layerViewportMatrix[2] +
+      "," +
+      layerViewportMatrix[3] +
+      "," +
+      layerViewportMatrix[4] +
+      "," +
+      layerViewportMatrix[5] +
+      ")";
     if (!hasSeenRoot) {
       hasSeenRoot = true;
-      layerViewport.style.transform = "scale(" + 1 / contentScale + "," + 1 / contentScale + ")";
+      layerViewport.style.transform =
+        "scale(" + 1 / contentScale + "," + 1 / contentScale + ")";
     }
     if (clipElem) {
       previewParent.appendChild(clipElem);
@@ -557,14 +604,19 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
           height: rect2d[3] + "px",
           overflow: "hidden",
           border: "solid 1px black",
-          background: 'url("noise.png"), linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2))',
+          background:
+            'url("noise.png"), linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2))',
         },
       });
       layerViewport.appendChild(layerPreview);
 
       function isInside(rect1, rect2) {
-        if (rect1[0] + rect1[2] < rect2[0] && rect2[0] + rect2[2] < rect1[0] &&
-            rect1[1] + rect1[3] < rect2[1] && rect2[1] + rect2[3] < rect1[1]) {
+        if (
+          rect1[0] + rect1[2] < rect2[0] &&
+          rect2[0] + rect2[2] < rect1[0] &&
+          rect1[1] + rect1[3] < rect2[1] &&
+          rect2[1] + rect2[3] < rect1[1]
+        ) {
           return true;
         }
         return true;
@@ -583,8 +635,8 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
                 src: getDataURI(root.tiles[x][y]),
                 style: {
                   position: "absolute",
-                  left: (x - previewOffset[0]) + "px",
-                  top: (y - previewOffset[1]) + "px",
+                  left: x - previewOffset[0] + "px",
+                  top: y - previewOffset[1] + "px",
                   pointerEvents: "auto",
                 },
               });
@@ -605,8 +657,8 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
           src: getDataURI(root.surfaceURI),
           style: {
             position: "absolute",
-            left: (offsetX - previewOffset[0]) + "px",
-            top: (offsetY - previewOffset[1]) + "px",
+            left: offsetX - previewOffset[0] + "px",
+            top: offsetY - previewOffset[1] + "px",
             pointerEvents: "auto",
           },
         });
@@ -614,7 +666,16 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         layerPreview.style.background = "";
       } else if (root.color) {
         hasImg = true;
-        layerPreview.style.background = "rgba(" + root.color.r + ", " + root.color.g + ", " + root.color.b + ", " + root.color.a + ")";
+        layerPreview.style.background =
+          "rgba(" +
+          root.color.r +
+          ", " +
+          root.color.g +
+          ", " +
+          root.color.b +
+          ", " +
+          root.color.a +
+          ")";
       }
 
       if (hasImg || true) {
@@ -648,14 +709,29 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
               description += "Content: " + this.displayItem.contentDescriptor;
             } else {
               description += "Content: Unknown";
-              }
-            description += "<br>Item: " + this.displayItem.name + " (" + this.displayItem.address + ")";
-            description += "<br>Layer: " + root.name + " (" + root.address + ")";
+            }
+            description +=
+              "<br>Item: " +
+              this.displayItem.name +
+              " (" +
+              this.displayItem.address +
+              ")";
+            description +=
+              "<br>Layer: " + root.name + " (" + root.address + ")";
             if (this.displayItem.frame) {
               description += "<br>Frame: " + this.displayItem.frame;
             }
             if (this.displayItem.layerBounds) {
-              description += "<br>Bounds: [" + toFixed(this.displayItem.layerBounds[0] / 60, 2) + ", " + toFixed(this.displayItem.layerBounds[1] / 60, 2) + ", " + toFixed(this.displayItem.layerBounds[2] / 60, 2) + ", " + toFixed(this.displayItem.layerBounds[3] / 60, 2) + "] (CSS Pixels)";
+              description +=
+                "<br>Bounds: [" +
+                toFixed(this.displayItem.layerBounds[0] / 60, 2) +
+                ", " +
+                toFixed(this.displayItem.layerBounds[1] / 60, 2) +
+                ", " +
+                toFixed(this.displayItem.layerBounds[2] / 60, 2) +
+                ", " +
+                toFixed(this.displayItem.layerBounds[3] / 60, 2) +
+                "] (CSS Pixels)";
             }
             if (this.displayItem.z) {
               description += "<br>Z: " + this.displayItem.z;
@@ -670,7 +746,11 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
               className: "csstooltip",
               innerHTML: description,
               style: {
-                top: Math.min(box.bottom, document.documentElement.clientHeight - 150) + "px",
+                top:
+                  Math.min(
+                    box.bottom,
+                    document.documentElement.clientHeight - 150
+                  ) + "px",
                 left: box.left + "px",
               },
             });
@@ -699,7 +779,8 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       // bounds doesn't adjust for within the layer. It's not a bad fallback but
       // will have the wrong offset
       let rect2d = displayItem.layerBounds || displayItem.bounds;
-      if (rect2d) { // This doesn't place them corectly
+      if (rect2d) {
+        // This doesn't place them corectly
         var appUnitsToPixels = 60 / contentScale;
         let diPreview = createElement("div", {
           id: "displayitem_" + displayItem.content + "_" + displayItem.address,
@@ -729,7 +810,15 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
   }
 
   for (var i = 0; i < root.children.length; i++) {
-    populateLayers(root.children[i], displayList, pane, previewParent, hasSeenRoot, contentScale, rootPreviewParent);
+    populateLayers(
+      root.children[i],
+      displayList,
+      pane,
+      previewParent,
+      hasSeenRoot,
+      contentScale,
+      rootPreviewParent
+    );
   }
 }
 
@@ -796,7 +885,7 @@ function parseMultiLineDump(log) {
           display: "block",
         },
         href: "#",
-        textContent: "LayerTree " + (frameID++),
+        textContent: "LayerTree " + frameID++,
         onclick() {
           contents.innerHTML = "";
           var matchLines = matches[i].split("\n");
@@ -829,7 +918,9 @@ function parseDump(log, displayList, compositeTitle, compositeTime) {
       style: {
         width: "100%",
       },
-      textContent: compositeTitle + (compositeTitle ? " (near " + compositeTime.toFixed(0) + " ms)" : ""),
+      textContent:
+        compositeTitle +
+        (compositeTitle ? " (near " + compositeTime.toFixed(0) + " ms)" : ""),
     });
     container.appendChild(titleDiv);
   }

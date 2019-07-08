@@ -2,10 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {Schemas} = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
-let {SchemaAPIInterface} = ExtensionCommon;
+let { SchemaAPIInterface } = ExtensionCommon;
 
 const global = this;
 
@@ -46,7 +48,7 @@ let json = [
             name: "sub_foo",
             type: "function",
             parameters: [],
-            returns: {type: "integer"},
+            returns: { type: "integer" },
           },
         ],
       },
@@ -199,24 +201,59 @@ add_task(async function() {
   function checkRecorded() {
     let possible = [
       ["revokableNs", ["getProperty", "revokableNs", "stringProp", []]],
-      ["revokableProp", ["getProperty", "revokableNs", "revokableStringProp", []]],
+      [
+        "revokableProp",
+        ["getProperty", "revokableNs", "revokableStringProp", []],
+      ],
 
-      ["revokableNs", ["setProperty", "revokableNs", "stringProp", ["stringProp"]]],
-      ["revokableProp", ["setProperty", "revokableNs", "revokableStringProp", ["revokableStringProp"]]],
+      [
+        "revokableNs",
+        ["setProperty", "revokableNs", "stringProp", ["stringProp"]],
+      ],
+      [
+        "revokableProp",
+        [
+          "setProperty",
+          "revokableNs",
+          "revokableStringProp",
+          ["revokableStringProp"],
+        ],
+      ],
 
       ["revokableNs", ["callFunctionNoReturn", "revokableNs", "func", [[]]]],
-      ["revokableFunc", ["callFunctionNoReturn", "revokableNs", "revokableFunc", [[]]]],
+      [
+        "revokableFunc",
+        ["callFunctionNoReturn", "revokableNs", "revokableFunc", [[]]],
+      ],
 
-      ["revokableNs", ["callFunction", "revokableNs.submoduleProp", "sub_foo", [[]]]],
-      ["revokableProp", ["callFunction", "revokableNs.revokableSubmoduleProp", "sub_foo", [[]]]],
+      [
+        "revokableNs",
+        ["callFunction", "revokableNs.submoduleProp", "sub_foo", [[]]],
+      ],
+      [
+        "revokableProp",
+        ["callFunction", "revokableNs.revokableSubmoduleProp", "sub_foo", [[]]],
+      ],
 
-      ["revokableNs", ["addListener", "revokableNs", "onEvent", [listener, []]]],
+      [
+        "revokableNs",
+        ["addListener", "revokableNs", "onEvent", [listener, []]],
+      ],
       ["revokableNs", ["removeListener", "revokableNs", "onEvent", [listener]]],
       ["revokableNs", ["hasListener", "revokableNs", "onEvent", [listener]]],
 
-      ["revokableEvent", ["addListener", "revokableNs", "onRevokableEvent", [listener, []]]],
-      ["revokableEvent", ["removeListener", "revokableNs", "onRevokableEvent", [listener]]],
-      ["revokableEvent", ["hasListener", "revokableNs", "onRevokableEvent", [listener]]],
+      [
+        "revokableEvent",
+        ["addListener", "revokableNs", "onRevokableEvent", [listener, []]],
+      ],
+      [
+        "revokableEvent",
+        ["removeListener", "revokableNs", "onRevokableEvent", [listener]],
+      ],
+      [
+        "revokableEvent",
+        ["hasListener", "revokableNs", "onRevokableEvent", [listener]],
+      ],
     ];
 
     let expected = [];
@@ -271,9 +308,11 @@ add_task(async function() {
 
     let ns = root.revokableNs;
 
-    captured = {ns};
+    captured = { ns };
     captured.revokableStringProp = Object.getOwnPropertyDescriptor(
-      ns, "revokableStringProp");
+      ns,
+      "revokableStringProp"
+    );
 
     captured.revokableSubmoduleProp = ns.revokableSubmoduleProp;
     if (ns.revokableSubmoduleProp) {
@@ -291,9 +330,11 @@ add_task(async function() {
   }
 
   function checkCaptured() {
-    info(`Check captured value access (permissions: [${Array.from(permissions)}])`);
+    info(
+      `Check captured value access (permissions: [${Array.from(permissions)}])`
+    );
 
-    let {ns} = captured;
+    let { ns } = captured;
 
     void ns.stringProp;
     ignoreError(() => captured.revokableStringProp.get());
@@ -362,9 +403,7 @@ add_task(async function() {
 
   permissions.delete("revokableFunc");
   context.permissionsChanged();
-  verify([
-    ["revoke", "revokableNs", "revokableFunc", []],
-  ]);
+  verify([["revoke", "revokableNs", "revokableFunc", []]]);
 
   check();
   checkCaptured();
@@ -372,9 +411,7 @@ add_task(async function() {
   permissions.delete("revokableEvent");
   context.permissionsChanged();
 
-  verify([
-    ["revoke", "revokableNs", "onRevokableEvent", []],
-  ]);
+  verify([["revoke", "revokableNs", "onRevokableEvent", []]]);
 
   check();
   checkCaptured();
@@ -440,7 +477,6 @@ add_task(async function() {
   checkCaptured();
 });
 
-
 add_task(async function test_neuter() {
   context.permissionsChanged = null;
 
@@ -454,7 +490,7 @@ add_task(async function test_neuter() {
   permissions.add("revokableEvent");
 
   let ns = root.revokableNs;
-  let {submoduleProp} = ns;
+  let { submoduleProp } = ns;
 
   let lazyGetter = Object.getOwnPropertyDescriptor(submoduleProp, "sub_foo");
 

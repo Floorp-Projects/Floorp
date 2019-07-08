@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
 const { Cc, Ci } = require("chrome");
@@ -21,8 +21,9 @@ function isWebGLSupportedByGFX() {
     const opengl = gfxInfo.FEATURE_WEBGL_OPENGL;
 
     // if either the Angle or OpenGL renderers are available, WebGL should work
-    supported = gfxInfo.getFeatureStatus(angle) === gfxInfo.FEATURE_STATUS_OK ||
-                gfxInfo.getFeatureStatus(opengl) === gfxInfo.FEATURE_STATUS_OK;
+    supported =
+      gfxInfo.getFeatureStatus(angle) === gfxInfo.FEATURE_STATUS_OK ||
+      gfxInfo.getFeatureStatus(opengl) === gfxInfo.FEATURE_STATUS_OK;
   } catch (e) {
     return false;
   }
@@ -47,8 +48,8 @@ function createCanvas(doc) {
 function isWebGLSupported(doc) {
   const supported =
     !isWebGLForceEnabled() &&
-     isWebGLSupportedByGFX() &&
-     create3DContext(createCanvas(doc));
+    isWebGLSupportedByGFX() &&
+    create3DContext(createCanvas(doc));
 
   return supported;
 }

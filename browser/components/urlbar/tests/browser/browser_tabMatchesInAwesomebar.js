@@ -28,7 +28,7 @@ add_task(async function step_1() {
   let promises = [];
   for (let i = 0; i < maxResults - 1; i++) {
     let tab = BrowserTestUtils.addTab(gBrowser);
-    promises.push(loadTab(tab, TEST_URL_BASES[0] + (++gTabCounter)));
+    promises.push(loadTab(tab, TEST_URL_BASES[0] + ++gTabCounter));
   }
 
   await Promise.all(promises);
@@ -43,8 +43,9 @@ add_task(async function step_2() {
   gBrowser.removeCurrentTab();
 
   let promises = [];
-  for (let i = 1; i < gBrowser.tabs.length; i++)
-    promises.push(loadTab(gBrowser.tabs[i], TEST_URL_BASES[1] + (++gTabCounter)));
+  for (let i = 1; i < gBrowser.tabs.length; i++) {
+    promises.push(loadTab(gBrowser.tabs[i], TEST_URL_BASES[1] + ++gTabCounter));
+  }
 
   await Promise.all(promises);
   await ensure_opentabs_match_db();
@@ -53,8 +54,9 @@ add_task(async function step_2() {
 add_task(async function step_3() {
   info("Running step 3");
   let promises = [];
-  for (let i = 1; i < gBrowser.tabs.length; i++)
+  for (let i = 1; i < gBrowser.tabs.length; i++) {
     promises.push(loadTab(gBrowser.tabs[i], TEST_URL_BASES[0] + gTabCounter));
+  }
 
   await Promise.all(promises);
   await ensure_opentabs_match_db();
@@ -63,11 +65,18 @@ add_task(async function step_3() {
 add_task(async function step_4() {
   info("Running step 4 - ensure we don't register subframes as open pages");
   let tab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, 'data:text/html,<body><iframe src=""></iframe></body>');
+  BrowserTestUtils.loadURI(
+    tab.linkedBrowser,
+    'data:text/html,<body><iframe src=""></iframe></body>'
+  );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    let iframe_loaded = ContentTaskUtils.waitForEvent(content.document, "load", true);
+    let iframe_loaded = ContentTaskUtils.waitForEvent(
+      content.document,
+      "load",
+      true
+    );
     content.document.querySelector("iframe").src = "http://test2.example.org/";
     await iframe_loaded;
   });
@@ -83,15 +92,19 @@ add_task(async function step_5() {
 });
 
 add_task(async function step_6() {
-  info("Running step 6 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result");
+  info(
+    "Running step 6 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result"
+  );
   let tabToKeep = BrowserTestUtils.addTab(gBrowser);
   let tab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser,
-                                   { remoteType: tab.linkedBrowser.isRemoteBrowser ?
-                                     E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE });
+  gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser, {
+    remoteType: tab.linkedBrowser.isRemoteBrowser
+      ? E10SUtils.DEFAULT_REMOTE_TYPE
+      : E10SUtils.NOT_REMOTE,
+  });
   gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
 
   await ensure_opentabs_match_db();
@@ -106,7 +119,7 @@ add_task(async function step_7() {
 
   Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
 
-  BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
+  BrowserTestUtils.addTab(gBrowser, "about:blank", { skipAnimation: true });
   while (gBrowser.tabs.length > 1) {
     info("Removing tab: " + gBrowser.tabs[0].linkedBrowser.currentURI.spec);
     gBrowser.selectTabAtIndex(0);
@@ -126,20 +139,18 @@ function loadTab(tab, url) {
   // Because adding visits is async, we will not be notified immediately.
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let visited = new Promise(resolve => {
-    Services.obs.addObserver(
-      function observer(aSubject, aTopic, aData) {
-        if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
-          return;
-        Services.obs.removeObserver(observer, aTopic);
-        resolve();
-      },
-      "uri-visit-saved"
-    );
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+      if (url != aSubject.QueryInterface(Ci.nsIURI).spec) {
+        return;
+      }
+      Services.obs.removeObserver(observer, aTopic);
+      resolve();
+    }, "uri-visit-saved");
   });
 
   info("Loading page: " + url);
   BrowserTestUtils.loadURI(tab.linkedBrowser, url);
-  return Promise.all([ loaded, visited ]);
+  return Promise.all([loaded, visited]);
 }
 
 function ensure_opentabs_match_db() {
@@ -147,18 +158,21 @@ function ensure_opentabs_match_db() {
 
   for (let browserWin of Services.wm.getEnumerator("navigator:browser")) {
     // skip closed-but-not-destroyed windows
-    if (browserWin.closed)
+    if (browserWin.closed) {
       continue;
+    }
 
     for (let i = 0; i < browserWin.gBrowser.tabs.length; i++) {
       let browser = browserWin.gBrowser.getBrowserAtIndex(i);
       let url = browser.currentURI.spec;
-      if (browserWin.isBlankPageURL(url))
+      if (browserWin.isBlankPageURL(url)) {
         continue;
-      if (!(url in tabs))
+      }
+      if (!(url in tabs)) {
         tabs[url] = 1;
-      else
+      } else {
         tabs[url]++;
+      }
     }
   }
 
@@ -177,8 +191,11 @@ async function checkAutocompleteResults(expected) {
       continue;
     }
 
-    Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-      "Should have a tab switch result");
+    Assert.equal(
+      result.type,
+      UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+      "Should have a tab switch result"
+    );
 
     let url = result.url;
     if (!UrlbarPrefs.get("quantumbar")) {
@@ -187,13 +204,19 @@ async function checkAutocompleteResults(expected) {
 
     info(`Search for ${url} in open tabs.`);
     let inExpected = url in expected;
-    Assert.ok(inExpected, `${url} was found in autocomplete, was ${inExpected ? "" : "not "} expected`);
+    Assert.ok(
+      inExpected,
+      `${url} was found in autocomplete, was ${
+        inExpected ? "" : "not "
+      } expected`
+    );
     // Remove the found entry from expected results.
     delete expected[url];
   }
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   // Make sure there is no reported open page that is not open.
   for (let entry in expected) {

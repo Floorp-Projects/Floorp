@@ -37,9 +37,9 @@
 #include "nsThreadUtils.h"
 #include "nsVideoFrame.h"
 
-static mozilla::LazyLogModule gTrackElementLog("nsTrackElement");
-#define LOG(msg, ...)                          \
-  MOZ_LOG(gTrackElementLog, LogLevel::Verbose, \
+extern mozilla::LazyLogModule gTextTrackLog;
+#define LOG(msg, ...)                       \
+  MOZ_LOG(gTextTrackLog, LogLevel::Verbose, \
           ("TextTrackElement=%p, " msg, this, ##__VA_ARGS__))
 
 // Replace the usual NS_IMPL_NS_NEW_HTML_ELEMENT(Track) so
@@ -99,7 +99,7 @@ class WindowDestroyObserver final : public nsIObserver {
       NS_ENSURE_SUCCESS(rv, rv);
       if (innerID == mInnerID) {
         if (mTrackElement) {
-          mTrackElement->NotifyShutdown();
+          mTrackElement->CancelChannelAndListener();
         }
         UnRegisterWindowDestroyObserver();
       }
@@ -133,7 +133,7 @@ HTMLTrackElement::~HTMLTrackElement() {
   if (mWindowDestroyObserver) {
     mWindowDestroyObserver->UnRegisterWindowDestroyObserver();
   }
-  NotifyShutdown();
+  CancelChannelAndListener();
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLTrackElement)
@@ -297,10 +297,7 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
   LOG("Trying to load from src=%s", NS_ConvertUTF16toUTF8(src).get());
 
-  if (mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
-    mChannel = nullptr;
-  }
+  CancelChannelAndListener();
 
   // According to
   // https://www.w3.org/TR/html5/embedded-content-0.html#sourcing-out-of-band-text-tracks
@@ -469,14 +466,17 @@ void HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName) {
                                        aName, CanBubble::eNo, Cancelable::eNo);
 }
 
-void HTMLTrackElement::DropChannel() { mChannel = nullptr; }
-
-void HTMLTrackElement::NotifyShutdown() {
+void HTMLTrackElement::CancelChannelAndListener() {
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->SetNotificationCallbacks(nullptr);
+    mChannel = nullptr;
   }
-  mChannel = nullptr;
-  mListener = nullptr;
+
+  if (mListener) {
+    mListener->Cancel();
+    mListener = nullptr;
+  }
 }
 
 nsresult HTMLTrackElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
@@ -496,6 +496,13 @@ nsresult HTMLTrackElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
   return nsGenericHTMLElement::AfterSetAttr(
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
+}
+
+void HTMLTrackElement::DispatchTestEvent(const nsAString& aName) {
+  if (!StaticPrefs::media_webvtt_testing_events()) {
+    return;
+  }
+  DispatchTrustedEvent(aName);
 }
 
 }  // namespace dom

@@ -40,27 +40,34 @@ function test() {
   testSavedFile();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  content.location = "data:text/html,<p>test scratchpad save file prompt on closing";
+  content.location =
+    "data:text/html,<p>test scratchpad save file prompt on closing";
 }
 
 function testNew() {
-  openScratchpad(function(win) {
-    win.Scratchpad.close(function() {
-      ok(win.closed, "new scratchpad window should close without prompting");
-      done();
-    });
-  }, {noFocus: true});
+  openScratchpad(
+    function(win) {
+      win.Scratchpad.close(function() {
+        ok(win.closed, "new scratchpad window should close without prompting");
+        done();
+      });
+    },
+    { noFocus: true }
+  );
 }
 
 function testSavedFile() {
-  openScratchpad(function(win) {
-    win.Scratchpad.filename = "test.js";
-    win.Scratchpad.editor.dirty = false;
-    win.Scratchpad.close(function() {
-      ok(win.closed, "scratchpad from file with no changes should close");
-      done();
-    });
-  }, {noFocus: true});
+  openScratchpad(
+    function(win) {
+      win.Scratchpad.filename = "test.js";
+      win.Scratchpad.editor.dirty = false;
+      win.Scratchpad.close(function() {
+        ok(win.closed, "scratchpad from file with no changes should close");
+        done();
+      });
+    },
+    { noFocus: true }
+  );
 }
 
 function testUnsaved() {
@@ -97,80 +104,99 @@ function testUnsaved() {
 }
 
 function testUnsavedFileCancel(aCallback = function() {}) {
-  openScratchpad(function(win) {
-    aCallback(win.Scratchpad, "test.js");
-    win.Scratchpad.editor.dirty = true;
+  openScratchpad(
+    function(win) {
+      aCallback(win.Scratchpad, "test.js");
+      win.Scratchpad.editor.dirty = true;
 
-    promptButton = win.BUTTON_POSITION_CANCEL;
+      promptButton = win.BUTTON_POSITION_CANCEL;
 
-    win.Scratchpad.close(function() {
-      ok(!win.closed, "cancelling dialog shouldn't close scratchpad");
-      win.close();
-      done();
-    });
-  }, {noFocus: true});
+      win.Scratchpad.close(function() {
+        ok(!win.closed, "cancelling dialog shouldn't close scratchpad");
+        win.close();
+        done();
+      });
+    },
+    { noFocus: true }
+  );
 }
 
 // Test a regression where our confirmation dialog wasn't appearing
 // after openFile calls. See bug 801982.
 function testCancelAfterLoad() {
-  openScratchpad(function(win) {
-    win.Scratchpad.setRecentFile(gFile);
-    win.Scratchpad.openFile(0);
-    win.Scratchpad.editor.dirty = true;
-    promptButton = win.BUTTON_POSITION_CANCEL;
+  openScratchpad(
+    function(win) {
+      win.Scratchpad.setRecentFile(gFile);
+      win.Scratchpad.openFile(0);
+      win.Scratchpad.editor.dirty = true;
+      promptButton = win.BUTTON_POSITION_CANCEL;
 
-    const EventStub = {
-      called: false,
-      preventDefault: function() {
-        EventStub.called = true;
-      },
-    };
+      const EventStub = {
+        called: false,
+        preventDefault: function() {
+          EventStub.called = true;
+        },
+      };
 
-    win.Scratchpad.onClose(EventStub, function() {
-      ok(!win.closed, "cancelling dialog shouldn't close scratchpad");
-      ok(EventStub.called, "aEvent.preventDefault was called");
+      win.Scratchpad.onClose(EventStub, function() {
+        ok(!win.closed, "cancelling dialog shouldn't close scratchpad");
+        ok(EventStub.called, "aEvent.preventDefault was called");
 
-      win.Scratchpad.editor.dirty = false;
-      win.close();
-      done();
-    });
-  }, {noFocus: true});
+        win.Scratchpad.editor.dirty = false;
+        win.close();
+        done();
+      });
+    },
+    { noFocus: true }
+  );
 }
 
 function testUnsavedFileSave(aCallback = function() {}) {
-  openScratchpad(function(win) {
-    win.Scratchpad.importFromFile(gFile, true, function(status, content) {
-      aCallback(win.Scratchpad, gFile.path);
+  openScratchpad(
+    function(win) {
+      win.Scratchpad.importFromFile(gFile, true, function(status, content) {
+        aCallback(win.Scratchpad, gFile.path);
 
-      const text = "new text";
-      win.Scratchpad.setText(text);
+        const text = "new text";
+        win.Scratchpad.setText(text);
 
-      promptButton = win.BUTTON_POSITION_SAVE;
+        promptButton = win.BUTTON_POSITION_SAVE;
 
-      win.Scratchpad.close(function() {
-        ok(win.closed, 'pressing "Save" in dialog should close scratchpad');
-        readFile(gFile, function(savedContent) {
-          is(savedContent, text, 'prompted "Save" worked when closing scratchpad');
-          done();
+        win.Scratchpad.close(function() {
+          ok(win.closed, 'pressing "Save" in dialog should close scratchpad');
+          readFile(gFile, function(savedContent) {
+            is(
+              savedContent,
+              text,
+              'prompted "Save" worked when closing scratchpad'
+            );
+            done();
+          });
         });
       });
-    });
-  }, {noFocus: true});
+    },
+    { noFocus: true }
+  );
 }
 
 function testUnsavedFileDontSave(aCallback = function() {}) {
-  openScratchpad(function(win) {
-    aCallback(win.Scratchpad, gFile.path);
-    win.Scratchpad.editor.dirty = true;
+  openScratchpad(
+    function(win) {
+      aCallback(win.Scratchpad, gFile.path);
+      win.Scratchpad.editor.dirty = true;
 
-    promptButton = win.BUTTON_POSITION_DONT_SAVE;
+      promptButton = win.BUTTON_POSITION_DONT_SAVE;
 
-    win.Scratchpad.close(function() {
-      ok(win.closed, 'pressing "Don\'t Save" in dialog should close scratchpad');
-      done();
-    });
-  }, {noFocus: true});
+      win.Scratchpad.close(function() {
+        ok(
+          win.closed,
+          'pressing "Don\'t Save" in dialog should close scratchpad'
+        );
+        done();
+      });
+    },
+    { noFocus: true }
+  );
 }
 
 function cleanup() {
@@ -187,13 +213,19 @@ function createTempFile(name) {
 }
 
 function writeFile(file, content, callback) {
-  const fout = Cc["@mozilla.org/network/file-output-stream;1"]
-             .createInstance(Ci.nsIFileOutputStream);
-  fout.init(file.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
-            0o644, fout.DEFER_OPEN);
+  const fout = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
+  fout.init(
+    file.QueryInterface(Ci.nsIFile),
+    0x02 | 0x08 | 0x20,
+    0o644,
+    fout.DEFER_OPEN
+  );
 
-  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                  .createInstance(Ci.nsIScriptableUnicodeConverter);
+  const converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   const fileContentStream = converter.convertToInputStream(content);
 
@@ -203,15 +235,17 @@ function writeFile(file, content, callback) {
 function readFile(file, callback) {
   const channel = NetUtil.newChannel({
     uri: NetUtil.newURI(file),
-    loadUsingSystemPrincipal: true});
+    loadUsingSystemPrincipal: true,
+  });
   channel.contentType = "application/javascript";
 
   NetUtil.asyncFetch(channel, function(inputStream, status) {
-    ok(Components.isSuccessCode(status),
-       "file was read successfully");
+    ok(Components.isSuccessCode(status), "file was read successfully");
 
-    const content = NetUtil.readInputStreamToString(inputStream,
-                                                  inputStream.available());
+    const content = NetUtil.readInputStreamToString(
+      inputStream,
+      inputStream.available()
+    );
     callback(content);
   });
 }

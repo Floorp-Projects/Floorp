@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 async function makeSteamEngine() {
   let engine = new SyncEngine("Steam", Service);
@@ -11,8 +11,7 @@ async function makeSteamEngine() {
 }
 
 function guidSetOfSize(length) {
-  return new SerializableSet(
-    Array.from({ length }, () => Utils.makeGUID()));
+  return new SerializableSet(Array.from({ length }, () => Utils.makeGUID()));
 }
 
 function assertSetsEqual(a, b) {
@@ -156,8 +155,9 @@ add_task(async function test_toFetch() {
     async beforeCheck() {
       let toFetchPath = OS.Path.join(OS.Constants.Path.profileDir, filename);
       let bytes = new TextEncoder().encode(JSON.stringify(this.toFetch));
-      await OS.File.writeAtomic(toFetchPath, bytes,
-                                { tmpPath: toFetchPath + ".tmp" });
+      await OS.File.writeAtomic(toFetchPath, bytes, {
+        tmpPath: toFetchPath + ".tmp",
+      });
     },
     check(engine) {
       // Read file from disk
@@ -206,11 +206,14 @@ add_task(async function test_previousFailed() {
   await testSteamEngineStorage({
     previousFailed: guidSetOfSize(2),
     async beforeCheck() {
-      let previousFailedPath = OS.Path.join(OS.Constants.Path.profileDir,
-                                            filename);
+      let previousFailedPath = OS.Path.join(
+        OS.Constants.Path.profileDir,
+        filename
+      );
       let bytes = new TextEncoder().encode(JSON.stringify(this.previousFailed));
-      await OS.File.writeAtomic(previousFailedPath, bytes,
-                                { tmpPath: previousFailedPath + ".tmp" });
+      await OS.File.writeAtomic(previousFailedPath, bytes, {
+        tmpPath: previousFailedPath + ".tmp",
+      });
     },
     check(engine) {
       // Read file from disk

@@ -12,8 +12,12 @@ function arrivingHereIsBad(aResult) {
 
 function expectError(aType) {
   let expected = `${aType}Error`;
-  return function (aResult) {
-    is(aResult.slice(0, expected.length), expected, `Expecting a ${aType}Error`);
+  return function(aResult) {
+    is(
+      aResult.slice(0, expected.length),
+      expected,
+      `Expecting a ${aType}Error`
+    );
   };
 }
 
@@ -26,9 +30,17 @@ function promiseU2FRegister(tab, app_id) {
   let challenge = crypto.getRandomValues(new Uint8Array(16));
   challenge = bytesToBase64UrlSafe(challenge);
 
-  return ContentTask.spawn(tab.linkedBrowser, [app_id, challenge], function ([app_id, challenge]) {
+  return ContentTask.spawn(tab.linkedBrowser, [app_id, challenge], function([
+    app_id,
+    challenge,
+  ]) {
     return new Promise(resolve => {
-      content.u2f.register(app_id, [{version: "U2F_V2", challenge}], [], resolve);
+      content.u2f.register(
+        app_id,
+        [{ version: "U2F_V2", challenge }],
+        [],
+        resolve
+      );
     });
   }).then(res => {
     is(res.errorCode, 0, "u2f.register() succeeded");
@@ -44,33 +56,43 @@ function promiseWebAuthnRegister(tab, appid) {
 
     let challenge = content.crypto.getRandomValues(new Uint8Array(16));
 
-    let pubKeyCredParams = [{
-      type: "public-key",
-      alg: cose_alg_ECDSA_w_SHA256
-    }];
+    let pubKeyCredParams = [
+      {
+        type: "public-key",
+        alg: cose_alg_ECDSA_w_SHA256,
+      },
+    ];
 
     let publicKey = {
-      rp: {id: content.document.domain, name: "none", icon: "none"},
-      user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+      rp: { id: content.document.domain, name: "none", icon: "none" },
+      user: {
+        id: new Uint8Array(),
+        name: "none",
+        icon: "none",
+        displayName: "none",
+      },
       pubKeyCredParams,
-      extensions: {appid},
-      challenge
+      extensions: { appid },
+      challenge,
     };
 
-    return content.navigator.credentials.create({publicKey})
+    return content.navigator.credentials
+      .create({ publicKey })
       .then(res => res.rawId);
   });
 }
 
 function promiseWebAuthnSign(tab, key_handle, extensions = {}) {
-  return ContentTask.spawn(tab.linkedBrowser, [key_handle, extensions],
+  return ContentTask.spawn(
+    tab.linkedBrowser,
+    [key_handle, extensions],
     ([key_handle, extensions]) => {
       let challenge = content.crypto.getRandomValues(new Uint8Array(16));
 
       let credential = {
         id: key_handle,
         type: "public-key",
-        transports: ["usb"]
+        transports: ["usb"],
       };
 
       let publicKey = {
@@ -80,24 +102,35 @@ function promiseWebAuthnSign(tab, key_handle, extensions = {}) {
         allowCredentials: [credential],
       };
 
-      return content.navigator.credentials.get({publicKey})
+      return content.navigator.credentials
+        .get({ publicKey })
         .then(credential => {
           return {
             authenticatorData: credential.response.authenticatorData,
             clientDataJSON: credential.response.clientDataJSON,
-            extensions: credential.getClientExtensionResults()
+            extensions: credential.getClientExtensionResults(),
           };
-        })
-    });
+        });
+    }
+  );
 }
 /* eslint-enable no-shadow */
 
 add_task(function test_setup() {
   Services.prefs.setBoolPref("security.webauth.u2f", true);
   Services.prefs.setBoolPref("security.webauth.webauthn", true);
-  Services.prefs.setBoolPref("security.webauth.webauthn_enable_android_fido2", false);
-  Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", true);
-  Services.prefs.setBoolPref("security.webauth.webauthn_enable_usbtoken", false);
+  Services.prefs.setBoolPref(
+    "security.webauth.webauthn_enable_android_fido2",
+    false
+  );
+  Services.prefs.setBoolPref(
+    "security.webauth.webauthn_enable_softtoken",
+    true
+  );
+  Services.prefs.setBoolPref(
+    "security.webauth.webauthn_enable_usbtoken",
+    false
+  );
 });
 
 add_task(async function test_appid() {
@@ -121,13 +154,15 @@ add_task(async function test_appid() {
     .catch(expectInvalidStateError);
 
   // Invalid app IDs (for the current origin) must be rejected.
-  await promiseWebAuthnSign(tab, keyHandle, {appid: "https://bogus.com/appId"})
+  await promiseWebAuthnSign(tab, keyHandle, {
+    appid: "https://bogus.com/appId",
+  })
     .then(arrivingHereIsBad)
     .catch(expectSecurityError);
 
   // Non-matching app IDs must be rejected. Even when the user/softtoken
   // consents, leading to an invalid state.
-  await promiseWebAuthnSign(tab, keyHandle, {appid: appid + "2"})
+  await promiseWebAuthnSign(tab, keyHandle, { appid: appid + "2" })
     .then(arrivingHereIsBad)
     .catch(expectInvalidStateError);
 
@@ -135,8 +170,8 @@ add_task(async function test_appid() {
   let rpIdHash = await crypto.subtle.digest("SHA-256", rpId);
 
   // Succeed with the right fallback rpId.
-  await promiseWebAuthnSign(tab, keyHandle, {appid})
-    .then(({authenticatorData, clientDataJSON, extensions}) => {
+  await promiseWebAuthnSign(tab, keyHandle, { appid }).then(
+    ({ authenticatorData, clientDataJSON, extensions }) => {
       is(extensions.appid, true, "appid extension was acted upon");
 
       // Check that the correct rpIdHash is returned.
@@ -145,7 +180,8 @@ add_task(async function test_appid() {
 
       let clientData = JSON.parse(buffer2string(clientDataJSON));
       is(clientData.clientExtensions.appid, appid, "appid extension sent");
-    });
+    }
+  );
 
   // Close tab.
   BrowserTestUtils.removeTab(tab);

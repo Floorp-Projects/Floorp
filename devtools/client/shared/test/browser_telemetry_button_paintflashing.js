@@ -4,7 +4,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8," +
+const TEST_URI =
+  "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_paintflashing.js</p>";
 
 // Because we need to gather stats for the period of time that a tool has been
@@ -53,6 +54,16 @@ async function delayedClicks(toolbox, node, clicks) {
 function checkResults() {
   // For help generating these tests use generateTelemetryTests("DEVTOOLS_PAINTFLASHING_")
   // here.
-  checkTelemetry("DEVTOOLS_PAINTFLASHING_OPENED_COUNT", "", {0: 2, 1: 0}, "array");
-  checkTelemetry("DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS", "", null, "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_PAINTFLASHING_OPENED_COUNT",
+    "",
+    { 0: 2, 1: 0 },
+    "array"
+  );
+  checkTelemetry(
+    "DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
+  );
 }

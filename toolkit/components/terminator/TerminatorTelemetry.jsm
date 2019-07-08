@@ -11,21 +11,30 @@
  * relevant telemetry histograms.
  */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "OS",
-  "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
-  "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 function nsTerminatorTelemetry() {}
 
 var HISTOGRAMS = {
   "quit-application": "SHUTDOWN_PHASE_DURATION_TICKS_QUIT_APPLICATION",
-  "profile-change-teardown": "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_CHANGE_TEARDOWN",
-  "profile-before-change":  "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_BEFORE_CHANGE",
+  "profile-change-teardown":
+    "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_CHANGE_TEARDOWN",
+  "profile-before-change":
+    "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_BEFORE_CHANGE",
   "xpcom-will-shutdown": "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_WILL_SHUTDOWN",
 };
 
@@ -47,8 +56,10 @@ nsTerminatorTelemetry.prototype = {
       //
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      let PATH = OS.Path.join(OS.Constants.Path.localProfileDir,
-        "ShutdownDuration.json");
+      let PATH = OS.Path.join(
+        OS.Constants.Path.localProfileDir,
+        "ShutdownDuration.json"
+      );
       let raw;
       try {
         raw = await OS.File.read(PATH, { encoding: "utf-8" });
@@ -83,8 +94,10 @@ nsTerminatorTelemetry.prototype = {
       }
 
       // Inform observers that we are done.
-      Services.obs.notifyObservers(null,
-        "shutdown-terminator-telemetry-updated");
+      Services.obs.notifyObservers(
+        null,
+        "shutdown-terminator-telemetry-updated"
+      );
     })();
   },
 };

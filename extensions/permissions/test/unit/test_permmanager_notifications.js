@@ -12,8 +12,7 @@ function run_test() {
   test_generator.next();
 }
 
-function continue_test()
-{
+function continue_test() {
   do_run_generator(test_generator);
 }
 
@@ -24,8 +23,9 @@ function* do_run_test() {
   let pm = Services.perms;
   let now = Number(Date.now());
   let permType = "test/expiration-perm";
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(Ci.nsIScriptSecurityManager);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
+    Ci.nsIScriptSecurityManager
+  );
   let uri = NetUtil.newURI("http://example.com");
   let principal = ssm.createCodebasePrincipal(uri, {});
 
@@ -36,13 +36,25 @@ function* do_run_test() {
   // do_execute_soon() so that we can use our generator to continue the test
   // where we left off.
   executeSoon(function() {
-    pm.addFromPrincipal(principal, permType, pm.ALLOW_ACTION, pm.EXPIRE_TIME, now + 100000);
+    pm.addFromPrincipal(
+      principal,
+      permType,
+      pm.ALLOW_ACTION,
+      pm.EXPIRE_TIME,
+      now + 100000
+    );
   });
   yield;
 
   // Alter a permission, to test the 'changed' notification.
   executeSoon(function() {
-    pm.addFromPrincipal(principal, permType, pm.ALLOW_ACTION, pm.EXPIRE_TIME, now + 200000);
+    pm.addFromPrincipal(
+      principal,
+      permType,
+      pm.ALLOW_ACTION,
+      pm.EXPIRE_TIME,
+      now + 200000
+    );
   });
   yield;
 
@@ -99,7 +111,6 @@ permission_observer.prototype = {
         default:
           do_throw("too many add notifications posted.");
       }
-
     } else if (data == "changed") {
       let perm = subject.QueryInterface(Ci.nsIPermission);
       this.changes++;
@@ -112,7 +123,6 @@ permission_observer.prototype = {
         default:
           do_throw("too many change notifications posted.");
       }
-
     } else if (data == "deleted") {
       let perm = subject.QueryInterface(Ci.nsIPermission);
       this.deletes++;
@@ -123,13 +133,11 @@ permission_observer.prototype = {
         default:
           do_throw("too many delete notifications posted.");
       }
-
     } else if (data == "cleared") {
       // only clear once: at the end
       Assert.ok(!this.cleared);
       Assert.equal(do_count_enumerator(Services.perms.enumerator), 0);
       this.cleared = true;
-
     } else {
       do_throw("unexpected data '" + data + "'!");
     }

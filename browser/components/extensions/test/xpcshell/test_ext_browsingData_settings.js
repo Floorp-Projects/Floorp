@@ -2,13 +2,25 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
-ChromeUtils.defineModuleGetter(this, "Sanitizer",
-                               "resource:///modules/Sanitizer.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sanitizer",
+  "resource:///modules/Sanitizer.jsm"
+);
 
 const PREF_DOMAIN = "privacy.cpd.";
-const SETTINGS_LIST = ["cache", "cookies", "history", "formData", "downloads"].sort();
+const SETTINGS_LIST = [
+  "cache",
+  "cookies",
+  "history",
+  "formData",
+  "downloads",
+].sort();
 
 add_task(async function testSettingsProperties() {
   function background() {
@@ -32,23 +44,33 @@ add_task(async function testSettingsProperties() {
   let settings = await extension.awaitMessage("settings");
 
   // Verify that we get the keys back we expect.
-  deepEqual(Object.keys(settings.dataToRemove).sort(),
-            SETTINGS_LIST,
-            "dataToRemove contains expected properties.");
-  deepEqual(Object.keys(settings.dataRemovalPermitted).sort(),
-            SETTINGS_LIST,
-            "dataToRemove contains expected properties.");
+  deepEqual(
+    Object.keys(settings.dataToRemove).sort(),
+    SETTINGS_LIST,
+    "dataToRemove contains expected properties."
+  );
+  deepEqual(
+    Object.keys(settings.dataRemovalPermitted).sort(),
+    SETTINGS_LIST,
+    "dataToRemove contains expected properties."
+  );
 
   let dataTypeSet = settings.dataToRemove;
   for (let key of Object.keys(dataTypeSet)) {
-    equal(Preferences.get(`${PREF_DOMAIN}${key.toLowerCase()}`),
-          dataTypeSet[key],
-          `${key} property of dataToRemove matches the expected pref.`);
+    equal(
+      Preferences.get(`${PREF_DOMAIN}${key.toLowerCase()}`),
+      dataTypeSet[key],
+      `${key} property of dataToRemove matches the expected pref.`
+    );
   }
 
   dataTypeSet = settings.dataRemovalPermitted;
   for (let key of Object.keys(dataTypeSet)) {
-    equal(true, dataTypeSet[key], `${key} property of dataRemovalPermitted is true.`);
+    equal(
+      true,
+      dataTypeSet[key],
+      `${key} property of dataRemovalPermitted is true.`
+    );
   }
 
   // Explicitly set a pref to both true and false and then check.
@@ -63,13 +85,21 @@ add_task(async function testSettingsProperties() {
 
   extension.sendMessage("settings");
   settings = await extension.awaitMessage("settings");
-  equal(settings.dataToRemove[SINGLE_OPTION], true, "Preference that was set to true returns true.");
+  equal(
+    settings.dataToRemove[SINGLE_OPTION],
+    true,
+    "Preference that was set to true returns true."
+  );
 
   Preferences.set(SINGLE_PREF, false);
 
   extension.sendMessage("settings");
   settings = await extension.awaitMessage("settings");
-  equal(settings.dataToRemove[SINGLE_OPTION], false, "Preference that was set to false returns false.");
+  equal(
+    settings.dataToRemove[SINGLE_OPTION],
+    false,
+    "Preference that was set to false returns false."
+  );
 
   await extension.unload();
 });
@@ -112,8 +142,10 @@ add_task(async function testSettingsSince() {
 
     // Because it is based on the current timestamp, we cannot know the exact
     // value to expect for since, so allow a 10s variance.
-    ok(Math.abs(settings.options.since - TEST_DATA[timespan]) < 10000,
-       "settings.options contains the expected since value.");
+    ok(
+      Math.abs(settings.options.since - TEST_DATA[timespan]) < 10000,
+      "settings.options contains the expected since value."
+    );
   }
 
   await extension.unload();

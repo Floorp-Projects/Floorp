@@ -6,21 +6,32 @@ function test() {
   // We need to open a new window for this so that its docshell would get destroyed
   // when clearing the PB mode flag.
   function runTest(aCloseWindow, aCallback) {
-    let newWin = OpenBrowserWindow({private: true});
+    let newWin = OpenBrowserWindow({ private: true });
     SimpleTest.waitForFocus(function() {
       let expectedExiting = true;
       let expectedExited = false;
       let observerExiting = {
         observe(aSubject, aTopic, aData) {
-          is(aTopic, "last-pb-context-exiting", "Correct topic should be dispatched (exiting)");
+          is(
+            aTopic,
+            "last-pb-context-exiting",
+            "Correct topic should be dispatched (exiting)"
+          );
           is(expectedExiting, true, "notification not expected yet (exiting)");
           expectedExited = true;
-          Services.obs.removeObserver(observerExiting, "last-pb-context-exiting");
+          Services.obs.removeObserver(
+            observerExiting,
+            "last-pb-context-exiting"
+          );
         },
       };
       let observerExited = {
         observe(aSubject, aTopic, aData) {
-          is(aTopic, "last-pb-context-exited", "Correct topic should be dispatched (exited)");
+          is(
+            aTopic,
+            "last-pb-context-exited",
+            "Correct topic should be dispatched (exited)"
+          );
           is(expectedExited, true, "notification not expected yet (exited)");
           Services.obs.removeObserver(observerExited, "last-pb-context-exited");
           aCallback();
@@ -37,13 +48,16 @@ function test() {
 
   waitForExplicitFinish();
 
-  runTest(function(newWin) {
+  runTest(
+    function(newWin) {
       // Simulate pressing the window close button
       newWin.document.getElementById("cmd_closeWindow").doCommand();
-    }, function() {
+    },
+    function() {
       runTest(function(newWin) {
-          // Simulate closing the last tab
-          newWin.document.getElementById("cmd_close").doCommand();
-        }, finish);
-    });
+        // Simulate closing the last tab
+        newWin.document.getElementById("cmd_close").doCommand();
+      }, finish);
+    }
+  );
 }

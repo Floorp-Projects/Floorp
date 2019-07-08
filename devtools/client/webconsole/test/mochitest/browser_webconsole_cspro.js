@@ -17,8 +17,9 @@ See Bug 1010953.
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf8,Web Console CSP report only test";
-const TEST_VIOLATION = "http://example.com/browser/devtools/client/webconsole/" +
-                       "test/mochitest/test-cspro.html";
+const TEST_VIOLATION =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-cspro.html";
 const CSP_VIOLATION_MSG =
   "Content Security Policy: The page\u2019s settings blocked the loading of a resource " +
   "at http://some.example.com/cspro.png (\u201cimg-src\u201d).";
@@ -30,15 +31,26 @@ const CSP_REPORT_MSG =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const onCspViolationMessage = waitForMessage(hud, CSP_VIOLATION_MSG, ".message.error");
-  const onCspReportMessage = waitForMessage(hud, CSP_REPORT_MSG, ".message.error");
+  const onCspViolationMessage = waitForMessage(
+    hud,
+    CSP_VIOLATION_MSG,
+    ".message.error"
+  );
+  const onCspReportMessage = waitForMessage(
+    hud,
+    CSP_REPORT_MSG,
+    ".message.error"
+  );
 
   info("Load a page with CSP warnings.");
   loadDocument(TEST_VIOLATION);
 
   await onCspViolationMessage;
   await onCspReportMessage;
-  ok(true, "Confirmed that CSP and CSP-Report-Only log different messages to console");
+  ok(
+    true,
+    "Confirmed that CSP and CSP-Report-Only log different messages to console"
+  );
 
   hud.ui.clearOutput(true);
 });

@@ -34,16 +34,23 @@ add_task(async function setup() {
 add_task(async function test_plugin_is_hidden_on_iteration() {
   // The plugin should not be visible when we iterate
   // navigator.plugins.
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
-      let plugins = Array.from(content.navigator.plugins);
-      Assert.ok(plugins.every(p => p.name != pluginName),
-                "Should not find Test Plugin");
-    });
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    async function(browser) {
+      await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(
+        pluginName
+      ) {
+        let plugins = Array.from(content.navigator.plugins);
+        Assert.ok(
+          plugins.every(p => p.name != pluginName),
+          "Should not find Test Plugin"
+        );
+      });
+    }
+  );
 
   // Now clear the HIDDEN_CTP_PLUGIN_PREF temporarily and
   // make sure we can see the plugin again.
@@ -53,16 +60,23 @@ add_task(async function test_plugin_is_hidden_on_iteration() {
 
   // Note that I have to do this in a new tab since navigator
   // caches navigator.plugins after an initial read.
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
-      let plugins = Array.from(content.navigator.plugins);
-      Assert.ok(plugins.some(p => p.name == pluginName),
-                "Should have found the Test Plugin");
-    });
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    async function(browser) {
+      await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(
+        pluginName
+      ) {
+        let plugins = Array.from(content.navigator.plugins);
+        Assert.ok(
+          plugins.some(p => p.name == pluginName),
+          "Should have found the Test Plugin"
+        );
+      });
+    }
+  );
 
   await SpecialPowers.popPrefEnv();
 });

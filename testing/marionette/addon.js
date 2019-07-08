@@ -4,10 +4,16 @@
 
 "use strict";
 
-const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 
-const {UnknownError} = ChromeUtils.import("chrome://marionette/content/error.js");
+const { UnknownError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
 
 this.EXPORTED_SYMBOLS = ["Addon"];
 
@@ -21,7 +27,9 @@ const ERRORS = {
 };
 
 async function installAddon(file) {
-  let install = await AddonManager.getInstallForFile(file, null, {source: "internal"});
+  let install = await AddonManager.getInstallForFile(file, null, {
+    source: "internal",
+  });
 
   if (install.error) {
     throw new UnknownError(ERRORS[install.error]);
@@ -76,7 +84,9 @@ class Addon {
       }
     } catch (e) {
       throw new UnknownError(
-          `Could not install add-on: ${path}: ${e.message}`, e);
+        `Could not install add-on: ${path}: ${e.message}`,
+        e
+      );
     }
 
     return addon.id;
@@ -104,7 +114,9 @@ class Addon {
         onOperationCancelled: addon => {
           if (addon.id === candidate.id) {
             AddonManager.removeAddonListener(listener);
-            throw new UnknownError(`Uninstall of ${candidate.id} has been canceled`);
+            throw new UnknownError(
+              `Uninstall of ${candidate.id} has been canceled`
+            );
           }
         },
 

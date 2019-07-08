@@ -23,11 +23,18 @@ function run_test() {
   var size = 0;
   for (let i = 0; i < TESTS.length; i++) {
     let source = do_get_file(DATA_DIR + TESTS[i].name);
-    zipW.addEntryFile(TESTS[i].name, Ci.nsIZipWriter.COMPRESSION_NONE, source,
-                      false);
-    size += ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
-            (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
-            (TESTS[i].name.length * 2) + TESTS[i].size;
+    zipW.addEntryFile(
+      TESTS[i].name,
+      Ci.nsIZipWriter.COMPRESSION_NONE,
+      source,
+      false
+    );
+    size +=
+      ZIP_FILE_HEADER_SIZE +
+      ZIP_CDS_HEADER_SIZE +
+      ZIP_EXTENDED_TIMESTAMP_SIZE * 2 +
+      TESTS[i].name.length * 2 +
+      TESTS[i].size;
   }
 
   zipW.close();
@@ -46,8 +53,10 @@ function run_test() {
     Assert.equal(entry.realSize, TESTS[i].size);
     Assert.equal(entry.size, TESTS[i].size);
     Assert.equal(entry.CRC32, TESTS[i].crc);
-    Assert.equal(Math.floor(entry.lastModifiedTime / PR_USEC_PER_SEC),
-                 Math.floor(source.lastModifiedTime / PR_MSEC_PER_SEC));
+    Assert.equal(
+      Math.floor(entry.lastModifiedTime / PR_USEC_PER_SEC),
+      Math.floor(source.lastModifiedTime / PR_MSEC_PER_SEC)
+    );
 
     zipR.test(TESTS[i].name);
   }

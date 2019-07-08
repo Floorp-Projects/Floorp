@@ -4,22 +4,40 @@
 
 "use strict";
 
-
 var EXPORTED_SYMBOLS = ["UptakeTelemetry"];
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "ClientID",
-                               "resource://gre/modules/ClientID.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ClientID",
+  "resource://gre/modules/ClientID.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
-  return Components.Constructor("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
+  return Components.Constructor(
+    "@mozilla.org/security/hash;1",
+    "nsICryptoHash",
+    "initWithString"
+  );
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gSampleRate", "services.common.uptake.sampleRate");
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gSampleRate",
+  "services.common.uptake.sampleRate"
+);
 
 // Telemetry histogram id (see Histograms.json).
 const TELEMETRY_HISTOGRAM_ID = "UPTAKE_REMOTE_CONTENT_RESULT_1";
@@ -105,30 +123,30 @@ class UptakeTelemetry {
    */
   static get STATUS() {
     return {
-      UP_TO_DATE:            "up_to_date",
-      SUCCESS:               "success",
-      BACKOFF:               "backoff",
-      PREF_DISABLED:         "pref_disabled",
-      PARSE_ERROR:           "parse_error",
-      CONTENT_ERROR:         "content_error",
-      SIGNATURE_ERROR:       "sign_error",
+      UP_TO_DATE: "up_to_date",
+      SUCCESS: "success",
+      BACKOFF: "backoff",
+      PREF_DISABLED: "pref_disabled",
+      PARSE_ERROR: "parse_error",
+      CONTENT_ERROR: "content_error",
+      SIGNATURE_ERROR: "sign_error",
       SIGNATURE_RETRY_ERROR: "sign_retry_error",
-      CONFLICT_ERROR:        "conflict_error",
-      SYNC_ERROR:            "sync_error",
-      APPLY_ERROR:           "apply_error",
-      SERVER_ERROR:          "server_error",
-      CERTIFICATE_ERROR:     "certificate_error",
-      DOWNLOAD_ERROR:        "download_error",
-      TIMEOUT_ERROR:         "timeout_error",
-      NETWORK_ERROR:         "network_error",
+      CONFLICT_ERROR: "conflict_error",
+      SYNC_ERROR: "sync_error",
+      APPLY_ERROR: "apply_error",
+      SERVER_ERROR: "server_error",
+      CERTIFICATE_ERROR: "certificate_error",
+      DOWNLOAD_ERROR: "download_error",
+      TIMEOUT_ERROR: "timeout_error",
+      NETWORK_ERROR: "network_error",
       NETWORK_OFFLINE_ERROR: "offline_error",
-      CLEANUP_ERROR:         "cleanup_error",
-      UNKNOWN_ERROR:         "unknown_error",
-      CUSTOM_1_ERROR:        "custom_1_error",
-      CUSTOM_2_ERROR:        "custom_2_error",
-      CUSTOM_3_ERROR:        "custom_3_error",
-      CUSTOM_4_ERROR:        "custom_4_error",
-      CUSTOM_5_ERROR:        "custom_5_error",
+      CLEANUP_ERROR: "cleanup_error",
+      UNKNOWN_ERROR: "unknown_error",
+      CUSTOM_1_ERROR: "custom_1_error",
+      CUSTOM_2_ERROR: "custom_2_error",
+      CUSTOM_3_ERROR: "custom_3_error",
+      CUSTOM_4_ERROR: "custom_4_error",
+      CUSTOM_5_ERROR: "custom_5_error",
     };
   }
 
@@ -159,15 +177,21 @@ class UptakeTelemetry {
 
     const hash = await Policy.getClientIDHash();
     const channel = Policy.getChannel();
-    const shouldSendEvent = !["release", "esr"].includes(channel) || hash < gSampleRate;
+    const shouldSendEvent =
+      !["release", "esr"].includes(channel) || hash < gSampleRate;
     if (shouldSendEvent) {
       // The Event API requires `extra` values to be of type string. Force it!
-      const extraStr = Object.keys(extra).reduce(( acc, k ) => {
+      const extraStr = Object.keys(extra).reduce((acc, k) => {
         acc[k] = extra[k].toString();
         return acc;
       }, {});
-      Services.telemetry
-        .recordEvent(TELEMETRY_EVENTS_ID, "uptake", component, status, extraStr);
+      Services.telemetry.recordEvent(
+        TELEMETRY_EVENTS_ID,
+        "uptake",
+        component,
+        status,
+        extraStr
+      );
     }
 
     // Report via histogram in main ping.

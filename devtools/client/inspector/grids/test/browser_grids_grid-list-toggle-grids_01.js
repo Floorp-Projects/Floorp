@@ -29,14 +29,18 @@ add_task(async function() {
 
   info("Checking the initial state of the Grid Inspector.");
   is(gridList.childNodes.length, 1, "One grid container is listed.");
-  ok(!checkbox.checked, `Grid item ${checkbox.value} is unchecked in the grid list.`);
+  ok(
+    !checkbox.checked,
+    `Grid item ${checkbox.value} is unchecked in the grid list.`
+  );
   ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
 
   info("Toggling ON the CSS grid highlighter from the layout panel.");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  let onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 1 &&
-    state.grids[0].highlighted);
+  let onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length == 1 && state.grids[0].highlighted
+  );
   checkbox.click();
   await onHighlighterShown;
   await onCheckboxChange;
@@ -46,9 +50,10 @@ add_task(async function() {
 
   info("Toggling OFF the CSS grid highlighter from the layout panel.");
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
-  onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 1 &&
-    !state.grids[0].highlighted);
+  onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length == 1 && !state.grids[0].highlighted
+  );
   checkbox.click();
   await onHighlighterHidden;
   await onCheckboxChange;

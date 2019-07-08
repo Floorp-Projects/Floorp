@@ -8,17 +8,30 @@ var EXPORTED_SYMBOLS = [
   "FxAccountsStorageManager",
 ];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {DATA_FORMAT_VERSION, DEFAULT_STORAGE_FILENAME, FXA_PWDMGR_HOST, FXA_PWDMGR_MEMORY_FIELDS, FXA_PWDMGR_PLAINTEXT_FIELDS, FXA_PWDMGR_REALM, FXA_PWDMGR_SECURE_FIELDS, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {
+  DATA_FORMAT_VERSION,
+  DEFAULT_STORAGE_FILENAME,
+  FXA_PWDMGR_HOST,
+  FXA_PWDMGR_MEMORY_FIELDS,
+  FXA_PWDMGR_PLAINTEXT_FIELDS,
+  FXA_PWDMGR_REALM,
+  FXA_PWDMGR_SECURE_FIELDS,
+  log,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
 
 // A helper function so code can check what fields are able to be stored by
 // the storage manager without having a reference to a manager instance.
 function FxAccountsStorageManagerCanStoreField(fieldName) {
-  return FXA_PWDMGR_MEMORY_FIELDS.has(fieldName) ||
-         FXA_PWDMGR_PLAINTEXT_FIELDS.has(fieldName) ||
-         FXA_PWDMGR_SECURE_FIELDS.has(fieldName);
+  return (
+    FXA_PWDMGR_MEMORY_FIELDS.has(fieldName) ||
+    FXA_PWDMGR_PLAINTEXT_FIELDS.has(fieldName) ||
+    FXA_PWDMGR_SECURE_FIELDS.has(fieldName)
+  );
 }
 
 // The storage manager object.
@@ -77,7 +90,10 @@ this.FxAccountsStorageManager.prototype = {
             // but still treat it as such (so it will still be available in this
             // session but isn't persisted anywhere.)
             if (!FXA_PWDMGR_MEMORY_FIELDS.has(name)) {
-              log.warn("Unknown FxA field name in user data, treating as in-memory", name);
+              log.warn(
+                "Unknown FxA field name in user data, treating as in-memory",
+                name
+              );
             }
             this.cachedMemory[name] = val;
           }
@@ -102,14 +118,16 @@ this.FxAccountsStorageManager.prototype = {
     // We can't throw this instance away while it is still writing or we may
     // end up racing with the newly created one.
     log.trace("StorageManager finalizing");
-    return this._promiseInitialized.then(() => {
-      return this._promiseStorageComplete;
-    }).then(() => {
-      this._promiseStorageComplete = null;
-      this._promiseInitialized = null;
-      this._clearCachedData();
-      log.trace("StorageManager finalized");
-    });
+    return this._promiseInitialized
+      .then(() => {
+        return this._promiseStorageComplete;
+      })
+      .then(() => {
+        this._promiseStorageComplete = null;
+        this._promiseInitialized = null;
+        this._clearCachedData();
+        log.trace("StorageManager finalized");
+      });
   },
 
   // We want to make sure we don't end up doing multiple storage requests
@@ -129,7 +147,7 @@ this.FxAccountsStorageManager.prototype = {
     // future operations from starting (ie, _promiseStorageComplete must never
     // be in a rejected state)
     this._promiseStorageComplete = result.catch(err => {
-      log.error("${func} failed: ${err}", {func, err});
+      log.error("${func} failed: ${err}", { func, err });
     });
     return result;
   },
@@ -272,8 +290,12 @@ this.FxAccountsStorageManager.prototype = {
       // either way, we return null.
       got = null;
     }
-    if (!got || !got.accountData || !got.accountData.uid ||
-        got.version != DATA_FORMAT_VERSION) {
+    if (
+      !got ||
+      !got.accountData ||
+      !got.accountData.uid ||
+      got.version != DATA_FORMAT_VERSION
+    ) {
       return false;
     }
     // We need to update our .cachedPlain, but can't just assign to it as
@@ -298,7 +320,8 @@ this.FxAccountsStorageManager.prototype = {
       return null;
     }
     return this._queueStorageOperation(() => {
-      if (this._needToReadSecure) { // we might have read it by now!
+      if (this._needToReadSecure) {
+        // we might have read it by now!
         return this._doReadAndUpdateSecure();
       }
       return null;
@@ -312,7 +335,10 @@ this.FxAccountsStorageManager.prototype = {
   async _doReadAndUpdateSecure() {
     let { uid, email } = this.cachedPlain;
     try {
-      log.debug("reading secure storage with existing", Object.keys(this.cachedSecure));
+      log.debug(
+        "reading secure storage with existing",
+        Object.keys(this.cachedSecure)
+      );
       // If we already have anything in .cachedSecure it means something has
       // updated cachedSecure before we've read it. That means that after we do
       // manage to read we must write back the merged data.
@@ -326,7 +352,10 @@ this.FxAccountsStorageManager.prototype = {
         readSecure = null;
       }
       if (readSecure && readSecure.accountData) {
-        log.debug("secure read fetched items", Object.keys(readSecure.accountData));
+        log.debug(
+          "secure read fetched items",
+          Object.keys(readSecure.accountData)
+        );
         for (let [name, value] of Object.entries(readSecure.accountData)) {
           if (!(name in this.cachedSecure)) {
             this.cachedSecure[name] = value;
@@ -438,12 +467,18 @@ function JSONStorage(options) {
 
 JSONStorage.prototype = {
   set(contents) {
-    log.trace("starting write of json user data", contents ? Object.keys(contents.accountData) : "null");
+    log.trace(
+      "starting write of json user data",
+      contents ? Object.keys(contents.accountData) : "null"
+    );
     let start = Date.now();
-    return OS.File.makeDir(this.baseDir, {ignoreExisting: true})
+    return OS.File.makeDir(this.baseDir, { ignoreExisting: true })
       .then(CommonUtils.writeJSON.bind(null, contents, this.path))
       .then(result => {
-        log.trace("finished write of json user data - took", Date.now() - start);
+        log.trace(
+          "finished write of json user data - took",
+          Date.now() - start
+        );
         return result;
       });
   },
@@ -458,8 +493,7 @@ JSONStorage.prototype = {
   },
 };
 
-function StorageLockedError() {
-}
+function StorageLockedError() {}
 /**
  * LoginManagerStorage constructor that creates instances that set/get
  * data stored securely in the nsILoginManager.
@@ -467,8 +501,7 @@ function StorageLockedError() {
  * @return instance
  */
 
-function LoginManagerStorage() {
-}
+function LoginManagerStorage() {}
 
 LoginManagerStorage.prototype = {
   STORAGE_LOCKED: StorageLockedError,
@@ -485,12 +518,17 @@ LoginManagerStorage.prototype = {
   // was unlocked (even if no existing logins existed) or false if it was
   // locked (meaning we don't even know if it existed or not.)
   async _clearLoginMgrData() {
-    try { // Services.logins might be third-party and broken...
+    try {
+      // Services.logins might be third-party and broken...
       await Services.logins.initializationPromise;
       if (!this._isLoggedIn) {
         return false;
       }
-      let logins = Services.logins.findLogins(FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
+      let logins = Services.logins.findLogins(
+        FXA_PWDMGR_HOST,
+        null,
+        FXA_PWDMGR_REALM
+      );
       for (let login of logins) {
         Services.logins.removeLogin(login);
       }
@@ -516,7 +554,8 @@ LoginManagerStorage.prototype = {
 
     // We are saving actual data.
     log.trace("starting write of user data to the login manager");
-    try { // Services.logins might be third-party and broken...
+    try {
+      // Services.logins might be third-party and broken...
       // and the stuff into the login manager.
       await Services.logins.initializationPromise;
       // If MP is locked we silently fail - the user may need to re-auth
@@ -527,17 +566,25 @@ LoginManagerStorage.prototype = {
       }
       // write the data to the login manager.
       let loginInfo = new Components.Constructor(
-         "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
-      let login = new loginInfo(FXA_PWDMGR_HOST,
-                                null, // aFormActionOrigin,
-                                FXA_PWDMGR_REALM, // aHttpRealm,
-                                uid, // aUsername
-                                JSON.stringify(contents), // aPassword
-                                "", // aUsernameField
-                                "");// aPasswordField
+        "@mozilla.org/login-manager/loginInfo;1",
+        Ci.nsILoginInfo,
+        "init"
+      );
+      let login = new loginInfo(
+        FXA_PWDMGR_HOST,
+        null, // aFormActionOrigin,
+        FXA_PWDMGR_REALM, // aHttpRealm,
+        uid, // aUsername
+        JSON.stringify(contents), // aPassword
+        "", // aUsernameField
+        ""
+      ); // aPasswordField
 
-      let existingLogins = Services.logins.findLogins(FXA_PWDMGR_HOST, null,
-                                                      FXA_PWDMGR_REALM);
+      let existingLogins = Services.logins.findLogins(
+        FXA_PWDMGR_HOST,
+        null,
+        FXA_PWDMGR_REALM
+      );
       if (existingLogins.length) {
         Services.logins.modifyLogin(existingLogins[0], login);
       } else {
@@ -557,16 +604,23 @@ LoginManagerStorage.prototype = {
   async get(uid, email) {
     log.trace("starting fetch of user data from the login manager");
 
-    try { // Services.logins might be third-party and broken...
+    try {
+      // Services.logins might be third-party and broken...
       // read the data from the login manager and merge it for return.
       await Services.logins.initializationPromise;
 
       if (!this._isLoggedIn) {
-        log.info("returning partial account data as the login manager is locked.");
+        log.info(
+          "returning partial account data as the login manager is locked."
+        );
         throw new this.STORAGE_LOCKED();
       }
 
-      let logins = Services.logins.findLogins(FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
+      let logins = Services.logins.findLogins(
+        FXA_PWDMGR_HOST,
+        null,
+        FXA_PWDMGR_REALM
+      );
       if (logins.length == 0) {
         // This could happen if the MP was locked when we wrote the data.
         log.info("Can't find any credentials in the login manager");

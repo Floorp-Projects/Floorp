@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   await selectNode("#testElement", inspector);
   await testRuleView(view, inspector.selection.nodeFront);
@@ -35,9 +35,12 @@ async function testRuleView(ruleView, nodeFront) {
   ok(panel, "XUL panel exists");
 
   // Get the computed font family property inside the font rule view
-  const propertyList = ruleView.element
-    .querySelectorAll(".ruleview-propertylist");
-  const fontExpander = propertyList[1].querySelectorAll(".ruleview-expander")[0];
+  const propertyList = ruleView.element.querySelectorAll(
+    ".ruleview-propertylist"
+  );
+  const fontExpander = propertyList[1].querySelectorAll(
+    ".ruleview-expander"
+  )[0];
   fontExpander.click();
 
   const rule = getRuleViewRule(ruleView, "#testElement");
@@ -56,12 +59,17 @@ async function testRuleView(ruleView, nodeFront) {
 
   const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
-  ok(images[0].getAttribute("src")
-    .startsWith("data:"), "Tooltip contains a data-uri image as expected");
+  ok(
+    images[0].getAttribute("src").startsWith("data:"),
+    "Tooltip contains a data-uri image as expected"
+  );
 
   const dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
-  is(images[0].getAttribute("src"), dataURL,
-    "Tooltip contains the correct data-uri image");
+  is(
+    images[0].getAttribute("src"),
+    dataURL,
+    "Tooltip contains the correct data-uri image"
+  );
 
   await assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }

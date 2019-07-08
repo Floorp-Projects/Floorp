@@ -10,8 +10,10 @@
 /* exported Readerable */
 /* import-globals-from Readability-readerable.js */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 function isNodeVisible(node) {
   return node.clientHeight > 0 && node.clientWidth > 0;
@@ -30,7 +32,10 @@ var Readerable = {
    */
   isProbablyReaderable(doc) {
     // Only care about 'real' HTML documents:
-    if (doc.mozSyntheticDocument || !(doc instanceof doc.defaultView.HTMLDocument)) {
+    if (
+      doc.mozSyntheticDocument ||
+      !(doc instanceof doc.defaultView.HTMLDocument)
+    ) {
       return false;
     }
 
@@ -59,7 +64,7 @@ var Readerable = {
 
     if (!isBaseUri) {
       // Sadly, some high-profile pages have false positives, so bail early for those:
-      let {host} = uri;
+      let { host } = uri;
       if (this._blockedHosts.some(blockedHost => host.endsWith(blockedHost))) {
         return false;
       }
@@ -74,6 +79,14 @@ var Readerable = {
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  Readerable, "isEnabled", "reader.parse-on-load.enabled", true);
+  Readerable,
+  "isEnabled",
+  "reader.parse-on-load.enabled",
+  true
+);
 XPCOMUtils.defineLazyPreferenceGetter(
-  Readerable, "isForceEnabled", "reader.parse-on-load.force-enabled", false);
+  Readerable,
+  "isForceEnabled",
+  "reader.parse-on-load.force-enabled",
+  false
+);

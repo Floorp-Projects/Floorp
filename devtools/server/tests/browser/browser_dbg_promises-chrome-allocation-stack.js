@@ -26,8 +26,10 @@ add_task(async function test() {
   // compartments. The actors have to be in a distinct compartment than the
   // context they are debugging. `invisibleToDebugger` force loading modules in
   // a distinct compartments.
-  const { DevToolsLoader } =
-    ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const { DevToolsLoader } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm",
+    {}
+  );
   const customLoader = new DevToolsLoader();
   customLoader.invisibleToDebugger = true;
   const { DebuggerServer } = customLoader.require("devtools/server/main");
@@ -63,8 +65,10 @@ async function testGetAllocationStack(client, target, makePromises) {
   const onNewPromise = new Promise(resolve => {
     front.on("new-promises", promises => {
       for (const p of promises) {
-        if (p.preview.ownProperties.name &&
-            p.preview.ownProperties.name.value === "p") {
+        if (
+          p.preview.ownProperties.name &&
+          p.preview.ownProperties.name.value === "p"
+        ) {
           resolve(p);
         }
       }
@@ -88,11 +92,13 @@ async function testGetAllocationStack(client, target, makePromises) {
 
     ok(stack.source.url.startsWith("chrome:"), "Got a chrome source URL");
     ok(stack.source.url.endsWith(SOURCE_URL), "Got correct source URL.");
-    is(stack.functionDisplayName, data.functionDisplayName,
-       "Got correct function display name.");
+    is(
+      stack.functionDisplayName,
+      data.functionDisplayName,
+      "Got correct function display name."
+    );
     is(typeof stack.line, "number", "Expect stack line to be a number.");
-    is(typeof stack.column, "number",
-       "Expect stack column to be a number.");
+    is(typeof stack.column, "number", "Expect stack column to be a number.");
   }
 
   await front.detach();

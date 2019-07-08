@@ -4,20 +4,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {Point} = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
+const { Point } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 
-const BASE_TEST_URL = "http://mochi.test:8888/tests/robocop/testAccessibleCarets.html";
-const DESIGNMODE_TEST_URL = "http://mochi.test:8888/tests/robocop/testAccessibleCarets2.html";
+const BASE_TEST_URL =
+  "http://mochi.test:8888/tests/robocop/testAccessibleCarets.html";
+const DESIGNMODE_TEST_URL =
+  "http://mochi.test:8888/tests/robocop/testAccessibleCarets2.html";
 
 // Ensures Tabs are completely loaded, viewport and zoom constraints updated, etc.
 const TAB_CHANGE_EVENT = "testAccessibleCarets:TabChange";
 const TAB_STOP_EVENT = "STOP";
 
 const gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-const gActionBarHandler = Cc["@mozilla.org/browser/browser-clh;1"]
-    .getService().wrappedJSObject.ActionBarHandler;
+const gActionBarHandler = Cc["@mozilla.org/browser/browser-clh;1"].getService()
+  .wrappedJSObject.ActionBarHandler;
 
 /**
  * Wait for and return, when an expected tab change event occurs.
@@ -29,12 +33,17 @@ const gActionBarHandler = Cc["@mozilla.org/browser/browser-clh;1"]
  */
 function do_promiseTabChangeEvent(tabId, eventType) {
   return new Promise(resolve => {
-    EventDispatcher.instance.registerListener(function listener(event, message, callback) {
+    EventDispatcher.instance.registerListener(function listener(
+      event,
+      message,
+      callback
+    ) {
       if (message.event === eventType && message.tabId === tabId) {
         EventDispatcher.instance.unregisterListener(listener, TAB_CHANGE_EVENT);
         resolve();
       }
-    }, TAB_CHANGE_EVENT);
+    },
+    TAB_CHANGE_EVENT);
   });
 }
 
@@ -43,17 +52,19 @@ function do_promiseTabChangeEvent(tabId, eventType) {
  * or if we have basic content.
  */
 function isInputOrTextarea(element) {
-  return (ChromeUtils.getClassName(element) === "HTMLInputElement" ||
-          ChromeUtils.getClassName(element) === "HTMLTextAreaElement");
+  return (
+    ChromeUtils.getClassName(element) === "HTMLInputElement" ||
+    ChromeUtils.getClassName(element) === "HTMLTextAreaElement"
+  );
 }
 
 /**
  * Return the selection controller based on element.
  */
 function elementSelection(element) {
-  return (isInputOrTextarea(element)) ?
-    element.editor.selection :
-    element.ownerGlobal.getSelection();
+  return isInputOrTextarea(element)
+    ? element.editor.selection
+    : element.ownerGlobal.getSelection();
 }
 
 /**
@@ -87,11 +98,15 @@ function getCharPressPoint(doc, element, char, expected) {
 
   // Reality check selected char to expected.
   let selection = elementSelection(element);
-  is(selection.toString(), expected, "Selected char should match expected char.");
+  is(
+    selection.toString(),
+    expected,
+    "Selected char should match expected char."
+  );
 
   // Return a point where long press should select entire word.
   let rect = selection.getRangeAt(0).getBoundingClientRect();
-  let r = new Point(rect.left + (rect.width / 2), rect.bottom - (rect.height / 3));
+  let r = new Point(rect.left + rect.width / 2, rect.bottom - rect.height / 3);
 
   return r;
 }
@@ -107,18 +122,43 @@ async function getLongPressResult(browser, midPoint) {
   let domWinUtils = browser.contentWindow.windowUtils;
 
   // AccessibleCarets expect longtap between touchstart/end.
-  domWinUtils.sendTouchEventToWindow("touchstart", [0], [midPoint.x], [midPoint.y],
-                                     [1], [1], [0], [1], 0);
-  domWinUtils.sendMouseEventToWindow("mouselongtap", midPoint.x, midPoint.y,
-                                     0, 1, 0);
-  domWinUtils.sendTouchEventToWindow("touchend", [0], [midPoint.x], [midPoint.y],
-                                     [1], [1], [0], [1], 0);
+  domWinUtils.sendTouchEventToWindow(
+    "touchstart",
+    [0],
+    [midPoint.x],
+    [midPoint.y],
+    [1],
+    [1],
+    [0],
+    [1],
+    0
+  );
+  domWinUtils.sendMouseEventToWindow(
+    "mouselongtap",
+    midPoint.x,
+    midPoint.y,
+    0,
+    1,
+    0
+  );
+  domWinUtils.sendTouchEventToWindow(
+    "touchend",
+    [0],
+    [midPoint.x],
+    [midPoint.y],
+    [1],
+    [1],
+    [0],
+    [1],
+    0
+  );
 
-  await (new Promise(resolve => browser.contentWindow.setTimeout(resolve, 0)));
+  await new Promise(resolve => browser.contentWindow.setTimeout(resolve, 0));
 
-  return { focusedElement: gActionBarHandler._targetElement,
-           text: gActionBarHandler._getSelectedText(),
-           selectionID: gActionBarHandler._selectionID,
+  return {
+    focusedElement: gActionBarHandler._targetElement,
+    text: gActionBarHandler._getSelectedText(),
+    selectionID: gActionBarHandler._selectionID,
   };
 }
 
@@ -140,8 +180,9 @@ function UIhasActionByID(expectedActionID) {
  * Messages the ActionBarHandler to close the Selection UI.
  */
 function closeSelectionUI() {
-  gChromeWin.WindowEventDispatcher.dispatch("TextSelection:End",
-    {selectionID: gActionBarHandler._selectionID});
+  gChromeWin.WindowEventDispatcher.dispatch("TextSelection:End", {
+    selectionID: gActionBarHandler._selectionID,
+  });
 }
 
 /**
@@ -201,7 +242,11 @@ add_task(async function testAccessibleCarets() {
   // Longpress various LTR content elements. Test focused element against
   // expected, and selected text against expected.
   let result = await getLongPressResult(browser, ce_LTR_midPoint);
-  is(result.focusedElement, ce_LTR_elem, "Focused element should match expected.");
+  is(
+    result.focusedElement,
+    ce_LTR_elem,
+    "Focused element should match expected."
+  );
   is(result.text, "Find", "Selected text should match expected text.");
 
   result = await getLongPressResult(browser, tc_LTR_midPoint);
@@ -209,39 +254,66 @@ add_task(async function testAccessibleCarets() {
   is(result.text, "Open", "Selected text should match expected text.");
 
   result = await getLongPressResult(browser, i_LTR_midPoint);
-  is(result.focusedElement, i_LTR_elem, "Focused element should match expected.");
+  is(
+    result.focusedElement,
+    i_LTR_elem,
+    "Focused element should match expected."
+  );
   is(result.text, "Type", "Selected text should match expected text.");
 
   result = await getLongPressResult(browser, ta_LTR_midPoint);
-  is(result.focusedElement, ta_LTR_elem, "Focused element should match expected.");
+  is(
+    result.focusedElement,
+    ta_LTR_elem,
+    "Focused element should match expected."
+  );
   is(result.text, "Words", "Selected text should match expected text.");
 
   result = await getLongPressResult(browser, ip_LTR_midPoint);
-  is(result.focusedElement, ip_LTR_elem, "Focused element should match expected.");
-  is(result.text, "09876543210 .-.)(wp#*103410341",
-    "Selected phone number should match expected text.");
-  is(result.text.length, 30,
-    "Selected phone number length should match expected maximum.");
+  is(
+    result.focusedElement,
+    ip_LTR_elem,
+    "Focused element should match expected."
+  );
+  is(
+    result.text,
+    "09876543210 .-.)(wp#*103410341",
+    "Selected phone number should match expected text."
+  );
+  is(
+    result.text.length,
+    30,
+    "Selected phone number length should match expected maximum."
+  );
 
   result = await getLongPressResult(browser, bug1265750_midPoint);
   is(result.focusedElement, null, "Focused element should match expected.");
-  is(result.text, "3 45 678 90",
-    "Selected phone number should match expected text.");
+  is(
+    result.text,
+    "3 45 678 90",
+    "Selected phone number should match expected text."
+  );
 
   result = await getLongPressResult(browser, bug1338445_midPoint1);
   is(result.focusedElement, null, "Focused element should match expected.");
-  is(result.text, "012345p",
-    "Selected phone number should match expected text.");
+  is(
+    result.text,
+    "012345p",
+    "Selected phone number should match expected text."
+  );
 
   result = await getLongPressResult(browser, bug1338445_midPoint2);
   is(result.focusedElement, null, "Focused element should match expected.");
-  is(result.text, "p34",
-    "Selected phone number should match expected text.");
+  is(result.text, "p34", "Selected phone number should match expected text.");
 
   // Longpress various RTL content elements. Test focused element against
   // expected, and selected text against expected.
   result = await getLongPressResult(browser, ce_RTL_midPoint);
-  is(result.focusedElement, ce_RTL_elem, "Focused element should match expected.");
+  is(
+    result.focusedElement,
+    ce_RTL_elem,
+    "Focused element should match expected."
+  );
   is(result.text, "איפה", "Selected text should match expected text.");
 
   result = await getLongPressResult(browser, tc_RTL_midPoint);
@@ -249,17 +321,32 @@ add_task(async function testAccessibleCarets() {
   is(result.text, "תן", "Selected text should match expected text.");
 
   result = await getLongPressResult(browser, i_RTL_midPoint);
-  is(result.focusedElement, i_RTL_elem, "Focused element should match expected.");
+  is(
+    result.focusedElement,
+    i_RTL_elem,
+    "Focused element should match expected."
+  );
   is(result.text, "לרוץ", "Selected text should match expected text.");
 
   result = await getLongPressResult(browser, ta_RTL_midPoint);
-  is(result.focusedElement, ta_RTL_elem, "Focused element should match expected.");
+  is(
+    result.focusedElement,
+    ta_RTL_elem,
+    "Focused element should match expected."
+  );
   is(result.text, "הספר", "Selected text should match expected text.");
 
   result = await getLongPressResult(browser, ip_RTL_midPoint);
-  is(result.focusedElement, ip_RTL_elem, "Focused element should match expected.");
-  is(result.text, "+972 3 7347514 ",
-    "Selected phone number should match expected text.");
+  is(
+    result.focusedElement,
+    ip_RTL_elem,
+    "Focused element should match expected."
+  );
+  is(
+    result.text,
+    "+972 3 7347514 ",
+    "Selected phone number should match expected text."
+  );
 
   // Close Selection UI (ActionBar or FloatingToolbar) and complete test.
   closeSelectionUI();
@@ -273,8 +360,9 @@ add_task(async function testAccessibleCarets_designMode() {
   let BrowserApp = gChromeWin.BrowserApp;
 
   // Pre-populate the clipboard to ensure PASTE action available.
-  Cc["@mozilla.org/widget/clipboardhelper;1"].
-    getService(Ci.nsIClipboardHelper).copyString("somethingMagical");
+  Cc["@mozilla.org/widget/clipboardhelper;1"]
+    .getService(Ci.nsIClipboardHelper)
+    .copyString("somethingMagical");
 
   // Load test page, wait for load completion.
   let browser = BrowserApp.addTab(DESIGNMODE_TEST_URL).browser;
@@ -292,8 +380,14 @@ add_task(async function testAccessibleCarets_designMode() {
 
   let flavors = ["text/unicode"];
   let clipboardHasText = Services.clipboard.hasDataMatchingFlavors(
-    flavors, Ci.nsIClipboard.kGlobalClipboard);
-  is(clipboardHasText, true, "There should now be paste-able text in the clipboard.");
+    flavors,
+    Ci.nsIClipboard.kGlobalClipboard
+  );
+  is(
+    clipboardHasText,
+    true,
+    "There should now be paste-able text in the clipboard."
+  );
 
   // Toggle designMode on/off/on, check UI expectations.
   for (let designMode of ["on", "off"]) {
@@ -305,25 +399,36 @@ add_task(async function testAccessibleCarets_designMode() {
     let result = await getLongPressResult(browser, tc_LTR_midPoint);
     is(result.focusedElement, null, "No focused element is expected.");
     is(result.text, "existence", "Selected text should match expected text.");
-    is(UIhasActionByID("cut_action"), (designMode === "on"),
-      "CUT action UI Visibility should match designMode state.");
-    is(UIhasActionByID("paste_action"), (designMode === "on"),
-      "PASTE action UI Visibility should match designMode state.");
+    is(
+      UIhasActionByID("cut_action"),
+      designMode === "on",
+      "CUT action UI Visibility should match designMode state."
+    );
+    is(
+      UIhasActionByID("paste_action"),
+      designMode === "on",
+      "PASTE action UI Visibility should match designMode state."
+    );
 
     result = await getLongPressResult(browser, tc_RTL_midPoint);
     is(result.focusedElement, null, "No focused element is expected.");
     is(result.text, "אותו", "Selected text should match expected text.");
-    is(UIhasActionByID("cut_action"), (designMode === "on"),
-      "CUT action UI Visibility should match designMode state.");
-    is(UIhasActionByID("paste_action"), (designMode === "on"),
-      "PASTE action UI Visibility should match designMode state.");
+    is(
+      UIhasActionByID("cut_action"),
+      designMode === "on",
+      "CUT action UI Visibility should match designMode state."
+    );
+    is(
+      UIhasActionByID("paste_action"),
+      designMode === "on",
+      "PASTE action UI Visibility should match designMode state."
+    );
   }
 
   // Close Selection UI (ActionBar or FloatingToolbar) and complete test.
   closeSelectionUI();
   ok(true, "Finished testAccessibleCarets_designMode tests.");
 });
-
 
 // Start all the test tasks.
 run_next_test();

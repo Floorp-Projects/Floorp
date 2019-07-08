@@ -7,7 +7,9 @@
 
 "use strict";
 
-const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 const TEST_URI = `data:text/html,<meta charset=utf8><script>
   console.log("test message");
@@ -24,15 +26,20 @@ add_task(async function() {
 
   // Get log persistence toggle button
   const logPersistToggle = await waitFor(() =>
-    hud.ui.window.document.querySelector(".filter-checkbox"));
+    hud.ui.window.document.querySelector(".filter-checkbox")
+  );
 
   // Click on the toggle - "true"
   logPersistToggle.click();
-  await waitUntil(() => hud.ui.wrapper.getStore().getState().ui.persistLogs === true);
+  await waitUntil(
+    () => hud.ui.wrapper.getStore().getState().ui.persistLogs === true
+  );
 
   // Click a second time - "false"
   logPersistToggle.click();
-  await waitUntil(() => hud.ui.wrapper.getStore().getState().ui.persistLogs === false);
+  await waitUntil(
+    () => hud.ui.wrapper.getStore().getState().ui.persistLogs === false
+  );
 
   const expectedEvents = [
     {

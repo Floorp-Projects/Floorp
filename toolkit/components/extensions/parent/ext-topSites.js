@@ -27,15 +27,24 @@ this.topSites = class extends ExtensionAPI {
             let pinnedLinks = NewTabUtils.pinnedLinks.links;
             if (options.includeFavicon) {
               pinnedLinks = NewTabUtils.activityStreamProvider._faviconBytesToDataURI(
-                await NewTabUtils.activityStreamProvider._addFavicons(pinnedLinks));
+                await NewTabUtils.activityStreamProvider._addFavicons(
+                  pinnedLinks
+                )
+              );
             }
             pinnedLinks.forEach((pinnedLink, index) => {
-              if (pinnedLink &&
-                  (!pinnedLink.searchTopSite || options.includeSearchShortcuts)) {
+              if (
+                pinnedLink &&
+                (!pinnedLink.searchTopSite || options.includeSearchShortcuts)
+              ) {
                 // Remove any dupes from history.
-                links = links.filter(link => link.url != pinnedLink.url &&
-                  (!options.onePerDomain ||
-                   NewTabUtils.extractSite(link.url) != pinnedLink.baseDomain));
+                links = links.filter(
+                  link =>
+                    link.url != pinnedLink.url &&
+                    (!options.onePerDomain ||
+                      NewTabUtils.extractSite(link.url) !=
+                        pinnedLink.baseDomain)
+                );
                 links.splice(index, 0, pinnedLink);
               }
             });
@@ -46,8 +55,10 @@ this.topSites = class extends ExtensionAPI {
           }
 
           // Convert links to search shortcuts, if necessary.
-          if (options.includeSearchShortcuts &&
-            Services.prefs.getBoolPref(SHORTCUTS_PREF, false)) {
+          if (
+            options.includeSearchShortcuts &&
+            Services.prefs.getBoolPref(SHORTCUTS_PREF, false)
+          ) {
             // Pinned shortcuts are already returned as searchTopSite links,
             // with a proper label and url. But certain non-pinned links may
             // also be promoted to search shortcuts; here we convert them.

@@ -27,15 +27,18 @@ var TelemetryTimestamps = {
    */
   add: function TT_add(name, value) {
     // Default to "now" if not specified
-    if (value == null)
+    if (value == null) {
       value = Date.now();
+    }
 
-    if (isNaN(value))
+    if (isNaN(value)) {
       throw new Error("Value must be a timestamp");
+    }
 
     // If there's an existing value, just ignore the new value.
-    if (timeStamps.hasOwnProperty(name))
+    if (timeStamps.hasOwnProperty(name)) {
       return;
+    }
 
     timeStamps[name] = value;
   },

@@ -32,7 +32,9 @@ function promise_reset_session(backups = {}) {
     for (let key of SessionFile.Paths.loadOrder) {
       if (backups.hasOwnProperty(key)) {
         let s = await OS.File.read(backups[key]);
-        await OS.File.writeAtomic(SessionFile.Paths[key], s, {compression: "lz4"});
+        await OS.File.writeAtomic(SessionFile.Paths[key], s, {
+          compression: "lz4",
+        });
       } else {
         await OS.File.remove(SessionFile.Paths[key]);
       }

@@ -6,8 +6,18 @@
 
 const { L10N } = require("../utils/l10n");
 
-loader.lazyRequireGetter(this, "copyString", "devtools/shared/platform/clipboard", true);
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "copyString",
+  "devtools/shared/platform/clipboard",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "showMenu",
+  "devtools/client/shared/components/menu/utils",
+  true
+);
 
 class PropertiesViewContextMenu {
   constructor(props) {

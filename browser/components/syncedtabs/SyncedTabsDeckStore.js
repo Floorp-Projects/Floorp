@@ -4,11 +4,11 @@
 
 "use strict";
 
-let { EventEmitter } = ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm");
+let { EventEmitter } = ChromeUtils.import(
+  "resource:///modules/syncedtabs/EventEmitter.jsm"
+);
 
-var EXPORTED_SYMBOLS = [
-  "SyncedTabsDeckStore",
-];
+var EXPORTED_SYMBOLS = ["SyncedTabsDeckStore"];
 
 /**
  * SyncedTabsDeckStore
@@ -27,9 +27,9 @@ function SyncedTabsDeckStore() {
 Object.assign(SyncedTabsDeckStore.prototype, EventEmitter.prototype, {
   _change(isUpdatable = false) {
     let panels = this._panels.map(panel => {
-      return {id: panel, selected: panel === this._selectedPanel};
+      return { id: panel, selected: panel === this._selectedPanel };
     });
-    this.emit("change", {panels, isUpdatable});
+    this.emit("change", { panels, isUpdatable });
   },
 
   /**

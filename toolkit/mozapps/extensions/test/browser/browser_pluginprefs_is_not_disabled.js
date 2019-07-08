@@ -11,15 +11,28 @@ function getTestPlugin(aPlugins) {
 }
 
 add_task(async function taskCheckPluginPrefsEnabled() {
-  const [gManagerWindow, plugins] = await Promise.all([open_manager(), AddonManager.getAddonsByTypes(["plugin"])]);
+  const [gManagerWindow, plugins] = await Promise.all([
+    open_manager(),
+    AddonManager.getAddonsByTypes(["plugin"]),
+  ]);
   const testPlugin = getTestPlugin(plugins);
   const testPluginTag = getTestPluginTag();
   Assert.ok(testPluginTag, "Test Plug-in tag should exist");
   const initialTestPluginState = testPluginTag.enabledState;
 
-  Assert.ok(gManagerWindow.gViewController.commands.cmd_showItemPreferences.isEnabled(testPlugin), "Test Plug-in preferences should be enabled");
+  Assert.ok(
+    gManagerWindow.gViewController.commands.cmd_showItemPreferences.isEnabled(
+      testPlugin
+    ),
+    "Test Plug-in preferences should be enabled"
+  );
   testPluginTag.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
-  Assert.ok(gManagerWindow.gViewController.commands.cmd_showItemPreferences.isEnabled(testPlugin), "Test Plug-in preferences should be enabled");
+  Assert.ok(
+    gManagerWindow.gViewController.commands.cmd_showItemPreferences.isEnabled(
+      testPlugin
+    ),
+    "Test Plug-in preferences should be enabled"
+  );
 
   testPluginTag.enabledState = initialTestPluginState;
   await close_manager(gManagerWindow);

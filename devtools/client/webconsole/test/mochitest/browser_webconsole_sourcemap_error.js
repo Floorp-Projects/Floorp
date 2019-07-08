@@ -7,11 +7,14 @@
 
 // Test that a missing source map is reported.
 
-const BASE = "http://example.com/browser/devtools/client/webconsole/" +
-             "test/mochitest/";
+const BASE =
+  "http://example.com/browser/devtools/client/webconsole/" + "test/mochitest/";
 
 add_task(async function() {
-  for (const test of ["test-sourcemap-error-01.html", "test-sourcemap-error-02.html"]) {
+  for (const test of [
+    "test-sourcemap-error-01.html",
+    "test-sourcemap-error-02.html",
+  ]) {
     const hud = await openNewTabAndConsole(BASE + test);
 
     const node = await waitFor(() => findMessage(hud, "here"));

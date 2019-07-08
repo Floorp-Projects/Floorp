@@ -78,7 +78,7 @@
 
 function run_test() {
   const isAndroid = AppConstants.platform == "android";
-  const certDBName =  isAndroid ? "cert9.db" : "cert8.db";
+  const certDBName = isAndroid ? "cert9.db" : "cert8.db";
   const keyDBName = isAndroid ? "key4.db" : "key3.db";
   let profile = do_get_profile();
   let certDBFile = do_get_file(`test_cert_isBuiltInRoot_reload/${certDBName}`);
@@ -86,8 +86,9 @@ function run_test() {
   let keyDBFile = do_get_file(`test_cert_isBuiltInRoot_reload/${keyDBName}`);
   keyDBFile.copyTo(profile, keyDBName);
 
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
 
   // This is a built-in root, but not one that was added to the preexisting
   // certificate DB.

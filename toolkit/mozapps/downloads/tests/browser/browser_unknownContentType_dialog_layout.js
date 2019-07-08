@@ -11,15 +11,19 @@
 const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
 
 let tests = [
-  { // This URL will trigger the simple UI, where only the Save an Cancel buttons are available
-    url: "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.pif",
+  {
+    // This URL will trigger the simple UI, where only the Save an Cancel buttons are available
+    url:
+      "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.pif",
     elements: {
       basicBox: { collapsed: false },
       normalBox: { collapsed: true },
     },
   },
-  { // This URL will trigger the full UI
-    url: "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt",
+  {
+    // This URL will trigger the full UI
+    url:
+      "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt",
     elements: {
       basicBox: { collapsed: true },
       normalBox: { collapsed: false },
@@ -38,12 +42,16 @@ add_task(async function test_unknownContentType_dialog_layout() {
 
         switch (aTopic) {
           case "domwindowopened":
-            win.addEventListener("load", function onLoad(event) {
-              // Let the dialog initialize
-              SimpleTest.executeSoon(function() {
-                UCTObserver.opened.resolve(win);
-              });
-            }, {once: true});
+            win.addEventListener(
+              "load",
+              function onLoad(event) {
+                // Let the dialog initialize
+                SimpleTest.executeSoon(function() {
+                  UCTObserver.opened.resolve(win);
+                });
+              },
+              { once: true }
+            );
             break;
 
           case "domwindowclosed":
@@ -56,27 +64,37 @@ add_task(async function test_unknownContentType_dialog_layout() {
     };
 
     Services.ww.registerNotification(UCTObserver);
-    await BrowserTestUtils.withNewTab({
-      gBrowser,
-      url: test.url,
-    }, async function() {
-      let uctWindow = await UCTObserver.opened.promise;
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: test.url,
+      },
+      async function() {
+        let uctWindow = await UCTObserver.opened.promise;
 
-      for (let [id, props] of Object.entries(test.elements)) {
-        let elem = uctWindow.dialog.dialogElement(id);
-        for (let [prop, value] of Object.entries(props)) {
-          SimpleTest.is(elem[prop], value,
-             "Element with id " + id + " has property " +
-             prop + " set to " + value);
+        for (let [id, props] of Object.entries(test.elements)) {
+          let elem = uctWindow.dialog.dialogElement(id);
+          for (let [prop, value] of Object.entries(props)) {
+            SimpleTest.is(
+              elem[prop],
+              value,
+              "Element with id " +
+                id +
+                " has property " +
+                prop +
+                " set to " +
+                value
+            );
+          }
         }
-      }
-      let focusOnDialog = SimpleTest.promiseFocus(uctWindow);
-      uctWindow.focus();
-      await focusOnDialog;
+        let focusOnDialog = SimpleTest.promiseFocus(uctWindow);
+        uctWindow.focus();
+        await focusOnDialog;
 
-      uctWindow.document.documentElement.cancelDialog();
-      uctWindow = null;
-      Services.ww.unregisterNotification(UCTObserver);
-    });
+        uctWindow.document.documentElement.cancelDialog();
+        uctWindow = null;
+        Services.ww.unregisterNotification(UCTObserver);
+      }
+    );
   }
 });

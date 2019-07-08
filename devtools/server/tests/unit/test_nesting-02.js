@@ -15,17 +15,20 @@ function run_test() {
   addTestGlobal("test-nesting");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(
-      gClient, "test-nesting",
-      function(response, targetFront, threadClient) {
-        // Reach over the protocol connection and get a reference to the thread
-        // actor.
-        // TODO: rewrite tests so we don't do this kind of reaching anymore..
-        gThreadActor =
-          gClient._transport._serverConnection.getActor(threadClient.actorID);
+    attachTestTabAndResume(gClient, "test-nesting", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      // Reach over the protocol connection and get a reference to the thread
+      // actor.
+      // TODO: rewrite tests so we don't do this kind of reaching anymore..
+      gThreadActor = gClient._transport._serverConnection.getActor(
+        threadClient.actorID
+      );
 
-        test_nesting();
-      });
+      test_nesting();
+    });
   });
   do_test_pending();
 }

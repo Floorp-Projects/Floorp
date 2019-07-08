@@ -36,5 +36,8 @@ add_task(async function() {
   });
 
   await waitFor(() => !findMessage(hud, "hello world"));
-  ok(findMessage(hud, "Navigated to"), "The navigation marker is still visible");
+  ok(
+    findMessage(hud, "Navigated to"),
+    "The navigation marker is still visible"
+  );
 });

@@ -6,16 +6,18 @@
 
 // Get history services
 try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+    Ci.nsINavHistoryService
+  );
 } catch (ex) {
   do_throw("Could not get history services\n");
 }
 
 // Get tagging service
 try {
-  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-                getService(Ci.nsITaggingService);
+  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].getService(
+    Ci.nsITaggingService
+  );
 } catch (ex) {
   do_throw("Could not get tagging service\n");
 }

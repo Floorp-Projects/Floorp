@@ -8,7 +8,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   const pseudo = await getNodeFront("#pseudo", inspector);
 
@@ -39,6 +39,9 @@ add_task(async function() {
   ok(!child.isAnonymous, "<input type=file> is not anonymous");
 
   const grandchildren = await inspector.walker.children(child);
-  is(grandchildren.nodes.length, 0,
-    "No native children returned from walker for <input type=file> by default");
+  is(
+    grandchildren.nodes.length,
+    0,
+    "No native children returned from walker for <input type=file> by default"
+  );
 });

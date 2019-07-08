@@ -40,38 +40,8 @@ module.exports = {
       "requireReturnDescription": false,
     }],
 
-    // Forbid spaces inside the square brackets of array literals.
-    "array-bracket-spacing": ["error", "never"],
-
-    // Forbid spaces inside the curly brackets of object literals.
-    "object-curly-spacing": ["error", "never"],
-
-    // No space padding in parentheses
-    "space-in-parens": ["error", "never"],
-
     // Functions are not required to consistently return something or nothing
     "consistent-return": "off",
-
-    // Require braces around blocks that start a new line
-    "curly": ["error", "all"],
-
-    // Two space indent
-    "indent": [
-      "error", 2,
-      {
-        "ArrayExpression": "first",
-        "CallExpression": {"arguments": "first"},
-        "FunctionDeclaration": {"parameters": "first"},
-        "FunctionExpression": {"parameters": "first"},
-        "MemberExpression": "off",
-        "ObjectExpression": "first",
-        "SwitchCase": 1,
-        "ignoredNodes": ["ConditionalExpression"],
-      },
-    ],
-
-    // Always require parenthesis for new calls
-    "new-parens": "error",
 
     // Disallow empty statements. This will report an error for:
     // try { something(); } catch (e) {}
@@ -79,14 +49,6 @@ module.exports = {
     // try { something(); } catch (e) { /* Silencing the error because ...*/ }
     // which is a valid use case.
     "no-empty": "error",
-
-    // No mixing different operators without parens
-    "no-mixed-operators": ["error", {"groups": [["&&", "||"], ["==", "!=", "===", "!==", ">", ">=", "<", "<="], ["in", "instanceof"]]}],
-
-    // Disallow use of multiple spaces (sometimes used to align const values,
-    // array or object items, etc.). It's hard to maintain and doesn't add that
-    // much benefit.
-    "no-multi-spaces": "error",
 
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
@@ -98,12 +60,6 @@ module.exports = {
 
     // No using variables before defined
     "no-use-before-define": "error",
-
-    // Never use spaces before function parentheses
-    "space-before-function-paren": ["error", {"anonymous": "never", "named": "never"}],
-
-    // ++ and -- should not need spacing
-    "space-unary-ops": ["error", {"nonwords": false, "words": true, "overrides": {"typeof": false}}],
 
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
@@ -120,9 +76,6 @@ module.exports = {
     // add a bogus default when you know all possible cases are handled.
     "default-case": "off",
 
-    // Enforce dots on the next line with property name.
-    "dot-location": ["error", "property"],
-
     // Allow using == instead of ===, in the interest of landing something since
     // the devtools codebase is split on convention here.
     "eqeqeq": "off",
@@ -136,10 +89,6 @@ module.exports = {
 
     // Allow use of function declarations and expressions.
     "func-style": "off",
-
-    // Maximum length of a line.
-    // Disabled because we exceed this in too many places.
-    "max-len": [0, 80],
 
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 4],
@@ -174,14 +123,8 @@ module.exports = {
     // Disallow adding to native types
     "no-extend-native": "error",
 
-    // Allow unnecessary parentheses, as they may make the code more readable.
-    "no-extra-parens": "off",
-
     // Disallow fallthrough of case statements, except if there is a comment.
     "no-fallthrough": "error",
-
-    // Allow the use of leading or trailing decimal points in numeric literals.
-    "no-floating-decimal": "off",
 
     // Allow comments inline after code.
     "no-inline-comments": "off",
@@ -191,9 +134,6 @@ module.exports = {
 
     // Disallow use of multiline strings (use template strings instead).
     "no-multi-str": "error",
-
-    // Disallow multiple empty lines.
-    "no-multiple-empty-lines": [1, {"max": 2}],
 
     // Allow reassignment of function parameters.
     "no-param-reassign": "off",
@@ -250,34 +190,18 @@ module.exports = {
     // Allow more than one variable declaration per function.
     "one-var": "off",
 
-    // Don't require quotes around object literal property names.
-    "quote-props": "off",
-
     // Require use of the second argument for parseInt().
     "radix": "error",
-
-    // Enforce spacing after semicolons.
-    "semi-spacing": ["error", {"before": false, "after": true}],
 
     // Don't require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": "off",
-
-    // Require a space immediately following the // in a line comment.
-    "spaced-comment": ["error", "always"],
 
     // Require "use strict" to be defined globally in the script.
     "strict": ["error", "global"],
 
     // Allow vars to be declared anywhere in the scope.
     "vars-on-top": "off",
-
-    // Don't require immediate function invocation to be wrapped in parentheses.
-    "wrap-iife": "off",
-
-    // Don't require regex literals to be wrapped in parentheses (which
-    // supposedly prevent them from being mistaken for division operators).
-    "wrap-regex": "off",
 
     // Disallow Yoda conditions (where literal value comes first).
     "yoda": "error",

@@ -17,8 +17,13 @@ add_task(async function() {
   for (const header of headers) {
     const buttonText = header.querySelector(".button-text").textContent;
     const tooltip = header.getAttribute("title");
-    is(buttonText, tooltip,
-       "The " + header.id + " header has the button text in its 'title' attribute.");
+    is(
+      buttonText,
+      tooltip,
+      "The " +
+        header.id +
+        " header has the button text in its 'title' attribute."
+    );
   }
 
   await teardown(monitor);

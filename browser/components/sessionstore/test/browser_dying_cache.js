@@ -12,7 +12,9 @@ add_task(async function test() {
 
   // Load some URL in the current tab.
   let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots", { flags });
+  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots", {
+    flags,
+  });
   await promiseBrowserLoaded(win.gBrowser.selectedBrowser);
 
   // Open a second tab and close the first one.
@@ -36,21 +38,33 @@ add_task(async function test() {
   checkWindowState(win);
 
   // Make sure we're not allowed to modify state data.
-  Assert.throws(() => ss.setWindowState(win, {}),
+  Assert.throws(
+    () => ss.setWindowState(win, {}),
     /Window is not tracked/,
-    "we're not allowed to modify state data anymore");
-  Assert.throws(() => ss.setCustomWindowValue(win, "foo", "baz"),
+    "we're not allowed to modify state data anymore"
+  );
+  Assert.throws(
+    () => ss.setCustomWindowValue(win, "foo", "baz"),
     /Window is not tracked/,
-    "we're not allowed to modify state data anymore");
+    "we're not allowed to modify state data anymore"
+  );
 });
 
 function checkWindowState(window) {
-  let {windows: [{tabs}]} = JSON.parse(ss.getWindowState(window));
+  let {
+    windows: [{ tabs }],
+  } = JSON.parse(ss.getWindowState(window));
   is(tabs.length, 1, "the window has a single tab");
   is(tabs[0].entries[0].url, "about:mozilla", "the tab is about:mozilla");
 
   is(ss.getClosedTabCount(window), 1, "the window has one closed tab");
-  let [{state: {entries: [{url}]}}] = JSON.parse(ss.getClosedTabData(window));
+  let [
+    {
+      state: {
+        entries: [{ url }],
+      },
+    },
+  ] = JSON.parse(ss.getClosedTabData(window));
   is(url, "about:robots", "the closed tab is about:robots");
 
   is(ss.getCustomWindowValue(window, "foo"), "bar", "correct extData value");

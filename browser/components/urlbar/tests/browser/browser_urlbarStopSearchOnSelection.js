@@ -25,7 +25,8 @@ add_task(async function init() {
   });
   // Add a test search engine that returns suggestions on a delay.
   let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.moveEngine(engine, 0);
   await Services.search.setDefault(engine);
@@ -49,8 +50,10 @@ add_task(async function mainTest() {
       // and the two suggestions.
       await promiseAutocompleteResultPopup("amp");
       await TestUtils.waitForCondition(() => {
-        return UrlbarTestUtils.getResultCount(window) ==
-               2 + TEST_ENGINE_NUM_EXPECTED_RESULTS;
+        return (
+          UrlbarTestUtils.getResultCount(window) ==
+          2 + TEST_ENGINE_NUM_EXPECTED_RESULTS
+        );
       });
 
       // Type a character to start a new search.  The new search should still
@@ -78,14 +81,22 @@ add_task(async function mainTest() {
 
       // To make absolutely sure the suggestions don't appear after the search
       // completes, wait a bit.
-      await new Promise(r => setTimeout(r, 1 + TEST_ENGINE_SUGGESTIONS_TIMEOUT));
+      await new Promise(r =>
+        setTimeout(r, 1 + TEST_ENGINE_SUGGESTIONS_TIMEOUT)
+      );
 
       // The heuristic result should reflect the new search, "ampl".
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-      Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
-        "Should have the correct result type");
-      Assert.equal(result.searchParams.query, "ampl",
-        "Should have the correct query");
+      Assert.equal(
+        result.type,
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        "Should have the correct result type"
+      );
+      Assert.equal(
+        result.searchParams.query,
+        "ampl",
+        "Should have the correct query"
+      );
 
       // None of the other results should be "ampl" suggestions, i.e., amplfoo
       // and amplbar should not be in the results.
@@ -106,7 +117,7 @@ add_task(async function mainTest() {
         result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
         Assert.ok(
           result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
-          !["amplfoo", "amplbar"].includes(result.searchParams.suggestion),
+            !["amplfoo", "amplbar"].includes(result.searchParams.suggestion),
           "Suggestions should not contain the typed l char"
         );
       }

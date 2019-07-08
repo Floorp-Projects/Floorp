@@ -2,23 +2,26 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "Bookmarks",
-                               "resource://gre/modules/Bookmarks.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Bookmarks",
+  "resource://gre/modules/Bookmarks.jsm"
+);
 
-var {
-  DefaultMap,
-  ExtensionError,
-} = ExtensionUtils;
+var { DefaultMap, ExtensionError } = ExtensionUtils;
 
-var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
-var {
-  IconDetails,
-} = ExtensionParent;
+var { IconDetails } = ExtensionParent;
 
 const ACTION_MENU_TOP_LEVEL_LIMIT = 6;
 
@@ -61,7 +64,10 @@ var gMenuBuilder = {
     }
     this.afterBuildingMenu(contextData);
 
-    if (contextData.webExtContextData && !contextData.webExtContextData.showDefaults) {
+    if (
+      contextData.webExtContextData &&
+      !contextData.webExtContextData.showDefaults
+    ) {
       // Wait until nsContextMenu.js has toggled the visibility of the default
       // menu items before hiding the default items.
       Promise.resolve().then(() => this.hideDefaultMenuItems());
@@ -69,7 +75,7 @@ var gMenuBuilder = {
   },
 
   maybeOverrideContextData(contextData) {
-    let {webExtContextData} = contextData;
+    let { webExtContextData } = contextData;
     if (!webExtContextData || !webExtContextData.overrideContext) {
       return contextData;
     }
@@ -77,7 +83,9 @@ var gMenuBuilder = {
       menu: contextData.menu,
       // eslint-disable-next-line no-use-before-define
       originalViewType: getContextViewType(contextData),
-      originalViewUrl: contextData.inFrame ? contextData.frameUrl : contextData.pageUrl,
+      originalViewUrl: contextData.inFrame
+        ? contextData.frameUrl
+        : contextData.pageUrl,
       webExtContextData,
     };
     if (webExtContextData.overrideContext === "bookmark") {
@@ -97,15 +105,22 @@ var gMenuBuilder = {
         onTab: true,
       };
     }
-    throw new Error(`Unexpected overrideContext: ${webExtContextData.overrideContext}`);
+    throw new Error(
+      `Unexpected overrideContext: ${webExtContextData.overrideContext}`
+    );
   },
 
   canAccessContext(extension, contextData) {
     if (!extension.privateBrowsingAllowed) {
       let nativeTab = contextData.tab;
-      if (nativeTab && PrivateBrowsingUtils.isBrowserPrivate(nativeTab.linkedBrowser)) {
+      if (
+        nativeTab &&
+        PrivateBrowsingUtils.isBrowserPrivate(nativeTab.linkedBrowser)
+      ) {
         return false;
-      } else if (PrivateBrowsingUtils.isWindowPrivate(contextData.menu.ownerGlobal)) {
+      } else if (
+        PrivateBrowsingUtils.isWindowPrivate(contextData.menu.ownerGlobal)
+      ) {
         return false;
       }
     }
@@ -121,12 +136,19 @@ var gMenuBuilder = {
       if (contextData.extension.id !== root.extension.id) {
         return;
       }
-      rootElements = this.buildTopLevelElements(root, contextData, ACTION_MENU_TOP_LEVEL_LIMIT, false);
+      rootElements = this.buildTopLevelElements(
+        root,
+        contextData,
+        ACTION_MENU_TOP_LEVEL_LIMIT,
+        false
+      );
 
       // Action menu items are prepended to the menu, followed by a separator.
       nextSibling = nextSibling || this.xulMenu.firstElementChild;
       if (rootElements.length && !this.itemsToCleanUp.has(nextSibling)) {
-        rootElements.push(this.xulMenu.ownerDocument.createXULElement("menuseparator"));
+        rootElements.push(
+          this.xulMenu.ownerDocument.createXULElement("menuseparator")
+        );
       }
     } else if (contextData.webExtContextData) {
       let {
@@ -135,11 +157,24 @@ var gMenuBuilder = {
         overrideContext,
       } = contextData.webExtContextData;
       if (extensionId === root.extension.id) {
-        rootElements = this.buildTopLevelElements(root, contextData, Infinity, false);
+        rootElements = this.buildTopLevelElements(
+          root,
+          contextData,
+          Infinity,
+          false
+        );
         // The extension menu should be rendered at the top, but after the navigation buttons.
-        nextSibling = nextSibling || this.xulMenu.querySelector(":scope > #context-sep-navigation + *");
-        if (rootElements.length && showDefaults && !this.itemsToCleanUp.has(nextSibling)) {
-          rootElements.push(this.xulMenu.ownerDocument.createXULElement("menuseparator"));
+        nextSibling =
+          nextSibling ||
+          this.xulMenu.querySelector(":scope > #context-sep-navigation + *");
+        if (
+          rootElements.length &&
+          showDefaults &&
+          !this.itemsToCleanUp.has(nextSibling)
+        ) {
+          rootElements.push(
+            this.xulMenu.ownerDocument.createXULElement("menuseparator")
+          );
         }
       } else if (!showDefaults && !overrideContext) {
         // When the default menu items should be hidden, menu items from other
@@ -150,10 +185,15 @@ var gMenuBuilder = {
     }
     if (!rootElements) {
       rootElements = this.buildTopLevelElements(root, contextData, 1, true);
-      if (rootElements.length && !this.itemsToCleanUp.has(this.xulMenu.lastElementChild)) {
+      if (
+        rootElements.length &&
+        !this.itemsToCleanUp.has(this.xulMenu.lastElementChild)
+      ) {
         // All extension menu items are appended at the end.
         // Prepend separator if this is the first extension menu item.
-        rootElements.unshift(this.xulMenu.ownerDocument.createXULElement("menuseparator"));
+        rootElements.unshift(
+          this.xulMenu.ownerDocument.createXULElement("menuseparator")
+        );
       }
     }
 
@@ -204,9 +244,13 @@ var gMenuBuilder = {
     let children = this.buildChildren(root, contextData);
 
     // TODO: Fix bug 1492969 and remove this whole if block.
-    if (children.length === 1 && maxCount === 1 && forceManifestIcons &&
-        AppConstants.platform === "linux" &&
-        children[0].getAttribute("type") === "checkbox") {
+    if (
+      children.length === 1 &&
+      maxCount === 1 &&
+      forceManifestIcons &&
+      AppConstants.platform === "linux" &&
+      children[0].getAttribute("type") === "checkbox"
+    ) {
       // Keep single checkbox items in the submenu on Linux since
       // the extension icon overlaps the checkbox otherwise.
       maxCount = 0;
@@ -224,7 +268,12 @@ var gMenuBuilder = {
       for (let rootElement of children) {
         // Display the extension icon on the root element.
         if (root.extension.manifest.icons) {
-          this.setMenuItemIcon(rootElement, root.extension, contextData, root.extension.manifest.icons);
+          this.setMenuItemIcon(
+            rootElement,
+            root.extension,
+            contextData,
+            root.extension.manifest.icons
+          );
         } else {
           this.removeMenuItemIcon(rootElement);
         }
@@ -235,18 +284,20 @@ var gMenuBuilder = {
 
   removeSeparatorIfNoTopLevelItems() {
     // Extension menu items always have have a non-empty ID.
-    let isNonExtensionSeparator =
-      item => item.nodeName === "menuseparator" && !item.id;
+    let isNonExtensionSeparator = item =>
+      item.nodeName === "menuseparator" && !item.id;
 
     // itemsToCleanUp contains all top-level menu items. A separator should
     // only be kept if it is next to an extension menu item.
-    let isExtensionMenuItemSibling =
-      item => item && this.itemsToCleanUp.has(item) && !isNonExtensionSeparator(item);
+    let isExtensionMenuItemSibling = item =>
+      item && this.itemsToCleanUp.has(item) && !isNonExtensionSeparator(item);
 
     for (let item of this.itemsToCleanUp) {
       if (isNonExtensionSeparator(item)) {
-        if (!isExtensionMenuItemSibling(item.previousElementSibling) &&
-            !isExtensionMenuItemSibling(item.nextElementSibling)) {
+        if (
+          !isExtensionMenuItemSibling(item.previousElementSibling) &&
+          !isExtensionMenuItemSibling(item.nextElementSibling)
+        ) {
           item.remove();
           this.itemsToCleanUp.delete(item);
         }
@@ -313,11 +364,14 @@ var gMenuBuilder = {
         if (codePointsToRemove) {
           let ellipsis = "\u2026";
           try {
-            ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
-                                                      Ci.nsIPrefLocalizedString).data;
-          } catch (e) { }
+            ellipsis = Services.prefs.getComplexValue(
+              "intl.ellipsis",
+              Ci.nsIPrefLocalizedString
+            ).data;
+          } catch (e) {}
           codePointsToRemove += 1;
-          selection = selectionArray.slice(0, -codePointsToRemove).join("") + ellipsis;
+          selection =
+            selectionArray.slice(0, -codePointsToRemove).join("") + ellipsis;
         }
 
         label = label.replace(/%s/g, selection);
@@ -355,63 +409,84 @@ var gMenuBuilder = {
 
     let button;
 
-    element.addEventListener("command", event => {
-      if (event.target !== event.currentTarget) {
-        return;
-      }
-      const wasChecked = item.checked;
-      if (item.type == "checkbox") {
-        item.checked = !item.checked;
-      } else if (item.type == "radio") {
-        // Deselect all radio items in the current radio group.
-        for (let child of item.parent.children) {
-          if (child.type == "radio" && child.groupName == item.groupName) {
-            child.checked = false;
-          }
+    element.addEventListener(
+      "command",
+      event => {
+        if (event.target !== event.currentTarget) {
+          return;
         }
-        // Select the clicked radio item.
-        item.checked = true;
-      }
+        const wasChecked = item.checked;
+        if (item.type == "checkbox") {
+          item.checked = !item.checked;
+        } else if (item.type == "radio") {
+          // Deselect all radio items in the current radio group.
+          for (let child of item.parent.children) {
+            if (child.type == "radio" && child.groupName == item.groupName) {
+              child.checked = false;
+            }
+          }
+          // Select the clicked radio item.
+          item.checked = true;
+        }
 
-      let {webExtContextData} = contextData;
-      if (contextData.tab &&
+        let { webExtContextData } = contextData;
+        if (
+          contextData.tab &&
           // If the menu context was overridden by the extension, do not grant
           // activeTab since the extension also controls the tabId.
-          (!webExtContextData || webExtContextData.extensionId !== item.extension.id)) {
-        item.tabManager.addActiveTabPermission(contextData.tab);
-      }
+          (!webExtContextData ||
+            webExtContextData.extensionId !== item.extension.id)
+        ) {
+          item.tabManager.addActiveTabPermission(contextData.tab);
+        }
 
-      let info = item.getClickInfo(contextData, wasChecked);
+        let info = item.getClickInfo(contextData, wasChecked);
 
-      const map = {shiftKey: "Shift", altKey: "Alt", metaKey: "Command", ctrlKey: "Ctrl"};
-      info.modifiers = Object.keys(map).filter(key => event[key]).map(key => map[key]);
-      if (event.ctrlKey && AppConstants.platform === "macosx") {
-        info.modifiers.push("MacCtrl");
-      }
+        const map = {
+          shiftKey: "Shift",
+          altKey: "Alt",
+          metaKey: "Command",
+          ctrlKey: "Ctrl",
+        };
+        info.modifiers = Object.keys(map)
+          .filter(key => event[key])
+          .map(key => map[key]);
+        if (event.ctrlKey && AppConstants.platform === "macosx") {
+          info.modifiers.push("MacCtrl");
+        }
 
-      info.button = button;
+        info.button = button;
 
-      // Allow menus to open various actions supported in webext prior
-      // to notifying onclicked.
-      let actionFor = {
-        _execute_page_action: global.pageActionFor,
-        _execute_browser_action: global.browserActionFor,
-        _execute_sidebar_action: global.sidebarActionFor,
-      }[item.command];
-      if (actionFor) {
-        let win = event.target.ownerGlobal;
-        actionFor(item.extension).triggerAction(win);
-      }
+        // Allow menus to open various actions supported in webext prior
+        // to notifying onclicked.
+        let actionFor = {
+          _execute_page_action: global.pageActionFor,
+          _execute_browser_action: global.browserActionFor,
+          _execute_sidebar_action: global.sidebarActionFor,
+        }[item.command];
+        if (actionFor) {
+          let win = event.target.ownerGlobal;
+          actionFor(item.extension).triggerAction(win);
+        }
 
-      item.extension.emit("webext-menu-menuitem-click", info, contextData.tab);
-    }, {once: true});
+        item.extension.emit(
+          "webext-menu-menuitem-click",
+          info,
+          contextData.tab
+        );
+      },
+      { once: true }
+    );
 
-    element.addEventListener("click", event => { // eslint-disable-line mozilla/balanced-listeners
-      if (event.target !== event.currentTarget ||
-          // Ignore menu items that are usually not clickeable,
-          // such as separators and parents of submenus and disabled items.
-          element.localName !== "menuitem" ||
-          element.disabled) {
+    // eslint-disable-next-line mozilla/balanced-listeners
+    element.addEventListener("click", event => {
+      if (
+        event.target !== event.currentTarget ||
+        // Ignore menu items that are usually not clickeable,
+        // such as separators and parents of submenus and disabled items.
+        element.localName !== "menuitem" ||
+        element.disabled
+      ) {
         return;
       }
 
@@ -434,8 +509,11 @@ var gMenuBuilder = {
   setMenuItemIcon(element, extension, contextData, icons) {
     let parentWindow = contextData.menu.ownerGlobal;
 
-    let {icon} = IconDetails.getPreferredIcon(icons, extension,
-                                              16 * parentWindow.devicePixelRatio);
+    let { icon } = IconDetails.getPreferredIcon(
+      icons,
+      extension,
+      16 * parentWindow.devicePixelRatio
+    );
 
     // The extension icons in the manifest are not pre-resolved, since
     // they're sometimes used by the add-on manager when the extension is
@@ -458,7 +536,7 @@ var gMenuBuilder = {
   },
 
   rebuildMenu(extension) {
-    let {contextData} = this;
+    let { contextData } = this;
     if (!contextData) {
       // This happens if the menu is not visible.
       return;
@@ -485,7 +563,7 @@ var gMenuBuilder = {
 
   // This should be called once, after constructing the top-level menus, if any.
   afterBuildingMenu(contextData) {
-    let dispatchOnShownEvent = (extension) => {
+    let dispatchOnShownEvent = extension => {
       if (!this.canAccessContext(extension, contextData)) {
         return;
       }
@@ -576,7 +654,11 @@ const getMenuContexts = contextData => {
   }
 
   // New non-content contexts supported in Firefox are not part of "all".
-  if (!contextData.onBookmark && !contextData.onTab && !contextData.inToolsMenu) {
+  if (
+    !contextData.onBookmark &&
+    !contextData.onTab &&
+    !contextData.inToolsMenu
+  ) {
     contexts.add("all");
   }
 
@@ -587,8 +669,10 @@ function getContextViewType(contextData) {
   if ("originalViewType" in contextData) {
     return contextData.originalViewType;
   }
-  if (contextData.webExtBrowserType === "popup" ||
-      contextData.webExtBrowserType === "sidebar") {
+  if (
+    contextData.webExtBrowserType === "popup" ||
+    contextData.webExtBrowserType === "sidebar"
+  ) {
     return contextData.webExtBrowserType;
   }
   if (contextData.tab && contextData.menu.id === "contentAreaContextMenu") {
@@ -679,9 +763,12 @@ MenuItem.prototype = {
     }
 
     if (createProperties.documentUrlPatterns != null) {
-      this.documentUrlMatchPattern = new MatchPatternSet(this.documentUrlPatterns, {
-        restrictSchemes: this.extension.restrictSchemes,
-      });
+      this.documentUrlMatchPattern = new MatchPatternSet(
+        this.documentUrlPatterns,
+        {
+          restrictSchemes: this.extension.restrictSchemes,
+        }
+      );
     }
 
     if (createProperties.targetUrlPatterns != null) {
@@ -742,11 +829,15 @@ MenuItem.prototype = {
     }
     let menuMap = gMenuMap.get(this.extension);
     if (!menuMap.has(parentId)) {
-      throw new ExtensionError(`Could not find any MenuItem with id: ${parentId}`);
+      throw new ExtensionError(
+        `Could not find any MenuItem with id: ${parentId}`
+      );
     }
     for (let item = menuMap.get(parentId); item; item = item.parent) {
       if (item === this) {
-        throw new ExtensionError("MenuItem cannot be an ancestor (or self) of its new parent.");
+        throw new ExtensionError(
+          "MenuItem cannot be an ancestor (or self) of its new parent."
+        );
       }
     }
   },
@@ -790,9 +881,11 @@ MenuItem.prototype = {
   get root() {
     let extension = this.extension;
     if (!gRootItems.has(extension)) {
-      let root = new MenuItem(extension,
-                              {title: extension.name},
-                              /* isRoot = */ true);
+      let root = new MenuItem(
+        extension,
+        { title: extension.name },
+        /* isRoot = */ true
+      );
       gRootItems.set(extension, root);
     }
 
@@ -825,7 +918,7 @@ MenuItem.prototype = {
 
     addMenuEventInfo(info, contextData, this.extension, true);
 
-    if ((this.type === "checkbox") || (this.type === "radio")) {
+    if (this.type === "checkbox" || this.type === "radio") {
       info.checked = this.checked;
       info.wasChecked = wasChecked;
     }
@@ -842,7 +935,10 @@ MenuItem.prototype = {
       return false;
     }
 
-    if (this.viewTypes && !this.viewTypes.includes(getContextViewType(contextData))) {
+    if (
+      this.viewTypes &&
+      !this.viewTypes.includes(getContextViewType(contextData))
+    ) {
       return false;
     }
 
@@ -853,7 +949,9 @@ MenuItem.prototype = {
     // changes the context, contextData.pageUrl does not reflect that URL any
     // more, so use contextData.originalViewUrl instead.
     if (docPattern && this.viewTypes && contextData.originalViewUrl) {
-      if (!docPattern.matches(Services.io.newURI(contextData.originalViewUrl))) {
+      if (
+        !docPattern.matches(Services.io.newURI(contextData.originalViewUrl))
+      ) {
         return false;
       }
       docPattern = null; // Null it so that it won't be used with pageURI below.
@@ -863,7 +961,9 @@ MenuItem.prototype = {
       return this.extension.hasPermission("bookmarks");
     }
 
-    let pageURI = Services.io.newURI(contextData[contextData.inFrame ? "frameUrl" : "pageUrl"]);
+    let pageURI = Services.io.newURI(
+      contextData[contextData.inFrame ? "frameUrl" : "pageUrl"]
+    );
     if (docPattern && !docPattern.matches(pageURI)) {
       return false;
     }
@@ -878,7 +978,11 @@ MenuItem.prototype = {
       if (contextData.onLink) {
         targetUrls.push(contextData.linkUrl);
       }
-      if (!targetUrls.some(targetUrl => targetPattern.matches(Services.io.newURI(targetUrl)))) {
+      if (
+        !targetUrls.some(targetUrl =>
+          targetPattern.matches(Services.io.newURI(targetUrl))
+        )
+      ) {
         return false;
       }
     }
@@ -909,7 +1013,7 @@ const libraryTracker = {
           this.notify(window);
         }
       } else {
-        window.addEventListener("load", this, {once: true});
+        window.addEventListener("load", this, { once: true });
       }
     }
   },
@@ -934,7 +1038,7 @@ const libraryTracker = {
   // Defer actually doing anything until the window's loaded, though.
   observe(window, topic) {
     if (topic === "domwindowopened") {
-      window.addEventListener("load", this, {once: true});
+      window.addEventListener("load", this, { once: true });
     }
   },
 
@@ -989,13 +1093,18 @@ const menuTracker = {
       menu.addEventListener("popupshowing", menuTracker);
     }
 
-    const sidebarHeader = window.document.getElementById("sidebar-switcher-target");
+    const sidebarHeader = window.document.getElementById(
+      "sidebar-switcher-target"
+    );
     sidebarHeader.addEventListener("SidebarShown", menuTracker.onSidebarShown);
 
     await window.SidebarUI.promiseInitialized;
 
-    if (!window.closed && window.SidebarUI.currentID === "viewBookmarksSidebar") {
-      menuTracker.onSidebarShown({currentTarget: sidebarHeader});
+    if (
+      !window.closed &&
+      window.SidebarUI.currentID === "viewBookmarksSidebar"
+    ) {
+      menuTracker.onSidebarShown({ currentTarget: sidebarHeader });
     }
   },
 
@@ -1005,13 +1114,17 @@ const menuTracker = {
       menu.removeEventListener("popupshowing", this);
     }
 
-    const sidebarHeader = window.document.getElementById("sidebar-switcher-target");
+    const sidebarHeader = window.document.getElementById(
+      "sidebar-switcher-target"
+    );
     sidebarHeader.removeEventListener("SidebarShown", this.onSidebarShown);
 
     if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
       let sidebarBrowser = window.SidebarUI.browser;
       sidebarBrowser.removeEventListener("load", this.onSidebarShown);
-      const menu = sidebarBrowser.contentDocument.getElementById("placesContext");
+      const menu = sidebarBrowser.contentDocument.getElementById(
+        "placesContext"
+      );
       menu.removeEventListener("popupshowing", this.onBookmarksContextMenu);
     }
   },
@@ -1026,10 +1139,14 @@ const menuTracker = {
         // SidebarUI.currentID may be updated before the bookmark sidebar's
         // document has finished loading. This sometimes happens when the
         // sidebar is automatically shown when a new window is opened.
-        sidebarBrowser.addEventListener("load", menuTracker.onSidebarShown, {once: true});
+        sidebarBrowser.addEventListener("load", menuTracker.onSidebarShown, {
+          once: true,
+        });
         return;
       }
-      const menu = sidebarBrowser.contentDocument.getElementById("placesContext");
+      const menu = sidebarBrowser.contentDocument.getElementById(
+        "placesContext"
+      );
       menu.addEventListener("popupshowing", menuTracker.onBookmarksContextMenu);
     }
   },
@@ -1041,7 +1158,10 @@ const menuTracker = {
 
   cleanupLibrary(window) {
     const menu = window.document.getElementById("placesContext");
-    menu.removeEventListener("popupshowing", menuTracker.onBookmarksContextMenu);
+    menu.removeEventListener(
+      "popupshowing",
+      menuTracker.onBookmarksContextMenu
+    );
   },
 
   handleEvent(event) {
@@ -1062,7 +1182,7 @@ const menuTracker = {
     if (menu.id === "menu_ToolsPopup") {
       const tab = tabTracker.activeTab;
       const pageUrl = tab.linkedBrowser.currentURI.spec;
-      gMenuBuilder.build({menu, tab, pageUrl, inToolsMenu: true});
+      gMenuBuilder.build({ menu, tab, pageUrl, inToolsMenu: true });
     }
     if (menu.id === "tabContextMenu") {
       let trigger = menu.triggerNode;
@@ -1071,7 +1191,7 @@ const menuTracker = {
       }
       const tab = trigger || tabTracker.activeTab;
       const pageUrl = tab.linkedBrowser.currentURI.spec;
-      gMenuBuilder.build({menu, tab, pageUrl, onTab: true});
+      gMenuBuilder.build({ menu, tab, pageUrl, onTab: true });
     }
   },
 
@@ -1104,7 +1224,7 @@ this.menusInternal = class extends ExtensionAPI {
   }
 
   onShutdown() {
-    let {extension} = this;
+    let { extension } = this;
 
     if (gMenuMap.has(extension)) {
       gMenuMap.delete(extension);
@@ -1118,7 +1238,7 @@ this.menusInternal = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
 
     const menus = {
       refresh() {
@@ -1140,12 +1260,20 @@ this.menusInternal = class extends ExtensionAPI {
             // The menus.onShown event is fired before the user has consciously
             // interacted with an extension, so we require permissions before
             // exposing sensitive contextual data.
-            let contextUrl = contextData.inFrame ? contextData.frameUrl : contextData.pageUrl;
+            let contextUrl = contextData.inFrame
+              ? contextData.frameUrl
+              : contextData.pageUrl;
             let includeSensitiveData =
-              (nativeTab && extension.tabManager.hasActiveTabPermission(nativeTab)) ||
+              (nativeTab &&
+                extension.tabManager.hasActiveTabPermission(nativeTab)) ||
               (contextUrl && extension.whiteListedHosts.matches(contextUrl));
 
-            addMenuEventInfo(info, contextData, extension, includeSensitiveData);
+            addMenuEventInfo(
+              info,
+              contextData,
+              extension,
+              includeSensitiveData
+            );
 
             let tab = nativeTab && extension.tabManager.convert(nativeTab);
             fire.sync(info, tab);
@@ -1211,10 +1339,11 @@ this.menusInternal = class extends ExtensionAPI {
           name: "menusInternal.onClicked",
           register: fire => {
             let listener = (event, info, nativeTab) => {
-              let {linkedBrowser} = nativeTab || tabTracker.activeTab;
+              let { linkedBrowser } = nativeTab || tabTracker.activeTab;
               let tab = nativeTab && extension.tabManager.convert(nativeTab);
-              context.withPendingBrowser(linkedBrowser,
-                                         () => fire.sync(info, tab));
+              context.withPendingBrowser(linkedBrowser, () =>
+                fire.sync(info, tab)
+              );
             };
 
             extension.on("webext-menu-menuitem-click", listener);

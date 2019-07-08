@@ -37,8 +37,9 @@ function cbHandleError(callback, nsresult) {
 }
 
 function safeCallback(callbackObj, methodName, args) {
-  if (!callbackObj || typeof(callbackObj[methodName]) != "function")
+  if (!callbackObj || typeof callbackObj[methodName] != "function") {
     return;
+  }
   try {
     callbackObj[methodName].apply(callbackObj, args);
   } catch (err) {

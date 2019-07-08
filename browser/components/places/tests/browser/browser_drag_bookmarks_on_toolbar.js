@@ -32,26 +32,42 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
     gBookmarksToolbar.addEventListener("dragstart", function listener(event) {
       info("A dragstart event has been trapped.");
       var dataTransfer = event.dataTransfer;
-      is(dataTransfer.mozItemCount, aExpectedDragData.length,
-         "Number of dragged items should be the same.");
+      is(
+        dataTransfer.mozItemCount,
+        aExpectedDragData.length,
+        "Number of dragged items should be the same."
+      );
 
       for (var t = 0; t < dataTransfer.mozItemCount; t++) {
         var types = dataTransfer.mozTypesAt(t);
         var expecteditem = aExpectedDragData[t];
-        is(types.length, expecteditem.length,
-          "Number of flavors for item " + t + " should be the same.");
+        is(
+          types.length,
+          expecteditem.length,
+          "Number of flavors for item " + t + " should be the same."
+        );
 
         for (var f = 0; f < types.length; f++) {
-          is(types[f], expecteditem[f].substring(0, types[f].length),
-             "Flavor " + types[f] + " for item " + t + " should be the same.");
-          is(dataTransfer.mozGetDataAt(types[f], t),
-             expecteditem[f].substring(types[f].length + 2),
-             "Contents for item " + t + " with flavor " + types[f] + " should be the same.");
+          is(
+            types[f],
+            expecteditem[f].substring(0, types[f].length),
+            "Flavor " + types[f] + " for item " + t + " should be the same."
+          );
+          is(
+            dataTransfer.mozGetDataAt(types[f], t),
+            expecteditem[f].substring(types[f].length + 2),
+            "Contents for item " +
+              t +
+              " with flavor " +
+              types[f] +
+              " should be the same."
+          );
         }
       }
 
-      if (!aExpectedDragData.length)
+      if (!aExpectedDragData.length) {
         ok(event.defaultPrevented, "Drag has been canceled.");
+      }
 
       event.preventDefault();
       event.stopPropagation();
@@ -61,20 +77,25 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
       // This is likely to cause a click event, and, in case we are dragging a
       // bookmark, an unwanted page visit.  Prevent the click event.
       aElement.addEventListener("click", prevent);
-      EventUtils.synthesizeMouse(aElement,
-                                 startingPoint.x + xIncrement * 9,
-                                 startingPoint.y + yIncrement * 9,
-                                 { type: "mouseup" });
+      EventUtils.synthesizeMouse(
+        aElement,
+        startingPoint.x + xIncrement * 9,
+        startingPoint.y + yIncrement * 9,
+        { type: "mouseup" }
+      );
       aElement.removeEventListener("click", prevent);
 
       // Cleanup eventually opened menus.
-      if (aElement.localName == "menu" && aElement.open)
+      if (aElement.localName == "menu" && aElement.open) {
         aElement.open = false;
+      }
       resolve();
     });
   });
 
-  var prevent = function(aEvent) { aEvent.preventDefault(); };
+  var prevent = function(aEvent) {
+    aEvent.preventDefault();
+  };
 
   var xIncrement = 0;
   var yIncrement = 0;
@@ -95,21 +116,26 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
   }
 
   var rect = aElement.getBoundingClientRect();
-  var startingPoint = { x: (rect.right - rect.left) / 2,
-                        y: (rect.bottom - rect.top) / 2 };
+  var startingPoint = {
+    x: (rect.right - rect.left) / 2,
+    y: (rect.bottom - rect.top) / 2,
+  };
 
-  EventUtils.synthesizeMouse(aElement,
-                             startingPoint.x,
-                             startingPoint.y,
-                             { type: "mousedown" });
-  EventUtils.synthesizeMouse(aElement,
-                             startingPoint.x + xIncrement * 1,
-                             startingPoint.y + yIncrement * 1,
-                             { type: "mousemove" });
-  EventUtils.synthesizeMouse(aElement,
-                             startingPoint.x + xIncrement * 9,
-                             startingPoint.y + yIncrement * 9,
-                             { type: "mousemove" });
+  EventUtils.synthesizeMouse(aElement, startingPoint.x, startingPoint.y, {
+    type: "mousedown",
+  });
+  EventUtils.synthesizeMouse(
+    aElement,
+    startingPoint.x + xIncrement * 1,
+    startingPoint.y + yIncrement * 1,
+    { type: "mousemove" }
+  );
+  EventUtils.synthesizeMouse(
+    aElement,
+    startingPoint.x + xIncrement * 9,
+    startingPoint.y + yIncrement * 9,
+    { type: "mousemove" }
+  );
 
   return promise;
 }
@@ -126,14 +152,15 @@ function getToolbarNodeForItemId(itemGuid) {
 
 function getExpectedDataForPlacesNode(aNode) {
   var wrappedNode = [];
-  var flavors = ["text/x-moz-place",
-                 "text/x-moz-url",
-                 "text/plain",
-                 "text/html"];
+  var flavors = [
+    "text/x-moz-place",
+    "text/x-moz-url",
+    "text/plain",
+    "text/html",
+  ];
 
   flavors.forEach(function(aFlavor) {
-    var wrappedFlavor = aFlavor + ": " +
-                        PlacesUtils.wrapNode(aNode, aFlavor);
+    var wrappedFlavor = aFlavor + ": " + PlacesUtils.wrapNode(aNode, aFlavor);
     wrappedNode.push(wrappedFlavor);
   });
 
@@ -165,14 +192,22 @@ add_task(async function test_drag_folder_on_toolbar() {
   var element = getToolbarNodeForItemId(folder.guid);
   isnot(element, null, "Found node on toolbar");
 
-  isnot(element._placesNode, null, "Toolbar node has an associated Places node.");
+  isnot(
+    element._placesNode,
+    null,
+    "Toolbar node has an associated Places node."
+  );
   var expectedData = getExpectedDataForPlacesNode(element._placesNode);
 
   info("Dragging left");
   await synthesizeDragWithDirection(element, expectedData, dragDirections.LEFT);
 
   info("Dragging right");
-  await synthesizeDragWithDirection(element, expectedData, dragDirections.RIGHT);
+  await synthesizeDragWithDirection(
+    element,
+    expectedData,
+    dragDirections.RIGHT
+  );
 
   info("Dragging up");
   await synthesizeDragWithDirection(element, expectedData, dragDirections.UP);
@@ -193,14 +228,22 @@ add_task(async function test_drag_bookmark_on_toolbar() {
   var element = getToolbarNodeForItemId(bookmark.guid);
   isnot(element, null, "Found node on toolbar");
 
-  isnot(element._placesNode, null, "Toolbar node has an associated Places node.");
+  isnot(
+    element._placesNode,
+    null,
+    "Toolbar node has an associated Places node."
+  );
   var expectedData = getExpectedDataForPlacesNode(element._placesNode);
 
   info("Dragging left");
   await synthesizeDragWithDirection(element, expectedData, dragDirections.LEFT);
 
   info("Dragging right");
-  await synthesizeDragWithDirection(element, expectedData, dragDirections.RIGHT);
+  await synthesizeDragWithDirection(
+    element,
+    expectedData,
+    dragDirections.RIGHT
+  );
 
   info("Dragging up");
   await synthesizeDragWithDirection(element, expectedData, dragDirections.UP);

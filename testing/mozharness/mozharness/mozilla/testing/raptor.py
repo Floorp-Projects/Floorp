@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import copy
-import json
 import os
 import re
 import sys
@@ -507,6 +506,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
     def install(self):
         if self.app in self.firefox_android_browsers:
+            self.device.uninstall_app(self.binary_path)
             self.install_apk(self.installer_path)
         else:
             super(Raptor, self).install()
@@ -521,34 +521,6 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                                                   'requirements.txt')
             self.info("installing requirements for the view-gecko-profile tool")
             self.install_module(requirements=[view_gecko_profile_req])
-
-    def _validate_treeherder_data(self, parser):
-        # late import is required, because install is done in create_virtualenv
-        import jsonschema
-
-        expected_perfherder = 1
-        if self.config.get('power_test', None):
-            expected_perfherder += 1
-        if self.config.get('memory_test', None):
-            expected_perfherder += 1
-        if self.config.get('cpu_test', None):
-            expected_perfherder += 1
-        if len(parser.found_perf_data) != expected_perfherder:
-            self.critical("PERFHERDER_DATA was seen %d times, expected %d."
-                          % (len(parser.found_perf_data), expected_perfherder))
-            return
-
-        schema_path = os.path.join(external_tools_path,
-                                   'performance-artifact-schema.json')
-        self.info("Validating PERFHERDER_DATA against %s" % schema_path)
-        try:
-            with open(schema_path) as f:
-                schema = json.load(f)
-            data = json.loads(parser.found_perf_data[0])
-            jsonschema.validate(data, schema)
-        except Exception as e:
-            self.exception("Error while validating PERFHERDER_DATA")
-            self.info(str(e))
 
     def _artifact_perf_data(self, src, dest):
         if not os.path.isdir(os.path.dirname(dest)):
@@ -646,35 +618,32 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             for item in parser.minidump_output:
                 self.run_command(["ls", "-l", item])
 
-        elif '--no-upload-results' not in options:
-            if not self.gecko_profile:
-                self._validate_treeherder_data(parser)
-            if not self.run_local:
-                # copy results to upload dir so they are included as an artifact
-                self.info("copying raptor results to upload dir:")
+        elif not self.run_local:
+            # copy results to upload dir so they are included as an artifact
+            self.info("copying raptor results to upload dir:")
 
-                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
-                dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
-                self.info(str(dest))
+            src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
+            dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
+            self.info(str(dest))
+            self._artifact_perf_data(src, dest)
+
+            if self.power_test:
+                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-power.json')
                 self._artifact_perf_data(src, dest)
 
-                if self.power_test:
-                    src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-power.json')
-                    self._artifact_perf_data(src, dest)
+            if self.memory_test:
+                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-memory.json')
+                self._artifact_perf_data(src, dest)
 
-                if self.memory_test:
-                    src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-memory.json')
-                    self._artifact_perf_data(src, dest)
+            if self.cpu_test:
+                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-cpu.json')
+                self._artifact_perf_data(src, dest)
 
-                if self.cpu_test:
-                    src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-cpu.json')
-                    self._artifact_perf_data(src, dest)
-
-                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'screenshots.html')
-                if os.path.exists(src):
-                    dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'screenshots.html')
-                    self.info(str(dest))
-                    self._artifact_perf_data(src, dest)
+            src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'screenshots.html')
+            if os.path.exists(src):
+                dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'screenshots.html')
+                self.info(str(dest))
+                self._artifact_perf_data(src, dest)
 
 
 class RaptorOutputParser(OutputParser):

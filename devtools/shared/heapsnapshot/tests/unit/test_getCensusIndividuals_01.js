@@ -22,7 +22,8 @@ function run_test() {
     takeCensus: ({ breakdown }) => {
       assertStructurallyEquivalent(
         breakdown,
-        CensusUtils.countToBucketBreakdown(BREAKDOWN));
+        CensusUtils.countToBucketBreakdown(BREAKDOWN)
+      );
 
       /* eslint-disable */
       //                                DFS Index
@@ -50,13 +51,11 @@ function run_test() {
 
   const INDICES = new Set([3, 5, 9]);
 
-  const EXPECTED = new Set([111, 112, 113,
-                            201, 202, 203,
-                            311, 312, 313]);
+  const EXPECTED = new Set([111, 112, 113, 201, 202, 203, 311, 312, 313]);
 
-  const actual = new Set(CensusUtils.getCensusIndividuals(INDICES,
-                                                          BREAKDOWN,
-                                                          MOCK_SNAPSHOT));
+  const actual = new Set(
+    CensusUtils.getCensusIndividuals(INDICES, BREAKDOWN, MOCK_SNAPSHOT)
+  );
 
   assertStructurallyEquivalent(EXPECTED, actual);
 }

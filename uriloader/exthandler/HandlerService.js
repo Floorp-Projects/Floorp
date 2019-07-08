@@ -2,21 +2,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "JSONFile",
-                               "resource://gre/modules/JSONFile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "JSONFile",
+  "resource://gre/modules/JSONFile.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "gExternalProtocolService",
-                                   "@mozilla.org/uriloader/external-protocol-service;1",
-                                   "nsIExternalProtocolService");
-XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
-                                   "@mozilla.org/mime;1",
-                                   "nsIMIMEService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gExternalProtocolService",
+  "@mozilla.org/uriloader/external-protocol-service;1",
+  "nsIExternalProtocolService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gMIMEService",
+  "@mozilla.org/mime;1",
+  "nsIMIMEService"
+);
 
 function HandlerService() {
   // Observe handlersvc-json-replace so we can switch to the datasource
@@ -24,7 +38,6 @@ function HandlerService() {
 }
 
 HandlerService.prototype = {
-
   classID: Components.ID("{220cc253-b60f-41f6-b9cf-fdcb325f970f}"),
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsISupportsWeakReference,
@@ -61,11 +74,13 @@ HandlerService.prototype = {
   },
 
   _dataPostProcessor(data) {
-    return data.defaultHandlersVersion ? data : {
-      defaultHandlersVersion: {},
-      mimeTypes: {},
-      schemes: {},
-    };
+    return data.defaultHandlersVersion
+      ? data
+      : {
+          defaultHandlersVersion: {},
+          mimeTypes: {},
+          schemes: {},
+        };
   },
 
   /**
@@ -77,10 +92,13 @@ HandlerService.prototype = {
     try {
       prefsDefaultHandlersVersion = Services.prefs.getComplexValue(
         "gecko.handlerService.defaultHandlersVersion",
-        Ci.nsIPrefLocalizedString);
+        Ci.nsIPrefLocalizedString
+      );
     } catch (ex) {
-      if (ex instanceof Components.Exception &&
-          ex.result == Cr.NS_ERROR_UNEXPECTED) {
+      if (
+        ex instanceof Components.Exception &&
+        ex.result == Cr.NS_ERROR_UNEXPECTED
+      ) {
         // This platform does not have any default protocol handlers configured.
         return;
       }
@@ -92,11 +110,12 @@ HandlerService.prototype = {
       let locale = Services.locale.appLocaleAsLangTag;
 
       let defaultHandlersVersion =
-          this._store.data.defaultHandlersVersion[locale] || 0;
+        this._store.data.defaultHandlersVersion[locale] || 0;
       if (defaultHandlersVersion < prefsDefaultHandlersVersion) {
         this._injectDefaultProtocolHandlers();
-        this._store.data.defaultHandlersVersion[locale] =
-          prefsDefaultHandlersVersion;
+        this._store.data.defaultHandlersVersion[
+          locale
+        ] = prefsDefaultHandlersVersion;
       }
     } catch (ex) {
       Cu.reportError(ex);
@@ -104,7 +123,9 @@ HandlerService.prototype = {
   },
 
   _injectDefaultProtocolHandlers() {
-    let schemesPrefBranch = Services.prefs.getBranch("gecko.handlerService.schemes.");
+    let schemesPrefBranch = Services.prefs.getBranch(
+      "gecko.handlerService.schemes."
+    );
     let schemePrefList = schemesPrefBranch.getChildList("");
 
     let schemes = {};
@@ -114,9 +135,10 @@ HandlerService.prototype = {
       let [scheme, handlerNumber, attribute] = schemePrefName.split(".");
 
       try {
-        let attrData =
-          schemesPrefBranch.getComplexValue(schemePrefName,
-                                            Ci.nsIPrefLocalizedString).data;
+        let attrData = schemesPrefBranch.getComplexValue(
+          schemePrefName,
+          Ci.nsIPrefLocalizedString
+        ).data;
         if (!(scheme in schemes)) {
           schemes[scheme] = {};
         }
@@ -136,7 +158,9 @@ HandlerService.prototype = {
       let possibleHandlers = protoInfo.possibleApplicationHandlers;
 
       for (let handlerNumber of Object.keys(schemes[scheme])) {
-        let handlerApp = this.handlerAppFromSerializable(schemes[scheme][handlerNumber]);
+        let handlerApp = this.handlerAppFromSerializable(
+          schemes[scheme][handlerNumber]
+        );
         // If there is already a handler registered with the same template
         // URL, the newly added one will be ignored when saving.
         possibleHandlers.appendElement(handlerApp);
@@ -160,7 +184,9 @@ HandlerService.prototype = {
     const kMigrations = {
       "30boxes": () => {
         const k30BoxesRegex = /^https?:\/\/(?:www\.)?30boxes.com\/external\/widget/i;
-        let webcalHandler = gExternalProtocolService.getProtocolHandlerInfo("webcal");
+        let webcalHandler = gExternalProtocolService.getProtocolHandlerInfo(
+          "webcal"
+        );
         if (this.exists(webcalHandler)) {
           this.fillHandlerInfo(webcalHandler, "");
           let shouldStore = false;
@@ -168,8 +194,10 @@ HandlerService.prototype = {
           let handlers = webcalHandler.possibleApplicationHandlers;
           for (let i = handlers.length - 1; i >= 0; i--) {
             let app = handlers.queryElementAt(i, Ci.nsIHandlerApp);
-            if (app instanceof Ci.nsIWebHandlerApp &&
-                k30BoxesRegex.test(app.uriTemplate)) {
+            if (
+              app instanceof Ci.nsIWebHandlerApp &&
+              k30BoxesRegex.test(app.uriTemplate)
+            ) {
               shouldStore = true;
               handlers.removeElementAt(i);
             }
@@ -177,8 +205,10 @@ HandlerService.prototype = {
           // Then remove as a preferred handler.
           if (webcalHandler.preferredApplicationHandler) {
             let app = webcalHandler.preferredApplicationHandler;
-            if (app instanceof Ci.nsIWebHandlerApp &&
-                k30BoxesRegex.test(app.uriTemplate)) {
+            if (
+              app instanceof Ci.nsIWebHandlerApp &&
+              k30BoxesRegex.test(app.uriTemplate)
+            ) {
               webcalHandler.preferredApplicationHandler = null;
               shouldStore = true;
             }
@@ -190,7 +220,10 @@ HandlerService.prototype = {
         }
       },
     };
-    let migrationsToRun = Services.prefs.getCharPref("browser.handlers.migrations", "");
+    let migrationsToRun = Services.prefs.getCharPref(
+      "browser.handlers.migrations",
+      ""
+    );
     migrationsToRun = migrationsToRun ? migrationsToRun.split(",") : [];
     for (let migration of migrationsToRun) {
       migration.trim();
@@ -234,19 +267,23 @@ HandlerService.prototype = {
         path: OS.Path.join(OS.Constants.Path.profileDir, "handlers.json"),
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
-      this.__store.load().then(() => {
-        // __store can be null if we called _onDBChange in the mean time.
-        if (this.__store) {
-          this._ensureStoreInitialized();
-        }
-      }).catch(Cu.reportError);
+      this.__store
+        .load()
+        .then(() => {
+          // __store can be null if we called _onDBChange in the mean time.
+          if (this.__store) {
+            this._ensureStoreInitialized();
+          }
+        })
+        .catch(Cu.reportError);
     }
   },
 
   // nsIHandlerService
   enumerate() {
-    let handlers = Cc["@mozilla.org/array;1"]
-                     .createInstance(Ci.nsIMutableArray);
+    let handlers = Cc["@mozilla.org/array;1"].createInstance(
+      Ci.nsIMutableArray
+    );
     for (let type of Object.keys(this._store.data.mimeTypes)) {
       let handler = gMIMEService.getFromTypeAndExtension(type, null);
       handlers.appendElement(handler);
@@ -266,7 +303,9 @@ HandlerService.prototype = {
           type,
           get _handlerInfo() {
             delete this._handlerInfo;
-            return this._handlerInfo = gExternalProtocolService.getProtocolHandlerInfo(type);
+            return (this._handlerInfo = gExternalProtocolService.getProtocolHandlerInfo(
+              type
+            ));
           },
         },
         {
@@ -276,7 +315,7 @@ HandlerService.prototype = {
           set(target, name, value) {
             target._handlerInfo[name] = value;
           },
-        },
+        }
       );
       handlers.appendElement(handler);
     }
@@ -296,9 +335,11 @@ HandlerService.prototype = {
     }
 
     // Only a limited number of preferredAction values is allowed.
-    if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk ||
-        handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault ||
-        handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally) {
+    if (
+      handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk ||
+      handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault ||
+      handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally
+    ) {
       storedHandlerInfo.action = handlerInfo.preferredAction;
     } else {
       storedHandlerInfo.action = Ci.nsIHandlerInfo.useHelperApp;
@@ -315,7 +356,9 @@ HandlerService.prototype = {
     if (handlerInfo.preferredApplicationHandler) {
       handlers.push(handlerInfo.preferredApplicationHandler);
     }
-    for (let handler of handlerInfo.possibleApplicationHandlers.enumerate(Ci.nsIHandlerApp)) {
+    for (let handler of handlerInfo.possibleApplicationHandlers.enumerate(
+      Ci.nsIHandlerApp
+    )) {
       // If the caller stored duplicate handlers, we save them only once.
       if (!handlers.some(h => h.equals(handler))) {
         handlers.push(handler);
@@ -325,8 +368,9 @@ HandlerService.prototype = {
     // If any of the nsIHandlerInfo instances cannot be serialized, it is not
     // included in the final list. The first element is always the preferred
     // handler, or null if there is none.
-    let serializableHandlers =
-        handlers.map(h => this.handlerAppToSerializable(h)).filter(h => h);
+    let serializableHandlers = handlers
+      .map(h => this.handlerAppToSerializable(h))
+      .filter(h => h);
     if (serializableHandlers.length) {
       if (!handlerInfo.preferredApplicationHandler) {
         serializableHandlers.unshift(null);
@@ -358,10 +402,14 @@ HandlerService.prototype = {
   // nsIHandlerService
   fillHandlerInfo(handlerInfo, overrideType) {
     let type = overrideType || handlerInfo.type;
-    let storedHandlerInfo = this._getHandlerListByHandlerInfoType(handlerInfo)[type];
+    let storedHandlerInfo = this._getHandlerListByHandlerInfoType(handlerInfo)[
+      type
+    ];
     if (!storedHandlerInfo) {
-      throw new Components.Exception("handlerSvc fillHandlerInfo: don't know this type",
-                                     Cr.NS_ERROR_NOT_AVAILABLE);
+      throw new Components.Exception(
+        "handlerSvc fillHandlerInfo: don't know this type",
+        Cr.NS_ERROR_NOT_AVAILABLE
+      );
     }
 
     handlerInfo.preferredAction = storedHandlerInfo.action;
@@ -436,29 +484,31 @@ HandlerService.prototype = {
         if (!file.exists()) {
           return null;
         }
-        handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
-                       .createInstance(Ci.nsILocalHandlerApp);
+        handlerApp = Cc[
+          "@mozilla.org/uriloader/local-handler-app;1"
+        ].createInstance(Ci.nsILocalHandlerApp);
         handlerApp.executable = file;
       } catch (ex) {
         return null;
       }
     } else if ("uriTemplate" in handlerObj) {
-      handlerApp = Cc["@mozilla.org/uriloader/web-handler-app;1"]
-                     .createInstance(Ci.nsIWebHandlerApp);
+      handlerApp = Cc[
+        "@mozilla.org/uriloader/web-handler-app;1"
+      ].createInstance(Ci.nsIWebHandlerApp);
       handlerApp.uriTemplate = handlerObj.uriTemplate;
     } else if ("service" in handlerObj) {
-      handlerApp = Cc["@mozilla.org/uriloader/dbus-handler-app;1"]
-                     .createInstance(Ci.nsIDBusHandlerApp);
+      handlerApp = Cc[
+        "@mozilla.org/uriloader/dbus-handler-app;1"
+      ].createInstance(Ci.nsIDBusHandlerApp);
       handlerApp.service = handlerObj.service;
       handlerApp.method = handlerObj.method;
       handlerApp.objectPath = handlerObj.objectPath;
       handlerApp.dBusInterface = handlerObj.dBusInterface;
-    } else if ("command" in handlerObj &&
-               "@mozilla.org/gio-service;1" in Cc) {
+    } else if ("command" in handlerObj && "@mozilla.org/gio-service;1" in Cc) {
       try {
         handlerApp = Cc["@mozilla.org/gio-service;1"]
-                       .getService(Ci.nsIGIOService)
-                       .createAppFromCommand(handlerObj.command, handlerObj.name);
+          .getService(Ci.nsIGIOService)
+          .createAppFromCommand(handlerObj.command, handlerObj.name);
       } catch (ex) {
         return null;
       }
@@ -475,8 +525,9 @@ HandlerService.prototype = {
    * based on which type of handlerInfo is provided.
    */
   _getHandlerListByHandlerInfoType(handlerInfo) {
-    return this._isMIMEInfo(handlerInfo) ? this._store.data.mimeTypes
-                                         : this._store.data.schemes;
+    return this._isMIMEInfo(handlerInfo)
+      ? this._store.data.mimeTypes
+      : this._store.data.schemes;
   },
 
   /**
@@ -486,13 +537,16 @@ HandlerService.prototype = {
     // We cannot rely only on the instanceof check because on Android both MIME
     // types and protocols are instances of nsIMIMEInfo. We still do the check
     // so that properties of nsIMIMEInfo become available to the callers.
-    return handlerInfo instanceof Ci.nsIMIMEInfo &&
-           handlerInfo.type.includes("/");
+    return (
+      handlerInfo instanceof Ci.nsIMIMEInfo && handlerInfo.type.includes("/")
+    );
   },
 
   // nsIHandlerService
   exists(handlerInfo) {
-    return handlerInfo.type in this._getHandlerListByHandlerInfoType(handlerInfo);
+    return (
+      handlerInfo.type in this._getHandlerListByHandlerInfoType(handlerInfo)
+    );
   },
 
   // nsIHandlerService
@@ -506,8 +560,10 @@ HandlerService.prototype = {
     let extension = fileExtension.toLowerCase();
     let mimeTypes = this._store.data.mimeTypes;
     for (let type of Object.keys(mimeTypes)) {
-      if (mimeTypes[type].extensions &&
-          mimeTypes[type].extensions.includes(extension)) {
+      if (
+        mimeTypes[type].extensions &&
+        mimeTypes[type].extensions.includes(extension)
+      ) {
         return type;
       }
     }

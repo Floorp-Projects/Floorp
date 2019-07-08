@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["Page"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domain.jsm"
+);
 
 class Page extends Domain {
   // commands

@@ -4,8 +4,14 @@
 
 "use strict";
 
-const { openToolboxAndLog, closeToolboxAndLog, reloadPageAndLog, testSetup,
-        testTeardown, SIMPLE_URL } = require("../head");
+const {
+  openToolboxAndLog,
+  closeToolboxAndLog,
+  reloadPageAndLog,
+  testSetup,
+  testTeardown,
+  SIMPLE_URL,
+} = require("../head");
 const { exportHar, waitForNetworkRequests } = require("./netmonitor-helpers");
 
 const EXPECTED_REQUESTS = 1;
@@ -14,8 +20,11 @@ module.exports = async function() {
   await testSetup(SIMPLE_URL);
   const toolbox = await openToolboxAndLog("simple.netmonitor", "netmonitor");
 
-  const requestsDone = waitForNetworkRequests("simple.netmonitor", toolbox,
-    EXPECTED_REQUESTS);
+  const requestsDone = waitForNetworkRequests(
+    "simple.netmonitor",
+    toolbox,
+    EXPECTED_REQUESTS
+  );
   await reloadPageAndLog("simple.netmonitor", toolbox);
   await requestsDone;
 

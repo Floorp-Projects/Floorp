@@ -2,13 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ExtensionSearchHandler",
-                               "resource://gre/modules/ExtensionSearchHandler.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSearchHandler",
+  "resource://gre/modules/ExtensionSearchHandler.jsm"
+);
 
 this.omnibox = class extends ExtensionAPI {
   onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
+    let { extension } = this;
+    let { manifest } = extension;
 
     let keyword = manifest.omnibox.keyword;
     try {
@@ -25,13 +28,16 @@ this.omnibox = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
     return {
       omnibox: {
-        setDefaultSuggestion: (suggestion) => {
+        setDefaultSuggestion: suggestion => {
           try {
             // This will throw if the keyword failed to register.
-            ExtensionSearchHandler.setDefaultSuggestion(this.keyword, suggestion);
+            ExtensionSearchHandler.setDefaultSuggestion(
+              this.keyword,
+              suggestion
+            );
           } catch (e) {
             return Promise.reject(e.message);
           }
@@ -41,7 +47,7 @@ this.omnibox = class extends ExtensionAPI {
           context,
           name: "omnibox.onInputStarted",
           register: fire => {
-            let listener = (eventName) => {
+            let listener = eventName => {
               fire.sync();
             };
             extension.on(ExtensionSearchHandler.MSG_INPUT_STARTED, listener);
@@ -55,12 +61,15 @@ this.omnibox = class extends ExtensionAPI {
           context,
           name: "omnibox.onInputCancelled",
           register: fire => {
-            let listener = (eventName) => {
+            let listener = eventName => {
               fire.sync();
             };
             extension.on(ExtensionSearchHandler.MSG_INPUT_CANCELLED, listener);
             return () => {
-              extension.off(ExtensionSearchHandler.MSG_INPUT_CANCELLED, listener);
+              extension.off(
+                ExtensionSearchHandler.MSG_INPUT_CANCELLED,
+                listener
+              );
             };
           },
         }).api(),
@@ -82,7 +91,11 @@ this.omnibox = class extends ExtensionAPI {
         // Internal APIs.
         addSuggestions: (id, suggestions) => {
           try {
-            ExtensionSearchHandler.addSuggestions(this.keyword, id, suggestions);
+            ExtensionSearchHandler.addSuggestions(
+              this.keyword,
+              id,
+              suggestions
+            );
           } catch (e) {
             // Silently fail because the extension developer can not know for sure if the user
             // has already invalidated the callback when asynchronously providing suggestions.

@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const osName = "foo";
 
@@ -25,9 +24,10 @@ function* testSteps()
 
   let key1, key2;
 
-  request = db.transaction([osName], "readwrite")
-              .objectStore(osName)
-              .add({});
+  request = db
+    .transaction([osName], "readwrite")
+    .objectStore(osName)
+    .add({});
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -36,7 +36,10 @@ function* testSteps()
   };
   yield undefined;
 
-  request = db.transaction(osName, "readwrite").objectStore(osName).add({});
+  request = db
+    .transaction(osName, "readwrite")
+    .objectStore(osName)
+    .add({});
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -45,9 +48,10 @@ function* testSteps()
   };
   yield undefined;
 
-  request = db.transaction([osName], "readwrite")
-              .objectStore(osName)
-              .put({}, key1);
+  request = db
+    .transaction([osName], "readwrite")
+    .objectStore(osName)
+    .put({}, key1);
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -55,9 +59,10 @@ function* testSteps()
   };
   yield undefined;
 
-  request = db.transaction(osName, "readwrite")
-              .objectStore(osName)
-              .put({}, key2);
+  request = db
+    .transaction(osName, "readwrite")
+    .objectStore(osName)
+    .put({}, key2);
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -65,9 +70,10 @@ function* testSteps()
   };
   yield undefined;
 
-  request = db.transaction([osName], "readwrite")
-              .objectStore(osName)
-              .put({}, key1);
+  request = db
+    .transaction([osName], "readwrite")
+    .objectStore(osName)
+    .put({}, key1);
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -75,9 +81,10 @@ function* testSteps()
   };
   yield undefined;
 
-  request = db.transaction(osName, "readwrite")
-              .objectStore(osName)
-              .put({}, key1);
+  request = db
+    .transaction(osName, "readwrite")
+    .objectStore(osName)
+    .put({}, key1);
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -85,9 +92,10 @@ function* testSteps()
   };
   yield undefined;
 
-  request = db.transaction([osName], "readwrite")
-              .objectStore(osName)
-              .delete(key1);
+  request = db
+    .transaction([osName], "readwrite")
+    .objectStore(osName)
+    .delete(key1);
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -95,9 +103,10 @@ function* testSteps()
   };
   yield undefined;
 
-  request = db.transaction(osName, "readwrite")
-              .objectStore(osName)
-              .delete(key2);
+  request = db
+    .transaction(osName, "readwrite")
+    .objectStore(osName)
+    .delete(key2);
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -106,66 +115,82 @@ function* testSteps()
   yield undefined;
 
   try {
-    request = db.transaction([osName]).objectStore(osName).add({});
+    request = db
+      .transaction([osName])
+      .objectStore(osName)
+      .add({});
     ok(false, "Adding to a readonly transaction should fail!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Adding to a readonly transaction failed");
   }
 
   try {
-    request = db.transaction(osName).objectStore(osName).add({});
+    request = db
+      .transaction(osName)
+      .objectStore(osName)
+      .add({});
     ok(false, "Adding to a readonly transaction should fail!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Adding to a readonly transaction failed");
   }
 
   try {
-    request = db.transaction([osName]).objectStore(osName).put({});
+    request = db
+      .transaction([osName])
+      .objectStore(osName)
+      .put({});
     ok(false, "Adding or modifying a readonly transaction should fail!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Adding or modifying a readonly transaction failed");
   }
 
   try {
-    request = db.transaction(osName).objectStore(osName).put({});
+    request = db
+      .transaction(osName)
+      .objectStore(osName)
+      .put({});
     ok(false, "Adding or modifying a readonly transaction should fail!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Adding or modifying a readonly transaction failed");
   }
 
   try {
-    request = db.transaction([osName]).objectStore(osName).put({}, key1);
+    request = db
+      .transaction([osName])
+      .objectStore(osName)
+      .put({}, key1);
     ok(false, "Modifying a readonly transaction should fail!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Modifying a readonly transaction failed");
   }
 
   try {
-    request = db.transaction(osName).objectStore(osName).put({}, key1);
+    request = db
+      .transaction(osName)
+      .objectStore(osName)
+      .put({}, key1);
     ok(false, "Modifying a readonly transaction should fail!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Modifying a readonly transaction failed");
   }
 
   try {
-    request = db.transaction([osName]).objectStore(osName).delete(key1);
+    request = db
+      .transaction([osName])
+      .objectStore(osName)
+      .delete(key1);
     ok(false, "Removing from a readonly transaction should fail!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Removing from a readonly transaction failed");
   }
 
   try {
-    request = db.transaction(osName).objectStore(osName).delete(key2);
+    request = db
+      .transaction(osName)
+      .objectStore(osName)
+      .delete(key2);
     ok(false, "Removing from a readonly transaction should fail!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Removing from a readonly transaction failed");
   }
 

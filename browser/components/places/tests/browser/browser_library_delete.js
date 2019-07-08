@@ -30,14 +30,17 @@ add_task(async function test_create_and_remove_bookmarks() {
 
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "deleteme",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      children: bmChildren,
-    }, {
-      title: "keepme",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }],
+    children: [
+      {
+        title: "deleteme",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        children: bmChildren,
+      },
+      {
+        title: "keepme",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+    ],
   });
 
   // Select and open the left pane "History" query.
@@ -48,23 +51,38 @@ add_task(async function test_create_and_remove_bookmarks() {
   let unsortedNode = PlacesUtils.asContainer(PO._places.selectedNode);
   Assert.equal(unsortedNode.childCount, 2, "Unsorted node has 2 children");
   let folderNode = unsortedNode.getChild(0);
-  Assert.equal(folderNode.title, "deleteme", "Folder found in unsorted bookmarks");
+  Assert.equal(
+    folderNode.title,
+    "deleteme",
+    "Folder found in unsorted bookmarks"
+  );
 
   // Check delete command is available.
   PO._places.selectNode(folderNode);
-  Assert.equal(PO._places.selectedNode.title, "deleteme", "Folder node selected");
-  Assert.ok(PO._places.controller.isCommandEnabled("cmd_delete"),
-     "Delete command is enabled");
+  Assert.equal(
+    PO._places.selectedNode.title,
+    "deleteme",
+    "Folder node selected"
+  );
+  Assert.ok(
+    PO._places.controller.isCommandEnabled("cmd_delete"),
+    "Delete command is enabled"
+  );
   let promiseItemRemovedNotification = PlacesTestUtils.waitForNotification(
-    "onItemRemoved", (itemId, parentId, index, type, uri, guid) => guid == folderNode.bookmarkGuid);
+    "onItemRemoved",
+    (itemId, parentId, index, type, uri, guid) =>
+      guid == folderNode.bookmarkGuid
+  );
 
   // Execute the delete command and check bookmark has been removed.
   PO._places.controller.doCommand("cmd_delete");
 
   await promiseItemRemovedNotification;
 
-  Assert.ok(!(await PlacesUtils.bookmarks.fetch({url: TEST_URL})),
-    "Bookmark has been correctly removed");
+  Assert.ok(
+    !(await PlacesUtils.bookmarks.fetch({ url: TEST_URL })),
+    "Bookmark has been correctly removed"
+  );
   // Test live update.
   Assert.equal(unsortedNode.childCount, 1, "Unsorted node has 1 child");
   Assert.equal(PO._places.selectedNode.title, "keepme", "Folder node selected");
@@ -78,8 +96,11 @@ add_task(async function test_ensure_correct_selection_and_functionality() {
   PO.selectLeftPaneBuiltIn("UnfiledBookmarks");
   // Now select the "keepme" folder in the right pane and delete it.
   ContentTree.view.selectNode(ContentTree.view.result.root.getChild(0));
-  Assert.equal(ContentTree.view.selectedNode.title, "keepme",
-    "Found folder in content pane");
+  Assert.equal(
+    ContentTree.view.selectedNode.title,
+    "keepme",
+    "Found folder in content pane"
+  );
 
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -87,6 +108,9 @@ add_task(async function test_ensure_correct_selection_and_functionality() {
     url: TEST_URL,
   });
 
-  Assert.equal(ContentTree.view.result.root.childCount, 2,
-    "Right pane was correctly updated");
+  Assert.equal(
+    ContentTree.view.result.root.childCount,
+    2,
+    "Right pane was correctly updated"
+  );
 });

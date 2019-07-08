@@ -53,7 +53,9 @@ async function takeNodeScreenshot(inspector) {
   // Cleanup all downloads at the end of the test.
   registerCleanupFunction(resetDownloads);
 
-  info("Call screenshotNode() and wait until the screenshot is found in the Downloads");
+  info(
+    "Call screenshotNode() and wait until the screenshot is found in the Downloads"
+  );
   const whenScreenshotSucceeded = waitUntilScreenshot();
   inspector.screenshotNode();
   const filePath = await whenScreenshotSucceeded;
@@ -70,7 +72,9 @@ async function takeNodeScreenshot(inspector) {
   // reuse files from the previous test if they have the same name. Since our file name
   // is based on a timestamp that has "second" precision, wait for one second to make sure
   // screenshots will have different names.
-  info("Wait for one second to make sure future screenshots will use a different name");
+  info(
+    "Wait for one second to make sure future screenshots will use a different name"
+  );
   await new Promise(r => setTimeout(r, 1000));
 
   return image;
@@ -82,7 +86,12 @@ async function takeNodeScreenshot(inspector) {
  * NOTE: This test assumes that the image is only made of a single color and will only
  * check one pixel.
  */
-async function assertSingleColorScreenshotImage(image, width, height, { r, g, b }) {
+async function assertSingleColorScreenshotImage(
+  image,
+  width,
+  height,
+  { r, g, b }
+) {
   is(image.width, width, "node screenshot has the expected width");
   is(image.height, height, "node screenshot has the expected height");
 

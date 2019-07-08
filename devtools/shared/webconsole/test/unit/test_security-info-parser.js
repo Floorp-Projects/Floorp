@@ -47,13 +47,19 @@ function run_test() {
 
   equal(result.state, "secure", "State is correct.");
 
-  equal(result.cipherSuite, MockSecurityInfo.cipherName,
-    "Cipher suite is correct.");
+  equal(
+    result.cipherSuite,
+    MockSecurityInfo.cipherName,
+    "Cipher suite is correct."
+  );
 
   equal(result.protocolVersion, "TLSv1.2", "Protocol version is correct.");
 
-  deepEqual(result.cert, NetworkHelper.parseCertificateInfo(MockCertificate),
-    "Certificate information is correct.");
+  deepEqual(
+    result.cert,
+    NetworkHelper.parseCertificateInfo(MockCertificate),
+    "Certificate information is correct."
+  );
 
   equal(result.hpkp, false, "HPKP is false when URI is not available.");
   equal(result.hsts, false, "HSTS is false when URI is not available.");

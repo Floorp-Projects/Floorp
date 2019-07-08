@@ -4,25 +4,28 @@
 
 const nsIQuotaManagerService = Ci.nsIQuotaManagerService;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gURI = Services.io.newURI("http://localhost");
 
 function onUsageCallback(request) {}
 
-function onLoad()
-{
-  var quotaManagerService =
-    Cc["@mozilla.org/dom/quota-manager-service;1"]
-      .getService(nsIQuotaManagerService);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(gURI, {});
-  var quotaRequest = quotaManagerService.getUsageForPrincipal(principal,
-                                                              onUsageCallback);
+function onLoad() {
+  var quotaManagerService = Cc[
+    "@mozilla.org/dom/quota-manager-service;1"
+  ].getService(nsIQuotaManagerService);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    gURI,
+    {}
+  );
+  var quotaRequest = quotaManagerService.getUsageForPrincipal(
+    principal,
+    onUsageCallback
+  );
   quotaRequest.cancel();
   Services.obs.notifyObservers(window, "bug839193-loaded");
 }
 
-function onUnload()
-{
+function onUnload() {
   Services.obs.notifyObservers(window, "bug839193-unloaded");
 }

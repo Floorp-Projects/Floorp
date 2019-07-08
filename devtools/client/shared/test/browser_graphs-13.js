@@ -14,9 +14,11 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host,, doc] = await createHost();
-  doc.body.setAttribute("style",
-                        "position: fixed; width: 100%; height: 100%; margin: 0;");
+  const [host, , doc] = await createHost();
+  doc.body.setAttribute(
+    "style",
+    "position: fixed; width: 100%; height: 100%; margin: 0;"
+  );
 
   const graph = new LineGraphWidget(doc.body, "fps");
   graph.fixedWidth = 200;
@@ -32,13 +34,25 @@ async function performTest() {
 function testGraph(host, graph) {
   const bounds = host.frame.getBoundingClientRect();
 
-  isnot(graph.width, bounds.width * window.devicePixelRatio,
-    "The graph should not span all the parent node's width.");
-  isnot(graph.height, bounds.height * window.devicePixelRatio,
-    "The graph should not span all the parent node's height.");
+  isnot(
+    graph.width,
+    bounds.width * window.devicePixelRatio,
+    "The graph should not span all the parent node's width."
+  );
+  isnot(
+    graph.height,
+    bounds.height * window.devicePixelRatio,
+    "The graph should not span all the parent node's height."
+  );
 
-  is(graph.width, graph.fixedWidth * window.devicePixelRatio,
-    "The graph has the correct width.");
-  is(graph.height, graph.fixedHeight * window.devicePixelRatio,
-    "The graph has the correct height.");
+  is(
+    graph.width,
+    graph.fixedWidth * window.devicePixelRatio,
+    "The graph has the correct width."
+  );
+  is(
+    graph.height,
+    graph.fixedHeight * window.devicePixelRatio,
+    "The graph has the correct height."
+  );
 }

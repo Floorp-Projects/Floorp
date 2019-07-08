@@ -6,7 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["Snackbars"];
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
 
 const LENGTH_INDEFINITE = -2;
 const LENGTH_LONG = 0;
@@ -40,7 +44,8 @@ var Snackbars = {
         msg.action.label = aOptions.action.label;
       }
 
-      EventDispatcher.instance.sendRequestForResult(msg)
+      EventDispatcher.instance
+        .sendRequestForResult(msg)
         .then(result => aOptions.action.callback())
         .catch(result => {
           if (aOptions.action.rejection) {

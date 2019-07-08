@@ -1,5 +1,6 @@
-var prefetch = Cc["@mozilla.org/prefetch-service;1"].
-               getService(Ci.nsIPrefetchService);
+var prefetch = Cc["@mozilla.org/prefetch-service;1"].getService(
+  Ci.nsIPrefetchService
+);
 
 function run_test() {
   // Fill up the queue

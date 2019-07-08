@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  UPDATE_CAN_DEBUG_WORKERS,
-  UPDATE_WORKERS,
-} = require("../constants");
+const { UPDATE_CAN_DEBUG_WORKERS, UPDATE_WORKERS } = require("../constants");
 
 function WorkersState() {
   return {
@@ -20,7 +17,9 @@ function WorkersState() {
 function workersReducer(state = WorkersState(), action) {
   switch (action.type) {
     case UPDATE_CAN_DEBUG_WORKERS: {
-      return Object.assign({}, state, { canDebugWorkers: action.canDebugWorkers });
+      return Object.assign({}, state, {
+        canDebugWorkers: action.canDebugWorkers,
+      });
     }
     case UPDATE_WORKERS: {
       const { workers } = action;

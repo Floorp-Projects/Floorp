@@ -41,13 +41,10 @@ define(function(require, exports, module) {
     render() {
       const data = this.props.data;
 
-      return (
-        div({className: "headersPanelBox tab-panel-inner"},
-          HeadersToolbar({actions: this.props.actions}),
-          div({className: "panelContent"},
-            Headers({data: data})
-          )
-        )
+      return div(
+        { className: "headersPanelBox tab-panel-inner" },
+        HeadersToolbar({ actions: this.props.actions }),
+        div({ className: "panelContent" }, Headers({ data: data }))
       );
     }
   }

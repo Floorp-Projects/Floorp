@@ -114,6 +114,11 @@ const expected = {
 };
 
 function run_test() {
-  assertDominatorTreeNodeInsertion(tree, path, newChildren,
-    moreChildrenAvailable, expected);
+  assertDominatorTreeNodeInsertion(
+    tree,
+    path,
+    newChildren,
+    moreChildrenAvailable,
+    expected
+  );
 }

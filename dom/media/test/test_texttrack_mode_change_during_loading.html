@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebVTT : changing track's mode during loading</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+/**
+ * This test is to ensure that we won't get `error` event when we change track's
+ * mode during loading. In this test, track element starts loading after setting
+ * the src and we would start another load later just after the channel which is
+ * used to fetch data starts. The second load is triggered by mode changes, and
+ * it should stop the prevous load and won't generate any error.
+ */
+async function startTest() {
+  const video = createVideo();
+  const trackElement = createAndAppendtrackElemententToVideo(video);
+
+  await changeTrackModeDuringLoading(trackElement);
+  await waitUntilTrackLoaded(trackElement);
+
+  removeNodeAndSource(video);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.testing.events", true]]},
+                            startTest);
+
+/**
+ * The following are test helper functions.
+ */
+function createVideo() {
+  info(`create video`);
+  let video = document.createElement("video");
+  video.src = "gizmo.mp4";
+  document.body.appendChild(video);
+  return video;
+}
+
+function createAndAppendtrackElemententToVideo(video) {
+  let trackElement = document.createElement("track");
+  trackElement.default = true;
+  video.append(trackElement);
+  return trackElement;
+}
+
+async function changeTrackModeDuringLoading(trackElement) {
+  info(`set src to start loading`);
+  trackElement.src = "basic.vtt";
+
+  info(`wait until starting loading resource.`);
+  await once(trackElement, "mozStartedLoadingTextTrack");
+
+  info(`changeing track's mode during loading should not cause loading failed.`);
+  trackElement.onerror = () => {
+    ok(false, `Should not get error event!`);
+  }
+  trackElement.track.mode = "hidden";
+}
+
+async function waitUntilTrackLoaded(trackElement) {
+  if (trackElement.readyState != 2) {
+    info(`wait until the track finishes loading`);
+    await once(trackElement, "load");
+  }
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+  is(trackElement.track.cues.length, 6, "Cue list length should be 6.");
+}
+</script>
+</body>
+</html>

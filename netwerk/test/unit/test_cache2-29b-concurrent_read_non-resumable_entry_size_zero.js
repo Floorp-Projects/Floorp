@@ -13,10 +13,11 @@ This test is using a non-resumable response.
 
 */
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
-                          .getService(Ci.nsIHttpProtocolHandler);
+var httpProtocolHandler = Cc[
+  "@mozilla.org/network/protocol;1?name=http"
+].getService(Ci.nsIHttpProtocolHandler);
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -25,14 +26,13 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
 const responseBody = "c\r\ndata reached\r\n3\r\nhej\r\n0\r\n\r\n";
 const responseBodyDecoded = "data reachedhej";
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   response.seizePower();
   response.write("HTTP/1.1 200 OK\r\n");
   response.write("Content-Type: text/plain\r\n");
@@ -42,8 +42,7 @@ function contentHandler(metadata, response)
   response.finish();
 }
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
 
   Services.prefs.setIntPref("browser.cache.disk.max_entry_size", 0);
@@ -55,21 +54,23 @@ function run_test()
 
   httpProtocolHandler.EnsureHSTSDataReady().then(function() {
     var chan1 = make_channel(URL + "/content");
-    chan1.asyncOpen(new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
+    chan1.asyncOpen(
+      new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL)
+    );
     var chan2 = make_channel(URL + "/content");
-    chan2.asyncOpen(new ChannelListener(secondTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
+    chan2.asyncOpen(
+      new ChannelListener(secondTimeThrough, null, CL_ALLOW_UNKNOWN_CL)
+    );
   });
 
   do_test_pending();
 }
 
-function firstTimeThrough(request, buffer)
-{
+function firstTimeThrough(request, buffer) {
   Assert.equal(buffer, responseBodyDecoded);
 }
 
-function secondTimeThrough(request, buffer)
-{
+function secondTimeThrough(request, buffer) {
   Assert.equal(buffer, responseBodyDecoded);
   httpServer.stop(do_test_finished);
 }

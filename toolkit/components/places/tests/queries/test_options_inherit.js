@@ -16,20 +16,19 @@ add_task(async function() {
         title: "folder",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         children: [
-          { title: "query",
-            url: "place:queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS,
+          {
+            title: "query",
+            url:
+              "place:queryType=" +
+              Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS,
           },
-          { title: "bm",
-            url: "http://example.com",
-          },
+          { title: "bm", url: "http://example.com" },
           {
             type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
           },
         ],
       },
-      { title: "bm",
-        url: "http://example.com",
-      },
+      { title: "bm", url: "http://example.com" },
       {
         type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       },
@@ -43,7 +42,12 @@ add_task(async function() {
   await test_query({ excludeItems: true, excludeQueries: true }, 1, 0, 0);
 });
 
-async function test_query(opts, expectedRootCc, expectedFolderCc, expectedQueryCc) {
+async function test_query(
+  opts,
+  expectedRootCc,
+  expectedFolderCc,
+  expectedQueryCc
+) {
   let query = PlacesUtils.history.getNewQuery();
   query.setParents([PlacesUtils.bookmarks.unfiledGuid]);
   let options = PlacesUtils.history.getNewQueryOptions();
@@ -64,11 +68,19 @@ async function test_query(opts, expectedRootCc, expectedFolderCc, expectedQueryC
     checkURIOptions(folder.uri);
 
     PlacesUtils.asContainer(folder).containerOpen = true;
-    Assert.equal(folder.childCount, expectedFolderCc, "Checking folder child count");
+    Assert.equal(
+      folder.childCount,
+      expectedFolderCc,
+      "Checking folder child count"
+    );
     if (folder.childCount) {
       let placeQuery = folder.getChild(0);
       PlacesUtils.asQuery(placeQuery).containerOpen = true;
-      Assert.equal(placeQuery.childCount, expectedQueryCc, "Checking query child count");
+      Assert.equal(
+        placeQuery.childCount,
+        expectedQueryCc,
+        "Checking query child count"
+      );
       placeQuery.containerOpen = false;
     }
     folder.containerOpen = false;
@@ -85,10 +97,22 @@ async function test_query(opts, expectedRootCc, expectedFolderCc, expectedQueryC
 
 function checkURIOptions(uri) {
   info("Checking options for uri " + uri);
-  let folderOptions = { };
+  let folderOptions = {};
   PlacesUtils.history.queryStringToQuery(uri, {}, folderOptions);
   folderOptions = folderOptions.value;
-  Assert.equal(folderOptions.excludeItems, false, "ExcludeItems should not be changed");
-  Assert.equal(folderOptions.excludeQueries, false, "ExcludeQueries should not be changed");
-  Assert.equal(folderOptions.expandQueries, true, "ExpandQueries should not be changed");
+  Assert.equal(
+    folderOptions.excludeItems,
+    false,
+    "ExcludeItems should not be changed"
+  );
+  Assert.equal(
+    folderOptions.excludeQueries,
+    false,
+    "ExcludeQueries should not be changed"
+  );
+  Assert.equal(
+    folderOptions.expandQueries,
+    true,
+    "ExpandQueries should not be changed"
+  );
 }

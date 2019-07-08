@@ -5,16 +5,18 @@ async function checkTagsSelector(aAvailableTags, aCheckedTags) {
   is(tags.length, aAvailableTags.length, "Check tags list");
   let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
   let children = tagsSelector.children;
-  is(children.length, aAvailableTags.length,
-      "Found expected number of tags in the tags selector");
+  is(
+    children.length,
+    aAvailableTags.length,
+    "Found expected number of tags in the tags selector"
+  );
 
   Array.prototype.forEach.call(children, function(aChild) {
     let tag = aChild.querySelector("label").getAttribute("value");
     ok(true, "Found tag '" + tag + "' in the selector");
     ok(aAvailableTags.includes(tag), "Found expected tag");
     let checked = aChild.getAttribute("checked") == "true";
-    is(checked, aCheckedTags.includes(tag),
-       "Tag is correctly marked");
+    is(checked, aCheckedTags.includes(tag), "Tag is correctly marked");
   });
 }
 
@@ -44,20 +46,28 @@ add_task(async function() {
   // Add a tag.
   PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
 
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], TEST_TAG,
-     "Correctly added tag to a single bookmark");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI)[0],
+    TEST_TAG,
+    "Correctly added tag to a single bookmark"
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == TEST_TAG,
-    "Editing a single bookmark shows the added tag.");
+    "Editing a single bookmark shows the added tag."
+  );
   await checkTagsSelector([TEST_TAG], [TEST_TAG]);
 
   // Remove tag.
   PlacesUtils.tagging.untagURI(TEST_URI, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], undefined,
-     "The tag has been removed");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI)[0],
+    undefined,
+    "The tag has been removed"
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == "",
-    "Editing a single bookmark should not show any tag");
+    "Editing a single bookmark should not show any tag"
+  );
   await checkTagsSelector([], []);
 
   // Add a second bookmark.
@@ -74,38 +84,54 @@ add_task(async function() {
 
   // Add a tag to the first uri.
   PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], TEST_TAG,
-     "Correctly added a tag to the first bookmark.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI)[0],
+    TEST_TAG,
+    "Correctly added a tag to the first bookmark."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == "",
-    "Editing multiple bookmarks without matching tags should not show any tag.");
+    "Editing multiple bookmarks without matching tags should not show any tag."
+  );
   await checkTagsSelector([TEST_TAG], []);
 
   // Add a tag to the second uri.
   PlacesUtils.tagging.tagURI(TEST_URI2, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0], TEST_TAG,
-     "Correctly added a tag to the second bookmark.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0],
+    TEST_TAG,
+    "Correctly added a tag to the second bookmark."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == TEST_TAG,
-    "Editing multiple bookmarks should show matching tags.");
+    "Editing multiple bookmarks should show matching tags."
+  );
   await checkTagsSelector([TEST_TAG], [TEST_TAG]);
 
   // Remove tag from the first bookmark.
   PlacesUtils.tagging.untagURI(TEST_URI, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], undefined,
-     "Correctly removed tag from the first bookmark.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI)[0],
+    undefined,
+    "Correctly removed tag from the first bookmark."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == "",
-    "Editing multiple bookmarks without matching tags should not show any tag.");
+    "Editing multiple bookmarks without matching tags should not show any tag."
+  );
   await checkTagsSelector([TEST_TAG], []);
 
   // Remove tag from the second bookmark.
   PlacesUtils.tagging.untagURI(TEST_URI2, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0], undefined,
-     "Correctly removed tag from the second bookmark.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0],
+    undefined,
+    "Correctly removed tag from the second bookmark."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == "",
-    "Editing multiple bookmarks without matching tags should not show any tag.");
+    "Editing multiple bookmarks without matching tags should not show any tag."
+  );
   await checkTagsSelector([], []);
 
   // Init panel with a nsIURI entry.
@@ -113,20 +139,28 @@ add_task(async function() {
 
   // Add a tag.
   PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], TEST_TAG,
-     "Correctly added tag to the first entry.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI)[0],
+    TEST_TAG,
+    "Correctly added tag to the first entry."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == TEST_TAG,
-    "Editing a single nsIURI entry shows the added tag.");
+    "Editing a single nsIURI entry shows the added tag."
+  );
   await checkTagsSelector([TEST_TAG], [TEST_TAG]);
 
   // Remove tag.
   PlacesUtils.tagging.untagURI(TEST_URI, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], undefined,
-     "Correctly removed tag from the nsIURI entry.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI)[0],
+    undefined,
+    "Correctly removed tag from the nsIURI entry."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == "",
-    "Editing a single nsIURI entry should not show any tag.");
+    "Editing a single nsIURI entry should not show any tag."
+  );
   await checkTagsSelector([], []);
 
   // Init panel with multiple nsIURI entries.
@@ -134,38 +168,54 @@ add_task(async function() {
 
   // Add a tag to the first entry.
   PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], TEST_TAG,
-     "Tag correctly added.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI)[0],
+    TEST_TAG,
+    "Tag correctly added."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == "",
-    "Editing multiple nsIURIs without matching tags should not show any tag.");
+    "Editing multiple nsIURIs without matching tags should not show any tag."
+  );
   await checkTagsSelector([TEST_TAG], []);
 
   // Add a tag to the second entry.
   PlacesUtils.tagging.tagURI(TEST_URI2, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0], TEST_TAG,
-     "Tag correctly added.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0],
+    TEST_TAG,
+    "Tag correctly added."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == TEST_TAG,
-    "Editing multiple nsIURIs should show matching tags.");
+    "Editing multiple nsIURIs should show matching tags."
+  );
   await checkTagsSelector([TEST_TAG], [TEST_TAG]);
 
   // Remove tag from the first entry.
   PlacesUtils.tagging.untagURI(TEST_URI, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], undefined,
-     "Correctly removed tag from the first entry.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI)[0],
+    undefined,
+    "Correctly removed tag from the first entry."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == "",
-    "Editing multiple nsIURIs without matching tags should not show any tag.");
+    "Editing multiple nsIURIs without matching tags should not show any tag."
+  );
   await checkTagsSelector([TEST_TAG], []);
 
   // Remove tag from the second entry.
   PlacesUtils.tagging.untagURI(TEST_URI2, [TEST_TAG]);
-  is(PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0], undefined,
-     "Correctly removed tag from the second entry.");
+  is(
+    PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0],
+    undefined,
+    "Correctly removed tag from the second entry."
+  );
   await BrowserTestUtils.waitForCondition(
     () => document.getElementById("editBMPanel_tagsField").value == "",
-    "Editing multiple nsIURIs without matching tags should not show any tag.");
+    "Editing multiple nsIURIs without matching tags should not show any tag."
+  );
   await checkTagsSelector([], []);
 
   // Cleanup.

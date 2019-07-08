@@ -5,25 +5,24 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const origins = [
     {
       path: "storage/default/1007+f+app+++system.gaiamobile.org",
-      obsolete: true
+      obsolete: true,
     },
 
     {
       path: "storage/default/1007+t+https+++developer.cdn.mozilla.net",
-      obsolete: true
+      obsolete: true,
     },
 
     {
       path: "storage/default/http+++www.mozilla.org",
       obsolete: false,
       url: "http://www.mozilla.org",
-      persistence: "default"
-    }
+      persistence: "default",
+    },
   ];
 
   const storageFileName = "storage.sqlite";
@@ -103,8 +102,11 @@ function* testSteps()
       info("Initializing origin");
 
       let principal = getPrincipal(origin.url);
-      request =
-        initOrigin(principal, origin.persistence, continueToNextStepSync);
+      request = initOrigin(
+        principal,
+        origin.persistence,
+        continueToNextStepSync
+      );
       yield undefined;
 
       ok(request.resultCode == NS_OK, "Initialization succeeded");

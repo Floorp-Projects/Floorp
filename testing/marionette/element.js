@@ -5,16 +5,18 @@
 "use strict";
 /* global XPCNativeWrapper */
 
-const {assert} = ChromeUtils.import("chrome://marionette/content/assert.js");
-const {atom} = ChromeUtils.import("chrome://marionette/content/atom.js");
+const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
+const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
 const {
   InvalidArgumentError,
   InvalidSelectorError,
   NoSuchElementError,
   StaleElementReferenceError,
 } = ChromeUtils.import("chrome://marionette/content/error.js");
-const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js");
-const {PollPromise} = ChromeUtils.import("chrome://marionette/content/sync.js");
+const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
+const { PollPromise } = ChromeUtils.import(
+  "chrome://marionette/content/sync.js"
+);
 
 this.EXPORTED_SYMBOLS = [
   "ChromeWebElement",
@@ -35,11 +37,7 @@ const XBLNS = "http://www.mozilla.org/xbl";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 /** XUL elements that support checked property. */
-const XUL_CHECKED_ELS = new Set([
-  "button",
-  "checkbox",
-  "toolbarbutton",
-]);
+const XUL_CHECKED_ELS = new Set(["button", "checkbox", "toolbarbutton"]);
 
 /** XUL elements that support selected property. */
 const XUL_SELECTED_ELS = new Set([
@@ -51,8 +49,9 @@ const XUL_SELECTED_ELS = new Set([
   "tab",
 ]);
 
-const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator);
+const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
 
 /**
  * This module provides shared functionality for dealing with DOM-
@@ -144,8 +143,8 @@ element.Store = class {
 
     if (!(isDOMElement || isDOMWindow || isXULElement)) {
       throw new TypeError(
-          "Expected an element or WindowProxy, " +
-          pprint`got: ${el}`);
+        "Expected an element or WindowProxy, " + pprint`got: ${el}`
+      );
     }
 
     for (let i in this.els) {
@@ -159,7 +158,7 @@ element.Store = class {
           return WebElement.fromUUID(i, context);
         }
 
-      // cleanup reference to gc'd element
+        // cleanup reference to gc'd element
       } else {
         delete this.els[i];
       }
@@ -188,8 +187,7 @@ element.Store = class {
    */
   has(webEl) {
     if (!(webEl instanceof WebElement)) {
-      throw new TypeError(
-          pprint`Expected web element, got: ${webEl}`);
+      throw new TypeError(pprint`Expected web element, got: ${webEl}`);
     }
     return Object.keys(this.els).includes(webEl.uuid);
   }
@@ -220,12 +218,12 @@ element.Store = class {
    */
   get(webEl, win) {
     if (!(webEl instanceof WebElement)) {
-      throw new TypeError(
-          pprint`Expected web element, got: ${webEl}`);
+      throw new TypeError(pprint`Expected web element, got: ${webEl}`);
     }
     if (!this.has(webEl)) {
       throw new NoSuchElementError(
-          "Web element reference not seen before: " + webEl.uuid);
+        "Web element reference not seen before: " + webEl.uuid
+      );
     }
 
     let el;
@@ -238,10 +236,11 @@ element.Store = class {
 
     if (element.isStale(el, win)) {
       throw new StaleElementReferenceError(
-          pprint`The element reference of ${el || webEl.uuid} is stale; ` +
-              "either the element is no longer attached to the DOM, " +
-              "it is not in the current frame context, " +
-              "or the document has been refreshed");
+        pprint`The element reference of ${el || webEl.uuid} is stale; ` +
+          "either the element is no longer attached to the DOM, " +
+          "it is not in the current frame context, " +
+          "or the document has been refreshed"
+      );
     }
 
     return el;
@@ -311,15 +310,20 @@ element.find = function(container, strategy, selector, opts = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    let findElements = new PollPromise((resolve, reject) => {
-      let res = find_(container, strategy, selector, searchFn,
-          {all, startNode});
-      if (res.length > 0) {
-        resolve(Array.from(res));
-      } else {
-        reject([]);
-      }
-    }, {timeout});
+    let findElements = new PollPromise(
+      (resolve, reject) => {
+        let res = find_(container, strategy, selector, searchFn, {
+          all,
+          startNode,
+        });
+        if (res.length > 0) {
+          resolve(Array.from(res));
+        } else {
+          reject([]);
+        }
+      },
+      { timeout }
+    );
 
     findElements.then(foundEls => {
       // the following code ought to be moved into findElement
@@ -328,8 +332,8 @@ element.find = function(container, strategy, selector, opts = {}) {
         let msg;
         switch (strategy) {
           case element.Strategy.AnonAttribute:
-            msg = "Unable to locate anonymous element: " +
-                JSON.stringify(selector);
+            msg =
+              "Unable to locate anonymous element: " + JSON.stringify(selector);
             break;
 
           default:
@@ -347,8 +351,13 @@ element.find = function(container, strategy, selector, opts = {}) {
   });
 };
 
-function find_(container, strategy, selector, searchFn,
-    {startNode = null, all = false} = {}) {
+function find_(
+  container,
+  strategy,
+  selector,
+  searchFn,
+  { startNode = null, all = false } = {}
+) {
   let rootNode = container.shadowRoot || container.frame.document;
 
   if (!startNode) {
@@ -372,7 +381,8 @@ function find_(container, strategy, selector, searchFn,
     res = searchFn(strategy, selector, rootNode, startNode);
   } catch (e) {
     throw new InvalidSelectorError(
-        `Given ${strategy} expression "${selector}" is invalid: ${e}`);
+      `Given ${strategy} expression "${selector}" is invalid: ${e}`
+    );
   }
 
   if (res) {
@@ -399,7 +409,12 @@ function find_(container, strategy, selector, searchFn,
  */
 element.findByXPath = function(document, startNode, expression) {
   let iter = document.evaluate(
-      expression, startNode, null, FIRST_ORDERED_NODE_TYPE, null);
+    expression,
+    startNode,
+    null,
+    FIRST_ORDERED_NODE_TYPE,
+    null
+  );
   return iter.singleNodeValue;
 };
 
@@ -416,9 +431,14 @@ element.findByXPath = function(document, startNode, expression) {
  * @return {Iterable.<Node>}
  *     Iterator over elements matching <var>expression</var>.
  */
-element.findByXPathAll = function* (document, startNode, expression) {
+element.findByXPathAll = function*(document, startNode, expression) {
   let iter = document.evaluate(
-      expression, startNode, null, ORDERED_NODE_ITERATOR_TYPE, null);
+    expression,
+    startNode,
+    null,
+    ORDERED_NODE_ITERATOR_TYPE,
+    null
+  );
   let el = iter.iterateNext();
   while (el) {
     yield el;
@@ -439,8 +459,10 @@ element.findByXPathAll = function* (document, startNode, expression) {
  *     Sequence of link elements which text is <var>s</var>.
  */
 element.findByLinkText = function(startNode, linkText) {
-  return filterLinks(startNode,
-      link => atom.getElementText(link).trim() === linkText);
+  return filterLinks(
+    startNode,
+    link => atom.getElementText(link).trim() === linkText
+  );
 };
 
 /**
@@ -457,8 +479,9 @@ element.findByLinkText = function(startNode, linkText) {
  *     <var>linkText</var>.
  */
 element.findByPartialLinkText = function(startNode, linkText) {
-  return filterLinks(startNode,
-      link => atom.getElementText(link).includes(linkText));
+  return filterLinks(startNode, link =>
+    atom.getElementText(link).includes(linkText)
+  );
 };
 
 /**
@@ -472,7 +495,7 @@ element.findByPartialLinkText = function(startNode, linkText) {
  * @return {Iterable.<XULElement>}
  *     Iterator over anonymous elements.
  */
-element.findAnonymousNodes = function* (document, node) {
+element.findAnonymousNodes = function*(document, node) {
   let anons = document.getAnonymousNodes(node) || [];
   for (let node of anons) {
     yield node;
@@ -522,23 +545,21 @@ function* filterLinks(startNode, predicate) {
  */
 function findElement(strategy, selector, document, startNode = undefined) {
   switch (strategy) {
-    case element.Strategy.ID:
-      {
-        if (startNode.getElementById) {
-          return startNode.getElementById(selector);
-        }
-        let expr = `.//*[@id="${selector}"]`;
-        return element.findByXPath(document, startNode, expr);
+    case element.Strategy.ID: {
+      if (startNode.getElementById) {
+        return startNode.getElementById(selector);
       }
+      let expr = `.//*[@id="${selector}"]`;
+      return element.findByXPath(document, startNode, expr);
+    }
 
-    case element.Strategy.Name:
-      {
-        if (startNode.getElementsByName) {
-          return startNode.getElementsByName(selector)[0];
-        }
-        let expr = `.//*[@name="${selector}"]`;
-        return element.findByXPath(document, startNode, expr);
+    case element.Strategy.Name: {
+      if (startNode.getElementsByName) {
+        return startNode.getElementsByName(selector)[0];
       }
+      let expr = `.//*[@name="${selector}"]`;
+      return element.findByXPath(document, startNode, expr);
+    }
 
     case element.Strategy.ClassName:
       return startNode.getElementsByClassName(selector)[0];
@@ -578,7 +599,10 @@ function findElement(strategy, selector, document, startNode = undefined) {
     case element.Strategy.AnonAttribute:
       let attr = Object.keys(selector)[0];
       return document.getAnonymousElementByAttribute(
-          startNode, attr, selector[attr]);
+        startNode,
+        attr,
+        selector[attr]
+      );
   }
 
   throw new InvalidSelectorError(`No such strategy: ${strategy}`);
@@ -617,8 +641,13 @@ function findElements(strategy, selector, document, startNode = undefined) {
       if (startNode.getElementsByName) {
         return startNode.getElementsByName(selector);
       }
-      return [...element.findByXPathAll(
-          document, startNode, `.//*[@name="${selector}"]`)];
+      return [
+        ...element.findByXPathAll(
+          document,
+          startNode,
+          `.//*[@name="${selector}"]`
+        ),
+      ];
 
     case element.Strategy.ClassName:
       return startNode.getElementsByClassName(selector);
@@ -641,7 +670,10 @@ function findElements(strategy, selector, document, startNode = undefined) {
     case element.Strategy.AnonAttribute:
       let attr = Object.keys(selector)[0];
       let el = document.getAnonymousElementByAttribute(
-          startNode, attr, selector[attr]);
+        startNode,
+        attr,
+        selector[attr]
+      );
       if (el) {
         return [el];
       }
@@ -733,9 +765,7 @@ element.isStale = function(el, win = undefined) {
     win = el.ownerGlobal;
   }
 
-  if (el === null ||
-      !el.ownerGlobal ||
-      el.ownerDocument !== win.document) {
+  if (el === null || !el.ownerGlobal || el.ownerDocument !== win.document) {
     return true;
   }
 
@@ -790,8 +820,11 @@ element.isSelected = function(el) {
  *     True if element is read only.
  */
 element.isReadOnly = function(el) {
-  return element.isDOMElement(el) &&
-      ["input", "textarea"].includes(el.localName) && el.readOnly;
+  return (
+    element.isDOMElement(el) &&
+    ["input", "textarea"].includes(el.localName) &&
+    el.readOnly
+  );
 };
 
 /**
@@ -896,8 +929,10 @@ element.isMutableFormControl = function(el) {
  *     True if editing host, false otherwise.
  */
 element.isEditingHost = function(el) {
-  return element.isDOMElement(el) &&
-      (el.isContentEditable || el.ownerDocument.designMode == "on");
+  return (
+    element.isDOMElement(el) &&
+    (el.isContentEditable || el.ownerDocument.designMode == "on")
+  );
 };
 
 /**
@@ -956,8 +991,7 @@ element.isEditable = function(el) {
  * @throws TypeError
  *     If <var>xOffset</var> or <var>yOffset</var> are not numbers.
  */
-element.coordinates = function(
-    node, xOffset = undefined, yOffset = undefined) {
+element.coordinates = function(node, xOffset = undefined, yOffset = undefined) {
   let box = node.getBoundingClientRect();
 
   if (typeof xOffset == "undefined" || xOffset === null) {
@@ -998,14 +1032,16 @@ element.inViewport = function(el, x = undefined, y = undefined) {
   let vp = {
     top: win.pageYOffset,
     left: win.pageXOffset,
-    bottom: (win.pageYOffset + win.innerHeight),
-    right: (win.pageXOffset + win.innerWidth),
+    bottom: win.pageYOffset + win.innerHeight,
+    right: win.pageXOffset + win.innerWidth,
   };
 
-  return (vp.left <= c.x + win.pageXOffset &&
-      c.x + win.pageXOffset <= vp.right &&
-      vp.top <= c.y + win.pageYOffset &&
-      c.y + win.pageYOffset <= vp.bottom);
+  return (
+    vp.left <= c.x + win.pageXOffset &&
+    c.x + win.pageXOffset <= vp.right &&
+    vp.top <= c.y + win.pageYOffset &&
+    c.y + win.pageYOffset <= vp.bottom
+  );
 };
 
 /**
@@ -1163,7 +1199,7 @@ element.isObscured = function(el) {
  *     `rect`.
  */
 element.getInViewCentrePoint = function(rect, win) {
-  const {floor, max, min} = Math;
+  const { floor, max, min } = Math;
 
   // calculate the intersection of the rect that is inside the viewport
   let visible = {
@@ -1181,7 +1217,7 @@ element.getInViewCentrePoint = function(rect, win) {
   x = floor(x);
   y = floor(y);
 
-  return {x, y};
+  return { x, y };
 };
 
 /**
@@ -1232,7 +1268,7 @@ element.isKeyboardInteractable = () => true;
  */
 element.scrollIntoView = function(el) {
   if (el.scrollIntoView) {
-    el.scrollIntoView({block: "end", inline: "nearest", behavior: "instant"});
+    el.scrollIntoView({ block: "end", inline: "nearest", behavior: "instant" });
   }
 };
 
@@ -1260,11 +1296,13 @@ element.isElement = function(node) {
  *     True if <var>node</var> is a DOM element, false otherwise.
  */
 element.isDOMElement = function(node) {
-  return typeof node == "object" &&
-      node !== null &&
-      "nodeType" in node &&
-      [ELEMENT_NODE, DOCUMENT_NODE].includes(node.nodeType) &&
-      !element.isXULElement(node);
+  return (
+    typeof node == "object" &&
+    node !== null &&
+    "nodeType" in node &&
+    [ELEMENT_NODE, DOCUMENT_NODE].includes(node.nodeType) &&
+    !element.isXULElement(node)
+  );
 };
 
 /**
@@ -1278,11 +1316,13 @@ element.isDOMElement = function(node) {
  *     false otherwise.
  */
 element.isXULElement = function(node) {
-  return typeof node == "object" &&
-      node !== null &&
-      "nodeType" in node &&
-      node.nodeType === node.ELEMENT_NODE &&
-      [XBLNS, XULNS].includes(node.namespaceURI);
+  return (
+    typeof node == "object" &&
+    node !== null &&
+    "nodeType" in node &&
+    node.nodeType === node.ELEMENT_NODE &&
+    [XBLNS, XULNS].includes(node.namespaceURI)
+  );
 };
 
 /**
@@ -1298,11 +1338,13 @@ element.isDOMWindow = function(node) {
   // TODO(ato): This should use Object.prototype.toString.call(node)
   // but it's not clear how to write a good xpcshell test for that,
   // seeing as we stub out a WindowProxy.
-  return typeof node == "object" &&
-      node !== null &&
-      typeof node.toString == "function" &&
-      node.toString() == "[object Window]" &&
-      node.self === node;
+  return (
+    typeof node == "object" &&
+    node !== null &&
+    typeof node.toString == "function" &&
+    node.toString() == "[object Window]" &&
+    node.self === node
+  );
 };
 
 const boolEls = {
@@ -1428,8 +1470,9 @@ class WebElement {
       return new ChromeWebElement(uuid);
     }
 
-    throw new InvalidArgumentError("Expected DOM window/element " +
-        pprint`or XUL element, got: ${node}`);
+    throw new InvalidArgumentError(
+      "Expected DOM window/element " + pprint`or XUL element, got: ${node}`
+    );
   }
 
   /**
@@ -1469,7 +1512,8 @@ class WebElement {
     }
 
     throw new InvalidArgumentError(
-        pprint`Expected web element reference, got: ${json}`);
+      pprint`Expected web element reference, got: ${json}`
+    );
   }
 
   /**
@@ -1526,10 +1570,12 @@ class WebElement {
       return false;
     }
 
-    if ((ContentWebElement.Identifier in obj) ||
-        (ContentWebWindow.Identifier in obj) ||
-        (ContentWebFrame.Identifier in obj) ||
-        (ChromeWebElement.Identifier in obj)) {
+    if (
+      ContentWebElement.Identifier in obj ||
+      ContentWebWindow.Identifier in obj ||
+      ContentWebFrame.Identifier in obj ||
+      ChromeWebElement.Identifier in obj
+    ) {
       return true;
     }
     return false;
@@ -1554,15 +1600,16 @@ this.WebElement = WebElement;
  */
 class ContentWebElement extends WebElement {
   toJSON() {
-    return {[ContentWebElement.Identifier]: this.uuid};
+    return { [ContentWebElement.Identifier]: this.uuid };
   }
 
   static fromJSON(json) {
-    const {Identifier} = ContentWebElement;
+    const { Identifier } = ContentWebElement;
 
     if (!(Identifier in json)) {
       throw new InvalidArgumentError(
-          pprint`Expected web element reference, got: ${json}`);
+        pprint`Expected web element reference, got: ${json}`
+      );
     }
 
     let uuid = json[Identifier];
@@ -1579,13 +1626,14 @@ this.ContentWebElement = ContentWebElement;
  */
 class ContentWebWindow extends WebElement {
   toJSON() {
-    return {[ContentWebWindow.Identifier]: this.uuid};
+    return { [ContentWebWindow.Identifier]: this.uuid };
   }
 
   static fromJSON(json) {
     if (!(ContentWebWindow.Identifier in json)) {
       throw new InvalidArgumentError(
-          pprint`Expected web window reference, got: ${json}`);
+        pprint`Expected web window reference, got: ${json}`
+      );
     }
     let uuid = json[ContentWebWindow.Identifier];
     return new ContentWebWindow(uuid);
@@ -1601,13 +1649,14 @@ this.ContentWebWindow = ContentWebWindow;
  */
 class ContentWebFrame extends WebElement {
   toJSON() {
-    return {[ContentWebFrame.Identifier]: this.uuid};
+    return { [ContentWebFrame.Identifier]: this.uuid };
   }
 
   static fromJSON(json) {
     if (!(ContentWebFrame.Identifier in json)) {
       throw new InvalidArgumentError(
-          pprint`Expected web frame reference, got: ${json}`);
+        pprint`Expected web frame reference, got: ${json}`
+      );
     }
     let uuid = json[ContentWebFrame.Identifier];
     return new ContentWebFrame(uuid);
@@ -1622,13 +1671,15 @@ this.ContentWebFrame = ContentWebFrame;
  */
 class ChromeWebElement extends WebElement {
   toJSON() {
-    return {[ChromeWebElement.Identifier]: this.uuid};
+    return { [ChromeWebElement.Identifier]: this.uuid };
   }
 
   static fromJSON(json) {
     if (!(ChromeWebElement.Identifier in json)) {
-      throw new InvalidArgumentError("Expected chrome element reference " +
-          pprint`for XUL/XBL element, got: ${json}`);
+      throw new InvalidArgumentError(
+        "Expected chrome element reference " +
+          pprint`for XUL/XBL element, got: ${json}`
+      );
     }
     let uuid = json[ChromeWebElement.Identifier];
     return new ChromeWebElement(uuid);

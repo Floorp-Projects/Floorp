@@ -1960,6 +1960,9 @@ nsresult nsHttpChannel::ProcessFailedProxyConnect(uint32_t httpStatus) {
     case 407:  // ProcessAuthentication() failed (e.g. no header)
       rv = NS_ERROR_PROXY_AUTHENTICATION_FAILED;
       break;
+    case 429:
+      rv = NS_ERROR_TOO_MANY_REQUESTS;
+      break;
       // Squid sends 404 if DNS fails (regular 404 from target is tunneled)
     case 404:  // HTTP/1.1: "Not Found"
                // RFC 2616: "some deployed proxies are known to return 400 or
@@ -2786,7 +2789,8 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
       break;
 
     case 425:
-      // Do not cache 425.
+    case 429:
+      // Do not cache 425 and 429.
       CloseCacheEntry(false);
       MOZ_FALLTHROUGH;  // process normally
     default:

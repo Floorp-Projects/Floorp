@@ -24,11 +24,20 @@ add_task(async function() {
   const groupNode = await waitFor(() => msgNode.querySelector(".group"));
   ok(groupNode, "The error object is logged as expected");
 
-  const onGroupExpanded = waitFor(() => msgNode.querySelector(".frames-group.expanded"));
+  const onGroupExpanded = waitFor(() =>
+    msgNode.querySelector(".frames-group.expanded")
+  );
   groupNode.click();
   await onGroupExpanded;
 
   ok(true, "The stacktrace group was expanded");
-  is(msgNode.querySelectorAll(".frame").length, 3, "Expected frames are displayed");
-  ok(!msgNode.classList.contains("open"), `Error message is still not expanded`);
+  is(
+    msgNode.querySelectorAll(".frame").length,
+    3,
+    "Expected frames are displayed"
+  );
+  ok(
+    !msgNode.classList.contains("open"),
+    `Error message is still not expanded`
+  );
 });

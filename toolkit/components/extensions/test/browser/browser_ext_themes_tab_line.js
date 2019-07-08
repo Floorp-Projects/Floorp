@@ -7,11 +7,11 @@ add_task(async function test_support_tab_line() {
   const TAB_LINE_COLOR = "#9400ff";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "theme": {
-        "colors": {
-          "frame": ACCENT_COLOR,
-          "tab_background_text": TEXT_COLOR,
-          "tab_line": TAB_LINE_COLOR,
+      theme: {
+        colors: {
+          frame: ACCENT_COLOR,
+          tab_background_text: TEXT_COLOR,
+          tab_line: TAB_LINE_COLOR,
         },
       },
     },
@@ -22,9 +22,11 @@ add_task(async function test_support_tab_line() {
   info("Checking selected tab line color");
   let selectedTab = document.querySelector(".tabbrowser-tab[selected]");
   let line = selectedTab.querySelector(".tab-line");
-  Assert.equal(window.getComputedStyle(line).backgroundColor,
-               `rgb(${hexToRGB(TAB_LINE_COLOR).join(", ")})`,
-               "Tab line should have theme color");
+  Assert.equal(
+    window.getComputedStyle(line).backgroundColor,
+    `rgb(${hexToRGB(TAB_LINE_COLOR).join(", ")})`,
+    "Tab line should have theme color"
+  );
 
   await extension.unload();
 });

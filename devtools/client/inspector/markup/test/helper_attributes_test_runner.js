@@ -136,13 +136,16 @@ async function runEditAttributesTest(test, inspector, testActor) {
   info("Editing attribute " + test.name + " with value " + test.value);
 
   const container = await focusNode(test.node, inspector);
-  ok(container && container.editor, "The markup-container for " + test.node +
-    " was found");
+  ok(
+    container && container.editor,
+    "The markup-container for " + test.node + " was found"
+  );
 
   info("Listening for the markupmutation event");
   const nodeMutated = inspector.once("markupmutation");
-  const attr = container.editor.attrElements.get(test.name)
-                                          .querySelector(".editable");
+  const attr = container.editor.attrElements
+    .get(test.name)
+    .querySelector(".editable");
   setEditableFieldValue(attr, test.value, inspector);
   await nodeMutated;
 
@@ -153,8 +156,10 @@ async function runEditAttributesTest(test, inspector, testActor) {
   await undoChange(inspector);
   await assertAttributes(test.node, test.originalAttributes, testActor);
 
-  info("Redo the change and assert that the attributes have been changed " +
-       "again");
+  info(
+    "Redo the change and assert that the attributes have been changed " +
+      "again"
+  );
   await redoChange(inspector);
   await assertAttributes(test.node, test.expectedAttributes, testActor);
 }

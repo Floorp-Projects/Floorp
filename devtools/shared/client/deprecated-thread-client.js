@@ -5,9 +5,12 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
+const {
+  arg,
+  DebuggerClient,
+} = require("devtools/shared/client/debugger-client");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {ThreadStateTypes} = require("devtools/shared/client/constants");
+const { ThreadStateTypes } = require("devtools/shared/client/constants");
 
 loader.lazyRequireGetter(
   this,
@@ -78,36 +81,39 @@ ThreadClient.prototype = {
    *        than proceeding forwards. This parameter has no effect if the
    *        server does not support rewinding.
    */
-  _doResume: DebuggerClient.requester({
-    type: "resume",
-    resumeLimit: arg(0),
-    rewind: arg(1),
-  }, {
-    before: function(packet) {
-      this._assertPaused("resume");
-
-      // Put the client in a tentative "resuming" state so we can prevent
-      // further requests that should only be sent in the paused state.
-      this._previousState = this._state;
-      this._state = "resuming";
-
-      return packet;
+  _doResume: DebuggerClient.requester(
+    {
+      type: "resume",
+      resumeLimit: arg(0),
+      rewind: arg(1),
     },
-    after: function(response) {
-      if (response.error && this._state == "resuming") {
-        // There was an error resuming, update the state to the new one
-        // reported by the server, if given (only on wrongState), otherwise
-        // reset back to the previous state.
-        if (response.state) {
-          this._state = ThreadStateTypes[response.state];
-        } else {
-          this._state = this._previousState;
+    {
+      before: function(packet) {
+        this._assertPaused("resume");
+
+        // Put the client in a tentative "resuming" state so we can prevent
+        // further requests that should only be sent in the paused state.
+        this._previousState = this._state;
+        this._state = "resuming";
+
+        return packet;
+      },
+      after: function(response) {
+        if (response.error && this._state == "resuming") {
+          // There was an error resuming, update the state to the new one
+          // reported by the server, if given (only on wrongState), otherwise
+          // reset back to the previous state.
+          if (response.state) {
+            this._state = ThreadStateTypes[response.state];
+          } else {
+            this._state = this._previousState;
+          }
         }
-      }
-      delete this._previousState;
-      return response;
-    },
-  }),
+        delete this._previousState;
+        return response;
+      },
+    }
+  ),
 
   /**
    * Reconfigure the thread actor.

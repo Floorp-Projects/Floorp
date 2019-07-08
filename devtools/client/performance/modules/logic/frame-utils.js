@@ -6,10 +6,17 @@
 const global = require("devtools/client/performance/modules/global");
 const demangle = require("devtools/client/shared/demangle");
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { isChromeScheme, isContentScheme, isWASM, parseURL } =
-  require("devtools/client/shared/source-utils");
+const {
+  isChromeScheme,
+  isContentScheme,
+  isWASM,
+  parseURL,
+} = require("devtools/client/shared/source-utils");
 
-const { CATEGORY_INDEX, CATEGORIES } = require("devtools/client/performance/modules/categories");
+const {
+  CATEGORY_INDEX,
+  CATEGORIES,
+} = require("devtools/client/performance/modules/categories");
 
 // Character codes used in various parsing helper functions.
 const CHAR_CODE_R = "r".charCodeAt(0);
@@ -127,9 +134,11 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
   // Look for the last occurrence of ' (' in case 1).
   if (lastCharCode === CHAR_CODE_RPAREN) {
     for (; i >= 0; i--) {
-      if (location.charCodeAt(i) === CHAR_CODE_LPAREN &&
-          i > 0 &&
-          location.charCodeAt(i - 1) === CHAR_CODE_SPACE) {
+      if (
+        location.charCodeAt(i) === CHAR_CODE_LPAREN &&
+        i > 0 &&
+        location.charCodeAt(i - 1) === CHAR_CODE_SPACE
+      ) {
         parenIndex = i;
         break;
       }
@@ -159,22 +168,28 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
     // Check for the case of the filename containing eval
     // e.g. "file.js%20line%2065%20%3E%20eval"
     const evalIndex = fileName.indexOf(EVAL_TOKEN);
-    if (evalIndex !== -1 && evalIndex === (fileName.length - EVAL_TOKEN.length)) {
+    if (evalIndex !== -1 && evalIndex === fileName.length - EVAL_TOKEN.length) {
       // Match the filename
       const evalLine = line;
-      const [, _fileName, , _line] = fileName.match(/(.+)(%20line%20(\d+)%20%3E%20eval)/)
-                                   || [];
+      const [, _fileName, , _line] =
+        fileName.match(/(.+)(%20line%20(\d+)%20%3E%20eval)/) || [];
       fileName = `${_fileName} (eval:${evalLine})`;
       line = _line;
-      assert(_fileName !== undefined,
-             "Filename could not be found from an eval location site");
-      assert(_line !== undefined,
-             "Line could not be found from an eval location site");
+      assert(
+        _fileName !== undefined,
+        "Filename could not be found from an eval location site"
+      );
+      assert(
+        _line !== undefined,
+        "Line could not be found from an eval location site"
+      );
 
       // Match the url as well
       [, url] = url.match(/(.+)( line (\d+) > eval)/) || [];
-      assert(url !== undefined,
-             "The URL could not be parsed correctly from an eval location site");
+      assert(
+        url !== undefined,
+        "The URL could not be parsed correctly from an eval location site"
+      );
     }
   } else {
     functionName = location;
@@ -211,9 +226,11 @@ function computeIsContentAndCategory(frame) {
     // Need to search for the last occurrence of ' (' to find the start of the
     // resource string.
     for (let i = location.length - 2; i >= 0; i--) {
-      if (location.charCodeAt(i) === CHAR_CODE_LPAREN &&
-          i > 0 &&
-          location.charCodeAt(i - 1) === CHAR_CODE_SPACE) {
+      if (
+        location.charCodeAt(i) === CHAR_CODE_LPAREN &&
+        i > 0 &&
+        location.charCodeAt(i - 1) === CHAR_CODE_SPACE
+      ) {
         schemeStartIndex = i + 1;
         break;
       }
@@ -232,10 +249,12 @@ function computeIsContentAndCategory(frame) {
 
   if (schemeStartIndex !== 0) {
     for (let j = schemeStartIndex; j < location.length; j++) {
-      if (location.charCodeAt(j) === CHAR_CODE_R &&
-          isChromeScheme(location, j) &&
-          (location.includes("resource://devtools") ||
-           location.includes("resource://devtools"))) {
+      if (
+        location.charCodeAt(j) === CHAR_CODE_R &&
+        isChromeScheme(location, j) &&
+        (location.includes("resource://devtools") ||
+          location.includes("resource://devtools"))
+      ) {
         frame.category = CATEGORY_INDEX("tools");
         return;
       }
@@ -280,7 +299,11 @@ function getInflatedFrameCache(frameTable) {
 function getOrAddInflatedFrame(cache, index, frameTable, stringTable) {
   let inflatedFrame = cache[index];
   if (inflatedFrame === null) {
-    inflatedFrame = cache[index] = new InflatedFrame(index, frameTable, stringTable);
+    inflatedFrame = cache[index] = new InflatedFrame(
+      index,
+      frameTable,
+      stringTable
+    );
   }
   return inflatedFrame;
 }
@@ -360,10 +383,13 @@ function isNumeric(c) {
 }
 
 function shouldDemangle(name) {
-  return name && name.charCodeAt &&
-         name.charCodeAt(0) === CHAR_CODE_UNDERSCORE &&
-         name.charCodeAt(1) === CHAR_CODE_UNDERSCORE &&
-         name.charCodeAt(2) === CHAR_CODE_CAP_Z;
+  return (
+    name &&
+    name.charCodeAt &&
+    name.charCodeAt(0) === CHAR_CODE_UNDERSCORE &&
+    name.charCodeAt(1) === CHAR_CODE_UNDERSCORE &&
+    name.charCodeAt(2) === CHAR_CODE_CAP_Z
+  );
 }
 
 /**
@@ -397,7 +423,7 @@ function getFrameInfo(node, options) {
     data.samples = node.youngestFrameSamples;
     const hasCategory = node.category !== null && node.category !== undefined;
     data.categoryData = hasCategory
-      ? (CATEGORIES[node.category] || CATEGORIES[CATEGORY_INDEX("other")])
+      ? CATEGORIES[node.category] || CATEGORIES[CATEGORY_INDEX("other")]
       : {};
     data.nodeType = node.nodeType;
 
@@ -410,9 +436,9 @@ function getFrameInfo(node, options) {
       data.name = data.functionName;
     }
 
-    data.tooltiptext = data.isMetaCategory ?
-      data.categoryData.label :
-      node.location || "";
+    data.tooltiptext = data.isMetaCategory
+      ? data.categoryData.label
+      : node.location || "";
 
     gFrameData.set(node, data);
   }
@@ -428,10 +454,11 @@ function getFrameInfo(node, options) {
   const totalSamples = options.root.samples;
   const totalDuration = options.root.duration;
   if (options && options.root && !data.COSTS_CALCULATED) {
-    data.selfDuration = node.youngestFrameSamples / totalSamples * totalDuration;
-    data.selfPercentage = node.youngestFrameSamples / totalSamples * 100;
-    data.totalDuration = node.samples / totalSamples * totalDuration;
-    data.totalPercentage = node.samples / totalSamples * 100;
+    data.selfDuration =
+      (node.youngestFrameSamples / totalSamples) * totalDuration;
+    data.selfPercentage = (node.youngestFrameSamples / totalSamples) * 100;
+    data.totalDuration = (node.samples / totalSamples) * totalDuration;
+    data.totalPercentage = (node.samples / totalSamples) * 100;
     data.COSTS_CALCULATED = true;
   }
 
@@ -439,12 +466,12 @@ function getFrameInfo(node, options) {
     const totalBytes = options.root.byteSize;
     data.selfCount = node.youngestFrameSamples;
     data.totalCount = node.samples;
-    data.selfCountPercentage = node.youngestFrameSamples / totalSamples * 100;
-    data.totalCountPercentage = node.samples / totalSamples * 100;
+    data.selfCountPercentage = (node.youngestFrameSamples / totalSamples) * 100;
+    data.totalCountPercentage = (node.samples / totalSamples) * 100;
     data.selfSize = node.youngestFrameByteSize;
     data.totalSize = node.byteSize;
-    data.selfSizePercentage = node.youngestFrameByteSize / totalBytes * 100;
-    data.totalSizePercentage = node.byteSize / totalBytes * 100;
+    data.selfSizePercentage = (node.youngestFrameByteSize / totalBytes) * 100;
+    data.totalSizePercentage = (node.byteSize / totalBytes) * 100;
     data.ALLOCATION_DATA_CALCULATED = true;
   }
 
@@ -464,7 +491,8 @@ exports.getFrameInfo = getFrameInfo;
 function findFrameByLocation(threadNode, location) {
   if (!threadNode.inverted) {
     throw new Error(
-      "FrameUtils.findFrameByLocation only supports leaf nodes in an inverted tree.");
+      "FrameUtils.findFrameByLocation only supports leaf nodes in an inverted tree."
+    );
   }
 
   const calls = threadNode.calls;

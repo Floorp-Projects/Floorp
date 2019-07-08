@@ -5,7 +5,7 @@ gUseRealCertChecks = true;
 const DATA = "data/signing_checks/";
 const ID = "test@somewhere.com";
 
-let testserver = createHttpServer({hosts: ["example.com"]});
+let testserver = createHttpServer({ hosts: ["example.com"] });
 
 AddonTestUtils.registerJSON(testserver, "/update.json", {
   addons: {
@@ -21,8 +21,10 @@ AddonTestUtils.registerJSON(testserver, "/update.json", {
   },
 });
 
-Services.prefs.setCharPref("extensions.update.background.url",
-                           "http://example.com/update.json");
+Services.prefs.setCharPref(
+  "extensions.update.background.url",
+  "http://example.com/update.json"
+);
 
 function verifySignatures() {
   return new Promise(resolve => {
@@ -33,7 +35,10 @@ function verifySignatures() {
     Services.obs.addObserver(observer, "xpi-signature-changed");
 
     info("Verifying signatures");
-    let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
+    let XPIscope = ChromeUtils.import(
+      "resource://gre/modules/addons/XPIProvider.jsm",
+      null
+    );
     XPIscope.XPIDatabase.verifySignatures();
   });
 }

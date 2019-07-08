@@ -27,8 +27,14 @@ add_test(function test_handleEnter_key() {
   // First check the case where we do select a value with the keyboard:
   doSearch("moz", results, function(aController) {
     Assert.equal(aController.input.textValue, "moz");
-    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
-    Assert.equal(aController.getFinalCompleteValueAt(1), "http://www.mozilla.org");
+    Assert.equal(
+      aController.getFinalCompleteValueAt(0),
+      "http://www.mozilla.com"
+    );
+    Assert.equal(
+      aController.getFinalCompleteValueAt(1),
+      "http://www.mozilla.org"
+    );
 
     Assert.equal(aController.input.popup.selectedIndex, 0);
     // Hardcode KeyboardEvent.DOM_VK_DOWN, because we can't easily
@@ -54,8 +60,14 @@ add_test(function test_handleEnter_mouse() {
   // Then the case where we do not:
   doSearch("moz", results, function(aController) {
     Assert.equal(aController.input.textValue, "moz");
-    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
-    Assert.equal(aController.getFinalCompleteValueAt(1), "http://www.mozilla.org");
+    Assert.equal(
+      aController.getFinalCompleteValueAt(0),
+      "http://www.mozilla.com"
+    );
+    Assert.equal(
+      aController.getFinalCompleteValueAt(1),
+      "http://www.mozilla.org"
+    );
 
     Assert.equal(aController.input.popup.selectedIndex, 0);
     aController.input.popupOpen = true;
@@ -80,8 +92,14 @@ add_test(function test_handleEnter_preselected() {
   // Then test a preselection.
   doSearch("moz", results, function(aController) {
     Assert.equal(aController.input.textValue, "moz");
-    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
-    Assert.equal(aController.getFinalCompleteValueAt(1), "http://www.mozilla.org");
+    Assert.equal(
+      aController.getFinalCompleteValueAt(0),
+      "http://www.mozilla.com"
+    );
+    Assert.equal(
+      aController.getFinalCompleteValueAt(1),
+      "http://www.mozilla.org"
+    );
 
     aController.setInitiallySelectedIndex(0);
 
@@ -100,11 +118,12 @@ function doSearch(aSearchString, aResults, aOnCompleteCallback) {
   );
   registerAutoCompleteSearch(search);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
   // Make an AutoCompleteInput that uses our searches and confirms results.
-  let input = new AutoCompleteInput([ search.name ]);
+  let input = new AutoCompleteInput([search.name]);
   input.textValue = aSearchString;
 
   controller.input = input;
@@ -118,4 +137,3 @@ function doSearch(aSearchString, aResults, aOnCompleteCallback) {
     run_next_test();
   };
 }
-

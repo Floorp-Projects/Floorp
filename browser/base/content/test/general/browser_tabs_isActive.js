@@ -4,13 +4,18 @@
 
 // Test for the docshell active state of local and remote browsers.
 
-const kTestPage = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+const kTestPage =
+  "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
 function promiseNewTabSwitched() {
   return new Promise(resolve => {
-    gBrowser.addEventListener("TabSwitchDone", function() {
-      executeSoon(resolve);
-    }, {once: true});
+    gBrowser.addEventListener(
+      "TabSwitchDone",
+      function() {
+        executeSoon(resolve);
+      },
+      { once: true }
+    );
   });
 }
 
@@ -30,7 +35,7 @@ function checkState(parentSide, childSide, value, message) {
 }
 
 function waitForMs(aMs) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(done, aMs);
     function done() {
       resolve(true);
@@ -41,13 +46,18 @@ function waitForMs(aMs) {
 add_task(async function() {
   let url = kTestPage;
   let originalTab = gBrowser.selectedTab; // test tab
-  let newTab = BrowserTestUtils.addTab(gBrowser, url, {skipAnimation: true});
+  let newTab = BrowserTestUtils.addTab(gBrowser, url, { skipAnimation: true });
   let parentSide, childSide;
 
   // new tab added but not selected checks
   parentSide = getParentTabState(newTab);
   childSide = await getChildTabState(newTab);
-  checkState(parentSide, childSide, false, "newly added " + url + " tab is not active");
+  checkState(
+    parentSide,
+    childSide,
+    false,
+    "newly added " + url + " tab is not active"
+  );
   parentSide = getParentTabState(originalTab);
   childSide = await getChildTabState(originalTab);
   checkState(parentSide, childSide, true, "original tab is active initially");
@@ -58,16 +68,29 @@ add_task(async function() {
   await tabSwitchedPromise;
 
   if (Services.appinfo.browserTabsRemoteAutostart) {
-    ok(newTab.linkedBrowser.isRemoteBrowser, "for testing we need a remote tab");
+    ok(
+      newTab.linkedBrowser.isRemoteBrowser,
+      "for testing we need a remote tab"
+    );
   }
 
   // check active state of both tabs
   parentSide = getParentTabState(newTab);
   childSide = await getChildTabState(newTab);
-  checkState(parentSide, childSide, true, "newly added " + url + " tab is active after selection");
+  checkState(
+    parentSide,
+    childSide,
+    true,
+    "newly added " + url + " tab is active after selection"
+  );
   parentSide = getParentTabState(originalTab);
   childSide = await getChildTabState(originalTab);
-  checkState(parentSide, childSide, false, "original tab is not active while unselected");
+  checkState(
+    parentSide,
+    childSide,
+    false,
+    "original tab is not active while unselected"
+  );
 
   // switch back to the original test tab and wait for TabSwitchDone event
   tabSwitchedPromise = promiseNewTabSwitched();
@@ -77,10 +100,20 @@ add_task(async function() {
   // check active state of both tabs
   parentSide = getParentTabState(newTab);
   childSide = await getChildTabState(newTab);
-  checkState(parentSide, childSide, false, "newly added " + url + " tab is not active after switch back");
+  checkState(
+    parentSide,
+    childSide,
+    false,
+    "newly added " + url + " tab is not active after switch back"
+  );
   parentSide = getParentTabState(originalTab);
   childSide = await getChildTabState(originalTab);
-  checkState(parentSide, childSide, true, "original tab is active again after switch back");
+  checkState(
+    parentSide,
+    childSide,
+    true,
+    "original tab is active again after switch back"
+  );
 
   // switch to the new tab and wait for TabSwitchDone event
   tabSwitchedPromise = promiseNewTabSwitched();
@@ -90,10 +123,20 @@ add_task(async function() {
   // check active state of both tabs
   parentSide = getParentTabState(newTab);
   childSide = await getChildTabState(newTab);
-  checkState(parentSide, childSide, true, "newly added " + url + " tab is not active after switch back");
+  checkState(
+    parentSide,
+    childSide,
+    true,
+    "newly added " + url + " tab is not active after switch back"
+  );
   parentSide = getParentTabState(originalTab);
   childSide = await getChildTabState(originalTab);
-  checkState(parentSide, childSide, false, "original tab is active again after switch back");
+  checkState(
+    parentSide,
+    childSide,
+    false,
+    "original tab is active again after switch back"
+  );
 
   gBrowser.removeTab(newTab);
 });
@@ -101,12 +144,17 @@ add_task(async function() {
 add_task(async function() {
   let url = "about:about";
   let originalTab = gBrowser.selectedTab; // test tab
-  let newTab = BrowserTestUtils.addTab(gBrowser, url, {skipAnimation: true});
+  let newTab = BrowserTestUtils.addTab(gBrowser, url, { skipAnimation: true });
   let parentSide, childSide;
 
   parentSide = getParentTabState(newTab);
   childSide = await getChildTabState(newTab);
-  checkState(parentSide, childSide, false, "newly added " + url + " tab is not active");
+  checkState(
+    parentSide,
+    childSide,
+    false,
+    "newly added " + url + " tab is not active"
+  );
   parentSide = getParentTabState(originalTab);
   childSide = await getChildTabState(originalTab);
   checkState(parentSide, childSide, true, "original tab is active initially");
@@ -116,15 +164,28 @@ add_task(async function() {
   await tabSwitchedPromise;
 
   if (Services.appinfo.browserTabsRemoteAutostart) {
-    ok(!newTab.linkedBrowser.isRemoteBrowser, "for testing we need a local tab");
+    ok(
+      !newTab.linkedBrowser.isRemoteBrowser,
+      "for testing we need a local tab"
+    );
   }
 
   parentSide = getParentTabState(newTab);
   childSide = await getChildTabState(newTab);
-  checkState(parentSide, childSide, true, "newly added " + url + " tab is active after selection");
+  checkState(
+    parentSide,
+    childSide,
+    true,
+    "newly added " + url + " tab is active after selection"
+  );
   parentSide = getParentTabState(originalTab);
   childSide = await getChildTabState(originalTab);
-  checkState(parentSide, childSide, false, "original tab is not active while unselected");
+  checkState(
+    parentSide,
+    childSide,
+    false,
+    "original tab is not active while unselected"
+  );
 
   tabSwitchedPromise = promiseNewTabSwitched();
   gBrowser.selectedTab = originalTab;
@@ -132,10 +193,20 @@ add_task(async function() {
 
   parentSide = getParentTabState(newTab);
   childSide = await getChildTabState(newTab);
-  checkState(parentSide, childSide, false, "newly added " + url + " tab is not active after switch back");
+  checkState(
+    parentSide,
+    childSide,
+    false,
+    "newly added " + url + " tab is not active after switch back"
+  );
   parentSide = getParentTabState(originalTab);
   childSide = await getChildTabState(originalTab);
-  checkState(parentSide, childSide, true, "original tab is active again after switch back");
+  checkState(
+    parentSide,
+    childSide,
+    true,
+    "original tab is active again after switch back"
+  );
 
   tabSwitchedPromise = promiseNewTabSwitched();
   gBrowser.selectedTab = newTab;
@@ -143,10 +214,20 @@ add_task(async function() {
 
   parentSide = getParentTabState(newTab);
   childSide = await getChildTabState(newTab);
-  checkState(parentSide, childSide, true, "newly added " + url + " tab is not active after switch back");
+  checkState(
+    parentSide,
+    childSide,
+    true,
+    "newly added " + url + " tab is not active after switch back"
+  );
   parentSide = getParentTabState(originalTab);
   childSide = await getChildTabState(originalTab);
-  checkState(parentSide, childSide, false, "original tab is active again after switch back");
+  checkState(
+    parentSide,
+    childSide,
+    false,
+    "original tab is active again after switch back"
+  );
 
   gBrowser.removeTab(newTab);
 });

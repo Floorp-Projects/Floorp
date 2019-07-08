@@ -8,17 +8,21 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "DownloadUIHelper",
-];
+var EXPORTED_SYMBOLS = ["DownloadUIHelper"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 const kStringBundleUrl =
   "chrome://mozapps/locale/downloads/downloads.properties";
@@ -68,8 +72,7 @@ XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function() {
     if (stringName in kStringsRequiringFormatting) {
       strings[stringName] = function() {
         // Convert "arguments" to a real array before calling into XPCOM.
-        return sb.formatStringFromName(stringName,
-                                       Array.from(arguments));
+        return sb.formatStringFromName(stringName, Array.from(arguments));
       };
     } else {
       strings[stringName] = string.value;
@@ -130,9 +133,10 @@ this.DownloadPrompter.prototype = {
     let leafName = OS.Path.basename(path);
 
     let s = DownloadUIHelper.strings;
-    return this._prompter.confirm(s.fileExecutableSecurityWarningTitle,
-                                  s.fileExecutableSecurityWarning(leafName,
-                                                                  leafName));
+    return this._prompter.confirm(
+      s.fileExecutableSecurityWarningTitle,
+      s.fileExecutableSecurityWarning(leafName, leafName)
+    );
   },
 
   /**
@@ -147,8 +151,10 @@ this.DownloadPrompter.prototype = {
    * @return False to cancel the downloads and continue, true to abort the
    *         operation.
    */
-  confirmCancelDownloads: function DP_confirmCancelDownload(aDownloadsCount,
-                                                            aPromptType) {
+  confirmCancelDownloads: function DP_confirmCancelDownload(
+    aDownloadsCount,
+    aPromptType
+  ) {
     // Always continue in case we have no prompter implementation, or if there
     // are no active downloads.
     if (!this._prompter || aDownloadsCount <= 0) {
@@ -156,45 +162,62 @@ this.DownloadPrompter.prototype = {
     }
 
     let s = DownloadUIHelper.strings;
-    let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-                      (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
-    let okButton = aDownloadsCount > 1 ? s.cancelDownloadsOKTextMultiple(aDownloadsCount)
-                                       : s.cancelDownloadsOKText;
+    let buttonFlags =
+      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0 +
+      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1;
+    let okButton =
+      aDownloadsCount > 1
+        ? s.cancelDownloadsOKTextMultiple(aDownloadsCount)
+        : s.cancelDownloadsOKText;
     let title, message, cancelButton;
 
     switch (aPromptType) {
       case this.ON_QUIT:
         title = s.quitCancelDownloadsAlertTitle;
         if (AppConstants.platform != "macosx") {
-          message = aDownloadsCount > 1
-                    ? s.quitCancelDownloadsAlertMsgMultiple(aDownloadsCount)
-                    : s.quitCancelDownloadsAlertMsg;
+          message =
+            aDownloadsCount > 1
+              ? s.quitCancelDownloadsAlertMsgMultiple(aDownloadsCount)
+              : s.quitCancelDownloadsAlertMsg;
           cancelButton = s.dontQuitButtonWin;
         } else {
-          message = aDownloadsCount > 1
-                    ? s.quitCancelDownloadsAlertMsgMacMultiple(aDownloadsCount)
-                    : s.quitCancelDownloadsAlertMsgMac;
+          message =
+            aDownloadsCount > 1
+              ? s.quitCancelDownloadsAlertMsgMacMultiple(aDownloadsCount)
+              : s.quitCancelDownloadsAlertMsgMac;
           cancelButton = s.dontQuitButtonMac;
         }
         break;
       case this.ON_OFFLINE:
         title = s.offlineCancelDownloadsAlertTitle;
-        message = aDownloadsCount > 1
-                  ? s.offlineCancelDownloadsAlertMsgMultiple(aDownloadsCount)
-                  : s.offlineCancelDownloadsAlertMsg;
+        message =
+          aDownloadsCount > 1
+            ? s.offlineCancelDownloadsAlertMsgMultiple(aDownloadsCount)
+            : s.offlineCancelDownloadsAlertMsg;
         cancelButton = s.dontGoOfflineButton;
         break;
       case this.ON_LEAVE_PRIVATE_BROWSING:
         title = s.leavePrivateBrowsingCancelDownloadsAlertTitle;
-        message = aDownloadsCount > 1
-                  ? s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2(aDownloadsCount)
-                  : s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsg2;
+        message =
+          aDownloadsCount > 1
+            ? s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2(
+                aDownloadsCount
+              )
+            : s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsg2;
         cancelButton = s.dontLeavePrivateBrowsingButton2;
         break;
     }
 
-    let rv = this._prompter.confirmEx(title, message, buttonFlags, okButton,
-                                      cancelButton, null, null, {});
-    return (rv == 1);
+    let rv = this._prompter.confirmEx(
+      title,
+      message,
+      buttonFlags,
+      okButton,
+      cancelButton,
+      null,
+      null,
+      {}
+    );
+    return rv == 1;
   },
 };

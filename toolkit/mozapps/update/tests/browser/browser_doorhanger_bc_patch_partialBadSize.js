@@ -4,8 +4,10 @@
 "use strict";
 
 add_task(async function doorhanger_bc_patch_partialBadSize() {
-  let params = {checkAttempts: 1,
-                queryString: "&partialPatchOnly=1&invalidPartialSize=1"};
+  let params = {
+    checkAttempts: 1,
+    queryString: "&partialPatchOnly=1&invalidPartialSize=1",
+  };
   await runDoorhangerUpdateTest(params, [
     {
       // If the update download fails maxBackgroundErrors download attempts then
@@ -13,13 +15,13 @@ add_task(async function doorhanger_bc_patch_partialBadSize() {
       notificationId: "update-available",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: {whatsNew: gDefaultWhatsNewURL},
+      pageURLs: { whatsNew: gDefaultWhatsNewURL },
     },
     {
       notificationId: "update-available",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: {whatsNew: gDefaultWhatsNewURL},
+      pageURLs: { whatsNew: gDefaultWhatsNewURL },
     },
     {
       // If the update process is unable to install the update show the manual
@@ -27,8 +29,7 @@ add_task(async function doorhanger_bc_patch_partialBadSize() {
       notificationId: "update-manual",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: {whatsNew: gDefaultWhatsNewURL,
-                 manual: URL_MANUAL_UPDATE},
+      pageURLs: { whatsNew: gDefaultWhatsNewURL, manual: URL_MANUAL_UPDATE },
     },
   ]);
 });

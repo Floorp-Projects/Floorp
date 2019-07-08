@@ -18,8 +18,9 @@ function run_test() {
  * anything written to it throws a not-initialized exception.
  */
 function test1() {
-  var ss = Cc["@mozilla.org/storagestream;1"]
-             .createInstance(Ci.nsIStorageStream);
+  var ss = Cc["@mozilla.org/storagestream;1"].createInstance(
+    Ci.nsIStorageStream
+  );
   ss.init(1024, 1024, null);
 
   var unusedVariable = ss.getOutputStream(0);
@@ -27,9 +28,9 @@ function test1() {
   Assert.equal(inp2.available(), 0);
   Assert.ok(inp2.isNonBlocking());
 
-  var sis =
-      Cc["@mozilla.org/scriptableinputstream;1"]
-        .createInstance(Ci.nsIScriptableInputStream);
+  var sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   sis.init(inp2);
 
   var threw = false;
@@ -50,8 +51,9 @@ function test1() {
  * data have been explicitly written doesn't throw an exception.
  */
 function test2() {
-  var ss = Cc["@mozilla.org/storagestream;1"]
-             .createInstance(Ci.nsIStorageStream);
+  var ss = Cc["@mozilla.org/storagestream;1"].createInstance(
+    Ci.nsIStorageStream
+  );
   ss.init(1024, 1024, null);
 
   var out = ss.getOutputStream(0);
@@ -68,8 +70,9 @@ function test2() {
  * which has had 0 bytes written to it explicitly works correctly.
  */
 function test3() {
-  var ss = Cc["@mozilla.org/storagestream;1"]
-             .createInstance(Ci.nsIStorageStream);
+  var ss = Cc["@mozilla.org/storagestream;1"].createInstance(
+    Ci.nsIStorageStream
+  );
   ss.init(1024, 1024, null);
 
   var out = ss.getOutputStream(0);
@@ -87,12 +90,12 @@ function test3() {
     var bis = BIS(inp);
     bis.readByteArray(5);
   } catch (e) {
-    if (e.result != Cr.NS_BASE_STREAM_WOULD_BLOCK)
+    if (e.result != Cr.NS_BASE_STREAM_WOULD_BLOCK) {
       do_throw("wrong error thrown: " + e);
+    }
     threw = true;
   }
-  Assert.ok(threw,
-            "should have thrown (nsStorageInputStream is nonblocking)");
+  Assert.ok(threw, "should have thrown (nsStorageInputStream is nonblocking)");
 }
 
 /**
@@ -102,14 +105,16 @@ function test3() {
 function test4() {
   var bytes = [65, 66, 67, 68, 69, 70, 71, 72, 73, 74];
 
-  var ss = Cc["@mozilla.org/storagestream;1"]
-             .createInstance(Ci.nsIStorageStream);
+  var ss = Cc["@mozilla.org/storagestream;1"].createInstance(
+    Ci.nsIStorageStream
+  );
   ss.init(1024, 1024, null);
 
   var outStream = ss.getOutputStream(0);
 
-  var bos = Cc["@mozilla.org/binaryoutputstream;1"]
-              .createInstance(Ci.nsIBinaryOutputStream);
+  var bos = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+    Ci.nsIBinaryOutputStream
+  );
   bos.setOutputStream(outStream);
 
   bos.writeByteArray(bytes, bytes.length);
@@ -128,18 +133,20 @@ function test4() {
   try {
     data = bis.read8(1);
   } catch (e) {
-    if (e.result != Cr.NS_ERROR_FAILURE)
+    if (e.result != Cr.NS_ERROR_FAILURE) {
       do_throw("wrong error thrown: " + e);
+    }
     threw = true;
   }
-  if (!threw)
+  if (!threw) {
     do_throw("should have thrown but instead returned: '" + data + "'");
+  }
 }
 
-
 function BIS(input) {
-  var bis = Cc["@mozilla.org/binaryinputstream;1"]
-              .createInstance(Ci.nsIBinaryInputStream);
+  var bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   bis.setInputStream(input);
   return bis;
 }

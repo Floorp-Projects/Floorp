@@ -25,8 +25,9 @@ add_task(async function test_get_child_index() {
 
   // Get the unfiled bookmark node.
   let unfiledNode = getNodeAt(PlacesUtils.bookmarks.unfiledGuid, 0);
-  if (!unfiledNode)
+  if (!unfiledNode) {
     do_throw("Unable to find bookmark in hierarchy!");
+  }
   Assert.equal(unfiledNode.title, "Unfiled bookmark");
 
   let hs = PlacesUtils.history;
@@ -63,8 +64,9 @@ function getNodeAt(aFolderGuid, aIndex) {
   options.queryType = options.QUERY_TYPE_BOOKMARKS;
   let root = hs.executeQuery(query, options).root;
   root.containerOpen = true;
-  if (root.childCount < aIndex)
+  if (root.childCount < aIndex) {
     do_throw("Not enough children to find bookmark!");
+  }
   let node = root.getChild(aIndex);
   root.containerOpen = false;
   return node;

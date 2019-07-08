@@ -17,32 +17,28 @@ class EndDelaySign extends PureComponent {
   }
 
   render() {
-    const {
-      animation,
-      timeScale,
-    } = this.props;
+    const { animation, timeScale } = this.props;
     const {
       endDelay,
       endTime,
       isEndDelayFilled,
-   } = animation.state.absoluteValues;
+    } = animation.state.absoluteValues;
 
-    const toPercentage = v => v / timeScale.getDuration() * 100;
+    const toPercentage = v => (v / timeScale.getDuration()) * 100;
     const absEndDelay = Math.abs(endDelay);
     const offset = toPercentage(endTime - absEndDelay - timeScale.minStartTime);
     const width = toPercentage(absEndDelay);
 
-    return dom.div(
-      {
-        className: "animation-end-delay-sign" +
-                    (endDelay < 0 ? " negative" : "") +
-                    (isEndDelayFilled ? " fill" : ""),
-        style: {
-          width: `${ width }%`,
-          marginInlineStart: `${ offset }%`,
-        },
-      }
-    );
+    return dom.div({
+      className:
+        "animation-end-delay-sign" +
+        (endDelay < 0 ? " negative" : "") +
+        (isEndDelayFilled ? " fill" : ""),
+      style: {
+        width: `${width}%`,
+        marginInlineStart: `${offset}%`,
+      },
+    });
   }
 }
 

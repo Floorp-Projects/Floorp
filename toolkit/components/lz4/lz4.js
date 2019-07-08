@@ -7,13 +7,16 @@
 var SharedAll;
 if (typeof Components != "undefined") {
   SharedAll = {};
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
-  var {Primitives} = ChromeUtils.import("resource://gre/modules/lz4_internal.js");
-  var {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
+    SharedAll
+  );
+  var { Primitives } = ChromeUtils.import(
+    "resource://gre/modules/lz4_internal.js"
+  );
+  var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
-  this.EXPORTED_SYMBOLS = [
-    "Lz4",
-  ];
+  this.EXPORTED_SYMBOLS = ["Lz4"];
   this.exports = {};
 } else if (typeof module != "undefined" && typeof require != "undefined") {
   /* eslint-env commonjs */
@@ -21,7 +24,9 @@ if (typeof Components != "undefined") {
   Primitives = require("resource://gre/modules/lz4_internal.js");
   ctypes = self.ctypes;
 } else {
-  throw new Error("Please load this module with Component.utils.import or with require()");
+  throw new Error(
+    "Please load this module with Component.utils.import or with require()"
+  );
 }
 
 const MAGIC_NUMBER = new Uint8Array([109, 111, 122, 76, 122, 52, 48, 0]); // "mozLz40\0"
@@ -87,7 +92,10 @@ function compressFileContent(array, options = {}) {
   let outputArray = new Uint8Array(HEADER_SIZE + maxCompressedSize);
 
   // Compress to output array
-  let payload = new Uint8Array(outputArray.buffer, outputArray.byteOffset + HEADER_SIZE);
+  let payload = new Uint8Array(
+    outputArray.buffer,
+    outputArray.byteOffset + HEADER_SIZE
+  );
   let compressedSize = Primitives.compress(array, inputBytes, payload);
 
   // Add headers
@@ -102,20 +110,34 @@ exports.compressFileContent = compressFileContent;
 function decompressFileContent(array, options = {}) {
   let bytes = SharedAll.normalizeBufferArgs(array, options.bytes || null);
   if (bytes < HEADER_SIZE) {
-    throw new LZError("decompress", "becauseLZNoHeader",
-      `Buffer is too short (no header) - Data: ${ options.path || array }`);
+    throw new LZError(
+      "decompress",
+      "becauseLZNoHeader",
+      `Buffer is too short (no header) - Data: ${options.path || array}`
+    );
   }
 
   // Read headers
-  let expectMagicNumber = new DataView(array.buffer, 0, MAGIC_NUMBER.byteLength);
+  let expectMagicNumber = new DataView(
+    array.buffer,
+    0,
+    MAGIC_NUMBER.byteLength
+  );
   for (let i = 0; i < MAGIC_NUMBER.byteLength; ++i) {
     if (expectMagicNumber.getUint8(i) != MAGIC_NUMBER[i]) {
-      throw new LZError("decompress", "becauseLZWrongMagicNumber",
-        `Invalid header (no magic number) - Data: ${ options.path || array }`);
+      throw new LZError(
+        "decompress",
+        "becauseLZWrongMagicNumber",
+        `Invalid header (no magic number) - Data: ${options.path || array}`
+      );
     }
   }
 
-  let sizeBuf = new DataView(array.buffer, MAGIC_NUMBER.byteLength, BYTES_IN_SIZE_HEADER);
+  let sizeBuf = new DataView(
+    array.buffer,
+    MAGIC_NUMBER.byteLength,
+    BYTES_IN_SIZE_HEADER
+  );
   let expectDecompressedSize =
     sizeBuf.getUint8(0) +
     (sizeBuf.getUint8(1) << 8) +
@@ -131,17 +153,30 @@ function decompressFileContent(array, options = {}) {
 
   // Prepare the output buffer
   let outputBuffer = new Uint8Array(expectDecompressedSize);
-  let decompressedBytes = (new SharedAll.Type.size_t.implementation(0));
+  let decompressedBytes = new SharedAll.Type.size_t.implementation(0);
 
   // Decompress
-  let success = Primitives.decompress(inputData, bytes - HEADER_SIZE,
-                                      outputBuffer, outputBuffer.byteLength,
-                                      decompressedBytes.address());
+  let success = Primitives.decompress(
+    inputData,
+    bytes - HEADER_SIZE,
+    outputBuffer,
+    outputBuffer.byteLength,
+    decompressedBytes.address()
+  );
   if (!success) {
-    throw new LZError("decompress", "becauseLZInvalidContent",
-      `Invalid content: Decompression stopped at ${decompressedBytes.value} - Data: ${ options.path || array }`);
+    throw new LZError(
+      "decompress",
+      "becauseLZInvalidContent",
+      `Invalid content: Decompression stopped at ${
+        decompressedBytes.value
+      } - Data: ${options.path || array}`
+    );
   }
-  return new Uint8Array(outputBuffer.buffer, outputBuffer.byteOffset, decompressedBytes.value);
+  return new Uint8Array(
+    outputBuffer.buffer,
+    outputBuffer.byteOffset,
+    decompressedBytes.value
+  );
 }
 exports.decompressFileContent = decompressFileContent;
 

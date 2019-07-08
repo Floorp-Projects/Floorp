@@ -1,24 +1,22 @@
-function postMsg(message)
-{
+function postMsg(message) {
   parent.postMessage(message, "http://mochi.test:8888");
 }
 
 window.addEventListener("message", onMessageReceived);
 
-function onMessageReceived(event)
-{
+function onMessageReceived(event) {
   if (event.data == "step") {
     var performed = false;
     try {
       performed = doStep();
-    }
-    catch (ex) {
-      postMsg("FAILURE: exception threw at "+ location +":\n" + ex);
+    } catch (ex) {
+      postMsg("FAILURE: exception threw at " + location + ":\n" + ex);
       finishTest();
     }
 
-    if (performed)
+    if (performed) {
       postMsg("perf");
+    }
 
     return;
   }
@@ -26,29 +24,27 @@ function onMessageReceived(event)
   postMsg("Invalid message");
 }
 
-function ok(a, message)
-{
-  if (!a)
+function ok(a, message) {
+  if (!a) {
     postMsg("FAILURE: " + message);
-  else
+  } else {
     postMsg(message);
+  }
 }
 
-function is(a, b, message)
-{
-  if (a != b)
-    postMsg("FAILURE: " + message + ", expected "+b+" got "+a);
-  else
-    postMsg(message + ", expected "+b+" got "+a);
+function is(a, b, message) {
+  if (a != b) {
+    postMsg("FAILURE: " + message + ", expected " + b + " got " + a);
+  } else {
+    postMsg(message + ", expected " + b + " got " + a);
+  }
 }
 
-function todo(a, b, message)
-{
-  postMsg("TODO: " + message + ", expected "+b+" got "+a);
+function todo(a, b, message) {
+  postMsg("TODO: " + message + ", expected " + b + " got " + a);
 }
 
-function finishTest()
-{
+function finishTest() {
   try {
     localStorage.clear();
   } catch (e) {}

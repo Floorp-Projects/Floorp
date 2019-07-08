@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 /**
  * Test that the split console key shortcut works on about:devtools-toolbox.
@@ -15,8 +18,11 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const { devtoolsTab, devtoolsWindow } =
-    await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window
+  );
 
   // Select any tool that is not the Webconsole, since we will assert the split-console.
   info("Select inspector tool");

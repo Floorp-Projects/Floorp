@@ -60,143 +60,167 @@ const defaults = {
 // devtools/client/webconsole/test/browser_console.js
 
 // The following tests use a system principal debuggee.
-const systemPrincipalTests = [{
-  // Dead objects throw a TypeError when accessing properties.
-  class: "DeadObject",
-  string: "<dead object>",
-  code: `
+const systemPrincipalTests = [
+  {
+    // Dead objects throw a TypeError when accessing properties.
+    class: "DeadObject",
+    string: "<dead object>",
+    code: `
     var obj = Cu.Sandbox(null);
     Cu.nukeSandbox(obj);
   `,
-  property: descriptor({value: "TypeError"}),
-}, {
-  // This proxy checks that no trap runs (using a second proxy as the handler
-  // there is no need to maintain a list of all possible traps).
-  class: "Proxy",
-  string: "<proxy>",
-  code: `
+    property: descriptor({ value: "TypeError" }),
+  },
+  {
+    // This proxy checks that no trap runs (using a second proxy as the handler
+    // there is no need to maintain a list of all possible traps).
+    class: "Proxy",
+    string: "<proxy>",
+    code: `
     var trapDidRun = false;
     var obj = new Proxy({}, new Proxy({}, {get: (_, trap) => {
       trapDidRun = true;
       throw new Error("proxy trap '" + trap + "' was called.");
     }}));
   `,
-  afterTest: "trapDidRun === false",
-}, {
-  // Like the previous test, but now the proxy has a Function class.
-  class: "Proxy",
-  string: "<proxy>",
-  isFunction: true,
-  code: `
+    afterTest: "trapDidRun === false",
+  },
+  {
+    // Like the previous test, but now the proxy has a Function class.
+    class: "Proxy",
+    string: "<proxy>",
+    isFunction: true,
+    code: `
     var trapDidRun = false;
     var obj = new Proxy(function(){}, new Proxy({}, {get: (_, trap) => {
       trapDidRun = true;
       throw new Error("proxy trap '" + trap + "' was called.");
     }}));
   `,
-  afterTest: "trapDidRun === false",
-}, {
-  // Invisisible-to-debugger objects can't be unwrapped, so we don't know if
-  // they are proxies. Thus they shouldn't be accessed.
-  class: "InvisibleToDebugger: Array",
-  string: "<invisibleToDebugger>",
-  hasPreview: false,
-  code: `
+    afterTest: "trapDidRun === false",
+  },
+  {
+    // Invisisible-to-debugger objects can't be unwrapped, so we don't know if
+    // they are proxies. Thus they shouldn't be accessed.
+    class: "InvisibleToDebugger: Array",
+    string: "<invisibleToDebugger>",
+    hasPreview: false,
+    code: `
     var s = Cu.Sandbox(systemPrincipal, {invisibleToDebugger: true});
     var obj = s.eval("[1, 2, 3]");
   `,
-}, {
-  // Like the previous test, but now the object has a Function class.
-  class: "InvisibleToDebugger: Function",
-  string: "<invisibleToDebugger>",
-  isFunction: true,
-  hasPreview: false,
-  code: `
+  },
+  {
+    // Like the previous test, but now the object has a Function class.
+    class: "InvisibleToDebugger: Function",
+    string: "<invisibleToDebugger>",
+    isFunction: true,
+    hasPreview: false,
+    code: `
     var s = Cu.Sandbox(systemPrincipal, {invisibleToDebugger: true});
     var obj = s.eval("(function func(arg){})");
   `,
-}, {
-  // Cu.Sandbox is a WrappedNative that throws when accessing properties.
-  class: "nsXPCComponents_utils_Sandbox",
-  string: "[object nsXPCComponents_utils_Sandbox]",
-  code: `var obj = Cu.Sandbox;`,
-  protoType: "object",
-}];
+  },
+  {
+    // Cu.Sandbox is a WrappedNative that throws when accessing properties.
+    class: "nsXPCComponents_utils_Sandbox",
+    string: "[object nsXPCComponents_utils_Sandbox]",
+    code: `var obj = Cu.Sandbox;`,
+    protoType: "object",
+  },
+];
 
 // The following tests run code in a system principal, but the resulting object
 // is debugged in a null principal.
-const nullPrincipalTests = [{
-  // The null principal gets undefined when attempting to access properties.
-  string: "[object Object]",
-  code: `var obj = {x: -1};`,
-}, {
-  // For arrays it's an error instead of undefined.
-  string: "[object Object]",
-  code: `var obj = [1, 2, 3];`,
-  property: descriptor({value: "Error"}),
-}, {
-  // For functions it's also an error.
-  string: "function func(arg){}",
-  isFunction: true,
-  hasPreview: false,
-  code: `var obj = function func(arg){};`,
-  property: descriptor({value: "Error"}),
-}, {
-  // Check that no proxy trap runs.
-  string: "[object Object]",
-  code: `
+const nullPrincipalTests = [
+  {
+    // The null principal gets undefined when attempting to access properties.
+    string: "[object Object]",
+    code: `var obj = {x: -1};`,
+  },
+  {
+    // For arrays it's an error instead of undefined.
+    string: "[object Object]",
+    code: `var obj = [1, 2, 3];`,
+    property: descriptor({ value: "Error" }),
+  },
+  {
+    // For functions it's also an error.
+    string: "function func(arg){}",
+    isFunction: true,
+    hasPreview: false,
+    code: `var obj = function func(arg){};`,
+    property: descriptor({ value: "Error" }),
+  },
+  {
+    // Check that no proxy trap runs.
+    string: "[object Object]",
+    code: `
     var trapDidRun = false;
     var obj = new Proxy([], new Proxy({}, {get: (_, trap) => {
       trapDidRun = true;
       throw new Error("proxy trap '" + trap + "' was called.");
     }}));
   `,
-  property: descriptor({value: "Error"}),
-  afterTest: `trapDidRun === false`,
-}, {
-  // Like the previous test, but now the object is a callable Proxy.
-  string: "function () {\n    [native code]\n}",
-  isFunction: true,
-  hasPreview: false,
-  code: `
+    property: descriptor({ value: "Error" }),
+    afterTest: `trapDidRun === false`,
+  },
+  {
+    // Like the previous test, but now the object is a callable Proxy.
+    string: "function () {\n    [native code]\n}",
+    isFunction: true,
+    hasPreview: false,
+    code: `
     var trapDidRun = false;
     var obj = new Proxy(function(){}, new Proxy({}, {get: (_, trap) => {
       trapDidRun = true;
       throw new Error("proxy trap '" + trap + "' was called.");
     }}));
   `,
-  property: descriptor({value: "Error"}),
-  afterTest: `trapDidRun === false`,
-}, {
-  // Cross-origin Window objects do expose some properties and have a preview.
-  string: "[object Object]",
-  code: `var obj = Services.appShell.createWindowlessBrowser().document.defaultView;`,
-  hasOwnPropertyNames: true,
-  hasOwnPropertySymbols: true,
-  property: descriptor({value: "SecurityError"}),
-}, {
-  // Cross-origin Location objects do expose some properties and have a preview.
-  string: "[object Object]",
-  code: `var obj = Services.appShell.createWindowlessBrowser().document.defaultView
+    property: descriptor({ value: "Error" }),
+    afterTest: `trapDidRun === false`,
+  },
+  {
+    // Cross-origin Window objects do expose some properties and have a preview.
+    string: "[object Object]",
+    code: `var obj = Services.appShell.createWindowlessBrowser().document.defaultView;`,
+    hasOwnPropertyNames: true,
+    hasOwnPropertySymbols: true,
+    property: descriptor({ value: "SecurityError" }),
+  },
+  {
+    // Cross-origin Location objects do expose some properties and have a preview.
+    string: "[object Object]",
+    code: `var obj = Services.appShell.createWindowlessBrowser().document.defaultView
                    .location;`,
-  hasOwnPropertyNames: true,
-  hasOwnPropertySymbols: true,
-  property: descriptor({value: "SecurityError"}),
-}];
+    hasOwnPropertyNames: true,
+    hasOwnPropertySymbols: true,
+    property: descriptor({ value: "SecurityError" }),
+  },
+];
 
 function descriptor(descr) {
-  return Object.assign({
-    configurable: false,
-    writable: false,
-    enumerable: false,
-    value: undefined,
-  }, descr);
+  return Object.assign(
+    {
+      configurable: false,
+      writable: false,
+      enumerable: false,
+      value: undefined,
+    },
+    descr
+  );
 }
 
-async function test_unsafe_grips({ threadClient, debuggee, client }, tests, principal) {
-  debuggee.eval(function stopMe(arg1, arg2) {
-    debugger;
-  }.toString());
+async function test_unsafe_grips(
+  { threadClient, debuggee, client },
+  tests,
+  principal
+) {
+  debuggee.eval(
+    function stopMe(arg1, arg2) {
+      debugger;
+    }.toString()
+  );
   for (let data of tests) {
     await new Promise(function(resolve) {
       threadClient.once("paused", async function(packet) {
@@ -219,7 +243,9 @@ async function test_unsafe_grips({ threadClient, debuggee, client }, tests, prin
           check_symbols(response.ownSymbols, data, isUnsafe);
           check_prototype(response.prototype, data, isUnsafe);
 
-          response = await objClient.enumProperties({ignoreIndexedProperties: true});
+          response = await objClient.enumProperties({
+            ignoreIndexedProperties: true,
+          });
           slice = await response.iterator.slice(0, response.iterator.count);
           check_properties(slice.ownProperties, data, isUnsafe);
 
@@ -257,11 +283,17 @@ async function test_unsafe_grips({ threadClient, debuggee, client }, tests, prin
             objClient = threadClient.pauseGrip(grip);
             try {
               response = await objClient.getParameterNames();
-              ok(true, "getParameterNames passed. DebuggerObject.class is 'Function'"
-                + "on the object actor");
+              ok(
+                true,
+                "getParameterNames passed. DebuggerObject.class is 'Function'" +
+                  "on the object actor"
+              );
             } catch (e) {
-              ok(false, "getParameterNames failed. DebuggerObject.class may not be"
-                + " 'Function' on the object actor");
+              ok(
+                false,
+                "getParameterNames failed. DebuggerObject.class may not be" +
+                  " 'Function' on the object actor"
+              );
             }
           }
         }
@@ -270,11 +302,11 @@ async function test_unsafe_grips({ threadClient, debuggee, client }, tests, prin
         resolve();
       });
 
-      data = {...defaults, ...data};
+      data = { ...defaults, ...data };
 
       // Run the code and test the results.
       const sandbox = Cu.Sandbox(systemPrincipal);
-      Object.assign(sandbox, {Services, systemPrincipal, Cu});
+      Object.assign(sandbox, { Services, systemPrincipal, Cu });
       sandbox.eval(data.code);
       debuggee.obj = sandbox.obj;
       const inherits = `Object.create(obj, {
@@ -309,8 +341,11 @@ function check_properties(props, data, isUnsafe) {
 
 function check_property_names(props, data, isUnsafe) {
   if (isUnsafe) {
-    strictEqual(props.length > 0, data.hasOwnPropertyNames,
-                "Check presence of own string properties.");
+    strictEqual(
+      props.length > 0,
+      data.hasOwnPropertyNames,
+      "Check presence of own string properties."
+    );
   } else {
     strictEqual(props.length, 1, "1 own property was retrieved.");
     strictEqual(props[0], "x", "The property has the right name.");
@@ -334,8 +369,11 @@ function check_symbols(symbols, data, isUnsafe) {
 
 function check_symbol_names(props, data, isUnsafe) {
   if (isUnsafe) {
-    strictEqual(props.length > 0, data.hasOwnPropertySymbols,
-                "Check presence of own symbol properties.");
+    strictEqual(
+      props.length > 0,
+      data.hasOwnPropertySymbols,
+      "Check presence of own symbol properties."
+    );
   } else {
     strictEqual(props.length, 1, "1 own symbol property was retrieved.");
     strictEqual(props[0].name, "Symbol(x)", "The symbol has the right name.");
@@ -344,7 +382,11 @@ function check_symbol_names(props, data, isUnsafe) {
 
 function check_symbol(descr, data, isUnsafe) {
   if (isUnsafe) {
-    deepEqual(descr, data.property, "Got the right symbol property descriptor.");
+    deepEqual(
+      descr,
+      data.property,
+      "Got the right symbol property descriptor."
+    );
   } else {
     strictEqual(descr.value, 2, "The symbol property has the right value.");
   }
@@ -367,11 +409,23 @@ function check_display_string(str, data, isUnsafe) {
 }
 
 // threadClientTest uses systemPrincipal by default, but let's be explicit here.
-add_task(threadClientTest(options => {
-  return test_unsafe_grips(options, systemPrincipalTests, "system");
-}, { principal: systemPrincipal }));
+add_task(
+  threadClientTest(
+    options => {
+      return test_unsafe_grips(options, systemPrincipalTests, "system");
+    },
+    { principal: systemPrincipal }
+  )
+);
 
-const nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
-add_task(threadClientTest(options => {
-  return test_unsafe_grips(options, nullPrincipalTests, "null");
-}, { principal: nullPrincipal }));
+const nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(
+  Ci.nsIPrincipal
+);
+add_task(
+  threadClientTest(
+    options => {
+      return test_unsafe_grips(options, nullPrincipalTests, "null");
+    },
+    { principal: nullPrincipal }
+  )
+);

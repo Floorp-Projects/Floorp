@@ -2,7 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-const { ShellService } = ChromeUtils.import("resource:///modules/ShellService.jsm");
+const { ShellService } = ChromeUtils.import(
+  "resource:///modules/ShellService.jsm"
+);
 
 add_task(async function test_default_browser_check() {
   ShellService._checkedThisSession = false;
@@ -13,12 +15,16 @@ add_task(async function test_default_browser_check() {
   equal(ShellService.shouldCheckDefaultBrowser, true, "Sanity check");
 
   await setupPolicyEngineWithJson({
-    "policies": {
-      "DontCheckDefaultBrowser": true,
+    policies: {
+      DontCheckDefaultBrowser: true,
     },
   });
 
-  equal(ShellService.shouldCheckDefaultBrowser, false, "Policy changed it to not check");
+  equal(
+    ShellService.shouldCheckDefaultBrowser,
+    false,
+    "Policy changed it to not check"
+  );
 
   // Try to change it to true and check that it doesn't take effect
   ShellService.shouldCheckDefaultBrowser = true;
@@ -28,12 +34,16 @@ add_task(async function test_default_browser_check() {
 
 add_task(async function test_default_browser_check() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "DontCheckDefaultBrowser": false,
+    policies: {
+      DontCheckDefaultBrowser: false,
     },
   });
 
-  equal(ShellService.shouldCheckDefaultBrowser, true, "Policy changed it to check");
+  equal(
+    ShellService.shouldCheckDefaultBrowser,
+    true,
+    "Policy changed it to check"
+  );
 
   // Try to change it to false and check that it doesn't take effect
   ShellService.shouldCheckDefaultBrowser = false;

@@ -105,9 +105,8 @@ class DocGroup final {
   // Returns true if any of its documents are active but not in the bfcache.
   bool IsActive() const;
 
-  nsresult QueueIframePostMessages(
-      already_AddRefed<nsIRunnable>&& aRunnable,
-      uint64_t aWindowId);
+  nsresult QueueIframePostMessages(already_AddRefed<nsIRunnable>&& aRunnable,
+                                   uint64_t aWindowId);
 
   void TryFlushIframePostMessages(uint64_t aWindowId);
 

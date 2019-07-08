@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const userAgentID = "28cd09e2-7506-42d8-9e50-b02785adc7ef";
 
@@ -20,8 +20,11 @@ function run_test() {
 let putRecord = async function(perm, record) {
   let uri = Services.io.newURI(record.scope);
 
-  Services.perms.add(uri, "desktop-notification",
-    Ci.nsIPermissionManager[perm]);
+  Services.perms.add(
+    uri,
+    "desktop-notification",
+    Ci.nsIPermissionManager[perm]
+  );
   registerCleanupFunction(() => {
     Services.perms.remove(uri, "desktop-notification");
   });
@@ -65,9 +68,11 @@ add_task(async function test_expiration_history_observer() {
   });
 
   let unregisterDone;
-  let unregisterPromise = new Promise(resolve => unregisterDone = resolve);
-  let subChangePromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic, (subject, data) =>
-    data == "https://example.com/stuff");
+  let unregisterPromise = new Promise(resolve => (unregisterDone = resolve));
+  let subChangePromise = promiseObserverNotification(
+    PushServiceComponent.subscriptionChangeTopic,
+    (subject, data) => data == "https://example.com/stuff"
+  );
 
   PushService.init({
     serverURI: "wss://push.example.org/",
@@ -75,21 +80,31 @@ add_task(async function test_expiration_history_observer() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: userAgentID,
-          }));
-          this.serverSendMsg(JSON.stringify({
-            messageType: "notification",
-            updates: [{
-              channelID: "379c0668-8323-44d2-a315-4ee83f1a9ee9",
-              version: 2,
-            }],
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: userAgentID,
+            })
+          );
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "notification",
+              updates: [
+                {
+                  channelID: "379c0668-8323-44d2-a315-4ee83f1a9ee9",
+                  version: 2,
+                },
+              ],
+            })
+          );
         },
         onUnregister(request) {
-          equal(request.channelID, "379c0668-8323-44d2-a315-4ee83f1a9ee9", "Dropped wrong channel ID");
+          equal(
+            request.channelID,
+            "379c0668-8323-44d2-a315-4ee83f1a9ee9",
+            "Dropped wrong channel ID"
+          );
           equal(request.code, 201, "Expected quota exceeded unregister reason");
           unregisterDone();
         },
@@ -101,14 +116,19 @@ add_task(async function test_expiration_history_observer() {
   await subChangePromise;
   await unregisterPromise;
 
-  let expiredRecord = await db.getByKeyID("379c0668-8323-44d2-a315-4ee83f1a9ee9");
+  let expiredRecord = await db.getByKeyID(
+    "379c0668-8323-44d2-a315-4ee83f1a9ee9"
+  );
   strictEqual(expiredRecord.quota, 0, "Expired record not updated");
 
   let notifiedScopes = [];
-  subChangePromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic, (subject, data) => {
-    notifiedScopes.push(data);
-    return notifiedScopes.length == 2;
-  });
+  subChangePromise = promiseObserverNotification(
+    PushServiceComponent.subscriptionChangeTopic,
+    (subject, data) => {
+      notifiedScopes.push(data);
+      return notifiedScopes.length == 2;
+    }
+  );
 
   // Add an expired registration that we'll revive later using the idle
   // observer.
@@ -145,10 +165,11 @@ add_task(async function test_expiration_history_observer() {
 
   // And we should receive notifications for both scopes.
   await subChangePromise;
-  deepEqual(notifiedScopes.sort(), [
-    "https://example.com/auctions",
-    "https://example.com/deals",
-  ], "Wrong scopes for subscription changes");
+  deepEqual(
+    notifiedScopes.sort(),
+    ["https://example.com/auctions", "https://example.com/deals"],
+    "Wrong scopes for subscription changes"
+  );
 
   let aRecord = await db.getByKeyID("379c0668-8323-44d2-a315-4ee83f1a9ee9");
   ok(!aRecord, "Should drop expired record");
@@ -165,20 +186,27 @@ add_task(async function test_expiration_history_observer() {
     visitDate: Date.now() * 1000,
     transition: Ci.nsINavHistoryService.TRANSITION_LINK,
   });
-  subChangePromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic, (subject, data) => {
-    if (data == "https://example.net/sales") {
-      ok(subject.isCodebasePrincipal,
-        "Should pass subscription principal as the subject");
-      return true;
+  subChangePromise = promiseObserverNotification(
+    PushServiceComponent.subscriptionChangeTopic,
+    (subject, data) => {
+      if (data == "https://example.net/sales") {
+        ok(
+          subject.isCodebasePrincipal,
+          "Should pass subscription principal as the subject"
+        );
+        return true;
+      }
+      return false;
     }
-    return false;
-  });
+  );
   let record = await PushService.registration({
     scope: "https://example.net/sales",
     originAttributes: "",
   });
   ok(!record, "Should not return evicted record");
-  ok(!(await db.getByKeyID("6b2d13fe-d848-4c5f-bdda-e9fc89727dca")),
-    "Should drop evicted record on fetch");
+  ok(
+    !(await db.getByKeyID("6b2d13fe-d848-4c5f-bdda-e9fc89727dca")),
+    "Should drop evicted record on fetch"
+  );
   await subChangePromise;
 });

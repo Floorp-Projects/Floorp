@@ -8,15 +8,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NativeManifests: "resource://gre/modules/NativeManifests.jsm",
 });
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 const enforceNoTemporaryAddon = extensionId => {
   const EXCEPTION_MESSAGE =
-        "The storage API will not work with a temporary addon ID. " +
-        "Please add an explicit addon ID to your manifest. " +
-        "For more information see https://bugzil.la/1323228.";
+    "The storage API will not work with a temporary addon ID. " +
+    "Please add an explicit addon ID to your manifest. " +
+    "For more information see https://bugzil.la/1323228.";
   if (AddonManagerPrivate.isTemporaryInstallID(extensionId)) {
     throw new ExtensionError(EXCEPTION_MESSAGE);
   }
@@ -30,7 +28,11 @@ const lookupManagedStorage = async (extensionId, context) => {
   if (extensionPolicy) {
     return ExtensionStorage._serializableMap(extensionPolicy);
   }
-  let info = await NativeManifests.lookupManifest("storage", extensionId, context);
+  let info = await NativeManifests.lookupManifest(
+    "storage",
+    extensionId,
+    context
+  );
   if (info) {
     return ExtensionStorage._serializableMap(info.manifest.data);
   }
@@ -49,7 +51,7 @@ this.storage = class extends ExtensionAPI {
   }
 
   onShutdown() {
-    const {clearStorageChangedListener} = this;
+    const { clearStorageChangedListener } = this;
     this.clearStorageChangedListener = null;
 
     if (clearStorageChangedListener) {
@@ -57,7 +59,7 @@ this.storage = class extends ExtensionAPI {
     }
   }
 
-  receiveMessage({name, data}) {
+  receiveMessage({ name, data }) {
     if (name !== `Extension:StorageLocalOnChanged:${this.extension.uuid}`) {
       return;
     }
@@ -66,19 +68,22 @@ this.storage = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
 
     return {
       storage: {
         local: {
           async callMethodInParentProcess(method, args) {
-            const res = await ExtensionStorageIDB.selectBackend({extension});
+            const res = await ExtensionStorageIDB.selectBackend({ extension });
             if (!res.backendEnabled) {
               return ExtensionStorage[method](extension.id, ...args);
             }
 
             const persisted = extension.hasPermission("unlimitedStorage");
-            const db = await ExtensionStorageIDB.open(res.storagePrincipal.deserialize(this, true), persisted);
+            const db = await ExtensionStorageIDB.open(
+              res.storagePrincipal.deserialize(this, true),
+              persisted
+            );
             const changes = await db[method](...args);
             if (changes) {
               ExtensionStorageIDB.notifyListeners(extension.id, changes);
@@ -141,7 +146,9 @@ this.storage = class extends ExtensionAPI {
 
             let data = await lookup;
             if (!data) {
-              return Promise.reject({message: "Managed storage manifest not found"});
+              return Promise.reject({
+                message: "Managed storage manifest not found",
+              });
             }
             return ExtensionStorage._filterProperties(data, keys);
           },
@@ -159,12 +166,28 @@ this.storage = class extends ExtensionAPI {
             };
 
             ExtensionStorage.addOnChangedListener(extension.id, listenerLocal);
-            ExtensionStorageIDB.addOnChangedListener(extension.id, listenerLocal);
-            extensionStorageSync.addOnChangedListener(extension, listenerSync, context);
+            ExtensionStorageIDB.addOnChangedListener(
+              extension.id,
+              listenerLocal
+            );
+            extensionStorageSync.addOnChangedListener(
+              extension,
+              listenerSync,
+              context
+            );
             return () => {
-              ExtensionStorage.removeOnChangedListener(extension.id, listenerLocal);
-              ExtensionStorageIDB.removeOnChangedListener(extension.id, listenerLocal);
-              extensionStorageSync.removeOnChangedListener(extension, listenerSync);
+              ExtensionStorage.removeOnChangedListener(
+                extension.id,
+                listenerLocal
+              );
+              ExtensionStorageIDB.removeOnChangedListener(
+                extension.id,
+                listenerLocal
+              );
+              extensionStorageSync.removeOnChangedListener(
+                extension,
+                listenerSync
+              );
             };
           },
         }).api(),

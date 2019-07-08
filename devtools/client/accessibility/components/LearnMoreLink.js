@@ -42,8 +42,14 @@ class LearnMoreLink extends Component {
   }
 
   render() {
-    const { className, href, learnMoreStringKey, l10n, messageStringKey, onClick } =
-      this.props;
+    const {
+      className,
+      href,
+      learnMoreStringKey,
+      l10n,
+      messageStringKey,
+      onClick,
+    } = this.props;
     const learnMoreString = l10n.getStr(learnMoreStringKey);
     const messageString = l10n.getFormatStr(messageStringKey, learnMoreString);
 
@@ -53,10 +59,11 @@ class LearnMoreLink extends Component {
     const contents = messageString.split(re);
     contents[1] = a({ className: "link", href, onClick }, contents[1]);
 
-    return (
-      p({
+    return p(
+      {
         className,
-      }, ...contents)
+      },
+      ...contents
     );
   }
 }

@@ -18,11 +18,14 @@ async function callRequestStorageAccess(callback, expectFail) {
 
   let success = true;
   // We only grant storage exceptions when the reject tracker behavior is enabled.
-  let rejectTrackers = [SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
-                        SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN].
-
-                         includes(SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")) &&
-                       !isOnContentBlockingAllowList();
+  let rejectTrackers =
+    [
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      SpecialPowers.Ci.nsICookieService
+        .BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    ].includes(
+      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
+    ) && !isOnContentBlockingAllowList();
   // With another-tracking.example.net, we're same-eTLD+1, so the first try succeeds.
   if (origin != "https://another-tracking.example.net") {
     if (rejectTrackers) {
@@ -58,9 +61,12 @@ async function callRequestStorageAccess(callback, expectFail) {
 
       helper = dwu.setHandlingUserInput(true);
     }
-    if (SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") ==
-          SpecialPowers.Ci.nsICookieService.BEHAVIOR_ACCEPT &&
-        !isOnContentBlockingAllowList()) {
+    if (
+      SpecialPowers.Services.prefs.getIntPref(
+        "network.cookie.cookieBehavior"
+      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_ACCEPT &&
+      !isOnContentBlockingAllowList()
+    ) {
       try {
         if (callback) {
           if (expectFail) {
@@ -114,15 +120,23 @@ async function callRequestStorageAccess(callback, expectFail) {
 
   success = !threw && !rejected;
   let hasAccess = await document.hasStorageAccess();
-  is(hasAccess, success,
-     "Should " + (success ? "" : "not ") + "have storage access now");
-  if (success && rejectTrackers &&
-      window.location.search != "?disableWaitUntilPermission" &&
-      origin != "https://another-tracking.example.net") {
+  is(
+    hasAccess,
+    success,
+    "Should " + (success ? "" : "not ") + "have storage access now"
+  );
+  if (
+    success &&
+    rejectTrackers &&
+    window.location.search != "?disableWaitUntilPermission" &&
+    origin != "https://another-tracking.example.net"
+  ) {
     // Wait until the permission is visible in our process to avoid race
     // conditions.
-    await waitUntilPermission("http://example.net/browser/toolkit/components/antitracking/test/browser/page.html",
-                              "3rdPartyStorage^" + window.origin);
+    await waitUntilPermission(
+      "http://example.net/browser/toolkit/components/antitracking/test/browser/page.html",
+      "3rdPartyStorage^" + window.origin
+    );
   }
 
   return [threw, rejected];
@@ -133,8 +147,9 @@ async function waitUntilPermission(url, name) {
     let id = setInterval(_ => {
       let Services = SpecialPowers.Services;
       let uri = Services.io.newURI(url);
-      if (Services.perms.testPermission(uri, name) ==
-            Services.perms.ALLOW_ACTION) {
+      if (
+        Services.perms.testPermission(uri, name) == Services.perms.ALLOW_ACTION
+      ) {
         clearInterval(id);
         resolve();
       }
@@ -147,7 +162,9 @@ async function interactWithTracker() {
     onmessage = resolve;
 
     info("Let's interact with the tracker");
-    window.open("/browser/toolkit/components/antitracking/test/browser/3rdPartyOpenUI.html?messageme");
+    window.open(
+      "/browser/toolkit/components/antitracking/test/browser/3rdPartyOpenUI.html?messageme"
+    );
   });
 
   // Wait until the user interaction permission becomes visible in our process
@@ -155,11 +172,12 @@ async function interactWithTracker() {
 }
 
 function isOnContentBlockingAllowList() {
-  let prefs = ["browser.contentblocking.allowlist.storage.enabled",
-               "browser.contentblocking.allowlist.annotations.enabled"];
+  let prefs = [
+    "browser.contentblocking.allowlist.storage.enabled",
+    "browser.contentblocking.allowlist.annotations.enabled",
+  ];
   function allEnabled(prev, pref) {
-    return pref &&
-           SpecialPowers.Services.prefs.getBoolPref(pref);
+    return pref && SpecialPowers.Services.prefs.getBoolPref(pref);
   }
   if (!prefs.reduce(allEnabled)) {
     return false;
@@ -169,8 +187,9 @@ function isOnContentBlockingAllowList() {
   let origin = SpecialPowers.Services.io.newURI("https://" + url.host);
   let types = ["trackingprotection", "trackingprotection-pb"];
   return types.some(type => {
-    return SpecialPowers.Services.perms.testPermission(origin, type) ==
-             SpecialPowers.Services.perms.ALLOW_ACTION;
+    return (
+      SpecialPowers.Services.perms.testPermission(origin, type) ==
+      SpecialPowers.Services.perms.ALLOW_ACTION
+    );
   });
 }
-

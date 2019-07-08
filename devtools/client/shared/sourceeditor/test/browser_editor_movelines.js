@@ -6,9 +6,9 @@
 
 async function test() {
   waitForExplicitFinish();
-  const {ed, win} = await setup();
-  const simpleProg = "function foo() {\n  let i = 1;\n  let j = 2;\n  " +
-                    "return bar;\n}";
+  const { ed, win } = await setup();
+  const simpleProg =
+    "function foo() {\n  let i = 1;\n  let j = 2;\n  " + "return bar;\n}";
   ed.setText(simpleProg);
 
   // Move first line up
@@ -24,7 +24,7 @@ async function test() {
   ch(ed.getCursor(), { line: 4, ch: 0 }, "getCursor");
 
   // Move line 2 up
-  ed.setCursor({ line: 1, ch: 5});
+  ed.setCursor({ line: 1, ch: 5 });
   ed.moveLineUp();
   is(ed.getText(0), "  let i = 1;", "getText(num)");
   is(ed.getText(1), "function foo() {", "getText(num)");

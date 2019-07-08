@@ -6,10 +6,7 @@
 
 const { l10n } = require("../modules/l10n");
 
-const {
-  DEBUG_TARGETS,
-  REQUEST_PROCESSES_SUCCESS,
-} = require("../constants");
+const { DEBUG_TARGETS, REQUEST_PROCESSES_SUCCESS } = require("../constants");
 
 /**
  * This middleware converts tabs object that get from DebuggerClient.listProcesses() to
@@ -18,7 +15,9 @@ const {
 const processComponentDataMiddleware = store => next => action => {
   switch (action.type) {
     case REQUEST_PROCESSES_SUCCESS: {
-      const mainProcessComponentData = toMainProcessComponentData(action.mainProcess);
+      const mainProcessComponentData = toMainProcessComponentData(
+        action.mainProcess
+      );
       action.processes = [mainProcessComponentData];
       break;
     }
@@ -32,7 +31,9 @@ function toMainProcessComponentData(process) {
   const id = process.processFront.actorID;
   const icon = "chrome://devtools/skin/images/aboutdebugging-process-icon.svg";
   const name = l10n.getString("about-debugging-main-process-name");
-  const description = l10n.getString("about-debugging-main-process-description2");
+  const description = l10n.getString(
+    "about-debugging-main-process-description2"
+  );
 
   return {
     name,

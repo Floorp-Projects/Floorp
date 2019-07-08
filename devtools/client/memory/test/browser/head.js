@@ -7,15 +7,21 @@
 /* import-globals-from ../../../shared/test/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
 // Load the shared Redux helpers into this compartment.
 /* import-globals-from ../../../shared/test/shared-redux-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
-  this);
+  this
+);
 
-var { censusDisplays, censusState, snapshotState: states } = require("devtools/client/memory/constants");
+var {
+  censusDisplays,
+  censusState,
+  snapshotState: states,
+} = require("devtools/client/memory/constants");
 var { L10N } = require("devtools/client/memory/utils");
 
 Services.prefs.setBoolPref("devtools.memory.enabled", true);
@@ -96,11 +102,15 @@ function dumpn(msg) {
 function waitUntilDominatorTreeState(store, expected) {
   const predicate = () => {
     const snapshots = store.getState().snapshots;
-    return snapshots.length === expected.length &&
-            expected.every((state, i) => {
-              return snapshots[i].dominatorTree &&
-              snapshots[i].dominatorTree.state === state;
-            });
+    return (
+      snapshots.length === expected.length &&
+      expected.every((state, i) => {
+        return (
+          snapshots[i].dominatorTree &&
+          snapshots[i].dominatorTree.state === state
+        );
+      })
+    );
   };
   info(`Waiting for dominator trees to be of state: ${expected}`);
   return waitUntilState(store, predicate);
@@ -111,15 +121,19 @@ function takeSnapshot(window) {
   const snapshotCount = gStore.getState().snapshots.length;
   info("Taking snapshot...");
   document.querySelector(".devtools-toolbar .take-snapshot").click();
-  return waitUntilState(gStore,
-                        () => gStore.getState().snapshots.length === snapshotCount + 1);
+  return waitUntilState(
+    gStore,
+    () => gStore.getState().snapshots.length === snapshotCount + 1
+  );
 }
 
 function clearSnapshots(window) {
   const { gStore, document } = window;
   document.querySelector(".devtools-toolbar .clear-snapshots").click();
-  return waitUntilState(gStore, () => gStore.getState().snapshots.every(
-    (snapshot) => snapshot.state !== states.READ)
+  return waitUntilState(gStore, () =>
+    gStore
+      .getState()
+      .snapshots.every(snapshot => snapshot.state !== states.READ)
   );
 }
 
@@ -133,15 +147,21 @@ function setCensusDisplay(window, display) {
   // XXX: Should handle this via clicking the DOM, but React doesn't
   // fire the onChange event, so just change it in the store.
   // window.document.querySelector(`.select-display`).value = type;
-  gStore.dispatch(require("devtools/client/memory/actions/census-display")
-                         .setCensusDisplayAndRefresh(gHeapAnalysesClient, display));
+  gStore.dispatch(
+    require("devtools/client/memory/actions/census-display").setCensusDisplayAndRefresh(
+      gHeapAnalysesClient,
+      display
+    )
+  );
 
   return waitUntilState(window.gStore, () => {
     const selected = window.gStore.getState().snapshots.find(s => s.selected);
-    return selected.state === states.READ &&
+    return (
+      selected.state === states.READ &&
       selected.census &&
       selected.census.state === censusState.SAVED &&
-      selected.census.display === display;
+      selected.census.display === display
+    );
   });
 }
 
@@ -174,9 +194,12 @@ function getSelectedSnapshotIndex(store) {
  * @return {Promise}
  */
 function waitUntilSnapshotSelected(store, snapshotIndex) {
-  return waitUntilState(store, state =>
-    state.snapshots[snapshotIndex] &&
-    state.snapshots[snapshotIndex].selected === true);
+  return waitUntilState(
+    store,
+    state =>
+      state.snapshots[snapshotIndex] &&
+      state.snapshots[snapshotIndex].selected === true
+  );
 }
 
 /**
@@ -188,16 +211,22 @@ function waitUntilCensusState(store, getCensus, expected) {
   const predicate = () => {
     const snapshots = store.getState().snapshots;
 
-    info("Current census state:" +
-             snapshots.map(x => getCensus(x) ? getCensus(x).state : null));
+    info(
+      "Current census state:" +
+        snapshots.map(x => (getCensus(x) ? getCensus(x).state : null))
+    );
 
-    return snapshots.length === expected.length &&
-           expected.every((state, i) => {
-             const census = getCensus(snapshots[i]);
-             return (state === "*") ||
-                    (!census && !state) ||
-                    (census && census.state === state);
-           });
+    return (
+      snapshots.length === expected.length &&
+      expected.every((state, i) => {
+        const census = getCensus(snapshots[i]);
+        return (
+          state === "*" ||
+          (!census && !state) ||
+          (census && census.state === state)
+        );
+      })
+    );
   };
   info(`Waiting for snapshot censuses to be of state: ${expected}`);
   return waitUntilState(store, predicate);

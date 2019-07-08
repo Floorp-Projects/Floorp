@@ -16,7 +16,12 @@ loader.lazyGetter(this, "MODE", function() {
   return require("devtools/client/shared/components/reps/reps").MODE;
 });
 
-loader.lazyRequireGetter(this, "translateNodeFrontToGrip", "devtools/client/inspector/shared/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "translateNodeFrontToGrip",
+  "devtools/client/inspector/shared/utils",
+  true
+);
 
 const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
 const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
@@ -38,7 +43,9 @@ class ComputedProperty extends PureComponent {
     super(props);
 
     this.onFocus = this.onFocus.bind(this);
-    this.renderReferenceElementPreview = this.renderReferenceElementPreview.bind(this);
+    this.renderReferenceElementPreview = this.renderReferenceElementPreview.bind(
+      this
+    );
   }
 
   onFocus() {
@@ -58,64 +65,64 @@ class ComputedProperty extends PureComponent {
       return null;
     }
 
-    return (
-      dom.div({ className: "reference-element" },
-        dom.span(
-          {
-            className: "reference-element-type",
-            title: BOXMODEL_L10N.getStr("boxmodel.offsetParent.title"),
-          },
-          referenceElementType
-        ),
-        Rep({
-          defaultRep: referenceElement,
-          mode: MODE.TINY,
-          object: translateNodeFrontToGrip(referenceElement),
-          onInspectIconClick: () => setSelectedNode(referenceElement,
-            { reason: "box-model" }),
-          onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(referenceElement),
-          onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-        })
-      )
+    return dom.div(
+      { className: "reference-element" },
+      dom.span(
+        {
+          className: "reference-element-type",
+          title: BOXMODEL_L10N.getStr("boxmodel.offsetParent.title"),
+        },
+        referenceElementType
+      ),
+      Rep({
+        defaultRep: referenceElement,
+        mode: MODE.TINY,
+        object: translateNodeFrontToGrip(referenceElement),
+        onInspectIconClick: () =>
+          setSelectedNode(referenceElement, { reason: "box-model" }),
+        onDOMNodeMouseOver: () =>
+          onShowBoxModelHighlighterForNode(referenceElement),
+        onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+      })
     );
   }
 
   render() {
     const { name, value } = this.props;
 
-    return (
-      dom.div(
-        {
-          className: "computed-property-view",
-          "data-property-name": name,
-          tabIndex: "0",
-          ref: container => {
-            this.container = container;
-          },
+    return dom.div(
+      {
+        className: "computed-property-view",
+        "data-property-name": name,
+        tabIndex: "0",
+        ref: container => {
+          this.container = container;
         },
-        dom.div({ className: "computed-property-name-container" },
-          dom.div(
-            {
-              className: "computed-property-name theme-fg-color3",
-              tabIndex: "",
-              title: name,
-              onClick: this.onFocus,
-            },
-            name
-          )
-        ),
-        dom.div({ className: "computed-property-value-container" },
-          dom.div(
-            {
-              className: "computed-property-value theme-fg-color1",
-              dir: "ltr",
-              tabIndex: "",
-              onClick: this.onFocus,
-            },
-            value
-          ),
-          this.renderReferenceElementPreview()
+      },
+      dom.div(
+        { className: "computed-property-name-container" },
+        dom.div(
+          {
+            className: "computed-property-name theme-fg-color3",
+            tabIndex: "",
+            title: name,
+            onClick: this.onFocus,
+          },
+          name
         )
+      ),
+      dom.div(
+        { className: "computed-property-value-container" },
+        dom.div(
+          {
+            className: "computed-property-value theme-fg-color1",
+            dir: "ltr",
+            tabIndex: "",
+            onClick: this.onFocus,
+          },
+          value
+        ),
+        this.renderReferenceElementPreview()
       )
     );
   }

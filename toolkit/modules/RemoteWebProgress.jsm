@@ -5,18 +5,24 @@
 
 var EXPORTED_SYMBOLS = ["RemoteWebProgressManager"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const RemoteWebProgress = Components.Constructor(
-    "@mozilla.org/dom/remote-web-progress;1", "nsIRemoteWebProgress", "init");
+  "@mozilla.org/dom/remote-web-progress;1",
+  "nsIRemoteWebProgress",
+  "init"
+);
 const RemoteWebProgressRequest = Components.Constructor(
-    "@mozilla.org/dom/remote-web-progress-request;1",
-    "nsIRemoteWebProgressRequest", "init");
+  "@mozilla.org/dom/remote-web-progress-request;1",
+  "nsIRemoteWebProgressRequest",
+  "init"
+);
 
 class RemoteWebProgressManager {
   constructor(aBrowser) {
     this._topLevelWebProgress = new RemoteWebProgress(
       this.QueryInterface(Ci.nsIWebProgress),
-      /* aIsTopLevel = */ true);
+      /* aIsTopLevel = */ true
+    );
     this._progressListeners = [];
 
     this.swapBrowser(aBrowser);
@@ -24,7 +30,10 @@ class RemoteWebProgressManager {
 
   swapBrowser(aBrowser) {
     if (this._messageManager) {
-      this._messageManager.removeMessageListener("Content:SecurityChange", this);
+      this._messageManager.removeMessageListener(
+        "Content:SecurityChange",
+        this
+      );
     }
 
     this._browser = aBrowser;
@@ -55,15 +64,17 @@ class RemoteWebProgressManager {
   }
 
   removeProgressListener(aListener) {
-    this._progressListeners =
-      this._progressListeners.filter(l => l.listener != aListener);
+    this._progressListeners = this._progressListeners.filter(
+      l => l.listener != aListener
+    );
   }
 
   _fixSecInfoAndState(aSecInfo, aState) {
     let deserialized = null;
     if (aSecInfo) {
-      let helper = Cc["@mozilla.org/network/serialization-helper;1"]
-                    .getService(Ci.nsISerializationHelper);
+      let helper = Cc["@mozilla.org/network/serialization-helper;1"].getService(
+        Ci.nsISerializationHelper
+      );
 
       deserialized = helper.deserializeObject(aSecInfo);
       deserialized.QueryInterface(Ci.nsITransportSecurityInfo);
@@ -88,11 +99,13 @@ class RemoteWebProgressManager {
 
   _callProgressListeners(type, methodName, ...args) {
     for (let { listener, mask } of this._progressListeners) {
-      if ((mask & type) && listener[methodName]) {
+      if (mask & type && listener[methodName]) {
         try {
           listener[methodName].apply(listener, args);
         } catch (ex) {
-          Cu.reportError("RemoteWebProgress failed to call " + methodName + ": " + ex + "\n");
+          Cu.reportError(
+            "RemoteWebProgress failed to call " + methodName + ": " + ex + "\n"
+          );
         }
       }
     }
@@ -100,45 +113,74 @@ class RemoteWebProgressManager {
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     this._callProgressListeners(
-      Ci.nsIWebProgress.NOTIFY_STATE_ALL, "onStateChange", aWebProgress,
-      aRequest, aStateFlags, aStatus
+      Ci.nsIWebProgress.NOTIFY_STATE_ALL,
+      "onStateChange",
+      aWebProgress,
+      aRequest,
+      aStateFlags,
+      aStatus
     );
   }
 
-  onProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-                   aCurTotalProgress, aMaxTotalProgress) {
+  onProgressChange(
+    aWebProgress,
+    aRequest,
+    aCurSelfProgress,
+    aMaxSelfProgress,
+    aCurTotalProgress,
+    aMaxTotalProgress
+  ) {
     this._callProgressListeners(
-      Ci.nsIWebProgress.NOTIFY_PROGRESS, "onProgressChange", aWebProgress,
-      aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
+      Ci.nsIWebProgress.NOTIFY_PROGRESS,
+      "onProgressChange",
+      aWebProgress,
+      aRequest,
+      aCurSelfProgress,
+      aMaxSelfProgress,
+      aCurTotalProgress,
       aMaxTotalProgress
     );
   }
 
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
     this._callProgressListeners(
-      Ci.nsIWebProgress.NOTIFY_LOCATION, "onLocationChange", aWebProgress,
-      aRequest, aLocation, aFlags
+      Ci.nsIWebProgress.NOTIFY_LOCATION,
+      "onLocationChange",
+      aWebProgress,
+      aRequest,
+      aLocation,
+      aFlags
     );
   }
 
   onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
     this._callProgressListeners(
-      Ci.nsIWebProgress.NOTIFY_STATUS, "onStatusChange", aWebProgress,
-      aRequest, aStatus, aMessage
+      Ci.nsIWebProgress.NOTIFY_STATUS,
+      "onStatusChange",
+      aWebProgress,
+      aRequest,
+      aStatus,
+      aMessage
     );
   }
 
   onSecurityChange(aWebProgress, aRequest, aState) {
     this._callProgressListeners(
-      Ci.nsIWebProgress.NOTIFY_SECURITY, "onSecurityChange", aWebProgress,
-      aRequest, aState
+      Ci.nsIWebProgress.NOTIFY_SECURITY,
+      "onSecurityChange",
+      aWebProgress,
+      aRequest,
+      aState
     );
   }
 
   onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
     this._callProgressListeners(
-      Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING, "onContentBlockingEvent",
-      aWebProgress, aRequest, aEvent
+      Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING,
+      "onContentBlockingEvent",
+      aWebProgress,
+      aRequest,
+      aEvent
     );
   }
 
@@ -150,12 +192,15 @@ class RemoteWebProgressManager {
     // really have a concept of subframes/content we always create a new object
     // for those.
     if (json.webProgress) {
-      webProgress = isTopLevel ? this._topLevelWebProgress
-                               : new RemoteWebProgress(this, isTopLevel);
-      webProgress.update(json.webProgress.DOMWindowID,
-                         0,
-                         json.webProgress.loadType,
-                         json.webProgress.isLoadingDocument);
+      webProgress = isTopLevel
+        ? this._topLevelWebProgress
+        : new RemoteWebProgress(this, isTopLevel);
+      webProgress.update(
+        json.webProgress.DOMWindowID,
+        0,
+        json.webProgress.loadType,
+        json.webProgress.isLoadingDocument
+      );
       webProgress.QueryInterface(Ci.nsIWebProgress);
     }
 
@@ -164,28 +209,33 @@ class RemoteWebProgressManager {
     if (json.requestURI) {
       request = new RemoteWebProgressRequest(
         Services.io.newURI(json.requestURI),
-        Services.io.newURI(json.originalRequestURI));
+        Services.io.newURI(json.originalRequestURI)
+      );
       request = request.QueryInterface(Ci.nsIRequest);
     }
 
     switch (aMessage.name) {
-    case "Content:SecurityChange":
-      let [secInfo, state] = this._fixSecInfoAndState(json.secInfo, json.state);
+      case "Content:SecurityChange":
+        let [secInfo, state] = this._fixSecInfoAndState(
+          json.secInfo,
+          json.state
+        );
 
-      if (isTopLevel) {
-        // Invoking this getter triggers the generation of the underlying object,
-        // which we need to access with ._securityUI, because .securityUI returns
-        // a wrapper that makes _update inaccessible.
-        void this._browser.securityUI;
-        this._browser._securityUI._update(secInfo, state);
-      }
+        if (isTopLevel) {
+          // Invoking this getter triggers the generation of the underlying object,
+          // which we need to access with ._securityUI, because .securityUI returns
+          // a wrapper that makes _update inaccessible.
+          void this._browser.securityUI;
+          this._browser._securityUI._update(secInfo, state);
+        }
 
-      this.onSecurityChange(webProgress, request, state);
-      break;
+        this.onSecurityChange(webProgress, request, state);
+        break;
     }
   }
 }
 
-RemoteWebProgressManager.prototype.QueryInterface =
-  ChromeUtils.generateQI(["nsIWebProgress",
-                          "nsIWebProgressListener"]);
+RemoteWebProgressManager.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsIWebProgress",
+  "nsIWebProgressListener",
+]);

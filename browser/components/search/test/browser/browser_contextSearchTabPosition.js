@@ -8,7 +8,9 @@ add_task(async function test() {
   let numSearchesBefore = 0;
 
   try {
-    let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
+    let hs = Services.telemetry
+      .getKeyedHistogramById("SEARCH_COUNTS")
+      .snapshot();
     if (histogramKey in hs) {
       numSearchesBefore = hs[histogramKey].sum;
     }
@@ -33,15 +35,29 @@ add_task(async function test() {
   container.addEventListener("TabOpen", tabAdded);
 
   BrowserTestUtils.addTab(gBrowser, "about:blank");
-  BrowserSearch.loadSearchFromContext("mozilla", Services.scriptSecurityManager.getSystemPrincipal());
-  BrowserSearch.loadSearchFromContext("firefox", Services.scriptSecurityManager.getSystemPrincipal());
+  BrowserSearch.loadSearchFromContext(
+    "mozilla",
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
+  BrowserSearch.loadSearchFromContext(
+    "firefox",
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
 
   // Wait for all the tabs to open.
   await tabsLoadedDeferred.promise;
 
   is(tabs[0], gBrowser.tabs[3], "blank tab has been pushed to the end");
-  is(tabs[1], gBrowser.tabs[1], "first search tab opens next to the current tab");
-  is(tabs[2], gBrowser.tabs[2], "second search tab opens next to the first search tab");
+  is(
+    tabs[1],
+    gBrowser.tabs[1],
+    "first search tab opens next to the current tab"
+  );
+  is(
+    tabs[2],
+    gBrowser.tabs[2],
+    "second search tab opens next to the first search tab"
+  );
 
   container.removeEventListener("TabOpen", tabAdded);
   tabs.forEach(gBrowser.removeTab, gBrowser);
@@ -49,8 +65,11 @@ add_task(async function test() {
   // Make sure that the context searches are correctly recorded.
   let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
   Assert.ok(histogramKey in hs, "The histogram must contain the correct key");
-  Assert.equal(hs[histogramKey].sum, numSearchesBefore + 2,
-               "The histogram must contain the correct search count");
+  Assert.equal(
+    hs[histogramKey].sum,
+    numSearchesBefore + 2,
+    "The histogram must contain the correct search count"
+  );
 });
 
 function Deferred() {

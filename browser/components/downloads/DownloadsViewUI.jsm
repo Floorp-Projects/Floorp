@@ -9,11 +9,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "DownloadsViewUI",
-];
+var EXPORTED_SYMBOLS = ["DownloadsViewUI"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -92,8 +92,9 @@ var DownloadsViewUI = {
    * source URI is displayed.
    */
   getDisplayName(download) {
-    return download.target.path ? OS.Path.basename(download.target.path)
-                                : download.source.url;
+    return download.target.path
+      ? OS.Path.basename(download.target.path)
+      : download.source.url;
   },
 
   /**
@@ -194,10 +195,13 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     }
     this.element.setAttribute("active", true);
     this.element.setAttribute("orient", "horizontal");
-    this.element.setAttribute("onclick",
-                              "DownloadsView.onDownloadClick(event);");
-    this.element.appendChild(document.importNode(downloadListItemFragment,
-                                                 true));
+    this.element.setAttribute(
+      "onclick",
+      "DownloadsView.onDownloadClick(event);"
+    );
+    this.element.appendChild(
+      document.importNode(downloadListItemFragment, true)
+    );
     for (let [propertyName, selector] of [
       ["_downloadTypeIcon", ".downloadTypeIcon"],
       ["_downloadTarget", ".downloadTarget"],
@@ -210,8 +214,10 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     }
 
     // HTML elements can be created directly without using parseXULToFragment.
-    let progress = this._downloadProgress =
-                   document.createElementNS(HTML_NS, "progress");
+    let progress = (this._downloadProgress = document.createElementNS(
+      HTML_NS,
+      "progress"
+    ));
     progress.className = "downloadProgress";
     progress.setAttribute("max", "100");
     this._downloadTarget.insertAdjacentElement("afterend", progress);
@@ -224,8 +230,9 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    */
   string(l10nId) {
     // These strings are not used often enough to require caching.
-    return this.element.ownerDocument.getElementById("downloadsStrings")
-                                     .getAttribute("string-" + l10nId);
+    return this.element.ownerDocument
+      .getElementById("downloadsStrings")
+      .getAttribute("string-" + l10nId);
   },
 
   /**
@@ -243,8 +250,12 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     // reloaded, however, we must change the URI used by the XUL image element,
     // for example by adding a query parameter. This only works if we add one of
     // the parameters explicitly supported by the nsIMozIconURI interface.
-    return "moz-icon://" + this.download.target.path + "?size=32" +
-           (this.download.succeeded ? "&state=normal" : "");
+    return (
+      "moz-icon://" +
+      this.download.target.path +
+      "?size=32" +
+      (this.download.succeeded ? "&state=normal" : "")
+    );
   },
 
   get browserWindow() {
@@ -316,16 +327,21 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    *        Downloads View.
    */
   showStatusWithDetails(stateLabel, hoverStatus) {
-    let [displayHost] =
-        DownloadUtils.getURIHost(this.download.source.referrer ||
-                                 this.download.source.url);
-    let [displayDate] =
-        DownloadUtils.getReadableDates(new Date(this.download.endTime));
+    let [displayHost] = DownloadUtils.getURIHost(
+      this.download.source.referrer || this.download.source.url
+    );
+    let [displayDate] = DownloadUtils.getReadableDates(
+      new Date(this.download.endTime)
+    );
 
-    let firstPart =
-        DownloadsCommon.strings.statusSeparator(stateLabel, displayHost);
-    let fullStatus =
-        DownloadsCommon.strings.statusSeparator(firstPart, displayDate);
+    let firstPart = DownloadsCommon.strings.statusSeparator(
+      stateLabel,
+      displayHost
+    );
+    let fullStatus = DownloadsCommon.strings.statusSeparator(
+      firstPart,
+      displayDate
+    );
 
     if (!this.isPanel) {
       this.showStatus(fullStatus);
@@ -341,15 +357,21 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    *        One of the presets defined in gDownloadElementButtons.
    */
   showButton(type) {
-    let { commandName, l10nId, descriptionL10nId,
-          iconClass } = gDownloadElementButtons[type];
+    let {
+      commandName,
+      l10nId,
+      descriptionL10nId,
+      iconClass,
+    } = gDownloadElementButtons[type];
 
     this.buttonCommandName = commandName;
     let labelAttribute = this.isPanel ? "aria-label" : "tooltiptext";
     this._downloadButton.setAttribute(labelAttribute, this.string(l10nId));
     if (this.isPanel && descriptionL10nId) {
-      this._downloadDetailsButtonHover.setAttribute("value",
-        this.string(descriptionL10nId));
+      this._downloadDetailsButtonHover.setAttribute(
+        "value",
+        this.string(descriptionL10nId)
+      );
     }
     this._downloadButton.setAttribute("class", "downloadButton " + iconClass);
     this._downloadButton.removeAttribute("hidden");
@@ -366,10 +388,14 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    * called for every progress update in order to improve performance.
    */
   _updateState() {
-    this.showDisplayNameAndIcon(DownloadsViewUI.getDisplayName(this.download),
-                                this.image);
-    this.element.setAttribute("state",
-                              DownloadsCommon.stateOfDownload(this.download));
+    this.showDisplayNameAndIcon(
+      DownloadsViewUI.getDisplayName(this.download),
+      this.image
+    );
+    this.element.setAttribute(
+      "state",
+      DownloadsCommon.stateOfDownload(this.download)
+    );
 
     if (!this.download.stopped) {
       // When the download becomes in progress, we make all the major changes to
@@ -397,13 +423,15 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       // The download is in progress, so we don't change the button state
       // because the _updateState function already did it. We still need to
       // update all elements that may change during the download.
-      let totalBytes = this.download.hasProgress ? this.download.totalBytes
-                                                 : -1;
+      let totalBytes = this.download.hasProgress
+        ? this.download.totalBytes
+        : -1;
       let [status, newEstimatedSecondsLeft] = DownloadUtils.getDownloadStatus(
-                                              this.download.currentBytes,
-                                              totalBytes,
-                                              this.download.speed,
-                                              this.lastEstimatedSecondsLeft);
+        this.download.currentBytes,
+        totalBytes,
+        this.download.speed,
+        this.lastEstimatedSecondsLeft
+      );
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
       this.showStatus(status);
     } else {
@@ -424,16 +452,21 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
             // description of the default action, which opens the file.
             let status = DownloadsCommon.strings.stateCompleted;
             if (sizeWithUnits) {
-              status = DownloadsCommon.strings.statusSeparator(status,
-                                                               sizeWithUnits);
+              status = DownloadsCommon.strings.statusSeparator(
+                status,
+                sizeWithUnits
+              );
             }
-            this.showStatus(status,
-                            this.string("download-open-file-description"));
+            this.showStatus(
+              status,
+              this.string("download-open-file-description")
+            );
           } else {
             // In the Downloads View, we show the file size in place of the
             // state label, for example "1.5 MB - example.com - 1:45 PM".
-            this.showStatusWithDetails(sizeWithUnits ||
-                                       DownloadsCommon.strings.sizeUnknown);
+            this.showStatusWithDetails(
+              sizeWithUnits || DownloadsCommon.strings.sizeUnknown
+            );
           }
           this.showButton("show");
         } else {
@@ -448,7 +481,8 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
         if (this.download.error.becauseBlockedByParentalControls) {
           // This download was blocked permanently by parental controls.
           this.showStatusWithDetails(
-            DownloadsCommon.strings.stateBlockedParentalControls);
+            DownloadsCommon.strings.stateBlockedParentalControls
+          );
           this.hideButton();
         } else if (this.download.error.becauseBlockedByReputationCheck) {
           verdict = this.download.error.reputationCheckVerdict;
@@ -472,7 +506,8 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
               case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
                 this.showButton("askRemoveFileOrAllow");
                 break;
-              default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
+              default:
+                // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
                 this.showButton("removeFile");
                 break;
             }
@@ -488,13 +523,19 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
           // This download was paused. The main action button will cancel the
           // download, and in both the Downloads Panel and the Downlods View the
           // status includes the size, for example "Paused - 1.1 MB".
-          let totalBytes =
-              this.download.hasProgress ? this.download.totalBytes : -1;
-          let transfer =
-              DownloadUtils.getTransferTotal(this.download.currentBytes,
-                                             totalBytes);
-          this.showStatus(DownloadsCommon.strings.statusSeparatorBeforeNumber(
-                          DownloadsCommon.strings.statePaused, transfer));
+          let totalBytes = this.download.hasProgress
+            ? this.download.totalBytes
+            : -1;
+          let transfer = DownloadUtils.getTransferTotal(
+            this.download.currentBytes,
+            totalBytes
+          );
+          this.showStatus(
+            DownloadsCommon.strings.statusSeparatorBeforeNumber(
+              DownloadsCommon.strings.statePaused,
+              transfer
+            )
+          );
           this.showButton("cancel");
           progressPaused = true;
         } else {
@@ -520,8 +561,10 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
         this.element.removeAttribute("verdict");
       }
 
-      this.element.classList.toggle("temporary-block",
-                                    !!this.download.hasBlockedData);
+      this.element.classList.toggle(
+        "temporary-block",
+        !!this.download.hasBlockedData
+      );
     }
 
     // These attributes are set in all code paths, because they are relevant for
@@ -538,21 +581,27 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    */
   get rawBlockedTitleAndDetails() {
     let s = DownloadsCommon.strings;
-    if (!this.download.error ||
-        !this.download.error.becauseBlockedByReputationCheck) {
+    if (
+      !this.download.error ||
+      !this.download.error.becauseBlockedByReputationCheck
+    ) {
       return [null, null];
     }
     switch (this.download.error.reputationCheckVerdict) {
       case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
         return [s.blockedUncommon2, [s.unblockTypeUncommon2, s.unblockTip2]];
       case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
-        return [s.blockedPotentiallyUnwanted,
-                [s.unblockTypePotentiallyUnwanted2, s.unblockTip2]];
+        return [
+          s.blockedPotentiallyUnwanted,
+          [s.unblockTypePotentiallyUnwanted2, s.unblockTip2],
+        ];
       case Downloads.Error.BLOCK_VERDICT_MALWARE:
         return [s.blockedMalware, [s.unblockTypeMalware, s.unblockTip2]];
     }
-    throw new Error("Unexpected reputationCheckVerdict: " +
-                    this.download.error.reputationCheckVerdict);
+    throw new Error(
+      "Unexpected reputationCheckVerdict: " +
+        this.download.error.reputationCheckVerdict
+    );
   },
 
   /**
@@ -570,16 +619,18 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       verdict: this.download.error.reputationCheckVerdict,
       window,
       dialogType,
-    }).then(action => {
-      if (action == "open") {
-        return this.unblockAndOpenDownload();
-      } else if (action == "unblock") {
-        return this.download.unblock();
-      } else if (action == "confirmBlock") {
-        return this.download.confirmBlock();
-      }
-      return Promise.resolve();
-    }).catch(Cu.reportError);
+    })
+      .then(action => {
+        if (action == "open") {
+          return this.unblockAndOpenDownload();
+        } else if (action == "unblock") {
+          return this.download.unblock();
+        } else if (action == "confirmBlock") {
+          return this.download.confirmBlock();
+        }
+        return Promise.resolve();
+      })
+      .catch(Cu.reportError);
   },
 
   /**
@@ -714,8 +765,9 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     let document = window.document;
 
     // Do not suggest a file name if we don't know the original target.
-    let targetPath = this.download.target.path ?
-                     OS.Path.basename(this.download.target.path) : null;
+    let targetPath = this.download.target.path
+      ? OS.Path.basename(this.download.target.path)
+      : null;
     window.DownloadURL(this.download.source.url, targetPath, document);
   },
 

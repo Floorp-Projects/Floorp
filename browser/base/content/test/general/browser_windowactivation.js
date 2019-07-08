@@ -22,70 +22,95 @@ add_task(async function reallyRunTests() {
   browser2 = tab2.linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser2);
 
-  browser1.messageManager.loadFrameScript("data:,(" + childFunction.toString() + ")();", true);
-  browser2.messageManager.loadFrameScript("data:,(" + childFunction.toString() + ")();", true);
+  browser1.messageManager.loadFrameScript(
+    "data:,(" + childFunction.toString() + ")();",
+    true
+  );
+  browser2.messageManager.loadFrameScript(
+    "data:,(" + childFunction.toString() + ")();",
+    true
+  );
 
   gURLBar.focus();
 
   let testFinished = {};
-  testFinished.promise = new Promise(resolve => testFinished.resolve = resolve);
+  testFinished.promise = new Promise(
+    resolve => (testFinished.resolve = resolve)
+  );
 
   // The test performs four checks, using -moz-window-inactive on two child tabs.
   // First, the initial state should be transparent. The second check is done
   // while another window is focused. The third check is done after that window
   // is closed and the main window focused again. The fourth check is done after
   // switching to the second tab.
-  window.messageManager.addMessageListener("Test:BackgroundColorChanged", function(message) {
-    colorChangeNotifications++;
+  window.messageManager.addMessageListener(
+    "Test:BackgroundColorChanged",
+    function(message) {
+      colorChangeNotifications++;
 
-    switch (colorChangeNotifications) {
-      case 1:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "first window initial");
-        break;
-      case 2:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "second window initial");
-        runOtherWindowTests();
-        break;
-      case 3:
-        is(message.data.color, "rgb(255, 0, 0)", "first window lowered");
-        break;
-      case 4:
-        is(message.data.color, "rgb(255, 0, 0)", "second window lowered");
-        sendGetBackgroundRequest(true);
-        otherWindow.close();
-        break;
-      case 5:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "first window raised");
-        break;
-      case 6:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "second window raised");
-        gBrowser.selectedTab = tab2;
-        break;
-      case 7:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "first window after tab switch");
-        break;
-      case 8:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "second window after tab switch");
-        testFinished.resolve();
-        break;
-      case 9:
-        ok(false, "too many color change notifications");
-        break;
+      switch (colorChangeNotifications) {
+        case 1:
+          is(message.data.color, "rgba(0, 0, 0, 0)", "first window initial");
+          break;
+        case 2:
+          is(message.data.color, "rgba(0, 0, 0, 0)", "second window initial");
+          runOtherWindowTests();
+          break;
+        case 3:
+          is(message.data.color, "rgb(255, 0, 0)", "first window lowered");
+          break;
+        case 4:
+          is(message.data.color, "rgb(255, 0, 0)", "second window lowered");
+          sendGetBackgroundRequest(true);
+          otherWindow.close();
+          break;
+        case 5:
+          is(message.data.color, "rgba(0, 0, 0, 0)", "first window raised");
+          break;
+        case 6:
+          is(message.data.color, "rgba(0, 0, 0, 0)", "second window raised");
+          gBrowser.selectedTab = tab2;
+          break;
+        case 7:
+          is(
+            message.data.color,
+            "rgba(0, 0, 0, 0)",
+            "first window after tab switch"
+          );
+          break;
+        case 8:
+          is(
+            message.data.color,
+            "rgba(0, 0, 0, 0)",
+            "second window after tab switch"
+          );
+          testFinished.resolve();
+          break;
+        case 9:
+          ok(false, "too many color change notifications");
+          break;
+      }
     }
-  });
+  );
 
-  window.messageManager.addMessageListener("Test:FocusReceived", function(message) {
+  window.messageManager.addMessageListener("Test:FocusReceived", function(
+    message
+  ) {
     // No color change should occur after a tab switch.
     if (colorChangeNotifications == 6) {
       sendGetBackgroundRequest(false);
     }
   });
 
-  window.messageManager.addMessageListener("Test:ActivateEvent", function(message) {
+  window.messageManager.addMessageListener("Test:ActivateEvent", function(
+    message
+  ) {
     ok(message.data.ok, "Test:ActivateEvent");
   });
 
-  window.messageManager.addMessageListener("Test:DeactivateEvent", function(message) {
+  window.messageManager.addMessageListener("Test:DeactivateEvent", function(
+    message
+  ) {
     ok(message.data.ok, "Test:DeactivateEvent");
   });
 
@@ -102,8 +127,12 @@ add_task(async function reallyRunTests() {
 });
 
 function sendGetBackgroundRequest(ifChanged) {
-  browser1.messageManager.sendAsyncMessage("Test:GetBackgroundColor", { ifChanged });
-  browser2.messageManager.sendAsyncMessage("Test:GetBackgroundColor", { ifChanged });
+  browser1.messageManager.sendAsyncMessage("Test:GetBackgroundColor", {
+    ifChanged,
+  });
+  browser2.messageManager.sendAsyncMessage("Test:GetBackgroundColor", {
+    ifChanged,
+  });
 }
 
 function runOtherWindowTests() {
@@ -125,27 +154,27 @@ function childFunction() {
   });
 
   content.addEventListener("focus", function() {
-    sendAsyncMessage("Test:FocusReceived", { });
+    sendAsyncMessage("Test:FocusReceived", {});
   });
 
   var windowGotActivate = false;
   var windowGotDeactivate = false;
   addEventListener("activate", function() {
-      sendAsyncMessage("Test:ActivateEvent", { ok: !windowGotActivate });
-      windowGotActivate = false;
-    });
+    sendAsyncMessage("Test:ActivateEvent", { ok: !windowGotActivate });
+    windowGotActivate = false;
+  });
 
   addEventListener("deactivate", function() {
-      sendAsyncMessage("Test:DeactivateEvent", { ok: !windowGotDeactivate });
-      windowGotDeactivate = false;
-    });
+    sendAsyncMessage("Test:DeactivateEvent", { ok: !windowGotDeactivate });
+    windowGotDeactivate = false;
+  });
   content.addEventListener("activate", function() {
-      windowGotActivate = true;
-    });
+    windowGotActivate = true;
+  });
 
   content.addEventListener("deactivate", function() {
-      windowGotDeactivate = true;
-    });
+    windowGotDeactivate = true;
+  });
 
   content.setInterval(function() {
     if (!expectingResponse) {

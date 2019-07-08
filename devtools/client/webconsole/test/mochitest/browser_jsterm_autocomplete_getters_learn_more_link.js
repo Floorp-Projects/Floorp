@@ -38,18 +38,30 @@ async function performTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  const tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud,
-    "window.foo.bar.");
+  const tooltip = await setInputValueForGetterConfirmDialog(
+    toolbox,
+    hud,
+    "window.foo.bar."
+  );
   const labelEl = tooltip.querySelector(".confirm-label");
-  is(labelEl.textContent, "Invoke getter window.foo.bar to retrieve the property list?",
-    "Dialog has expected text content");
+  is(
+    labelEl.textContent,
+    "Invoke getter window.foo.bar to retrieve the property list?",
+    "Dialog has expected text content"
+  );
   const learnMoreEl = tooltip.querySelector(".learn-more-link");
   is(learnMoreEl.textContent, "Learn More", `There's a "Learn more" link`);
 
-  info(`Check that clicking on the "Learn more" link navigates to the expected page`);
+  info(
+    `Check that clicking on the "Learn more" link navigates to the expected page`
+  );
   const expectedUri = MDN_URL + GA_PARAMS;
   let { link } = await simulateLinkClick(learnMoreEl);
-  is(link, expectedUri, `Click on "Learn More" link navigates user to ${expectedUri}`);
+  is(
+    link,
+    expectedUri,
+    `Click on "Learn More" link navigates user to ${expectedUri}`
+  );
 
   info(`Check that hitting "?" navigates to the Learn more target page`);
   link = (await overrideOpenLink(() => EventUtils.synthesizeKey("?"))).link;

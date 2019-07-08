@@ -7,8 +7,13 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_EXPERIMENTAL_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  UI_EXPERIMENTAL_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
 
 add_task(async function() {
   Services.prefs.setBoolPref(UI_EXPERIMENTAL_PREF, false);
@@ -22,17 +27,25 @@ add_task(async function() {
   const $body = $(".theme-body");
   const $menu = $("#performance-options-menupopup");
 
-  ok(!$body.classList.contains("experimental-enabled"),
-    "The body node does not have `experimental-enabled` on start.");
-  ok(!$menu.classList.contains("experimental-enabled"),
-    "The menu popup does not have `experimental-enabled` on start.");
+  ok(
+    !$body.classList.contains("experimental-enabled"),
+    "The body node does not have `experimental-enabled` on start."
+  );
+  ok(
+    !$menu.classList.contains("experimental-enabled"),
+    "The menu popup does not have `experimental-enabled` on start."
+  );
 
   Services.prefs.setBoolPref(UI_EXPERIMENTAL_PREF, true);
 
-  ok($body.classList.contains("experimental-enabled"),
-    "The body node has `experimental-enabled` after toggle.");
-  ok($menu.classList.contains("experimental-enabled"),
-    "The menu popup has `experimental-enabled` after toggle.");
+  ok(
+    $body.classList.contains("experimental-enabled"),
+    "The body node has `experimental-enabled` after toggle."
+  );
+  ok(
+    $menu.classList.contains("experimental-enabled"),
+    "The menu popup has `experimental-enabled` after toggle."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

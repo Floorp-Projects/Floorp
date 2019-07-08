@@ -25,25 +25,32 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { panel } = await openAnimationInspector();
 
   for (const { targetClass, expectedPath } of TEST_DATA) {
-    const animationItemEl =
-      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
+    const animationItemEl = findAnimationItemElementsByTargetSelector(
+      panel,
+      `.${targetClass}`
+    );
 
-    info(`Checking negative endDelay path existance for ${ targetClass }`);
-    const negativeEndDelayPathEl =
-      animationItemEl.querySelector(".animation-negative-end-delay-path");
+    info(`Checking negative endDelay path existance for ${targetClass}`);
+    const negativeEndDelayPathEl = animationItemEl.querySelector(
+      ".animation-negative-end-delay-path"
+    );
 
     if (expectedPath) {
-      ok(negativeEndDelayPathEl,
-        "The negative endDelay path element should be in animation item element");
+      ok(
+        negativeEndDelayPathEl,
+        "The negative endDelay path element should be in animation item element"
+      );
       const pathEl = negativeEndDelayPathEl.querySelector("path");
       assertPathSegments(pathEl, true, expectedPath);
     } else {
-      ok(!negativeEndDelayPathEl,
-        "The negative endDelay path element should not be in animation item element");
+      ok(
+        !negativeEndDelayPathEl,
+        "The negative endDelay path element should not be in animation item element"
+      );
     }
   }
 });

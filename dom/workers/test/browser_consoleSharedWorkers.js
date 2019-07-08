@@ -16,14 +16,18 @@ add_task(async function test() {
     }
 
     var order = 0;
-    consoleListener.prototype  = {
+    consoleListener.prototype = {
       observe: (aSubject, aTopic, aData) => {
         ok(true, "Something has been received");
 
         if (aTopic == "console-api-profiler") {
           var obj = aSubject.wrappedJSObject;
-          is (obj.arguments[0], "Hello profiling from a SharedWorker!", "A message from a SharedWorker \\o/");
-          is (order++, 0, "First a profiler message.");
+          is(
+            obj.arguments[0],
+            "Hello profiling from a SharedWorker!",
+            "A message from a SharedWorker \\o/"
+          );
+          is(order++, 0, "First a profiler message.");
 
           Services.obs.removeObserver(cl, "console-api-profiler");
           return;
@@ -31,23 +35,31 @@ add_task(async function test() {
 
         if (aTopic == "console-api-log-event") {
           var obj = aSubject.wrappedJSObject;
-          is (obj.arguments[0], "Hello world from a SharedWorker!", "A message from a SharedWorker \\o/");
-          is (obj.ID, "chrome://mochitests/content/browser/dom/workers/test/sharedWorker_console.js", "The ID is SharedWorker");
-          is (obj.innerID, "SharedWorker", "The ID is SharedWorker");
-          is (order++, 1, "Then a log message.");
+          is(
+            obj.arguments[0],
+            "Hello world from a SharedWorker!",
+            "A message from a SharedWorker \\o/"
+          );
+          is(
+            obj.ID,
+            "chrome://mochitests/content/browser/dom/workers/test/sharedWorker_console.js",
+            "The ID is SharedWorker"
+          );
+          is(obj.innerID, "SharedWorker", "The ID is SharedWorker");
+          is(order++, 1, "Then a log message.");
 
           Services.obs.removeObserver(cl, "console-api-log-event");
           resolve();
           return;
         }
-      }
-    }
+      },
+    };
 
     var cl = new consoleListener();
   });
 
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    new content.SharedWorker('sharedWorker_console.js');
+    new content.SharedWorker("sharedWorker_console.js");
   });
 
   await promise;

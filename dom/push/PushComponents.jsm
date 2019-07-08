@@ -9,15 +9,20 @@
  * interact with the Push service.
  */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var isParent = Services.appinfo.processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+var isParent =
+  Services.appinfo.processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
 // The default Push service implementation.
 XPCOMUtils.defineLazyGetter(this, "PushService", function() {
   if (Services.prefs.getBoolPref("dom.push.enabled")) {
-    const {PushService} = ChromeUtils.import("resource://gre/modules/PushService.jsm");
+    const { PushService } = ChromeUtils.import(
+      "resource://gre/modules/PushService.jsm"
+    );
     PushService.init();
     return PushService;
   }
@@ -101,8 +106,8 @@ PushServiceBase.prototype = {
   },
 
   _deliverSubscriptionError(request, error) {
-    let result = typeof error.result == "number" ?
-                 error.result : Cr.NS_ERROR_FAILURE;
+    let result =
+      typeof error.result == "number" ? error.result : Cr.NS_ERROR_FAILURE;
     request.onPushSubscription(result, null);
   },
 };
@@ -124,8 +129,12 @@ function PushServiceParent() {
 
 PushServiceParent.prototype = Object.create(PushServiceBase.prototype);
 
-XPCOMUtils.defineLazyServiceGetter(PushServiceParent.prototype, "_mm",
-  "@mozilla.org/parentprocessmessagemanager;1", "nsISupports");
+XPCOMUtils.defineLazyServiceGetter(
+  PushServiceParent.prototype,
+  "_mm",
+  "@mozilla.org/parentprocessmessagemanager;1",
+  "nsISupports"
+);
 
 Object.assign(PushServiceParent.prototype, {
   _messages: [
@@ -148,41 +157,61 @@ Object.assign(PushServiceParent.prototype, {
     this._handleRequest("Push:Register", principal, {
       scope,
       appServerKey: key,
-    }).then(result => {
-      this._deliverSubscription(callback, result);
-    }, error => {
-      this._deliverSubscriptionError(callback, error);
-    }).catch(Cu.reportError);
+    })
+      .then(
+        result => {
+          this._deliverSubscription(callback, result);
+        },
+        error => {
+          this._deliverSubscriptionError(callback, error);
+        }
+      )
+      .catch(Cu.reportError);
   },
 
   unsubscribe(scope, principal, callback) {
     this._handleRequest("Push:Unregister", principal, {
       scope,
-    }).then(result => {
-      callback.onUnsubscribe(Cr.NS_OK, result);
-    }, error => {
-      callback.onUnsubscribe(Cr.NS_ERROR_FAILURE, false);
-    }).catch(Cu.reportError);
+    })
+      .then(
+        result => {
+          callback.onUnsubscribe(Cr.NS_OK, result);
+        },
+        error => {
+          callback.onUnsubscribe(Cr.NS_ERROR_FAILURE, false);
+        }
+      )
+      .catch(Cu.reportError);
   },
 
   getSubscription(scope, principal, callback) {
     return this._handleRequest("Push:Registration", principal, {
       scope,
-    }).then(result => {
-      this._deliverSubscription(callback, result);
-    }, error => {
-      this._deliverSubscriptionError(callback, error);
-    }).catch(Cu.reportError);
+    })
+      .then(
+        result => {
+          this._deliverSubscription(callback, result);
+        },
+        error => {
+          this._deliverSubscriptionError(callback, error);
+        }
+      )
+      .catch(Cu.reportError);
   },
 
   clearForDomain(domain, callback) {
     return this._handleRequest("Push:Clear", null, {
       domain,
-    }).then(result => {
-      callback.onClear(Cr.NS_OK);
-    }, error => {
-      callback.onClear(Cr.NS_ERROR_FAILURE);
-    }).catch(Cu.reportError);
+    })
+      .then(
+        result => {
+          callback.onClear(Cr.NS_OK);
+        },
+        error => {
+          callback.onClear(Cr.NS_ERROR_FAILURE);
+        }
+      )
+      .catch(Cu.reportError);
   },
 
   // nsIPushQuotaManager methods
@@ -205,7 +234,7 @@ Object.assign(PushServiceParent.prototype, {
     if (!this._isValidMessage(message)) {
       return;
     }
-    let {name, principal, target, data} = message;
+    let { name, principal, target, data } = message;
     if (name === "Push:NotificationForOriginShown") {
       this.notificationForOriginShown(data);
       return;
@@ -218,17 +247,22 @@ Object.assign(PushServiceParent.prototype, {
       this.reportDeliveryError(data.messageId, data.reason);
       return;
     }
-    this._handleRequest(name, principal, data).then(result => {
-      target.sendAsyncMessage(this._getResponseName(name, "OK"), {
-        requestID: data.requestID,
-        result,
-      });
-    }, error => {
-      target.sendAsyncMessage(this._getResponseName(name, "KO"), {
-        requestID: data.requestID,
-        result: error.result,
-      });
-    }).catch(Cu.reportError);
+    this._handleRequest(name, principal, data)
+      .then(
+        result => {
+          target.sendAsyncMessage(this._getResponseName(name, "OK"), {
+            requestID: data.requestID,
+            result,
+          });
+        },
+        error => {
+          target.sendAsyncMessage(this._getResponseName(name, "KO"), {
+            requestID: data.requestID,
+            result: error.result,
+          });
+        }
+      )
+      .catch(Cu.reportError);
   },
 
   _handleReady() {
@@ -251,8 +285,9 @@ Object.assign(PushServiceParent.prototype, {
     // also do not fire service worker events.
     data.systemRecord = principal.isSystemPrincipal;
 
-    data.originAttributes =
-      ChromeUtils.originAttributesToSuffix(principal.originAttributes);
+    data.originAttributes = ChromeUtils.originAttributesToSuffix(
+      principal.originAttributes
+    );
 
     return data;
   },
@@ -329,9 +364,12 @@ function PushServiceContent() {
 
 PushServiceContent.prototype = Object.create(PushServiceBase.prototype);
 
-XPCOMUtils.defineLazyServiceGetter(PushServiceContent.prototype,
-  "_mm", "@mozilla.org/childprocessmessagemanager;1",
-  "nsISupports");
+XPCOMUtils.defineLazyServiceGetter(
+  PushServiceContent.prototype,
+  "_mm",
+  "@mozilla.org/childprocessmessagemanager;1",
+  "nsISupports"
+);
 
 Object.assign(PushServiceContent.prototype, {
   _messages: [
@@ -353,27 +391,42 @@ Object.assign(PushServiceContent.prototype, {
 
   subscribeWithKey(scope, principal, key, callback) {
     let requestID = this._addRequest(callback);
-    this._mm.sendAsyncMessage("Push:Register", {
-      scope,
-      appServerKey: key,
-      requestID,
-    }, null, principal);
+    this._mm.sendAsyncMessage(
+      "Push:Register",
+      {
+        scope,
+        appServerKey: key,
+        requestID,
+      },
+      null,
+      principal
+    );
   },
 
   unsubscribe(scope, principal, callback) {
     let requestID = this._addRequest(callback);
-    this._mm.sendAsyncMessage("Push:Unregister", {
-      scope,
-      requestID,
-    }, null, principal);
+    this._mm.sendAsyncMessage(
+      "Push:Unregister",
+      {
+        scope,
+        requestID,
+      },
+      null,
+      principal
+    );
   },
 
   getSubscription(scope, principal, callback) {
     let requestID = this._addRequest(callback);
-    this._mm.sendAsyncMessage("Push:Registration", {
-      scope,
-      requestID,
-    }, null, principal);
+    this._mm.sendAsyncMessage(
+      "Push:Registration",
+      {
+        scope,
+        requestID,
+      },
+      null,
+      principal
+    );
   },
 
   clearForDomain(domain, callback) {
@@ -419,7 +472,7 @@ Object.assign(PushServiceContent.prototype, {
     if (!this._isValidMessage(message)) {
       return;
     }
-    let {name, data} = message;
+    let { name, data } = message;
     let request = this._takeRequest(data.requestID);
 
     if (!request) {

@@ -1,4 +1,4 @@
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function create_subdir(dir, subdirname) {
   let subdir = dir.clone();
@@ -36,14 +36,19 @@ function make_fake_appdir() {
       // because of the arbitrary JSContext being used in nsXPCWrappedJS::CallMethod.
       // After bug 997440 this gets reported to our window and causes the tests to fail.
       // So, we'll just dump out a message to the logs.
-      dump("WARNING: make_fake_appdir - fake nsIDirectoryServiceProvider - Unexpected getFile for: '" + prop + "'\n");
+      dump(
+        "WARNING: make_fake_appdir - fake nsIDirectoryServiceProvider - Unexpected getFile for: '" +
+          prop +
+          "'\n"
+      );
       return null;
     },
     QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
   };
   // register our new provider
-  Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
-                 .registerProvider(_provider);
+  Services.dirsvc
+    .QueryInterface(Ci.nsIDirectoryService)
+    .registerProvider(_provider);
   // and undefine the old value
   try {
     Services.dirsvc.undefine("UAppData");
@@ -52,8 +57,9 @@ function make_fake_appdir() {
 }
 
 function cleanup_fake_appdir() {
-  Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
-                 .unregisterProvider(_provider);
+  Services.dirsvc
+    .QueryInterface(Ci.nsIDirectoryService)
+    .unregisterProvider(_provider);
   // undefine our value so future calls get the real value
   try {
     Services.dirsvc.undefine("UAppData");
@@ -64,8 +70,9 @@ function cleanup_fake_appdir() {
 
 function add_fake_crashes(crD, count) {
   let results = [];
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                      .getService(Ci.nsIUUIDGenerator);
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
   let submitdir = crD.clone();
   submitdir.append("submitted");
   // create them from oldest to newest, to ensure that about:crashes
@@ -80,7 +87,7 @@ function add_fake_crashes(crD, count) {
     file.append(fn);
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
     file.lastModifiedTime = date;
-    results.push({"id": uuid, "date": date, "pending": false});
+    results.push({ id: uuid, date, pending: false });
 
     date += 60000;
   }
@@ -91,12 +98,14 @@ function add_fake_crashes(crD, count) {
 }
 
 function writeDataToFile(file, data) {
-  var fstream = Cc["@mozilla.org/network/file-output-stream;1"]
-                .createInstance(Ci.nsIFileOutputStream);
+  var fstream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   // open, write, truncate
   fstream.init(file, -1, -1, 0);
-  var os = Cc["@mozilla.org/intl/converter-output-stream;1"]
-           .createInstance(Ci.nsIConverterOutputStream);
+  var os = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(
+    Ci.nsIConverterOutputStream
+  );
   os.init(fstream, "UTF-8");
   os.writeString(data);
   os.close();
@@ -106,8 +115,9 @@ function writeDataToFile(file, data) {
 function addPendingCrashreport(crD, date, extra) {
   let pendingdir = crD.clone();
   pendingdir.append("pending");
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                      .getService(Ci.nsIUUIDGenerator);
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
   let uuid = uuidGenerator.generateUUID().toString();
   // ditch the {}
   uuid = uuid.substring(1, uuid.length - 1);
@@ -127,5 +137,5 @@ function addPendingCrashreport(crD, date, extra) {
   dumpfile.lastModifiedTime = date;
   extrafile.lastModifiedTime = date;
   memoryfile.lastModifiedTime = date;
-  return {"id": uuid, "date": date, "pending": true, "extra": extra};
+  return { id: uuid, date, pending: true, extra };
 }

@@ -28,16 +28,18 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "DownloadStore",
-];
+var EXPORTED_SYMBOLS = ["DownloadStore"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", function() {
   return new TextDecoder();
@@ -167,15 +169,18 @@ this.DownloadStore.prototype = {
       if (atLeastOneDownload) {
         // Create or overwrite the file if there are downloads to save.
         let bytes = gTextEncoder.encode(JSON.stringify(storeData));
-        await OS.File.writeAtomic(this.path, bytes,
-                                  { tmpPath: this.path + ".tmp" });
+        await OS.File.writeAtomic(this.path, bytes, {
+          tmpPath: this.path + ".tmp",
+        });
       } else {
         // Remove the file if there are no downloads to save at all.
         try {
           await OS.File.remove(this.path);
         } catch (ex) {
-          if (!(ex instanceof OS.File.Error) ||
-              !(ex.becauseNoSuchFile || ex.becauseAccessDenied)) {
+          if (
+            !(ex instanceof OS.File.Error) ||
+            !(ex.becauseNoSuchFile || ex.becauseAccessDenied)
+          ) {
             throw ex;
           }
           // On Windows, we may get an access denied error instead of a no such

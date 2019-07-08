@@ -5,20 +5,24 @@
 // hit all sites that update a frecency.
 
 // InsertVisitedURIs::UpdateFrecency and History::InsertPlace
-add_task(async function test_InsertVisitedURIs_UpdateFrecency_and_History_InsertPlace() {
-  // InsertPlace is at the end of a path that UpdateFrecency is also on, so kill
-  // two birds with one stone and expect two notifications.  Trigger the path by
-  // adding a download.
-  let url = Services.io.newURI("http://example.com/a");
-  let promises = [onFrecencyChanged(url), onFrecencyChanged(url)];
-  await PlacesUtils.history.insert({
-    url,
-    visits: [{
-      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
-    }],
-  });
-  await Promise.all(promises);
-});
+add_task(
+  async function test_InsertVisitedURIs_UpdateFrecency_and_History_InsertPlace() {
+    // InsertPlace is at the end of a path that UpdateFrecency is also on, so kill
+    // two birds with one stone and expect two notifications.  Trigger the path by
+    // adding a download.
+    let url = Services.io.newURI("http://example.com/a");
+    let promises = [onFrecencyChanged(url), onFrecencyChanged(url)];
+    await PlacesUtils.history.insert({
+      url,
+      visits: [
+        {
+          transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
+        },
+      ],
+    });
+    await Promise.all(promises);
+  }
+);
 
 // nsNavHistory::UpdateFrecency
 add_task(async function test_nsNavHistory_UpdateFrecency() {
@@ -57,21 +61,21 @@ add_task(async function test_clear() {
 add_task(async function test_nsNavHistory_FixAndDecayFrecency() {
   // Fix and decay frecencies by making nsNavHistory observe the idle-daily
   // notification.
-  PlacesUtils.history.QueryInterface(Ci.nsIObserver).
-    observe(null, "idle-daily", "");
+  PlacesUtils.history
+    .QueryInterface(Ci.nsIObserver)
+    .observe(null, "idle-daily", "");
   await Promise.all([onManyFrecenciesChanged()]);
 });
 
 function onFrecencyChanged(expectedURI) {
   return new Promise(resolve => {
     let obs = new NavHistoryObserver();
-    obs.onFrecencyChanged =
-      (uri, newFrecency, guid, hidden, visitDate) => {
-        PlacesUtils.history.removeObserver(obs);
-        Assert.ok(!!uri);
-        Assert.ok(uri.equals(expectedURI));
-        resolve();
-      };
+    obs.onFrecencyChanged = (uri, newFrecency, guid, hidden, visitDate) => {
+      PlacesUtils.history.removeObserver(obs);
+      Assert.ok(!!uri);
+      Assert.ok(uri.equals(expectedURI));
+      resolve();
+    };
     PlacesUtils.history.addObserver(obs);
   });
 }

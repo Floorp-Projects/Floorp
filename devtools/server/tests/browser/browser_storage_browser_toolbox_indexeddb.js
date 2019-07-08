@@ -8,13 +8,15 @@
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js",
-  this);
+  this
+);
 
 add_task(async function() {
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
-  const { target, front } =
-    await openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
+  const { target, front } = await openTabAndSetupStorage(
+    MAIN_DOMAIN + "storage-updates.html"
+  );
   await createIndexedDB();
 
   await testInternalDBs(front);
@@ -33,7 +35,7 @@ async function createIndexedDB() {
 
   request.onupgradeneeded = function() {
     const db = request.result;
-    const store = db.createObjectStore("MyObjectStore", {keyPath: "id"});
+    const store = db.createObjectStore("MyObjectStore", { keyPath: "id" });
     store.createIndex("NameIndex", ["name.last", "name.first"]);
   };
 

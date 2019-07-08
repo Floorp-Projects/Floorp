@@ -69,8 +69,12 @@ NetMonitorAPI.prototype = {
       owner: this,
     };
 
-    await this.connectBackend(this.connector, connection, this.actions,
-      this.store.getState);
+    await this.connectBackend(
+      this.connector,
+      connection,
+      this.actions,
+      this.store.getState
+    );
   },
 
   /**
@@ -105,7 +109,9 @@ NetMonitorAPI.prototype = {
    * Support for `devtools.network.getHAR` (get collected data as HAR)
    */
   async getHar() {
-    const { HarExporter } = require("devtools/client/netmonitor/src/har/har-exporter");
+    const {
+      HarExporter,
+    } = require("devtools/client/netmonitor/src/har/har-exporter");
     const state = this.store.getState();
 
     const options = {
@@ -125,7 +131,9 @@ NetMonitorAPI.prototype = {
       return;
     }
 
-    const { HarExporter } = require("devtools/client/netmonitor/src/har/har-exporter");
+    const {
+      HarExporter,
+    } = require("devtools/client/netmonitor/src/har/har-exporter");
 
     const connector = await this.getHarExportConnector();
     const request = getDisplayedRequestById(this.store.getState(), requestId);
@@ -146,10 +154,12 @@ NetMonitorAPI.prototype = {
     const harEntry = har.log.entries[0];
     delete harEntry.pageref;
 
-    this._requestFinishedListeners.forEach(listener => listener({
-      harEntry,
-      requestId,
-    }));
+    this._requestFinishedListeners.forEach(listener =>
+      listener({
+        harEntry,
+        requestId,
+      })
+    );
   },
 
   /**
@@ -198,8 +208,10 @@ NetMonitorAPI.prototype = {
     };
 
     this.harExportConnector = new Connector();
-    this.harExportConnectorReady =
-      this.connectBackend(this.harExportConnector, connection);
+    this.harExportConnectorReady = this.connectBackend(
+      this.harExportConnector,
+      connection
+    );
     await this.harExportConnectorReady;
     return this.harExportConnector;
   },

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 
 startupAddonsManager();
 

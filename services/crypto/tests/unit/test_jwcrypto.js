@@ -3,15 +3,20 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "jwcrypto",
-                               "resource://services-crypto/jwcrypto.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "jwcrypto",
+  "resource://services-crypto/jwcrypto.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "CryptoService",
-                                   "@mozilla.org/identity/crypto-service;1",
-                                   "nsIIdentityCryptoService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "CryptoService",
+  "@mozilla.org/identity/crypto-service;1",
+  "nsIIdentityCryptoService"
+);
 
 Cu.importGlobalProperties(["crypto"]);
 
@@ -39,14 +44,22 @@ const generateAssertion = promisify(jwcrypto.generateAssertion);
 
 add_task(async function test_jwe_roundtrip_ecdh_es_encryption() {
   const data = crypto.getRandomValues(new Uint8Array(123));
-  const localEpk = await crypto.subtle.generateKey({
-    name: "ECDH",
-    namedCurve: "P-256",
-  }, true, ["deriveKey"]);
-  const remoteEpk = await crypto.subtle.generateKey({
-    name: "ECDH",
-    namedCurve: "P-256",
-  }, true, ["deriveKey"]);
+  const localEpk = await crypto.subtle.generateKey(
+    {
+      name: "ECDH",
+      namedCurve: "P-256",
+    },
+    true,
+    ["deriveKey"]
+  );
+  const remoteEpk = await crypto.subtle.generateKey(
+    {
+      name: "ECDH",
+      namedCurve: "P-256",
+    },
+    true,
+    ["deriveKey"]
+  );
   const jwe = await jwcrypto._generateJWE(localEpk, remoteEpk.publicKey, data);
   const decryptedJWE = await jwcrypto.decryptJWE(jwe, remoteEpk.privateKey);
   Assert.deepEqual(data, decryptedJWE);
@@ -128,13 +141,11 @@ add_task(async function test_get_assertion_with_offset() {
   let localMsec = serverMsec - localtimeOffsetMsec;
 
   let kp = await generateKeyPair("DS160");
-  let backedAssertion = await generateAssertion("fake-cert", kp, RP_ORIGIN,
-    {
-      duration: MINUTE_MS,
-      localtimeOffsetMsec,
-      now: localMsec,
-    }
-  );
+  let backedAssertion = await generateAssertion("fake-cert", kp, RP_ORIGIN, {
+    duration: MINUTE_MS,
+    localtimeOffsetMsec,
+    now: localMsec,
+  });
   // properly formed
   let cert;
   let assertion;
@@ -152,7 +163,9 @@ add_task(async function test_get_assertion_with_offset() {
 
 add_task(async function test_assertion_lifetime() {
   let kp = await generateKeyPair("DS160");
-  let backedAssertion = await generateAssertion("fake-cert", kp, RP_ORIGIN, {duration: MINUTE_MS});
+  let backedAssertion = await generateAssertion("fake-cert", kp, RP_ORIGIN, {
+    duration: MINUTE_MS,
+  });
   // properly formed
   let cert;
   let assertion;
@@ -173,19 +186,21 @@ add_task(async function test_audience_encoding_bug972582() {
   let audience = "i-like-pie.com";
   let kp = await generateKeyPair("DS160");
   let backedAssertion = await generateAssertion("fake-cert", kp, audience);
-  let [/* cert */, assertion] = backedAssertion.split("~");
+  let [, /* cert */ assertion] = backedAssertion.split("~");
   let components = extractComponents(assertion);
   Assert.equal(components.payload.aud, audience);
 });
 
 function extractComponents(signedObject) {
-  if (typeof(signedObject) != "string") {
-    throw new Error("malformed signature " + typeof(signedObject));
+  if (typeof signedObject != "string") {
+    throw new Error("malformed signature " + typeof signedObject);
   }
 
   let parts = signedObject.split(".");
   if (parts.length != 3) {
-    throw new Error("signed object must have three parts, this one has " + parts.length);
+    throw new Error(
+      "signed object must have three parts, this one has " + parts.length
+    );
   }
 
   let headerSegment = parts[0];
@@ -204,9 +219,5 @@ function extractComponents(signedObject) {
     Assert.ok(!!payload[field]);
   }
 
-  return {header,
-          payload,
-          headerSegment,
-          payloadSegment,
-          cryptoSegment};
+  return { header, payload, headerSegment, payloadSegment, cryptoSegment };
 }

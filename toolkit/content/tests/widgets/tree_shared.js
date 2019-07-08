@@ -4,15 +4,19 @@
 // This files relies on these specific Chrome/XBL globals
 /* globals TreeColumns, TreeColumn */
 
-var columns_simpletree =
-[
+var columns_simpletree = [
   { name: "name", label: "Name", key: true, properties: "one two" },
   { name: "address", label: "Address" },
 ];
 
-var columns_hiertree =
-[
-  { name: "name", label: "Name", primary: true, key: true, properties: "one two" },
+var columns_hiertree = [
+  {
+    name: "name",
+    label: "Name",
+    primary: true,
+    key: true,
+    properties: "one two",
+  },
   { name: "address", label: "Address" },
   { name: "planet", label: "Planet" },
   { name: "gender", label: "Gender", cycler: true },
@@ -25,7 +29,13 @@ var columns_hiertree =
 // expanded. The tree should only display four rows at a time. If editable,
 // the cell at row 1 and column 0 must be editable, and the cell at row 2 and
 // column 1 must not be editable.
-async function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
+async function testtag_tree(
+  treeid,
+  treerowinfoid,
+  seltype,
+  columnstype,
+  testid
+) {
   // Stop keystrokes that aren't handled by the tree from leaking out and
   // scrolling the main Mochitests window!
   function preventDefault(event) {
@@ -33,16 +43,18 @@ async function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid)
   }
   document.addEventListener("keypress", preventDefault);
 
-  var multiple = (seltype == "multiple");
+  var multiple = seltype == "multiple";
 
   var tree = document.getElementById(treeid);
   var treerowinfo = document.getElementById(treerowinfoid);
   var rowInfo;
-  if (testid == "tree view")
+  if (testid == "tree view") {
     rowInfo = getCustomTreeViewCellInfo();
-  else
+  } else {
     rowInfo = convertDOMtoTreeRowInfo(treerowinfo, 0, { value: -1 });
-  var columnInfo = (columnstype == "simple") ? columns_simpletree : columns_hiertree;
+  }
+  var columnInfo =
+    columnstype == "simple" ? columns_simpletree : columns_hiertree;
 
   is(tree.selType, seltype == "multiple" ? "" : seltype, testid + " seltype");
 
@@ -62,57 +74,105 @@ async function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid)
 
   testtag_tree_UI_editing(tree, testid, rowInfo);
 
-  is(tree.editable, false, "tree should not be editable after testtag_tree_UI_editing");
+  is(
+    tree.editable,
+    false,
+    "tree should not be editable after testtag_tree_UI_editing"
+  );
   // currently, the editable flag means that tree editing cannot be invoked
   // by the user. However, editing can still be started with a script.
   is(tree.editingRow, -1, testid + " initial editingRow (continued)");
   is(tree.editingColumn, null, testid + " initial editingColumn (continued)");
 
   var ecolumn = tree.columns[0];
-  ok(!tree.startEditing(1, ecolumn), "non-editable trees shouldn't start editing");
-  is(tree.editingRow, -1, testid + " failed startEditing shouldn't set editingRow");
-  is(tree.editingColumn, null, testid + " failed startEditing shouldn't set editingColumn");
+  ok(
+    !tree.startEditing(1, ecolumn),
+    "non-editable trees shouldn't start editing"
+  );
+  is(
+    tree.editingRow,
+    -1,
+    testid + " failed startEditing shouldn't set editingRow"
+  );
+  is(
+    tree.editingColumn,
+    null,
+    testid + " failed startEditing shouldn't set editingColumn"
+  );
 
   tree.editable = true;
 
   ok(tree.startEditing(1, ecolumn), "startEditing should have returned true");
   is(tree.editingRow, 1, testid + " startEditing editingRow");
   is(tree.editingColumn, ecolumn, testid + " startEditing editingColumn");
-  is(tree.getAttribute("editing"), "true", testid + " startEditing editing attribute");
+  is(
+    tree.getAttribute("editing"),
+    "true",
+    testid + " startEditing editing attribute"
+  );
 
   tree.stopEditing(true);
   is(tree.editingRow, -1, testid + " stopEditing editingRow");
   is(tree.editingColumn, null, testid + " stopEditing editingColumn");
-  is(tree.hasAttribute("editing"), false, testid + " stopEditing editing attribute");
+  is(
+    tree.hasAttribute("editing"),
+    false,
+    testid + " stopEditing editing attribute"
+  );
 
   tree.startEditing(-1, ecolumn);
-  is(tree.editingRow == -1 && tree.editingColumn == null, true, testid + " startEditing -1 editingRow");
+  is(
+    tree.editingRow == -1 && tree.editingColumn == null,
+    true,
+    testid + " startEditing -1 editingRow"
+  );
   tree.startEditing(15, ecolumn);
-  is(tree.editingRow == -1 && tree.editingColumn == null, true, testid + " startEditing 15 editingRow");
+  is(
+    tree.editingRow == -1 && tree.editingColumn == null,
+    true,
+    testid + " startEditing 15 editingRow"
+  );
   tree.startEditing(1, null);
-  is(tree.editingRow == -1 && tree.editingColumn == null, true, testid + " startEditing null column editingRow");
+  is(
+    tree.editingRow == -1 && tree.editingColumn == null,
+    true,
+    testid + " startEditing null column editingRow"
+  );
   tree.startEditing(2, tree.columns[1]);
-  is(tree.editingRow == -1 && tree.editingColumn == null, true, testid + " startEditing non editable cell editingRow");
+  is(
+    tree.editingRow == -1 && tree.editingColumn == null,
+    true,
+    testid + " startEditing non editable cell editingRow"
+  );
 
   tree.startEditing(1, ecolumn);
   var inputField = tree.inputField;
   is(inputField.localName, "textbox", testid + "inputField");
   inputField.value = "Changed Value";
   tree.stopEditing(true);
-  is(tree.view.getCellText(1, ecolumn), "Changed Value", testid + "edit cell accept");
+  is(
+    tree.view.getCellText(1, ecolumn),
+    "Changed Value",
+    testid + "edit cell accept"
+  );
 
   // this cell can be edited, but stopEditing(false) means don't accept the change.
   tree.startEditing(1, ecolumn);
   inputField.value = "Second Value";
   tree.stopEditing(false);
-  is(tree.view.getCellText(1, ecolumn), "Changed Value", testid + "edit cell no accept");
+  is(
+    tree.view.getCellText(1, ecolumn),
+    "Changed Value",
+    testid + "edit cell no accept"
+  );
 
   tree.editable = false;
 
   // do the sorting tests last as it will cause the rows to rearrange
   // skip them for the custom tree view
-  if (testid != "tree view")
+  if (testid != "tree view") {
     testtag_tree_TreeView_rows_sort(tree, testid, rowInfo);
+  }
 
   testtag_tree_wheel(tree);
 
@@ -128,18 +188,33 @@ async function testtag_tree_treecolpicker(tree, expectedColumns, testid) {
     let treecolpicker = tree.querySelector("treecolpicker");
     let treecolpickerMenupopup = treecolpicker.querySelector("menupopup");
     await new Promise(resolve => {
-      treecolpickerMenupopup.addEventListener("popupshown", resolve, { once: true });
+      treecolpickerMenupopup.addEventListener("popupshown", resolve, {
+        once: true,
+      });
       treecolpicker.click();
     });
     let menuitems = treecolpicker.querySelectorAll("menuitem");
     // Ignore the last "Restore Column Order" menu in the count:
-    is(menuitems.length - 1, expectedColumns.length, testid + "Same number of columns");
+    is(
+      menuitems.length - 1,
+      expectedColumns.length,
+      testid + "Same number of columns"
+    );
     for (var c = 0; c < expectedColumns.length; c++) {
-      is(menuitems[c].textContent, expectedColumns[c].label, testid + "treecolpicker menu matches");
-      ok(!menuitems[c].querySelector("label").hidden, testid + "label not hidden");
+      is(
+        menuitems[c].textContent,
+        expectedColumns[c].label,
+        testid + "treecolpicker menu matches"
+      );
+      ok(
+        !menuitems[c].querySelector("label").hidden,
+        testid + "label not hidden"
+      );
     }
     await new Promise(resolve => {
-      treecolpickerMenupopup.addEventListener("popuphidden", resolve, { once: true });
+      treecolpickerMenupopup.addEventListener("popuphidden", resolve, {
+        once: true,
+      });
       treecolpickerMenupopup.hidePopup();
     });
   }
@@ -162,26 +237,44 @@ function testtag_tree_columns(tree, expectedColumns, testid) {
   var treecol = treecols.getElementsByTagName("treecol");
 
   var x = 0;
-  var primary = null, sorted = null, key = null;
+  var primary = null,
+    sorted = null,
+    key = null;
   for (var c = 0; c < expectedColumns.length; c++) {
     var adjtestid = testid + " column " + c + " ";
     var column = columns[c];
     var expectedColumn = expectedColumns[c];
     is(columns.getColumnAt(c), column, adjtestid + "getColumnAt");
-    is(columns.getNamedColumn(expectedColumn.name), column, adjtestid + "getNamedColumn");
+    is(
+      columns.getNamedColumn(expectedColumn.name),
+      column,
+      adjtestid + "getNamedColumn"
+    );
     is(columns.getColumnFor(treecol[c]), column, adjtestid + "getColumnFor");
-    if (expectedColumn.primary)
+    if (expectedColumn.primary) {
       primary = column;
-    if (expectedColumn.sorted)
+    }
+    if (expectedColumn.sorted) {
       sorted = column;
-    if (expectedColumn.key)
+    }
+    if (expectedColumn.key) {
       key = column;
+    }
 
     // XXXndeakin on Windows and Linux, some columns are one pixel to the
     // left of where they should be. Could just be a rounding issue.
     var adj = 1;
-    is(column.x + adj >= x, true, adjtestid + "position is after last column " +
-       column.x + "," + column.width + "," + x);
+    is(
+      column.x + adj >= x,
+      true,
+      adjtestid +
+        "position is after last column " +
+        column.x +
+        "," +
+        column.width +
+        "," +
+        x
+    );
     is(column.width > 0, true, adjtestid + "width is greater than 0");
     x = column.x + column.width;
 
@@ -193,24 +286,50 @@ function testtag_tree_columns(tree, expectedColumns, testid) {
     is(column.index, c, adjtestid + "index");
     is(column.primary, primary == column, adjtestid + "column is primary");
 
-    is(column.cycler, "cycler" in expectedColumn && expectedColumn.cycler,
-                  adjtestid + "column is cycler");
-    is(column.editable, "editable" in expectedColumn && expectedColumn.editable,
-                  adjtestid + "column is editable");
+    is(
+      column.cycler,
+      "cycler" in expectedColumn && expectedColumn.cycler,
+      adjtestid + "column is cycler"
+    );
+    is(
+      column.editable,
+      "editable" in expectedColumn && expectedColumn.editable,
+      adjtestid + "column is editable"
+    );
 
-    is(column.type, "type" in expectedColumn ? expectedColumn.type : 1, adjtestid + "type");
+    is(
+      column.type,
+      "type" in expectedColumn ? expectedColumn.type : 1,
+      adjtestid + "type"
+    );
 
-    is(column.getPrevious(), c > 0 ? columns[c - 1] : null, adjtestid + "getPrevious");
-    is(column.getNext(), c < columns.length - 1 ? columns[c + 1] : null, adjtestid + "getNext");
+    is(
+      column.getPrevious(),
+      c > 0 ? columns[c - 1] : null,
+      adjtestid + "getPrevious"
+    );
+    is(
+      column.getNext(),
+      c < columns.length - 1 ? columns[c + 1] : null,
+      adjtestid + "getNext"
+    );
 
     // check the view's getColumnProperties method
     var properties = tree.view.getColumnProperties(column);
     var expectedProperties = expectedColumn.properties;
-    is(properties, expectedProperties ? expectedProperties : "", adjtestid + "getColumnProperties");
+    is(
+      properties,
+      expectedProperties ? expectedProperties : "",
+      adjtestid + "getColumnProperties"
+    );
   }
 
   is(columns.getFirstColumn(), columns[0], testid + "getFirstColumn");
-  is(columns.getLastColumn(), columns[columns.length - 1], testid + "getLastColumn");
+  is(
+    columns.getLastColumn(),
+    columns[columns.length - 1],
+    testid + "getLastColumn"
+  );
   is(columns.getPrimaryColumn(), primary, testid + "getPrimaryColumn");
   is(columns.getSortedColumn(), sorted, testid + "getSortedColumn");
   is(columns.getKeyColumn(), key, testid + "getKeyColumn");
@@ -218,7 +337,11 @@ function testtag_tree_columns(tree, expectedColumns, testid) {
   is(columns.getColumnAt(-1), null, testid + "getColumnAt under");
   is(columns.getColumnAt(columns.length), null, testid + "getColumnAt over");
   is(columns.getNamedColumn(""), null, testid + "getNamedColumn null");
-  is(columns.getNamedColumn("unknown"), null, testid + "getNamedColumn unknown");
+  is(
+    columns.getNamedColumn("unknown"),
+    null,
+    testid + "getNamedColumn unknown"
+  );
   is(columns.getColumnFor(null), null, testid + "getColumnFor null");
   is(columns.getColumnFor(tree), null, testid + "getColumnFor other");
 }
@@ -227,8 +350,11 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   testid += " selection ";
 
   var selection = tree.view.selection;
-  is(selection instanceof Ci.nsITreeSelection, true,
-                testid + "selection is a TreeSelection");
+  is(
+    selection instanceof Ci.nsITreeSelection,
+    true,
+    testid + "selection is a TreeSelection"
+  );
   is(selection.single, !multiple, testid + "single");
 
   testtag_tree_TreeSelection_State(tree, testid + "initial", -1, []);
@@ -237,7 +363,12 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   selection.currentIndex = 2;
   testtag_tree_TreeSelection_State(tree, testid + "set currentIndex", 2, []);
   tree.currentIndex = 3;
-  testtag_tree_TreeSelection_State(tree, testid + "set tree.currentIndex", 3, []);
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "set tree.currentIndex",
+    3,
+    []
+  );
 
   // test the select() method, which should deselect all rows and select
   // a single row
@@ -249,15 +380,30 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   testtag_tree_TreeSelection_State(tree, testid + "select same", 3, [3]);
 
   selection.currentIndex = 1;
-  testtag_tree_TreeSelection_State(tree, testid + "set currentIndex with single selection", 1, [3]);
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "set currentIndex with single selection",
+    1,
+    [3]
+  );
 
   tree.currentIndex = 2;
-  testtag_tree_TreeSelection_State(tree, testid + "set tree.currentIndex with single selection", 2, [3]);
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "set tree.currentIndex with single selection",
+    2,
+    [3]
+  );
 
   // check the toggleSelect method. In single selection mode, it only toggles on when
   // there isn't currently a selection.
   selection.toggleSelect(2);
-  testtag_tree_TreeSelection_State(tree, testid + "toggleSelect 1", 2, multiple ? [2, 3] : [3]);
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "toggleSelect 1",
+    2,
+    multiple ? [2, 3] : [3]
+  );
   selection.toggleSelect(2);
   selection.toggleSelect(3);
   testtag_tree_TreeSelection_State(tree, testid + "toggleSelect 2", 3, []);
@@ -266,21 +412,44 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   // selectAll has no effect on single selection trees
   selection.currentIndex = 1;
   selection.selectAll();
-  testtag_tree_TreeSelection_State(tree, testid + "selectAll 1", 1, multiple ? [0, 1, 2, 3, 4, 5, 6, 7] : []);
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "selectAll 1",
+    1,
+    multiple ? [0, 1, 2, 3, 4, 5, 6, 7] : []
+  );
   selection.toggleSelect(2);
-  testtag_tree_TreeSelection_State(tree, testid + "toggleSelect after selectAll", 2,
-                                   multiple ? [0, 1, 3, 4, 5, 6, 7] : [2]);
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "toggleSelect after selectAll",
+    2,
+    multiple ? [0, 1, 3, 4, 5, 6, 7] : [2]
+  );
   selection.clearSelection();
   testtag_tree_TreeSelection_State(tree, testid + "clearSelection", 2, []);
   selection.toggleSelect(3);
   selection.toggleSelect(1);
   if (multiple) {
     selection.selectAll();
-    testtag_tree_TreeSelection_State(tree, testid + "selectAll 2", 1, [0, 1, 2, 3, 4, 5, 6, 7]);
+    testtag_tree_TreeSelection_State(tree, testid + "selectAll 2", 1, [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+    ]);
   }
   selection.currentIndex = 2;
   selection.clearSelection();
-  testtag_tree_TreeSelection_State(tree, testid + "clearSelection after selectAll", 2, []);
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "clearSelection after selectAll",
+    2,
+    []
+  );
 
   // XXXndeakin invertSelection isn't implemented
   //  selection.invertSelection();
@@ -290,50 +459,104 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   // rangedSelect and clearRange set the currentIndex to the endIndex. The
   // shiftSelectPivot property will be set to startIndex.
   selection.rangedSelect(1, 3, false);
-  testtag_tree_TreeSelection_State(tree, testid + "rangedSelect no augment",
-                                   multiple ? 3 : 2, multiple ? [1, 2, 3] : []);
-  is(selection.shiftSelectPivot, multiple ? 1 : -1,
-                testid + "shiftSelectPivot after rangedSelect no augment");
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "rangedSelect no augment",
+    multiple ? 3 : 2,
+    multiple ? [1, 2, 3] : []
+  );
+  is(
+    selection.shiftSelectPivot,
+    multiple ? 1 : -1,
+    testid + "shiftSelectPivot after rangedSelect no augment"
+  );
   if (multiple) {
     selection.select(1);
     selection.rangedSelect(0, 2, true);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect augment", 2, [0, 1, 2]);
-    is(selection.shiftSelectPivot, 0, testid + "shiftSelectPivot after rangedSelect augment");
+    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect augment", 2, [
+      0,
+      1,
+      2,
+    ]);
+    is(
+      selection.shiftSelectPivot,
+      0,
+      testid + "shiftSelectPivot after rangedSelect augment"
+    );
 
     selection.clearRange(1, 3);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect augment", 3, [0]);
+    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect augment", 3, [
+      0,
+    ]);
 
     // check that rangedSelect can take a start value higher than end
     selection.rangedSelect(3, 1, false);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect reverse", 1, [1, 2, 3]);
-    is(selection.shiftSelectPivot, 3, testid + "shiftSelectPivot after rangedSelect reverse");
+    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect reverse", 1, [
+      1,
+      2,
+      3,
+    ]);
+    is(
+      selection.shiftSelectPivot,
+      3,
+      testid + "shiftSelectPivot after rangedSelect reverse"
+    );
 
     // check that setting the current index doesn't change the selection
     selection.currentIndex = 0;
-    testtag_tree_TreeSelection_State(tree, testid + "currentIndex with range selection", 0, [1, 2, 3]);
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "currentIndex with range selection",
+      0,
+      [1, 2, 3]
+    );
   }
 
   // both values of rangedSelect may be the same
   selection.rangedSelect(2, 2, false);
-  testtag_tree_TreeSelection_State(tree, testid + "rangedSelect one row", 2, [2]);
-  is(selection.shiftSelectPivot, 2, testid + "shiftSelectPivot after selecting one row");
+  testtag_tree_TreeSelection_State(tree, testid + "rangedSelect one row", 2, [
+    2,
+  ]);
+  is(
+    selection.shiftSelectPivot,
+    2,
+    testid + "shiftSelectPivot after selecting one row"
+  );
 
   if (multiple) {
     selection.rangedSelect(2, 3, true);
 
     // a start index of -1 means from the last point
     selection.rangedSelect(-1, 0, true);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect -1 existing selection", 0, [0, 1, 2, 3]);
-    is(selection.shiftSelectPivot, 2, testid + "shiftSelectPivot after -1 existing selection");
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "rangedSelect -1 existing selection",
+      0,
+      [0, 1, 2, 3]
+    );
+    is(
+      selection.shiftSelectPivot,
+      2,
+      testid + "shiftSelectPivot after -1 existing selection"
+    );
 
     selection.currentIndex = 2;
     selection.rangedSelect(-1, 0, false);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect -1 from currentIndex", 0, [0, 1, 2]);
-    is(selection.shiftSelectPivot, 2, testid + "shiftSelectPivot -1 from currentIndex");
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "rangedSelect -1 from currentIndex",
+      0,
+      [0, 1, 2]
+    );
+    is(
+      selection.shiftSelectPivot,
+      2,
+      testid + "shiftSelectPivot -1 from currentIndex"
+    );
   }
 
   // XXXndeakin need to test out of range values but these don't work properly
-/*
+  /*
   selection.select(-1);
   testtag_tree_TreeSelection_State(tree, testid + "rangedSelect augment -1", -1, []);
 
@@ -390,7 +613,13 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
 
   tree.scrollToRow(0);
   selection.select(3);
-  synthesizeKeyExpectEvent("VK_DOWN", {}, tree, "!select", "key down with scroll");
+  synthesizeKeyExpectEvent(
+    "VK_DOWN",
+    {},
+    tree,
+    "!select",
+    "key down with scroll"
+  );
   is(tree.getFirstVisibleRow(), 1, testid + "key down with scroll");
 
   // accel key and cursor movement adjust currentIndex but should not change
@@ -398,70 +627,163 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   // but instead will just scroll up or down a line
   tree.scrollToRow(0);
   selection.select(1);
-  synthesizeKeyExpectEvent("VK_DOWN", { accelKey: true }, tree, "!select", "key down with accel");
-  testtag_tree_TreeSelection_State(tree, testid + "key down with accel", multiple ? 2 : 1, [1]);
-  if (!multiple)
+  synthesizeKeyExpectEvent(
+    "VK_DOWN",
+    { accelKey: true },
+    tree,
+    "!select",
+    "key down with accel"
+  );
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key down with accel",
+    multiple ? 2 : 1,
+    [1]
+  );
+  if (!multiple) {
     is(tree.getFirstVisibleRow(), 1, testid + "key down with accel and scroll");
+  }
 
   tree.scrollToRow(4);
   selection.select(4);
-  synthesizeKeyExpectEvent("VK_UP", { accelKey: true }, tree, "!select", "key up with accel");
-  testtag_tree_TreeSelection_State(tree, testid + "key up with accel", multiple ? 3 : 4, [4]);
-  if (!multiple)
+  synthesizeKeyExpectEvent(
+    "VK_UP",
+    { accelKey: true },
+    tree,
+    "!select",
+    "key up with accel"
+  );
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key up with accel",
+    multiple ? 3 : 4,
+    [4]
+  );
+  if (!multiple) {
     is(tree.getFirstVisibleRow(), 3, testid + "key up with accel and scroll");
+  }
 
   // do this three times, one for each state of pageUpOrDownMovesSelection,
   // and then once with the accel key pressed
   for (let t = 0; t < 3; t++) {
     let testidmod = "";
-    if (t == 2)
+    if (t == 2) {
       testidmod = " with accel";
-    else if (t == 1)
+    } else if (t == 1) {
       testidmod = " rev";
-    var keymod = (t == 2) ? { accelKey: true } : { };
+    }
+    var keymod = t == 2 ? { accelKey: true } : {};
 
     var moveselection = tree.pageUpOrDownMovesSelection;
-    if (t == 2)
+    if (t == 2) {
       moveselection = !moveselection;
+    }
 
     tree.scrollToRow(4);
     selection.currentIndex = 6;
     selection.select(6);
     var expected = moveselection ? 4 : 6;
-    synthesizeKeyExpectEvent("VK_PAGE_UP", keymod, tree, "!select", "key page up");
-    testtag_tree_TreeSelection_State(tree, testid + "key page up" + testidmod,
-                                     expected, [expected], moveselection ? 4 : 0);
+    synthesizeKeyExpectEvent(
+      "VK_PAGE_UP",
+      keymod,
+      tree,
+      "!select",
+      "key page up"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key page up" + testidmod,
+      expected,
+      [expected],
+      moveselection ? 4 : 0
+    );
 
     expected = moveselection ? 0 : 6;
-    synthesizeKeyExpectEvent("VK_PAGE_UP", keymod, tree, "!select", "key page up again");
-    testtag_tree_TreeSelection_State(tree, testid + "key page up again" + testidmod,
-                                     expected, [expected], 0);
+    synthesizeKeyExpectEvent(
+      "VK_PAGE_UP",
+      keymod,
+      tree,
+      "!select",
+      "key page up again"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key page up again" + testidmod,
+      expected,
+      [expected],
+      0
+    );
 
     expected = moveselection ? 0 : 6;
-    synthesizeKeyExpectEvent("VK_PAGE_UP", keymod, tree, "!select", "key page up at start");
-    testtag_tree_TreeSelection_State(tree, testid + "key page up at start" + testidmod,
-                                     expected, [expected], 0);
+    synthesizeKeyExpectEvent(
+      "VK_PAGE_UP",
+      keymod,
+      tree,
+      "!select",
+      "key page up at start"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key page up at start" + testidmod,
+      expected,
+      [expected],
+      0
+    );
 
     tree.scrollToRow(0);
     selection.currentIndex = 1;
     selection.select(1);
     expected = moveselection ? 3 : 1;
-    synthesizeKeyExpectEvent("VK_PAGE_DOWN", keymod, tree, "!select", "key page down");
-    testtag_tree_TreeSelection_State(tree, testid + "key page down" + testidmod,
-                                     expected, [expected], moveselection ? 0 : 4);
+    synthesizeKeyExpectEvent(
+      "VK_PAGE_DOWN",
+      keymod,
+      tree,
+      "!select",
+      "key page down"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key page down" + testidmod,
+      expected,
+      [expected],
+      moveselection ? 0 : 4
+    );
 
     expected = moveselection ? 7 : 1;
-    synthesizeKeyExpectEvent("VK_PAGE_DOWN", keymod, tree, "!select", "key page down again");
-    testtag_tree_TreeSelection_State(tree, testid + "key page down again" + testidmod,
-                                     expected, [expected], 4);
+    synthesizeKeyExpectEvent(
+      "VK_PAGE_DOWN",
+      keymod,
+      tree,
+      "!select",
+      "key page down again"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key page down again" + testidmod,
+      expected,
+      [expected],
+      4
+    );
 
     expected = moveselection ? 7 : 1;
-    synthesizeKeyExpectEvent("VK_PAGE_DOWN", keymod, tree, "!select", "key page down at start");
-    testtag_tree_TreeSelection_State(tree, testid + "key page down at start" + testidmod,
-                                     expected, [expected], 4);
+    synthesizeKeyExpectEvent(
+      "VK_PAGE_DOWN",
+      keymod,
+      tree,
+      "!select",
+      "key page down at start"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key page down at start" + testidmod,
+      expected,
+      [expected],
+      4
+    );
 
-    if (t < 2)
+    if (t < 2) {
       tree.pageUpOrDownMovesSelection = !tree.pageUpOrDownMovesSelection;
+    }
   }
 
   tree.scrollToRow(4);
@@ -477,33 +799,114 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   // in single selection mode, the selection doesn't change in this case
   tree.scrollToRow(4);
   selection.select(6);
-  synthesizeKeyExpectEvent("VK_HOME", { accelKey: true }, tree, "!select", "key home with accel");
-  testtag_tree_TreeSelection_State(tree, testid + "key home with accel", multiple ? 0 : 6, [6], 0);
+  synthesizeKeyExpectEvent(
+    "VK_HOME",
+    { accelKey: true },
+    tree,
+    "!select",
+    "key home with accel"
+  );
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key home with accel",
+    multiple ? 0 : 6,
+    [6],
+    0
+  );
 
   tree.scrollToRow(0);
   selection.select(1);
-  synthesizeKeyExpectEvent("VK_END", { accelKey: true }, tree, "!select", "key end with accel");
-  testtag_tree_TreeSelection_State(tree, testid + "key end with accel", multiple ? 7 : 1, [1], 4);
+  synthesizeKeyExpectEvent(
+    "VK_END",
+    { accelKey: true },
+    tree,
+    "!select",
+    "key end with accel"
+  );
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key end with accel",
+    multiple ? 7 : 1,
+    [1],
+    4
+  );
 
   // next, test cursor navigation with selection. Here the select event will be fired
   selection.select(1);
   var eventExpected = multiple ? "select" : "!select";
-  synthesizeKeyExpectEvent("VK_DOWN", { shiftKey: true }, tree, eventExpected, "key shift down to select");
-  testtag_tree_TreeSelection_State(tree, testid + "key shift down to select",
-                                   multiple ? 2 : 1, multiple ? [1, 2] : [1]);
-  is(selection.shiftSelectPivot, multiple ? 1 : -1,
-                testid + "key shift down to select shiftSelectPivot");
-  synthesizeKeyExpectEvent("VK_UP", { shiftKey: true }, tree, eventExpected, "key shift up to unselect");
-  testtag_tree_TreeSelection_State(tree, testid + "key shift up to unselect", 1, [1]);
-  is(selection.shiftSelectPivot, multiple ? 1 : -1,
-                testid + "key shift up to unselect shiftSelectPivot");
+  synthesizeKeyExpectEvent(
+    "VK_DOWN",
+    { shiftKey: true },
+    tree,
+    eventExpected,
+    "key shift down to select"
+  );
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key shift down to select",
+    multiple ? 2 : 1,
+    multiple ? [1, 2] : [1]
+  );
+  is(
+    selection.shiftSelectPivot,
+    multiple ? 1 : -1,
+    testid + "key shift down to select shiftSelectPivot"
+  );
+  synthesizeKeyExpectEvent(
+    "VK_UP",
+    { shiftKey: true },
+    tree,
+    eventExpected,
+    "key shift up to unselect"
+  );
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key shift up to unselect",
+    1,
+    [1]
+  );
+  is(
+    selection.shiftSelectPivot,
+    multiple ? 1 : -1,
+    testid + "key shift up to unselect shiftSelectPivot"
+  );
   if (multiple) {
-    synthesizeKeyExpectEvent("VK_UP", { shiftKey: true }, tree, "select", "key shift up to select");
-    testtag_tree_TreeSelection_State(tree, testid + "key shift up to select", 0, [0, 1]);
-    is(selection.shiftSelectPivot, 1, testid + "key shift up to select shiftSelectPivot");
-    synthesizeKeyExpectEvent("VK_DOWN", { shiftKey: true }, tree, "select", "key shift down to unselect");
-    testtag_tree_TreeSelection_State(tree, testid + "key shift down to unselect", 1, [1]);
-    is(selection.shiftSelectPivot, 1, testid + "key shift down to unselect shiftSelectPivot");
+    synthesizeKeyExpectEvent(
+      "VK_UP",
+      { shiftKey: true },
+      tree,
+      "select",
+      "key shift up to select"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key shift up to select",
+      0,
+      [0, 1]
+    );
+    is(
+      selection.shiftSelectPivot,
+      1,
+      testid + "key shift up to select shiftSelectPivot"
+    );
+    synthesizeKeyExpectEvent(
+      "VK_DOWN",
+      { shiftKey: true },
+      tree,
+      "select",
+      "key shift down to unselect"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key shift down to unselect",
+      1,
+      [1]
+    );
+    is(
+      selection.shiftSelectPivot,
+      1,
+      testid + "key shift down to unselect shiftSelectPivot"
+    );
   }
 
   // do this twice, one for each state of pageUpOrDownMovesSelection, however
@@ -511,7 +914,7 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   // and the selection always changes
   var lastidx = tree.view.rowCount - 1;
   for (let t = 0; t < 2; t++) {
-    let testidmod = (t == 0) ? "" : " rev";
+    let testidmod = t == 0 ? "" : " rev";
 
     // If the top or bottom visible row is the current row, pressing shift and
     // page down / page up selects one page up or one page down. Otherwise, the
@@ -519,39 +922,119 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
     tree.scrollToRow(lastidx - 3);
     selection.currentIndex = 6;
     selection.select(6);
-    synthesizeKeyExpectEvent("VK_PAGE_UP", { shiftKey: true }, tree, eventExpected, "key shift page up");
-    testtag_tree_TreeSelection_State(tree, testid + "key shift page up" + testidmod,
-                                     multiple ? 4 : 6, multiple ? [4, 5, 6] : [6]);
+    synthesizeKeyExpectEvent(
+      "VK_PAGE_UP",
+      { shiftKey: true },
+      tree,
+      eventExpected,
+      "key shift page up"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key shift page up" + testidmod,
+      multiple ? 4 : 6,
+      multiple ? [4, 5, 6] : [6]
+    );
     if (multiple) {
-      synthesizeKeyExpectEvent("VK_PAGE_UP", { shiftKey: true }, tree, "select", "key shift page up again");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page up again" + testidmod,
-                                       0, [0, 1, 2, 3, 4, 5, 6]);
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_UP",
+        { shiftKey: true },
+        tree,
+        "select",
+        "key shift page up again"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page up again" + testidmod,
+        0,
+        [0, 1, 2, 3, 4, 5, 6]
+      );
       // no change in the selection, so no select event should be fired
-      synthesizeKeyExpectEvent("VK_PAGE_UP", { shiftKey: true }, tree, "!select", "key shift page up at start");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page up at start" + testidmod,
-                                       0, [0, 1, 2, 3, 4, 5, 6]);
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_UP",
+        { shiftKey: true },
+        tree,
+        "!select",
+        "key shift page up at start"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page up at start" + testidmod,
+        0,
+        [0, 1, 2, 3, 4, 5, 6]
+      );
       // deselect by paging down again
-      synthesizeKeyExpectEvent("VK_PAGE_DOWN", { shiftKey: true }, tree, "select", "key shift page down deselect");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page down deselect" + testidmod,
-                                       3, [3, 4, 5, 6]);
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_DOWN",
+        { shiftKey: true },
+        tree,
+        "select",
+        "key shift page down deselect"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page down deselect" + testidmod,
+        3,
+        [3, 4, 5, 6]
+      );
     }
 
     tree.scrollToRow(1);
     selection.currentIndex = 2;
     selection.select(2);
-    synthesizeKeyExpectEvent("VK_PAGE_DOWN", { shiftKey: true }, tree, eventExpected, "key shift page down");
-    testtag_tree_TreeSelection_State(tree, testid + "key shift page down" + testidmod,
-                                     multiple ? 4 : 2, multiple ? [2, 3, 4] : [2]);
+    synthesizeKeyExpectEvent(
+      "VK_PAGE_DOWN",
+      { shiftKey: true },
+      tree,
+      eventExpected,
+      "key shift page down"
+    );
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "key shift page down" + testidmod,
+      multiple ? 4 : 2,
+      multiple ? [2, 3, 4] : [2]
+    );
     if (multiple) {
-      synthesizeKeyExpectEvent("VK_PAGE_DOWN", { shiftKey: true }, tree, "select", "key shift page down again");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page down again" + testidmod,
-                                       7, [2, 3, 4, 5, 6, 7]);
-      synthesizeKeyExpectEvent("VK_PAGE_DOWN", { shiftKey: true }, tree, "!select", "key shift page down at start");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page down at start" + testidmod,
-                                       7, [2, 3, 4, 5, 6, 7]);
-      synthesizeKeyExpectEvent("VK_PAGE_UP", { shiftKey: true }, tree, "select", "key shift page up deselect");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page up deselect" + testidmod,
-                                       4, [2, 3, 4]);
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_DOWN",
+        { shiftKey: true },
+        tree,
+        "select",
+        "key shift page down again"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page down again" + testidmod,
+        7,
+        [2, 3, 4, 5, 6, 7]
+      );
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_DOWN",
+        { shiftKey: true },
+        tree,
+        "!select",
+        "key shift page down at start"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page down at start" + testidmod,
+        7,
+        [2, 3, 4, 5, 6, 7]
+      );
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_UP",
+        { shiftKey: true },
+        tree,
+        "select",
+        "key shift page up deselect"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page up deselect" + testidmod,
+        4,
+        [2, 3, 4]
+      );
     }
 
     // test when page down / page up is pressed when the view is scrolled such
@@ -560,36 +1043,78 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
       tree.scrollToRow(3);
       selection.currentIndex = 1;
       selection.select(1);
-      synthesizeKeyExpectEvent("VK_PAGE_DOWN", { shiftKey: true }, tree, eventExpected,
-                               "key shift page down with view scrolled down");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page down with view scrolled down" + testidmod,
-                                       6, [1, 2, 3, 4, 5, 6], 3);
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_DOWN",
+        { shiftKey: true },
+        tree,
+        eventExpected,
+        "key shift page down with view scrolled down"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page down with view scrolled down" + testidmod,
+        6,
+        [1, 2, 3, 4, 5, 6],
+        3
+      );
 
       tree.scrollToRow(2);
       selection.currentIndex = 6;
       selection.select(6);
-      synthesizeKeyExpectEvent("VK_PAGE_UP", { shiftKey: true }, tree, eventExpected,
-                               "key shift page up with view scrolled up");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page up with view scrolled up" + testidmod,
-                                       2, [2, 3, 4, 5, 6], 2);
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_UP",
+        { shiftKey: true },
+        tree,
+        eventExpected,
+        "key shift page up with view scrolled up"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page up with view scrolled up" + testidmod,
+        2,
+        [2, 3, 4, 5, 6],
+        2
+      );
 
       tree.scrollToRow(2);
       selection.currentIndex = 0;
       selection.select(0);
       // don't expect the select event, as the selection won't have changed
-      synthesizeKeyExpectEvent("VK_PAGE_UP", { shiftKey: true }, tree, "!select",
-                               "key shift page up at start with view scrolled down");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page up at start with view scrolled down" + testidmod,
-                                       0, [0], 0);
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_UP",
+        { shiftKey: true },
+        tree,
+        "!select",
+        "key shift page up at start with view scrolled down"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid +
+          "key shift page up at start with view scrolled down" +
+          testidmod,
+        0,
+        [0],
+        0
+      );
 
       tree.scrollToRow(0);
       selection.currentIndex = 7;
       selection.select(7);
       // don't expect the select event, as the selection won't have changed
-      synthesizeKeyExpectEvent("VK_PAGE_DOWN", { shiftKey: true }, tree, "!select",
-                               "key shift page down at end with view scrolled up");
-      testtag_tree_TreeSelection_State(tree, testid + "key shift page down at end with view scrolled up" + testidmod,
-                                       7, [7], 4);
+      synthesizeKeyExpectEvent(
+        "VK_PAGE_DOWN",
+        { shiftKey: true },
+        tree,
+        "!select",
+        "key shift page down at end with view scrolled up"
+      );
+      testtag_tree_TreeSelection_State(
+        tree,
+        testid + "key shift page down at end with view scrolled up" + testidmod,
+        7,
+        [7],
+        4
+      );
     }
 
     tree.pageUpOrDownMovesSelection = !tree.pageUpOrDownMovesSelection;
@@ -597,25 +1122,58 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
 
   tree.scrollToRow(4);
   selection.select(5);
-  synthesizeKeyExpectEvent("VK_HOME", { shiftKey: true }, tree, eventExpected, "key shift home");
-  testtag_tree_TreeSelection_State(tree, testid + "key shift home",
-                                   multiple ? 0 : 5, multiple ? [0, 1, 2, 3, 4, 5] : [5], multiple ? 0 : 4);
+  synthesizeKeyExpectEvent(
+    "VK_HOME",
+    { shiftKey: true },
+    tree,
+    eventExpected,
+    "key shift home"
+  );
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key shift home",
+    multiple ? 0 : 5,
+    multiple ? [0, 1, 2, 3, 4, 5] : [5],
+    multiple ? 0 : 4
+  );
 
   tree.scrollToRow(0);
   selection.select(3);
-  synthesizeKeyExpectEvent("VK_END", { shiftKey: true }, tree, eventExpected, "key shift end");
-  testtag_tree_TreeSelection_State(tree, testid + "key shift end",
-                                   multiple ? 7 : 3, multiple ? [3, 4, 5, 6, 7] : [3], multiple ? 4 : 0);
+  synthesizeKeyExpectEvent(
+    "VK_END",
+    { shiftKey: true },
+    tree,
+    eventExpected,
+    "key shift end"
+  );
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key shift end",
+    multiple ? 7 : 3,
+    multiple ? [3, 4, 5, 6, 7] : [3],
+    multiple ? 4 : 0
+  );
 
   // pressing space selects a row, pressing accel + space unselects a row
   selection.select(2);
   selection.currentIndex = 4;
   synthesizeKeyExpectEvent(" ", {}, tree, "select", "key space on");
   // in single selection mode, space shouldn't do anything
-  testtag_tree_TreeSelection_State(tree, testid + "key space on", 4, multiple ? [2, 4] : [2]);
+  testtag_tree_TreeSelection_State(
+    tree,
+    testid + "key space on",
+    4,
+    multiple ? [2, 4] : [2]
+  );
 
   if (multiple) {
-    synthesizeKeyExpectEvent(" ", { accelKey: true }, tree, "select", "key space off");
+    synthesizeKeyExpectEvent(
+      " ",
+      { accelKey: true },
+      tree,
+      "select",
+      "key space off"
+    );
     testtag_tree_TreeSelection_State(tree, testid + "key space off", 4, [2]);
   }
 
@@ -623,9 +1181,17 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   tree.scrollToRow(0);
   selection.select(2);
   selection.currentIndex = 2;
-  if (0) { // XXXndeakin disable these tests for now
+  if (0) {
+    // XXXndeakin disable these tests for now
     mouseOnCell(tree, 1, tree.columns[1], "mouse on row");
-    testtag_tree_TreeSelection_State(tree, testid + "mouse on row", 1, [1], 0, null);
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "mouse on row",
+      1,
+      [1],
+      0,
+      null
+    );
   }
 
   // restore the scroll position to the start of the page
@@ -646,34 +1212,53 @@ function testtag_tree_UI_editing(tree, testid, rowInfo) {
 
   // temporary make the tree editable to test mouse double click
   var wasEditable = tree.editable;
-  if (!wasEditable)
+  if (!wasEditable) {
     tree.editable = true;
+  }
 
   // if this is a container save its current open status
   var row = rowInfo.rows[rowIndex];
   var wasOpen = null;
-  if (tree.view.isContainer(row))
+  if (tree.view.isContainer(row)) {
     wasOpen = tree.view.isContainerOpen(row);
+  }
 
   mouseDblClickOnCell(tree, rowIndex, ecolumn, testid + "edit on double click");
   is(tree.editingColumn, ecolumn, testid + "editing column");
   is(tree.editingRow, rowIndex, testid + "editing row");
 
   // ensure that we don't expand an expandable container on edit
-  if (wasOpen != null)
-    is(tree.view.isContainerOpen(row), wasOpen, testid + "opened container node on edit");
+  if (wasOpen != null) {
+    is(
+      tree.view.isContainerOpen(row),
+      wasOpen,
+      testid + "opened container node on edit"
+    );
+  }
 
   // ensure to restore editable attribute
-  if (!wasEditable)
+  if (!wasEditable) {
     tree.editable = false;
+  }
 
   var ci = tree.currentIndex;
 
   // cursor navigation should not change the selection while editing
   var testKey = function(key) {
-    synthesizeKeyExpectEvent(key, {}, tree, "!select", "key " + key + " with editing");
-    is(tree.editingRow == rowIndex && tree.editingColumn == ecolumn && tree.currentIndex == ci,
-                  true, testid + "key " + key + " while editing");
+    synthesizeKeyExpectEvent(
+      key,
+      {},
+      tree,
+      "!select",
+      "key " + key + " with editing"
+    );
+    is(
+      tree.editingRow == rowIndex &&
+        tree.editingColumn == ecolumn &&
+        tree.currentIndex == ci,
+      true,
+      testid + "key " + key + " while editing"
+    );
   };
 
   testKey("VK_DOWN");
@@ -719,28 +1304,52 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
   var length = rowInfo.rows.length;
 
   // methods to test along with the functions which determine the expected value
-  var checkRowMethods =
-  {
-    isContainer(row) { return row.container; },
-    isContainerOpen(row) { return false; },
-    isContainerEmpty(row) { return (row.children != null && row.children.rows.length == 0); },
-    isSeparator(row) { return row.separator; },
-    getRowProperties(row) { return row.properties; },
-    getLevel(row) { return row.level; },
-    getParentIndex(row) { return row.parent; },
-    hasNextSibling(row) { return r < startRow + length - 1; },
+  var checkRowMethods = {
+    isContainer(row) {
+      return row.container;
+    },
+    isContainerOpen(row) {
+      return false;
+    },
+    isContainerEmpty(row) {
+      return row.children != null && row.children.rows.length == 0;
+    },
+    isSeparator(row) {
+      return row.separator;
+    },
+    getRowProperties(row) {
+      return row.properties;
+    },
+    getLevel(row) {
+      return row.level;
+    },
+    getParentIndex(row) {
+      return row.parent;
+    },
+    hasNextSibling(row) {
+      return r < startRow + length - 1;
+    },
   };
 
-  var checkCellMethods =
-  {
-    getCellText(row, cell) { return cell.label; },
-    getCellValue(row, cell) { return cell.value; },
-    getCellProperties(row, cell) { return cell.properties; },
-    isEditable(row, cell) { return cell.editable; },
-    getImageSrc(row, cell) { return cell.image; },
+  var checkCellMethods = {
+    getCellText(row, cell) {
+      return cell.label;
+    },
+    getCellValue(row, cell) {
+      return cell.value;
+    },
+    getCellProperties(row, cell) {
+      return cell.properties;
+    },
+    isEditable(row, cell) {
+      return cell.editable;
+    },
+    getImageSrc(row, cell) {
+      return cell.image;
+    },
   };
 
-  var failedMethods = { };
+  var failedMethods = {};
   var checkMethod, actual, expected;
   var toggleOpenStateOK = true;
 
@@ -754,7 +1363,18 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
         actual = view[checkMethod](r, columns[c]);
         if (actual !== expected) {
           failedMethods[checkMethod] = true;
-          is(actual, expected, testid + "row " + r + " column " + c + " " + checkMethod + " is incorrect");
+          is(
+            actual,
+            expected,
+            testid +
+              "row " +
+              r +
+              " column " +
+              c +
+              " " +
+              checkMethod +
+              " is incorrect"
+          );
         }
       }
     }
@@ -769,10 +1389,14 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
       }
       if (actual !== expected) {
         failedMethods[checkMethod] = true;
-        is(actual, expected, testid + "row " + r + " " + checkMethod + " is incorrect");
+        is(
+          actual,
+          expected,
+          testid + "row " + r + " " + checkMethod + " is incorrect"
+        );
       }
     }
-/*
+    /*
     // open and recurse into containers
     if (row.container) {
       view.toggleOpenState(r);
@@ -791,18 +1415,23 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
   }
 
   for (var failedMethod in failedMethods) {
-    if (failedMethod in checkRowMethods)
+    if (failedMethod in checkRowMethods) {
       delete checkRowMethods[failedMethod];
-    if (failedMethod in checkCellMethods)
+    }
+    if (failedMethod in checkCellMethods) {
       delete checkCellMethods[failedMethod];
+    }
   }
 
-  for (checkMethod in checkRowMethods)
+  for (checkMethod in checkRowMethods) {
     is(checkMethod + " ok", checkMethod + " ok", testid + checkMethod);
-  for (checkMethod in checkCellMethods)
+  }
+  for (checkMethod in checkCellMethods) {
     is(checkMethod + " ok", checkMethod + " ok", testid + checkMethod);
-  if (toggleOpenStateOK)
+  }
+  if (toggleOpenStateOK) {
     is("toggleOpenState ok", "toggleOpenState ok", testid + "toggleOpenState");
+  }
 }
 
 function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo) {
@@ -815,89 +1444,162 @@ function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo) {
   if (sortkey) {
     view.cycleHeader(column);
     is(tree.getAttribute("sort"), sortkey, "cycleHeader sort");
-    is(tree.getAttribute("sortDirection"), "ascending", "cycleHeader sortDirection ascending");
-    is(columnElement.getAttribute("sortDirection"), "ascending", "cycleHeader column sortDirection");
-    is(columnElement.getAttribute("sortActive"), "true", "cycleHeader column sortActive");
+    is(
+      tree.getAttribute("sortDirection"),
+      "ascending",
+      "cycleHeader sortDirection ascending"
+    );
+    is(
+      columnElement.getAttribute("sortDirection"),
+      "ascending",
+      "cycleHeader column sortDirection"
+    );
+    is(
+      columnElement.getAttribute("sortActive"),
+      "true",
+      "cycleHeader column sortActive"
+    );
     view.cycleHeader(column);
-    is(tree.getAttribute("sortDirection"), "descending", "cycleHeader sortDirection descending");
-    is(columnElement.getAttribute("sortDirection"), "descending", "cycleHeader column sortDirection descending");
+    is(
+      tree.getAttribute("sortDirection"),
+      "descending",
+      "cycleHeader sortDirection descending"
+    );
+    is(
+      columnElement.getAttribute("sortDirection"),
+      "descending",
+      "cycleHeader column sortDirection descending"
+    );
     view.cycleHeader(column);
-    is(tree.getAttribute("sortDirection"), "", "cycleHeader sortDirection natural");
-    is(columnElement.getAttribute("sortDirection"), "", "cycleHeader column sortDirection natural");
+    is(
+      tree.getAttribute("sortDirection"),
+      "",
+      "cycleHeader sortDirection natural"
+    );
+    is(
+      columnElement.getAttribute("sortDirection"),
+      "",
+      "cycleHeader column sortDirection natural"
+    );
     // XXXndeakin content view isSorted needs to be tested
   }
 
   // Check that clicking on column header sorts the column.
   var columns = getSortedColumnArray(tree);
-  is(columnElement.getAttribute("sortDirection"), "",
-     "cycleHeader column sortDirection");
+  is(
+    columnElement.getAttribute("sortDirection"),
+    "",
+    "cycleHeader column sortDirection"
+  );
 
   // Click once on column header and check sorting has cycled once.
   mouseClickOnColumnHeader(columns, columnIndex, 0, 1);
-  is(columnElement.getAttribute("sortDirection"), "ascending",
-     "single click cycleHeader column sortDirection ascending");
+  is(
+    columnElement.getAttribute("sortDirection"),
+    "ascending",
+    "single click cycleHeader column sortDirection ascending"
+  );
 
   // Now simulate a double click.
   mouseClickOnColumnHeader(columns, columnIndex, 0, 2);
   if (navigator.platform.indexOf("Win") == 0) {
     // Windows cycles only once on double click.
-    is(columnElement.getAttribute("sortDirection"), "descending",
-       "double click cycleHeader column sortDirection descending");
+    is(
+      columnElement.getAttribute("sortDirection"),
+      "descending",
+      "double click cycleHeader column sortDirection descending"
+    );
     // 1 single clicks should restore natural sorting.
     mouseClickOnColumnHeader(columns, columnIndex, 0, 1);
   }
 
   // Check we have gone back to natural sorting.
-  is(columnElement.getAttribute("sortDirection"), "",
-     "cycleHeader column sortDirection");
+  is(
+    columnElement.getAttribute("sortDirection"),
+    "",
+    "cycleHeader column sortDirection"
+  );
 
   columnElement.setAttribute("sorthints", "twostate");
   view.cycleHeader(column);
-  is(tree.getAttribute("sortDirection"), "ascending", "cycleHeader sortDirection ascending twostate");
+  is(
+    tree.getAttribute("sortDirection"),
+    "ascending",
+    "cycleHeader sortDirection ascending twostate"
+  );
   view.cycleHeader(column);
-  is(tree.getAttribute("sortDirection"), "descending", "cycleHeader sortDirection ascending twostate");
+  is(
+    tree.getAttribute("sortDirection"),
+    "descending",
+    "cycleHeader sortDirection ascending twostate"
+  );
   view.cycleHeader(column);
-  is(tree.getAttribute("sortDirection"), "ascending", "cycleHeader sortDirection ascending twostate again");
+  is(
+    tree.getAttribute("sortDirection"),
+    "ascending",
+    "cycleHeader sortDirection ascending twostate again"
+  );
   columnElement.removeAttribute("sorthints");
   view.cycleHeader(column);
   view.cycleHeader(column);
 
-  is(columnElement.getAttribute("sortDirection"), "",
-     "cycleHeader column sortDirection reset");
+  is(
+    columnElement.getAttribute("sortDirection"),
+    "",
+    "cycleHeader column sortDirection reset"
+  );
 }
 
 // checks if the current and selected rows are correct
 // current is the index of the current row
 // selected is an array of the indicies of the selected rows
 // viewidx is the row that should be visible at the top of the tree
-function testtag_tree_TreeSelection_State(tree, testid, current, selected, viewidx) {
+function testtag_tree_TreeSelection_State(
+  tree,
+  testid,
+  current,
+  selected,
+  viewidx
+) {
   var selection = tree.view.selection;
 
   is(selection.count, selected.length, testid + " count");
   is(tree.currentIndex, current, testid + " currentIndex");
   is(selection.currentIndex, current, testid + " TreeSelection currentIndex");
-  if (viewidx !== null && viewidx !== undefined)
+  if (viewidx !== null && viewidx !== undefined) {
     is(tree.getFirstVisibleRow(), viewidx, testid + " first visible row");
+  }
 
   var actualSelected = [];
   var count = tree.view.rowCount;
   for (var s = 0; s < count; s++) {
-    if (selection.isSelected(s))
+    if (selection.isSelected(s)) {
       actualSelected.push(s);
+    }
   }
 
-  is(compareArrays(selected, actualSelected), true, testid + " selection [" + selected + "]");
+  is(
+    compareArrays(selected, actualSelected),
+    true,
+    testid + " selection [" + selected + "]"
+  );
 
   actualSelected = [];
   var rangecount = selection.getRangeCount();
   for (var r = 0; r < rangecount; r++) {
-    var start = {}, end = {};
+    var start = {},
+      end = {};
     selection.getRangeAt(r, start, end);
-    for (var rs = start.value; rs <= end.value; rs++)
+    for (var rs = start.value; rs <= end.value; rs++) {
       actualSelected.push(rs);
+    }
   }
 
-  is(compareArrays(selected, actualSelected), true, testid + " range selection [" + selected + "]");
+  is(
+    compareArrays(selected, actualSelected),
+    true,
+    testid + " range selection [" + selected + "]"
+  );
 }
 
 function testtag_tree_column_reorder() {
@@ -969,9 +1671,9 @@ function testtag_tree_column_reorder() {
 
 function testtag_tree_wheel(aTree) {
   const deltaModes = [
-    WheelEvent.DOM_DELTA_PIXEL,  // 0
-    WheelEvent.DOM_DELTA_LINE,   // 1
-    WheelEvent.DOM_DELTA_PAGE,    // 2
+    WheelEvent.DOM_DELTA_PIXEL, // 0
+    WheelEvent.DOM_DELTA_LINE, // 1
+    WheelEvent.DOM_DELTA_PAGE, // 2
   ];
   function helper(aStart, aDelta, aIntDelta, aDeltaMode) {
     aTree.scrollToRow(aStart);
@@ -992,23 +1694,43 @@ function testtag_tree_wheel(aTree) {
     if (expected > aTree.view.rowCount - aTree.getPageLength()) {
       expected = aTree.view.rowCount - aTree.getPageLength();
     }
-    synthesizeWheel(aTree.body, 1, 1,
-                    { deltaMode: aDeltaMode, deltaY: aDelta,
-                      lineOrPageDeltaY: aIntDelta });
-    is(aTree.getFirstVisibleRow(), expected,
-         "testtag_tree_wheel: vertical, starting " + aStart +
-           " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
-           " aDeltaMode " + aDeltaMode);
+    synthesizeWheel(aTree.body, 1, 1, {
+      deltaMode: aDeltaMode,
+      deltaY: aDelta,
+      lineOrPageDeltaY: aIntDelta,
+    });
+    is(
+      aTree.getFirstVisibleRow(),
+      expected,
+      "testtag_tree_wheel: vertical, starting " +
+        aStart +
+        " delta " +
+        aDelta +
+        " lineOrPageDelta " +
+        aIntDelta +
+        " aDeltaMode " +
+        aDeltaMode
+    );
 
     aTree.scrollToRow(aStart);
     // Check that horizontal scrolling has no effect
-    synthesizeWheel(aTree.body, 1, 1,
-                    { deltaMode: aDeltaMode, deltaX: aDelta,
-                      lineOrPageDeltaX: aIntDelta });
-    is(aTree.getFirstVisibleRow(), aStart,
-         "testtag_tree_wheel: horizontal, starting " + aStart +
-           " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
-           " aDeltaMode " + aDeltaMode);
+    synthesizeWheel(aTree.body, 1, 1, {
+      deltaMode: aDeltaMode,
+      deltaX: aDelta,
+      lineOrPageDeltaX: aIntDelta,
+    });
+    is(
+      aTree.getFirstVisibleRow(),
+      aStart,
+      "testtag_tree_wheel: horizontal, starting " +
+        aStart +
+        " delta " +
+        aDelta +
+        " lineOrPageDelta " +
+        aIntDelta +
+        " aDeltaMode " +
+        aDeltaMode
+    );
   }
 
   var defaultPrevented = 0;
@@ -1019,7 +1741,7 @@ function testtag_tree_wheel(aTree) {
   window.addEventListener("wheel", wheelListener);
 
   deltaModes.forEach(function(aDeltaMode) {
-    var delta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? 5.0 : 0.3;
+    var delta = aDeltaMode == WheelEvent.DOM_DELTA_PIXEL ? 5.0 : 0.3;
     helper(2, -delta, 0, aDeltaMode);
     helper(2, -delta, -1, aDeltaMode);
     helper(2, delta, 0, aDeltaMode);
@@ -1034,17 +1756,22 @@ function testtag_tree_wheel(aTree) {
   is(defaultPrevented, 48, "wheel event default prevented");
 }
 
-function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumber, aAfter) {
+function synthesizeColumnDrag(
+  aTree,
+  aMouseDownColumnNumber,
+  aMouseUpColumnNumber,
+  aAfter
+) {
   var columns = getSortedColumnArray(aTree);
 
   var down = columns[aMouseDownColumnNumber].element;
-  var up   = columns[aMouseUpColumnNumber].element;
+  var up = columns[aMouseUpColumnNumber].element;
 
   // Target the initial mousedown in the middle of the column header so we
   // avoid the extra hit test space given to the splitter
   var columnWidth = down.getBoundingClientRect().width;
   var splitterHitWidth = columnWidth / 2;
-  synthesizeMouse(down, splitterHitWidth, 3, { type: "mousedown"});
+  synthesizeMouse(down, splitterHitWidth, 3, { type: "mousedown" });
 
   var offsetX = 0;
   if (aAfter) {
@@ -1054,16 +1781,16 @@ function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumbe
   if (aMouseUpColumnNumber > aMouseDownColumnNumber) {
     for (let i = aMouseDownColumnNumber; i <= aMouseUpColumnNumber; i++) {
       let move = columns[i].element;
-      synthesizeMouse(move, offsetX, 3, { type: "mousemove"});
+      synthesizeMouse(move, offsetX, 3, { type: "mousemove" });
     }
   } else {
     for (let i = aMouseDownColumnNumber; i >= aMouseUpColumnNumber; i--) {
       let move = columns[i].element;
-      synthesizeMouse(move, offsetX, 3, { type: "mousemove"});
+      synthesizeMouse(move, offsetX, 3, { type: "mousemove" });
     }
   }
 
-  synthesizeMouse(up, offsetX, 3, { type: "mouseup"});
+  synthesizeMouse(up, offsetX, 3, { type: "mouseup" });
 }
 
 function arrayMove(aArray, aFrom, aTo, aAfter) {
@@ -1106,10 +1833,23 @@ function checkColumns(aTree, aReference, aMessage) {
 function mouseOnCell(tree, row, column, testname) {
   var rect = tree.getCoordsForCellItem(row, column, "text");
 
-  synthesizeMouseExpectEvent(tree.body, rect.x, rect.y, {}, tree, "select", testname);
+  synthesizeMouseExpectEvent(
+    tree.body,
+    rect.x,
+    rect.y,
+    {},
+    tree,
+    "select",
+    testname
+  );
 }
 
-function mouseClickOnColumnHeader(aColumns, aColumnIndex, aButton, aClickCount) {
+function mouseClickOnColumnHeader(
+  aColumns,
+  aColumnIndex,
+  aButton,
+  aClickCount
+) {
   var columnHeader = aColumns[aColumnIndex].element;
   var columnHeaderRect = columnHeader.getBoundingClientRect();
   var columnWidth = columnHeaderRect.right - columnHeaderRect.left;
@@ -1117,9 +1857,10 @@ function mouseClickOnColumnHeader(aColumns, aColumnIndex, aButton, aClickCount) 
   // clickCount.  This simulates the common behavior of multiple clicks.
   for (let i = 1; i <= aClickCount; i++) {
     // Target the middle of the column header.
-    synthesizeMouse(columnHeader, columnWidth / 2, 3,
-                    { button: aButton,
-                      clickCount: i });
+    synthesizeMouse(columnHeader, columnWidth / 2, 3, {
+      button: aButton,
+      clickCount: i,
+    });
   }
 }
 
@@ -1136,12 +1877,14 @@ function mouseDblClickOnCell(tree, row, column, testname) {
 }
 
 function compareArrays(arr1, arr2) {
-  if (arr1.length != arr2.length)
+  if (arr1.length != arr2.length) {
     return false;
+  }
 
   for (let i = 0; i < arr1.length; i++) {
-    if (arr1[i] != arr2[i])
+    if (arr1[i] != arr2[i]) {
       return false;
+    }
   }
 
   return true;
@@ -1162,25 +1905,33 @@ function convertDOMtoTreeRowInfo(treechildren, level, rowidx) {
       var cellInfo = [];
       for (var c = 0; c < treerow.childNodes.length; c++) {
         var cell = treerow.childNodes[c];
-        cellInfo.push({ label: "" + cell.getAttribute("label"),
-                        value: cell.getAttribute("value"),
-                        properties: cell.getAttribute("properties"),
-                        editable: cell.getAttribute("editable") != "false",
-                        selectable: cell.getAttribute("selectable") != "false",
-                        image: cell.getAttribute("src"),
-                        mode: cell.hasAttribute("mode") ? parseInt(cell.getAttribute("mode")) : 3 });
+        cellInfo.push({
+          label: "" + cell.getAttribute("label"),
+          value: cell.getAttribute("value"),
+          properties: cell.getAttribute("properties"),
+          editable: cell.getAttribute("editable") != "false",
+          selectable: cell.getAttribute("selectable") != "false",
+          image: cell.getAttribute("src"),
+          mode: cell.hasAttribute("mode")
+            ? parseInt(cell.getAttribute("mode"))
+            : 3,
+        });
       }
 
       var descendants = treeitem.lastChild;
-      var children = (treerow == descendants) ? null :
-                     convertDOMtoTreeRowInfo(descendants, level + 1, rowidx);
-      obj.rows.push({ cells: cellInfo,
-                      properties: treerow.getAttribute("properties"),
-                      container: treeitem.getAttribute("container") == "true",
-                      separator: treeitem.localName == "treeseparator",
-                      children,
-                      level,
-                      parent: parentidx });
+      var children =
+        treerow == descendants
+          ? null
+          : convertDOMtoTreeRowInfo(descendants, level + 1, rowidx);
+      obj.rows.push({
+        cells: cellInfo,
+        properties: treerow.getAttribute("properties"),
+        container: treeitem.getAttribute("container") == "true",
+        separator: treeitem.localName == "treeseparator",
+        children,
+        level,
+        parent: parentidx,
+      });
     }
   }
 

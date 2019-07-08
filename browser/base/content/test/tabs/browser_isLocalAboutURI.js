@@ -22,8 +22,11 @@ add_task(function test_URI() {
   check("about:blank", true, "about:blank is local");
   check("about:about", true, "about:about is local");
   check("about:newtab", true, "about:newtab is local");
-  check("about:random-invalid-uri", false,
-        "about:random-invalid-uri is invalid but should not throw");
+  check(
+    "about:random-invalid-uri",
+    false,
+    "about:random-invalid-uri is invalid but should not throw"
+  );
 });
 
 add_task(function test_URI_with_resolved() {
@@ -32,16 +35,22 @@ add_task(function test_URI_with_resolved() {
     const resolvedURI = Services.io.newURI(resolvedSpec);
     is(gBrowser.isLocalAboutURI(URI, resolvedURI), expect, description);
   };
-  check("about:newtab",
+  check(
+    "about:newtab",
     "jar:file:///Applications/Firefox.app/Contents/Resources/browser/omni.ja!/chrome/browser/res/activity-stream/prerendered/en-US/activity-stream.html",
     true,
-    "about:newtab with jar is local");
-  check("about:newtab",
+    "about:newtab with jar is local"
+  );
+  check(
+    "about:newtab",
     "file:///mozilla-central/browser/base/content/newtab/newTab.xhtml",
     true,
-    "about:newtab with file is local");
-  check("about:newtab",
+    "about:newtab with file is local"
+  );
+  check(
+    "about:newtab",
     "https://www.mozilla.org/newtab",
     false,
-    "about:newtab with https is not local");
+    "about:newtab with https is not local"
+  );
 });

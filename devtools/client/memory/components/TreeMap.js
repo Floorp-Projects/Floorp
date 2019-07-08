@@ -65,12 +65,10 @@ class TreeMap extends Component {
   }
 
   render() {
-    return dom.div(
-      {
-        ref: "container",
-        className: "tree-map-container",
-      }
-    );
+    return dom.div({
+      ref: "container",
+      className: "tree-map-container",
+    });
   }
 }
 

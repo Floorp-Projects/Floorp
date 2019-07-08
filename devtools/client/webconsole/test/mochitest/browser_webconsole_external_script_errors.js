@@ -7,9 +7,10 @@
 
 // See Bug 597136.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-external-script-errors.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-external-script-errors.html";
 
 add_task(async function() {
   // On e10s, the exception is triggered in child process
@@ -21,7 +22,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const onMessage = waitForMessage(hud, "bogus is not defined");
-  BrowserTestUtils.synthesizeMouseAtCenter("button", {}, gBrowser.selectedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter(
+    "button",
+    {},
+    gBrowser.selectedBrowser
+  );
   await onMessage;
 
   ok(true, "Received the expected message");

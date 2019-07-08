@@ -6,16 +6,26 @@
 
 "use strict";
 
-const {Cc, Ci, Cr} = require("chrome");
+const { Cc, Ci, Cr } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 
-loader.lazyRequireGetter(this, "NetworkHelper",
-                         "devtools/shared/webconsole/network-helper");
-loader.lazyRequireGetter(this, "DevToolsUtils",
-                         "devtools/shared/DevToolsUtils");
-loader.lazyRequireGetter(this, "CacheEntry",
-                         "devtools/shared/platform/cache-entry", true);
+loader.lazyRequireGetter(
+  this,
+  "NetworkHelper",
+  "devtools/shared/webconsole/network-helper"
+);
+loader.lazyRequireGetter(
+  this,
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
+);
+loader.lazyRequireGetter(
+  this,
+  "CacheEntry",
+  "devtools/shared/platform/cache-entry",
+  true
+);
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
 // Network logging
@@ -55,9 +65,12 @@ function NetworkResponseListener(owner, httpActivity) {
 exports.NetworkResponseListener = NetworkResponseListener;
 
 NetworkResponseListener.prototype = {
-  QueryInterface:
-    ChromeUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInputStreamCallback,
-                            Ci.nsIRequestObserver, Ci.nsIInterfaceRequestor]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIStreamListener,
+    Ci.nsIInputStreamCallback,
+    Ci.nsIRequestObserver,
+    Ci.nsIInterfaceRequestor,
+  ]),
 
   // nsIInterfaceRequestor implementation
 
@@ -180,10 +193,14 @@ NetworkResponseListener.prototype = {
     this.bodySize += count;
 
     if (!this.httpActivity.discardResponseBody) {
-      const limit = Services.prefs.getIntPref("devtools.netmonitor.responseBodyLimit");
+      const limit = Services.prefs.getIntPref(
+        "devtools.netmonitor.responseBodyLimit"
+      );
       if (this.receivedData.length <= limit || limit == 0) {
-        this.receivedData +=
-          NetworkHelper.convertToUnicode(data, request.contentCharset);
+        this.receivedData += NetworkHelper.convertToUnicode(
+          data,
+          request.contentCharset
+        );
       }
       if (this.receivedData.length > limit && limit > 0) {
         this.receivedData = this.receivedData.substr(0, limit);
@@ -238,8 +255,11 @@ NetworkResponseListener.prototype = {
       if (!charset) {
         charset = this.httpActivity.charset;
       }
-      NetworkHelper.loadFromCache(this.httpActivity.url, charset,
-                                  this._onComplete.bind(this));
+      NetworkHelper.loadFromCache(
+        this.httpActivity.url,
+        charset,
+        this._onComplete.bind(this)
+      );
       return;
     }
 
@@ -249,22 +269,35 @@ NetworkResponseListener.prototype = {
     // ourself. For that we use the stream converter services.  Do not
     // do that for Service workers as they are run in the child
     // process.
-    if (!this.httpActivity.fromServiceWorker &&
-        channel instanceof Ci.nsIEncodedChannel &&
-        channel.contentEncodings &&
-        !channel.applyConversion) {
+    if (
+      !this.httpActivity.fromServiceWorker &&
+      channel instanceof Ci.nsIEncodedChannel &&
+      channel.contentEncodings &&
+      !channel.applyConversion
+    ) {
       const encodingHeader = channel.getResponseHeader("Content-Encoding");
-      const scs = Cc["@mozilla.org/streamConverters;1"]
-        .getService(Ci.nsIStreamConverterService);
+      const scs = Cc["@mozilla.org/streamConverters;1"].getService(
+        Ci.nsIStreamConverterService
+      );
       const encodings = encodingHeader.split(/\s*\t*,\s*\t*/);
       let nextListener = this;
-      const acceptedEncodings = ["gzip", "deflate", "br", "x-gzip", "x-deflate"];
+      const acceptedEncodings = [
+        "gzip",
+        "deflate",
+        "br",
+        "x-gzip",
+        "x-deflate",
+      ];
       for (const i in encodings) {
         // There can be multiple conversions applied
         const enc = encodings[i].toLowerCase();
         if (acceptedEncodings.indexOf(enc) > -1) {
-          this.converter = scs.asyncConvertData(enc, "uncompressed",
-                                                nextListener, null);
+          this.converter = scs.asyncConvertData(
+            enc,
+            "uncompressed",
+            nextListener,
+            null
+          );
           nextListener = this.converter;
         }
       }
@@ -310,7 +343,7 @@ NetworkResponseListener.prototype = {
    */
   _fetchCacheInformation: function() {
     const httpActivity = this.httpActivity;
-    CacheEntry.getCacheEntry(this.request, (descriptor) => {
+    CacheEntry.getCacheEntry(this.request, descriptor => {
       httpActivity.owner.addResponseCache({
         responseCache: descriptor,
       });
@@ -396,8 +429,10 @@ NetworkResponseListener.prototype = {
 
     if (!this.httpActivity.discardResponseBody && this.receivedData.length) {
       this._onComplete(this.receivedData);
-    } else if (!this.httpActivity.discardResponseBody &&
-               this.httpActivity.responseStatus == 304) {
+    } else if (
+      !this.httpActivity.discardResponseBody &&
+      this.httpActivity.responseStatus == 304
+    ) {
       // Response is cached, so we load it from cache.
       let charset;
       try {
@@ -409,8 +444,11 @@ NetworkResponseListener.prototype = {
       if (!charset) {
         charset = this.httpActivity.charset;
       }
-      NetworkHelper.loadFromCache(this.httpActivity.url, charset,
-                                  this._onComplete.bind(this));
+      NetworkHelper.loadFromCache(
+        this.httpActivity.url,
+        charset,
+        this._onComplete.bind(this)
+      );
     } else {
       this._onComplete();
     }
@@ -431,7 +469,8 @@ NetworkResponseListener.prototype = {
     };
 
     response.size = this.bodySize;
-    response.transferredSize = this.transferredSize + this.httpActivity.headersSize;
+    response.transferredSize =
+      this.transferredSize + this.httpActivity.headersSize;
 
     try {
       response.mimeType = this.request.contentType;
@@ -439,8 +478,10 @@ NetworkResponseListener.prototype = {
       // Ignore.
     }
 
-    if (!response.mimeType ||
-        !NetworkHelper.isTextMimeType(response.mimeType)) {
+    if (
+      !response.mimeType ||
+      !NetworkHelper.isTextMimeType(response.mimeType)
+    ) {
       response.encoding = "base64";
       try {
         response.text = btoa(response.text);
@@ -455,13 +496,10 @@ NetworkResponseListener.prototype = {
 
     this.receivedData = "";
 
-    this.httpActivity.owner.addResponseContent(
-      response,
-      {
-        discardResponseBody: this.httpActivity.discardResponseBody,
-        truncated: this.truncated,
-      }
-    );
+    this.httpActivity.owner.addResponseContent(response, {
+      discardResponseBody: this.httpActivity.discardResponseBody,
+      truncated: this.truncated,
+    });
 
     this._wrappedNotificationCallbacks = null;
     this.httpActivity = null;
@@ -496,11 +534,14 @@ NetworkResponseListener.prototype = {
     if (available != -1) {
       if (available != 0) {
         if (this.converter) {
-          this.converter.onDataAvailable(this.request, stream,
-                                         this.offset, available);
+          this.converter.onDataAvailable(
+            this.request,
+            stream,
+            this.offset,
+            available
+          );
         } else {
-          this.onDataAvailable(this.request, stream, this.offset,
-                               available);
+          this.onDataAvailable(this.request, stream, this.offset, available);
         }
       }
       this.offset += available;

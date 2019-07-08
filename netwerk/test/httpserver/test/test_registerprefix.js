@@ -20,25 +20,41 @@ function notFound(ch) {
 }
 
 function makeCheckOverride(magic) {
-  return (function checkOverride(ch) {
+  return function checkOverride(ch) {
     Assert.equal(ch.responseStatus, 200);
     Assert.equal(ch.responseStatusText, "OK");
     Assert.ok(ch.requestSucceeded);
     Assert.equal(ch.getResponseHeader("Override-Succeeded"), magic);
-  });
+  };
 }
 
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
-    new Test(BASE + "/prefix/dummy", prefixHandler, null,
-                makeCheckOverride("prefix")),
-    new Test(BASE + "/prefix/dummy", pathHandler, null,
-                makeCheckOverride("path")),
-    new Test(BASE + "/prefix/subpath/dummy", longerPrefixHandler, null,
-                makeCheckOverride("subpath")),
+    new Test(
+      BASE + "/prefix/dummy",
+      prefixHandler,
+      null,
+      makeCheckOverride("prefix")
+    ),
+    new Test(
+      BASE + "/prefix/dummy",
+      pathHandler,
+      null,
+      makeCheckOverride("path")
+    ),
+    new Test(
+      BASE + "/prefix/subpath/dummy",
+      longerPrefixHandler,
+      null,
+      makeCheckOverride("subpath")
+    ),
     new Test(BASE + "/prefix/dummy", removeHandlers, null, notFound),
-    new Test(BASE + "/prefix/subpath/dummy", newPrefixHandler, null,
-                makeCheckOverride("subpath")),
+    new Test(
+      BASE + "/prefix/subpath/dummy",
+      newPrefixHandler,
+      null,
+      makeCheckOverride("subpath")
+    ),
   ];
 });
 
@@ -105,11 +121,11 @@ function run_test() {
 
 // generate an override
 function makeOverride(magic) {
-  return (function override(metadata, response) {
+  return function override(metadata, response) {
     response.setStatusLine("1.1", 200, "OK");
     response.setHeader("Override-Succeeded", magic, false);
 
     var body = "success!";
     response.bodyOutputStream.write(body, body.length);
-  });
+  };
 }

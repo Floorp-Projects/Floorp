@@ -9,14 +9,19 @@ let formFillChromeScript;
 let defaultTextColor;
 let expectingPopup = null;
 
-const {FormAutofillUtils} = SpecialPowers.Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+const { FormAutofillUtils } = SpecialPowers.Cu.import(
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
 
 async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {
   SimpleTest.requestFlakyTimeout(reason);
   await new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function focusAndWaitForFieldsIdentified(input, mustBeIdentified = false) {
+async function focusAndWaitForFieldsIdentified(
+  input,
+  mustBeIdentified = false
+) {
   info("expecting the target input being focused and indentified");
   if (typeof input === "string") {
     input = document.querySelector(input);
@@ -34,10 +39,16 @@ async function focusAndWaitForFieldsIdentified(input, mustBeIdentified = false) 
   }
   if (!previouslyFocused) {
     await new Promise(resolve => {
-      formFillChromeScript.addMessageListener("FormAutofillTest:FieldsIdentified", function onIdentified() {
-        formFillChromeScript.removeMessageListener("FormAutofillTest:FieldsIdentified", onIdentified);
-        resolve();
-      });
+      formFillChromeScript.addMessageListener(
+        "FormAutofillTest:FieldsIdentified",
+        function onIdentified() {
+          formFillChromeScript.removeMessageListener(
+            "FormAutofillTest:FieldsIdentified",
+            onIdentified
+          );
+          resolve();
+        }
+      );
     });
   }
   // In order to ensure that "markAsAutofillField" is fully executed, a short period
@@ -74,7 +85,9 @@ function _getAdaptedProfile(profile) {
   const adaptedProfile = Object.assign({}, profile);
 
   if (profile["street-address"]) {
-    adaptedProfile["street-address"] = FormAutofillUtils.toOneLineAddress(profile["street-address"]);
+    adaptedProfile["street-address"] = FormAutofillUtils.toOneLineAddress(
+      profile["street-address"]
+    );
   }
 
   return adaptedProfile;
@@ -94,11 +107,16 @@ async function checkFieldHighlighted(elem, expectedValue) {
 }
 
 async function checkFieldPreview(elem, expectedValue) {
-  is(SpecialPowers.wrap(elem).previewValue, expectedValue, `Checking #${elem.id} previewValue`);
+  is(
+    SpecialPowers.wrap(elem).previewValue,
+    expectedValue,
+    `Checking #${elem.id} previewValue`
+  );
   let isTextColorApplied;
   await SimpleTest.promiseWaitForCondition(function checkPreview() {
     const computedStyle = window.getComputedStyle(elem);
-    isTextColorApplied = computedStyle.getPropertyValue("color") !== defaultTextColor;
+    isTextColorApplied =
+      computedStyle.getPropertyValue("color") !== defaultTextColor;
     return isTextColorApplied === !!expectedValue;
   }, `Checking #${elem.id} preview style`);
 
@@ -119,29 +137,53 @@ function triggerAutofillAndCheckProfile(profile) {
   for (const [fieldName, value] of Object.entries(adaptedProfile)) {
     info(`triggerAutofillAndCheckProfile: ${fieldName}`);
     const element = document.getElementById(fieldName);
-    const expectingEvent = document.activeElement == element ? "input" : "change";
+    const expectingEvent =
+      document.activeElement == element ? "input" : "change";
     const checkFieldAutofilled = Promise.all([
-      new Promise(resolve => element.addEventListener("input", (event) => {
-        if (element.tagName == "INPUT" && element.type == "text") {
-          ok(event instanceof InputEvent,
-             `"input" event should be dispatched with InputEvent interface on ${element.tagName}`);
-          is(event.inputType, "insertReplacementText",
-             "inputType value should be \"insertReplacementText\"");
-          is(event.data, String(value),
-             `data value should be "${value}"`);
-          is(event.dataTransfer, null,
-             "dataTransfer should be null");
-        } else {
-          ok(event instanceof Event && !(event instanceof UIEvent),
-             `"input" event should be dispatched with Event interface on ${element.tagName}`);
-        }
-        is(event.cancelable, false,
-           `"input" event should be never cancelable on ${element.tagName}`);
-        is(event.bubbles, true,
-           `"input" event should always bubble on ${element.tagName}`);
-        resolve();
-      }, {once: true})),
-      new Promise(resolve => element.addEventListener(expectingEvent, resolve, {once: true})),
+      new Promise(resolve =>
+        element.addEventListener(
+          "input",
+          event => {
+            if (element.tagName == "INPUT" && element.type == "text") {
+              ok(
+                event instanceof InputEvent,
+                `"input" event should be dispatched with InputEvent interface on ${
+                  element.tagName
+                }`
+              );
+              is(
+                event.inputType,
+                "insertReplacementText",
+                'inputType value should be "insertReplacementText"'
+              );
+              is(event.data, String(value), `data value should be "${value}"`);
+              is(event.dataTransfer, null, "dataTransfer should be null");
+            } else {
+              ok(
+                event instanceof Event && !(event instanceof UIEvent),
+                `"input" event should be dispatched with Event interface on ${
+                  element.tagName
+                }`
+              );
+            }
+            is(
+              event.cancelable,
+              false,
+              `"input" event should be never cancelable on ${element.tagName}`
+            );
+            is(
+              event.bubbles,
+              true,
+              `"input" event should always bubble on ${element.tagName}`
+            );
+            resolve();
+          },
+          { once: true }
+        )
+      ),
+      new Promise(resolve =>
+        element.addEventListener(expectingEvent, resolve, { once: true })
+      ),
     ]).then(() => checkFieldValue(element, value));
 
     promises.push(checkFieldAutofilled);
@@ -155,18 +197,26 @@ function triggerAutofillAndCheckProfile(profile) {
 async function onStorageChanged(type) {
   info(`expecting the storage changed: ${type}`);
   return new Promise(resolve => {
-    formFillChromeScript.addMessageListener("formautofill-storage-changed", function onChanged(data) {
-      formFillChromeScript.removeMessageListener("formautofill-storage-changed", onChanged);
-      is(data.data, type, `Receive ${type} storage changed event`);
-      resolve();
-    });
+    formFillChromeScript.addMessageListener(
+      "formautofill-storage-changed",
+      function onChanged(data) {
+        formFillChromeScript.removeMessageListener(
+          "formautofill-storage-changed",
+          onChanged
+        );
+        is(data.data, type, `Receive ${type} storage changed event`);
+        resolve();
+      }
+    );
   });
 }
 
 function checkMenuEntries(expectedValues, isFormAutofillResult = true) {
   let actualValues = getMenuEntries();
   // Expect one more item would appear at the bottom as the footer if the result is from form autofill.
-  let expectedLength = isFormAutofillResult ? expectedValues.length + 1 : expectedValues.length;
+  let expectedLength = isFormAutofillResult
+    ? expectedValues.length + 1
+    : expectedValues.length;
 
   is(actualValues.length, expectedLength, " Checking length of expected menu");
   for (let i = 0; i < expectedValues.length; i++) {
@@ -174,54 +224,54 @@ function checkMenuEntries(expectedValues, isFormAutofillResult = true) {
   }
 }
 
-function invokeAsyncChromeTask(message, response, payload = {}) {
+function invokeAsyncChromeTask(message, payload = {}) {
   info(`expecting the chrome task finished: ${message}`);
-  return new Promise(resolve => {
-    formFillChromeScript.sendAsyncMessage(message, payload);
-    formFillChromeScript.addMessageListener(response, function onReceived(data) {
-      formFillChromeScript.removeMessageListener(response, onReceived);
-
-      resolve(data);
-    });
-  });
+  return formFillChromeScript.sendQuery(message, payload);
 }
 
 async function addAddress(address) {
-  await invokeAsyncChromeTask("FormAutofillTest:AddAddress", "FormAutofillTest:AddressAdded", {address});
+  await invokeAsyncChromeTask("FormAutofillTest:AddAddress", { address });
   await sleep();
 }
 
 async function removeAddress(guid) {
-  return invokeAsyncChromeTask("FormAutofillTest:RemoveAddress", "FormAutofillTest:AddressRemoved", {guid});
+  return invokeAsyncChromeTask("FormAutofillTest:RemoveAddress", { guid });
 }
 
 async function updateAddress(guid, address) {
-  return invokeAsyncChromeTask("FormAutofillTest:UpdateAddress", "FormAutofillTest:AddressUpdated", {address, guid});
+  return invokeAsyncChromeTask("FormAutofillTest:UpdateAddress", {
+    address,
+    guid,
+  });
 }
 
 async function checkAddresses(expectedAddresses) {
-  return invokeAsyncChromeTask("FormAutofillTest:CheckAddresses", "FormAutofillTest:areAddressesMatching", {expectedAddresses});
+  return invokeAsyncChromeTask("FormAutofillTest:CheckAddresses", {
+    expectedAddresses,
+  });
 }
 
 async function cleanUpAddresses() {
-  return invokeAsyncChromeTask("FormAutofillTest:CleanUpAddresses", "FormAutofillTest:AddressesCleanedUp");
+  return invokeAsyncChromeTask("FormAutofillTest:CleanUpAddresses");
 }
 
 async function addCreditCard(creditcard) {
-  await invokeAsyncChromeTask("FormAutofillTest:AddCreditCard", "FormAutofillTest:CreditCardAdded", {creditcard});
+  await invokeAsyncChromeTask("FormAutofillTest:AddCreditCard", { creditcard });
   await sleep();
 }
 
 async function removeCreditCard(guid) {
-  return invokeAsyncChromeTask("FormAutofillTest:RemoveCreditCard", "FormAutofillTest:CreditCardRemoved", {guid});
+  return invokeAsyncChromeTask("FormAutofillTest:RemoveCreditCard", { guid });
 }
 
 async function checkCreditCards(expectedCreditCards) {
-  return invokeAsyncChromeTask("FormAutofillTest:CheckCreditCards", "FormAutofillTest:areCreditCardsMatching", {expectedCreditCards});
+  return invokeAsyncChromeTask("FormAutofillTest:CheckCreditCards", {
+    expectedCreditCards,
+  });
 }
 
 async function cleanUpCreditCards() {
-  return invokeAsyncChromeTask("FormAutofillTest:CleanUpCreditCards", "FormAutofillTest:CreditCardsCleanedUp");
+  return invokeAsyncChromeTask("FormAutofillTest:CleanUpCreditCards");
 }
 
 async function cleanUpStorage() {
@@ -230,12 +280,14 @@ async function cleanUpStorage() {
 }
 
 async function canTestOSKeyStoreLogin() {
-  let {canTest} = await invokeAsyncChromeTask("FormAutofillTest:CanTestOSKeyStoreLogin", "FormAutofillTest:CanTestOSKeyStoreLoginResult");
+  let { canTest } = await invokeAsyncChromeTask(
+    "FormAutofillTest:CanTestOSKeyStoreLogin"
+  );
   return canTest;
 }
 
 async function waitForOSKeyStoreLogin(login = false) {
-  await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", "FormAutofillTest:OSKeyStoreLoggedIn", {login});
+  await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", { login });
 }
 
 function patchRecordCCNumber(record) {
@@ -245,7 +297,7 @@ function patchRecordCCNumber(record) {
     label: number.substr(-4),
   };
 
-  return Object.assign({}, record, {ccNumberFmt});
+  return Object.assign({}, record, { ccNumberFmt });
 }
 
 // Utils for registerPopupShownListener(in satchel_common.js) that handles dropdown popup
@@ -292,34 +344,39 @@ async function triggerPopupAndHoverItem(fieldSelector, selectIndex) {
 
 function formAutoFillCommonSetup() {
   // Remove the /creditCard path segement when referenced from the 'creditCard' subdirectory.
-  let chromeURL = SimpleTest.getTestFileURL("formautofill_parent_utils.js").replace(/\/creditCard/, "");
+  let chromeURL = SimpleTest.getTestFileURL(
+    "formautofill_parent_utils.js"
+  ).replace(/\/creditCard/, "");
   formFillChromeScript = SpecialPowers.loadChromeScript(chromeURL);
-  formFillChromeScript.addMessageListener("onpopupshown", ({results}) => {
+  formFillChromeScript.addMessageListener("onpopupshown", ({ results }) => {
     gLastAutoCompleteResults = results;
     if (gPopupShownListener) {
-      gPopupShownListener({results});
+      gPopupShownListener({ results });
     }
   });
 
   add_task(async function setup() {
-    formFillChromeScript.sendAsyncMessage("setup");
     info(`expecting the storage setup`);
-    await formFillChromeScript.promiseOneMessage("setup-finished");
+    await formFillChromeScript.sendQuery("setup");
   });
 
   SimpleTest.registerCleanupFunction(async () => {
-    formFillChromeScript.sendAsyncMessage("cleanup");
     info(`expecting the storage cleanup`);
-    await formFillChromeScript.promiseOneMessage("cleanup-finished");
+    await formFillChromeScript.sendQuery("cleanup");
 
     formFillChromeScript.destroy();
     expectingPopup = null;
   });
 
-  document.addEventListener("DOMContentLoaded", function() {
-    defaultTextColor = window.getComputedStyle(document.querySelector("input"))
-      .getPropertyValue("color");
-  }, {once: true});
+  document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+      defaultTextColor = window
+        .getComputedStyle(document.querySelector("input"))
+        .getPropertyValue("color");
+    },
+    { once: true }
+  );
 }
 
 formAutoFillCommonSetup();

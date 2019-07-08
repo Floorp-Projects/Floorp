@@ -7,14 +7,16 @@
 // to the console.
 
 function shouldBeImminentlyDistrusted(aTransportSecurityInfo) {
-  let isDistrust = aTransportSecurityInfo.securityState &
-                     Ci.nsIWebProgressListener.STATE_CERT_DISTRUST_IMMINENT;
+  let isDistrust =
+    aTransportSecurityInfo.securityState &
+    Ci.nsIWebProgressListener.STATE_CERT_DISTRUST_IMMINENT;
   Assert.ok(isDistrust, "This host should be imminently distrusted");
 }
 
 function shouldNotBeImminentlyDistrusted(aTransportSecurityInfo) {
-  let isDistrust = aTransportSecurityInfo.securityState &
-                     Ci.nsIWebProgressListener.STATE_CERT_DISTRUST_IMMINENT;
+  let isDistrust =
+    aTransportSecurityInfo.securityState &
+    Ci.nsIWebProgressListener.STATE_CERT_DISTRUST_IMMINENT;
   Assert.ok(!isDistrust, "This host should not be imminently distrusted");
 }
 
@@ -22,8 +24,16 @@ do_get_profile();
 
 add_tls_server_setup("BadCertServer", "bad_certs");
 
-add_connection_test("imminently-distrusted.example.com",
-                    PRErrorCodeSuccess, null, shouldBeImminentlyDistrusted);
+add_connection_test(
+  "imminently-distrusted.example.com",
+  PRErrorCodeSuccess,
+  null,
+  shouldBeImminentlyDistrusted
+);
 
-add_connection_test("include-subdomains.pinning.example.com",
-                    PRErrorCodeSuccess, null, shouldNotBeImminentlyDistrusted);
+add_connection_test(
+  "include-subdomains.pinning.example.com",
+  PRErrorCodeSuccess,
+  null,
+  shouldNotBeImminentlyDistrusted
+);

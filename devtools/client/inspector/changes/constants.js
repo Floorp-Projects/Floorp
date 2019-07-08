@@ -10,8 +10,9 @@ module.exports = {
   TELEMETRY_SCALAR_CONTEXTMENU: "devtools.changesview.contextmenu",
   TELEMETRY_SCALAR_CONTEXTMENU_COPY: "devtools.changesview.contextmenu_copy",
   TELEMETRY_SCALAR_CONTEXTMENU_COPY_DECLARATION:
-  "devtools.changesview.contextmenu_copy_declaration",
-  TELEMETRY_SCALAR_CONTEXTMENU_COPY_RULE: "devtools.changesview.contextmenu_copy_rule",
+    "devtools.changesview.contextmenu_copy_declaration",
+  TELEMETRY_SCALAR_CONTEXTMENU_COPY_RULE:
+    "devtools.changesview.contextmenu_copy_rule",
   TELEMETRY_SCALAR_COPY: "devtools.changesview.copy",
   TELEMETRY_SCALAR_COPY_ALL_CHANGES: "devtools.changesview.copy_all_changes",
   TELEMETRY_SCALAR_COPY_RULE: "devtools.changesview.copy_rule",

@@ -5,16 +5,15 @@
  * Generic nsINavHistoryObserver that doesn't implement anything, but provides
  * dummy methods to prevent errors about an object not having a certain method.
  */
-function NavHistoryObserver() {
-}
+function NavHistoryObserver() {}
 NavHistoryObserver.prototype = {
-  onBeginUpdateBatch() { },
-  onEndUpdateBatch() { },
-  onTitleChanged() { },
-  onDeleteURI() { },
-  onClearHistory() { },
-  onPageChanged() { },
-  onDeleteVisits() { },
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
+  onTitleChanged() {},
+  onDeleteURI() {},
+  onClearHistory() {},
+  onPageChanged() {},
+  onDeleteVisits() {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
 };
 
@@ -167,15 +166,19 @@ add_task(async function test_onDeleteURI() {
 });
 
 add_task(async function test_onDeleteVisits() {
-  let promiseNotify = onNotify(function onDeleteVisits(aURI, aVisitTime, aGUID,
-                                                       aReason) {
+  let promiseNotify = onNotify(function onDeleteVisits(
+    aURI,
+    aVisitTime,
+    aGUID,
+    aReason
+  ) {
     Assert.ok(aURI.equals(testuri));
     // Can't use do_check_guid_for_uri() here because the visit is already gone.
     Assert.equal(aGUID, testguid);
     Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_DELETED);
     Assert.equal(aVisitTime, 0); // All visits have been removed.
   });
-  let msecs24hrsAgo = Date.now() - (86400 * 1000);
+  let msecs24hrsAgo = Date.now() - 86400 * 1000;
   let [testuri] = await task_add_visit(undefined, msecs24hrsAgo * 1000);
   // Add a bookmark so the page is not removed.
   await PlacesUtils.bookmarks.insert({
@@ -205,8 +208,12 @@ add_task(async function test_onTitleChanged() {
 });
 
 add_task(async function test_onPageChanged() {
-  let promiseNotify = onNotify(function onPageChanged(aURI, aChangedAttribute,
-                                                      aNewValue, aGUID) {
+  let promiseNotify = onNotify(function onPageChanged(
+    aURI,
+    aChangedAttribute,
+    aNewValue,
+    aGUID
+  ) {
     Assert.equal(aChangedAttribute, Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON);
     Assert.ok(aURI.equals(testuri));
     Assert.equal(aNewValue, SMALLPNG_DATA_URI.spec);
@@ -218,10 +225,13 @@ add_task(async function test_onPageChanged() {
   // The new favicon for the page must have data associated with it in order to
   // receive the onPageChanged notification.  To keep this test self-contained,
   // we use an URI representing the smallest possible PNG file.
-  PlacesUtils.favicons.setAndFetchFaviconForPage(testuri, SMALLPNG_DATA_URI,
-                                                 false,
-                                                 PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-                                                 null,
-                                                 Services.scriptSecurityManager.getSystemPrincipal());
+  PlacesUtils.favicons.setAndFetchFaviconForPage(
+    testuri,
+    SMALLPNG_DATA_URI,
+    false,
+    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+    null,
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
   await promiseNotify;
 });

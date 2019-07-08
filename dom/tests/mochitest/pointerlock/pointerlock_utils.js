@@ -1,5 +1,5 @@
 // Get test filename for page being run in popup so errors are more useful
-var testName = location.pathname.split('/').pop();
+var testName = location.pathname.split("/").pop();
 
 // Wrap test functions and pass to parent window
 window.ok = function(a, msg) {
@@ -34,16 +34,16 @@ window.info = function(msg) {
 var SimpleTest = SimpleTest || {};
 
 SimpleTest.waitForExplicitFinish = function() {
-  dump("[POINTERLOCK] Starting " + testName+ "\n");
+  dump("[POINTERLOCK] Starting " + testName + "\n");
 };
 
-SimpleTest.finish = function () {
-  dump("[POINTERLOCK] Finishing " + testName+ "\n");
+SimpleTest.finish = function() {
+  dump("[POINTERLOCK] Finishing " + testName + "\n");
   opener.nextTest();
 };
 
 addLoadEvent(function() {
-  if (typeof start !== 'undefined') {
+  if (typeof start !== "undefined") {
     SimpleTest.waitForFocus(start);
   }
 });
@@ -52,16 +52,18 @@ addLoadEvent(function() {
 // Note this only returns true once the transition from normal to
 // fullscreen mode is complete.
 function inFullscreenMode(win) {
-  return win.innerWidth == win.screen.width &&
-         win.innerHeight == win.screen.height;
+  return (
+    win.innerWidth == win.screen.width && win.innerHeight == win.screen.height
+  );
 }
 
 // Returns true if the window is in normal mode, i.e. non fullscreen mode.
 // Note this only returns true once the transition from fullscreen back to
 // normal mode is complete.
 function inNormalMode(win) {
-  return win.innerWidth == win.normalSize.w &&
-         win.innerHeight == win.normalSize.h;
+  return (
+    win.innerWidth == win.normalSize.w && win.innerHeight == win.normalSize.h
+  );
 }
 
 // Adds a listener that will be called once a fullscreen transition
@@ -80,7 +82,7 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
   if (!topWin.normalSize) {
     topWin.normalSize = {
       w: window.innerWidth,
-      h: window.innerHeight
+      h: window.innerHeight,
     };
   }
   function checkCondition() {

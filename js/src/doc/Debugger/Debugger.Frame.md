@@ -117,6 +117,10 @@ the `Debugger.onEnterFrame` handler is called each time a frame is
 resumed. (This means these events can fire multiple times for the same
 `Frame` object, which is odd, but accurately conveys what's happening.)
 
+The [completion value][cv] passed to the `frame.onPop` handler for a suspension
+contains additional properties to clarify what's going on. See the documentation
+for completion values for details.
+
 
 ## Stepping Into Generators: The "Initial Yield"
 
@@ -279,19 +283,19 @@ the compartment to which the handler method belongs.
     frames.
 
 `onPop`
-:   This property must be either `undefined` or a function. If it is a
-    function, SpiderMonkey calls it just before this frame is popped,
-    passing a [completion value][cv] indicating how this frame's execution
-    completed, and providing this `Debugger.Frame` instance as the `this`
-    value. The function should return a [resumption value][rv] indicating
-    how execution should proceed. On newly created frames, this property's
-    value is `undefined`.
+:   This property must be either `undefined` or a function. If it is a function,
+    SpiderMonkey calls it just before this frame is popped or suspended, passing
+    a [completion value][cv] indicating the reason, and providing this
+    `Debugger.Frame` instance as the `this` value. The function should return a
+    [resumption value][rv] indicating how execution should proceed. On newly
+    created frames, this property's value is `undefined`.
 
     When this handler is called, this frame's current execution location, as
     reflected in its `offset` and `environment` properties, is the operation
-    which caused it to be unwound. In frames returning or throwing an
-    exception, the location is often a return or a throw statement. In frames
-    propagating exceptions, the location is a call.
+    which caused it to be unwound. In frames returning or throwing an exception,
+    the location is often a return or a throw statement. In frames propagating
+    exceptions, the location is a call. In generator or async function frames,
+    the location may be a `yield` or `await` expression.
 
     When an `onPop` call reports the completion of a construction call
     (that is, a function called via the `new` operator), the completion
@@ -320,14 +324,14 @@ the compartment to which the handler method belongs.
     resumption value each handler returns establishes the completion value
     reported to the next handler.
 
+    The `onPop` handler is typically called only once for a given
+    `Debugger.Frame`, after which the frame becomes inactive. However, in the
+    case of [generators and async functions](#suspended), `onPop` fires each
+    time the frame is suspended.
+
     This handler is not called on `"debugger"` frames. It is also not called
     when unwinding a frame due to an over-recursion or out-of-memory
     exception.
-
-    The `onPop` handler is typically called only once for a given frame,
-    after which the frame becomes inactive. However, in the case of
-    [generators and async functions](suspended), `onPop` fires each time
-    the frame is suspended.
 
 
 ## Function Properties of the Debugger.Frame Prototype Object

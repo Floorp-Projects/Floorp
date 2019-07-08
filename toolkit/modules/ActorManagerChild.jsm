@@ -12,22 +12,36 @@
 
 var EXPORTED_SYMBOLS = ["ActorManagerChild"];
 
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
-                               "resource://gre/modules/WebNavigationFrames.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
 
-const {DefaultMap} = ExtensionUtils;
+const { DefaultMap } = ExtensionUtils;
 
-const {sharedData} = Services.cpmm;
+const { sharedData } = Services.cpmm;
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "simulateEvents",
-                                      "fission.frontend.simulate-events", false);
-XPCOMUtils.defineLazyPreferenceGetter(this, "simulateMessages",
-                                      "fission.frontend.simulate-messages", false);
-
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "simulateEvents",
+  "fission.frontend.simulate-events",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "simulateMessages",
+  "fission.frontend.simulate-messages",
+  false
+);
 
 function getMessageManager(window) {
   return window.docShell.messageManager;
@@ -55,7 +69,7 @@ class Dispatcher {
     for (let topic of this.observers.keys()) {
       Services.obs.addObserver(this, topic, true);
     }
-    for (let {event, options, actor} of this.events) {
+    for (let { event, options, actor } of this.events) {
       this.addEventListener(event, actor, options);
     }
 
@@ -146,13 +160,13 @@ class Dispatcher {
       let match = false;
       let data = message.data || {};
       if (data.hasOwnProperty("frameId")) {
-        match = (data.frameId == this.frameId);
+        match = data.frameId == this.frameId;
       } else if (data.hasOwnProperty("browsingContextId")) {
-        match = (data.browsingContextId == this.browsingContextId);
+        match = data.browsingContextId == this.browsingContextId;
       } else {
         // if no specific target was given, just dispatch it to
         // top-level actors.
-        match = (this.frameId == 0);
+        match = this.frameId == 0;
       }
 
       if (!match) {
@@ -181,16 +195,17 @@ class Dispatcher {
   }
 }
 
-Dispatcher.prototype.QueryInterface =
-  ChromeUtils.generateQI(["nsIObserver",
-                          "nsISupportsWeakReference"]);
+Dispatcher.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsIObserver",
+  "nsISupportsWeakReference",
+]);
 
 class SingletonDispatcher extends Dispatcher {
   constructor(window, data) {
     super(getMessageManager(window), data);
 
-    window.addEventListener("pageshow", this, {mozSystemGroup: true});
-    window.addEventListener("pagehide", this, {mozSystemGroup: true});
+    window.addEventListener("pageshow", this, { mozSystemGroup: true });
+    window.addEventListener("pagehide", this, { mozSystemGroup: true });
 
     this._window = Cu.getWeakReference(window);
     this.listeners = [];
@@ -253,7 +268,9 @@ class SingletonDispatcher extends Dispatcher {
     if (event.target.ownerGlobal == this.window) {
       const inst = this.getActor(actor);
       if (typeof inst.handleEvent != "function") {
-        throw new Error(`Unhandled event for ${actor}: ${event.type}: missing handleEvent`);
+        throw new Error(
+          `Unhandled event for ${actor}: ${event.type}: missing handleEvent`
+        );
       }
       inst.handleEvent(event);
     }
@@ -279,7 +296,9 @@ var ActorManagerChild = {
     let singletons = sharedData.get("ChildSingletonActors");
     for (let [filter, data] of singletons.entries()) {
       let options = {
-        matches: new MatchPatternSet(filter.matches, {restrictSchemes: false}),
+        matches: new MatchPatternSet(filter.matches, {
+          restrictSchemes: false,
+        }),
         allFrames: filter.allFrames,
         matchAboutBlank: filter.matchAboutBlank,
       };
@@ -300,8 +319,7 @@ var ActorManagerChild = {
   onNewDocument(matcher, window) {
     new SingletonDispatcher(window, this.singletons.get(matcher)).init();
   },
-  onPreloadDocument(matcher, loadInfo) {
-  },
+  onPreloadDocument(matcher, loadInfo) {},
 
   /**
    * Attaches the appropriate set of actors to the given frame message manager.

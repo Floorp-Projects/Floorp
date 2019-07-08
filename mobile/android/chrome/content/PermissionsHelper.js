@@ -4,25 +4,33 @@
 "use strict";
 
 var PermissionsHelper = {
-  _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
-                    "offline-app", "desktop-notification", "plugins", "native-intent"],
+  _permissonTypes: [
+    "password",
+    "geolocation",
+    "popup",
+    "indexedDB",
+    "offline-app",
+    "desktop-notification",
+    "plugins",
+    "native-intent",
+  ],
   _permissionStrings: {
-    "password": {
+    password: {
       label: "password.logins",
       allowed: "password.save",
       denied: "password.dontSave",
     },
-    "geolocation": {
+    geolocation: {
       label: "geolocation.location",
       allowed: "geolocation.allow",
       denied: "geolocation.dontAllow",
     },
-    "popup": {
+    popup: {
       label: "blockPopups.label2",
       allowed: "popup.show",
       denied: "popup.dontShow",
     },
-    "indexedDB": {
+    indexedDB: {
       label: "offlineApps.offlineData",
       allowed: "offlineApps.allow",
       denied: "offlineApps.dontAllow2",
@@ -37,7 +45,7 @@ var PermissionsHelper = {
       allowed: "desktopNotification2.allow",
       denied: "desktopNotification2.dontAllow",
     },
-    "plugins": {
+    plugins: {
       label: "clickToPlayPlugins.plugins",
       allowed: "clickToPlayPlugins.activate",
       denied: "clickToPlayPlugins.dontActivate",
@@ -56,7 +64,7 @@ var PermissionsHelper = {
     switch (event) {
       case "Permissions:Check":
         check = true;
-        // fall-through
+      // fall-through
 
       case "Permissions:Get":
         let permissions = [];
@@ -65,8 +73,9 @@ var PermissionsHelper = {
           let value = this.getPermission(principal, type);
 
           // Only add the permission if it was set by the user
-          if (value == Services.perms.UNKNOWN_ACTION)
+          if (value == Services.perms.UNKNOWN_ACTION) {
             continue;
+          }
 
           if (check) {
             GlobalEventDispatcher.sendRequest({
@@ -80,9 +89,11 @@ var PermissionsHelper = {
           let label = Strings.browser.GetStringFromName(typeStrings.label);
 
           // Get the key to look up the appropriate string entity
-          let valueKey = value == Services.perms.ALLOW_ACTION ?
-                         "allowed" : "denied";
-          let valueString = Strings.browser.GetStringFromName(typeStrings[valueKey]);
+          let valueKey =
+            value == Services.perms.ALLOW_ACTION ? "allowed" : "denied";
+          let valueString = Strings.browser.GetStringFromName(
+            typeStrings[valueKey]
+          );
 
           permissions.push({
             type: type,
@@ -111,8 +122,9 @@ var PermissionsHelper = {
       case "Permissions:Clear":
         // An array of the indices of the permissions we want to clear
         let permissionsToClear = data.permissions;
-        let privacyContext = BrowserApp.selectedBrowser.docShell
-                               .QueryInterface(Ci.nsILoadContext);
+        let privacyContext = BrowserApp.selectedBrowser.docShell.QueryInterface(
+          Ci.nsILoadContext
+        );
 
         for (let i = 0; i < permissionsToClear.length; i++) {
           let indexToClear = permissionsToClear[i];
@@ -138,19 +150,22 @@ var PermissionsHelper = {
     if (aType == "password") {
       // By default, login saving is enabled, so if it is disabled, the
       // user selected the never remember option
-      if (!Services.logins.getLoginSavingEnabled(aURI.displayPrePath))
+      if (!Services.logins.getLoginSavingEnabled(aURI.displayPrePath)) {
         return Services.perms.DENY_ACTION;
+      }
 
       // Check to see if the user ever actually saved a login
-      if (Services.logins.countLogins(aURI.displayPrePath, "", ""))
+      if (Services.logins.countLogins(aURI.displayPrePath, "", "")) {
         return Services.perms.ALLOW_ACTION;
+      }
 
       return Services.perms.UNKNOWN_ACTION;
     }
 
     // Geolocation consumers use testExactPermissionForPrincipal
-    if (aType == "geolocation")
+    if (aType == "geolocation") {
       return Services.perms.testExactPermissionForPrincipal(aPrincipal, aType);
+    }
 
     return Services.perms.testPermissionForPrincipal(aPrincipal, aType);
   },
@@ -178,7 +193,11 @@ var PermissionsHelper = {
       // Clear content prefs set in ContentPermissionPrompt.js
       Cc["@mozilla.org/content-pref/service;1"]
         .getService(Ci.nsIContentPrefService2)
-        .removeByDomainAndName(aURI.spec, aType + ".request.remember", aContext);
+        .removeByDomainAndName(
+          aURI.spec,
+          aType + ".request.remember",
+          aContext
+        );
     }
   },
 };

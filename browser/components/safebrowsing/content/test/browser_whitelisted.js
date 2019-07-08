@@ -20,17 +20,22 @@ function testBlockedPage(window) {
 function testWhitelistedPage(window) {
   info("Whitelisted pages must be skipped");
   var getmeout_button = window.document.getElementById("getMeOutButton");
-  var ignorewarning_button = window.document.getElementById("ignoreWarningButton");
+  var ignorewarning_button = window.document.getElementById(
+    "ignoreWarningButton"
+  );
   ok(!getmeout_button, "GetMeOut button not present");
   ok(!ignorewarning_button, "IgnoreWarning button not present");
 }
 
 add_task(async function testNormalBrowsing() {
   tabbrowser = gBrowser;
-  let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
+  let tab = (tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser));
 
   info("Load a test page that's whitelisted");
-  Services.prefs.setCharPref(PREF_WHITELISTED_HOSTNAMES, "example.com,www.ItIsaTrap.org,example.net");
+  Services.prefs.setCharPref(
+    PREF_WHITELISTED_HOSTNAMES,
+    "example.com,www.ItIsaTrap.org,example.net"
+  );
   await promiseTabLoadEvent(tab, TEST_PAGE, "load");
   testWhitelistedPage(tab.ownerGlobal);
 

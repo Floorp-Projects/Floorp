@@ -3,7 +3,9 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
@@ -84,7 +86,12 @@ class SearchConfigTest {
    */
   async setup() {
     AddonTestUtils.init(GLOBAL_SCOPE);
-    AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+    AddonTestUtils.createAppInfo(
+      "xpcshell@tests.mozilla.org",
+      "XPCShell",
+      "42",
+      "42"
+    );
 
     // Disable region checks.
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
@@ -95,8 +102,10 @@ class SearchConfigTest {
 
     // Note: we don't use the helper function here, so that we have at least
     // one message output per process.
-    Assert.ok(Services.search.isInitialized,
-      "Should have correctly initialized the search service");
+    Assert.ok(
+      Services.search.isInitialized,
+      "Should have correctly initialized the search service"
+    );
   }
 
   /**
@@ -122,7 +131,10 @@ class SearchConfigTest {
       }
     }
 
-    this.assertOk(!this._testDebug, "Should not have test debug turned on in production");
+    this.assertOk(
+      !this._testDebug,
+      "Should not have test debug turned on in production"
+    );
   }
 
   /**
@@ -135,15 +147,18 @@ class SearchConfigTest {
    */
   async _reinit(region, locale) {
     Services.prefs.setStringPref("browser.search.region", region.toUpperCase());
-    const reinitCompletePromise =
-      SearchTestUtils.promiseSearchNotification("reinit-complete");
+    const reinitCompletePromise = SearchTestUtils.promiseSearchNotification(
+      "reinit-complete"
+    );
     Services.locale.availableLocales = [locale];
     Services.locale.requestedLocales = [locale];
     Services.search.reInit();
     await reinitCompletePromise;
 
-    this.assertOk(Services.search.isInitialized,
-      "Should have completely re-initialization, if it fails check logs for if reinit was successful");
+    this.assertOk(
+      Services.search.isInitialized,
+      "Should have completely re-initialization, if it fails check logs for if reinit was successful"
+    );
   }
 
   /**
@@ -153,9 +168,10 @@ class SearchConfigTest {
     if (this._testDebug) {
       return new Set(["by", "cn", "kz", "us", "ru", "tr"]);
     }
-    const chunk = Services.prefs.getIntPref("browser.search.config.test.section", -1) - 1;
+    const chunk =
+      Services.prefs.getIntPref("browser.search.config.test.section", -1) - 1;
     const regions = Services.intl.getAvailableLocaleDisplayNames("region");
-    const chunkSize =  Math.ceil(regions.length / 4);
+    const chunkSize = Math.ceil(regions.length / 4);
     const startPoint = chunk * chunkSize;
     return regions.slice(startPoint, startPoint + chunkSize);
   }
@@ -167,7 +183,9 @@ class SearchConfigTest {
     if (this._testDebug) {
       return ["be", "en-US", "kk", "tr", "ru", "zh-CN"];
     }
-    const data = await OS.File.read(do_get_file("all-locales").path, {encoding: "utf-8"});
+    const data = await OS.File.read(do_get_file("all-locales").path, {
+      encoding: "utf-8",
+    });
     return data.split("\n").filter(e => e != "");
   }
 
@@ -185,8 +203,7 @@ class SearchConfigTest {
    *   True if the locale matches.
    */
   _localeIncludes(locales, locale) {
-    if ("matches" in locales &&
-        locales.matches.includes(locale)) {
+    if ("matches" in locales && locales.matches.includes(locale)) {
       return true;
     }
     if ("startsWith" in locales) {
@@ -209,7 +226,7 @@ class SearchConfigTest {
    *   True if the locale/region pair matches the section.
    */
   _localeRegionInSection(section, region, locale) {
-    for (const {regions, locales} of section) {
+    for (const { regions, locales } of section) {
       // If we only specify a regions or locales section then
       // it is always considered included in the other section.
       const inRegions = !regions || regions.includes(region);
@@ -254,29 +271,42 @@ class SearchConfigTest {
     const config = this._config[section];
     const hasIncluded = "included" in config;
     const hasExcluded = "excluded" in config;
-    const identifierIncluded = !!this._findEngine(engines, this._config.identifier);
+    const identifierIncluded = !!this._findEngine(
+      engines,
+      this._config.identifier
+    );
 
     // If there's not included/excluded, then this shouldn't be the default anywhere.
     if (section == "default" && !hasIncluded && !hasExcluded) {
-      this.assertOk(!identifierIncluded,
+      this.assertOk(
+        !identifierIncluded,
         `Should not be ${section} for any locale/region,
-         currently set for ${infoString}`);
+         currently set for ${infoString}`
+      );
       return false;
     }
 
     // If there's no included section, we assume the engine is default everywhere
     // and we should apply the exclusions instead.
-    let included = (hasIncluded &&
-      this._localeRegionInSection(config.included, region, locale));
+    let included =
+      hasIncluded &&
+      this._localeRegionInSection(config.included, region, locale);
 
-    let notExcluded = (hasExcluded &&
-     !this._localeRegionInSection(config.excluded, region, locale));
+    let notExcluded =
+      hasExcluded &&
+      !this._localeRegionInSection(config.excluded, region, locale);
 
     if (included || notExcluded) {
-      this.assertOk(identifierIncluded, `Should be ${section} for ${infoString}`);
+      this.assertOk(
+        identifierIncluded,
+        `Should be ${section} for ${infoString}`
+      );
       return true;
     }
-    this.assertOk(!identifierIncluded, `Should not be ${section} for ${infoString}`);
+    this.assertOk(
+      !identifierIncluded,
+      `Should not be ${section} for ${infoString}`
+    );
     return false;
   }
 
@@ -289,8 +319,12 @@ class SearchConfigTest {
    *   The two-letter locale code.
    */
   _assertDefaultEngines(region, locale) {
-    this._assertEngineRules([Services.search.originalDefaultEngine], region,
-                            locale, "default");
+    this._assertEngineRules(
+      [Services.search.originalDefaultEngine],
+      region,
+      locale,
+      "default"
+    );
   }
 
   /**
@@ -321,8 +355,14 @@ class SearchConfigTest {
    */
   _assertEngineDetails(region, locale, engines) {
     const details = this._config.details.filter(value => {
-      const included = this._localeRegionInSection(value.included, region, locale);
-      const excluded = value.excluded && this._localeRegionInSection(value.excluded, region, locale);
+      const included = this._localeRegionInSection(
+        value.included,
+        region,
+        locale
+      );
+      const excluded =
+        value.excluded &&
+        this._localeRegionInSection(value.excluded, region, locale);
       return included && !excluded;
     });
 
@@ -330,8 +370,11 @@ class SearchConfigTest {
     this.assertOk(engine, "Should have an engine present");
 
     if (this._config.aliases) {
-      this.assertDeepEqual(engine._internalAliases,
-        this._config.aliases, "Should have the correct aliases for the engine");
+      this.assertDeepEqual(
+        engine._internalAliases,
+        this._config.aliases,
+        "Should have the correct aliases for the engine"
+      );
     }
 
     const location = `in region:${region}, locale:${locale}`;
@@ -345,8 +388,11 @@ class SearchConfigTest {
         this._assertCorrectUrlCode(location, engine, rule);
       }
       if (rule.aliases) {
-        this.assertDeepEqual(engine._internalAliases,
-          rule.aliases, "Should have the correct aliases for the engine");
+        this.assertDeepEqual(
+          engine._internalAliases,
+          rule.aliases,
+          "Should have the correct aliases for the engine"
+        );
       }
     }
   }
@@ -362,27 +408,39 @@ class SearchConfigTest {
    *   Rules to test.
    */
   _assertCorrectDomains(location, engine, rules) {
-    this.assertOk(rules.domain,
-      `Should have an expectedDomain for the engine ${location}`);
+    this.assertOk(
+      rules.domain,
+      `Should have an expectedDomain for the engine ${location}`
+    );
 
     const searchForm = new URL(engine.searchForm);
-    this.assertOk(searchForm.host.endsWith(rules.domain),
+    this.assertOk(
+      searchForm.host.endsWith(rules.domain),
       `Should have the correct search form domain ${location}.
-       Got "${searchForm.host}", expected to end with "${rules.domain}".`);
+       Got "${searchForm.host}", expected to end with "${rules.domain}".`
+    );
 
     for (const urlType of [URLTYPE_SUGGEST_JSON, URLTYPE_SEARCH_HTML]) {
       const submission = engine.getSubmission("test", urlType);
-      if (urlType == URLTYPE_SUGGEST_JSON &&
-          (this._config.noSuggestionsURL || rules.noSuggestionsURL)) {
+      if (
+        urlType == URLTYPE_SUGGEST_JSON &&
+        (this._config.noSuggestionsURL || rules.noSuggestionsURL)
+      ) {
         this.assertOk(!submission, "Should not have a submission url");
       } else if (this._config.searchUrlBase) {
-          this.assertEqual(submission.uri.prePath + submission.uri.filePath,
-            this._config.searchUrlBase + rules.searchUrlEnd,
-            `Should have the correct domain for type: ${urlType} ${location}.`);
+        this.assertEqual(
+          submission.uri.prePath + submission.uri.filePath,
+          this._config.searchUrlBase + rules.searchUrlEnd,
+          `Should have the correct domain for type: ${urlType} ${location}.`
+        );
       } else {
-        this.assertOk(submission.uri.host.endsWith(rules.domain),
+        this.assertOk(
+          submission.uri.host.endsWith(rules.domain),
           `Should have the correct domain for type: ${urlType} ${location}.
-           Got "${submission.uri.host}", expected to end with "${rules.domain}".`);
+           Got "${submission.uri.host}", expected to end with "${
+            rules.domain
+          }".`
+        );
       }
     }
   }
@@ -400,16 +458,25 @@ class SearchConfigTest {
   _assertCorrectCodes(location, engine, rules) {
     for (const purpose of SUBMISSION_PURPOSES) {
       // Don't need to repeat the code if we use it for all purposes.
-      const code = (typeof rules.codes === "string") ? rules.codes :
-       rules.codes[purpose];
+      const code =
+        typeof rules.codes === "string" ? rules.codes : rules.codes[purpose];
       const submission = engine.getSubmission("test", "text/html", purpose);
       const submissionQueryParams = submission.uri.query.split("&");
-      this.assertOk(submissionQueryParams.includes(code),
-        `Expected "${code}" in url "${submission.uri.spec}" from purpose "${purpose}" ${location}`);
+      this.assertOk(
+        submissionQueryParams.includes(code),
+        `Expected "${code}" in url "${
+          submission.uri.spec
+        }" from purpose "${purpose}" ${location}`
+      );
 
       const paramName = code.split("=")[0];
-      this.assertOk(submissionQueryParams.filter(param => param.startsWith(paramName)).length == 1,
-        `Expected only one "${paramName}" parameter in "${submission.uri.spec}" from purpose "${purpose}" ${location}`);
+      this.assertOk(
+        submissionQueryParams.filter(param => param.startsWith(paramName))
+          .length == 1,
+        `Expected only one "${paramName}" parameter in "${
+          submission.uri.spec
+        }" from purpose "${purpose}" ${location}`
+      );
     }
   }
 
@@ -420,24 +487,34 @@ class SearchConfigTest {
    *   Debug string with locale + region information.
    * @param {object} engine
    *   The engine being tested.
-   * @param {object} rules
+   * @param {object} rule
    *   Rules to test.
    */
   _assertCorrectUrlCode(location, engine, rule) {
     if (rule.searchUrlCode) {
       const submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
-      this.assertOk(submission.uri.query.split("&").includes(rule.searchUrlCode),
-        `Expected "${rule.searchUrlCode}" in search url "${submission.uri.spec}"`);
+      this.assertOk(
+        submission.uri.query.split("&").includes(rule.searchUrlCode),
+        `Expected "${rule.searchUrlCode}" in search url "${
+          submission.uri.spec
+        }"`
+      );
     }
     if (rule.searchFormUrlCode) {
       const uri = engine.searchForm;
-      this.assertOk(uri.includes(rule.searchFormUrlCode),
-        `Expected "${rule.searchFormUrlCode}" in "${uri}"`);
+      this.assertOk(
+        uri.includes(rule.searchFormUrlCode),
+        `Expected "${rule.searchFormUrlCode}" in "${uri}"`
+      );
     }
     if (rule.suggestUrlCode) {
       const submission = engine.getSubmission("test", URLTYPE_SUGGEST_JSON);
-      this.assertOk(submission.uri.query.split("&").includes(rule.suggestUrlCode),
-        `Expected "${rule.suggestUrlCode}" in suggestion url "${submission.uri.spec}"`);
+      this.assertOk(
+        submission.uri.query.split("&").includes(rule.suggestUrlCode),
+        `Expected "${rule.suggestUrlCode}" in suggestion url "${
+          submission.uri.spec
+        }"`
+      );
     }
   }
 
@@ -446,6 +523,7 @@ class SearchConfigTest {
    * failures. These help the tests to run faster, and avoid clogging up the
    * python test runner process.
    */
+
   assertOk(value, message) {
     if (!value || this._testDebug) {
       Assert.ok(value, message);

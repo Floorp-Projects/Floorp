@@ -13,16 +13,23 @@ async function openAndCheckContextMenu(contextMenu, target) {
   await popupshown;
 
   is(contextMenu.state, "open", "Context menu is open.");
-  is(contextMenu.getAttribute("touchmode"), "true", "Context menu is in touchmode.");
+  is(
+    contextMenu.getAttribute("touchmode"),
+    "true",
+    "Context menu is in touchmode."
+  );
 
   contextMenu.hidePopup();
 
   popupshown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(target, {type: "contextmenu"});
+  EventUtils.synthesizeMouseAtCenter(target, { type: "contextmenu" });
   await popupshown;
 
   is(contextMenu.state, "open", "Context menu is open.");
-  ok(!contextMenu.hasAttribute("touchmode"), "Context menu is not in touchmode.");
+  ok(
+    !contextMenu.hasAttribute("touchmode"),
+    "Context menu is not in touchmode."
+  );
 
   contextMenu.hidePopup();
 }
@@ -31,9 +38,7 @@ async function openAndCheckContextMenu(contextMenu, target) {
 add_task(async function setup() {
   let isWindows = AppConstants.isPlatformAndVersionAtLeast("win", "10.0");
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["apz.test.fails_with_native_injection", isWindows],
-    ],
+    set: [["apz.test.fails_with_native_injection", isWindows]],
   });
 });
 
@@ -47,18 +52,23 @@ add_task(async function test_contentarea_contextmenu_touch() {
 
 // Test the back and forward buttons.
 add_task(async function test_back_forward_button_contextmenu_touch() {
-  await BrowserTestUtils.withNewTab("http://example.com", async function(browser) {
+  await BrowserTestUtils.withNewTab("http://example.com", async function(
+    browser
+  ) {
     let contextMenu = document.getElementById("backForwardMenu");
 
     let backbutton = document.getElementById("back-button");
-    let notDisabled = BrowserTestUtils.waitForCondition(() => !backbutton.hasAttribute("disabled"));
+    let notDisabled = BrowserTestUtils.waitForCondition(
+      () => !backbutton.hasAttribute("disabled")
+    );
     BrowserTestUtils.loadURI(browser, "http://example.org");
     await notDisabled;
     await openAndCheckContextMenu(contextMenu, backbutton);
 
-
     let forwardbutton = document.getElementById("forward-button");
-    notDisabled = BrowserTestUtils.waitForCondition(() => !forwardbutton.hasAttribute("disabled"));
+    notDisabled = BrowserTestUtils.waitForCondition(
+      () => !forwardbutton.hasAttribute("disabled")
+    );
     backbutton.click();
     await notDisabled;
     await openAndCheckContextMenu(contextMenu, forwardbutton);
@@ -75,8 +85,11 @@ add_task(async function test_toolbar_contextmenu_touch() {
 // Test the urlbar input context menu.
 add_task(async function test_urlbar_contextmenu_touch() {
   let urlbar = document.getElementById("urlbar");
-  let textBox = document.getAnonymousElementByAttribute(urlbar,
-                                      "anonid", "moz-input-box");
+  let textBox = document.getAnonymousElementByAttribute(
+    urlbar,
+    "anonid",
+    "moz-input-box"
+  );
   let menu = textBox.menupopup;
   await openAndCheckContextMenu(menu, textBox);
 });

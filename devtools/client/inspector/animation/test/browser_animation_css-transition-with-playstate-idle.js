@@ -60,8 +60,10 @@ add_task(async function() {
   await waitUntilAnimationsPaused(animationInspector);
 
   // Query the scrubber element again to check that the UI is still rendered.
-  ok(!!panel.querySelector(".current-time-scrubber"),
-    "The scrubber element is still rendered in the animation inspector panel");
+  ok(
+    !!panel.querySelector(".current-time-scrubber"),
+    "The scrubber element is still rendered in the animation inspector panel"
+  );
 });
 
 /**

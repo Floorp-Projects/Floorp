@@ -11,13 +11,22 @@ add_task(async function() {
   const generatedStubs = await generateNetworkEventStubs();
 
   const repoStubFilePath = getTestFilePath("../stubs/networkEvent.js");
-  const repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
+  const repoStubFileContent = await OS.File.read(repoStubFilePath, {
+    encoding: "utf-8",
+  });
 
-  is(generatedStubs, repoStubFileContent, "Generated stub has the expected content");
+  is(
+    generatedStubs,
+    repoStubFileContent,
+    "Generated stub has the expected content"
+  );
   if (generatedStubs != repoStubFileContent) {
-    ok(false, "The networkEvent stubs file needs to be updated by running " +
-      "`mach test devtools/client/webconsole/test/fixtures/" +
-      "stub-generators/browser_webconsole_update_stubs_network_event.js`");
+    ok(
+      false,
+      "The networkEvent stubs file needs to be updated by running " +
+        "`mach test devtools/client/webconsole/test/fixtures/" +
+        "stub-generators/browser_webconsole_update_stubs_network_event.js`"
+    );
   } else {
     ok(true, "The networkEvent stubs file is up to date");
   }

@@ -105,7 +105,9 @@ function _uint8ArrayToString(uint8Array) {
 
   let results = [];
   for (let i = 0; i < length; i += 1024) {
-    results.push(String.fromCharCode.apply(null, uint8Array.subarray(i, i + 1024)));
+    results.push(
+      String.fromCharCode.apply(null, uint8Array.subarray(i, i + 1024))
+    );
   }
 
   return results.join("");

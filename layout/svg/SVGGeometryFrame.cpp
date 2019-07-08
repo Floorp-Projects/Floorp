@@ -455,7 +455,7 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
 
   bool getFill = (aFlags & nsSVGUtils::eBBoxIncludeFillGeometry) ||
                  ((aFlags & nsSVGUtils::eBBoxIncludeFill) &&
-                  StyleSVG()->mFill.Type() != eStyleSVGPaintType_None);
+                  !StyleSVG()->mFill.kind.IsNone());
 
   bool getStroke = (aFlags & nsSVGUtils::eBBoxIncludeStrokeGeometry) ||
                    ((aFlags & nsSVGUtils::eBBoxIncludeStroke) &&

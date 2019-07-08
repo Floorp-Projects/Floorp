@@ -8,7 +8,11 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-loader.lazyRequireGetter(this, "ObjectUtils", "devtools/server/actors/object/utils");
+loader.lazyRequireGetter(
+  this,
+  "ObjectUtils",
+  "devtools/server/actors/object/utils"
+);
 
 /**
  * Stringify a Debugger.Object based on its class.
@@ -154,18 +158,30 @@ var stringifiers = {
     const code = DevToolsUtils.getProperty(obj, "code");
     const name = DevToolsUtils.getProperty(obj, "name") || "<unknown>";
 
-    return '[Exception... "' + message + '" ' +
-           'code: "' + code + '" ' +
-           'nsresult: "0x' + result + " (" + name + ')"]';
+    return (
+      '[Exception... "' +
+      message +
+      '" ' +
+      'code: "' +
+      code +
+      '" ' +
+      'nsresult: "0x' +
+      result +
+      " (" +
+      name +
+      ')"]'
+    );
   },
   Promise: obj => {
     const { state, value, reason } = ObjectUtils.getPromiseState(obj);
     let statePreview = state;
     if (state != "pending") {
       const settledValue = state === "fulfilled" ? value : reason;
-      statePreview += ": " + (typeof settledValue === "object" && settledValue !== null
-                                ? stringify(settledValue)
-                                : settledValue);
+      statePreview +=
+        ": " +
+        (typeof settledValue === "object" && settledValue !== null
+          ? stringify(settledValue)
+          : settledValue);
     }
     return "Promise (" + statePreview + ")";
   },

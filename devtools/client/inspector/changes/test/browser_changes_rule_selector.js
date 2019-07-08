@@ -51,7 +51,9 @@ add_task(async function() {
   is(removedSelectors.length, 1, "One old selector was tracked as removed");
   is(removedSelectors.item(0).title, "div", "Old selector is correct");
 
-  info("Expect no declarations to have been added or removed during selector change");
+  info(
+    "Expect no declarations to have been added or removed during selector change"
+  );
   const removeDecl = getRemovedDeclarations(doc, rules.item(0));
   is(removeDecl.length, 0, "No declarations removed");
   const addDecl = getAddedDeclarations(doc, rules.item(0));

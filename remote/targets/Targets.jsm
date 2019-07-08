@@ -6,10 +6,18 @@
 
 var EXPORTED_SYMBOLS = ["Targets"];
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {MessagePromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
-const {TabTarget} = ChromeUtils.import("chrome://remote/content/targets/TabTarget.jsm");
-const {MainProcessTarget} = ChromeUtils.import("chrome://remote/content/targets/MainProcessTarget.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+const { MessagePromise } = ChromeUtils.import(
+  "chrome://remote/content/Sync.jsm"
+);
+const { TabTarget } = ChromeUtils.import(
+  "chrome://remote/content/targets/TabTarget.jsm"
+);
+const { MainProcessTarget } = ChromeUtils.import(
+  "chrome://remote/content/targets/MainProcessTarget.jsm"
+);
 
 class Targets {
   constructor() {
@@ -91,7 +99,7 @@ class Targets {
     return this.mainProcessTarget;
   }
 
-  * [Symbol.iterator]() {
+  *[Symbol.iterator]() {
     for (const target of this._targets.values()) {
       yield target;
     }

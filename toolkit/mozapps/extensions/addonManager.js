@@ -10,43 +10,58 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyPreferenceGetter(this, "separatePrivilegedMozillaWebContentProcess",
-  "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
-XPCOMUtils.defineLazyPreferenceGetter(this, "extensionsWebAPITesting",
-  "extensions.webapi.testing", false);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "separatePrivilegedMozillaWebContentProcess",
+  "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "extensionsWebAPITesting",
+  "extensions.webapi.testing",
+  false
+);
 
 // The old XPInstall error codes
-const EXECUTION_ERROR   = -203;
+const EXECUTION_ERROR = -203;
 const CANT_READ_ARCHIVE = -207;
-const USER_CANCELLED    = -210;
-const DOWNLOAD_ERROR    = -228;
-const UNSUPPORTED_TYPE  = -244;
-const SUCCESS           = 0;
+const USER_CANCELLED = -210;
+const DOWNLOAD_ERROR = -228;
+const UNSUPPORTED_TYPE = -244;
+const SUCCESS = 0;
 
-const MSG_INSTALL_ENABLED  = "WebInstallerIsInstallEnabled";
-const MSG_INSTALL_ADDON    = "WebInstallerInstallAddonFromWebpage";
+const MSG_INSTALL_ENABLED = "WebInstallerIsInstallEnabled";
+const MSG_INSTALL_ADDON = "WebInstallerInstallAddonFromWebpage";
 const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
 
-const MSG_PROMISE_REQUEST  = "WebAPIPromiseRequest";
-const MSG_PROMISE_RESULT   = "WebAPIPromiseResult";
-const MSG_INSTALL_EVENT    = "WebAPIInstallEvent";
-const MSG_INSTALL_CLEANUP  = "WebAPICleanup";
-const MSG_ADDON_EVENT_REQ  = "WebAPIAddonEventRequest";
-const MSG_ADDON_EVENT      = "WebAPIAddonEvent";
+const MSG_PROMISE_REQUEST = "WebAPIPromiseRequest";
+const MSG_PROMISE_RESULT = "WebAPIPromiseResult";
+const MSG_INSTALL_EVENT = "WebAPIInstallEvent";
+const MSG_INSTALL_CLEANUP = "WebAPICleanup";
+const MSG_ADDON_EVENT_REQ = "WebAPIAddonEventRequest";
+const MSG_ADDON_EVENT = "WebAPIAddonEvent";
 
 const CHILD_SCRIPT = "resource://gre/modules/addons/Content.js";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gSingleton = null;
 
 var AddonManager, AddonManagerPrivate;
 function amManager() {
-  ({AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm"));
+  ({ AddonManager, AddonManagerPrivate } = ChromeUtils.import(
+    "resource://gre/modules/AddonManager.jsm"
+  ));
 
   Services.mm.loadFrameScript(CHILD_SCRIPT, true, true);
   Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);
@@ -81,14 +96,7 @@ amManager.prototype = {
   installAddonFromWebpage(aPayload, aBrowser, aCallback) {
     let retval = true;
 
-    const {
-      mimetype,
-      triggeringPrincipal,
-      hash,
-      icon,
-      name,
-      uri,
-    } = aPayload;
+    const { mimetype, triggeringPrincipal, hash, icon, name, uri } = aPayload;
 
     if (!AddonManager.isInstallAllowed(mimetype, triggeringPrincipal)) {
       aCallback = null;
@@ -132,10 +140,11 @@ amManager.prototype = {
           },
 
           onDownloadFailed(aInstall) {
-            if (aInstall.error == AddonManager.ERROR_CORRUPT_FILE)
+            if (aInstall.error == AddonManager.ERROR_CORRUPT_FILE) {
               callCallback(CANT_READ_ARCHIVE);
-            else
+            } else {
               callCallback(DOWNLOAD_ERROR);
+            }
           },
 
           onInstallFailed(aInstall) {
@@ -148,7 +157,12 @@ amManager.prototype = {
         });
       }
 
-      AddonManager.installAddonFromWebpage(mimetype, aBrowser, triggeringPrincipal, aInstall);
+      AddonManager.installAddonFromWebpage(
+        mimetype,
+        aBrowser,
+        triggeringPrincipal,
+        aInstall
+      );
     });
 
     return retval;
@@ -165,7 +179,7 @@ amManager.prototype = {
   _addAddonListener(target) {
     if (!this.addonListeners.has(target)) {
       let handler = (event, id) => {
-        target.sendAsyncMessage(MSG_ADDON_EVENT, {event, id});
+        target.sendAsyncMessage(MSG_ADDON_EVENT, { event, id });
       };
       let listener = {
         onEnabling: addon => handler("onEnabling", addon.id),
@@ -176,7 +190,8 @@ amManager.prototype = {
         onInstalled: addon => handler("onInstalled", addon.id),
         onUninstalling: addon => handler("onUninstalling", addon.id),
         onUninstalled: addon => handler("onUninstalled", addon.id),
-        onOperationCancelled: addon => handler("onOperationCancelled", addon.id),
+        onOperationCancelled: addon =>
+          handler("onOperationCancelled", addon.id),
       };
       this.addonListeners.set(target, listener);
       AddonManager.addAddonListener(listener);
@@ -222,20 +237,24 @@ amManager.prototype = {
       }
 
       case MSG_PROMISE_REQUEST: {
-        if (!extensionsWebAPITesting &&
-            separatePrivilegedMozillaWebContentProcess && aMessage.target &&
-            aMessage.target.remoteType != null && aMessage.target.remoteType !== "privilegedmozilla") {
+        if (
+          !extensionsWebAPITesting &&
+          separatePrivilegedMozillaWebContentProcess &&
+          aMessage.target &&
+          aMessage.target.remoteType != null &&
+          aMessage.target.remoteType !== "privilegedmozilla"
+        ) {
           return undefined;
         }
 
         let mm = aMessage.target.messageManager;
-        let resolve = (value) => {
+        let resolve = value => {
           mm.sendAsyncMessage(MSG_PROMISE_RESULT, {
             callbackID: payload.callbackID,
             resolve: value,
           });
         };
-        let reject = (value) => {
+        let reject = value => {
           mm.sendAsyncMessage(MSG_PROMISE_RESULT, {
             callbackID: payload.callbackID,
             reject: value,
@@ -244,7 +263,10 @@ amManager.prototype = {
 
         let API = AddonManager.webAPI;
         if (payload.type in API) {
-          API[payload.type](aMessage.target, ...payload.args).then(resolve, reject);
+          API[payload.type](aMessage.target, ...payload.args).then(
+            resolve,
+            reject
+          );
         } else {
           reject("Unknown Add-on API request.");
         }
@@ -252,9 +274,13 @@ amManager.prototype = {
       }
 
       case MSG_INSTALL_CLEANUP: {
-        if (!extensionsWebAPITesting &&
-            separatePrivilegedMozillaWebContentProcess && aMessage.target &&
-            aMessage.target.remoteType != null && aMessage.target.remoteType !== "privilegedmozilla") {
+        if (
+          !extensionsWebAPITesting &&
+          separatePrivilegedMozillaWebContentProcess &&
+          aMessage.target &&
+          aMessage.target.remoteType != null &&
+          aMessage.target.remoteType !== "privilegedmozilla"
+        ) {
           return undefined;
         }
 
@@ -263,9 +289,13 @@ amManager.prototype = {
       }
 
       case MSG_ADDON_EVENT_REQ: {
-        if (!extensionsWebAPITesting &&
-            separatePrivilegedMozillaWebContentProcess && aMessage.target &&
-            aMessage.target.remoteType != null && aMessage.target.remoteType !== "privilegedmozilla") {
+        if (
+          !extensionsWebAPITesting &&
+          separatePrivilegedMozillaWebContentProcess &&
+          aMessage.target &&
+          aMessage.target.remoteType != null &&
+          aMessage.target.remoteType !== "privilegedmozilla"
+        ) {
           return undefined;
         }
 
@@ -292,18 +322,24 @@ amManager.prototype = {
   classID: Components.ID("{4399533d-08d1-458c-a87a-235f74451cfa}"),
   _xpcom_factory: {
     createInstance(aOuter, aIid) {
-      if (aOuter != null)
-        throw Components.Exception("Component does not support aggregation",
-                                   Cr.NS_ERROR_NO_AGGREGATION);
+      if (aOuter != null) {
+        throw Components.Exception(
+          "Component does not support aggregation",
+          Cr.NS_ERROR_NO_AGGREGATION
+        );
+      }
 
-      if (!gSingleton)
+      if (!gSingleton) {
         gSingleton = new amManager();
+      }
       return gSingleton.QueryInterface(aIid);
     },
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.amIAddonManager,
-                                          Ci.nsITimerCallback,
-                                          Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.amIAddonManager,
+    Ci.nsITimerCallback,
+    Ci.nsIObserver,
+  ]),
 };
 
 const BLOCKLIST_JSM = "resource://gre/modules/Blocklist.jsm";
@@ -319,7 +355,8 @@ BlocklistService.prototype = {
   STATE_SOFTBLOCKED: Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
   STATE_BLOCKED: Ci.nsIBlocklistService.STATE_BLOCKED,
   STATE_OUTDATED: Ci.nsIBlocklistService.STATE_OUTDATED,
-  STATE_VULNERABLE_UPDATE_AVAILABLE: Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE,
+  STATE_VULNERABLE_UPDATE_AVAILABLE:
+    Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE,
   STATE_VULNERABLE_NO_UPDATE: Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE,
 
   get isLoaded() {
@@ -331,12 +368,18 @@ BlocklistService.prototype = {
       return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
     }
     if (Cu.isModuleLoaded(BLOCKLIST_JSM)) {
-      return Blocklist.getPluginBlocklistState(plugin, appVersion, toolkitVersion);
+      return Blocklist.getPluginBlocklistState(
+        plugin,
+        appVersion,
+        toolkitVersion
+      );
     }
 
     // Blocklist module isn't loaded yet. Queue the query until it is.
-    let request = {plugin, appVersion, toolkitVersion};
-    let promise = new Promise(resolve => { request.resolve = resolve; });
+    let request = { plugin, appVersion, toolkitVersion };
+    let promise = new Promise(resolve => {
+      request.resolve = resolve;
+    });
 
     this.pluginQueries.push(request);
     return promise;
@@ -351,9 +394,11 @@ BlocklistService.prototype = {
   },
 
   classID: Components.ID("{66354bc9-7ed1-4692-ae1d-8da97d6b205e}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsIBlocklistService,
-                                          Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsIBlocklistService,
+    Ci.nsITimerCallback,
+  ]),
 };
 
 // eslint-disable-next-line no-unused-vars

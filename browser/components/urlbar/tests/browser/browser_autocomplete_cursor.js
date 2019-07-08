@@ -8,7 +8,10 @@
  */
 
 add_task(async function test_windowSwitch() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:mozilla"
+  );
   await promiseAutocompleteResultPopup("www.mozilla.org");
   await waitForAutocompleteResultAt(0);
 
@@ -19,7 +22,11 @@ add_task(async function test_windowSwitch() {
 
   await BrowserTestUtils.closeWindow(newWindow);
 
-  Assert.equal(document.activeElement, gURLBar.inputField, "URL Bar should be focused");
+  Assert.equal(
+    document.activeElement,
+    gURLBar.inputField,
+    "URL Bar should be focused"
+  );
   Assert.equal(gURLBar.selectionStart, 4, "Should not have moved the cursor");
   Assert.equal(gURLBar.selectionEnd, 4, "Should not have selected anything");
 

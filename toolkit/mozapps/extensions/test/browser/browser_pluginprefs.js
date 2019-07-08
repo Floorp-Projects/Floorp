@@ -17,23 +17,41 @@ async function test_inline_plugin_prefs() {
   ok(testPlugin, "Test Plug-in should exist");
 
   let pluginEl = get_addon_element(gManagerWindow, testPlugin.id);
-  is(testPlugin.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER, "Options should be inline type");
+  is(
+    testPlugin.optionsType,
+    AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
+    "Options should be inline type"
+  );
 
-  let optionsBrowserPromise =
-    BrowserTestUtils.waitForEvent(pluginEl.ownerDocument, "load", true, event => {
-      let {target} = event;
-      return target.currentURI && target.currentURI.spec === testPlugin.optionsURL;
-    }).then(event => event.target);
+  let optionsBrowserPromise = BrowserTestUtils.waitForEvent(
+    pluginEl.ownerDocument,
+    "load",
+    true,
+    event => {
+      let { target } = event;
+      return (
+        target.currentURI && target.currentURI.spec === testPlugin.optionsURL
+      );
+    }
+  ).then(event => event.target);
 
   if (gManagerWindow.useHtmlViews) {
     pluginEl.querySelector("panel-item[action='preferences']").click();
   } else {
     pluginEl.parentNode.ensureElementIsVisible(pluginEl);
 
-    let button = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "preferences-btn");
+    let button = gManagerWindow.document.getAnonymousElementByAttribute(
+      pluginEl,
+      "anonid",
+      "preferences-btn"
+    );
     is_element_visible(button, "Preferences button should be visible");
 
-    EventUtils.synthesizeMouseAtCenter(pluginEl, { clickCount: 1 }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(
+      pluginEl,
+      { clickCount: 1 },
+      gManagerWindow
+    );
 
     await TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
   }
@@ -49,11 +67,19 @@ async function test_inline_plugin_prefs() {
   let pluginLibraries = doc.getElementById("pluginLibraries");
   ok(pluginLibraries, "Plugin file name row should be displayed");
   // the file name depends on the platform
-  is(pluginLibraries.textContent, testPlugin.pluginLibraries, "Plugin file name should be displayed");
+  is(
+    pluginLibraries.textContent,
+    testPlugin.pluginLibraries,
+    "Plugin file name should be displayed"
+  );
 
   let pluginMimeTypes = doc.getElementById("pluginMimeTypes");
   ok(pluginMimeTypes, "Plugin mime type row should be displayed");
-  is(pluginMimeTypes.textContent, "application/x-test (Test \u2122 mimetype: tst)", "Plugin mime type should be displayed");
+  is(
+    pluginMimeTypes.textContent,
+    "application/x-test (Test \u2122 mimetype: tst)",
+    "Plugin mime type should be displayed"
+  );
 
   await close_manager(gManagerWindow);
 }

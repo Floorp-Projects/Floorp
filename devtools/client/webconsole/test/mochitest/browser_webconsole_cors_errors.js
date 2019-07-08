@@ -6,8 +6,10 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test/mochitest/test-network-request.html";
-const BASE_CORS_ERROR_URL = "https://developer.mozilla.org/docs/Web/HTTP/CORS/Errors/";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/test/mochitest/test-network-request.html";
+const BASE_CORS_ERROR_URL =
+  "https://developer.mozilla.org/docs/Web/HTTP/CORS/Errors/";
 const BASE_CORS_ERROR_URL_PARAMS = new URLSearchParams({
   utm_source: "devtools",
   utm_medium: "firefox-cors-errors",
@@ -43,71 +45,104 @@ add_task(async function() {
   await checkCorsMessage(message, "CORSDidNotSucceed");
 
   info("Test CORSExternalRedirectNotAllowed");
-  onCorsMessage = waitForMessage(hud,
-    "Reason: CORS request external redirect not allowed");
+  onCorsMessage = waitForMessage(
+    hud,
+    "Reason: CORS request external redirect not allowed"
+  );
   makeFaultyCorsCall("CORSExternalRedirectNotAllowed");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSExternalRedirectNotAllowed");
 
   info("Test CORSMissingAllowOrigin");
-  onCorsMessage = waitForMessage(hud,
-    `Reason: CORS header ${quote("Access-Control-Allow-Origin")} missing`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: CORS header ${quote("Access-Control-Allow-Origin")} missing`
+  );
   makeFaultyCorsCall("CORSMissingAllowOrigin");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSMissingAllowOrigin");
 
   info("Test CORSMultipleAllowOriginNotAllowed");
-  onCorsMessage = waitForMessage(hud,
-    `Reason: Multiple CORS header ${quote("Access-Control-Allow-Origin")} not allowed`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: Multiple CORS header ${quote(
+      "Access-Control-Allow-Origin"
+    )} not allowed`
+  );
   makeFaultyCorsCall("CORSMultipleAllowOriginNotAllowed");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSMultipleAllowOriginNotAllowed");
 
   info("Test CORSAllowOriginNotMatchingOrigin");
-  onCorsMessage = waitForMessage(hud, `Reason: CORS header ` +
-    `${quote("Access-Control-Allow-Origin")} does not match ${quote("mochi.test")}`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: CORS header ` +
+      `${quote("Access-Control-Allow-Origin")} does not match ${quote(
+        "mochi.test"
+      )}`
+  );
   makeFaultyCorsCall("CORSAllowOriginNotMatchingOrigin");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSAllowOriginNotMatchingOrigin");
 
   info("Test CORSNotSupportingCredentials");
-  onCorsMessage = waitForMessage(hud, `Reason: Credential is not supported if the CORS ` +
-    `header ${quote("Access-Control-Allow-Origin")} is ${quote("*")}`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: Credential is not supported if the CORS ` +
+      `header ${quote("Access-Control-Allow-Origin")} is ${quote("*")}`
+  );
   makeFaultyCorsCall("CORSNotSupportingCredentials");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSNotSupportingCredentials");
 
   info("Test CORSMethodNotFound");
-  onCorsMessage = waitForMessage(hud, `Reason: Did not find method in CORS header ` +
-    `${quote("Access-Control-Allow-Methods")}`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: Did not find method in CORS header ` +
+      `${quote("Access-Control-Allow-Methods")}`
+  );
   makeFaultyCorsCall("CORSMethodNotFound");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSMethodNotFound");
 
   info("Test CORSMissingAllowCredentials");
-  onCorsMessage = waitForMessage(hud, `Reason: expected ${quote("true")} in CORS ` +
-    `header ${quote("Access-Control-Allow-Credentials")}`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: expected ${quote("true")} in CORS ` +
+      `header ${quote("Access-Control-Allow-Credentials")}`
+  );
   makeFaultyCorsCall("CORSMissingAllowCredentials");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSMissingAllowCredentials");
 
   info("Test CORSInvalidAllowMethod");
-  onCorsMessage = waitForMessage(hud, `Reason: invalid token ${quote("xyz;")} in CORS ` +
-    `header ${quote("Access-Control-Allow-Methods")}`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: invalid token ${quote("xyz;")} in CORS ` +
+      `header ${quote("Access-Control-Allow-Methods")}`
+  );
   makeFaultyCorsCall("CORSInvalidAllowMethod");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSInvalidAllowMethod");
 
   info("Test CORSInvalidAllowHeader");
-  onCorsMessage = waitForMessage(hud, `Reason: invalid token ${quote("xyz;")} in CORS ` +
-    `header ${quote("Access-Control-Allow-Headers")}`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: invalid token ${quote("xyz;")} in CORS ` +
+      `header ${quote("Access-Control-Allow-Headers")}`
+  );
   makeFaultyCorsCall("CORSInvalidAllowHeader");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSInvalidAllowHeader");
 
   info("Test CORSMissingAllowHeaderFromPreflight");
-  onCorsMessage = waitForMessage(hud, `Reason: missing token ${quote("xyz")} in CORS ` +
-    `header ${quote("Access-Control-Allow-Headers")} from CORS preflight channel`);
+  onCorsMessage = waitForMessage(
+    hud,
+    `Reason: missing token ${quote("xyz")} in CORS ` +
+      `header ${quote(
+        "Access-Control-Allow-Headers"
+      )} from CORS preflight channel`
+  );
   makeFaultyCorsCall("CORSMissingAllowHeaderFromPreflight");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSMissingAllowHeaderFromPreflight");
@@ -135,16 +170,24 @@ add_task(async function() {
 
 async function checkCorsMessage(message, category) {
   const node = message.node;
-  ok(node.classList.contains("warn"), "The cors message has the expected classname");
+  ok(
+    node.classList.contains("warn"),
+    "The cors message has the expected classname"
+  );
   const learnMoreLink = node.querySelector(".learn-more-link");
   ok(learnMoreLink, "There is a Learn more link displayed");
   const linkSimulation = await simulateLinkClick(learnMoreLink);
-  is(linkSimulation.link, getCategoryUrl(category),
-    "Click on the link opens the expected page");
+  is(
+    linkSimulation.link,
+    getCategoryUrl(category),
+    "Click on the link opens the expected page"
+  );
 }
 
 function makeFaultyCorsCall(errorCategory, corsUrl) {
-  ContentTask.spawn(gBrowser.selectedBrowser, [errorCategory, corsUrl],
+  ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [errorCategory, corsUrl],
     ([category, url]) => {
       if (!url) {
         const baseUrl =
@@ -155,18 +198,20 @@ function makeFaultyCorsCall(errorCategory, corsUrl) {
       // Preflight request are not made for GET requests, so let's do a PUT.
       const method = "PUT";
       const options = { method };
-      if (category === "CORSNotSupportingCredentials"
-        || category === "CORSMissingAllowCredentials"
+      if (
+        category === "CORSNotSupportingCredentials" ||
+        category === "CORSMissingAllowCredentials"
       ) {
         options.credentials = "include";
       }
 
       if (category === "CORSMissingAllowHeaderFromPreflight") {
-        options.headers = new content.Headers({"xyz": true});
+        options.headers = new content.Headers({ xyz: true });
       }
 
       content.fetch(url, options);
-    });
+    }
+  );
 }
 
 function quote(str) {

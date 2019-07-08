@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode(".testclass", inspector);
   await testEditSelector(view, "asd@:::!");
 });
@@ -31,8 +31,11 @@ async function testEditSelector(view, name) {
   info("Focusing an existing selector name in the rule-view");
   const editor = await focusEditableField(view, ruleEditor.selectorText);
 
-  is(inplaceEditor(ruleEditor.selectorText), editor,
-    "The selector editor got focused");
+  is(
+    inplaceEditor(ruleEditor.selectorText),
+    editor,
+    "The selector editor got focused"
+  );
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
@@ -41,8 +44,13 @@ async function testEditSelector(view, name) {
   await onRuleViewChanged;
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
-  is(getRuleViewRule(view, name), undefined,
-    "Rule with " + name + " selector should not exist.");
-  ok(getRuleViewRule(view, ".testclass"),
-    "Rule with .testclass selector exists.");
+  is(
+    getRuleViewRule(view, name),
+    undefined,
+    "Rule with " + name + " selector should not exist."
+  );
+  ok(
+    getRuleViewRule(view, ".testclass"),
+    "Rule with .testclass selector exists."
+  );
 }

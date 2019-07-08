@@ -1,4 +1,3 @@
-
 // Bug 1192692 - promiseBookmarksTree caches items without adding observers to
 // invalidate the cache.
 add_task(async function boookmarks_tree_cache() {
@@ -10,12 +9,15 @@ add_task(async function boookmarks_tree_cache() {
     await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid),
     uri("http://example.com"),
     PlacesUtils.bookmarks.DEFAULT_INDEX,
-    "A title");
+    "A title"
+  );
 
   await PlacesUtils.promiseBookmarksTree();
 
   PlacesUtils.bookmarks.removeItem(id);
 
-  await Assert.rejects(PlacesUtils.promiseItemGuid(id),
-    /no item found for the given itemId/);
+  await Assert.rejects(
+    PlacesUtils.promiseItemGuid(id),
+    /no item found for the given itemId/
+  );
 });

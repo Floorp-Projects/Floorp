@@ -1,0 +1,8 @@
+<!doctype html>
+<div style="font: message-box">
+  System font text.
+</div>
+<script>
+  let el = document.querySelector("div");
+  el.style.fontSize = (2 * parseFloat(getComputedStyle(el).fontSize)) + "px";
+</script>

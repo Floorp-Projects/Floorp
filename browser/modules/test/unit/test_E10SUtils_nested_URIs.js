@@ -1,8 +1,10 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var TEST_PREFERRED_REMOTE_TYPES = [
   E10SUtils.WEB_REMOTE_TYPE,
@@ -52,12 +54,20 @@ function run_test() {
   for (let testCase of TEST_CASES) {
     for (let preferredRemoteType of TEST_PREFERRED_REMOTE_TYPES) {
       let plainUri = Services.io.newURI(testCase.plainURL);
-      let plainRemoteType =
-        E10SUtils.getRemoteTypeForURIObject(plainUri, true, false, preferredRemoteType);
+      let plainRemoteType = E10SUtils.getRemoteTypeForURIObject(
+        plainUri,
+        true,
+        false,
+        preferredRemoteType
+      );
 
       let nestedUri = Services.io.newURI(testCase.nestedURL);
-      let nestedRemoteType =
-        E10SUtils.getRemoteTypeForURIObject(nestedUri, true, false, preferredRemoteType);
+      let nestedRemoteType = E10SUtils.getRemoteTypeForURIObject(
+        nestedUri,
+        true,
+        false,
+        preferredRemoteType
+      );
 
       let nestedStr = nestedUri.scheme + ":";
       do {
@@ -70,11 +80,14 @@ function run_test() {
         nestedStr += nestedUri.scheme + ":";
       } while (nestedUri instanceof Ci.nsINestedURI);
 
-      let plainStr = plainUri.scheme == "about" ? plainUri.spec
-                                                : plainUri.scheme + ":";
-      equal(nestedRemoteType, plainRemoteType,
-            `Check that ${nestedStr} loads in same remote type as ${plainStr}`
-            + ` with preferred remote type: ${preferredRemoteType}`);
+      let plainStr =
+        plainUri.scheme == "about" ? plainUri.spec : plainUri.scheme + ":";
+      equal(
+        nestedRemoteType,
+        plainRemoteType,
+        `Check that ${nestedStr} loads in same remote type as ${plainStr}` +
+          ` with preferred remote type: ${preferredRemoteType}`
+      );
     }
   }
 }

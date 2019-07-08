@@ -52,8 +52,11 @@ add_task(async function webpages_in_privileged_content_process() {
       `${TEST_HIGH2}?q=foo`,
     ]) {
       await BrowserTestUtils.withNewTab(url, async function(browser2) {
-        is(browser2.frameLoader.remoteTab.osPid, privilegedPid,
-          "Check that privileged pages are in the same privileged mozilla content process.");
+        is(
+          browser2.frameLoader.remoteTab.osPid,
+          privilegedPid,
+          "Check that privileged pages are in the same privileged mozilla content process."
+        );
       });
     }
   });
@@ -116,7 +119,11 @@ add_task(async function process_switching_through_navigation_features() {
     let privilegedPid = browser.frameLoader.remoteTab.osPid;
 
     // Check that about:newtab opened from JS in about:newtab page is in the same process.
-    let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, TEST_HIGH1, true);
+    let promiseTabOpened = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      TEST_HIGH1,
+      true
+    );
     await ContentTask.spawn(browser, TEST_HIGH1, uri => {
       content.open(uri, "_blank");
     });
@@ -125,14 +132,20 @@ add_task(async function process_switching_through_navigation_features() {
       BrowserTestUtils.removeTab(newTab);
     });
     browser = newTab.linkedBrowser;
-    is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that new tab opened from privileged page is loaded in privileged mozilla content process.");
+    is(
+      browser.frameLoader.remoteTab.osPid,
+      privilegedPid,
+      "Check that new tab opened from privileged page is loaded in privileged mozilla content process."
+    );
 
     // Check that reload does not break the privileged mozilla content process affinity.
     BrowserReload();
     await BrowserTestUtils.browserLoaded(browser, false, TEST_HIGH1);
-    is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that privileged page is still in privileged mozilla content process after reload.");
+    is(
+      browser.frameLoader.remoteTab.osPid,
+      privilegedPid,
+      "Check that privileged page is still in privileged mozilla content process after reload."
+    );
 
     // Load http webpage
     BrowserTestUtils.loadURI(browser, TEST_LOW1);
@@ -140,31 +153,49 @@ add_task(async function process_switching_through_navigation_features() {
     checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
     // Check that using the history back feature switches back to privileged mozilla content process.
-    let promiseLocation = BrowserTestUtils.waitForLocationChange(gBrowser, TEST_HIGH1);
+    let promiseLocation = BrowserTestUtils.waitForLocationChange(
+      gBrowser,
+      TEST_HIGH1
+    );
     browser.goBack();
     await promiseLocation;
     // We will need to ensure that the process flip has fully completed so that
     // the navigation history data will be available when we do browser.goForward();
     await BrowserTestUtils.waitForEvent(newTab, "SSTabRestored");
-    is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that privileged page is still in privileged mozilla content process after history goBack.");
+    is(
+      browser.frameLoader.remoteTab.osPid,
+      privilegedPid,
+      "Check that privileged page is still in privileged mozilla content process after history goBack."
+    );
 
     // Check that using the history forward feature switches back to the web content process.
-    promiseLocation = BrowserTestUtils.waitForLocationChange(gBrowser, TEST_LOW1);
+    promiseLocation = BrowserTestUtils.waitForLocationChange(
+      gBrowser,
+      TEST_LOW1
+    );
     browser.goForward();
     await promiseLocation;
     // We will need to ensure that the process flip has fully completed so that
     // the navigation history data will be available when we do browser.gotoIndex(0);
     await BrowserTestUtils.waitForEvent(newTab, "SSTabRestored");
-    checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE,
-      "Check that tab runs in the web content process after using history goForward.");
+    checkBrowserRemoteType(
+      browser,
+      E10SUtils.WEB_REMOTE_TYPE,
+      "Check that tab runs in the web content process after using history goForward."
+    );
 
     // Check that goto history index does not break the affinity.
-    promiseLocation = BrowserTestUtils.waitForLocationChange(gBrowser, TEST_HIGH1);
+    promiseLocation = BrowserTestUtils.waitForLocationChange(
+      gBrowser,
+      TEST_HIGH1
+    );
     browser.gotoIndex(0);
     await promiseLocation;
-    is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that privileged page is in privileged mozilla content process after history gotoIndex.");
+    is(
+      browser.frameLoader.remoteTab.osPid,
+      privilegedPid,
+      "Check that privileged page is in privileged mozilla content process after history gotoIndex."
+    );
 
     BrowserTestUtils.loadURI(browser, TEST_LOW2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_LOW2);
@@ -175,8 +206,11 @@ add_task(async function process_switching_through_navigation_features() {
       content.location = uri;
     });
     await BrowserTestUtils.browserLoaded(browser, false, TEST_HIGH1);
-    is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that privileged page is in privileged mozilla content process after location change.");
+    is(
+      browser.frameLoader.remoteTab.osPid,
+      privilegedPid,
+      "Check that privileged page is in privileged mozilla content process after location change."
+    );
   });
 
   Services.ppmm.releaseCachedProcesses();

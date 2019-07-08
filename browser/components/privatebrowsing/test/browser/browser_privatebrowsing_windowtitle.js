@@ -6,14 +6,15 @@
 // from and to private browsing mode.
 
 add_task(async function test() {
-  const testPageURL = "http://mochi.test:8888/browser/" +
+  const testPageURL =
+    "http://mochi.test:8888/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_windowtitle_page.html";
   requestLongerTimeout(2);
 
   // initialization of expected titles
   let test_title = "Test title";
   let app_name = document.documentElement.getAttribute("title");
-  const isOSX = ("nsILocalFileMac" in Ci);
+  const isOSX = "nsILocalFileMac" in Ci;
   let page_with_title;
   let page_without_title;
   let about_pb_title;
@@ -37,7 +38,7 @@ add_task(async function test() {
   }
 
   async function testTabTitle(aWindow, url, insidePB, expected_title) {
-    let tab = (await BrowserTestUtils.openNewForegroundTab(aWindow.gBrowser));
+    let tab = await BrowserTestUtils.openNewForegroundTab(aWindow.gBrowser);
     await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -45,9 +46,15 @@ add_task(async function test() {
       return aWindow.document.title === expected_title;
     }, `Window title should be ${expected_title}, got ${aWindow.document.title}`);
 
-    is(aWindow.document.title, expected_title, "The window title for " + url +
-       " is correct (" + (insidePB ? "inside" : "outside") +
-       " private browsing mode)");
+    is(
+      aWindow.document.title,
+      expected_title,
+      "The window title for " +
+        url +
+        " is correct (" +
+        (insidePB ? "inside" : "outside") +
+        " private browsing mode)"
+    );
 
     let win = aWindow.gBrowser.replaceTabWithWindow(tab);
     await BrowserTestUtils.waitForEvent(win, "load", false);
@@ -56,21 +63,54 @@ add_task(async function test() {
       return win.document.title === expected_title;
     }, `Window title should be ${expected_title}, got ${win.document.title}`);
 
-    is(win.document.title, expected_title, "The window title for " + url +
-       " detached tab is correct (" + (insidePB ? "inside" : "outside") +
-       " private browsing mode)");
+    is(
+      win.document.title,
+      expected_title,
+      "The window title for " +
+        url +
+        " detached tab is correct (" +
+        (insidePB ? "inside" : "outside") +
+        " private browsing mode)"
+    );
 
-    await Promise.all([ BrowserTestUtils.closeWindow(win),
-                        BrowserTestUtils.closeWindow(aWindow) ]);
+    await Promise.all([
+      BrowserTestUtils.closeWindow(win),
+      BrowserTestUtils.closeWindow(aWindow),
+    ]);
   }
 
   function openWin(private) {
     return BrowserTestUtils.openNewBrowserWindow({ private });
   }
-  await testTabTitle((await openWin(false)), "about:blank", false, page_without_title);
-  await testTabTitle((await openWin(false)), testPageURL, false, page_with_title);
-  await testTabTitle((await openWin(false)), "about:privatebrowsing", false, about_pb_title);
-  await testTabTitle((await openWin(true)), "about:blank", true, pb_page_without_title);
-  await testTabTitle((await openWin(true)), testPageURL, true, pb_page_with_title);
-  await testTabTitle((await openWin(true)), "about:privatebrowsing", true, pb_about_pb_title);
+  await testTabTitle(
+    await openWin(false),
+    "about:blank",
+    false,
+    page_without_title
+  );
+  await testTabTitle(await openWin(false), testPageURL, false, page_with_title);
+  await testTabTitle(
+    await openWin(false),
+    "about:privatebrowsing",
+    false,
+    about_pb_title
+  );
+  await testTabTitle(
+    await openWin(true),
+    "about:blank",
+    true,
+    pb_page_without_title
+  );
+  await testTabTitle(
+    await openWin(true),
+    testPageURL,
+    true,
+    pb_page_with_title
+  );
+  await testTabTitle(
+    await openWin(true),
+    "about:privatebrowsing",
+    true,
+    pb_about_pb_title
+  );
 });

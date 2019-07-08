@@ -3,8 +3,8 @@
 
 "use strict";
 
-const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * A test to check that .getPosition/.setPosition work with large files.
@@ -13,14 +13,16 @@ const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Test setPosition/getPosition.
 async function test_setPosition(forward, current, backward) {
-  let path = OS.Path.join(OS.Constants.Path.tmpDir,
-                          "test_osfile_async_largefiles.tmp");
+  let path = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_largefiles.tmp"
+  );
 
   // Clear any left-over files from previous runs.
   await removeTestFile(path);
 
   try {
-    let file = await OS.File.open(path, {write: true, append: false});
+    let file = await OS.File.open(path, { write: true, append: false });
     try {
       let pos = 0;
 
@@ -28,19 +30,19 @@ async function test_setPosition(forward, current, backward) {
       info("Moving forward: " + forward);
       await file.setPosition(forward, OS.File.POS_START);
       pos += forward;
-      Assert.equal((await file.getPosition()), pos);
+      Assert.equal(await file.getPosition(), pos);
 
       // 2. seek forward from current position
       info("Moving current: " + current);
       await file.setPosition(current, OS.File.POS_CURRENT);
       pos += current;
-      Assert.equal((await file.getPosition()), pos);
+      Assert.equal(await file.getPosition(), pos);
 
       // 3. seek backward from current position
       info("Moving current backward: " + backward);
       await file.setPosition(-backward, OS.File.POS_CURRENT);
       pos -= backward;
-      Assert.equal((await file.getPosition()), pos);
+      Assert.equal(await file.getPosition(), pos);
     } finally {
       await file.setPosition(0, OS.File.POS_START);
       await file.close();
@@ -52,14 +54,16 @@ async function test_setPosition(forward, current, backward) {
 
 // Test setPosition/getPosition expected failures.
 async function test_setPosition_failures() {
-  let path = OS.Path.join(OS.Constants.Path.tmpDir,
-                          "test_osfile_async_largefiles.tmp");
+  let path = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_largefiles.tmp"
+  );
 
   // Clear any left-over files from previous runs.
   await removeTestFile(path);
 
   try {
-    let file = await OS.File.open(path, {write: true, append: false});
+    let file = await OS.File.open(path, { write: true, append: false });
     try {
       // 1. Use an invalid position value
       try {
@@ -70,7 +74,7 @@ async function test_setPosition_failures() {
       }
       // Since setPosition should have bailed, it shouldn't have moved the
       // file pointer at all.
-      Assert.equal((await file.getPosition()), 0);
+      Assert.equal(await file.getPosition(), 0);
 
       // 2. Use an invalid position value
       try {
@@ -81,7 +85,7 @@ async function test_setPosition_failures() {
       }
       // Since setPosition should have bailed, it shouldn't have moved the
       // file pointer at all.
-      Assert.equal((await file.getPosition()), 0);
+      Assert.equal(await file.getPosition(), 0);
 
       // 3. Use a position that cannot be represented as a double
       try {

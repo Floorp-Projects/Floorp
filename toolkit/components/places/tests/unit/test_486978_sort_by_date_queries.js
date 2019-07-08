@@ -11,8 +11,9 @@
  * children of inside containers are sorted accordingly.
  */
 
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+  Ci.nsINavHistoryService
+);
 
 // Will be inserted in this order, so last one will be the newest visit.
 var pages = [
@@ -50,7 +51,9 @@ add_task(function() {
   var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  var dayContainer = root.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var dayContainer = root
+    .getChild(0)
+    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayContainer.containerOpen = true;
 
   var cc = dayContainer.childCount;
@@ -76,7 +79,9 @@ add_task(function() {
   var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  var dayContainer = root.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var dayContainer = root
+    .getChild(0)
+    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayContainer.containerOpen = true;
 
   var cc = dayContainer.childCount;
@@ -102,9 +107,13 @@ add_task(function() {
   var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  var dayContainer = root.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var dayContainer = root
+    .getChild(0)
+    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayContainer.containerOpen = true;
-  var siteContainer = dayContainer.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var siteContainer = dayContainer
+    .getChild(0)
+    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   Assert.equal(siteContainer.title, "a.mozilla.org");
   siteContainer.containerOpen = true;
 

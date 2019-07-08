@@ -109,7 +109,7 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
 
   for (const data of TEST_DATA) {
     info("Running test case: " + data.desc);
@@ -117,13 +117,19 @@ add_task(async function() {
   }
 });
 
-async function runTestData(inspector, testActor,
-                      {selector, before, changeStyle, after}) {
+async function runTestData(
+  inspector,
+  testActor,
+  { selector, before, changeStyle, after }
+) {
   info("Getting the " + selector + " test node");
   const nodeFront = await getNodeFront(selector, inspector);
   const container = getContainerForNodeFront(nodeFront, inspector);
-  is(!container.elt.classList.contains("not-displayed"), before,
-    "The container is marked as " + (before ? "shown" : "hidden"));
+  is(
+    !container.elt.classList.contains("not-displayed"),
+    before,
+    "The container is marked as " + (before ? "shown" : "hidden")
+  );
 
   info("Listening for the display-change event");
   const onDisplayChanged = new Promise(resolve => {
@@ -146,6 +152,9 @@ async function runTestData(inspector, testActor,
   }
   ok(foundContainer, "Container is part of the list of changed nodes");
 
-  is(!container.elt.classList.contains("not-displayed"), after,
-    "The container is marked as " + (after ? "shown" : "hidden"));
+  is(
+    !container.elt.classList.contains("not-displayed"),
+    after,
+    "The container is marked as " + (after ? "shown" : "hidden")
+  );
 }

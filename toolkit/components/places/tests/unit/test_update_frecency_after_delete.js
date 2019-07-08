@@ -13,8 +13,10 @@
  */
 
 add_task(async function removed_bookmark() {
-  info("After removing bookmark, frecency of bookmark's URI should be " +
-       "zero if URI is unvisited and no longer bookmarked.");
+  info(
+    "After removing bookmark, frecency of bookmark's URI should be " +
+      "zero if URI is unvisited and no longer bookmarked."
+  );
   const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -37,8 +39,10 @@ add_task(async function removed_bookmark() {
 });
 
 add_task(async function removed_but_visited_bookmark() {
-  info("After removing bookmark, frecency of bookmark's URI should " +
-       "not be zero if URI is visited.");
+  info(
+    "After removing bookmark, frecency of bookmark's URI should " +
+      "not be zero if URI is visited."
+  );
   const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -62,8 +66,10 @@ add_task(async function removed_but_visited_bookmark() {
 });
 
 add_task(async function remove_bookmark_still_bookmarked() {
-  info("After removing bookmark, frecency of bookmark's URI should " +
-       "not be zero if URI is still bookmarked.");
+  info(
+    "After removing bookmark, frecency of bookmark's URI should " +
+      "not be zero if URI is still bookmarked."
+  );
   const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm1 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -91,8 +97,10 @@ add_task(async function remove_bookmark_still_bookmarked() {
 });
 
 add_task(async function cleared_parent_of_visited_bookmark() {
-  info("After removing all children from bookmark's parent, frecency " +
-       "of bookmark's URI should not be zero if URI is visited.");
+  info(
+    "After removing all children from bookmark's parent, frecency " +
+      "of bookmark's URI should not be zero if URI is visited."
+  );
   const TEST_URI = Services.io.newURI("http://example.com/1");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -116,9 +124,11 @@ add_task(async function cleared_parent_of_visited_bookmark() {
 });
 
 add_task(async function cleared_parent_of_bookmark_still_bookmarked() {
-  info("After removing all children from bookmark's parent, frecency " +
-       "of bookmark's URI should not be zero if URI is still " +
-       "bookmarked.");
+  info(
+    "After removing all children from bookmark's parent, frecency " +
+      "of bookmark's URI should not be zero if URI is still " +
+      "bookmarked."
+  );
   const TEST_URI = Services.io.newURI("http://example.com/1");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,

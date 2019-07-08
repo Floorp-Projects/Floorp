@@ -320,8 +320,9 @@ void nsNodeUtils::LastRelease(nsINode* aNode) {
     aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-  NS_ASSERTION(!Element::FromNode(aNode) ||
-               !Element::FromNode(aNode)->GetXBLBinding(), "Node has binding on destruction");
+  NS_ASSERTION(
+      !Element::FromNode(aNode) || !Element::FromNode(aNode)->GetXBLBinding(),
+      "Node has binding on destruction");
 
   aNode->ReleaseWrapper(aNode);
 

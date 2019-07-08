@@ -38,16 +38,17 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = [
-  "LoginStore",
-];
+const EXPORTED_SYMBOLS = ["LoginStore"];
 
 // Globals
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "JSONFile",
-                               "resource://gre/modules/JSONFile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "JSONFile",
+  "resource://gre/modules/JSONFile.jsm"
+);
 
 /**
  * Current data version assigned by the code that last touched the data.

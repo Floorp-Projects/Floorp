@@ -15,11 +15,7 @@ add_task(async function() {
 
   const onMessages = waitForMessages({
     hud,
-    messages: [
-      { text: "abba" },
-      { text: "abba" },
-      { text: "abba" },
-    ],
+    messages: [{ text: "abba" }, { text: "abba" }, { text: "abba" }],
   });
 
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {

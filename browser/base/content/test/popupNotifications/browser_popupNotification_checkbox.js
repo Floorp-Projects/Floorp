@@ -28,15 +28,18 @@ function promiseElementVisible(element) {
   // HTMLElement.offsetParent is null when the element is not visisble
   // (or if the element has |position: fixed|). See:
   // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetParent
-  return BrowserTestUtils.waitForCondition(() => element.offsetParent !== null,
-                                          "Waiting for element to be visible");
+  return BrowserTestUtils.waitForCondition(
+    () => element.offsetParent !== null,
+    "Waiting for element to be visible"
+  );
 }
 
 var gNotification;
 
 var tests = [
   // Test that passing the checkbox field shows the checkbox.
-  { id: "show_checkbox",
+  {
+    id: "show_checkbox",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.checkbox = {
@@ -50,11 +53,12 @@ var tests = [
       checkCheckbox(notification.checkbox, "This is a checkbox");
       triggerMainCommand(popup);
     },
-    onHidden() { },
+    onHidden() {},
   },
 
   // Test checkbox being checked by default
-  { id: "checkbox_checked",
+  {
+    id: "checkbox_checked",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.checkbox = {
@@ -69,14 +73,16 @@ var tests = [
       checkCheckbox(notification.checkbox, "Check this", true);
       triggerMainCommand(popup);
     },
-    onHidden() { },
+    onHidden() {},
   },
 
   // Test checkbox passing the checkbox state on mainAction
-  { id: "checkbox_passCheckboxChecked_mainAction",
+  {
+    id: "checkbox_passCheckboxChecked_mainAction",
     run() {
       this.notifyObj = new BasicNotification(this.id);
-      this.notifyObj.mainAction.callback = ({checkboxChecked}) => this.mainActionChecked = checkboxChecked;
+      this.notifyObj.mainAction.callback = ({ checkboxChecked }) =>
+        (this.mainActionChecked = checkboxChecked);
       this.notifyObj.options.checkbox = {
         label: "This is a checkbox",
       };
@@ -93,19 +99,27 @@ var tests = [
       triggerMainCommand(popup);
     },
     onHidden() {
-      is(this.mainActionChecked, true, "mainAction callback is passed the correct checkbox value");
+      is(
+        this.mainActionChecked,
+        true,
+        "mainAction callback is passed the correct checkbox value"
+      );
     },
   },
 
   // Test checkbox passing the checkbox state on secondaryAction
-  { id: "checkbox_passCheckboxChecked_secondaryAction",
+  {
+    id: "checkbox_passCheckboxChecked_secondaryAction",
     run() {
       this.notifyObj = new BasicNotification(this.id);
-      this.notifyObj.secondaryActions = [{
-        label: "Test Secondary",
-        accessKey: "T",
-        callback: ({checkboxChecked}) => this.secondaryActionChecked = checkboxChecked,
-      }];
+      this.notifyObj.secondaryActions = [
+        {
+          label: "Test Secondary",
+          accessKey: "T",
+          callback: ({ checkboxChecked }) =>
+            (this.secondaryActionChecked = checkboxChecked),
+        },
+      ];
       this.notifyObj.options.checkbox = {
         label: "This is a checkbox",
       };
@@ -122,12 +136,17 @@ var tests = [
       triggerSecondaryCommand(popup, 0);
     },
     onHidden() {
-      is(this.secondaryActionChecked, true, "secondaryAction callback is passed the correct checkbox value");
+      is(
+        this.secondaryActionChecked,
+        true,
+        "secondaryAction callback is passed the correct checkbox value"
+      );
     },
   },
 
   // Test checkbox preserving its state through re-opening the doorhanger
-  { id: "checkbox_reopen",
+  {
+    id: "checkbox_reopen",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.checkbox = {
@@ -162,7 +181,8 @@ var tests = [
   },
 
   // Test no checkbox hides warning label
-  { id: "no_checkbox",
+  {
+    id: "no_checkbox",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.checkbox = null;
@@ -175,53 +195,54 @@ var tests = [
       checkMainAction(notification);
       triggerMainCommand(popup);
     },
-    onHidden() { },
+    onHidden() {},
   },
 ];
 
 // Test checkbox disabling the main action in different combinations
 ["checkedState", "uncheckedState"].forEach(function(state) {
   [true, false].forEach(function(checked) {
-    tests.push(
-      { id: `checkbox_disableMainAction_${state}_${checked ? "checked" : "unchecked"}`,
-        run() {
-          this.notifyObj = new BasicNotification(this.id);
-          this.notifyObj.options.checkbox = {
-            label: "This is a checkbox",
-            checked,
-            [state]: {
-              disableMainAction: true,
-              warningLabel: "Testing disable",
-            },
-          };
-          gNotification = showNotification(this.notifyObj);
-        },
-        async onShown(popup) {
-          checkPopup(popup, this.notifyObj);
-          let notification = popup.children[0];
-          let checkbox = notification.checkbox;
-          let disabled = (state === "checkedState" && checked) ||
-                         (state === "uncheckedState" && !checked);
+    tests.push({
+      id: `checkbox_disableMainAction_${state}_${
+        checked ? "checked" : "unchecked"
+      }`,
+      run() {
+        this.notifyObj = new BasicNotification(this.id);
+        this.notifyObj.options.checkbox = {
+          label: "This is a checkbox",
+          checked,
+          [state]: {
+            disableMainAction: true,
+            warningLabel: "Testing disable",
+          },
+        };
+        gNotification = showNotification(this.notifyObj);
+      },
+      async onShown(popup) {
+        checkPopup(popup, this.notifyObj);
+        let notification = popup.children[0];
+        let checkbox = notification.checkbox;
+        let disabled =
+          (state === "checkedState" && checked) ||
+          (state === "uncheckedState" && !checked);
 
-          checkCheckbox(checkbox, "This is a checkbox", checked);
-          checkMainAction(notification, disabled);
-          await promiseElementVisible(checkbox);
-          EventUtils.synthesizeMouseAtCenter(checkbox, {});
-          checkCheckbox(checkbox, "This is a checkbox", !checked);
-          checkMainAction(notification, !disabled);
-          EventUtils.synthesizeMouseAtCenter(checkbox, {});
-          checkCheckbox(checkbox, "This is a checkbox", checked);
-          checkMainAction(notification, disabled);
+        checkCheckbox(checkbox, "This is a checkbox", checked);
+        checkMainAction(notification, disabled);
+        await promiseElementVisible(checkbox);
+        EventUtils.synthesizeMouseAtCenter(checkbox, {});
+        checkCheckbox(checkbox, "This is a checkbox", !checked);
+        checkMainAction(notification, !disabled);
+        EventUtils.synthesizeMouseAtCenter(checkbox, {});
+        checkCheckbox(checkbox, "This is a checkbox", checked);
+        checkMainAction(notification, disabled);
 
-          // Unblock the main command if it's currently disabled.
-          if (disabled) {
-            EventUtils.synthesizeMouseAtCenter(checkbox, {});
-          }
-          triggerMainCommand(popup);
-        },
-        onHidden() { },
-      }
-    );
+        // Unblock the main command if it's currently disabled.
+        if (disabled) {
+          EventUtils.synthesizeMouseAtCenter(checkbox, {});
+        }
+        triggerMainCommand(popup);
+      },
+      onHidden() {},
+    });
   });
 });
-

@@ -1,10 +1,14 @@
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",
-                                   "@mozilla.org/network/protocol-proxy-service;1",
-                                   "nsIProtocolProxyService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gProxyService",
+  "@mozilla.org/network/protocol-proxy-service;1",
+  "nsIProtocolProxyService"
+);
 
-const TRANSPARENT_PROXY_RESOLVES_HOST = Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
+const TRANSPARENT_PROXY_RESOLVES_HOST =
+  Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
 
 function getProxyInfo(url = "http://www.mozilla.org/") {
   return new Promise((resolve, reject) => {
@@ -34,14 +38,33 @@ const testData = [
     proxyInfo: 1,
     expected: {
       error: {
-        message: "ProxyInfoData: proxyData must be an object or array of objects",
+        message:
+          "ProxyInfoData: proxyData must be an object or array of objects",
       },
     },
   },
   {
-    proxyInfo: [{type: "socks", host: "foo.bar", port: 1080, username: "johnsmith", password: "pass123", proxyDNS: true, failoverTimeout: 3},
-                {type: "http", host: "192.168.1.1", port: 3128}, {type: "https", host: "192.168.1.2", port: 1121, failoverTimeout: 1},
-                {type: "socks", host: "192.168.1.3", port: 1999, proxyDNS: true, username: "mungosantamaria", password: "foobar"}],
+    proxyInfo: [
+      {
+        type: "socks",
+        host: "foo.bar",
+        port: 1080,
+        username: "johnsmith",
+        password: "pass123",
+        proxyDNS: true,
+        failoverTimeout: 3,
+      },
+      { type: "http", host: "192.168.1.1", port: 3128 },
+      { type: "https", host: "192.168.1.2", port: 1121, failoverTimeout: 1 },
+      {
+        type: "socks",
+        host: "192.168.1.3",
+        port: 1999,
+        proxyDNS: true,
+        username: "mungosantamaria",
+        password: "foobar",
+      },
+    ],
     expected: {
       proxyInfo: {
         type: "socks",
@@ -81,7 +104,7 @@ const testData = [
 add_task(async function test_proxy_listener() {
   let extensionData = {
     manifest: {
-      "permissions": ["proxy", "<all_urls>"],
+      permissions: ["proxy", "<all_urls>"],
     },
     background() {
       // Some tests generate multiple errors, we'll just rely on the first.
@@ -94,13 +117,16 @@ add_task(async function test_proxy_listener() {
         }
       });
 
-      browser.proxy.onRequest.addListener(details => {
-        browser.test.log(`onRequest ${JSON.stringify(details)}`);
-        if (proxyInfo == "not_defined") {
-          return not_defined; // eslint-disable-line no-undef
-        }
-        return proxyInfo;
-      }, {urls: ["<all_urls>"]});
+      browser.proxy.onRequest.addListener(
+        details => {
+          browser.test.log(`onRequest ${JSON.stringify(details)}`);
+          if (proxyInfo == "not_defined") {
+            return not_defined; // eslint-disable-line no-undef
+          }
+          return proxyInfo;
+        },
+        { urls: ["<all_urls>"] }
+      );
 
       browser.test.onMessage.addListener((message, data) => {
         if (message === "set-proxy") {
@@ -133,17 +159,45 @@ add_task(async function test_proxy_listener() {
     } else if (expectedProxyInfo === null) {
       equal(proxyInfo, null, "no proxyInfo received");
     } else {
-      for (let proxyUsed = proxyInfo; proxyUsed; proxyUsed = proxyUsed.failoverProxy) {
-        let {type, host, port, username, password, proxyDNS, failoverTimeout} = expectedProxyInfo;
+      for (
+        let proxyUsed = proxyInfo;
+        proxyUsed;
+        proxyUsed = proxyUsed.failoverProxy
+      ) {
+        let {
+          type,
+          host,
+          port,
+          username,
+          password,
+          proxyDNS,
+          failoverTimeout,
+        } = expectedProxyInfo;
         equal(proxyUsed.host, host, `Expected proxy host to be ${host}`);
         equal(proxyUsed.port, port, `Expected proxy port to be ${port}`);
         equal(proxyUsed.type, type, `Expected proxy type to be ${type}`);
         // May be null or undefined depending on use of newProxyInfoWithAuth or newProxyInfo
-        equal(proxyUsed.username || "", username || "", `Expected proxy username to be ${username}`);
-        equal(proxyUsed.password || "", password || "", `Expected proxy password to be ${password}`);
-        equal(proxyUsed.flags, proxyDNS == undefined ? 0 : proxyDNS, `Expected proxyDNS to be ${proxyDNS}`);
+        equal(
+          proxyUsed.username || "",
+          username || "",
+          `Expected proxy username to be ${username}`
+        );
+        equal(
+          proxyUsed.password || "",
+          password || "",
+          `Expected proxy password to be ${password}`
+        );
+        equal(
+          proxyUsed.flags,
+          proxyDNS == undefined ? 0 : proxyDNS,
+          `Expected proxyDNS to be ${proxyDNS}`
+        );
         // Default timeout is 10
-        equal(proxyUsed.failoverTimeout, failoverTimeout || 10, `Expected failoverTimeout to be ${failoverTimeout}`);
+        equal(
+          proxyUsed.failoverTimeout,
+          failoverTimeout || 10,
+          `Expected failoverTimeout to be ${failoverTimeout}`
+        );
         expectedProxyInfo = expectedProxyInfo.failoverProxy;
       }
     }
@@ -154,14 +208,19 @@ add_task(async function test_proxy_listener() {
 
 async function getExtension(expectedProxyInfo) {
   function background(proxyInfo) {
-    browser.test.log(`testing proxy.onRequest with proxyInfo = ${JSON.stringify(proxyInfo)}`);
-    browser.proxy.onRequest.addListener(details => {
-      return proxyInfo;
-    }, {urls: ["<all_urls>"]});
+    browser.test.log(
+      `testing proxy.onRequest with proxyInfo = ${JSON.stringify(proxyInfo)}`
+    );
+    browser.proxy.onRequest.addListener(
+      details => {
+        return proxyInfo;
+      },
+      { urls: ["<all_urls>"] }
+    );
   }
   let extensionData = {
     manifest: {
-      "permissions": ["proxy", "<all_urls>"],
+      permissions: ["proxy", "<all_urls>"],
     },
     background: `(${background})(${JSON.stringify(expectedProxyInfo)})`,
   };
@@ -172,7 +231,7 @@ async function getExtension(expectedProxyInfo) {
 
 add_task(async function test_passthrough() {
   let ext1 = await getExtension(null);
-  let ext2 = await getExtension({host: "1.2.3.4", port: 8888, type: "https"});
+  let ext2 = await getExtension({ host: "1.2.3.4", port: 8888, type: "https" });
 
   // Also use a restricted url to test the ability to proxy those.
   let proxyInfo = await getProxyInfo("https://addons.mozilla.org/");
@@ -189,7 +248,11 @@ add_task(async function test_passthrough() {
 });
 
 add_task(async function test_ftp() {
-  let extension = await getExtension({host: "1.2.3.4", port: 8888, type: "http"});
+  let extension = await getExtension({
+    host: "1.2.3.4",
+    port: 8888,
+    type: "http",
+  });
 
   let proxyInfo = await getProxyInfo("ftp://somewhere.mozilla.org/");
 

@@ -17,9 +17,9 @@ add_task(async function test_json_parser() {
   });
 
   let expectedManifest = {
-    "applications": {"gecko": {"id": ID}},
-    "name": "This \" is // not a comment",
-    "version": "0.1\\",
+    applications: { gecko: { id: ID } },
+    name: 'This " is // not a comment',
+    version: "0.1\\",
   };
 
   let fileURI = Services.io.newFileURI(xpi);
@@ -29,8 +29,11 @@ add_task(async function test_json_parser() {
 
   await extension.parseManifest();
 
-  Assert.deepEqual(extension.rawManifest, expectedManifest,
-                   "Manifest with correctly-filtered comments");
+  Assert.deepEqual(
+    extension.rawManifest,
+    expectedManifest,
+    "Manifest with correctly-filtered comments"
+  );
 
   Services.obs.notifyObservers(xpi, "flush-cache-entry");
 });

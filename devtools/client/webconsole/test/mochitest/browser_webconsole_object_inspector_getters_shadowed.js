@@ -6,7 +6,8 @@
 "use strict";
 
 // Check evaluating shadowed getters in the console.
-const TEST_URI = "data:text/html;charset=utf8,<h1>Object Inspector on Getters</h1>";
+const TEST_URI =
+  "data:text/html;charset=utf8,<h1>Object Inspector on Getters</h1>";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -54,8 +55,10 @@ async function testObject(oi, values) {
     if (value != null) {
       const getter = findObjectInspectorNodeChild(node, "getter");
       await invokeGetter(getter);
-      ok(getter.textContent.includes(`getter: "${value}"`),
-        `Getter now has the expected "${value}" content`);
+      ok(
+        getter.textContent.includes(`getter: "${value}"`),
+        `Getter now has the expected "${value}" content`
+      );
     }
     node = findObjectInspectorNodeChild(node, "<prototype>");
   }

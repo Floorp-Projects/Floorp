@@ -3,23 +3,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {MulticastDNS} = ChromeUtils.import(
-  (AppConstants.platform == "android" && !Services.prefs.getBoolPref("network.mdns.use_js_fallback"))
-  ? "resource://gre/modules/MulticastDNSAndroid.jsm"
-  : "resource://gre/modules/MulticastDNS.jsm");
+const { MulticastDNS } = ChromeUtils.import(
+  AppConstants.platform == "android" &&
+    !Services.prefs.getBoolPref("network.mdns.use_js_fallback")
+    ? "resource://gre/modules/MulticastDNSAndroid.jsm"
+    : "resource://gre/modules/MulticastDNS.jsm"
+);
 
-const DNSSERVICEINFO_CONTRACT_ID = "@mozilla.org/toolkit/components/mdnsresponder/dns-info;1";
+const DNSSERVICEINFO_CONTRACT_ID =
+  "@mozilla.org/toolkit/components/mdnsresponder/dns-info;1";
 
 function log(aMsg) {
   dump("-*- nsDNSServiceDiscovery.js : " + aMsg + "\n");
 }
 
 function generateUuid() {
-  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].
-    getService(Ci.nsIUUIDGenerator);
+  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
   return uuidGenerator.generateUUID().toString();
 }
 
@@ -40,9 +46,17 @@ function ListenerWrapper(aListener, aMdns) {
 ListenerWrapper.prototype = {
   // Helper function for transforming an Object into nsIDNSServiceInfo.
   makeServiceInfo(aServiceInfo) {
-    let serviceInfo = Cc[DNSSERVICEINFO_CONTRACT_ID].createInstance(Ci.nsIDNSServiceInfo);
+    let serviceInfo = Cc[DNSSERVICEINFO_CONTRACT_ID].createInstance(
+      Ci.nsIDNSServiceInfo
+    );
 
-    for (let name of ["host", "address", "port", "serviceName", "serviceType"]) {
+    for (let name of [
+      "host",
+      "address",
+      "port",
+      "serviceName",
+      "serviceType",
+    ]) {
       try {
         serviceInfo[name] = aServiceInfo[name];
       } catch (e) {
@@ -54,10 +68,11 @@ ListenerWrapper.prototype = {
     try {
       attributes = _toPropertyBag2(aServiceInfo.attributes);
     } catch (err) {
-        // Ignore unset attributes in object.
-        log("Caught unset attributes error: " + err + " - " + err.stack);
-        attributes = Cc["@mozilla.org/hash-property-bag;1"]
-                        .createInstance(Ci.nsIWritablePropertyBag2);
+      // Ignore unset attributes in object.
+      log("Caught unset attributes error: " + err + " - " + err.stack);
+      attributes = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+        Ci.nsIWritablePropertyBag2
+      );
     }
     serviceInfo.attributes = attributes;
 
@@ -113,15 +128,24 @@ ListenerWrapper.prototype = {
     log("onRegistrationFailed: (" + aErrorCode + ")");
     this.registrationStarting = false;
     this.stopRegistration = true;
-    this.listener.onRegistrationFailed(this.makeServiceInfo(aServiceInfo), aErrorCode);
+    this.listener.onRegistrationFailed(
+      this.makeServiceInfo(aServiceInfo),
+      aErrorCode
+    );
   },
   onUnregistrationFailed(aServiceInfo, aErrorCode) {
     log("onUnregistrationFailed: (" + aErrorCode + ")");
-    this.listener.onUnregistrationFailed(this.makeServiceInfo(aServiceInfo), aErrorCode);
+    this.listener.onUnregistrationFailed(
+      this.makeServiceInfo(aServiceInfo),
+      aErrorCode
+    );
   },
   onResolveFailed(aServiceInfo, aErrorCode) {
     log("onResolveFailed: (" + aErrorCode + ")");
-    this.listener.onResolveFailed(this.makeServiceInfo(aServiceInfo), aErrorCode);
+    this.listener.onResolveFailed(
+      this.makeServiceInfo(aServiceInfo),
+      aErrorCode
+    );
   },
 };
 
@@ -131,7 +155,10 @@ function nsDNSServiceDiscovery() {
 }
 
 nsDNSServiceDiscovery.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIDNSServiceDiscovery]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsISupportsWeakReference,
+    Ci.nsIDNSServiceDiscovery,
+  ]),
 
   startDiscovery(aServiceType, aListener) {
     log("startDiscovery");
@@ -141,13 +168,13 @@ nsDNSServiceDiscovery.prototype = {
 
     return {
       QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-      cancel: (function() {
+      cancel: function() {
         if (this.discoveryStarting || this.stopDiscovery) {
           this.stopDiscovery = true;
           return;
         }
         this.mdns.stopDiscovery(aServiceType, listener);
-      }).bind(listener),
+      }.bind(listener),
     };
   },
 
@@ -159,13 +186,13 @@ nsDNSServiceDiscovery.prototype = {
 
     return {
       QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-      cancel: (function() {
+      cancel: function() {
         if (this.registrationStarting || this.stopRegistration) {
           this.stopRegistration = true;
           return;
         }
         this.mdns.unregisterService(aServiceInfo, listener);
-      }).bind(listener),
+      }.bind(listener),
     };
   },
 
@@ -182,8 +209,9 @@ function _toPropertyBag2(obj) {
     return obj.QueryInterface(Ci.nsIPropertyBag2);
   }
 
-  let result = Cc["@mozilla.org/hash-property-bag;1"]
-                  .createInstance(Ci.nsIWritablePropertyBag2);
+  let result = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+    Ci.nsIWritablePropertyBag2
+  );
   for (let name in obj) {
     result.setPropertyAsAString(name, obj[name]);
   }

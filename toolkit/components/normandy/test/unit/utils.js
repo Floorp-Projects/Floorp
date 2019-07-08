@@ -4,20 +4,28 @@
 // Loaded into the same scope as head_xpc.js
 /* import-globals-from head_xpc.js */
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 
-const CryptoHash = Components.Constructor("@mozilla.org/security/hash;1",
-                                          "nsICryptoHash", "initWithString");
-const FileInputStream = Components.Constructor("@mozilla.org/network/file-input-stream;1",
-                                               "nsIFileInputStream", "init");
+const CryptoHash = Components.Constructor(
+  "@mozilla.org/security/hash;1",
+  "nsICryptoHash",
+  "initWithString"
+);
+const FileInputStream = Components.Constructor(
+  "@mozilla.org/network/file-input-stream;1",
+  "nsIFileInputStream",
+  "init"
+);
 
 const preferenceBranches = {
   user: Preferences,
-  default: new Preferences({defaultBranch: true}),
+  default: new Preferences({ defaultBranch: true }),
 };
 
 // duplicated from test/browser/head.js until we move everything over to mochitests.
@@ -34,7 +42,7 @@ function withMockPreferences(testFunction) {
 
 class MockPreferences {
   constructor() {
-    this.oldValues = {user: {}, default: {}};
+    this.oldValues = { user: {}, default: {} };
   }
 
   set(name, value, branch = "user") {
@@ -44,7 +52,10 @@ class MockPreferences {
 
   preserve(name, branch) {
     if (!(name in this.oldValues[branch])) {
-      this.oldValues[branch][name] = preferenceBranches[branch].get(name, undefined);
+      this.oldValues[branch][name] = preferenceBranches[branch].get(
+        name,
+        undefined
+      );
     }
   }
 
@@ -125,7 +136,7 @@ function makeMockApiServer(directory) {
     }
 
     try {
-      const contents = await OS.File.read(index.path, {encoding: "utf-8"});
+      const contents = await OS.File.read(index.path, { encoding: "utf-8" });
       response.write(contents);
     } catch (e) {
       response.setStatusLine("1.1", 500, "Server error");
@@ -168,4 +179,3 @@ const CryptoUtils = {
     return hash;
   },
 };
-

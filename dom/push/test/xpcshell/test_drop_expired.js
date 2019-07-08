@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const userAgentID = "2c43af06-ab6e-476a-adc4-16cbda54fb89";
 
@@ -20,11 +20,14 @@ function visitURI(uri, timestamp) {
   });
 }
 
-var putRecord = async function({scope, perm, quota, lastPush, lastVisit}) {
+var putRecord = async function({ scope, perm, quota, lastPush, lastVisit }) {
   let uri = Services.io.newURI(scope);
 
-  Services.perms.add(uri, "desktop-notification",
-    Ci.nsIPermissionManager[perm]);
+  Services.perms.add(
+    uri,
+    "desktop-notification",
+    Ci.nsIPermissionManager[perm]
+  );
   registerCleanupFunction(() => {
     Services.perms.remove(uri, "desktop-notification");
   });
@@ -52,7 +55,9 @@ function run_test() {
   });
 
   db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
+  registerCleanupFunction(() => {
+    return db.drop().then(_ => db.close());
+  });
 
   run_next_test();
 }
@@ -109,18 +114,22 @@ add_task(async function setUp() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: userAgentID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: userAgentID,
+            })
+          );
         },
         onUnregister(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "unregister",
-            channelID: request.channelID,
-            status: 200,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "unregister",
+              channelID: request.channelID,
+              status: 200,
+            })
+          );
         },
       });
     },
@@ -147,8 +156,11 @@ add_task(async function test_perm_restored() {
     (subject, data) => data == "https://example.info/expired-perm-revoked"
   );
 
-  Services.perms.add(permURI, "desktop-notification",
-    Ci.nsIPermissionManager.ALLOW_ACTION);
+  Services.perms.add(
+    permURI,
+    "desktop-notification",
+    Ci.nsIPermissionManager.ALLOW_ACTION
+  );
 
   await subChangePromise;
 });

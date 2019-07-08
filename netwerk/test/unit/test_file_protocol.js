@@ -1,7 +1,6 @@
 /* run some tests on the file:// protocol handler */
 
-
-const PR_RDONLY = 0x1;  // see prio.h
+const PR_RDONLY = 0x1; // see prio.h
 
 const special_type = "application/x-our-special-type";
 
@@ -11,37 +10,37 @@ const special_type = "application/x-our-special-type";
   test_read_dir_2,
   test_upload_file,
   test_load_replace,
-  do_test_finished
+  do_test_finished,
 ].forEach(f => add_test(f));
 
 function getFile(key) {
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"]
-                 .getService(Ci.nsIProperties);
+  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(
+    Ci.nsIProperties
+  );
   return dirSvc.get(key, Ci.nsIFile);
 }
 
 function new_file_input_stream(file, buffered) {
-  var stream =
-      Cc["@mozilla.org/network/file-input-stream;1"].
-      createInstance(Ci.nsIFileInputStream);
+  var stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   stream.init(file, PR_RDONLY, 0, 0);
-  if (!buffered)
+  if (!buffered) {
     return stream;
+  }
 
-  var buffer =
-      Cc["@mozilla.org/network/buffered-input-stream;1"].
-      createInstance(Ci.nsIBufferedInputStream);
+  var buffer = Cc[
+    "@mozilla.org/network/buffered-input-stream;1"
+  ].createInstance(Ci.nsIBufferedInputStream);
   buffer.init(stream, 4096);
   return buffer;
 }
 
 function new_file_channel(file) {
-  var ios =
-      Cc["@mozilla.org/network/io-service;1"].
-      getService(Ci.nsIIOService);
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   return NetUtil.newChannel({
     uri: ios.newFileURI(file),
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
 }
 
@@ -65,49 +64,63 @@ FileStreamListener.prototype = {
     return request.file.isDirectory();
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIStreamListener",
+    "nsIRequestObserver",
+  ]),
 
   onStartRequest(request) {
-    if (this._got_onstartrequest)
+    if (this._got_onstartrequest) {
       do_throw("Got second onStartRequest event!");
+    }
     this._got_onstartrequest = true;
 
     if (!this._isDir(request)) {
       request.QueryInterface(Ci.nsIChannel);
       this._contentLen = request.contentLength;
-      if (this._contentLen == -1)
+      if (this._contentLen == -1) {
         do_throw("Content length is unknown in onStartRequest!");
+      }
     }
   },
 
   onDataAvailable(request, stream, offset, count) {
-    if (!this._got_onstartrequest)
+    if (!this._got_onstartrequest) {
       do_throw("onDataAvailable without onStartRequest event!");
-    if (this._got_onstoprequest)
+    }
+    if (this._got_onstoprequest) {
       do_throw("onDataAvailable after onStopRequest event!");
-    if (!request.isPending())
+    }
+    if (!request.isPending()) {
       do_throw("request reports itself as not pending from onStartRequest!");
+    }
 
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
 
   onStopRequest(request, status) {
-    if (!this._got_onstartrequest)
+    if (!this._got_onstartrequest) {
       do_throw("onStopRequest without onStartRequest event!");
-    if (this._got_onstoprequest)
+    }
+    if (this._got_onstoprequest) {
       do_throw("Got second onStopRequest event!");
+    }
     this._got_onstoprequest = true;
-    if (!Components.isSuccessCode(status))
+    if (!Components.isSuccessCode(status)) {
       do_throw("Failed to load file: " + status.toString(16));
-    if (status != request.status)
+    }
+    if (status != request.status) {
       do_throw("request.status does not match status arg to onStopRequest!");
-    if (request.isPending())
+    }
+    if (request.isPending()) {
       do_throw("request reports itself as pending from onStopRequest!");
-    if (this._contentLen != -1 && this._buffer.length != this._contentLen)
+    }
+    if (this._contentLen != -1 && this._buffer.length != this._contentLen) {
       do_throw("did not read nsIChannel.contentLength number of bytes!");
+    }
 
     this._closure(this._buffer);
-  }
+  },
 };
 
 function test_read_file() {
@@ -120,16 +133,23 @@ function test_read_file() {
     dump("*** test_read_file.on_read_complete\n");
 
     // bug 326693
-    if (chan.contentType != special_type)
-      do_throw("Type mismatch! Is <" + chan.contentType + ">, should be <" +
-               special_type + ">")
+    if (chan.contentType != special_type) {
+      do_throw(
+        "Type mismatch! Is <" +
+          chan.contentType +
+          ">, should be <" +
+          special_type +
+          ">"
+      );
+    }
 
     /* read completed successfully.  now read data directly from file,
        and compare the result. */
-    var stream = new_file_input_stream(file, false);   
+    var stream = new_file_input_stream(file, false);
     var result = read_stream(stream, stream.available());
-    if (result != data)
+    if (result != data) {
       do_throw("Stream contents do not match with direct read!");
+    }
     run_next_test();
   }
 
@@ -144,18 +164,31 @@ function do_test_read_dir(set_type, expected_type) {
   var chan = new_file_channel(file);
 
   function on_read_complete(data) {
-    dump("*** test_read_dir.on_read_complete(" + set_type + ", " + expected_type + ")\n");
+    dump(
+      "*** test_read_dir.on_read_complete(" +
+        set_type +
+        ", " +
+        expected_type +
+        ")\n"
+    );
 
     // bug 326693
-    if (chan.contentType != expected_type)
-      do_throw("Type mismatch! Is <" + chan.contentType + ">, should be <" +
-               expected_type + ">")
+    if (chan.contentType != expected_type) {
+      do_throw(
+        "Type mismatch! Is <" +
+          chan.contentType +
+          ">, should be <" +
+          expected_type +
+          ">"
+      );
+    }
 
     run_next_test();
   }
 
-  if (set_type)
+  if (set_type) {
     chan.contentType = expected_type;
+  }
   chan.asyncOpen(new FileStreamListener(on_read_complete));
 }
 
@@ -171,7 +204,7 @@ function test_upload_file() {
   dump("*** test_upload_file\n");
 
   var file = do_get_file("../unit/data/test_readline6.txt"); // file to upload
-  var dest = do_get_tempdir();      // file upload destination
+  var dest = do_get_tempdir(); // file upload destination
   dest.append("junk.dat");
   dest.createUnique(dest.NORMAL_FILE_TYPE, 0o600);
 
@@ -185,20 +218,28 @@ function test_upload_file() {
     dump("*** test_upload_file.on_upload_complete\n");
 
     // bug 326693
-    if (chan.contentType != special_type)
-      do_throw("Type mismatch! Is <" + chan.contentType + ">, should be <" +
-               special_type + ">")
+    if (chan.contentType != special_type) {
+      do_throw(
+        "Type mismatch! Is <" +
+          chan.contentType +
+          ">, should be <" +
+          special_type +
+          ">"
+      );
+    }
 
     /* upload of file completed successfully. */
-    if (data.length != 0)
+    if (data.length != 0) {
       do_throw("Upload resulted in data!");
+    }
 
-    var oldstream = new_file_input_stream(file, false);   
-    var newstream = new_file_input_stream(dest, false);   
+    var oldstream = new_file_input_stream(file, false);
+    var newstream = new_file_input_stream(dest, false);
     var olddata = read_stream(oldstream, oldstream.available());
     var newdata = read_stream(newstream, newstream.available());
-    if (olddata != newdata)
+    if (olddata != newdata) {
       do_throw("Stream contents do not match after file copy!");
+    }
     oldstream.close();
     newstream.close();
 
@@ -210,7 +251,7 @@ function test_upload_file() {
       dump(e + "\n");
       do_throw("Unable to remove uploaded file!\n");
     }
-    
+
     run_next_test();
   }
 
@@ -229,9 +270,13 @@ function test_load_replace() {
     Assert.notEqual(chan.URI.pathQueryRef, chan.originalURI.pathQueryRef);
 
     // The original URI path should be the same as the lnk file path
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-    Assert.equal(chan.originalURI.pathQueryRef, ios.newFileURI(file).pathQueryRef);
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(
+      Ci.nsIIOService
+    );
+    Assert.equal(
+      chan.originalURI.pathQueryRef,
+      ios.newFileURI(file).pathQueryRef
+    );
   }
   run_next_test();
 }

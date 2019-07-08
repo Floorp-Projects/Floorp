@@ -12,10 +12,11 @@ async function run_test() {
   // The service cannot safely write update.status for this failure.
   const STATE_AFTER_RUNUPDATE_BASE = STATE_FAILED_INVALID_INSTALL_DIR_PATH_ERROR;
   const STATE_AFTER_RUNUPDATE_SERVICE = AppConstants.EARLY_BETA_OR_EARLIER
-      ? STATE_PENDING_SVC
-      : STATE_FAILED_SERVICE_INVALID_INSTALL_DIR_PATH_ERROR;
-  const STATE_AFTER_RUNUPDATE = gIsServiceTest ? STATE_AFTER_RUNUPDATE_SERVICE
-                                               : STATE_AFTER_RUNUPDATE_BASE;
+    ? STATE_PENDING_SVC
+    : STATE_FAILED_SERVICE_INVALID_INSTALL_DIR_PATH_ERROR;
+  const STATE_AFTER_RUNUPDATE = gIsServiceTest
+    ? STATE_AFTER_RUNUPDATE_SERVICE
+    : STATE_AFTER_RUNUPDATE_BASE;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
@@ -35,12 +36,22 @@ async function run_test() {
     if (AppConstants.EARLY_BETA_OR_EARLIER) {
       checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
     } else {
-      checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                         SERVICE_INVALID_INSTALL_DIR_PATH_ERROR, 1);
+      checkUpdateManager(
+        STATE_NONE,
+        false,
+        STATE_FAILED,
+        SERVICE_INVALID_INSTALL_DIR_PATH_ERROR,
+        1
+      );
     }
   } else {
-    checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                       INVALID_INSTALL_DIR_PATH_ERROR, 1);
+    checkUpdateManager(
+      STATE_NONE,
+      false,
+      STATE_FAILED,
+      INVALID_INSTALL_DIR_PATH_ERROR,
+      1
+    );
   }
 
   waitForFilesInUse();

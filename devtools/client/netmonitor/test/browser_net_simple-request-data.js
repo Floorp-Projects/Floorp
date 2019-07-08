@@ -19,8 +19,12 @@ function test() {
     info("Starting test... ");
 
     const { document, store, windowRequire, connector } = monitor.panelWin;
-    const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-    const { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
+    const Actions = windowRequire(
+      "devtools/client/netmonitor/src/actions/index"
+    );
+    const { EVENTS } = windowRequire(
+      "devtools/client/netmonitor/src/constants"
+    );
     const {
       getDisplayedRequests,
       getSelectedRequest,
@@ -33,66 +37,123 @@ function test() {
     promiseList.push(waitForNetworkEvents(monitor, 1));
 
     function expectEvent(evt, cb) {
-      promiseList.push(new Promise((resolve, reject) => {
-        monitor.panelWin.api.once(evt, _ => {
-          cb().then(resolve, reject);
-        });
-      }));
+      promiseList.push(
+        new Promise((resolve, reject) => {
+          monitor.panelWin.api.once(evt, _ => {
+            cb().then(resolve, reject);
+          });
+        })
+      );
     }
 
     expectEvent(EVENTS.NETWORK_EVENT, async () => {
-      is(getSelectedRequest(store.getState()), null,
-        "There shouldn't be any selected item in the requests menu.");
-      is(store.getState().requests.requests.size, 1,
-        "The requests menu should not be empty after the first request.");
-      is(!!document.querySelector(".network-details-panel"), false,
-        "The network details panel should still be hidden after first request.");
+      is(
+        getSelectedRequest(store.getState()),
+        null,
+        "There shouldn't be any selected item in the requests menu."
+      );
+      is(
+        store.getState().requests.requests.size,
+        1,
+        "The requests menu should not be empty after the first request."
+      );
+      is(
+        !!document.querySelector(".network-details-panel"),
+        false,
+        "The network details panel should still be hidden after first request."
+      );
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      is(typeof requestItem.id, "string",
-        "The attached request id is incorrect.");
-      isnot(requestItem.id, "",
-        "The attached request id should not be empty.");
+      is(
+        typeof requestItem.id,
+        "string",
+        "The attached request id is incorrect."
+      );
+      isnot(requestItem.id, "", "The attached request id should not be empty.");
 
-      is(typeof requestItem.startedMillis, "number",
-        "The attached startedMillis is incorrect.");
-      isnot(requestItem.startedMillis, 0,
-        "The attached startedMillis should not be zero.");
+      is(
+        typeof requestItem.startedMillis,
+        "number",
+        "The attached startedMillis is incorrect."
+      );
+      isnot(
+        requestItem.startedMillis,
+        0,
+        "The attached startedMillis should not be zero."
+      );
 
-      is(requestItem.requestHeaders, undefined,
-        "The requestHeaders should not yet be set.");
-      is(requestItem.requestCookies, undefined,
-        "The requestCookies should not yet be set.");
-      is(requestItem.requestPostData, undefined,
-        "The requestPostData should not yet be set.");
+      is(
+        requestItem.requestHeaders,
+        undefined,
+        "The requestHeaders should not yet be set."
+      );
+      is(
+        requestItem.requestCookies,
+        undefined,
+        "The requestCookies should not yet be set."
+      );
+      is(
+        requestItem.requestPostData,
+        undefined,
+        "The requestPostData should not yet be set."
+      );
 
-      is(requestItem.responseHeaders, undefined,
-        "The responseHeaders should not yet be set.");
-      is(requestItem.responseCookies, undefined,
-        "The responseCookies should not yet be set.");
+      is(
+        requestItem.responseHeaders,
+        undefined,
+        "The responseHeaders should not yet be set."
+      );
+      is(
+        requestItem.responseCookies,
+        undefined,
+        "The responseCookies should not yet be set."
+      );
 
-      is(requestItem.httpVersion, undefined,
-        "The httpVersion should not yet be set.");
-      is(requestItem.status, undefined,
-        "The status should not yet be set.");
-      is(requestItem.statusText, undefined,
-        "The statusText should not yet be set.");
+      is(
+        requestItem.httpVersion,
+        undefined,
+        "The httpVersion should not yet be set."
+      );
+      is(requestItem.status, undefined, "The status should not yet be set.");
+      is(
+        requestItem.statusText,
+        undefined,
+        "The statusText should not yet be set."
+      );
 
-      is(requestItem.headersSize, undefined,
-        "The headersSize should not yet be set.");
-      is(requestItem.transferredSize, undefined,
-        "The transferredSize should not yet be set.");
-      is(requestItem.contentSize, undefined,
-        "The contentSize should not yet be set.");
+      is(
+        requestItem.headersSize,
+        undefined,
+        "The headersSize should not yet be set."
+      );
+      is(
+        requestItem.transferredSize,
+        undefined,
+        "The transferredSize should not yet be set."
+      );
+      is(
+        requestItem.contentSize,
+        undefined,
+        "The contentSize should not yet be set."
+      );
 
-      is(requestItem.responseContent, undefined,
-        "The responseContent should not yet be set.");
+      is(
+        requestItem.responseContent,
+        undefined,
+        "The responseContent should not yet be set."
+      );
 
-      is(requestItem.totalTime, undefined,
-        "The totalTime should not yet be set.");
-      is(requestItem.eventTimings, undefined,
-        "The eventTimings should not yet be set.");
+      is(
+        requestItem.totalTime,
+        undefined,
+        "The totalTime should not yet be set."
+      );
+      is(
+        requestItem.eventTimings,
+        undefined,
+        "The eventTimings should not yet be set."
+      );
 
       verifyRequestItemTarget(
         document,
@@ -108,12 +169,20 @@ function test() {
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      ok(requestItem.requestHeaders,
-        "There should be a requestHeaders data available.");
-      is(requestItem.requestHeaders.headers.length, 10,
-        "The requestHeaders data has an incorrect |headers| property.");
-      isnot(requestItem.requestHeaders.headersSize, 0,
-        "The requestHeaders data has an incorrect |headersSize| property.");
+      ok(
+        requestItem.requestHeaders,
+        "There should be a requestHeaders data available."
+      );
+      is(
+        requestItem.requestHeaders.headers.length,
+        10,
+        "The requestHeaders data has an incorrect |headers| property."
+      );
+      isnot(
+        requestItem.requestHeaders.headersSize,
+        0,
+        "The requestHeaders data has an incorrect |headersSize| property."
+      );
       // Can't test for the exact request headers size because the value may
       // vary across platforms ("User-Agent" header differs).
 
@@ -131,10 +200,15 @@ function test() {
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      ok(requestItem.requestCookies,
-        "There should be a requestCookies data available.");
-      is(requestItem.requestCookies.length, 2,
-        "The requestCookies data has an incorrect |cookies| property.");
+      ok(
+        requestItem.requestCookies,
+        "There should be a requestCookies data available."
+      );
+      is(
+        requestItem.requestCookies.length,
+        2,
+        "The requestCookies data has an incorrect |cookies| property."
+      );
 
       verifyRequestItemTarget(
         document,
@@ -154,12 +228,20 @@ function test() {
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      ok(requestItem.responseHeaders,
-        "There should be a responseHeaders data available.");
-      is(requestItem.responseHeaders.headers.length, 13,
-        "The responseHeaders data has an incorrect |headers| property.");
-      is(requestItem.responseHeaders.headersSize, 335,
-        "The responseHeaders data has an incorrect |headersSize| property.");
+      ok(
+        requestItem.responseHeaders,
+        "There should be a responseHeaders data available."
+      );
+      is(
+        requestItem.responseHeaders.headers.length,
+        13,
+        "The responseHeaders data has an incorrect |headers| property."
+      );
+      is(
+        requestItem.responseHeaders.headersSize,
+        335,
+        "The responseHeaders data has an incorrect |headersSize| property."
+      );
 
       verifyRequestItemTarget(
         document,
@@ -175,10 +257,15 @@ function test() {
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      ok(requestItem.responseCookies,
-        "There should be a responseCookies data available.");
-      is(requestItem.responseCookies.length, 2,
-        "The responseCookies data has an incorrect |cookies| property.");
+      ok(
+        requestItem.responseCookies,
+        "There should be a responseCookies data available."
+      );
+      is(
+        requestItem.responseCookies.length,
+        2,
+        "The responseCookies data has an incorrect |cookies| property."
+      );
 
       verifyRequestItemTarget(
         document,
@@ -199,14 +286,22 @@ function test() {
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      is(requestItem.httpVersion, "HTTP/1.1",
-        "The httpVersion data has an incorrect value.");
-      is(requestItem.status, "200",
-        "The status data has an incorrect value.");
-      is(requestItem.statusText, "Och Aye",
-        "The statusText data has an incorrect value.");
-      is(requestItem.headersSize, 335,
-        "The headersSize data has an incorrect value.");
+      is(
+        requestItem.httpVersion,
+        "HTTP/1.1",
+        "The httpVersion data has an incorrect value."
+      );
+      is(requestItem.status, "200", "The status data has an incorrect value.");
+      is(
+        requestItem.statusText,
+        "Och Aye",
+        "The statusText data has an incorrect value."
+      );
+      is(
+        requestItem.headersSize,
+        335,
+        "The headersSize data has an incorrect value."
+      );
 
       const requestListItem = document.querySelector(".request-list-item");
       requestListItem.scrollIntoView();
@@ -236,12 +331,21 @@ function test() {
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      is(requestItem.transferredSize, "347",
-        "The transferredSize data has an incorrect value.");
-      is(requestItem.contentSize, "12",
-        "The contentSize data has an incorrect value.");
-      is(requestItem.mimeType, "text/plain; charset=utf-8",
-        "The mimeType data has an incorrect value.");
+      is(
+        requestItem.transferredSize,
+        "347",
+        "The transferredSize data has an incorrect value."
+      );
+      is(
+        requestItem.contentSize,
+        "12",
+        "The contentSize data has an incorrect value."
+      );
+      is(
+        requestItem.mimeType,
+        "text/plain; charset=utf-8",
+        "The mimeType data has an incorrect value."
+      );
 
       verifyRequestItemTarget(
         document,
@@ -263,10 +367,15 @@ function test() {
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      is(typeof requestItem.totalTime, "number",
-        "The attached totalTime is incorrect.");
-      ok(requestItem.totalTime >= 0,
-        "The attached totalTime should be positive.");
+      is(
+        typeof requestItem.totalTime,
+        "number",
+        "The attached totalTime is incorrect."
+      );
+      ok(
+        requestItem.totalTime >= 0,
+        "The attached totalTime should be positive."
+      );
 
       verifyRequestItemTarget(
         document,
@@ -285,24 +394,50 @@ function test() {
 
       const requestItem = getSortedRequests(store.getState()).get(0);
 
-      ok(requestItem.eventTimings,
-        "There should be a eventTimings data available.");
-      is(typeof requestItem.eventTimings.timings.blocked, "number",
-        "The eventTimings data has an incorrect |timings.blocked| property.");
-      is(typeof requestItem.eventTimings.timings.dns, "number",
-        "The eventTimings data has an incorrect |timings.dns| property.");
-      is(typeof requestItem.eventTimings.timings.ssl, "number",
-        "The eventTimings data has an incorrect |timings.ssl| property.");
-      is(typeof requestItem.eventTimings.timings.connect, "number",
-        "The eventTimings data has an incorrect |timings.connect| property.");
-      is(typeof requestItem.eventTimings.timings.send, "number",
-        "The eventTimings data has an incorrect |timings.send| property.");
-      is(typeof requestItem.eventTimings.timings.wait, "number",
-        "The eventTimings data has an incorrect |timings.wait| property.");
-      is(typeof requestItem.eventTimings.timings.receive, "number",
-        "The eventTimings data has an incorrect |timings.receive| property.");
-      is(typeof requestItem.eventTimings.totalTime, "number",
-        "The eventTimings data has an incorrect |totalTime| property.");
+      ok(
+        requestItem.eventTimings,
+        "There should be a eventTimings data available."
+      );
+      is(
+        typeof requestItem.eventTimings.timings.blocked,
+        "number",
+        "The eventTimings data has an incorrect |timings.blocked| property."
+      );
+      is(
+        typeof requestItem.eventTimings.timings.dns,
+        "number",
+        "The eventTimings data has an incorrect |timings.dns| property."
+      );
+      is(
+        typeof requestItem.eventTimings.timings.ssl,
+        "number",
+        "The eventTimings data has an incorrect |timings.ssl| property."
+      );
+      is(
+        typeof requestItem.eventTimings.timings.connect,
+        "number",
+        "The eventTimings data has an incorrect |timings.connect| property."
+      );
+      is(
+        typeof requestItem.eventTimings.timings.send,
+        "number",
+        "The eventTimings data has an incorrect |timings.send| property."
+      );
+      is(
+        typeof requestItem.eventTimings.timings.wait,
+        "number",
+        "The eventTimings data has an incorrect |timings.wait| property."
+      );
+      is(
+        typeof requestItem.eventTimings.timings.receive,
+        "number",
+        "The eventTimings data has an incorrect |timings.receive| property."
+      );
+      is(
+        typeof requestItem.eventTimings.totalTime,
+        "number",
+        "The eventTimings data has an incorrect |totalTime| property."
+      );
 
       verifyRequestItemTarget(
         document,

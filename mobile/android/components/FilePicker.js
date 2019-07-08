@@ -2,15 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 
-function FilePicker() {
-}
+function FilePicker() {}
 
 FilePicker.prototype = {
   _mimeTypeFilter: 0,
@@ -32,11 +37,17 @@ FilePicker.prototype = {
     this._mode = aMode;
     this._title = aTitle;
 
-    let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+    let idService = Cc["@mozilla.org/uuid-generator;1"].getService(
+      Ci.nsIUUIDGenerator
+    );
     this.guid = idService.generateUUID().toString();
 
-    if (aMode != Ci.nsIFilePicker.modeOpen && aMode != Ci.nsIFilePicker.modeOpenMultiple)
+    if (
+      aMode != Ci.nsIFilePicker.modeOpen &&
+      aMode != Ci.nsIFilePicker.modeOpenMultiple
+    ) {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    }
   },
 
   appendFilters: function(aFilterMask) {
@@ -79,8 +90,9 @@ FilePicker.prototype = {
   },
 
   appendFilter: function(title, filter) {
-    if (this._extensionsFilter)
-        this._extensionsFilter += ", ";
+    if (this._extensionsFilter) {
+      this._extensionsFilter += ", ";
+    }
     this._extensionsFilter += filter;
   },
 
@@ -126,7 +138,7 @@ FilePicker.prototype = {
 
   get file() {
     if (!this._filePath) {
-        return null;
+      return null;
     }
 
     return new FileUtils.File(this._filePath);
@@ -181,8 +193,9 @@ FilePicker.prototype = {
       this.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
     }
 
-    if (this._filePath)
+    if (this._filePath) {
       return Ci.nsIFilePicker.returnOK;
+    }
 
     return Ci.nsIFilePicker.returnCancel;
   },
@@ -220,45 +233,56 @@ FilePicker.prototype = {
       msg.mimeType = this._mimeTypeFilter;
     }
     if (this._mode) {
-        msg.modeOpenAttribute = this._mode;
+      msg.modeOpenAttribute = this._mode;
     }
 
-    EventDispatcher.instance.sendRequestForResult(msg).then(file => {
-      this._filePath = file || null;
-      this._promptActive = false;
+    EventDispatcher.instance
+      .sendRequestForResult(msg)
+      .then(file => {
+        this._filePath = file || null;
+        this._promptActive = false;
 
-      if (!file) {
-        return;
-      }
+        if (!file) {
+          return;
+        }
 
-      if (this._domWin) {
-        return this._domWin.File.createFromNsIFile(this.file, { existenceCheck: false });
-      }
+        if (this._domWin) {
+          return this._domWin.File.createFromNsIFile(this.file, {
+            existenceCheck: false,
+          });
+        }
 
-      return File.createFromNsIFile(this.file, { existenceCheck: false });
-    }).then(domFile => {
-      this._domFile = domFile;
-    }, () => {
-    }).then(() => {
-      if (this._callback) {
-        this._callback.done(this._filePath ?
-          Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
-      }
-      delete this._callback;
-    });
+        return File.createFromNsIFile(this.file, { existenceCheck: false });
+      })
+      .then(
+        domFile => {
+          this._domFile = domFile;
+        },
+        () => {}
+      )
+      .then(() => {
+        if (this._callback) {
+          this._callback.done(
+            this._filePath
+              ? Ci.nsIFilePicker.returnOK
+              : Ci.nsIFilePicker.returnCancel
+          );
+        }
+        delete this._callback;
+      });
   },
 
   fireDialogEvent: function(aDomWin, aEventName) {
     // accessing the document object can throw if this window no longer exists. See bug 789888.
     try {
-      if (!aDomWin.document)
+      if (!aDomWin.document) {
         return;
+      }
       let event = aDomWin.document.createEvent("Events");
       event.initEvent(aEventName, true, true);
       let winUtils = aDomWin.windowUtils;
       winUtils.dispatchEventToChromeOnly(aDomWin, event);
-    } catch (ex) {
-    }
+    } catch (ex) {}
   },
 
   classID: Components.ID("{18a4e042-7c7c-424b-a583-354e68553a7f}"),

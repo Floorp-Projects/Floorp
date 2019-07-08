@@ -35,9 +35,11 @@ const { Cu, CC, Cc, Ci } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 
-const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
-                     "nsIUDPSocket",
-                     "init");
+const UDPSocket = CC(
+  "@mozilla.org/network/udp-socket;1",
+  "nsIUDPSocket",
+  "init"
+);
 
 const SCAN_PORT = 50624;
 const UPDATE_PORT = 50625;
@@ -47,8 +49,9 @@ const REPLY_TIMEOUT = 5000;
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "converter", () => {
-  const conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-             .createInstance(Ci.nsIScriptableUnicodeConverter);
+  const conv = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   conv.charset = "utf8";
   return conv;
 });
@@ -72,8 +75,11 @@ function log(msg) {
 function Transport(port) {
   EventEmitter.decorate(this);
   try {
-    this.socket = new UDPSocket(port, false,
-                                Services.scriptSecurityManager.getSystemPrincipal());
+    this.socket = new UDPSocket(
+      port,
+      false,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
     this.socket.joinMulticast(ADDRESS);
     this.socket.asyncListen(this);
   } catch (e) {
@@ -82,7 +88,6 @@ function Transport(port) {
 }
 
 Transport.prototype = {
-
   /**
    * Send a object to some UDP port.
    * @param object object
@@ -119,14 +124,14 @@ Transport.prototype = {
       return;
     }
     if (logging) {
-      log("Recv on " + this.socket.port + ":\n" +
-          JSON.stringify(object, null, 2));
+      log(
+        "Recv on " + this.socket.port + ":\n" + JSON.stringify(object, null, 2)
+      );
     }
     this.emit("message", object);
   },
 
   onStopListening: function() {},
-
 };
 
 /**
@@ -143,7 +148,6 @@ function LocalDevice() {
 LocalDevice.UNKNOWN = "unknown";
 
 LocalDevice.prototype = {
-
   _get: function() {
     // Without Settings API, just generate a name and stop, since the value
     // can't be persisted.
@@ -160,8 +164,9 @@ LocalDevice.prototype = {
       // TODO: Bug 1180997: Find the right way to expose an editable name
       this.name = sysInfo.get("device");
     } else {
-      this.name = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService)
-                                                          .myHostName;
+      this.name = Cc["@mozilla.org/network/dns-service;1"].getService(
+        Ci.nsIDNSService
+      ).myHostName;
     }
   },
 
@@ -173,7 +178,6 @@ LocalDevice.prototype = {
     this._name = name;
     log("Device: " + this._name);
   },
-
 };
 
 function Discovery() {
@@ -201,7 +205,6 @@ function Discovery() {
 }
 
 Discovery.prototype = {
-
   /**
    * Add a new service offered by this device.
    * @param service string
@@ -272,8 +275,10 @@ Discovery.prototype = {
   _waitForReplies: function() {
     clearTimeout(this._expectingReplies.timer);
     this._expectingReplies.from = new Set(this.getRemoteDevices());
-    this._expectingReplies.timer =
-      setTimeout(this._purgeMissingDevices, this.replyTimeout);
+    this._expectingReplies.timer = setTimeout(
+      this._purgeMissingDevices,
+      this.replyTimeout
+    );
   },
 
   get Transport() {
@@ -385,8 +390,9 @@ Discovery.prototype = {
     // Second, loop over the services in the received update
     for (const service in update.services) {
       // Detect if this is a new device for this service
-      const newDevice = !this.remoteServices[service] ||
-                      !this.remoteServices[service][remoteDevice];
+      const newDevice =
+        !this.remoteServices[service] ||
+        !this.remoteServices[service][remoteDevice];
 
       // Look up the service info we may have received previously from the same
       // remote device
@@ -407,8 +413,10 @@ Discovery.prototype = {
 
       // If we've seen this service from the remote device, but the details have
       // changed, announce the update
-      if (!newDevice &&
-          JSON.stringify(oldDeviceInfo) != JSON.stringify(newDeviceInfo)) {
+      if (
+        !newDevice &&
+        JSON.stringify(oldDeviceInfo) != JSON.stringify(newDeviceInfo)
+      ) {
         log("UPDATED " + service + ", DEVICE " + remoteDevice);
         this.emit(service + "-device-updated", remoteDevice, newDeviceInfo);
       }
@@ -430,7 +438,6 @@ Discovery.prototype = {
       }
     }
   },
-
 };
 
 var discovery = new Discovery();

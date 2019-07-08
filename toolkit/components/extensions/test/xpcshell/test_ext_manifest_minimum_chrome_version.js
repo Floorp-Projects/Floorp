@@ -2,10 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-
 add_task(async function test_manifest_minimum_chrome_version() {
   let normalized = await ExtensionTestUtils.normalizeManifest({
-    "minimum_chrome_version": "42",
+    minimum_chrome_version: "42",
   });
 
   equal(normalized.error, undefined, "Should not have an error");

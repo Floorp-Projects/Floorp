@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 const { webSocketSpec } = require("devtools/shared/specs/websocket");
 
 /**
@@ -58,7 +61,13 @@ class WebSocketFront extends FrontClassWithSpec(webSocketSpec) {
    * @param string extensions
    */
   async _onWebSocketOpened(httpChannelId, effectiveURI, protocols, extensions) {
-    this.emit("webSocketOpened", httpChannelId, effectiveURI, protocols, extensions);
+    this.emit(
+      "webSocketOpened",
+      httpChannelId,
+      effectiveURI,
+      protocols,
+      extensions
+    );
   }
 
   /**

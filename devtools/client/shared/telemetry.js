@@ -13,7 +13,9 @@
 const Services = require("Services");
 const TelemetryStopwatch = require("TelemetryStopwatch");
 const { getNthPathExcluding } = require("devtools/shared/platform/stack");
-const { TelemetryEnvironment } = require("resource://gre/modules/TelemetryEnvironment.jsm");
+const {
+  TelemetryEnvironment,
+} = require("resource://gre/modules/TelemetryEnvironment.jsm");
 const WeakMapMap = require("devtools/client/shared/WeakMapMap");
 
 const CATEGORY = "devtools.main";
@@ -92,8 +94,8 @@ class Telemetry {
    *          timer already exists, it can't be started again, and the existing
    *          one will be cleared in order to avoid measurements errors.
    */
-  start(histogramId, obj, {inSeconds} = {}) {
-    return TelemetryStopwatch.start(histogramId, obj, {inSeconds});
+  start(histogramId, obj, { inSeconds } = {}) {
+    return TelemetryStopwatch.start(histogramId, obj, { inSeconds });
   }
 
   /**
@@ -120,8 +122,8 @@ class Telemetry {
    *          timer already exists, it can't be started again, and the existing
    *          one will be cleared in order to avoid measurements errors.
    */
-  startKeyed(histogramId, key, obj, {inSeconds} = {}) {
-    return TelemetryStopwatch.startKeyed(histogramId, key, obj, {inSeconds});
+  startKeyed(histogramId, key, obj, { inSeconds } = {}) {
+    return TelemetryStopwatch.startKeyed(histogramId, key, obj, { inSeconds });
   }
 
   /**
@@ -187,15 +189,19 @@ class Telemetry {
       try {
         histogram = Services.telemetry.getHistogramById(histogramId);
       } catch (e) {
-        dump(`Warning: An attempt was made to write to the ${histogramId} ` +
+        dump(
+          `Warning: An attempt was made to write to the ${histogramId} ` +
             `histogram, which is not defined in Histograms.json\n` +
-            `CALLER: ${getCaller()}`);
+            `CALLER: ${getCaller()}`
+        );
       }
     }
 
-    return histogram || {
-      add: () => {},
-    };
+    return (
+      histogram || {
+        add: () => {},
+      }
+    );
   }
 
   /**
@@ -211,14 +217,18 @@ class Telemetry {
       try {
         histogram = Services.telemetry.getKeyedHistogramById(histogramId);
       } catch (e) {
-        dump(`Warning: An attempt was made to write to the ${histogramId} ` +
-             `histogram, which is not defined in Histograms.json\n` +
-             `CALLER: ${getCaller()}`);
+        dump(
+          `Warning: An attempt was made to write to the ${histogramId} ` +
+            `histogram, which is not defined in Histograms.json\n` +
+            `CALLER: ${getCaller()}`
+        );
       }
     }
-    return histogram || {
-      add: () => {},
-    };
+    return (
+      histogram || {
+        add: () => {},
+      }
+    );
   }
 
   /**
@@ -236,18 +246,22 @@ class Telemetry {
 
     try {
       if (isNaN(value) && typeof value !== "boolean") {
-        dump(`Warning: An attempt was made to write a non-numeric and ` +
-             `non-boolean value ${value} to the ${scalarId} scalar. Only ` +
-             `numeric and boolean values are allowed.\n` +
-             `CALLER: ${getCaller()}`);
+        dump(
+          `Warning: An attempt was made to write a non-numeric and ` +
+            `non-boolean value ${value} to the ${scalarId} scalar. Only ` +
+            `numeric and boolean values are allowed.\n` +
+            `CALLER: ${getCaller()}`
+        );
 
         return;
       }
       Services.telemetry.scalarSet(scalarId, value);
     } catch (e) {
-      dump(`Warning: An attempt was made to write to the ${scalarId} ` +
-           `scalar, which is not defined in Scalars.yaml\n` +
-           `CALLER: ${getCaller()}`);
+      dump(
+        `Warning: An attempt was made to write to the ${scalarId} ` +
+          `scalar, which is not defined in Scalars.yaml\n` +
+          `CALLER: ${getCaller()}`
+      );
     }
   }
 
@@ -266,18 +280,22 @@ class Telemetry {
 
     try {
       if (isNaN(value)) {
-        dump(`Warning: An attempt was made to write a non-numeric value ` +
-             `${value} to the ${scalarId} scalar. Only numeric values are ` +
-             `allowed.\n` +
-             `CALLER: ${getCaller()}`);
+        dump(
+          `Warning: An attempt was made to write a non-numeric value ` +
+            `${value} to the ${scalarId} scalar. Only numeric values are ` +
+            `allowed.\n` +
+            `CALLER: ${getCaller()}`
+        );
 
         return;
       }
       Services.telemetry.scalarAdd(scalarId, value);
     } catch (e) {
-      dump(`Warning: An attempt was made to write to the ${scalarId} ` +
-           `scalar, which is not defined in Scalars.yaml\n` +
-           `CALLER: ${getCaller()}`);
+      dump(
+        `Warning: An attempt was made to write to the ${scalarId} ` +
+          `scalar, which is not defined in Scalars.yaml\n` +
+          `CALLER: ${getCaller()}`
+      );
     }
   }
 
@@ -298,18 +316,22 @@ class Telemetry {
 
     try {
       if (isNaN(value) && typeof value !== "boolean") {
-        dump(`Warning: An attempt was made to write a non-numeric and ` +
-             `non-boolean value ${value} to the ${scalarId} scalar. Only ` +
-             `numeric and boolean values are allowed.\n` +
-             `CALLER: ${getCaller()}`);
+        dump(
+          `Warning: An attempt was made to write a non-numeric and ` +
+            `non-boolean value ${value} to the ${scalarId} scalar. Only ` +
+            `numeric and boolean values are allowed.\n` +
+            `CALLER: ${getCaller()}`
+        );
 
         return;
       }
       Services.telemetry.keyedScalarSet(scalarId, key, value);
     } catch (e) {
-      dump(`Warning: An attempt was made to write to the ${scalarId} ` +
-           `scalar, which is not defined in Scalars.yaml\n` +
-           `CALLER: ${getCaller()}`);
+      dump(
+        `Warning: An attempt was made to write to the ${scalarId} ` +
+          `scalar, which is not defined in Scalars.yaml\n` +
+          `CALLER: ${getCaller()}`
+      );
     }
   }
 
@@ -330,18 +352,22 @@ class Telemetry {
 
     try {
       if (isNaN(value)) {
-        dump(`Warning: An attempt was made to write a non-numeric value ` +
-             `${value} to the ${scalarId} scalar. Only numeric values are ` +
-             `allowed.\n` +
-             `CALLER: ${getCaller()}`);
+        dump(
+          `Warning: An attempt was made to write a non-numeric value ` +
+            `${value} to the ${scalarId} scalar. Only numeric values are ` +
+            `allowed.\n` +
+            `CALLER: ${getCaller()}`
+        );
 
         return;
       }
       Services.telemetry.keyedScalarAdd(scalarId, key, value);
     } catch (e) {
-      dump(`Warning: An attempt was made to write to the ${scalarId} ` +
-           `scalar, which is not defined in Scalars.yaml\n` +
-           `CALLER: ${getCaller()}`);
+      dump(
+        `Warning: An attempt was made to write to the ${scalarId} ` +
+          `scalar, which is not defined in Scalars.yaml\n` +
+          `CALLER: ${getCaller()}`
+      );
     }
   }
 
@@ -391,9 +417,11 @@ class Telemetry {
     const sig = `${method},${object},${value}`;
 
     if (expected.length === 0) {
-      throw new Error(`preparePendingEvent() was called without any expected ` +
-                      `properties.\n` +
-                      `CALLER: ${getCaller()}`);
+      throw new Error(
+        `preparePendingEvent() was called without any expected ` +
+          `properties.\n` +
+          `CALLER: ${getCaller()}`
+      );
     }
 
     const data = {
@@ -435,7 +463,14 @@ class Telemetry {
    * @param {String} pendingPropValue
    *        The pending property value
    */
-  addEventProperty(obj, method, object, value, pendingPropName, pendingPropValue) {
+  addEventProperty(
+    obj,
+    method,
+    object,
+    value,
+    pendingPropName,
+    pendingPropValue
+  ) {
     const sig = `${method},${object},${value}`;
     const events = PENDING_EVENTS.get(obj, sig);
 
@@ -464,10 +499,12 @@ class Telemetry {
       }
     } else {
       // The property was not expected, warn and bail.
-      throw new Error(`An attempt was made to add the unexpected property ` +
-                      `"${pendingPropName}" to a telemetry event with the ` +
-                      `signature "${sig}"\n` +
-                      `CALLER: ${getCaller()}`);
+      throw new Error(
+        `An attempt was made to add the unexpected property ` +
+          `"${pendingPropName}" to a telemetry event with the ` +
+          `signature "${sig}"\n` +
+          `CALLER: ${getCaller()}`
+      );
     }
   }
 
@@ -556,11 +593,13 @@ class Telemetry {
         if (val.length > 80) {
           const sig = `${method},${object},${value}`;
 
-          dump(`Warning: The property "${name}" was added to a telemetry ` +
-               `event with the signature ${sig} but it's value "${val}" is ` +
-               `longer than the maximum allowed length of 80 characters.\n` +
-               `The property value has been trimmed to 80 characters before ` +
-               `sending.\nCALLER: ${getCaller()}`);
+          dump(
+            `Warning: The property "${name}" was added to a telemetry ` +
+              `event with the signature ${sig} but it's value "${val}" is ` +
+              `longer than the maximum allowed length of 80 characters.\n` +
+              `The property value has been trimmed to 80 characters before ` +
+              `sending.\nCALLER: ${getCaller()}`
+          );
 
           val = val.substring(0, 80);
         }
@@ -605,11 +644,17 @@ class Telemetry {
         "time_open",
         "session_id",
       ]);
-      this.addEventProperty(obj, "tool_timer", id, null,
-                            "time_open", this.msSystemNow());
+      this.addEventProperty(
+        obj,
+        "tool_timer",
+        id,
+        null,
+        "time_open",
+        this.msSystemNow()
+      );
     }
     if (charts.timerHist) {
-      this.start(charts.timerHist, obj, {inSeconds: true});
+      this.start(charts.timerHist, obj, { inSeconds: true });
     }
     if (charts.countHist) {
       this.getHistogramById(charts.countHist).add(true);
@@ -652,9 +697,9 @@ class Telemetry {
       const time = this.msSystemNow() - event.extra.time_open;
 
       this.addEventProperties(obj, "tool_timer", id, null, {
-        "time_open": time,
-        "os": this.osNameAndVersion,
-        "session_id": sessionId,
+        time_open: time,
+        os: this.osNameAndVersion,
+        session_id: sessionId,
       });
     }
 

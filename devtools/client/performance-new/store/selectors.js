@@ -4,7 +4,8 @@
 "use strict";
 
 const getRecordingState = state => state.recordingState;
-const getRecordingUnexpectedlyStopped = state => state.recordingUnexpectedlyStopped;
+const getRecordingUnexpectedlyStopped = state =>
+  state.recordingUnexpectedlyStopped;
 const getIsSupportedPlatform = state => state.isSupportedPlatform;
 const getInterval = state => state.interval;
 const getEntries = state => state.entries;
@@ -33,8 +34,8 @@ const getInitializedValues = state => {
 
 const getPerfFront = state => getInitializedValues(state).perfFront;
 const getReceiveProfileFn = state => getInitializedValues(state).receiveProfile;
-const getSetRecordingPreferencesFn =
-  state => getInitializedValues(state).setRecordingPreferences;
+const getSetRecordingPreferencesFn = state =>
+  getInitializedValues(state).setRecordingPreferences;
 
 module.exports = {
   getRecordingState,

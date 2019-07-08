@@ -15,11 +15,13 @@ add_task(async () => {
     options: {
       startWithLastProfile: false,
     },
-    profiles: [{
-      name: PROFILE_DEFAULT,
-      path: defaultProfile.leafName,
-      default: true,
-    }],
+    profiles: [
+      {
+        name: PROFILE_DEFAULT,
+        path: defaultProfile.leafName,
+        default: true,
+      },
+    ],
   });
 
   testStartsProfileManager();

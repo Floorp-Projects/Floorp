@@ -5,12 +5,8 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const dbNames = [
-    "No files",
-    "Blobs and mutable files",
-  ];
+function* testSteps() {
+  const dbNames = ["No files", "Blobs and mutable files"];
   const version = 1;
   const objectStoreName = "test";
 
@@ -30,9 +26,10 @@ function* testSteps()
   let db = event.target.result;
   db.onerror = errorHandler;
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName)
-              .get(1);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(1);
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
@@ -49,26 +46,29 @@ function* testSteps()
   db = event.target.result;
   db.onerror = errorHandler;
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName)
-              .get(1);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(1);
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result, "text", "Correct result");
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName)
-              .get(2);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(2);
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   verifyBlob(event.target.result, getBlob("blob0"));
   yield undefined;
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName)
-              .get(3);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(3);
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
@@ -80,18 +80,20 @@ function* testSteps()
   verifyBlob(result[1], getBlob("blob2"));
   yield undefined;
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName)
-              .get(4);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(4);
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   verifyMutableFile(event.target.result, getFile("mutablefile0", "", ""));
   yield undefined;
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName)
-              .get(5);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(5);
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
@@ -103,9 +105,10 @@ function* testSteps()
   verifyMutableFile(result[1], getFile("mutablefile2", "", ""));
   yield undefined;
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName)
-              .get(6);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(6);
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 

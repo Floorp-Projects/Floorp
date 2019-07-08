@@ -4,14 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // LoginReputationService
-const gLoginRep = Cc["@mozilla.org/reputationservice/login-reputation-service;1"].
-                  getService(Ci.nsILoginReputationService);
+const gLoginRep = Cc[
+  "@mozilla.org/reputationservice/login-reputation-service;1"
+].getService(Ci.nsILoginReputationService);
 
-let gListManager = Cc["@mozilla.org/url-classifier/listmanager;1"]
-                     .getService(Ci.nsIUrlListManager);
+let gListManager = Cc["@mozilla.org/url-classifier/listmanager;1"].getService(
+  Ci.nsIUrlListManager
+);
 
 var gHttpServ = null;
 
@@ -31,11 +33,16 @@ add_task(async function test_setup() {
   gLoginRep.init();
 
   // Setup local whitelist table.
-  Services.prefs.setCharPref("urlclassifier.passwordAllowTable", "test-passwordwhite-proto");
-  gListManager.registerTable(LOCAL_WHITELIST_DATA.tableName,
-                             LOCAL_WHITELIST_DATA.providerName,
-                             LOCAL_WHITELIST_DATA.updateUrl,
-                             LOCAL_WHITELIST_DATA.gethashUrl);
+  Services.prefs.setCharPref(
+    "urlclassifier.passwordAllowTable",
+    "test-passwordwhite-proto"
+  );
+  gListManager.registerTable(
+    LOCAL_WHITELIST_DATA.tableName,
+    LOCAL_WHITELIST_DATA.providerName,
+    LOCAL_WHITELIST_DATA.updateUrl,
+    LOCAL_WHITELIST_DATA.gethashUrl
+  );
 
   registerCleanupFunction(function() {
     gListManager.unregisterTable(LOCAL_WHITELIST_DATA.tableName);
@@ -50,9 +57,15 @@ add_test(function test_setup_local_whitelist() {
   // to SafeBrowsing database while update.
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
-  gHttpServ.registerPathHandler("/safebrowsing/update", function(request, response) {
-    response.setHeader("Content-Type",
-                       "application/vnd.google.safebrowsing-update", false);
+  gHttpServ.registerPathHandler("/safebrowsing/update", function(
+    request,
+    response
+  ) {
+    response.setHeader(
+      "Content-Type",
+      "application/vnd.google.safebrowsing-update",
+      false
+    );
 
     response.setStatusLine(request.httpVersion, 200, "OK");
 
@@ -70,11 +83,12 @@ add_test(function test_setup_local_whitelist() {
     //   }
     // ]
     //
-    let content = "\x0A\x36\x08\x08\x20\x02\x2A\x28\x08\x01\x12\x24\x08" +
-                  "\x20\x12\x20\x0F\xE4\x66\xBB\xDD\x34\xAB\x1E\xF7\x8F" +
-                  "\xDD\x9D\x8C\xF8\x9F\x4E\x42\x97\x92\x86\x02\x03\xE0" +
-                  "\xE9\x60\xBD\xD6\x3A\x85\xCD\x08\xD0\x3A\x06\x73\x74" +
-                  "\x61\x00\x74\x65\x12\x04\x08\x0C\x10\x0A";
+    let content =
+      "\x0A\x36\x08\x08\x20\x02\x2A\x28\x08\x01\x12\x24\x08" +
+      "\x20\x12\x20\x0F\xE4\x66\xBB\xDD\x34\xAB\x1E\xF7\x8F" +
+      "\xDD\x9D\x8C\xF8\x9F\x4E\x42\x97\x92\x86\x02\x03\xE0" +
+      "\xE9\x60\xBD\xD6\x3A\x85\xCD\x08\xD0\x3A\x06\x73\x74" +
+      "\x61\x00\x74\x65\x12\x04\x08\x0C\x10\x0A";
 
     response.bodyOutputStream.write(content, content.length);
   });
@@ -103,18 +117,24 @@ add_test(function test_setup_local_whitelist() {
 add_test(function test_disable() {
   Services.prefs.setBoolPref("browser.safebrowsing.passwords.enabled", false);
 
-  gLoginRep.queryReputation({
-    formURI: NetUtil.newURI("http://example.com"),
-  }, {
-    onComplete(aStatus, aVerdict) {
-      Assert.equal(aStatus, Cr.NS_ERROR_ABORT);
-      Assert.equal(aVerdict, Ci.nsILoginReputationVerdictType.UNSPECIFIED);
-
-      Services.prefs.setBoolPref("browser.safebrowsing.passwords.enabled", true);
-
-      run_next_test();
+  gLoginRep.queryReputation(
+    {
+      formURI: NetUtil.newURI("http://example.com"),
     },
-  });
+    {
+      onComplete(aStatus, aVerdict) {
+        Assert.equal(aStatus, Cr.NS_ERROR_ABORT);
+        Assert.equal(aVerdict, Ci.nsILoginReputationVerdictType.UNSPECIFIED);
+
+        Services.prefs.setBoolPref(
+          "browser.safebrowsing.passwords.enabled",
+          true
+        );
+
+        run_next_test();
+      },
+    }
+  );
 });
 
 add_test(function test_nullQuery() {
@@ -131,27 +151,33 @@ add_test(function test_nullQuery() {
 });
 
 add_test(function test_local_whitelist() {
-  gLoginRep.queryReputation({
-    formURI: NetUtil.newURI(whitelistedURI),
-  }, {
-    onComplete(aStatus, aVerdict) {
-      Assert.equal(aStatus, Cr.NS_OK);
-      Assert.equal(aVerdict, Ci.nsILoginReputationVerdictType.SAFE);
-
-      run_next_test();
+  gLoginRep.queryReputation(
+    {
+      formURI: NetUtil.newURI(whitelistedURI),
     },
-  });
+    {
+      onComplete(aStatus, aVerdict) {
+        Assert.equal(aStatus, Cr.NS_OK);
+        Assert.equal(aVerdict, Ci.nsILoginReputationVerdictType.SAFE);
+
+        run_next_test();
+      },
+    }
+  );
 });
 
 add_test(function test_notin_local_whitelist() {
-  gLoginRep.queryReputation({
-    formURI: NetUtil.newURI(exampleURI),
-  }, {
-    onComplete(aStatus, aVerdict) {
-      Assert.equal(aStatus, Cr.NS_OK);
-      Assert.equal(aVerdict, Ci.nsILoginReputationVerdictType.UNSPECIFIED);
-
-      run_next_test();
+  gLoginRep.queryReputation(
+    {
+      formURI: NetUtil.newURI(exampleURI),
     },
-  });
+    {
+      onComplete(aStatus, aVerdict) {
+        Assert.equal(aStatus, Cr.NS_OK);
+        Assert.equal(aVerdict, Ci.nsILoginReputationVerdictType.UNSPECIFIED);
+
+        run_next_test();
+      },
+    }
+  );
 });

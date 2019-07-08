@@ -9,8 +9,10 @@
 
 var EXPORTED_SYMBOLS = ["BrowserWindowTracker"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Lazy getters
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -34,27 +36,39 @@ function debug(s) {
 }
 
 function _updateCurrentContentOuterWindowID(browser) {
-  if (!browser.outerWindowID ||
-      browser.outerWindowID === _lastTopLevelWindowID ||
-      browser.ownerGlobal != _trackedWindows[0]) {
+  if (
+    !browser.outerWindowID ||
+    browser.outerWindowID === _lastTopLevelWindowID ||
+    browser.ownerGlobal != _trackedWindows[0]
+  ) {
     return;
   }
 
-  debug("Current window uri=" + (browser.currentURI && browser.currentURI.spec) +
-        " id=" + browser.outerWindowID);
+  debug(
+    "Current window uri=" +
+      (browser.currentURI && browser.currentURI.spec) +
+      " id=" +
+      browser.outerWindowID
+  );
 
   _lastTopLevelWindowID = browser.outerWindowID;
-  let windowIDWrapper = Cc["@mozilla.org/supports-PRUint64;1"]
-                          .createInstance(Ci.nsISupportsPRUint64);
+  let windowIDWrapper = Cc["@mozilla.org/supports-PRUint64;1"].createInstance(
+    Ci.nsISupportsPRUint64
+  );
   windowIDWrapper.data = _lastTopLevelWindowID;
-  Services.obs.notifyObservers(windowIDWrapper,
-                               "net:current-toplevel-outer-content-windowid");
+  Services.obs.notifyObservers(
+    windowIDWrapper,
+    "net:current-toplevel-outer-content-windowid"
+  );
 }
 
 function _handleEvent(event) {
   switch (event.type) {
     case "TabBrowserInserted":
-      if (event.target.ownerGlobal.gBrowser.selectedBrowser === event.target.linkedBrowser) {
+      if (
+        event.target.ownerGlobal.gBrowser.selectedBrowser ===
+        event.target.linkedBrowser
+      ) {
         _updateCurrentContentOuterWindowID(event.target.linkedBrowser);
       }
       break;
@@ -72,15 +86,19 @@ function _handleEvent(event) {
 
 function _handleMessage(message) {
   let browser = message.target;
-  if (message.name === "Browser:Init" &&
-      browser === browser.ownerGlobal.gBrowser.selectedBrowser) {
+  if (
+    message.name === "Browser:Init" &&
+    browser === browser.ownerGlobal.gBrowser.selectedBrowser
+  ) {
     _updateCurrentContentOuterWindowID(browser);
   }
 }
 
 function _trackWindowOrder(window) {
   if (window.windowState == window.STATE_MINIMIZED) {
-    let firstMinimizedWindow = _trackedWindows.findIndex(w => w.windowState == w.STATE_MINIMIZED);
+    let firstMinimizedWindow = _trackedWindows.findIndex(
+      w => w.windowState == w.STATE_MINIMIZED
+    );
     if (firstMinimizedWindow == -1) {
       firstMinimizedWindow = _trackedWindows.length;
     }
@@ -92,8 +110,9 @@ function _trackWindowOrder(window) {
 
 function _untrackWindowOrder(window) {
   let idx = _trackedWindows.indexOf(window);
-  if (idx >= 0)
+  if (idx >= 0) {
     _trackedWindows.splice(idx, 1);
+  }
 }
 
 // Methods that impact a window. Put into single object for organization.
@@ -133,8 +152,9 @@ var WindowHelper = {
 
   onActivate(window) {
     // If this window was the last focused window, we don't need to do anything
-    if (window == _trackedWindows[0])
+    if (window == _trackedWindows[0]) {
       return;
+    }
 
     _untrackWindowOrder(window);
     _trackWindowOrder(window);
@@ -155,11 +175,13 @@ this.BrowserWindowTracker = {
    */
   getTopWindow(options = {}) {
     for (let win of _trackedWindows) {
-      if (!win.closed &&
-          (options.allowPopups || win.toolbar.visible) &&
-          (!("private" in options) ||
-           PrivateBrowsingUtils.permanentPrivateBrowsing ||
-           PrivateBrowsingUtils.isWindowPrivate(win) == options.private)) {
+      if (
+        !win.closed &&
+        (options.allowPopups || win.toolbar.visible) &&
+        (!("private" in options) ||
+          PrivateBrowsingUtils.permanentPrivateBrowsing ||
+          PrivateBrowsingUtils.isWindowPrivate(win) == options.private)
+      ) {
         return win;
       }
     }

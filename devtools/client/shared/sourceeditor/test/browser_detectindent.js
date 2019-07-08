@@ -67,13 +67,17 @@ const NONE_CODE = [
 async function test() {
   waitForExplicitFinish();
 
-  const {ed, win} = await setup();
+  const { ed, win } = await setup();
   is(ed.getOption("indentUnit"), 2, "2 spaces before code added");
   is(ed.getOption("indentWithTabs"), false, "spaces is default");
 
   ed.setText(NONE_CODE);
   is(ed.getOption("indentUnit"), 2, "2 spaces after un-detectable code");
-  is(ed.getOption("indentWithTabs"), false, "spaces still set after un-detectable code");
+  is(
+    ed.getOption("indentWithTabs"),
+    false,
+    "spaces still set after un-detectable code"
+  );
 
   ed.setText(FOUR_SPACES_CODE);
   is(ed.getOption("indentUnit"), 4, "4 spaces detected in 4 space code");
@@ -85,7 +89,11 @@ async function test() {
 
   ed.setText(TABS_CODE);
   is(ed.getOption("indentUnit"), 2, "2 space indentation unit");
-  is(ed.getOption("indentWithTabs"), true, "tabs detected in majority tabs code");
+  is(
+    ed.getOption("indentWithTabs"),
+    true,
+    "tabs detected in majority tabs code"
+  );
 
   teardown(ed, win);
 }

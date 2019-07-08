@@ -63,12 +63,10 @@ class InspectorTabPanel extends Component {
   }
 
   render() {
-    return (
-      div({
-        ref: "content",
-        className: "devtools-inspector-tab-panel",
-      })
-    );
+    return div({
+      ref: "content",
+      className: "devtools-inspector-tab-panel",
+    });
   }
 }
 

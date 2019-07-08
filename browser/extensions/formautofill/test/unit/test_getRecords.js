@@ -4,13 +4,20 @@
 
 "use strict";
 
-const {CreditCard} = ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
+const { CreditCard } = ChromeUtils.import(
+  "resource://gre/modules/CreditCard.jsm"
+);
 
 let FormAutofillParent;
 let OSKeyStore;
 add_task(async function setup() {
-  ({FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", null));
-  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm"));
+  ({ FormAutofillParent } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillParent.jsm",
+    null
+  ));
+  ({ OSKeyStore } = ChromeUtils.import(
+    "resource://formautofill/OSKeyStore.jsm"
+  ));
 });
 
 const TEST_ADDRESS_1 = {
@@ -58,31 +65,38 @@ add_task(async function test_getRecords() {
   await formAutofillParent.init();
   await formAutofillParent.formAutofillStorage.initialize();
   let fakeResult = {
-    addresses: [{
-      "given-name": "Timothy",
-      "additional-name": "John",
-      "family-name": "Berners-Lee",
-      "organization": "World Wide Web Consortium",
-    }],
-    creditCards: [{
-      "cc-name": "John Doe",
-      "cc-number": "4111111111111111",
-      "cc-exp-month": 4,
-      "cc-exp-year": 2017,
-    }],
+    addresses: [
+      {
+        "given-name": "Timothy",
+        "additional-name": "John",
+        "family-name": "Berners-Lee",
+        organization: "World Wide Web Consortium",
+      },
+    ],
+    creditCards: [
+      {
+        "cc-name": "John Doe",
+        "cc-number": "4111111111111111",
+        "cc-exp-month": 4,
+        "cc-exp-year": 2017,
+      },
+    ],
   };
 
   for (let collectionName of ["addresses", "creditCards", "nonExisting"]) {
     let collection = formAutofillParent.formAutofillStorage[collectionName];
     let expectedResult = fakeResult[collectionName] || [];
     let mock = sinon.mock(target);
-    mock.expects("sendAsyncMessage").once().withExactArgs("FormAutofill:Records", expectedResult);
+    mock
+      .expects("sendAsyncMessage")
+      .once()
+      .withExactArgs("FormAutofill:Records", expectedResult);
 
     if (collection) {
       sinon.stub(collection, "getAll");
       collection.getAll.returns(Promise.resolve(expectedResult));
     }
-    await formAutofillParent._getRecords({collectionName}, target);
+    await formAutofillParent._getRecords({ collectionName }, target);
     mock.verify();
     if (collection) {
       Assert.equal(collection.getAll.called, true);
@@ -106,7 +120,7 @@ add_task(async function test_getRecords_addresses() {
       description: "If the search string could match 1 address",
       filter: {
         collectionName: "addresses",
-        info: {fieldName: "street-address"},
+        info: { fieldName: "street-address" },
         searchString: "Some",
       },
       expectedResult: [TEST_ADDRESS_2],
@@ -115,7 +129,7 @@ add_task(async function test_getRecords_addresses() {
       description: "If the search string could match multiple addresses",
       filter: {
         collectionName: "addresses",
-        info: {fieldName: "country"},
+        info: { fieldName: "country" },
         searchString: "u",
       },
       expectedResult: [TEST_ADDRESS_1, TEST_ADDRESS_2],
@@ -124,7 +138,7 @@ add_task(async function test_getRecords_addresses() {
       description: "If the search string could not match any address",
       filter: {
         collectionName: "addresses",
-        info: {fieldName: "street-address"},
+        info: { fieldName: "street-address" },
         searchString: "test",
       },
       expectedResult: [],
@@ -133,25 +147,27 @@ add_task(async function test_getRecords_addresses() {
       description: "If the search string is empty",
       filter: {
         collectionName: "addresses",
-        info: {fieldName: "street-address"},
+        info: { fieldName: "street-address" },
         searchString: "",
       },
       expectedResult: [TEST_ADDRESS_1, TEST_ADDRESS_2],
     },
     {
-      description: "Check if the filtering logic is free from searching special chars",
+      description:
+        "Check if the filtering logic is free from searching special chars",
       filter: {
         collectionName: "addresses",
-        info: {fieldName: "street-address"},
+        info: { fieldName: "street-address" },
         searchString: ".*",
       },
       expectedResult: [],
     },
     {
-      description: "Prevent broken while searching the property that does not exist",
+      description:
+        "Prevent broken while searching the property that does not exist",
       filter: {
         collectionName: "addresses",
-        info: {fieldName: "tel"},
+        info: { fieldName: "tel" },
         searchString: "1",
       },
       expectedResult: [],
@@ -161,8 +177,10 @@ add_task(async function test_getRecords_addresses() {
   for (let testCase of testCases) {
     info("Starting testcase: " + testCase.description);
     let mock = sinon.mock(target);
-    mock.expects("sendAsyncMessage").once().withExactArgs("FormAutofill:Records",
-                                                          testCase.expectedResult);
+    mock
+      .expects("sendAsyncMessage")
+      .once()
+      .withExactArgs("FormAutofill:Records", testCase.expectedResult);
     await formAutofillParent._getRecords(testCase.filter, target);
     mock.verify();
   }
@@ -174,21 +192,33 @@ add_task(async function test_getRecords_creditCards() {
   await formAutofillParent.init();
   await formAutofillParent.formAutofillStorage.initialize();
   let collection = formAutofillParent.formAutofillStorage.creditCards;
-  let encryptedCCRecords = await Promise.all([TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2].map(async record => {
-    let clonedRecord = Object.assign({}, record);
-    clonedRecord["cc-number"] = CreditCard.getLongMaskedNumber(record["cc-number"]);
-    clonedRecord["cc-number-encrypted"] = await OSKeyStore.encrypt(record["cc-number"]);
-    return clonedRecord;
-  }));
-  sinon.stub(collection, "getAll").callsFake(() =>
-    Promise.resolve([Object.assign({}, encryptedCCRecords[0]), Object.assign({}, encryptedCCRecords[1])]));
+  let encryptedCCRecords = await Promise.all(
+    [TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2].map(async record => {
+      let clonedRecord = Object.assign({}, record);
+      clonedRecord["cc-number"] = CreditCard.getLongMaskedNumber(
+        record["cc-number"]
+      );
+      clonedRecord["cc-number-encrypted"] = await OSKeyStore.encrypt(
+        record["cc-number"]
+      );
+      return clonedRecord;
+    })
+  );
+  sinon
+    .stub(collection, "getAll")
+    .callsFake(() =>
+      Promise.resolve([
+        Object.assign({}, encryptedCCRecords[0]),
+        Object.assign({}, encryptedCCRecords[1]),
+      ])
+    );
 
   let testCases = [
     {
       description: "If the search string could match multiple creditCards",
       filter: {
         collectionName: "creditCards",
-        info: {fieldName: "cc-name"},
+        info: { fieldName: "cc-name" },
         searchString: "John",
       },
       expectedResult: encryptedCCRecords,
@@ -197,17 +227,18 @@ add_task(async function test_getRecords_creditCards() {
       description: "If the search string could not match any creditCard",
       filter: {
         collectionName: "creditCards",
-        info: {fieldName: "cc-name"},
+        info: { fieldName: "cc-name" },
         searchString: "T",
       },
       expectedResult: [],
     },
     {
-      description: "Return all creditCards if focused field is cc number; " +
+      description:
+        "Return all creditCards if focused field is cc number; " +
         "if the search string could match multiple creditCards",
       filter: {
         collectionName: "creditCards",
-        info: {fieldName: "cc-number"},
+        info: { fieldName: "cc-number" },
         searchString: "4",
       },
       expectedResult: encryptedCCRecords,
@@ -216,7 +247,7 @@ add_task(async function test_getRecords_creditCards() {
       description: "If the search string could match 1 creditCard",
       filter: {
         collectionName: "creditCards",
-        info: {fieldName: "cc-name"},
+        info: { fieldName: "cc-name" },
         searchString: "John Doe",
       },
       mpEnabled: true,
@@ -226,7 +257,7 @@ add_task(async function test_getRecords_creditCards() {
       description: "Return all creditCards if focused field is cc number",
       filter: {
         collectionName: "creditCards",
-        info: {fieldName: "cc-number"},
+        info: { fieldName: "cc-number" },
         searchString: "411",
       },
       mpEnabled: true,
@@ -237,14 +268,18 @@ add_task(async function test_getRecords_creditCards() {
   for (let testCase of testCases) {
     info("Starting testcase: " + testCase.description);
     if (testCase.mpEnabled) {
-      let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(Ci.nsIPK11TokenDB);
+      let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
+        Ci.nsIPK11TokenDB
+      );
       let token = tokendb.getInternalKeyToken();
       token.reset();
       token.initPassword("password");
     }
     let mock = sinon.mock(target);
-    mock.expects("sendAsyncMessage").once().withExactArgs("FormAutofill:Records",
-                                                          testCase.expectedResult);
+    mock
+      .expects("sendAsyncMessage")
+      .once()
+      .withExactArgs("FormAutofill:Records", testCase.expectedResult);
     await formAutofillParent._getRecords(testCase.filter, target);
     mock.verify();
   }

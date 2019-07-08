@@ -19,7 +19,7 @@ function getIndentElement(indent, className) {
     "data-indent": indent,
     className: `indent${className ? " " + className : ""}`,
     style: {
-      "width": indent * INDENT_WIDTH,
+      width: indent * INDENT_WIDTH,
     },
   });
 }

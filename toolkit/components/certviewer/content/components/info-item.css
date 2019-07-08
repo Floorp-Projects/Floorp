@@ -12,6 +12,10 @@ label {
   margin-inline-end: 0;
 }
 
+label:dir(rtl) {
+  text-align: left;
+}
+
 .long-hex {
   max-width: 100%;
   overflow: hidden;

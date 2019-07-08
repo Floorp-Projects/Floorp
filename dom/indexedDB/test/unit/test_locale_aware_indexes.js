@@ -5,51 +5,82 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   const objectStoreName = "People";
 
   const objectStoreData = [
-    { key: "237-23-7732", value: { name: "\u00E1na",   height: 60, weight: 120 } },
-    { key: "237-23-7733", value: { name: "ana",        height: 52, weight: 110 } },
-    { key: "237-23-7734", value: { name: "fabio",      height: 73, weight: 180 } },
-    { key: "237-23-7735", value: { name: "\u00F3scar", height: 58, weight: 130 } },
-    { key: "237-23-7736", value: { name: "bob",        height: 65, weight: 150 } },
+    {
+      key: "237-23-7732",
+      value: { name: "\u00E1na", height: 60, weight: 120 },
+    },
+    { key: "237-23-7733", value: { name: "ana", height: 52, weight: 110 } },
+    { key: "237-23-7734", value: { name: "fabio", height: 73, weight: 180 } },
+    {
+      key: "237-23-7735",
+      value: { name: "\u00F3scar", height: 58, weight: 130 },
+    },
+    { key: "237-23-7736", value: { name: "bob", height: 65, weight: 150 } },
     { key: "237-23-7737", value: { name: "\u00E9ason", height: 65 } },
   ];
 
   const indexData = [
-    { name: "name", keyPath: "name", options: { unique: true, locale: "es-ES" } },
+    {
+      name: "name",
+      keyPath: "name",
+      options: { unique: true, locale: "es-ES" },
+    },
     { name: "height", keyPath: "height", options: { locale: "auto" } },
-    { name: "weight", keyPath: "weight", options: { unique: false, locale: "es-ES" } },
+    {
+      name: "weight",
+      keyPath: "weight",
+      options: { unique: false, locale: "es-ES" },
+    },
   ];
 
   const objectStoreDataNameSort = [
-    { key: "237-23-7733", value: { name: "ana",        height: 52, weight: 110 } },
-    { key: "237-23-7732", value: { name: "\u00E1na",   height: 60, weight: 120 } },
-    { key: "237-23-7736", value: { name: "bob",        height: 65, weight: 150 } },
+    { key: "237-23-7733", value: { name: "ana", height: 52, weight: 110 } },
+    {
+      key: "237-23-7732",
+      value: { name: "\u00E1na", height: 60, weight: 120 },
+    },
+    { key: "237-23-7736", value: { name: "bob", height: 65, weight: 150 } },
     { key: "237-23-7737", value: { name: "\u00E9ason", height: 65 } },
-    { key: "237-23-7734", value: { name: "fabio",      height: 73, weight: 180 } },
-    { key: "237-23-7735", value: { name: "\u00F3scar", height: 58, weight: 130 } },
+    { key: "237-23-7734", value: { name: "fabio", height: 73, weight: 180 } },
+    {
+      key: "237-23-7735",
+      value: { name: "\u00F3scar", height: 58, weight: 130 },
+    },
   ];
 
   const objectStoreDataWeightSort = [
-    { key: "237-23-7733", value: { name: "ana",        height: 52, weight: 110 } },
-    { key: "237-23-7732", value: { name: "\u00E1na",   height: 60, weight: 120 } },
-    { key: "237-23-7735", value: { name: "\u00F3scar", height: 58, weight: 130 } },
-    { key: "237-23-7736", value: { name: "bob",        height: 65, weight: 150 } },
-    { key: "237-23-7734", value: { name: "fabio",      height: 73, weight: 180 } },
+    { key: "237-23-7733", value: { name: "ana", height: 52, weight: 110 } },
+    {
+      key: "237-23-7732",
+      value: { name: "\u00E1na", height: 60, weight: 120 },
+    },
+    {
+      key: "237-23-7735",
+      value: { name: "\u00F3scar", height: 58, weight: 130 },
+    },
+    { key: "237-23-7736", value: { name: "bob", height: 65, weight: 150 } },
+    { key: "237-23-7734", value: { name: "fabio", height: 73, weight: 180 } },
   ];
 
   const objectStoreDataHeightSort = [
-    { key: "237-23-7733", value: { name: "ana",        height: 52, weight: 110 } },
-    { key: "237-23-7735", value: { name: "\u00F3scar", height: 58, weight: 130 } },
-    { key: "237-23-7732", value: { name: "\u00E1na",   height: 60, weight: 120 } },
-    { key: "237-23-7736", value: { name: "bob",        height: 65, weight: 150 } },
+    { key: "237-23-7733", value: { name: "ana", height: 52, weight: 110 } },
+    {
+      key: "237-23-7735",
+      value: { name: "\u00F3scar", height: 58, weight: 130 },
+    },
+    {
+      key: "237-23-7732",
+      value: { name: "\u00E1na", height: 60, weight: 120 },
+    },
+    { key: "237-23-7736", value: { name: "bob", height: 65, weight: 150 } },
     { key: "237-23-7737", value: { name: "\u00E9ason", height: 65 } },
-    { key: "237-23-7734", value: { name: "fabio",      height: 73, weight: 180 } },
+    { key: "237-23-7734", value: { name: "fabio", height: 73, weight: 180 } },
   ];
 
   let request = indexedDB.open(name, 1);
@@ -64,8 +95,7 @@ function* testSteps()
   // First, add all our data to the object store.
   let addedData = 0;
   for (let i in objectStoreData) {
-    request = objectStore.add(objectStoreData[i].value,
-                              objectStoreData[i].key);
+    request = objectStore.add(objectStoreData[i].value, objectStoreData[i].key);
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == objectStoreData.length) {
@@ -76,13 +106,15 @@ function* testSteps()
   event = yield undefined;
   // Now create the indexes.
   for (let i in indexData) {
-    objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                            indexData[i].options);
+    objectStore.createIndex(
+      indexData[i].name,
+      indexData[i].keyPath,
+      indexData[i].options
+    );
   }
   is(objectStore.indexNames.length, indexData.length, "Good index count");
   yield undefined;
-  objectStore = db.transaction(objectStoreName)
-                  .objectStore(objectStoreName);
+  objectStore = db.transaction(objectStoreName).objectStore(objectStoreName);
 
   // Check global properties to make sure they are correct.
   is(objectStore.indexNames.length, indexData.length, "Good index count");
@@ -134,23 +166,34 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
       ok(!("value" in cursor), "No value");
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
       ok(!("value" in cursor), "No value");
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -167,21 +210,32 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataWeightSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataWeightSort[keyIndex].value.weight,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataWeightSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataWeightSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataWeightSort[keyIndex].value.weight,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataWeightSort[keyIndex].key,
+        "Correct value"
+      );
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -190,10 +244,13 @@ function* testSteps()
   is(keyIndex, objectStoreData.length - 1, "Saw all the expected keys");
 
   // Check that the name index enforces its unique constraint.
-  objectStore = db.transaction(objectStoreName, "readwrite")
-                  .objectStore(objectStoreName);
-  request = objectStore.add({ name: "\u00E1na", height: 62, weight: 170 },
-                            "237-23-7738");
+  objectStore = db
+    .transaction(objectStoreName, "readwrite")
+    .objectStore(objectStoreName);
+  request = objectStore.add(
+    { name: "\u00E1na", height: 62, weight: 170 },
+    "237-23-7738"
+  );
   request.addEventListener("error", new ExpectError("ConstraintError", true));
   request.onsuccess = unexpectedSuccessHandler;
   event = yield undefined;
@@ -207,21 +264,32 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       keyIndex--;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -239,15 +307,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -265,15 +338,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -291,15 +369,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -317,15 +400,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -343,15 +431,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -369,15 +462,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -395,15 +493,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -421,15 +524,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -447,15 +555,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -472,41 +585,66 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -523,41 +661,66 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       keyIndex--;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -575,41 +738,66 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -627,41 +815,66 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -679,41 +892,66 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -731,41 +969,66 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -783,41 +1046,66 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       keyIndex--;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -836,15 +1124,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataHeightSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -857,21 +1150,25 @@ function* testSteps()
   keyIndex = 3;
   keyRange = IDBKeyRange.only(65);
 
-  request = objectStore.index("height").openKeyCursor(keyRange,
-                                                      "nextunique");
+  request = objectStore.index("height").openKeyCursor(keyRange, "nextunique");
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataHeightSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -888,15 +1185,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataHeightSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       keyIndex--;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -908,24 +1210,28 @@ function* testSteps()
 
   keyIndex = 5;
 
-  request = objectStore.index("height").openKeyCursor(null,
-                                                      "prevunique");
+  request = objectStore.index("height").openKeyCursor(null, "prevunique");
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataHeightSort[keyIndex].key,
+        "Correct value"
+      );
 
       cursor.continue();
       if (keyIndex == 5) {
         keyIndex--;
       }
       keyIndex--;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -943,25 +1249,37 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataHeightSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataHeightSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataHeightSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataHeightSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -974,31 +1292,42 @@ function* testSteps()
   keyIndex = 3;
   keyRange = IDBKeyRange.only(65);
 
-  request = objectStore.index("height").openCursor(keyRange,
-                                                   "nextunique");
+  request = objectStore.index("height").openCursor(keyRange, "nextunique");
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataHeightSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataHeightSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataHeightSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataHeightSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
       keyIndex++;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -1015,25 +1344,37 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataHeightSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataHeightSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataHeightSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataHeightSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
       keyIndex--;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -1045,25 +1386,37 @@ function* testSteps()
 
   keyIndex = 5;
 
-  request = objectStore.index("height").openCursor(null,
-                                                   "prevunique");
+  request = objectStore.index("height").openCursor(null, "prevunique");
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataHeightSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataHeightSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataHeightSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataHeightSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataHeightSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataHeightSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       cursor.continue();
@@ -1071,8 +1424,7 @@ function* testSteps()
         keyIndex--;
       }
       keyIndex--;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -1089,28 +1441,38 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       let nextKey = !keyIndex ? "\u00E9ason" : undefined;
 
       cursor.continue(nextKey);
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       if (!keyIndex) {
         keyIndex = 3;
-      }
-      else {
+      } else {
         keyIndex++;
       }
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -1127,23 +1489,34 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       let nextKey = !keyIndex ? "bar" : undefined;
 
       cursor.continue(nextKey);
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct value"
+      );
 
       keyIndex += keyIndex ? 1 : 2;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -1160,48 +1533,72 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       let nextKey = !keyIndex ? "\u00E9ason" : undefined;
 
       cursor.continue(nextKey);
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       if (!keyIndex) {
         keyIndex = 3;
-      }
-      else {
+      } else {
         keyIndex++;
       }
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -1218,43 +1615,68 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       let nextKey = !keyIndex ? "bar" : undefined;
 
       cursor.continue(nextKey);
 
-      is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
-         "Correct primary key");
-      is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
-         "Correct name");
-      is(cursor.value.height,
-         objectStoreDataNameSort[keyIndex].value.height,
-         "Correct height");
+      is(
+        cursor.key,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataNameSort[keyIndex].key,
+        "Correct primary key"
+      );
+      is(
+        cursor.value.name,
+        objectStoreDataNameSort[keyIndex].value.name,
+        "Correct name"
+      );
+      is(
+        cursor.value.height,
+        objectStoreDataNameSort[keyIndex].value.height,
+        "Correct height"
+      );
       if ("weight" in cursor.value) {
-        is(cursor.value.weight,
-           objectStoreDataNameSort[keyIndex].value.weight,
-           "Correct weight");
+        is(
+          cursor.value.weight,
+          objectStoreDataNameSort[keyIndex].value.weight,
+          "Correct weight"
+        );
       }
 
       keyIndex += keyIndex ? 1 : 2;
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };

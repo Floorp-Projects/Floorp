@@ -4,15 +4,23 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 function makeDefaultFaviconChannel(uri, loadInfo) {
   let channel = Services.io.newChannelFromURIWithLoadInfo(
-    PlacesUtils.favicons.defaultFavicon, loadInfo);
+    PlacesUtils.favicons.defaultFavicon,
+    loadInfo
+  );
   channel.originalURI = uri;
   channel.contentType = PlacesUtils.favicons.defaultFaviconMimeType;
   return channel;
@@ -22,8 +30,9 @@ function streamDefaultFavicon(uri, loadInfo, outputStream, originalChannel) {
   try {
     // Open up a new channel to get that data, and push it to our output stream.
     // Create a listener to hand data to the pipe's output stream.
-    let listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
-                     .createInstance(Ci.nsISimpleStreamListener);
+    let listener = Cc[
+      "@mozilla.org/network/simple-stream-listener;1"
+    ].createInstance(Ci.nsISimpleStreamListener);
     listener.init(outputStream, {
       onStartRequest(request) {},
       onStopRequest(request, statusCode) {
@@ -42,16 +51,16 @@ function streamDefaultFavicon(uri, loadInfo, outputStream, originalChannel) {
 
 function serveIcon(pipe, data, len) {
   // Pass the icon data to the output stream.
-  let stream = Cc["@mozilla.org/binaryoutputstream;1"]
-                 .createInstance(Ci.nsIBinaryOutputStream);
+  let stream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+    Ci.nsIBinaryOutputStream
+  );
   stream.setOutputStream(pipe.outputStream);
   stream.writeByteArray(data, len);
   stream.close();
   pipe.outputStream.close();
 }
 
-function PageIconProtocolHandler() {
-}
+function PageIconProtocolHandler() {}
 
 PageIconProtocolHandler.prototype = {
   get scheme() {
@@ -63,43 +72,51 @@ PageIconProtocolHandler.prototype = {
   },
 
   get protocolFlags() {
-    return Ci.nsIProtocolHandler.URI_NORELATIVE |
-           Ci.nsIProtocolHandler.URI_NOAUTH |
-           Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD |
-           Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE;
+    return (
+      Ci.nsIProtocolHandler.URI_NORELATIVE |
+      Ci.nsIProtocolHandler.URI_NOAUTH |
+      Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD |
+      Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE
+    );
   },
 
   newChannel(uri, loadInfo) {
     try {
       // Create a pipe that will give us an output stream that we can use once
       // we got all the favicon data.
-      let pipe = Cc["@mozilla.org/pipe;1"]
-                   .createInstance(Ci.nsIPipe);
+      let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
       pipe.init(true, true, 0, Ci.nsIFaviconService.MAX_FAVICON_BUFFER_SIZE);
 
       // Create our channel.
-      let channel = Cc["@mozilla.org/network/input-stream-channel;1"]
-                      .createInstance(Ci.nsIInputStreamChannel);
+      let channel = Cc[
+        "@mozilla.org/network/input-stream-channel;1"
+      ].createInstance(Ci.nsIInputStreamChannel);
       channel.QueryInterface(Ci.nsIChannel);
       channel.setURI(uri);
       channel.contentStream = pipe.inputStream;
       channel.loadInfo = loadInfo;
 
-      let pageURI = NetUtil.newURI(uri.pathQueryRef.replace(/[&#]size=[^&]+$/, ""));
+      let pageURI = NetUtil.newURI(
+        uri.pathQueryRef.replace(/[&#]size=[^&]+$/, "")
+      );
       let preferredSize = PlacesUtils.favicons.preferredSizeFromURI(uri);
-      PlacesUtils.favicons.getFaviconDataForPage(pageURI, (iconURI, len, data, mimeType) => {
-        if (len == 0) {
-          streamDefaultFavicon(uri, loadInfo, pipe.outputStream, channel);
-        } else {
-          try {
-            channel.contentType = mimeType;
-            channel.contentLength = len;
-            serveIcon(pipe, data, len);
-          } catch (ex) {
+      PlacesUtils.favicons.getFaviconDataForPage(
+        pageURI,
+        (iconURI, len, data, mimeType) => {
+          if (len == 0) {
             streamDefaultFavicon(uri, loadInfo, pipe.outputStream, channel);
+          } else {
+            try {
+              channel.contentType = mimeType;
+              channel.contentLength = len;
+              serveIcon(pipe, data, len);
+            } catch (ex) {
+              streamDefaultFavicon(uri, loadInfo, pipe.outputStream, channel);
+            }
           }
-        }
-      }, preferredSize);
+        },
+        preferredSize
+      );
 
       return channel;
     } catch (ex) {

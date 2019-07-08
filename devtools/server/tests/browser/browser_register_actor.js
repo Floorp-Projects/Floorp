@@ -4,13 +4,15 @@ var gClient;
 
 function test() {
   waitForExplicitFinish();
-  const actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
+  const actorURL =
+    "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect()
+  gClient
+    .connect()
     .then(() => gClient.mainRoot.listTabs())
     .then(async () => {
       const options = {
@@ -26,8 +28,10 @@ function test() {
       ok(!!front.targetForm.helloActor, "Hello actor must exist");
 
       // Make sure actor's state is maintained across listTabs requests.
-      checkActorState(front.targetForm.helloActor,
-        cleanupActor.bind(this, actorFront));
+      checkActorState(
+        front.targetForm.helloActor,
+        cleanupActor.bind(this, actorFront)
+      );
     });
 }
 
@@ -43,10 +47,13 @@ function cleanupActor(actorFront) {
 }
 
 function getCount(actor, callback) {
-  return gClient.request({
-    to: actor,
-    type: "count",
-  }, callback);
+  return gClient.request(
+    {
+      to: actor,
+      type: "count",
+    },
+    callback
+  );
 }
 
 var checkActorState = async function(helloActor, callback) {

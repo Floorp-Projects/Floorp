@@ -5,15 +5,14 @@
 
 "use strict";
 
-const {
-  viewState,
-} = require("devtools/client/memory/constants");
+const { viewState } = require("devtools/client/memory/constants");
 const {
   takeSnapshotAndCensus,
 } = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
+const TEST_URL =
+  "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
   // Creating snapshots already takes ~25 seconds on linux 32 debug machines
@@ -33,9 +32,14 @@ this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
 
-  await waitUntilState(store, state =>
-    state.snapshots.length == 3 &&
-    state.snapshots.every(s => s.census && s.census.state === censusState.SAVED));
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots.length == 3 &&
+      state.snapshots.every(
+        s => s.census && s.census.state === censusState.SAVED
+      )
+  );
   ok(true, "All snapshots censuses are in SAVED state");
 
   await waitUntilSnapshotSelected(store, 2);
@@ -64,14 +68,20 @@ this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
   info("Click on first node.");
   const firstNode = doc.querySelector(".tree .heap-tree-item-name");
   EventUtils.synthesizeMouseAtCenter(firstNode, {}, panel.panelWin);
-  await waitUntilState(store, state => state.snapshots[1].census.focused ===
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots[1].census.focused ===
       state.snapshots[1].census.report.children[0]
   );
   ok(true, "First root is selected after click.");
 
   info("Press DOWN key, expect second root focused.");
   EventUtils.synthesizeKey("VK_DOWN", {}, panel.panelWin);
-  await waitUntilState(store, state => state.snapshots[1].census.focused ===
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots[1].census.focused ===
       state.snapshots[1].census.report.children[1]
   );
   ok(true, "Second root is selected after pressing DOWN.");
@@ -79,7 +89,10 @@ this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
 
   info("Press UP key, expect second root focused.");
   EventUtils.synthesizeKey("VK_UP", {}, panel.panelWin);
-  await waitUntilState(store, state => state.snapshots[1].census.focused ===
+  await waitUntilState(
+    store,
+    state =>
+      state.snapshots[1].census.focused ===
       state.snapshots[1].census.report.children[0]
   );
   ok(true, "First root is selected after pressing UP.");

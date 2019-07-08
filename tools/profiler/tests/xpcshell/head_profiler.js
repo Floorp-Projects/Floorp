@@ -1,10 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-var {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 /**
  * Get the payloads of a type recursively, including from all subprocesses.
@@ -15,7 +17,7 @@ var {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
  * @return {Array} The final payloads.
  */
 function getAllPayloadsOfType(profile, type, payloadTarget = []) {
-  for (const {markers} of profile.threads) {
+  for (const { markers } of profile.threads) {
     for (const markerTuple of markers.data) {
       const payload = markerTuple[markers.schema.data];
       if (payload && payload.type === type) {
@@ -30,7 +32,6 @@ function getAllPayloadsOfType(profile, type, payloadTarget = []) {
 
   return payloadTarget;
 }
-
 
 /**
  * This is a helper function be able to run `await wait(500)`. Unfortunately this

@@ -6,12 +6,14 @@
 async function run_test() {
   setupTestCommon();
 
-  debugDump("testing removal of an active update for a channel that is not " +
-            "valid due to switching channels (Bug 486275).");
+  debugDump(
+    "testing removal of an active update for a channel that is not " +
+      "valid due to switching channels (Bug 486275)."
+  );
 
-  let patchProps = {state: STATE_DOWNLOADING};
+  let patchProps = { state: STATE_DOWNLOADING };
   let patches = getLocalPatchString(patchProps);
-  let updateProps = {appVersion: "1.0"};
+  let updateProps = { appVersion: "1.0" };
   let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
@@ -20,17 +22,31 @@ async function run_test() {
 
   standardInit();
 
-  Assert.ok(!gUpdateManager.activeUpdate,
-            "there should not be an active update");
-  Assert.equal(gUpdateManager.updateCount, 1,
-               "the update manager update count" + MSG_SHOULD_EQUAL);
+  Assert.ok(
+    !gUpdateManager.activeUpdate,
+    "there should not be an active update"
+  );
+  Assert.equal(
+    gUpdateManager.updateCount,
+    1,
+    "the update manager update count" + MSG_SHOULD_EQUAL
+  );
   let update = gUpdateManager.getUpdateAt(0);
-  Assert.equal(update.state, STATE_FAILED,
-               "the first update state" + MSG_SHOULD_EQUAL);
-  Assert.equal(update.errorCode, ERR_CHANNEL_CHANGE,
-               "the first update errorCode" + MSG_SHOULD_EQUAL);
-  Assert.equal(update.statusText, getString("statusFailed"),
-               "the first update statusText " + MSG_SHOULD_EQUAL);
+  Assert.equal(
+    update.state,
+    STATE_FAILED,
+    "the first update state" + MSG_SHOULD_EQUAL
+  );
+  Assert.equal(
+    update.errorCode,
+    ERR_CHANNEL_CHANGE,
+    "the first update errorCode" + MSG_SHOULD_EQUAL
+  );
+  Assert.equal(
+    update.statusText,
+    getString("statusFailed"),
+    "the first update statusText " + MSG_SHOULD_EQUAL
+  );
   await waitForUpdateXMLFiles();
 
   let dir = getUpdateDirFile(DIR_PATCH);

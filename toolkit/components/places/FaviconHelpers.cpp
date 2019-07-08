@@ -848,7 +848,8 @@ AsyncAssociateIconToPage::Run() {
         "  SELECT icon_id FROM moz_icons_to_pages "
         "  JOIN moz_icons i ON icon_id = i.id "
         "  WHERE page_id = :page_id "
-        "  AND expire_ms < strftime('%s','now','localtime','start of day','-7 days','utc') * 1000 "
+        "  AND expire_ms < strftime('%s','now','localtime','start of day','-7 "
+        "days','utc') * 1000 "
         ") AND page_id = :page_id ");
     NS_ENSURE_STATE(stmt);
     mozStorageStatementScoper scoper(stmt);

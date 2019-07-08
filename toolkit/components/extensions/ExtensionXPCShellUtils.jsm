@@ -7,73 +7,112 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionTestUtils"];
 
-const {ActorManagerParent} = ChromeUtils.import("resource://gre/modules/ActorManagerParent.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { ActorManagerParent } = ChromeUtils.import(
+  "resource://gre/modules/ActorManagerParent.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 // Windowless browsers can create documents that rely on XUL Custom Elements:
 ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm", null);
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonTestUtils",
-                               "resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ContentTask",
-                               "resource://testing-common/ContentTask.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionTestCommon",
-                               "resource://testing-common/ExtensionTestCommon.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "MessageChannel",
-                               "resource://gre/modules/MessageChannel.jsm");
-ChromeUtils.defineModuleGetter(this, "Schemas",
-                               "resource://gre/modules/Schemas.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "TestUtils",
-                               "resource://testing-common/TestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonTestUtils",
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentTask",
+  "resource://testing-common/ContentTask.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionTestCommon",
+  "resource://testing-common/ExtensionTestCommon.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "MessageChannel",
+  "resource://gre/modules/MessageChannel.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Schemas",
+  "resource://gre/modules/Schemas.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TestUtils",
+  "resource://testing-common/TestUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const { Management } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm",
+    null
+  );
   return Management;
 });
 
-Services.mm.loadFrameScript("chrome://global/content/browser-content.js", true, true);
+Services.mm.loadFrameScript(
+  "chrome://global/content/browser-content.js",
+  true,
+  true
+);
 
 ActorManagerParent.flush();
 
 /* exported ExtensionTestUtils */
 
-const {
-  promiseDocumentLoaded,
-  promiseEvent,
-  promiseObserved,
-} = ExtensionUtils;
+const { promiseDocumentLoaded, promiseEvent, promiseObserved } = ExtensionUtils;
 
 var REMOTE_CONTENT_SCRIPTS = false;
 
 let BASE_MANIFEST = Object.freeze({
-  "applications": Object.freeze({
-    "gecko": Object.freeze({
-      "id": "test@web.ext",
+  applications: Object.freeze({
+    gecko: Object.freeze({
+      id: "test@web.ext",
     }),
   }),
 
-  "manifest_version": 2,
+  manifest_version: 2,
 
-  "name": "name",
-  "version": "0",
+  name: "name",
+  version: "0",
 });
 
-
 function frameScript() {
-  const {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const { MessageChannel } = ChromeUtils.import(
+    "resource://gre/modules/MessageChannel.jsm"
+  );
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
 
   Services.obs.notifyObservers(this, "tab-content-frameloader-created");
 
   const messageListener = {
-    async receiveMessage({target, messageName, recipient, data, name}) {
+    async receiveMessage({ target, messageName, recipient, data, name }) {
       /* globals content */
       let resp = await content.fetch(data.url, data.options);
       return resp.text();
@@ -82,24 +121,36 @@ function frameScript() {
   MessageChannel.addListener(this, "Test:Fetch", messageListener);
 
   // eslint-disable-next-line mozilla/balanced-listeners, no-undef
-  addEventListener("MozHeapMinimize", () => {
-    Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
-  }, true, true);
+  addEventListener(
+    "MozHeapMinimize",
+    () => {
+      Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
+    },
+    true,
+    true
+  );
 }
 
 let kungFuDeathGrip = new Set();
 function promiseBrowserLoaded(browser, url, redirectUrl) {
   return new Promise(resolve => {
     const listener = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIWebProgressListener]),
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsISupportsWeakReference,
+        Ci.nsIWebProgressListener,
+      ]),
 
       onStateChange(webProgress, request, stateFlags, statusCode) {
         request.QueryInterface(Ci.nsIChannel);
 
-        let requestUrl = request.originalURI ? request.originalURI.spec : webProgress.DOMWindow.location.href;
-        if (webProgress.isTopLevel &&
-            (requestUrl === url || requestUrl === redirectUrl) &&
-            (stateFlags & Ci.nsIWebProgressListener.STATE_STOP)) {
+        let requestUrl = request.originalURI
+          ? request.originalURI.spec
+          : webProgress.DOMWindow.location.href;
+        if (
+          webProgress.isTopLevel &&
+          (requestUrl === url || requestUrl === redirectUrl) &&
+          stateFlags & Ci.nsIWebProgressListener.STATE_STOP
+        ) {
           resolve();
           kungFuDeathGrip.delete(listener);
           browser.removeProgressListener(listener);
@@ -111,12 +162,20 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
     // use one. But we also need to make sure it stays alive until we're
     // done with it, so thunk away a strong reference to keep it alive.
     kungFuDeathGrip.add(listener);
-    browser.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+    browser.addProgressListener(
+      listener,
+      Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
+    );
   });
 }
 
 class ContentPage {
-  constructor(remote = REMOTE_CONTENT_SCRIPTS, extension = null, privateBrowsing = false, userContextId = undefined) {
+  constructor(
+    remote = REMOTE_CONTENT_SCRIPTS,
+    extension = null,
+    privateBrowsing = false,
+    userContextId = undefined
+  ) {
     this.remote = remote;
     this.extension = extension;
     this.privateBrowsing = privateBrowsing;
@@ -129,25 +188,32 @@ class ContentPage {
     this.windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
 
     if (this.privateBrowsing) {
-      let loadContext = this.windowlessBrowser.docShell
-                            .QueryInterface(Ci.nsILoadContext);
+      let loadContext = this.windowlessBrowser.docShell.QueryInterface(
+        Ci.nsILoadContext
+      );
       loadContext.usePrivateBrowsing = true;
     }
 
     let system = Services.scriptSecurityManager.getSystemPrincipal();
 
-    let chromeShell = this.windowlessBrowser.docShell
-                          .QueryInterface(Ci.nsIWebNavigation);
+    let chromeShell = this.windowlessBrowser.docShell.QueryInterface(
+      Ci.nsIWebNavigation
+    );
 
     chromeShell.createAboutBlankContentViewer(system, system);
     chromeShell.useGlobalHistory = false;
     let loadURIOptions = {
       triggeringPrincipal: system,
     };
-    chromeShell.loadURI("chrome://extensions/content/dummy.xul", loadURIOptions);
+    chromeShell.loadURI(
+      "chrome://extensions/content/dummy.xul",
+      loadURIOptions
+    );
 
-    await promiseObserved("chrome-document-global-created",
-                          win => win.document == chromeShell.document);
+    await promiseObserved(
+      "chrome-document-global-created",
+      win => win.document == chromeShell.document
+    );
 
     let chromeDoc = await promiseDocumentLoaded(chromeShell.document);
 
@@ -205,7 +271,7 @@ class ContentPage {
   }
 
   async fetch(url, options) {
-    return this.sendMessage("Test:Fetch", {url, options});
+    return this.sendMessage("Test:Fetch", { url, options });
   }
 
   spawn(params, task) {
@@ -215,15 +281,17 @@ class ContentPage {
   async close() {
     await this.browserReady;
 
-    let {messageManager} = this.browser;
+    let { messageManager } = this.browser;
 
     this.browser = null;
 
     this.windowlessBrowser.close();
     this.windowlessBrowser = null;
 
-    await TestUtils.topicObserved("message-manager-disconnect",
-                                  subject => subject === messageManager);
+    await TestUtils.topicObserved(
+      "message-manager-disconnect",
+      subject => subject === messageManager
+    );
   }
 }
 
@@ -239,22 +307,31 @@ class ExtensionWrapper {
     this.state = "uninitialized";
 
     this.testResolve = null;
-    this.testDone = new Promise(resolve => { this.testResolve = resolve; });
+    this.testDone = new Promise(resolve => {
+      this.testResolve = resolve;
+    });
 
     this.messageHandler = new Map();
     this.messageAwaiter = new Map();
 
     this.messageQueue = new Set();
 
-
     this.testScope.registerCleanupFunction(() => {
       this.clearMessageQueues();
 
       if (this.state == "pending" || this.state == "running") {
-        this.testScope.equal(this.state, "unloaded", "Extension left running at test shutdown");
+        this.testScope.equal(
+          this.state,
+          "unloaded",
+          "Extension left running at test shutdown"
+        );
         return this.unload();
       } else if (this.state == "unloading") {
-        this.testScope.equal(this.state, "unloaded", "Extension not fully unloaded at test shutdown");
+        this.testScope.equal(
+          this.state,
+          "unloaded",
+          "Extension not fully unloaded at test shutdown"
+        );
       }
       this.destroy();
     });
@@ -298,12 +375,20 @@ class ExtensionWrapper {
   clearMessageQueues() {
     if (this.messageQueue.size) {
       let names = Array.from(this.messageQueue, ([msg]) => msg);
-      this.testScope.equal(JSON.stringify(names), "[]", "message queue is empty");
+      this.testScope.equal(
+        JSON.stringify(names),
+        "[]",
+        "message queue is empty"
+      );
       this.messageQueue.clear();
     }
     if (this.messageAwaiter.size) {
       let names = Array.from(this.messageAwaiter.keys());
-      this.testScope.equal(JSON.stringify(names), "[]", "no tasks awaiting on messages");
+      this.testScope.equal(
+        JSON.stringify(names),
+        "[]",
+        "no tasks awaiting on messages"
+      );
       for (let promise of this.messageAwaiter.values()) {
         promise.reject();
       }
@@ -314,7 +399,10 @@ class ExtensionWrapper {
   handleResult(kind, pass, msg, expected, actual) {
     switch (kind) {
       case "test-eq":
-        this.testScope.ok(pass, `${msg} - Expected: ${expected}, Actual: ${actual}`);
+        this.testScope.ok(
+          pass,
+          `${msg} - Expected: ${expected}, Actual: ${actual}`
+        );
         break;
 
       case "test-log":
@@ -364,7 +452,8 @@ class ExtensionWrapper {
         this.state = "failed";
 
         return Promise.reject(error);
-      });
+      }
+    );
 
     return this.startupPromise;
   }
@@ -438,7 +527,7 @@ class ExtensionWrapper {
     return new Promise((resolve, reject) => {
       this.checkDuplicateListeners(msg);
 
-      this.messageAwaiter.set(msg, {resolve, reject});
+      this.messageAwaiter.set(msg, { resolve, reject });
       this.checkMessages();
     });
   }
@@ -521,7 +610,7 @@ class AOMExtensionWrapper extends ExtensionWrapper {
         this.addonPromise = AddonManager.getAddonByID(this.id).then(addon => {
           this.addon = addon;
         });
-        // FALLTHROUGH
+      // FALLTHROUGH
       case "addon-manager-shutdown":
         this.addon = null;
 
@@ -561,8 +650,11 @@ class AOMExtensionWrapper extends ExtensionWrapper {
 
   async _flushCache() {
     if (this.extension && this.extension.rootURI instanceof Ci.nsIJARURI) {
-      let file = this.extension.rootURI.JARFile.QueryInterface(Ci.nsIFileURL).file;
-      await Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
+      let file = this.extension.rootURI.JARFile.QueryInterface(Ci.nsIFileURL)
+        .file;
+      await Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {
+        path: file.path,
+      });
     }
   }
 
@@ -617,9 +709,11 @@ class InstallableWrapper extends AOMExtensionWrapper {
   }
 
   maybeSetID(uri, id) {
-    if (!this.id && uri instanceof Ci.nsIJARURI &&
-        uri.JARFile.QueryInterface(Ci.nsIFileURL)
-           .file.equals(this.file)) {
+    if (
+      !this.id &&
+      uri instanceof Ci.nsIJARURI &&
+      uri.JARFile.QueryInterface(Ci.nsIFileURL).file.equals(this.file)
+    ) {
       this.id = id;
     }
   }
@@ -627,15 +721,17 @@ class InstallableWrapper extends AOMExtensionWrapper {
   _setIncognitoOverride() {
     // this.id is not set yet so grab it from the manifest data to set
     // the incognito permission.
-    let {addonData} = this;
+    let { addonData } = this;
     if (addonData && addonData.incognitoOverride) {
       try {
-        let {id} = addonData.manifest.applications.gecko;
+        let { id } = addonData.manifest.applications.gecko;
         if (id) {
-          return ExtensionTestCommon.setIncognitoOverride({id, addonData});
+          return ExtensionTestCommon.setIncognitoOverride({ id, addonData });
         }
       } catch (e) {}
-      throw new Error("Extension ID is required for setting incognito permission.");
+      throw new Error(
+        "Extension ID is required for setting incognito permission."
+      );
     }
   }
 
@@ -645,17 +741,23 @@ class InstallableWrapper extends AOMExtensionWrapper {
     await this._setIncognitoOverride();
 
     if (this.installType === "temporary") {
-      return AddonManager.installTemporaryAddon(xpiFile).then(addon => {
-        this.id = addon.id;
-        this.addon = addon;
+      return AddonManager.installTemporaryAddon(xpiFile)
+        .then(addon => {
+          this.id = addon.id;
+          this.addon = addon;
 
-        return this.startupPromise;
-      }).catch(e => {
-        this.state = "unloaded";
-        return Promise.reject(e);
-      });
+          return this.startupPromise;
+        })
+        .catch(e => {
+          this.state = "unloaded";
+          return Promise.reject(e);
+        });
     } else if (this.installType === "permanent") {
-      return AddonManager.getInstallForFile(xpiFile, null, this.installTelemetryInfo).then(install => {
+      return AddonManager.getInstallForFile(
+        xpiFile,
+        null,
+        this.installTelemetryInfo
+      ).then(install => {
         let listener = {
           onInstallFailed: () => {
             this.state = "unloaded";
@@ -701,14 +803,17 @@ class ExternallyInstalledWrapper extends AOMExtensionWrapper {
     this.state = "restarting";
   }
 
-  maybeSetID(uri, id) { }
+  maybeSetID(uri, id) {}
 }
 
 var ExtensionTestUtils = {
   BASE_MANIFEST,
 
-  async normalizeManifest(manifest, manifestType = "manifest.WebExtensionManifest",
-                          baseManifest = BASE_MANIFEST) {
+  async normalizeManifest(
+    manifest,
+    manifestType = "manifest.WebExtensionManifest",
+    baseManifest = BASE_MANIFEST
+  ) {
     await Management.lazyInit();
 
     let errors = [];
@@ -749,7 +854,6 @@ var ExtensionTestUtils = {
     // cached wrapper.
     Services.mm.loadFrameScript("data:text/javascript,//", true, true);
 
-
     let tmpD = this.profileDir.clone();
     tmpD.append("tmp");
     tmpD.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
@@ -767,7 +871,6 @@ var ExtensionTestUtils = {
     };
     Services.dirsvc.registerProvider(dirProvider);
 
-
     scope.registerCleanupFunction(() => {
       try {
         tmpD.remove(true);
@@ -778,16 +881,23 @@ var ExtensionTestUtils = {
 
       this.currentScope = null;
 
-      return Promise.all(Array.from(this.fetchScopes.values(),
-                                    promise => promise.then(scope => scope.close())));
+      return Promise.all(
+        Array.from(this.fetchScopes.values(), promise =>
+          promise.then(scope => scope.close())
+        )
+      );
     });
   },
 
   addonManagerStarted: false,
 
   mockAppInfo() {
-    AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org",
-                                 "XPCShell", "48", "48");
+    AddonTestUtils.createAppInfo(
+      "xpcshell@tests.mozilla.org",
+      "XPCShell",
+      "48",
+      "48"
+    );
   },
 
   startAddonManager() {
@@ -843,7 +953,7 @@ var ExtensionTestUtils = {
     }
 
     let fetchScope = await fetchScopePromise;
-    return fetchScope.sendMessage("Test:Fetch", {url, options});
+    return fetchScope.sendMessage("Test:Fetch", { url, options });
   },
 
   /**
@@ -864,10 +974,24 @@ var ExtensionTestUtils = {
    *
    * @returns {ContentPage}
    */
-  loadContentPage(url, {extension = undefined, remote = undefined, redirectUrl = undefined, privateBrowsing = false, userContextId = undefined} = {}) {
+  loadContentPage(
+    url,
+    {
+      extension = undefined,
+      remote = undefined,
+      redirectUrl = undefined,
+      privateBrowsing = false,
+      userContextId = undefined,
+    } = {}
+  ) {
     ContentTask.setTestScope(this.currentScope);
 
-    let contentPage = new ContentPage(remote, extension && extension.extension, privateBrowsing, userContextId);
+    let contentPage = new ContentPage(
+      remote,
+      extension && extension.extension,
+      privateBrowsing,
+      userContextId
+    );
 
     return contentPage.loadURL(url, redirectUrl).then(() => {
       return contentPage;

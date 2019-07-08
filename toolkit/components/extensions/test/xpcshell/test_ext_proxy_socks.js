@@ -4,12 +4,14 @@
 
 const CC = Components.Constructor;
 
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
-const currentThread = Cc["@mozilla.org/thread-manager;1"]
-                      .getService().currentThread;
+const currentThread = Cc["@mozilla.org/thread-manager;1"].getService()
+  .currentThread;
 
 // Most of the socks logic here is copied and upgraded to support authentication
 // for socks5. The original test is from netwerk/test/unit/test_socks.js
@@ -44,10 +46,10 @@ class SocksClient {
     this.state = STATE_WAIT_GREETING;
     this.socket = socket;
 
-    socket.onclose = (event) => {
+    socket.onclose = event => {
       this.server.requestCompleted(this);
     };
-    socket.ondata = (event) => {
+    socket.ondata = event => {
       let len = event.data.byteLength;
 
       if (len == 0 && this.state == STATE_FINISHED) {
@@ -57,7 +59,9 @@ class SocksClient {
       }
 
       this.inbuf = new Uint8Array(event.data);
-      Promise.resolve().then(() => { this.callState(); });
+      Promise.resolve().then(() => {
+        this.callState();
+      });
     };
   }
 
@@ -148,10 +152,12 @@ class SocksClient {
     }
 
     this.username = str;
-    if (this.dest_addr[0] == 0 &&
-        this.dest_addr[1] == 0 &&
-        this.dest_addr[2] == 0 &&
-        this.dest_addr[3] != 0) {
+    if (
+      this.dest_addr[0] == 0 &&
+      this.dest_addr[1] == 0 &&
+      this.dest_addr[2] == 0 &&
+      this.dest_addr[3] != 0
+    ) {
       this.state = STATE_WAIT_SOCKS4_HOSTNAME;
       this.checkSocks4Hostname();
     } else {
@@ -173,7 +179,7 @@ class SocksClient {
   sendSocks4Response() {
     this.state = STATE_WAIT_INPUT;
     this.inbuf = [];
-    this.write([0, 0x5A, 0, 0, 0, 0, 0, 0]);
+    this.write([0, 0x5a, 0, 0, 0, 0, 0, 0]);
   }
 
   /**
@@ -306,10 +312,12 @@ class SocksClient {
       this.state = STATE_FINISHED;
       this.socket.send("PONG!");
     } else if (request.startsWith("GET / HTTP/1.1")) {
-      this.socket.send("HTTP/1.1 200 OK\r\n" +
-                       "Content-Length: 2\r\n" +
-                       "Content-Type: text/html\r\n" +
-                       "\r\nOK");
+      this.socket.send(
+        "HTTP/1.1 200 OK\r\n" +
+          "Content-Length: 2\r\n" +
+          "Content-Type: text/html\r\n" +
+          "\r\nOK"
+      );
       this.state = STATE_FINISHED;
     }
   }
@@ -322,8 +330,8 @@ class SocksClient {
 class SocksTestServer {
   constructor() {
     this.client_connections = new Set();
-    this.listener = new TCPServerSocket(-1, {binaryType: "arraybuffer"}, -1);
-    this.listener.onconnect = (event) => {
+    this.listener = new TCPServerSocket(-1, { binaryType: "arraybuffer" }, -1);
+    this.listener.onconnect = event => {
       let client = new SocksClient(this, event.socket);
       this.client_connections.add(client);
     };
@@ -357,23 +365,42 @@ class SocksTestServer {
  */
 class SocksTestClient {
   constructor(socks, dest, resolve, reject) {
-    let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"]
-              .getService(Ci.nsIProtocolProxyService);
-    let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
-              .getService(Ci.nsISocketTransportService);
+    let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService(
+      Ci.nsIProtocolProxyService
+    );
+    let sts = Cc["@mozilla.org/network/socket-transport-service;1"].getService(
+      Ci.nsISocketTransportService
+    );
 
     let pi_flags = 0;
     if (socks.dns == "remote") {
       pi_flags = Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
     }
 
-    let pi = pps.newProxyInfoWithAuth(socks.version, socks.host, socks.port,
-                                      socks.username, socks.password, "", "",
-                                      pi_flags, -1, null);
+    let pi = pps.newProxyInfoWithAuth(
+      socks.version,
+      socks.host,
+      socks.port,
+      socks.username,
+      socks.password,
+      "",
+      "",
+      pi_flags,
+      -1,
+      null
+    );
 
     this.trans = sts.createTransport([], dest.host, dest.port, pi);
-    this.input = this.trans.openInputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-    this.output = this.trans.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
+    this.input = this.trans.openInputStream(
+      Ci.nsITransport.OPEN_BLOCKING,
+      0,
+      0
+    );
+    this.output = this.trans.openOutputStream(
+      Ci.nsITransport.OPEN_BLOCKING,
+      0,
+      0
+    );
     this.outbuf = String();
     this.resolve = resolve;
     this.reject = reject;
@@ -445,11 +472,13 @@ add_task(async function test_socks_server() {
 
   new Promise((resolve, reject) => {
     new SocksTestClient(socks, dest, resolve, reject);
-  }).then(result => {
-    equal("PONG!", result, "socks test ok");
-  }).catch(result => {
-    ok(false, `socks test failed ${result}`);
-  });
+  })
+    .then(result => {
+      equal("PONG!", result, "socks test ok");
+    })
+    .catch(result => {
+      ok(false, `socks test failed ${result}`);
+    });
 });
 
 add_task(async function test_webRequest_socks_proxy() {
@@ -458,20 +487,38 @@ add_task(async function test_webRequest_socks_proxy() {
       browser.test.assertEq("127.0.0.1", details.proxyInfo.host, "proxy host");
       browser.test.assertEq(port, details.proxyInfo.port, "proxy port");
       browser.test.assertEq("socks", details.proxyInfo.type, "proxy type");
-      browser.test.assertEq("foo", details.proxyInfo.username, "proxy username not set");
-      browser.test.assertEq(undefined, details.proxyInfo.password, "no proxy password passed to webrequest");
+      browser.test.assertEq(
+        "foo",
+        details.proxyInfo.username,
+        "proxy username not set"
+      );
+      browser.test.assertEq(
+        undefined,
+        details.proxyInfo.password,
+        "no proxy password passed to webrequest"
+      );
     }
-    browser.webRequest.onBeforeRequest.addListener(details => {
-      checkProxyData(details);
-    }, {urls: ["<all_urls>"]});
-    browser.webRequest.onAuthRequired.addListener(details => {
-      // We should never get onAuthRequired for socks proxy
-      browser.test.fail("onAuthRequired");
-    }, {urls: ["<all_urls>"]}, ["blocking"]);
-    browser.webRequest.onCompleted.addListener(details => {
-      checkProxyData(details);
-      browser.test.sendMessage("done");
-    }, {urls: ["<all_urls>"]});
+    browser.webRequest.onBeforeRequest.addListener(
+      details => {
+        checkProxyData(details);
+      },
+      { urls: ["<all_urls>"] }
+    );
+    browser.webRequest.onAuthRequired.addListener(
+      details => {
+        // We should never get onAuthRequired for socks proxy
+        browser.test.fail("onAuthRequired");
+      },
+      { urls: ["<all_urls>"] },
+      ["blocking"]
+    );
+    browser.webRequest.onCompleted.addListener(
+      details => {
+        checkProxyData(details);
+        browser.test.sendMessage("done");
+      },
+      { urls: ["<all_urls>"] }
+    );
 
     await browser.proxy.register("proxy.js");
     browser.test.sendMessage("pac-ready");
@@ -479,12 +526,7 @@ add_task(async function test_webRequest_socks_proxy() {
 
   let handlingExt = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "proxy",
-        "webRequest",
-        "webRequestBlocking",
-        "<all_urls>",
-      ],
+      permissions: ["proxy", "webRequest", "webRequestBlocking", "<all_urls>"],
     },
     background: `(${background})(${socksServer.listener.localPort})`,
     files: {
@@ -504,7 +546,9 @@ add_task(async function test_webRequest_socks_proxy() {
   await handlingExt.startup();
   await handlingExt.awaitMessage("pac-ready");
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`http://localhost/`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `http://localhost/`
+  );
 
   await handlingExt.awaitMessage("done");
   await contentPage.close();

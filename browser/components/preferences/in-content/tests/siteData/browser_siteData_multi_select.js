@@ -49,12 +49,19 @@ add_task(async function() {
   let win = gBrowser.selectedBrowser.contentWindow;
   let frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   let removeBtn = frameDoc.getElementById("removeSelected");
-  is(removeBtn.disabled, true, "Should start with disabled removeSelected button");
+  is(
+    removeBtn.disabled,
+    true,
+    "Should start with disabled removeSelected button"
+  );
 
   let hostCol = frameDoc.getElementById("hostCol");
   hostCol.click();
 
-  let removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
+  let removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen(
+    "accept",
+    REMOVE_DIALOG_URL
+  );
   let settingsDialogClosePromise = promiseSettingsDialogClose();
 
   // Select some sites to remove.
@@ -95,4 +102,3 @@ add_task(async function() {
   await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
-

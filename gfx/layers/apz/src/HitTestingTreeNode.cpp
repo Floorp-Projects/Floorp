@@ -4,8 +4,8 @@
 
 #include "HitTestingTreeNode.h"
 
-#include "AsyncPanZoomController.h"   // for AsyncPanZoomController
-#include "LayersLogging.h"            // for Stringify
+#include "AsyncPanZoomController.h"  // for AsyncPanZoomController
+#include "LayersLogging.h"           // for Stringify
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/Point.h"        // for Point4D
 #include "mozilla/layers/APZUtils.h"  // for CompleteAsyncTransform
@@ -322,9 +322,9 @@ LayerToScreenMatrix4x4 HitTestingTreeNode::GetTransformToGecko() const {
     LayerToParentLayerMatrix4x4 thisToParent =
         mTransform * AsyncTransformMatrix();
     if (mApzc) {
-      thisToParent = thisToParent *
-          ViewAs<ParentLayerToParentLayerMatrix4x4>(
-              mApzc->GetTransformToLastDispatchedPaint());
+      thisToParent =
+          thisToParent * ViewAs<ParentLayerToParentLayerMatrix4x4>(
+                             mApzc->GetTransformToLastDispatchedPaint());
     }
     ParentLayerToScreenMatrix4x4 parentToRoot =
         ViewAs<ParentLayerToScreenMatrix4x4>(

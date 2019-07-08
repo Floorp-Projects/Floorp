@@ -53,27 +53,45 @@ add_task(async function() {
     is(uri.spec, expected, "Saved URL visit " + uri.spec);
 
     var placeId = getColumn("moz_places", "id", "url", uri.spec);
-    var fromVisitId = getColumn("moz_historyvisits", "from_visit", "place_id", placeId);
+    var fromVisitId = getColumn(
+      "moz_historyvisits",
+      "from_visit",
+      "place_id",
+      placeId
+    );
 
     if (currentIndex == 0) {
       is(fromVisitId, 0, "First visit has no from visit");
     } else {
-      var lastVisitId = getColumn("moz_historyvisits", "place_id", "id", fromVisitId);
+      var lastVisitId = getColumn(
+        "moz_historyvisits",
+        "place_id",
+        "id",
+        fromVisitId
+      );
       var fromVisitUrl = getColumn("moz_places", "url", "id", lastVisitId);
-      is(fromVisitUrl, expectedUrls[currentIndex - 1],
-         "From visit was " + expectedUrls[currentIndex - 1]);
+      is(
+        fromVisitUrl,
+        expectedUrls[currentIndex - 1],
+        "From visit was " + expectedUrls[currentIndex - 1]
+      );
     }
 
     currentIndex++;
-    return (currentIndex >= expectedUrls.length);
+    return currentIndex >= expectedUrls.length;
   }
   let visitUriPromise = promiseObserve("uri-visit-saved", checkObserver);
 
-  const testUrl = "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
+  const testUrl =
+    "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, testUrl);
 
   // Load begin page, click link on page to record visits.
-  await BrowserTestUtils.synthesizeMouseAtCenter("#clickme", { }, gBrowser.selectedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#clickme",
+    {},
+    gBrowser.selectedBrowser
+  );
   await visitUriPromise;
 
   await PlacesUtils.history.clear();

@@ -6,8 +6,9 @@
 // Basic tests to verify that MacWebAppUtils works
 
 function test_find_app() {
-  var mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"].
-  createInstance(Ci.nsIMacWebAppUtils);
+  var mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"].createInstance(
+    Ci.nsIMacWebAppUtils
+  );
   let sig = "com.apple.TextEdit";
 
   let path;
@@ -17,15 +18,15 @@ function test_find_app() {
 }
 
 function test_dont_find_fake_app() {
-  var mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"].
-  createInstance(Ci.nsIMacWebAppUtils);
+  var mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"].createInstance(
+    Ci.nsIMacWebAppUtils
+  );
   let sig = "calliope.penitentiary.dramamine";
 
   let path;
   path = mwaUtils.pathForAppWithIdentifier(sig);
   Assert.equal(path, "");
 }
-
 
 function run_test() {
   test_find_app();

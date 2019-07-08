@@ -5,13 +5,14 @@
 
 const { generateActorSpec } = require("devtools/shared/protocol");
 const { extend } = require("devtools/shared/extend");
-const { parentProcessTargetSpecPrototype } = require("devtools/shared/specs/targets/parent-process");
-
-const webExtensionTargetSpec = generateActorSpec(extend(
+const {
   parentProcessTargetSpecPrototype,
-  {
+} = require("devtools/shared/specs/targets/parent-process");
+
+const webExtensionTargetSpec = generateActorSpec(
+  extend(parentProcessTargetSpecPrototype, {
     typeName: "webExtensionTarget",
-  }
-));
+  })
+);
 
 exports.webExtensionTargetSpec = webExtensionTargetSpec;

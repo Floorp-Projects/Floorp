@@ -7,7 +7,12 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
-loader.lazyRequireGetter(this, "HTMLTooltip", "devtools/client/shared/widgets/tooltip/HTMLTooltip", true);
+loader.lazyRequireGetter(
+  this,
+  "HTMLTooltip",
+  "devtools/client/shared/widgets/tooltip/HTMLTooltip",
+  true
+);
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -98,7 +103,8 @@ AutocompletePopup.prototype = {
     this._tooltip = new HTMLTooltip(this._document);
     this._tooltip.panel.classList.add(
       "devtools-autocomplete-popup",
-      "devtools-monospace");
+      "devtools-monospace"
+    );
     // Stop this appearing as an alert to accessibility.
     this._tooltip.panel.setAttribute("role", "presentation");
     this._tooltip.panel.appendChild(this.list);
@@ -173,9 +179,7 @@ AutocompletePopup.prototype = {
    *                     during the initial autoSelect.
    */
   selectItemAtIndex: function(index, options = {}) {
-    const {
-      preventSelectCallback,
-    } = options;
+    const { preventSelectCallback } = options;
 
     if (!Number.isInteger(index)) {
       // If no index was provided, select the first item.
@@ -201,7 +205,12 @@ AutocompletePopup.prototype = {
     }
     this.selectedIndex = index;
 
-    if (this.isOpen && item && this.onSelectCallback && !preventSelectCallback) {
+    if (
+      this.isOpen &&
+      item &&
+      this.onSelectCallback &&
+      !preventSelectCallback
+    ) {
       // Call the user-defined select callback if defined.
       this.onSelectCallback(item);
     }
@@ -312,7 +321,7 @@ AutocompletePopup.prototype = {
       this.elements.set(item, listItem);
       fragment.appendChild(listItem);
 
-      let {label, postLabel, count} = item;
+      let { label, postLabel, count } = item;
       if (count) {
         label += count + "";
       }
@@ -323,24 +332,24 @@ AutocompletePopup.prototype = {
       maxLabelLength = Math.max(label.length, maxLabelLength);
     });
 
-    this.list.style.width = (maxLabelLength + 3) + "ch";
+    this.list.style.width = maxLabelLength + 3 + "ch";
     this.list.appendChild(fragment);
 
     this.selectItemAtIndex(selectedIndex, options);
   },
 
   _scrollElementIntoViewIfNeeded: function(element) {
-    const quads = element.getBoxQuads({relativeTo: this.tooltip.panel});
+    const quads = element.getBoxQuads({ relativeTo: this.tooltip.panel });
     if (!quads || !quads[0]) {
       return;
     }
 
-    const {top, height} = quads[0].getBounds();
+    const { top, height } = quads[0].getBounds();
     const containerHeight = this.tooltip.panel.getBoundingClientRect().height;
     if (top < 0) {
       // Element is above container.
       element.scrollIntoView(true);
-    } else if ((top + height) > containerHeight) {
+    } else if (top + height > containerHeight) {
       // Element is below container.
       element.scrollIntoView(false);
     }
@@ -394,7 +403,10 @@ AutocompletePopup.prototype = {
 
     // Make sure the list clone is in the same document as the anchor.
     const anchorDoc = this._activeElement.ownerDocument;
-    if (!this._listClone.parentNode || this._listClone.ownerDocument !== anchorDoc) {
+    if (
+      !this._listClone.parentNode ||
+      this._listClone.ownerDocument !== anchorDoc
+    ) {
       anchorDoc.documentElement.appendChild(this._listClone);
     }
 
@@ -503,7 +515,7 @@ AutocompletePopup.prototype = {
    *         The newly selected item object.
    */
   selectNextItem: function() {
-    if (this.selectedIndex < (this.items.length - 1)) {
+    if (this.selectedIndex < this.items.length - 1) {
       this.selectItemAtIndex(this.selectedIndex + 1);
     } else {
       this.selectItemAtIndex(0);
@@ -554,15 +566,15 @@ AutocompletePopup.prototype = {
   },
 
   /**
-  * Determines if the specified colour object is a valid colour, and if
-  * it is not a "special value"
-  *
-  * @return {Boolean}
-  *         If the object represents a proper colour or not.
-  */
+   * Determines if the specified colour object is a valid colour, and if
+   * it is not a "special value"
+   *
+   * @return {Boolean}
+   *         If the object represents a proper colour or not.
+   */
   _isValidColor: function(color) {
     const colorObj = new colorUtils.CssColor(color);
-    return (colorObj.valid && (!colorObj.specialValue));
+    return colorObj.valid && !colorObj.specialValue;
   },
 
   /**

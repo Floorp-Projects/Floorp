@@ -15,30 +15,39 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,Scratchpad test for bug 646070 - chrome context preference");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,Scratchpad test for bug 646070 - chrome context preference"
+  );
 }
 
 function runTests() {
   const sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
 
-  const environmentMenu = gScratchpadWindow.document
-                          .getElementById("sp-environment-menu");
+  const environmentMenu = gScratchpadWindow.document.getElementById(
+    "sp-environment-menu"
+  );
   ok(environmentMenu, "Environment menu element exists");
-  ok(!environmentMenu.hasAttribute("hidden"),
-     "Environment menu is visible");
+  ok(!environmentMenu.hasAttribute("hidden"), "Environment menu is visible");
 
-  const errorConsoleCommand = gScratchpadWindow.document
-                            .getElementById("sp-cmd-errorConsole");
+  const errorConsoleCommand = gScratchpadWindow.document.getElementById(
+    "sp-cmd-errorConsole"
+  );
   ok(errorConsoleCommand, "Error console command element exists");
-  ok(!errorConsoleCommand.hasAttribute("disabled"),
-     "Error console command is enabled");
+  ok(
+    !errorConsoleCommand.hasAttribute("disabled"),
+    "Error console command is enabled"
+  );
 
-  const chromeContextCommand = gScratchpadWindow.document
-                            .getElementById("sp-cmd-browserContext");
+  const chromeContextCommand = gScratchpadWindow.document.getElementById(
+    "sp-cmd-browserContext"
+  );
   ok(chromeContextCommand, "Chrome context command element exists");
-  ok(!chromeContextCommand.hasAttribute("disabled"),
-     "Chrome context command is disabled");
+  ok(
+    !chromeContextCommand.hasAttribute("disabled"),
+    "Chrome context command is disabled"
+  );
 
   Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
 

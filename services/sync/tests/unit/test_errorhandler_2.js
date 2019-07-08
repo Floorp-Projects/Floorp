@@ -1,9 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {Status} = ChromeUtils.import("resource://services-sync/status.js");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Status } = ChromeUtils.import("resource://services-sync/status.js");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 const fakeServer = new SyncServer();
 fakeServer.start();
@@ -60,13 +62,16 @@ add_task(async function test_crypto_keys_login_server_maintenance_error() {
   let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.keys"}, server);
+  await configureIdentity({ username: "broken.keys" }, server);
 
   // Force re-download of keys
   Service.collectionKeys.clear();
 
   let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+  Svc.Obs.add("weave:service:backoff:interval", function observe(
+    subject,
+    data
+  ) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
     backoffInterval = subject;
   });
@@ -94,7 +99,7 @@ add_task(async function test_lastSync_not_updated_on_complete_failure() {
   let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "johndoe"}, server);
+  await configureIdentity({ username: "johndoe" }, server);
 
   // Do an initial sync that we expect to be successful.
   let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
@@ -109,8 +114,10 @@ add_task(async function test_lastSync_not_updated_on_complete_failure() {
   Assert.ok(lastSync);
 
   // Report server maintenance on info/collections requests
-  server.registerPathHandler("/1.1/johndoe/info/collections",
-                             EHTestsCommon.service_unavailable);
+  server.registerPathHandler(
+    "/1.1/johndoe/info/collections",
+    EHTestsCommon.service_unavailable
+  );
 
   promiseObserved = promiseOneObserver("weave:service:reset-file-log");
   await sync_and_validate_telem(true);
@@ -126,231 +133,262 @@ add_task(async function test_lastSync_not_updated_on_complete_failure() {
   await promiseStopServer(server);
 });
 
-add_task(async function test_sync_syncAndReportErrors_server_maintenance_error() {
-  enableValidationPrefs();
+add_task(
+  async function test_sync_syncAndReportErrors_server_maintenance_error() {
+    enableValidationPrefs();
 
-  // Test server maintenance errors are reported
-  // when calling syncAndReportErrors.
-  let server = await EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+    // Test server maintenance errors are reported
+    // when calling syncAndReportErrors.
+    let server = await EHTestsCommon.sync_httpd_setup();
+    await EHTestsCommon.setUp(server);
 
-  const BACKOFF = 42;
-  engine.enabled = true;
-  engine.exception = {status: 503,
-                      headers: {"retry-after": BACKOFF}};
+    const BACKOFF = 42;
+    engine.enabled = true;
+    engine.exception = { status: 503, headers: { "retry-after": BACKOFF } };
 
-  Assert.equal(Status.service, STATUS_OK);
+    Assert.equal(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await Service.sync();
-  await promiseObserved;
+    let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
+    await Service.sync();
+    await promiseObserved;
 
-  Assert.equal(Status.service, SYNC_FAILED_PARTIAL);
-  Assert.equal(Status.sync, SERVER_MAINTENANCE);
+    Assert.equal(Status.service, SYNC_FAILED_PARTIAL);
+    Assert.equal(Status.sync, SERVER_MAINTENANCE);
 
-  await clean();
-  await promiseStopServer(server);
-});
+    await clean();
+    await promiseStopServer(server);
+  }
+);
 
-add_task(async function test_info_collections_login_syncAndReportErrors_server_maintenance_error() {
-  enableValidationPrefs();
+add_task(
+  async function test_info_collections_login_syncAndReportErrors_server_maintenance_error() {
+    enableValidationPrefs();
 
-  // Test info/collections server maintenance errors are reported
-  // when calling syncAndReportErrors.
-  let server = await EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+    // Test info/collections server maintenance errors are reported
+    // when calling syncAndReportErrors.
+    let server = await EHTestsCommon.sync_httpd_setup();
+    await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.info"}, server);
+    await configureIdentity({ username: "broken.info" }, server);
 
-  let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
-    Svc.Obs.remove("weave:service:backoff:interval", observe);
-    backoffInterval = subject;
-  });
+    let backoffInterval;
+    Svc.Obs.add("weave:service:backoff:interval", function observe(
+      subject,
+      data
+    ) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    });
 
-  Assert.ok(!Status.enforceBackoff);
-  Assert.equal(Status.service, STATUS_OK);
+    Assert.ok(!Status.enforceBackoff);
+    Assert.equal(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await Service.sync();
-  await promiseObserved;
+    let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
+    await Service.sync();
+    await promiseObserved;
 
-  Assert.ok(Status.enforceBackoff);
-  Assert.equal(backoffInterval, 42);
-  Assert.equal(Status.service, LOGIN_FAILED);
-  Assert.equal(Status.login, SERVER_MAINTENANCE);
+    Assert.ok(Status.enforceBackoff);
+    Assert.equal(backoffInterval, 42);
+    Assert.equal(Status.service, LOGIN_FAILED);
+    Assert.equal(Status.login, SERVER_MAINTENANCE);
 
-  await clean();
-  await promiseStopServer(server);
-});
+    await clean();
+    await promiseStopServer(server);
+  }
+);
 
-add_task(async function test_meta_global_login_syncAndReportErrors_server_maintenance_error() {
-  enableValidationPrefs();
+add_task(
+  async function test_meta_global_login_syncAndReportErrors_server_maintenance_error() {
+    enableValidationPrefs();
 
-  // Test meta/global server maintenance errors are reported
-  // when calling syncAndReportErrors.
-  let server = await EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+    // Test meta/global server maintenance errors are reported
+    // when calling syncAndReportErrors.
+    let server = await EHTestsCommon.sync_httpd_setup();
+    await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.meta"}, server);
+    await configureIdentity({ username: "broken.meta" }, server);
 
-  let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
-    Svc.Obs.remove("weave:service:backoff:interval", observe);
-    backoffInterval = subject;
-  });
+    let backoffInterval;
+    Svc.Obs.add("weave:service:backoff:interval", function observe(
+      subject,
+      data
+    ) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    });
 
-  Assert.ok(!Status.enforceBackoff);
-  Assert.equal(Status.service, STATUS_OK);
+    Assert.ok(!Status.enforceBackoff);
+    Assert.equal(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await Service.sync();
-  await promiseObserved;
+    let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
+    await Service.sync();
+    await promiseObserved;
 
-  Assert.ok(Status.enforceBackoff);
-  Assert.equal(backoffInterval, 42);
-  Assert.equal(Status.service, LOGIN_FAILED);
-  Assert.equal(Status.login, SERVER_MAINTENANCE);
+    Assert.ok(Status.enforceBackoff);
+    Assert.equal(backoffInterval, 42);
+    Assert.equal(Status.service, LOGIN_FAILED);
+    Assert.equal(Status.login, SERVER_MAINTENANCE);
 
-  await clean();
-  await promiseStopServer(server);
-});
+    await clean();
+    await promiseStopServer(server);
+  }
+);
 
-add_task(async function test_download_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
-  enableValidationPrefs();
+add_task(
+  async function test_download_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
+    enableValidationPrefs();
 
-  // Test crypto/keys server maintenance errors are reported
-  // when calling syncAndReportErrors.
-  let server = await EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+    // Test crypto/keys server maintenance errors are reported
+    // when calling syncAndReportErrors.
+    let server = await EHTestsCommon.sync_httpd_setup();
+    await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.keys"}, server);
-  // Force re-download of keys
-  Service.collectionKeys.clear();
+    await configureIdentity({ username: "broken.keys" }, server);
+    // Force re-download of keys
+    Service.collectionKeys.clear();
 
-  let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
-    Svc.Obs.remove("weave:service:backoff:interval", observe);
-    backoffInterval = subject;
-  });
+    let backoffInterval;
+    Svc.Obs.add("weave:service:backoff:interval", function observe(
+      subject,
+      data
+    ) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    });
 
-  Assert.ok(!Status.enforceBackoff);
-  Assert.equal(Status.service, STATUS_OK);
+    Assert.ok(!Status.enforceBackoff);
+    Assert.equal(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await Service.sync();
-  await promiseObserved;
+    let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
+    await Service.sync();
+    await promiseObserved;
 
-  Assert.ok(Status.enforceBackoff);
-  Assert.equal(backoffInterval, 42);
-  Assert.equal(Status.service, LOGIN_FAILED);
-  Assert.equal(Status.login, SERVER_MAINTENANCE);
+    Assert.ok(Status.enforceBackoff);
+    Assert.equal(backoffInterval, 42);
+    Assert.equal(Status.service, LOGIN_FAILED);
+    Assert.equal(Status.login, SERVER_MAINTENANCE);
 
-  await clean();
-  await promiseStopServer(server);
-});
+    await clean();
+    await promiseStopServer(server);
+  }
+);
 
-add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
-  enableValidationPrefs();
+add_task(
+  async function test_upload_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
+    enableValidationPrefs();
 
-  // Test crypto/keys server maintenance errors are reported
-  // when calling syncAndReportErrors.
-  let server = await EHTestsCommon.sync_httpd_setup();
+    // Test crypto/keys server maintenance errors are reported
+    // when calling syncAndReportErrors.
+    let server = await EHTestsCommon.sync_httpd_setup();
 
-  // Start off with an empty account, do not upload a key.
-  await configureIdentity({username: "broken.keys"}, server);
+    // Start off with an empty account, do not upload a key.
+    await configureIdentity({ username: "broken.keys" }, server);
 
-  let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
-    Svc.Obs.remove("weave:service:backoff:interval", observe);
-    backoffInterval = subject;
-  });
+    let backoffInterval;
+    Svc.Obs.add("weave:service:backoff:interval", function observe(
+      subject,
+      data
+    ) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    });
 
-  Assert.ok(!Status.enforceBackoff);
-  Assert.equal(Status.service, STATUS_OK);
+    Assert.ok(!Status.enforceBackoff);
+    Assert.equal(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await Service.sync();
-  await promiseObserved;
+    let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
+    await Service.sync();
+    await promiseObserved;
 
-  Assert.ok(Status.enforceBackoff);
-  Assert.equal(backoffInterval, 42);
-  Assert.equal(Status.service, LOGIN_FAILED);
-  Assert.equal(Status.login, SERVER_MAINTENANCE);
+    Assert.ok(Status.enforceBackoff);
+    Assert.equal(backoffInterval, 42);
+    Assert.equal(Status.service, LOGIN_FAILED);
+    Assert.equal(Status.login, SERVER_MAINTENANCE);
 
-  await clean();
-  await promiseStopServer(server);
-});
+    await clean();
+    await promiseStopServer(server);
+  }
+);
 
-add_task(async function test_wipeServer_login_syncAndReportErrors_server_maintenance_error() {
-  enableValidationPrefs();
+add_task(
+  async function test_wipeServer_login_syncAndReportErrors_server_maintenance_error() {
+    enableValidationPrefs();
 
-  // Test crypto/keys server maintenance errors are reported
-  // when calling syncAndReportErrors.
-  let server = await EHTestsCommon.sync_httpd_setup();
+    // Test crypto/keys server maintenance errors are reported
+    // when calling syncAndReportErrors.
+    let server = await EHTestsCommon.sync_httpd_setup();
 
-  // Start off with an empty account, do not upload a key.
-  await configureIdentity({username: "broken.wipe"}, server);
+    // Start off with an empty account, do not upload a key.
+    await configureIdentity({ username: "broken.wipe" }, server);
 
-  let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
-    Svc.Obs.remove("weave:service:backoff:interval", observe);
-    backoffInterval = subject;
-  });
+    let backoffInterval;
+    Svc.Obs.add("weave:service:backoff:interval", function observe(
+      subject,
+      data
+    ) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    });
 
-  Assert.ok(!Status.enforceBackoff);
-  Assert.equal(Status.service, STATUS_OK);
+    Assert.ok(!Status.enforceBackoff);
+    Assert.equal(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await Service.sync();
-  await promiseObserved;
+    let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
+    await Service.sync();
+    await promiseObserved;
 
-  Assert.ok(Status.enforceBackoff);
-  Assert.equal(backoffInterval, 42);
-  Assert.equal(Status.service, LOGIN_FAILED);
-  Assert.equal(Status.login, SERVER_MAINTENANCE);
+    Assert.ok(Status.enforceBackoff);
+    Assert.equal(backoffInterval, 42);
+    Assert.equal(Status.service, LOGIN_FAILED);
+    Assert.equal(Status.login, SERVER_MAINTENANCE);
 
-  await clean();
-  await promiseStopServer(server);
-});
+    await clean();
+    await promiseStopServer(server);
+  }
+);
 
-add_task(async function test_wipeRemote_syncAndReportErrors_server_maintenance_error() {
-  enableValidationPrefs();
+add_task(
+  async function test_wipeRemote_syncAndReportErrors_server_maintenance_error() {
+    enableValidationPrefs();
 
-  // Test that we report prolonged server maintenance errors that occur whilst
-  // wiping all remote devices.
-  let server = await EHTestsCommon.sync_httpd_setup();
+    // Test that we report prolonged server maintenance errors that occur whilst
+    // wiping all remote devices.
+    let server = await EHTestsCommon.sync_httpd_setup();
 
-  await configureIdentity({username: "broken.wipe"}, server);
-  await EHTestsCommon.generateAndUploadKeys();
+    await configureIdentity({ username: "broken.wipe" }, server);
+    await EHTestsCommon.generateAndUploadKeys();
 
-  engine.exception = null;
-  engine.enabled = true;
+    engine.exception = null;
+    engine.enabled = true;
 
-  let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
-    Svc.Obs.remove("weave:service:backoff:interval", observe);
-    backoffInterval = subject;
-  });
+    let backoffInterval;
+    Svc.Obs.add("weave:service:backoff:interval", function observe(
+      subject,
+      data
+    ) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    });
 
-  Assert.ok(!Status.enforceBackoff);
-  Assert.equal(Status.service, STATUS_OK);
+    Assert.ok(!Status.enforceBackoff);
+    Assert.equal(Status.service, STATUS_OK);
 
-  Svc.Prefs.set("firstSync", "wipeRemote");
+    Svc.Prefs.set("firstSync", "wipeRemote");
 
-  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await Service.sync();
-  await promiseObserved;
+    let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
+    await Service.sync();
+    await promiseObserved;
 
-  Assert.ok(Status.enforceBackoff);
-  Assert.equal(backoffInterval, 42);
-  Assert.equal(Status.service, SYNC_FAILED);
-  Assert.equal(Status.sync, SERVER_MAINTENANCE);
-  Assert.equal(Svc.Prefs.get("firstSync"), "wipeRemote");
+    Assert.ok(Status.enforceBackoff);
+    Assert.equal(backoffInterval, 42);
+    Assert.equal(Status.service, SYNC_FAILED);
+    Assert.equal(Status.sync, SERVER_MAINTENANCE);
+    Assert.equal(Svc.Prefs.get("firstSync"), "wipeRemote");
 
-  await clean();
-  await promiseStopServer(server);
-});
+    await clean();
+    await promiseStopServer(server);
+  }
+);
 
 add_task(async function test_sync_engine_generic_fail() {
   enableValidationPrefs();
@@ -397,7 +435,10 @@ add_task(async function test_sync_engine_generic_fail() {
   // Test Error log was written on SYNC_FAILED_PARTIAL.
   let logFiles = getLogFiles();
   equal(logFiles.length, 1);
-  Assert.ok(logFiles[0].leafName.startsWith("error-sync-"), logFiles[0].leafName);
+  Assert.ok(
+    logFiles[0].leafName.startsWith("error-sync-"),
+    logFiles[0].leafName
+  );
 
   await clean();
 
@@ -407,8 +448,10 @@ add_task(async function test_sync_engine_generic_fail() {
 add_task(async function test_logs_on_sync_error() {
   enableValidationPrefs();
 
-  _("Ensure that an error is still logged when weave:service:sync:error " +
-    "is notified, despite shouldReportError returning false.");
+  _(
+    "Ensure that an error is still logged when weave:service:sync:error " +
+      "is notified, despite shouldReportError returning false."
+  );
 
   let log = Log.repository.getLogger("Sync.ErrorHandler");
   Svc.Prefs.set("log.appender.file.logOnError", true);
@@ -424,7 +467,10 @@ add_task(async function test_logs_on_sync_error() {
   // Test that error log was written.
   let logFiles = getLogFiles();
   equal(logFiles.length, 1);
-  Assert.ok(logFiles[0].leafName.startsWith("error-sync-"), logFiles[0].leafName);
+  Assert.ok(
+    logFiles[0].leafName.startsWith("error-sync-"),
+    logFiles[0].leafName
+  );
 
   await clean();
 });
@@ -432,8 +478,10 @@ add_task(async function test_logs_on_sync_error() {
 add_task(async function test_logs_on_login_error() {
   enableValidationPrefs();
 
-  _("Ensure that an error is still logged when weave:service:login:error " +
-    "is notified, despite shouldReportError returning false.");
+  _(
+    "Ensure that an error is still logged when weave:service:login:error " +
+      "is notified, despite shouldReportError returning false."
+  );
 
   let log = Log.repository.getLogger("Sync.ErrorHandler");
   Svc.Prefs.set("log.appender.file.logOnError", true);
@@ -449,7 +497,10 @@ add_task(async function test_logs_on_login_error() {
   // Test that error log was written.
   let logFiles = getLogFiles();
   equal(logFiles.length, 1);
-  Assert.ok(logFiles[0].leafName.startsWith("error-sync-"), logFiles[0].leafName);
+  Assert.ok(
+    logFiles[0].leafName.startsWith("error-sync-"),
+    logFiles[0].leafName
+  );
 
   await clean();
 });
@@ -464,7 +515,7 @@ add_task(async function test_engine_applyFailed() {
   engine.enabled = true;
   delete engine.exception;
   engine.sync = async function sync() {
-    Svc.Obs.notify("weave:engine:sync:applied", {newFailed: 1}, "catapult");
+    Svc.Obs.notify("weave:engine:sync:applied", { newFailed: 1 }, "catapult");
   };
 
   Svc.Prefs.set("log.appender.file.logOnError", true);
@@ -482,7 +533,10 @@ add_task(async function test_engine_applyFailed() {
   // Test Error log was written on SYNC_FAILED_PARTIAL.
   let logFiles = getLogFiles();
   equal(logFiles.length, 1);
-  Assert.ok(logFiles[0].leafName.startsWith("error-sync-"), logFiles[0].leafName);
+  Assert.ok(
+    logFiles[0].leafName.startsWith("error-sync-"),
+    logFiles[0].leafName
+  );
 
   await clean();
   await promiseStopServer(server);

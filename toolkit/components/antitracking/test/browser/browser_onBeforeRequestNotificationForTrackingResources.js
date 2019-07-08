@@ -9,7 +9,7 @@
 let extension;
 add_task(async function() {
   extension = ExtensionTestUtils.loadExtension({
-    manifest: {permissions: ["webRequest", "webRequestBlocking", "*://*/*"]},
+    manifest: { permissions: ["webRequest", "webRequestBlocking", "*://*/*"] },
     async background() {
       let gExpectedResourcesSeen = 0;
       function onBeforeRequest(details) {
@@ -24,7 +24,7 @@ add_task(async function() {
           browser.test.succeed("Correct resource observed");
           ++gExpectedResourcesSeen;
         } else if (spec.endsWith("empty.js?redirect")) {
-          return {redirectUrl: spec.replace("empty.js?redirect", "head.js")};
+          return { redirectUrl: spec.replace("empty.js?redirect", "head.js") };
         } else if (spec.endsWith("head.js")) {
           ++gExpectedResourcesSeen;
         }
@@ -35,9 +35,11 @@ add_task(async function() {
         return undefined;
       }
 
-      browser.webRequest.onBeforeRequest.addListener(onBeforeRequest,
-                                                     {urls: ["*://*/*"]},
-                                                     ["blocking"]);
+      browser.webRequest.onBeforeRequest.addListener(
+        onBeforeRequest,
+        { urls: ["*://*/*"] },
+        ["blocking"]
+      );
       browser.test.sendMessage("ready");
     },
   });
@@ -49,18 +51,23 @@ add_task(async function() {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["browser.contentblocking.allowlist.annotations.enabled", true],
-    ["browser.contentblocking.allowlist.storage.enabled", true],
-    ["privacy.trackingprotection.enabled", true],
-    // the test doesn't open a private window, so we don't care about this pref's value
-    ["privacy.trackingprotection.pbmode.enabled", false],
-    // tracking annotations aren't needed in this test, only TP is needed
-    ["privacy.trackingprotection.annotate_channels", false],
-    // prevent the content blocking on-boarding UI to start mid-way through the test!
-    [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
-    ["privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "tracking.example.com,tracking.example.org"],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.contentblocking.allowlist.annotations.enabled", true],
+      ["browser.contentblocking.allowlist.storage.enabled", true],
+      ["privacy.trackingprotection.enabled", true],
+      // the test doesn't open a private window, so we don't care about this pref's value
+      ["privacy.trackingprotection.pbmode.enabled", false],
+      // tracking annotations aren't needed in this test, only TP is needed
+      ["privacy.trackingprotection.annotate_channels", false],
+      // prevent the content blocking on-boarding UI to start mid-way through the test!
+      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
+      [
+        "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
+        "tracking.example.com,tracking.example.org",
+      ],
+    ],
+  });
 
   await UrlClassifierTestUtils.addTestTrackers();
 
@@ -76,11 +83,12 @@ add_task(async function() {
   await promise;
 
   info("Verify the number of tracking nodes found");
-  await ContentTask.spawn(browser,
-                          { expected: 3,
-                          },
-                          async function(obj) {
-    is(content.document.blockedNodeByClassifierCount, obj.expected, "Expected tracking nodes found");
+  await ContentTask.spawn(browser, { expected: 3 }, async function(obj) {
+    is(
+      content.document.blockedNodeByClassifierCount,
+      obj.expected,
+      "Expected tracking nodes found"
+    );
   });
 
   info("Removing the tab");

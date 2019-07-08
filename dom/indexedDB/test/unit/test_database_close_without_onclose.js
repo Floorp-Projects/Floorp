@@ -6,10 +6,10 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const name = this.window ? window.location.pathname :
-                             "test_database_close_without_onclose.js";
+function* testSteps() {
+  const name = this.window
+    ? window.location.pathname
+    : "test_database_close_without_onclose.js";
 
   const checkpointSleepTimeSec = 10;
 

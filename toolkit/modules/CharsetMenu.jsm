@@ -2,23 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [ "CharsetMenu" ];
+var EXPORTED_SYMBOLS = ["CharsetMenu"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
   const kUrl = "chrome://global/locale/charsetMenu.properties";
   return Services.strings.createBundle(kUrl);
 });
 
-ChromeUtils.defineModuleGetter(this, "Deprecated",
-    "resource://gre/modules/Deprecated.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Deprecated",
+  "resource://gre/modules/Deprecated.jsm"
+);
 
-const kAutoDetectors = [
-  ["off", ""],
-  ["ru", "ruprob"],
-  ["uk", "ukprob"],
-];
+const kAutoDetectors = [["off", ""], ["ru", "ruprob"], ["uk", "ukprob"]];
 
 /**
  * This set contains encodings that are in the Encoding Standard, except:
@@ -79,10 +80,7 @@ const kEncodings = new Set([
 ]);
 
 // Always at the start of the menu, in this order, followed by a separator.
-const kPinned = [
-  "UTF-8",
-  "windows-1252",
-];
+const kPinned = ["UTF-8", "windows-1252"];
 
 kPinned.forEach(x => kEncodings.delete(x));
 
@@ -96,13 +94,18 @@ function CharsetComparator(a, b) {
 }
 
 function SetDetector(event) {
-  Services.prefs.setStringPref("intl.charset.detector",
-                               event.target.getAttribute("detector"));
+  Services.prefs.setStringPref(
+    "intl.charset.detector",
+    event.target.getAttribute("detector")
+  );
 }
 
 function UpdateDetectorMenu(event) {
   event.stopPropagation();
-  let detector = Services.prefs.getComplexValue("intl.charset.detector", Ci.nsIPrefLocalizedString);
+  let detector = Services.prefs.getComplexValue(
+    "intl.charset.detector",
+    Ci.nsIPrefLocalizedString
+  );
   let menuitem = this.getElementsByAttribute("detector", detector).item(0);
   if (menuitem) {
     menuitem.setAttribute("checked", "true");
@@ -114,8 +117,10 @@ var gDetectorInfoCache, gCharsetInfoCache, gPinnedInfoCache;
 var CharsetMenu = {
   build(parent, deprecatedShowAccessKeys = true, showDetector = true) {
     if (!deprecatedShowAccessKeys) {
-      Deprecated.warning("CharsetMenu no longer supports building a menu with no access keys.",
-                         "https://bugzilla.mozilla.org/show_bug.cgi?id=1088710");
+      Deprecated.warning(
+        "CharsetMenu no longer supports building a menu with no access keys.",
+        "https://bugzilla.mozilla.org/show_bug.cgi?id=1088710"
+      );
     }
     function createDOMNode(doc, nodeInfo) {
       let node = doc.createXULElement("menuitem");
@@ -138,8 +143,14 @@ var CharsetMenu = {
 
     if (showDetector) {
       let menuNode = doc.createXULElement("menu");
-      menuNode.setAttribute("label", gBundle.GetStringFromName("charsetMenuAutodet"));
-      menuNode.setAttribute("accesskey", gBundle.GetStringFromName("charsetMenuAutodet.key"));
+      menuNode.setAttribute(
+        "label",
+        gBundle.GetStringFromName("charsetMenuAutodet")
+      );
+      menuNode.setAttribute(
+        "accesskey",
+        gBundle.GetStringFromName("charsetMenuAutodet.key")
+      );
       parent.appendChild(menuNode);
 
       let menuPopupNode = doc.createXULElement("menupopup");
@@ -147,13 +158,19 @@ var CharsetMenu = {
       menuPopupNode.addEventListener("command", SetDetector);
       menuPopupNode.addEventListener("popupshown", UpdateDetectorMenu);
 
-      gDetectorInfoCache.forEach(detectorInfo => menuPopupNode.appendChild(createDOMNode(doc, detectorInfo)));
+      gDetectorInfoCache.forEach(detectorInfo =>
+        menuPopupNode.appendChild(createDOMNode(doc, detectorInfo))
+      );
       parent.appendChild(doc.createXULElement("menuseparator"));
     }
 
-    gPinnedInfoCache.forEach(charsetInfo => parent.appendChild(createDOMNode(doc, charsetInfo)));
+    gPinnedInfoCache.forEach(charsetInfo =>
+      parent.appendChild(createDOMNode(doc, charsetInfo))
+    );
     parent.appendChild(doc.createXULElement("menuseparator"));
-    gCharsetInfoCache.forEach(charsetInfo => parent.appendChild(createDOMNode(doc, charsetInfo)));
+    gCharsetInfoCache.forEach(charsetInfo =>
+      parent.appendChild(createDOMNode(doc, charsetInfo))
+    );
   },
 
   getData() {
@@ -204,7 +221,9 @@ var CharsetMenu = {
   },
   _getDetectorAccesskey(detector) {
     try {
-      return gBundle.GetStringFromName("charsetMenuAutodet." + detector + ".key");
+      return gBundle.GetStringFromName(
+        "charsetMenuAutodet." + detector + ".key"
+      );
     } catch (ex) {}
     return "";
   },
@@ -242,7 +261,7 @@ var CharsetMenu = {
         case "ISO-2022-JP":
           return "Japanese";
         default:
-          // fall through
+        // fall through
       }
     }
     switch (charset) {
@@ -261,7 +280,9 @@ var CharsetMenu = {
    * This method is for comm-central callers only.
    */
   update(parent, charset) {
-    let menuitem = parent.getElementsByAttribute("charset", this.foldCharset(charset, false)).item(0);
+    let menuitem = parent
+      .getElementsByAttribute("charset", this.foldCharset(charset, false))
+      .item(0);
     if (menuitem) {
       menuitem.setAttribute("checked", "true");
     }
@@ -269,4 +290,3 @@ var CharsetMenu = {
 };
 
 Object.freeze(CharsetMenu);
-

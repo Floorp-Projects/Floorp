@@ -9,25 +9,29 @@
 function loadExtension() {
   return ExtensionTestUtils.loadExtension({
     manifest: {
-      "content_scripts": [{
-        "js": ["script.js"],
-        "matches": ["http://mochi.test/?discoTest"],
-      }],
+      content_scripts: [
+        {
+          js: ["script.js"],
+          matches: ["http://mochi.test/?discoTest"],
+        },
+      ],
     },
     background() {
-      browser.runtime.onConnect.addListener((port) => {
+      browser.runtime.onConnect.addListener(port => {
         port.onDisconnect.addListener(() => {
-          browser.test.fail("onDisconnect should not fire because the port is to be closed from this side");
+          browser.test.fail(
+            "onDisconnect should not fire because the port is to be closed from this side"
+          );
           browser.test.sendMessage("port_disconnected");
         });
         port.onMessage.addListener(async msg => {
           browser.test.assertEq("connect_from_script", msg, "expected message");
           // Move a tab to a new window and back. Regression test for bugzil.la/1448674
-          let {windowId, id: tabId, index} = port.sender.tab;
-          await browser.windows.create({tabId});
-          await browser.tabs.move(tabId, {index, windowId});
-          await browser.windows.create({tabId});
-          await browser.tabs.move(tabId, {index, windowId});
+          let { windowId, id: tabId, index } = port.sender.tab;
+          await browser.windows.create({ tabId });
+          await browser.tabs.move(tabId, { index, windowId });
+          await browser.windows.create({ tabId });
+          await browser.tabs.move(tabId, { index, windowId });
           try {
             // When the port is unexpectedly disconnected, postMessage will throw an error.
             port.postMessage("ping");
@@ -50,7 +54,7 @@ function loadExtension() {
 
       browser.test.onMessage.addListener(msg => {
         browser.test.assertEq("open_extension_tab", msg, "expected message");
-        browser.tabs.create({url: "tab.html"});
+        browser.tabs.create({ url: "tab.html" });
       });
     },
 
@@ -79,7 +83,10 @@ function loadExtension() {
 add_task(async function contentscript_connect_and_move_tabs() {
   let extension = loadExtension();
   await extension.startup();
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/?discoTest");
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/?discoTest"
+  );
   await extension.awaitMessage("port_ping_ponged_before_disconnect");
   await extension.awaitMessage("port_disconnected");
   await extension.awaitMessage("closed_tab");

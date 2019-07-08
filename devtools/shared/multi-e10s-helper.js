@@ -8,7 +8,8 @@ const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
-  this, "swm",
+  this,
+  "swm",
   "@mozilla.org/serviceworkers/manager;1",
   "nsIServiceWorkerManager"
 );
@@ -52,7 +53,7 @@ function removeMultiE10sListener(listener) {
 function isMultiE10s() {
   const isE10s = Services.appinfo.browserTabsRemoteAutostart;
   const processCount = Services.appinfo.maxWebProcessCount;
-  const multiE10s =  isE10s && processCount > 1;
+  const multiE10s = isE10s && processCount > 1;
   const isNewSWImplementation = swm.isParentInterceptEnabled();
 
   // When can we debug Service Workers?

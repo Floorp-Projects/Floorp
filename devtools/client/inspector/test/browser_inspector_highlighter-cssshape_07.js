@@ -13,7 +13,7 @@ const SHAPE_SELECTORS = ["#polygon-transform", "#ellipse"];
 add_task(async function() {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
-  const {testActor, inspector} = env;
+  const { testActor, inspector } = env;
   const view = selectRuleView(inspector);
   const highlighters = view.highlighters;
   const config = { inspector, view, highlighters, testActor, helper };
@@ -39,11 +39,13 @@ async function testOneDimScale(config) {
   const property = "clip-path";
 
   for (const selector of SHAPE_SELECTORS) {
-    await setup({selector, property, options, ...config});
+    await setup({ selector, property, options, ...config });
     const { mouse } = helper;
 
-    const { nw, width,
-          height, center } = await getBoundingBoxInPx({selector, ...config});
+    const { nw, width, height, center } = await getBoundingBoxInPx({
+      selector,
+      ...config,
+    });
 
     // if the top or left edges are not visible, move the shape so it is.
     if (nw[0] < 0 || nw[1] < 0) {
@@ -62,62 +64,74 @@ async function testOneDimScale(config) {
     let onShapeChangeApplied;
 
     info("Scaling from w");
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(nw[0], center[1], selector);
     await mouse.move(nw[0] + dx, center[1], selector);
     await mouse.up(nw[0] + dx, center[1], selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    const wBB = await getBoundingBoxInPx({selector, ...config});
+    const wBB = await getBoundingBoxInPx({ selector, ...config });
     isnot(wBB.nw[0], nw[0], `${selector} nw moved right after w scale`);
     is(wBB.nw[1], nw[1], `${selector} nw not moved down after w scale`);
     isnot(wBB.width, width, `${selector} width reduced after w scale`);
     is(wBB.height, height, `${selector} height not reduced after w scale`);
 
     info("Scaling from e");
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(wBB.ne[0], center[1], selector);
     await mouse.move(wBB.ne[0] - dx, center[1], selector);
     await mouse.up(wBB.ne[0] - dx, center[1], selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    const eBB = await getBoundingBoxInPx({selector, ...config});
+    const eBB = await getBoundingBoxInPx({ selector, ...config });
     isnot(eBB.ne[0], wBB.ne[0], `${selector} ne moved left after e scale`);
     is(eBB.ne[1], wBB.ne[1], `${selector} ne not moved down after e scale`);
     isnot(eBB.width, wBB.width, `${selector} width reduced after e scale`);
     is(eBB.height, wBB.height, `${selector} height not reduced after e scale`);
 
     info("Scaling from s");
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(eBB.center[0], eBB.sw[1], selector);
     await mouse.move(eBB.center[0], eBB.sw[1] - dy, selector);
     await mouse.up(eBB.center[0], eBB.sw[1] - dy, selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    const sBB = await getBoundingBoxInPx({selector, ...config});
+    const sBB = await getBoundingBoxInPx({ selector, ...config });
     is(sBB.sw[0], eBB.sw[0], `${selector} sw not moved right after w scale`);
     isnot(sBB.sw[1], eBB.sw[1], `${selector} sw moved down after w scale`);
     is(sBB.width, eBB.width, `${selector} width not reduced after w scale`);
     isnot(sBB.height, eBB.height, `${selector} height reduced after w scale`);
 
     info("Scaling from n");
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(sBB.center[0], sBB.nw[1], selector);
     await mouse.move(sBB.center[0], sBB.nw[1] + dy, selector);
     await mouse.up(sBB.center[0], sBB.nw[1] + dy, selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    const nBB = await getBoundingBoxInPx({selector, ...config});
+    const nBB = await getBoundingBoxInPx({ selector, ...config });
     is(nBB.nw[0], sBB.nw[0], `${selector} nw not moved right after n scale`);
     isnot(nBB.nw[1], sBB.nw[1], `${selector} nw moved down after n scale`);
     is(nBB.width, sBB.width, `${selector} width reduced after n scale`);
-    isnot(nBB.height, sBB.height, `${selector} height not reduced after n scale`);
+    isnot(
+      nBB.height,
+      sBB.height,
+      `${selector} height not reduced after n scale`
+    );
 
-    await teardown({selector, property, ...config});
+    await teardown({ selector, property, ...config });
   }
 }
 
@@ -131,10 +145,18 @@ async function getBoundingBoxInPx(config) {
   const paddingLeft = parseFloat(computedStyle["padding-left"].value);
   // path is always of form "Mx y Lx y Lx y Lx y Z", where x/y are numbers
   const path = await testActor.getHighlighterNodeAttribute(
-    "shapes-bounding-box", "d", highlighters.highlighters[HIGHLIGHTER_TYPE]);
-  const coords = path.replace(/[MLZ]/g, "").split(" ").map((n, i) => {
-    return i % 2 === 0 ? paddingLeft + width * n / 100 : paddingTop + height * n / 100;
-  });
+    "shapes-bounding-box",
+    "d",
+    highlighters.highlighters[HIGHLIGHTER_TYPE]
+  );
+  const coords = path
+    .replace(/[MLZ]/g, "")
+    .split(" ")
+    .map((n, i) => {
+      return i % 2 === 0
+        ? paddingLeft + (width * n) / 100
+        : paddingTop + (height * n) / 100;
+    });
 
   const nw = [coords[0], coords[1]];
   const ne = [coords[2], coords[3]];

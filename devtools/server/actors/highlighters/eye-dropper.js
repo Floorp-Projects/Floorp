@@ -8,17 +8,30 @@
 // It basically displays a magnifier that tracks mouse moves and shows a magnified version
 // of the page. On click, it samples the color at the pixel being hovered.
 
-const {Ci, Cc} = require("chrome");
-const {CanvasFrameAnonymousContentHelper, createNode} = require("./utils/markup");
+const { Ci, Cc } = require("chrome");
+const {
+  CanvasFrameAnonymousContentHelper,
+  createNode,
+} = require("./utils/markup");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {rgbToHsl, rgbToColorName} = require("devtools/shared/css/color").colorUtils;
-const {getCurrentZoom, getFrameOffsets} = require("devtools/shared/layout/utils");
+const {
+  rgbToHsl,
+  rgbToColorName,
+} = require("devtools/shared/css/color").colorUtils;
+const {
+  getCurrentZoom,
+  getFrameOffsets,
+} = require("devtools/shared/layout/utils");
 
-loader.lazyGetter(this, "clipboardHelper",
-  () => Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper));
-loader.lazyGetter(this, "l10n",
-  () => Services.strings.createBundle("chrome://devtools-shared/locale/eyedropper.properties"));
+loader.lazyGetter(this, "clipboardHelper", () =>
+  Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper)
+);
+loader.lazyGetter(this, "l10n", () =>
+  Services.strings.createBundle(
+    "chrome://devtools-shared/locale/eyedropper.properties"
+  )
+);
 
 const ZOOM_LEVEL_PREF = "devtools.eyedropper.zoom";
 const FORMAT_PREF = "devtools.defaultColorUnit";
@@ -41,8 +54,10 @@ function EyeDropper(highlighterEnv) {
   EventEmitter.decorate(this);
 
   this.highlighterEnv = highlighterEnv;
-  this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
-                                                      this._buildMarkup.bind(this));
+  this.markup = new CanvasFrameAnonymousContentHelper(
+    this.highlighterEnv,
+    this._buildMarkup.bind(this)
+  );
 
   // Get a couple of settings from prefs.
   this.format = Services.prefs.getCharPref(FORMAT_PREF);
@@ -61,16 +76,16 @@ EyeDropper.prototype = {
   _buildMarkup() {
     // Highlighter main container.
     const container = createNode(this.win, {
-      attributes: {"class": "highlighter-container"},
+      attributes: { class: "highlighter-container" },
     });
 
     // Wrapper element.
     const wrapper = createNode(this.win, {
       parent: container,
       attributes: {
-        "id": "root",
-        "class": "root",
-        "hidden": "true",
+        id: "root",
+        class: "root",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -80,10 +95,10 @@ EyeDropper.prototype = {
       parent: wrapper,
       nodeType: "canvas",
       attributes: {
-        "id": "canvas",
-        "class": "canvas",
-        "width": MAGNIFIER_WIDTH,
-        "height": MAGNIFIER_HEIGHT,
+        id: "canvas",
+        class: "canvas",
+        width: MAGNIFIER_WIDTH,
+        height: MAGNIFIER_HEIGHT,
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -91,19 +106,19 @@ EyeDropper.prototype = {
     // The color label element.
     const colorLabelContainer = createNode(this.win, {
       parent: wrapper,
-      attributes: {"class": "color-container"},
+      attributes: { class: "color-container" },
       prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "div",
       parent: colorLabelContainer,
-      attributes: {"id": "color-preview", "class": "color-preview"},
+      attributes: { id: "color-preview", class: "color-preview" },
       prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "div",
       parent: colorLabelContainer,
-      attributes: {"id": "color-value", "class": "color-value"},
+      attributes: { id: "color-value", class: "color-value" },
       prefix: this.ID_CLASS_PREFIX,
     });
 
@@ -142,7 +157,7 @@ EyeDropper.prototype = {
     this.prepareImageCapture();
 
     // Start listening for user events.
-    const {pageListenerTarget} = this.highlighterEnv;
+    const { pageListenerTarget } = this.highlighterEnv;
     pageListenerTarget.addEventListener("mousemove", this);
     pageListenerTarget.addEventListener("click", this, true);
     pageListenerTarget.addEventListener("keydown", this);
@@ -156,8 +171,12 @@ EyeDropper.prototype = {
     this.ctx = this.getElement("canvas").getCanvasContext();
     this.ctx.imageSmoothingEnabled = false;
 
-    this.magnifiedArea = {width: MAGNIFIER_WIDTH, height: MAGNIFIER_HEIGHT,
-                          x: DEFAULT_START_POS_X, y: DEFAULT_START_POS_Y};
+    this.magnifiedArea = {
+      width: MAGNIFIER_WIDTH,
+      height: MAGNIFIER_HEIGHT,
+      x: DEFAULT_START_POS_X,
+      y: DEFAULT_START_POS_Y,
+    };
 
     this.moveTo(DEFAULT_START_POS_X, DEFAULT_START_POS_Y);
 
@@ -181,7 +200,7 @@ EyeDropper.prototype = {
 
     this.pageImage = null;
 
-    const {pageListenerTarget} = this.highlighterEnv;
+    const { pageListenerTarget } = this.highlighterEnv;
 
     if (pageListenerTarget) {
       pageListenerTarget.removeEventListener("mousemove", this);
@@ -223,7 +242,9 @@ EyeDropper.prototype = {
   get cellsWide() {
     // Canvas will render whole "pixels" (cells) only, and an even number at that. Round
     // up to the nearest even number of pixels.
-    let cellsWide = Math.ceil(this.magnifiedArea.width / this.eyeDropperZoomLevel);
+    let cellsWide = Math.ceil(
+      this.magnifiedArea.width / this.eyeDropperZoomLevel
+    );
     cellsWide += cellsWide % 2;
 
     return cellsWide;
@@ -247,7 +268,7 @@ EyeDropper.prototype = {
    * Get color of center cell in the grid.
    */
   get centerColor() {
-    const pos = (this.centerCell * this.cellSize) + (this.cellSize / 2);
+    const pos = this.centerCell * this.cellSize + this.cellSize / 2;
     const rgb = this.ctx.getImageData(pos, pos, 1, 1).data;
     return rgb;
   },
@@ -258,13 +279,13 @@ EyeDropper.prototype = {
       return;
     }
 
-    const {width, height, x, y} = this.magnifiedArea;
+    const { width, height, x, y } = this.magnifiedArea;
 
     const zoomedWidth = width / this.eyeDropperZoomLevel;
     const zoomedHeight = height / this.eyeDropperZoomLevel;
 
-    const sx = x - (zoomedWidth / 2);
-    const sy = y - (zoomedHeight / 2);
+    const sx = x - zoomedWidth / 2;
+    const sy = y - zoomedHeight / 2;
     const sw = zoomedWidth;
     const sh = zoomedHeight;
 
@@ -279,29 +300,33 @@ EyeDropper.prototype = {
 
     // Update the color preview and value.
     const rgb = this.centerColor;
-    this.getElement("color-preview").setAttribute("style",
-      `background-color:${toColorString(rgb, "rgb")};`);
-    this.getElement("color-value").setTextContent(toColorString(rgb, this.format));
+    this.getElement("color-preview").setAttribute(
+      "style",
+      `background-color:${toColorString(rgb, "rgb")};`
+    );
+    this.getElement("color-value").setTextContent(
+      toColorString(rgb, this.format)
+    );
   },
 
   /**
    * Draw a grid on the canvas representing pixel boundaries.
    */
   drawGrid() {
-    const {width, height} = this.magnifiedArea;
+    const { width, height } = this.magnifiedArea;
 
     this.ctx.lineWidth = 1;
     this.ctx.strokeStyle = "rgba(143, 143, 143, 0.2)";
 
     for (let i = 0; i < width; i += this.cellSize) {
       this.ctx.beginPath();
-      this.ctx.moveTo(i - .5, 0);
-      this.ctx.lineTo(i - .5, height);
+      this.ctx.moveTo(i - 0.5, 0);
+      this.ctx.lineTo(i - 0.5, height);
       this.ctx.stroke();
 
       this.ctx.beginPath();
-      this.ctx.moveTo(0, i - .5);
-      this.ctx.lineTo(width, i - .5);
+      this.ctx.moveTo(0, i - 0.5);
+      this.ctx.lineTo(width, i - 0.5);
       this.ctx.stroke();
     }
   },
@@ -315,7 +340,12 @@ EyeDropper.prototype = {
     this.ctx.lineWidth = 1;
     this.ctx.lineJoin = "miter";
     this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-    this.ctx.strokeRect(pos - 1.5, pos - 1.5, this.cellSize + 2, this.cellSize + 2);
+    this.ctx.strokeRect(
+      pos - 1.5,
+      pos - 1.5,
+      this.cellSize + 2,
+      this.cellSize + 2
+    );
 
     this.ctx.strokeStyle = "rgba(255, 255, 255, 1)";
     this.ctx.strokeRect(pos - 0.5, pos - 0.5, this.cellSize, this.cellSize);
@@ -441,15 +471,23 @@ EyeDropper.prototype = {
     offsetX *= modifier;
 
     if (offsetX !== 0 || offsetY !== 0) {
-      this.magnifiedArea.x = cap(this.magnifiedArea.x + offsetX,
-                                 0, this.win.innerWidth * this.pageZoom);
-      this.magnifiedArea.y = cap(this.magnifiedArea.y + offsetY, 0,
-                                 this.win.innerHeight * this.pageZoom);
+      this.magnifiedArea.x = cap(
+        this.magnifiedArea.x + offsetX,
+        0,
+        this.win.innerWidth * this.pageZoom
+      );
+      this.magnifiedArea.y = cap(
+        this.magnifiedArea.y + offsetY,
+        0,
+        this.win.innerHeight * this.pageZoom
+      );
 
       this.draw();
 
-      this.moveTo(this.magnifiedArea.x / this.pageZoom,
-                  this.magnifiedArea.y / this.pageZoom);
+      this.moveTo(
+        this.magnifiedArea.x / this.pageZoom,
+        this.magnifiedArea.y / this.pageZoom
+      );
 
       e.preventDefault();
     }
@@ -467,7 +505,8 @@ EyeDropper.prototype = {
 
     // Provide some feedback.
     this.getElement("color-value").setTextContent(
-      "✓ " + l10n.GetStringFromName("colorValue.copied"));
+      "✓ " + l10n.GetStringFromName("colorValue.copied")
+    );
 
     // Hide the tool after a delay.
     clearTimeout(this._copyTimeout);
@@ -485,7 +524,10 @@ exports.EyeDropper = EyeDropper;
  * @return {ImageData} The image data for the window.
  */
 function getWindowAsImageData(win) {
-  const canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  const canvas = win.document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "canvas"
+  );
   const scale = getCurrentZoom(win);
   const width = win.innerWidth;
   const height = win.innerHeight;

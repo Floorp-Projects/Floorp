@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["convertToRTCStatsReport"];
 function convertToRTCStatsReport(dict) {
   function appendStats(stats, report) {
     stats.forEach(function(stat) {
-        report[stat.id] = stat;
-      });
+      report[stat.id] = stat;
+    });
   }
   let report = {};
   appendStats(dict.inboundRtpStreamStats, report);
@@ -22,4 +22,3 @@ function convertToRTCStatsReport(dict) {
   appendStats(dict.iceCandidateStats, report);
   return report;
 }
-

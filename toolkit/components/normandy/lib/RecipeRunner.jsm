@@ -4,19 +4,27 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {LogManager} = ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { LogManager } = ChromeUtils.import(
+  "resource://normandy/lib/LogManager.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "timerManager",
-                                   "@mozilla.org/updates/timer-manager;1",
-                                   "nsIUpdateTimerManager");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "timerManager",
+  "@mozilla.org/updates/timer-manager;1",
+  "nsIUpdateTimerManager"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
   Storage: "resource://normandy/lib/Storage.jsm",
-  FilterExpressions: "resource://gre/modules/components-utils/FilterExpressions.jsm",
+  FilterExpressions:
+    "resource://gre/modules/components-utils/FilterExpressions.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
@@ -54,7 +62,8 @@ const PREFS_TO_WATCH = [
 
 XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
   return RemoteSettings(REMOTE_SETTINGS_COLLECTION, {
-    filterFunc: async entry => (await RecipeRunner.checkFilter(entry.recipe)) ? entry : null,
+    filterFunc: async entry =>
+      (await RecipeRunner.checkFilter(entry.recipe)) ? entry : null,
   });
 });
 
@@ -167,7 +176,9 @@ var RecipeRunner = {
             break;
 
           default:
-            log.debug(`Observer fired with unexpected pref change: ${prefName}`);
+            log.debug(
+              `Observer fired with unexpected pref change: ${prefName}`
+            );
         }
 
         break;
@@ -178,13 +189,17 @@ var RecipeRunner = {
   checkPrefs() {
     // Only run if Unified Telemetry is enabled.
     if (!Services.prefs.getBoolPref(TELEMETRY_ENABLED_PREF)) {
-      log.debug("Disabling RecipeRunner because Unified Telemetry is disabled.");
+      log.debug(
+        "Disabling RecipeRunner because Unified Telemetry is disabled."
+      );
       this.disable();
       return;
     }
 
     if (!Services.prefs.getBoolPref(SHIELD_ENABLED_PREF)) {
-      log.debug(`Disabling Shield because ${SHIELD_ENABLED_PREF} is set to false`);
+      log.debug(
+        `Disabling Shield because ${SHIELD_ENABLED_PREF} is set to false`
+      );
       this.disable();
       return;
     }
@@ -202,7 +217,9 @@ var RecipeRunner = {
       return;
     }
     if (!apiUrl.startsWith("https://")) {
-      log.warn(`Disabling Shield because ${API_URL_PREF} is not an HTTPS url: ${apiUrl}.`);
+      log.warn(
+        `Disabling Shield because ${API_URL_PREF} is not an HTTPS url: ${apiUrl}.`
+      );
       this.disable();
       return;
     }
@@ -213,7 +230,9 @@ var RecipeRunner = {
 
   registerTimer() {
     this.updateRunInterval();
-    CleanupManager.addCleanupHandler(() => timerManager.unregisterTimer(TIMER_NAME));
+    CleanupManager.addCleanupHandler(() =>
+      timerManager.unregisterTimer(TIMER_NAME)
+    );
   },
 
   unregisterTimer() {
@@ -230,7 +249,9 @@ var RecipeRunner = {
       onDisable: this.detachRemoteSettings.bind(this),
     };
     remoteSettingsGate.addObserver(observer);
-    CleanupManager.addCleanupHandler(() => remoteSettingsGate.removeObserver(observer));
+    CleanupManager.addCleanupHandler(() =>
+      remoteSettingsGate.removeObserver(observer)
+    );
   },
 
   attachRemoteSettings() {
@@ -339,19 +360,21 @@ var RecipeRunner = {
       // First, fetch recipes whose JEXL filters match.
       const entries = await gRemoteSettingsClient.get();
       // Then, verify the signature of each recipe. It will throw if invalid.
-      return Promise.all(entries.map(async ( { recipe, signature } ) => {
-        await NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
-        return recipe;
-      }));
+      return Promise.all(
+        entries.map(async ({ recipe, signature }) => {
+          await NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
+          return recipe;
+        })
+      );
     }
 
     // Obtain the recipes from the Normandy server (legacy).
     let recipes;
     try {
-      recipes = await NormandyApi.fetchRecipes({enabled: true});
+      recipes = await NormandyApi.fetchRecipes({ enabled: true });
       log.debug(
         `Fetched ${recipes.length} recipes from the server: ` +
-        recipes.map(r => r.name).join(", ")
+          recipes.map(r => r.name).join(", ")
       );
     } catch (e) {
       const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
@@ -394,7 +417,11 @@ var RecipeRunner = {
     try {
       result = await FilterExpressions.eval(recipe.filter_expression, context);
     } catch (err) {
-      log.error(`Error checking filter for "${recipe.name}". Filter: [${recipe.filter_expression}]. Error: "${err}"`);
+      log.error(
+        `Error checking filter for "${recipe.name}". Filter: [${
+          recipe.filter_expression
+        }]. Error: "${err}"`
+      );
       await Uptake.reportRecipe(recipe, Uptake.RECIPE_FILTER_BROKEN);
       return false;
     }

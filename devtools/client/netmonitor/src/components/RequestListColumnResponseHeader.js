@@ -43,13 +43,12 @@ class RequestListColumnResponseHeader extends Component {
 
   render() {
     const header = getResponseHeader(this.props.item, this.props.header);
-    return (
-      dom.td({
+    return dom.td(
+      {
         className: "requests-list-column requests-list-response-header",
         title: header,
       },
-        header
-      )
+      header
     );
   }
 }

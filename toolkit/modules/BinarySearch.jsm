@@ -4,12 +4,9 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "BinarySearch",
-];
+var EXPORTED_SYMBOLS = ["BinarySearch"];
 
 var BinarySearch = Object.freeze({
-
   /**
    * Returns the index of the given target in the given array or -1 if the
    * target is not found.
@@ -63,12 +60,14 @@ var BinarySearch = Object.freeze({
       // Thanks to http://jsperf.com/code-review-1480 for this tip.
       let mid = (low + high) >> 1;
       let cmp = comparator(target, array[mid]);
-      if (cmp == 0)
+      if (cmp == 0) {
         return [true, mid];
-      if (cmp < 0)
+      }
+      if (cmp < 0) {
         high = mid - 1;
-      else
+      } else {
         low = mid + 1;
+      }
     }
     return [false, low];
   },

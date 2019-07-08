@@ -2,8 +2,10 @@
 
 /* global addMessageListener, sendAsyncMessage */
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let listener = msg => {
   void (msg instanceof Ci.nsIConsoleMessage);
@@ -53,8 +55,8 @@ addMessageListener("check-cleanup", extensionId => {
       }
     } else {
       results.extraWindows.push(
-        Array.from(win.gBrowser.tabs,
-                   tab => getTabBrowser(tab).currentURI.spec));
+        Array.from(win.gBrowser.tabs, tab => getTabBrowser(tab).currentURI.spec)
+      );
     }
   }
 

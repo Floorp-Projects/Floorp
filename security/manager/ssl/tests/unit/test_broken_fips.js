@@ -22,18 +22,24 @@ function run_test() {
   let secmodDBFile = do_get_file(`test_broken_fips/${secmodDBName}`);
   secmodDBFile.copyTo(profile, secmodDBName);
 
-  let moduleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                   .getService(Ci.nsIPKCS11ModuleDB);
+  let moduleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
+    Ci.nsIPKCS11ModuleDB
+  );
   ok(!moduleDB.isFIPSEnabled, "FIPS should not be enabled");
 
-  let sdr = Cc["@mozilla.org/security/sdr;1"]
-              .getService(Ci.nsISecretDecoderRing);
+  let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
+    Ci.nsISecretDecoderRing
+  );
 
-  const encrypted = "MDoEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECGeDHwVfyFqzBBAYvqMq/kDMsrARVNdC1C8d";
+  const encrypted =
+    "MDoEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECGeDHwVfyFqzBBAYvqMq/kDMsrARVNdC1C8d";
   const expectedResult = "password";
   let decrypted = sdr.decryptString(encrypted);
-  equal(decrypted, expectedResult,
-        "decrypted ciphertext should match expected plaintext");
+  equal(
+    decrypted,
+    expectedResult,
+    "decrypted ciphertext should match expected plaintext"
+  );
 
   let secmodDBFileFIPS = do_get_profile();
   secmodDBFileFIPS.append(`${secmodDBName}.fips`);

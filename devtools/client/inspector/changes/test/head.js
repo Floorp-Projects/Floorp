@@ -1,4 +1,4 @@
- /* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,12 +13,14 @@
 // It loads inspector/test/head.js which itself loads inspector/test/shared-head.js
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/rules/test/head.js",
-  this);
+  this
+);
 
 // Load the shared Redux helpers.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
-  this);
+  this
+);
 
 // Ensure the three-pane mode is enabled before running the tests.
 Services.prefs.setBoolPref("devtools.inspector.three-pane-enabled", true);

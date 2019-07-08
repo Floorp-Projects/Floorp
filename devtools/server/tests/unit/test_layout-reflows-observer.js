@@ -102,8 +102,10 @@ function run_test() {
 }
 
 function instancesOfObserversAreSharedBetweenWindows() {
-  info("Checking that when requesting twice an instances of the observer " +
-    "for the same BrowsingContextTargetActor, the instance is shared");
+  info(
+    "Checking that when requesting twice an instances of the observer " +
+      "for the same BrowsingContextTargetActor, the instance is shared"
+  );
 
   info("Checking 2 instances of the observer for the targetActor 1");
   const targetActor1 = new MockTargetActor();
@@ -117,8 +119,10 @@ function instancesOfObserversAreSharedBetweenWindows() {
   const obs22 = getLayoutChangesObserver(targetActor2);
   Assert.equal(obs21, obs22);
 
-  info("Checking that observers instances for 2 different targetActors are " +
-    "different");
+  info(
+    "Checking that observers instances for 2 different targetActors are " +
+      "different"
+  );
   Assert.notEqual(obs11, obs21);
 
   releaseLayoutChangesObserver(targetActor1);
@@ -128,8 +132,10 @@ function instancesOfObserversAreSharedBetweenWindows() {
 }
 
 function eventsAreBatched() {
-  info("Checking that reflow events are batched and only sent when the " +
-    "timeout expires");
+  info(
+    "Checking that reflow events are batched and only sent when the " +
+      "timeout expires"
+  );
 
   // Note that in this test, we mock the target actor and its window property, so we also
   // mock the setTimeout/clearTimeout mechanism and just call the callback manually
@@ -173,14 +179,16 @@ function eventsAreBatched() {
 }
 
 function noEventsAreSentWhenThereAreNoReflowsAndLoopTimeouts() {
-  info("Checking that if no reflows were detected and the event batching " +
-  "loop expires, then no reflows event is sent");
+  info(
+    "Checking that if no reflows were detected and the event batching " +
+      "loop expires, then no reflows event is sent"
+  );
 
   const targetActor = new MockTargetActor();
   const observer = getLayoutChangesObserver(targetActor);
 
   const reflowsEvents = [];
-  const onReflows = (reflows) => reflowsEvents.push(reflows);
+  const onReflows = reflows => reflowsEvents.push(reflows);
   observer.on("reflows", onReflows);
 
   info("Faking timeout expiration and checking for reflows");
@@ -221,8 +229,10 @@ function destroyStopsObserving() {
 }
 
 function stoppingAndStartingSeveralTimesWorksCorrectly() {
-  info("Checking that the stopping and starting several times the observer" +
-    " works correctly");
+  info(
+    "Checking that the stopping and starting several times the observer" +
+      " works correctly"
+  );
 
   const targetActor = new MockTargetActor();
   const observer = getLayoutChangesObserver(targetActor);

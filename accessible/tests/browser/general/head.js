@@ -10,7 +10,8 @@
 /* import-globals-from ../shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js",
-  this);
+  this
+);
 
 const nsIAccessibleRole = Ci.nsIAccessibleRole; // eslint-disable-line no-unused-vars
 
@@ -20,14 +21,18 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 async function openNewTab(url) {
   const forceNewProcess = true;
 
-  return BrowserTestUtils.openNewForegroundTab(
-    { gBrowser, url, forceNewProcess });
+  return BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url,
+    forceNewProcess,
+  });
 }
 
 async function initAccessibilityService() {
   info("Create accessibility service.");
   let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
-    Ci.nsIAccessibilityService);
+    Ci.nsIAccessibilityService
+  );
 
   await new Promise(resolve => {
     if (Services.appinfo.accessibilityEnabled) {

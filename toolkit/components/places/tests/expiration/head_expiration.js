@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
 {
@@ -26,7 +26,6 @@ function force_expiration_start() {
     .observe(null, "testing-mode", null);
 }
 
-
 /**
  * Forces an expiration run.
  *
@@ -40,21 +39,27 @@ function force_expiration_start() {
  */
 function promiseForceExpirationStep(aLimit) {
   let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-  let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
+  let expire = Cc["@mozilla.org/places/expiration;1"].getService(
+    Ci.nsIObserver
+  );
   expire.observe(null, "places-debug-start-expiration", aLimit);
   return promise;
 }
-
 
 /**
  * Expiration preferences helpers.
  */
 
 function setInterval(aNewInterval) {
-  Services.prefs.setIntPref("places.history.expiration.interval_seconds", aNewInterval);
+  Services.prefs.setIntPref(
+    "places.history.expiration.interval_seconds",
+    aNewInterval
+  );
 }
 function getInterval() {
-  return Services.prefs.getIntPref("places.history.expiration.interval_seconds");
+  return Services.prefs.getIntPref(
+    "places.history.expiration.interval_seconds"
+  );
 }
 function clearInterval() {
   try {
@@ -62,9 +67,11 @@ function clearInterval() {
   } catch (ex) {}
 }
 
-
 function setMaxPages(aNewMaxPages) {
-  Services.prefs.setIntPref("places.history.expiration.max_pages", aNewMaxPages);
+  Services.prefs.setIntPref(
+    "places.history.expiration.max_pages",
+    aNewMaxPages
+  );
 }
 function getMaxPages() {
   return Services.prefs.getIntPref("places.history.expiration.max_pages");
@@ -74,7 +81,6 @@ function clearMaxPages() {
     Services.prefs.clearUserPref("places.history.expiration.max_pages");
   } catch (ex) {}
 }
-
 
 function setHistoryEnabled(aHistoryEnabled) {
   Services.prefs.setBoolPref("places.history.enabled", aHistoryEnabled);

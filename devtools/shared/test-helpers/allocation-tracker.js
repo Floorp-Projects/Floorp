@@ -39,7 +39,9 @@ const { Cu } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 
 const global = Cu.getGlobalForObject(this);
-const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+const { addDebuggerToGlobal } = ChromeUtils.import(
+  "resource://gre/modules/jsdebugger.jsm"
+);
 addDebuggerToGlobal(global);
 
 /**
@@ -84,7 +86,9 @@ exports.allocationTracker = function({
       const ref = g.unsafeDereference();
       const location = Cu.getRealmLocation(ref);
       const accept = !!location.match(/devtools/i);
-      dump("TRACKER NEW GLOBAL: " + (accept ? "+" : "-") + " : " + location + "\n");
+      dump(
+        "TRACKER NEW GLOBAL: " + (accept ? "+" : "-") + " : " + location + "\n"
+      );
       return accept;
     };
   }
@@ -203,13 +207,21 @@ exports.allocationTracker = function({
             });
           return { src, count: item.count, lines };
         });
-      dump("DEVTOOLS ALLOCATION: Javascript object allocations: " + allocations.length +
-           "\n" + JSON.stringify(allocationList, null, 2) + "\n");
+      dump(
+        "DEVTOOLS ALLOCATION: Javascript object allocations: " +
+          allocations.length +
+          "\n" +
+          JSON.stringify(allocationList, null, 2) +
+          "\n"
+      );
     },
 
     logCount() {
-      dump("DEVTOOLS ALLOCATION: Javascript object allocations: " +
-           this.countAllocations() + "\n");
+      dump(
+        "DEVTOOLS ALLOCATION: Javascript object allocations: " +
+          this.countAllocations() +
+          "\n"
+      );
     },
 
     countAllocations() {

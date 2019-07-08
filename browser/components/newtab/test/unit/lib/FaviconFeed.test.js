@@ -1,7 +1,7 @@
 "use strict";
-import {FaviconFeed, fetchIconFromRedirects} from "lib/FaviconFeed.jsm";
-import {actionTypes as at} from "common/Actions.jsm";
-import {GlobalOverrider} from "test/unit/utils";
+import { FaviconFeed, fetchIconFromRedirects } from "lib/FaviconFeed.jsm";
+import { actionTypes as at } from "common/Actions.jsm";
+import { GlobalOverrider } from "test/unit/utils";
 
 const FAKE_ENDPOINT = "https://foo.com/";
 
@@ -29,16 +29,24 @@ describe("FaviconFeed", () => {
         },
       },
     });
-    globals.set("NewTabUtils", {activityStreamProvider: {executePlacesQuery: () => Promise.resolve([])}});
+    globals.set("NewTabUtils", {
+      activityStreamProvider: { executePlacesQuery: () => Promise.resolve([]) },
+    });
     siteIconsPref = true;
-    sandbox.stub(global.Services.prefs, "getBoolPref")
-      .withArgs("browser.chrome.site_icons").callsFake(() => siteIconsPref);
+    sandbox
+      .stub(global.Services.prefs, "getBoolPref")
+      .withArgs("browser.chrome.site_icons")
+      .callsFake(() => siteIconsPref);
 
     feed = new FaviconFeed();
     feed.store = {
       dispatch: sinon.spy(),
-      getState() { return this.state; },
-      state: {Prefs: {values: {"tippyTop.service.endpoint": FAKE_ENDPOINT}}},
+      getState() {
+        return this.state;
+      },
+      state: {
+        Prefs: { values: { "tippyTop.service.endpoint": FAKE_ENDPOINT } },
+      },
     };
   });
   afterEach(() => {
@@ -56,7 +64,9 @@ describe("FaviconFeed", () => {
     beforeEach(() => {
       domain = "mozilla.org";
       url = `https://${domain}/`;
-      feed.getSite = sandbox.stub().returns(Promise.resolve({domain, image_url: `${url}/icon.png`}));
+      feed.getSite = sandbox
+        .stub()
+        .returns(Promise.resolve({ domain, image_url: `${url}/icon.png` }));
       feed._queryForRedirects.clear();
     });
 
@@ -64,13 +74,15 @@ describe("FaviconFeed", () => {
       await feed.fetchIcon(url);
 
       assert.calledOnce(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
-      assert.calledWith(global.PlacesUtils.favicons.setAndFetchFaviconForPage,
-        sinon.match({spec: url}),
-        {ref: "tippytop", spec: `${url}/icon.png`},
+      assert.calledWith(
+        global.PlacesUtils.favicons.setAndFetchFaviconForPage,
+        sinon.match({ spec: url }),
+        { ref: "tippytop", spec: `${url}/icon.png` },
         false,
         global.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
         null,
-        undefined);
+        undefined
+      );
     });
     it("should NOT setAndFetchFaviconForPage if site_icons pref is false", async () => {
       siteIconsPref = false;
@@ -115,14 +127,15 @@ describe("FaviconFeed", () => {
 
   describe("#getSite", () => {
     it("should return site data if RemoteSettings has an entry for the domain", async () => {
-      const get = () => Promise.resolve([{domain: "example.com", image_url: "foo.img"}]);
-      feed._tippyTop = {get};
+      const get = () =>
+        Promise.resolve([{ domain: "example.com", image_url: "foo.img" }]);
+      feed._tippyTop = { get };
       const site = await feed.getSite("example.com");
       assert.equal(site.domain, "example.com");
     });
     it("should return null if RemoteSettings doesn't have an entry for the domain", async () => {
       const get = () => Promise.resolve([]);
-      feed._tippyTop = {get};
+      feed._tippyTop = { get };
       const site = await feed.getSite("example.com");
       assert.isNull(site);
     });
@@ -137,7 +150,7 @@ describe("FaviconFeed", () => {
     it("should fetchIcon on RICH_ICON_MISSING", async () => {
       feed.fetchIcon = sinon.spy();
       const url = "https://mozilla.org";
-      feed.onAction({type: at.RICH_ICON_MISSING, data: {url}});
+      feed.onAction({ type: at.RICH_ICON_MISSING, data: { url } });
       assert.calledOnce(feed.fetchIcon);
       assert.calledWith(feed.fetchIcon, url);
     });
@@ -154,24 +167,29 @@ describe("FaviconFeed", () => {
       iconUrl = `${url}/icon.png`;
     });
     it("should setAndFetchFaviconForPage if the url was redirected with a icon", async () => {
-      sandbox.stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
-        .resolves([{visit_id: 1, url: domain}, {visit_id: 2, url}]);
-      sandbox.stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
-        .callsArgWith(1, {spec: iconUrl}, 0, null, null, 96);
+      sandbox
+        .stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
+        .resolves([{ visit_id: 1, url: domain }, { visit_id: 2, url }]);
+      sandbox
+        .stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
+        .callsArgWith(1, { spec: iconUrl }, 0, null, null, 96);
 
       await fetchIconFromRedirects(domain);
 
       assert.calledOnce(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
-      assert.calledWith(global.PlacesUtils.favicons.setAndFetchFaviconForPage,
-        sinon.match({spec: domain}),
-        {spec: iconUrl},
+      assert.calledWith(
+        global.PlacesUtils.favicons.setAndFetchFaviconForPage,
+        sinon.match({ spec: domain }),
+        { spec: iconUrl },
         false,
         global.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
         null,
-        undefined);
+        undefined
+      );
     });
     it("should NOT setAndFetchFaviconForPage if the url doesn't have any redirect", async () => {
-      sandbox.stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
+      sandbox
+        .stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
         .resolves([]);
 
       await fetchIconFromRedirects(domain);
@@ -179,9 +197,11 @@ describe("FaviconFeed", () => {
       assert.notCalled(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
     });
     it("should NOT setAndFetchFaviconForPage if the original url doesn't have a icon", async () => {
-      sandbox.stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
-        .resolves([{visit_id: 1, url: domain}, {visit_id: 2, url}]);
-      sandbox.stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
+      sandbox
+        .stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
+        .resolves([{ visit_id: 1, url: domain }, { visit_id: 2, url }]);
+      sandbox
+        .stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
         .callsArgWith(1, null, null, null, null, null);
 
       await fetchIconFromRedirects(domain);
@@ -189,10 +209,12 @@ describe("FaviconFeed", () => {
       assert.notCalled(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
     });
     it("should NOT setAndFetchFaviconForPage if the original url doesn't have a rich icon", async () => {
-      sandbox.stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
-        .resolves([{visit_id: 1, url: domain}, {visit_id: 2, url}]);
-      sandbox.stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
-        .callsArgWith(1, {spec: iconUrl}, 0, null, null, 16);
+      sandbox
+        .stub(global.NewTabUtils.activityStreamProvider, "executePlacesQuery")
+        .resolves([{ visit_id: 1, url: domain }, { visit_id: 2, url }]);
+      sandbox
+        .stub(global.PlacesUtils.favicons, "getFaviconDataForPage")
+        .callsArgWith(1, { spec: iconUrl }, 0, null, null, 16);
 
       await fetchIconFromRedirects(domain);
 

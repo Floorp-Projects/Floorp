@@ -51,8 +51,10 @@ class ClassList {
    * since that's the only type this model can work with.)
    */
   get currentNode() {
-    if (this.inspector.selection.isElementNode() &&
-        !this.inspector.selection.isPseudoElementNode()) {
+    if (
+      this.inspector.selection.isElementNode() &&
+      !this.inspector.selection.isPseudoElementNode()
+    ) {
       return this.inspector.selection.nodeFront;
     }
     return null;
@@ -70,10 +72,11 @@ class ClassList {
     if (!CLASSES.has(this.currentNode)) {
       // Use the proxy node to get a clean list of classes.
       this.classListProxyNode.className = this.currentNode.className;
-      const nodeClasses = [...new Set([...this.classListProxyNode.classList])]
-        .map(name => {
-          return { name, isApplied: true };
-        });
+      const nodeClasses = [
+        ...new Set([...this.classListProxyNode.classList]),
+      ].map(name => {
+        return { name, isApplied: true };
+      });
 
       CLASSES.set(this.currentNode, nodeClasses);
     }
@@ -86,9 +89,10 @@ class ClassList {
    * enabled classes are added.
    */
   get currentClassesPreview() {
-    return this.currentClasses.filter(({ isApplied }) => isApplied)
-                              .map(({ name }) => name)
-                              .join(" ");
+    return this.currentClasses
+      .filter(({ isApplied }) => isApplied)
+      .map(({ name }) => name)
+      .join(" ");
   }
 
   /**
@@ -117,9 +121,11 @@ class ClassList {
    */
   addClassName(classNameString) {
     this.classListProxyNode.className = classNameString;
-    return Promise.all([...new Set([...this.classListProxyNode.classList])].map(name => {
-      return this.addClass(name);
-    }));
+    return Promise.all(
+      [...new Set([...this.classListProxyNode.classList])].map(name => {
+        return this.addClass(name);
+      })
+    );
   }
 
   /**
@@ -168,15 +174,16 @@ class ClassList {
   }
 
   onMutations(mutations) {
-    for (const {type, target, attributeName} of mutations) {
+    for (const { type, target, attributeName } of mutations) {
       // Only care if this mutation is for the class attribute.
       if (type !== "attributes" || attributeName !== "class") {
         continue;
       }
 
-      const isMutationForOurChange = this.lastStateChange &&
-                                   target === this.lastStateChange.node &&
-                                   target.className === this.lastStateChange.className;
+      const isMutationForOurChange =
+        this.lastStateChange &&
+        target === this.lastStateChange.node &&
+        target.className === this.lastStateChange.className;
 
       if (!isMutationForOurChange) {
         CLASSES.delete(target);

@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 1519313";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Web Console test for bug 1519313";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.features.editor", true);
@@ -22,7 +23,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   const expression = `x = 10`;
   setInputValue(hud, expression);

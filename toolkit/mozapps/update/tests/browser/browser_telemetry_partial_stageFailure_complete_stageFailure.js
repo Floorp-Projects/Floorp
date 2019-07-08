@@ -12,9 +12,7 @@
 // Complete patch stage failure
 add_task(async function telemetry_partial_stageFailure_complete_stageFailure() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_APP_UPDATE_STAGING_ENABLED, true],
-    ],
+    set: [[PREF_APP_UPDATE_STAGING_ENABLED, true]],
   });
 
   let updateParams = "";

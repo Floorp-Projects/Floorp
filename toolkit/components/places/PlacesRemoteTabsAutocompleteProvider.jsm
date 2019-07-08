@@ -11,16 +11,21 @@
 
 var EXPORTED_SYMBOLS = ["PlacesRemoteTabsAutocompleteProvider"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "SyncedTabs",
-  "resource://services-sync/SyncedTabs.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SyncedTabs",
+  "resource://services-sync/SyncedTabs.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
   try {
-    return Cc["@mozilla.org/weave/service;1"]
-             .getService(Ci.nsISupports)
-             .wrappedJSObject;
+    return Cc["@mozilla.org/weave/service;1"].getService(
+      Ci.nsISupports
+    ).wrappedJSObject;
   } catch (ex) {
     // The app didn't build Sync.
   }
@@ -45,7 +50,7 @@ async function buildItems() {
     SyncedTabs.sortTabClientsByLastUsed(clients);
     for (let client of clients) {
       for (let tab of client.tabs) {
-        tabsData.push({tab, client});
+        tabsData.push({ tab, client });
       }
     }
   }
@@ -92,9 +97,15 @@ function observe(subject, topic, data) {
 
     case "nsPref:changed":
       if (data == PREF_SHOW_REMOTE_ICONS) {
-        showRemoteIcons = Services.prefs.getBoolPref(PREF_SHOW_REMOTE_ICONS, true);
+        showRemoteIcons = Services.prefs.getBoolPref(
+          PREF_SHOW_REMOTE_ICONS,
+          true
+        );
       } else if (data == PREF_SHOW_REMOTE_TABS) {
-        showRemoteTabs = Services.prefs.getBoolPref(PREF_SHOW_REMOTE_TABS, true);
+        showRemoteTabs = Services.prefs.getBoolPref(
+          PREF_SHOW_REMOTE_TABS,
+          true
+        );
       }
       break;
 
@@ -113,13 +124,16 @@ Services.prefs.addObserver(PREF_SHOW_REMOTE_TABS, observe);
 observe(null, "nsPref:changed", PREF_SHOW_REMOTE_ICONS);
 observe(null, "nsPref:changed", PREF_SHOW_REMOTE_TABS);
 
-
 // This public object is a static singleton.
 var PlacesRemoteTabsAutocompleteProvider = {
   // a promise that resolves with an array of matching remote tabs.
   async getMatches(searchString) {
     // If Sync isn't configured we bail early.
-    if (!weaveXPCService || !weaveXPCService.ready || !weaveXPCService.enabled) {
+    if (
+      !weaveXPCService ||
+      !weaveXPCService.ready ||
+      !weaveXPCService.enabled
+    ) {
       return [];
     }
 
@@ -130,14 +144,16 @@ var PlacesRemoteTabsAutocompleteProvider = {
     let re = new RegExp(escapeRegExp(searchString), "i");
     let matches = [];
     let tabsData = await ensureItems();
-    for (let {tab, client} of tabsData) {
+    for (let { tab, client } of tabsData) {
       let url = tab.url;
       let title = tab.title;
       if (url.match(re) || (title && title.match(re))) {
         let icon = showRemoteIcons ? tab.icon : null;
         // create the record we return for auto-complete.
         let record = {
-          url, title, icon,
+          url,
+          title,
+          icon,
           deviceName: client.name,
           lastUsed: tab.lastUsed * 1000,
         };

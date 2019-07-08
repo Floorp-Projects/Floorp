@@ -6,28 +6,38 @@
 
 "use strict";
 
-const {Ci, Cu, CC} = require("chrome");
+const { Ci, Cu, CC } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 
-loader.lazyRequireGetter(this, "NetworkHelper",
-                               "devtools/shared/webconsole/network-helper");
+loader.lazyRequireGetter(
+  this,
+  "NetworkHelper",
+  "devtools/shared/webconsole/network-helper"
+);
 loader.lazyGetter(this, "debugJsModules", function() {
-  const {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
-  return !!(AppConstants.DEBUG_JS_MODULES);
+  const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+  return !!AppConstants.DEBUG_JS_MODULES;
 });
 
-const BinaryInput = CC("@mozilla.org/binaryinputstream;1",
-                       "nsIBinaryInputStream", "setInputStream");
-const BufferStream = CC("@mozilla.org/io/arraybuffer-input-stream;1",
-                       "nsIArrayBufferInputStream", "setData");
+const BinaryInput = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
+const BufferStream = CC(
+  "@mozilla.org/io/arraybuffer-input-stream;1",
+  "nsIArrayBufferInputStream",
+  "setData"
+);
 
 const kCSP = "default-src 'none' ; script-src resource:; ";
 
 // Localization
 loader.lazyGetter(this, "jsonViewStrings", () => {
   return Services.strings.createBundle(
-    "chrome://devtools/locale/jsonview.properties");
+    "chrome://devtools/locale/jsonview.properties"
+  );
 });
 
 /**
@@ -87,7 +97,11 @@ Converter.prototype = {
     try {
       request.QueryInterface(Ci.nsIHttpChannel);
       request.setResponseHeader("Content-Security-Policy", kCSP, false);
-      request.setResponseHeader("Content-Security-Policy-Report-Only", "", false);
+      request.setResponseHeader(
+        "Content-Security-Policy-Report-Only",
+        "",
+        false
+      );
     } catch (ex) {
       // If this is not an HTTP channel we can't and won't do anything.
     }
@@ -134,7 +148,7 @@ Converter.prototype = {
   // Decodes an ArrayBuffer into a string and inserts it into the page.
   decodeAndInsertBuffer: function(buffer, flush = false) {
     // Decode the buffer into a string.
-    const data = this.decoder.decode(buffer, {stream: !flush});
+    const data = this.decoder.decode(buffer, { stream: !flush });
 
     // Using `appendData` instead of `textContent +=` is important to avoid
     // repainting previous data.
@@ -178,12 +192,12 @@ function getHttpHeaders(request) {
   if (request instanceof Ci.nsIHttpChannel) {
     request.visitResponseHeaders({
       visitHeader: function(name, value) {
-        headers.response.push({name: name, value: value});
+        headers.response.push({ name: name, value: value });
       },
     });
     request.visitRequestHeaders({
       visitHeader: function(name, value) {
-        headers.request.push({name: name, value: value});
+        headers.request.push({ name: name, value: value });
       },
     });
   }
@@ -193,25 +207,29 @@ function getHttpHeaders(request) {
 // Exports variables that will be accessed by the non-privileged scripts.
 function exportData(win, headers) {
   const json = new win.Text();
-  const JSONView = Cu.cloneInto({
-    debugJsModules,
-    headers,
-    json,
-    readyState: "uninitialized",
-    Locale: {
-      $STR: key => {
-        try {
-          return jsonViewStrings.GetStringFromName(key);
-        } catch (err) {
-          console.error(err);
-          return undefined;
-        }
+  const JSONView = Cu.cloneInto(
+    {
+      debugJsModules,
+      headers,
+      json,
+      readyState: "uninitialized",
+      Locale: {
+        $STR: key => {
+          try {
+            return jsonViewStrings.GetStringFromName(key);
+          } catch (err) {
+            console.error(err);
+            return undefined;
+          }
+        },
       },
     },
-  }, win, {
-    cloneFunctions: true,
-    wrapReflectors: true,
-  });
+    win,
+    {
+      cloneFunctions: true,
+      wrapReflectors: true,
+    }
+  );
   try {
     Object.defineProperty(Cu.waiveXrays(win), "JSONView", {
       value: JSONView,
@@ -222,7 +240,7 @@ function exportData(win, headers) {
   } catch (error) {
     Cu.reportError(error);
   }
-  return {json};
+  return { json };
 }
 
 // Builds an HTML string that will be used to load stylesheets and scripts.
@@ -249,33 +267,37 @@ function initialHTML(doc) {
 
   const baseURI = "resource://devtools-client-jsonview/";
 
-  return "<!DOCTYPE html>\n" +
-    element("html", {
-      "platform": os,
-      "class": "theme-" + Services.prefs.getCharPref("devtools.theme"),
-      "dir": Services.locale.isAppLocaleRTL ? "rtl" : "ltr",
-    }, [
-      element("head", {}, [
-        element("meta", {
-          "http-equiv": "Content-Security-Policy",
-          content: kCSP,
-        }),
-        element("link", {
-          rel: "stylesheet",
-          type: "text/css",
-          href: baseURI + "css/main.css",
-        }),
-      ]),
-      element("body", {}, [
-        element("div", {"id": "content"}, [
-          element("div", {"id": "json"}),
+  return (
+    "<!DOCTYPE html>\n" +
+    element(
+      "html",
+      {
+        platform: os,
+        class: "theme-" + Services.prefs.getCharPref("devtools.theme"),
+        dir: Services.locale.isAppLocaleRTL ? "rtl" : "ltr",
+      },
+      [
+        element("head", {}, [
+          element("meta", {
+            "http-equiv": "Content-Security-Policy",
+            content: kCSP,
+          }),
+          element("link", {
+            rel: "stylesheet",
+            type: "text/css",
+            href: baseURI + "css/main.css",
+          }),
         ]),
-        element("script", {
-          src: baseURI + "lib/require.js",
-          "data-main": baseURI + "viewer-config.js",
-        }),
-      ]),
-    ]).outerHTML;
+        element("body", {}, [
+          element("div", { id: "content" }, [element("div", { id: "json" })]),
+          element("script", {
+            src: baseURI + "lib/require.js",
+            "data-main": baseURI + "viewer-config.js",
+          }),
+        ]),
+      ]
+    ).outerHTML
+  );
 }
 
 // We insert the received data into a text node, which should be appended into
@@ -284,7 +306,7 @@ function initialHTML(doc) {
 // observer to detect the creation of the element. Then the text node is appended.
 function insertJsonData(win, json) {
   new win.MutationObserver(function(mutations, observer) {
-    for (const {target, addedNodes} of mutations) {
+    for (const { target, addedNodes } of mutations) {
       if (target.nodeType == 1 && target.id == "content") {
         for (const node of addedNodes) {
           if (node.nodeType == 1 && node.id == "json") {
@@ -307,10 +329,14 @@ function keepThemeUpdated(win) {
     win.document.documentElement.className = "theme-" + theme;
   };
   Services.prefs.addObserver("devtools.theme", listener);
-  win.addEventListener("unload", function(event) {
-    Services.prefs.removeObserver("devtools.theme", listener);
-    win = null;
-  }, {once: true});
+  win.addEventListener(
+    "unload",
+    function(event) {
+      Services.prefs.removeObserver("devtools.theme", listener);
+      win = null;
+    },
+    { once: true }
+  );
 }
 
 // Chrome <-> Content communication
@@ -324,8 +350,7 @@ function onContentMessage(e) {
   const value = e.detail.value;
   switch (e.detail.type) {
     case "save":
-      Services.cpmm.sendAsyncMessage(
-        "devtools:jsonview:save", value);
+      Services.cpmm.sendAsyncMessage("devtools:jsonview:save", value);
   }
 }
 

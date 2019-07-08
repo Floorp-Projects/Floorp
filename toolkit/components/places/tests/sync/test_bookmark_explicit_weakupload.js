@@ -6,26 +6,35 @@ add_task(async function test_explicit_weakupload() {
 
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
-    children: [{
-      guid: "mozBmk______",
-      url: "https://mozilla.org",
-      title: "Mozilla",
-      tags: ["moz", "dot", "org"],
-    }],
+    children: [
+      {
+        guid: "mozBmk______",
+        url: "https://mozilla.org",
+        title: "Mozilla",
+        tags: ["moz", "dot", "org"],
+      },
+    ],
   });
-  await storeRecords(buf, shuffle([{
-    id: "menu",
-    parentid: "places",
-    type: "folder",
-    children: ["mozBmk______"],
-  }, {
-    id: "mozBmk______",
-    parentid: "menu",
-    type: "bookmark",
-    title: "Mozilla",
-    bmkUri: "https://mozilla.org",
-    tags: ["moz", "dot", "org"],
-  }]), { needsMerge: false });
+  await storeRecords(
+    buf,
+    shuffle([
+      {
+        id: "menu",
+        parentid: "places",
+        type: "folder",
+        children: ["mozBmk______"],
+      },
+      {
+        id: "mozBmk______",
+        parentid: "menu",
+        type: "bookmark",
+        title: "Mozilla",
+        bmkUri: "https://mozilla.org",
+        tags: ["moz", "dot", "org"],
+      },
+    ]),
+    { needsMerge: false }
+  );
   await PlacesTestUtils.markBookmarksAsSynced();
 
   let changesToUpload = await buf.apply({
@@ -47,37 +56,48 @@ add_task(async function test_explicit_weakupload_with_dateAdded() {
   let dateAdded = new Date();
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
-    children: [{
-      guid: "mozBmk______",
-      url: "https://mozilla.org",
-      title: "Mozilla",
-      dateAdded,
-    }],
+    children: [
+      {
+        guid: "mozBmk______",
+        url: "https://mozilla.org",
+        title: "Mozilla",
+        dateAdded,
+      },
+    ],
   });
-  await storeRecords(buf, shuffle([{
-    id: "menu",
-    parentid: "places",
-    type: "folder",
-    children: ["mozBmk______"],
-  }, {
-    id: "mozBmk______",
-    parentid: "menu",
-    type: "bookmark",
-    title: "Mozilla",
-    bmkUri: "https://mozilla.org",
-    dateAdded: dateAdded.getTime(),
-  }]), { needsMerge: false });
+  await storeRecords(
+    buf,
+    shuffle([
+      {
+        id: "menu",
+        parentid: "places",
+        type: "folder",
+        children: ["mozBmk______"],
+      },
+      {
+        id: "mozBmk______",
+        parentid: "menu",
+        type: "bookmark",
+        title: "Mozilla",
+        bmkUri: "https://mozilla.org",
+        dateAdded: dateAdded.getTime(),
+      },
+    ]),
+    { needsMerge: false }
+  );
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote change with older date added");
-  await storeRecords(buf, [{
-    id: "mozBmk______",
-    parentid: "menu",
-    type: "bookmark",
-    title: "Firefox",
-    bmkUri: "http://getfirefox.com/",
-    dateAdded: dateAdded.getTime() + 5000,
-  }]);
+  await storeRecords(buf, [
+    {
+      id: "mozBmk______",
+      parentid: "menu",
+      type: "bookmark",
+      title: "Firefox",
+      bmkUri: "http://getfirefox.com/",
+      dateAdded: dateAdded.getTime() + 5000,
+    },
+  ]);
 
   info("Explicitly request changed item for weak upload");
   let changesToUpload = await buf.apply({
@@ -103,10 +123,16 @@ add_task(async function test_explicit_weakupload_with_dateAdded() {
 
   let localInfo = await PlacesUtils.bookmarks.fetch("mozBmk______");
   equal(localInfo.title, "Firefox", "Should take new title from mirror");
-  equal(localInfo.url.href, "http://getfirefox.com/",
-    "Should take new URL from mirror");
-  equal(localInfo.dateAdded.getTime(), dateAdded.getTime(),
-    "Should keep older local date added");
+  equal(
+    localInfo.url.href,
+    "http://getfirefox.com/",
+    "Should take new URL from mirror"
+  );
+  equal(
+    localInfo.dateAdded.getTime(),
+    dateAdded.getTime(),
+    "Should keep older local date added"
+  );
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

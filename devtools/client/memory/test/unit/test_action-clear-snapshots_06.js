@@ -9,10 +9,7 @@ const {
   takeSnapshotAndCensus,
   clearSnapshots,
 } = require("devtools/client/memory/actions/snapshot");
-const {
-  actions,
-  treeMapState,
-} = require("devtools/client/memory/constants");
+const { actions, treeMapState } = require("devtools/client/memory/constants");
 const {
   toggleDiffing,
   selectSnapshotForDiffingAndRefresh,
@@ -28,15 +25,19 @@ add_task(async function() {
   ok(true, "create 2 snapshots with a saved census");
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await waitUntilCensusState(store, snapshot => snapshot.treeMap,
-                             [treeMapState.SAVED, treeMapState.SAVED]);
+  await waitUntilCensusState(store, snapshot => snapshot.treeMap, [
+    treeMapState.SAVED,
+    treeMapState.SAVED,
+  ]);
   ok(true, "snapshots created with a saved census");
 
   dispatch(toggleDiffing());
-  dispatch(selectSnapshotForDiffingAndRefresh(heapWorker,
-                                              getState().snapshots[0]));
-  dispatch(selectSnapshotForDiffingAndRefresh(heapWorker,
-                                              getState().snapshots[1]));
+  dispatch(
+    selectSnapshotForDiffingAndRefresh(heapWorker, getState().snapshots[0])
+  );
+  dispatch(
+    selectSnapshotForDiffingAndRefresh(heapWorker, getState().snapshots[1])
+  );
 
   ok(getState().diffing, "We should be in diffing view");
 

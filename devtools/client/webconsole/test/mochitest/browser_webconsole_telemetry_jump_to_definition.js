@@ -39,10 +39,11 @@ function getJumpToDefinitionEventsExtra() {
   // Retrieve and clear telemetry events.
   const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
 
-  const events = snapshot.parent.filter(event =>
-    event[1] === "devtools.main" &&
-    event[2] === "jump_to_definition" &&
-    event[3] === "webconsole"
+  const events = snapshot.parent.filter(
+    event =>
+      event[1] === "devtools.main" &&
+      event[2] === "jump_to_definition" &&
+      event[3] === "webconsole"
   );
 
   // Since we already know we have the correct event, we only return the `extra` field

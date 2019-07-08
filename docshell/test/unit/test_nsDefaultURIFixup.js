@@ -60,9 +60,10 @@ add_task(function test_unset_pref_fixes_typos() {
   Services.prefs.clearUserPref(pref);
   for (let i = 0; i < len; ++i) {
     let item = data[i];
-    let result =
-      Services.uriFixup.createFixupURI(item.wrong,
-                              Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
+    let result = Services.uriFixup.createFixupURI(
+      item.wrong,
+      Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+    ).spec;
     Assert.equal(result, item.fixed);
   }
 });
@@ -73,9 +74,10 @@ add_task(function test_false_pref_keeps_typos() {
   Services.prefs.setBoolPref(pref, false);
   for (let i = 0; i < len; ++i) {
     let item = data[i];
-    let result =
-      Services.uriFixup.createFixupURI(item.wrong,
-                              Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
+    let result = Services.uriFixup.createFixupURI(
+      item.wrong,
+      Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+    ).spec;
     Assert.equal(result, item.wrong);
   }
 });
@@ -86,9 +88,10 @@ add_task(function test_true_pref_fixes_typos() {
   Services.prefs.setBoolPref(pref, true);
   for (let i = 0; i < len; ++i) {
     let item = data[i];
-    let result =
-        Services.uriFixup.createFixupURI(item.wrong,
-                                Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
+    let result = Services.uriFixup.createFixupURI(
+      item.wrong,
+      Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+    ).spec;
     Assert.equal(result, item.fixed);
   }
 });

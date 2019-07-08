@@ -6,10 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["ExtFindChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "FindContent",
-                               "resource://gre/modules/FindContent.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FindContent",
+  "resource://gre/modules/FindContent.jsm"
+);
 
 class ExtFindChild extends ActorChild {
   async receiveMessage(message) {

@@ -1,3 +1,1 @@
-var gShorthandPropertiesLikeLonghand = [
-	{ name: "overflow", prop: "overflow"},
-];
+var gShorthandPropertiesLikeLonghand = [{ name: "overflow", prop: "overflow" }];

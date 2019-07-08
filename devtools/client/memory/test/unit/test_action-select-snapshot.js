@@ -19,8 +19,10 @@ add_task(async function() {
     store.dispatch(actions.takeSnapshot(front));
   }
 
-  await waitUntilState(store,
-    ({ snapshots }) => snapshots.length === 5 && snapshots.every(isDone));
+  await waitUntilState(
+    store,
+    ({ snapshots }) => snapshots.length === 5 && snapshots.every(isDone)
+  );
 
   for (let i = 0; i < 5; i++) {
     info(`Selecting snapshot[${i}]`);
@@ -29,8 +31,11 @@ add_task(async function() {
 
     const { snapshots } = store.getState();
     ok(snapshots[i].selected, `snapshot[${i}] selected`);
-    equal(snapshots.filter(s => !s.selected).length, 4,
-          "All other snapshots are unselected");
+    equal(
+      snapshots.filter(s => !s.selected).length,
+      4,
+      "All other snapshots are unselected"
+    );
   }
 });
 

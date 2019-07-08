@@ -2,12 +2,21 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Sanitizer",
-                               "resource://gre/modules/Sanitizer.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "SharedPreferences",
-                               "resource://gre/modules/SharedPreferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sanitizer",
+  "resource://gre/modules/Sanitizer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "SharedPreferences",
+  "resource://gre/modules/SharedPreferences.jsm"
+);
 
 const clearCache = () => {
   // Clearing the cache does not support timestamps.
@@ -21,13 +30,18 @@ const clearCookies = async function(options) {
 
   if (options.since) {
     // Convert it to microseconds
-    let since =  options.since * 1000;
+    let since = options.since * 1000;
     // Iterate through the cookies and delete any created after our cutoff.
     for (let cookie of cookieMgr.enumerator) {
       if (cookie.creationTime >= since) {
         // This cookie was created after our cutoff, clear it.
-        cookieMgr.remove(cookie.host, cookie.name, cookie.path,
-                         false, cookie.originAttributes);
+        cookieMgr.remove(
+          cookie.host,
+          cookie.name,
+          cookie.path,
+          false,
+          cookie.originAttributes
+        );
 
         if (++yieldCounter % YIELD_PERIOD == 0) {
           await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
@@ -49,10 +63,14 @@ const clearFormData = options => {
 };
 
 const doRemoval = (options, dataToRemove, extension) => {
-  if (options.originTypes &&
-      (options.originTypes.protectedWeb || options.originTypes.extension)) {
-    return Promise.reject(
-      {message: "Firefox does not support protectedWeb or extension as originTypes."});
+  if (
+    options.originTypes &&
+    (options.originTypes.protectedWeb || options.originTypes.extension)
+  ) {
+    return Promise.reject({
+      message:
+        "Firefox does not support protectedWeb or extension as originTypes.",
+    });
   }
 
   let removalPromises = [];
@@ -79,14 +97,15 @@ const doRemoval = (options, dataToRemove, extension) => {
   }
   if (extension && invalidDataTypes.length) {
     extension.logger.warn(
-      `Firefox does not support dataTypes: ${invalidDataTypes.toString()}.`);
+      `Firefox does not support dataTypes: ${invalidDataTypes.toString()}.`
+    );
   }
   return Promise.all(removalPromises);
 };
 
 this.browsingData = class extends ExtensionAPI {
   getAPI(context) {
-    let {extension} = context;
+    let { extension } = context;
     return {
       browsingData: {
         settings() {
@@ -94,7 +113,13 @@ this.browsingData = class extends ExtensionAPI {
           const PREF_KEY_PREFIX = "private.data.";
           // The following prefs are the only ones in Firefox that match corresponding
           // values used by Chrome when returning settings.
-          const PREF_LIST = ["cache", "history", "formdata", "cookies_sessions", "downloadFiles"];
+          const PREF_LIST = [
+            "cache",
+            "history",
+            "formdata",
+            "cookies_sessions",
+            "downloadFiles",
+          ];
 
           let dataTrue = SharedPreferences.forProfile().getSetPref(PREF_DOMAIN);
           let name;
@@ -125,22 +150,26 @@ this.browsingData = class extends ExtensionAPI {
           }
           // We do not provide option to delete history by time
           // so, since value is given 0, which means Everything
-          return Promise.resolve({options: {since: 0}, dataToRemove, dataRemovalPermitted});
+          return Promise.resolve({
+            options: { since: 0 },
+            dataToRemove,
+            dataRemovalPermitted,
+          });
         },
         remove(options, dataToRemove) {
           return doRemoval(options, dataToRemove, extension);
         },
         removeCache(options) {
-          return doRemoval(options, {cache: true});
+          return doRemoval(options, { cache: true });
         },
         removeCookies(options) {
-          return doRemoval(options, {cookies: true});
+          return doRemoval(options, { cookies: true });
         },
         removeDownloads(options) {
-          return doRemoval(options, {downloads: true});
+          return doRemoval(options, { downloads: true });
         },
         removeFormData(options) {
-          return doRemoval(options, {formData: true});
+          return doRemoval(options, { formData: true });
         },
       },
     };

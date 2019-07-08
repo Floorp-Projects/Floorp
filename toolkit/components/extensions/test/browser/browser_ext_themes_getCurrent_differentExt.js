@@ -6,13 +6,13 @@
 add_task(async function test_getcurrent() {
   const theme = ExtensionTestUtils.loadExtension({
     manifest: {
-      "theme": {
-        "images": {
-          "theme_frame": "image1.png",
+      theme: {
+        images: {
+          theme_frame: "image1.png",
         },
-        "colors": {
-          "frame": ACCENT_COLOR,
-          "tab_background_text": TEXT_COLOR,
+        colors: {
+          frame: ACCENT_COLOR,
+          tab_background_text: TEXT_COLOR,
         },
       },
     },
@@ -37,19 +37,26 @@ add_task(async function test_getcurrent() {
   let updatedPromise = extension.awaitMessage("theme-updated");
   await theme.startup();
   let receivedTheme = await updatedPromise;
-  Assert.ok(receivedTheme.images.theme_frame.includes("image1.png"),
-            "getCurrent returns correct theme_frame image");
-  Assert.equal(receivedTheme.colors.frame, ACCENT_COLOR,
-               "getCurrent returns correct frame color");
-  Assert.equal(receivedTheme.colors.tab_background_text, TEXT_COLOR,
-               "getCurrent returns correct tab_background_text color");
+  Assert.ok(
+    receivedTheme.images.theme_frame.includes("image1.png"),
+    "getCurrent returns correct theme_frame image"
+  );
+  Assert.equal(
+    receivedTheme.colors.frame,
+    ACCENT_COLOR,
+    "getCurrent returns correct frame color"
+  );
+  Assert.equal(
+    receivedTheme.colors.tab_background_text,
+    TEXT_COLOR,
+    "getCurrent returns correct tab_background_text color"
+  );
 
   info("Testing getCurrent after static theme unload");
   updatedPromise = extension.awaitMessage("theme-updated");
   await theme.unload();
   receivedTheme = await updatedPromise;
-  Assert.equal(Object.keys(receivedTheme), 0,
-               "getCurrent returns empty theme");
+  Assert.equal(Object.keys(receivedTheme), 0, "getCurrent returns empty theme");
 
   await extension.unload();
 });

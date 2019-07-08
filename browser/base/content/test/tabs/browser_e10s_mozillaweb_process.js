@@ -7,8 +7,22 @@ add_task(async function test_privileged_remote_true() {
     ],
   });
 
-  test_url_for_process_types("https://example.com", false, true, false, false, false);
-  test_url_for_process_types("https://example.org", false, false, false, true, false);
+  test_url_for_process_types(
+    "https://example.com",
+    false,
+    true,
+    false,
+    false,
+    false
+  );
+  test_url_for_process_types(
+    "https://example.org",
+    false,
+    false,
+    false,
+    true,
+    false
+  );
 });
 
 add_task(async function test_privileged_remote_false() {
@@ -19,6 +33,20 @@ add_task(async function test_privileged_remote_false() {
     ],
   });
 
-  test_url_for_process_types("https://example.com", false, true, false, false, false);
-  test_url_for_process_types("https://example.org", false, true, false, false, false);
+  test_url_for_process_types(
+    "https://example.com",
+    false,
+    true,
+    false,
+    false,
+    false
+  );
+  test_url_for_process_types(
+    "https://example.org",
+    false,
+    true,
+    false,
+    false,
+    false
+  );
 });

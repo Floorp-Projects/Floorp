@@ -63,9 +63,12 @@ if (Cu) {
   Cu.import("resource://gre/modules/Services.jsm", this);
   Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-  XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
-                                     "@mozilla.org/toolkit/finalizationwitness;1",
-                                     "nsIFinalizationWitnessService");
+  XPCOMUtils.defineLazyServiceGetter(
+    this,
+    "FinalizationWitnessService",
+    "@mozilla.org/toolkit/finalizationwitness;1",
+    "nsIFinalizationWitnessService"
+  );
 }
 
 const STATUS_PENDING = 0;
@@ -137,7 +140,7 @@ var PendingErrors = {
    * @return The unique identifier of the error.
    */
   register(error) {
-    let id = "pending-error-" + (this._counter++);
+    let id = "pending-error-" + this._counter++;
     //
     // At this stage, ideally, we would like to store the error itself
     // and delay any treatment until we are certain that we will need
@@ -157,7 +160,8 @@ var PendingErrors = {
       stack: null,
       lineNumber: null,
     };
-    try { // Defend against non-enumerable values
+    try {
+      // Defend against non-enumerable values
       if (error && error instanceof Ci.nsIException) {
         // nsIException does things a little differently.
         try {
@@ -180,9 +184,10 @@ var PendingErrors = {
         }
       } else if (typeof error == "object" && error) {
         for (let k of ["fileName", "stack", "lineNumber"]) {
-          try { // Defend against fallible getters and string conversions
+          try {
+            // Defend against fallible getters and string conversions
             let v = error[k];
-            value[k] = v ? ("" + v) : null;
+            value[k] = v ? "" + v : null;
           } catch (ex) {
             // Ignore field
           }
@@ -192,8 +197,11 @@ var PendingErrors = {
       if (!value.stack) {
         // |error| is not an Error (or Error-alike). Try to figure out the stack.
         let stack = null;
-        if (error && error.location &&
-            error.location instanceof Ci.nsIStackFrame) {
+        if (
+          error &&
+          error.location &&
+          error.location instanceof Ci.nsIStackFrame
+        ) {
           // nsIException has full stack frames in the |.location| member.
           stack = error.location;
         } else {
@@ -294,11 +302,14 @@ if (Cu) {
 
 // Default mechanism for displaying errors
 PendingErrors.addObserver(function(details) {
-  const generalDescription = "A promise chain failed to handle a rejection." +
+  const generalDescription =
+    "A promise chain failed to handle a rejection." +
     " Did you forget to '.catch', or did you forget to 'return'?\nSee" +
     " https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise\n\n";
 
-  let error = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+  let error = Cc["@mozilla.org/scripterror;1"].createInstance(
+    Ci.nsIScriptError
+  );
   if (!error || !Services.console) {
     // Too late during shutdown to use the nsIConsole
     dump("*************************\n");
@@ -314,23 +325,31 @@ PendingErrors.addObserver(function(details) {
     message += "\nFull Stack: " + details.stack;
   }
   error.init(
-             /* message*/ generalDescription +
-             "Date: " + details.date + "\nFull Message: " + message,
-             /* sourceName*/ details.fileName,
-             /* sourceLine*/ details.lineNumber ? ("" + details.lineNumber) : 0,
-             /* lineNumber*/ details.lineNumber || 0,
-             /* columnNumber*/ 0,
-             /* flags*/ Ci.nsIScriptError.errorFlag,
-             /* category*/ "chrome javascript");
+    /* message*/ generalDescription +
+      "Date: " +
+      details.date +
+      "\nFull Message: " +
+      message,
+    /* sourceName*/ details.fileName,
+    /* sourceLine*/ details.lineNumber ? "" + details.lineNumber : 0,
+    /* lineNumber*/ details.lineNumber || 0,
+    /* columnNumber*/ 0,
+    /* flags*/ Ci.nsIScriptError.errorFlag,
+    /* category*/ "chrome javascript"
+  );
   Services.console.logMessage(error);
 });
-
 
 // Additional warnings for developers
 //
 // The following error types are considered programmer errors, which should be
 // reported (possibly redundantly) so as to let programmers fix their code.
-const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeError"];
+const ERRORS_TO_REPORT = [
+  "EvalError",
+  "RangeError",
+  "ReferenceError",
+  "TypeError",
+];
 
 // Promise
 
@@ -342,51 +361,59 @@ const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeErro
  *        The callback that will be called with resolve and reject.
  */
 this.Promise = function Promise(aExecutor) {
-  if (typeof(aExecutor) != "function") {
+  if (typeof aExecutor != "function") {
     throw new TypeError("Promise constructor must be called with an executor.");
   }
 
   /*
    * Object holding all of our internal values we associate with the promise.
    */
-  Object.defineProperty(this, N_INTERNALS, { value: {
-    /*
-     * Internal status of the promise.  This can be equal to STATUS_PENDING,
-     * STATUS_RESOLVED, or STATUS_REJECTED.
-     */
-    status: STATUS_PENDING,
+  Object.defineProperty(this, N_INTERNALS, {
+    value: {
+      /*
+       * Internal status of the promise.  This can be equal to STATUS_PENDING,
+       * STATUS_RESOLVED, or STATUS_REJECTED.
+       */
+      status: STATUS_PENDING,
 
-    /*
-     * When the status property is STATUS_RESOLVED, this contains the final
-     * resolution value, that cannot be a promise, because resolving with a
-     * promise will cause its state to be eventually propagated instead.  When the
-     * status property is STATUS_REJECTED, this contains the final rejection
-     * reason, that could be a promise, even if this is uncommon.
-     */
-    value: undefined,
+      /*
+       * When the status property is STATUS_RESOLVED, this contains the final
+       * resolution value, that cannot be a promise, because resolving with a
+       * promise will cause its state to be eventually propagated instead.  When the
+       * status property is STATUS_REJECTED, this contains the final rejection
+       * reason, that could be a promise, even if this is uncommon.
+       */
+      value: undefined,
 
-    /*
-     * Array of Handler objects registered by the "then" method, and not processed
-     * yet.  Handlers are removed when the promise is resolved or rejected.
-     */
-    handlers: [],
+      /*
+       * Array of Handler objects registered by the "then" method, and not processed
+       * yet.  Handlers are removed when the promise is resolved or rejected.
+       */
+      handlers: [],
 
-    /**
-     * When the status property is STATUS_REJECTED and until there is
-     * a rejection callback, this contains an array
-     * - {string} id An id for use with |PendingErrors|;
-     * - {FinalizationWitness} witness A witness broadcasting |id| on
-     *   notification "promise-finalization-witness".
-     */
-    witness: undefined,
-  }});
+      /**
+       * When the status property is STATUS_REJECTED and until there is
+       * a rejection callback, this contains an array
+       * - {string} id An id for use with |PendingErrors|;
+       * - {FinalizationWitness} witness A witness broadcasting |id| on
+       *   notification "promise-finalization-witness".
+       */
+      witness: undefined,
+    },
+  });
 
   Object.seal(this);
 
-  let resolve = PromiseWalker.completePromise
-                             .bind(PromiseWalker, this, STATUS_RESOLVED);
-  let reject = PromiseWalker.completePromise
-                            .bind(PromiseWalker, this, STATUS_REJECTED);
+  let resolve = PromiseWalker.completePromise.bind(
+    PromiseWalker,
+    this,
+    STATUS_RESOLVED
+  );
+  let reject = PromiseWalker.completePromise.bind(
+    PromiseWalker,
+    this,
+    STATUS_REJECTED
+  );
 
   try {
     aExecutor(resolve, reject);
@@ -498,19 +525,20 @@ Promise.defer = function() {
  * @return A promise that can be pending, resolved, or rejected.
  */
 Promise.resolve = function(aValue) {
-  if (aValue && typeof(aValue) == "function" && aValue.isAsyncFunction) {
+  if (aValue && typeof aValue == "function" && aValue.isAsyncFunction) {
     throw new TypeError(
       "Cannot resolve a promise with an async function. " +
-      "You should either invoke the async function first " +
-      "or use 'Task.spawn' instead of 'Task.async' to start " +
-      "the Task and return its promise.");
+        "You should either invoke the async function first " +
+        "or use 'Task.spawn' instead of 'Task.async' to start " +
+        "the Task and return its promise."
+    );
   }
 
   if (aValue instanceof Promise) {
     return aValue;
   }
 
-  return new Promise((aResolve) => aResolve(aValue));
+  return new Promise(aResolve => aResolve(aValue));
 };
 
 /**
@@ -548,7 +576,7 @@ Promise.reject = function(aReason) {
  *         given promises to be rejected.
  */
 Promise.all = function(aValues) {
-  if (aValues == null || typeof(aValues[Symbol.iterator]) != "function") {
+  if (aValues == null || typeof aValues[Symbol.iterator] != "function") {
     throw new Error("Promise.all() expects an iterable.");
   }
 
@@ -574,7 +602,7 @@ Promise.all = function(aValues) {
       let value = values[i];
       let resolver = val => checkForCompletion(val, index);
 
-      if (value && typeof(value.then) == "function") {
+      if (value && typeof value.then == "function") {
         value.then(resolver, reject);
       } else {
         // Given value is not a promise, forward it as a resolution value.
@@ -598,7 +626,7 @@ Promise.all = function(aValues) {
  *         value or rejection reason.
  */
 Promise.race = function(aValues) {
-  if (aValues == null || typeof(aValues[Symbol.iterator]) != "function") {
+  if (aValues == null || typeof aValues[Symbol.iterator] != "function") {
     throw new Error("Promise.race() expects an iterable.");
   }
 
@@ -694,10 +722,15 @@ this.PromiseWalker = {
 
     // Resolving with another promise will cause this promise to eventually
     // assume the state of the provided promise.
-    if (aStatus == STATUS_RESOLVED && aValue &&
-        typeof(aValue.then) == "function") {
-      aValue.then(this.completePromise.bind(this, aPromise, STATUS_RESOLVED),
-                  this.completePromise.bind(this, aPromise, STATUS_REJECTED));
+    if (
+      aStatus == STATUS_RESOLVED &&
+      aValue &&
+      typeof aValue.then == "function"
+    ) {
+      aValue.then(
+        this.completePromise.bind(this, aPromise, STATUS_RESOLVED),
+        this.completePromise.bind(this, aPromise, STATUS_REJECTED)
+      );
       return;
     }
 
@@ -710,8 +743,10 @@ this.PromiseWalker = {
       // This is a rejection and the promise is the last in the chain.
       // For the time being we therefore have an uncaught error.
       let id = PendingErrors.register(aValue);
-      let witness =
-          FinalizationWitnessService.make("promise-finalization-witness", id);
+      let witness = FinalizationWitnessService.make(
+        "promise-finalization-witness",
+        id
+      );
       aPromise[N_INTERNALS].witness = [id, witness];
     }
   },
@@ -740,8 +775,11 @@ this.PromiseWalker = {
       let stack = Components_ ? Components_.stack : null;
       if (stack) {
         DOMPromise.resolve().then(() => {
-          Cu.callFunctionWithAsyncStack(this.walkerLoop.bind(this), stack,
-                                        "Promise");
+          Cu.callFunctionWithAsyncStack(
+            this.walkerLoop.bind(this),
+            stack,
+            "Promise"
+          );
         });
       } else {
         DOMPromise.resolve().then(() => this.walkerLoop());
@@ -919,18 +957,22 @@ Handler.prototype = {
       // to determine the state of the next promise, that will be resolved with
       // the returned value, that can also be another promise.
       if (nextStatus == STATUS_RESOLVED) {
-        if (typeof(this.onResolve) == "function") {
+        if (typeof this.onResolve == "function") {
           nextValue = this.onResolve.call(undefined, nextValue);
         }
-      } else if (typeof(this.onReject) == "function") {
+      } else if (typeof this.onReject == "function") {
         nextValue = this.onReject.call(undefined, nextValue);
         nextStatus = STATUS_RESOLVED;
       }
     } catch (ex) {
       // An exception has occurred in the handler.
 
-      if (ex && typeof ex == "object" && "name" in ex &&
-          ERRORS_TO_REPORT.includes(ex.name)) {
+      if (
+        ex &&
+        typeof ex == "object" &&
+        "name" in ex &&
+        ERRORS_TO_REPORT.includes(ex.name)
+      ) {
         // We suspect that the exception is a programmer error, so we now
         // display it using dump().  Note that we do not use Cu.reportError as
         // we assume that this is a programming error, so we do not want end
@@ -938,12 +980,18 @@ Handler.prototype = {
         // they will either treat the error or log them somewhere.
 
         dump("*************************\n");
-        dump("A coding exception was thrown in a Promise " +
-             ((nextStatus == STATUS_RESOLVED) ? "resolution" : "rejection") +
-             " callback.\n");
-        dump("See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise\n\n");
+        dump(
+          "A coding exception was thrown in a Promise " +
+            (nextStatus == STATUS_RESOLVED ? "resolution" : "rejection") +
+            " callback.\n"
+        );
+        dump(
+          "See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise\n\n"
+        );
         dump("Full message: " + ex + "\n");
-        dump("Full stack: " + (("stack" in ex) ? ex.stack : "not available") + "\n");
+        dump(
+          "Full stack: " + ("stack" in ex ? ex.stack : "not available") + "\n"
+        );
         dump("*************************\n");
       }
 

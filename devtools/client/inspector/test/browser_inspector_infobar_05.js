@@ -86,7 +86,11 @@ add_task(async function() {
   }
 });
 
-async function testTextContent({ selector, gridText, flexText }, inspector, testActor) {
+async function testTextContent(
+  { selector, gridText, flexText },
+  inspector,
+  testActor
+) {
   await selectAndHighlightNode(selector, inspector);
 
   const gridType = await testActor.getHighlighterNodeTextContent(

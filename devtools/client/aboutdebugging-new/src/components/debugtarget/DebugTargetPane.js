@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { createFactory, createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -53,8 +57,10 @@ class DebugTargetPane extends PureComponent {
       animation.cancel();
     }
 
-    el.animate({ maxHeight: [`${ snapshot }px`, `${ el.clientHeight }px`] },
-               { duration: 150, easing: "cubic-bezier(.07, .95, 0, 1)" });
+    el.animate(
+      { maxHeight: [`${snapshot}px`, `${el.clientHeight}px`] },
+      { duration: 150, easing: "cubic-bezier(.07, .95, 0, 1)" }
+    );
   }
 
   getSnapshotBeforeUpdate(prevProps) {
@@ -67,7 +73,9 @@ class DebugTargetPane extends PureComponent {
 
   toggleCollapsibility() {
     const { collapsibilityKey, dispatch, isCollapsed } = this.props;
-    dispatch(Actions.updateDebugTargetCollapsibility(collapsibilityKey, !isCollapsed));
+    dispatch(
+      Actions.updateDebugTargetCollapsibility(collapsibilityKey, !isCollapsed)
+    );
   }
 
   render() {
@@ -92,33 +100,32 @@ class DebugTargetPane extends PureComponent {
       },
       dom.a(
         {
-          className: "undecorated-link debug-target-pane__title " +
-                     "qa-debug-target-pane-title",
+          className:
+            "undecorated-link debug-target-pane__title " +
+            "qa-debug-target-pane-title",
           title,
           onClick: e => this.toggleCollapsibility(),
         },
         dom.h2(
           { className: "main-subheading debug-target-pane__heading" },
-          dom.img(
-            {
-              className: "main-subheading__icon",
-              src: icon,
-            }
-          ),
-          `${ name } (${ targets.length })`,
-          dom.img(
-            {
-              className: "main-subheading__icon debug-target-pane__icon" +
-                            (isCollapsed ? " debug-target-pane__icon--collapsed" : ""),
-              src: "chrome://devtools/skin/images/arrow-e.svg",
-            }
-          ),
+          dom.img({
+            className: "main-subheading__icon",
+            src: icon,
+          }),
+          `${name} (${targets.length})`,
+          dom.img({
+            className:
+              "main-subheading__icon debug-target-pane__icon" +
+              (isCollapsed ? " debug-target-pane__icon--collapsed" : ""),
+            src: "chrome://devtools/skin/images/arrow-e.svg",
+          })
         )
       ),
       dom.div(
         {
-          className: "debug-target-pane__collapsable qa-debug-target-pane__collapsable" +
-                     (isCollapsed ? " debug-target-pane__collapsable--collapsed" : ""),
+          className:
+            "debug-target-pane__collapsable qa-debug-target-pane__collapsable" +
+            (isCollapsed ? " debug-target-pane__collapsable--collapsed" : ""),
           ref: this.collapsableRef,
         },
         children,
@@ -129,8 +136,8 @@ class DebugTargetPane extends PureComponent {
           dispatch,
           isCollapsed,
           targets,
-        }),
-      ),
+        })
+      )
     );
   }
 }

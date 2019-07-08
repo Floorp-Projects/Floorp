@@ -20,19 +20,21 @@ const BASE = "http://localhost:" + PORT;
 var test;
 var tests = [];
 
-
 /** *******************
  * UTILITY FUNCTIONS *
  *********************/
 
 function bytesToString(bytes) {
-  return bytes.map(function(v) { return String.fromCharCode(v); }).join("");
+  return bytes
+    .map(function(v) {
+      return String.fromCharCode(v);
+    })
+    .join("");
 }
 
 function skipCache(ch) {
   ch.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
 }
-
 
 /** ******************
  * DEFINE THE TESTS *
@@ -61,7 +63,6 @@ function setupTests(throwing) {
   test = new Test(TEST_URL, setupFile, null, verifyRawText);
   tests.push(test);
 
-
   //   add mapping, => interpreted
 
   function addTypeMapping(ch) {
@@ -79,13 +80,13 @@ function setupTests(throwing) {
   }
 
   function checkContents(ch, status, data) {
-    if (!throwing)
+    if (!throwing) {
       Assert.equal("PASS", bytesToString(data));
+    }
   }
 
   test = new Test(TEST_URL, addTypeMapping, checkType, checkContents);
   tests.push(test);
-
 
   //   remove file/type mapping, map containing directory => raw text
 
@@ -99,7 +100,6 @@ function setupTests(throwing) {
 
   test = new Test(TEST_URL, setupDirectoryAndRemoveType, null, verifyRawText);
   tests.push(test);
-
 
   //   add mapping, => interpreted
 
@@ -118,7 +118,6 @@ function setupTests(throwing) {
   //     either the second run of tests (without ?throw) or the tests added
   //     after the two sets will almost certainly fail.
 }
-
 
 /** ***************
  * ADD THE TESTS *
@@ -157,34 +156,54 @@ function rangeInit(expectedRangeHeader) {
 function checkRangeResult(ch) {
   try {
     var val = ch.getResponseHeader("Content-Range");
-  } catch (e) { /* IDL doesn't specify a particular exception to require */ }
+  } catch (e) {
+    /* IDL doesn't specify a particular exception to require */
+  }
   if (val !== undefined) {
-    do_throw("should not have gotten a Content-Range header, but got one " +
-             "with this value: " + val);
+    do_throw(
+      "should not have gotten a Content-Range header, but got one " +
+        "with this value: " +
+        val
+    );
   }
   Assert.equal(200, ch.responseStatus);
   Assert.equal("OK", ch.responseStatusText);
 }
 
-test = new Test(BASE + "/range-checker.sjs",
-                rangeInit("not-a-bytes-equals-specifier"),
-                checkRangeResult, null);
+test = new Test(
+  BASE + "/range-checker.sjs",
+  rangeInit("not-a-bytes-equals-specifier"),
+  checkRangeResult,
+  null
+);
 tests.push(test);
-test = new Test(BASE + "/range-checker.sjs",
-                rangeInit("bytes=-"),
-                checkRangeResult, null);
+test = new Test(
+  BASE + "/range-checker.sjs",
+  rangeInit("bytes=-"),
+  checkRangeResult,
+  null
+);
 tests.push(test);
-test = new Test(BASE + "/range-checker.sjs",
-                rangeInit("bytes=1000000-"),
-                checkRangeResult, null);
+test = new Test(
+  BASE + "/range-checker.sjs",
+  rangeInit("bytes=1000000-"),
+  checkRangeResult,
+  null
+);
 tests.push(test);
-test = new Test(BASE + "/range-checker.sjs",
-                rangeInit("bytes=1-4"),
-                checkRangeResult, null);
+test = new Test(
+  BASE + "/range-checker.sjs",
+  rangeInit("bytes=1-4"),
+  checkRangeResult,
+  null
+);
 tests.push(test);
-test = new Test(BASE + "/range-checker.sjs",
-                rangeInit("bytes=-4"),
-                checkRangeResult, null);
+test = new Test(
+  BASE + "/range-checker.sjs",
+  rangeInit("bytes=-4"),
+  checkRangeResult,
+  null
+);
 tests.push(test);
 
 // One last test: for file mappings, the content-type is determined by the
@@ -206,7 +225,6 @@ function onStop(ch, status, data) {
 test = new Test(BASE + "/script.html", setupFileMapping, onStart, onStop);
 tests.push(test);
 
-
 /** ***************
  * RUN THE TESTS *
  *****************/
@@ -215,7 +233,9 @@ function run_test() {
   // Test for a content-type which isn't a field-value
   try {
     srv.registerContentType("foo", "bar\nbaz");
-    throw new Error("this server throws on content-types which aren't field-values");
+    throw new Error(
+      "this server throws on content-types which aren't field-values"
+    );
   } catch (e) {
     isException(e, Cr.NS_ERROR_INVALID_ARG);
   }

@@ -6,9 +6,14 @@
 
 "use strict";
 
-const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
-const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-const EXTENSION_DIR = "chrome://mochitests/content/browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/";
+const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+  Ci.nsIChromeRegistry
+);
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
+const EXTENSION_DIR =
+  "chrome://mochitests/content/browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/";
 
 let TestRunner;
 
@@ -22,14 +27,19 @@ async function setup() {
 
   info("installing extension temporarily");
   let chromeURL = Services.io.newURI(EXTENSION_DIR);
-  let dir = chromeRegistry.convertChromeURL(chromeURL).QueryInterface(Ci.nsIFileURL).file;
+  let dir = chromeRegistry
+    .convertChromeURL(chromeURL)
+    .QueryInterface(Ci.nsIFileURL).file;
   await AddonManager.installTemporaryAddon(dir);
 
   info("Checking for mozscreenshots extension");
-  return new Promise(async (resolve) => {
+  return new Promise(async resolve => {
     let aAddon = await AddonManager.getAddonByID("mozscreenshots@mozilla.org");
     isnot(aAddon, null, "The mozscreenshots extension should be installed");
-    TestRunner = ChromeUtils.import("resource://mozscreenshots/TestRunner.jsm", {}).TestRunner;
+    TestRunner = ChromeUtils.import(
+      "resource://mozscreenshots/TestRunner.jsm",
+      {}
+    ).TestRunner;
     TestRunner.initTest(this);
     resolve();
   });
@@ -42,8 +52,11 @@ async function setup() {
  */
 function shouldCapture() {
   if (env.get("MOZSCREENSHOTS_SETS")) {
-    ok(true, "MOZSCREENSHOTS_SETS was specified so only capture what was " +
-       "requested (in browser_screenshots.js)");
+    ok(
+      true,
+      "MOZSCREENSHOTS_SETS was specified so only capture what was " +
+        "requested (in browser_screenshots.js)"
+    );
     return false;
   }
 

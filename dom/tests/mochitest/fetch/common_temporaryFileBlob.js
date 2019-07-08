@@ -3,24 +3,31 @@ var data = new Array(256).join("1234567890ABCDEF");
 function test_fetch_basic() {
   info("Simple fetch test");
 
-  fetch("/tests/dom/xhr/tests/temporaryFileBlob.sjs",
-        { method: "POST", body: data })
-  .then(response => {
-    return response.blob();
-  }).then(blob => {
-    ok(blob instanceof Blob, "We have a blob!");
-    is(blob.size, data.length, "Data length matches");
-    if ("SpecialPowers" in self) {
-      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
-    }
+  fetch("/tests/dom/xhr/tests/temporaryFileBlob.sjs", {
+    method: "POST",
+    body: data,
+  })
+    .then(response => {
+      return response.blob();
+    })
+    .then(blob => {
+      ok(blob instanceof Blob, "We have a blob!");
+      is(blob.size, data.length, "Data length matches");
+      if ("SpecialPowers" in self) {
+        is(
+          SpecialPowers.wrap(blob).blobImplType,
+          "StreamBlobImpl[TemporaryBlobImpl]",
+          "We have a blob stored into a stream file"
+        );
+      }
 
-    var fr = new FileReader();
-    fr.readAsText(blob);
-    fr.onload = function() {
-      is(fr.result, data, "Data content matches");
-      next();
-    }
-  });
+      var fr = new FileReader();
+      fr.readAsText(blob);
+      fr.onload = function() {
+        is(fr.result, data, "Data content matches");
+        next();
+      };
+    });
 }
 
 function test_fetch_worker() {
@@ -42,7 +49,11 @@ function test_xhr_basic() {
       ok(blob instanceof Blob, "We have a blob!");
       is(blob.size, data.length, "Data length matches");
       if ("SpecialPowers" in self) {
-        is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
+        is(
+          SpecialPowers.wrap(blob).blobImplType,
+          "StreamBlobImpl[TemporaryBlobImpl]",
+          "We have a blob stored into a stream file"
+        );
       }
 
       var fr = new FileReader();
@@ -50,9 +61,9 @@ function test_xhr_basic() {
       fr.onload = function() {
         is(fr.result, data, "Data content matches");
         next();
-      }
+      };
     }
-  }
+  };
 }
 
 function test_xhr_worker() {
@@ -67,7 +78,11 @@ function test_response_basic() {
     ok(blob instanceof Blob, "We have a blob!");
     is(blob.size, data.length, "Data length matches");
     if ("SpecialPowers" in self) {
-      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
+      is(
+        SpecialPowers.wrap(blob).blobImplType,
+        "StreamBlobImpl[TemporaryBlobImpl]",
+        "We have a blob stored into a stream file"
+      );
     }
 
     var fr = new FileReader();
@@ -75,7 +90,7 @@ function test_response_basic() {
     fr.onload = function() {
       is(fr.result, data, "Data content matches");
       next();
-    }
+    };
   });
 }
 
@@ -86,12 +101,16 @@ function test_response_worker() {
 function test_request_basic() {
   info("Request");
 
-  let r = new Request("https://example.com", { body: data, method: 'POST' });
+  let r = new Request("https://example.com", { body: data, method: "POST" });
   r.blob().then(blob => {
     ok(blob instanceof Blob, "We have a blob!");
     is(blob.size, data.length, "Data length matches");
     if ("SpecialPowers" in self) {
-      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
+      is(
+        SpecialPowers.wrap(blob).blobImplType,
+        "StreamBlobImpl[TemporaryBlobImpl]",
+        "We have a blob stored into a stream file"
+      );
     }
 
     var fr = new FileReader();
@@ -99,7 +118,7 @@ function test_request_basic() {
     fr.onload = function() {
       is(fr.result, data, "Data content matches");
       next();
-    }
+    };
   });
 }
 
@@ -110,18 +129,18 @@ function test_request_worker() {
 function generic_worker_test(title, what) {
   info(title);
 
-  var w = new Worker('worker_temporaryFileBlob.js');
+  var w = new Worker("worker_temporaryFileBlob.js");
   w.onmessage = function(e) {
-    if (e.data.type == 'info') {
+    if (e.data.type == "info") {
       info(e.data.msg);
-    } else if (e.data.type == 'check') {
+    } else if (e.data.type == "check") {
       ok(e.data.what, e.data.msg);
-    } else if (e.data.type == 'finish') {
+    } else if (e.data.type == "finish") {
       next();
     } else {
-      ok(false, 'Something wrong happened');
+      ok(false, "Something wrong happened");
     }
-  }
+  };
 
   w.postMessage(what);
 }

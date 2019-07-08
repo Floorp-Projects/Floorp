@@ -34,8 +34,7 @@ const hasCrypto = "crypto" in this;
  * Relationship to other test:
  * - test_create_index_with_integer_keys.js: This test is derived from that one.
  */
-function* testSteps()
-{
+function* testSteps() {
   // -- Create our fancy data that has interesting structured clone issues.
   const allData = [];
 
@@ -56,7 +55,10 @@ function* testSteps()
 
   // -- Create the IDB and populate it with the base data.
   info("opening initial database");
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+  let request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    1
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler; // advance onupgradeneeded
   let event = yield undefined; // wait for onupgradeneeded.
@@ -81,7 +83,10 @@ function* testSteps()
 
   // -- Trigger an upgrade, adding a new index.
   info("opening database for upgrade to v2");
-  request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 2);
+  request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    2
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler; // advance onupgradeneeded
   event = yield undefined; // wait for onupgradeneeded

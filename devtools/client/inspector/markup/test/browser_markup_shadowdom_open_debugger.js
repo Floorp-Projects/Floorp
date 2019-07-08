@@ -13,14 +13,18 @@
 /* import-globals-from ../../../debugger/test/mochitest/helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
-  this);
+  this
+);
 
 /* import-globals-from ../../../debugger/test/mochitest/helpers/context.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers/context.js",
-  this);
+  this
+);
 
-const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
+const TEST_URL =
+  `data:text/html;charset=utf-8,` +
+  encodeURIComponent(`
 <test-component></test-component>
 <other-component>some-content</other-component>
 
@@ -48,7 +52,7 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
 </script>`);
 
 add_task(async function() {
-  const {inspector, toolbox} = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   // Test with an element to which we attach a shadow.
   await runTest(inspector, toolbox, "test-component", "attachTestComponent");
@@ -64,16 +68,24 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
   const testFront = await getNodeFront(selector, inspector);
   const testContainer = inspector.markup.getContainer(testFront);
   let customBadge = testContainer.elt.querySelector(
-    ".inspector-badge.interactive[data-custom]");
+    ".inspector-badge.interactive[data-custom]"
+  );
 
   // Verify that the "custom" badge and menu item are hidden.
   ok(!customBadge, "[custom] badge is hidden");
   let menuItem = getMenuItem("node-menu-jumptodefinition", inspector);
-  ok(!menuItem, selector + ": The menu item was not found in the contextual menu");
+  ok(
+    !menuItem,
+    selector + ": The menu item was not found in the contextual menu"
+  );
 
-  info("Call the content method that should attach a custom element definition");
+  info(
+    "Call the content method that should attach a custom element definition"
+  );
   const mutated = waitForMutation(inspector, "customElementDefined");
-  ContentTask.spawn(gBrowser.selectedBrowser, { contentMethod }, function(args) {
+  ContentTask.spawn(gBrowser.selectedBrowser, { contentMethod }, function(
+    args
+  ) {
     content.wrappedJSObject[args.contentMethod]();
   });
   await mutated;
@@ -82,7 +94,8 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
 
   // Check that the badge opens the debugger.
   customBadge = testContainer.elt.querySelector(
-    ".inspector-badge.interactive[data-custom]");
+    ".inspector-badge.interactive[data-custom]"
+  );
   ok(customBadge, "[custom] badge is visible");
 
   info("Click on the `custom` badge and verify that the debugger opens.");

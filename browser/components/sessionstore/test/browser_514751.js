@@ -6,14 +6,22 @@ add_task(async function test_malformedURI() {
   /** Test for Bug 514751 (Wallpaper) **/
 
   let state = {
-    windows: [{
-      tabs: [{
-        entries: [
-          { url: "about:mozilla", triggeringPrincipal_base64, title: "Mozilla" },
-          {},
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [
+              {
+                url: "about:mozilla",
+                triggeringPrincipal_base64,
+                title: "Mozilla",
+              },
+              {},
+            ],
+          },
         ],
-      }],
-    }],
+      },
+    ],
   };
 
   var theWin = openDialog(location, "", "chrome,all,dialog=no");
@@ -23,8 +31,9 @@ add_task(async function test_malformedURI() {
   try {
     await setWindowState(theWin, state, true);
   } catch (e) {
-    if (/NS_ERROR_MALFORMED_URI/.test(e))
+    if (/NS_ERROR_MALFORMED_URI/.test(e)) {
       gotError = true;
+    }
   }
 
   ok(!gotError, "Didn't get a malformed URI error.");

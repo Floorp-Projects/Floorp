@@ -15,7 +15,7 @@ async function checkEmptyHistory() {
 
 add_task(async function test_addPage() {
   await PlacesTestUtils.addVisits(TEST_URI);
-  Assert.ok(!await checkEmptyHistory(), "History has entries");
+  Assert.ok(!(await checkEmptyHistory()), "History has entries");
 });
 
 add_task(async function test_removePage() {
@@ -53,9 +53,13 @@ add_task(async function test_removePages() {
   Assert.ok(await checkEmptyHistory(), "History is empty");
 
   // Check that the bookmark and its annotation still exist.
-  let folder = await PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid);
+  let folder = await PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  );
   Assert.equal(folder.root.childCount, 1);
-  let pageInfo = await PlacesUtils.history.fetch(pages[BOOKMARK_INDEX], {includeAnnotations: true});
+  let pageInfo = await PlacesUtils.history.fetch(pages[BOOKMARK_INDEX], {
+    includeAnnotations: true,
+  });
   Assert.equal(pageInfo.annotations.get(ANNO_NAME), ANNO_VALUE);
 
   // Check the annotation on the non-bookmarked page does not exist anymore.
@@ -104,9 +108,12 @@ add_task(async function test_removePagesFromHost() {
 });
 
 add_task(async function test_removePagesFromHost_keepSubdomains() {
-  await PlacesTestUtils.addVisits([{ uri: TEST_URI }, { uri: TEST_SUBDOMAIN_URI }]);
+  await PlacesTestUtils.addVisits([
+    { uri: TEST_URI },
+    { uri: TEST_SUBDOMAIN_URI },
+  ]);
   await PlacesUtils.history.removeByFilter({ host: "mozilla.com" });
-  Assert.ok(!await checkEmptyHistory(), "History has entries");
+  Assert.ok(!(await checkEmptyHistory()), "History has entries");
 });
 
 add_task(async function test_history_clear() {

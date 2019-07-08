@@ -9,7 +9,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
+const l10n = new LocalizationHelper(
+  "devtools/client/locales/components.properties"
+);
 const { div, span, button } = dom;
 
 // Priority Levels
@@ -104,7 +106,14 @@ class NotificationBox extends Component {
    * already present with a higher priority, the new notification will be
    * added behind it. See `propTypes` for arguments description.
    */
-  appendNotification(label, value, image, priority, buttons = [], eventCallback) {
+  appendNotification(
+    label,
+    value,
+    image,
+    priority,
+    buttons = [],
+    eventCallback
+  ) {
     const newState = appendNotification(this.state, {
       label,
       value,
@@ -187,14 +196,14 @@ class NotificationBox extends Component {
       }
     };
 
-    return (
-      button({
+    return button(
+      {
         key: props.label,
         className: "notificationButton",
         accesskey: props.accesskey,
-        onClick: onClick},
-        props.label
-      )
+        onClick: onClick,
+      },
+      props.label
     );
   }
 
@@ -202,33 +211,34 @@ class NotificationBox extends Component {
    * Render a notification.
    */
   renderNotification(notification) {
-    return (
-      div({
+    return div(
+      {
         key: notification.value,
         className: "notification",
         "data-key": notification.value,
-        "data-type": notification.type},
-        div(
-          {className: "notificationInner"},
-          div({
-            className: "messageImage",
-            "data-type": notification.type,
-          }),
-          span({
+        "data-type": notification.type,
+      },
+      div(
+        { className: "notificationInner" },
+        div({
+          className: "messageImage",
+          "data-type": notification.type,
+        }),
+        span(
+          {
             className: "messageText",
             title: notification.label,
           },
-            notification.label
-          ),
-          notification.buttons.map(props =>
-            this.renderButton(props, notification)
-          ),
-          div({
-            className: "messageCloseButton",
-            title: this.props.closeButtonTooltip,
-            onClick: this.close.bind(this, notification)}
-          )
-        )
+          notification.label
+        ),
+        notification.buttons.map(props =>
+          this.renderButton(props, notification)
+        ),
+        div({
+          className: "messageCloseButton",
+          title: this.props.closeButtonTooltip,
+          onClick: this.close.bind(this, notification),
+        })
       )
     );
   }
@@ -240,17 +250,18 @@ class NotificationBox extends Component {
   render() {
     const notifications = this.props.notifications || this.state.notifications;
     const notification = getHighestPriorityNotification(notifications);
-    const content = notification
-      ? this.renderNotification(notification)
-      : null;
+    const content = notification ? this.renderNotification(notification) : null;
     const classNames = ["notificationbox"];
     if (this.props.wrapping) {
       classNames.push("wrapping");
     }
-    return div({
-      className: classNames.join(" "),
-      id: this.props.id,
-    }, content);
+    return div(
+      {
+        className: classNames.join(" "),
+        id: this.props.id,
+      },
+      content
+    );
   }
 }
 
@@ -262,19 +273,14 @@ class NotificationBox extends Component {
  * See `propTypes` for arguments description.
  */
 function appendNotification(state, props) {
-  const {
-    label,
-    value,
-    image,
-    priority,
-    buttons,
-    eventCallback,
-  } = props;
+  const { label, value, image, priority, buttons, eventCallback } = props;
 
   // Priority level must be within expected interval
   // (see priority levels at the top of this file).
-  if (priority < PriorityLevels.PRIORITY_INFO_LOW ||
-    priority > PriorityLevels.PRIORITY_CRITICAL_BLOCK) {
+  if (
+    priority < PriorityLevels.PRIORITY_INFO_LOW ||
+    priority > PriorityLevels.PRIORITY_CRITICAL_BLOCK
+  ) {
     throw new Error("Invalid notification priority " + priority);
   }
 
@@ -331,7 +337,10 @@ function getHighestPriorityNotification(notifications) {
   let currentNotification = null;
   // High priorities must be on top.
   for (const [, notification] of notifications) {
-    if (!currentNotification || notification.priority > currentNotification.priority) {
+    if (
+      !currentNotification ||
+      notification.priority > currentNotification.priority
+    ) {
       currentNotification = notification;
     }
   }

@@ -18,14 +18,14 @@ var endTime = endTimeDate.getTime();
 
 // Some range dates inside our query - mult by 1000 to convert to PRTIME
 var jan7_800 = (beginTime + DAY_MSEC) * 1000;
-var jan6_815 = (beginTime + (MIN_MSEC * 15)) * 1000;
+var jan6_815 = (beginTime + MIN_MSEC * 15) * 1000;
 var jan14_2130 = (endTime - DAY_MSEC) * 1000;
-var jan15_2045 = (endTime - (MIN_MSEC * 45)) * 1000;
-var jan12_1730 = (endTime - (DAY_MSEC * 3) - (HOUR_MSEC * 4)) * 1000;
+var jan15_2045 = (endTime - MIN_MSEC * 45) * 1000;
+var jan12_1730 = (endTime - DAY_MSEC * 3 - HOUR_MSEC * 4) * 1000;
 
 // Dates outside our query - mult by 1000 to convert to PRTIME
 var jan6_700 = (beginTime - HOUR_MSEC) * 1000;
-var dec27_800 = (beginTime - (DAY_MSEC * 10)) * 1000;
+var dec27_800 = (beginTime - DAY_MSEC * 10) * 1000;
 
 // So that we can easily use these too, convert them to PRTIME
 beginTime *= 1000;
@@ -42,51 +42,116 @@ var badAnnoName = "text/foo";
 // will be returned by the query (the isInQuery: true objects) is IMPORTANT.
 // see compareArrayToResult in head_queries.js for more info.
 var testData = [
-
   // Test flat domain with annotation
-  {isInQuery: true, isVisit: true, isDetails: true, isPageAnnotation: true,
-   uri: "http://foo.com/", annoName: goodAnnoName, annoVal: val,
-   lastVisit: jan14_2130, title: "moz"},
+  {
+    isInQuery: true,
+    isVisit: true,
+    isDetails: true,
+    isPageAnnotation: true,
+    uri: "http://foo.com/",
+    annoName: goodAnnoName,
+    annoVal: val,
+    lastVisit: jan14_2130,
+    title: "moz",
+  },
 
   // Begin the invalid queries:
   // Test www. style URI is not included, with an annotation
-  {isInQuery: false, isVisit: true, isDetails: true, isPageAnnotation: true,
-   uri: "http://www.foo.com/yiihah", annoName: goodAnnoName, annoVal: val,
-   lastVisit: jan7_800, title: "moz"},
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    isPageAnnotation: true,
+    uri: "http://www.foo.com/yiihah",
+    annoName: goodAnnoName,
+    annoVal: val,
+    lastVisit: jan7_800,
+    title: "moz",
+  },
 
-   // Test subdomain not inclued at the leading time edge
-   {isInQuery: false, isVisit: true, isDetails: true,
-    uri: "http://mail.foo.com/yiihah", title: "moz", lastVisit: jan6_815},
+  // Test subdomain not inclued at the leading time edge
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    uri: "http://mail.foo.com/yiihah",
+    title: "moz",
+    lastVisit: jan6_815,
+  },
 
   // Test https protocol
-  {isInQuery: false, isVisit: true, isDetails: true, title: "moz",
-   uri: "https://foo.com/", lastVisit: jan15_2045},
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    title: "moz",
+    uri: "https://foo.com/",
+    lastVisit: jan15_2045,
+  },
 
-   // Test ftp protocol
-   {isInQuery: false, isVisit: true, isDetails: true,
-    uri: "ftp://foo.com/ftp", lastVisit: jan12_1730,
-    title: "hugelongconfmozlagurationofwordswithasearchtermsinit whoo-hoo"},
+  // Test ftp protocol
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    uri: "ftp://foo.com/ftp",
+    lastVisit: jan12_1730,
+    title: "hugelongconfmozlagurationofwordswithasearchtermsinit whoo-hoo",
+  },
 
   // Test too early
-  {isInQuery: false, isVisit: true, isDetails: true, title: "moz",
-   uri: "http://foo.com/tooearly.php", lastVisit: jan6_700},
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    title: "moz",
+    uri: "http://foo.com/tooearly.php",
+    lastVisit: jan6_700,
+  },
 
   // Test Bad Annotation
-  {isInQuery: false, isVisit: true, isDetails: true, isPageAnnotation: true,
-   title: "moz", uri: "http://foo.com/badanno.htm", lastVisit: jan12_1730,
-   annoName: badAnnoName, annoVal: val},
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    isPageAnnotation: true,
+    title: "moz",
+    uri: "http://foo.com/badanno.htm",
+    lastVisit: jan12_1730,
+    annoName: badAnnoName,
+    annoVal: val,
+  },
 
   // Test afterward, one to update
-  {isInQuery: false, isVisit: true, isDetails: true, title: "changeme",
-   uri: "http://foo.com/changeme1.htm", lastVisit: jan12_1730},
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    title: "changeme",
+    uri: "http://foo.com/changeme1.htm",
+    lastVisit: jan12_1730,
+  },
 
   // Test invalid title
-  {isInQuery: false, isVisit: true, isDetails: true, title: "changeme2",
-   uri: "http://foo.com/changeme2.htm", lastVisit: jan7_800},
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    title: "changeme2",
+    uri: "http://foo.com/changeme2.htm",
+    lastVisit: jan7_800,
+  },
 
   // Test changing the lastVisit
-  {isInQuery: false, isVisit: true, isDetails: true, title: "moz",
-   uri: "http://foo.com/changeme3.htm", lastVisit: dec27_800}];
+  {
+    isInQuery: false,
+    isVisit: true,
+    isDetails: true,
+    title: "moz",
+    uri: "http://foo.com/changeme3.htm",
+    lastVisit: dec27_800,
+  },
+];
 
 /**
  * This test will test a Query using several terms and do a bit of negative
@@ -128,24 +193,34 @@ add_task(async function test_abstime_annotation_uri() {
 
   // live update.
   info("change title");
-  var change1 = [{isDetails: true, uri: "http://foo.com/",
-                  title: "mo"} ];
+  var change1 = [{ isDetails: true, uri: "http://foo.com/", title: "mo" }];
   await task_populateDB(change1);
-  Assert.ok(!isInResult({uri: "http://foo.com/"}, root));
+  Assert.ok(!isInResult({ uri: "http://foo.com/" }, root));
 
-  var change2 = [{isDetails: true, uri: "http://foo.com/",
-                  title: "moz", lastvisit: endTime} ];
+  var change2 = [
+    {
+      isDetails: true,
+      uri: "http://foo.com/",
+      title: "moz",
+      lastvisit: endTime,
+    },
+  ];
   await task_populateDB(change2);
   dump_table("moz_places");
-  Assert.ok(!isInResult({uri: "http://foo.com/"}, root));
+  Assert.ok(!isInResult({ uri: "http://foo.com/" }, root));
 
   // Let's delete something from the result set - using annotation
-  var change3 = [{isPageAnnotation: true,
-                  uri: "http://foo.com/",
-                  annoName: badAnnoName, annoVal: "test"}];
+  var change3 = [
+    {
+      isPageAnnotation: true,
+      uri: "http://foo.com/",
+      annoName: badAnnoName,
+      annoVal: "test",
+    },
+  ];
   await task_populateDB(change3);
   info("LiveUpdate by removing annotation");
-  Assert.ok(!isInResult({uri: "http://foo.com/"}, root));
+  Assert.ok(!isInResult({ uri: "http://foo.com/" }, root));
 
   root.containerOpen = false;
 });

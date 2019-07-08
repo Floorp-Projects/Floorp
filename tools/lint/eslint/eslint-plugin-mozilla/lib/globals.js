@@ -45,7 +45,7 @@ function parseBooleanConfig(string, comment) {
     }
 
     items[name] = {
-      value: (value === "true"),
+      value: value === "true",
       comment,
     };
   });
@@ -135,7 +135,10 @@ GlobalsForNode.prototype = {
     // Note: We check the expression types here and only call the necessary
     // functions to aid performance.
     if (node.expression.type === "AssignmentExpression") {
-      globals = helpers.convertThisAssignmentExpressionToGlobals(node, isGlobal);
+      globals = helpers.convertThisAssignmentExpressionToGlobals(
+        node,
+        isGlobal
+      );
     } else if (node.expression.type === "CallExpression") {
       globals = helpers.convertCallExpressionToGlobals(node, isGlobal);
     }
@@ -144,8 +147,11 @@ GlobalsForNode.prototype = {
     // this is a worker. It would be nice if eslint gave us a way of getting
     // the environment directly.
     if (globalScope && globalScope.set.get("importScripts")) {
-      let workerDetails = helpers.convertWorkerExpressionToGlobals(node,
-        isGlobal, this.dirname);
+      let workerDetails = helpers.convertWorkerExpressionToGlobals(
+        node,
+        isGlobal,
+        this.dirname
+      );
       globals = globals.concat(workerDetails);
     }
 
@@ -265,19 +271,31 @@ module.exports = {
       } else if (script.src.includes("chrome")) {
         // This is one way of referencing test files.
         script.src = script.src.replace("chrome://mochikit/content/", "/");
-        scriptName = path.join(helpers.rootDir, "testing", "mochitest", script.src);
+        scriptName = path.join(
+          helpers.rootDir,
+          "testing",
+          "mochitest",
+          script.src
+        );
       } else if (script.src.includes("SimpleTest")) {
         // This is another way of referencing test files...
-        scriptName = path.join(helpers.rootDir, "testing", "mochitest", script.src);
+        scriptName = path.join(
+          helpers.rootDir,
+          "testing",
+          "mochitest",
+          script.src
+        );
       } else {
         // Fallback to hoping this is a relative path.
         scriptName = path.join(dir, script.src);
       }
       if (scriptName && fs.existsSync(scriptName)) {
-        globals.push(...module.exports.getGlobalsForFile(scriptName, {
-          ecmaVersion: helpers.getECMAVersion(),
-          sourceType: script.type,
-        }));
+        globals.push(
+          ...module.exports.getGlobalsForFile(scriptName, {
+            ecmaVersion: helpers.getECMAVersion(),
+            sourceType: script.type,
+          })
+        );
       }
     }
 
@@ -317,7 +335,11 @@ module.exports = {
           helpers.addGlobals(extraHTMLGlobals, globalScope);
         }
         let globals = handler[type](node, context.getAncestors(), globalScope);
-        helpers.addGlobals(globals, globalScope, node.type !== "Program" && node);
+        helpers.addGlobals(
+          globals,
+          globalScope,
+          node.type !== "Program" && node
+        );
       };
     }
 

@@ -7,16 +7,18 @@
 
 "use strict";
 
-const {SearchTelemetry} = ChromeUtils.import("resource:///modules/SearchTelemetry.jsm");
+const { SearchTelemetry } = ChromeUtils.import(
+  "resource:///modules/SearchTelemetry.jsm"
+);
 
 const TEST_PROVIDER_INFO = {
-  "example": {
-    "regexp": /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
-    "queryParam": "s",
-    "codeParam": "abc",
-    "codePrefixes": ["ff"],
-    "followonParams": ["a"],
-    "extraAdServersRegexps": [/^https:\/\/example\.com\/ad2?/],
+  example: {
+    regexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+    queryParam: "s",
+    codeParam: "abc",
+    codePrefixes: ["ff"],
+    followonParams: ["a"],
+    extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
   },
 };
 
@@ -47,39 +49,56 @@ async function assertTelemetry(expectedHistograms, expectedScalars) {
 
   await TestUtils.waitForCondition(() => {
     histSnapshot = searchCounts.snapshot();
-    return Object.getOwnPropertyNames(histSnapshot).length ==
-      Object.getOwnPropertyNames(expectedHistograms).length;
+    return (
+      Object.getOwnPropertyNames(histSnapshot).length ==
+      Object.getOwnPropertyNames(expectedHistograms).length
+    );
   }, "should have the correct number of histograms");
 
   if (Object.entries(expectedScalars).length > 0) {
     await TestUtils.waitForCondition(() => {
-      scalars = Services.telemetry.getSnapshotForKeyedScalars(
-        "main", false).parent || {};
-      return Object.getOwnPropertyNames(expectedScalars).every(scalar => scalar in scalars);
+      scalars =
+        Services.telemetry.getSnapshotForKeyedScalars("main", false).parent ||
+        {};
+      return Object.getOwnPropertyNames(expectedScalars).every(
+        scalar => scalar in scalars
+      );
     }, "should have the expected keyed scalars");
   }
 
-  Assert.equal(Object.getOwnPropertyNames(histSnapshot).length,
+  Assert.equal(
+    Object.getOwnPropertyNames(histSnapshot).length,
     Object.getOwnPropertyNames(expectedHistograms).length,
-    "Should only have one key");
+    "Should only have one key"
+  );
 
   for (let [key, value] of Object.entries(expectedHistograms)) {
-    Assert.ok(key in histSnapshot,
-      `Histogram should have the expected key: ${key}`);
-    Assert.equal(histSnapshot[key].sum, value,
-      `Should have counted the correct number of visits for ${key}`);
+    Assert.ok(
+      key in histSnapshot,
+      `Histogram should have the expected key: ${key}`
+    );
+    Assert.equal(
+      histSnapshot[key].sum,
+      value,
+      `Should have counted the correct number of visits for ${key}`
+    );
   }
 
   for (let [name, value] of Object.entries(expectedScalars)) {
-    Assert.ok(name in scalars,
-      `Scalar ${name} should have been added.`);
-    Assert.deepEqual(scalars[name], value,
-      `Should have counted the correct number of visits for ${name}`);
+    Assert.ok(name in scalars, `Scalar ${name} should have been added.`);
+    Assert.deepEqual(
+      scalars[name],
+      value,
+      `Should have counted the correct number of visits for ${name}`
+    );
   }
 
   for (let name of SEARCH_AD_CLICK_SCALARS) {
-    Assert.equal(name in scalars, name in expectedScalars,
-      `Should have matched ${name} in scalars and expectedScalars`);
+    Assert.equal(
+      name in scalars,
+      name in expectedScalars,
+      `Should have matched ${name} in scalars and expectedScalars`
+    );
   }
 }
 
@@ -111,35 +130,49 @@ add_task(async function setup() {
 add_task(async function test_simple_search_page_visit() {
   searchCounts.clear();
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: getSERPUrl(getPageUrl()),
-  }, async () => {
-    await assertTelemetry({"example.in-content:sap:ff": 1}, {});
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: getSERPUrl(getPageUrl()),
+    },
+    async () => {
+      await assertTelemetry({ "example.in-content:sap:ff": 1 }, {});
+    }
+  );
 });
 
 add_task(async function test_follow_on_visit() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: getSERPFollowOnUrl(getPageUrl()),
-  }, async () => {
-    await assertTelemetry({
-      "example.in-content:sap:ff": 1,
-      "example.in-content:sap-follow-on:ff": 1,
-    }, {});
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: getSERPFollowOnUrl(getPageUrl()),
+    },
+    async () => {
+      await assertTelemetry(
+        {
+          "example.in-content:sap:ff": 1,
+          "example.in-content:sap-follow-on:ff": 1,
+        },
+        {}
+      );
+    }
+  );
 });
 
 add_task(async function test_track_ad() {
   searchCounts.clear();
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    getSERPUrl(getPageUrl(false, true)));
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl(getPageUrl(false, true))
+  );
 
-  await assertTelemetry({"example.in-content:sap:ff": 1}, {
-    "browser.search.with_ads": {"example": 1},
-  });
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 1 },
+    {
+      "browser.search.with_ads": { example: 1 },
+    }
+  );
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -152,11 +185,18 @@ add_task(async function test_track_ad_new_window() {
 
   let url = getSERPUrl(getPageUrl(false, true));
   await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, false, url);
+  await BrowserTestUtils.browserLoaded(
+    win.gBrowser.selectedBrowser,
+    false,
+    url
+  );
 
-  await assertTelemetry({"example.in-content:sap:ff": 1}, {
-    "browser.search.with_ads": {"example": 1},
-  });
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 1 },
+    {
+      "browser.search.with_ads": { example: 1 },
+    }
+  );
 
   await BrowserTestUtils.closeWindow(win);
 });
@@ -168,14 +208,25 @@ add_task(async function test_track_ad_pages_without_ads() {
 
   let tabs = [];
 
-  tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    getSERPUrl(getPageUrl(false, false))));
-  tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    getSERPUrl(getPageUrl(false, true))));
+  tabs.push(
+    await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      getSERPUrl(getPageUrl(false, false))
+    )
+  );
+  tabs.push(
+    await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      getSERPUrl(getPageUrl(false, true))
+    )
+  );
 
-  await assertTelemetry({"example.in-content:sap:ff": 2}, {
-    "browser.search.with_ads": {"example": 1},
-  });
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 2 },
+    {
+      "browser.search.with_ads": { example: 1 },
+    }
+  );
 
   for (let tab of tabs) {
     BrowserTestUtils.removeTab(tab);
@@ -187,12 +238,17 @@ add_task(async function test_track_ad_click() {
   searchCounts.clear();
   Services.telemetry.clearScalars();
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    getSERPUrl(getPageUrl(false, true)));
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl(getPageUrl(false, true))
+  );
 
-  await assertTelemetry({"example.in-content:sap:ff": 1}, {
-    "browser.search.with_ads": {"example": 1},
-  });
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 1 },
+    {
+      "browser.search.with_ads": { example: 1 },
+    }
+  );
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
@@ -200,10 +256,13 @@ add_task(async function test_track_ad_click() {
   });
   await pageLoadPromise;
 
-  await assertTelemetry({"example.in-content:sap:ff": 1}, {
-    "browser.search.with_ads": {"example": 1},
-    "browser.search.ad_clicks": {"example": 1},
-  });
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 1 },
+    {
+      "browser.search.with_ads": { example: 1 },
+      "browser.search.ad_clicks": { example: 1 },
+    }
+  );
 
   // Now go back, and click again.
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
@@ -211,10 +270,13 @@ add_task(async function test_track_ad_click() {
   await pageLoadPromise;
 
   // We've gone back, so we register an extra display & if it is with ads or not.
-  await assertTelemetry({"example.in-content:sap:ff": 2}, {
-    "browser.search.with_ads": {"example": 2},
-    "browser.search.ad_clicks": {"example": 1},
-  });
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 2 },
+    {
+      "browser.search.with_ads": { example: 2 },
+      "browser.search.ad_clicks": { example: 1 },
+    }
+  );
 
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
@@ -222,10 +284,13 @@ add_task(async function test_track_ad_click() {
   });
   await pageLoadPromise;
 
-  await assertTelemetry({"example.in-content:sap:ff": 2}, {
-    "browser.search.with_ads": {"example": 2},
-    "browser.search.ad_clicks": {"example": 2},
-  });
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 2 },
+    {
+      "browser.search.with_ads": { example: 2 },
+      "browser.search.ad_clicks": { example: 2 },
+    }
+  );
 
   BrowserTestUtils.removeTab(tab);
 });

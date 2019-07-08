@@ -48,10 +48,9 @@ enum RegExpRunStatus {
 /*
  * Layout of the reg exp bytecode header.
  */
-struct RegExpByteCodeHeader
-{
-  uint32_t length;          // Number of instructions.
-  uint32_t numRegisters;    // Number of registers used.
+struct RegExpByteCodeHeader {
+  uint32_t length;        // Number of instructions.
+  uint32_t numRegisters;  // Number of registers used.
 };
 
 /*

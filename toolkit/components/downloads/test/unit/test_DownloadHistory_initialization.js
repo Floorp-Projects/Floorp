@@ -3,8 +3,12 @@
 
 "use strict";
 
-const {DownloadHistory} = ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
-const {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+const { DownloadHistory } = ChromeUtils.import(
+  "resource://gre/modules/DownloadHistory.jsm"
+);
+const { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 let baseDate = new Date("2000-01-01");
 
@@ -35,21 +39,28 @@ add_task(async function test_DownloadHistory_initialization() {
       state: i / 10,
     };
 
-    await PlacesTestUtils.addVisits([{
-      uri: download.source.url,
-      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
-    }]);
+    await PlacesTestUtils.addVisits([
+      {
+        uri: download.source.url,
+        transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
+      },
+    ]);
 
-    let targetUri = Services.io.newFileURI(new FileUtils.File(download.target.path));
+    let targetUri = Services.io.newFileURI(
+      new FileUtils.File(download.target.path)
+    );
 
     await PlacesUtils.history.update({
       annotations: new Map([
-        [ "downloads/destinationFileURI", targetUri.spec ],
-        [ "downloads/metaData", JSON.stringify({
-          state: download.state,
-          endTime: download.endTime,
-          fileSize: download.fileSize,
-        })],
+        ["downloads/destinationFileURI", targetUri.spec],
+        [
+          "downloads/metaData",
+          JSON.stringify({
+            state: download.state,
+            endTime: download.endTime,
+            fileSize: download.fileSize,
+          }),
+        ],
       ]),
       url: download.source.url,
     });
@@ -68,15 +79,30 @@ add_task(async function test_DownloadHistory_initialization() {
 
     info(`Checking download ${expected.source.url}`);
     Assert.ok(download, "Should have found the expected download");
-    Assert.equal(download.endTime, expected.endTime,
-      "Should have the correct end time");
-    Assert.equal(download.target.size, expected.fileSize,
-      "Should have the correct file size");
-    Assert.equal(download.succeeded, expected.state == 1,
-      "Should have the correct succeeded value");
-    Assert.equal(download.canceled, expected.state == 3,
-      "Should have the correct canceled value");
-    Assert.equal(download.target.path, expected.target.path,
-      "Should have the correct target path");
+    Assert.equal(
+      download.endTime,
+      expected.endTime,
+      "Should have the correct end time"
+    );
+    Assert.equal(
+      download.target.size,
+      expected.fileSize,
+      "Should have the correct file size"
+    );
+    Assert.equal(
+      download.succeeded,
+      expected.state == 1,
+      "Should have the correct succeeded value"
+    );
+    Assert.equal(
+      download.canceled,
+      expected.state == 3,
+      "Should have the correct canceled value"
+    );
+    Assert.equal(
+      download.target.path,
+      expected.target.path,
+      "Should have the correct target path"
+    );
   }
 });

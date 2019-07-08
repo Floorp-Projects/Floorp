@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
 {
@@ -19,8 +19,9 @@ const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 // This error icon must stay in sync with FAVICON_ERRORPAGE_URL in
 // nsIFaviconService.idl, aboutCertError.xhtml and netError.xhtml.
-const FAVICON_ERRORPAGE_URI =
-  Services.io.newURI("chrome://global/skin/icons/warning.svg");
+const FAVICON_ERRORPAGE_URI = Services.io.newURI(
+  "chrome://global/skin/icons/warning.svg"
+);
 
 /**
  * Waits for the first OnPageChanged notification for ATTRIBUTE_FAVICON, and
@@ -35,8 +36,11 @@ const FAVICON_ERRORPAGE_URI =
  * @param aCallback
  *        This function is called after the check finished.
  */
-function waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI,
-                               aCallback) {
+function waitForFaviconChanged(
+  aExpectedPageURI,
+  aExpectedFaviconURI,
+  aCallback
+) {
   let historyObserver = {
     __proto__: NavHistoryObserver.prototype,
     onPageChanged: function WFFC_onPageChanged(aURI, aWhat, aValue, aGUID) {
@@ -66,15 +70,23 @@ function waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI,
  * @param aCallback
  *        This function is called after the check finished.
  */
-function checkFaviconDataForPage(aPageURI, aExpectedMimeType, aExpectedData,
-                                 aCallback) {
-  PlacesUtils.favicons.getFaviconDataForPage(aPageURI,
-    function(aURI, aDataLen, aData, aMimeType) {
-      Assert.equal(aExpectedMimeType, aMimeType);
-      Assert.ok(compareArrays(aExpectedData, aData));
-      do_check_guid_for_uri(aPageURI);
-      aCallback();
-    });
+function checkFaviconDataForPage(
+  aPageURI,
+  aExpectedMimeType,
+  aExpectedData,
+  aCallback
+) {
+  PlacesUtils.favicons.getFaviconDataForPage(aPageURI, function(
+    aURI,
+    aDataLen,
+    aData,
+    aMimeType
+  ) {
+    Assert.equal(aExpectedMimeType, aMimeType);
+    Assert.ok(compareArrays(aExpectedData, aData));
+    do_check_guid_for_uri(aPageURI);
+    aCallback();
+  });
 }
 
 /**
@@ -86,11 +98,15 @@ function checkFaviconDataForPage(aPageURI, aExpectedMimeType, aExpectedData,
  *        This function is called after the check finished.
  */
 function checkFaviconMissingForPage(aPageURI, aCallback) {
-  PlacesUtils.favicons.getFaviconURLForPage(aPageURI,
-    function(aURI, aDataLen, aData, aMimeType) {
-      Assert.ok(aURI === null);
-      aCallback();
-    });
+  PlacesUtils.favicons.getFaviconURLForPage(aPageURI, function(
+    aURI,
+    aDataLen,
+    aData,
+    aMimeType
+  ) {
+    Assert.ok(aURI === null);
+    aCallback();
+  });
 }
 
 function promiseFaviconMissingForPage(aPageURI) {
@@ -98,5 +114,7 @@ function promiseFaviconMissingForPage(aPageURI) {
 }
 
 function promiseFaviconChanged(aExpectedPageURI, aExpectedFaviconURI) {
-  return new Promise(resolve => waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI, resolve));
+  return new Promise(resolve =>
+    waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI, resolve)
+  );
 }

@@ -19,12 +19,14 @@ module.exports = function(context) {
 
   return {
     "Program > FunctionDeclaration": function(node) {
-      if (node.id.name === "run_test" &&
-          node.body.type === "BlockStatement" &&
-          node.body.body.length === 1 &&
-          node.body.body[0].type === "ExpressionStatement" &&
-          node.body.body[0].expression.type === "CallExpression" &&
-          node.body.body[0].expression.callee.name === "run_next_test") {
+      if (
+        node.id.name === "run_test" &&
+        node.body.type === "BlockStatement" &&
+        node.body.body.length === 1 &&
+        node.body.body[0].type === "ExpressionStatement" &&
+        node.body.body[0].expression.type === "CallExpression" &&
+        node.body.body[0].expression.callee.name === "run_next_test"
+      ) {
         context.report({
           node,
           fix: fixer => {
@@ -51,7 +53,7 @@ module.exports = function(context) {
             return fixer.removeRange([
               // If there's no startNode, we fall back to zero, i.e. start of
               // file.
-              startNode ? (startNode.end + 1) : 0,
+              startNode ? startNode.end + 1 : 0,
               // We know the function is a block and it'll end with }. Normally
               // there's a new line after that, so just advance past it. This
               // may be slightly not dodgy in some cases, but covers the existing
@@ -59,7 +61,8 @@ module.exports = function(context) {
               node.end + 1,
             ]);
           },
-          message: "Useless run_test function - only contains run_next_test; whole function can be removed",
+          message:
+            "Useless run_test function - only contains run_next_test; whole function can be removed",
         });
       }
     },

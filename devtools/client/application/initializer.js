@@ -4,27 +4,36 @@
 
 "use strict";
 
-const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+const { BrowserLoader } = ChromeUtils.import(
+  "resource://devtools/client/shared/browser-loader.js"
+);
 const require = BrowserLoader({
   baseURI: "resource://devtools/client/application/",
   window,
 }).require;
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
-const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const {
+  render,
+  unmountComponentAtNode,
+} = require("devtools/client/shared/vendor/react-dom");
+const Provider = createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
 const { l10n } = require("./src/modules/l10n");
 
 const { configureStore } = require("./src/create-store");
 const actions = require("./src/actions/index");
 
-const { WorkersListener } =
-  require("devtools/client/shared/workers-listener");
+const { WorkersListener } = require("devtools/client/shared/workers-listener");
 
 // NOTE: this API may change names for these functions. See Bug 1531349.
-const { addMultiE10sListener, isMultiE10s, removeMultiE10sListener } =
-  require("devtools/shared/multi-e10s-helper");
+const {
+  addMultiE10sListener,
+  isMultiE10s,
+  removeMultiE10sListener,
+} = require("devtools/shared/multi-e10s-helper");
 
 const App = createFactory(require("./src/components/App"));
 

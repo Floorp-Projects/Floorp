@@ -10,8 +10,10 @@
  * @returns {String} The crash dump id.
  */
 function getCrashDumpId(subject) {
-  Assert.ok(subject instanceof Ci.nsIPropertyBag2,
-            "Subject needs to be a nsIPropertyBag2 to clean up properly");
+  Assert.ok(
+    subject instanceof Ci.nsIPropertyBag2,
+    "Subject needs to be a nsIPropertyBag2 to clean up properly"
+  );
 
   return subject.getPropertyAsAString("dumpID");
 }
@@ -51,69 +53,80 @@ add_task(async function test_crash_in_previous_frameloader() {
     return;
   }
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    // First, sanity check...
-    Assert.ok(browser.isRemoteBrowser,
-              "This browser needs to be remote if this test is going to " +
-              "work properly.");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    async function(browser) {
+      // First, sanity check...
+      Assert.ok(
+        browser.isRemoteBrowser,
+        "This browser needs to be remote if this test is going to " +
+          "work properly."
+      );
 
-    // We will wait for the oop-browser-crashed event to have
-    // a chance to appear. That event is fired when RemoteTabs
-    // are destroyed, and that occurs _before_ ContentParents
-    // are destroyed, so we'll wait on the ipc:content-shutdown
-    // observer notification, which is fired when a ContentParent
-    // goes away. After we see this notification, oop-browser-crashed
-    // events should have fired.
-    let contentProcessGone = TestUtils.topicObserved("ipc:content-shutdown");
-    let sawTabCrashed = false;
-    let onTabCrashed = () => {
-      sawTabCrashed = true;
-    };
-
-    browser.addEventListener("oop-browser-crashed", onTabCrashed);
-
-    // The name of the game is to cause a crash in a remote browser,
-    // and then immediately swap out the browser for a non-remote one.
-    await ContentTask.spawn(browser, null, function() {
-      const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-      ChromeUtils.import("resource://gre/modules/Timer.jsm");
-
-      let dies = function() {
-        privateNoteIntentionalCrash();
-        let zero = new ctypes.intptr_t(8);
-        let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
-        badptr.contents;
+      // We will wait for the oop-browser-crashed event to have
+      // a chance to appear. That event is fired when RemoteTabs
+      // are destroyed, and that occurs _before_ ContentParents
+      // are destroyed, so we'll wait on the ipc:content-shutdown
+      // observer notification, which is fired when a ContentParent
+      // goes away. After we see this notification, oop-browser-crashed
+      // events should have fired.
+      let contentProcessGone = TestUtils.topicObserved("ipc:content-shutdown");
+      let sawTabCrashed = false;
+      let onTabCrashed = () => {
+        sawTabCrashed = true;
       };
 
-      // When the parent flips the remoteness of the browser, the
-      // page should receive the pagehide event, which we'll then
-      // use to crash the frameloader.
-      addEventListener("pagehide", function() {
-        dump("\nEt tu, Brute?\n");
-        dies();
+      browser.addEventListener("oop-browser-crashed", onTabCrashed);
+
+      // The name of the game is to cause a crash in a remote browser,
+      // and then immediately swap out the browser for a non-remote one.
+      await ContentTask.spawn(browser, null, function() {
+        const { ctypes } = ChromeUtils.import(
+          "resource://gre/modules/ctypes.jsm"
+        );
+        ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
+        let dies = function() {
+          privateNoteIntentionalCrash();
+          let zero = new ctypes.intptr_t(8);
+          let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
+          badptr.contents;
+        };
+
+        // When the parent flips the remoteness of the browser, the
+        // page should receive the pagehide event, which we'll then
+        // use to crash the frameloader.
+        addEventListener("pagehide", function() {
+          dump("\nEt tu, Brute?\n");
+          dies();
+        });
       });
-    });
 
-    gBrowser.updateBrowserRemoteness(browser, { remoteType: E10SUtils.NOT_REMOTE });
-    info("Waiting for content process to go away.");
-    let [subject /* , data */] = await contentProcessGone;
+      gBrowser.updateBrowserRemoteness(browser, {
+        remoteType: E10SUtils.NOT_REMOTE,
+      });
+      info("Waiting for content process to go away.");
+      let [subject /* , data */] = await contentProcessGone;
 
-    // If we don't clean up the minidump, the harness will
-    // complain.
-    let dumpID = getCrashDumpId(subject);
+      // If we don't clean up the minidump, the harness will
+      // complain.
+      let dumpID = getCrashDumpId(subject);
 
-    Assert.ok(dumpID, "There should be a dumpID");
-    if (dumpID) {
-      await Services.crashmanager.ensureCrashIsPresent(dumpID);
-      cleanUpMinidump(dumpID);
+      Assert.ok(dumpID, "There should be a dumpID");
+      if (dumpID) {
+        await Services.crashmanager.ensureCrashIsPresent(dumpID);
+        cleanUpMinidump(dumpID);
+      }
+
+      info("Content process is gone!");
+      Assert.ok(
+        !sawTabCrashed,
+        "Should not have seen the oop-browser-crashed event."
+      );
+      browser.removeEventListener("oop-browser-crashed", onTabCrashed);
     }
-
-    info("Content process is gone!");
-    Assert.ok(!sawTabCrashed,
-              "Should not have seen the oop-browser-crashed event.");
-    browser.removeEventListener("oop-browser-crashed", onTabCrashed);
-  });
+  );
 });

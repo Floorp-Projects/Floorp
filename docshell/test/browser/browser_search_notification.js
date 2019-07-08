@@ -4,14 +4,22 @@
 add_task(async function() {
   const kSearchEngineID = "test_urifixup_search_engine";
   const kSearchEngineURL = "http://localhost/?search={searchTerms}";
-  await Services.search.addEngineWithDetails(kSearchEngineID,
-    {method: "get", template: kSearchEngineURL});
+  await Services.search.addEngineWithDetails(kSearchEngineID, {
+    method: "get",
+    template: kSearchEngineURL,
+  });
 
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(Services.search.getEngineByName(kSearchEngineID));
+  await Services.search.setDefault(
+    Services.search.getEngineByName(kSearchEngineID)
+  );
 
   let selectedName = (await Services.search.getDefault()).name;
-  Assert.equal(selectedName, kSearchEngineID, "Check fake search engine is selected");
+  Assert.equal(
+    selectedName,
+    kSearchEngineID,
+    "Check fake search engine is selected"
+  );
 
   registerCleanupFunction(async function() {
     if (oldDefaultEngine) {
@@ -34,7 +42,11 @@ add_task(async function() {
   let engine = Services.search.defaultEngine;
   Assert.ok(engine, "Have default search engine.");
   Assert.equal(engine, subject, "Notification subject is engine.");
-  Assert.equal(data, "firefox health report", "Notification data is search term.");
+  Assert.equal(
+    data,
+    "firefox health report",
+    "Notification data is search term."
+  );
 
   gBrowser.removeTab(tab);
 });

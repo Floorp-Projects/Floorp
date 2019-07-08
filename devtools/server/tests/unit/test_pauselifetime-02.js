@@ -21,11 +21,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_pause_frame();
-                           });
+    attachTestTabAndResume(gClient, "test-stack", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_pause_frame();
+    });
   });
   do_test_pending();
 }
@@ -45,7 +48,9 @@ function test_pause_frame() {
       gThreadClient.resume().then(function() {
         // Now that we've resumed, should get no-such-actor for the
         // same request.
-        gClient.request({ to: objActor, type: "bogusRequest" }, function(response) {
+        gClient.request({ to: objActor, type: "bogusRequest" }, function(
+          response
+        ) {
           Assert.equal(response.error, "noSuchActor");
           finishClient(gClient);
         });
@@ -53,10 +58,14 @@ function test_pause_frame() {
     });
   });
 
-  gDebuggee.eval("(" + function() {
-    function stopMe(obj) {
-      debugger;
-    }
-    stopMe({ foo: "bar" });
-  } + ")()");
+  gDebuggee.eval(
+    "(" +
+      function() {
+        function stopMe(obj) {
+          debugger;
+        }
+        stopMe({ foo: "bar" });
+      } +
+      ")()"
+  );
 }

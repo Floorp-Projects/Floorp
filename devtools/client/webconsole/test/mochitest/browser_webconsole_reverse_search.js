@@ -33,45 +33,74 @@ add_task(async function() {
 
   info("Check that the reverse search toolbar as the expected initial state");
   let reverseSearchElement = await openReverseSearch(hud);
-  ok(reverseSearchElement, "Reverse search is displayed with a keyboard shortcut");
-  ok(!getReverseSearchInfoElement(hud),
-    "The result info element is not displayed by default");
+  ok(
+    reverseSearchElement,
+    "Reverse search is displayed with a keyboard shortcut"
+  );
+  ok(
+    !getReverseSearchInfoElement(hud),
+    "The result info element is not displayed by default"
+  );
   ok(
     !reverseSearchElement.querySelector(".search-result-button-prev") &&
-    !reverseSearchElement.querySelector(".search-result-button-next"),
+      !reverseSearchElement.querySelector(".search-result-button-next"),
     "The results navigation buttons are not displayed by default"
   );
-  is(getInputValue(hud), initialValue,
-    "The jsterm value is not changed when opening reverse search");
+  is(
+    getInputValue(hud),
+    initialValue,
+    "The jsterm value is not changed when opening reverse search"
+  );
   is(isReverseSearchInputFocused(hud), true, "reverse search input is focused");
 
   EventUtils.sendString("d");
   let infoElement = await waitFor(() => getReverseSearchInfoElement(hud));
-  is(infoElement.textContent, "3 of 3 results", "The reverse info has the expected text "
-    + "— duplicated results (`document`) are coalesced");
+  is(
+    infoElement.textContent,
+    "3 of 3 results",
+    "The reverse info has the expected text " +
+      "— duplicated results (`document`) are coalesced"
+  );
 
-  const previousButton = reverseSearchElement.querySelector(".search-result-button-prev");
-  const nextButton = reverseSearchElement.querySelector(".search-result-button-next");
+  const previousButton = reverseSearchElement.querySelector(
+    ".search-result-button-prev"
+  );
+  const nextButton = reverseSearchElement.querySelector(
+    ".search-result-button-next"
+  );
   ok(previousButton, "Previous navigation button is now displayed");
-  is(previousButton.title, `Previous result (${isMacOS ? "Ctrl + R" : "F9"})`,
-    "Previous navigation button has expected title");
+  is(
+    previousButton.title,
+    `Previous result (${isMacOS ? "Ctrl + R" : "F9"})`,
+    "Previous navigation button has expected title"
+  );
 
   ok(nextButton, "Next navigation button is now displayed");
-  is(nextButton.title, `Next result (${isMacOS ? "Ctrl + S" : "Shift + F9"})`,
-    "Next navigation button has expected title");
+  is(
+    nextButton.title,
+    `Next result (${isMacOS ? "Ctrl + S" : "Shift + F9"})`,
+    "Next navigation button has expected title"
+  );
   is(getInputValue(hud), "document", "JsTerm has the expected input");
-  is(hud.jsterm.autocompletePopup.isOpen, false,
-    "Setting the input value did not trigger the autocompletion");
+  is(
+    hud.jsterm.autocompletePopup.isOpen,
+    false,
+    "Setting the input value did not trigger the autocompletion"
+  );
   is(isReverseSearchInputFocused(hud), true, "reverse search input is focused");
 
   let onJsTermValueChanged = hud.jsterm.once("set-input-value");
   EventUtils.sendString("og");
   await onJsTermValueChanged;
   is(getInputValue(hud), `Dog = "Snoopy"`, "JsTerm input was updated");
-  is(infoElement.textContent, "1 result", "The reverse info has the expected text");
+  is(
+    infoElement.textContent,
+    "1 result",
+    "The reverse info has the expected text"
+  );
   ok(
     !reverseSearchElement.querySelector(".search-result-button-prev") &&
-    !reverseSearchElement.querySelector(".search-result-button-next"),
+      !reverseSearchElement.querySelector(".search-result-button-next"),
     "The results navigation buttons are not displayed when there's only one result"
   );
 
@@ -79,26 +108,40 @@ add_task(async function() {
   onJsTermValueChanged = hud.jsterm.once("set-input-value");
   EventUtils.sendString("g");
   await waitFor(() => reverseSearchElement.classList.contains("no-result"));
-  is(getInputValue(hud), `Dog = "Snoopy"`,
-    "JsTerm input was not updated since there's no results");
-  is(infoElement.textContent, "No results", "The reverse info has the expected text");
+  is(
+    getInputValue(hud),
+    `Dog = "Snoopy"`,
+    "JsTerm input was not updated since there's no results"
+  );
+  is(
+    infoElement.textContent,
+    "No results",
+    "The reverse info has the expected text"
+  );
   ok(
     !reverseSearchElement.querySelector(".search-result-button-prev") &&
-    !reverseSearchElement.querySelector(".search-result-button-next"),
+      !reverseSearchElement.querySelector(".search-result-button-next"),
     "The results navigation buttons are not displayed when there's no result"
   );
 
   info("Check that Backspace updates the UI");
   EventUtils.synthesizeKey("KEY_Backspace");
   await waitFor(() => !reverseSearchElement.classList.contains("no-result"));
-  is(infoElement.textContent, "1 result", "The reverse info has the expected text");
+  is(
+    infoElement.textContent,
+    "1 result",
+    "The reverse info has the expected text"
+  );
   is(getInputValue(hud), `Dog = "Snoopy"`, "JsTerm kept its value");
 
   info("Check that Escape does not affect the jsterm value");
   EventUtils.synthesizeKey("KEY_Escape");
   await waitFor(() => !getReverseSearchElement(hud));
-  is(getInputValue(hud), `Dog = "Snoopy"`,
-    "Closing the input did not changed the JsTerm value");
+  is(
+    getInputValue(hud),
+    `Dog = "Snoopy"`,
+    "Closing the input did not changed the JsTerm value"
+  );
   is(isInputFocused(hud), true, "input is focused");
 
   info("Check that the search works with emojis");
@@ -106,12 +149,19 @@ add_task(async function() {
   onJsTermValueChanged = hud.jsterm.once("set-input-value");
   EventUtils.sendString("😎");
   infoElement = await waitFor(() => getReverseSearchInfoElement(hud));
-  is(infoElement.textContent, "1 result", "The reverse info has the expected text");
+  is(
+    infoElement.textContent,
+    "1 result",
+    "The reverse info has the expected text"
+  );
 
   info("Check that Enter evaluates the JsTerm and closes the UI");
   const onMessage = waitForMessage(hud, `"😎"`);
   const onReverseSearchClose = waitFor(() => !getReverseSearchElement(hud));
   EventUtils.synthesizeKey("KEY_Enter");
   await Promise.all([onMessage, onReverseSearchClose]);
-  ok(true, "Enter evaluates what's in the JsTerm and closes the reverse search UI");
+  ok(
+    true,
+    "Enter evaluates what's in the JsTerm and closes the reverse search UI"
+  );
 });

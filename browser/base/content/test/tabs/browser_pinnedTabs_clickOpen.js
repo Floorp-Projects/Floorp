@@ -8,8 +8,15 @@ function index(tab) {
 }
 
 async function testNewTabPosition(expectedPosition, modifiers = {}) {
-  let opening = BrowserTestUtils.waitForNewTab(gBrowser, "http://mochi.test:8888/");
-  BrowserTestUtils.synthesizeMouseAtCenter("#link", modifiers, gBrowser.selectedBrowser);
+  let opening = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
+  BrowserTestUtils.synthesizeMouseAtCenter(
+    "#link",
+    modifiers,
+    gBrowser.selectedBrowser
+  );
   let newtab = await opening;
   is(index(newtab), expectedPosition, "clicked tab is in correct position");
   return newtab;
@@ -17,7 +24,8 @@ async function testNewTabPosition(expectedPosition, modifiers = {}) {
 
 // Test that a tab opened from a pinned tab is not in the pinned region.
 add_task(async function test_pinned_content_click() {
-  let testUri = "data:text/html;charset=utf-8,<a href=\"http://mochi.test:8888/\" target=\"_blank\" id=\"link\">link</a>";
+  let testUri =
+    'data:text/html;charset=utf-8,<a href="http://mochi.test:8888/" target="_blank" id="link">link</a>';
   let tabs = [
     gBrowser.selectedTab,
     await BrowserTestUtils.openNewForegroundTab(gBrowser, testUri),
@@ -36,7 +44,8 @@ add_task(async function test_pinned_content_click() {
   gBrowser.removeTab(newtab2);
 
   // Second test new background tabs open in order.
-  let modifiers = AppConstants.platform == "macosx" ? {metaKey: true} : {ctrlKey: true};
+  let modifiers =
+    AppConstants.platform == "macosx" ? { metaKey: true } : { ctrlKey: true };
   await BrowserTestUtils.switchTab(gBrowser, tabs[1]);
 
   newtab1 = await testNewTabPosition(2, modifiers);

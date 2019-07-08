@@ -2,9 +2,12 @@
 
 /* eslint no-unused-vars: ["error", {"args": "none", "varsIgnorePattern": "^(FindProxyForURL)$"}] */
 
-XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",
-                                   "@mozilla.org/network/protocol-proxy-service;1",
-                                   "nsIProtocolProxyService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gProxyService",
+  "@mozilla.org/network/protocol-proxy-service;1",
+  "nsIProtocolProxyService"
+);
 
 function getProxyInfo() {
   return new Promise((resolve, reject) => {
@@ -24,7 +27,7 @@ async function testProxyScript(script, expected = {}) {
   let scriptData = String(script).replace(/^.*?\{([^]*)\}$/, "$1");
   let extensionData = {
     manifest: {
-      "permissions": ["proxy"],
+      permissions: ["proxy"],
     },
     background() {
       // Some tests generate multiple errors, we'll just rely on the first.
@@ -66,7 +69,7 @@ async function testProxyScript(script, expected = {}) {
   if (!expected.proxyInfo) {
     equal(proxyInfo, null, "no proxyInfo received");
   } else {
-    let {host, port, type} = expected.proxyInfo;
+    let { host, port, type } = expected.proxyInfo;
     equal(proxyInfo.host, host, `Expected proxy host to be ${host}`);
     equal(proxyInfo.port, port, `Expected proxy port to be ${port}`);
     equal(proxyInfo.type, type, `Expected proxy type to be ${type}`);
@@ -74,7 +77,10 @@ async function testProxyScript(script, expected = {}) {
   if (expected.errorInfo) {
     ok(error.fileName.includes("proxy.js"), "Error should include file name");
     equal(error.lineNumber, 3, "Error should include line number");
-    ok(error.stack.includes("proxy.js:3:7"), "Error should include stack trace");
+    ok(
+      error.stack.includes("proxy.js:3:9"),
+      "Error should include stack trace"
+    );
   }
   extension.sendMessage("unregister-proxy-script");
   await extension.awaitFinish("proxy");
@@ -82,54 +88,66 @@ async function testProxyScript(script, expected = {}) {
 }
 
 add_task(async function test_invalid_FindProxyForURL_function() {
-  await testProxyScript(() => { }, {
+  await testProxyScript(() => {}, {
     message: "The proxy script must define FindProxyForURL as a function",
   });
 
-  await testProxyScript(() => {
-    var FindProxyForURL = 5; // eslint-disable-line mozilla/var-only-at-top-level
-  }, {
-    message: "The proxy script must define FindProxyForURL as a function",
-  });
-
-  await testProxyScript(() => {
-    function FindProxyForURL() {
-      return not_defined; // eslint-disable-line no-undef
+  await testProxyScript(
+    () => {
+      var FindProxyForURL = 5; // eslint-disable-line mozilla/var-only-at-top-level
+    },
+    {
+      message: "The proxy script must define FindProxyForURL as a function",
     }
-  }, {
-    message: "not_defined is not defined",
-    errorInfo: true,
-  });
+  );
+
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return not_defined; // eslint-disable-line no-undef
+      }
+    },
+    {
+      message: "not_defined is not defined",
+      errorInfo: true,
+    }
+  );
 
   // The following tests will produce multiple errors.
-  await testProxyScript(() => {
-    function FindProxyForURL() {
-      return ";;;;;PROXY 1.2.3.4:8080";
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return ";;;;;PROXY 1.2.3.4:8080";
+      }
+    },
+    {
+      message: "ProxyInfoData: Missing Proxy Rule",
     }
-  }, {
-    message: "ProxyInfoData: Missing Proxy Rule",
-  });
+  );
 
   // We take any valid proxy up to the error.
-  await testProxyScript(() => {
-    function FindProxyForURL() {
-      return "PROXY 1.2.3.4:8080; UNEXPECTED; SOCKS 1.2.3.4:8080";
-    }
-  }, {
-    message: "ProxyInfoData: Unrecognized proxy type: \"unexpected\"",
-    proxyInfo: {
-      host: "1.2.3.4",
-      port: "8080",
-      type: "http",
-      failoverProxy: null,
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY 1.2.3.4:8080; UNEXPECTED; SOCKS 1.2.3.4:8080";
+      }
     },
-  });
+    {
+      message: 'ProxyInfoData: Unrecognized proxy type: "unexpected"',
+      proxyInfo: {
+        host: "1.2.3.4",
+        port: "8080",
+        type: "http",
+        failoverProxy: null,
+      },
+    }
+  );
 });
 
 async function getExtension(proxyResult) {
   let extensionData = {
     manifest: {
-      "permissions": ["proxy"],
+      permissions: ["proxy"],
     },
     background() {
       browser.proxy.register("proxy.js").then(() => {
@@ -151,7 +169,7 @@ async function getExtension(proxyResult) {
 
 add_task(async function test_passthrough() {
   let ext1 = await getExtension(null);
-  let ext2 = await getExtension("\"PROXY 1.2.3.4:8888\"");
+  let ext2 = await getExtension('"PROXY 1.2.3.4:8888"');
 
   let proxyInfo = await getProxyInfo();
 

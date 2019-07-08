@@ -4,36 +4,43 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "UserAgentOverrides" ];
+var EXPORTED_SYMBOLS = ["UserAgentOverrides"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {UserAgentUpdates} = ChromeUtils.import("resource://gre/modules/UserAgentUpdates.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { UserAgentUpdates } = ChromeUtils.import(
+  "resource://gre/modules/UserAgentUpdates.jsm"
+);
 
 const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
 const MAX_OVERRIDE_FOR_HOST_CACHE_SIZE = 250;
 
 // lazy load nsHttpHandler to improve startup performance.
 XPCOMUtils.defineLazyGetter(this, "DEFAULT_UA", function() {
-  return Cc["@mozilla.org/network/protocol;1?name=http"]
-           .getService(Ci.nsIHttpProtocolHandler)
-           .userAgent;
+  return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+    Ci.nsIHttpProtocolHandler
+  ).userAgent;
 });
 
 var gPrefBranch;
-var gOverrides = new Map;
+var gOverrides = new Map();
 var gUpdatedOverrides;
-var gOverrideForHostCache = new Map;
+var gOverrideForHostCache = new Map();
 var gInitialized = false;
 var gOverrideFunctions = [
-  function(aHttpChannel) { return UserAgentOverrides.getOverrideForURI(aHttpChannel.URI); },
+  function(aHttpChannel) {
+    return UserAgentOverrides.getOverrideForURI(aHttpChannel.URI);
+  },
 ];
-var gBuiltUAs = new Map;
+var gBuiltUAs = new Map();
 
 var UserAgentOverrides = {
   init: function uao_init() {
-    if (gInitialized)
+    if (gInitialized) {
       return;
+    }
 
     gPrefBranch = Services.prefs.getBranch("general.useragent.override.");
     gPrefBranch.addObserver("", buildOverrides);
@@ -41,7 +48,10 @@ var UserAgentOverrides = {
     Services.prefs.addObserver(PREF_OVERRIDES_ENABLED, buildOverrides);
 
     try {
-      Services.obs.addObserver(HTTP_on_useragent_request, "http-on-useragent-request");
+      Services.obs.addObserver(
+        HTTP_on_useragent_request,
+        "http-on-useragent-request"
+      );
     } catch (x) {
       // The http-on-useragent-request notification is disallowed in content processes.
     }
@@ -53,7 +63,9 @@ var UserAgentOverrides = {
           for (let domain in overrides) {
             overrides[domain] = getUserAgentFromOverride(overrides[domain]);
           }
-          overrides.get = function(key) { return this[key]; };
+          overrides.get = function(key) {
+            return this[key];
+          };
         }
         gUpdatedOverrides = overrides;
       });
@@ -75,15 +87,14 @@ var UserAgentOverrides = {
 
   getOverrideForURI: function uao_getOverrideForURI(aURI) {
     let host = aURI.asciiHost;
-    if (!gInitialized ||
-        (!gOverrides.size && !gUpdatedOverrides) ||
-        !(host)) {
+    if (!gInitialized || (!gOverrides.size && !gUpdatedOverrides) || !host) {
       return null;
     }
 
     let override = gOverrideForHostCache.get(host);
-    if (override !== undefined)
+    if (override !== undefined) {
       return override;
+    }
 
     function findOverride(overrides) {
       let searchHost = host;
@@ -100,8 +111,9 @@ var UserAgentOverrides = {
       return userAgent;
     }
 
-    override = (gOverrides.size && findOverride(gOverrides))
-            || (gUpdatedOverrides && findOverride(gUpdatedOverrides));
+    override =
+      (gOverrides.size && findOverride(gOverrides)) ||
+      (gUpdatedOverrides && findOverride(gUpdatedOverrides));
 
     if (gOverrideForHostCache.size >= MAX_OVERRIDE_FOR_HOST_CACHE_SIZE) {
       gOverrideForHostCache.clear();
@@ -112,15 +124,19 @@ var UserAgentOverrides = {
   },
 
   uninit: function uao_uninit() {
-    if (!gInitialized)
+    if (!gInitialized) {
       return;
+    }
     gInitialized = false;
 
     gPrefBranch.removeObserver("", buildOverrides);
 
     Services.prefs.removeObserver(PREF_OVERRIDES_ENABLED, buildOverrides);
 
-    Services.obs.removeObserver(HTTP_on_useragent_request, "http-on-useragent-request");
+    Services.obs.removeObserver(
+      HTTP_on_useragent_request,
+      "http-on-useragent-request"
+    );
   },
 };
 
@@ -143,8 +159,9 @@ function buildOverrides() {
   gOverrides.clear();
   gOverrideForHostCache.clear();
 
-  if (!Services.prefs.getBoolPref(PREF_OVERRIDES_ENABLED))
+  if (!Services.prefs.getBoolPref(PREF_OVERRIDES_ENABLED)) {
     return;
+  }
 
   let domains = gPrefBranch.getChildList("");
 

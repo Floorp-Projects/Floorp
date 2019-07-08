@@ -1,12 +1,14 @@
 "use strict";
 
 const testState = {
-  windows: [{
-    tabs: [
-      { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
-      { entries: [{ url: "about:rights", triggeringPrincipal_base64 }] },
-    ],
-  }],
+  windows: [
+    {
+      tabs: [
+        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+        { entries: [{ url: "about:rights", triggeringPrincipal_base64 }] },
+      ],
+    },
+  ],
 };
 
 // Test for Bug 615394 - Session Restore should notify when it is beginning and
@@ -37,12 +39,18 @@ add_task(async function test_undoCloseTab() {
   window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
   window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
 
-  let restoredPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored");
+  let restoredPromise = BrowserTestUtils.waitForEvent(
+    gBrowser.tabContainer,
+    "SSTabRestored"
+  );
 
   await promiseRemoveTabAndSessionState(tab);
   let reopenedTab = ss.undoCloseTab(window, 0);
 
-  await Promise.all([restoredPromise, BrowserTestUtils.browserLoaded(reopenedTab.linkedBrowser)]);
+  await Promise.all([
+    restoredPromise,
+    BrowserTestUtils.browserLoaded(reopenedTab.linkedBrowser),
+  ]);
 
   Assert.equal(reopenedTab, lastTab, "Tabs should be the same one.");
   Assert.equal(busyEventCount, 1);

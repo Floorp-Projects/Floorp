@@ -98,8 +98,9 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  const { inspector, testActor } = await openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
+  );
 
   for (const data of TEST_DATA) {
     info("Running test case: " + data.desc);
@@ -107,18 +108,30 @@ add_task(async function() {
   }
 });
 
-async function runTestData(inspector, testActor,
-                      {selector, before, changeStyle, after}) {
+async function runTestData(
+  inspector,
+  testActor,
+  { selector, before, changeStyle, after }
+) {
   await selectNode(selector, inspector);
   const container = await getContainerForSelector(selector, inspector);
 
   const beforeBadge = container.elt.querySelector(
-    ".inspector-badge.interactive[data-display]");
-  is(!!beforeBadge, before.visible,
-    `Display badge is visible as expected for ${selector}: ${before.visible}`);
+    ".inspector-badge.interactive[data-display]"
+  );
+  is(
+    !!beforeBadge,
+    before.visible,
+    `Display badge is visible as expected for ${selector}: ${before.visible}`
+  );
   if (before.visible) {
-    is(beforeBadge.textContent, before.textContent,
-      `Got the correct before display type for ${selector}: ${beforeBadge.textContent}`);
+    is(
+      beforeBadge.textContent,
+      before.textContent,
+      `Got the correct before display type for ${selector}: ${
+        beforeBadge.textContent
+      }`
+    );
   }
 
   info("Listening for the display-change event");
@@ -139,12 +152,20 @@ async function runTestData(inspector, testActor,
   ok(foundContainer, "Container is part of the list of changed nodes");
 
   const afterBadge = container.elt.querySelector(
-    ".inspector-badge.interactive[data-display]");
-  is(!!afterBadge, after.visible,
-    `Display badge is visible as expected for ${selector}: ${after.visible}`);
+    ".inspector-badge.interactive[data-display]"
+  );
+  is(
+    !!afterBadge,
+    after.visible,
+    `Display badge is visible as expected for ${selector}: ${after.visible}`
+  );
   if (after.visible) {
-    is(afterBadge.textContent, after.textContent,
-      `Got the correct after display type for ${selector}: ${afterBadge.textContent}`);
+    is(
+      afterBadge.textContent,
+      after.textContent,
+      `Got the correct after display type for ${selector}: ${
+        afterBadge.textContent
+      }`
+    );
   }
 }
-

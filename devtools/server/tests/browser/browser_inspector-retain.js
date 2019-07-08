@@ -5,7 +5,10 @@
 "use strict";
 
 /* import-globals-from inspector-helpers.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js",
+  this
+);
 
 // Retain a node, and a second-order child (in another document, for kicks)
 // Release the parent of the top item, which should cause one retained orphan.
@@ -15,8 +18,9 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtool
 // Then change the source of the iframe, which should kill that orphan.
 
 add_task(async function testRetain() {
-  const { walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
 
   // Get the toplevel body element and retain it.
   const bodyFront = await walker.querySelector(walker.rootNode, "body");
@@ -35,20 +39,35 @@ add_task(async function testRetain() {
 
   // That request should have freed the parent of the first retained
   // but moved the rest into the retained orphaned tree.
-  is(ownershipTreeSize(clientTree.root) + ownershipTreeSize(clientTree.retained[0]) + 1,
-     originalOwnershipSize,
-     "Should have only lost one item overall.");
+  is(
+    ownershipTreeSize(clientTree.root) +
+      ownershipTreeSize(clientTree.retained[0]) +
+      1,
+    originalOwnershipSize,
+    "Should have only lost one item overall."
+  );
   is(walker._retainedOrphans.size, 1, "Should have retained one orphan");
-  ok(walker._retainedOrphans.has(bodyFront),
-     "Should have retained the expected node.");
+  ok(
+    walker._retainedOrphans.has(bodyFront),
+    "Should have retained the expected node."
+  );
   // Unretain the body, which should promote the childListFront to a retained orphan.
   await walker.unretainNode(bodyFront);
   await assertOwnershipTrees(walker);
 
-  is(walker._retainedOrphans.size, 1, "Should still only have one retained orphan.");
-  ok(!walker._retainedOrphans.has(bodyFront), "Should have dropped the body node.");
-  ok(walker._retainedOrphans.has(childListFront),
-     "Should have retained the child node.");
+  is(
+    walker._retainedOrphans.size,
+    1,
+    "Should still only have one retained orphan."
+  );
+  ok(
+    !walker._retainedOrphans.has(bodyFront),
+    "Should have dropped the body node."
+  );
+  ok(
+    walker._retainedOrphans.has(childListFront),
+    "Should have retained the child node."
+  );
 
   // Change the source of the iframe, which should kill the retained orphan.
   const onMutations = waitForMutation(walker, isUnretained);
@@ -66,8 +85,9 @@ add_task(async function testRetain() {
 // We should always win that race (even though the mutation happens before the
 // retain request), because we haven't issued `getMutations` yet.
 add_task(async function testWinRace() {
-  const { walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
 
   const front = await walker.querySelector(walker.rootNode, "#a");
   const onMutation = waitForMutation(walker, isChildList);
@@ -81,7 +101,10 @@ add_task(async function testWinRace() {
 
   await assertOwnershipTrees(walker);
   is(walker._retainedOrphans.size, 1, "Should have a retained orphan.");
-  ok(walker._retainedOrphans.has(front), "Should have retained our expected node.");
+  ok(
+    walker._retainedOrphans.has(front),
+    "Should have retained our expected node."
+  );
   await walker.unretainNode(front);
 
   // Make sure we're clear for the next test.
@@ -92,8 +115,9 @@ add_task(async function testWinRace() {
 // Same as above, but issue the request right after the 'new-mutations' event, so that
 // we *lose* the race.
 add_task(async function testLoseRace() {
-  const { walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
 
   const front = await walker.querySelector(walker.rootNode, "#z");
   const onMutation = walker.once("new-mutations");
@@ -119,7 +143,11 @@ add_task(async function testLoseRace() {
     // was the original intent. Still not failing with the expected error message
     // Needs more work.
     // ok(err, "noSuchActor", "Should have lost the race.");
-    is(walker._retainedOrphans.size, 0, "Should have no more retained orphans.");
+    is(
+      walker._retainedOrphans.size,
+      0,
+      "Should have no more retained orphans."
+    );
     // Don't re-throw the error.
   }
 });

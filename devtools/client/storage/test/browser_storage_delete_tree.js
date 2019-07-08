@@ -11,9 +11,12 @@
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
-  const contextMenu = gPanelWindow.document.getElementById("storage-tree-popup");
+  const contextMenu = gPanelWindow.document.getElementById(
+    "storage-tree-popup"
+  );
   const menuDeleteAllItem = contextMenu.querySelector(
-    "#storage-tree-popup-delete-all");
+    "#storage-tree-popup-delete-all"
+  );
 
   info("test state before delete");
   await checkState([
@@ -30,9 +33,17 @@ add_task(async function() {
     ],
     [["localStorage", "http://test1.example.org"], ["key", "ls1", "ls2"]],
     [["sessionStorage", "http://test1.example.org"], ["key", "ss1"]],
-    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"], [1, 2, 3]],
-    [["Cache", "http://test1.example.org", "plop"],
-      [MAIN_DOMAIN + "404_cached_file.js", MAIN_DOMAIN + "browser_storage_basic.js"]],
+    [
+      ["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
+      [1, 2, 3],
+    ],
+    [
+      ["Cache", "http://test1.example.org", "plop"],
+      [
+        MAIN_DOMAIN + "404_cached_file.js",
+        MAIN_DOMAIN + "browser_storage_basic.js",
+      ],
+    ],
   ]);
 
   info("do the delete");
@@ -49,8 +60,8 @@ add_task(async function() {
 
     await selectTreeItem(store);
 
-    const eventName = "store-objects-" +
-      (store[0] == "cookies" ? "edit" : "cleared");
+    const eventName =
+      "store-objects-" + (store[0] == "cookies" ? "edit" : "cleared");
     const eventWait = gUI.once(eventName);
 
     const selector = `[data-id='${JSON.stringify(store)}'] > .tree-widget-item`;

@@ -16,7 +16,7 @@ add_task(async function() {
 
   const firstURL = "http://example.com/";
   const secondURL = "http://example.com/?id=secondURL";
-  ContentTask.spawn(gBrowser.selectedBrowser, [firstURL, secondURL], (urls) => {
+  ContentTask.spawn(gBrowser.selectedBrowser, [firstURL, secondURL], urls => {
     content.wrappedJSObject.console.log("Visit ", urls[0], " and ", urls[1]);
   });
 
@@ -40,19 +40,28 @@ add_task(async function() {
   onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, secondURL, true);
 
   const isMacOS = Services.appinfo.OS === "Darwin";
-  EventUtils.sendMouseEvent({
-    type: "click",
-    [isMacOS ? "metaKey" : "ctrlKey"]: true,
-  }, urlEl2, hud.ui.window);
+  EventUtils.sendMouseEvent(
+    {
+      type: "click",
+      [isMacOS ? "metaKey" : "ctrlKey"]: true,
+    },
+    urlEl2,
+    hud.ui.window
+  );
 
   newTab = await onTabLoaded;
 
   ok(newTab, "The expected tab was opened.");
-  is(newTab._tPos, currentTab._tPos + 1,
-    "The new tab was opened in the position to the right of the current tab");
+  is(
+    newTab._tPos,
+    currentTab._tPos + 1,
+    "The new tab was opened in the position to the right of the current tab"
+  );
   is(gBrowser.selectedTab, currentTab, "The tab was opened in the background");
 
-  info("Test that Ctrl/Cmd + Click on a link in an array doesn't open the sidebar");
+  info(
+    "Test that Ctrl/Cmd + Click on a link in an array doesn't open the sidebar"
+  );
   const onMessage = waitForMessage(hud, "Visit");
   ContentTask.spawn(gBrowser.selectedBrowser, firstURL, url => {
     content.wrappedJSObject.console.log([`Visit ${url}`]);
@@ -62,10 +71,14 @@ add_task(async function() {
 
   onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, firstURL, true);
 
-  EventUtils.sendMouseEvent({
-    type: "click",
-    [isMacOS ? "metaKey" : "ctrlKey"]: true,
-  }, urlEl3, hud.ui.window);
+  EventUtils.sendMouseEvent(
+    {
+      type: "click",
+      [isMacOS ? "metaKey" : "ctrlKey"]: true,
+    },
+    urlEl3,
+    hud.ui.window
+  );
   await onTabLoaded;
 
   info("Log a message and wait for it to appear so we know the UI was updated");

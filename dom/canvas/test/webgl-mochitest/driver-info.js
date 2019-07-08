@@ -3,7 +3,7 @@ DriverInfo = (function() {
   // Debug info handling
 
   function info(str) {
-    window.console.log('Info: ' + str);
+    window.console.log("Info: " + str);
   }
 
   // ---------------------------------------------------------------------------
@@ -18,16 +18,17 @@ DriverInfo = (function() {
     var gl = null;
     try {
       gl = canvas.getContext("experimental-webgl");
-    } catch(e) {}
+    } catch (e) {}
 
     if (!gl) {
-      info('Failed to create WebGL context for querying driver info.');
-      throw 'WebGL failed';
+      info("Failed to create WebGL context for querying driver info.");
+      throw "WebGL failed";
     }
 
     var ext = gl.getExtension("WEBGL_debug_renderer_info");
-    if (!ext)
-      throw 'WEBGL_debug_renderer_info not available';
+    if (!ext) {
+      throw "WEBGL_debug_renderer_info not available";
+    }
 
     var webglRenderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
     return webglRenderer;
@@ -36,30 +37,27 @@ DriverInfo = (function() {
   function detectOSInfo() {
     var os = null;
     var version = null;
-    if (navigator.platform.indexOf('Win') == 0) {
+    if (navigator.platform.indexOf("Win") == 0) {
       os = OS.WINDOWS;
 
       var versionMatch = /Windows NT (\d+.\d+)/.exec(navigator.userAgent);
       version = versionMatch ? parseFloat(versionMatch[1]) : null;
       // Version 6.0 is Vista, 6.1 is 7.
-
-    } else if (navigator.platform.indexOf('Mac') == 0) {
+    } else if (navigator.platform.indexOf("Mac") == 0) {
       os = OS.MAC;
 
       var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
       version = versionMatch ? parseFloat(versionMatch[1]) : null;
-
-    } else if (navigator.appVersion.includes('Android')) {
+    } else if (navigator.appVersion.includes("Android")) {
       os = OS.ANDROID;
 
       try {
         // From layout/tools/reftest/reftest.js:
-        version = SpecialPowers.Services.sysinfo.getProperty('version');
+        version = SpecialPowers.Services.sysinfo.getProperty("version");
       } catch (e) {
-        info('No SpecialPowers: can\'t query android version');
+        info("No SpecialPowers: can't query android version");
       }
-
-    } else if (navigator.platform.indexOf('Linux') == 0) {
+    } else if (navigator.platform.indexOf("Linux") == 0) {
       // Must be checked after android, as android also has a 'Linux' platform string.
       os = OS.LINUX;
     }
@@ -68,18 +66,18 @@ DriverInfo = (function() {
   }
 
   var OS = {
-    WINDOWS: 'windows',
-    MAC: 'mac',
-    LINUX: 'linux',
-    ANDROID: 'android',
+    WINDOWS: "windows",
+    MAC: "mac",
+    LINUX: "linux",
+    ANDROID: "android",
   };
 
   var DRIVER = {
-    INTEL: 'intel',
-    MESA: 'mesa',
-    NVIDIA: 'nvidia',
-    ANDROID_X86_EMULATOR: 'android x86 emulator',
-    ANGLE: 'angle',
+    INTEL: "intel",
+    MESA: "mesa",
+    NVIDIA: "nvidia",
+    ANDROID_X86_EMULATOR: "android x86 emulator",
+    ANGLE: "angle",
   };
 
   var kOS = null;
@@ -96,15 +94,15 @@ DriverInfo = (function() {
   try {
     kRawDriver = detectDriverInfo();
 
-    if (kRawDriver.includes('llvmpipe')) {
+    if (kRawDriver.includes("llvmpipe")) {
       kDriver = DRIVER.MESA;
-    } else if (kRawDriver.includes('Android Emulator')) {
+    } else if (kRawDriver.includes("Android Emulator")) {
       kDriver = DRIVER.ANDROID_X86_EMULATOR;
-    } else if (kRawDriver.includes('ANGLE')) {
+    } else if (kRawDriver.includes("ANGLE")) {
       kDriver = DRIVER.ANGLE;
-    } else if (kRawDriver.includes('NVIDIA')) {
+    } else if (kRawDriver.includes("NVIDIA")) {
       kDriver = DRIVER.NVIDIA;
-    } else if (kRawDriver.includes('Intel')) {
+    } else if (kRawDriver.includes("Intel")) {
       kDriver = DRIVER.INTEL;
     }
   } catch (e) {
@@ -113,11 +111,11 @@ DriverInfo = (function() {
 
   function dump(line_out_func) {
     let lines = [
-      '[DriverInfo] userAgent: ' + navigator.userAgent,
-      '[DriverInfo] kRawDriver: ' + kRawDriver,
-      '[DriverInfo] kDriver: ' + kDriver,
-      '[DriverInfo] kOS: ' + kOS,
-      '[DriverInfo] kOSVersion: ' + kOSVersion,
+      "[DriverInfo] userAgent: " + navigator.userAgent,
+      "[DriverInfo] kRawDriver: " + kRawDriver,
+      "[DriverInfo] kDriver: " + kDriver,
+      "[DriverInfo] kOS: " + kOS,
+      "[DriverInfo] kOSVersion: " + kOSVersion,
     ];
     lines.forEach(line_out_func);
   }
@@ -128,9 +126,14 @@ DriverInfo = (function() {
     DRIVER: DRIVER,
     OS: OS,
     dump: dump,
-    getDriver: function() { return kDriver; },
-    getOS: function() { return kOS; },
-    getOSVersion: function() { return kOSVersion; },
+    getDriver: function() {
+      return kDriver;
+    },
+    getOS: function() {
+      return kOS;
+    },
+    getOSVersion: function() {
+      return kOSVersion;
+    },
   };
 })();
-

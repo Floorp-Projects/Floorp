@@ -5,20 +5,23 @@
 let getExtension = () => {
   return ExtensionTestUtils.loadExtension({
     background: async function() {
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       await browser.pageAction.show(tab.id);
       browser.test.sendMessage("pageAction ready");
     },
 
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": false,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: false,
       },
 
-      "page_action": {
-        "default_popup": "popup.html",
-        "browser_style": false,
+      page_action: {
+        default_popup: "popup.html",
+        browser_style: false,
       },
     },
 

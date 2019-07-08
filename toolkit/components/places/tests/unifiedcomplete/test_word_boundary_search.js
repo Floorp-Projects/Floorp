@@ -30,19 +30,37 @@ add_task(async function test_escape() {
     { uri: "http://ideograph/", title: ideograph.join("") },
     { uri: "http://camel/pleaseMatchMe/", title: "title1" },
   ]);
-  await addBookmark( { uri: "http://tag/1", title: "title1", tags: [ "matchme2" ] } );
-  await addBookmark( { uri: "http://tag/2", title: "title1", tags: [ "dontmatchme3" ] } );
+  await addBookmark({
+    uri: "http://tag/1",
+    title: "title1",
+    tags: ["matchme2"],
+  });
+  await addBookmark({
+    uri: "http://tag/2",
+    title: "title1",
+    tags: ["dontmatchme3"],
+  });
 
   info("Match 'match' at the beginning or after / or on a CamelCase");
   await check_autocomplete({
     search: "match",
     checkSorting: true,
     matches: [
-      { uri: "http://tag/1", title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+      {
+        uri: "http://tag/1",
+        title: "title1",
+        tags: ["matchme2"],
+        style: ["bookmark-tag"],
+      },
       { uri: "http://camel/pleaseMatchMe/", title: "title1" },
       { uri: "http://title/1", title: "matchme2" },
       { uri: "http://matchme/", title: "title1" },
-      { uri: "http://tag/2", title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
+      {
+        uri: "http://tag/2",
+        title: "title1",
+        tags: ["dontmatchme3"],
+        style: ["bookmark-tag"],
+      },
       { uri: "http://title/2", title: "dontmatchme3" },
       { uri: "http://dontmatchme/", title: "title1" },
     ],
@@ -53,7 +71,12 @@ add_task(async function test_escape() {
     search: "dont",
     checkSorting: true,
     matches: [
-      { uri: "http://tag/2", title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
+      {
+        uri: "http://tag/2",
+        title: "title1",
+        tags: ["dontmatchme3"],
+        style: ["bookmark-tag"],
+      },
       { uri: "http://title/2", title: "dontmatchme3" },
       { uri: "http://dontmatchme/", title: "title1" },
     ],
@@ -64,8 +87,18 @@ add_task(async function test_escape() {
     search: "2",
     checkSorting: true,
     matches: [
-      { uri: "http://tag/2", title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
-      { uri: "http://tag/1", title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+      {
+        uri: "http://tag/2",
+        title: "title1",
+        tags: ["dontmatchme3"],
+        style: ["bookmark-tag"],
+      },
+      {
+        uri: "http://tag/1",
+        title: "title1",
+        tags: ["matchme2"],
+        style: ["bookmark-tag"],
+      },
       { uri: "http://title/2", title: "dontmatchme3" },
       { uri: "http://title/1", title: "matchme2" },
     ],
@@ -76,8 +109,18 @@ add_task(async function test_escape() {
     search: "t",
     checkSorting: true,
     matches: [
-      { uri: "http://tag/2", title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
-      { uri: "http://tag/1", title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+      {
+        uri: "http://tag/2",
+        title: "title1",
+        tags: ["dontmatchme3"],
+        style: ["bookmark-tag"],
+      },
+      {
+        uri: "http://tag/1",
+        title: "title1",
+        tags: ["matchme2"],
+        style: ["bookmark-tag"],
+      },
       { uri: "http://camel/pleaseMatchMe/", title: "title1" },
       { uri: "http://title/2", title: "dontmatchme3" },
       { uri: "http://title/1", title: "matchme2" },
@@ -92,9 +135,7 @@ add_task(async function test_escape() {
   await check_autocomplete({
     search: "word",
     checkSorting: true,
-    matches: [
-      { uri: "http://crazytitle/", title: "!@#$%^&*()_+{}|:<>?word" },
-    ],
+    matches: [{ uri: "http://crazytitle/", title: "!@#$%^&*()_+{}|:<>?word" }],
   });
 
   info("Match a word boundary '/' for everything");
@@ -102,8 +143,18 @@ add_task(async function test_escape() {
     search: "/",
     checkSorting: true,
     matches: [
-      { uri: "http://tag/2", title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
-      { uri: "http://tag/1", title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+      {
+        uri: "http://tag/2",
+        title: "title1",
+        tags: ["dontmatchme3"],
+        style: ["bookmark-tag"],
+      },
+      {
+        uri: "http://tag/1",
+        title: "title1",
+        tags: ["matchme2"],
+        style: ["bookmark-tag"],
+      },
       { uri: "http://camel/pleaseMatchMe/", title: "title1" },
       { uri: "http://ideograph/", title: ideograph.join("") },
       { uri: "http://katakana/", title: katakana.join("") },
@@ -119,21 +170,17 @@ add_task(async function test_escape() {
   await check_autocomplete({
     search: "()_",
     checkSorting: true,
-    matches: [
-      { uri: "http://crazytitle/", title: "!@#$%^&*()_+{}|:<>?word" },
-    ],
+    matches: [{ uri: "http://crazytitle/", title: "!@#$%^&*()_+{}|:<>?word" }],
   });
 
   info("Katakana characters form a string, so match the beginning");
   await check_autocomplete({
     search: katakana[0],
     checkSorting: true,
-    matches: [
-      { uri: "http://katakana/", title: katakana.join("") },
-    ],
+    matches: [{ uri: "http://katakana/", title: katakana.join("") }],
   });
 
-/*
+  /*
   info("Middle of a katakana word shouldn't be matched");
   await check_autocomplete({
     search: katakana[1],
@@ -141,34 +188,44 @@ add_task(async function test_escape() {
   });
 */
 
- info("Ideographs are treated as words so 'nin' is one word");
+  info("Ideographs are treated as words so 'nin' is one word");
   await check_autocomplete({
     search: ideograph[0],
     checkSorting: true,
-    matches: [ { uri: "http://ideograph/", title: ideograph.join("") } ],
+    matches: [{ uri: "http://ideograph/", title: ideograph.join("") }],
   });
 
- info("Ideographs are treated as words so 'ten' is another word");
+  info("Ideographs are treated as words so 'ten' is another word");
   await check_autocomplete({
     search: ideograph[1],
     checkSorting: true,
-    matches: [ { uri: "http://ideograph/", title: ideograph.join("") } ],
+    matches: [{ uri: "http://ideograph/", title: ideograph.join("") }],
   });
 
- info("Ideographs are treated as words so 'do' is yet another word");
+  info("Ideographs are treated as words so 'do' is yet another word");
   await check_autocomplete({
     search: ideograph[2],
     checkSorting: true,
-    matches: [ { uri: "http://ideograph/", title: ideograph.join("") } ],
+    matches: [{ uri: "http://ideograph/", title: ideograph.join("") }],
   });
 
- info("Match in the middle. Should just be sorted by frecency.");
+  info("Match in the middle. Should just be sorted by frecency.");
   await check_autocomplete({
     search: "ch",
     checkSorting: true,
     matches: [
-      { uri: "http://tag/2", title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
-      { uri: "http://tag/1", title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+      {
+        uri: "http://tag/2",
+        title: "title1",
+        tags: ["dontmatchme3"],
+        style: ["bookmark-tag"],
+      },
+      {
+        uri: "http://tag/1",
+        title: "title1",
+        tags: ["matchme2"],
+        style: ["bookmark-tag"],
+      },
       { uri: "http://camel/pleaseMatchMe/", title: "title1" },
       { uri: "http://title/2", title: "dontmatchme3" },
       { uri: "http://title/1", title: "matchme2" },
@@ -177,14 +234,26 @@ add_task(async function test_escape() {
     ],
   });
 
- // Also this test should just be sorted by frecency.
- info("Don't match one character after a camel-case word boundary (bug 429498). Should just be sorted by frecency.");
+  // Also this test should just be sorted by frecency.
+  info(
+    "Don't match one character after a camel-case word boundary (bug 429498). Should just be sorted by frecency."
+  );
   await check_autocomplete({
     search: "atch",
     checkSorting: true,
     matches: [
-      { uri: "http://tag/2", title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
-      { uri: "http://tag/1", title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+      {
+        uri: "http://tag/2",
+        title: "title1",
+        tags: ["dontmatchme3"],
+        style: ["bookmark-tag"],
+      },
+      {
+        uri: "http://tag/1",
+        title: "title1",
+        tags: ["matchme2"],
+        style: ["bookmark-tag"],
+      },
       { uri: "http://camel/pleaseMatchMe/", title: "title1" },
       { uri: "http://title/2", title: "dontmatchme3" },
       { uri: "http://title/1", title: "matchme2" },

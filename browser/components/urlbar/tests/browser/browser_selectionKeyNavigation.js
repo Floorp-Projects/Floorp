@@ -19,8 +19,11 @@ add_task(async function init() {
 
 add_task(async function downKey() {
   await promiseAutocompleteResultPopup("exam", window, true);
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "The heuristic autofill result should be selected initially");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "The heuristic autofill result should be selected initially"
+  );
   for (let i = 1; i < MAX_RESULTS; i++) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
     Assert.equal(UrlbarTestUtils.getSelectedIndex(window), i);
@@ -31,34 +34,44 @@ add_task(async function downKey() {
   while (oneOffs.selectedButton) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   }
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "The heuristic autofill result should be selected again");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "The heuristic autofill result should be selected again"
+  );
 });
 
 add_task(async function upKey() {
   await promiseAutocompleteResultPopup("exam", window, true);
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "The heuristic autofill result should be selected initially");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "The heuristic autofill result should be selected initially"
+  );
   EventUtils.synthesizeKey("KEY_ArrowUp");
   let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window);
   Assert.ok(oneOffs.selectedButton, "A one-off should now be selected");
   while (oneOffs.selectedButton) {
     EventUtils.synthesizeKey("KEY_ArrowUp");
   }
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window),
-               MAX_RESULTS - 1,
-               "The last result should be selected");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    MAX_RESULTS - 1,
+    "The last result should be selected"
+  );
   for (let i = 1; i < MAX_RESULTS; i++) {
     EventUtils.synthesizeKey("KEY_ArrowUp");
-    Assert.equal(UrlbarTestUtils.getSelectedIndex(window),
-                 MAX_RESULTS - i - 1);
+    Assert.equal(UrlbarTestUtils.getSelectedIndex(window), MAX_RESULTS - i - 1);
   }
 });
 
 add_task(async function pageDownKey() {
   await promiseAutocompleteResultPopup("exam", window, true);
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "The heuristic autofill result should be selected initially");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "The heuristic autofill result should be selected initially"
+  );
   let pageCount = Math.ceil((MAX_RESULTS - 1) / UrlbarUtils.PAGE_UP_DOWN_DELTA);
   for (let i = 0; i < pageCount; i++) {
     EventUtils.synthesizeKey("KEY_PageDown");
@@ -68,23 +81,32 @@ add_task(async function pageDownKey() {
     );
   }
   EventUtils.synthesizeKey("KEY_PageDown");
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "Page down at end should wrap around to first result");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "Page down at end should wrap around to first result"
+  );
 });
 
 add_task(async function pageUpKey() {
   await promiseAutocompleteResultPopup("exam", window, true);
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "The heuristic autofill result should be selected initially");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "The heuristic autofill result should be selected initially"
+  );
   EventUtils.synthesizeKey("KEY_PageUp");
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), MAX_RESULTS - 1,
-               "Page up at start should wrap around to last result");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    MAX_RESULTS - 1,
+    "Page up at start should wrap around to last result"
+  );
   let pageCount = Math.ceil((MAX_RESULTS - 1) / UrlbarUtils.PAGE_UP_DOWN_DELTA);
   for (let i = 0; i < pageCount; i++) {
     EventUtils.synthesizeKey("KEY_PageUp");
     Assert.equal(
       UrlbarTestUtils.getSelectedIndex(window),
-      Math.max(MAX_RESULTS - 1 - ((i + 1) * UrlbarUtils.PAGE_UP_DOWN_DELTA), 0)
+      Math.max(MAX_RESULTS - 1 - (i + 1) * UrlbarUtils.PAGE_UP_DOWN_DELTA, 0)
     );
   }
 });
@@ -109,21 +131,30 @@ add_task(async function pageUpKeyShowsView() {
 
 add_task(async function tabKey() {
   await promiseAutocompleteResultPopup("exam", window, true);
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "The heuristic autofill result should be selected initially");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "The heuristic autofill result should be selected initially"
+  );
   for (let i = 1; i < MAX_RESULTS; i++) {
     EventUtils.synthesizeKey("KEY_Tab");
     Assert.equal(UrlbarTestUtils.getSelectedIndex(window), i);
   }
   EventUtils.synthesizeKey("KEY_Tab");
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "The heuristic autofill result should be selected again");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "The heuristic autofill result should be selected again"
+  );
 });
 
 add_task(async function tabKeyReverse() {
   await promiseAutocompleteResultPopup("exam", window, true);
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
-               "The heuristic autofill result should be selected initially");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedIndex(window),
+    0,
+    "The heuristic autofill result should be selected initially"
+  );
   for (let i = 1; i < MAX_RESULTS; i++) {
     EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
     Assert.equal(UrlbarTestUtils.getSelectedIndex(window), MAX_RESULTS - i);

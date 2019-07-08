@@ -10,27 +10,33 @@ const IS_OSX = Services.appinfo.OS === "Darwin";
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
-  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
   await moveMouseOver("#another");
 
   info("Testing enter/return key as pick-node command");
-  await doKeyPick({key: "VK_RETURN", options: {}});
-  is(inspector.selection.nodeFront.id, "another",
-     "The #another node was selected. Passed.");
+  await doKeyPick({ key: "VK_RETURN", options: {} });
+  is(
+    inspector.selection.nodeFront.id,
+    "another",
+    "The #another node was selected. Passed."
+  );
 
   info("Testing escape key as cancel-picker command");
   await startPicker(toolbox);
   await moveMouseOver("#ahoy");
-  await doKeyStop({key: "VK_ESCAPE", options: {}});
-  is(inspector.selection.nodeFront.id, "another",
-     "The #another DIV is still selected. Passed.");
+  await doKeyStop({ key: "VK_ESCAPE", options: {} });
+  is(
+    inspector.selection.nodeFront.id,
+    "another",
+    "The #another DIV is still selected. Passed."
+  );
 
   info("Testing Ctrl+Shift+C shortcut as cancel-picker command");
   await startPicker(toolbox);
   await moveMouseOver("#ahoy");
-  const shortcutOpts = {key: "VK_C", options: {}};
+  const shortcutOpts = { key: "VK_C", options: {} };
   if (IS_OSX) {
     shortcutOpts.options.metaKey = true;
     shortcutOpts.options.altKey = true;
@@ -39,8 +45,11 @@ add_task(async function() {
     shortcutOpts.options.shiftKey = true;
   }
   await doKeyStop(shortcutOpts);
-  is(inspector.selection.nodeFront.id, "another",
-     "The #another DIV is still selected. Passed.");
+  is(
+    inspector.selection.nodeFront.id,
+    "another",
+    "The #another DIV is still selected. Passed."
+  );
 
   function doKeyPick(args) {
     info("Key pressed. Waiting for element to be picked");
@@ -61,10 +70,11 @@ add_task(async function() {
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
     const onHighlighterReady = toolbox.once("highlighter-ready");
-    const onPickerNodeHovered =
-      inspector.inspector.nodePicker.once("picker-node-hovered");
+    const onPickerNodeHovered = inspector.inspector.nodePicker.once(
+      "picker-node-hovered"
+    );
     testActor.synthesizeMouse({
-      options: {type: "mousemove"},
+      options: { type: "mousemove" },
       center: true,
       selector: selector,
     });

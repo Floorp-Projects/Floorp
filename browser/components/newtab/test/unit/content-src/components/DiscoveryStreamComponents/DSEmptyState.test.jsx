@@ -1,6 +1,6 @@
-import {DSEmptyState} from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
+import { DSEmptyState } from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
 import React from "react";
-import {shallow} from "enzyme";
+import { shallow } from "enzyme";
 
 describe("<DSEmptyState>", () => {
   let wrapper;
@@ -33,17 +33,26 @@ describe("<DSEmptyState>", () => {
   it("should dispatch DISCOVERY_STREAM_RETRY_FEED on failed state button click", () => {
     const dispatch = sinon.spy();
 
-    wrapper = shallow(<DSEmptyState status="failed" dispatch={dispatch} feed={{url: "https://foo.com", data: {}}} />);
+    wrapper = shallow(
+      <DSEmptyState
+        status="failed"
+        dispatch={dispatch}
+        feed={{ url: "https://foo.com", data: {} }}
+      />
+    );
     wrapper.find("button.try-again-button").simulate("click");
 
     assert.calledTwice(dispatch);
     let [action] = dispatch.firstCall.args;
     assert.equal(action.type, "DISCOVERY_STREAM_FEED_UPDATE");
-    assert.deepEqual(action.data.feed, {url: "https://foo.com", data: {status: "waiting"}});
+    assert.deepEqual(action.data.feed, {
+      url: "https://foo.com",
+      data: { status: "waiting" },
+    });
 
     [action] = dispatch.secondCall.args;
 
     assert.equal(action.type, "DISCOVERY_STREAM_RETRY_FEED");
-    assert.deepEqual(action.data.feed, {url: "https://foo.com", data: {}});
+    assert.deepEqual(action.data.feed, { url: "https://foo.com", data: {} });
   });
 });

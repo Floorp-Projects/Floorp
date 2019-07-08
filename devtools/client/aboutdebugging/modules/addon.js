@@ -4,7 +4,11 @@
 
 "use strict";
 
-loader.lazyImporter(this, "AddonManagerPrivate", "resource://gre/modules/AddonManager.jsm");
+loader.lazyImporter(
+  this,
+  "AddonManagerPrivate",
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 const {
   debugAddon,

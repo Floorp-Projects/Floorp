@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerPathHandler("/dummyFrame", (request, response) => {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "text/html; charset=utf-8", false);
@@ -12,7 +12,7 @@ server.registerPathHandler("/dummyFrame", (request, response) => {
 add_task(async function connect_from_background_frame() {
   async function background() {
     const FRAME_URL = "http://example.com:8888/dummyFrame";
-    browser.runtime.onConnect.addListener((port) => {
+    browser.runtime.onConnect.addListener(port => {
       browser.test.assertEq(port.sender.tab, undefined, "Sender is not a tab");
       browser.test.assertEq(port.sender.url, FRAME_URL, "Expected sender URL");
       port.onMessage.addListener(msg => {
@@ -24,7 +24,7 @@ add_task(async function connect_from_background_frame() {
 
     await browser.contentScripts.register({
       matches: ["http://example.com/dummyFrame"],
-      js: [{file: "contentscript.js"}],
+      js: [{ file: "contentscript.js" }],
       allFrames: true,
     });
 

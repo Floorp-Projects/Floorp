@@ -399,6 +399,11 @@
                        label="&webDeveloperMenu.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-developer', this)"/>
+       <toolbarbutton id="appMenu-whatsnew-button"
+                      class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                      hidden="true"
+                      closemenu="none"
+                      oncommand="PanelUI.showSubView('PanelUI-whatsNew', this)"/>
         <toolbarbutton id="appMenu-help-button"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                        label="&appMenuHelp.label;"
@@ -799,6 +804,23 @@
                        label-show="&viewBookmarksToolbar.label;"
                        label-hide="&hideBookmarksToolbar.label;"
                        oncommand="BookmarkingUI.toggleBookmarksToolbar();"/>
+      </vbox>
+    </panelview>
+
+    <panelview id="PanelUI-whatsNew" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <box id="PanelUI-whatsNew-title" class="panel-header">
+          <label/>
+        </box>
+        <toolbaritem id="PanelUI-whatsNew-content"
+                     orient="vertical"
+                     smoothscroll="false"
+                     flatList="true"
+                     tooltip="bhTooltip">
+          <html:div id="PanelUI-whatsNew-message-container">
+            <!-- What's New messages will be rendered here -->
+          </html:div>
+        </toolbaritem>
       </vbox>
     </panelview>
   </panelmultiview>

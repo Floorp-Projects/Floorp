@@ -6,5 +6,4 @@
 
 var EXPORTED_SYMBOLS = ["SubframeCrashParent"];
 
-class SubframeCrashParent extends JSWindowActorParent {
-}
+class SubframeCrashParent extends JSWindowActorParent {}

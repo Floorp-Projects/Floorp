@@ -61,8 +61,9 @@ const IS_MAC = navigator.platform.match(/Mac/);
 function getBrowserWindowsCount() {
   let open = 0;
   for (let win of Services.wm.getEnumerator("navigator:browser")) {
-    if (!win.closed)
+    if (!win.closed) {
       ++open;
+    }
   }
 
   let winstates = JSON.parse(ss.getBrowserState()).windows.length;
@@ -111,8 +112,10 @@ add_task(async function setup() {
  *        Resolves once the test has been cleaned up.
  */
 let setupTest = async function(options, testFunction) {
-  await pushPrefs(["browser.startup.page", 3],
-                  ["browser.tabs.warnOnClose", false]);
+  await pushPrefs(
+    ["browser.startup.page", 3],
+    ["browser.tabs.warnOnClose", false]
+  );
   // SessionStartup caches pref values, but as this test tries to simulate a
   // startup scenario, we'll reset them here.
   SessionStartup.resetForTest();
@@ -168,8 +171,9 @@ let setupTest = async function(options, testFunction) {
  *        The browser window to load the tabs in
  */
 function injectTestTabs(win) {
-  let promises = TEST_URLS.map(url => BrowserTestUtils.addTab(win.gBrowser, url))
-                          .map(tab => BrowserTestUtils.browserLoaded(tab.linkedBrowser));
+  let promises = TEST_URLS.map(url =>
+    BrowserTestUtils.addTab(win.gBrowser, url)
+  ).map(tab => BrowserTestUtils.browserLoaded(tab.linkedBrowser));
   return Promise.all(promises);
 }
 
@@ -185,7 +189,7 @@ function injectTestTabs(win) {
  *        was denied the ability to close.
  */
 function closeWindowForRestoration(win) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let closePromise = BrowserTestUtils.windowClosed(win);
     win.BrowserTryToCloseWindow();
     if (!win.closed) {
@@ -224,8 +228,11 @@ add_task(async function test_open_close_normal() {
     ok(closed, "Second close request should be accepted");
 
     newWin = await promiseNewWindowLoaded();
-    is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
-       "Restored window in-session with otherpopup windows around");
+    is(
+      newWin.gBrowser.browsers.length,
+      TEST_URLS.length + 2,
+      "Restored window in-session with otherpopup windows around"
+    );
 
     // Note that this will not result in the the browser-lastwindow-close
     // notifications firing for this other newWin.
@@ -233,10 +240,16 @@ add_task(async function test_open_close_normal() {
 
     // setupTest gave us a window which was denied for closing once, and then
     // closed.
-    is(obs["browser-lastwindow-close-requested"], 2,
-       "Got expected browser-lastwindow-close-requested notifications");
-    is(obs["browser-lastwindow-close-granted"], 1,
-       "Got expected browser-lastwindow-close-granted notifications");
+    is(
+      obs["browser-lastwindow-close-requested"],
+      2,
+      "Got expected browser-lastwindow-close-requested notifications"
+    );
+    is(
+      obs["browser-lastwindow-close-granted"],
+      1,
+      "Got expected browser-lastwindow-close-granted notifications"
+    );
   });
 });
 
@@ -264,16 +277,22 @@ add_task(async function test_open_close_private_browsing() {
     let closed = await closeWindowForRestoration(newWin);
     ok(closed, "Should be able to close the window");
 
-    newWin = await promiseNewWindowLoaded({private: true});
-    is(newWin.gBrowser.browsers.length, 1,
-       "Did not restore in private browing mode");
+    newWin = await promiseNewWindowLoaded({ private: true });
+    is(
+      newWin.gBrowser.browsers.length,
+      1,
+      "Did not restore in private browing mode"
+    );
 
     closed = await closeWindowForRestoration(newWin);
     ok(closed, "Should be able to close the window");
 
     newWin = await promiseNewWindowLoaded();
-    is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
-       "Restored tabs in a new non-private window");
+    is(
+      newWin.gBrowser.browsers.length,
+      TEST_URLS.length + 2,
+      "Restored tabs in a new non-private window"
+    );
 
     // Note that this will not result in the the browser-lastwindow-close
     // notifications firing for this other newWin.
@@ -281,10 +300,16 @@ add_task(async function test_open_close_private_browsing() {
 
     // We closed two windows with closeWindowForRestoration, and both
     // should have been successful.
-    is(obs["browser-lastwindow-close-requested"], 2,
-       "Got expected browser-lastwindow-close-requested notifications");
-    is(obs["browser-lastwindow-close-granted"], 2,
-       "Got expected browser-lastwindow-close-granted notifications");
+    is(
+      obs["browser-lastwindow-close-requested"],
+      2,
+      "Got expected browser-lastwindow-close-requested notifications"
+    );
+    is(
+      obs["browser-lastwindow-close-granted"],
+      2,
+      "Got expected browser-lastwindow-close-granted notifications"
+    );
   });
 });
 
@@ -319,8 +344,11 @@ add_task(async function test_open_close_only_popup() {
     openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[1]);
     let popup = await popupPromise;
 
-    is(popup.gBrowser.browsers.length, 1,
-       "Did not restore the popup window (1)");
+    is(
+      popup.gBrowser.browsers.length,
+      1,
+      "Did not restore the popup window (1)"
+    );
 
     let closed = await closeWindowForRestoration(popup);
     ok(closed, "Should be able to close the window");
@@ -330,24 +358,39 @@ add_task(async function test_open_close_only_popup() {
     popup = await popupPromise;
 
     BrowserTestUtils.addTab(popup.gBrowser, TEST_URLS[0]);
-    is(popup.gBrowser.browsers.length, 2,
-       "Did not restore to the popup window (2)");
+    is(
+      popup.gBrowser.browsers.length,
+      2,
+      "Did not restore to the popup window (2)"
+    );
 
     await BrowserTestUtils.closeWindow(popup);
 
     newWin = await promiseNewWindowLoaded();
-    isnot(newWin.gBrowser.browsers.length, 2,
-          "Did not restore the popup window");
-    is(TEST_URLS.indexOf(newWin.gBrowser.browsers[0].currentURI.spec), -1,
-        "Did not restore the popup window (2)");
+    isnot(
+      newWin.gBrowser.browsers.length,
+      2,
+      "Did not restore the popup window"
+    );
+    is(
+      TEST_URLS.indexOf(newWin.gBrowser.browsers[0].currentURI.spec),
+      -1,
+      "Did not restore the popup window (2)"
+    );
     await BrowserTestUtils.closeWindow(newWin);
 
     // We closed one popup window with closeWindowForRestoration, and popup
     // windows should never fire the browser-lastwindow notifications.
-    is(obs["browser-lastwindow-close-requested"], 0,
-       "Got expected browser-lastwindow-close-requested notifications");
-    is(obs["browser-lastwindow-close-granted"], 0,
-       "Got expected browser-lastwindow-close-granted notifications");
+    is(
+      obs["browser-lastwindow-close-requested"],
+      0,
+      "Got expected browser-lastwindow-close-requested notifications"
+    );
+    is(
+      obs["browser-lastwindow-close-granted"],
+      0,
+      "Got expected browser-lastwindow-close-granted notifications"
+    );
   });
 });
 
@@ -385,13 +428,18 @@ add_task(async function test_open_close_restore_from_popup() {
     await BrowserTestUtils.waitForEvent(newWin, "load");
 
     // Make sure we wait until this window is restored.
-    await BrowserTestUtils.waitForEvent(newWin.gBrowser.tabContainer,
-                                        "SSTabRestored");
+    await BrowserTestUtils.waitForEvent(
+      newWin.gBrowser.tabContainer,
+      "SSTabRestored"
+    );
 
     newWin2 = await promiseNewWindowLoaded();
 
-    is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
-       "Did not restore, as undoCloseWindow() was last called (2)");
+    is(
+      TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec),
+      -1,
+      "Did not restore, as undoCloseWindow() was last called (2)"
+    );
 
     counts = getBrowserWindowsCount();
     is(counts.open, 2, "Got right number of open windows");
@@ -423,9 +471,15 @@ add_task(async function test_mac_notifications() {
 
     // We tried closing once, and got denied. Then we tried again and
     // succeeded. That means 2 close requests, and 1 close granted.
-    is(obs["browser-lastwindow-close-requested"], 2,
-       "Got expected browser-lastwindow-close-requested notifications");
-    is(obs["browser-lastwindow-close-granted"], 1,
-       "Got expected browser-lastwindow-close-granted notifications");
+    is(
+      obs["browser-lastwindow-close-requested"],
+      2,
+      "Got expected browser-lastwindow-close-requested notifications"
+    );
+    is(
+      obs["browser-lastwindow-close-granted"],
+      1,
+      "Got expected browser-lastwindow-close-granted notifications"
+    );
   });
 });

@@ -8,8 +8,7 @@
 // removing them. Also, an invalid origin shouldn't block upgrades, so this
 // test verifies that as well.
 
-async function testSteps()
-{
+async function testSteps() {
   const obsoleteOriginPaths = [
     "storage/default/chrome+++content+browser.xul/",
     "storage/default/moz-safe-about+++home/",
@@ -29,8 +28,10 @@ async function testSteps()
     "storage/default/https+++example.com/idb/UUID123.tmp";
   const invalidOriginPath = "storage/default/invalid+++example.com/";
 
-  info("Verifying the obsolete origins are removed after the 2_1To2_2 upgrade" +
-       " and invalid origins wouldn't block upgrades");
+  info(
+    "Verifying the obsolete origins are removed after the 2_1To2_2 upgrade" +
+      " and invalid origins wouldn't block upgrades"
+  );
 
   // This profile only contains the storage.sqlite with schema 2_1, so that we
   // can test the 2_1To2_2 upgrade.
@@ -43,7 +44,6 @@ async function testSteps()
     originDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt(0o755));
   }
 
-
   let strangeFile = getRelativeFile(obsoleteFilePath);
   strangeFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt(0o644));
 
@@ -55,9 +55,9 @@ async function testSteps()
   info("Verifying the obsolete origins are removed after the 2_1To2_2 upgrade");
 
   for (let originPath of obsoleteOriginPaths.concat(obsoleteFilePath)) {
-     let folder = getRelativeFile(originPath);
-     let exists = folder.exists();
-     ok(!exists, "Obsolete origin was removed during origin initialization");
+    let folder = getRelativeFile(originPath);
+    let exists = folder.exists();
+    ok(!exists, "Obsolete origin was removed during origin initialization");
   }
 
   // Removing the invalid origin directory becasue it will block the temporary
@@ -65,8 +65,10 @@ async function testSteps()
   let folder = getRelativeFile(invalidOriginPath);
   folder.remove(true);
 
-  info("Verifying the temporary storage is able to be initialized after " +
-       "removing an invalid origin");
+  info(
+    "Verifying the temporary storage is able to be initialized after " +
+      "removing an invalid origin"
+  );
 
   request = initTemporaryStorage();
   await requestFinished(request);

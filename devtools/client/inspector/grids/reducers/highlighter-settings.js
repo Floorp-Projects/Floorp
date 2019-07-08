@@ -25,7 +25,6 @@ const INITIAL_HIGHLIGHTER_SETTINGS = () => {
 };
 
 const reducers = {
-
   [UPDATE_SHOW_GRID_AREAS](highlighterSettings, { enabled }) {
     return Object.assign({}, highlighterSettings, {
       showGridAreasOverlay: enabled,
@@ -43,10 +42,12 @@ const reducers = {
       showInfiniteLines: enabled,
     });
   },
-
 };
 
-module.exports = function(highlighterSettings = INITIAL_HIGHLIGHTER_SETTINGS(), action) {
+module.exports = function(
+  highlighterSettings = INITIAL_HIGHLIGHTER_SETTINGS(),
+  action
+) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return highlighterSettings;

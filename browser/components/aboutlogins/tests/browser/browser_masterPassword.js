@@ -12,10 +12,15 @@ function waitForMPDialog(action) {
   let dialogShown = TestUtils.topicObserved("common-dialog-loaded");
   return dialogShown.then(function([subject]) {
     let dialog = subject.Dialog;
-    is(dialog.args.title, "Password Required", "Dialog is the Master Password dialog");
+    is(
+      dialog.args.title,
+      "Password Required",
+      "Dialog is the Master Password dialog"
+    );
     if (action == "authenticate") {
-      SpecialPowers.wrap(dialog.ui.password1Textbox)
-                   .setUserInput(LoginTestUtils.masterPassword.masterPassword);
+      SpecialPowers.wrap(dialog.ui.password1Textbox).setUserInput(
+        LoginTestUtils.masterPassword.masterPassword
+      );
       dialog.ui.button0.click();
     } else if (action == "cancel") {
       dialog.ui.button1.click();
@@ -25,10 +30,10 @@ function waitForMPDialog(action) {
 }
 
 function waitForLoginCountToReach(browser, loginCount) {
-  return ContentTask.spawn(browser, loginCount, async (expectedLoginCount) => {
+  return ContentTask.spawn(browser, loginCount, async expectedLoginCount => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     await ContentTaskUtils.waitForCondition(() => {
-        return loginList._logins.length == expectedLoginCount;
+      return loginList._logins.length == expectedLoginCount;
     });
     return loginList._logins.length;
   });
@@ -39,7 +44,10 @@ add_task(async function test() {
   LoginTestUtils.masterPassword.enable();
 
   let mpDialogShown = waitForMPDialog("cancel");
-  await BrowserTestUtils.openNewForegroundTab({gBrowser, url: "about:logins"});
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: "about:logins",
+  });
   await mpDialogShown;
 
   registerCleanupFunction(function() {
@@ -50,13 +58,24 @@ add_task(async function test() {
 
   let browser = gBrowser.selectedBrowser;
   let logins = await waitForLoginCountToReach(browser, 0);
-  is(logins, 0, "No logins should be displayed when MP is set and unauthenticated");
+  is(
+    logins,
+    0,
+    "No logins should be displayed when MP is set and unauthenticated"
+  );
 
   let notification;
-  await BrowserTestUtils.waitForCondition(() =>
-    notification = gBrowser.getNotificationBox().getNotificationWithValue("master-password-login-required"));
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      (notification = gBrowser
+        .getNotificationBox()
+        .getNotificationWithValue("master-password-login-required"))
+  );
 
-  ok(notification, "master-password-login-required notification should be visible");
+  ok(
+    notification,
+    "master-password-login-required notification should be visible"
+  );
 
   let buttons = notification.querySelectorAll(".notification-button");
   is(buttons.length, 1, "Should have one button.");

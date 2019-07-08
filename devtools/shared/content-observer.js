@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Ci} = require("chrome");
+const { Ci } = require("chrome");
 const Services = require("Services");
 
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -28,9 +28,13 @@ ContentObserver.prototype = {
    */
   startListening: function() {
     Services.obs.addObserver(
-      this._onContentGlobalCreated, "content-document-global-created");
+      this._onContentGlobalCreated,
+      "content-document-global-created"
+    );
     Services.obs.addObserver(
-      this._onInnerWindowDestroyed, "inner-window-destroyed");
+      this._onInnerWindowDestroyed,
+      "inner-window-destroyed"
+    );
   },
 
   /**
@@ -38,9 +42,13 @@ ContentObserver.prototype = {
    */
   stopListening: function() {
     Services.obs.removeObserver(
-      this._onContentGlobalCreated, "content-document-global-created");
+      this._onContentGlobalCreated,
+      "content-document-global-created"
+    );
     Services.obs.removeObserver(
-      this._onInnerWindowDestroyed, "inner-window-destroyed");
+      this._onInnerWindowDestroyed,
+      "inner-window-destroyed"
+    );
   },
 
   /**

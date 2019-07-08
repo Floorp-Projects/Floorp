@@ -27,7 +27,8 @@ const TEST_URI = `
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
+  );
 
   let badge = await getBadgeEl(inspector);
   ok(badge, "The scrollable badge exists on the test node");
@@ -50,8 +51,13 @@ add_task(async function() {
 });
 
 async function getBadgeEl(inspector) {
-  const wrapperMarkupContainer = await getContainerForSelector("#wrapper", inspector);
-  return wrapperMarkupContainer.elt.querySelector(".inspector-badge.scrollable-badge");
+  const wrapperMarkupContainer = await getContainerForSelector(
+    "#wrapper",
+    inspector
+  );
+  return wrapperMarkupContainer.elt.querySelector(
+    ".inspector-badge.scrollable-badge"
+  );
 }
 
 async function toggleScrollableClass() {

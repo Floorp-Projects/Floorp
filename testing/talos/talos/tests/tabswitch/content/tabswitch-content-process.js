@@ -1,5 +1,7 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const WEBEXTENSION_ID = "tabswitch-talos@mozilla.org";
 const ABOUT_PAGE_NAME = "tabswitch";
@@ -7,7 +9,7 @@ const Registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 const UUID = "0f459ab4-b4ba-4741-ac89-ee47dea07adb";
 const ABOUT_PATH_PATH = "content/test.html";
 
-const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
+const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 
 const TPSProcessScript = {
   init() {
@@ -25,8 +27,10 @@ const TPSProcessScript = {
         return chan;
       }
       getURIFlags(aURI) {
-        return Ci.nsIAboutModule.ALLOW_SCRIPT |
-               Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD;
+        return (
+          Ci.nsIAboutModule.ALLOW_SCRIPT |
+          Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD
+        );
       }
     }
 
@@ -34,9 +38,11 @@ const TPSProcessScript = {
     this._factory = factory;
 
     Registrar.registerFactory(
-      Components.ID(UUID), "",
+      Components.ID(UUID),
+      "",
       `@mozilla.org/network/protocol/about;1?what=${ABOUT_PAGE_NAME}`,
-      factory);
+      factory
+    );
 
     this._hasSetup = true;
   },

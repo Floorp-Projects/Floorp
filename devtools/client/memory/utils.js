@@ -8,7 +8,7 @@ const { Cc, Ci } = require("chrome");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/client/locales/memory.properties";
-const L10N = exports.L10N = new LocalizationHelper(STRINGS_URI);
+const L10N = (exports.L10N = new LocalizationHelper(STRINGS_URI));
 
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const { assert } = require("devtools/shared/DevToolsUtils");
@@ -61,7 +61,8 @@ function getCustomDisplaysHelper(pref) {
     customDisplays = JSON.parse(Preferences.get(pref)) || Object.create(null);
   } catch (e) {
     DevToolsUtils.reportException(
-      `String stored in "${pref}" pref cannot be parsed by \`JSON.parse()\`.`);
+      `String stored in "${pref}" pref cannot be parsed by \`JSON.parse()\`.`
+    );
   }
   return Object.freeze(customDisplays);
 }
@@ -257,10 +258,12 @@ exports.getStatusTextFull = function(state) {
  * @returns {Boolean}
  */
 exports.snapshotIsDiffable = function snapshotIsDiffable(snapshot) {
-  return (snapshot.census && snapshot.census.state === censusState.SAVED)
-    || (snapshot.census && snapshot.census.state === censusState.SAVING)
-    || snapshot.state === states.SAVED
-    || snapshot.state === states.READ;
+  return (
+    (snapshot.census && snapshot.census.state === censusState.SAVED) ||
+    (snapshot.census && snapshot.census.state === censusState.SAVING) ||
+    snapshot.state === states.SAVED ||
+    snapshot.state === states.READ
+  );
 };
 
 /**
@@ -330,10 +333,12 @@ exports.createSnapshot = function createSnapshot(state) {
  * @returns {Boolean}
  */
 exports.censusIsUpToDate = function(filter, display, census) {
-  return census
-      // Filter could be null == undefined so use loose equality.
-      && filter == census.filter
-      && display === census.display;
+  return (
+    census &&
+    // Filter could be null == undefined so use loose equality.
+    filter == census.filter &&
+    display === census.display
+  );
 };
 
 /**
@@ -344,9 +349,12 @@ exports.censusIsUpToDate = function(filter, display, census) {
  * @returns {Boolean}
  */
 exports.canTakeCensus = function(snapshot) {
-  return snapshot.state === states.READ &&
-    ((!snapshot.census || snapshot.census.state === censusState.SAVED) ||
-     (!snapshot.treeMap || snapshot.treeMap.state === treeMapState.SAVED));
+  return (
+    snapshot.state === states.READ &&
+    (!snapshot.census ||
+      snapshot.census.state === censusState.SAVED ||
+      (!snapshot.treeMap || snapshot.treeMap.state === treeMapState.SAVED))
+  );
 };
 
 /**
@@ -357,10 +365,12 @@ exports.canTakeCensus = function(snapshot) {
  * @returns {Boolean}
  */
 exports.dominatorTreeIsComputed = function(snapshot) {
-  return snapshot.dominatorTree &&
+  return (
+    snapshot.dominatorTree &&
     (snapshot.dominatorTree.state === dominatorTreeState.COMPUTED ||
-     snapshot.dominatorTree.state === dominatorTreeState.LOADED ||
-     snapshot.dominatorTree.state === dominatorTreeState.INCREMENTAL_FETCHING);
+      snapshot.dominatorTree.state === dominatorTreeState.LOADED ||
+      snapshot.dominatorTree.state === dominatorTreeState.INCREMENTAL_FETCHING)
+  );
 };
 
 /**
@@ -430,7 +440,7 @@ exports.openFilePicker = function({ title, filters, defaultName, mode }) {
   const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   fp.init(window, title, fpMode);
 
-  for (const filter of (filters || [])) {
+  for (const filter of filters || []) {
     fp.appendFilter(filter[0], filter[1]);
   }
   fp.defaultString = defaultName;
@@ -481,8 +491,10 @@ exports.formatNumber = function(number, showSign = false) {
  * @param {Boolean} showSign (defaults to false)
  */
 exports.formatPercent = function(percent, showSign = false) {
-  return exports.L10N.getFormatStr("tree-item.percent2",
-                           exports.formatNumber(percent, showSign));
+  return exports.L10N.getFormatStr(
+    "tree-item.percent2",
+    exports.formatNumber(percent, showSign)
+  );
 };
 
 /**

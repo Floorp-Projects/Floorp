@@ -18,12 +18,21 @@ function is_element_hidden(aElement, aMsg) {
 function open_preferences(aCallback) {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:preferences");
   let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-  newTabBrowser.addEventListener("Initialized", function() {
-    aCallback(gBrowser.contentWindow);
-  }, { capture: true, once: true });
+  newTabBrowser.addEventListener(
+    "Initialized",
+    function() {
+      aCallback(gBrowser.contentWindow);
+    },
+    { capture: true, once: true }
+  );
 }
 
-function openAndLoadSubDialog(aURL, aFeatures = null, aParams = null, aClosingCallback = null) {
+function openAndLoadSubDialog(
+  aURL,
+  aFeatures = null,
+  aParams = null,
+  aClosingCallback = null
+) {
   let promise = promiseLoadSubDialog(aURL);
   content.gSubDialog.open(aURL, aFeatures, aParams, aClosingCallback);
   return promise;
@@ -31,32 +40,51 @@ function openAndLoadSubDialog(aURL, aFeatures = null, aParams = null, aClosingCa
 
 function promiseLoadSubDialog(aURL) {
   return new Promise((resolve, reject) => {
-    content.gSubDialog._dialogStack.addEventListener("dialogopen", function dialogopen(aEvent) {
-      if (aEvent.detail.dialog._frame.contentWindow.location == "about:blank")
-        return;
-      content.gSubDialog._dialogStack.removeEventListener("dialogopen", dialogopen);
-
-      is(aEvent.detail.dialog._frame.contentWindow.location.toString(), aURL,
-        "Check the proper URL is loaded");
-
-      // Check visibility
-      is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
-
-      // Check that stylesheets were injected
-      let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(0);
-      for (let styleSheet of aEvent.detail.dialog._frame.contentDocument.styleSheets) {
-        let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
-        if (i >= 0) {
-          info("found " + styleSheet.href);
-          expectedStyleSheetURLs.splice(i, 1);
+    content.gSubDialog._dialogStack.addEventListener(
+      "dialogopen",
+      function dialogopen(aEvent) {
+        if (
+          aEvent.detail.dialog._frame.contentWindow.location == "about:blank"
+        ) {
+          return;
         }
-      }
-      is(expectedStyleSheetURLs.length, 0, "All expectedStyleSheetURLs should have been found");
+        content.gSubDialog._dialogStack.removeEventListener(
+          "dialogopen",
+          dialogopen
+        );
 
-      // Wait for the next event tick to make sure the remaining part of the
-      // testcase runs after the dialog gets ready for input.
-      executeSoon(() => resolve(aEvent.detail.dialog._frame.contentWindow));
-    });
+        is(
+          aEvent.detail.dialog._frame.contentWindow.location.toString(),
+          aURL,
+          "Check the proper URL is loaded"
+        );
+
+        // Check visibility
+        is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
+
+        // Check that stylesheets were injected
+        let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(
+          0
+        );
+        for (let styleSheet of aEvent.detail.dialog._frame.contentDocument
+          .styleSheets) {
+          let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
+          if (i >= 0) {
+            info("found " + styleSheet.href);
+            expectedStyleSheetURLs.splice(i, 1);
+          }
+        }
+        is(
+          expectedStyleSheetURLs.length,
+          0,
+          "All expectedStyleSheetURLs should have been found"
+        );
+
+        // Wait for the next event tick to make sure the remaining part of the
+        // testcase runs after the dialog gets ready for input.
+        executeSoon(() => resolve(aEvent.detail.dialog._frame.contentWindow));
+      }
+    );
   });
 }
 
@@ -90,8 +118,9 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
   }, timeoutMs);
 
   var listener = function(aEvent) {
-    if (aTarget && aTarget !== aEvent.target)
+    if (aTarget && aTarget !== aEvent.target) {
       return;
+    }
 
     // stop the timeout clock and resume
     clearTimeout(timerID);
@@ -109,23 +138,38 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
 
 function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
   return new Promise(resolve => {
-    let finalPaneEvent = Services.prefs.getBoolPref("identity.fxaccounts.enabled") ?
-                           "sync-pane-loaded" : "privacy-pane-loaded";
-    let finalPrefPaneLoaded = TestUtils.topicObserved(finalPaneEvent, () => true);
+    let finalPaneEvent = Services.prefs.getBoolPref(
+      "identity.fxaccounts.enabled"
+    )
+      ? "sync-pane-loaded"
+      : "privacy-pane-loaded";
+    let finalPrefPaneLoaded = TestUtils.topicObserved(
+      finalPaneEvent,
+      () => true
+    );
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
     openPreferences(aPane);
     let newTabBrowser = gBrowser.selectedBrowser;
 
-    newTabBrowser.addEventListener("Initialized", function() {
-      newTabBrowser.contentWindow.addEventListener("load", async function() {
-        let win = gBrowser.contentWindow;
-        let selectedPane = win.history.state;
-        await finalPrefPaneLoaded;
-        if (!aOptions || !aOptions.leaveOpen)
-          gBrowser.removeCurrentTab();
-        resolve({ selectedPane });
-      }, { once: true });
-    }, { capture: true, once: true });
+    newTabBrowser.addEventListener(
+      "Initialized",
+      function() {
+        newTabBrowser.contentWindow.addEventListener(
+          "load",
+          async function() {
+            let win = gBrowser.contentWindow;
+            let selectedPane = win.history.state;
+            await finalPrefPaneLoaded;
+            if (!aOptions || !aOptions.leaveOpen) {
+              gBrowser.removeCurrentTab();
+            }
+            resolve({ selectedPane });
+          },
+          { once: true }
+        );
+      },
+      { capture: true, once: true }
+    );
   });
 }
 
@@ -136,7 +180,10 @@ async function evaluateSearchResults(keyword, searchReults) {
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
   searchInput.focus();
   let searchCompletedPromise = BrowserTestUtils.waitForEvent(
-    gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == keyword);
+    gBrowser.contentWindow,
+    "PreferencesSearchCompleted",
+    evt => evt.detail == keyword
+  );
   EventUtils.sendString(keyword);
   await searchCompletedPromise;
 
@@ -152,7 +199,7 @@ async function evaluateSearchResults(keyword, searchReults) {
 }
 
 function waitForMutation(target, opts, cb) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let observer = new MutationObserver(() => {
       if (!cb || cb(target)) {
         observer.disconnect();

@@ -21,12 +21,15 @@ function run_test() {
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             gTargetFront = targetFront;
-                             test_simple_new_source();
-                           });
+    attachTestTabAndResume(gClient, "test-stack", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      gTargetFront = targetFront;
+      test_simple_new_source();
+    });
   });
   do_test_pending();
 }
@@ -47,7 +50,9 @@ function test_simple_new_source() {
       });
 
       const consoleFront = await gTargetFront.getFront("console");
-      consoleFront.evaluateJSAsync("function f() { }\n//# sourceURL=http://example.com/code.js");
+      consoleFront.evaluateJSAsync(
+        "function f() { }\n//# sourceURL=http://example.com/code.js"
+      );
     });
   });
 

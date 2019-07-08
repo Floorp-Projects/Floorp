@@ -6,17 +6,31 @@
 
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "TelemetryPrioPing",
-                               "resource://gre/modules/PrioPing.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryPrioPing",
+  "resource://gre/modules/PrioPing.jsm"
+);
 
 function checkPingStructure(type, payload, options) {
-  Assert.equal(type, TelemetryPrioPing.PRIO_PING_TYPE, "Should be a prio ping.");
+  Assert.equal(
+    type,
+    TelemetryPrioPing.PRIO_PING_TYPE,
+    "Should be a prio ping."
+  );
   // Check the payload for required fields.
   Assert.ok("version" in payload, "Payload must have version.");
   Assert.ok("reason" in payload, "Payload must have reason.");
-  Assert.ok(Object.values(TelemetryPrioPing.Reason).some(reason => payload.reason === reason),
-            "Should be a known reason.");
-  Assert.ok(Array.isArray(payload.prioData), "Payload prioData must be present and an array.");
+  Assert.ok(
+    Object.values(TelemetryPrioPing.Reason).some(
+      reason => payload.reason === reason
+    ),
+    "Should be a known reason."
+  );
+  Assert.ok(
+    Array.isArray(payload.prioData),
+    "Payload prioData must be present and an array."
+  );
   payload.prioData.forEach(prioData => {
     Assert.ok("encoding" in prioData, "All prioData must have encodings.");
     Assert.ok("prio" in prioData, "All prioData must have prio blocks.");
@@ -34,7 +48,9 @@ function fakePolicy(set, clear, send, snapshot) {
   mod.Policy.getEncodedOriginSnapshot = snapshot;
 }
 
-function pass() { /* intentionally empty */ }
+function pass() {
+  /* intentionally empty */
+}
 function fail() {
   Assert.ok(false, "Not allowed");
 }
@@ -50,7 +66,6 @@ function fakeSnapshot() {
     },
   ];
 }
-
 
 add_task(async function setup() {
   // Trigger a proper telemetry init.
@@ -72,27 +87,54 @@ add_task(async function test_limit_reached() {
   // Ensure that on being notified of the limit we immediately trigger a ping
   // with reason "max"
 
-  fakePolicy(pass, pass, (type, payload, options) => {
-    checkPingStructure(type, payload, options);
-    Assert.equal(payload.reason, TelemetryPrioPing.Reason.MAX, "Sent using max reason.");
-  }, fakeSnapshot);
+  fakePolicy(
+    pass,
+    pass,
+    (type, payload, options) => {
+      checkPingStructure(type, payload, options);
+      Assert.equal(
+        payload.reason,
+        TelemetryPrioPing.Reason.MAX,
+        "Sent using max reason."
+      );
+    },
+    fakeSnapshot
+  );
   Services.obs.notifyObservers(null, "origin-telemetry-storage-limit-reached");
 });
 
 add_task(async function test_periodic() {
-  fakePolicy(pass, pass, (type, payload, options) => {
-    checkPingStructure(type, payload, options);
-    Assert.equal(payload.reason, TelemetryPrioPing.Reason.PERIODIC, "Sent with periodic reason.");
-  }, fakeSnapshot);
+  fakePolicy(
+    pass,
+    pass,
+    (type, payload, options) => {
+      checkPingStructure(type, payload, options);
+      Assert.equal(
+        payload.reason,
+        TelemetryPrioPing.Reason.PERIODIC,
+        "Sent with periodic reason."
+      );
+    },
+    fakeSnapshot
+  );
 
   // This is normally triggered by the scheduler once a day
   TelemetryPrioPing.periodicPing();
 });
 
 add_task(async function test_shutdown() {
-  fakePolicy(fail, pass, (type, payload, options) => {
-    checkPingStructure(type, payload, options);
-    Assert.equal(payload.reason, TelemetryPrioPing.Reason.SHUTDOWN, "Sent with shutdown reason.");
-  }, fakeSnapshot);
+  fakePolicy(
+    fail,
+    pass,
+    (type, payload, options) => {
+      checkPingStructure(type, payload, options);
+      Assert.equal(
+        payload.reason,
+        TelemetryPrioPing.Reason.SHUTDOWN,
+        "Sent with shutdown reason."
+      );
+    },
+    fakeSnapshot
+  );
   await TelemetryPrioPing.shutdown();
 });

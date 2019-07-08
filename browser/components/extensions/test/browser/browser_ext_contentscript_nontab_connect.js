@@ -9,7 +9,7 @@ function extensionScript() {
   // Cannot use :8888 in the manifest because of bug 1468162.
   FRAME_URL = FRAME_URL.replace("mochi.test", "mochi.test:8888");
 
-  browser.runtime.onConnect.addListener((port) => {
+  browser.runtime.onConnect.addListener(port => {
     browser.test.assertEq(port.sender.tab, undefined, "Sender is not a tab");
     browser.test.assertEq(port.sender.url, FRAME_URL, "Expected sender URL");
     port.onMessage.addListener(msg => {
@@ -41,11 +41,13 @@ function contentScript() {
 add_task(async function connect_from_background_frame() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      content_scripts: [{
-        matches: ["http://mochi.test/?background"],
-        js: ["contentscript.js"],
-        all_frames: true,
-      }],
+      content_scripts: [
+        {
+          matches: ["http://mochi.test/?background"],
+          js: ["contentscript.js"],
+          all_frames: true,
+        },
+      ],
     },
     files: {
       "contentscript.js": contentScript,
@@ -61,11 +63,13 @@ add_task(async function connect_from_sidebar_panel() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary", // To automatically show sidebar on load.
     manifest: {
-      content_scripts: [{
-        matches: ["http://mochi.test/?sidebar"],
-        js: ["contentscript.js"],
-        all_frames: true,
-      }],
+      content_scripts: [
+        {
+          matches: ["http://mochi.test/?sidebar"],
+          js: ["contentscript.js"],
+          all_frames: true,
+        },
+      ],
       sidebar_action: {
         default_panel: "sidebar.html",
       },
@@ -84,11 +88,13 @@ add_task(async function connect_from_sidebar_panel() {
 add_task(async function connect_from_browser_action_popup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      content_scripts: [{
-        matches: ["http://mochi.test/?browser_action_popup"],
-        js: ["contentscript.js"],
-        all_frames: true,
-      }],
+      content_scripts: [
+        {
+          matches: ["http://mochi.test/?browser_action_popup"],
+          js: ["contentscript.js"],
+          all_frames: true,
+        },
+      ],
       browser_action: {
         default_popup: "popup.html",
       },

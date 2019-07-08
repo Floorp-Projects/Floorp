@@ -26,60 +26,72 @@ function deprecationFunctionCustomCallstack() {
   function getStack() {
     return Components.stack;
   }
-  Deprecated.warning("this method is deprecated.", "http://example.com",
-    getStack());
+  Deprecated.warning(
+    "this method is deprecated.",
+    "http://example.com",
+    getStack()
+  );
   return true;
 }
 
 var tests = [
-// Test deprecation warning without passing the callstack.
-{
-  deprecatedFunction: basicDeprecatedFunction,
-  expectedObservation(aMessage) {
-    testAMessage(aMessage);
-    ok(aMessage.errorMessage.indexOf("basicDeprecatedFunction") > 0,
-      "Callstack is correctly logged.");
+  // Test deprecation warning without passing the callstack.
+  {
+    deprecatedFunction: basicDeprecatedFunction,
+    expectedObservation(aMessage) {
+      testAMessage(aMessage);
+      ok(
+        aMessage.errorMessage.indexOf("basicDeprecatedFunction") > 0,
+        "Callstack is correctly logged."
+      );
+    },
   },
-},
-// Test a reported error when URL to documentation is not passed.
-{
-  deprecatedFunction() {
-    Deprecated.warning("this method is deprecated.");
-    return true;
+  // Test a reported error when URL to documentation is not passed.
+  {
+    deprecatedFunction() {
+      Deprecated.warning("this method is deprecated.");
+      return true;
+    },
+    expectedObservation(aMessage) {
+      ok(
+        aMessage.errorMessage.indexOf("must provide a URL") > 0,
+        "Deprecation warning logged an empty URL argument."
+      );
+    },
   },
-  expectedObservation(aMessage) {
-    ok(aMessage.errorMessage.indexOf("must provide a URL") > 0,
-      "Deprecation warning logged an empty URL argument.");
+  // Test deprecation with a bogus callstack passed as an argument (it will be
+  // replaced with the current call stack).
+  {
+    deprecatedFunction: deprecationFunctionBogusCallstack,
+    expectedObservation(aMessage) {
+      testAMessage(aMessage);
+      ok(
+        aMessage.errorMessage.indexOf("deprecationFunctionBogusCallstack") > 0,
+        "Callstack is correctly logged."
+      );
+    },
   },
-},
-// Test deprecation with a bogus callstack passed as an argument (it will be
-// replaced with the current call stack).
-{
-  deprecatedFunction: deprecationFunctionBogusCallstack,
-  expectedObservation(aMessage) {
-    testAMessage(aMessage);
-    ok(aMessage.errorMessage.indexOf("deprecationFunctionBogusCallstack") > 0,
-      "Callstack is correctly logged.");
+  // When pref is unset Deprecated.warning should not log anything.
+  {
+    deprecatedFunction: basicDeprecatedFunction,
+    expectedObservation: null,
+    // Set pref to false.
+    logWarnings: false,
   },
-},
-// When pref is unset Deprecated.warning should not log anything.
-{
-  deprecatedFunction: basicDeprecatedFunction,
-  expectedObservation: null,
-  // Set pref to false.
-  logWarnings: false,
-},
-// Test deprecation with a valid custom callstack passed as an argument.
-{
-  deprecatedFunction: deprecationFunctionCustomCallstack,
-  expectedObservation(aMessage) {
-    testAMessage(aMessage);
-    ok(aMessage.errorMessage.indexOf("deprecationFunctionCustomCallstack") > 0,
-      "Callstack is correctly logged.");
+  // Test deprecation with a valid custom callstack passed as an argument.
+  {
+    deprecatedFunction: deprecationFunctionCustomCallstack,
+    expectedObservation(aMessage) {
+      testAMessage(aMessage);
+      ok(
+        aMessage.errorMessage.indexOf("deprecationFunctionCustomCallstack") > 0,
+        "Callstack is correctly logged."
+      );
+    },
+    // Set pref to true.
+    logWarnings: true,
   },
-  // Set pref to true.
-  logWarnings: true,
-}];
+];
 
 // Which test are we running now?
 var idx = -1;
@@ -95,11 +107,16 @@ function test() {
 
 // Test Consle Message attributes.
 function testAMessage(aMessage) {
-  ok(aMessage.errorMessage.indexOf("DEPRECATION WARNING: " +
-    "this method is deprecated.") === 0,
-    "Deprecation is correctly logged.");
-  ok(aMessage.errorMessage.indexOf("http://example.com") > 0,
-    "URL is correctly logged.");
+  ok(
+    aMessage.errorMessage.indexOf(
+      "DEPRECATION WARNING: this method is deprecated."
+    ) === 0,
+    "Deprecation is correctly logged."
+  );
+  ok(
+    aMessage.errorMessage.indexOf("http://example.com") > 0,
+    "URL is correctly logged."
+  );
 }
 
 function nextTest() {
@@ -125,13 +142,16 @@ function nextTest() {
       if (!(aMessage instanceof Ci.nsIScriptError)) {
         return;
       }
-      if (!aMessage.errorMessage.includes("DEPRECATION WARNING: ") &&
-          !aMessage.errorMessage.includes("must provide a URL")) {
+      if (
+        !aMessage.errorMessage.includes("DEPRECATION WARNING: ") &&
+        !aMessage.errorMessage.includes("must provide a URL")
+      ) {
         return;
       }
-      ok(aMessage instanceof Ci.nsIScriptError,
-        "Deprecation log message is an instance of type nsIScriptError.");
-
+      ok(
+        aMessage instanceof Ci.nsIScriptError,
+        "Deprecation log message is an instance of type nsIScriptError."
+      );
 
       if (test.expectedObservation === null) {
         ok(false, "Deprecated warning not expected");

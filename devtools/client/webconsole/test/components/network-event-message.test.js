@@ -10,14 +10,21 @@ const { render } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
-const NetworkEventMessage = createFactory(require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage"));
-const { INDENT_WIDTH } = require("devtools/client/webconsole/components/Output/MessageIndent");
+const NetworkEventMessage = createFactory(
+  require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage")
+);
+const {
+  INDENT_WIDTH,
+} = require("devtools/client/webconsole/components/Output/MessageIndent");
 
 // Test fakes.
-const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPreparedMessages,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
 
-const EXPECTED_URL = "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/inexistent.html";
+const EXPECTED_URL =
+  "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/inexistent.html";
 const EXPECTED_STATUS = /\[HTTP\/\d\.\d \d+ [A-Za-z ]+ \d+ms\]/;
 
 describe("NetworkEventMessage component:", () => {
@@ -25,30 +32,40 @@ describe("NetworkEventMessage component:", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("GET request");
       const update = stubPreparedMessages.get("GET request update");
-      const wrapper = render(NetworkEventMessage({
-        message,
-        serviceContainer,
-        timestampsVisible: true,
-        networkMessageUpdate: update,
-      }));
-      const { timestampString } = require("devtools/client/webconsole/webconsole-l10n");
+      const wrapper = render(
+        NetworkEventMessage({
+          message,
+          serviceContainer,
+          timestampsVisible: true,
+          networkMessageUpdate: update,
+        })
+      );
+      const {
+        timestampString,
+      } = require("devtools/client/webconsole/webconsole-l10n");
 
-      expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
+      expect(wrapper.find(".timestamp").text()).toBe(
+        timestampString(message.timeStamp)
+      );
       expect(wrapper.find(".message-body .method").text()).toBe("GET");
       expect(wrapper.find(".message-body .xhr").length).toBe(0);
       expect(wrapper.find(".message-body .url").length).toBe(1);
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
       expect(wrapper.find(".message-body .status").length).toBe(1);
-      expect(wrapper.find(".message-body .status").text()).toMatch(EXPECTED_STATUS);
+      expect(wrapper.find(".message-body .status").text()).toMatch(
+        EXPECTED_STATUS
+      );
     });
 
     it("does not have a timestamp when timestampsVisible prop is falsy", () => {
       const message = stubPreparedMessages.get("GET request update");
-      const wrapper = render(NetworkEventMessage({
-        message,
-        serviceContainer,
-        timestampsVisible: false,
-      }));
+      const wrapper = render(
+        NetworkEventMessage({
+          message,
+          serviceContainer,
+          timestampsVisible: false,
+        })
+      );
 
       expect(wrapper.find(".timestamp").length).toBe(0);
     });
@@ -57,10 +74,12 @@ describe("NetworkEventMessage component:", () => {
       const message = stubPreparedMessages.get("GET request");
 
       const indent = 10;
-      let wrapper = render(NetworkEventMessage({
-        message: Object.assign({}, message, {indent}),
-        serviceContainer,
-      }));
+      let wrapper = render(
+        NetworkEventMessage({
+          message: Object.assign({}, message, { indent }),
+          serviceContainer,
+        })
+      );
       let indentEl = wrapper.find(".indent");
       expect(indentEl.prop("style").width).toBe(`${indent * INDENT_WIDTH}px`);
       expect(indentEl.prop("data-indent")).toBe(`${indent}`);
@@ -76,17 +95,21 @@ describe("NetworkEventMessage component:", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("XHR GET request");
       const update = stubPreparedMessages.get("XHR GET request update");
-      const wrapper = render(NetworkEventMessage({
-        message,
-        serviceContainer,
-        networkMessageUpdate: update,
-      }));
+      const wrapper = render(
+        NetworkEventMessage({
+          message,
+          serviceContainer,
+          networkMessageUpdate: update,
+        })
+      );
 
       expect(wrapper.find(".message-body .method").text()).toBe("GET");
       expect(wrapper.find(".message-body .xhr").length).toBe(1);
       expect(wrapper.find(".message-body .xhr").text()).toBe("XHR");
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
-      expect(wrapper.find(".message-body .status").text()).toMatch(EXPECTED_STATUS);
+      expect(wrapper.find(".message-body .status").text()).toMatch(
+        EXPECTED_STATUS
+      );
     });
   });
 
@@ -94,11 +117,13 @@ describe("NetworkEventMessage component:", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("XHR POST request");
       const update = stubPreparedMessages.get("XHR POST request update");
-      const wrapper = render(NetworkEventMessage({
-        message,
-        serviceContainer,
-        networkMessageUpdate: update,
-      }));
+      const wrapper = render(
+        NetworkEventMessage({
+          message,
+          serviceContainer,
+          networkMessageUpdate: update,
+        })
+      );
 
       expect(wrapper.find(".message-body .method").text()).toBe("POST");
       expect(wrapper.find(".message-body .xhr").length).toBe(1);
@@ -106,17 +131,21 @@ describe("NetworkEventMessage component:", () => {
       expect(wrapper.find(".message-body .url").length).toBe(1);
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
       expect(wrapper.find(".message-body .status").length).toBe(1);
-      expect(wrapper.find(".message-body .status").text()).toMatch(EXPECTED_STATUS);
+      expect(wrapper.find(".message-body .status").text()).toMatch(
+        EXPECTED_STATUS
+      );
     });
   });
 
   describe("is expandable", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("XHR POST request");
-      const wrapper = render(NetworkEventMessage({
-        message,
-        serviceContainer,
-      }));
+      const wrapper = render(
+        NetworkEventMessage({
+          message,
+          serviceContainer,
+        })
+      );
 
       expect(wrapper.find(".message .theme-twisty")).toExist();
     });

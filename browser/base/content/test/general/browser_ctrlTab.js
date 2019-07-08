@@ -1,5 +1,7 @@
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [["browser.ctrlTab.recentlyUsedOrder", true]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ctrlTab.recentlyUsedOrder", true]],
+  });
 
   BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.addTab(gBrowser);
@@ -15,8 +17,7 @@ add_task(async function() {
     for (let node of ctrlTab.previews) {
       try {
         node.style.removeProperty("pointer-events");
-      } catch (e) {
-      }
+      } catch (e) {}
     }
   });
 
@@ -31,11 +32,15 @@ add_task(async function() {
     await pressCtrlTab();
     await pressCtrlTab(true);
     await releaseCtrl();
-    is(gBrowser.tabContainer.selectedIndex, selectedIndex,
-       "Ctrl+Tab -> Ctrl+Shift+Tab keeps the selected tab");
+    is(
+      gBrowser.tabContainer.selectedIndex,
+      selectedIndex,
+      "Ctrl+Tab -> Ctrl+Shift+Tab keeps the selected tab"
+    );
   }
 
-  { // test for bug 445369
+  {
+    // test for bug 445369
     let tabs = gBrowser.tabs.length;
     await pressCtrlTab();
     await synthesizeCtrlW();
@@ -43,12 +48,17 @@ add_task(async function() {
     await releaseCtrl();
   }
 
-  { // test for bug 667314
+  {
+    // test for bug 667314
     let tabs = gBrowser.tabs.length;
     await pressCtrlTab();
     await pressCtrlTab(true);
     await synthesizeCtrlW();
-    is(gBrowser.tabs.length, tabs - 1, "Ctrl+Tab -> Ctrl+W removes the selected tab");
+    is(
+      gBrowser.tabs.length,
+      tabs - 1,
+      "Ctrl+Tab -> Ctrl+W removes the selected tab"
+    );
     await releaseCtrl();
   }
 
@@ -56,8 +66,12 @@ add_task(async function() {
   checkTabs(3);
   await ctrlTabTest([2, 1, 0], 7, 1);
 
-  { // test for bug 1292049
-    let tabToClose = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:buildconfig");
+  {
+    // test for bug 1292049
+    let tabToClose = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:buildconfig"
+    );
     checkTabs(4);
     selectTabs([0, 1, 2, 3]);
 
@@ -67,12 +81,17 @@ add_task(async function() {
     checkTabs(3);
     undoCloseTab();
     checkTabs(4);
-    is(gBrowser.tabContainer.selectedIndex, 3, "tab is selected after closing and restoring it");
+    is(
+      gBrowser.tabContainer.selectedIndex,
+      3,
+      "tab is selected after closing and restoring it"
+    );
 
     await ctrlTabTest([], 1, 2);
   }
 
-  { // test for bug 445369
+  {
+    // test for bug 445369
     checkTabs(4);
     selectTabs([1, 2, 0]);
 
@@ -82,14 +101,18 @@ add_task(async function() {
     await pressCtrlTab();
     await pressCtrlTab();
     await synthesizeCtrlW();
-    ok(!tabToRemove.parentNode,
-       "Ctrl+Tab*2 -> Ctrl+W removes the second most recently selected tab");
+    ok(
+      !tabToRemove.parentNode,
+      "Ctrl+Tab*2 -> Ctrl+W removes the second most recently selected tab"
+    );
 
     await pressCtrlTab(true);
     await pressCtrlTab(true);
     await releaseCtrl();
-    ok(selectedTab.selected,
-       "Ctrl+Tab*2 -> Ctrl+W -> Ctrl+Shift+Tab*2 keeps the selected tab");
+    ok(
+      selectedTab.selected,
+      "Ctrl+Tab*2 -> Ctrl+W -> Ctrl+Shift+Tab*2 keeps the selected tab"
+    );
   }
   gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   checkTabs(2);
@@ -99,7 +122,8 @@ add_task(async function() {
   gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   checkTabs(1);
 
-  { // test for bug 445768
+  {
+    // test for bug 445768
     let focusedWindow = document.commandDispatcher.focusedWindow;
     let eventConsumed = true;
     let detectKeyEvent = function(event) {
@@ -108,9 +132,15 @@ add_task(async function() {
     document.addEventListener("keypress", detectKeyEvent);
     await pressCtrlTab();
     document.removeEventListener("keypress", detectKeyEvent);
-    ok(eventConsumed, "Ctrl+Tab consumed by the tabbed browser if one tab is open");
-    is(focusedWindow, document.commandDispatcher.focusedWindow,
-       "Ctrl+Tab doesn't change focus if one tab is open");
+    ok(
+      eventConsumed,
+      "Ctrl+Tab consumed by the tabbed browser if one tab is open"
+    );
+    is(
+      focusedWindow,
+      document.commandDispatcher.focusedWindow,
+      "Ctrl+Tab doesn't change focus if one tab is open"
+    );
   }
 
   /* private utility functions */
@@ -122,7 +152,10 @@ add_task(async function() {
     } else {
       promise = BrowserTestUtils.waitForEvent(document, "keyup");
     }
-    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true, shiftKey: !!aShiftKey });
+    EventUtils.synthesizeKey("VK_TAB", {
+      ctrlKey: true,
+      shiftKey: !!aShiftKey,
+    });
     return promise;
   }
 
@@ -138,7 +171,10 @@ add_task(async function() {
   }
 
   function synthesizeCtrlW() {
-    let promise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabClose");
+    let promise = BrowserTestUtils.waitForEvent(
+      gBrowser.tabContainer,
+      "TabClose"
+    );
     EventUtils.synthesizeKey("w", { ctrlKey: true });
     return promise;
   }
@@ -148,8 +184,10 @@ add_task(async function() {
   }
 
   function canOpen() {
-    return Services.prefs.getBoolPref("browser.ctrlTab.recentlyUsedOrder") &&
-           gBrowser.tabs.length > 2;
+    return (
+      Services.prefs.getBoolPref("browser.ctrlTab.recentlyUsedOrder") &&
+      gBrowser.tabs.length > 2
+    );
   }
 
   function checkTabs(aTabs) {
@@ -168,32 +206,52 @@ add_task(async function() {
     var indexStart = gBrowser.tabContainer.selectedIndex;
     var tabCount = gBrowser.tabs.length;
     var normalized = tabTimes % tabCount;
-    var where = normalized == 1 ? "back to the previously selected tab" :
-                normalized + " tabs back in most-recently-selected order";
+    var where =
+      normalized == 1
+        ? "back to the previously selected tab"
+        : normalized + " tabs back in most-recently-selected order";
 
     for (let i = 0; i < tabTimes; i++) {
       await pressCtrlTab();
 
-      if (tabCount > 2)
-       is(gBrowser.tabContainer.selectedIndex, indexStart,
-         "Selected tab doesn't change while tabbing");
+      if (tabCount > 2) {
+        is(
+          gBrowser.tabContainer.selectedIndex,
+          indexStart,
+          "Selected tab doesn't change while tabbing"
+        );
+      }
     }
 
     if (tabCount > 2) {
-      ok(isOpen(),
-         "With " + tabCount + " tabs open, Ctrl+Tab opens the preview panel");
+      ok(
+        isOpen(),
+        "With " + tabCount + " tabs open, Ctrl+Tab opens the preview panel"
+      );
 
       await releaseCtrl();
 
-      ok(!isOpen(),
-         "Releasing Ctrl closes the preview panel");
+      ok(!isOpen(), "Releasing Ctrl closes the preview panel");
     } else {
-      ok(!isOpen(),
-         "With " + tabCount + " tabs open, Ctrl+Tab doesn't open the preview panel");
+      ok(
+        !isOpen(),
+        "With " +
+          tabCount +
+          " tabs open, Ctrl+Tab doesn't open the preview panel"
+      );
     }
 
-    is(gBrowser.tabContainer.selectedIndex, expectedIndex,
-       "With " + tabCount + " tabs open and tab " + indexStart
-       + " selected, Ctrl+Tab*" + tabTimes + " goes " + where);
+    is(
+      gBrowser.tabContainer.selectedIndex,
+      expectedIndex,
+      "With " +
+        tabCount +
+        " tabs open and tab " +
+        indexStart +
+        " selected, Ctrl+Tab*" +
+        tabTimes +
+        " goes " +
+        where
+    );
   }
 });

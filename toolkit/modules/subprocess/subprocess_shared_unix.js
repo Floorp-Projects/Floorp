@@ -18,13 +18,14 @@ const unix = {
   pid_t: ctypes.int32_t,
 
   pollfd: new ctypes.StructType("pollfd", [
-    {"fd": ctypes.int},
-    {"events": ctypes.short},
-    {"revents": ctypes.short},
+    { fd: ctypes.int },
+    { events: ctypes.short },
+    { revents: ctypes.short },
   ]),
 
   posix_spawn_file_actions_t: ctypes.uint8_t.array(
-    LIBC.OSFILE_SIZEOF_POSIX_SPAWN_FILE_ACTIONS_T),
+    LIBC.OSFILE_SIZEOF_POSIX_SPAWN_FILE_ACTIONS_T
+  ),
 
   WEXITSTATUS(status) {
     return (status >> 8) & 0xff;
@@ -39,10 +40,7 @@ var libc = new Library("libc", LIBC_CHOICES, {
   environ: [ctypes.char.ptr.ptr],
 
   // Darwin-only.
-  _NSGetEnviron: [
-    ctypes.default_abi,
-    ctypes.char.ptr.ptr.ptr,
-  ],
+  _NSGetEnviron: [ctypes.default_abi, ctypes.char.ptr.ptr.ptr],
 
   setenv: [
     ctypes.default_abi,
@@ -52,114 +50,102 @@ var libc = new Library("libc", LIBC_CHOICES, {
     ctypes.int,
   ],
 
-  chdir: [
-    ctypes.default_abi,
-    ctypes.int,
-    ctypes.char.ptr, /* path */
-  ],
+  chdir: [ctypes.default_abi, ctypes.int, ctypes.char.ptr /* path */],
 
-  close: [
-    ctypes.default_abi,
-    ctypes.int,
-    ctypes.int, /* fildes */
-  ],
+  close: [ctypes.default_abi, ctypes.int, ctypes.int /* fildes */],
 
   fcntl: [
     ctypes.default_abi,
     ctypes.int,
-    ctypes.int, /* fildes */
-    ctypes.int, /* cmd */
-    ctypes.int, /* ... */
+    ctypes.int /* fildes */,
+    ctypes.int /* cmd */,
+    ctypes.int /* ... */,
   ],
 
   getcwd: [
     ctypes.default_abi,
     ctypes.char.ptr,
-    ctypes.char.ptr, /* buf */
-    ctypes.size_t, /* size */
+    ctypes.char.ptr /* buf */,
+    ctypes.size_t /* size */,
   ],
 
   kill: [
     ctypes.default_abi,
     ctypes.int,
-    unix.pid_t, /* pid */
-    ctypes.int, /* signal */
+    unix.pid_t /* pid */,
+    ctypes.int /* signal */,
   ],
 
-  pipe: [
-    ctypes.default_abi,
-    ctypes.int,
-    ctypes.int.array(2), /* pipefd */
-  ],
+  pipe: [ctypes.default_abi, ctypes.int, ctypes.int.array(2) /* pipefd */],
 
   poll: [
     ctypes.default_abi,
     ctypes.int,
-    unix.pollfd.array(), /* fds */
-    ctypes.unsigned_int, /* nfds */
-    ctypes.int, /* timeout */
+    unix.pollfd.array() /* fds */,
+    ctypes.unsigned_int /* nfds */,
+    ctypes.int /* timeout */,
   ],
 
   posix_spawn: [
     ctypes.default_abi,
     ctypes.int,
-    unix.pid_t.ptr, /* pid */
-    ctypes.char.ptr, /* path */
-    unix.posix_spawn_file_actions_t.ptr, /* file_actions */
-    ctypes.voidptr_t, /* attrp */
-    ctypes.char.ptr.ptr, /* argv */
-    ctypes.char.ptr.ptr, /* envp */
+    unix.pid_t.ptr /* pid */,
+    ctypes.char.ptr /* path */,
+    unix.posix_spawn_file_actions_t.ptr /* file_actions */,
+    ctypes.voidptr_t /* attrp */,
+    ctypes.char.ptr.ptr /* argv */,
+    ctypes.char.ptr.ptr /* envp */,
   ],
 
   posix_spawn_file_actions_addclose: [
     ctypes.default_abi,
     ctypes.int,
-    unix.posix_spawn_file_actions_t.ptr, /* file_actions */
-    ctypes.int, /* fildes */
+    unix.posix_spawn_file_actions_t.ptr /* file_actions */,
+    ctypes.int /* fildes */,
   ],
 
   posix_spawn_file_actions_adddup2: [
     ctypes.default_abi,
     ctypes.int,
-    unix.posix_spawn_file_actions_t.ptr, /* file_actions */
-    ctypes.int, /* fildes */
-    ctypes.int, /* newfildes */
+    unix.posix_spawn_file_actions_t.ptr /* file_actions */,
+    ctypes.int /* fildes */,
+    ctypes.int /* newfildes */,
   ],
 
   posix_spawn_file_actions_destroy: [
     ctypes.default_abi,
     ctypes.int,
-    unix.posix_spawn_file_actions_t.ptr, /* file_actions */
+    unix.posix_spawn_file_actions_t.ptr /* file_actions */,
   ],
 
   posix_spawn_file_actions_init: [
     ctypes.default_abi,
     ctypes.int,
-    unix.posix_spawn_file_actions_t.ptr, /* file_actions */
+    unix.posix_spawn_file_actions_t.ptr /* file_actions */,
   ],
 
   read: [
     ctypes.default_abi,
     ctypes.ssize_t,
-    ctypes.int, /* fildes */
-    ctypes.char.ptr, /* buf */
-    ctypes.size_t, /* nbyte */
+    ctypes.int /* fildes */,
+    ctypes.char.ptr /* buf */,
+    ctypes.size_t /* nbyte */,
   ],
 
   waitpid: [
     ctypes.default_abi,
     unix.pid_t,
-    unix.pid_t, /* pid */
-    ctypes.int.ptr, /* status */
-    ctypes.int, /* options */
+    unix.pid_t /* pid */,
+    ctypes.int.ptr /* status */,
+    ctypes.int /* options */,
   ],
 
   write: [
     ctypes.default_abi,
     ctypes.ssize_t,
-    ctypes.int, /* fildes */
-    ctypes.char.ptr, /* buf */
-    ctypes.size_t, /* nbyte */
+    ctypes.int /* fildes */,
+    ctypes.char.ptr /* buf */,
+    ctypes.size_t /* nbyte */,
   ],
 });
 

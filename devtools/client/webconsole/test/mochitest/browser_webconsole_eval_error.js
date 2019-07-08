@@ -8,8 +8,9 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-eval-error.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-eval-error.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -30,7 +31,12 @@ add_task(async function() {
   await checkMessageStack(hud, "Error: bloop", [2, 3, 4, 5, 6]);
 
   hud.jsterm.execute(`1 + @`);
-  const messageNode = await waitFor(() => findMessage(hud, "illegal character"));
-  is(messageNode.querySelector(".frames"), null,
-    "There's no stacktrace for a SyntaxError evaluation");
+  const messageNode = await waitFor(() =>
+    findMessage(hud, "illegal character")
+  );
+  is(
+    messageNode.querySelector(".frames"),
+    null,
+    "There's no stacktrace for a SyntaxError evaluation"
+  );
 });

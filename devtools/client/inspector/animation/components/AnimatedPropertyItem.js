@@ -4,12 +4,17 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const AnimatedPropertyName = createFactory(require("./AnimatedPropertyName"));
-const KeyframesGraph = createFactory(require("./keyframes-graph/KeyframesGraph"));
+const KeyframesGraph = createFactory(
+  require("./keyframes-graph/KeyframesGraph")
+);
 
 class AnimatedPropertyItem extends PureComponent {
   static get propTypes() {
@@ -37,24 +42,19 @@ class AnimatedPropertyItem extends PureComponent {
 
     return dom.li(
       {
-        className: "animated-property-item" +
-                   (isUnchanged ? " unchanged" : ""),
+        className: "animated-property-item" + (isUnchanged ? " unchanged" : ""),
       },
-      AnimatedPropertyName(
-        {
-          name,
-          state,
-        }
-      ),
-      KeyframesGraph(
-        {
-          getComputedStyle,
-          keyframes,
-          name,
-          simulateAnimation,
-          type,
-        }
-      )
+      AnimatedPropertyName({
+        name,
+        state,
+      }),
+      KeyframesGraph({
+        getComputedStyle,
+        keyframes,
+        name,
+        simulateAnimation,
+        type,
+      })
     );
   }
 }

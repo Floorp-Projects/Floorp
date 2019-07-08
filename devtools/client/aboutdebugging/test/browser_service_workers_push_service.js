@@ -13,8 +13,9 @@ const TAB_URL = URL_ROOT + "service-workers/push-sw.html";
 
 const FAKE_ENDPOINT = "https://fake/endpoint";
 
-const PushService = Cc["@mozilla.org/push/Service;1"]
-  .getService(Ci.nsIPushService).wrappedJSObject;
+const PushService = Cc["@mozilla.org/push/Service;1"].getService(
+  Ci.nsIPushService
+).wrappedJSObject;
 
 add_task(async function() {
   info("Turn on workers via mochitest http.");
@@ -27,7 +28,8 @@ add_task(async function() {
       Services.obs.notifyObservers(
         null,
         PushService.subscriptionModifiedTopic,
-        scope);
+        scope
+      );
     },
     init() {},
     register(pageRecord) {
@@ -65,14 +67,19 @@ add_task(async function() {
 
   // Wait for the service worker details to update.
   const names = [...document.querySelectorAll("#service-workers .target-name")];
-  const name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
+  const name = names.filter(
+    element => element.textContent === SERVICE_WORKER
+  )[0];
   ok(name, "Found the service worker in the list");
 
   const targetContainer = name.closest(".target-container");
 
   // Retrieve the push subscription endpoint URL, and verify it looks good.
   info("Wait for the push URL");
-  const pushURL = await waitUntilElement(".service-worker-push-url", targetContainer);
+  const pushURL = await waitUntilElement(
+    ".service-worker-push-url",
+    targetContainer
+  );
 
   info("Found the push service URL in the service worker details");
   is(pushURL.textContent, FAKE_ENDPOINT, "The push service URL looks correct");
@@ -85,7 +92,10 @@ add_task(async function() {
 
   // Wait for the service worker details to update again
   info("Wait until the push URL is removed from the UI");
-  await waitUntil(() => !targetContainer.querySelector(".service-worker-push-url"), 100);
+  await waitUntil(
+    () => !targetContainer.querySelector(".service-worker-push-url"),
+    100
+  );
   info("The push service URL should be removed");
 
   // Finally, unregister the service worker itself.

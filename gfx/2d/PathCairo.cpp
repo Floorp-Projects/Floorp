@@ -103,13 +103,13 @@ void PathBuilderCairo::Arc(const Point& aOrigin, float aRadius,
 }
 
 already_AddRefed<Path> PathBuilderCairo::Finish() {
-  return MakeAndAddRef<PathCairo>(mFillRule, mPathData, mCurrentPoint, mBeginPoint);
+  return MakeAndAddRef<PathCairo>(mFillRule, mPathData, mCurrentPoint,
+                                  mBeginPoint);
 }
 
 PathCairo::PathCairo(FillRule aFillRule,
                      std::vector<cairo_path_data_t>& aPathData,
-                     const Point& aCurrentPoint,
-                     const Point& aBeginPoint)
+                     const Point& aCurrentPoint, const Point& aBeginPoint)
     : mFillRule(aFillRule),
       mContainingContext(nullptr),
       mCurrentPoint(aCurrentPoint),

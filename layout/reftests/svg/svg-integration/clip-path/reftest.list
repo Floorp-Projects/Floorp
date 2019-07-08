@@ -20,22 +20,22 @@ fuzzy-if(webrender,35-35,699-708) == clip-path-circle-001.html clip-path-circle-
 fuzzy-if(webrender,35-35,699-708) == clip-path-circle-002.html clip-path-circle-001-ref.html
 fuzzy-if(webrender,35-35,699-708) == clip-path-circle-003.html clip-path-circle-001-ref.html
 fuzzy-if(webrender,35-35,699-708) == clip-path-circle-004.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-005.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-35,699-710) == clip-path-circle-005.html clip-path-circle-002-ref.html
 fuzzy-if(webrender,35-35,699-708) == clip-path-circle-006.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-007.html clip-path-circle-002-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-008.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-35,699-710) == clip-path-circle-007.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-35,699-710) == clip-path-circle-008.html clip-path-circle-002-ref.html
 fuzzy-if(webrender,35-35,699-708) == clip-path-circle-009.html clip-path-circle-003-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-010.html clip-path-circle-004-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-011.html clip-path-circle-005-ref.html
+fuzzy-if(webrender,35-35,699-731) == clip-path-circle-010.html clip-path-circle-004-ref.html
+fuzzy-if(webrender,35-35,699-719) == clip-path-circle-011.html clip-path-circle-005-ref.html
 fuzzy-if(webrender,35-35,699-708) == clip-path-circle-012.html clip-path-circle-006-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-013.html clip-path-circle-002-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-014.html clip-path-circle-007-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-015.html clip-path-circle-008-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-016.html clip-path-circle-009-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-16,0-9) fuzzy-if(webrender,35-35,699-708) == clip-path-circle-017.html clip-path-circle-007-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-018.html clip-path-circle-010-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-019.html clip-path-circle-002-ref.html
-fuzzy-if(webrender,35-35,699-708) == clip-path-circle-020.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-35,699-710) == clip-path-circle-013.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,34-35,699-882) == clip-path-circle-014.html clip-path-circle-007-ref.html
+fuzzy-if(webrender,34-35,699-901) == clip-path-circle-015.html clip-path-circle-008-ref.html
+fuzzy-if(webrender,34-35,699-836) == clip-path-circle-016.html clip-path-circle-009-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-16,0-9) fuzzy-if(webrender,34-35,699-882) == clip-path-circle-017.html clip-path-circle-007-ref.html
+fuzzy-if(webrender,35-35,699-712) == clip-path-circle-018.html clip-path-circle-010-ref.html
+fuzzy-if(webrender,35-35,699-710) == clip-path-circle-019.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-35,699-710) == clip-path-circle-020.html clip-path-circle-002-ref.html
 fuzzy-if(webrender&&(winWidget||cocoaWidget),0-1,0-5) == clip-path-circle-021.html clip-path-circle-021-ref.html
 
 fuzzy-if(webrender,36-36,1099-1100) == clip-path-ellipse-001.html clip-path-ellipse-001-ref.html

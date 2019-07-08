@@ -49,7 +49,9 @@ add_task(async function() {
   // 2. Change Waterfall column width and check that the size
   // of waterfall changed correctly and all the other columns changed size.
   info("Resize waterfall & check changed prefs...");
-  const waterfallHeader = document.querySelector(`#requests-list-waterfall-header-box`);
+  const waterfallHeader = document.querySelector(
+    `#requests-list-waterfall-header-box`
+  );
   // before resizing waterfall -> save old columnsData for later testing
   const oldColumnsData = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.columnsData")
@@ -74,8 +76,15 @@ add_task(async function() {
   // and check that they resize correctly. Then resize
   // waterfall to 50% => size should take up 50%
   info("Hide all but 2 columns - size & waterfall and check resizing...");
-  await hideMoreColumns(monitor,
-    ["status", "method", "domain", "file", "cause", "type", "transferred"]);
+  await hideMoreColumns(monitor, [
+    "status",
+    "method",
+    "domain",
+    "file",
+    "cause",
+    "type",
+    "transferred",
+  ]);
 
   resizeWaterfallColumn(waterfallHeader, 50, parentWidth);
   // after resize - get fresh prefs for tests
@@ -96,7 +105,9 @@ add_task(async function() {
   await showMoreColumns(monitor, ["domain", "file"]);
   await hideMoreColumns(monitor, ["contentSize", "waterfall"]);
 
-  const domainHeader = document.querySelector(`#requests-list-domain-header-box`);
+  const domainHeader = document.querySelector(
+    `#requests-list-domain-header-box`
+  );
   resizeColumn(domainHeader, 50, parentWidth);
 
   // after resize - get fresh prefs for tests
@@ -129,29 +140,62 @@ async function showMoreColumns(monitor, arr) {
 }
 
 function resizeColumn(columnHeader, newPercent, parentWidth) {
-  const newWidthInPixels = newPercent * parentWidth / 100;
+  const newWidthInPixels = (newPercent * parentWidth) / 100;
   const win = columnHeader.ownerDocument.defaultView;
   const mouseDown = columnHeader.getBoundingClientRect().width;
   const mouseMove = newWidthInPixels;
 
-  EventUtils.synthesizeMouse(columnHeader, mouseDown, 1, { type: "mousedown" }, win);
-  EventUtils.synthesizeMouse(columnHeader, mouseMove, 1, { type: "mousemove" }, win);
-  EventUtils.synthesizeMouse(columnHeader, mouseMove, 1, { type: "mouseup" }, win);
+  EventUtils.synthesizeMouse(
+    columnHeader,
+    mouseDown,
+    1,
+    { type: "mousedown" },
+    win
+  );
+  EventUtils.synthesizeMouse(
+    columnHeader,
+    mouseMove,
+    1,
+    { type: "mousemove" },
+    win
+  );
+  EventUtils.synthesizeMouse(
+    columnHeader,
+    mouseMove,
+    1,
+    { type: "mouseup" },
+    win
+  );
 }
 
 function resizeWaterfallColumn(columnHeader, newPercent, parentWidth) {
-  const newWidthInPixels = newPercent * parentWidth / 100;
+  const newWidthInPixels = (newPercent * parentWidth) / 100;
   const win = columnHeader.ownerDocument.defaultView;
   const mouseDown = columnHeader.getBoundingClientRect().left;
   const mouseMove =
     mouseDown + (columnHeader.getBoundingClientRect().width - newWidthInPixels);
 
   EventUtils.synthesizeMouse(
-    columnHeader.parentElement, mouseDown, 1, { type: "mousedown" }, win);
+    columnHeader.parentElement,
+    mouseDown,
+    1,
+    { type: "mousedown" },
+    win
+  );
   EventUtils.synthesizeMouse(
-    columnHeader.parentElement, mouseMove, 1, { type: "mousemove" }, win);
+    columnHeader.parentElement,
+    mouseMove,
+    1,
+    { type: "mousemove" },
+    win
+  );
   EventUtils.synthesizeMouse(
-    columnHeader.parentElement, mouseMove, 1, { type: "mouseup" }, win);
+    columnHeader.parentElement,
+    mouseMove,
+    1,
+    { type: "mouseup" },
+    win
+  );
 }
 
 function checkColumnsData(columnsData, column, expectedWidth) {
@@ -186,13 +230,19 @@ function checkAllColumnsChanged(columnsData, oldColumnsData, visibleColumns) {
 
       // Test that if waterfall is smaller all other columns are bigger
       if (oldWaterfallWidth > newWaterfallWidth) {
-        is(oldWidth < newWidth, true,
-          "Column " + column + " has changed width correctly.");
+        is(
+          oldWidth < newWidth,
+          true,
+          "Column " + column + " has changed width correctly."
+        );
       }
       // Test that if waterfall is bigger all other columns are smaller
       if (oldWaterfallWidth < newWaterfallWidth) {
-        is(oldWidth > newWidth, true,
-          "Column " + column + " has changed width correctly.");
+        is(
+          oldWidth > newWidth,
+          true,
+          "Column " + column + " has changed width correctly."
+        );
       }
     }
   });

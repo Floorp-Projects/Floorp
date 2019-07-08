@@ -42,6 +42,14 @@ class WebVTTListener final : public nsIWebVTTListener,
    */
   nsresult LoadResource();
 
+  /**
+   * When this listener is not going to be used anymore, its owner should take
+   * a responsibility to call `Cancel()` to prevent this listener making any
+   * changes for the track element.
+   */
+  bool IsCanceled() const;
+  void Cancel();
+
  private:
   ~WebVTTListener();
 
@@ -54,6 +62,7 @@ class WebVTTListener final : public nsIWebVTTListener,
   RefPtr<HTMLTrackElement> mElement;
   nsCOMPtr<nsIWebVTTParserWrapper> mParserWrapper;
   nsresult mParserWrapperError;
+  bool mCancel = false;
 };
 
 }  // namespace dom

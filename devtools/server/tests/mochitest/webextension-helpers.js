@@ -5,14 +5,24 @@
 
 "use strict";
 
-const {require, loader} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-const {DebuggerServer} = require("devtools/server/main");
+const { require, loader } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DebuggerServer } = require("devtools/server/main");
 
-const {AddonTestUtils} = require("resource://testing-common/AddonTestUtils.jsm");
-const {ExtensionTestCommon} = require("resource://testing-common/ExtensionTestCommon.jsm");
+const {
+  AddonTestUtils,
+} = require("resource://testing-common/AddonTestUtils.jsm");
+const {
+  ExtensionTestCommon,
+} = require("resource://testing-common/ExtensionTestCommon.jsm");
 
-loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
+loader.lazyImporter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
 // Initialize a minimal DebuggerServer and connect to the webextension addon actor.
 if (!DebuggerServer.initialized) {
@@ -24,16 +34,23 @@ if (!DebuggerServer.initialized) {
 }
 
 SimpleTest.registerCleanupFunction(function() {
-  const {hiddenXULWindow} = ExtensionParent.DebugUtils;
-  const debugBrowserMapSize = ExtensionParent.DebugUtils.debugBrowserPromises.size;
+  const { hiddenXULWindow } = ExtensionParent.DebugUtils;
+  const debugBrowserMapSize =
+    ExtensionParent.DebugUtils.debugBrowserPromises.size;
 
   if (debugBrowserMapSize > 0) {
-    is(debugBrowserMapSize, 0,
-       "ExtensionParent DebugUtils debug browsers have not been released");
+    is(
+      debugBrowserMapSize,
+      0,
+      "ExtensionParent DebugUtils debug browsers have not been released"
+    );
   }
 
   if (hiddenXULWindow) {
-    ok(false, "ExtensionParent DebugUtils hiddenXULWindow has not been destroyed");
+    ok(
+      false,
+      "ExtensionParent DebugUtils hiddenXULWindow has not been destroyed"
+    );
   }
 });
 
@@ -41,9 +58,7 @@ SimpleTest.registerCleanupFunction(function() {
 
 function setWebExtensionOOPMode(oopMode) {
   return SpecialPowers.pushPrefEnv({
-    "set": [
-      ["extensions.webextensions.remote", oopMode],
-    ],
+    set: [["extensions.webextensions.remote", oopMode]],
   });
 }
 
@@ -63,10 +78,10 @@ function waitForFramesUpdated(target, matchFn) {
   });
 }
 
-function collectFrameUpdates({client}, matchFn) {
+function collectFrameUpdates({ client }, matchFn) {
   const collected = [];
 
-  const listener = (data) => {
+  const listener = data => {
     if (matchFn(data)) {
       collected.push(data);
     }
@@ -105,7 +120,7 @@ async function attachAddon(addonId) {
   return addonTarget;
 }
 
-async function reloadAddon({client}, addonId) {
+async function reloadAddon({ client }, addonId) {
   const addonTargetFront = await client.mainRoot.getAddon({ id: addonId });
 
   if (!addonTargetFront) {

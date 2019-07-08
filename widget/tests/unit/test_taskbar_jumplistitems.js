@@ -7,17 +7,21 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function test_basics() {
-  var item = Cc["@mozilla.org/windows-jumplistitem;1"].
-  createInstance(Ci.nsIJumpListItem);
+  var item = Cc["@mozilla.org/windows-jumplistitem;1"].createInstance(
+    Ci.nsIJumpListItem
+  );
 
-  var sep = Cc["@mozilla.org/windows-jumplistseparator;1"].
-  createInstance(Ci.nsIJumpListSeparator);
+  var sep = Cc["@mozilla.org/windows-jumplistseparator;1"].createInstance(
+    Ci.nsIJumpListSeparator
+  );
 
-  var shortcut = Cc["@mozilla.org/windows-jumplistshortcut;1"].
-  createInstance(Ci.nsIJumpListShortcut);
+  var shortcut = Cc["@mozilla.org/windows-jumplistshortcut;1"].createInstance(
+    Ci.nsIJumpListShortcut
+  );
 
-  var link = Cc["@mozilla.org/windows-jumplistlink;1"].
-  createInstance(Ci.nsIJumpListLink);
+  var link = Cc["@mozilla.org/windows-jumplistlink;1"].createInstance(
+    Ci.nsIJumpListLink
+  );
 
   Assert.ok(!item.equals(sep));
   Assert.ok(!item.equals(shortcut));
@@ -44,78 +48,127 @@ function test_basics() {
 function test_separator() {
   // separators:
 
-  var item = Cc["@mozilla.org/windows-jumplistseparator;1"].
-  createInstance(Ci.nsIJumpListSeparator);
+  var item = Cc["@mozilla.org/windows-jumplistseparator;1"].createInstance(
+    Ci.nsIJumpListSeparator
+  );
 
   Assert.ok(item.type == Ci.nsIJumpListItem.JUMPLIST_ITEM_SEPARATOR);
 }
 
 function test_hashes() {
-  var link = Cc["@mozilla.org/windows-jumplistlink;1"]
-             .createInstance(Ci.nsIJumpListLink);
+  var link = Cc["@mozilla.org/windows-jumplistlink;1"].createInstance(
+    Ci.nsIJumpListLink
+  );
   var uri1 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-               .createInstance(Ci.nsIURIMutator)
-               .setSpec("http://www.123.com/")
-               .finalize();
+    .createInstance(Ci.nsIURIMutator)
+    .setSpec("http://www.123.com/")
+    .finalize();
   var uri2 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-               .createInstance(Ci.nsIURIMutator)
-               .setSpec("http://www.123.com/")
-               .finalize();
+    .createInstance(Ci.nsIURIMutator)
+    .setSpec("http://www.123.com/")
+    .finalize();
 
   link.uri = uri1;
 
   Assert.ok(link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("http://www.456.com/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("http://www.456.com/")
+    .finalize();
   Assert.ok(!link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("http://www.123.com/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("http://www.123.com/")
+    .finalize();
   Assert.ok(link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("https://www.123.com/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("https://www.123.com/")
+    .finalize();
   Assert.ok(!link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("http://www.123.com/test/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("http://www.123.com/test/")
+    .finalize();
   Assert.ok(!link.compareHash(uri2));
-  uri1 = uri1.mutate().setSpec("http://www.123.com/test/").finalize();
+  uri1 = uri1
+    .mutate()
+    .setSpec("http://www.123.com/test/")
+    .finalize();
   link.uri = uri1;
-  uri2 = uri2.mutate().setSpec("http://www.123.com/test/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("http://www.123.com/test/")
+    .finalize();
   Assert.ok(link.compareHash(uri2));
-  uri1 = uri1.mutate().setSpec("https://www.123.com/test/").finalize();
+  uri1 = uri1
+    .mutate()
+    .setSpec("https://www.123.com/test/")
+    .finalize();
   link.uri = uri1;
-  uri2 = uri2.mutate().setSpec("https://www.123.com/test/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("https://www.123.com/test/")
+    .finalize();
   Assert.ok(link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("ftp://www.123.com/test/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("ftp://www.123.com/test/")
+    .finalize();
   Assert.ok(!link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("http://123.com/test/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("http://123.com/test/")
+    .finalize();
   Assert.ok(!link.compareHash(uri2));
-  uri1 = uri1.mutate().setSpec("https://www.123.com/test/").finalize();
+  uri1 = uri1
+    .mutate()
+    .setSpec("https://www.123.com/test/")
+    .finalize();
   link.uri = uri1;
-  uri2 = uri2.mutate().setSpec("https://www.123.com/Test/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("https://www.123.com/Test/")
+    .finalize();
   Assert.ok(!link.compareHash(uri2));
 
-  uri1 = uri1.mutate().setSpec("http://www.123.com/").finalize();
+  uri1 = uri1
+    .mutate()
+    .setSpec("http://www.123.com/")
+    .finalize();
   link.uri = uri1;
   Assert.equal(link.uriHash, "QGLmWuwuTozr3tOfXSf5mg==");
-  uri1 = uri1.mutate().setSpec("http://www.123.com/test/").finalize();
+  uri1 = uri1
+    .mutate()
+    .setSpec("http://www.123.com/test/")
+    .finalize();
   link.uri = uri1;
   Assert.equal(link.uriHash, "AG87Ls+GmaUYSUJFETRr3Q==");
-  uri1 = uri1.mutate().setSpec("https://www.123.com/").finalize();
+  uri1 = uri1
+    .mutate()
+    .setSpec("https://www.123.com/")
+    .finalize();
   link.uri = uri1;
   Assert.equal(link.uriHash, "iSx6UH1a9enVPzUA9JZ42g==");
 }
 
 function test_links() {
   // links:
-  var link1 = Cc["@mozilla.org/windows-jumplistlink;1"]
-             .createInstance(Ci.nsIJumpListLink);
-  var link2 = Cc["@mozilla.org/windows-jumplistlink;1"]
-              .createInstance(Ci.nsIJumpListLink);
+  var link1 = Cc["@mozilla.org/windows-jumplistlink;1"].createInstance(
+    Ci.nsIJumpListLink
+  );
+  var link2 = Cc["@mozilla.org/windows-jumplistlink;1"].createInstance(
+    Ci.nsIJumpListLink
+  );
 
   var uri1 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-               .createInstance(Ci.nsIURIMutator)
-               .setSpec("http://www.test.com/")
-               .finalize();
+    .createInstance(Ci.nsIURIMutator)
+    .setSpec("http://www.test.com/")
+    .finalize();
   var uri2 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-               .createInstance(Ci.nsIURIMutator)
-               .setSpec("http://www.test.com/")
-               .finalize();
+    .createInstance(Ci.nsIURIMutator)
+    .setSpec("http://www.test.com/")
+    .finalize();
 
   link1.uri = uri1;
   link1.uriTitle = "Test";
@@ -129,7 +182,10 @@ function test_links() {
   Assert.ok(!link1.equals(link2));
 
   link2.uriTitle = "Test";
-  uri2 = uri2.mutate().setSpec("http://www.testing.com/").finalize();
+  uri2 = uri2
+    .mutate()
+    .setSpec("http://www.testing.com/")
+    .finalize();
   link2.uri = uri2;
 
   Assert.ok(!link1.equals(link2));
@@ -137,11 +193,13 @@ function test_links() {
 
 function test_shortcuts() {
   // shortcuts:
-  var sc = Cc["@mozilla.org/windows-jumplistshortcut;1"]
-           .createInstance(Ci.nsIJumpListShortcut);
+  var sc = Cc["@mozilla.org/windows-jumplistshortcut;1"].createInstance(
+    Ci.nsIJumpListShortcut
+  );
 
-  var handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
-                   .createInstance(Ci.nsILocalHandlerApp);
+  var handlerApp = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(Ci.nsILocalHandlerApp);
 
   handlerApp.name = "TestApp";
   handlerApp.detailedDescription = "TestApp detailed description.";
@@ -151,9 +209,9 @@ function test_shortcuts() {
   Assert.equal(sc.iconIndex, 1);
 
   var faviconPageUri = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-                         .createInstance(Ci.nsIURIMutator)
-                         .setSpec("http://www.123.com/")
-                         .finalize();
+    .createInstance(Ci.nsIURIMutator)
+    .setSpec("http://www.123.com/")
+    .finalize();
   sc.faviconPageUri = faviconPageUri;
   Assert.equal(sc.faviconPageUri, faviconPageUri);
 
@@ -176,11 +234,13 @@ async function test_jumplist() {
   // add a task item, and commit it.
 
   // not compiled in
-  if (Ci.nsIWinTaskbar == null)
+  if (Ci.nsIWinTaskbar == null) {
     return;
+  }
 
-  var taskbar = Cc["@mozilla.org/windows-taskbar;1"]
-                .getService(Ci.nsIWinTaskbar);
+  var taskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(
+    Ci.nsIWinTaskbar
+  );
 
   var builder = taskbar.createJumpListBuilder();
 
@@ -188,27 +248,29 @@ async function test_jumplist() {
 
   // Win7 and up only
   try {
-    var sysInfo = Cc["@mozilla.org/system-info;1"].
-                  getService(Ci.nsIPropertyBag2);
+    var sysInfo = Cc["@mozilla.org/system-info;1"].getService(
+      Ci.nsIPropertyBag2
+    );
     var ver = parseFloat(sysInfo.getProperty("version"));
     if (ver < 6.1) {
       Assert.ok(!builder.available);
       return;
     }
-  } catch (ex) { }
+  } catch (ex) {}
 
   Assert.ok(taskbar.available);
 
   builder.deleteActiveList();
 
-  var items = Cc["@mozilla.org/array;1"]
-              .createInstance(Ci.nsIMutableArray);
+  var items = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 
-  var sc = Cc["@mozilla.org/windows-jumplistshortcut;1"]
-           .createInstance(Ci.nsIJumpListShortcut);
+  var sc = Cc["@mozilla.org/windows-jumplistshortcut;1"].createInstance(
+    Ci.nsIJumpListShortcut
+  );
 
-  var handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
-                   .createInstance(Ci.nsILocalHandlerApp);
+  var handlerApp = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(Ci.nsILocalHandlerApp);
 
   handlerApp.name = "Notepad";
   handlerApp.detailedDescription = "Testing detailed description.";
@@ -224,13 +286,12 @@ async function test_jumplist() {
     sc.app = handlerApp;
     items.appendElement(sc);
 
-    var removed = Cc["@mozilla.org/array;1"]
-                  .createInstance(Ci.nsIMutableArray);
+    var removed = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     Assert.ok(builder.initListBuild(removed));
     Assert.ok(builder.addListToBuild(builder.JUMPLIST_CATEGORY_TASKS, items));
     Assert.ok(builder.addListToBuild(builder.JUMPLIST_CATEGORY_RECENT));
     Assert.ok(builder.addListToBuild(builder.JUMPLIST_CATEGORY_FREQUENT));
-    let rv = new Promise((resolve) => {
+    let rv = new Promise(resolve => {
       builder.commitListBuild(resolve);
     });
     Assert.ok(await rv);
@@ -238,8 +299,14 @@ async function test_jumplist() {
     builder.deleteActiveList();
 
     Assert.ok(builder.initListBuild(removed));
-    Assert.ok(builder.addListToBuild(builder.JUMPLIST_CATEGORY_CUSTOMLIST, items, "Custom List"));
-    rv = new Promise((resolve) => {
+    Assert.ok(
+      builder.addListToBuild(
+        builder.JUMPLIST_CATEGORY_CUSTOMLIST,
+        items,
+        "Custom List"
+      )
+    );
+    rv = new Promise(resolve => {
       builder.commitListBuild(resolve);
     });
     Assert.ok(await rv);

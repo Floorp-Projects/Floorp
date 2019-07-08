@@ -11,7 +11,8 @@ add_task(async function test_paramSubstitution() {
 
   let prefix = "http://test.moz/search?q=";
   let [engine] = await addTestEngines([
-    { name: "test",
+    {
+      name: "test",
       details: {
         alias: "test",
         description: "Search Test",

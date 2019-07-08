@@ -11,13 +11,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396024
 <iframe src="about:blank" type="content"></iframe>
 <script type="application/javascript">
 <![CDATA[
+// Note: We can't use window.frames directly here because the type="content"
+// attributes isolate the frames into their own BrowsingContext hierarchies.
+let frameElts = document.getElementsByTagName("iframe");
+
 var is = window.opener.wrappedJSObject.is;
 var ok = window.opener.wrappedJSObject.ok;
 var todo = window.opener.wrappedJSObject.todo;
 var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var gWbp;
 function printpreview() {
-  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
+  gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress, 
@@ -39,12 +43,12 @@ function printpreview() {
   prefs.setBoolPref('print.show_print_progress', false);
   //XXX I would have thought this would work, instead I'm forced to use prefs service
   gWbp.globalPrintSettings.showPrintProgress = false; 
-  gWbp.printPreview(gWbp.globalPrintSettings, window.frames[0], listener);
+  gWbp.printPreview(gWbp.globalPrintSettings, frameElts[0].contentWindow, listener);
   prefs.clearUserPref('print.show_print_progress');
 }
 
 function exitprintpreview() {
-  window.frames[1].docShell.exitPrintPreview();
+  frameElts[1].contentWindow.docShell.exitPrintPreview();
 }
 
 function finish() {
@@ -86,11 +90,11 @@ function run2() {
     setTimeout(run3, 0);
   };
   document.getElementById("i").addEventListener("load", loadhandler, true);
-  window.frames[0].location.reload();
+  frameElts[0].contentWindow.location.reload();
 }
 
 function run3() {
-  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
+  gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();
   ok(gWbp.doingPrintPreview, "Should be doing print preview");
   exitprintpreview();
   setTimeout(run4, 0);
@@ -109,7 +113,7 @@ function run4() {
 }
 
 function run5() {
-  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
+  gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();
   ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore2");
 
   //XXX this shouldn't be necessary, see bug 405555

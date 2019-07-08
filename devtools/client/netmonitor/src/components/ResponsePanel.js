@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Services = require("Services");
@@ -61,12 +64,16 @@ class ResponsePanel extends Component {
 
   componentDidMount() {
     const { request, connector } = this.props;
-    fetchNetworkUpdatePacket(connector.requestData, request, ["responseContent"]);
+    fetchNetworkUpdatePacket(connector.requestData, request, [
+      "responseContent",
+    ]);
   }
 
   componentWillReceiveProps(nextProps) {
     const { request, connector } = nextProps;
-    fetchNetworkUpdatePacket(connector.requestData, request, ["responseContent"]);
+    fetchNetworkUpdatePacket(connector.requestData, request, [
+      "responseContent",
+    ]);
   }
 
   updateImageDimensions({ target }) {
@@ -105,7 +112,9 @@ class ResponsePanel extends Component {
    * as text/plain instead.
    */
   isJSON(mimeType, response) {
-    const limit = Services.prefs.getIntPref("devtools.netmonitor.responseBodyLimit");
+    const limit = Services.prefs.getIntPref(
+      "devtools.netmonitor.responseBodyLimit"
+    );
     const { request } = this.props;
     let json, error;
 
@@ -173,11 +182,12 @@ class ResponsePanel extends Component {
     const { openLink, request } = this.props;
     const { responseContent, url } = request;
 
-    if (!responseContent || typeof responseContent.content.text !== "string"
-        || !responseContent.content.text) {
-      return div({ className: "empty-notice" },
-        RESPONSE_EMPTY_TEXT
-      );
+    if (
+      !responseContent ||
+      typeof responseContent.content.text !== "string" ||
+      !responseContent.content.text
+    ) {
+      return div({ className: "empty-notice" }, RESPONSE_EMPTY_TEXT);
     }
 
     let { encoding, mimeType, text } = responseContent.content;
@@ -185,25 +195,27 @@ class ResponsePanel extends Component {
     if (mimeType.includes("image/")) {
       const { width, height } = this.state.imageDimensions;
 
-      return (
-        div({ className: "panel-container response-image-box devtools-monospace" },
-          img({
-            className: "response-image",
-            src: formDataURI(mimeType, encoding, text),
-            onLoad: this.updateImageDimensions,
-          }),
-          div({ className: "response-summary" },
-            div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_NAME),
-            div({ className: "tabpanel-summary-value" }, getUrlBaseName(url)),
-          ),
-          div({ className: "response-summary" },
-            div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_DIMENSIONS),
-            div({ className: "tabpanel-summary-value" }, `${width} × ${height}`),
-          ),
-          div({ className: "response-summary" },
-            div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_MIMETYPE),
-            div({ className: "tabpanel-summary-value" }, mimeType),
-          ),
+      return div(
+        { className: "panel-container response-image-box devtools-monospace" },
+        img({
+          className: "response-image",
+          src: formDataURI(mimeType, encoding, text),
+          onLoad: this.updateImageDimensions,
+        }),
+        div(
+          { className: "response-summary" },
+          div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_NAME),
+          div({ className: "tabpanel-summary-value" }, getUrlBaseName(url))
+        ),
+        div(
+          { className: "response-summary" },
+          div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_DIMENSIONS),
+          div({ className: "tabpanel-summary-value" }, `${width} × ${height}`)
+        ),
+        div(
+          { className: "response-summary" },
+          div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_MIMETYPE),
+          div({ className: "tabpanel-summary-value" }, mimeType)
         )
       );
     }
@@ -247,18 +259,15 @@ class ResponsePanel extends Component {
       classList.push("contains-html-preview");
     }
 
-    return (
-      div({ className: classList.join(" ") },
-        error && div({ className: "response-error-header", title: error },
-          error
-        ),
-        PropertiesView({
-          object,
-          filterPlaceHolder: JSON_FILTER_TEXT,
-          sectionNames: Object.keys(object),
-          openLink,
-        }),
-      )
+    return div(
+      { className: classList.join(" ") },
+      error && div({ className: "response-error-header", title: error }, error),
+      PropertiesView({
+        object,
+        filterPlaceHolder: JSON_FILTER_TEXT,
+        sectionNames: Object.keys(object),
+        openLink,
+      })
     );
   }
 }

@@ -8,11 +8,11 @@
  * get updated. See bug 1535995.
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const principal = getPrincipal("https://foo.bar.mozilla-iot.org");
   const metadataFile = getRelativeFile(
-    "storage/default/https+++foo.bar.mozilla-iot.org/.metadata-v2");
+    "storage/default/https+++foo.bar.mozilla-iot.org/.metadata-v2"
+  );
 
   async function readMetadataFile() {
     let file = await File.createFromNsIFile(metadataFile);

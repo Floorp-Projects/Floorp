@@ -6,12 +6,10 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "ContentTask",
-];
+var EXPORTED_SYMBOLS = ["ContentTask"];
 
-const {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FRAME_SCRIPT = "resource://testing-common/content-task.js";
 
@@ -77,13 +75,11 @@ var ContentTask = {
     let id = gMessageID++;
     gPromises.set(id, deferred);
 
-    browser.messageManager.sendAsyncMessage(
-      "content-task:spawn",
-      {
-        id,
-        runnable: task.toString(),
-        arg,
-      });
+    browser.messageManager.sendAsyncMessage("content-task:spawn", {
+      id,
+      runnable: task.toString(),
+      arg,
+    });
 
     return deferred.promise;
   },
@@ -113,19 +109,40 @@ var ContentMessageListener = {
       }
     } else if (aMessage.name == "content-task:test-result") {
       let data = aMessage.data;
-      ContentTask._testScope.record(data.condition, data.name, null, data.stack);
+      ContentTask._testScope.record(
+        data.condition,
+        data.name,
+        null,
+        data.stack
+      );
     } else if (aMessage.name == "content-task:test-info") {
       ContentTask._testScope.info(aMessage.data.name);
     } else if (aMessage.name == "content-task:test-todo") {
       ContentTask._testScope.todo(aMessage.data.expr, aMessage.data.name);
     } else if (aMessage.name == "content-task:test-todo_is") {
-      ContentTask._testScope.todo_is(aMessage.data.a, aMessage.data.b, aMessage.data.name);
+      ContentTask._testScope.todo_is(
+        aMessage.data.a,
+        aMessage.data.b,
+        aMessage.data.name
+      );
     }
   },
 };
 
 Services.mm.addMessageListener("content-task:complete", ContentMessageListener);
-Services.mm.addMessageListener("content-task:test-result", ContentMessageListener);
-Services.mm.addMessageListener("content-task:test-info", ContentMessageListener);
-Services.mm.addMessageListener("content-task:test-todo", ContentMessageListener);
-Services.mm.addMessageListener("content-task:test-todo_is", ContentMessageListener);
+Services.mm.addMessageListener(
+  "content-task:test-result",
+  ContentMessageListener
+);
+Services.mm.addMessageListener(
+  "content-task:test-info",
+  ContentMessageListener
+);
+Services.mm.addMessageListener(
+  "content-task:test-todo",
+  ContentMessageListener
+);
+Services.mm.addMessageListener(
+  "content-task:test-todo_is",
+  ContentMessageListener
+);

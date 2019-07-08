@@ -10,7 +10,7 @@ async function run_test() {
 
   Services.prefs.setIntPref(PREF_APP_UPDATE_CANCELATIONS, 5);
 
-  let patchProps = {state: STATE_PENDING};
+  let patchProps = { state: STATE_PENDING };
   let patches = getLocalPatchString(patchProps);
   let updates = getLocalUpdateString({}, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
@@ -21,24 +21,34 @@ async function run_test() {
 
   standardInit();
 
-  Assert.ok(!gUpdateManager.activeUpdate,
-            "there should not be an active update");
-  Assert.equal(gUpdateManager.updateCount, 1,
-               "the update manager update count" + MSG_SHOULD_EQUAL);
+  Assert.ok(
+    !gUpdateManager.activeUpdate,
+    "there should not be an active update"
+  );
+  Assert.equal(
+    gUpdateManager.updateCount,
+    1,
+    "the update manager update count" + MSG_SHOULD_EQUAL
+  );
   await waitForUpdateXMLFiles();
 
   let cancelations = Services.prefs.getIntPref(PREF_APP_UPDATE_CANCELATIONS, 0);
-  Assert.equal(cancelations, 0,
-               "the " + PREF_APP_UPDATE_CANCELATIONS + " preference " +
-               MSG_SHOULD_EQUAL);
+  Assert.equal(
+    cancelations,
+    0,
+    "the " + PREF_APP_UPDATE_CANCELATIONS + " preference " + MSG_SHOULD_EQUAL
+  );
 
   log = getUpdateDirFile(FILE_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   Assert.ok(log.exists(), MSG_SHOULD_EXIST);
-  Assert.equal(readFile(log), "Last Update Log",
-               "the last update log contents" + MSG_SHOULD_EQUAL);
+  Assert.equal(
+    readFile(log),
+    "Last Update Log",
+    "the last update log contents" + MSG_SHOULD_EQUAL
+  );
 
   log = getUpdateDirFile(FILE_BACKUP_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);

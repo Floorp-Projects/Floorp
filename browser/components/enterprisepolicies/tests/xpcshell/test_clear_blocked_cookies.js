@@ -7,18 +7,70 @@ const ORIGIN_DOMAIN = "browser_policy_clear_blocked_cookies.org";
 
 add_task(async function setup() {
   const expiry = Date.now() + 24 * 60 * 60;
-  Services.cookies.add(HOSTNAME_DOMAIN, "/", "secure", "true", true, false, false, expiry, {}, Ci.nsICookie.SAMESITE_NONE);
-  Services.cookies.add(HOSTNAME_DOMAIN, "/", "insecure", "true", false, false, false, expiry, {}, Ci.nsICookie.SAMESITE_NONE);
-  Services.cookies.add(ORIGIN_DOMAIN, "/", "secure", "true", true, false, false, expiry, {}, Ci.nsICookie.SAMESITE_NONE);
-  Services.cookies.add(ORIGIN_DOMAIN, "/", "insecure", "true", false, false, false, expiry, {}, Ci.nsICookie.SAMESITE_NONE);
-  Services.cookies.add("example.net", "/", "secure", "true", true, false, false, expiry, {}, Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    HOSTNAME_DOMAIN,
+    "/",
+    "secure",
+    "true",
+    true,
+    false,
+    false,
+    expiry,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
+  Services.cookies.add(
+    HOSTNAME_DOMAIN,
+    "/",
+    "insecure",
+    "true",
+    false,
+    false,
+    false,
+    expiry,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
+  Services.cookies.add(
+    ORIGIN_DOMAIN,
+    "/",
+    "secure",
+    "true",
+    true,
+    false,
+    false,
+    expiry,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
+  Services.cookies.add(
+    ORIGIN_DOMAIN,
+    "/",
+    "insecure",
+    "true",
+    false,
+    false,
+    false,
+    expiry,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
+  Services.cookies.add(
+    "example.net",
+    "/",
+    "secure",
+    "true",
+    true,
+    false,
+    false,
+    expiry,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
   await setupPolicyEngineWithJson({
-    "policies": {
-      "Cookies": {
-        "Block": [
-          `http://${HOSTNAME_DOMAIN}`,
-          `https://${ORIGIN_DOMAIN}:8080`,
-        ],
+    policies: {
+      Cookies: {
+        Block: [`http://${HOSTNAME_DOMAIN}`, `https://${ORIGIN_DOMAIN}:8080`],
       },
     },
   });
@@ -45,14 +97,13 @@ add_task(async function test_cookies_for_blocked_sites_cleared() {
   const expected = {
     hostname: [],
     origin: [],
-    keep: [
-      {host: "example.net",
-       name: "secure",
-       path: "/"},
-    ],
+    keep: [{ host: "example.net", name: "secure", path: "/" }],
   };
-  equal(JSON.stringify(cookies), JSON.stringify(expected),
-     "All stored cookies for blocked origins should be cleared");
+  equal(
+    JSON.stringify(cookies),
+    JSON.stringify(expected),
+    "All stored cookies for blocked origins should be cleared"
+  );
 });
 
 add_task(function teardown() {

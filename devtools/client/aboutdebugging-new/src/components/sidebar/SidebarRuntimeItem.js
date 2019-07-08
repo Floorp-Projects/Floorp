@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -43,8 +46,8 @@ class SidebarRuntimeItem extends PureComponent {
   renderConnectButton() {
     const { isConnecting } = this.props;
     const localizationId = isConnecting
-                             ? "about-debugging-sidebar-item-connect-button-connecting"
-                             : "about-debugging-sidebar-item-connect-button";
+      ? "about-debugging-sidebar-item-connect-button-connecting"
+      : "about-debugging-sidebar-item-connect-button";
     return Localized(
       {
         id: localizationId,
@@ -84,14 +87,22 @@ class SidebarRuntimeItem extends PureComponent {
   }
 
   renderName() {
-    const { deviceName, getString, isUnavailable, isUnplugged, name } = this.props;
+    const {
+      deviceName,
+      getString,
+      isUnavailable,
+      isUnplugged,
+      name,
+    } = this.props;
 
     let displayName, qaClassName;
     if (isUnplugged) {
       displayName = getString("about-debugging-sidebar-runtime-item-unplugged");
       qaClassName = "qa-runtime-item-unplugged";
     } else if (isUnavailable) {
-      displayName = getString("about-debugging-sidebar-runtime-item-waiting-for-browser");
+      displayName = getString(
+        "about-debugging-sidebar-runtime-item-waiting-for-browser"
+      );
       qaClassName = "qa-runtime-item-waiting-for-browser";
     } else {
       displayName = name;
@@ -116,8 +127,8 @@ class SidebarRuntimeItem extends PureComponent {
           {
             className: `sidebar-runtime-item__runtime__details ${qaClassName}`,
           },
-          displayName,
-        ),
+          displayName
+        )
       );
     }
 
@@ -127,7 +138,7 @@ class SidebarRuntimeItem extends PureComponent {
           className,
           title: localizationId,
         },
-        displayName,
+        displayName
       );
     }
 
@@ -138,7 +149,7 @@ class SidebarRuntimeItem extends PureComponent {
         $deviceName: deviceName,
         $displayName: displayName,
       },
-      deviceName ? renderWithDevice() : renderNoDevice(),
+      deviceName ? renderWithDevice() : renderNoDevice()
     );
   }
 
@@ -155,9 +166,11 @@ class SidebarRuntimeItem extends PureComponent {
       runtimeId,
     } = this.props;
 
-    const connectionStatus = isConnected ?
-      getString("aboutdebugging-sidebar-runtime-connection-status-connected") :
-      getString("aboutdebugging-sidebar-runtime-connection-status-disconnected");
+    const connectionStatus = isConnected
+      ? getString("aboutdebugging-sidebar-runtime-connection-status-connected")
+      : getString(
+          "aboutdebugging-sidebar-runtime-connection-status-disconnected"
+        );
 
     return SidebarItem(
       {
@@ -168,14 +181,12 @@ class SidebarRuntimeItem extends PureComponent {
         {
           className: "sidebar-runtime-item__container",
         },
-        dom.img(
-          {
-            className: "sidebar-runtime-item__icon ",
-            src: icon,
-            alt: connectionStatus,
-            title: connectionStatus,
-          }
-        ),
+        dom.img({
+          className: "sidebar-runtime-item__icon ",
+          src: icon,
+          alt: connectionStatus,
+          title: connectionStatus,
+        }),
         this.renderName(),
         !isUnavailable && !isConnected ? this.renderConnectButton() : null
       ),
@@ -196,7 +207,7 @@ class SidebarRuntimeItem extends PureComponent {
         MESSAGE_LEVEL.WARNING,
         "about-debugging-sidebar-item-connect-button-connection-not-responding",
         "qa-connection-not-responding"
-      ),
+      )
     );
   }
 }

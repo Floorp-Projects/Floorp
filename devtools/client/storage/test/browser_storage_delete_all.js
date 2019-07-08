@@ -11,28 +11,35 @@
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
-  const contextMenu = gPanelWindow.document.getElementById("storage-table-popup");
+  const contextMenu = gPanelWindow.document.getElementById(
+    "storage-table-popup"
+  );
   const menuDeleteAllItem = contextMenu.querySelector(
-    "#storage-table-popup-delete-all");
+    "#storage-table-popup-delete-all"
+  );
 
   info("test state before delete");
   const beforeState = [
-    [["localStorage", "http://test1.example.org"],
-      ["key", "ls1", "ls2"]],
-    [["localStorage", "http://sectest1.example.org"],
-      ["iframe-u-ls1"]],
-    [["localStorage", "https://sectest1.example.org"],
-      ["iframe-s-ls1"]],
-    [["sessionStorage", "http://test1.example.org"],
-      ["key", "ss1"]],
-    [["sessionStorage", "http://sectest1.example.org"],
-      ["iframe-u-ss1", "iframe-u-ss2"]],
-    [["sessionStorage", "https://sectest1.example.org"],
-      ["iframe-s-ss1"]],
-    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
-      [1, 2, 3]],
-    [["Cache", "http://test1.example.org", "plop"],
-      [MAIN_DOMAIN + "404_cached_file.js", MAIN_DOMAIN + "browser_storage_basic.js"]],
+    [["localStorage", "http://test1.example.org"], ["key", "ls1", "ls2"]],
+    [["localStorage", "http://sectest1.example.org"], ["iframe-u-ls1"]],
+    [["localStorage", "https://sectest1.example.org"], ["iframe-s-ls1"]],
+    [["sessionStorage", "http://test1.example.org"], ["key", "ss1"]],
+    [
+      ["sessionStorage", "http://sectest1.example.org"],
+      ["iframe-u-ss1", "iframe-u-ss2"],
+    ],
+    [["sessionStorage", "https://sectest1.example.org"], ["iframe-s-ss1"]],
+    [
+      ["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
+      [1, 2, 3],
+    ],
+    [
+      ["Cache", "http://test1.example.org", "plop"],
+      [
+        MAIN_DOMAIN + "404_cached_file.js",
+        MAIN_DOMAIN + "browser_storage_basic.js",
+      ],
+    ],
   ];
 
   await checkState(beforeState);
@@ -40,10 +47,21 @@ add_task(async function() {
   info("do the delete");
   const deleteHosts = [
     [["localStorage", "https://sectest1.example.org"], "iframe-s-ls1", "name"],
-    [["sessionStorage", "https://sectest1.example.org"], "iframe-s-ss1", "name"],
-    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"], 1, "name"],
-    [["Cache", "http://test1.example.org", "plop"],
-     MAIN_DOMAIN + "404_cached_file.js", "url"],
+    [
+      ["sessionStorage", "https://sectest1.example.org"],
+      "iframe-s-ss1",
+      "name",
+    ],
+    [
+      ["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
+      1,
+      "name",
+    ],
+    [
+      ["Cache", "http://test1.example.org", "plop"],
+      MAIN_DOMAIN + "404_cached_file.js",
+      "url",
+    ],
   ];
 
   for (const [store, rowName, cellToClick] of deleteHosts) {
@@ -66,22 +84,17 @@ add_task(async function() {
   const afterState = [
     // iframes from the same host, one secure, one unsecure, are independent
     // from each other. Delete all in one doesn't touch the other one.
-    [["localStorage", "http://test1.example.org"],
-      ["key", "ls1", "ls2"]],
-    [["localStorage", "http://sectest1.example.org"],
-      ["iframe-u-ls1"]],
-    [["localStorage", "https://sectest1.example.org"],
-      []],
-    [["sessionStorage", "http://test1.example.org"],
-      ["key", "ss1"]],
-    [["sessionStorage", "http://sectest1.example.org"],
-      ["iframe-u-ss1", "iframe-u-ss2"]],
-    [["sessionStorage", "https://sectest1.example.org"],
-      []],
-    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
-      []],
-    [["Cache", "http://test1.example.org", "plop"],
-      []],
+    [["localStorage", "http://test1.example.org"], ["key", "ls1", "ls2"]],
+    [["localStorage", "http://sectest1.example.org"], ["iframe-u-ls1"]],
+    [["localStorage", "https://sectest1.example.org"], []],
+    [["sessionStorage", "http://test1.example.org"], ["key", "ss1"]],
+    [
+      ["sessionStorage", "http://sectest1.example.org"],
+      ["iframe-u-ss1", "iframe-u-ss2"],
+    ],
+    [["sessionStorage", "https://sectest1.example.org"], []],
+    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"], []],
+    [["Cache", "http://test1.example.org", "plop"], []],
   ];
 
   await checkState(afterState);

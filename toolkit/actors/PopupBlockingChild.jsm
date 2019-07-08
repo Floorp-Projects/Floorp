@@ -7,8 +7,12 @@
 
 var EXPORTED_SYMBOLS = ["PopupBlockingChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 class PopupBlockingChild extends ActorChild {
   constructor(dispatcher) {
@@ -36,7 +40,11 @@ class PopupBlockingChild extends ActorChild {
           // If we have a requesting window and the requesting document is
           // still the current document, open the popup.
           if (dwi && dwi.document == internals.requestingDocument) {
-            dwi.open(data.popupWindowURIspec, data.popupWindowName, data.popupWindowFeatures);
+            dwi.open(
+              data.popupWindowURIspec,
+              data.popupWindowName,
+              data.popupWindowFeatures
+            );
           }
         }
         break;
@@ -60,10 +68,12 @@ class PopupBlockingChild extends ActorChild {
             popupWindowURIspec = popupWindowURIspec.substring(0, 500);
           }
 
-          popupData.push({popupWindowURIspec});
+          popupData.push({ popupWindowURIspec });
         }
 
-        this.mm.sendAsyncMessage("PopupBlocking:ReplyGetBlockedPopupList", {popupData});
+        this.mm.sendAsyncMessage("PopupBlocking:ReplyGetBlockedPopupList", {
+          popupData,
+        });
         break;
       }
     }
@@ -93,7 +103,9 @@ class PopupBlockingChild extends ActorChild {
     }
 
     let obj = {
-      popupWindowURIspec: ev.popupWindowURI ? ev.popupWindowURI.spec : "about:blank",
+      popupWindowURIspec: ev.popupWindowURI
+        ? ev.popupWindowURI.spec
+        : "about:blank",
       popupWindowFeatures: ev.popupWindowFeatures,
       popupWindowName: ev.popupWindowName,
     };
@@ -113,10 +125,15 @@ class PopupBlockingChild extends ActorChild {
       let i = 0;
       let oldLength = this.popupData.length;
       while (i < this.popupData.length) {
-        let {requestingWindow, requestingDocument} = this.popupDataInternal[i];
+        let { requestingWindow, requestingDocument } = this.popupDataInternal[
+          i
+        ];
         // Filter out irrelevant reports.
-        if (requestingWindow && requestingWindow.document == requestingDocument &&
-            requestingDocument != removedDoc) {
+        if (
+          requestingWindow &&
+          requestingWindow.document == requestingDocument &&
+          requestingDocument != removedDoc
+        ) {
           i++;
         } else {
           this.popupData.splice(i, 1);
@@ -134,13 +151,15 @@ class PopupBlockingChild extends ActorChild {
   }
 
   updateBlockedPopups(freshPopup) {
-    this.mm.sendAsyncMessage("PopupBlocking:UpdateBlockedPopups",
-      {
-        count: this.popupData ? this.popupData.length : 0,
-        freshPopup,
-      });
+    this.mm.sendAsyncMessage("PopupBlocking:UpdateBlockedPopups", {
+      count: this.popupData ? this.popupData.length : 0,
+      freshPopup,
+    });
   }
 }
 
-XPCOMUtils.defineLazyPreferenceGetter(PopupBlockingChild, "maxReportedPopups",
-  "privacy.popups.maxReported");
+XPCOMUtils.defineLazyPreferenceGetter(
+  PopupBlockingChild,
+  "maxReportedPopups",
+  "privacy.popups.maxReported"
+);

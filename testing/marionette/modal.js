@@ -4,10 +4,12 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
+const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
@@ -16,7 +18,7 @@ this.EXPORTED_SYMBOLS = ["modal"];
 const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
 
 const isFirefox = () =>
-    Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+  Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
 /** @namespace */
 this.modal = {
@@ -40,8 +42,11 @@ modal.findModalDialogs = function(context) {
   for (let win of Services.wm.getEnumerator(null)) {
     // TODO: Use BrowserWindowTracker.getTopWindow for modal dialogs without
     // an opener.
-    if (win.document.documentURI === COMMON_DIALOG &&
-        win.opener && win.opener === context.window) {
+    if (
+      win.document.documentURI === COMMON_DIALOG &&
+      win.opener &&
+      win.opener === context.window
+    ) {
       return new modal.Dialog(() => context, Cu.getWeakReference(win));
     }
   }
@@ -51,8 +56,7 @@ modal.findModalDialogs = function(context) {
   // TODO: Find an adequate implementation for Fennec.
   if (context.tab && context.tabBrowser.getTabModalPromptBox) {
     let contentBrowser = context.contentBrowser;
-    let promptManager =
-        context.tabBrowser.getTabModalPromptBox(contentBrowser);
+    let promptManager = context.tabBrowser.getTabModalPromptBox(contentBrowser);
     let prompts = promptManager.listPrompts();
 
     if (prompts.length) {
@@ -105,8 +109,9 @@ modal.DialogObserver = class {
   handleEvent(event) {
     logger.trace(`Received event ${event.type}`);
 
-    let chromeWin = event.target.opener ? event.target.opener.ownerGlobal :
-        event.target.ownerGlobal;
+    let chromeWin = event.target.opener
+      ? event.target.opener.ownerGlobal
+      : event.target.ownerGlobal;
 
     let targetRef = Cu.getWeakReference(event.target);
 
@@ -121,8 +126,9 @@ modal.DialogObserver = class {
     switch (topic) {
       case "common-dialog-loaded":
       case "tabmodal-dialog-loaded":
-        let chromeWin = subject.opener ? subject.opener.ownerGlobal :
-            subject.ownerGlobal;
+        let chromeWin = subject.opener
+          ? subject.opener.ownerGlobal
+          : subject.ownerGlobal;
 
         // Always keep a weak reference to the current dialog
         let targetRef = Cu.getWeakReference(subject);
@@ -179,7 +185,9 @@ modal.Dialog = class {
     this.win_ = winRef;
   }
 
-  get curBrowser_() { return this.curBrowserFn_(); }
+  get curBrowser_() {
+    return this.curBrowserFn_();
+  }
 
   /**
    * Returns the ChromeWindow associated with an open dialog window if

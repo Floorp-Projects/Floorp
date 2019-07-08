@@ -4367,6 +4367,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         break;
       case NS_ERROR_PROXY_CONNECTION_REFUSED:
       case NS_ERROR_PROXY_AUTHENTICATION_FAILED:
+      case NS_ERROR_TOO_MANY_REQUESTS:
         // Proxy connection was refused.
         error = "proxyConnectFailure";
         break;
@@ -5910,13 +5911,6 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
   NS_ENSURE_ARG(aURI);
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
-  /* We do need to pass in a referrer, but we don't want it to
-   * be sent to the server.
-   * For most refreshes the current URI is an appropriate
-   * internal referrer
-   */
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      new ReferrerInfo(mCurrentURI, mozilla::net::RP_Unset, false);
   loadState->SetOriginalURI(mCurrentURI);
   loadState->SetResultPrincipalURI(aURI);
   loadState->SetResultPrincipalURIIsSome(true);
@@ -5944,6 +5938,8 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
    */
   bool equalUri = false;
   nsresult rv = aURI->Equals(mCurrentURI, &equalUri);
+
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
   if (NS_SUCCEEDED(rv) && (!equalUri) && aMetaRefresh &&
       aDelay <= REFRESH_REDIRECT_TIMER) {
     /* It is a META refresh based redirection within the threshold time
@@ -5952,12 +5948,22 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
      */
     loadState->SetLoadType(LOAD_NORMAL_REPLACE);
 
-    /* for redirects we mimic HTTP, which passes the
-     *  original referrer
+    /* For redirects we mimic HTTP, which passes the
+     * original referrer.
+     * We will pass in referrer but will not send to server
      */
-    referrerInfo = mReferrerInfo;
+    if (mReferrerInfo) {
+      referrerInfo = static_cast<ReferrerInfo*>(mReferrerInfo.get())
+                         ->CloneWithNewSendReferrer(false);
+    }
   } else {
     loadState->SetLoadType(LOAD_REFRESH);
+    /* We do need to pass in a referrer, but we don't want it to
+     * be sent to the server.
+     * For most refreshes the current URI is an appropriate
+     * internal referrer.
+     */
+    referrerInfo = new ReferrerInfo(mCurrentURI, mozilla::net::RP_Unset, false);
   }
 
   loadState->SetReferrerInfo(referrerInfo);
@@ -6957,6 +6963,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
          aStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
          aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
          aStatus == NS_ERROR_PROXY_AUTHENTICATION_FAILED ||
+         aStatus == NS_ERROR_TOO_MANY_REQUESTS ||
          aStatus == NS_ERROR_BLOCKED_BY_POLICY) &&
         (isTopFrame || UseErrorPages())) {
       DisplayLoadError(aStatus, url, nullptr, aChannel);

@@ -16,17 +16,24 @@ if (!gMultiProcessBrowser) {
   PromiseTestUtils.expectUncaughtRejection(/NetworkError/);
 }
 
-const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "test_no_mcb_for_loopback.html";
+const TEST_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "test_no_mcb_for_loopback.html";
 
-const LOOPBACK_PNG_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://127.0.0.1:8888") + "moz.png";
+const LOOPBACK_PNG_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "http://127.0.0.1:8888"
+  ) + "moz.png";
 
 const PREF_BLOCK_DISPLAY = "security.mixed_content.block_display_content";
 const PREF_UPGRADE_DISPLAY = "security.mixed_content.upgrade_display_content";
 const PREF_BLOCK_ACTIVE = "security.mixed_content.block_active_content";
 
 function clearAllImageCaches() {
-  let tools = Cc["@mozilla.org/image/tools;1"]
-                .getService(Ci.imgITools);
+  let tools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
   let imageCache = tools.getImgCacheForDocument(window.document);
   imageCache.clearCache(true); // true=chrome
   imageCache.clearCache(false); // false=content
@@ -49,12 +56,22 @@ add_task(async function allowLoopbackMixedContent() {
   const browser = gBrowser.getBrowserForTab(tab);
 
   await ContentTask.spawn(browser, null, function() {
-    is(docShell.hasMixedDisplayContentBlocked, false, "hasMixedDisplayContentBlocked not set");
-    is(docShell.hasMixedActiveContentBlocked, false, "hasMixedActiveContentBlocked not set");
+    is(
+      docShell.hasMixedDisplayContentBlocked,
+      false,
+      "hasMixedDisplayContentBlocked not set"
+    );
+    is(
+      docShell.hasMixedActiveContentBlocked,
+      false,
+      "hasMixedActiveContentBlocked not set"
+    );
   });
 
   // Check that loopback content served from the cache is not blocked.
-  await ContentTask.spawn(browser, LOOPBACK_PNG_URL, async function(loopbackPNGUrl) {
+  await ContentTask.spawn(browser, LOOPBACK_PNG_URL, async function(
+    loopbackPNGUrl
+  ) {
     const doc = content.document;
     const img = doc.createElement("img");
     const promiseImgLoaded = ContentTaskUtils.waitForEvent(img, "load", false);

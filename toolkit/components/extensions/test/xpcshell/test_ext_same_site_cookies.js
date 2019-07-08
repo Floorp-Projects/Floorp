@@ -1,13 +1,14 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 
 const WIN = `<html><body>dummy page setting a same-site cookie</body></html>`;
 
 // Small red image.
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
-  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
 
 server.registerPathHandler("/same_site_cookies", (request, response) => {
   // avoid confusing cache behaviors
@@ -20,7 +21,11 @@ server.registerPathHandler("/same_site_cookies", (request, response) => {
 
   // using startsWith and discard the math random
   if (request.queryString.startsWith("loadImage")) {
-    response.setHeader("Set-Cookie", "myKey=mySameSiteExtensionCookie; samesite=strict", true);
+    response.setHeader(
+      "Set-Cookie",
+      "myKey=mySameSiteExtensionCookie; samesite=strict",
+      true
+    );
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;
@@ -49,14 +54,14 @@ server.registerPathHandler("/same_site_cookies", (request, response) => {
 add_task(async function test_webRequest_same_site_cookie_access() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "http://example.com/*",
+      permissions: ["http://example.com/*"],
+      content_scripts: [
+        {
+          matches: ["http://example.com/*"],
+          run_at: "document_end",
+          js: ["content_script.js"],
+        },
       ],
-      content_scripts: [{
-        matches: ["http://example.com/*"],
-        run_at: "document_end",
-        js: ["content_script.js"],
-      }],
     },
 
     background() {
@@ -64,10 +69,17 @@ add_task(async function test_webRequest_same_site_cookie_access() {
         if (msg === "verify-same-site-cookie-moz-extension") {
           let xhr = new XMLHttpRequest();
           try {
-            xhr.open("GET", "http://example.com/same_site_cookies?loadXHR", true);
+            xhr.open(
+              "GET",
+              "http://example.com/same_site_cookies?loadXHR",
+              true
+            );
             xhr.onload = function() {
-              browser.test.assertEq("myKey=mySameSiteExtensionCookie", xhr.responseText,
-                                    "cookie should be accessible from moz-extension context");
+              browser.test.assertEq(
+                "myKey=mySameSiteExtensionCookie",
+                xhr.responseText,
+                "cookie should be accessible from moz-extension context"
+              );
               browser.test.sendMessage("same-site-cookie-test-done");
             };
             xhr.onerror = function() {
@@ -87,7 +99,10 @@ add_task(async function test_webRequest_same_site_cookie_access() {
         let myImage = document.createElement("img");
         // Set the src via wrappedJSObject so the load is triggered with the
         // content page's principal rather than ours.
-        myImage.wrappedJSObject.setAttribute("src", "http://example.com/same_site_cookies?loadImage" + Math.random());
+        myImage.wrappedJSObject.setAttribute(
+          "src",
+          "http://example.com/same_site_cookies?loadImage" + Math.random()
+        );
         myImage.onload = function() {
           browser.test.log("image onload");
           browser.test.sendMessage("image-loaded-and-same-site-cookie-set");
@@ -102,7 +117,9 @@ add_task(async function test_webRequest_same_site_cookie_access() {
 
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/same_site_cookies?loadWin");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/same_site_cookies?loadWin"
+  );
 
   await extension.awaitMessage("image-loaded-and-same-site-cookie-set");
 

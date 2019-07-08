@@ -9,7 +9,10 @@ const BOOKMARKED_PAGE_URI = NetUtil.newURI("http://example.com/bookmarked");
 
 add_task(async function test_expireAllFavicons() {
   // Add a visited page.
-  await PlacesTestUtils.addVisits({ uri: TEST_PAGE_URI, transition: TRANSITION_TYPED });
+  await PlacesTestUtils.addVisits({
+    uri: TEST_PAGE_URI,
+    transition: TRANSITION_TYPED,
+  });
 
   // Set a favicon for our test page.
   await setFaviconForPage(TEST_PAGE_URI, SMALLPNG_DATA_URI);

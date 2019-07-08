@@ -10,7 +10,9 @@
  * not open the panel automatically.
  */
 add_task(async function test_first_download_panel() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.download.autohideButton", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.autohideButton", false]],
+  });
   await promiseButtonShown("downloads-button");
   // Clear the download panel has shown preference first as this test is used to
   // verify this preference's behaviour.
@@ -42,8 +44,10 @@ add_task(async function test_first_download_panel() {
   // If we got here, that means the panel opened.
   DownloadsPanel.hidePanel();
 
-  ok(DownloadsCommon.getData(window).panelHasShownBefore,
-     "Should have recorded that the panel was opened on a download.");
+  ok(
+    DownloadsCommon.getData(window).panelHasShownBefore,
+    "Should have recorded that the panel was opened on a download."
+  );
 
   // Next, make sure that if we start another download, we don't open the
   // panel automatically.

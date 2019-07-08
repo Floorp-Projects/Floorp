@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -73,8 +76,9 @@ class NetworkLocationsForm extends PureComponent {
 
     return Message(
       {
-        className: "connect-page__network-form__error-message " +
-                   "qa-connect-page__network-form__error-message",
+        className:
+          "connect-page__network-form__error-message " +
+          "qa-connect-page__network-form__error-message",
         level: MESSAGE_LEVEL.ERROR,
         isCloseable: true,
       },
@@ -85,11 +89,11 @@ class NetworkLocationsForm extends PureComponent {
         },
         dom.p(
           {
-          className: "technical-text",
+            className: "technical-text",
           },
           errorMessageId
         )
-      ),
+      )
     );
   }
 
@@ -97,7 +101,7 @@ class NetworkLocationsForm extends PureComponent {
     return dom.form(
       {
         className: "connect-page__network-form",
-        onSubmit: (e) => this.onSubmit(e),
+        onSubmit: e => this.onSubmit(e),
       },
       this.renderError(),
       Localized(
@@ -108,7 +112,7 @@ class NetworkLocationsForm extends PureComponent {
           {
             htmlFor: "about-debugging-network-locations-host-input",
           },
-          "Host",
+          "Host"
         )
       ),
       dom.input({
@@ -117,7 +121,7 @@ class NetworkLocationsForm extends PureComponent {
         placeholder: "localhost:6080",
         type: "text",
         value: this.state.value,
-        onChange: (e) => {
+        onChange: e => {
           const value = e.target.value;
           this.setState({ value });
         },
@@ -132,7 +136,7 @@ class NetworkLocationsForm extends PureComponent {
           },
           "Add"
         )
-      ),
+      )
     );
   }
 }

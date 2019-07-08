@@ -11,7 +11,9 @@
 
 /* globals exportFunction */
 
-console.info("The user agent has been overridden for compatibility reasons. See https://webcompat.com/issues/1804 for details.");
+console.info(
+  "The user agent has been overridden for compatibility reasons. See https://webcompat.com/issues/1804 for details."
+);
 
 const CHROME_UA = navigator.userAgent + " Chrome for WebCompat";
 

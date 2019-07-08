@@ -11,18 +11,21 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = [
-  "LoginImport",
-];
+const EXPORTED_SYMBOLS = ["LoginImport"];
 
 // Globals
 
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "Sqlite",
-                               "resource://gre/modules/Sqlite.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sqlite",
+  "resource://gre/modules/Sqlite.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 // LoginImport
 
@@ -61,8 +64,10 @@ this.LoginImport.prototype = {
     // restriction might be removed to support re-importing passwords set by an
     // old version by flipping the import preference and restarting.
     if (this.store.data.logins.length > 0) {
-      throw new Error("Unable to import saved passwords because some data " +
-                      "has already been imported or saved.");
+      throw new Error(
+        "Unable to import saved passwords because some data " +
+          "has already been imported or saved."
+      );
     }
 
     // When a timestamp is not specified, we will use the same reference time.
@@ -77,8 +82,10 @@ this.LoginImport.prototype = {
       // Version 4 was implemented in bug 465636 (Firefox 4, March 2010).
       // Version 5 was implemented in bug 718817 (Firefox 13, February 2012).
       if (schemaVersion < 3) {
-        throw new Error("Unable to import saved passwords because " +
-                        "the existing profile is too old.");
+        throw new Error(
+          "Unable to import saved passwords because " +
+            "the existing profile is too old."
+        );
       }
 
       let rows = await connection.execute("SELECT * FROM moz_logins");
@@ -108,7 +115,7 @@ this.LoginImport.prototype = {
             timeLastUsed = row.getResultByName("timeLastUsed");
             timePasswordChanged = row.getResultByName("timePasswordChanged");
             timesUsed = row.getResultByName("timesUsed");
-          } catch (ex) { }
+          } catch (ex) {}
 
           // These columns may be null either because they were not present in
           // the database or because the record was created on a new schema

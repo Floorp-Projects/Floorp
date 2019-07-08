@@ -19,8 +19,8 @@ const TEST_URI_2 = "data:text/html,<html><body>test</body></html>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
-  const {highlighters} = view;
+  const { inspector, view } = await openRuleView();
+  const { highlighters } = view;
 
   await selectNode("#flex", inspector);
   const container = getRuleViewProperty(view, "#flex", "display").valueSpan;

@@ -3,10 +3,7 @@ const PREF_WARN_ON_CLOSE = "browser.tabs.warnOnCloseOtherTabs";
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_MULTISELECT_TABS, true],
-      [PREF_WARN_ON_CLOSE, false],
-    ],
+    set: [[PREF_MULTISELECT_TABS, true], [PREF_WARN_ON_CLOSE, false]],
   });
 });
 

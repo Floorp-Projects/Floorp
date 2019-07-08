@@ -27,7 +27,7 @@ add_task(async function() {
 function testMultipleInitialization(doc) {
   doc.body.innerHTML = "";
   const options = {};
-  const span = options.element = createSpan(doc);
+  const span = (options.element = createSpan(doc));
 
   info("Creating multiple inplace-editor fields");
   editableField(options);
@@ -38,26 +38,38 @@ function testMultipleInitialization(doc) {
 
   is(span.style.display, "none", "The original <span> is hidden");
   is(doc.querySelectorAll("input").length, 1, "Only one <input>");
-  is(doc.querySelectorAll("span").length, 2,
-    "Correct number of <span> elements");
-  is(doc.querySelectorAll("span.autosizer").length, 1,
-    "There is an autosizer element");
+  is(
+    doc.querySelectorAll("span").length,
+    2,
+    "Correct number of <span> elements"
+  );
+  is(
+    doc.querySelectorAll("span.autosizer").length,
+    1,
+    "There is an autosizer element"
+  );
 }
 
 function testReturnCommit(doc) {
   info("Testing that pressing return commits the new value");
   const def = defer();
 
-  createInplaceEditorAndClick({
-    initial: "explicit initial",
-    start: function(editor) {
-      is(editor.input.value, "explicit initial",
-        "Explicit initial value should be used.");
-      editor.input.value = "Test Value";
-      EventUtils.sendKey("return");
+  createInplaceEditorAndClick(
+    {
+      initial: "explicit initial",
+      start: function(editor) {
+        is(
+          editor.input.value,
+          "explicit initial",
+          "Explicit initial value should be used."
+        );
+        editor.input.value = "Test Value";
+        EventUtils.sendKey("return");
+      },
+      done: onDone("Test Value", true, def),
     },
-    done: onDone("Test Value", true, def),
-  }, doc);
+    doc
+  );
 
   return def.promise;
 }
@@ -66,14 +78,18 @@ function testBlurCommit(doc) {
   info("Testing that bluring the field commits the new value");
   const def = defer();
 
-  createInplaceEditorAndClick({
-    start: function(editor) {
-      is(editor.input.value, "Edit Me!", "textContent of the span used.");
-      editor.input.value = "Test Value";
-      editor.input.blur();
+  createInplaceEditorAndClick(
+    {
+      start: function(editor) {
+        is(editor.input.value, "Edit Me!", "textContent of the span used.");
+        editor.input.value = "Test Value";
+        editor.input.blur();
+      },
+      done: onDone("Test Value", true, def),
     },
-    done: onDone("Test Value", true, def),
-  }, doc, "Edit Me!");
+    doc,
+    "Edit Me!"
+  );
 
   return def.promise;
 }
@@ -82,13 +98,16 @@ function testAdvanceCharCommit(doc) {
   info("Testing that configured advanceChars commit the new value");
   const def = defer();
 
-  createInplaceEditorAndClick({
-    advanceChars: ":",
-    start: function(editor) {
-      EventUtils.sendString("Test:");
+  createInplaceEditorAndClick(
+    {
+      advanceChars: ":",
+      start: function(editor) {
+        EventUtils.sendString("Test:");
+      },
+      done: onDone("Test", true, def),
     },
-    done: onDone("Test", true, def),
-  }, doc);
+    doc
+  );
 
   return def.promise;
 }
@@ -99,27 +118,30 @@ function testAdvanceCharsFunction(doc) {
 
   let firstTime = true;
 
-  createInplaceEditorAndClick({
-    initial: "",
-    advanceChars: function(charCode, text, insertionPoint) {
-      if (charCode !== KeyboardEvent.DOM_VK_COLON) {
-        return false;
-      }
-      if (firstTime) {
-        firstTime = false;
-        return false;
-      }
+  createInplaceEditorAndClick(
+    {
+      initial: "",
+      advanceChars: function(charCode, text, insertionPoint) {
+        if (charCode !== KeyboardEvent.DOM_VK_COLON) {
+          return false;
+        }
+        if (firstTime) {
+          firstTime = false;
+          return false;
+        }
 
-      // Just to make sure we check it somehow.
-      return text.length > 0;
+        // Just to make sure we check it somehow.
+        return text.length > 0;
+      },
+      start: function(editor) {
+        for (const ch of ":Test:") {
+          EventUtils.sendChar(ch);
+        }
+      },
+      done: onDone(":Test", true, def),
     },
-    start: function(editor) {
-      for (const ch of ":Test:") {
-        EventUtils.sendChar(ch);
-      }
-    },
-    done: onDone(":Test", true, def),
-  }, doc);
+    doc
+  );
 
   return def.promise;
 }
@@ -128,14 +150,17 @@ function testEscapeCancel(doc) {
   info("Testing that escape cancels the new value");
   const def = defer();
 
-  createInplaceEditorAndClick({
-    initial: "initial text",
-    start: function(editor) {
-      editor.input.value = "Test Value";
-      EventUtils.sendKey("escape");
+  createInplaceEditorAndClick(
+    {
+      initial: "initial text",
+      start: function(editor) {
+        editor.input.value = "Test Value";
+        EventUtils.sendKey("escape");
+      },
+      done: onDone("initial text", false, def),
     },
-    done: onDone("initial text", false, def),
-  }, doc);
+    doc
+  );
 
   return def.promise;
 }

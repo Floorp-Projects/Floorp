@@ -2,9 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(this, "loginManager",
-                                   "@mozilla.org/login-manager;1",
-                                   "nsILoginManager");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "loginManager",
+  "@mozilla.org/login-manager;1",
+  "nsILoginManager"
+);
 
 const REFERENCE_DATE = Date.now();
 const LOGIN_USERNAME = "username";
@@ -16,15 +19,27 @@ const NEW_HOST = "http://mozilla.com";
 
 function checkLoginExists(host, shouldExist) {
   let logins = loginManager.findLogins(host, "", null);
-  equal(logins.length, shouldExist ? 1 : 0, `Login was ${shouldExist ? "" : "not "} found.`);
+  equal(
+    logins.length,
+    shouldExist ? 1 : 0,
+    `Login was ${shouldExist ? "" : "not "} found.`
+  );
 }
 
 function addLogin(host, timestamp) {
   checkLoginExists(host, false);
-  let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
-              .createInstance(Ci.nsILoginInfo);
-  login.init(host, "", null, LOGIN_USERNAME, LOGIN_PASSWORD,
-             LOGIN_USERNAME_FIELD, LOGIN_PASSWORD_FIELD);
+  let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+    Ci.nsILoginInfo
+  );
+  login.init(
+    host,
+    "",
+    null,
+    LOGIN_USERNAME,
+    LOGIN_PASSWORD,
+    LOGIN_USERNAME_FIELD,
+    LOGIN_PASSWORD_FIELD
+  );
   login.QueryInterface(Ci.nsILoginMetaInfo);
   login.timePasswordChanged = timestamp;
   loginManager.addLogin(login);
@@ -43,7 +58,7 @@ add_task(async function testPasswords() {
       if (msg == "removeHistory") {
         await browser.browsingData.removePasswords(options);
       } else {
-        await browser.browsingData.remove(options, {passwords: true});
+        await browser.browsingData.remove(options, { passwords: true });
       }
       browser.test.sendMessage("passwordsRemoved");
     });
@@ -67,7 +82,7 @@ add_task(async function testPasswords() {
 
     // Clear passwords with recent since value.
     await setupPasswords();
-    extension.sendMessage(method, {since: REFERENCE_DATE - 1000});
+    extension.sendMessage(method, { since: REFERENCE_DATE - 1000 });
     await extension.awaitMessage("passwordsRemoved");
 
     checkLoginExists(OLD_HOST, true);
@@ -75,7 +90,7 @@ add_task(async function testPasswords() {
 
     // Clear passwords with old since value.
     await setupPasswords();
-    extension.sendMessage(method, {since: REFERENCE_DATE - 20000});
+    extension.sendMessage(method, { since: REFERENCE_DATE - 20000 });
     await extension.awaitMessage("passwordsRemoved");
 
     checkLoginExists(OLD_HOST, false);

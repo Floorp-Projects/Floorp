@@ -8,7 +8,7 @@ var DELIM = mozinfo.os == "win" ? "|" : ":";
 
 var gProfD = do_get_profile_startup();
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Writes out some plugin registry to the profile
 function write_registry(version, info) {
@@ -23,14 +23,16 @@ function write_registry(version, info) {
 
   var registry = gProfD.clone();
   registry.append("pluginreg.dat");
-  var foStream = Cc["@mozilla.org/network/file-output-stream;1"]
-                   .createInstance(Ci.nsIFileOutputStream);
+  var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   // write, create, truncate
   foStream.init(registry, 0x02 | 0x08 | 0x20, 0o666, 0);
 
   var charset = "UTF-8"; // Can be any character encoding name that Mozilla supports
-  var os = Cc["@mozilla.org/intl/converter-output-stream;1"].
-           createInstance(Ci.nsIConverterOutputStream);
+  var os = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(
+    Ci.nsIConverterOutputStream
+  );
   os.init(foStream, charset);
 
   os.writeString(header);
@@ -63,8 +65,16 @@ function run_test() {
   registry += "Plug-in for testing purposes." + DELIM + "$\n";
   registry += "Test Plug-in" + DELIM + "$\n";
   registry += "999999999999999999999999999999999999999999999999|0|5|$\n";
-  registry += "0" + DELIM + "application/x-test" + DELIM + "Test mimetype" +
-              DELIM + "tst" + DELIM + "$\n";
+  registry +=
+    "0" +
+    DELIM +
+    "application/x-test" +
+    DELIM +
+    "Test mimetype" +
+    DELIM +
+    "tst" +
+    DELIM +
+    "$\n";
 
   registry += "\n";
   registry += "[INVALID]\n";
@@ -75,8 +85,9 @@ function run_test() {
   do_get_profile();
 
   plugin = get_test_plugintag();
-  if (!plugin)
+  if (!plugin) {
     do_throw("Plugin tag not found");
+  }
 
   // The plugin registry should have been rejected.
   // If not, the test plugin version would be 0.0.0.0

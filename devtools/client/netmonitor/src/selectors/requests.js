@@ -14,7 +14,8 @@ const { Sorters } = require("../utils/sort-predicates");
  * If one of the compared request is a clone of the other, sort them next to each other.
  */
 function sortWithClones(requests, sorter, a, b) {
-  const aId = a.id, bId = b.id;
+  const aId = a.id,
+    bId = b.id;
 
   if (aId.endsWith("-clone")) {
     const aOrigId = aId.replace(/-clone$/, "");
@@ -46,7 +47,11 @@ const getFilterWithCloneFn = createSelector(
       if (r.id.endsWith("-clone")) {
         return true;
       }
-      return filters.requestFilterTypes[filter] && Filters[filter] && Filters[filter](r);
+      return (
+        filters.requestFilterTypes[filter] &&
+        Filters[filter] &&
+        Filters[filter](r)
+      );
     });
     return matchesType && isFreetextMatch(r, filters.requestFilterText);
   }
@@ -56,7 +61,11 @@ const getTypeFilterFn = createSelector(
   state => state.filters,
   filters => r => {
     return Object.keys(filters.requestFilterTypes).some(filter => {
-      return filters.requestFilterTypes[filter] && Filters[filter] && Filters[filter](r);
+      return (
+        filters.requestFilterTypes[filter] &&
+        Filters[filter] &&
+        Filters[filter](r)
+      );
     });
   }
 );
@@ -110,18 +119,23 @@ const getDisplayedRequestsSummary = createSelector(
       return { count: 0, bytes: 0, millis: 0 };
     }
 
-    const totalBytes = requests.reduce((totals, item) => {
-      if (typeof item.contentSize == "number") {
-        totals.contentSize += item.contentSize;
-      }
+    const totalBytes = requests.reduce(
+      (totals, item) => {
+        if (typeof item.contentSize == "number") {
+          totals.contentSize += item.contentSize;
+        }
 
-      if (typeof item.transferredSize == "number" &&
-        !(item.fromCache || item.status === "304")) {
-        totals.transferredSize += item.transferredSize;
-      }
+        if (
+          typeof item.transferredSize == "number" &&
+          !(item.fromCache || item.status === "304")
+        ) {
+          totals.transferredSize += item.transferredSize;
+        }
 
-      return totals;
-    }, { contentSize: 0, transferredSize: 0 });
+        return totals;
+      },
+      { contentSize: 0, transferredSize: 0 }
+    );
 
     return {
       count: requests.size,
@@ -134,7 +148,8 @@ const getDisplayedRequestsSummary = createSelector(
 
 const getSelectedRequest = createSelector(
   state => state.requests,
-  ({ selectedId, requests }) => selectedId ? requests.get(selectedId) : undefined
+  ({ selectedId, requests }) =>
+    selectedId ? requests.get(selectedId) : undefined
 );
 
 const isSelectedRequestVisible = createSelector(

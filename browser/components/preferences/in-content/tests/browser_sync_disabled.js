@@ -9,13 +9,19 @@
  */
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["identity.fxaccounts.enabled", false],
-    ],
+    set: [["identity.fxaccounts.enabled", false]],
   });
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  ok(!gBrowser.contentDocument.getElementById("template-paneSync"), "sync pane removed");
-  ok(gBrowser.contentDocument.getElementById("category-sync").hidden, "sync category hidden");
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+  ok(
+    !gBrowser.contentDocument.getElementById("template-paneSync"),
+    "sync pane removed"
+  );
+  ok(
+    gBrowser.contentDocument.getElementById("category-sync").hidden,
+    "sync category hidden"
+  );
 
   // Check that we don't get any results in sync when searching:
   await evaluateSearchResults("sync", "no-results-message");

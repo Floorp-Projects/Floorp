@@ -44,30 +44,46 @@ add_task(async function test_bookmarks_url_query_implicit_exclusions() {
   let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
 
-  Assert.equal(root.childCount, expectedGuids.length, "Checking root child count");
+  Assert.equal(
+    root.childCount,
+    expectedGuids.length,
+    "Checking root child count"
+  );
   for (let i = 0; i < expectedGuids.length; i++) {
-    Assert.equal(root.getChild(i).bookmarkGuid, expectedGuids[i],
-      "should have got the expected item");
+    Assert.equal(
+      root.getChild(i).bookmarkGuid,
+      expectedGuids[i],
+      "should have got the expected item"
+    );
   }
 
   root.containerOpen = false;
 });
 
-
 add_task(async function test_bookmarks_excludeQueries() {
   // When excluding queries, we exclude actual queries, but not folder shortcuts.
   let expectedGuids = [bm.guid, folderShortcut.guid];
-  let query = {}, options = {};
-  let queryString = `place:parent=${PlacesUtils.bookmarks.unfiledGuid}&excludeQueries=1`;
+  let query = {},
+    options = {};
+  let queryString = `place:parent=${
+    PlacesUtils.bookmarks.unfiledGuid
+  }&excludeQueries=1`;
   PlacesUtils.history.queryStringToQuery(queryString, query, options);
 
   let root = PlacesUtils.history.executeQuery(query.value, options.value).root;
   root.containerOpen = true;
 
-  Assert.equal(root.childCount, expectedGuids.length, "Checking root child count");
+  Assert.equal(
+    root.childCount,
+    expectedGuids.length,
+    "Checking root child count"
+  );
   for (let i = 0; i < expectedGuids.length; i++) {
-    Assert.equal(root.getChild(i).bookmarkGuid, expectedGuids[i],
-      "should have got the expected item");
+    Assert.equal(
+      root.getChild(i).bookmarkGuid,
+      expectedGuids[i],
+      "should have got the expected item"
+    );
   }
 
   root.containerOpen = false;
@@ -87,10 +103,17 @@ add_task(async function test_search_excludesQueries() {
   let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
 
-  Assert.equal(root.childCount, expectedGuids.length, "Checking root child count");
+  Assert.equal(
+    root.childCount,
+    expectedGuids.length,
+    "Checking root child count"
+  );
   for (let i = 0; i < expectedGuids.length; i++) {
-    Assert.equal(root.getChild(i).bookmarkGuid, expectedGuids[i],
-      "should have got the expected item");
+    Assert.equal(
+      root.getChild(i).bookmarkGuid,
+      expectedGuids[i],
+      "should have got the expected item"
+    );
   }
 
   root.containerOpen = false;

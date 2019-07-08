@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 // Track HMAC error counts.
 var hmacErrorCount = 0;
@@ -25,19 +25,22 @@ async function shared_setup() {
   // Make sure RotaryEngine is the only one we sync.
   let { engine, syncID, tracker } = await registerRotaryEngine();
   await engine.setLastSync(123); // Needs to be non-zero so that tracker is queried.
-  engine._store.items = {flying: "LNER Class A3 4472",
-                         scotsman: "Flying Scotsman"};
+  engine._store.items = {
+    flying: "LNER Class A3 4472",
+    scotsman: "Flying Scotsman",
+  };
   await tracker.addChangedID("scotsman", 0);
   Assert.equal(1, Service.engineManager.getEnabled().length);
 
-  let engines = {rotary:  {version: engine.version, syncID},
-                 clients: {version: clientsEngine.version,
-                           syncID:  clientsSyncID}};
+  let engines = {
+    rotary: { version: engine.version, syncID },
+    clients: { version: clientsEngine.version, syncID: clientsSyncID },
+  };
 
   // Common server objects.
-  let global      = new ServerWBO("global", {engines});
-  let keysWBO     = new ServerWBO("keys");
-  let rotaryColl  = new ServerCollection({}, true);
+  let global = new ServerWBO("global", { engines });
+  let keysWBO = new ServerWBO("keys");
+  let rotaryColl = new ServerCollection({}, true);
   let clientsColl = new ServerCollection({}, true);
 
   return [engine, rotaryColl, clientsColl, keysWBO, global, tracker];
@@ -45,11 +48,18 @@ async function shared_setup() {
 
 add_task(async function hmac_error_during_404() {
   _("Attempt to replicate the HMAC error setup.");
-  let [engine, rotaryColl, clientsColl, keysWBO, global, tracker] = await shared_setup();
+  let [
+    engine,
+    rotaryColl,
+    clientsColl,
+    keysWBO,
+    global,
+    tracker,
+  ] = await shared_setup();
 
   // Hand out 404s for crypto/keys.
-  let keysHandler    = keysWBO.handler();
-  let key404Counter  = 0;
+  let keysHandler = keysWBO.handler();
+  let key404Counter = 0;
   let keys404Handler = function(request, response) {
     if (key404Counter > 0) {
       let body = "Not Found";
@@ -80,7 +90,9 @@ add_task(async function hmac_error_during_404() {
     _("Syncing.");
     await sync_and_validate_telem();
 
-    _("Partially resetting client, as if after a restart, and forcing redownload.");
+    _(
+      "Partially resetting client, as if after a restart, and forcing redownload."
+    );
     Service.collectionKeys.clear();
     await engine.setLastSync(0); // So that we redownload records.
     key404Counter = 1;
@@ -101,7 +113,14 @@ add_task(async function hmac_error_during_404() {
 
 add_task(async function hmac_error_during_node_reassignment() {
   _("Attempt to replicate an HMAC error during node reassignment.");
-  let [engine, rotaryColl, clientsColl, keysWBO, global, tracker] = await shared_setup();
+  let [
+    engine,
+    rotaryColl,
+    clientsColl,
+    keysWBO,
+    global,
+    tracker,
+  ] = await shared_setup();
 
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
@@ -123,10 +142,10 @@ add_task(async function hmac_error_during_node_reassignment() {
   let should401 = false;
   function upd401(coll, handler) {
     return function(request, response) {
-      if (should401 && (request.method != "DELETE")) {
+      if (should401 && request.method != "DELETE") {
         on401();
         should401 = false;
-        let body = "\"reassigned!\"";
+        let body = '"reassigned!"';
         response.setStatusLine(request.httpVersion, 401, "Node reassignment.");
         response.bodyOutputStream.write(body, body.length);
         return;
@@ -136,11 +155,11 @@ add_task(async function hmac_error_during_node_reassignment() {
   }
 
   let handlers = {
-    "/1.1/foo/info/collections":    collectionsHelper.handler,
+    "/1.1/foo/info/collections": collectionsHelper.handler,
     "/1.1/foo/storage/meta/global": upd("meta", global.handler()),
     "/1.1/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),
-    "/1.1/foo/storage/clients":     upd401("clients", clientsColl.handler()),
-    "/1.1/foo/storage/rotary":      upd("rotary", rotaryColl.handler()),
+    "/1.1/foo/storage/clients": upd401("clients", clientsColl.handler()),
+    "/1.1/foo/storage/rotary": upd("rotary", rotaryColl.handler()),
   };
 
   let server = sync_httpd_setup(handlers);
@@ -181,8 +200,7 @@ add_task(async function hmac_error_during_node_reassignment() {
     _("== Invoking first sync.");
     await Service.sync();
     _("We should not simultaneously have data but no keys on the server.");
-    let hasData = rotaryColl.wbo("flying") ||
-                  rotaryColl.wbo("scotsman");
+    let hasData = rotaryColl.wbo("flying") || rotaryColl.wbo("scotsman");
     let hasKeys = keysWBO.modified;
 
     _("We correctly handle 401s by aborting the sync and starting again.");
@@ -198,8 +216,7 @@ add_task(async function hmac_error_during_node_reassignment() {
       _("---------------------------");
       onSyncFinished = function() {
         _("== Second (automatic) sync done.");
-        let hasData = rotaryColl.wbo("flying") ||
-                      rotaryColl.wbo("scotsman");
+        let hasData = rotaryColl.wbo("flying") || rotaryColl.wbo("scotsman");
         let hasKeys = keysWBO.modified;
         Assert.ok(!hasData == !hasKeys);
 
@@ -208,7 +225,9 @@ add_task(async function hmac_error_during_node_reassignment() {
         (async () => {
           await Async.promiseYield();
           _("Now a fresh sync will get no HMAC errors.");
-          _("Partially resetting client, as if after a restart, and forcing redownload.");
+          _(
+            "Partially resetting client, as if after a restart, and forcing redownload."
+          );
           Service.collectionKeys.clear();
           await engine.setLastSync(0);
           hmacErrorCount = 0;

@@ -21,10 +21,12 @@ transform highlighter applies those values correctly to the SVG elements
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_csstransform.html";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
   const front = inspector.inspector;
 
-  const highlighter = await front.getHighlighterByType("CssTransformHighlighter");
+  const highlighter = await front.getHighlighterByType(
+    "CssTransformHighlighter"
+  );
 
   const nodeFront = await getNodeFront("#test-node", inspector);
 
@@ -35,7 +37,10 @@ add_task(async function() {
   const [expected] = data.border;
 
   const points = await testActor.getHighlighterNodeAttribute(
-    "css-transform-transformed", "points", highlighter);
+    "css-transform-transformed",
+    "points",
+    highlighter
+  );
   const polygonPoints = points.split(" ").map(p => {
     return {
       x: +p.substring(0, p.indexOf(",")),
@@ -44,10 +49,16 @@ add_task(async function() {
   });
 
   for (let i = 1; i < 5; i++) {
-    is(polygonPoints[i - 1].x, expected["p" + i].x,
-      "p" + i + " x coordinate is correct");
-    is(polygonPoints[i - 1].y, expected["p" + i].y,
-      "p" + i + " y coordinate is correct");
+    is(
+      polygonPoints[i - 1].x,
+      expected["p" + i].x,
+      "p" + i + " x coordinate is correct"
+    );
+    is(
+      polygonPoints[i - 1].y,
+      expected["p" + i].y,
+      "p" + i + " y coordinate is correct"
+    );
   }
 
   info("Hiding the transform highlighter");

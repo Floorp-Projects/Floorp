@@ -7,11 +7,13 @@
 module.exports = function(content) {
   this.cacheable && this.cacheable();
 
-  return content.replace(
-    "require(REACT_PATH)",
-    "require(\"devtools/client/shared/vendor/react\")"
-  ).replace(
-    "require(REDUX_PATH)",
-    "require(\"devtools/client/shared/vendor/redux\")"
-  );
+  return content
+    .replace(
+      "require(REACT_PATH)",
+      'require("devtools/client/shared/vendor/react")'
+    )
+    .replace(
+      "require(REDUX_PATH)",
+      'require("devtools/client/shared/vendor/redux")'
+    );
 };

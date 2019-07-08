@@ -16,7 +16,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   // Mock the highlighter front to get the reference of the NodeFront
   const HighlighterFront = {
@@ -42,12 +42,24 @@ add_task(async function() {
   const icon = await getRuleViewSelectorHighlighterIcon(view, "element");
 
   await clickSelectorIcon(icon, view);
-  is(HighlighterFront.nodeFront.tagName, "P",
-     "The right NodeFront is passed to the highlighter (1)");
-  is(HighlighterFront.options.selector, "body > p:nth-child(1)",
-     "The right selector option is passed to the highlighter (1)");
-  ok(HighlighterFront.isShown, "The toggle event says the highlighter is visible");
+  is(
+    HighlighterFront.nodeFront.tagName,
+    "P",
+    "The right NodeFront is passed to the highlighter (1)"
+  );
+  is(
+    HighlighterFront.options.selector,
+    "body > p:nth-child(1)",
+    "The right selector option is passed to the highlighter (1)"
+  );
+  ok(
+    HighlighterFront.isShown,
+    "The toggle event says the highlighter is visible"
+  );
 
   await clickSelectorIcon(icon, view);
-  ok(!HighlighterFront.isShown, "The toggle event says the highlighter is not visible");
+  ok(
+    !HighlighterFront.isShown,
+    "The toggle event says the highlighter is not visible"
+  );
 });

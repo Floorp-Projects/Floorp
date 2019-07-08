@@ -26,71 +26,81 @@ function handleStream(evt, filename) {
   }
   const dataChunk = encoder.encode(strChunk);
 
-  evt.waitUntil(new Promise(resolve => {
-    let body = new ReadableStream({
-      start: controller => {
-        const closeStream = (why) => {
-          console.log("closing stream: " + JSON.stringify(why) + "\n");
-          clearInterval(intervalId);
-          resolve();
-          // In event of error, the controller will automatically have closed.
-          if (why.why != "canceled") {
-            try {
-              controller.close();
-            } catch(ex) {
-              // If we thought we should cancel but experienced a problem,
-              // that's a different kind of failure and we need to report it.
-              // (If we didn't catch the exception here, we'd end up erroneously
-              // in the tick() method's canceled handler.)
-              channel.postMessage({
-                what: filename,
-                why: "close-failure",
-                message: ex.message,
-                ticks: why.ticks
-              });
-              return;
+  evt.waitUntil(
+    new Promise(resolve => {
+      let body = new ReadableStream({
+        start: controller => {
+          const closeStream = why => {
+            console.log("closing stream: " + JSON.stringify(why) + "\n");
+            clearInterval(intervalId);
+            resolve();
+            // In event of error, the controller will automatically have closed.
+            if (why.why != "canceled") {
+              try {
+                controller.close();
+              } catch (ex) {
+                // If we thought we should cancel but experienced a problem,
+                // that's a different kind of failure and we need to report it.
+                // (If we didn't catch the exception here, we'd end up erroneously
+                // in the tick() method's canceled handler.)
+                channel.postMessage({
+                  what: filename,
+                  why: "close-failure",
+                  message: ex.message,
+                  ticks: why.ticks,
+                });
+                return;
+              }
             }
-          }
-          // Post prior to performing any attempt to close...
-          channel.postMessage(why);
-        };
+            // Post prior to performing any attempt to close...
+            channel.postMessage(why);
+          };
 
-        controller.enqueue(dataChunk);
-        let count = 0;
-        let intervalId;
-        function tick() {
-          try {
-            // bound worst-case behavior.
-            if (count++ > MAX_TICK_COUNT) {
+          controller.enqueue(dataChunk);
+          let count = 0;
+          let intervalId;
+          function tick() {
+            try {
+              // bound worst-case behavior.
+              if (count++ > MAX_TICK_COUNT) {
+                closeStream({
+                  what: filename,
+                  why: "timeout",
+                  message: "timeout",
+                  ticks: count,
+                });
+                return;
+              }
+              controller.enqueue(dataChunk);
+            } catch (e) {
               closeStream({
-                what: filename, why: "timeout", message: "timeout", ticks: count
+                what: filename,
+                why: "canceled",
+                message: e.message,
+                ticks: count,
               });
-              return;
             }
-            controller.enqueue(dataChunk);
-          } catch(e) {
-            closeStream({
-              what: filename, why: "canceled", message: e.message, ticks: count
-            });
           }
-        }
-        // Alternately, streams' pull mechanism could be used here, but this
-        // test doesn't so much want to saturate the stream as to make sure the
-        // data is at least flowing a little bit.  (Also, the author had some
-        // concern about slowing down the test by overwhelming the event loop
-        // and concern that we might not have sufficent back-pressure plumbed
-        // through and an infinite pipe might make bad things happen.)
-        intervalId = setInterval(tick, TICK_INTERVAL);
-        tick();
-      },
-    });
-    evt.respondWith(new Response(body, {
-      headers: {
-        "Content-Disposition": `attachment; filename="${filename}"`,
-        "Content-Type": "application/octet-stream"
-      }
-    }));
-  }));
+          // Alternately, streams' pull mechanism could be used here, but this
+          // test doesn't so much want to saturate the stream as to make sure the
+          // data is at least flowing a little bit.  (Also, the author had some
+          // concern about slowing down the test by overwhelming the event loop
+          // and concern that we might not have sufficent back-pressure plumbed
+          // through and an infinite pipe might make bad things happen.)
+          intervalId = setInterval(tick, TICK_INTERVAL);
+          tick();
+        },
+      });
+      evt.respondWith(
+        new Response(body, {
+          headers: {
+            "Content-Disposition": `attachment; filename="${filename}"`,
+            "Content-Type": "application/octet-stream",
+          },
+        })
+      );
+    })
+  );
 }
 
 /**
@@ -101,22 +111,26 @@ function handleStream(evt, filename) {
  * .sjs experiences closure of its socket and terminates the payload stream.
  */
 function handlePassThrough(evt, filename) {
-  evt.waitUntil((async () => {
-    console.log("issuing monitor fetch request");
-    const response = await fetch("server-stream-download.sjs?monitor");
-    console.log("monitor headers received, awaiting body");
-    const data = await response.json();
-    console.log("passthrough monitor fetch completed, notifying.");
-    channel.postMessage({
-      what: filename,
-      why: data.why,
-      message: data.message
-    });
-  })());
-  evt.respondWith(fetch("server-stream-download.sjs").then(response => {
-    console.log("server-stream-download.sjs Response received, propagating");
-    return response;
-  }));
+  evt.waitUntil(
+    (async () => {
+      console.log("issuing monitor fetch request");
+      const response = await fetch("server-stream-download.sjs?monitor");
+      console.log("monitor headers received, awaiting body");
+      const data = await response.json();
+      console.log("passthrough monitor fetch completed, notifying.");
+      channel.postMessage({
+        what: filename,
+        why: data.why,
+        message: data.message,
+      });
+    })()
+  );
+  evt.respondWith(
+    fetch("server-stream-download.sjs").then(response => {
+      console.log("server-stream-download.sjs Response received, propagating");
+      return response;
+    })
+  );
 }
 
 addEventListener("fetch", evt => {
@@ -127,7 +141,7 @@ addEventListener("fetch", evt => {
   if (evt.request.url.includes("sw-passthrough-download")) {
     return handlePassThrough(evt, "sw-passthrough-download");
   }
-})
+});
 
 addEventListener("message", evt => {
   if (evt.data === "claim") {

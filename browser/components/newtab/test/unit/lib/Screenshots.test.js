@@ -1,6 +1,6 @@
 "use strict";
-import {GlobalOverrider} from "test/unit/utils";
-import {Screenshots} from "lib/Screenshots.jsm";
+import { GlobalOverrider } from "test/unit/utils";
+import { Screenshots } from "lib/Screenshots.jsm";
 
 const URL = "foo.com";
 const FAKE_THUMBNAIL_PATH = "fake/path/thumb.jpg";
@@ -21,15 +21,24 @@ describe("Screenshots", () => {
         },
       },
     };
-    globals.set("BackgroundPageThumbs", {captureIfMissing: sandbox.spy(() => Promise.resolve())});
+    globals.set("BackgroundPageThumbs", {
+      captureIfMissing: sandbox.spy(() => Promise.resolve()),
+    });
     globals.set("PageThumbs", {
       _store: sandbox.stub(),
       getThumbnailPath: sandbox.spy(() => FAKE_THUMBNAIL_PATH),
     });
-    globals.set("PrivateBrowsingUtils", {isWindowPrivate: sandbox.spy(() => false)});
-    testFile = {size: 1};
+    globals.set("PrivateBrowsingUtils", {
+      isWindowPrivate: sandbox.spy(() => false),
+    });
+    testFile = { size: 1 };
     globals.set("Services", fakeServices);
-    globals.set("fetch", sandbox.spy(() => Promise.resolve({blob: () => Promise.resolve(testFile)})));
+    globals.set(
+      "fetch",
+      sandbox.spy(() =>
+        Promise.resolve({ blob: () => Promise.resolve(testFile) })
+      )
+    );
   });
   afterEach(() => {
     globals.restore();
@@ -55,7 +64,10 @@ describe("Screenshots", () => {
       assert.notEqual(screenshot.data, undefined);
     });
     it("should get null if something goes wrong", async () => {
-      globals.set("BackgroundPageThumbs", {captureIfMissing: () => Promise.reject(new Error("Cannot capture thumbnail"))});
+      globals.set("BackgroundPageThumbs", {
+        captureIfMissing: () =>
+          Promise.reject(new Error("Cannot capture thumbnail")),
+      });
 
       const screenshot = await Screenshots.getScreenshotForURL(URL);
 
@@ -75,44 +87,89 @@ describe("Screenshots", () => {
   describe("#maybeCacheScreenshot", () => {
     let link;
     beforeEach(() => {
-      link = {__sharedCache: {updateLink: (prop, val) => { link[prop] = val; }}};
+      link = {
+        __sharedCache: {
+          updateLink: (prop, val) => {
+            link[prop] = val;
+          },
+        },
+      };
     });
     it("should call getScreenshotForURL", () => {
       sandbox.stub(Screenshots, "getScreenshotForURL");
       sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(true);
-      Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
+      Screenshots.maybeCacheScreenshot(
+        link,
+        "mozilla.com",
+        "image",
+        sinon.stub()
+      );
 
       assert.calledOnce(Screenshots.getScreenshotForURL);
       assert.calledWithExactly(Screenshots.getScreenshotForURL, "mozilla.com");
     });
     it("should not call getScreenshotForURL twice if a fetch is in progress", () => {
-      sandbox.stub(Screenshots, "getScreenshotForURL").returns(new Promise(() => {}));
+      sandbox
+        .stub(Screenshots, "getScreenshotForURL")
+        .returns(new Promise(() => {}));
       sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(true);
-      Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
-      Screenshots.maybeCacheScreenshot(link, "mozilla.org", "image", sinon.stub());
+      Screenshots.maybeCacheScreenshot(
+        link,
+        "mozilla.com",
+        "image",
+        sinon.stub()
+      );
+      Screenshots.maybeCacheScreenshot(
+        link,
+        "mozilla.org",
+        "image",
+        sinon.stub()
+      );
 
       assert.calledOnce(Screenshots.getScreenshotForURL);
       assert.calledWithExactly(Screenshots.getScreenshotForURL, "mozilla.com");
     });
     it("should not call getScreenshotsForURL if property !== undefined", async () => {
-      sandbox.stub(Screenshots, "getScreenshotForURL").returns(Promise.resolve(null));
+      sandbox
+        .stub(Screenshots, "getScreenshotForURL")
+        .returns(Promise.resolve(null));
       sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(true);
-      await Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
-      await Screenshots.maybeCacheScreenshot(link, "mozilla.org", "image", sinon.stub());
+      await Screenshots.maybeCacheScreenshot(
+        link,
+        "mozilla.com",
+        "image",
+        sinon.stub()
+      );
+      await Screenshots.maybeCacheScreenshot(
+        link,
+        "mozilla.org",
+        "image",
+        sinon.stub()
+      );
 
       assert.calledOnce(Screenshots.getScreenshotForURL);
       assert.calledWithExactly(Screenshots.getScreenshotForURL, "mozilla.com");
     });
     it("should check if we are in private browsing before getting screenshots", async () => {
       sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(true);
-      await Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
+      await Screenshots.maybeCacheScreenshot(
+        link,
+        "mozilla.com",
+        "image",
+        sinon.stub()
+      );
 
       assert.calledOnce(Screenshots._shouldGetScreenshots);
     });
     it("should not get a screenshot if we are in private browsing", async () => {
       sandbox.stub(Screenshots, "getScreenshotForURL");
       sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(false);
-      await Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
+      await Screenshots.maybeCacheScreenshot(
+        link,
+        "mozilla.com",
+        "image",
+        sinon.stub()
+      );
 
       assert.notCalled(Screenshots.getScreenshotForURL);
     });
@@ -121,7 +178,9 @@ describe("Screenshots", () => {
   describe("#_shouldGetScreenshots", () => {
     beforeEach(() => {
       let more = 2;
-      sandbox.stub(global.Services.wm, "getEnumerator").callsFake(() => Array(Math.max(more--, 0)));
+      sandbox
+        .stub(global.Services.wm, "getEnumerator")
+        .callsFake(() => Array(Math.max(more--, 0)));
     });
     it("should use private browsing utils to determine if a window is private", () => {
       Screenshots._shouldGetScreenshots();
@@ -131,7 +190,9 @@ describe("Screenshots", () => {
       assert.isTrue(Screenshots._shouldGetScreenshots());
     });
     it("should return false if there exists private windows", () => {
-      global.PrivateBrowsingUtils = {isWindowPrivate: sandbox.spy(() => true)};
+      global.PrivateBrowsingUtils = {
+        isWindowPrivate: sandbox.spy(() => true),
+      };
       assert.isFalse(Screenshots._shouldGetScreenshots());
       assert.calledTwice(global.PrivateBrowsingUtils.isWindowPrivate);
     });

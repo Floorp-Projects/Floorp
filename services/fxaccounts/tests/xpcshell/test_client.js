@@ -3,31 +3,42 @@
 
 "use strict";
 
-const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
 
-const FAKE_SESSION_TOKEN = "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf";
+const FAKE_SESSION_TOKEN =
+  "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf";
 
 // https://wiki.mozilla.org/Identity/AttachedServices/KeyServerProtocol#.2Faccount.2Fkeys
 var ACCOUNT_KEYS = {
-  keyFetch:     h("8081828384858687 88898a8b8c8d8e8f" +
-                  "9091929394959697 98999a9b9c9d9e9f"),
+  keyFetch: h(
+    // eslint-disable-next-line no-useless-concat
+    "8081828384858687 88898a8b8c8d8e8f" + "9091929394959697 98999a9b9c9d9e9f"
+  ),
 
-  response:     h("ee5c58845c7c9412 b11bbd20920c2fdd" +
-                  "d83c33c9cd2c2de2 d66b222613364636" +
-                  "c2c0f8cfbb7c6304 72c0bd88451342c6" +
-                  "c05b14ce342c5ad4 6ad89e84464c993c" +
-                  "3927d30230157d08 17a077eef4b20d97" +
-                  "6f7a97363faf3f06 4c003ada7d01aa70"),
+  response: h(
+    "ee5c58845c7c9412 b11bbd20920c2fdd" +
+      "d83c33c9cd2c2de2 d66b222613364636" +
+      "c2c0f8cfbb7c6304 72c0bd88451342c6" +
+      "c05b14ce342c5ad4 6ad89e84464c993c" +
+      "3927d30230157d08 17a077eef4b20d97" +
+      "6f7a97363faf3f06 4c003ada7d01aa70"
+  ),
 
-  kA:           h("2021222324252627 28292a2b2c2d2e2f" +
-                  "3031323334353637 38393a3b3c3d3e3f"),
+  kA: h(
+    // eslint-disable-next-line no-useless-concat
+    "2021222324252627 28292a2b2c2d2e2f" + "3031323334353637 38393a3b3c3d3e3f"
+  ),
 
-  wrapKB:       h("4041424344454647 48494a4b4c4d4e4f" +
-                  "5051525354555657 58595a5b5c5d5e5f"),
+  wrapKB: h(
+    // eslint-disable-next-line no-useless-concat
+    "4041424344454647 48494a4b4c4d4e4f" + "5051525354555657 58595a5b5c5d5e5f"
+  ),
 };
 
 add_task(async function test_authenticated_get_request() {
-  let message = "{\"msg\": \"Great Success!\"}";
+  let message = '{"msg": "Great Success!"}';
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
@@ -35,7 +46,8 @@ add_task(async function test_authenticated_get_request() {
   };
   let method = "GET";
 
-  let server = httpd_setup({"/foo": function(request, response) {
+  let server = httpd_setup({
+    "/foo": function(request, response) {
       Assert.ok(request.hasHeader("Authorization"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
@@ -59,18 +71,24 @@ add_task(async function test_authenticated_post_request() {
   };
   let method = "POST";
 
-  let server = httpd_setup({"/foo": function(request, response) {
+  let server = httpd_setup({
+    "/foo": function(request, response) {
       Assert.ok(request.hasHeader("Authorization"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
-      response.bodyOutputStream.writeFrom(request.bodyInputStream, request.bodyInputStream.available());
+      response.bodyOutputStream.writeFrom(
+        request.bodyInputStream,
+        request.bodyInputStream.available()
+      );
     },
   });
 
   let client = new FxAccountsClient(server.baseURI);
 
-  let result = await client._request("/foo", method, credentials, {foo: "bar"});
+  let result = await client._request("/foo", method, credentials, {
+    foo: "bar",
+  });
   Assert.equal("bar", result.foo);
 
   await promiseStopServer(server);
@@ -80,7 +98,8 @@ add_task(async function test_500_error() {
   let message = "<h1>Ooops!</h1>";
   let method = "GET";
 
-  let server = httpd_setup({"/foo": function(request, response) {
+  let server = httpd_setup({
+    "/foo": function(request, response) {
       response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
       response.bodyOutputStream.write(message, message.length);
     },
@@ -104,13 +123,17 @@ add_task(async function test_backoffError() {
   let server = httpd_setup({
     "/retryDelay": function(request, response) {
       response.setHeader("Retry-After", "30");
-      response.setStatusLine(request.httpVersion, 429, "Client has sent too many requests");
+      response.setStatusLine(
+        request.httpVersion,
+        429,
+        "Client has sent too many requests"
+      );
       let message = "<h1>Ooops!</h1>";
       response.bodyOutputStream.write(message, message.length);
     },
     "/duringDelayIShouldNotBeCalled": function(request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
-      let jsonMessage = "{\"working\": \"yes\"}";
+      let jsonMessage = '{"working": "yes"}';
       response.bodyOutputStream.write(jsonMessage, jsonMessage.length);
     },
   });
@@ -124,7 +147,7 @@ add_task(async function test_backoffError() {
   } catch (e) {
     Assert.equal(429, e.code);
     Assert.equal(30, e.retryAfter);
-    Assert.notEqual(typeof(client.fxaBackoffTimer), "undefined");
+    Assert.notEqual(typeof client.fxaBackoffTimer, "undefined");
     Assert.notEqual(client.backoffError, null);
   }
   // While delay is in effect, client short-circuits any requests
@@ -156,7 +179,11 @@ add_task(async function test_signUp() {
     sessionToken: "sessionToken",
     keyFetchToken: "keyFetchToken",
   });
-  let errorMessage = JSON.stringify({code: 400, errno: 101, error: "account exists"});
+  let errorMessage = JSON.stringify({
+    code: 400,
+    errno: 101,
+    error: "account exists",
+  });
   let created = false;
 
   // Note these strings must be unicode and not already utf-8 encoded.
@@ -179,22 +206,32 @@ add_task(async function test_signUp() {
 
       if (jsonBody.email == unicodeUsername) {
         Assert.equal("", request._queryString);
-        Assert.equal(jsonBody.authPW, "247b675ffb4c46310bc87e26d712153abe5e1c90ef00a4784594f97ef54f2375");
+        Assert.equal(
+          jsonBody.authPW,
+          "247b675ffb4c46310bc87e26d712153abe5e1c90ef00a4784594f97ef54f2375"
+        );
 
         response.setStatusLine(request.httpVersion, 200, "OK");
-        response.bodyOutputStream.write(creationMessage_noKey,
-                                        creationMessage_noKey.length);
+        response.bodyOutputStream.write(
+          creationMessage_noKey,
+          creationMessage_noKey.length
+        );
         return;
       }
 
       if (jsonBody.email == "you@example.org") {
         Assert.equal("keys=true", request._queryString);
-        Assert.equal(jsonBody.authPW, "e5c1cdfdaa5fcee06142db865b212cc8ba8abee2a27d639d42c139f006cdb930");
+        Assert.equal(
+          jsonBody.authPW,
+          "e5c1cdfdaa5fcee06142db865b212cc8ba8abee2a27d639d42c139f006cdb930"
+        );
         created = true;
 
         response.setStatusLine(request.httpVersion, 200, "OK");
-        response.bodyOutputStream.write(creationMessage_withKey,
-                                        creationMessage_withKey.length);
+        response.bodyOutputStream.write(
+          creationMessage_withKey,
+          creationMessage_withKey.length
+        );
         return;
       }
       // just throwing here doesn't make any log noise, so have an assertion
@@ -209,16 +246,20 @@ add_task(async function test_signUp() {
   Assert.equal("uid", result.uid);
   Assert.equal("sessionToken", result.sessionToken);
   Assert.equal(undefined, result.keyFetchToken);
-  Assert.equal(result.unwrapBKey,
-               "de6a2648b78284fcb9ffa81ba95803309cfba7af583c01a8a1a63e567234dd28");
+  Assert.equal(
+    result.unwrapBKey,
+    "de6a2648b78284fcb9ffa81ba95803309cfba7af583c01a8a1a63e567234dd28"
+  );
 
   // Try to create an account retrieving optional keys.
   result = await client.signUp("you@example.org", "pässwörd", true);
   Assert.equal("uid", result.uid);
   Assert.equal("sessionToken", result.sessionToken);
   Assert.equal("keyFetchToken", result.keyFetchToken);
-  Assert.equal(result.unwrapBKey,
-               "f589225b609e56075d76eb74f771ff9ab18a4dc0e901e131ba8f984c7fb0ca8c");
+  Assert.equal(
+    result.unwrapBKey,
+    "f589225b609e56075d76eb74f771ff9ab18a4dc0e901e131ba8f984c7fb0ca8c"
+  );
 
   // Try to create an existing account.  Triggers error path.
   try {
@@ -261,26 +302,40 @@ add_task(async function test_signIn() {
 
       if (jsonBody.email == unicodeUsername) {
         Assert.equal("", request._queryString);
-        Assert.equal(jsonBody.authPW, "08b9d111196b8408e8ed92439da49206c8ecfbf343df0ae1ecefcd1e0174a8b6");
+        Assert.equal(
+          jsonBody.authPW,
+          "08b9d111196b8408e8ed92439da49206c8ecfbf343df0ae1ecefcd1e0174a8b6"
+        );
         response.setStatusLine(request.httpVersion, 200, "OK");
-        response.bodyOutputStream.write(sessionMessage_noKey,
-                                        sessionMessage_noKey.length);
+        response.bodyOutputStream.write(
+          sessionMessage_noKey,
+          sessionMessage_noKey.length
+        );
       } else if (jsonBody.email == "you@example.com") {
         Assert.equal("keys=true", request._queryString);
-        Assert.equal(jsonBody.authPW, "93d20ec50304d496d0707ec20d7e8c89459b6396ec5dd5b9e92809c5e42856c7");
+        Assert.equal(
+          jsonBody.authPW,
+          "93d20ec50304d496d0707ec20d7e8c89459b6396ec5dd5b9e92809c5e42856c7"
+        );
         response.setStatusLine(request.httpVersion, 200, "OK");
-        response.bodyOutputStream.write(sessionMessage_withKey,
-                                        sessionMessage_withKey.length);
+        response.bodyOutputStream.write(
+          sessionMessage_withKey,
+          sessionMessage_withKey.length
+        );
       } else if (jsonBody.email == "You@example.com") {
         // Error trying to sign in with a wrong capitalization
         response.setStatusLine(request.httpVersion, 400, "Bad request");
-        response.bodyOutputStream.write(errorMessage_wrongCap,
-                                        errorMessage_wrongCap.length);
+        response.bodyOutputStream.write(
+          errorMessage_wrongCap,
+          errorMessage_wrongCap.length
+        );
       } else {
         // Error trying to sign in to nonexistent account
         response.setStatusLine(request.httpVersion, 400, "Bad request");
-        response.bodyOutputStream.write(errorMessage_notExistent,
-                                        errorMessage_notExistent.length);
+        response.bodyOutputStream.write(
+          errorMessage_notExistent,
+          errorMessage_notExistent.length
+        );
       }
     },
   });
@@ -289,22 +344,28 @@ add_task(async function test_signIn() {
   let client = new FxAccountsClient(server.baseURI);
   let result = await client.signIn(unicodeUsername, "bigsecret");
   Assert.equal(FAKE_SESSION_TOKEN, result.sessionToken);
-  Assert.equal(result.unwrapBKey,
-               "c076ec3f4af123a615157154c6e1d0d6293e514fd7b0221e32d50517ecf002b8");
+  Assert.equal(
+    result.unwrapBKey,
+    "c076ec3f4af123a615157154c6e1d0d6293e514fd7b0221e32d50517ecf002b8"
+  );
   Assert.equal(undefined, result.keyFetchToken);
 
   // Login with retrieving optional keys
   result = await client.signIn("you@example.com", "bigsecret", true);
   Assert.equal(FAKE_SESSION_TOKEN, result.sessionToken);
-  Assert.equal(result.unwrapBKey,
-               "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");
+  Assert.equal(
+    result.unwrapBKey,
+    "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624"
+  );
   Assert.equal("keyFetchToken", result.keyFetchToken);
 
   // Retry due to wrong email capitalization
   result = await client.signIn("You@example.com", "bigsecret", true);
   Assert.equal(FAKE_SESSION_TOKEN, result.sessionToken);
-  Assert.equal(result.unwrapBKey,
-               "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");
+  Assert.equal(
+    result.unwrapBKey,
+    "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624"
+  );
   Assert.equal("keyFetchToken", result.keyFetchToken);
 
   // Trigger error path
@@ -320,7 +381,11 @@ add_task(async function test_signIn() {
 
 add_task(async function test_signOut() {
   let signoutMessage = JSON.stringify({});
-  let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
+  let errorMessage = JSON.stringify({
+    code: 400,
+    errno: 102,
+    error: "doesn't exist",
+  });
   let signedOut = false;
 
   let server = httpd_setup({
@@ -355,8 +420,12 @@ add_task(async function test_signOut() {
 });
 
 add_task(async function test_recoveryEmailStatus() {
-  let emailStatus = JSON.stringify({verified: true});
-  let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
+  let emailStatus = JSON.stringify({ verified: true });
+  let errorMessage = JSON.stringify({
+    code: 400,
+    errno: 102,
+    error: "doesn't exist",
+  });
   let tries = 0;
 
   let server = httpd_setup({
@@ -393,7 +462,7 @@ add_task(async function test_recoveryEmailStatus() {
 });
 
 add_task(async function test_recoveryEmailStatusWithReason() {
-  let emailStatus = JSON.stringify({verified: true});
+  let emailStatus = JSON.stringify({ verified: true });
   let server = httpd_setup({
     "/recovery_email/status": function(request, response) {
       Assert.ok(request.hasHeader("Authorization"));
@@ -415,7 +484,11 @@ add_task(async function test_recoveryEmailStatusWithReason() {
 
 add_task(async function test_resendVerificationEmail() {
   let emptyMessage = "{}";
-  let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
+  let errorMessage = JSON.stringify({
+    code: 400,
+    errno: 102,
+    error: "doesn't exist",
+  });
   let tries = 0;
 
   let server = httpd_setup({
@@ -454,8 +527,12 @@ add_task(async function test_accountKeys() {
   // should get a valid bundle back, in exchange for our keyFetch token, from
   // which we correctly derive kA and wrapKB.  The subsequent three calls
   // should all trigger separate error paths.
-  let responseMessage = JSON.stringify({bundle: ACCOUNT_KEYS.response});
-  let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
+  let responseMessage = JSON.stringify({ bundle: ACCOUNT_KEYS.response });
+  let errorMessage = JSON.stringify({
+    code: 400,
+    errno: 102,
+    error: "doesn't exist",
+  });
   let emptyMessage = "{}";
   let attempt = 0;
 
@@ -468,7 +545,10 @@ add_task(async function test_accountKeys() {
         case 1:
           // First time succeeds
           response.setStatusLine(request.httpVersion, 200, "OK");
-          response.bodyOutputStream.write(responseMessage, responseMessage.length);
+          response.bodyOutputStream.write(
+            responseMessage,
+            responseMessage.length
+          );
           break;
 
         case 2:
@@ -484,7 +564,10 @@ add_task(async function test_accountKeys() {
             bundle: ACCOUNT_KEYS.response.slice(0, -1) + "1",
           });
           response.setStatusLine(request.httpVersion, 200, "OK");
-          response.bodyOutputStream.write(garbageResponse, garbageResponse.length);
+          response.bodyOutputStream.write(
+            garbageResponse,
+            garbageResponse.length
+          );
           break;
 
         case 4:
@@ -531,8 +614,12 @@ add_task(async function test_accountKeys() {
 });
 
 add_task(async function test_signCertificate() {
-  let certSignMessage = JSON.stringify({cert: {bar: "baz"}});
-  let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
+  let certSignMessage = JSON.stringify({ cert: { bar: "baz" } });
+  let errorMessage = JSON.stringify({
+    code: 400,
+    errno: 102,
+    error: "doesn't exist",
+  });
   let tries = 0;
 
   let server = httpd_setup({
@@ -541,12 +628,17 @@ add_task(async function test_signCertificate() {
 
       if (tries === 0) {
         tries += 1;
-        let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
+        let body = CommonUtils.readBytesFromInputStream(
+          request.bodyInputStream
+        );
         let jsonBody = JSON.parse(body);
         Assert.equal(JSON.parse(jsonBody.publicKey).foo, "bar");
         Assert.equal(jsonBody.duration, 600);
         response.setStatusLine(request.httpVersion, 200, "OK");
-        response.bodyOutputStream.write(certSignMessage, certSignMessage.length);
+        response.bodyOutputStream.write(
+          certSignMessage,
+          certSignMessage.length
+        );
         return;
       }
 
@@ -557,12 +649,20 @@ add_task(async function test_signCertificate() {
   });
 
   let client = new FxAccountsClient(server.baseURI);
-  let result = await client.signCertificate(FAKE_SESSION_TOKEN, JSON.stringify({foo: "bar"}), 600);
+  let result = await client.signCertificate(
+    FAKE_SESSION_TOKEN,
+    JSON.stringify({ foo: "bar" }),
+    600
+  );
   Assert.equal("baz", result.bar);
 
   // Account doesn't exist
   try {
-    result = await client.signCertificate("bogus", JSON.stringify({foo: "bar"}), 600);
+    result = await client.signCertificate(
+      "bogus",
+      JSON.stringify({ foo: "bar" }),
+      600
+    );
     do_throw("Expected to catch an exception");
   } catch (expectedError) {
     Assert.equal(102, expectedError.errno);
@@ -572,8 +672,16 @@ add_task(async function test_signCertificate() {
 });
 
 add_task(async function test_accountExists() {
-  let existsMessage = JSON.stringify({error: "wrong password", code: 400, errno: 103});
-  let doesntExistMessage = JSON.stringify({error: "no such account", code: 400, errno: 102});
+  let existsMessage = JSON.stringify({
+    error: "wrong password",
+    code: 400,
+    errno: 103,
+  });
+  let doesntExistMessage = JSON.stringify({
+    error: "no such account",
+    code: 400,
+    errno: 102,
+  });
   let emptyMessage = "{}";
 
   let server = httpd_setup({
@@ -592,7 +700,10 @@ add_task(async function test_accountExists() {
         // This user's account doesn't exist
         case "i.dont.exist@example.com":
           response.setStatusLine(request.httpVersion, 400, "Bad request");
-          response.bodyOutputStream.write(doesntExistMessage, doesntExistMessage.length);
+          response.bodyOutputStream.write(
+            doesntExistMessage,
+            doesntExistMessage.length
+          );
           break;
 
         // This user throws an unexpected response
@@ -638,9 +749,16 @@ add_task(async function test_registerDevice() {
 
   const server = httpd_setup({
     "/account/device": function(request, response) {
-      const body = JSON.parse(CommonUtils.readBytesFromInputStream(request.bodyInputStream));
+      const body = JSON.parse(
+        CommonUtils.readBytesFromInputStream(request.bodyInputStream)
+      );
 
-      if (body.id || !body.name || !body.type || Object.keys(body).length !== 2) {
+      if (
+        body.id ||
+        !body.name ||
+        !body.type ||
+        Object.keys(body).length !== 2
+      ) {
         response.setStatusLine(request.httpVersion, 400, "Invalid request");
         response.bodyOutputStream.write("{}", 2);
         return;
@@ -663,7 +781,11 @@ add_task(async function test_registerDevice() {
   });
 
   const client = new FxAccountsClient(server.baseURI);
-  const result = await client.registerDevice(FAKE_SESSION_TOKEN, DEVICE_NAME, DEVICE_TYPE);
+  const result = await client.registerDevice(
+    FAKE_SESSION_TOKEN,
+    DEVICE_NAME,
+    DEVICE_TYPE
+  );
 
   Assert.ok(result);
   Assert.equal(Object.keys(result).length, 4);
@@ -690,9 +812,16 @@ add_task(async function test_updateDevice() {
 
   const server = httpd_setup({
     "/account/device": function(request, response) {
-      const body = JSON.parse(CommonUtils.readBytesFromInputStream(request.bodyInputStream));
+      const body = JSON.parse(
+        CommonUtils.readBytesFromInputStream(request.bodyInputStream)
+      );
 
-      if (!body.id || !body.name || body.type || Object.keys(body).length !== 2) {
+      if (
+        !body.id ||
+        !body.name ||
+        body.type ||
+        Object.keys(body).length !== 2
+      ) {
         response.setStatusLine(request.httpVersion, 400, "Invalid request");
         response.bodyOutputStream.write("{}", 2);
         return;
@@ -712,7 +841,11 @@ add_task(async function test_updateDevice() {
   });
 
   const client = new FxAccountsClient(server.baseURI);
-  const result = await client.updateDevice(FAKE_SESSION_TOKEN, DEVICE_ID, DEVICE_NAME);
+  const result = await client.updateDevice(
+    FAKE_SESSION_TOKEN,
+    DEVICE_ID,
+    DEVICE_NAME
+  );
 
   Assert.ok(result);
   Assert.equal(Object.keys(result).length, 2);
@@ -770,27 +903,28 @@ add_task(async function test_client_metrics() {
     response.bodyOutputStream.write(msg, msg.length);
   }
 
-  let server = httpd_setup(
-    {
-      "/session/destroy": function(request, response) {
-        response.setHeader("Content-Type", "application/json; charset=utf-8");
-        response.setStatusLine(request.httpVersion, 401, "Unauthorized");
-        writeResp(response, {
-          error: "invalid authentication timestamp",
-          code: 401,
-          errno: 111,
-        });
-      },
-    }
-  );
+  let server = httpd_setup({
+    "/session/destroy": function(request, response) {
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
+      response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+      writeResp(response, {
+        error: "invalid authentication timestamp",
+        code: 401,
+        errno: 111,
+      });
+    },
+  });
 
   let client = new FxAccountsClient(server.baseURI);
 
-  await Assert.rejects(client.signOut(FAKE_SESSION_TOKEN, {
-    service: "sync",
-  }), function(err) {
-    return err.errno == 111;
-  });
+  await Assert.rejects(
+    client.signOut(FAKE_SESSION_TOKEN, {
+      service: "sync",
+    }),
+    function(err) {
+      return err.errno == 111;
+    }
+  );
 
   await promiseStopServer(server);
 });
@@ -807,37 +941,39 @@ add_task(async function test_email_case() {
     response.bodyOutputStream.write(msg, msg.length);
   }
 
-  let server = httpd_setup(
-    {
-      "/account/login": function(request, response) {
-        response.setHeader("Content-Type", "application/json; charset=utf-8");
-        attempts += 1;
-        if (attempts > 2) {
-          response.setStatusLine(request.httpVersion, 429, "Sorry, you had your chance");
-          return writeResp(response, "");
-        }
+  let server = httpd_setup({
+    "/account/login": function(request, response) {
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
+      attempts += 1;
+      if (attempts > 2) {
+        response.setStatusLine(
+          request.httpVersion,
+          429,
+          "Sorry, you had your chance"
+        );
+        return writeResp(response, "");
+      }
 
-        let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
-        let jsonBody = JSON.parse(body);
-        let email = jsonBody.email;
+      let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
+      let jsonBody = JSON.parse(body);
+      let email = jsonBody.email;
 
-        // If the client has the wrong case on the email, we return a 400, with
-        // the capitalization of the email as saved in the accounts database.
-        if (email == canonicalEmail) {
-          response.setStatusLine(request.httpVersion, 200, "Yay");
-          return writeResp(response, {areWeHappy: "yes"});
-        }
+      // If the client has the wrong case on the email, we return a 400, with
+      // the capitalization of the email as saved in the accounts database.
+      if (email == canonicalEmail) {
+        response.setStatusLine(request.httpVersion, 200, "Yay");
+        return writeResp(response, { areWeHappy: "yes" });
+      }
 
-        response.setStatusLine(request.httpVersion, 400, "Incorrect email case");
-        return writeResp(response, {
-          code: 400,
-          errno: 120,
-          error: "Incorrect email case",
-          email: canonicalEmail,
-        });
-      },
-    }
-  );
+      response.setStatusLine(request.httpVersion, 400, "Incorrect email case");
+      return writeResp(response, {
+        code: 400,
+        errno: 120,
+        error: "Incorrect email case",
+        email: canonicalEmail,
+      });
+    },
+  });
 
   let client = new FxAccountsClient(server.baseURI);
 

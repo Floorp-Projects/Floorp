@@ -35,11 +35,11 @@ function testChild3() {
     window3 = window.open("navigate.html#child3,hyperlink", "window3", "width=10,height=10");
 }
 
-xpcWaitForFinishedFrames(function() {
-  isNavigated(frames[0], "Should be able to navigate on-domain opener's children by setting location.");
-  isNavigated(frames[1], "Should be able to navigate on-domain opener's children by calling window.open.");
-  isNavigated(frames[2], "Should be able to navigate on-domain opener's children by submitting form.");
-  isNavigated(frames[3], "Should be able to navigate on-domain opener's children by targeted hyperlink.");
+xpcWaitForFinishedFrames(async function() {
+  await isNavigated(frames[0], "Should be able to navigate on-domain opener's children by setting location.");
+  await isNavigated(frames[1], "Should be able to navigate on-domain opener's children by calling window.open.");
+  await isNavigated(frames[2], "Should be able to navigate on-domain opener's children by submitting form.");
+  await isNavigated(frames[3], "Should be able to navigate on-domain opener's children by targeted hyperlink.");
 
   window0.close();
   window1.close();

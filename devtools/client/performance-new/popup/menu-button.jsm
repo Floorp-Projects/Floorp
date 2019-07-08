@@ -8,12 +8,21 @@
  * Care should be taken to keep it minimal as it can be run with browser initialization.
  */
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                                "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "CustomizableUI",
-                                "resource:///modules/CustomizableUI.jsm");
-ChromeUtils.defineModuleGetter(this, "CustomizableWidgets",
-                                "resource:///modules/CustomizableWidgets.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "CustomizableWidgets",
+  "resource:///modules/CustomizableWidgets.jsm"
+);
 
 // The profiler's menu button and its popup can be enabled/disabled by the user.
 // This is the pref to control whether the user has turned it on or not.
@@ -64,7 +73,7 @@ function getIframeFromEvent(event) {
   const panelview = event.target;
   const document = panelview.ownerDocument;
 
-   // Create the iframe, and append it.
+  // Create the iframe, and append it.
   const iframe = document.getElementById("PanelUI-profilerIframe");
   if (!iframe) {
     throw new Error("Unable to select the PanelUI-profilerIframe.");
@@ -88,7 +97,7 @@ const updateButtonColorForElement = buttonElement => () => {
 function initialize() {
   const widget = CustomizableUI.getWidget(WIDGET_ID);
   if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
-     // This widget has already been created.
+    // This widget has already been created.
     return;
   }
 
@@ -99,7 +108,7 @@ function initialize() {
     type: "view",
     viewId: "PanelUI-profiler",
     tooltiptext: "profiler-button.tooltiptext",
-    onViewShowing: (event) => {
+    onViewShowing: event => {
       const iframe = getIframeFromEvent(event);
       iframe.src = "chrome://devtools/content/performance-new/popup/popup.html";
 
@@ -119,10 +128,10 @@ function initialize() {
       // contents aren't re-initialized.
       iframe.src = "";
     },
-    onBeforeCreated: (document) => {
+    onBeforeCreated: document => {
       setMenuItemChecked(document, true);
     },
-    onCreated: (buttonElement) => {
+    onCreated: buttonElement => {
       observer = updateButtonColorForElement(buttonElement);
       Services.obs.addObserver(observer, "profiler-started");
       Services.obs.addObserver(observer, "profiler-stopped");

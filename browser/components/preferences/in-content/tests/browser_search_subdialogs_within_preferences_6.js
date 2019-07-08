@@ -1,12 +1,12 @@
 /*
-* This file contains tests for the Preferences search bar.
-*/
+ * This file contains tests for the Preferences search bar.
+ */
 
 // Enabling Searching functionatily. Will display search bar form this testcase forward.
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["browser.preferences.search", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.preferences.search", true]],
+  });
 });
 
 /**
@@ -14,7 +14,9 @@ add_task(async function() {
  */
 add_task(async function() {
   async function doTest() {
-    await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+    await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+      leaveOpen: true,
+    });
     await evaluateSearchResults("block online trackers", "trackingGroup");
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
@@ -25,7 +27,9 @@ add_task(async function() {
  * Test for searching for the "Allowed Sites - Pop-ups" subdialog.
  */
 add_task(async function() {
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
   await evaluateSearchResults("open pop-up windows", "permissionsGroup");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

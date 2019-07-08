@@ -10,8 +10,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const L10N =
-  new LocalizationHelper("devtools/client/locales/animationinspector.properties");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/animationinspector.properties"
+);
 
 class NoAnimationPanel extends Component {
   static get propTypes() {
@@ -32,21 +33,17 @@ class NoAnimationPanel extends Component {
       {
         className: "animation-error-message devtools-sidepanel-no-result",
       },
-      dom.p(
-        null,
-        L10N.getStr("panel.noAnimation")
-      ),
-      dom.button(
-        {
-          className: "animation-element-picker devtools-button" +
-                     (elementPickerEnabled ? " checked" : ""),
-          "data-standalone": true,
-          onClick: event => {
-            event.stopPropagation();
-            toggleElementPicker();
-          },
-        }
-      )
+      dom.p(null, L10N.getStr("panel.noAnimation")),
+      dom.button({
+        className:
+          "animation-element-picker devtools-button" +
+          (elementPickerEnabled ? " checked" : ""),
+        "data-standalone": true,
+        onClick: event => {
+          event.stopPropagation();
+          toggleElementPicker();
+        },
+      })
     );
   }
 }

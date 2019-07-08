@@ -6,8 +6,12 @@
 
 "use strict";
 
-const {gDevTools} = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm");
-const {devtools: {TargetFactory}} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { gDevTools } = ChromeUtils.import(
+  "resource://devtools/client/framework/gDevTools.jsm"
+);
+const {
+  devtools: { TargetFactory },
+} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 add_task(async function capture() {
   if (!shouldCapture()) {

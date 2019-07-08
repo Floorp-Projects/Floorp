@@ -9,7 +9,9 @@
 
 add_task(async function() {
   info("Initialising the debugger server and client.");
-  const target = await addTabTarget(MAIN_DOMAIN + "stylesheets-nested-iframes.html");
+  const target = await addTabTarget(
+    MAIN_DOMAIN + "stylesheets-nested-iframes.html"
+  );
 
   const front = await target.getFront("stylesheets");
   ok(front, "The StyleSheetsFront was created.");

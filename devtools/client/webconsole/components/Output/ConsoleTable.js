@@ -3,15 +3,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const ObjectClient = require("devtools/shared/client/object-client");
 const actions = require("devtools/client/webconsole/actions/messages");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const { MODE } = require("devtools/client/shared/components/reps/reps");
-const GripMessageBody = createFactory(require("devtools/client/webconsole/components/Output/GripMessageBody"));
+const GripMessageBody = createFactory(
+  require("devtools/client/webconsole/components/Output/GripMessageBody")
+);
 
-loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
+loader.lazyRequireGetter(
+  this,
+  "PropTypes",
+  "devtools/client/shared/vendor/react-prop-types"
+);
 
 const TABLE_ROW_MAX_ITEMS = 1000;
 const TABLE_COLUMN_MAX_ITEMS = 10;
@@ -36,13 +45,16 @@ class ConsoleTable extends Component {
   }
 
   componentWillMount() {
-    const {id, dispatch, serviceContainer, parameters} = this.props;
+    const { id, dispatch, serviceContainer, parameters } = this.props;
 
     if (!Array.isArray(parameters) || parameters.length === 0) {
       return;
     }
 
-    const client = new ObjectClient(serviceContainer.proxy.client, parameters[0]);
+    const client = new ObjectClient(
+      serviceContainer.proxy.client,
+      parameters[0]
+    );
     const dataType = getParametersDataType(parameters);
 
     // Get all the object properties.
@@ -51,19 +63,22 @@ class ConsoleTable extends Component {
 
   getHeaders(columns) {
     const headerItems = [];
-    columns.forEach((value, key) => headerItems.push(dom.div({
-      className: "new-consoletable-header",
-      role: "columnheader",
-    }, value))
-  );
+    columns.forEach((value, key) =>
+      headerItems.push(
+        dom.div(
+          {
+            className: "new-consoletable-header",
+            role: "columnheader",
+          },
+          value
+        )
+      )
+    );
     return headerItems;
   }
 
   getRows(columns, items) {
-    const {
-      dispatch,
-      serviceContainer,
-    } = this.props;
+    const { dispatch, serviceContainer } = this.props;
 
     return items.map((item, index) => {
       const cells = [];
@@ -72,7 +87,7 @@ class ConsoleTable extends Component {
           dom.div(
             {
               role: "gridcell",
-              className: (index % 2) ? "odd" : "even",
+              className: index % 2 ? "odd" : "even",
             },
             GripMessageBody({
               grip: item[key],
@@ -89,32 +104,32 @@ class ConsoleTable extends Component {
   }
 
   render() {
-    const {parameters, tableData} = this.props;
+    const { parameters, tableData } = this.props;
     const headersGrip = parameters[1];
-    const headers = headersGrip && headersGrip.preview ? headersGrip.preview.items : null;
+    const headers =
+      headersGrip && headersGrip.preview ? headersGrip.preview.items : null;
 
     // if tableData is nullable, we don't show anything.
     if (!tableData) {
       return null;
     }
 
-    const {columns, items} = getTableItems(
+    const { columns, items } = getTableItems(
       tableData,
       getParametersDataType(parameters),
       headers
     );
 
-    return (
-      dom.div({
+    return dom.div(
+      {
         className: "new-consoletable",
         role: "grid",
         style: {
           gridTemplateColumns: `repeat(${columns.size}, auto)`,
         },
       },
-        this.getHeaders(columns),
-        this.getRows(columns, items)
-      )
+      this.getHeaders(columns),
+      this.getRows(columns, items)
     );
   }
 }
@@ -130,10 +145,9 @@ function getTableItems(data = {}, type, headers = null) {
   const INDEX_NAME = "_index";
   const VALUE_NAME = "_value";
   const namedIndexes = {
-    [INDEX_NAME]: (
-      ["Object", "Array"].includes(type) ?
-        l10n.getStr("table.index") : l10n.getStr("table.iterationIndex")
-    ),
+    [INDEX_NAME]: ["Object", "Array"].includes(type)
+      ? l10n.getStr("table.index")
+      : l10n.getStr("table.iterationIndex"),
     [VALUE_NAME]: l10n.getStr("table.value"),
     key: l10n.getStr("table.key"),
   };
@@ -153,11 +167,10 @@ function getTableItems(data = {}, type, headers = null) {
 
     if (
       !columnExists &&
-      !hasMaxColumns && (
-        !hasCustomHeaders ||
+      !hasMaxColumns &&
+      (!hasCustomHeaders ||
         headers.includes(columnIndex) ||
-        columnIndex === INDEX_NAME
-      )
+        columnIndex === INDEX_NAME)
     ) {
       columns.set(columnIndex, namedIndexes[columnIndex] || columnIndex);
     }
@@ -175,7 +188,7 @@ function getTableItems(data = {}, type, headers = null) {
     const property = data[index] ? data[index].value : undefined;
 
     if (property && property.preview) {
-      const {preview} = property;
+      const { preview } = property;
       const entries = preview.ownProperties || preview.items;
       if (entries) {
         for (const key of Object.keys(entries)) {
@@ -189,7 +202,10 @@ function getTableItems(data = {}, type, headers = null) {
           item.key = preview.key;
         }
 
-        item[VALUE_NAME] = Object.prototype.hasOwnProperty.call(preview, "value")
+        item[VALUE_NAME] = Object.prototype.hasOwnProperty.call(
+          preview,
+          "value"
+        )
           ? preview.value
           : property;
       }

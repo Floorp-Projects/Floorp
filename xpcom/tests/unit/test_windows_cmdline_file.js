@@ -1,4 +1,4 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let executableFile = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 executableFile.append("xpcshell.exe");
@@ -9,7 +9,11 @@ function run_test() {
     info(`Testing with ${cmdline}`);
     let f = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFileWin);
     f.initWithCommandLine(cmdline);
-    Assert.equal(f.path, executableFile.path, "Should be able to recover executable path");
+    Assert.equal(
+      f.path,
+      executableFile.path,
+      "Should be able to recover executable path"
+    );
   }
 
   let f = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFileWin);

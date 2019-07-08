@@ -11,22 +11,21 @@ add_task(async function test_button_background_properties() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "theme": {
-        "images": {
-          "theme_frame": "image1.png",
+      theme: {
+        images: {
+          theme_frame: "image1.png",
         },
-        "colors": {
-          "frame": ACCENT_COLOR,
-          "tab_background_text": TEXT_COLOR,
-          "button_background_active": BUTTON_BACKGROUND_ACTIVE,
-          "button_background_hover": BUTTON_BACKGROUND_HOVER,
+        colors: {
+          frame: ACCENT_COLOR,
+          tab_background_text: TEXT_COLOR,
+          button_background_active: BUTTON_BACKGROUND_ACTIVE,
+          button_background_hover: BUTTON_BACKGROUND_HOVER,
         },
       },
     },
     files: {
       "image1.png": BACKGROUND,
     },
-
   });
 
   await extension.startup();

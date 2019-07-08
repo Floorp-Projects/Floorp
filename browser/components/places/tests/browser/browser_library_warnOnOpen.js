@@ -12,9 +12,7 @@ var gLibrary = null;
 
 add_task(async function setup() {
   // Temporarily disable history, so we won't record pages navigation.
-  await SpecialPowers.pushPrefEnv({set: [
-    ["places.history.enabled", false],
-  ]});
+  await SpecialPowers.pushPrefEnv({ set: [["places.history.enabled", false]] });
 
   // Open Library window.
   gLibrary = await promiseLibrary();
@@ -45,11 +43,13 @@ add_task(async function test_warnOnOpenFolder() {
   // Create a new folder containing our links.
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "bigFolder",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      children,
-    }],
+    children: [
+      {
+        title: "bigFolder",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        children,
+      },
+    ],
   });
   info("Pushed test folder into the bookmarks tree");
 
@@ -65,15 +65,22 @@ add_task(async function test_warnOnOpenFolder() {
 
   // Middle-click on folder (opens all links in folder) and then cancel opening in the dialog
   let promiseLoaded = BrowserTestUtils.promiseAlertDialog("cancel");
-  let bookmarkedNode = gLibrary.PlacesOrganizer._places.selectedNode.getChild(0);
-  mouseEventOnCell(gLibrary.PlacesOrganizer._places,
+  let bookmarkedNode = gLibrary.PlacesOrganizer._places.selectedNode.getChild(
+    0
+  );
+  mouseEventOnCell(
+    gLibrary.PlacesOrganizer._places,
     gLibrary.PlacesOrganizer._places.view.treeIndexForNode(bookmarkedNode),
     0,
-    { button: 1 });
+    { button: 1 }
+  );
 
   await promiseLoaded;
 
-  Assert.ok(true, "Expected dialog was shown when attempting to open folder with lots of links");
+  Assert.ok(
+    true,
+    "Expected dialog was shown when attempting to open folder with lots of links"
+  );
 
   await PlacesUtils.bookmarks.eraseEverything();
 });
@@ -103,7 +110,10 @@ add_task(async function test_warnOnOpenLinks() {
   gLibrary.ContentTree.view.selectAll();
 
   let placesContext = gLibrary.document.getElementById("placesContext");
-  let promiseContextMenu = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
+  let promiseContextMenu = BrowserTestUtils.waitForEvent(
+    placesContext,
+    "popupshown"
+  );
 
   // Open up the context menu and select "Open All In Tabs" (the first item in the list)
   synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
@@ -114,14 +124,19 @@ add_task(async function test_warnOnOpenLinks() {
   await promiseContextMenu;
   info("Context menu opened as expected");
 
-  let openTabs = gLibrary.document.getElementById("placesContext_openLinks:tabs");
+  let openTabs = gLibrary.document.getElementById(
+    "placesContext_openLinks:tabs"
+  );
   let promiseLoaded = BrowserTestUtils.promiseAlertDialog("cancel");
 
   EventUtils.synthesizeMouseAtCenter(openTabs, {}, gLibrary);
 
   await promiseLoaded;
 
-  Assert.ok(true, "Expected dialog was shown when attempting to open lots of selected links");
+  Assert.ok(
+    true,
+    "Expected dialog was shown when attempting to open lots of selected links"
+  );
 
   await PlacesUtils.bookmarks.eraseEverything();
 });
@@ -135,6 +150,11 @@ function mouseEventOnCell(aTree, aRowIndex, aColumnIndex, aEventDetails) {
   // get cell coordinates
   var rect = aTree.getCoordsForCellItem(aRowIndex, column, "text");
 
-  EventUtils.synthesizeMouse(aTree.body, rect.x, rect.y,
-    aEventDetails, gLibrary);
+  EventUtils.synthesizeMouse(
+    aTree.body,
+    rect.x,
+    rect.y,
+    aEventDetails,
+    gLibrary
+  );
 }

@@ -11,7 +11,7 @@ const TEST_URI = "<div>Test Element</div>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   // Turn off throttling, which can cause intermittents. Throttling is used by
   // the TextPropertyEditor.
@@ -29,43 +29,80 @@ add_task(async function() {
   await onMutation;
   await onRuleViewChanged;
 
-  is(ruleEditor.rule.textProps.length, 2,
-    "Should have created a new text property.");
-  is(ruleEditor.propertyList.children.length, 2,
-    "Should have created a property editor.");
+  is(
+    ruleEditor.rule.textProps.length,
+    2,
+    "Should have created a new text property."
+  );
+  is(
+    ruleEditor.propertyList.children.length,
+    2,
+    "Should have created a property editor."
+  );
 
   // Value is focused, lets add multiple rules here and make sure they get added
   onMutation = inspector.once("markupmutation");
   onRuleViewChanged = view.once("ruleview-changed");
-  const valueEditor = ruleEditor.propertyList.children[1]
-    .querySelector(".styleinspector-propertyeditor");
+  const valueEditor = ruleEditor.propertyList.children[1].querySelector(
+    ".styleinspector-propertyeditor"
+  );
   valueEditor.value = "10px;background:orangered;color: black;";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   await onMutation;
   await onRuleViewChanged;
 
-  is(ruleEditor.rule.textProps.length, 4,
-    "Should have added the changed value.");
-  is(ruleEditor.propertyList.children.length, 5,
-    "Should have added the changed value editor.");
+  is(
+    ruleEditor.rule.textProps.length,
+    4,
+    "Should have added the changed value."
+  );
+  is(
+    ruleEditor.propertyList.children.length,
+    5,
+    "Should have added the changed value editor."
+  );
 
-  is(ruleEditor.rule.textProps[0].name, "width",
-    "Should have correct property name");
-  is(ruleEditor.rule.textProps[0].value, "100px",
-    "Should have correct property value");
+  is(
+    ruleEditor.rule.textProps[0].name,
+    "width",
+    "Should have correct property name"
+  );
+  is(
+    ruleEditor.rule.textProps[0].value,
+    "100px",
+    "Should have correct property value"
+  );
 
-  is(ruleEditor.rule.textProps[1].name, "heig",
-    "Should have correct property name");
-  is(ruleEditor.rule.textProps[1].value, "10px",
-    "Should have correct property value");
+  is(
+    ruleEditor.rule.textProps[1].name,
+    "heig",
+    "Should have correct property name"
+  );
+  is(
+    ruleEditor.rule.textProps[1].value,
+    "10px",
+    "Should have correct property value"
+  );
 
-  is(ruleEditor.rule.textProps[2].name, "background",
-    "Should have correct property name");
-  is(ruleEditor.rule.textProps[2].value, "orangered",
-    "Should have correct property value");
+  is(
+    ruleEditor.rule.textProps[2].name,
+    "background",
+    "Should have correct property name"
+  );
+  is(
+    ruleEditor.rule.textProps[2].value,
+    "orangered",
+    "Should have correct property value"
+  );
 
-  is(ruleEditor.rule.textProps[3].name, "color",
-    "Should have correct property name");
-  is(ruleEditor.rule.textProps[3].value, "black",
-    "Should have correct property value");
+  is(
+    ruleEditor.rule.textProps[3].name,
+    "color",
+    "Should have correct property name"
+  );
+  is(
+    ruleEditor.rule.textProps[3].value,
+    "black",
+    "Should have correct property value"
+  );
 });

@@ -12,7 +12,9 @@ add_task(async function() {
   await removeAnimatedElementsExcept([".animated", ".still"]);
   const { animationInspector, panel } = await openAnimationInspector();
 
-  info("Add an animation to make a situation which has different creation time");
+  info(
+    "Add an animation to make a situation which has different creation time"
+  );
   await wait(WAIT_TIME);
   await setClassAttribute(animationInspector, ".still", "ball compositor-all");
 
@@ -21,7 +23,10 @@ add_task(async function() {
 
   info("Check existed animations have different currentTime");
   const animations = animationInspector.state.animations;
-  ok(animations[0].state.currentTime + WAIT_TIME > animations[1].state.currentTime,
-    `The currentTime of added animation shold be ${ WAIT_TIME }ms less than ` +
-    "at least that currentTime of first animation");
+  ok(
+    animations[0].state.currentTime + WAIT_TIME >
+      animations[1].state.currentTime,
+    `The currentTime of added animation shold be ${WAIT_TIME}ms less than ` +
+      "at least that currentTime of first animation"
+  );
 });

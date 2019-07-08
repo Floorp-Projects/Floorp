@@ -24,47 +24,51 @@ const TEST_URI = `<html>
  *   expected {JSON}      An expected states for the tree and the sidebar.
  * }
  */
-const tests = [{
-  desc: "Test the initial accessibility audit state.",
-  expected: {
-    audit: { CONTRAST: null },
+const tests = [
+  {
+    desc: "Test the initial accessibility audit state.",
+    expected: {
+      audit: { CONTRAST: null },
+    },
   },
-}, {
-  desc: "Check accessible representing text node in red.",
-  setup: async ({ doc }) => {
-    await toggleRow(doc, 0);
-    await toggleRow(doc, 1);
-    await selectRow(doc, 2);
-  },
-  expected: {
-    audit: {
-      "CONTRAST": {
-        "value": 4.00,
-        "color": [255, 0, 0, 1],
-        "backgroundColor": [255, 255, 255, 1],
-        "isLargeText": false,
-        "score": "fail",
+  {
+    desc: "Check accessible representing text node in red.",
+    setup: async ({ doc }) => {
+      await toggleRow(doc, 0);
+      await toggleRow(doc, 1);
+      await selectRow(doc, 2);
+    },
+    expected: {
+      audit: {
+        CONTRAST: {
+          value: 4.0,
+          color: [255, 0, 0, 1],
+          backgroundColor: [255, 255, 255, 1],
+          isLargeText: false,
+          score: "fail",
+        },
       },
     },
   },
-}, {
-  desc: "Check accessible representing text node in blue.",
-  setup: async ({ doc }) => {
-    await toggleRow(doc, 3);
-    await selectRow(doc, 4);
-  },
-  expected: {
-    audit: {
-      "CONTRAST": {
-        "value": 8.59,
-        "color": [0, 0, 255, 1],
-        "backgroundColor": [255, 255, 255, 1],
-        "isLargeText": false,
-        "score": "AAA",
+  {
+    desc: "Check accessible representing text node in blue.",
+    setup: async ({ doc }) => {
+      await toggleRow(doc, 3);
+      await selectRow(doc, 4);
+    },
+    expected: {
+      audit: {
+        CONTRAST: {
+          value: 8.59,
+          color: [0, 0, 255, 1],
+          backgroundColor: [255, 255, 255, 1],
+          isLargeText: false,
+          score: "AAA",
+        },
       },
     },
   },
-}];
+];
 
 /**
  * Test that checks the Accessibility panel sidebar.

@@ -5,11 +5,16 @@
 const DB_VERSION = 6; // The database schema version
 const PERMISSION_SAVE_LOGINS = "login-saving";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
 
 /**
  * Object that manages a database transaction properly so consumers don't have
@@ -25,7 +30,9 @@ function Transaction(aDatabase) {
   try {
     this._db.beginTransaction();
     this._hasTransaction = true;
-  } catch (e) { /* om nom nom exceptions */ }
+  } catch (e) {
+    /* om nom nom exceptions */
+  }
 }
 
 Transaction.prototype = {
@@ -42,15 +49,18 @@ Transaction.prototype = {
   },
 };
 
-
-function LoginManagerStorage_mozStorage() { }
+function LoginManagerStorage_mozStorage() {}
 
 LoginManagerStorage_mozStorage.prototype = {
   classID: Components.ID("{8c2023b9-175c-477e-9761-44ae7b549756}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManagerStorage,
-                                          Ci.nsIInterfaceRequestor]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsILoginManagerStorage,
+    Ci.nsIInterfaceRequestor,
+  ]),
 
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(this.LoginManagerStorage_mozStorage),
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(
+    this.LoginManagerStorage_mozStorage
+  ),
 
   getInterface(aIID) {
     if (aIID.equals(Ci.nsIVariant)) {
@@ -62,19 +72,23 @@ LoginManagerStorage_mozStorage.prototype = {
       return this._dbConnection;
     }
 
-    throw new Components.Exception("Interface not available", Cr.NS_ERROR_NO_INTERFACE);
+    throw new Components.Exception(
+      "Interface not available",
+      Cr.NS_ERROR_NO_INTERFACE
+    );
   },
 
-  __crypto: null,  // nsILoginManagerCrypto service
+  __crypto: null, // nsILoginManagerCrypto service
   get _crypto() {
     if (!this.__crypto) {
-      this.__crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].
-                      getService(Ci.nsILoginManagerCrypto);
+      this.__crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].getService(
+        Ci.nsILoginManagerCrypto
+      );
     }
     return this.__crypto;
   },
 
-  __profileDir: null,  // nsIFile for the user's profile dir
+  __profileDir: null, // nsIFile for the user's profile dir
   get _profileDir() {
     if (!this.__profileDir) {
       this.__profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -85,39 +99,42 @@ LoginManagerStorage_mozStorage.prototype = {
   __uuidService: null,
   get _uuidService() {
     if (!this.__uuidService) {
-      this.__uuidService = Cc["@mozilla.org/uuid-generator;1"].
-                           getService(Ci.nsIUUIDGenerator);
+      this.__uuidService = Cc["@mozilla.org/uuid-generator;1"].getService(
+        Ci.nsIUUIDGenerator
+      );
     }
     return this.__uuidService;
   },
 
-
   // The current database schema.
   _dbSchema: {
     tables: {
-      moz_logins:         "id                  INTEGER PRIMARY KEY," +
-                          "hostname            TEXT NOT NULL," +
-                          "httpRealm           TEXT," +
-                          "formSubmitURL       TEXT," +
-                          "usernameField       TEXT NOT NULL," +
-                          "passwordField       TEXT NOT NULL," +
-                          "encryptedUsername   TEXT NOT NULL," +
-                          "encryptedPassword   TEXT NOT NULL," +
-                          "guid                TEXT," +
-                          "encType             INTEGER," +
-                          "timeCreated         INTEGER," +
-                          "timeLastUsed        INTEGER," +
-                          "timePasswordChanged INTEGER," +
-                          "timesUsed           INTEGER",
+      moz_logins:
+        "id                  INTEGER PRIMARY KEY," +
+        "hostname            TEXT NOT NULL," +
+        "httpRealm           TEXT," +
+        "formSubmitURL       TEXT," +
+        "usernameField       TEXT NOT NULL," +
+        "passwordField       TEXT NOT NULL," +
+        "encryptedUsername   TEXT NOT NULL," +
+        "encryptedPassword   TEXT NOT NULL," +
+        "guid                TEXT," +
+        "encType             INTEGER," +
+        "timeCreated         INTEGER," +
+        "timeLastUsed        INTEGER," +
+        "timePasswordChanged INTEGER," +
+        "timesUsed           INTEGER",
       // Changes must be reflected in this._dbAreExpectedColumnsPresent(),
       // this._searchLogins(), and this.modifyLogin().
 
-      moz_disabledHosts:  "id                 INTEGER PRIMARY KEY," +
-                          "hostname           TEXT UNIQUE ON CONFLICT REPLACE",
+      moz_disabledHosts:
+        "id                 INTEGER PRIMARY KEY," +
+        "hostname           TEXT UNIQUE ON CONFLICT REPLACE",
 
-      moz_deleted_logins: "id                  INTEGER PRIMARY KEY," +
-                          "guid                TEXT," +
-                          "timeDeleted         INTEGER",
+      moz_deleted_logins:
+        "id                  INTEGER PRIMARY KEY," +
+        "guid                TEXT," +
+        "timeDeleted         INTEGER",
     },
     indices: {
       moz_logins_hostname_index: {
@@ -142,11 +159,10 @@ LoginManagerStorage_mozStorage.prototype = {
       },
     },
   },
-  _dbConnection: null,  // The database connection
-  _dbStmts: null,  // Database statements for memoization
+  _dbConnection: null, // The database connection
+  _dbStmts: null, // Database statements for memoization
 
-  _signonsFile: null,  // nsIFile for "signons.sqlite"
-
+  _signonsFile: null, // nsIFile for "signons.sqlite"
 
   /*
    * Internal method used by regression tests only.  It overrides the default
@@ -159,7 +175,6 @@ LoginManagerStorage_mozStorage.prototype = {
 
     this.initialize();
   },
-
 
   initialize() {
     this._dbStmts = {};
@@ -194,7 +209,6 @@ LoginManagerStorage_mozStorage.prototype = {
     }
   },
 
-
   /**
    * Internal method used by regression tests only.  It is called before
    * replacing this storage module with a new instance.
@@ -203,14 +217,13 @@ LoginManagerStorage_mozStorage.prototype = {
     return Promise.resolve();
   },
 
-
   addLogin(login, preEncrypted = false) {
     // Throws if there are bogus values.
     LoginHelper.checkLoginValues(login);
 
-    let [encUsername, encPassword, encType] = preEncrypted ?
-      [login.username, login.password, this._crypto.defaultEncType] :
-      this._encryptLogin(login);
+    let [encUsername, encPassword, encType] = preEncrypted
+      ? [login.username, login.password, this._crypto.defaultEncType]
+      : this._encryptLogin(login);
 
     // Clone the login, so we don't modify the caller's object.
     let loginClone = login.clone();
@@ -241,30 +254,30 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     let query =
-        "INSERT INTO moz_logins " +
-        "(hostname, httpRealm, formSubmitURL, usernameField, " +
-         "passwordField, encryptedUsername, encryptedPassword, " +
-         "guid, encType, timeCreated, timeLastUsed, timePasswordChanged, " +
-         "timesUsed) " +
-        "VALUES (:hostname, :httpRealm, :formSubmitURL, :usernameField, " +
-                ":passwordField, :encryptedUsername, :encryptedPassword, " +
-                ":guid, :encType, :timeCreated, :timeLastUsed, " +
-                ":timePasswordChanged, :timesUsed)";
+      "INSERT INTO moz_logins " +
+      "(hostname, httpRealm, formSubmitURL, usernameField, " +
+      "passwordField, encryptedUsername, encryptedPassword, " +
+      "guid, encType, timeCreated, timeLastUsed, timePasswordChanged, " +
+      "timesUsed) " +
+      "VALUES (:hostname, :httpRealm, :formSubmitURL, :usernameField, " +
+      ":passwordField, :encryptedUsername, :encryptedPassword, " +
+      ":guid, :encType, :timeCreated, :timeLastUsed, " +
+      ":timePasswordChanged, :timesUsed)";
 
     let params = {
-      hostname:            loginClone.origin,
-      httpRealm:           loginClone.httpRealm,
-      formSubmitURL:       loginClone.formActionOrigin,
-      usernameField:       loginClone.usernameField,
-      passwordField:       loginClone.passwordField,
-      encryptedUsername:   encUsername,
-      encryptedPassword:   encPassword,
-      guid:                loginClone.guid,
+      hostname: loginClone.origin,
+      httpRealm: loginClone.httpRealm,
+      formSubmitURL: loginClone.formActionOrigin,
+      usernameField: loginClone.usernameField,
+      passwordField: loginClone.passwordField,
+      encryptedUsername: encUsername,
+      encryptedPassword: encPassword,
+      guid: loginClone.guid,
       encType,
-      timeCreated:         loginClone.timeCreated,
-      timeLastUsed:        loginClone.timeLastUsed,
+      timeCreated: loginClone.timeCreated,
+      timeLastUsed: loginClone.timeLastUsed,
       timePasswordChanged: loginClone.timePasswordChanged,
-      timesUsed:           loginClone.timesUsed,
+      timesUsed: loginClone.timesUsed,
     };
 
     let stmt;
@@ -285,7 +298,6 @@ LoginManagerStorage_mozStorage.prototype = {
     return loginClone;
   },
 
-
   removeLogin(login) {
     let [idToDelete, storedLogin] = this._getIdForLogin(login);
     if (!idToDelete) {
@@ -293,7 +305,7 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     // Execute the statement & remove from DB
-    let query  = "DELETE FROM moz_logins WHERE id = :id";
+    let query = "DELETE FROM moz_logins WHERE id = :id";
     let params = { id: idToDelete };
     let stmt;
     let transaction = new Transaction(this._dbConnection);
@@ -323,16 +335,20 @@ LoginManagerStorage_mozStorage.prototype = {
     let newLogin = LoginHelper.buildModifiedLogin(oldStoredLogin, newLoginData);
 
     // Check if the new GUID is duplicate.
-    if (newLogin.guid != oldStoredLogin.guid &&
-        !this._isGuidUnique(newLogin.guid)) {
+    if (
+      newLogin.guid != oldStoredLogin.guid &&
+      !this._isGuidUnique(newLogin.guid)
+    ) {
       throw new Error("specified GUID already exists");
     }
 
     // Look for an existing entry in case key properties changed.
     if (!newLogin.matches(oldLogin, true)) {
-      let logins = this.findLogins(newLogin.origin,
-                                   newLogin.formActionOrigin,
-                                   newLogin.httpRealm);
+      let logins = this.findLogins(
+        newLogin.origin,
+        newLogin.formActionOrigin,
+        newLogin.httpRealm
+      );
 
       if (logins.some(login => newLogin.matches(login, true))) {
         throw new Error("This login already exists.");
@@ -343,37 +359,37 @@ LoginManagerStorage_mozStorage.prototype = {
     let [encUsername, encPassword, encType] = this._encryptLogin(newLogin);
 
     let query =
-        "UPDATE moz_logins " +
-        "SET hostname = :hostname, " +
-            "httpRealm = :httpRealm, " +
-            "formSubmitURL = :formSubmitURL, " +
-            "usernameField = :usernameField, " +
-            "passwordField = :passwordField, " +
-            "encryptedUsername = :encryptedUsername, " +
-            "encryptedPassword = :encryptedPassword, " +
-            "guid = :guid, " +
-            "encType = :encType, " +
-            "timeCreated = :timeCreated, " +
-            "timeLastUsed = :timeLastUsed, " +
-            "timePasswordChanged = :timePasswordChanged, " +
-            "timesUsed = :timesUsed " +
-        "WHERE id = :id";
+      "UPDATE moz_logins " +
+      "SET hostname = :hostname, " +
+      "httpRealm = :httpRealm, " +
+      "formSubmitURL = :formSubmitURL, " +
+      "usernameField = :usernameField, " +
+      "passwordField = :passwordField, " +
+      "encryptedUsername = :encryptedUsername, " +
+      "encryptedPassword = :encryptedPassword, " +
+      "guid = :guid, " +
+      "encType = :encType, " +
+      "timeCreated = :timeCreated, " +
+      "timeLastUsed = :timeLastUsed, " +
+      "timePasswordChanged = :timePasswordChanged, " +
+      "timesUsed = :timesUsed " +
+      "WHERE id = :id";
 
     let params = {
-      id:                  idToModify,
-      hostname:            newLogin.origin,
-      httpRealm:           newLogin.httpRealm,
-      formSubmitURL:       newLogin.formActionOrigin,
-      usernameField:       newLogin.usernameField,
-      passwordField:       newLogin.passwordField,
-      encryptedUsername:   encUsername,
-      encryptedPassword:   encPassword,
-      guid:                newLogin.guid,
+      id: idToModify,
+      hostname: newLogin.origin,
+      httpRealm: newLogin.httpRealm,
+      formSubmitURL: newLogin.formActionOrigin,
+      usernameField: newLogin.usernameField,
+      passwordField: newLogin.passwordField,
+      encryptedUsername: encUsername,
+      encryptedPassword: encPassword,
+      guid: newLogin.guid,
       encType,
-      timeCreated:         newLogin.timeCreated,
-      timeLastUsed:        newLogin.timeLastUsed,
+      timeCreated: newLogin.timeCreated,
+      timeLastUsed: newLogin.timeLastUsed,
       timePasswordChanged: newLogin.timePasswordChanged,
-      timesUsed:           newLogin.timesUsed,
+      timesUsed: newLogin.timesUsed,
     };
 
     let stmt;
@@ -391,7 +407,6 @@ LoginManagerStorage_mozStorage.prototype = {
 
     LoginHelper.notifyStorageChanged("modifyLogin", [oldStoredLogin, newLogin]);
   },
-
 
   /**
    * Returns an array of nsILoginInfo.
@@ -416,7 +431,9 @@ LoginManagerStorage_mozStorage.prototype = {
     if (!logins.length) {
       return [];
     }
-    let ciphertexts = logins.map(l => l.username).concat(logins.map(l => l.password));
+    let ciphertexts = logins
+      .map(l => l.username)
+      .concat(logins.map(l => l.password));
     let plaintexts = await this._crypto.decryptMany(ciphertexts);
     let usernames = plaintexts.slice(0, logins.length);
     let passwords = plaintexts.slice(logins.length);
@@ -464,7 +481,6 @@ LoginManagerStorage_mozStorage.prototype = {
     return logins;
   },
 
-
   /**
    * Private method to perform arbitrary searches on any field. Decryption is
    * left to the caller.
@@ -473,11 +489,15 @@ LoginManagerStorage_mozStorage.prototype = {
    * is an array of encrypted nsLoginInfo and ids is an array of associated
    * ids in the database.
    */
-  _searchLogins(matchData, aOptions = {
-    schemeUpgrades: false,
-    acceptDifferentSubdomains: false,
-  }) {
-    let conditions = [], params = {};
+  _searchLogins(
+    matchData,
+    aOptions = {
+      schemeUpgrades: false,
+      acceptDifferentSubdomains: false,
+    }
+  ) {
+    let conditions = [],
+      params = {};
 
     for (let field in matchData) {
       let value = matchData[field];
@@ -503,17 +523,21 @@ LoginManagerStorage_mozStorage.prototype = {
             // Historical compatibility requires this special case
             condition = "formSubmitURL = '' OR ";
           }
-          // Fall through
+        // Fall through
         case "origin":
           if (value != null) {
             condition += `${storageFieldName} = :${storageFieldName}`;
             params[storageFieldName] = value;
             let valueURI;
             try {
-              if (aOptions.schemeUpgrades && (valueURI = Services.io.newURI(value)) &&
-                  valueURI.scheme == "https") {
+              if (
+                aOptions.schemeUpgrades &&
+                (valueURI = Services.io.newURI(value)) &&
+                valueURI.scheme == "https"
+              ) {
                 condition += ` OR ${storageFieldName} = :http${storageFieldName}`;
-                params["http" + storageFieldName] = "http://" + valueURI.displayHostPort;
+                params["http" + storageFieldName] =
+                  "http://" + valueURI.displayHostPort;
               }
             } catch (ex) {
               // newURI will throw for some values (e.g. chrome://FirefoxAccounts)
@@ -521,7 +545,7 @@ LoginManagerStorage_mozStorage.prototype = {
             }
             break;
           }
-          // Fall through
+        // Fall through
         // Normal cases.
         case "httpRealm":
         case "id":
@@ -559,18 +583,25 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     let stmt;
-    let logins = [], ids = [];
+    let logins = [],
+      ids = [];
     try {
       stmt = this._dbCreateStatement(query, params);
       // We can't execute as usual here, since we're iterating over rows
       while (stmt.executeStep()) {
         // Create the new nsLoginInfo object, push to array
-        let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                    createInstance(Ci.nsILoginInfo);
-        login.init(stmt.row.hostname, stmt.row.formSubmitURL,
-                   stmt.row.httpRealm, stmt.row.encryptedUsername,
-                   stmt.row.encryptedPassword, stmt.row.usernameField,
-                   stmt.row.passwordField);
+        let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+          Ci.nsILoginInfo
+        );
+        login.init(
+          stmt.row.hostname,
+          stmt.row.formSubmitURL,
+          stmt.row.httpRealm,
+          stmt.row.encryptedUsername,
+          stmt.row.encryptedPassword,
+          stmt.row.usernameField,
+          stmt.row.passwordField
+        );
         // set nsILoginMetaInfo values
         login.QueryInterface(Ci.nsILoginMetaInfo);
         login.guid = stmt.row.guid;
@@ -600,9 +631,9 @@ LoginManagerStorage_mozStorage.prototype = {
     let stmt = null;
     try {
       this.log("Storing " + aLogin.guid + " in deleted passwords\n");
-      let query = "INSERT INTO moz_deleted_logins (guid, timeDeleted) VALUES (:guid, :timeDeleted)";
-      let params = { guid: aLogin.guid,
-                     timeDeleted: Date.now() };
+      let query =
+        "INSERT INTO moz_deleted_logins (guid, timeDeleted) VALUES (:guid, :timeDeleted)";
+      let params = { guid: aLogin.guid, timeDeleted: Date.now() };
       let stmt = this._dbCreateStatement(query, params);
       stmt.execute();
     } catch (ex) {
@@ -613,7 +644,6 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
   },
-
 
   /**
    * Removes all logins from storage.
@@ -645,14 +675,13 @@ LoginManagerStorage_mozStorage.prototype = {
     LoginHelper.notifyStorageChanged("removeAllLogins", null);
   },
 
-
   findLogins(origin, formActionOrigin, httpRealm) {
     let loginData = {
       origin,
       formActionOrigin,
       httpRealm,
     };
-    let matchData = { };
+    let matchData = {};
     for (let field of ["origin", "formActionOrigin", "httpRealm"]) {
       if (loginData[field] != "") {
         matchData[field] = loginData[field];
@@ -667,12 +696,14 @@ LoginManagerStorage_mozStorage.prototype = {
     return logins;
   },
 
-
   countLogins(origin, formActionOrigin, httpRealm) {
     let _countLoginsHelper = (origin, formActionOrigin, httpRealm) => {
       // Do checks for null and empty strings, adjust conditions and params
-      let [conditions, params] =
-          this._buildConditionsAndParams(origin, formActionOrigin, httpRealm);
+      let [conditions, params] = this._buildConditionsAndParams(
+        origin,
+        formActionOrigin,
+        httpRealm
+      );
 
       let query = "SELECT COUNT(1) AS numLogins FROM moz_logins";
       if (conditions.length) {
@@ -700,16 +731,13 @@ LoginManagerStorage_mozStorage.prototype = {
     return resultLogins;
   },
 
-
   get uiBusy() {
     return this._crypto.uiBusy;
   },
 
-
   get isLoggedIn() {
     return this._crypto.isLoggedIn;
   },
-
 
   /**
    * Returns an array with two items: [id, login]. If the login was not
@@ -717,7 +745,7 @@ LoginManagerStorage_mozStorage.prototype = {
    * stored login (useful for looking at the actual nsILoginMetaInfo values).
    */
   _getIdForLogin(login) {
-    let matchData = { };
+    let matchData = {};
     for (let field of ["origin", "formActionOrigin", "httpRealm"]) {
       if (login[field] != "") {
         matchData[field] = login[field];
@@ -748,14 +776,14 @@ LoginManagerStorage_mozStorage.prototype = {
     return [id, foundLogin];
   },
 
-
   /**
    * Adjusts the WHERE conditions and parameters for statements prior to the
    * statement being created. This fixes the cases where nulls are involved
    * and the empty string is supposed to be a wildcard match
    */
   _buildConditionsAndParams(origin, formActionOrigin, httpRealm) {
-    let conditions = [], params = {};
+    let conditions = [],
+      params = {};
 
     if (origin == null) {
       conditions.push("hostname isnull");
@@ -781,12 +809,12 @@ LoginManagerStorage_mozStorage.prototype = {
     return [conditions, params];
   },
 
-
   /**
    * Checks to see if the specified GUID already exists.
    */
   _isGuidUnique(guid) {
-    let query = "SELECT COUNT(1) AS numLogins FROM moz_logins WHERE guid = :guid";
+    let query =
+      "SELECT COUNT(1) AS numLogins FROM moz_logins WHERE guid = :guid";
     let params = { guid };
 
     let stmt, numLogins;
@@ -802,9 +830,8 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
 
-    return (numLogins == 0);
+    return numLogins == 0;
   },
-
 
   /**
    * Returns the encrypted username, password, and encrypton type for the specified
@@ -813,11 +840,10 @@ LoginManagerStorage_mozStorage.prototype = {
   _encryptLogin(login) {
     let encUsername = this._crypto.encrypt(login.username);
     let encPassword = this._crypto.encrypt(login.password);
-    let encType     = this._crypto.defaultEncType;
+    let encType = this._crypto.defaultEncType;
 
     return [encUsername, encPassword, encType];
   },
-
 
   /**
    * Decrypts username and password fields in the provided array of
@@ -851,7 +877,6 @@ LoginManagerStorage_mozStorage.prototype = {
     return result;
   },
 
-
   // Database Creation & Access
 
   /**
@@ -875,7 +900,6 @@ LoginManagerStorage_mozStorage.prototype = {
     }
     return wrappedStmt;
   },
-
 
   /**
    * Attempts to initialize the database. This creates the file if it doesn't
@@ -923,12 +947,10 @@ LoginManagerStorage_mozStorage.prototype = {
     this._dbConnection.schemaVersion = DB_VERSION;
   },
 
-
   _dbCreateSchema() {
     this._dbCreateTables();
     this._dbCreateIndices();
   },
-
 
   _dbCreateTables() {
     this.log("Creating Tables");
@@ -937,17 +959,21 @@ LoginManagerStorage_mozStorage.prototype = {
     }
   },
 
-
   _dbCreateIndices() {
     this.log("Creating Indices");
     for (let name in this._dbSchema.indices) {
       let index = this._dbSchema.indices[name];
-      let statement = "CREATE INDEX IF NOT EXISTS " + name + " ON " + index.table +
-                      "(" + index.columns.join(", ") + ")";
+      let statement =
+        "CREATE INDEX IF NOT EXISTS " +
+        name +
+        " ON " +
+        index.table +
+        "(" +
+        index.columns.join(", ") +
+        ")";
       this._dbConnection.executeSimpleSQL(statement);
     }
   },
-
 
   _dbMigrate(oldVersion) {
     this.log("Attempting to migrate from version " + oldVersion);
@@ -961,8 +987,10 @@ LoginManagerStorage_mozStorage.prototype = {
       // should swtich to a different table or file.]
 
       if (!this._dbAreExpectedColumnsPresent()) {
-        throw Components.Exception("DB is missing expected columns",
-                                   Cr.NS_ERROR_FILE_CORRUPTED);
+        throw Components.Exception(
+          "DB is missing expected columns",
+          Cr.NS_ERROR_FILE_CORRUPTED
+        );
       }
 
       // Change the stored version to the current version. If the user
@@ -993,7 +1021,6 @@ LoginManagerStorage_mozStorage.prototype = {
     this.log("DB migration completed.");
   },
 
-
   /**
    * Version 2 adds a GUID column. Existing logins are assigned a random GUID.
    */
@@ -1004,7 +1031,8 @@ LoginManagerStorage_mozStorage.prototype = {
       query = "ALTER TABLE moz_logins ADD COLUMN guid TEXT";
       this._dbConnection.executeSimpleSQL(query);
 
-      query = "CREATE INDEX IF NOT EXISTS moz_logins_guid_index ON moz_logins (guid)";
+      query =
+        "CREATE INDEX IF NOT EXISTS moz_logins_guid_index ON moz_logins (guid)";
       this._dbConnection.executeSimpleSQL(query);
     }
 
@@ -1048,7 +1076,6 @@ LoginManagerStorage_mozStorage.prototype = {
     }
   },
 
-
   /**
    * Version 3 adds a encType column.
    */
@@ -1059,23 +1086,27 @@ LoginManagerStorage_mozStorage.prototype = {
       query = "ALTER TABLE moz_logins ADD COLUMN encType INTEGER";
       this._dbConnection.executeSimpleSQL(query);
 
-      query = "CREATE INDEX IF NOT EXISTS " +
-                  "moz_logins_encType_index ON moz_logins (encType)";
+      query =
+        "CREATE INDEX IF NOT EXISTS " +
+        "moz_logins_encType_index ON moz_logins (encType)";
       this._dbConnection.executeSimpleSQL(query);
     }
 
     // Get a list of existing logins
     let logins = [];
     let stmt;
-    query = "SELECT id, encryptedUsername, encryptedPassword " +
-                "FROM moz_logins WHERE encType isnull";
+    query =
+      "SELECT id, encryptedUsername, encryptedPassword " +
+      "FROM moz_logins WHERE encType isnull";
     try {
       stmt = this._dbCreateStatement(query);
       while (stmt.executeStep()) {
         let params = { id: stmt.row.id };
         // We will tag base64 logins correctly, but no longer support their use.
-        if (stmt.row.encryptedUsername.charAt(0) == "~" ||
-            stmt.row.encryptedPassword.charAt(0) == "~") {
+        if (
+          stmt.row.encryptedUsername.charAt(0) == "~" ||
+          stmt.row.encryptedPassword.charAt(0) == "~"
+        ) {
           params.encType = Ci.nsILoginManagerCrypto.ENCTYPE_BASE64;
         } else {
           params.encType = Ci.nsILoginManagerCrypto.ENCTYPE_SDR;
@@ -1108,7 +1139,6 @@ LoginManagerStorage_mozStorage.prototype = {
     }
   },
 
-
   /**
    * Version 4 adds timeCreated, timeLastUsed, timePasswordChanged,
    * and timesUsed columns
@@ -1116,7 +1146,12 @@ LoginManagerStorage_mozStorage.prototype = {
   _dbMigrateToVersion4() {
     let query;
     // Add the new columns, if needed.
-    for (let column of ["timeCreated", "timeLastUsed", "timePasswordChanged", "timesUsed"]) {
+    for (let column of [
+      "timeCreated",
+      "timeLastUsed",
+      "timePasswordChanged",
+      "timesUsed",
+    ]) {
       if (!this._dbColumnExists(column)) {
         query = "ALTER TABLE moz_logins ADD COLUMN " + column + " INTEGER";
         this._dbConnection.executeSimpleSQL(query);
@@ -1126,8 +1161,9 @@ LoginManagerStorage_mozStorage.prototype = {
     // Get a list of IDs for existing logins.
     let ids = [];
     let stmt;
-    query = "SELECT id FROM moz_logins WHERE timeCreated isnull OR " +
-            "timeLastUsed isnull OR timePasswordChanged isnull OR timesUsed isnull";
+    query =
+      "SELECT id FROM moz_logins WHERE timeCreated isnull OR " +
+      "timeLastUsed isnull OR timePasswordChanged isnull OR timesUsed isnull";
     try {
       stmt = this._dbCreateStatement(query);
       while (stmt.executeStep()) {
@@ -1143,10 +1179,11 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     // Initialize logins with current time.
-    query = "UPDATE moz_logins SET timeCreated = :initTime, timeLastUsed = :initTime, " +
-            "timePasswordChanged = :initTime, timesUsed = 1 WHERE id = :id";
+    query =
+      "UPDATE moz_logins SET timeCreated = :initTime, timeLastUsed = :initTime, " +
+      "timePasswordChanged = :initTime, timesUsed = 1 WHERE id = :id";
     let params = {
-      id:       null,
+      id: null,
       initTime: Date.now(),
     };
     for (let id of ids) {
@@ -1165,13 +1202,15 @@ LoginManagerStorage_mozStorage.prototype = {
     }
   },
 
-
   /**
    * Version 5 adds the moz_deleted_logins table
    */
   _dbMigrateToVersion5() {
     if (!this._dbConnection.tableExists("moz_deleted_logins")) {
-      this._dbConnection.createTable("moz_deleted_logins", this._dbSchema.tables.moz_deleted_logins);
+      this._dbConnection.createTable(
+        "moz_deleted_logins",
+        this._dbSchema.tables.moz_deleted_logins
+      );
     }
   },
 
@@ -1194,7 +1233,11 @@ LoginManagerStorage_mozStorage.prototype = {
       for (let host of disabledHosts) {
         try {
           let uri = Services.io.newURI(host);
-          Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
+          Services.perms.add(
+            uri,
+            PERMISSION_SAVE_LOGINS,
+            Services.perms.DENY_ACTION
+          );
         } catch (e) {
           Cu.reportError(e);
         }
@@ -1216,22 +1259,23 @@ LoginManagerStorage_mozStorage.prototype = {
    * are present in the DB we're using.
    */
   _dbAreExpectedColumnsPresent() {
-    let query = "SELECT " +
-                   "id, " +
-                   "hostname, " +
-                   "httpRealm, " +
-                   "formSubmitURL, " +
-                   "usernameField, " +
-                   "passwordField, " +
-                   "encryptedUsername, " +
-                   "encryptedPassword, " +
-                   "guid, " +
-                   "encType, " +
-                   "timeCreated, " +
-                   "timeLastUsed, " +
-                   "timePasswordChanged, " +
-                   "timesUsed " +
-                "FROM moz_logins";
+    let query =
+      "SELECT " +
+      "id, " +
+      "hostname, " +
+      "httpRealm, " +
+      "formSubmitURL, " +
+      "usernameField, " +
+      "passwordField, " +
+      "encryptedUsername, " +
+      "encryptedPassword, " +
+      "guid, " +
+      "encType, " +
+      "timeCreated, " +
+      "timeLastUsed, " +
+      "timePasswordChanged, " +
+      "timesUsed " +
+      "FROM moz_logins";
     try {
       let stmt = this._dbConnection.createStatement(query);
       // (no need to execute statement, if it compiled we're good)
@@ -1240,10 +1284,7 @@ LoginManagerStorage_mozStorage.prototype = {
       return false;
     }
 
-    query = "SELECT " +
-               "id, " +
-               "hostname " +
-            "FROM moz_disabledHosts";
+    query = "SELECT id, hostname FROM moz_disabledHosts";
     try {
       let stmt = this._dbConnection.createStatement(query);
       // (no need to execute statement, if it compiled we're good)
@@ -1255,7 +1296,6 @@ LoginManagerStorage_mozStorage.prototype = {
     this.log("verified that expected columns are present in DB.");
     return true;
   },
-
 
   /**
    * Checks to see if the named column already exists.
@@ -1307,12 +1347,15 @@ LoginManagerStorage_mozStorage.prototype = {
     this._dbClose();
     this._signonsFile.remove(false);
   },
-
 }; // end of nsLoginManagerStorage_mozStorage implementation
 
-XPCOMUtils.defineLazyGetter(this.LoginManagerStorage_mozStorage.prototype, "log", () => {
-  let logger = LoginHelper.createLogger("Login storage");
-  return logger.log.bind(logger);
-});
+XPCOMUtils.defineLazyGetter(
+  this.LoginManagerStorage_mozStorage.prototype,
+  "log",
+  () => {
+    let logger = LoginHelper.createLogger("Login storage");
+    return logger.log.bind(logger);
+  }
+);
 
 const EXPORTED_SYMBOLS = ["LoginManagerStorage_mozStorage"];

@@ -5,20 +5,28 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "ZoomUI" ];
+var EXPORTED_SYMBOLS = ["ZoomUI"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var ZoomUI = {
   init(aWindow) {
     aWindow.addEventListener("EndSwapDocShells", onEndSwapDocShells, true);
     aWindow.addEventListener("FullZoomChange", onZoomChange);
     aWindow.addEventListener("TextZoomChange", onZoomChange);
-    aWindow.addEventListener("unload", () => {
-      aWindow.removeEventListener("EndSwapDocShells", onEndSwapDocShells, true);
-      aWindow.removeEventListener("FullZoomChange", onZoomChange);
-      aWindow.removeEventListener("TextZoomChange", onZoomChange);
-    }, {once: true});
+    aWindow.addEventListener(
+      "unload",
+      () => {
+        aWindow.removeEventListener(
+          "EndSwapDocShells",
+          onEndSwapDocShells,
+          true
+        );
+        aWindow.removeEventListener("FullZoomChange", onZoomChange);
+        aWindow.removeEventListener("TextZoomChange", onZoomChange);
+      },
+      { once: true }
+    );
   },
 };
 
@@ -31,7 +39,10 @@ function fullZoomLocationChangeObserver(aSubject, aTopic) {
   }
   updateZoomUI(aSubject, false);
 }
-Services.obs.addObserver(fullZoomLocationChangeObserver, "browser-fullZoom:location-change");
+Services.obs.addObserver(
+  fullZoomLocationChangeObserver,
+  "browser-fullZoom:location-change"
+);
 
 function onEndSwapDocShells(event) {
   updateZoomUI(event.originalTarget);
@@ -69,7 +80,9 @@ function updateZoomUI(aBrowser, aAnimate = false) {
     return;
   }
 
-  let appMenuZoomReset = win.document.getElementById("appMenu-zoomReset-button");
+  let appMenuZoomReset = win.document.getElementById(
+    "appMenu-zoomReset-button"
+  );
   let customizableZoomControls = win.document.getElementById("zoom-controls");
   let customizableZoomReset = win.document.getElementById("zoom-reset-button");
   let urlbarZoomButton = win.document.getElementById("urlbar-zoom-button");
@@ -78,11 +91,13 @@ function updateZoomUI(aBrowser, aAnimate = false) {
   // Hide urlbar zoom button if zoom is at 100% or the customizable control is
   // in the toolbar.
   urlbarZoomButton.hidden =
-    (zoomFactor == 100 ||
-     (customizableZoomControls &&
-      customizableZoomControls.getAttribute("cui-areatype") == "toolbar"));
+    zoomFactor == 100 ||
+    (customizableZoomControls &&
+      customizableZoomControls.getAttribute("cui-areatype") == "toolbar");
 
-  let label = win.gNavigatorBundle.getFormattedString("zoom-button.label", [zoomFactor]);
+  let label = win.gNavigatorBundle.getFormattedString("zoom-button.label", [
+    zoomFactor,
+  ]);
   if (appMenuZoomReset) {
     appMenuZoomReset.setAttribute("label", label);
   }
@@ -99,22 +114,24 @@ function updateZoomUI(aBrowser, aAnimate = false) {
   }
 }
 
-const {CustomizableUI} = ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
+const { CustomizableUI } = ChromeUtils.import(
+  "resource:///modules/CustomizableUI.jsm"
+);
 let customizationListener = {};
-customizationListener.onWidgetAdded =
-customizationListener.onWidgetRemoved =
-customizationListener.onWidgetMoved = function(aWidgetId) {
+customizationListener.onWidgetAdded = customizationListener.onWidgetRemoved = customizationListener.onWidgetMoved = function(
+  aWidgetId
+) {
   if (aWidgetId == "zoom-controls") {
     for (let window of CustomizableUI.windows) {
       updateZoomUI(window.gBrowser.selectedBrowser);
     }
   }
 };
-customizationListener.onWidgetReset =
-customizationListener.onWidgetUndoMove = function(aWidgetNode) {
+customizationListener.onWidgetReset = customizationListener.onWidgetUndoMove = function(
+  aWidgetNode
+) {
   if (aWidgetNode.id == "zoom-controls") {
     updateZoomUI(aWidgetNode.ownerGlobal.gBrowser.selectedBrowser);
   }
 };
 CustomizableUI.addListener(customizationListener);
-

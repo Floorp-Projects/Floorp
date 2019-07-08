@@ -11,11 +11,13 @@
 // Import the inspector's head.js first (which itself imports shared-head.js).
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
-  this);
+  this
+);
 
 // Import the inspector extensions test helpers (shared between the tests that live
 // in the current devtools test directory and the devtools sidebar tests that live
 // in browser/components/extensions/test/browser).
 Services.scriptloader.loadSubScript(
   new URL("head_devtools_inspector_sidebar.js", gTestPath).href,
-  this);
+  this
+);

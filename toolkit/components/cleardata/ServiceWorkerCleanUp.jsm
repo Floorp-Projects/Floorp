@@ -4,15 +4,22 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
-                                   "@mozilla.org/serviceworkers/manager;1",
-                                   "nsIServiceWorkerManager");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "serviceWorkerManager",
+  "@mozilla.org/serviceworkers/manager;1",
+  "nsIServiceWorkerManager"
+);
 
 if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
-  throw new Error("ServiceWorkerCleanUp.jsm can only be used in the parent process");
+  throw new Error(
+    "ServiceWorkerCleanUp.jsm can only be used in the parent process"
+  );
 }
 
 this.EXPORTED_SYMBOLS = ["ServiceWorkerCleanUp"];
@@ -22,9 +29,15 @@ function unregisterServiceWorker(aSW) {
     let unregisterCallback = {
       unregisterSucceeded: resolve,
       unregisterFailed: resolve, // We don't care about failures.
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIServiceWorkerUnregisterCallback]),
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIServiceWorkerUnregisterCallback,
+      ]),
     };
-    serviceWorkerManager.propagateUnregister(aSW.principal, unregisterCallback, aSW.scope);
+    serviceWorkerManager.propagateUnregister(
+      aSW.principal,
+      unregisterCallback,
+      aSW.scope
+    );
   });
 }
 
@@ -33,7 +46,10 @@ this.ServiceWorkerCleanUp = {
     let promises = [];
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();
     for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+      let sw = serviceWorkers.queryElementAt(
+        i,
+        Ci.nsIServiceWorkerRegistrationInfo
+      );
       if (sw.principal.URI.host == aHost) {
         promises.push(unregisterServiceWorker(sw));
       }
@@ -45,7 +61,10 @@ this.ServiceWorkerCleanUp = {
     let promises = [];
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();
     for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+      let sw = serviceWorkers.queryElementAt(
+        i,
+        Ci.nsIServiceWorkerRegistrationInfo
+      );
       if (sw.principal.equals(aPrincipal)) {
         promises.push(unregisterServiceWorker(sw));
       }
@@ -57,7 +76,10 @@ this.ServiceWorkerCleanUp = {
     let promises = [];
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();
     for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+      let sw = serviceWorkers.queryElementAt(
+        i,
+        Ci.nsIServiceWorkerRegistrationInfo
+      );
       promises.push(unregisterServiceWorker(sw));
     }
     return Promise.all(promises);

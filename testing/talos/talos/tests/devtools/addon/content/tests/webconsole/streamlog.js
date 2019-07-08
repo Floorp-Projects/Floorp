@@ -4,8 +4,14 @@
 
 "use strict";
 
-const { openToolbox, closeToolbox, logTestResult, testSetup,
-        testTeardown, SIMPLE_URL } = require("../head");
+const {
+  openToolbox,
+  closeToolbox,
+  logTestResult,
+  testSetup,
+  testTeardown,
+  SIMPLE_URL,
+} = require("../head");
 
 // Log a stream of console messages, 1 per rAF.  Then record the average
 // time per rAF.  The idea is that the console being slow can slow down
@@ -19,8 +25,10 @@ module.exports = async function() {
 
   // Load a frame script using a data URI so we can do logs
   // from the page.  So this is running in content.
-  messageManager.loadFrameScript("data:,(" + encodeURIComponent(
-    `function () {
+  messageManager.loadFrameScript(
+    "data:,(" +
+      encodeURIComponent(
+        `function () {
       let count = 0;
       let startTime = content.performance.now();
       function log() {
@@ -40,10 +48,13 @@ module.exports = async function() {
       }
       log();
     }`
-  ) + ")()", true);
+      ) +
+      ")()",
+    true
+  );
 
   let avgTime = await new Promise(resolve => {
-    messageManager.addMessageListener("done", (e) => {
+    messageManager.addMessageListener("done", e => {
       resolve(e.data);
     });
   });

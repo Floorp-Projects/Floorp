@@ -8,7 +8,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 
 add_task(async function() {
-  const {client} = await setupTestForUri(TEST_URI);
+  const { client } = await setupTestForUri(TEST_URI);
 
   const firstContext = await testRuntimeEnable(client);
   await testEvaluate(client, firstContext);
@@ -42,8 +42,15 @@ async function testRuntimeEnable({ Runtime }) {
 async function testEvaluate({ Runtime }, previousContext) {
   const contextId = previousContext.id;
 
-  const { result } = await Runtime.evaluate({ contextId, expression: "location.href" });
-  is(result.value, TEST_URI, "Runtime.evaluate works and is against the test page");
+  const { result } = await Runtime.evaluate({
+    contextId,
+    expression: "location.href",
+  });
+  is(
+    result.value,
+    TEST_URI,
+    "Runtime.evaluate works and is against the test page"
+  );
 }
 
 async function testNavigate({ Runtime, Page }, previousContext) {
@@ -55,20 +62,39 @@ async function testNavigate({ Runtime, Page }, previousContext) {
   const url = "data:text/html;charset=utf-8,test-page";
   const { frameId } = await Page.navigate({ url });
   ok(true, "A new page has been loaded");
-  is(frameId, previousContext.auxData.frameId, "Page.navigate returns the same frameId than executionContextCreated");
+  is(
+    frameId,
+    previousContext.auxData.frameId,
+    "Page.navigate returns the same frameId than executionContextCreated"
+  );
 
   const { executionContextId } = await executionContextDestroyed;
-  is(executionContextId, previousContext.id, "The destroyed event reports the previous context id");
+  is(
+    executionContextId,
+    previousContext.id,
+    "The destroyed event reports the previous context id"
+  );
 
   const { context } = await executionContextCreated;
   ok(!!context.id, "The execution context has an id");
-  isnot(previousContext.id, context.id, "The new execution context has a different id");
+  isnot(
+    previousContext.id,
+    context.id,
+    "The new execution context has a different id"
+  );
   ok(context.auxData.isDefault, "The execution context is the default one");
-  is(context.auxData.frameId, frameId, "The execution context frame id is the same " +
-    "than the one returned by Page.navigate");
+  is(
+    context.auxData.frameId,
+    frameId,
+    "The execution context frame id is the same " +
+      "than the one returned by Page.navigate"
+  );
 
-  isnot(executionContextId, context.id, "The destroyed id is different from the " +
-    "created one");
+  isnot(
+    executionContextId,
+    context.id,
+    "The destroyed id is different from the created one"
+  );
 
   return context;
 }
@@ -85,15 +111,34 @@ async function testNavigateBack({ Runtime }, firstContext, previousContext) {
   gBrowser.selectedBrowser.goBack();
 
   const { context } = await executionContextCreated;
-  is(context.id, firstContext.id, "The new execution context should be the same than the first one");
+  is(
+    context.id,
+    firstContext.id,
+    "The new execution context should be the same than the first one"
+  );
   ok(context.auxData.isDefault, "The execution context is the default one");
-  is(context.auxData.frameId, firstContext.auxData.frameId, "The execution context frame id is always the same");
+  is(
+    context.auxData.frameId,
+    firstContext.auxData.frameId,
+    "The execution context frame id is always the same"
+  );
 
   const { executionContextId } = await executionContextDestroyed;
-  is(executionContextId, previousContext.id, "The destroyed event reports the previous context id");
+  is(
+    executionContextId,
+    previousContext.id,
+    "The destroyed event reports the previous context id"
+  );
 
-  const { result } = await Runtime.evaluate({ contextId: context.id, expression: "location.href" });
-  is(result.value, TEST_URI, "Runtime.evaluate works and is against the page we just navigated to");
+  const { result } = await Runtime.evaluate({
+    contextId: context.id,
+    expression: "location.href",
+  });
+  is(
+    result.value,
+    TEST_URI,
+    "Runtime.evaluate works and is against the page we just navigated to"
+  );
 }
 
 async function testNavigateViaLocation({ Runtime }, previousContext) {
@@ -103,19 +148,33 @@ async function testNavigateViaLocation({ Runtime }, previousContext) {
   const executionContextCreated = Runtime.executionContextCreated();
 
   const url2 = "data:text/html;charset=utf-8,test-page-2";
-  await Runtime.evaluate({ contextId: previousContext.id, expression: `window.location = '${url2}';` });
+  await Runtime.evaluate({
+    contextId: previousContext.id,
+    expression: `window.location = '${url2}';`,
+  });
 
   const { executionContextId } = await executionContextDestroyed;
-  is(executionContextId, previousContext.id, "The destroyed event reports the previous context id");
+  is(
+    executionContextId,
+    previousContext.id,
+    "The destroyed event reports the previous context id"
+  );
 
   const { context } = await executionContextCreated;
   ok(!!context.id, "The execution context has an id");
   ok(context.auxData.isDefault, "The execution context is the default one");
-  is(context.auxData.frameId, previousContext.auxData.frameId, "The execution context frame id is the same " +
-    "the one returned by Page.navigate");
+  is(
+    context.auxData.frameId,
+    previousContext.auxData.frameId,
+    "The execution context frame id is the same " +
+      "the one returned by Page.navigate"
+  );
 
-  isnot(executionContextId, context.id, "The destroyed id is different from the " +
-    "created one");
+  isnot(
+    executionContextId,
+    context.id,
+    "The destroyed id is different from the created one"
+  );
 
   return context;
 }
@@ -129,14 +188,24 @@ async function testReload({ Runtime, Page }, previousContext) {
   await Page.reload();
 
   const { executionContextId } = await executionContextDestroyed;
-  is(executionContextId, previousContext.id, "The destroyed event reports the previous context id");
+  is(
+    executionContextId,
+    previousContext.id,
+    "The destroyed event reports the previous context id"
+  );
 
   const { context } = await executionContextCreated;
   ok(!!context.id, "The execution context has an id");
   ok(context.auxData.isDefault, "The execution context is the default one");
-  is(context.auxData.frameId, previousContext.auxData.frameId, "The execution context " +
-    "frame id is the same one");
+  is(
+    context.auxData.frameId,
+    previousContext.auxData.frameId,
+    "The execution context frame id is the same one"
+  );
 
-  isnot(executionContextId, context.id, "The destroyed id is different from the " +
-    "created one");
+  isnot(
+    executionContextId,
+    context.id,
+    "The destroyed id is different from the created one"
+  );
 }

@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -22,12 +25,12 @@ class RequestListColumnStatus extends Component {
   render() {
     const { item } = this.props;
 
-    return (
-      dom.td({
+    return dom.td(
+      {
         className: "requests-list-column requests-list-status",
       },
-      StatusCode({ item }),
-    ));
+      StatusCode({ item })
+    );
   }
 }
 

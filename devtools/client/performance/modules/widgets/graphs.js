@@ -17,8 +17,12 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { colorUtils } = require("devtools/shared/css/color");
 const { getColor } = require("devtools/client/shared/theme");
 const ProfilerGlobal = require("devtools/client/performance/modules/global");
-const { MarkersOverview } = require("devtools/client/performance/modules/widgets/markers-overview");
-const { createTierGraphDataFromFrameNode } = require("devtools/client/performance/modules/logic/jit");
+const {
+  MarkersOverview,
+} = require("devtools/client/performance/modules/widgets/markers-overview");
+const {
+  createTierGraphDataFromFrameNode,
+} = require("devtools/client/performance/modules/logic/jit");
 
 /**
  * For line graphs
@@ -88,7 +92,9 @@ PerformanceGraph.prototype = extend(LineGraphWidget.prototype, {
     this.backgroundGradientStart = colorUtils.setAlpha(mainColor, 0.2);
     this.backgroundGradientEnd = colorUtils.setAlpha(mainColor, 0.2);
     this.selectionBackgroundColor = colorUtils.setAlpha(
-      getColor(SELECTION_BACKGROUND_COLOR_NAME, theme), 0.25);
+      getColor(SELECTION_BACKGROUND_COLOR_NAME, theme),
+      0.25
+    );
     this.selectionStripesColor = "rgba(255, 255, 255, 0.1)";
     this.maximumLineColor = colorUtils.setAlpha(mainColor, 0.4);
     this.averageLineColor = colorUtils.setAlpha(mainColor, 0.7);
@@ -121,7 +127,11 @@ FramerateGraph.prototype = extend(PerformanceGraph.prototype, {
  *        The parent node holding the overview.
  */
 function MemoryGraph(parent) {
-  PerformanceGraph.call(this, parent, ProfilerGlobal.L10N.getStr("graphs.memory"));
+  PerformanceGraph.call(
+    this,
+    parent,
+    ProfilerGlobal.L10N.getStr("graphs.memory")
+  );
 }
 
 MemoryGraph.prototype = extend(PerformanceGraph.prototype, {
@@ -180,8 +190,9 @@ function GraphsController({ definition, root, getFilter, getTheme }) {
   this._root = root;
   this._getFilter = getFilter;
   this._getTheme = getTheme;
-  this._primaryLink = Object.keys(this._definition)
-                            .filter(name => this._definition[name].primaryLink)[0];
+  this._primaryLink = Object.keys(this._definition).filter(
+    name => this._definition[name].primaryLink
+  )[0];
   this.$ = root.ownerDocument.querySelector.bind(root.ownerDocument);
 
   EventEmitter.decorate(this);
@@ -189,7 +200,6 @@ function GraphsController({ definition, root, getFilter, getTheme }) {
 }
 
 GraphsController.prototype = {
-
   /**
    * Returns the corresponding graph by `graphName`.
    */
@@ -217,8 +227,8 @@ GraphsController.prototype = {
       return;
     }
 
-    this._rendering = new Promise(async (resolve) => {
-      for (const graph of (await this._getEnabled())) {
+    this._rendering = new Promise(async resolve => {
+      for (const graph of await this._getEnabled()) {
         await graph.setPerformanceData(recordingData, resolution);
         this.emit("rendered", graph.graphName);
       }
@@ -312,7 +322,9 @@ GraphsController.prototype = {
   disableAll: function() {
     this._root.classList.add("hidden");
     // Hide all the subelements
-    Object.keys(this._definition).forEach(graphName => this.enable(graphName, false));
+    Object.keys(this._definition).forEach(graphName =>
+      this.enable(graphName, false)
+    );
   },
 
   /**
@@ -320,7 +332,10 @@ GraphsController.prototype = {
    * for keeping the graphs' selections in sync.
    */
   setMappedSelection: function(selection, { mapStart, mapEnd }) {
-    return this._getPrimaryLink().setMappedSelection(selection, { mapStart, mapEnd });
+    return this._getPrimaryLink().setMappedSelection(selection, {
+      mapStart,
+      mapEnd,
+    });
   },
 
   /**
@@ -357,7 +372,7 @@ GraphsController.prototype = {
    * Makes sure the selection is enabled or disabled in all the graphs.
    */
   async selectionEnabled(enabled) {
-    for (const graph of (await this._getEnabled())) {
+    for (const graph of await this._getEnabled()) {
       graph.selectionEnabled = enabled;
     }
   },
@@ -369,7 +384,7 @@ GraphsController.prototype = {
     const def = this._definition[graphName];
     const el = this.$(def.selector);
     const filter = this._getFilter();
-    const graph = this._graphs[graphName] = new def.constructor(el, filter);
+    const graph = (this._graphs[graphName] = new def.constructor(el, filter));
     graph.graphName = graphName;
 
     await graph.ready();
@@ -440,7 +455,6 @@ function OptimizationsGraph(parent) {
 }
 
 OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
-
   async render(threadNode, frameNode) {
     // Regardless if we draw or clear the graph, wait
     // until it's ready.
@@ -465,14 +479,21 @@ OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
     const endTime = sampleTimes[sampleTimes.length - 1];
 
     const bucketSize = (endTime - startTime) / OPTIMIZATIONS_GRAPH_RESOLUTION;
-    const data = createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize);
+    const data = createTierGraphDataFromFrameNode(
+      frameNode,
+      sampleTimes,
+      bucketSize
+    );
 
     // If for some reason we don't have data (like the frameNode doesn't
     // have optimizations, but it shouldn't be at this point if it doesn't),
     // log an error.
     if (!data) {
       console.error(
-        `FrameNode#${frameNode.location} does not have optimizations data to render.`);
+        `FrameNode#${
+          frameNode.location
+        } does not have optimizations data to render.`
+      );
       return;
     }
 

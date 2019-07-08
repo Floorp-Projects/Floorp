@@ -22,7 +22,7 @@ export default function ObservedPropertiesMixin(superClass) {
       };
 
       // Reflect property changes for `observedAttributes` to attributes.
-      for (let name of (this.constructor.observedAttributes || [])) {
+      for (let name of this.constructor.observedAttributes || []) {
         if (name in this) {
           // Don't overwrite existing properties.
           continue;

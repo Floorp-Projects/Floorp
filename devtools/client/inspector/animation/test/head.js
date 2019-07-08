@@ -7,13 +7,16 @@
 /* import-globals-from ../../test/head.js */
 // Import the inspector's head.js first (which itself imports shared-head.js).
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js", this);
+  "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
+  this
+);
 
 const FRAME_SCRIPT_URL = CHROME_URL_ROOT + "doc_frame_script.js";
 const TAB_NAME = "animationinspector";
 
-const ANIMATION_L10N =
-  new LocalizationHelper("devtools/client/locales/animationinspector.properties");
+const ANIMATION_L10N = new LocalizationHelper(
+  "devtools/client/locales/animationinspector.properties"
+);
 
 // Auto clean-up when a test ends.
 // Clean-up all prefs that might have been changed during a test run
@@ -33,7 +36,9 @@ const openAnimationInspector = async function() {
   await inspector.once("inspector-updated");
   const animationInspector = inspector.getPanel("animationinspector");
   await waitForRendering(animationInspector);
-  const panel = inspector.panelWin.document.getElementById("animation-container");
+  const panel = inspector.panelWin.document.getElementById(
+    "animation-container"
+  );
   return { animationInspector, toolbox, inspector, panel };
 };
 
@@ -53,13 +58,18 @@ const closeAnimationInspector = async function() {
  */
 const enableAnimationFeatures = function() {
   return new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["dom.animations-api.core.enabled", true],
-      ["dom.animations-api.getAnimations.enabled", true],
-      ["dom.animations-api.implicit-keyframes.enabled", true],
-      ["dom.animations-api.timelines.enabled", true],
-      ["layout.css.step-position-jump.enabled", true],
-    ]}, resolve);
+    SpecialPowers.pushPrefEnv(
+      {
+        set: [
+          ["dom.animations-api.core.enabled", true],
+          ["dom.animations-api.getAnimations.enabled", true],
+          ["dom.animations-api.implicit-keyframes.enabled", true],
+          ["dom.animations-api.timelines.enabled", true],
+          ["layout.css.step-position-jump.enabled", true],
+        ],
+      },
+      resolve
+    );
   });
 };
 
@@ -102,7 +112,9 @@ const removeAnimatedElementsExcept = async function(selectors) {
  */
 const clickOnAnimation = async function(animationInspector, panel, index) {
   info("Click on animation " + index + " in the timeline");
-  const summaryGraphEl = panel.querySelectorAll(".animation-summary-graph")[index];
+  const summaryGraphEl = panel.querySelectorAll(".animation-summary-graph")[
+    index
+  ];
   await clickOnSummaryGraph(animationInspector, panel, summaryGraphEl);
 };
 
@@ -115,11 +127,19 @@ const clickOnAnimation = async function(animationInspector, panel, index) {
  * @param {String} selector
  *        Selector of node which is target element of animation.
  */
-const clickOnAnimationByTargetSelector = async function(animationInspector,
-                                                        panel, selector) {
-  info(`Click on animation whose selector of target element is '${ selector }'`);
-  const animationItemEl = findAnimationItemElementsByTargetSelector(panel, selector);
-  const summaryGraphEl = animationItemEl.querySelector(".animation-summary-graph");
+const clickOnAnimationByTargetSelector = async function(
+  animationInspector,
+  panel,
+  selector
+) {
+  info(`Click on animation whose selector of target element is '${selector}'`);
+  const animationItemEl = findAnimationItemElementsByTargetSelector(
+    panel,
+    selector
+  );
+  const summaryGraphEl = animationItemEl.querySelector(
+    ".animation-summary-graph"
+  );
   await clickOnSummaryGraph(animationInspector, panel, summaryGraphEl);
 };
 
@@ -183,15 +203,23 @@ const clickOnRewindButton = async function(animationInspector, panel) {
  *        `mouseDownPosition * offsetWidth + offsetLeft of scrubber controller pane`
  *        as the clientX of MouseEvent.
  */
-const clickOnCurrentTimeScrubberController = async function(animationInspector,
-                                                            panel,
-                                                            mouseDownPosition) {
+const clickOnCurrentTimeScrubberController = async function(
+  animationInspector,
+  panel,
+  mouseDownPosition
+) {
   const controllerEl = panel.querySelector(".current-time-scrubber-area");
   const bounds = controllerEl.getBoundingClientRect();
   const mousedonwX = bounds.width * mouseDownPosition;
 
-  info(`Click ${ mousedonwX } on scrubber controller`);
-  EventUtils.synthesizeMouse(controllerEl, mousedonwX, 0, {}, controllerEl.ownerGlobal);
+  info(`Click ${mousedonwX} on scrubber controller`);
+  EventUtils.synthesizeMouse(
+    controllerEl,
+    mousedonwX,
+    0,
+    {},
+    controllerEl.ownerGlobal
+  );
   await waitForSummaryAndDetail(animationInspector);
 };
 
@@ -205,9 +233,10 @@ const clickOnCurrentTimeScrubberController = async function(animationInspector,
  *        The index of the AnimationTargetComponent to click on.
  */
 const clickOnInspectIcon = async function(animationInspector, panel, index) {
-  info(`Click on an inspect icon in animation target component[${ index }]`);
-  const iconEl =
-    panel.querySelectorAll(".animation-target .objectBox .open-inspector")[index];
+  info(`Click on an inspect icon in animation target component[${index}]`);
+  const iconEl = panel.querySelectorAll(
+    ".animation-target .objectBox .open-inspector"
+  )[index];
   iconEl.scrollIntoView(false);
   EventUtils.synthesizeMouseAtCenter(iconEl, {}, iconEl.ownerGlobal);
   // We wait just one time, because the components are updated synchronously.
@@ -222,14 +251,23 @@ const clickOnInspectIcon = async function(animationInspector, panel, index) {
  *        #animation-container element.
  * @param {Number} rate
  */
-const clickOnPlaybackRateSelector = async function(animationInspector, panel, rate) {
+const clickOnPlaybackRateSelector = async function(
+  animationInspector,
+  panel,
+  rate
+) {
   info(`Click on playback rate selector to select ${rate}`);
   const selectEl = panel.querySelector(".playback-rate-selector");
-  const optionEl = [...selectEl.options].filter(o => Number(o.value) === rate)[0];
+  const optionEl = [...selectEl.options].filter(
+    o => Number(o.value) === rate
+  )[0];
 
   if (!optionEl) {
-    ok(false, `Could not find an option for rate ${ rate } in the rate selector. ` +
-              `Values are: ${ [...selectEl.options].map(o => o.value) }`);
+    ok(
+      false,
+      `Could not find an option for rate ${rate} in the rate selector. ` +
+        `Values are: ${[...selectEl.options].map(o => o.value)}`
+    );
     return;
   }
 
@@ -247,13 +285,21 @@ const clickOnPlaybackRateSelector = async function(animationInspector, panel, ra
  *        #animation-container element.
  * @param {Element} summaryGraphEl
  */
-const clickOnSummaryGraph = async function(animationInspector, panel, summaryGraphEl) {
+const clickOnSummaryGraph = async function(
+  animationInspector,
+  panel,
+  summaryGraphEl
+) {
   // Disable pointer-events of the scrubber in order to avoid to click accidently.
   const scrubberEl = panel.querySelector(".current-time-scrubber");
   scrubberEl.style.pointerEvents = "none";
   // Scroll to show the timeBlock since the element may be out of displayed area.
   summaryGraphEl.scrollIntoView(false);
-  EventUtils.synthesizeMouseAtCenter(summaryGraphEl, {}, summaryGraphEl.ownerGlobal);
+  EventUtils.synthesizeMouseAtCenter(
+    summaryGraphEl,
+    {},
+    summaryGraphEl.ownerGlobal
+  );
   await waitForAnimationDetail(animationInspector);
   // Restore the scrubber style.
   scrubberEl.style.pointerEvents = "unset";
@@ -269,11 +315,17 @@ const clickOnSummaryGraph = async function(animationInspector, panel, summaryGra
  *        The index of the AnimationTargetComponent to click on.
  */
 const clickOnTargetNode = async function(animationInspector, panel, index) {
-  info(`Click on a target node in animation target component[${ index }]`);
-  const targetEl = panel.querySelectorAll(".animation-target .objectBox")[index];
+  info(`Click on a target node in animation target component[${index}]`);
+  const targetEl = panel.querySelectorAll(".animation-target .objectBox")[
+    index
+  ];
   targetEl.scrollIntoView(false);
-  const onHighlight = animationInspector.inspector.highlighter.once("node-highlight");
-  const onAnimationTargetUpdated = animationInspector.once("animation-target-rendered");
+  const onHighlight = animationInspector.inspector.highlighter.once(
+    "node-highlight"
+  );
+  const onAnimationTargetUpdated = animationInspector.once(
+    "animation-target-rendered"
+  );
   EventUtils.synthesizeMouseAtCenter(targetEl, {}, targetEl.ownerGlobal);
   await onAnimationTargetUpdated;
   await waitForSummaryAndDetail(animationInspector);
@@ -290,19 +342,36 @@ const clickOnTargetNode = async function(animationInspector, panel, index) {
  * @param {Number} mouseYPixel
  *        Y of mouse in pixel.
  */
-const dragOnCurrentTimeScrubber = async function(animationInspector,
-                                                 panel,
-                                                 mouseMovePixel,
-                                                 mouseYPixel) {
+const dragOnCurrentTimeScrubber = async function(
+  animationInspector,
+  panel,
+  mouseMovePixel,
+  mouseYPixel
+) {
   const controllerEl = panel.querySelector(".current-time-scrubber");
-  info(`Drag scrubber to X ${ mouseMovePixel }`);
-  EventUtils.synthesizeMouse(controllerEl, 0, mouseYPixel,
-                             { type: "mousedown" }, controllerEl.ownerGlobal);
+  info(`Drag scrubber to X ${mouseMovePixel}`);
+  EventUtils.synthesizeMouse(
+    controllerEl,
+    0,
+    mouseYPixel,
+    { type: "mousedown" },
+    controllerEl.ownerGlobal
+  );
   await waitForSummaryAndDetail(animationInspector);
-  EventUtils.synthesizeMouse(controllerEl, mouseMovePixel, mouseYPixel,
-                             { type: "mousemove" }, controllerEl.ownerGlobal);
-  EventUtils.synthesizeMouse(controllerEl, mouseMovePixel, mouseYPixel,
-                             { type: "mouseup" }, controllerEl.ownerGlobal);
+  EventUtils.synthesizeMouse(
+    controllerEl,
+    mouseMovePixel,
+    mouseYPixel,
+    { type: "mousemove" },
+    controllerEl.ownerGlobal
+  );
+  EventUtils.synthesizeMouse(
+    controllerEl,
+    mouseMovePixel,
+    mouseYPixel,
+    { type: "mouseup" },
+    controllerEl.ownerGlobal
+  );
   await waitForSummaryAndDetail(animationInspector);
 };
 
@@ -320,23 +389,40 @@ const dragOnCurrentTimeScrubber = async function(animationInspector,
  *        Dispatch mousemove event with mouseMovePosition after mousedown.
  *        Calculation for clinetX is same to above.
  */
-const dragOnCurrentTimeScrubberController = async function(animationInspector,
-                                                            panel,
-                                                            mouseDownPosition,
-                                                            mouseMovePosition) {
+const dragOnCurrentTimeScrubberController = async function(
+  animationInspector,
+  panel,
+  mouseDownPosition,
+  mouseMovePosition
+) {
   const controllerEl = panel.querySelector(".current-time-scrubber-area");
   const bounds = controllerEl.getBoundingClientRect();
   const mousedonwX = bounds.width * mouseDownPosition;
   const mousemoveX = bounds.width * mouseMovePosition;
 
-  info(`Drag on scrubber controller from ${ mousedonwX } to ${ mousemoveX }`);
-  EventUtils.synthesizeMouse(controllerEl, mousedonwX, 0,
-                             { type: "mousedown" }, controllerEl.ownerGlobal);
+  info(`Drag on scrubber controller from ${mousedonwX} to ${mousemoveX}`);
+  EventUtils.synthesizeMouse(
+    controllerEl,
+    mousedonwX,
+    0,
+    { type: "mousedown" },
+    controllerEl.ownerGlobal
+  );
   await waitForSummaryAndDetail(animationInspector);
-  EventUtils.synthesizeMouse(controllerEl, mousemoveX, 0,
-                             { type: "mousemove" }, controllerEl.ownerGlobal);
-  EventUtils.synthesizeMouse(controllerEl, mousemoveX, 0,
-                             { type: "mouseup" }, controllerEl.ownerGlobal);
+  EventUtils.synthesizeMouse(
+    controllerEl,
+    mousemoveX,
+    0,
+    { type: "mousemove" },
+    controllerEl.ownerGlobal
+  );
+  EventUtils.synthesizeMouse(
+    controllerEl,
+    mousemoveX,
+    0,
+    { type: "mouseup" },
+    controllerEl.ownerGlobal
+  );
   await waitForSummaryAndDetail(animationInspector);
 };
 
@@ -358,8 +444,8 @@ const getDurationAndRate = function(animationInspector, panel, pixels) {
   const controllerEl = panel.querySelector(".current-time-scrubber-area");
   const bounds = controllerEl.getBoundingClientRect();
   const duration =
-    animationInspector.state.timeScale.getDuration() / bounds.width * pixels;
-  const rate = 1 / bounds.width * pixels;
+    (animationInspector.state.timeScale.getDuration() / bounds.width) * pixels;
+  const rate = (1 / bounds.width) * pixels;
   return { duration, rate };
 };
 
@@ -373,7 +459,7 @@ const getDurationAndRate = function(animationInspector, panel, pixels) {
  *        The index of the AnimationTargetComponent to click on.
  */
 const mouseOverOnTargetNode = function(animationInspector, panel, index) {
-  info(`Mouse over on a target node in animation target component[${ index }]`);
+  info(`Mouse over on a target node in animation target component[${index}]`);
   const el = panel.querySelectorAll(".animation-target .objectBox")[index];
   el.scrollIntoView(false);
   EventUtils.synthesizeMouse(el, 10, 5, { type: "mouseover" }, el.ownerGlobal);
@@ -389,7 +475,7 @@ const mouseOverOnTargetNode = function(animationInspector, panel, index) {
  *        The index of the AnimationTargetComponent to click on.
  */
 const mouseOutOnTargetNode = function(animationInspector, panel, index) {
-  info(`Mouse out on a target node in animation target component[${ index }]`);
+  info(`Mouse out on a target node in animation target component[${index}]`);
   const el = panel.querySelectorAll(".animation-target .objectBox")[index];
   el.scrollIntoView(false);
   EventUtils.synthesizeMouse(el, -1, -1, { type: "mouseout" }, el.ownerGlobal);
@@ -422,7 +508,11 @@ const selectAnimationInspector = async function(inspector) {
  * @return {Promise} Resolves when the inspector is updated with the new node
  *                   and animations of its subtree are properly displayed.
  */
-const selectNodeAndWaitForAnimations = async function(data, inspector, reason = "test") {
+const selectNodeAndWaitForAnimations = async function(
+  data,
+  inspector,
+  reason = "test"
+) {
   // We want to make sure the rest of the test waits for the animations to
   // be properly displayed (wait for all target DOM nodes to be previewed).
   selectNode(data, inspector, reason);
@@ -471,8 +561,12 @@ const setClassAttribute = async function(animationInspector, selector, cls) {
  *               animationTimingFunction: "linear",
  *             }
  */
-const setEffectTimingAndPlayback = async function(animationInspector,
-                                                  selector, effectTiming, playbackRate) {
+const setEffectTimingAndPlayback = async function(
+  animationInspector,
+  selector,
+  effectTiming,
+  playbackRate
+) {
   const options = {
     effectTiming,
     playbackRate,
@@ -507,8 +601,12 @@ const setSidebarWidth = async function(width, inspector) {
  * @param {String} propertyValue
  *        e.g. "5.5s"
  */
-const setStyle = async function(animationInspector,
-                                selector, propertyName, propertyValue) {
+const setStyle = async function(
+  animationInspector,
+  selector,
+  propertyName,
+  propertyValue
+) {
   const options = {
     propertyName,
     propertyValue,
@@ -603,8 +701,10 @@ async function waitForDispatch(inspector, type, repeat = () => 1) {
  */
 
 const waitForAnimationDetail = async function(animationInspector) {
-  if (animationInspector.state.selectedAnimation &&
-      animationInspector.state.detailVisibility) {
+  if (
+    animationInspector.state.selectedAnimation &&
+    animationInspector.state.detailVisibility
+  ) {
     await animationInspector.once("animation-keyframes-rendered");
   }
 };
@@ -616,15 +716,21 @@ const waitForAnimationDetail = async function(animationInspector) {
  * @param {AnimationInspector} animationInspector
  */
 const waitForAllAnimationTargets = async function(animationInspector) {
-  const panel =
-    animationInspector.inspector.panelWin.document.getElementById("animation-container");
-  const objectBoxCount = panel.querySelectorAll(".animation-target .objectBox").length;
+  const panel = animationInspector.inspector.panelWin.document.getElementById(
+    "animation-container"
+  );
+  const objectBoxCount = panel.querySelectorAll(".animation-target .objectBox")
+    .length;
 
   if (objectBoxCount === animationInspector.state.animations.length) {
     return;
   }
 
-  for (let i = 0; i < animationInspector.state.animations.length - objectBoxCount; i++) {
+  for (
+    let i = 0;
+    i < animationInspector.state.animations.length - objectBoxCount;
+    i++
+  ) {
     await animationInspector.once("animation-target-rendered");
   }
 };
@@ -661,9 +767,10 @@ const waitForSummaryAndDetail = async function(animationInspector) {
  * @param {Number} time
  */
 function assertAnimationsCurrentTime(animationInspector, time) {
-  const isTimeEqual =
-    animationInspector.state.animations.every(({state}) => state.currentTime === time);
-  ok(isTimeEqual, `Current time of animations should be ${ time }`);
+  const isTimeEqual = animationInspector.state.animations.every(
+    ({ state }) => state.currentTime === time
+  );
+  ok(isTimeEqual, `Current time of animations should be ${time}`);
 }
 
 /**
@@ -682,8 +789,9 @@ function assertAnimationsPausing(animationInspector) {
  * @param {boolean} shouldPause
  */
 function assertAnimationsPausingOrRunning(animationInspector, shouldPause) {
-  const hasRunningAnimation =
-    animationInspector.state.animations.some(({state}) => state.playState === "running");
+  const hasRunningAnimation = animationInspector.state.animations.some(
+    ({ state }) => state.playState === "running"
+  );
 
   if (shouldPause) {
     is(hasRunningAnimation, false, "All animations should be paused");
@@ -714,9 +822,12 @@ function assertAnimationsRunning(animationInspector) {
  */
 function assertLinearGradient(linearGradientEl, offset, expectedColor) {
   const stopEl = findStopElement(linearGradientEl, offset);
-  ok(stopEl, `stop element at offset ${ offset } should exist`);
-  is(stopEl.getAttribute("stop-color"), expectedColor,
-    `stop-color of stop element at offset ${ offset } should be ${ expectedColor }`);
+  ok(stopEl, `stop element at offset ${offset} should exist`);
+  is(
+    stopEl.getAttribute("stop-color"),
+    expectedColor,
+    `stop-color of stop element at offset ${offset} should be ${expectedColor}`
+  );
 }
 
 /**
@@ -740,15 +851,20 @@ function assertPathSegments(pathEl, hasClosePath, expectedValues) {
   ok(pathSegList, "The tested element should have pathSegList");
 
   expectedValues.forEach(expectedValue => {
-    ok(isPassingThrough(pathSegList, expectedValue.x, expectedValue.y),
-       `The path segment of x ${ expectedValue.x }, y ${ expectedValue.y } `
-       + `should be passing through`);
+    ok(
+      isPassingThrough(pathSegList, expectedValue.x, expectedValue.y),
+      `The path segment of x ${expectedValue.x}, y ${expectedValue.y} ` +
+        `should be passing through`
+    );
   });
 
   if (hasClosePath) {
     const closePathSeg = pathSegList.getItem(pathSegList.numberOfItems - 1);
-    is(closePathSeg.pathSegType, closePathSeg.PATHSEG_CLOSEPATH,
-       "The last segment should be close path");
+    is(
+      closePathSeg.pathSegType,
+      closePathSeg.PATHSEG_CLOSEPATH,
+      "The last segment should be close path"
+    );
   }
 }
 
@@ -774,8 +890,12 @@ function isPassingThrough(pathSegList, x, y) {
     }
     const previousX = parseFloat(previousPathSeg.x.toFixed(3));
     const previousY = parseFloat(previousPathSeg.y.toFixed(3));
-    if (previousX <= x && x <= currentX &&
-        Math.min(previousY, currentY) <= y && y <= Math.max(previousY, currentY)) {
+    if (
+      previousX <= x &&
+      x <= currentX &&
+      Math.min(previousY, currentY) <= y &&
+      y <= Math.max(previousY, currentY)
+    ) {
       return true;
     }
     previousPathSeg = pathSeg;
@@ -797,7 +917,7 @@ function isPassingThrough(pathSegList, x, y) {
  */
 function findAnimationItemElementsByTargetSelector(panel, selector) {
   const attrNameEls = panel.querySelectorAll(".animation-target .attrName");
-  const regexp = new RegExp(`\\${ selector }(\\.|$)`, "gi");
+  const regexp = new RegExp(`\\${selector}(\\.|$)`, "gi");
 
   for (const attrNameEl of attrNameEls) {
     if (regexp.exec(attrNameEl.textContent)) {
@@ -835,13 +955,16 @@ function findStopElement(linearGradientEl, offset) {
  */
 async function testKeyframesGraphComputedValuePath(testData) {
   await addTab(URL_ROOT + "doc_multi_keyframes.html");
-  await removeAnimatedElementsExcept(testData.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(testData.map(t => `.${t.targetClass}`));
   const { animationInspector, panel } = await openAnimationInspector();
 
   for (const { properties, targetClass } of testData) {
-    info(`Checking keyframes graph for ${ targetClass }`);
-    await clickOnAnimationByTargetSelector(animationInspector,
-                                           panel, `.${ targetClass }`);
+    info(`Checking keyframes graph for ${targetClass}`);
+    await clickOnAnimationByTargetSelector(
+      animationInspector,
+      panel,
+      `.${targetClass}`
+    );
 
     for (const property of properties) {
       const {
@@ -851,32 +974,41 @@ async function testKeyframesGraphComputedValuePath(testData) {
         expectedStopColors,
       } = property;
 
-      const testTarget = `${ name } in ${ targetClass }`;
-      info(`Checking keyframes graph for ${ testTarget }`);
-      info(`Checking keyframes graph path existence for ${ testTarget }`);
-      const keyframesGraphPathEl = panel.querySelector(`.${ name }`);
-      ok(keyframesGraphPathEl,
-         `The keyframes graph path element of ${ testTarget } should be existence`);
+      const testTarget = `${name} in ${targetClass}`;
+      info(`Checking keyframes graph for ${testTarget}`);
+      info(`Checking keyframes graph path existence for ${testTarget}`);
+      const keyframesGraphPathEl = panel.querySelector(`.${name}`);
+      ok(
+        keyframesGraphPathEl,
+        `The keyframes graph path element of ${testTarget} should be existence`
+      );
 
-      info(`Checking computed value path existence for ${ testTarget }`);
-      const computedValuePathEl =
-        keyframesGraphPathEl.querySelector(`.${ computedValuePathClass }`);
-      ok(computedValuePathEl,
-         `The computed value path element of ${ testTarget } should be existence`);
+      info(`Checking computed value path existence for ${testTarget}`);
+      const computedValuePathEl = keyframesGraphPathEl.querySelector(
+        `.${computedValuePathClass}`
+      );
+      ok(
+        computedValuePathEl,
+        `The computed value path element of ${testTarget} should be existence`
+      );
 
-      info(`Checking path segments for ${ testTarget }`);
+      info(`Checking path segments for ${testTarget}`);
       const pathEl = computedValuePathEl.querySelector("path");
-      ok(pathEl, `The <path> element of ${ testTarget } should be existence`);
+      ok(pathEl, `The <path> element of ${testTarget} should be existence`);
       assertPathSegments(pathEl, true, expectedPathSegments);
 
       if (!expectedStopColors) {
         continue;
       }
 
-      info(`Checking linearGradient for ${ testTarget }`);
-      const linearGradientEl = computedValuePathEl.querySelector("linearGradient");
-      ok(linearGradientEl,
-         `The <linearGradientEl> element of ${ testTarget } should be existence`);
+      info(`Checking linearGradient for ${testTarget}`);
+      const linearGradientEl = computedValuePathEl.querySelector(
+        "linearGradient"
+      );
+      ok(
+        linearGradientEl,
+        `The <linearGradientEl> element of ${testTarget} should be existence`
+      );
 
       for (const expectedStopColor of expectedStopColors) {
         const { offset, color } = expectedStopColor;
@@ -893,9 +1025,12 @@ async function testKeyframesGraphComputedValuePath(testData) {
  * @param {AnimationPlayerFront.state} animation2
  */
 function checkAdjustingTheTime(animation1, animation2) {
-  const adjustedCurrentTimeDiff = animation2.currentTime / animation2.playbackRate
-                                  - animation1.currentTime / animation1.playbackRate;
+  const adjustedCurrentTimeDiff =
+    animation2.currentTime / animation2.playbackRate -
+    animation1.currentTime / animation1.playbackRate;
   const createdTimeDiff = animation1.createdTime - animation2.createdTime;
-  ok(Math.abs(adjustedCurrentTimeDiff - createdTimeDiff) < 0.1,
-     "Adjusted time is correct");
+  ok(
+    Math.abs(adjustedCurrentTimeDiff - createdTimeDiff) < 0.1,
+    "Adjusted time is correct"
+  );
 }

@@ -16,8 +16,9 @@
 // https://github.com/firefox-devtools/devtools-core
 
 const { Cc, Ci } = require("chrome");
-const idnService =
-        Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+const idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+  Ci.nsIIDNService
+);
 
 /**
  * Gets a readble Unicode hostname from a hostname.
@@ -62,8 +63,7 @@ function getUnicodeHostname(hostname) {
 function getUnicodeUrlPath(urlPath) {
   try {
     return decodeURIComponent(urlPath);
-  } catch (err) {
-  }
+  } catch (err) {}
   return urlPath;
 }
 
@@ -102,8 +102,7 @@ function getUnicodeUrl(url) {
     const readableHostname = getUnicodeHostname(hostname);
     url = decodeURI(url);
     return url.replace(hostname, readableHostname);
-  } catch (err) {
-  }
+  } catch (err) {}
   return url;
 }
 

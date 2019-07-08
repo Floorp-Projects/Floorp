@@ -14,13 +14,13 @@ function run_test() {
       this.observe = () => {};
     },
     Animation: function() {
-      this.effect = {target: getMockNode()};
+      this.effect = { target: getMockNode() };
     },
     CSSAnimation: function() {
-      this.effect = {target: getMockNode()};
+      this.effect = { target: getMockNode() };
     },
     CSSTransition: function() {
-      this.effect = {target: getMockNode()};
+      this.effect = { target: getMockNode() };
     },
   };
 
@@ -44,37 +44,44 @@ function run_test() {
   //   object.
   // - expectedName {String} The expected name returned by
   //   AnimationPlayerActor.getName.
-  const TEST_DATA = [{
-    desc: "Animation with an id",
-    animation: new window.Animation(),
-    props: { id: "animation-id" },
-    expectedName: "animation-id",
-  }, {
-    desc: "Animation without an id",
-    animation: new window.Animation(),
-    props: {},
-    expectedName: "",
-  }, {
-    desc: "CSSTransition with an id",
-    animation: new window.CSSTransition(),
-    props: { id: "transition-with-id", transitionProperty: "width" },
-    expectedName: "transition-with-id",
-  }, {
-    desc: "CSSAnimation with an id",
-    animation: new window.CSSAnimation(),
-    props: { id: "animation-with-id", animationName: "move" },
-    expectedName: "animation-with-id",
-  }, {
-    desc: "CSSTransition without an id",
-    animation: new window.CSSTransition(),
-    props: { transitionProperty: "width" },
-    expectedName: "width",
-  }, {
-    desc: "CSSAnimation without an id",
-    animation: new window.CSSAnimation(),
-    props: { animationName: "move" },
-    expectedName: "move",
-  }];
+  const TEST_DATA = [
+    {
+      desc: "Animation with an id",
+      animation: new window.Animation(),
+      props: { id: "animation-id" },
+      expectedName: "animation-id",
+    },
+    {
+      desc: "Animation without an id",
+      animation: new window.Animation(),
+      props: {},
+      expectedName: "",
+    },
+    {
+      desc: "CSSTransition with an id",
+      animation: new window.CSSTransition(),
+      props: { id: "transition-with-id", transitionProperty: "width" },
+      expectedName: "transition-with-id",
+    },
+    {
+      desc: "CSSAnimation with an id",
+      animation: new window.CSSAnimation(),
+      props: { id: "animation-with-id", animationName: "move" },
+      expectedName: "animation-with-id",
+    },
+    {
+      desc: "CSSTransition without an id",
+      animation: new window.CSSTransition(),
+      props: { transitionProperty: "width" },
+      expectedName: "width",
+    },
+    {
+      desc: "CSSAnimation without an id",
+      animation: new window.CSSAnimation(),
+      props: { animationName: "move" },
+      expectedName: "move",
+    },
+  ];
 
   for (const { desc, animation, props, expectedName } of TEST_DATA) {
     info(desc);

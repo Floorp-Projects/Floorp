@@ -1,8 +1,10 @@
 // This file spawns content tasks.
 /* global content */
 
-const TEST_PATH = getRootDirectory(gTestPath)
-                    .replace("chrome://mochitests/content", "http://example.com");
+const TEST_PATH = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "http://example.com"
+);
 
 /**
  * Verify that if the page contents change after print preview is initialized,
@@ -18,7 +20,12 @@ add_task(async function pp_after_orientation_change() {
   }
 
   // Ensure we get a browserStopped for this browser
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URI, false, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    URI,
+    false,
+    true
+  );
   let browserToPrint = tab.linkedBrowser;
   let ppBrowser = PrintPreviewListener.getPrintPreviewBrowser();
 
@@ -26,35 +33,55 @@ add_task(async function pp_after_orientation_change() {
   let originalTabNavigated = BrowserTestUtils.browserStopped(browserToPrint);
 
   // Enter print preview:
-  let printPreviewEntered = BrowserTestUtils.waitForMessage(ppBrowser.messageManager, "Printing:Preview:Entered");
+  let printPreviewEntered = BrowserTestUtils.waitForMessage(
+    ppBrowser.messageManager,
+    "Printing:Preview:Entered"
+  );
   document.getElementById("cmd_printPreview").doCommand();
   await printPreviewEntered;
 
   // Assert that we are showing the original page
   await ContentTask.spawn(ppBrowser, null, async function() {
-    is(content.document.body.textContent.trim(), "INITIAL PAGE", "Should have initial page print previewed.");
+    is(
+      content.document.body.textContent.trim(),
+      "INITIAL PAGE",
+      "Should have initial page print previewed."
+    );
   });
 
   await originalTabNavigated;
 
   // Change orientation and wait for print preview to re-enter:
   let orient = PrintUtils.getPrintSettings().orientation;
-  let orientToSwitchTo = orient != Ci.nsIPrintSettings.kPortraitOrientation ?
-    "portrait" : "landscape";
+  let orientToSwitchTo =
+    orient != Ci.nsIPrintSettings.kPortraitOrientation
+      ? "portrait"
+      : "landscape";
   let printPreviewToolbar = document.getElementById("print-preview-toolbar");
 
-  printPreviewEntered = BrowserTestUtils.waitForMessage(ppBrowser.messageManager, "Printing:Preview:Entered");
+  printPreviewEntered = BrowserTestUtils.waitForMessage(
+    ppBrowser.messageManager,
+    "Printing:Preview:Entered"
+  );
   printPreviewToolbar.orient(orientToSwitchTo);
   await printPreviewEntered;
 
   // Check that we're still showing the original page.
   await ContentTask.spawn(ppBrowser, null, async function() {
-    is(content.document.body.textContent.trim(), "INITIAL PAGE", "Should still have initial page print previewed.");
+    is(
+      content.document.body.textContent.trim(),
+      "INITIAL PAGE",
+      "Should still have initial page print previewed."
+    );
   });
 
   // Check that the other tab is definitely showing the new page:
   await ContentTask.spawn(browserToPrint, null, async function() {
-    is(content.document.body.textContent.trim(), "REPLACED PAGE!", "Original page should have changed.");
+    is(
+      content.document.body.textContent.trim(),
+      "REPLACED PAGE!",
+      "Original page should have changed."
+    );
   });
 
   PrintUtils.exitPrintPreview();

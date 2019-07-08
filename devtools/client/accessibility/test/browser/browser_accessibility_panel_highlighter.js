@@ -3,15 +3,18 @@
 
 "use strict";
 
-const TEST_URI = "<h1 id=\"h1\">header</h1><p id=\"p\">paragraph</p>";
+const TEST_URI = '<h1 id="h1">header</h1><p id="p">paragraph</p>';
 
 add_task(async function tabNotHighlighted() {
   await addTab(buildURL(TEST_URI));
   const { toolbox } = await openInspector();
   const isHighlighted = await toolbox.isToolHighlighted("accessibility");
 
-  ok(!isHighlighted, "When accessibility service is not running, accessibility panel " +
-                     "should not be highlighted when toolbox opens");
+  ok(
+    !isHighlighted,
+    "When accessibility service is not running, accessibility panel " +
+      "should not be highlighted when toolbox opens"
+  );
 
   gBrowser.removeCurrentTab();
 });
@@ -23,8 +26,11 @@ add_task(async function tabHighlighted() {
   const { toolbox } = await openInspector();
   const isHighlighted = await toolbox.isToolHighlighted("accessibility");
 
-  ok(isHighlighted, "When accessibility service is running, accessibility panel should" +
-                    "be highlighted when toolbox opens");
+  ok(
+    isHighlighted,
+    "When accessibility service is running, accessibility panel should" +
+      "be highlighted when toolbox opens"
+  );
 
   a11yService = null;
   gBrowser.removeCurrentTab();

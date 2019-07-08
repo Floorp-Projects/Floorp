@@ -2,9 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const STARTUP_APIS = [
-  "backgroundPage",
-];
+const STARTUP_APIS = ["backgroundPage"];
 
 const STARTUP_MODULES = [
   "resource://gre/modules/Extension.jsm",
@@ -22,7 +20,8 @@ const STARTUP_MODULES = [
 if (!Services.prefs.getBoolPref("extensions.webextensions.remote")) {
   STARTUP_MODULES.push(
     "resource://gre/modules/ExtensionChild.jsm",
-    "resource://gre/modules/ExtensionPageChild.jsm");
+    "resource://gre/modules/ExtensionPageChild.jsm"
+  );
 }
 
 AddonTestUtils.init(this);
@@ -40,21 +39,27 @@ add_task(async function test_loaded_scripts() {
 
   await extension.startup();
 
-  const {apiManager} = ExtensionParent;
+  const { apiManager } = ExtensionParent;
 
   const loadedAPIs = Array.from(apiManager.modules.values())
-                          .filter(m => m.loaded || m.asyncLoaded)
-                          .map(m => m.namespaceName);
+    .filter(m => m.loaded || m.asyncLoaded)
+    .map(m => m.namespaceName);
 
-  deepEqual(loadedAPIs.sort(), STARTUP_APIS,
-            "No extra APIs should be loaded at startup for a simple extension");
+  deepEqual(
+    loadedAPIs.sort(),
+    STARTUP_APIS,
+    "No extra APIs should be loaded at startup for a simple extension"
+  );
 
+  let loadedModules = Cu.loadedModules.filter(url =>
+    url.startsWith("resource://gre/modules/Extension")
+  );
 
-  let loadedModules = Cu.loadedModules
-                        .filter(url => url.startsWith("resource://gre/modules/Extension"));
-
-  deepEqual(loadedModules.sort(), STARTUP_MODULES.sort(),
-            "No extra extension modules should be loaded at startup for a simple extension");
+  deepEqual(
+    loadedModules.sort(),
+    STARTUP_MODULES.sort(),
+    "No extra extension modules should be loaded at startup for a simple extension"
+  );
 
   await extension.unload();
 });

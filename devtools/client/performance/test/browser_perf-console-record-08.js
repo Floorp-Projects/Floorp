@@ -9,11 +9,26 @@
 
 const { Constants } = require("devtools/client/performance/modules/constants");
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
-const { once, times } = require("devtools/client/performance/test/helpers/event-utils");
-const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
+const {
+  initPerformanceInTab,
+  initConsoleInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  waitForRecordingStartedEvents,
+  waitForRecordingStoppedEvents,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+  times,
+} = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  setSelectedRecording,
+} = require("devtools/client/performance/test/helpers/recording-utils");
 
 /**
  * The following are bit flag constants that are used to represent the state of a
@@ -58,9 +73,7 @@ add_task(async function() {
   });
   await console.profile("rust");
   await started;
-  testRecordings(PerformanceController, [
-    CONSOLE + SELECTED + RECORDING,
-  ]);
+  testRecordings(PerformanceController, [CONSOLE + SELECTED + RECORDING]);
 
   info("Recording 2 - Starting manual recording...");
   await startRecording(panel);
@@ -69,7 +82,7 @@ add_task(async function() {
     MANUAL + RECORDING + SELECTED,
   ]);
 
-  info("Recording 3 - Starting console.profile(\"3\")...");
+  info('Recording 3 - Starting console.profile("3")...');
   started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true,
@@ -87,7 +100,7 @@ add_task(async function() {
     CONSOLE + RECORDING,
   ]);
 
-  info("Recording 4 - Starting console.profile(\"4\")...");
+  info('Recording 4 - Starting console.profile("4")...');
   started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true,
@@ -127,7 +140,10 @@ add_task(async function() {
   ]);
 
   info("Recording 4 - Select last recording...");
-  let recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
+  let recordingSelected = once(
+    PerformanceController,
+    EVENTS.RECORDING_SELECTED
+  );
   setSelectedRecording(panel, 3);
   await recordingSelected;
   testRecordings(PerformanceController, [
@@ -136,8 +152,10 @@ add_task(async function() {
     CONSOLE + RECORDING,
     CONSOLE + SELECTED,
   ]);
-  ok(!OverviewView.isRendering(),
-    "Stop rendering overview when a completed recording is selected.");
+  ok(
+    !OverviewView.isRendering(),
+    "Stop rendering overview when a completed recording is selected."
+  );
 
   info("Recording 2 - Stop manual recording.");
 
@@ -148,8 +166,10 @@ add_task(async function() {
     CONSOLE + RECORDING,
     CONSOLE,
   ]);
-  ok(!OverviewView.isRendering(),
-    "Stop rendering overview when a completed recording is selected.");
+  ok(
+    !OverviewView.isRendering(),
+    "Stop rendering overview when a completed recording is selected."
+  );
 
   info("Recording 1 - Select first recording.");
   recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
@@ -161,8 +181,10 @@ add_task(async function() {
     CONSOLE + RECORDING,
     CONSOLE,
   ]);
-  ok(OverviewView.isRendering(),
-    "Should be rendering overview a recording in progress is selected.");
+  ok(
+    OverviewView.isRendering(),
+    "Should be rendering overview a recording in progress is selected."
+  );
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
@@ -188,8 +210,10 @@ add_task(async function() {
     CONSOLE,
     CONSOLE,
   ]);
-  ok(OverviewView.isRendering(),
-    "Should be rendering overview a recording in progress is selected.");
+  ok(
+    OverviewView.isRendering(),
+    "Should be rendering overview a recording in progress is selected."
+  );
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
@@ -205,8 +229,10 @@ add_task(async function() {
     CONSOLE,
     MANUAL + RECORDING + SELECTED,
   ]);
-  ok(OverviewView.isRendering(),
-    "Should be rendering overview a recording in progress is selected.");
+  ok(
+    OverviewView.isRendering(),
+    "Should be rendering overview a recording in progress is selected."
+  );
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
@@ -222,8 +248,10 @@ add_task(async function() {
     CONSOLE,
     MANUAL + SELECTED,
   ]);
-  ok(!OverviewView.isRendering(),
-  "Stop rendering overview when a completed recording is selected.");
+  ok(
+    !OverviewView.isRendering(),
+    "Stop rendering overview when a completed recording is selected."
+  );
 
   info("Recording 1 - Ending console.profileEnd()...");
   stopped = waitForRecordingStoppedEvents(panel, {
@@ -245,8 +273,10 @@ add_task(async function() {
     CONSOLE,
     MANUAL + SELECTED,
   ]);
-  ok(!OverviewView.isRendering(),
-    "Stop rendering overview when a completed recording is selected.");
+  ok(
+    !OverviewView.isRendering(),
+    "Stop rendering overview when a completed recording is selected."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });
@@ -254,15 +284,28 @@ add_task(async function() {
 function testRecordings(controller, expectedBitFlags) {
   const recordings = controller.getRecordings();
   const current = controller.getCurrentRecording();
-  is(recordings.length, expectedBitFlags.length, "Expected number of recordings.");
+  is(
+    recordings.length,
+    expectedBitFlags.length,
+    "Expected number of recordings."
+  );
 
   recordings.forEach((recording, i) => {
     const expected = expectedBitFlags[i];
-    is(recording.isConsole(), hasBitFlag(expected, CONSOLE),
-      `Recording ${i + 1} has expected console state.`);
-    is(recording.isRecording(), hasBitFlag(expected, RECORDING),
-      `Recording ${i + 1} has expected console state.`);
-    is((recording == current), hasBitFlag(expected, SELECTED),
-      `Recording ${i + 1} has expected selected state.`);
+    is(
+      recording.isConsole(),
+      hasBitFlag(expected, CONSOLE),
+      `Recording ${i + 1} has expected console state.`
+    );
+    is(
+      recording.isRecording(),
+      hasBitFlag(expected, RECORDING),
+      `Recording ${i + 1} has expected console state.`
+    );
+    is(
+      recording == current,
+      hasBitFlag(expected, SELECTED),
+      `Recording ${i + 1} has expected selected state.`
+    );
   });
 }

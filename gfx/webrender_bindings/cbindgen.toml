@@ -22,8 +22,6 @@ parse_deps = true
 include = ["log", "euclid", "webrender", "webrender_api"]
 
 [fn]
-prefix = "WR_INLINE"
-postfix = "WR_FUNC"
 args = "Vertical"
 rename_args = "GeckoCase"
 

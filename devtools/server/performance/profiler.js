@@ -7,8 +7,17 @@ const { Cu } = require("chrome");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
-loader.lazyRequireGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm", true);
+loader.lazyRequireGetter(
+  this,
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
+);
+loader.lazyRequireGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm",
+  true
+);
 
 // Events piped from system observers to Profiler instances.
 const PROFILER_SYSTEM_EVENTS = [
@@ -38,7 +47,6 @@ const ProfilerManager = (function() {
   const consumers = new Set();
 
   return {
-
     // How often the "profiler-status" is emitted
     _profilerStatusInterval: BUFFER_STATUS_INTERVAL_DEFAULT,
 
@@ -96,12 +104,13 @@ const ProfilerManager = (function() {
      * @return {object}
      */
     start: function(options = {}) {
-      const config = this._profilerStartOptions = {
+      const config = (this._profilerStartOptions = {
         entries: options.entries || DEFAULT_PROFILER_OPTIONS.entries,
         interval: options.interval || DEFAULT_PROFILER_OPTIONS.interval,
         features: options.features || DEFAULT_PROFILER_OPTIONS.features,
-        threadFilters: options.threadFilters || DEFAULT_PROFILER_OPTIONS.threadFilters,
-      };
+        threadFilters:
+          options.threadFilters || DEFAULT_PROFILER_OPTIONS.threadFilters,
+      });
 
       // The start time should be before any samples we might be
       // interested in.
@@ -112,7 +121,7 @@ const ProfilerManager = (function() {
           config.entries,
           config.interval,
           config.features,
-          config.threadFilters,
+          config.threadFilters
         );
       } catch (e) {
         // For some reason, the profiler couldn't be started. This could happen,
@@ -183,11 +192,14 @@ const ProfilerManager = (function() {
      */
     getProfile: function(options) {
       const startTime = options.startTime || 0;
-      const profile = options.stringify ?
-        Services.profiler.GetProfile(startTime) :
-        Services.profiler.getProfileData(startTime);
+      const profile = options.stringify
+        ? Services.profiler.GetProfile(startTime)
+        : Services.profiler.getProfileData(startTime);
 
-      return { profile: profile, currentTime: Services.profiler.getElapsedTime() };
+      return {
+        profile: profile,
+        currentTime: Services.profiler.getElapsedTime(),
+      };
     },
 
     /**
@@ -209,7 +221,9 @@ const ProfilerManager = (function() {
      * @return {object}
      */
     getBufferInfo: function() {
-      const position = {}, totalSize = {}, generation = {};
+      const position = {},
+        totalSize = {},
+        generation = {};
       Services.profiler.GetBufferInfo(position, totalSize, generation);
       return {
         position: position.value,
@@ -236,7 +250,9 @@ const ProfilerManager = (function() {
      */
     isActive: function() {
       const isActive = Services.profiler.IsActive();
-      const elapsedTime = isActive ? Services.profiler.getElapsedTime() : undefined;
+      const elapsedTime = isActive
+        ? Services.profiler.getElapsedTime()
+        : undefined;
       const { position, totalSize, generation } = this.getBufferInfo();
       return {
         isActive,
@@ -284,8 +300,10 @@ const ProfilerManager = (function() {
       // If the event was generated from `console.profile` or `console.profileEnd`
       // we need to start the profiler right away and then just notify the client.
       // Otherwise, we'll lose precious samples.
-      if (topic === "console-api-profiler" &&
-          (action === "profile" || action === "profileEnd")) {
+      if (
+        topic === "console-api-profiler" &&
+        (action === "profile" || action === "profileEnd")
+      ) {
         const { isActive, currentTime } = this.isActive();
 
         // Start the profiler only if it wasn't already active. Otherwise, any
@@ -324,7 +342,8 @@ const ProfilerManager = (function() {
     registerEventListeners: function() {
       if (!this._eventsRegistered) {
         PROFILER_SYSTEM_EVENTS.forEach(eventName =>
-          Services.obs.addObserver(this, eventName));
+          Services.obs.addObserver(this, eventName)
+        );
         this._eventsRegistered = true;
       }
     },
@@ -335,7 +354,8 @@ const ProfilerManager = (function() {
     unregisterEventListeners: function() {
       if (this._eventsRegistered) {
         PROFILER_SYSTEM_EVENTS.forEach(eventName =>
-          Services.obs.removeObserver(this, eventName));
+          Services.obs.removeObserver(this, eventName)
+        );
         this._eventsRegistered = false;
       }
     },
@@ -387,8 +407,11 @@ const ProfilerManager = (function() {
     _updateProfilerStatusPolling: function() {
       if (this._profilerStatusSubscribers > 0 && Services.profiler.IsActive()) {
         if (!this._poller) {
-          this._poller = new DeferredTask(this._emitProfilerStatus.bind(this),
-                                          this._profilerStatusInterval, 0);
+          this._poller = new DeferredTask(
+            this._emitProfilerStatus.bind(this),
+            this._profilerStatusInterval,
+            0
+          );
         }
         this._poller.arm();
       } else if (this._poller) {
@@ -416,7 +439,9 @@ class Profiler {
   }
 
   destroy() {
-    this.unregisterEventNotifications({ events: Array.from(this.subscribedEvents) });
+    this.unregisterEventNotifications({
+      events: Array.from(this.subscribedEvents),
+    });
     this.subscribedEvents = null;
 
     ProfilerManager.removeInstance(this);
@@ -564,8 +589,9 @@ function cycleBreaker(key, value) {
  */
 function sanitizeHandler(handler, identifier) {
   return DevToolsUtils.makeInfallible(function(subject, topic, data) {
-    subject = (subject && !Cu.isXrayWrapper(subject) && subject.wrappedJSObject)
-              || subject;
+    subject =
+      (subject && !Cu.isXrayWrapper(subject) && subject.wrappedJSObject) ||
+      subject;
     subject = JSON.parse(JSON.stringify(subject, cycleBreaker));
     data = (data && !Cu.isXrayWrapper(data) && data.wrappedJSObject) || data;
     data = JSON.parse(JSON.stringify(data, cycleBreaker));

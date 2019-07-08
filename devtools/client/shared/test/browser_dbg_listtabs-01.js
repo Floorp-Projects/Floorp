@@ -24,10 +24,10 @@ function test() {
   const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(([aType, aTraits]) => {
-    is(aType, "browser",
-      "Root actor should identify itself as a browser.");
+    is(aType, "browser", "Root actor should identify itself as a browser.");
 
-    promise.resolve(null)
+    promise
+      .resolve(null)
       .then(testFirstTab)
       .then(testSecondTab)
       .then(testRemoveTab)
@@ -78,13 +78,18 @@ function testAttachRemovedTab() {
     const deferred = promise.defer();
 
     gClient.on("paused", () => {
-      ok(false, "Attaching to an exited target actor shouldn't generate a pause.");
+      ok(
+        false,
+        "Attaching to an exited target actor shouldn't generate a pause."
+      );
       deferred.reject();
     });
 
     gTab2Front.attach().then(null, error => {
-      ok(error.includes("noSuchActor"),
-         "Actor is gone since the tab was removed.");
+      ok(
+        error.includes("noSuchActor"),
+        "Actor is gone since the tab was removed."
+      );
       deferred.resolve();
     });
 

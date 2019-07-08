@@ -5,55 +5,58 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 const showOnAnyType = () => false;
 const hideOnAnyType = () => true;
-const hideOnThemeType = (addonType) => addonType === "theme";
+const hideOnThemeType = addonType => addonType === "theme";
 
 // The reasons string used as a key in this Map is expected to stay in sync
 // with the reasons string used in the "abuseReports.ftl" locale file and
 // the suggestions templates included in abuse-reports-xulframe.html.
-const ABUSE_REASONS = window.ABUSE_REPORT_REASONS = {
-  "damage": {
+const ABUSE_REASONS = (window.ABUSE_REPORT_REASONS = {
+  damage: {
     isExampleHidden: showOnAnyType,
     isReasonHidden: hideOnThemeType,
   },
-  "spam": {
+  spam: {
     isExampleHidden: showOnAnyType,
     isReasonHidden: showOnAnyType,
   },
-  "settings": {
+  settings: {
     hasSuggestions: true,
     isExampleHidden: hideOnAnyType,
     isReasonHidden: hideOnThemeType,
   },
-  "deceptive": {
+  deceptive: {
     isExampleHidden: showOnAnyType,
     isReasonHidden: showOnAnyType,
   },
-  "broken": {
+  broken: {
     hasAddonTypeL10nId: true,
     hasAddonTypeSuggestionTemplate: true,
     hasSuggestions: true,
     isExampleHidden: hideOnThemeType,
     isReasonHidden: showOnAnyType,
   },
-  "policy": {
+  policy: {
     hasSuggestions: true,
     isExampleHidden: hideOnAnyType,
     isReasonHidden: showOnAnyType,
   },
-  "unwanted": {
+  unwanted: {
     isExampleHidden: showOnAnyType,
     isReasonHidden: hideOnThemeType,
   },
-  "other": {
+  other: {
     isExampleHidden: hideOnAnyType,
     isReasonHidden: showOnAnyType,
   },
-};
+});
 
 function getReasonL10nId(reason, addonType) {
   let l10nId = `abuse-report-${reason}-reason`;
@@ -101,9 +104,9 @@ const LEARNMORE_LINKS = {
 function formatLearnMoreURLs(containerEl) {
   for (const [linkClass, linkInfo] of Object.entries(LEARNMORE_LINKS)) {
     for (const element of containerEl.querySelectorAll(linkClass)) {
-      const baseURL = linkInfo.baseURL ?
-        Services.urlFormatter.formatURL(linkInfo.baseURL) :
-        Services.urlFormatter.formatURLPref("app.support.baseURL");
+      const baseURL = linkInfo.baseURL
+        ? Services.urlFormatter.formatURL(linkInfo.baseURL)
+        : Services.urlFormatter.formatURLPref("app.support.baseURL");
 
       element.href = baseURL + linkInfo.path;
     }
@@ -114,7 +117,7 @@ function formatLearnMoreURLs(containerEl) {
 function defineElementSelectorsGetters(object, propsMap) {
   const props = Object.entries(propsMap).reduce((acc, entry) => {
     const [name, selector] = entry;
-    acc[name] = {get: () => object.querySelector(selector)};
+    acc[name] = { get: () => object.querySelector(selector) };
     return acc;
   }, {});
   Object.defineProperties(object, props);
@@ -127,7 +130,7 @@ function defineElementAttributesProperties(object, propsMap) {
     const [name, attr] = entry;
     acc[name] = {
       get: () => object.getAttribute(attr),
-      set: (value) => {
+      set: value => {
         object.setAttribute(attr, value);
       },
     };
@@ -148,7 +151,7 @@ function getElements(containerEl, propsMap) {
 }
 
 function dispatchCustomEvent(el, eventName, detail) {
-  el.dispatchEvent(new CustomEvent(eventName, {detail}));
+  el.dispatchEvent(new CustomEvent(eventName, { detail }));
 }
 
 // This WebComponent extends the li item to represent an abuse report reason
@@ -177,7 +180,7 @@ class AbuseReasonListItem extends HTMLLIElement {
       return;
     }
 
-    const {reason, checked, addonType} = this;
+    const { reason, checked, addonType } = this;
 
     this.textContent = "";
     const content = document.importNode(this.template.content, true);
@@ -186,7 +189,7 @@ class AbuseReasonListItem extends HTMLLIElement {
       const reasonId = `abuse-reason-${reason}`;
       const reasonInfo = ABUSE_REASONS[reason] || {};
 
-      const {labelEl, descriptionEl, radioEl} = getElements(content, {
+      const { labelEl, descriptionEl, radioEl } = getElements(content, {
         labelEl: "label",
         descriptionEl: ".reason-description",
         radioEl: "input[type=radio]",
@@ -200,13 +203,17 @@ class AbuseReasonListItem extends HTMLLIElement {
       // This reason has a different localized description based on the
       // addon type.
       document.l10n.setAttributes(
-        descriptionEl, getReasonL10nId(reason, addonType));
+        descriptionEl,
+        getReasonL10nId(reason, addonType)
+      );
 
       // Show the reason example if supported for the addon type.
       if (!reasonInfo.isExampleHidden(addonType)) {
         const exampleEl = content.querySelector(".reason-example");
         document.l10n.setAttributes(
-          exampleEl, `abuse-report-${reason}-example`);
+          exampleEl,
+          `abuse-report-${reason}-example`
+        );
         exampleEl.hidden = false;
       }
     }
@@ -240,12 +247,12 @@ class AbuseReasonsPanel extends HTMLElement {
       return;
     }
 
-    const {addonType} = this;
+    const { addonType } = this;
 
     this.textContent = "";
     const content = document.importNode(this.template.content, true);
 
-    const {titleEl, listEl} = getElements(content, {
+    const { titleEl, listEl } = getElements(content, {
       titleEl: ".abuse-report-title",
       listEl: "ul.abuse-report-reasons",
     });
@@ -255,8 +262,8 @@ class AbuseReasonsPanel extends HTMLElement {
 
     // Create the randomized list of reasons.
     const reasons = Object.keys(ABUSE_REASONS)
-                          .filter(reason => reason !== "other")
-                          .sort(() => Math.random() - 0.5);
+      .filter(reason => reason !== "other")
+      .sort(() => Math.random() - 0.5);
 
     for (const reason of reasons) {
       const reasonInfo = ABUSE_REASONS[reason];
@@ -299,7 +306,7 @@ class AbuseReasonSuggestions extends HTMLElement {
   }
 
   update() {
-    const {addonType, extensionSupportURL, reason} = this;
+    const { addonType, extensionSupportURL, reason } = this;
 
     if (!addonType) {
       return;
@@ -359,7 +366,7 @@ class AbuseSubmitPanel extends HTMLElement {
     if (!this.isConnected || !this.addonType) {
       return;
     }
-    const {addonType, reason, _suggestions, _title} = this;
+    const { addonType, reason, _suggestions, _title } = this;
     document.l10n.setAttributes(_title, getReasonL10nId(reason, addonType));
     _suggestions.reason = reason;
     _suggestions.addonType = addonType;
@@ -435,8 +442,7 @@ class AbuseReport extends HTMLElement {
         this.handleKeyboardNavigation(evt);
         break;
       case "click":
-        if (evt.target === this._iconClose ||
-            evt.target === this._btnCancel) {
+        if (evt.target === this._iconClose || evt.target === this._btnCancel) {
           // NOTE: clear the focus on the clicked element to ensure that
           // -moz-focusring pseudo class is not still set on the element
           // when the panel is going to be shown again (See Bug 1560949).
@@ -468,8 +474,12 @@ class AbuseReport extends HTMLElement {
   }
 
   handleKeyboardNavigation(evt) {
-    if (evt.keyCode !== evt.DOM_VK_TAB ||
-      evt.altKey || evt.controlKey || evt.metaKey) {
+    if (
+      evt.keyCode !== evt.DOM_VK_TAB ||
+      evt.altKey ||
+      evt.controlKey ||
+      evt.metaKey
+    ) {
       return;
     }
 
@@ -497,8 +507,11 @@ class AbuseReport extends HTMLElement {
       evt.stopImmediatePropagation();
       const chromeWin = window.windowRoot.ownerGlobal;
       Services.focus.moveFocus(
-        chromeWin, null,
-        Services.MOVEFOCUS_BACKWARD, Services.focus.FLAG_BYKEY);
+        chromeWin,
+        null,
+        Services.MOVEFOCUS_BACKWARD,
+        Services.focus.FLAG_BYKEY
+      );
     }
   }
 
@@ -535,9 +548,11 @@ class AbuseReport extends HTMLElement {
 
     _linkAddonAuthor.href = this.authorURL || this.homepageURL;
     _linkAddonAuthor.textContent = this.authorName;
-    document.l10n.setAttributes(_linkAddonAuthor.parentNode,
-                                "abuse-report-addon-authored-by",
-                                {"author-name": this.authorName});
+    document.l10n.setAttributes(
+      _linkAddonAuthor.parentNode,
+      "abuse-report-addon-authored-by",
+      { "author-name": this.authorName }
+    );
 
     _addonIconElement.setAttribute("src", this.iconURL);
 
@@ -551,7 +566,8 @@ class AbuseReport extends HTMLElement {
 
     this.focus();
     dispatchCustomEvent(this, "abuse-report:updated", {
-      addonId, panel: "reasons",
+      addonId,
+      panel: "reasons",
     });
   }
 
@@ -573,11 +589,11 @@ class AbuseReport extends HTMLElement {
       return;
     }
     if (this._reasonsPanel.hidden) {
-      const {_textarea} = this;
+      const { _textarea } = this;
       _textarea.focus();
       _textarea.select();
     } else {
-      const {_radioCheckedReason} = this;
+      const { _radioCheckedReason } = this;
       if (_radioCheckedReason) {
         _radioCheckedReason.focus();
       }
@@ -617,7 +633,8 @@ class AbuseReport extends HTMLElement {
     // Adjust the focused element when switching to the submit panel.
     this.focus();
     dispatchCustomEvent(this, "abuse-report:updated", {
-      addonId: this.addonId, panel: "submit",
+      addonId: this.addonId,
+      panel: "submit",
     });
   }
 
@@ -632,7 +649,8 @@ class AbuseReport extends HTMLElement {
     // Adjust the focused element when switching back to the list of reasons.
     this.focus();
     dispatchCustomEvent(this, "abuse-report:updated", {
-      addonId: this.addonId, panel: "reasons",
+      addonId: this.addonId,
+      panel: "reasons",
     });
   }
 
@@ -657,18 +675,18 @@ class AbuseReport extends HTMLElement {
   }
 
   get homepageURL() {
-    const {addon} = this;
-    return addon && addon.homepageURL || this.authorURL || "";
+    const { addon } = this;
+    return (addon && addon.homepageURL) || this.authorURL || "";
   }
 
   get authorName() {
     // The author name may be missing on some of the test extensions
     // (or for temporarily installed add-ons).
-    return this.addonCreator && this.addonCreator.name || "";
+    return (this.addonCreator && this.addonCreator.name) || "";
   }
 
   get authorURL() {
-    return this.addonCreator && this.addonCreator.url || "";
+    return (this.addonCreator && this.addonCreator.url) || "";
   }
 
   get iconURL() {
@@ -676,7 +694,7 @@ class AbuseReport extends HTMLElement {
   }
 
   get supportURL() {
-    return this.addon && this.addon.supportURL || this.homepageURL || "";
+    return (this.addon && this.addon.supportURL) || this.homepageURL || "";
   }
 
   get message() {
@@ -692,14 +710,21 @@ class AbuseReport extends HTMLElement {
   }
 }
 
-customElements.define("abuse-report-reason-listitem",
-                      AbuseReasonListItem, {extends: "li"});
-customElements.define("abuse-report-reason-suggestions",
-                      AbuseReasonSuggestions);
+customElements.define("abuse-report-reason-listitem", AbuseReasonListItem, {
+  extends: "li",
+});
+customElements.define(
+  "abuse-report-reason-suggestions",
+  AbuseReasonSuggestions
+);
 customElements.define("abuse-report-reasons-panel", AbuseReasonsPanel);
 customElements.define("abuse-report-submit-panel", AbuseSubmitPanel);
 customElements.define("addon-abuse-report", AbuseReport);
 
-window.addEventListener("load", () => {
-  document.body.prepend(document.createElement("addon-abuse-report"));
-}, {once: true});
+window.addEventListener(
+  "load",
+  () => {
+    document.body.prepend(document.createElement("addon-abuse-report"));
+  },
+  { once: true }
+);

@@ -7,20 +7,51 @@
 "use strict";
 
 // React & Redux
-const { Component, createFactory, createElement } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const actions = require("devtools/client/webconsole/actions/index");
-const { MESSAGE_SOURCE, MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
-const { MessageIndent } = require("devtools/client/webconsole/components/Output/MessageIndent");
+const {
+  MESSAGE_SOURCE,
+  MESSAGE_TYPE,
+} = require("devtools/client/webconsole/constants");
+const {
+  MessageIndent,
+} = require("devtools/client/webconsole/components/Output/MessageIndent");
 const MessageIcon = require("devtools/client/webconsole/components/Output/MessageIcon");
-const FrameView = createFactory(require("devtools/client/shared/components/Frame"));
+const FrameView = createFactory(
+  require("devtools/client/shared/components/Frame")
+);
 
-loader.lazyRequireGetter(this, "CollapseButton", "devtools/client/webconsole/components/Output/CollapseButton");
-loader.lazyRequireGetter(this, "MessageRepeat", "devtools/client/webconsole/components/Output/MessageRepeat");
-loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
-loader.lazyRequireGetter(this, "SmartTrace", "devtools/client/shared/components/SmartTrace");
-ChromeUtils.defineModuleGetter(this, "pointPrecedes", "resource://devtools/shared/execution-point-utils.js");
+loader.lazyRequireGetter(
+  this,
+  "CollapseButton",
+  "devtools/client/webconsole/components/Output/CollapseButton"
+);
+loader.lazyRequireGetter(
+  this,
+  "MessageRepeat",
+  "devtools/client/webconsole/components/Output/MessageRepeat"
+);
+loader.lazyRequireGetter(
+  this,
+  "PropTypes",
+  "devtools/client/shared/vendor/react-prop-types"
+);
+loader.lazyRequireGetter(
+  this,
+  "SmartTrace",
+  "devtools/client/shared/components/SmartTrace"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "pointPrecedes",
+  "resource://devtools/shared/execution-point-utils.js"
+);
 
 class Message extends Component {
   static get propTypes() {
@@ -58,10 +89,12 @@ class Message extends Component {
         openLink: PropTypes.func.isRequired,
         sourceMapService: PropTypes.any,
       }),
-      notes: PropTypes.arrayOf(PropTypes.shape({
-        messageBody: PropTypes.string.isRequired,
-        frame: PropTypes.any,
-      })),
+      notes: PropTypes.arrayOf(
+        PropTypes.shape({
+          messageBody: PropTypes.string.isRequired,
+          frame: PropTypes.any,
+        })
+      ),
       isPaused: PropTypes.bool,
       maybeScrollToBottom: PropTypes.func,
       message: PropTypes.object.isRequired,
@@ -92,17 +125,20 @@ class Message extends Component {
       // did not emit for them.
       if (this.props.serviceContainer) {
         this.props.serviceContainer.emitNewMessage(
-          this.messageNode, this.props.messageId, this.props.timeStamp);
+          this.messageNode,
+          this.props.messageId,
+          this.props.timeStamp
+        );
       }
     }
   }
 
   componentDidCatch(e) {
-    this.setState({error: e});
+    this.setState({ error: e });
   }
 
   onLearnMoreClick(e) {
-    const {exceptionDocURL} = this.props;
+    const { exceptionDocURL } = this.props;
     this.props.serviceContainer.openLink(exceptionDocURL, e);
   }
 
@@ -136,7 +172,7 @@ class Message extends Component {
   }
 
   onMouseEvent(ev) {
-    const {messageId, serviceContainer, executionPoint} = this.props;
+    const { messageId, serviceContainer, executionPoint } = this.props;
     if (serviceContainer.canRewind() && executionPoint) {
       serviceContainer.onMessageHover(ev.type, messageId);
     }
@@ -158,9 +194,11 @@ class Message extends Component {
 
     return MessageIcon({
       level,
-      onRewindClick: (serviceContainer.canRewind() && executionPoint)
-        ? () => serviceContainer.jumpToExecutionPoint(executionPoint, messageId)
-        : null,
+      onRewindClick:
+        serviceContainer.canRewind() && executionPoint
+          ? () =>
+              serviceContainer.jumpToExecutionPoint(executionPoint, messageId)
+          : null,
       type,
     });
   }
@@ -170,9 +208,12 @@ class Message extends Component {
       return null;
     }
 
-    return dom.span({
-      className: "timestamp devtools-monospace",
-    }, l10n.timestampString(this.props.timeStamp || Date.now()));
+    return dom.span(
+      {
+        className: "timestamp devtools-monospace",
+      },
+      l10n.timestampString(this.props.timeStamp || Date.now())
+    );
   }
 
   renderErrorState() {
@@ -180,28 +221,41 @@ class Message extends Component {
       "https://bugzilla.mozilla.org/enter_bug.cgi?product=DevTools&component=Console";
     const timestampEl = this.renderTimestamp();
 
-    return dom.div({
-      className: "message error message-did-catch",
-    },
+    return dom.div(
+      {
+        className: "message error message-did-catch",
+      },
       timestampEl,
-      MessageIcon({level: "error"}),
-      dom.span({ className: "message-body-wrapper" },
-        dom.span({
-          className: "message-flex-body",
-        },
+      MessageIcon({ level: "error" }),
+      dom.span(
+        { className: "message-body-wrapper" },
+        dom.span(
+          {
+            className: "message-flex-body",
+          },
           // Add whitespaces for formatting when copying to the clipboard.
           timestampEl ? " " : null,
-          dom.span({ className: "message-body devtools-monospace" },
-            l10n.getFormatStr("webconsole.message.componentDidCatch.label", [newBugUrl]),
-            dom.button({
-              className: "devtools-button",
-              onClick: () => navigator.clipboard.writeText(
-                JSON.stringify(this.props.message, null, 2)),
-            }, l10n.getStr("webconsole.message.componentDidCatch.copyButton.label")),
-          ),
-        ),
+          dom.span(
+            { className: "message-body devtools-monospace" },
+            l10n.getFormatStr("webconsole.message.componentDidCatch.label", [
+              newBugUrl,
+            ]),
+            dom.button(
+              {
+                className: "devtools-button",
+                onClick: () =>
+                  navigator.clipboard.writeText(
+                    JSON.stringify(this.props.message, null, 2)
+                  ),
+              },
+              l10n.getStr(
+                "webconsole.message.componentDidCatch.copyButton.label"
+              )
+            )
+          )
+        )
       ),
-      dom.br(),
+      dom.br()
     );
   }
 
@@ -241,9 +295,11 @@ class Message extends Component {
     if (isPaused) {
       topLevelClasses.push("paused");
 
-      if (pausedExecutionPoint
-        && executionPoint
-        && !pointPrecedes(executionPoint, pausedExecutionPoint)) {
+      if (
+        pausedExecutionPoint &&
+        executionPoint &&
+        !pointPrecedes(executionPoint, pausedExecutionPoint)
+      ) {
         topLevelClasses.push("paused-before");
       }
     }
@@ -262,14 +318,16 @@ class Message extends Component {
         },
         createElement(SmartTrace, {
           stacktrace,
-          onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger
-            || serviceContainer.onViewSource,
-          onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad
-            || serviceContainer.onViewSource,
+          onViewSourceInDebugger:
+            serviceContainer.onViewSourceInDebugger ||
+            serviceContainer.onViewSource,
+          onViewSourceInScratchpad:
+            serviceContainer.onViewSourceInScratchpad ||
+            serviceContainer.onViewSource,
           onViewSource: serviceContainer.onViewSource,
           onReady: this.props.maybeScrollToBottom,
           sourceMapService: serviceContainer.sourceMapService,
-        }),
+        })
       );
     }
 
@@ -285,83 +343,106 @@ class Message extends Component {
 
     let notesNodes;
     if (notes) {
-      notesNodes = notes.map(note => dom.span(
-        { className: "message-flex-body error-note" },
-        dom.span({ className: "message-body devtools-monospace" },
-          "note: " + note.messageBody
-        ),
-        dom.span({ className: "message-location devtools-monospace" },
-          note.frame ? FrameView({
-            frame: note.frame,
-            onClick: serviceContainer
-              ? serviceContainer.onViewSourceInDebugger || serviceContainer.onViewSource
-              : undefined,
-            showEmptyPathAsHost: true,
-            sourceMapService: serviceContainer
-              ? serviceContainer.sourceMapService
-              : undefined,
-          }) : null
-        )));
+      notesNodes = notes.map(note =>
+        dom.span(
+          { className: "message-flex-body error-note" },
+          dom.span(
+            { className: "message-body devtools-monospace" },
+            "note: " + note.messageBody
+          ),
+          dom.span(
+            { className: "message-location devtools-monospace" },
+            note.frame
+              ? FrameView({
+                  frame: note.frame,
+                  onClick: serviceContainer
+                    ? serviceContainer.onViewSourceInDebugger ||
+                      serviceContainer.onViewSource
+                    : undefined,
+                  showEmptyPathAsHost: true,
+                  sourceMapService: serviceContainer
+                    ? serviceContainer.sourceMapService
+                    : undefined,
+                })
+              : null
+          )
+        )
+      );
     } else {
       notesNodes = [];
     }
 
-    const repeat = this.props.repeat && this.props.repeat > 1
-      ? createElement(MessageRepeat, {repeat: this.props.repeat})
-      : null;
+    const repeat =
+      this.props.repeat && this.props.repeat > 1
+        ? createElement(MessageRepeat, { repeat: this.props.repeat })
+        : null;
 
     let onFrameClick;
     if (serviceContainer && frame) {
       if (source === MESSAGE_SOURCE.CSS) {
-        onFrameClick = serviceContainer.onViewSourceInStyleEditor
-          || serviceContainer.onViewSource;
+        onFrameClick =
+          serviceContainer.onViewSourceInStyleEditor ||
+          serviceContainer.onViewSource;
       } else if (/^Scratchpad\/\d+$/.test(frame.source)) {
-        onFrameClick = serviceContainer.onViewSourceInScratchpad
-          || serviceContainer.onViewSource;
+        onFrameClick =
+          serviceContainer.onViewSourceInScratchpad ||
+          serviceContainer.onViewSource;
       } else {
         // Point everything else to debugger, if source not available,
         // it will fall back to view-source.
-        onFrameClick = serviceContainer.onViewSourceInDebugger
-          || serviceContainer.onViewSource;
+        onFrameClick =
+          serviceContainer.onViewSourceInDebugger ||
+          serviceContainer.onViewSource;
       }
     }
 
     // Configure the location.
-    const location = dom.span({ className: "message-location devtools-monospace" },
-      frame ? FrameView({
-        frame,
-        onClick: onFrameClick,
-        showEmptyPathAsHost: true,
-        sourceMapService:
-          serviceContainer ? serviceContainer.sourceMapService : undefined,
-      }) : null
+    const location = dom.span(
+      { className: "message-location devtools-monospace" },
+      frame
+        ? FrameView({
+            frame,
+            onClick: onFrameClick,
+            showEmptyPathAsHost: true,
+            sourceMapService: serviceContainer
+              ? serviceContainer.sourceMapService
+              : undefined,
+          })
+        : null
     );
 
     let learnMore;
     if (exceptionDocURL) {
-      learnMore = dom.a({
-        className: "learn-more-link webconsole-learn-more-link",
-        title: exceptionDocURL.split("?")[0],
-        onClick: this.onLearnMoreClick,
-      }, `[${l10n.getStr("webConsoleMoreInfoLabel")}]`);
+      learnMore = dom.a(
+        {
+          className: "learn-more-link webconsole-learn-more-link",
+          title: exceptionDocURL.split("?")[0],
+          onClick: this.onLearnMoreClick,
+        },
+        `[${l10n.getStr("webConsoleMoreInfoLabel")}]`
+      );
     }
 
-    const bodyElements = Array.isArray(messageBody) ? messageBody : [messageBody];
+    const bodyElements = Array.isArray(messageBody)
+      ? messageBody
+      : [messageBody];
 
-    const mouseEvents = serviceContainer.canRewind() && executionPoint
-      ? { onMouseEnter: this.onMouseEvent, onMouseLeave: this.onMouseEvent }
-      : {};
+    const mouseEvents =
+      serviceContainer.canRewind() && executionPoint
+        ? { onMouseEnter: this.onMouseEvent, onMouseLeave: this.onMouseEvent }
+        : {};
 
-    return dom.div({
-      className: topLevelClasses.join(" "),
-      onContextMenu: this.onContextMenu,
-      ...mouseEvents,
-      ref: node => {
-        this.messageNode = node;
+    return dom.div(
+      {
+        className: topLevelClasses.join(" "),
+        onContextMenu: this.onContextMenu,
+        ...mouseEvents,
+        ref: node => {
+          this.messageNode = node;
+        },
+        "data-message-id": messageId,
+        "aria-live": type === MESSAGE_TYPE.COMMAND ? "off" : "polite",
       },
-      "data-message-id": messageId,
-      "aria-live": type === MESSAGE_TYPE.COMMAND ? "off" : "polite",
-    },
       timestampEl,
       MessageIndent({
         indent,
@@ -369,26 +450,30 @@ class Message extends Component {
       }),
       icon,
       collapse,
-      dom.span({ className: "message-body-wrapper" },
-        dom.span({
-          className: "message-flex-body",
-          onClick: collapsible ? this.toggleMessage : undefined,
-        },
+      dom.span(
+        { className: "message-body-wrapper" },
+        dom.span(
+          {
+            className: "message-flex-body",
+            onClick: collapsible ? this.toggleMessage : undefined,
+          },
           // Add whitespaces for formatting when copying to the clipboard.
           timestampEl ? " " : null,
-          dom.span({ className: "message-body devtools-monospace" },
+          dom.span(
+            { className: "message-body devtools-monospace" },
             ...bodyElements,
-            learnMore,
+            learnMore
           ),
           repeat ? " " : null,
           repeat,
-          " ", location
+          " ",
+          location
         ),
         attachment,
         ...notesNodes
       ),
       // If an attachment is displayed, the final newline is handled by the attachment.
-      attachment ? null : dom.br(),
+      attachment ? null : dom.br()
     );
   }
   /* eslint-enable complexity */

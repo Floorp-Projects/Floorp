@@ -11,7 +11,9 @@
   var SimpleTest = opener.wrappedJSObject.SimpleTest;
   var ok = opener.wrappedJSObject.ok;
 
-  var doc = frames[0].document;
+  // Note: We can't use frames[0] here because the type="content" attribute
+  // isolates it into a separate browsing context hierarchy.
+  var doc = document.querySelector("iframe").contentDocument;
   ok(doc.createElement("body") instanceof HTMLBodyElement,
      "Should be instance of HTMLBodyElement");
   ok(doc.createElement("div") instanceof HTMLDivElement,

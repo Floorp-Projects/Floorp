@@ -7,14 +7,14 @@
  * Test blackbox ranges
  */
 
-async function testFinish({threadClient, debuggerClient}) {
+async function testFinish({ threadClient, debuggerClient }) {
   await threadClient.resume();
   await close(debuggerClient);
 
   do_test_finished();
 }
 
-async function invokeAndPause({global, threadClient}, expression) {
+async function invokeAndPause({ global, threadClient }, expression) {
   return executeOnNextTickAndWaitForPause(
     () => Cu.evalInSandbox(expression, global),
     threadClient
@@ -35,7 +35,7 @@ function run_test() {
     await setBreakpoint(threadClient, { sourceUrl: sourceFront.url, line: 11 });
 
     // 1. lets blackbox function a, and assert that we pause in b
-    const range = {start: { line: 6, column: 0 }, end: { line: 8, colum: 1 }};
+    const range = { start: { line: 6, column: 0 }, end: { line: 8, colum: 1 } };
     blackBox(sourceFront, range);
     await threadClient.resume();
     const paused = await waitForPause(threadClient);

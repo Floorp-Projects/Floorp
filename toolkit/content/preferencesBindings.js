@@ -6,25 +6,36 @@
 
 // We attach Preferences to the window object so other contexts (tests, JSMs)
 // have access to it.
-const Preferences = window.Preferences = (function() {
-  const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const Preferences = (window.Preferences = (function() {
+  const { EventEmitter } = ChromeUtils.import(
+    "resource://gre/modules/EventEmitter.jsm"
+  );
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
   const lazy = {};
-  ChromeUtils.defineModuleGetter(lazy, "DeferredTask",
-                                 "resource://gre/modules/DeferredTask.jsm");
+  ChromeUtils.defineModuleGetter(
+    lazy,
+    "DeferredTask",
+    "resource://gre/modules/DeferredTask.jsm"
+  );
 
   function getElementsByAttribute(name, value) {
     // If we needed to defend against arbitrary values, we would escape
     // double quotes (") and escape characters (\) in them, i.e.:
     //   ${value.replace(/["\\]/g, '\\$&')}
-    return value ? document.querySelectorAll(`[${name}="${value}"]`)
-                 : document.querySelectorAll(`[${name}]`);
+    return value
+      ? document.querySelectorAll(`[${name}="${value}"]`)
+      : document.querySelectorAll(`[${name}]`);
   }
 
   const domContentLoadedPromise = new Promise(resolve => {
-    window.addEventListener("DOMContentLoaded", resolve, { capture: true, once: true });
+    window.addEventListener("DOMContentLoaded", resolve, {
+      capture: true,
+      once: true,
+    });
   });
 
   const Preferences = {
@@ -36,7 +47,9 @@ const Preferences = window.Preferences = (function() {
       }
       const pref = new Preference(prefInfo);
       this._all[pref.id] = pref;
-      domContentLoadedPromise.then(() => { pref.updateElements(); });
+      domContentLoadedPromise.then(() => {
+        pref.updateElements();
+      });
       return pref;
     },
 
@@ -163,11 +176,14 @@ const Preferences = window.Preferences = (function() {
 
     getPreferenceElement(aStartElement) {
       let temp = aStartElement;
-      while (temp && temp.nodeType == Node.ELEMENT_NODE &&
-             !temp.hasAttribute("preference"))
+      while (
+        temp &&
+        temp.nodeType == Node.ELEMENT_NODE &&
+        !temp.hasAttribute("preference")
+      ) {
         temp = temp.parentNode;
-      return temp && temp.nodeType == Node.ELEMENT_NODE ?
-             temp : aStartElement;
+      }
+      return temp && temp.nodeType == Node.ELEMENT_NODE ? temp : aStartElement;
     },
 
     _deferredValueUpdate(aElement) {
@@ -191,13 +207,17 @@ const Preferences = window.Preferences = (function() {
       const element = this.getPreferenceElement(aElement);
       if (element.hasAttribute("preference")) {
         if (element.getAttribute("delayprefsave") != "true") {
-          const preference = Preferences.get(element.getAttribute("preference"));
+          const preference = Preferences.get(
+            element.getAttribute("preference")
+          );
           const prefVal = preference.getElementValue(element);
           preference.value = prefVal;
         } else {
           if (!element._deferredValueUpdateTask) {
-            element._deferredValueUpdateTask =
-              new lazy.DeferredTask(this._deferredValueUpdate.bind(this, element), 1000);
+            element._deferredValueUpdateTask = new lazy.DeferredTask(
+              this._deferredValueUpdate.bind(this, element),
+              1000
+            );
             this._deferredValueUpdateElements.add(element);
           } else {
             // Each time the preference is changed, restart the delay.
@@ -211,8 +231,9 @@ const Preferences = window.Preferences = (function() {
     onCommand(event) {
       // This "command" event handler tracks changes made to preferences by
       // the user in this window.
-      if (event.sourceEvent)
+      if (event.sourceEvent) {
         event = event.sourceEvent;
+      }
       this.userChangedValue(event.target);
     },
 
@@ -235,10 +256,14 @@ const Preferences = window.Preferences = (function() {
         event.initEvent(aEventName, true, true);
         let cancel = !aTarget.dispatchEvent(event);
         if (aTarget.hasAttribute("on" + aEventName)) {
-          const fn = new Function("event", aTarget.getAttribute("on" + aEventName));
+          const fn = new Function(
+            "event",
+            aTarget.getAttribute("on" + aEventName)
+          );
           const rv = fn.call(aTarget, event);
-          if (!rv)
+          if (!rv) {
             cancel = true;
+          }
         }
         return !cancel;
       } catch (e) {
@@ -257,26 +282,35 @@ const Preferences = window.Preferences = (function() {
     },
 
     close(event) {
-      if (Preferences.instantApply)
+      if (Preferences.instantApply) {
         window.close();
+      }
       event.stopPropagation();
       event.preventDefault();
     },
 
     handleEvent(event) {
       switch (event.type) {
-        case "change": return this.onChange(event);
-        case "command": return this.onCommand(event);
-        case "dialogaccept": return this.onDialogAccept(event);
-        case "input": return this.onInput(event);
-        case "unload": return this.onUnload(event);
-        default: return undefined;
+        case "change":
+          return this.onChange(event);
+        case "command":
+          return this.onCommand(event);
+        case "dialogaccept":
+          return this.onDialogAccept(event);
+        case "input":
+          return this.onInput(event);
+        case "unload":
+          return this.onUnload(event);
+        default:
+          return undefined;
       }
     },
   };
 
   Services.prefs.addObserver("", Preferences);
-  domContentLoadedPromise.then(result => Preferences.onDOMContentLoaded(result));
+  domContentLoadedPromise.then(result =>
+    Preferences.onDOMContentLoaded(result)
+  );
   window.addEventListener("change", Preferences);
   window.addEventListener("command", Preferences);
   window.addEventListener("dialogaccept", Preferences);
@@ -310,9 +344,12 @@ const Preferences = window.Preferences = (function() {
       // from any previous opens of a child dialog instead of the value from
       // preferences, to pick up any edits a user may have made.
 
-      if (Preferences.type == "child" && window.opener &&
-          window.opener.Preferences &&
-          window.opener.document.nodePrincipal.isSystemPrincipal) {
+      if (
+        Preferences.type == "child" &&
+        window.opener &&
+        window.opener.Preferences &&
+        window.opener.document.nodePrincipal.isSystemPrincipal
+      ) {
         // Try to find the preference in the parent window.
         const preference = window.opener.Preferences.get(this.name);
 
@@ -330,16 +367,20 @@ const Preferences = window.Preferences = (function() {
     }
 
     _reportUnknownType() {
-      const msg = `Preference with id=${this.id} and name=${this.name} has unknown type ${this.type}.`;
+      const msg = `Preference with id=${this.id} and name=${
+        this.name
+      } has unknown type ${this.type}.`;
       Services.console.logStringMessage(msg);
     }
 
     setElementValue(aElement) {
-      if (this.locked)
+      if (this.locked) {
         aElement.disabled = true;
+      }
 
-      if (!this.isElementEditable(aElement))
+      if (!this.isElementEditable(aElement)) {
         return;
+      }
 
       let rv = undefined;
       if (aElement.hasAttribute("onsyncfrompreference")) {
@@ -347,19 +388,23 @@ const Preferences = window.Preferences = (function() {
         try {
           const event = document.createEvent("Events");
           event.initEvent("syncfrompreference", true, true);
-          const f = new Function("event",
-                               aElement.getAttribute("onsyncfrompreference"));
+          const f = new Function(
+            "event",
+            aElement.getAttribute("onsyncfrompreference")
+          );
           rv = f.call(aElement, event);
         } catch (e) {
           Cu.reportError(e);
         }
       }
       let val = rv;
-      if (val === undefined)
+      if (val === undefined) {
         val = Preferences.instantApply ? this.valueFromPreferences : this.value;
+      }
       // if the preference is marked for reset, show default value in UI
-      if (val === undefined)
+      if (val === undefined) {
         val = this.defaultValue;
+      }
 
       /**
        * Initialize a UI element property with a value. Handles the case
@@ -392,8 +437,9 @@ const Preferences = window.Preferences = (function() {
         // XXXmano Bug 303998: Avoid a caret placement issue if either the
         // preference observer or its setter calls updateElements as a result
         // of the input event handler.
-        if (aElement.value !== val)
+        if (aElement.value !== val) {
           setValue(aElement, "value", val);
+        }
       } else {
         setValue(aElement, "value", val);
       }
@@ -405,11 +451,14 @@ const Preferences = window.Preferences = (function() {
         try {
           const event = document.createEvent("Events");
           event.initEvent("synctopreference", true, true);
-          const f = new Function("event",
-                               aElement.getAttribute("onsynctopreference"));
+          const f = new Function(
+            "event",
+            aElement.getAttribute("onsynctopreference")
+          );
           const rv = f.call(aElement, event);
-          if (rv !== undefined)
+          if (rv !== undefined) {
             return rv;
+          }
         } catch (e) {
           Cu.reportError(e);
         }
@@ -422,47 +471,51 @@ const Preferences = window.Preferences = (function() {
        * an attribute, as is the case before a binding has been attached.
        */
       function getValue(element, attribute) {
-        if (attribute in element)
+        if (attribute in element) {
           return element[attribute];
+        }
         return element.getAttribute(attribute);
       }
       let value;
-      if (aElement.localName == "checkbox")
+      if (aElement.localName == "checkbox") {
         value = getValue(aElement, "checked");
-      else
+      } else {
         value = getValue(aElement, "value");
+      }
 
       switch (this.type) {
-      case "int":
-        return parseInt(value, 10) || 0;
-      case "bool":
-        return typeof(value) == "boolean" ? value : value == "true";
+        case "int":
+          return parseInt(value, 10) || 0;
+        case "bool":
+          return typeof value == "boolean" ? value : value == "true";
       }
       return value;
     }
 
     isElementEditable(aElement) {
       switch (aElement.localName) {
-      case "checkbox":
-      case "input":
-      case "radiogroup":
-      case "textarea":
-      case "textbox":
-      case "menulist":
-        return true;
+        case "checkbox":
+        case "input":
+        case "radiogroup":
+        case "textarea":
+        case "textbox":
+        case "menulist":
+          return true;
       }
       return false;
     }
 
     updateElements() {
-      if (!this.id)
+      if (!this.id) {
         return;
+      }
 
       // This "change" event handler tracks changes made to preferences by
       // sources other than the user in this window.
       const elements = getElementsByAttribute("preference", this.id);
-      for (const element of elements)
+      for (const element of elements) {
         this.setElementValue(element);
+      }
     }
 
     onChange() {
@@ -474,8 +527,9 @@ const Preferences = window.Preferences = (function() {
     }
 
     set name(val) {
-      if (val == this.name)
+      if (val == this.name) {
         return val;
+      }
 
       this._name = val;
 
@@ -489,8 +543,9 @@ const Preferences = window.Preferences = (function() {
     set value(val) {
       if (this.value !== val) {
         this._value = val;
-        if (Preferences.instantApply)
+        if (Preferences.instantApply) {
           this.valueFromPreferences = val;
+        }
         this.emit("change");
       }
       return val;
@@ -507,24 +562,27 @@ const Preferences = window.Preferences = (function() {
     set disabled(val) {
       this._disabled = !!val;
 
-      if (!this.id)
+      if (!this.id) {
         return val;
+      }
 
       const elements = getElementsByAttribute("preference", this.id);
       for (const element of elements) {
         element.disabled = val;
 
         const labels = getElementsByAttribute("control", element.id);
-        for (const label of labels)
+        for (const label of labels) {
           label.disabled = val;
+        }
       }
 
       return val;
     }
 
     get hasUserValue() {
-      return Services.prefs.prefHasUserValue(this.name) &&
-             this.value !== undefined;
+      return (
+        Services.prefs.prefHasUserValue(this.name) && this.value !== undefined
+      );
     }
 
     get defaultValue() {
@@ -542,41 +600,43 @@ const Preferences = window.Preferences = (function() {
       try {
         // Force a resync of value with preferences.
         switch (this.type) {
-        case "int":
-          return this._branch.getIntPref(this.name);
-        case "bool": {
-          const val = this._branch.getBoolPref(this.name);
-          return this.inverted ? !val : val;
+          case "int":
+            return this._branch.getIntPref(this.name);
+          case "bool": {
+            const val = this._branch.getBoolPref(this.name);
+            return this.inverted ? !val : val;
+          }
+          case "wstring":
+            return this._branch.getComplexValue(
+              this.name,
+              Ci.nsIPrefLocalizedString
+            ).data;
+          case "string":
+          case "unichar":
+            return this._branch.getStringPref(this.name);
+          case "fontname": {
+            const family = this._branch.getStringPref(this.name);
+            const fontEnumerator = Cc[
+              "@mozilla.org/gfx/fontenumerator;1"
+            ].createInstance(Ci.nsIFontEnumerator);
+            return fontEnumerator.getStandardFamilyName(family);
+          }
+          case "file": {
+            const f = this._branch.getComplexValue(this.name, Ci.nsIFile);
+            return f;
+          }
+          default:
+            this._reportUnknownType();
         }
-        case "wstring":
-          return this._branch
-                     .getComplexValue(this.name, Ci.nsIPrefLocalizedString)
-                     .data;
-        case "string":
-        case "unichar":
-          return this._branch.getStringPref(this.name);
-        case "fontname": {
-          const family = this._branch.getStringPref(this.name);
-          const fontEnumerator = Cc["@mozilla.org/gfx/fontenumerator;1"]
-                               .createInstance(Ci.nsIFontEnumerator);
-          return fontEnumerator.getStandardFamilyName(family);
-        }
-        case "file": {
-          const f = this._branch
-                      .getComplexValue(this.name, Ci.nsIFile);
-          return f;
-        }
-        default:
-          this._reportUnknownType();
-        }
-      } catch (e) { }
+      } catch (e) {}
       return null;
     }
 
     set valueFromPreferences(val) {
       // Exit early if nothing to do.
-      if (this.readonly || this.valueFromPreferences == val)
+      if (this.readonly || this.valueFromPreferences == val) {
         return val;
+      }
 
       // The special value undefined means 'reset preference to default'.
       if (val === undefined) {
@@ -586,41 +646,45 @@ const Preferences = window.Preferences = (function() {
 
       // Force a resync of preferences with value.
       switch (this.type) {
-      case "int":
-        Services.prefs.setIntPref(this.name, val);
-        break;
-      case "bool":
-        Services.prefs.setBoolPref(this.name, this.inverted ? !val : val);
-        break;
-      case "wstring": {
-        const pls = Cc["@mozilla.org/pref-localizedstring;1"]
-                  .createInstance(Ci.nsIPrefLocalizedString);
-        pls.data = val;
-        Services.prefs
-            .setComplexValue(this.name, Ci.nsIPrefLocalizedString, pls);
-        break;
-      }
-      case "string":
-      case "unichar":
-      case "fontname":
-        Services.prefs.setStringPref(this.name, val);
-        break;
-      case "file": {
-        let lf;
-        if (typeof(val) == "string") {
-          lf = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-          lf.persistentDescriptor = val;
-          if (!lf.exists())
-            lf.initWithPath(val);
-        } else {
-          lf = val.QueryInterface(Ci.nsIFile);
+        case "int":
+          Services.prefs.setIntPref(this.name, val);
+          break;
+        case "bool":
+          Services.prefs.setBoolPref(this.name, this.inverted ? !val : val);
+          break;
+        case "wstring": {
+          const pls = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
+            Ci.nsIPrefLocalizedString
+          );
+          pls.data = val;
+          Services.prefs.setComplexValue(
+            this.name,
+            Ci.nsIPrefLocalizedString,
+            pls
+          );
+          break;
         }
-        Services.prefs
-            .setComplexValue(this.name, Ci.nsIFile, lf);
-        break;
-      }
-      default:
-        this._reportUnknownType();
+        case "string":
+        case "unichar":
+        case "fontname":
+          Services.prefs.setStringPref(this.name, val);
+          break;
+        case "file": {
+          let lf;
+          if (typeof val == "string") {
+            lf = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+            lf.persistentDescriptor = val;
+            if (!lf.exists()) {
+              lf.initWithPath(val);
+            }
+          } else {
+            lf = val.QueryInterface(Ci.nsIFile);
+          }
+          Services.prefs.setComplexValue(this.name, Ci.nsIFile, lf);
+          break;
+        }
+        default:
+          this._reportUnknownType();
       }
       if (!this.batching) {
         Services.prefs.savePrefFile(null);
@@ -630,4 +694,4 @@ const Preferences = window.Preferences = (function() {
   }
 
   return Preferences;
-}());
+})());

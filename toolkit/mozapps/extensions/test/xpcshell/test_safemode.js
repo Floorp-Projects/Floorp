@@ -15,7 +15,12 @@ const VERSION = "1.0";
 
 // Sets up the profile by installing an add-on.
 add_task(async function setup() {
-  AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  AddonTestUtils.createAppInfo(
+    "xpcshell@tests.mozilla.org",
+    "XPCShell",
+    "1",
+    "1.9.2"
+  );
   gAppInfo.inSafeMode = true;
 
   await promiseStartupManager();
@@ -28,12 +33,12 @@ add_task(async function setup() {
     manifest: {
       name: "Test 1",
       version: VERSION,
-      applications: {gecko: {id: ID}},
+      applications: { gecko: { id: ID } },
     },
   });
   let wrapper = await installBuiltinExtension({
     manifest: {
-      applications: {gecko: {id: BUILTIN_ID}},
+      applications: { gecko: { id: BUILTIN_ID } },
     },
   });
 
@@ -60,8 +65,12 @@ add_task(async function setup() {
 // Disabling an add-on should work
 add_task(async function test_disable() {
   let a1 = await AddonManager.getAddonByID(ID);
-  Assert.ok(!hasFlag(a1.operationsRequiringRestart,
-                     AddonManager.OP_NEEDS_RESTART_DISABLE));
+  Assert.ok(
+    !hasFlag(
+      a1.operationsRequiringRestart,
+      AddonManager.OP_NEEDS_RESTART_DISABLE
+    )
+  );
   await a1.disable();
   Assert.ok(!a1.isActive);
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));

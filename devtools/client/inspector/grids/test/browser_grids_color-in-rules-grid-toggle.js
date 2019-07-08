@@ -25,7 +25,9 @@ add_task(async function() {
   const { store } = inspector;
   const cPicker = layoutView.swatchColorPickerTooltip;
   const spectrum = cPicker.spectrum;
-  const swatch = doc.querySelector("#layout-grid-container .layout-color-swatch");
+  const swatch = doc.querySelector(
+    "#layout-grid-container .layout-color-swatch"
+  );
 
   info("Scrolling into view of the #grid color swatch.");
   swatch.scrollIntoView();
@@ -35,21 +37,29 @@ add_task(async function() {
   swatch.click();
   await onColorPickerReady;
 
-  await simulateColorPickerChange(cPicker, [0, 255, 0, .5]);
+  await simulateColorPickerChange(cPicker, [0, 255, 0, 0.5]);
 
-  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-    "The color swatch's background was updated.");
+  is(
+    swatch.style.backgroundColor,
+    "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was updated."
+  );
 
   info("Pressing RETURN to commit the color change.");
-  const onGridColorUpdate = waitUntilState(store, state =>
-    state.grids[0].color === "#00FF0080");
+  const onGridColorUpdate = waitUntilState(
+    store,
+    state => state.grids[0].color === "#00FF0080"
+  );
   const onColorPickerHidden = cPicker.tooltip.once("hidden");
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
   await onColorPickerHidden;
   await onGridColorUpdate;
 
-  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-    "The color swatch's background was kept after RETURN.");
+  is(
+    swatch.style.backgroundColor,
+    "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was kept after RETURN."
+  );
 
   info("Selecting the rule view.");
   const ruleView = selectRuleView(inspector);
@@ -61,7 +71,8 @@ add_task(async function() {
   const gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  const onHighlighterShown = highlighters.once("grid-highlighter-shown",
+  const onHighlighterShown = highlighters.once(
+    "grid-highlighter-shown",
     (nodeFront, options) => {
       info("Checking the grid highlighter display settings.");
       const {

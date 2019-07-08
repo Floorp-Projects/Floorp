@@ -3,7 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Arg, RetVal, generateActorSpec, types } = require("devtools/shared/protocol");
+const {
+  Arg,
+  RetVal,
+  generateActorSpec,
+  types,
+} = require("devtools/shared/protocol");
 
 const longstringType = types.getType("longstring");
 const arraybufferType = types.getType("arraybuffer");

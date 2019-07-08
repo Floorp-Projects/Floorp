@@ -12,17 +12,17 @@ import RichOption from "./rich-option.js";
  * </rich-select>
  */
 
-export default class ShippingOption extends ObservedPropertiesMixin(RichOption) {
+export default class ShippingOption extends ObservedPropertiesMixin(
+  RichOption
+) {
   static get recordAttributes() {
-    return [
-      "label",
-      "amount-currency",
-      "amount-value",
-    ];
+    return ["label", "amount-currency", "amount-value"];
   }
 
   static get observedAttributes() {
-    return RichOption.observedAttributes.concat(ShippingOption.recordAttributes);
+    return RichOption.observedAttributes.concat(
+      ShippingOption.recordAttributes
+    );
   }
 
   constructor() {

@@ -4,9 +4,12 @@
 
 "use strict";
 
-SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+SpecialPowers.pushPrefEnv({
+  set: [["dom.require_user_interaction_for_beforeunload", false]],
+});
 
-const TEST_URL = "http://example.com/browser/toolkit/components/startup/tests/browser/beforeunload.html";
+const TEST_URL =
+  "http://example.com/browser/toolkit/components/startup/tests/browser/beforeunload.html";
 
 function test() {
   waitForExplicitFinish();
@@ -27,20 +30,29 @@ function test() {
     ok(seenDialog, "Should have seen a prompt dialog");
     ok(!window.closed, "Shouldn't have closed the window");
 
-    let win2 = window.openDialog(location, "", "chrome,all,dialog=no", "about:blank");
+    let win2 = window.openDialog(
+      location,
+      "",
+      "chrome,all,dialog=no",
+      "about:blank"
+    );
     ok(win2 != null, "Should have been able to open a new window");
-    win2.addEventListener("load", () => {
-      executeSoon(() => {
-        win2.close();
+    win2.addEventListener(
+      "load",
+      () => {
+        executeSoon(() => {
+          win2.close();
 
-        // Leave the page the second time.
-        waitForOnBeforeUnloadDialog(browser, (btnLeave, btnStay) => {
-          btnLeave.click();
+          // Leave the page the second time.
+          waitForOnBeforeUnloadDialog(browser, (btnLeave, btnStay) => {
+            btnLeave.click();
+          });
+
+          gBrowser.removeTab(gBrowser.selectedTab);
+          finish();
         });
-
-        gBrowser.removeTab(gBrowser.selectedTab);
-        finish();
-      });
-    }, {once: true});
+      },
+      { once: true }
+    );
   });
 }

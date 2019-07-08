@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { LongStringActor } = require("devtools/server/actors/object/long-string");
+const {
+  LongStringActor,
+} = require("devtools/server/actors/object/long-string");
 
 function run_test() {
   test_LSA_destroy();
@@ -39,8 +41,10 @@ function test_LSA_grip() {
 
   const grip = actor.grip();
   Assert.equal(grip.type, "longString");
-  Assert.equal(grip.initial,
-               TEST_STRING.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
+  Assert.equal(
+    grip.initial,
+    TEST_STRING.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH)
+  );
   Assert.equal(grip.length, TEST_STRING.length);
   Assert.equal(grip.actor, actor.actorID);
 }
@@ -79,8 +83,10 @@ function test_LSA_onSubstring() {
     end: TEST_STRING.length,
   });
   Assert.equal(response.from, actor.actorID);
-  Assert.equal(response.substring,
-               TEST_STRING.substring(-5, TEST_STRING.length));
+  Assert.equal(
+    response.substring,
+    TEST_STRING.substring(-5, TEST_STRING.length)
+  );
 
   // Past the end
   response = actor.onSubstring({
@@ -88,6 +94,8 @@ function test_LSA_onSubstring() {
     end: 100,
   });
   Assert.equal(response.from, actor.actorID);
-  Assert.equal(response.substring,
-               TEST_STRING.substring(TEST_STRING.length - 5, 100));
+  Assert.equal(
+    response.substring,
+    TEST_STRING.substring(TEST_STRING.length - 5, 100)
+  );
 }

@@ -1,15 +1,18 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv(
-    {"set": [["ui.tooltipDelay", 0]]});
+  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
 });
 
 add_task(async function test_title_in_shadow_dom() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   info("Moving mouse out of the way.");
-  await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 300, 300);
+  await EventUtils.synthesizeAndWaitNativeMouseMove(
+    tab.linkedBrowser,
+    300,
+    300
+  );
 
   info("creating host");
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
@@ -18,17 +21,22 @@ add_task(async function test_title_in_shadow_dom() {
     doc.body.appendChild(host);
     host.setAttribute("style", "position: absolute; top: 0; left: 0;");
     var sr = host.attachShadow({ mode: "closed" });
-    sr.innerHTML = "<div title='shadow' style='width: 200px; height: 200px;'>shadow</div>";
+    sr.innerHTML =
+      "<div title='shadow' style='width: 200px; height: 200px;'>shadow</div>";
   });
 
   let awaitTooltipOpen = new Promise(resolve => {
-    let tooltipId = Services.appinfo.browserTabsRemoteAutostart ?
-                      "remoteBrowserTooltip" :
-                      "aHTMLTooltip";
+    let tooltipId = Services.appinfo.browserTabsRemoteAutostart
+      ? "remoteBrowserTooltip"
+      : "aHTMLTooltip";
     let tooltip = document.getElementById(tooltipId);
-    tooltip.addEventListener("popupshown", function(event) {
-      resolve(event.target);
-    }, {once: true});
+    tooltip.addEventListener(
+      "popupshown",
+      function(event) {
+        resolve(event.target);
+      },
+      { once: true }
+    );
   });
   info("Initial mouse move");
   await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 50, 5);
@@ -39,7 +47,11 @@ add_task(async function test_title_in_shadow_dom() {
   info("Waiting for tooltip to open");
   let tooltip = await awaitTooltipOpen;
 
-  is(tooltip.getAttribute("label"), "shadow", "tooltip label should match expectation");
+  is(
+    tooltip.getAttribute("label"),
+    "shadow",
+    "tooltip label should match expectation"
+  );
 
   info("Closing tab");
   BrowserTestUtils.removeTab(tab);
@@ -49,7 +61,11 @@ add_task(async function test_title_in_light_dom() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   info("Moving mouse out of the way.");
-  await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 300, 300);
+  await EventUtils.synthesizeAndWaitNativeMouseMove(
+    tab.linkedBrowser,
+    300,
+    300
+  );
 
   info("creating host");
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
@@ -63,13 +79,17 @@ add_task(async function test_title_in_light_dom() {
   });
 
   let awaitTooltipOpen = new Promise(resolve => {
-    let tooltipId = Services.appinfo.browserTabsRemoteAutostart ?
-                      "remoteBrowserTooltip" :
-                      "aHTMLTooltip";
+    let tooltipId = Services.appinfo.browserTabsRemoteAutostart
+      ? "remoteBrowserTooltip"
+      : "aHTMLTooltip";
     let tooltip = document.getElementById(tooltipId);
-    tooltip.addEventListener("popupshown", function(event) {
-      resolve(event.target);
-    }, {once: true});
+    tooltip.addEventListener(
+      "popupshown",
+      function(event) {
+        resolve(event.target);
+      },
+      { once: true }
+    );
   });
   info("Initial mouse move");
   await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 50, 5);
@@ -80,18 +100,25 @@ add_task(async function test_title_in_light_dom() {
   info("Waiting for tooltip to open");
   let tooltip = await awaitTooltipOpen;
 
-  is(tooltip.getAttribute("label"), "light", "tooltip label should match expectation");
+  is(
+    tooltip.getAttribute("label"),
+    "light",
+    "tooltip label should match expectation"
+  );
 
   info("Closing tab");
   BrowserTestUtils.removeTab(tab);
 });
 
-
 add_task(async function test_title_through_slot() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   info("Moving mouse out of the way.");
-  await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 300, 300);
+  await EventUtils.synthesizeAndWaitNativeMouseMove(
+    tab.linkedBrowser,
+    300,
+    300
+  );
 
   info("creating host");
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
@@ -102,17 +129,22 @@ add_task(async function test_title_through_slot() {
     doc.body.appendChild(host);
     host.setAttribute("style", "position: absolute; top: 0; left: 0;");
     var sr = host.attachShadow({ mode: "closed" });
-    sr.innerHTML = "<div title='shadow' style='width: 200px; height: 200px;'><slot></slot></div>";
+    sr.innerHTML =
+      "<div title='shadow' style='width: 200px; height: 200px;'><slot></slot></div>";
   });
 
   let awaitTooltipOpen = new Promise(resolve => {
-    let tooltipId = Services.appinfo.browserTabsRemoteAutostart ?
-                      "remoteBrowserTooltip" :
-                      "aHTMLTooltip";
+    let tooltipId = Services.appinfo.browserTabsRemoteAutostart
+      ? "remoteBrowserTooltip"
+      : "aHTMLTooltip";
     let tooltip = document.getElementById(tooltipId);
-    tooltip.addEventListener("popupshown", function(event) {
-      resolve(event.target);
-    }, {once: true});
+    tooltip.addEventListener(
+      "popupshown",
+      function(event) {
+        resolve(event.target);
+      },
+      { once: true }
+    );
   });
   info("Initial mouse move");
   await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 50, 5);
@@ -123,7 +155,11 @@ add_task(async function test_title_through_slot() {
   info("Waiting for tooltip to open");
   let tooltip = await awaitTooltipOpen;
 
-  is(tooltip.getAttribute("label"), "shadow", "tooltip label should match expectation");
+  is(
+    tooltip.getAttribute("label"),
+    "shadow",
+    "tooltip label should match expectation"
+  );
 
   info("Closing tab");
   BrowserTestUtils.removeTab(tab);

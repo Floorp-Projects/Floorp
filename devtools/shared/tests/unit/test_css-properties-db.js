@@ -19,27 +19,40 @@
 
 "use strict";
 
-const {PSEUDO_ELEMENTS, CSS_PROPERTIES, PREFERENCES} = require("devtools/shared/css/generated/properties-db");
-const {generateCssProperties} = require("devtools/server/actors/css-properties");
-const {Preferences} = require("resource://gre/modules/Preferences.jsm");
+const {
+  PSEUDO_ELEMENTS,
+  CSS_PROPERTIES,
+  PREFERENCES,
+} = require("devtools/shared/css/generated/properties-db");
+const {
+  generateCssProperties,
+} = require("devtools/server/actors/css-properties");
+const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const InspectorUtils = require("InspectorUtils");
 
 function run_test() {
-  const propertiesErrorMessage = "If this assertion fails, then the client side CSS " +
-                                 "properties list in devtools is out of sync with the " +
-                                 "CSS properties on the platform. To fix this " +
-                                 "assertion run `mach devtools-css-db` to re-generate " +
-                                 "the client side properties.";
+  const propertiesErrorMessage =
+    "If this assertion fails, then the client side CSS " +
+    "properties list in devtools is out of sync with the " +
+    "CSS properties on the platform. To fix this " +
+    "assertion run `mach devtools-css-db` to re-generate " +
+    "the client side properties.";
 
   // Check that the platform and client match for pseudo elements.
-  deepEqual(PSEUDO_ELEMENTS, InspectorUtils.getCSSPseudoElementNames(),
-            "The pseudo elements match on the client and platform. " +
-            propertiesErrorMessage);
+  deepEqual(
+    PSEUDO_ELEMENTS,
+    InspectorUtils.getCSSPseudoElementNames(),
+    "The pseudo elements match on the client and platform. " +
+      propertiesErrorMessage
+  );
 
   const prefs = InspectorUtils.getCSSPropertyPrefs();
-  deepEqual(PREFERENCES, prefs.map(({name, pref}) => [name, pref]),
-            "The preferences match on the client and platform. " +
-            propertiesErrorMessage);
+  deepEqual(
+    PREFERENCES,
+    prefs.map(({ name, pref }) => [name, pref]),
+    "The preferences match on the client and platform. " +
+      propertiesErrorMessage
+  );
 
   /**
    * Check that the platform and client match for the details on their CSS properties.
@@ -57,8 +70,12 @@ function run_test() {
     if (deepEqual) {
       ok(true, `The static database and platform match for "${propertyName}".`);
     } else {
-      ok(false, `The static database and platform do not match for ` + `
-        "${propertyName}". ${propertiesErrorMessage}`);
+      ok(
+        false,
+        `The static database and platform do not match for ` +
+          `
+        "${propertyName}". ${propertiesErrorMessage}`
+      );
     }
   }
 
@@ -72,17 +89,26 @@ function run_test() {
     .filter(name => name && !name.includes("-moz-osx-"));
 
   if (mismatches.length === 0) {
-    ok(true, "No client and platform CSS property database mismatches were found.");
+    ok(
+      true,
+      "No client and platform CSS property database mismatches were found."
+    );
   }
 
   mismatches.forEach(propertyName => {
     if (getPreference(propertyName) === false) {
-      ok(true, `The static database and platform do not agree on the property ` +
-               `"${propertyName}" This is ok because it is currently disabled through ` +
-               `a preference.`);
+      ok(
+        true,
+        `The static database and platform do not agree on the property ` +
+          `"${propertyName}" This is ok because it is currently disabled through ` +
+          `a preference.`
+      );
     } else {
-      ok(false, `The static database and platform do not agree on the property ` +
-                `"${propertyName}" ${propertiesErrorMessage}`);
+      ok(
+        false,
+        `The static database and platform do not agree on the property ` +
+          `"${propertyName}" ${propertiesErrorMessage}`
+      );
     }
   });
 }

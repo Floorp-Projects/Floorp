@@ -8,9 +8,13 @@
 do_get_profile();
 
 function run_test() {
-  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
-                  .getService(Ci.nsIPK11TokenDB);
+  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+    Ci.nsIPK11TokenDB
+  );
 
-  notEqual(tokenDB.getInternalKeyToken(), null,
-           "The internal token should be non-null");
+  notEqual(
+    tokenDB.getInternalKeyToken(),
+    null,
+    "The internal token should be non-null"
+  );
 }

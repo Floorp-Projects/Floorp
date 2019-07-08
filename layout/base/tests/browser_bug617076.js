@@ -11,7 +11,10 @@
 
 add_task(async function test() {
   // Open the test tab
-  let testTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:addons");
+  let testTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:addons"
+  );
 
   // insert button into test page content
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -24,7 +27,11 @@ add_task(async function test() {
   });
 
   // open a second tab and select it
-  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", true);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank",
+    true
+  );
   gBrowser.selectedTab = tab2;
 
   // Select the testTab then perform mouse events on inserted button
@@ -32,9 +39,27 @@ add_task(async function test() {
   let browser = gBrowser.selectedBrowser;
   EventUtils.disableNonTestMouseEvents(true);
   try {
-    await BrowserTestUtils.synthesizeMouse("#test-button", 1, 1, { type: "mouseover" }, browser);
-    await BrowserTestUtils.synthesizeMouse("#test-button", 2, 6, { type: "mousemove" }, browser);
-    await BrowserTestUtils.synthesizeMouse("#test-button", 2, 4, { type: "mousemove" }, browser);
+    await BrowserTestUtils.synthesizeMouse(
+      "#test-button",
+      1,
+      1,
+      { type: "mouseover" },
+      browser
+    );
+    await BrowserTestUtils.synthesizeMouse(
+      "#test-button",
+      2,
+      6,
+      { type: "mousemove" },
+      browser
+    );
+    await BrowserTestUtils.synthesizeMouse(
+      "#test-button",
+      2,
+      4,
+      { type: "mousemove" },
+      browser
+    );
   } finally {
     EventUtils.disableNonTestMouseEvents(false);
   }

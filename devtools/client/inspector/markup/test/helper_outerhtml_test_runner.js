@@ -50,23 +50,35 @@ async function runEditOuterHTMLTest(test, inspector, testActor) {
 
   info("Listen for reselectedonremoved and edit the outerHTML");
   const onReselected = inspector.markup.once("reselectedonremoved");
-  await inspector.markup.updateNodeOuterHTML(inspector.selection.nodeFront,
-                                             test.newHTML, test.oldHTML);
+  await inspector.markup.updateNodeOuterHTML(
+    inspector.selection.nodeFront,
+    test.newHTML,
+    test.oldHTML
+  );
   await onReselected;
 
   // Typically selectedNode will === pageNode, but if a new element has been
   // injected in front of it, this will not be the case. If this happens.
   const selectedNodeFront = inspector.selection.nodeFront;
   const pageNodeFront = await inspector.walker.querySelector(
-    inspector.walker.rootNode, test.selector);
+    inspector.walker.rootNode,
+    test.selector
+  );
 
   if (test.validate) {
-    await test.validate({pageNodeFront, selectedNodeFront,
-                         inspector, testActor});
+    await test.validate({
+      pageNodeFront,
+      selectedNodeFront,
+      inspector,
+      testActor,
+    });
   } else {
-    is(pageNodeFront, selectedNodeFront,
-       "Original node (grabbed by selector) is selected");
-    const {outerHTML} = await testActor.getNodeInfo(test.selector);
+    is(
+      pageNodeFront,
+      selectedNodeFront,
+      "Original node (grabbed by selector) is selected"
+    );
+    const { outerHTML } = await testActor.getNodeInfo(test.selector);
     is(outerHTML, test.newHTML, "Outer HTML has been updated");
   }
 
@@ -74,9 +86,13 @@ async function runEditOuterHTMLTest(test, inspector, testActor) {
   // abruptly closing hanging requests when the test ends
   await onUpdated;
 
-  const closeTagLine = inspector.markup.getContainer(pageNodeFront).closeTagLine;
+  const closeTagLine = inspector.markup.getContainer(pageNodeFront)
+    .closeTagLine;
   if (closeTagLine) {
-    is(closeTagLine.querySelectorAll(".theme-fg-contrast").length, 0,
-       "No contrast class");
+    is(
+      closeTagLine.querySelectorAll(".theme-fg-contrast").length,
+      0,
+      "No contrast class"
+    );
   }
 }

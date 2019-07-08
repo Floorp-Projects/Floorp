@@ -7,10 +7,9 @@
 const XPI_CONTENT_TYPE = "application/x-xpinstall";
 const MSG_INSTALL_ADDON = "WebInstallerInstallAddonFromWebpage";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-function amContentHandler() {
-}
+function amContentHandler() {}
 
 amContentHandler.prototype = {
   /**
@@ -24,24 +23,27 @@ amContentHandler.prototype = {
    *         The nsIRequest dealing with the content
    */
   handleContent(aMimetype, aContext, aRequest) {
-    if (aMimetype != XPI_CONTENT_TYPE)
+    if (aMimetype != XPI_CONTENT_TYPE) {
       throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
+    }
 
-    if (!(aRequest instanceof Ci.nsIChannel))
+    if (!(aRequest instanceof Ci.nsIChannel)) {
       throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
+    }
 
     let uri = aRequest.URI;
 
     let window = null;
-    let callbacks = aRequest.notificationCallbacks ?
-                    aRequest.notificationCallbacks :
-                    aRequest.loadGroup.notificationCallbacks;
-    if (callbacks)
+    let callbacks = aRequest.notificationCallbacks
+      ? aRequest.notificationCallbacks
+      : aRequest.loadGroup.notificationCallbacks;
+    if (callbacks) {
       window = callbacks.getInterface(Ci.nsIDOMWindow);
+    }
 
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
-    const {triggeringPrincipal} = aRequest.loadInfo;
+    const { triggeringPrincipal } = aRequest.loadInfo;
 
     let sourceHost;
 
@@ -69,8 +71,12 @@ amContentHandler.prototype = {
       // in-content UI page, walk up to find the first frame element in a chrome
       // privileged document
       let element = window.frameElement;
-      while (element && !element.ownerDocument.nodePrincipal.isSystemPrincipal)
+      while (
+        element &&
+        !element.ownerDocument.nodePrincipal.isSystemPrincipal
+      ) {
         element = element.ownerGlobal.frameElement;
+      }
 
       if (element) {
         let listener = Cc["@mozilla.org/addons/integration;1"].getService();

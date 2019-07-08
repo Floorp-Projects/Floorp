@@ -18,12 +18,21 @@ function check_ip(s, v, ip) {
 
   let parsedMaxAge = {};
   let parsedIncludeSubdomains = {};
-  s.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                  "max-age=1000;includeSubdomains", secInfo, 0,
-                  Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST, {},
-                  parsedMaxAge, parsedIncludeSubdomains);
-  ok(!s.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
-     "URI should not be secure if it contains an IP address");
+  s.processHeader(
+    Ci.nsISiteSecurityService.HEADER_HSTS,
+    uri,
+    "max-age=1000;includeSubdomains",
+    secInfo,
+    0,
+    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
+    {},
+    parsedMaxAge,
+    parsedIncludeSubdomains
+  );
+  ok(
+    !s.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
+    "URI should not be secure if it contains an IP address"
+  );
 
   /* Test that processHeader will ignore headers for an uri, if the uri
    * contains an IP address not a hostname.
@@ -37,8 +46,9 @@ function check_ip(s, v, ip) {
 }
 
 function run_test() {
-  let SSService = Cc["@mozilla.org/ssservice;1"]
-                    .getService(Ci.nsISiteSecurityService);
+  let SSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
 
   check_ip(SSService, 4, "127.0.0.1");
   check_ip(SSService, 4, "10.0.0.1");

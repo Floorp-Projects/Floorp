@@ -29,12 +29,13 @@ async function runTests1(tab) {
   };
 
   ok(gDevTools, "gDevTools exists");
-  ok(!gDevTools.getToolDefinitionMap().has(toolId1),
-    "The tool is not registered");
+  ok(
+    !gDevTools.getToolDefinitionMap().has(toolId1),
+    "The tool is not registered"
+  );
 
   gDevTools.registerTool(toolDefinition);
-  ok(gDevTools.getToolDefinitionMap().has(toolId1),
-    "The tool is registered");
+  ok(gDevTools.getToolDefinitionMap().has(toolId1), "The tool is registered");
 
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -88,12 +89,13 @@ async function runTests2() {
     },
   };
 
-  ok(!gDevTools.getToolDefinitionMap().has(toolId2),
-    "The tool is not registered");
+  ok(
+    !gDevTools.getToolDefinitionMap().has(toolId2),
+    "The tool is not registered"
+  );
 
   gDevTools.registerTool(toolDefinition);
-  ok(gDevTools.getToolDefinitionMap().has(toolId2),
-    "The tool is registered");
+  ok(gDevTools.getToolDefinitionMap().has(toolId2), "The tool is registered");
 
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -158,10 +160,11 @@ var continueTests = async function(toolbox, panel) {
   await toolSelected;
 
   is(unregisteredTool, toolId2, "Event returns correct id");
-  ok(!toolbox.isToolRegistered(toolId2),
-    "Toolbox: The tool is not registered");
-  ok(!gDevTools.getToolDefinitionMap().has(toolId2),
-    "The tool is no longer registered");
+  ok(!toolbox.isToolRegistered(toolId2), "Toolbox: The tool is not registered");
+  ok(
+    !gDevTools.getToolDefinitionMap().has(toolId2),
+    "The tool is no longer registered"
+  );
 
   info("Testing toolbox tool-registered event");
   const registeredTool = await new Promise(resolve => {
@@ -170,10 +173,8 @@ var continueTests = async function(toolbox, panel) {
   });
 
   is(registeredTool, toolId2, "Event returns correct id");
-  ok(toolbox.isToolRegistered(toolId2),
-    "Toolbox: The tool is registered");
-  ok(gDevTools.getToolDefinitionMap().has(toolId2),
-    "The tool is registered");
+  ok(toolbox.isToolRegistered(toolId2), "Toolbox: The tool is registered");
+  ok(gDevTools.getToolDefinitionMap().has(toolId2), "The tool is registered");
 
   info("Unregistering tool");
   gDevTools.unregisterTool(toolId2);
@@ -185,7 +186,10 @@ var continueTests = async function(toolbox, panel) {
 function destroyToolbox(toolbox) {
   toolbox.destroy().then(async function() {
     const target = await TargetFactory.forTab(gBrowser.selectedTab);
-    ok(gDevTools._toolboxes.get(target) == null, "gDevTools doesn't know about target");
+    ok(
+      gDevTools._toolboxes.get(target) == null,
+      "gDevTools doesn't know about target"
+    );
     ok(toolbox.target == null, "toolbox doesn't know about target.");
     finishUp();
   });

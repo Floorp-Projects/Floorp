@@ -7,23 +7,19 @@
 // with an automatic download and update staging.
 add_task(async function aboutPrefs_foregroundCheck_downloadAuto_staging() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_APP_UPDATE_STAGING_ENABLED, true],
-    ],
+    set: [[PREF_APP_UPDATE_STAGING_ENABLED, true]],
   });
 
   let downloadInfo = [];
   if (Services.prefs.getBoolPref(PREF_APP_UPDATE_BITS_ENABLED)) {
-    downloadInfo[0] = {patchType: "partial",
-                       bitsResult: "0"};
+    downloadInfo[0] = { patchType: "partial", bitsResult: "0" };
   } else {
-    downloadInfo[0] = {patchType: "partial",
-                       internalResult: "0"};
+    downloadInfo[0] = { patchType: "partial", internalResult: "0" };
   }
 
   // Since the partial should be successful specify an invalid size for the
   // complete update.
-  let params = {queryString: "&invalidCompleteSize=1"};
+  let params = { queryString: "&invalidCompleteSize=1" };
   await runAboutPrefsUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
@@ -32,18 +28,18 @@ add_task(async function aboutPrefs_foregroundCheck_downloadAuto_staging() {
     },
     {
       panelId: "downloading",
-      checkActiveUpdate: {state: STATE_DOWNLOADING},
+      checkActiveUpdate: { state: STATE_DOWNLOADING },
       continueFile: CONTINUE_DOWNLOAD,
       downloadInfo,
     },
     {
       panelId: "applying",
-      checkActiveUpdate: {state: STATE_PENDING},
+      checkActiveUpdate: { state: STATE_PENDING },
       continueFile: CONTINUE_STAGING,
     },
     {
       panelId: "apply",
-      checkActiveUpdate: {state: STATE_APPLIED},
+      checkActiveUpdate: { state: STATE_APPLIED },
       continueFile: null,
     },
   ]);

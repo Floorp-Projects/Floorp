@@ -20,12 +20,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
 
-  const swatch = getRuleViewProperty(view, "body", "color").valueSpan
-    .querySelector(".ruleview-colorswatch");
+  const swatch = getRuleViewProperty(
+    view,
+    "body",
+    "color"
+  ).valueSpan.querySelector(".ruleview-colorswatch");
 
-  const bgImageSpan = getRuleViewProperty(view, "body", "background-image").valueSpan;
+  const bgImageSpan = getRuleViewProperty(view, "body", "background-image")
+    .valueSpan;
   const uriSpan = bgImageSpan.querySelector(".theme-link");
 
   const colorPicker = view.tooltips.getTooltip("colorPicker");

@@ -6,21 +6,34 @@
 
 var EXPORTED_SYMBOLS = ["TestRunner"];
 
-const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 const APPLY_CONFIG_TIMEOUT_MS = 60 * 1000;
 const HOME_PAGE = "resource://mozscreenshots/lib/mozscreenshots.html";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Rect} = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
-                               "resource://testing-common/BrowserTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserTestUtils",
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
 // Screenshot.jsm must be imported this way for xpcshell tests to work
-ChromeUtils.defineModuleGetter(this, "Screenshot", "resource://mozscreenshots/Screenshot.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Screenshot",
+  "resource://mozscreenshots/Screenshot.jsm"
+);
 
 var TestRunner = {
   combos: null,
@@ -59,12 +72,17 @@ var TestRunner = {
     let killall = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     killall.initWithPath("/bin/bash");
 
-    let killallP = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+    let killallP = Cc["@mozilla.org/process/util;1"].createInstance(
+      Ci.nsIProcess
+    );
     killallP.init(killall);
-    let ncPlist = "/System/Library/LaunchAgents/com.apple.notificationcenterui.plist";
-    let killallArgs = ["-c",
-                       `/bin/launchctl unload -w ${ncPlist} && ` +
-                       "/usr/bin/killall -v NotificationCenter"];
+    let ncPlist =
+      "/System/Library/LaunchAgents/com.apple.notificationcenterui.plist";
+    let killallArgs = [
+      "-c",
+      `/bin/launchctl unload -w ${ncPlist} && ` +
+        "/usr/bin/killall -v NotificationCenter",
+    ];
     killallP.run(true, killallArgs, killallArgs.length);
   },
 
@@ -72,8 +90,10 @@ var TestRunner = {
    * Load specified sets, execute all combinations of them, and capture screenshots.
    */
   async start(setNames, jobName = null) {
-    let subDirs = ["mozscreenshots",
-                   (new Date()).toISOString().replace(/:/g, "-") + "_" + Services.appinfo.OS];
+    let subDirs = [
+      "mozscreenshots",
+      new Date().toISOString().replace(/:/g, "-") + "_" + Services.appinfo.OS,
+    ];
     let screenshotPath = FileUtils.getFile("TmpD", subDirs).path;
 
     const MOZ_UPLOAD_DIR = env.get("MOZ_UPLOAD_DIR");
@@ -92,7 +112,9 @@ var TestRunner = {
     }
     screenshotPrefix += "_";
     Screenshot.init(screenshotPath, this._extensionPath, screenshotPrefix);
-    this._libDir = this._extensionPath.QueryInterface(Ci.nsIFileURL).file.clone();
+    this._libDir = this._extensionPath
+      .QueryInterface(Ci.nsIFileURL)
+      .file.clone();
     this._libDir.append("chrome");
     this._libDir.append("mozscreenshots");
     this._libDir.append("lib");
@@ -107,7 +129,10 @@ var TestRunner = {
     this._lastCombo = null;
 
     // Setup some prefs
-    Services.prefs.setCharPref("extensions.ui.lastCategory", "addons://list/extension");
+    Services.prefs.setCharPref(
+      "extensions.ui.lastCategory",
+      "addons://list/extension"
+    );
     // Don't let the caret blink since it causes false positives for image diffs
     Services.prefs.setIntPref("ui.caretBlinkTime", -1);
     // Disable some animations that can cause false positives, such as the
@@ -119,7 +144,9 @@ var TestRunner = {
     // When being automated through Marionette, Firefox shows a prominent indication
     // in the urlbar and identity block. We don't want this to show when testing browser UI.
     // Note that this doesn't prevent subsequently opened windows from showing the automation UI.
-    browserWindow.document.getElementById("main-window").removeAttribute("remotecontrol");
+    browserWindow.document
+      .getElementById("main-window")
+      .removeAttribute("remotecontrol");
 
     let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
     await BrowserTestUtils.loadURI(selectedBrowser, HOME_PAGE);
@@ -130,8 +157,13 @@ var TestRunner = {
       await this._performCombo(this.combos.item(this.currentComboIndex));
     }
 
-    this.mochitestScope.info("Done: Completed " + this.completedCombos + " out of " +
-                             this.combos.length + " configurations.");
+    this.mochitestScope.info(
+      "Done: Completed " +
+        this.completedCombos +
+        " out of " +
+        this.combos.length +
+        " configurations."
+    );
     this.cleanup();
   },
 
@@ -149,8 +181,9 @@ var TestRunner = {
     }
     // Trim the restrictions from the set name.
     setName = setName.slice(0, match.index);
-    let restrictions = match[1].split(",").reduce((set, name) => set.add(name.trim())
-                                                 , new Set());
+    let restrictions = match[1]
+      .split(",")
+      .reduce((set, name) => set.add(name.trim()), new Set());
 
     return { trimmedSetName: setName, restrictions };
   },
@@ -170,16 +203,22 @@ var TestRunner = {
         restrictions = filteredData.restrictions;
       }
       let imported = {};
-      ChromeUtils.import(`resource://mozscreenshots/configurations/${setName}.jsm`,
-                         imported);
+      ChromeUtils.import(
+        `resource://mozscreenshots/configurations/${setName}.jsm`,
+        imported
+      );
       imported[setName].init(this._libDir);
       let configurationNames = Object.keys(imported[setName].configurations);
       if (!configurationNames.length) {
-        throw new Error(setName + " has no configurations for this environment");
+        throw new Error(
+          setName + " has no configurations for this environment"
+        );
       }
       // Checks to see if nonexistent configuration have been specified
       if (restrictions) {
-        let incorrectConfigs = [...restrictions].filter(r => !configurationNames.includes(r));
+        let incorrectConfigs = [...restrictions].filter(
+          r => !configurationNames.includes(r)
+        );
         if (incorrectConfigs.length) {
           throw new Error("non existent configurations: " + incorrectConfigs);
         }
@@ -203,10 +242,13 @@ var TestRunner = {
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
     let gBrowser = browserWindow.gBrowser;
     while (gBrowser.tabs.length > 1) {
-      gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+      gBrowser.removeTab(gBrowser.selectedTab, { animate: false });
     }
     gBrowser.unpinTab(gBrowser.selectedTab);
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "data:text/html;charset=utf-8,<h1>Done!");
+    BrowserTestUtils.loadURI(
+      gBrowser.selectedBrowser,
+      "data:text/html;charset=utf-8,<h1>Done!"
+    );
     browserWindow.restore();
     Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
   },
@@ -214,11 +256,11 @@ var TestRunner = {
   // helpers
 
   /**
-  * Calculate the bounding box based on CSS selector from config for cropping
-  *
-  * @param {String[]} selectors - array of CSS selectors for relevant DOM element
-  * @return {Geometry.jsm Rect} Rect holding relevant x, y, width, height with padding
-  **/
+   * Calculate the bounding box based on CSS selector from config for cropping
+   *
+   * @param {String[]} selectors - array of CSS selectors for relevant DOM element
+   * @return {Geometry.jsm Rect} Rect holding relevant x, y, width, height with padding
+   **/
   _findBoundingBox(selectors, windowType) {
     if (!selectors.length) {
       throw new Error("No selectors specified.");
@@ -229,9 +271,9 @@ var TestRunner = {
     let browserWindow = Services.wm.getMostRecentWindow(windowType);
     // Scale for high-density displays
     const scale = Cc["@mozilla.org/gfx/screenmanager;1"]
-                    .getService(Ci.nsIScreenManager)
-                    .screenForRect(browserWindow.screenX, browserWindow.screenY, 1, 1)
-                    .defaultCSSScaleFactor;
+      .getService(Ci.nsIScreenManager)
+      .screenForRect(browserWindow.screenX, browserWindow.screenY, 1, 1)
+      .defaultCSSScaleFactor;
 
     const windowLeft = browserWindow.screenX * scale;
     const windowTop = browserWindow.screenY * scale;
@@ -244,7 +286,7 @@ var TestRunner = {
     for (let selector of selectors) {
       let element;
       // Check for function to find anonymous content
-      if (typeof(selector) == "function") {
+      if (typeof selector == "function") {
         element = selector();
       } else {
         element = browserWindow.document.querySelector(selector);
@@ -256,8 +298,12 @@ var TestRunner = {
 
       // Calculate box region, convert to Rect
       let elementRect = element.getBoundingClientRect();
-      let rect = new Rect(element.screenX * scale, element.screenY * scale,
-                             elementRect.width * scale, elementRect.height * scale);
+      let rect = new Rect(
+        element.screenX * scale,
+        element.screenY * scale,
+        elementRect.width * scale,
+        elementRect.height * scale
+      );
       rect.inflateFixed(this.croppingPadding * scale);
       rect.left = Math.max(rect.left, windowLeft);
       rect.top = Math.max(rect.top, windowTop);
@@ -272,7 +318,7 @@ var TestRunner = {
       }
     }
 
-    return {bounds, rects};
+    return { bounds, rects };
   },
 
   _do_skip(reason, combo, config, func) {
@@ -281,25 +327,32 @@ var TestRunner = {
       this.mochitestScope.todo(
         false,
         `Skipped configuration ` +
-        `[ ${combo.map((e) => e.name).join(", ")} ] for failure in ` +
-        `${config.name}.${func}: ${todo}`);
+          `[ ${combo.map(e => e.name).join(", ")} ] for failure in ` +
+          `${config.name}.${func}: ${todo}`
+      );
     } else {
       this.mochitestScope.info(
         `\tSkipped configuration ` +
-        `[ ${combo.map((e) => e.name).join(", ")} ] ` +
-        `for "${reason}" in ${config.name}.${func}`);
+          `[ ${combo.map(e => e.name).join(", ")} ] ` +
+          `for "${reason}" in ${config.name}.${func}`
+      );
     }
   },
 
   async _performCombo(combo) {
-    let paddedComboIndex = padLeft(this.currentComboIndex + 1, String(this.combos.length).length);
+    let paddedComboIndex = padLeft(
+      this.currentComboIndex + 1,
+      String(this.combos.length).length
+    );
     this.mochitestScope.info(
-      `Combination ${paddedComboIndex}/${this.combos.length}: ${this._comboName(combo).substring(1)}`
+      `Combination ${paddedComboIndex}/${this.combos.length}: ${this._comboName(
+        combo
+      ).substring(1)}`
     );
 
     // Notice that this does need to be a closure, not a function, as otherwise
     // "this" gets replaced and we lose access to this.mochitestScope.
-    const changeConfig = (config) => {
+    const changeConfig = config => {
       this.mochitestScope.info("calling " + config.name);
 
       let applyPromise = Promise.resolve(config.applyConfig());
@@ -311,7 +364,7 @@ var TestRunner = {
       // Add a default timeout of 500ms to avoid conflicts when configurations
       // try to apply at the same time. e.g WindowSize and TabsInTitlebar
       return Promise.race([applyPromise, timeoutPromise]).then(result => {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
           setTimeout(() => resolve(result), 500);
         });
       });
@@ -332,7 +385,9 @@ var TestRunner = {
       }
 
       // Update the lastCombo since it's now been applied regardless of whether it's accepted below.
-      this.mochitestScope.info("fulfilled all applyConfig so setting lastCombo.");
+      this.mochitestScope.info(
+        "fulfilled all applyConfig so setting lastCombo."
+      );
       this._lastCombo = combo;
 
       // Then ask configs if the current setup is valid. We can't can do this in
@@ -345,7 +400,9 @@ var TestRunner = {
         // if the this config was used in the lastCombo since another config may
         // have invalidated it.
         if (config.verifyConfig) {
-          this.mochitestScope.info(`checking if the combo is valid with ${config.name}`);
+          this.mochitestScope.info(
+            `checking if the combo is valid with ${config.name}`
+          );
           const reason = await config.verifyConfig();
           if (reason) {
             this._do_skip(reason, combo, config, "applyConfig");
@@ -354,14 +411,23 @@ var TestRunner = {
         }
       }
     } catch (ex) {
-      this.mochitestScope.ok(false, `Unexpected exception in [ ${combo.map(({ name }) => name).join(", ")} ]: ${ex.toString()}`);
+      this.mochitestScope.ok(
+        false,
+        `Unexpected exception in [ ${combo
+          .map(({ name }) => name)
+          .join(", ")} ]: ${ex.toString()}`
+      );
       this.mochitestScope.info(`\t${ex}`);
       if (ex.stack) {
         this.mochitestScope.info(`\t${ex.stack}`);
       }
       return;
     }
-    this.mochitestScope.info(`Configured UI for [ ${combo.map(({ name }) => name).join(", ")} ] successfully`);
+    this.mochitestScope.info(
+      `Configured UI for [ ${combo
+        .map(({ name }) => name)
+        .join(", ")} ] successfully`
+    );
 
     // Collect selectors from combo configs for cropping region
     let windowType;
@@ -370,7 +436,10 @@ var TestRunner = {
       if (!windowType) {
         windowType = obj.windowType;
       } else if (windowType !== obj.windowType) {
-        this.mochitestScope.ok(false, "All configurations in the combo have a single window type");
+        this.mochitestScope.ok(
+          false,
+          "All configurations in the combo have a single window type"
+        );
         return;
       }
       for (const selector of obj.selectors) {
@@ -378,7 +447,7 @@ var TestRunner = {
       }
     }
 
-    const {bounds, rects} = this._findBoundingBox(finalSelectors, windowType);
+    const { bounds, rects } = this._findBoundingBox(finalSelectors, windowType);
     this.mochitestScope.ok(bounds, "A valid bounding box was found");
     if (!bounds) {
       return;
@@ -387,14 +456,21 @@ var TestRunner = {
   },
 
   async _onConfigurationReady(combo, bounds, rects) {
-    let filename = padLeft(this.currentComboIndex + 1,
-                           String(this.combos.length).length) + this._comboName(combo);
+    let filename =
+      padLeft(this.currentComboIndex + 1, String(this.combos.length).length) +
+      this._comboName(combo);
     const imagePath = await Screenshot.captureExternal(filename);
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    await this._cropImage(browserWindow, OS.Path.toFileURI(imagePath), bounds, rects, imagePath).catch((msg) => {
+    await this._cropImage(
+      browserWindow,
+      OS.Path.toFileURI(imagePath),
+      bounds,
+      rects,
+      imagePath
+    ).catch(msg => {
       throw new Error(
-        `Cropping combo [${combo.map((e) => e.name).join(", ")}] failed: ${msg}`
+        `Cropping combo [${combo.map(e => e.name).join(", ")}] failed: ${msg}`
       );
     });
     this.completedCombos++;
@@ -422,7 +498,10 @@ var TestRunner = {
 
         // Create a new offscreen canvas with the width and height given by the
         // size of the region we want to crop to
-        const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+        const canvas = document.createElementNS(
+          "http://www.w3.org/1999/xhtml",
+          "canvas"
+        );
         canvas.width = bounds.width;
         canvas.height = bounds.height;
         const ctx = canvas.getContext("2d");
@@ -444,16 +523,24 @@ var TestRunner = {
 
           const imageX = screenX - bounds.left;
           const imageY = screenY - bounds.top;
-          ctx.drawImage(img,
-            screenX, screenY, width, height,
-            imageX, imageY, width, height);
+          ctx.drawImage(
+            img,
+            screenX,
+            screenY,
+            width,
+            height,
+            imageX,
+            imageY,
+            width,
+            height
+          );
         }
 
         // Converts the canvas to a binary blob, which can be saved to a png
-        canvas.toBlob((blob) => {
+        canvas.toBlob(blob => {
           // Use a filereader to convert the raw binary blob into a writable buffer
           const fr = new FileReader();
-          fr.onload = (e) => {
+          fr.onload = e => {
             const buffer = new Uint8Array(e.target.result);
             // Save the file and complete the promise
             OS.File.writeAtomic(targetPath, buffer, {}).then(resolve);
@@ -534,8 +621,9 @@ function LazyProduct(sets) {
 LazyProduct.prototype = {
   get length() {
     let last = this.lookupTable[0];
-    if (!last)
+    if (!last) {
       return 0;
+    }
     return last[0] * last[1];
   },
 

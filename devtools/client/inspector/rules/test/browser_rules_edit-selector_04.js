@@ -18,11 +18,13 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("p", inspector);
 
-  ok(!view.selectorHighlighter,
-    "No selectorhighlighter exist in the rule-view");
+  ok(
+    !view.selectorHighlighter,
+    "No selectorhighlighter exist in the rule-view"
+  );
 
   await testSelectorHighlight(view, "p");
   await testEditSelector(view, "body");
@@ -51,8 +53,11 @@ async function testEditSelector(view, name) {
   info("Focusing an existing selector name in the rule-view");
   const editor = await focusEditableField(view, ruleEditor.selectorText);
 
-  is(inplaceEditor(ruleEditor.selectorText), editor,
-    "The selector editor got focused");
+  is(
+    inplaceEditor(ruleEditor.selectorText),
+    editor,
+    "The selector editor got focused"
+  );
 
   info("Waiting for rule view to update");
   const onToggled = view.once("ruleview-selectorhighlighter-toggled");
@@ -63,7 +68,9 @@ async function testEditSelector(view, name) {
 
   const isVisible = await onToggled;
 
-  ok(!view.highlighters.selectorHighlighterShown,
-    "The selectorHighlighterShown instance was removed");
+  ok(
+    !view.highlighters.selectorHighlighterShown,
+    "The selectorHighlighterShown instance was removed"
+  );
   ok(!isVisible, "The toggle event says the highlighter is not visible");
 }

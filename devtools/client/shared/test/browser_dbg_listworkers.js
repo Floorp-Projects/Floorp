@@ -15,7 +15,8 @@ registerCleanupFunction(() => {
 /* import-globals-from helper_workers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
-  this);
+  this
+);
 
 var TAB_URL = EXAMPLE_URL + "doc_listworkers-tab.html";
 var WORKER1_URL = "code_listworkers-worker1.js";
