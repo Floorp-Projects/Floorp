@@ -2051,7 +2051,6 @@ impl PrimitiveStore {
                         &world_culling_rect,
                         &mut frame_state.data_stores.clip,
                         true,
-                        prim_instance.is_chased(),
                     );
 
                 if let Some(ref mut tile_cache) = frame_state.tile_cache {
@@ -3840,7 +3839,6 @@ impl PrimitiveInstance {
                         &dirty_world_rect,
                         &mut data_stores.clip,
                         false,
-                        self.is_chased(),
                     );
 
                 let clip_mask_kind = segment.update_clip_task(
