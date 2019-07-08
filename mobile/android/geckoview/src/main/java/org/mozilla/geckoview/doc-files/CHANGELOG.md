@@ -20,6 +20,14 @@ exclude: true
 
 [69.3]: ../GeckoResult.html#accept-org.mozilla.geckoview.GeckoResult.Consumer-org.mozilla.geckoview.GeckoResult.Consumer-
 
+- [`GeckoSession.setMessageDelegate`][69.2] callers must now specify the
+  [`WebExtension`][69.3] that the [`MessageDelegate`][69.4] will receive
+  messages from.
+
+[69.2]: ../GeckoSession.html#setMessageDelegate-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String-
+[69.3]: ../WebExtension.html
+[69.4]: ../WebExtension.MessageDelegate.html
+
 ## v68
 - Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
   configuration has changed.
@@ -332,4 +340,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 783f253fda7287f55497c15f867dc14cd1622666
+[api-version]: 5728f5c65b2be03fcf31d7da12050bf26d07e30f
