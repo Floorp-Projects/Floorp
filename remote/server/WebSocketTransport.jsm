@@ -6,13 +6,13 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["WebSocketTransport"];
+var EXPORTED_SYMBOLS = ["WebSocketDebuggerTransport"];
 
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 
-function WebSocketTransport(socket) {
+function WebSocketDebuggerTransport(socket) {
   EventEmitter.decorate(this);
 
   this.active = false;
@@ -20,7 +20,7 @@ function WebSocketTransport(socket) {
   this.socket = socket;
 }
 
-WebSocketTransport.prototype = {
+WebSocketDebuggerTransport.prototype = {
   ready() {
     if (this.active) {
       return;
