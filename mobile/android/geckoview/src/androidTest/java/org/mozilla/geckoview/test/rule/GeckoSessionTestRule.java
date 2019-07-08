@@ -5,11 +5,11 @@
 
 package org.mozilla.geckoview.test.rule;
 
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
-import org.mozilla.geckoview.GeckoResult.OnValueListener;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
@@ -37,15 +37,14 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import android.app.Instrumentation;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.net.LocalSocketAddress;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
+import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -70,6 +69,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -1212,32 +1212,58 @@ public class GeckoSessionTestRule implements TestRule {
      * @param session Session to open.
      */
     public void openSession(final GeckoSession session) {
-        session.open(getRuntime());
-        waitForOpenSession(session);
-    }
+        ThreadUtils.assertOnUiThread();
+        // We receive an initial about:blank load; don't expose that to the test. The initial
+        // load ends with the first onPageStop call, so ignore everything from the session
+        // until the first onPageStop call.
 
-    /* package */ void waitForOpenSession(final GeckoSession session) {
-        waitForInitialLoad(session);
+        try {
+            // We cannot detect initial page load without progress delegate.
+            assertThat("ProgressDelegate cannot be null-delegate when opening session",
+                    GeckoSession.ProgressDelegate.class, not(isIn(mNullDelegates)));
+            mCallRecordHandler = (method, args) -> {
+                Log.e(LOGTAG, "method: " + method);
+                final boolean matching = DEFAULT_DELEGATES.contains(
+                        method.getDeclaringClass()) && session.equals(args[0]);
+                if (matching && sOnPageStop.equals(method)) {
+                    mCallRecordHandler = null;
+                }
+                return matching;
+            };
 
-        if (mWithDevTools) {
-            if (sRDPConnection == null) {
-                final String packageName = InstrumentationRegistry.getTargetContext()
-                                                                  .getPackageName();
-                final LocalSocketAddress address = new LocalSocketAddress(
-                        packageName + "/firefox-debugger-socket",
-                        LocalSocketAddress.Namespace.ABSTRACT);
-                sRDPConnection = new RDPConnection(address);
-                sRDPConnection.setTimeout(mTimeoutMillis);
-            }
-            if (mRDPTabs == null) {
-                mRDPTabs = new HashMap<>();
-            }
-            final Tab tab = sRDPConnection.getMostRecentTab();
-            mRDPTabs.put(session, tab);
+            session.open(getRuntime());
+
+            UiThreadUtils.waitForCondition(() -> mCallRecordHandler == null,
+                    env.getDefaultTimeoutMillis());
+        } finally {
+            mCallRecordHandler = null;
         }
+
+        attachDevTools(session);
     }
 
-    private void waitForInitialLoad(final GeckoSession session) {
+    private void attachDevTools(final GeckoSession session) {
+        if (!mWithDevTools) {
+            return;
+        }
+
+        if (sRDPConnection == null) {
+            final String packageName = InstrumentationRegistry.getTargetContext()
+                    .getPackageName();
+            final LocalSocketAddress address = new LocalSocketAddress(
+                    packageName + "/firefox-debugger-socket",
+                    LocalSocketAddress.Namespace.ABSTRACT);
+            sRDPConnection = new RDPConnection(address);
+            sRDPConnection.setTimeout(mTimeoutMillis);
+        }
+        if (mRDPTabs == null) {
+            mRDPTabs = new HashMap<>();
+        }
+        final Tab tab = sRDPConnection.getMostRecentTab();
+        mRDPTabs.put(session, tab);
+    }
+
+    private void waitForOpenSession(final GeckoSession session) {
         ThreadUtils.assertOnUiThread();
         // We receive an initial about:blank load; don't expose that to the test. The initial
         // load ends with the first onPageStop call, so ignore everything from the session
@@ -1247,16 +1273,14 @@ public class GeckoSessionTestRule implements TestRule {
             // We cannot detect initial page load without progress delegate.
             assertThat("ProgressDelegate cannot be null-delegate when opening session",
                        GeckoSession.ProgressDelegate.class, not(isIn(mNullDelegates)));
-            mCallRecordHandler = new CallRecordHandler() {
-                @Override
-                public boolean handleCall(final Method method, final Object[] args) {
-                    final boolean matching = DEFAULT_DELEGATES.contains(
-                            method.getDeclaringClass()) && session.equals(args[0]);
-                    if (matching && sOnPageStop.equals(method)) {
-                        mCallRecordHandler = null;
-                    }
-                    return matching;
+            mCallRecordHandler = (method, args) -> {
+                Log.e(LOGTAG, "method: " + method);
+                final boolean matching = DEFAULT_DELEGATES.contains(
+                        method.getDeclaringClass()) && session.equals(args[0]);
+                if (matching && sOnPageStop.equals(method)) {
+                    mCallRecordHandler = null;
                 }
+                return matching;
             };
 
             UiThreadUtils.waitForCondition(() -> mCallRecordHandler == null,
@@ -1264,6 +1288,8 @@ public class GeckoSessionTestRule implements TestRule {
         } finally {
             mCallRecordHandler = null;
         }
+
+        attachDevTools(session);
     }
 
     /**
@@ -1347,10 +1373,32 @@ public class GeckoSessionTestRule implements TestRule {
 
                 mInstrumentation.runOnMainSync(() -> {
                     try {
+                        getRuntime();
+
+                        long timeout = env.getDefaultTimeoutMillis() + System.currentTimeMillis();
+                        while (!GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                            if (System.currentTimeMillis() > timeout) {
+                                throw new TimeoutException("Could not startup runtime after "
+                                        + env.getDefaultTimeoutMillis() + ".ms");
+                            }
+                            Log.e(LOGTAG, "GeckoThread not ready, sleeping 1000ms.");
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException ex) {
+                            }
+                        }
+
+                        Log.e(LOGTAG, "====");
+                        Log.e(LOGTAG, "before prepareStatement " + description);
                         prepareStatement(description);
+                        Log.e(LOGTAG, "after prepareStatement");
                         base.evaluate();
+                        Log.e(LOGTAG, "after evaluate");
                         performTestEndCheck();
+                        Log.e(LOGTAG, "after performTestEndCheck");
+                        Log.e(LOGTAG, "====");
                     } catch (Throwable t) {
+                        Log.e(LOGTAG, "====", t);
                         exceptionRef.set(t);
                     } finally {
                         try {
