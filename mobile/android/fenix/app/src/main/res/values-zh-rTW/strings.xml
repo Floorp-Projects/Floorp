@@ -247,6 +247,8 @@
     <string name="quick_action_download">下載頁面</string>
     <!-- Button in the browser chrome in the browser to bookmark the current page -->
     <string name="quick_action_bookmark">加入書籤</string>
+    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
+    <string name="quick_action_bookmark_edit">編輯書籤</string>
     <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">閱讀模式</string>
     <!-- Button in the browser chrome to exit reader mode -->
@@ -414,6 +416,8 @@
     <string name="bookmarks_multi_select_title">已選擇 %1$d 筆書籤</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">編輯書籤</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">編輯資料夾</string>
     <!-- Bookmark sign in button message -->
     <string name="bookmark_sign_in_button">登入後即可檢視同步的書籤</string>
     <!-- Bookmark URL editing field label -->
@@ -587,18 +591,18 @@
     <string name="url_copied">已複製網址</string>
 
 
-    <!-- Sample text for accessiblity font size -->
+    <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. 
 中文字型測試：「永東國酬，愛鬱。靈鷹袋！」</string>
-    <!-- Summary for Accessiblity Text Size Scaling Preference -->
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">放大或縮小網站上的文字</string>
-    <!-- Title for Accessiblity Text Size Scaling Preference -->
+    <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">字型大小</string>
 
-    <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">自動調整字體大小</string>
 
-    <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">將依照 Android 系統文字大小設定顯示。請先停用設定才能在此調整。</string>
 
     <!-- Title for the Delete browsing data preference -->

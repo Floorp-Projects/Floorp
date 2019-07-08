@@ -245,6 +245,8 @@
     <string name="quick_action_download">Herunterladen</string>
     <!-- Button in the browser chrome in the browser to bookmark the current page -->
     <string name="quick_action_bookmark">Als Lesezeichen hinzufügen</string>
+    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
+    <string name="quick_action_bookmark_edit">Lesezeichen bearbeiten</string>
     <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">Lesen</string>
     <!-- Button in the browser chrome to exit reader mode -->
@@ -412,6 +414,8 @@
     <string name="bookmarks_multi_select_title">%1$d ausgewählt</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Lesezeichen bearbeiten</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Ordner bearbeiten</string>
     <!-- Bookmark sign in button message -->
     <string name="bookmark_sign_in_button">Melden Sie sich an, um die synchronisierten Lesezeichen anzuzeigen</string>
 
@@ -587,16 +591,16 @@
     <string name="url_copied">Adresse kopiert</string>
 
 
-    <!-- Sample text for accessiblity font size -->
+    <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text">Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.</string>
-    <!-- Summary for Accessiblity Text Size Scaling Preference -->
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Text auf Websites vergrößern oder verkleinern</string>
-    <!-- Title for Accessiblity Text Size Scaling Preference -->
+    <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Schriftgröße</string>
 
-    <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Automatische Schriftgrößenanpassung</string>
-    <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Die Schriftgröße entspricht Ihren Android-Einstellungen. Deaktivieren Sie diese Option, um die Schriftgröße hier zu verwalten.</string>
 
     <!-- Title for the Delete browsing data preference -->

@@ -245,6 +245,8 @@
     <string name="quick_action_download">ダウンロード</string>
     <!-- Button in the browser chrome in the browser to bookmark the current page -->
     <string name="quick_action_bookmark">ブックマーク</string>
+    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
+    <string name="quick_action_bookmark_edit">ブックマークを編集</string>
     <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">リーダーモード</string>
     <!-- Button in the browser chrome to exit reader mode -->
@@ -412,6 +414,8 @@
     <string name="bookmarks_multi_select_title">%1$d 件選択</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">ブックマークを編集</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">フォルダー編集</string>
     <!-- Bookmark sign in button message -->
     <string name="bookmark_sign_in_button">同期したブックマークを見るにはログインしてください</string>
     <!-- Bookmark URL editing field label -->
@@ -574,16 +578,16 @@
     <string name="url_copied">URL をコピーしました</string>
 
 
-    <!-- Sample text for accessiblity font size -->
+    <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
-    <!-- Summary for Accessiblity Text Size Scaling Preference -->
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">ウェブサイト上のテキストを拡大または縮小します</string>
-    <!-- Title for Accessiblity Text Size Scaling Preference -->
+    <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">フォントサイズ</string>
 
-    <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">フォントサイズを自動設定</string>
-    <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">フォントサイズは Android の設定に従います。このフォントサイズの管理は無効化されます。</string>
 
     <!-- Title for the Delete browsing data preference -->
