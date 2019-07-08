@@ -14,14 +14,14 @@
 #include "mar.h"
 
 #ifdef XP_WIN
-#include <winsock2.h>
+#  include <winsock2.h>
 #else
-#include <netinet/in.h>
-#include <unistd.h>
+#  include <netinet/in.h>
+#  include <unistd.h>
 #endif
 
 struct MarItemStack {
-  void *head;
+  void* head;
   uint32_t size_used;
   uint32_t size_allocated;
   uint32_t last_offset;
@@ -31,12 +31,12 @@ struct MarItemStack {
  * Push a new item onto the stack of items.  The stack is a single block
  * of memory.
  */
-static int mar_push(struct MarItemStack *stack, uint32_t length, uint32_t flags,
-                    const char *name) {
+static int mar_push(struct MarItemStack* stack, uint32_t length, uint32_t flags,
+                    const char* name) {
   int namelen;
   uint32_t n_offset, n_length, n_flags;
   uint32_t size;
-  char *data;
+  char* data;
 
   namelen = strlen(name);
   size = MAR_ITEM_SIZE(namelen);
@@ -51,7 +51,7 @@ static int mar_push(struct MarItemStack *stack, uint32_t length, uint32_t flags,
     stack->size_allocated = size_needed;
   }
 
-  data = (((char *)stack->head) + stack->size_used);
+  data = (((char*)stack->head) + stack->size_used);
 
   n_offset = htonl(stack->last_offset);
   n_length = htonl(length);
@@ -73,8 +73,8 @@ static int mar_push(struct MarItemStack *stack, uint32_t length, uint32_t flags,
   return 0;
 }
 
-static int mar_concat_file(FILE *fp, const char *path) {
-  FILE *in;
+static int mar_concat_file(FILE* fp, const char* path) {
+  FILE* in;
   char buf[BLOCKSIZE];
   size_t len;
   int rv = 0;
@@ -107,8 +107,8 @@ static int mar_concat_file(FILE *fp, const char *path) {
  * @return 0 on success.
  */
 static int mar_concat_product_info_block(
-    FILE *fp, struct MarItemStack *stack,
-    struct ProductInformationBlock *infoBlock) {
+    FILE* fp, struct MarItemStack* stack,
+    struct ProductInformationBlock* infoBlock) {
   char buf[PIB_MAX_MAR_CHANNEL_ID_SIZE + PIB_MAX_PRODUCT_VERSION_SIZE];
   uint32_t additionalBlockID = 1, infoBlockSize, unused;
   if (!fp || !infoBlock || !infoBlock->MARChannelID ||
@@ -183,9 +183,9 @@ static int mar_concat_product_info_block(
  * @param infoBlock        Out parameter for where to store the result to
  * @return 0 on success, -1 on failure
  */
-int refresh_product_info_block(const char *path,
-                               struct ProductInformationBlock *infoBlock) {
-  FILE *fp;
+int refresh_product_info_block(const char* path,
+                               struct ProductInformationBlock* infoBlock) {
+  FILE* fp;
   int rv;
   uint32_t numSignatures, additionalBlockSize, additionalBlockID,
       offsetAdditionalBlocks, numAdditionalBlocks, i;
@@ -276,14 +276,14 @@ int refresh_product_info_block(const char *path,
  * @param infoBlock The information to store in the product information block.
  * @return A non-zero value if an error occurs.
  */
-int mar_create(const char *dest, int num_files, char **files,
-               struct ProductInformationBlock *infoBlock) {
+int mar_create(const char* dest, int num_files, char** files,
+               struct ProductInformationBlock* infoBlock) {
   struct MarItemStack stack;
   uint32_t offset_to_index = 0, size_of_index, numSignatures,
            numAdditionalSections;
   uint64_t sizeOfEntireMAR = 0;
   struct stat st;
-  FILE *fp;
+  FILE* fp;
   int i, rv = -1;
 
   memset(&stack, 0, sizeof(stack));

@@ -13,14 +13,14 @@
 #include "mar.h"
 
 #ifdef XP_WIN
-#include <io.h>
-#include <direct.h>
-#define fdopen _fdopen
+#  include <io.h>
+#  include <direct.h>
+#  define fdopen _fdopen
 #endif
 
 /* Ensure that the directory containing this file exists */
-static int mar_ensure_parent_dir(const char *path) {
-  char *slash = strrchr(path, '/');
+static int mar_ensure_parent_dir(const char* path) {
+  char* slash = strrchr(path, '/');
   if (slash) {
     *slash = '\0';
     mar_ensure_parent_dir(path);
@@ -34,8 +34,8 @@ static int mar_ensure_parent_dir(const char *path) {
   return 0;
 }
 
-static int mar_test_callback(MarFile *mar, const MarItem *item, void *unused) {
-  FILE *fp;
+static int mar_test_callback(MarFile* mar, const MarItem* item, void* unused) {
+  FILE* fp;
   uint8_t buf[BLOCKSIZE];
   int fd, len, offset = 0;
 
@@ -71,8 +71,8 @@ static int mar_test_callback(MarFile *mar, const MarItem *item, void *unused) {
   return len == 0 ? 0 : -1;
 }
 
-int mar_extract(const char *path) {
-  MarFile *mar;
+int mar_extract(const char* path) {
+  MarFile* mar;
   int rv;
 
   mar = mar_open(path);
