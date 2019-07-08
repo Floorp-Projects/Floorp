@@ -70,9 +70,9 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
 
   RefPtr<WindowGlobalChild> wgc = new WindowGlobalChild(aWindow, bc);
 
-  // If we have already closed our browsing context, return a pre-closed
+  // If we have already closed our browsing context, return a pre-destroyed
   // WindowGlobalChild actor.
-  if (bc->GetClosed()) {
+  if (bc->IsDiscarded()) {
     wgc->ActorDestroy(FailedConstructor);
     return wgc.forget();
   }
