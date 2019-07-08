@@ -26,13 +26,25 @@ port.onMessage.addListener(async message => {
       }
       break;
 
-    case "GetPrefs": {
-      const {
-        id,
-        args: { prefs },
-      } = message;
-      sendResponse(id, browser.test.getPrefs(prefs));
-    }
+    case "GetPrefs":
+      {
+        const {
+          id,
+          args: { prefs },
+        } = message;
+        sendResponse(id, browser.test.getPrefs(prefs));
+      }
+      break;
+
+    case "GetLinkColor":
+      {
+        const {
+          id,
+          args: { uri, selector },
+        } = message;
+        sendResponse(id, browser.test.getLinkColor(uri, selector));
+      }
+      break;
   }
 });
 
