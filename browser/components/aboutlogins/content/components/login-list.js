@@ -54,7 +54,7 @@ export default class LoginList extends HTMLElement {
    *                         createLogin: When set to true will show and select
    *                                      a blank login-list-item.
    */
-  render(options = {}) {
+  async render(options = {}) {
     this._list.textContent = "";
 
     if (options.createLogin) {
@@ -65,6 +65,8 @@ export default class LoginList extends HTMLElement {
         this._blankLoginListItem.id
       );
       this._list.appendChild(this._blankLoginListItem);
+    } else {
+      this._blankLoginListItem.remove();
     }
 
     if (!this._logins.length) {
@@ -74,20 +76,35 @@ export default class LoginList extends HTMLElement {
       return;
     }
 
+    let visibleLogins = this._applyFilter();
+    document.l10n.setAttributes(this._count, "login-list-count", {
+      count: visibleLogins.length,
+    });
+
     let fragment = document.createDocumentFragment();
-    for (let login of this._logins) {
+    let chunkSize = 5;
+    for (let i = 0; i < this._logins.length; i++) {
+      let login = this._logins[i];
       let listItem = new LoginListItem(login);
       if (login.guid == this._selectedGuid) {
         this._setListItemAsSelected(listItem);
       }
+
+      if (!visibleLogins.includes(login.guid)) {
+        listItem.hidden = true;
+      }
+
       fragment.appendChild(listItem);
+
+      // Display a first chunk of logins ASAP to improve perceived performance,
+      // then append progressively larger chunks until complete.
+      if (i == chunkSize) {
+        this._list.appendChild(fragment);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        chunkSize *= chunkSize;
+      }
     }
     this._list.appendChild(fragment);
-
-    let visibleLoginCount = this._applyFilter();
-    document.l10n.setAttributes(this._count, "login-list-count", {
-      count: visibleLoginCount,
-    });
   }
 
   handleEvent(event) {
@@ -227,21 +244,7 @@ export default class LoginList extends HTMLElement {
       matchingLoginGuids = this._logins.map(login => login.guid);
     }
 
-    for (let listItem of this._list.querySelectorAll("login-list-item")) {
-      if (!listItem.dataset.guid) {
-        // Don't hide the 'New Login' item if it is present.
-        continue;
-      }
-      if (matchingLoginGuids.includes(listItem.dataset.guid)) {
-        if (listItem.hidden) {
-          listItem.hidden = false;
-        }
-      } else if (!listItem.hidden) {
-        listItem.hidden = true;
-      }
-    }
-
-    return matchingLoginGuids.length;
+    return matchingLoginGuids;
   }
 
   _handleKeyboardNav(event) {
@@ -330,6 +333,9 @@ export default class LoginList extends HTMLElement {
     if (oldSelectedItem) {
       oldSelectedItem.classList.remove("selected");
       oldSelectedItem.removeAttribute("aria-selected");
+    }
+    if (listItem.dataset.guid) {
+      this._blankLoginListItem.remove();
     }
     listItem.classList.add("selected");
     listItem.setAttribute("aria-selected", "true");
