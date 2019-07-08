@@ -13,12 +13,12 @@
     <string name="pref_key_accessibility_font_scale" translatable="false">pref_key_accessibility_font_scale</string>
     <string name="pref_key_language" translatable="false">pref_key_language</string>
     <string name="pref_key_data_choices" translatable="false">pref_key_data_choices</string>
+    <string name="pref_key_privacy_link" translatable="false">pref_key_privacy_link</string>
     <string name="pref_key_delete_browsing_data" translatable="false">pref_key_delete_browsing_data</string>
     <string name="pref_key_help" translatable="false">pref_key_help</string>
     <string name="pref_key_rate" translatable="false">pref_key_rate</string>
     <string name="pref_key_feedback" translatable="false">pref_key_feedback</string>
     <string name="pref_key_about" translatable="false">pref_key_about</string>
-    <string name="pref_key_privacy_notice" translatable="false">pref_key_privacy_notice</string>
     <string name="pref_key_your_rights" translatable="false">pref_key_your_rights</string>
     <string name="pref_key_account" translatable="false">pref_key_account</string>
     <string name="pref_key_sign_in" translatable="false">pref_key_sign_in</string>

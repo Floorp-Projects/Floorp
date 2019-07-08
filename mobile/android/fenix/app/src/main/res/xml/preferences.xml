@@ -70,6 +70,9 @@
             android:icon="@drawable/ic_data_collection"
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_choices" />
+        <androidx.preference.Preference
+            android:key="@string/pref_key_privacy_link"
+            android:title="@string/preferences_privacy_link" />
         <androidx.preference.SwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_info"
@@ -103,8 +106,5 @@
             android:icon="@drawable/ic_info"
             android:key="@string/pref_key_about"
             android:title="@string/preferences_about" />
-        <androidx.preference.Preference
-            android:key="@string/pref_key_privacy_notice"
-            android:title="@string/preferences_privacy_notice" />
     </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>
