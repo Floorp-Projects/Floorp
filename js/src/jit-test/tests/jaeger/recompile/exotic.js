@@ -1,16 +1,6 @@
 
 // Test exotic ways of triggering recompilation.
 
-// Lowered native call.
-
-var x = 0;
-var y = true;
-for (var i = 0; i < 20; i++) {
-  x += Array.map.apply(undefined, [[0], function(x) { if (i == 10) eval("y = 20"); return 1; }])[0];
-}
-assertEq(x, 20);
-assertEq(y, 20);
-
 // Recompilation triggered by local function.
 
 var o = {};
