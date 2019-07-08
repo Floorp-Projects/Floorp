@@ -78,6 +78,12 @@ function spinEventLoop() {
 }
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["signon.includeOtherSubdomainsInLookup", true],
+      ["signon.showAutoCompleteOrigins", true],
+    ],
+  });
   listenForUnexpectedPopupShown();
 });
 
