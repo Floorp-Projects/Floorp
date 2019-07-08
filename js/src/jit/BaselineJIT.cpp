@@ -317,6 +317,23 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   return BaselineCompile(cx, script, forceDebugInstrumentation);
 }
 
+bool jit::CanBaselineInterpretScript(JSScript* script) {
+  MOZ_ASSERT(JitOptions.baselineInterpreter);
+
+  if (script->hasForceInterpreterOp()) {
+    return false;
+  }
+
+  if (script->nslots() > BaselineMaxScriptSlots) {
+    // Avoid overrecursion exceptions when the script has a ton of stack slots
+    // by forcing such scripts to run in the C++ interpreter with heap-allocated
+    // stack frames.
+    return false;
+  }
+
+  return true;
+}
+
 static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
                                                 HandleScript script) {
   MOZ_ASSERT(JitOptions.baselineInterpreter);
@@ -325,7 +342,7 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
     return Method_Compiled;
   }
 
-  if (script->hasForceInterpreterOp()) {
+  if (!CanBaselineInterpretScript(script)) {
     return Method_CantCompile;
   }
 
