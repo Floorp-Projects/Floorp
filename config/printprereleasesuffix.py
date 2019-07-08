@@ -9,6 +9,7 @@
 # 2.1a3pre > ""
 # 3.2b4    > " 3.2 Beta 4"
 # 3.2b4pre > ""
+from __future__ import absolute_import
 from __future__ import print_function
 
 import sys

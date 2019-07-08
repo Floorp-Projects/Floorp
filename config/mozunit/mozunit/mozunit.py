@@ -164,6 +164,7 @@ class MockedOpen(object):
         f.write('foo')
     self.assertRaises(Exception,f.open('foo', 'r'))
     '''
+
     def __init__(self, files={}):
         self.files = {}
         for name, content in files.items():

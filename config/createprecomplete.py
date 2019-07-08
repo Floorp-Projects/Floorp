@@ -6,6 +6,7 @@
 # longer present in a complete update. The current working directory is used for
 # the location to enumerate and to create the precomplete file.
 
+from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
