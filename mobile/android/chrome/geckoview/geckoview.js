@@ -423,6 +423,7 @@ function createBrowser() {
   // Identify this `<browser>` element uniquely to Marionette, devtools, etc.
   browser.permanentKey = {};
 
+  browser.setAttribute("nodefaultsrc", "true");
   browser.setAttribute("type", "content");
   browser.setAttribute("primary", "true");
   browser.setAttribute("flex", "1");

@@ -1056,31 +1056,7 @@ public class GeckoSessionTestRule implements TestRule {
                     mCurrentMethodCall = null;
                 }
 
-                if (call == null || returnValue == null || !sOnNewSession.equals(method)) {
-                    return returnValue;
-                }
-
-                // We're delegating an onNewSession call.
-                // Make sure we wait on the newly opened session, if any.
-                final GeckoSession oldSession = (GeckoSession) args[0];
-
-                @SuppressWarnings("unchecked")
-                final GeckoResult<GeckoSession> result = (GeckoResult<GeckoSession>)returnValue;
-                final GeckoResult<GeckoSession> tmpResult = new GeckoResult<>();
-                result.accept(session -> {
-                    tmpResult.complete(session);
-
-                    // GeckoSession has already hooked up its then() listener earlier,
-                    // so ours will run after. We can wait for the session to
-                    // open here.
-                    tmpResult.accept(newSession -> {
-                        if (oldSession.isOpen() && newSession != null) {
-                            GeckoSessionTestRule.this.waitForOpenSession(newSession);
-                        }
-                    });
-                });
-
-                return tmpResult;
+                return returnValue;
             }
         };
 
