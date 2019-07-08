@@ -9,7 +9,7 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
  * Check that links work when the devtools are detached in a separate window.
  */
 
-const TAB_URL = URL_ROOT + "service-workers/empty.html";
+const TAB_URL = URL_ROOT + "resources/service-workers/empty.html";
 
 add_task(async function() {
   await enableApplicationPanel();

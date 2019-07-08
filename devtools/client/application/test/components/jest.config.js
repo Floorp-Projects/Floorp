@@ -15,7 +15,7 @@ module.exports = {
     "^chrome": `${__dirname}/fixtures/Chrome`,
     "^Services": `${__dirname}/fixtures/Services`,
     // Map all require("devtools/...") to the real devtools root.
-    "^devtools\\/(.*)": `${__dirname}/../../../$1`,
+    "^devtools\\/(.*)": `${__dirname}/../../../../$1`,
   },
   setupFiles: ["<rootDir>setup.js"],
   snapshotSerializers: ["enzyme-to-json/serializer"],

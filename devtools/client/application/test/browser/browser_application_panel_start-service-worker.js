@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TAB_URL = URL_ROOT + "service-workers/simple.html";
+const TAB_URL = URL_ROOT + "resources/service-workers/simple.html";
 
 /**
  * Tests that the Start button works for service workers who can be debugged

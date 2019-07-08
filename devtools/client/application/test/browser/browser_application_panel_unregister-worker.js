@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TAB_URL = URL_ROOT + "service-workers/simple.html";
+const TAB_URL = URL_ROOT + "resources/service-workers/simple.html";
 
 add_task(async function() {
   await enableApplicationPanel();
