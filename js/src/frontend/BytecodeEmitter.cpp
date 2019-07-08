@@ -445,11 +445,16 @@ bool BytecodeEmitter::emitCall(JSOp op, uint16_t argc, ParseNode* pn) {
   return emitCall(op, argc, pn ? Some(pn->pn_pos.begin) : Nothing());
 }
 
-bool BytecodeEmitter::emitDupAt(unsigned slotFromTop) {
+bool BytecodeEmitter::emitDupAt(unsigned slotFromTop, unsigned count) {
   MOZ_ASSERT(slotFromTop < unsigned(bytecodeSection().stackDepth()));
+  MOZ_ASSERT(slotFromTop + 1 >= count);
 
-  if (slotFromTop == 0) {
+  if (slotFromTop == 0 && count == 1) {
     return emit1(JSOP_DUP);
+  }
+
+  if (slotFromTop == 1 && count == 2) {
+    return emit1(JSOP_DUP2);
   }
 
   if (slotFromTop >= JS_BIT(24)) {
@@ -457,13 +462,16 @@ bool BytecodeEmitter::emitDupAt(unsigned slotFromTop) {
     return false;
   }
 
-  BytecodeOffset off;
-  if (!emitN(JSOP_DUPAT, 3, &off)) {
-    return false;
+  for (unsigned i = 0; i < count; i++) {
+    BytecodeOffset off;
+    if (!emitN(JSOP_DUPAT, 3, &off)) {
+      return false;
+    }
+
+    jsbytecode* pc = bytecodeSection().code(off);
+    SET_UINT24(pc, slotFromTop);
   }
 
-  jsbytecode* pc = bytecodeSection().code(off);
-  SET_UINT24(pc, slotFromTop);
   return true;
 }
 
@@ -2954,12 +2962,8 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
       //            [stack] ... RET ITER UNDEF
       return false;
     }
-    if (!emitDupAt(2)) {
+    if (!emitDupAt(2, 2)) {
       //            [stack] ... RET ITER UNDEF RET
-      return false;
-    }
-    if (!emitDupAt(2)) {
-      //            [stack] ... RET ITER UNDEF RET ITER
       return false;
     }
   }
@@ -3378,12 +3382,8 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
 
       // If iterator is not completed, create a new array with the rest
       // of the iterator.
-      if (!emitDupAt(emitted + 1)) {
+      if (!emitDupAt(emitted + 1, 2)) {
         //          [stack] ... OBJ NEXT ITER LREF* NEXT
-        return false;
-      }
-      if (!emitDupAt(emitted + 1)) {
-        //          [stack] ... OBJ NEXT ITER LREF* NEXT ITER
         return false;
       }
       if (!emitUint32Operand(JSOP_NEWARRAY, 0)) {
@@ -3474,12 +3474,8 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
       }
     }
 
-    if (!emitDupAt(emitted + 1)) {
+    if (!emitDupAt(emitted + 1, 2)) {
       //            [stack] ... OBJ NEXT ITER LREF* NEXT
-      return false;
-    }
-    if (!emitDupAt(emitted + 1)) {
-      //            [stack] ... OBJ NEXT ITER LREF* NEXT ITER
       return false;
     }
     if (!emitIteratorNext(Some(pattern->pn_pos.begin))) {
@@ -5215,12 +5211,8 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
       return false;
     }
 
-    if (!emitDupAt(3)) {
+    if (!emitDupAt(3, 2)) {
       //            [stack] NEXT ITER ARR I NEXT
-      return false;
-    }
-    if (!emitDupAt(3)) {
-      //            [stack] NEXT ITER ARR I NEXT ITER
       return false;
     }
     if (!emitIteratorNext(Nothing(), IteratorKind::Sync, allowSelfHosted)) {
