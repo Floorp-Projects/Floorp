@@ -1014,6 +1014,16 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   JSContext* cx = xdr->cx();
   RootedScript script(cx);
 
+  // Instrumented scripts cannot be encoded, as they have extra instructions
+  // which are not normally present. Globals with instrumentation enabled must
+  // compile scripts via the bytecode emitter, which will insert these
+  // instructions.
+  if (xdr->hasOptions()
+      ? !!xdr->options().instrumentationKinds
+      : !!cx->global()->getInstrumentationHolder()) {
+    return xdr->fail(JS::TranscodeResult_Failure);
+  }
+
   if (mode == XDR_ENCODE) {
     script = scriptp.get();
     MOZ_ASSERT(script->functionNonDelazifying() == fun);
