@@ -652,16 +652,13 @@ class GCRuntime {
   void sweepJitDataOnMainThread(FreeOp* fop);
   IncrementalProgress endSweepingSweepGroup(FreeOp* fop, SliceBudget& budget);
   IncrementalProgress performSweepActions(SliceBudget& sliceBudget);
-  IncrementalProgress sweepTypeInformation(FreeOp* fop, SliceBudget& budget,
-                                           Zone* zone);
+  IncrementalProgress sweepTypeInformation(FreeOp* fop, SliceBudget& budget);
   IncrementalProgress releaseSweptEmptyArenas(FreeOp* fop, SliceBudget& budget);
   void startSweepingAtomsTable();
   IncrementalProgress sweepAtomsTable(FreeOp* fop, SliceBudget& budget);
   IncrementalProgress sweepWeakCaches(FreeOp* fop, SliceBudget& budget);
-  IncrementalProgress finalizeAllocKind(FreeOp* fop, SliceBudget& budget,
-                                        Zone* zone, AllocKind kind);
-  IncrementalProgress sweepShapeTree(FreeOp* fop, SliceBudget& budget,
-                                     Zone* zone);
+  IncrementalProgress finalizeAllocKind(FreeOp* fop, SliceBudget& budget);
+  IncrementalProgress sweepShapeTree(FreeOp* fop, SliceBudget& budget);
   void endSweepPhase(bool lastGC);
   bool allCCVisibleZonesWereCollected() const;
   void sweepZones(FreeOp* fop, bool destroyingRuntime);
@@ -903,6 +900,7 @@ class GCRuntime {
   MainThreadData<UniquePtr<SweepAction<GCRuntime*, FreeOp*, SliceBudget&>>>
       sweepActions;
   MainThreadOrGCTaskData<JS::Zone*> sweepZone;
+  MainThreadOrGCTaskData<AllocKind> sweepAllocKind;
   MainThreadData<mozilla::Maybe<AtomsTable::SweepIterator>> maybeAtomsToSweep;
   MainThreadOrGCTaskData<JS::detail::WeakCacheBase*> sweepCache;
   MainThreadData<bool> hasMarkedGrayRoots;
