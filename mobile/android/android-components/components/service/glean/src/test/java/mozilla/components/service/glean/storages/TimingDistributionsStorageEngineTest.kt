@@ -54,7 +54,7 @@ class TimingDistributionsStorageEngineTest {
             timeUnit = TimeUnit.Millisecond
         )
 
-        // Create a sample that will fall into the first bucket (bucket '0') so we can easily
+        // Create a sample that will fall into the underflow bucket (bucket '0') so we can easily
         // find it
         val sample = 1L
         TimingDistributionsStorageEngine.accumulate(
@@ -260,7 +260,7 @@ class TimingDistributionsStorageEngineTest {
         val snapshot = metric.testGetValue()
         assertEquals("Accumulating overflow values should increment last bucket",
             1L,
-            snapshot.values[TimingDistributionData.DEFAULT_BUCKET_COUNT - 1])
+            snapshot.values[TimingDistributionData.DEFAULT_RANGE_MAX])
     }
 
     @Test
@@ -268,13 +268,13 @@ class TimingDistributionsStorageEngineTest {
         // Hand calculated values using current default range 0 - 60000 and bucket count of 100.
         // NOTE: The final bucket, regardless of width, represents the overflow bucket to hold any
         // values beyond the maximum (in this case the maximum is 60000)
-        val testBuckets: List<Long> = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17,
+        val testBuckets: List<Long> = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17,
             19, 21, 23, 25, 28, 31, 34, 38, 42, 46, 51, 56, 62, 68, 75, 83, 92, 101, 111, 122, 135,
             149, 164, 181, 200, 221, 244, 269, 297, 328, 362, 399, 440, 485, 535, 590, 651, 718,
             792, 874, 964, 1064, 1174, 1295, 1429, 1577, 1740, 1920, 2118, 2337, 2579, 2846, 3140,
             3464, 3822, 4217, 4653, 5134, 5665, 6250, 6896, 7609, 8395, 9262, 10219, 11275, 12440,
             13726, 15144, 16709, 18436, 20341, 22443, 24762, 27321, 30144, 33259, 36696, 40488,
-            44672, 49288, 54381, 60000, 60001)
+            44672, 49288, 54381, 60000)
 
         // Define a timing distribution metric, which will be stored in "store1".
         val metric = TimingDistributionMetricType(
@@ -295,7 +295,7 @@ class TimingDistributionsStorageEngineTest {
         // Check that timing distribution was recorded.
         assertTrue("Accumulating values records data", metric.testHasValue())
 
-        // Make sure that the sample in the correct (first) bucket
+        // Make sure that the sample in the correct (underflow) bucket
         val snapshot = metric.testGetValue()
         assertEquals("Accumulating should increment correct bucket",
             1L, snapshot.values[0])
@@ -340,15 +340,15 @@ class TimingDistributionsStorageEngineTest {
         assertEquals("Accumulating updates the count", 5, snapshot.count)
 
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[0])
+            1L, snapshot.values[1])
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[9])
+            1L, snapshot.values[10])
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[33])
+            1L, snapshot.values[92])
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[57])
+            1L, snapshot.values[964])
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[80])
+            1L, snapshot.values[9262])
     }
 
     @Test
@@ -382,11 +382,11 @@ class TimingDistributionsStorageEngineTest {
             tdd.histogramType.toString().toLowerCase(), jsonTdd.getString("histogram_type"))
         val jsonValue = jsonTdd.getJSONObject("values")
         assertEquals("JSON values must match Timing Distribution values",
-            tdd.values[0], jsonValue.getLong("0"))
-        assertEquals("JSON values must match Timing Distribution values",
             tdd.values[1], jsonValue.getLong("1"))
         assertEquals("JSON values must match Timing Distribution values",
             tdd.values[2], jsonValue.getLong("2"))
+        assertEquals("JSON values must match Timing Distribution values",
+            tdd.values[3], jsonValue.getLong("3"))
         assertEquals("JSON sum must match Timing Distribution sum",
             tdd.sum, jsonTdd.getLong("sum"))
         assertEquals("JSON time unit must match Timing Distribution time unit",

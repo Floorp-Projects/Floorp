@@ -138,7 +138,8 @@ data class TimingDistributionData(
     val rangeMin: Long = DEFAULT_RANGE_MIN,
     val rangeMax: Long = DEFAULT_RANGE_MAX,
     val histogramType: HistogramType = HistogramType.Exponential,
-    val values: MutableMap<Int, Long> = mutableMapOf(),
+    // map from bucket limits to accumulated values
+    val values: MutableMap<Long, Long> = mutableMapOf(),
     var sum: Long = 0,
     val timeUnit: TimeUnit = TimeUnit.Millisecond
 ) {
@@ -200,9 +201,9 @@ data class TimingDistributionData(
             // return null.
             val values = try {
                 val mapData = jsonObject.getJSONObject("values")
-                val valueMap: MutableMap<Int, Long> = mutableMapOf()
+                val valueMap: MutableMap<Long, Long> = mutableMapOf()
                 mapData.keys().forEach { key ->
-                    valueMap[key.toInt()] = mapData.tryGetLong(key) ?: 0L
+                    valueMap[key.toLong()] = mapData.tryGetLong(key) ?: 0L
                 }
                 valueMap
             } catch (e: org.json.JSONException) {
@@ -244,21 +245,32 @@ data class TimingDistributionData(
     internal val buckets: List<Long> by lazy { getBuckets() }
 
     /**
-     * Accumulates a sample to the correct bucket, using a linear search to locate the index of the
-     * bucket where the sample is less than or equal to the bucket value.  This works since the
-     * buckets are sorted in ascending order.  If a mapped value doesn't exist for this bucket yet,
-     * one is created.
+     * Accumulates a sample to the correct bucket, using a binary search to locate the index of the
+     * bucket where the sample is bigger than or equal to the bucket value.
+     * If a mapped value doesn't exist for this bucket yet, one is created.
      *
      * @param sample Long value representing the sample that is being accumulated
      */
     internal fun accumulate(sample: Long) {
-        for (i in buckets.indices) {
-            if (sample <= buckets[i] || i == bucketCount - 1) {
-                values[i] = (values[i] ?: 0) + 1
+        var under = 0
+        var over = bucketCount
+        var mid: Int
+
+        do {
+            mid = under + (over - under) / 2
+            if (mid == under) {
                 break
             }
-        }
 
+            if (buckets[mid] <= sample) {
+                under = mid
+            } else {
+                over = mid
+            }
+        } while (true)
+
+        val limit = buckets[mid]
+        values[limit] = (values[limit] ?: 0) + 1
         sum += sample
     }
 
@@ -288,15 +300,23 @@ data class TimingDistributionData(
     private fun getBuckets(): List<Long> {
         // This algorithm calculates the bucket sizes using a natural log approach to get
         // `bucketCount` number of buckets, exponentially spaced between `range[MIN]` and
-        // `range[MAX]`
+        // `range[MAX]`.
+        //
+        // Bucket limits are the minimal bucket value.
+        // That means values in a bucket `i` are `range[i] <= value < range[i+1]`.
+        // It will always contain an underflow bucket (`< 1`).
         val logMax = Math.log(rangeMax.toDouble())
         val result: MutableList<Long> = mutableListOf()
         var current = rangeMin
         if (current == 0L) {
             current = 1L
         }
+
+        // underflow bucket
+        result.add(0)
         result.add(current)
-        for (i in 2..bucketCount) {
+
+        for (i in 2 until bucketCount) {
             val logCurrent = Math.log(current.toDouble())
             val logRatio = (logMax - logCurrent) / (bucketCount - i)
             val logNext = logCurrent + logRatio

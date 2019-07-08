@@ -58,12 +58,12 @@ class TimingDistributionMetricTypeTest {
         val snapshot = metric.testGetValue()
         // Check the sum
         assertEquals(6L, snapshot.sum)
-        // Check that the 1L fell into the first bucket
-        assertEquals(1L, snapshot.values[0])
-        // Check that the 2L fell into the second bucket
+        // Check that the 1L fell into the first value bucket
         assertEquals(1L, snapshot.values[1])
-        // Check that the 3L fell into the third bucket
+        // Check that the 2L fell into the second value bucket
         assertEquals(1L, snapshot.values[2])
+        // Check that the 3L fell into the third value bucket
+        assertEquals(1L, snapshot.values[3])
     }
 
     @Test
@@ -130,11 +130,11 @@ class TimingDistributionMetricTypeTest {
         // Check the sum
         assertEquals(6L, snapshot.sum)
         // Check that the 1L fell into the first bucket
-        assertEquals(1L, snapshot.values[0])
-        // Check that the 2L fell into the second bucket
         assertEquals(1L, snapshot.values[1])
-        // Check that the 3L fell into the third bucket
+        // Check that the 2L fell into the second bucket
         assertEquals(1L, snapshot.values[2])
+        // Check that the 3L fell into the third bucket
+        assertEquals(1L, snapshot.values[3])
 
         // Check that data was properly recorded in the third ping.
         assertTrue(metric.testHasValue("store3"))
@@ -142,10 +142,10 @@ class TimingDistributionMetricTypeTest {
         // Check the sum
         assertEquals(6L, snapshot2.sum)
         // Check that the 1L fell into the first bucket
-        assertEquals(1L, snapshot2.values[0])
-        // Check that the 2L fell into the second bucket
         assertEquals(1L, snapshot2.values[1])
-        // Check that the 3L fell into the third bucket
+        // Check that the 2L fell into the second bucket
         assertEquals(1L, snapshot2.values[2])
+        // Check that the 3L fell into the third bucket
+        assertEquals(1L, snapshot2.values[3])
     }
 }
