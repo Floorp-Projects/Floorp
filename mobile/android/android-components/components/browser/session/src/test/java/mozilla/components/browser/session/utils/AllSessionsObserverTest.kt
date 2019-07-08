@@ -10,6 +10,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Test
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -18,7 +19,9 @@ class AllSessionsObserverTest {
     @Test
     fun `Observer will be registered on all already existing Sessions`() {
         val session1: Session = mock()
+        `when`(session1.id).thenReturn("1")
         val session2: Session = mock()
+        `when`(session2.id).thenReturn("2")
 
         val sessionManager = SessionManager(engine = mock()).apply {
             add(session1)
@@ -44,7 +47,9 @@ class AllSessionsObserverTest {
             .start()
 
         val session1: Session = mock()
+        `when`(session1.id).thenReturn("1")
         val session2: Session = mock()
+        `when`(session2.id).thenReturn("2")
 
         sessionManager.add(session1)
         sessionManager.add(session2)

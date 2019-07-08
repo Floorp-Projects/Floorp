@@ -1089,4 +1089,31 @@ class SessionManagerTest {
         assertTrue(executed)
         assertTrue(runSessionId == "anotherSessionId")
     }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `SessionManager throws exception when adding session that already exists`() {
+        val session = Session("https://www.firefox.com")
+
+        val manager = SessionManager(mock())
+        manager.add(session)
+        manager.add(session)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `SessionManager throws exception when restoring session that already exists`() {
+        val manager = SessionManager(engine = mock())
+        val session = Session("https://www.mozilla.org")
+        manager.add(session)
+
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+
+        val snapshot = SessionManager.Snapshot(
+            listOf(
+                SessionManager.Snapshot.Item(session = session)
+            ),
+            selectedSessionIndex = 1
+        )
+
+        manager.restore(snapshot)
+    }
 }

@@ -37,7 +37,7 @@ class LegacySessionManager(
      * Produces a snapshot of this manager's state, suitable for restoring via [SessionManager.restore].
      * Only regular sessions are included in the snapshot. Private and Custom Tab sessions are omitted.
      *
-     * @return [Snapshot] of the current session state.
+     * @return [SessionManager.Snapshot] of the current session state.
      */
     fun createSnapshot(): SessionManager.Snapshot = synchronized(values) {
         if (values.isEmpty()) {
@@ -149,6 +149,10 @@ class LegacySessionManager(
         parent: Session? = null,
         viaRestore: Boolean = false
     ) = synchronized(values) {
+        if (values.find { it.id == session.id } != null) {
+            throw IllegalArgumentException("Session with same ID already exists")
+        }
+
         if (parent != null) {
             val parentIndex = values.indexOf(parent)
 

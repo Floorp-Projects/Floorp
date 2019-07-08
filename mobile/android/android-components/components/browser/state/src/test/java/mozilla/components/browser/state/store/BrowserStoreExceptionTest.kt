@@ -21,12 +21,39 @@ class BrowserStoreExceptionTest {
 
     @Test(expected = java.lang.IllegalArgumentException::class)
     fun `AddTabAction - Exception is thrown if parent doesn't exist`() {
-        try {
+        unwrapStoreExceptionAndRethrow {
             val store = BrowserStore()
             val parent = createTab("https://www.mozilla.org")
             val child = createTab("https://www.firefox.com", parent = parent)
 
             store.dispatch(TabListAction.AddTabAction(child)).joinBlocking()
+        }
+    }
+
+    @Test(expected = java.lang.IllegalArgumentException::class)
+    fun `AddTabAction - Exception is thrown if tab already exists`() {
+        unwrapStoreExceptionAndRethrow {
+            val store = BrowserStore()
+            val tab1 = createTab("https://www.mozilla.org")
+            store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+            store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        }
+    }
+
+    @Test(expected = java.lang.IllegalArgumentException::class)
+    fun `RestoreTabAction - Exception is thrown if tab already exists`() {
+        unwrapStoreExceptionAndRethrow {
+            val store = BrowserStore()
+            val tab1 = createTab("https://www.mozilla.org")
+            store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+
+            store.dispatch(TabListAction.RestoreAction(listOf(tab1))).joinBlocking()
+        }
+    }
+
+    private fun unwrapStoreExceptionAndRethrow(block: () -> Unit) {
+        try {
+            block()
 
             // Wait for the main looper to process the re-thrown exception.
             ShadowLooper.idleMainLooper()

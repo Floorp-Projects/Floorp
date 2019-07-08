@@ -18,6 +18,8 @@ internal object TabListReducer {
     fun reduce(state: BrowserState, action: TabListAction): BrowserState {
         return when (action) {
             is TabListAction.AddTabAction -> {
+                // Verify that tab doesn't already exist
+                requireUniqueTab(state, action.tab)
 
                 val updatedTabList = if (action.tab.parentId != null) {
                     val parentIndex = state.tabs.indexOfFirst { it.id == action.tab.parentId }
@@ -77,6 +79,9 @@ internal object TabListReducer {
             }
 
             is TabListAction.RestoreAction -> {
+                // Verify that none of the tabs to restore already exist
+                action.tabs.forEach { requireUniqueTab(state, it) }
+
                 // We are adding the restored tabs first and then the already existing tabs. Since restore can or should
                 // happen asynchronously we may already have a tab at this point (e.g. from an `Intent`) and so we
                 // pretend we restored the list of tabs before any tab was added.
@@ -192,4 +197,17 @@ private fun findNearbyTab(
     }
 
     return null
+}
+
+/**
+ * Checks that the provided tab doesn't already exist and throws an
+ * [IllegalArgumentException] otherwise.
+ *
+ * @param state the current [BrowserState] (including all existing tabs).
+ * @param tab the [TabSessionState] to check.
+ */
+private fun requireUniqueTab(state: BrowserState, tab: TabSessionState) {
+    require(state.tabs.find { it.id == tab.id } == null) {
+        "Tab with same ID already exists"
+    }
 }

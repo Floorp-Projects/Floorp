@@ -91,10 +91,11 @@ class SessionSuggestionProviderTest {
     fun `Provider only returns non-private Sessions`() = runBlocking {
         val sessionManager = SessionManager(mock())
         val session = Session("https://www.mozilla.org")
-        val privateSession = Session("https://mozilla.org/firefox", true)
-        sessionManager.add(privateSession)
+        val privateSession1 = Session("https://mozilla.org/firefox", true)
+        val privateSession2 = Session("https://mozilla.org/projects", true)
+        sessionManager.add(privateSession1)
         sessionManager.add(session)
-        sessionManager.add(privateSession)
+        sessionManager.add(privateSession2)
 
         val useCase: TabsUseCases.SelectTabUseCase = mock()
 
