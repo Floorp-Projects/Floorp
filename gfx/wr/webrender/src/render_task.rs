@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ImageDescriptor, ImageFormat};
-use api::{LineStyle, LineOrientation, ClipMode, DirtyRect};
+use api::{ImageDescriptor, ImageFormat, FilterPrimitive, FilterPrimitiveInput, FilterPrimitiveKind};
+use api::{LineStyle, LineOrientation, ClipMode, DirtyRect, MixBlendMode, ColorF, ColorSpace};
 use api::units::*;
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
@@ -14,6 +14,7 @@ use crate::clip_scroll_tree::SpatialNodeIndex;
 use crate::device::TextureFilter;
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
+use crate::filterdata::SFilterData;
 use crate::frame_builder::FrameBuilderConfig;
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use crate::glyph_rasterizer::GpuGlyphCacheKey;
@@ -354,15 +355,15 @@ impl RenderTaskGraph {
                 // to insert a blit to ensure we don't read and write from
                 // the same target.
 
-                let task_id = RenderTaskId {
+                let child_task_id = RenderTaskId {
                     index: child_task_index as u32,
                     #[cfg(debug_assertions)]
                     frame_id: self.frame_id,
                 };
 
                 let mut blit = RenderTask::new_blit(
-                    self.tasks[task_index].location.size(),
-                    BlitSource::RenderTask { task_id },
+                    self.tasks[child_task_index].location.size(),
+                    BlitSource::RenderTask { task_id: child_task_id },
                 );
 
                 // Mark for saving if the blit is more than pass appart from
@@ -382,7 +383,7 @@ impl RenderTaskGraph {
                 passes[child_pass_index as usize + 1].tasks.push(blit_id);
 
                 self.tasks[task_index].children[nth_child] = blit_id;
-                task_redirects[task_index] = Some(blit_id);
+                task_redirects[child_task_index] = Some(blit_id);
             }
         }
     }
@@ -618,6 +619,33 @@ pub struct LineDecorationTask {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum SvgFilterInfo {
+    Blend(MixBlendMode),
+    Flood(ColorF),
+    LinearToSrgb,
+    SrgbToLinear,
+    Opacity(f32),
+    ColorMatrix(Box<[f32; 20]>),
+    DropShadow(ColorF),
+    Offset(DeviceVector2D),
+    ComponentTransfer(SFilterData),
+    // TODO: This is used as a hack to ensure that a blur task's input is always in the blur's previous pass.
+    Identity,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct SvgFilterTask {
+    pub info: SvgFilterInfo,
+    pub extra_gpu_cache_handle: Option<GpuCacheHandle>,
+    pub uv_rect_handle: GpuCacheHandle,
+    uv_rect_kind: UvRectKind,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskData {
     pub data: [f32; FLOATS_PER_RENDER_TASK_INFO],
 }
@@ -638,6 +666,7 @@ pub enum RenderTaskKind {
     Border(BorderTask),
     LineDecoration(LineDecorationTask),
     Gradient(GradientTask),
+    SvgFilter(SvgFilterTask),
     #[cfg(test)]
     Test(RenderTargetKind),
 }
@@ -657,6 +686,7 @@ impl RenderTaskKind {
             RenderTaskKind::Border(..) => "Border",
             RenderTaskKind::LineDecoration(..) => "LineDecoration",
             RenderTaskKind::Gradient(..) => "Gradient",
+            RenderTaskKind::SvgFilter(..) => "SvgFilter",
             #[cfg(test)]
             RenderTaskKind::Test(..) => "Test",
         }
@@ -1172,6 +1202,285 @@ impl RenderTask {
         )
     }
 
+    pub fn new_svg_filter(
+        filter_primitives: &[FilterPrimitive],
+        filter_datas: &[SFilterData],
+        render_tasks: &mut RenderTaskGraph,
+        content_size: DeviceIntSize,
+        uv_rect_kind: UvRectKind,
+        original_task_id: RenderTaskId,
+        device_pixel_scale: DevicePixelScale,
+    ) -> RenderTaskId {
+
+        if filter_primitives.is_empty() {
+            return original_task_id;
+        }
+
+        // Resolves the input to a filter primitive
+        let get_task_input = |
+            input: &FilterPrimitiveInput,
+            filter_primitives: &[FilterPrimitive],
+            render_tasks: &mut RenderTaskGraph,
+            cur_index: usize,
+            outputs: &[RenderTaskId],
+            original: RenderTaskId,
+            color_space: ColorSpace,
+        | {
+            // TODO(cbrewster): Not sure we can assume that the original input is sRGB.
+            let (mut task_id, input_color_space) = match input.to_index(cur_index) {
+                Some(index) => (outputs[index], filter_primitives[index].color_space),
+                None => (original, ColorSpace::Srgb),
+            };
+
+            match (input_color_space, color_space) {
+                (ColorSpace::Srgb, ColorSpace::LinearRgb) => {
+                    let task = RenderTask::new_svg_filter_primitive(
+                        vec![task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::SrgbToLinear,
+                    );
+                    task_id = render_tasks.add(task);
+                },
+                (ColorSpace::LinearRgb, ColorSpace::Srgb) => {
+                    let task = RenderTask::new_svg_filter_primitive(
+                        vec![task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::LinearToSrgb,
+                    );
+                    task_id = render_tasks.add(task);
+                },
+                _ => {},
+            }
+
+            task_id
+        };
+
+        let mut outputs = vec![];
+        let mut cur_filter_data = 0;
+        for (cur_index, primitive) in filter_primitives.iter().enumerate() {
+            let render_task_id = match primitive.kind {
+                FilterPrimitiveKind::Identity(ref identity) => {
+                    // Identity does not create a task, it provides its input's render task
+                    get_task_input(
+                        &identity.input,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    )
+                }
+                FilterPrimitiveKind::Blend(ref blend) => {
+                    let input_1_task_id = get_task_input(
+                        &blend.input1,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+                    let input_2_task_id = get_task_input(
+                        &blend.input2,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+
+                    let task = RenderTask::new_svg_filter_primitive(
+                        vec![input_1_task_id, input_2_task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::Blend(blend.mode),
+                    );
+                    render_tasks.add(task)
+                },
+                FilterPrimitiveKind::Flood(ref flood) => {
+                    let task = RenderTask::new_svg_filter_primitive(
+                        vec![],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::Flood(flood.color),
+                    );
+                    render_tasks.add(task)
+                }
+                FilterPrimitiveKind::Blur(ref blur) => {
+                    let blur_std_deviation = blur.radius * device_pixel_scale.0;
+                    let input_task_id = get_task_input(
+                        &blur.input,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+
+                    // TODO: This is a hack to ensure that a blur task's input is always in the blur's previous pass.
+                    let svg_task = RenderTask::new_svg_filter_primitive(
+                        vec![input_task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::Identity,
+                    );
+
+                    RenderTask::new_blur(
+                        DeviceSize::new(blur_std_deviation, blur_std_deviation),
+                        render_tasks.add(svg_task),
+                        render_tasks,
+                        RenderTargetKind::Color,
+                        ClearMode::Transparent,
+                        None,
+                    )
+                }
+                FilterPrimitiveKind::Opacity(ref opacity) => {
+                    let input_task_id = get_task_input(
+                        &opacity.input,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+
+                    let task = RenderTask::new_svg_filter_primitive(
+                        vec![input_task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::Opacity(opacity.opacity),
+                    );
+                    render_tasks.add(task)
+                }
+                FilterPrimitiveKind::ColorMatrix(ref color_matrix) => {
+                    let input_task_id = get_task_input(
+                        &color_matrix.input,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+
+                    let task = RenderTask::new_svg_filter_primitive(
+                        vec![input_task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::ColorMatrix(Box::new(color_matrix.matrix)),
+                    );
+                    render_tasks.add(task)
+                }
+                FilterPrimitiveKind::DropShadow(ref drop_shadow) => {
+                    let input_task_id = get_task_input(
+                        &drop_shadow.input,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+
+                    let blur_std_deviation = drop_shadow.shadow.blur_radius * device_pixel_scale.0;
+                    let offset = drop_shadow.shadow.offset * LayoutToWorldScale::new(1.0) * device_pixel_scale;
+
+                    let offset_task = RenderTask::new_svg_filter_primitive(
+                        vec![input_task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::Offset(offset),
+                    );
+                    let offset_task_id = render_tasks.add(offset_task);
+
+                    let blur_task_id = RenderTask::new_blur(
+                        DeviceSize::new(blur_std_deviation, blur_std_deviation),
+                        offset_task_id,
+                        render_tasks,
+                        RenderTargetKind::Color,
+                        ClearMode::Transparent,
+                        None,
+                    );
+
+                    let task = RenderTask::new_svg_filter_primitive(
+                        vec![input_task_id, blur_task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::DropShadow(drop_shadow.shadow.color),
+                    );
+                    render_tasks.add(task)
+                }
+                FilterPrimitiveKind::ComponentTransfer(ref component_transfer) => {
+                    let input_task_id = get_task_input(
+                        &component_transfer.input,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+
+                    let filter_data = &filter_datas[cur_filter_data];
+                    cur_filter_data += 1;
+                    if filter_data.is_identity() {
+                        input_task_id
+                    } else {
+                        let task = RenderTask::new_svg_filter_primitive(
+                            vec![input_task_id],
+                            content_size,
+                            uv_rect_kind,
+                            SvgFilterInfo::ComponentTransfer(filter_data.clone()),
+                        );
+                        render_tasks.add(task)
+                    }
+                }
+            };
+            outputs.push(render_task_id);
+        }
+
+        // The output of a filter is the output of the last primitive in the chain.
+        let mut render_task_id = *outputs.last().unwrap();
+
+        // Convert to sRGB if needed
+        if filter_primitives.last().unwrap().color_space == ColorSpace::LinearRgb {
+            let task = RenderTask::new_svg_filter_primitive(
+                vec![render_task_id],
+                content_size,
+                uv_rect_kind,
+                SvgFilterInfo::LinearToSrgb,
+            );
+            render_task_id = render_tasks.add(task);
+        }
+
+        render_task_id
+    }
+
+    pub fn new_svg_filter_primitive(
+        tasks: Vec<RenderTaskId>,
+        target_size: DeviceIntSize,
+        uv_rect_kind: UvRectKind,
+        info: SvgFilterInfo,
+    ) -> Self {
+        RenderTask::with_dynamic_location(
+            target_size,
+            tasks,
+            RenderTaskKind::SvgFilter(SvgFilterTask {
+                extra_gpu_cache_handle: None,
+                uv_rect_handle: GpuCacheHandle::new(),
+                uv_rect_kind,
+                info,
+            }),
+            ClearMode::Transparent,
+        )
+    }
+
     #[cfg(feature = "pathfinder")]
     pub fn new_glyph(
         location: RenderTaskLocation,
@@ -1213,6 +1522,10 @@ impl RenderTask {
             }
 
             RenderTaskKind::Scaling(ref task) => {
+                task.uv_rect_kind
+            }
+
+            RenderTaskKind::SvgFilter(ref task) => {
                 task.uv_rect_kind
             }
 
@@ -1287,6 +1600,15 @@ impl RenderTask {
                 [0.0; 3]
             }
 
+
+            RenderTaskKind::SvgFilter(ref task) => {
+                match task.info {
+                    SvgFilterInfo::Opacity(opacity) => [opacity, 0.0, 0.0],
+                    SvgFilterInfo::Offset(offset) => [offset.x, offset.y, 0.0],
+                    _ => [0.0; 3]
+                }
+            }
+
             #[cfg(test)]
             RenderTaskKind::Test(..) => {
                 unreachable!();
@@ -1322,6 +1644,9 @@ impl RenderTask {
             }
             RenderTaskKind::VerticalBlur(ref info) |
             RenderTaskKind::HorizontalBlur(ref info) => {
+                gpu_cache.get_address(&info.uv_rect_handle)
+            }
+            RenderTaskKind::SvgFilter(ref info) => {
                 gpu_cache.get_address(&info.uv_rect_handle)
             }
             RenderTaskKind::ClipRegion(..) |
@@ -1393,9 +1718,16 @@ impl RenderTask {
 
     pub fn target_kind(&self) -> RenderTargetKind {
         match self.kind {
-            RenderTaskKind::Readback(..) => RenderTargetKind::Color,
-
-            RenderTaskKind::LineDecoration(..) => RenderTargetKind::Color,
+            RenderTaskKind::LineDecoration(..) |
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::Glyph(..) |
+            RenderTaskKind::Border(..) |
+            RenderTaskKind::Gradient(..) |
+            RenderTaskKind::Picture(..) |
+            RenderTaskKind::Blit(..) |
+            RenderTaskKind::SvgFilter(..) => {
+                RenderTargetKind::Color
+            }
 
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::CacheMask(..) => {
@@ -1407,22 +1739,8 @@ impl RenderTask {
                 task_info.target_kind
             }
 
-            RenderTaskKind::Glyph(..) => {
-                RenderTargetKind::Color
-            }
-
             RenderTaskKind::Scaling(ref task_info) => {
                 task_info.target_kind
-            }
-
-            RenderTaskKind::Border(..) |
-            RenderTaskKind::Gradient(..) |
-            RenderTaskKind::Picture(..) => {
-                RenderTargetKind::Color
-            }
-
-            RenderTaskKind::Blit(..) => {
-                RenderTargetKind::Color
             }
 
             #[cfg(test)]
@@ -1442,6 +1760,9 @@ impl RenderTask {
                 (&mut info.uv_rect_handle, info.uv_rect_kind)
             }
             RenderTaskKind::Picture(ref mut info) => {
+                (&mut info.uv_rect_handle, info.uv_rect_kind)
+            }
+            RenderTaskKind::SvgFilter(ref mut info) => {
                 (&mut info.uv_rect_handle, info.uv_rect_kind)
             }
             RenderTaskKind::Readback(..) |
@@ -1472,6 +1793,33 @@ impl RenderTask {
                 uv_rect_kind,
             };
             image_source.write_gpu_blocks(&mut request);
+        }
+
+        if let RenderTaskKind::SvgFilter(ref mut filter_task) = self.kind {
+            match filter_task.info {
+                SvgFilterInfo::ColorMatrix(ref matrix) => {
+                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
+                    if let Some(mut request) = gpu_cache.request(handle) {
+                        for i in 0..5 {
+                            request.push([matrix[i*4], matrix[i*4+1], matrix[i*4+2], matrix[i*4+3]]);
+                        }
+                    }
+                }
+                SvgFilterInfo::DropShadow(color) |
+                SvgFilterInfo::Flood(color) => {
+                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
+                    if let Some(mut request) = gpu_cache.request(handle) {
+                        request.push(color.to_array());
+                    }
+                }
+                SvgFilterInfo::ComponentTransfer(ref data) => {
+                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
+                    if let Some(request) = gpu_cache.request(handle) {
+                        data.update(request);
+                    }
+                }
+                _ => {},
+            }
         }
     }
 
@@ -1520,6 +1868,10 @@ impl RenderTask {
             RenderTaskKind::Gradient(..) => {
                 pt.new_level("Gradient".to_owned());
             }
+            RenderTaskKind::SvgFilter(ref task) => {
+                pt.new_level("SvgFilter".to_owned());
+                pt.add_item(format!("primitive: {:?}", task.info));
+            }
             #[cfg(test)]
             RenderTaskKind::Test(..) => {
                 pt.new_level("Test".to_owned());
@@ -1527,6 +1879,7 @@ impl RenderTask {
         }
 
         pt.add_item(format!("clear to: {:?}", self.clear_mode));
+        pt.add_item(format!("dimensions: {:?}", self.location.size()));
 
         for &child_id in &self.children {
             if tree[child_id].print_with(pt, tree) {
