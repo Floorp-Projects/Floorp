@@ -15,7 +15,7 @@ SimpleTest.waitForExplicitFinish();
 
 var video = document.createElement("video");
 var trackElement = document.createElement("track");
-var cuesNumber = 8;
+var cuesNumber = 22;
 
 function isTrackElemenLoaded() {
   // Re-que isTrackElemenLoaded() at the end of the event loop until the track
@@ -43,19 +43,38 @@ function runTest() {
   ok(cues[0] instanceof VTTCue, "Cue should be an instanceof VTTCue.");
 
   info("--- check the cue's position alignment ---");
-  is(cues[0].positionAlign, "auto",     cues[0].text);
-  is(cues[1].positionAlign, "line-left",  cues[1].text);
-  is(cues[2].positionAlign, "center",     cues[2].text);
-  is(cues[3].positionAlign, "line-right", cues[3].text);
-  is(cues[4].positionAlign, "auto",       cues[4].text);
+  let expectedAlignment = ["auto", "line-left", "center", "line-right", "auto"];
+  let idx = 0;
+  for (;idx < expectedAlignment.length; idx++) {
+    is(cues[idx].positionAlign, expectedAlignment[idx], cues[idx].text);
+  }
 
   info("--- check the cue's computed position alignment ---");
   // The "computedPositionAlign" is the chrome-only attributes, we need to get
   // the chrome privilege for cues.
   cuesChrome = SpecialPowers.wrap(cues);
-  is(cuesChrome[5].computedPositionAlign, "line-left",  cuesChrome[5].text);
-  is(cuesChrome[6].computedPositionAlign, "line-right", cuesChrome[6].text);
-  is(cuesChrome[7].computedPositionAlign, "center",     cuesChrome[7].text);
+  expectedAlignment.push("line-left", "line-right", "center");
+  for (;idx < expectedAlignment.length; idx++) {
+    is(cuesChrome[idx].computedPositionAlign, expectedAlignment[idx],
+       cuesChrome[idx].text);
+  }
+
+  info(`test only setting text alignment with "start"`);
+  expectedAlignment.push("line-left", "line-right", "line-left", "line-right",
+                         "line-left", "line-left", "line-right");
+  for (;idx < expectedAlignment.length; idx++) {
+    is(cuesChrome[idx].computedPositionAlign, expectedAlignment[idx],
+       cuesChrome[idx].text);
+  }
+
+  info(`test only setting text alignment with "end"`);
+  expectedAlignment.push("line-right", "line-left", "line-right", "line-left",
+                         "line-right", "line-right", "line-left");
+  for (;idx < expectedAlignment.length; idx++) {
+    is(cuesChrome[idx].computedPositionAlign, expectedAlignment[idx],
+       cuesChrome[idx].text);
+  }
+  is(idx, cuesNumber, "finished checking all cues");
 
   info("--- check the cue's computed position alignment from DOM API ---");
   is(cuesChrome[0].computedPositionAlign, "center", "Cue's computedPositionAlign align is center.");
