@@ -69,6 +69,7 @@ export async function buildOriginalScopes(
   const actor = (await generatedScopes).actor;
   const scope = {
     type: "function",
+    scopeKind: "",
     actor,
     bindings,
     parent: null,

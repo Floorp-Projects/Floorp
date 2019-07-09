@@ -4,7 +4,7 @@
 
 // @flow
 
-import { getScope, type RenderableScope } from "./getScope";
+import { getScope, mergeScopes, type RenderableScope } from "./getScope";
 
 import type { Frame, Why, BindingContents } from "../../../types";
 
@@ -32,9 +32,11 @@ export function getScopes(
 
   let scope = frameScopes;
   let scopeIndex = 1;
+  let prev = null,
+    prevItem = null;
 
   while (scope) {
-    const scopeItem = getScope(
+    let scopeItem = getScope(
       scope,
       selectedFrame,
       frameScopes,
@@ -43,8 +45,16 @@ export function getScopes(
     );
 
     if (scopeItem) {
+      const mergedItem =
+        prev && prevItem ? mergeScopes(prev, scope, prevItem, scopeItem) : null;
+      if (mergedItem) {
+        scopeItem = mergedItem;
+        scopes.pop();
+      }
       scopes.push(scopeItem);
     }
+    prev = scope;
+    prevItem = scopeItem;
     scopeIndex++;
     scope = scope.parent;
   }
