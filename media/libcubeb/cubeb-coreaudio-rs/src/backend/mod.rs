@@ -2014,8 +2014,6 @@ pub struct AudioUnitContext {
     // without ARC(Automatic Reference Counting) support, so it should be released
     // by dispatch_release(release_dispatch_queue).
     serial_queue: dispatch_queue_t,
-    layout: atomic::Atomic<ChannelLayout>,
-    channels: u32,
     latency_controller: Mutex<LatencyController>,
     devices: Mutex<SharedDevices>,
 }
@@ -2025,8 +2023,6 @@ impl AudioUnitContext {
         Self {
             _ops: &OPS as *const _,
             serial_queue: create_dispatch_queue(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL),
-            layout: atomic::Atomic::new(ChannelLayout::UNDEFINED),
-            channels: 0,
             latency_controller: Mutex::new(LatencyController::default()),
             devices: Mutex::new(SharedDevices::default()),
         }
@@ -2508,6 +2504,7 @@ struct AudioUnitStream<'ctx> {
     // I/O device sample rate
     input_hw_rate: f64,
     output_hw_rate: f64,
+    device_layout: ChannelLayout,
     mutex: OwnedCriticalSection,
     // Hold the input samples in every input callback iteration.
     // Only accessed on input/output callback thread and during initial configure.
@@ -2575,6 +2572,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             output_unit: ptr::null_mut(),
             input_hw_rate: 0_f64,
             output_hw_rate: 0_f64,
+            device_layout: ChannelLayout::UNDEFINED,
             mutex: OwnedCriticalSection::new(),
             input_linear_buffer: None,
             frames_played: AtomicU64::new(0),
@@ -3140,35 +3138,27 @@ impl<'ctx> AudioUnitStream<'ctx> {
             self as *const AudioUnitStream,
             output_hw_desc
         );
-        self.context.channels = output_hw_desc.mChannelsPerFrame;
+        let hw_channels = output_hw_desc.mChannelsPerFrame;
 
         // Set the input layout to match the output device layout.
-        self.context.layout.store(
-            audiounit_get_current_channel_layout(self.output_unit),
-            atomic::Ordering::SeqCst,
-        );
-        audiounit_set_channel_layout(
-            self.output_unit,
-            io_side::OUTPUT,
-            self.context.layout.load(atomic::Ordering::SeqCst),
-        );
+        self.device_layout = audiounit_get_current_channel_layout(self.output_unit);
+        audiounit_set_channel_layout(self.output_unit, io_side::OUTPUT, self.device_layout);
         cubeb_log!(
             "({:p}) Output hardware layout: {:?}",
             self,
-            self.context.layout
+            self.device_layout
         );
 
         {
             let mut stream_device = self.stream_device.lock().unwrap();
-            stream_device.mixer = if self.context.channels != self.output_stream_params.channels()
-                || self.context.layout.load(atomic::Ordering::SeqCst)
-                    != self.output_stream_params.layout()
+            stream_device.mixer = if hw_channels != self.output_stream_params.channels()
+                || self.device_layout != self.output_stream_params.layout()
             {
                 cubeb_log!("Incompatible channel layouts detected, setting up remixer");
                 // We will be remixing the data before it reaches the output device.
                 // We need to adjust the number of channels and other
                 // AudioStreamDescription details.
-                self.output_desc.mChannelsPerFrame = self.context.channels;
+                self.output_desc.mChannelsPerFrame = hw_channels;
                 self.output_desc.mBytesPerFrame =
                     (self.output_desc.mBitsPerChannel / 8) * self.output_desc.mChannelsPerFrame;
                 self.output_desc.mBytesPerPacket =
@@ -3177,8 +3167,8 @@ impl<'ctx> AudioUnitStream<'ctx> {
                     self.output_stream_params.format(),
                     self.output_stream_params.channels(),
                     self.output_stream_params.layout(),
-                    self.context.channels,
-                    self.context.layout.load(atomic::Ordering::SeqCst),
+                    hw_channels,
+                    self.device_layout,
                 ))
             } else {
                 None
