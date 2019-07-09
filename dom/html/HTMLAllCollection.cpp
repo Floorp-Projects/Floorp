@@ -8,15 +8,13 @@
 
 #include "mozilla/dom/HTMLAllCollectionBinding.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "nsContentList.h"
-#include "nsGenericHTMLElement.h"
+#include "nsHTMLDocument.h"
 
 namespace mozilla {
 namespace dom {
 
-HTMLAllCollection::HTMLAllCollection(mozilla::dom::Document* aDocument)
+HTMLAllCollection::HTMLAllCollection(nsHTMLDocument* aDocument)
     : mDocument(aDocument) {
   MOZ_ASSERT(mDocument);
 }
