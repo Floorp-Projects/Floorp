@@ -810,6 +810,13 @@ ArrayObject* js::intl::NumberFormatFields::toArray(JSContext* cx,
       return nullptr;
     }
 
+    if (unitType != nullptr && type != &JSAtomState::literal) {
+      propVal.setString(cx->names().*unitType);
+      if (!DefineDataProperty(cx, singlePart, cx->names().unit, propVal)) {
+        return nullptr;
+      }
+    }
+
     propVal.setObject(*singlePart);
     if (!DefineDataElement(cx, partsArray, partIndex, propVal)) {
       return nullptr;
