@@ -172,9 +172,6 @@ pref("devtools.netmonitor.columnsData",
 pref("devtools.netmonitor.ws.payload-preview-width", 550);
 pref("devtools.netmonitor.ws.payload-preview-height", 450);
 
-// Support for columns resizing pref is now enabled (after merge date 03/18/19).
-pref("devtools.netmonitor.features.resizeColumns", true);
-
 pref("devtools.netmonitor.response.ui.limit", 10240);
 
 // Save request/response bodies yes/no.

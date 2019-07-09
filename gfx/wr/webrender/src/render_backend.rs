@@ -16,6 +16,7 @@ use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, Scrol
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
+use api::{ExternalImageType, ImageData};
 use api::units::*;
 use api::channel::{MsgReceiver, MsgSender, Payload};
 #[cfg(feature = "capture")]
@@ -1411,17 +1412,6 @@ impl RenderBackend {
             scroll |= op.scroll;
         }
 
-        for update in &resource_updates {
-            if let ResourceUpdate::UpdateImage(..) = update {
-                doc.frame_is_valid = false;
-            }
-        }
-
-        self.resource_cache.post_scene_building_update(
-            resource_updates,
-            &mut profile_counters.resources,
-        );
-
         if doc.dynamic_properties.flush_pending_updates() {
             doc.frame_is_valid = false;
             doc.hit_tester_is_valid = false;
@@ -1433,6 +1423,35 @@ impl RenderBackend {
             // composition here and do it as soon as we receive the scene.
             render_frame = false;
         }
+
+        if doc.frame_is_valid {
+            // Invalidate WR frame if ResourceUpdate::UpdateImage exists except
+            // when image of ExternalImageType::TextureHandle is not used.
+            let resource_cache = &self.resource_cache;
+            if resource_updates.iter().any(|update| {
+                match update {
+                    ResourceUpdate::UpdateImage(update_image) => {
+                        if let ImageData::External(ext_image_data) = update_image.data {
+                            if let ExternalImageType::TextureHandle(_) = ext_image_data.image_type {
+                                if !resource_cache.is_image_active(update_image.key) {
+                                    return false;
+                                }
+                            }
+                        }
+                        true
+                    }
+                    _ => { false }
+                }
+            })
+            {
+                doc.frame_is_valid = false;
+            }
+        }
+
+        self.resource_cache.post_scene_building_update(
+            resource_updates,
+            &mut profile_counters.resources,
+        );
 
         // Avoid re-building the frame if the current built frame is still valid.
         // However, if the resource_cache requires a frame build, _always_ do that, unless

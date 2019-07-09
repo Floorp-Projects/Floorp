@@ -1,0 +1,1 @@
+// |jit-test| --baseline-warmup-threshold=20

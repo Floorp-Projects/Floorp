@@ -788,7 +788,10 @@ void JSRuntime::decrementNumDebuggeeRealms() {
   MOZ_ASSERT(numDebuggeeRealms_ > 0);
   numDebuggeeRealms_--;
 
-  if (numDebuggeeRealms_ == 0) {
+  // Note: if we had shutdown leaks we can end up here while destroying the
+  // runtime. It's not safe to access JitRuntime trampolines because they're no
+  // longer traced.
+  if (numDebuggeeRealms_ == 0 && !isBeingDestroyed()) {
     jitRuntime()->baselineInterpreter().toggleDebuggerInstrumentation(false);
   }
 }
@@ -807,7 +810,10 @@ void JSRuntime::decrementNumDebuggeeRealmsObservingCoverage() {
   MOZ_ASSERT(numDebuggeeRealmsObservingCoverage_ > 0);
   numDebuggeeRealmsObservingCoverage_--;
 
-  if (numDebuggeeRealmsObservingCoverage_ == 0) {
+  // Note: if we had shutdown leaks we can end up here while destroying the
+  // runtime. It's not safe to access JitRuntime trampolines because they're no
+  // longer traced.
+  if (numDebuggeeRealmsObservingCoverage_ == 0 && !isBeingDestroyed()) {
     jit::BaselineInterpreter& interp = jitRuntime()->baselineInterpreter();
     interp.toggleCodeCoverageInstrumentation(false);
   }

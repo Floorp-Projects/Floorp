@@ -151,6 +151,7 @@ enum class ScrollFlags {
   IgnoreMarginAndPadding = 1 << 6,
   // ScrollOverflowHidden | ScrollNoParentFrames
   AnchorScrollFlags = (1 << 1) | (1 << 2),
+  ALL_BITS = (1 << 7) - 1,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollFlags)

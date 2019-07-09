@@ -1,0 +1,28 @@
+---
+license:
+    description: License Check
+    include:
+        - .
+    exclude:
+        - config/external/nspr/_pl_bld.h
+        - config/external/nspr/_pr_bld.h
+        - gfx/2d/MMIHelpers.h
+        - gfx/2d/ShadersD2D1.h
+        - gfx/layers/protobuf/LayerScopePacket.pb.cc
+        - gfx/layers/protobuf/LayerScopePacket.pb.h
+        - gfx/thebes/CJKCompatSVS.cpp
+        - js/src/builtin/intl/TimeZoneDataGenerated.h
+        - js/src/irregexp/RegExpCharacters-inl.h
+        - js/src/irregexp/RegExpCharacters.cpp
+        - media/libdav1d/vcs_version.h
+        - mozglue/android/NativeCrypto.h
+        - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.cc
+        - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
+        - toolkit/mozapps/update/updater/crctable.h
+        - xpcom/io/crc32c.h
+    extensions: ['.cpp', '.c', '.cc', '.h', '.m', '.mm']
+    # , 'js', 'jsm', 'jsx', 'xml', 'xul', 'html', 'xhtml', 'py', 'rs']
+    support-files:
+        - 'tools/lint/license/**'
+    type: external
+    payload: license:lint

@@ -56,8 +56,6 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using mozilla::dom::Document;
 
-static bool sShowPreviousPage = true;
-
 static Document* GetDocumentFromView(nsView* aView) {
   MOZ_ASSERT(aView, "null view");
 
@@ -111,15 +109,6 @@ void nsSubDocumentFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   MOZ_ASSERT(aContent);
   // determine if we are a <frame> or <iframe>
   mIsInline = !aContent->IsHTMLElement(nsGkAtoms::frame);
-
-  static bool addedShowPreviousPage = false;
-  if (!addedShowPreviousPage) {
-    // If layout.show_previous_page is true then during loading of a new page we
-    // will draw the previous page if the new page has painting suppressed.
-    Preferences::AddBoolVarCache(&sShowPreviousPage,
-                                 "layout.show_previous_page", true);
-    addedShowPreviousPage = true;
-  }
 
   nsAtomicContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
@@ -255,7 +244,7 @@ mozilla::PresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
       mozilla::PresShell* presShellForNextView = frame->PresShell();
       if (!presShell || (presShellForNextView &&
                          !presShellForNextView->IsPaintingSuppressed() &&
-                         sShowPreviousPage)) {
+                         StaticPrefs::layout_show_previous_page())) {
         subdocView = nextView;
         subdocRootFrame = frame;
         presShell = presShellForNextView;
@@ -1283,6 +1272,11 @@ nsView* nsSubDocumentFrame::EnsureInnerView() {
   viewMan->InsertChild(outerView, innerView, nullptr, true);
 
   return mInnerView;
+}
+
+nsPoint nsSubDocumentFrame::GetExtraOffset() const {
+  MOZ_ASSERT(mInnerView);
+  return mInnerView->GetPosition();
 }
 
 nsIFrame* nsSubDocumentFrame::ObtainIntrinsicSizeFrame() {

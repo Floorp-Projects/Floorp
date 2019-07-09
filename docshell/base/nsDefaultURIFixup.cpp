@@ -35,11 +35,6 @@ using namespace mozilla;
 /* Implementation file */
 NS_IMPL_ISUPPORTS(nsDefaultURIFixup, nsIURIFixup)
 
-static bool sInitializedPrefCaches = false;
-static bool sFixTypos = true;
-static bool sDNSFirstForSingleWords = false;
-static bool sFixupKeywords = true;
-
 nsDefaultURIFixup::nsDefaultURIFixup() {}
 
 nsDefaultURIFixup::~nsDefaultURIFixup() {}
@@ -192,28 +187,9 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
     }
   }
 
-  if (!sInitializedPrefCaches) {
-    // Check if we want to fix up common scheme typos.
-    rv = Preferences::AddBoolVarCache(&sFixTypos, "browser.fixup.typo.scheme",
-                                      sFixTypos);
-    MOZ_ASSERT(NS_SUCCEEDED(rv),
-               "Failed to observe \"browser.fixup.typo.scheme\"");
-
-    rv = Preferences::AddBoolVarCache(
-        &sDNSFirstForSingleWords, "browser.fixup.dns_first_for_single_words",
-        sDNSFirstForSingleWords);
-    MOZ_ASSERT(
-        NS_SUCCEEDED(rv),
-        "Failed to observe \"browser.fixup.dns_first_for_single_words\"");
-
-    rv = Preferences::AddBoolVarCache(&sFixupKeywords, "keyword.enabled",
-                                      sFixupKeywords);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to observe \"keyword.enabled\"");
-    sInitializedPrefCaches = true;
-  }
-
   // Fix up common scheme typos.
-  if (sFixTypos && (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
+  if (StaticPrefs::browser_fixup_typo_scheme() &&
+      (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
     // Fast-path for common cases.
     if (scheme.IsEmpty() || scheme.EqualsLiteral("http") ||
         scheme.EqualsLiteral("https") || scheme.EqualsLiteral("ftp") ||
@@ -282,7 +258,8 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
     }
   }
 
-  if (info->mFixedURI && ourHandler == extHandler && sFixupKeywords &&
+  if (info->mFixedURI && ourHandler == extHandler &&
+      StaticPrefs::keyword_enabled() &&
       (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
     nsCOMPtr<nsIExternalProtocolService> extProtService =
         do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
@@ -353,7 +330,8 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
 
   // See if it is a keyword
   // Test whether keywords need to be fixed up
-  if (sFixupKeywords && (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) &&
+  if (StaticPrefs::keyword_enabled() &&
+      (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) &&
       !inputHadDuffProtocol) {
     if (NS_SUCCEEDED(KeywordURIFixup(uriString, info, aPostData)) &&
         info->mPreferredURI) {
@@ -375,7 +353,8 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
 
   // If we still haven't been able to construct a valid URI, try to force a
   // keyword match.  This catches search strings with '.' or ':' in them.
-  if (sFixupKeywords && (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
+  if (StaticPrefs::keyword_enabled() &&
+      (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
     rv = TryKeywordFixupForURIInfo(aStringURI, info, aPostData);
   }
 
@@ -930,7 +909,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
     // characters from [a-z][A-Z]
   } else if (isValidHost && isValidDisplayHost && !hasAsciiAlpha &&
              asciiHost.EqualsIgnoreCase(displayHost.get())) {
-    if (!sDNSFirstForSingleWords) {
+    if (!StaticPrefs::browser_fixup_dns_first_for_single_words()) {
       rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo,
                                      aPostData);
     }
@@ -963,7 +942,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
 
 bool nsDefaultURIFixup::IsDomainWhitelisted(const nsACString& aAsciiHost,
                                             const uint32_t aDotLoc) {
-  if (sDNSFirstForSingleWords) {
+  if (StaticPrefs::browser_fixup_dns_first_for_single_words()) {
     return true;
   }
   // Check if this domain is whitelisted as an actual

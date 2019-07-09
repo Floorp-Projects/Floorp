@@ -514,10 +514,9 @@ class BaselineCodeGen {
 
   MOZ_MUST_USE bool emitHandleCodeCoverageAtPrologue();
 
-  void emitInitFrameFields();
-  void emitIsDebuggeeCheck();
+  void emitInitFrameFields(Register nonFunctionEnv);
+  MOZ_MUST_USE bool emitIsDebuggeeCheck();
   void emitInitializeLocals();
-  void emitPreInitEnvironmentChain(Register nonFunctionEnv);
 
   void emitProfilerEnterFrame();
   void emitProfilerExitFrame();
@@ -679,11 +678,11 @@ class BaselineInterpreterHandler {
   // InterpreterPCReg.
   Label interpretOpWithPCReg_;
 
-  // Offset of toggled jump for prologue debugger instrumentation.
-  CodeOffset debuggeeCheckOffset_;
+  // Offsets of toggled jumps for debugger instrumentation.
+  using CodeOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
+  CodeOffsetVector debugInstrumentationOffsets_;
 
   // Offsets of toggled jumps for code coverage instrumentation.
-  using CodeOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
   CodeOffsetVector codeCoverageOffsets_;
   Label codeCoverageAtPrologueLabel_;
   Label codeCoverageAtPCLabel_;
@@ -701,6 +700,9 @@ class BaselineInterpreterHandler {
   Label* codeCoverageAtPrologueLabel() { return &codeCoverageAtPrologueLabel_; }
   Label* codeCoverageAtPCLabel() { return &codeCoverageAtPCLabel_; }
 
+  CodeOffsetVector& debugInstrumentationOffsets() {
+    return debugInstrumentationOffsets_;
+  }
   CodeOffsetVector& codeCoverageOffsets() { return codeCoverageOffsets_; }
 
   // Interpreter doesn't know the script and pc statically.
@@ -709,10 +711,9 @@ class BaselineInterpreterHandler {
   JSScript* maybeScript() const { return nullptr; }
   JSFunction* maybeFunction() const { return nullptr; }
 
-  void setDebuggeeCheckOffset(CodeOffset offset) {
-    debuggeeCheckOffset_ = offset;
+  MOZ_MUST_USE bool addDebugInstrumentationOffset(CodeOffset offset) {
+    return debugInstrumentationOffsets_.append(offset.offset());
   }
-  CodeOffset debuggeeCheckOffset() const { return debuggeeCheckOffset_; }
 
   // Interpreter doesn't need to keep track of RetAddrEntries, so these methods
   // are no-ops.

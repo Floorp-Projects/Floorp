@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef XP_WIN
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
 #endif
 
 #include <sys/types.h>
@@ -18,7 +18,7 @@
 #include "mar.h"
 #include "cryptox.h"
 #ifndef XP_WIN
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "nss_secutil.h"
@@ -31,7 +31,7 @@
  * @return 0 on success
  *         -1 on error
  */
-int NSSInitCryptoContext(const char *NSSConfigDir) {
+int NSSInitCryptoContext(const char* NSSConfigDir) {
   SECStatus status =
       NSS_Initialize(NSSConfigDir, "", "", SECMOD_DB, NSS_INIT_READONLY);
   if (SECSuccess != status) {
@@ -49,9 +49,9 @@ int NSSInitCryptoContext(const char *NSSConfigDir) {
  * @return 0 on success
  *         -1 on error
  */
-int NSSSignBegin(const char *certName, SGNContext **ctx,
-                 SECKEYPrivateKey **privKey, CERTCertificate **cert,
-                 uint32_t *signatureLength) {
+int NSSSignBegin(const char* certName, SGNContext** ctx,
+                 SECKEYPrivateKey** privKey, CERTCertificate** cert,
+                 uint32_t* signatureLength) {
   secuPWData pwdata = {PW_NONE, 0};
   if (!certName || !ctx || !privKey || !cert || !signatureLength) {
     fprintf(stderr, "ERROR: Invalid parameter passed to NSSSignBegin\n");
@@ -117,9 +117,9 @@ int NSSSignBegin(const char *certName, SGNContext **ctx,
  *         -2 on write error
  *         -3 on signature update error
  */
-int WriteAndUpdateSignatures(FILE *fpDest, void *buffer, uint32_t size,
-                             SGNContext **ctxs, uint32_t ctxCount,
-                             const char *err) {
+int WriteAndUpdateSignatures(FILE* fpDest, void* buffer, uint32_t size,
+                             SGNContext** ctxs, uint32_t ctxCount,
+                             const char* err) {
   uint32_t k;
   if (!size) {
     return 0;
@@ -148,15 +148,15 @@ int WriteAndUpdateSignatures(FILE *fpDest, void *buffer, uint32_t size,
  * @param indexLength  The length of the MAR index
  * @param offsetAmount The amount to adjust each index entry by
  */
-void AdjustIndexContentOffsets(char *indexBuf, uint32_t indexLength,
+void AdjustIndexContentOffsets(char* indexBuf, uint32_t indexLength,
                                uint32_t offsetAmount) {
-  uint32_t *offsetToContent;
-  char *indexBufLoc = indexBuf;
+  uint32_t* offsetToContent;
+  char* indexBufLoc = indexBuf;
 
   /* Consume the index and adjust each index by the specified amount */
   while (indexBufLoc != (indexBuf + indexLength)) {
     /* Adjust the offset */
-    offsetToContent = (uint32_t *)indexBufLoc;
+    offsetToContent = (uint32_t*)indexBufLoc;
     *offsetToContent = ntohl(*offsetToContent);
     *offsetToContent += offsetAmount;
     *offsetToContent = htonl(*offsetToContent);
@@ -182,9 +182,9 @@ void AdjustIndexContentOffsets(char *indexBuf, uint32_t indexLength,
  *         -2 on write error
  *         -3 on signature update error
  */
-int ReadWriteAndUpdateSignatures(FILE *fpSrc, FILE *fpDest, void *buffer,
-                                 uint32_t size, SGNContext **ctxs,
-                                 uint32_t ctxCount, const char *err) {
+int ReadWriteAndUpdateSignatures(FILE* fpSrc, FILE* fpDest, void* buffer,
+                                 uint32_t size, SGNContext** ctxs,
+                                 uint32_t ctxCount, const char* err) {
   if (!size) {
     return 0;
   }
@@ -209,8 +209,8 @@ int ReadWriteAndUpdateSignatures(FILE *fpSrc, FILE *fpDest, void *buffer,
  *         -1 on read error
  *         -2 on write error
  */
-int ReadAndWrite(FILE *fpSrc, FILE *fpDest, void *buffer, uint32_t size,
-                 const char *err) {
+int ReadAndWrite(FILE* fpSrc, FILE* fpDest, void* buffer, uint32_t size,
+                 const char* err) {
   if (!size) {
     return 0;
   }
@@ -237,7 +237,7 @@ int ReadAndWrite(FILE *fpSrc, FILE *fpDest, void *buffer, uint32_t size,
  * @return 0 on success
  *         -1 on error
 */
-int strip_signature_block(const char *src, const char *dest) {
+int strip_signature_block(const char* src, const char* dest) {
   uint32_t offsetToIndex, dstOffsetToIndex, indexLength, numSignatures = 0,
                                                          leftOver;
   int32_t stripAmount = 0;
@@ -246,7 +246,7 @@ int strip_signature_block(const char *src, const char *dest) {
   FILE *fpSrc = NULL, *fpDest = NULL;
   int rv = -1, hasSignatureBlock;
   char buf[BLOCKSIZE];
-  char *indexBuf = NULL;
+  char* indexBuf = NULL;
 
   if (!src || !dest) {
     fprintf(stderr, "ERROR: Invalid parameter passed in.\n");
@@ -466,13 +466,13 @@ failure:
  * @return 0 on success
  *         -1 on error
  */
-int extract_signature(const char *src, uint32_t sigIndex, const char *dest) {
+int extract_signature(const char* src, uint32_t sigIndex, const char* dest) {
   FILE *fpSrc = NULL, *fpDest = NULL;
   uint32_t i;
   uint32_t signatureCount;
   uint32_t signatureLen;
-  uint8_t *extractedSignature = NULL;
-  char *base64Encoded = NULL;
+  uint8_t* extractedSignature = NULL;
+  char* base64Encoded = NULL;
   int rv = -1;
   if (!src || !dest) {
     fprintf(stderr, "ERROR: Invalid parameter passed in.\n");
@@ -582,20 +582,20 @@ failure:
  * @return 0 on success
  *         -1 on error
  */
-int import_signature(const char *src, uint32_t sigIndex,
-                     const char *base64SigFile, const char *dest) {
+int import_signature(const char* src, uint32_t sigIndex,
+                     const char* base64SigFile, const char* dest) {
   int rv = -1;
-  FILE *fpSrc = NULL;
-  FILE *fpDest = NULL;
-  FILE *fpSigFile = NULL;
+  FILE* fpSrc = NULL;
+  FILE* fpDest = NULL;
+  FILE* fpSigFile = NULL;
   uint32_t i;
   uint32_t signatureCount, signatureLen, signatureAlgorithmID, numChunks,
       leftOver;
   char buf[BLOCKSIZE];
   uint64_t sizeOfSrcMAR, sizeOfBase64EncodedFile;
-  char *passedInSignatureB64 = NULL;
-  uint8_t *passedInSignatureRaw = NULL;
-  uint8_t *extractedMARSignature = NULL;
+  char* passedInSignatureB64 = NULL;
+  uint8_t* passedInSignatureRaw = NULL;
+  uint8_t* extractedMARSignature = NULL;
   unsigned int passedInSignatureLenRaw;
 
   if (!src || !dest) {
@@ -794,9 +794,9 @@ failure:
  * @return 0 on success
  *         -1 on error
  */
-int mar_repackage_and_sign(const char *NSSConfigDir,
-                           const char *const *certNames, uint32_t certCount,
-                           const char *src, const char *dest) {
+int mar_repackage_and_sign(const char* NSSConfigDir,
+                           const char* const* certNames, uint32_t certCount,
+                           const char* src, const char* dest) {
   uint32_t offsetToIndex, dstOffsetToIndex, indexLength, leftOver,
       signatureAlgorithmID, numSignatures = 0, signatureSectionLength = 0;
   uint32_t signatureLengths[MAX_SIGNATURES];
@@ -804,12 +804,12 @@ int mar_repackage_and_sign(const char *NSSConfigDir,
       numBytesToCopy, sizeOfEntireMAR = 0;
   FILE *fpSrc = NULL, *fpDest = NULL;
   int rv = -1, hasSignatureBlock;
-  SGNContext *ctxs[MAX_SIGNATURES];
+  SGNContext* ctxs[MAX_SIGNATURES];
   SECItem secItems[MAX_SIGNATURES];
   char buf[BLOCKSIZE];
-  SECKEYPrivateKey *privKeys[MAX_SIGNATURES];
-  CERTCertificate *certs[MAX_SIGNATURES];
-  char *indexBuf = NULL;
+  SECKEYPrivateKey* privKeys[MAX_SIGNATURES];
+  CERTCertificate* certs[MAX_SIGNATURES];
+  char* indexBuf = NULL;
   uint32_t k;
 
   memset(signatureLengths, 0, sizeof(signatureLengths));

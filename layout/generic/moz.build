@@ -92,6 +92,7 @@ with Files('nsVideoFrame.*'):
     BUG_COMPONENT = ('Core', 'Audio/Video')
 
 EXPORTS += [
+    'nsAtomicContainerFrame.h',
     'nsCanvasFrame.h',
     'nsContainerFrame.h',
     'nsDirection.h',

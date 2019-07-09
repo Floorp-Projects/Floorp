@@ -844,6 +844,21 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Fix up common scheme typos?
+VARCACHE_PREF(
+  Live,
+  "browser.fixup.typo.scheme",
+   browser_fixup_typo_scheme,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "browser.fixup.dns_first_for_single_words",
+   browser_fixup_dns_first_for_single_words,
+  bool, false
+)
+
 // Render animations and videos as a solid color
 VARCACHE_PREF(
   Live,
@@ -959,6 +974,14 @@ VARCACHE_PREF(
 )
 
 PREF("browser.visited_color", String, "")
+
+// Enable xul error pages.
+VARCACHE_PREF(
+  Live,
+  "browser.xul.error_pages.enabled",
+   browser_xul_error_pages_enabled,
+  bool, true
+)
 
 //---------------------------------------------------------------------------
 // Prefs starting with "canvas."
@@ -1579,6 +1602,40 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, PREF_VALUE
 )
 #undef PREF_VALUE
+
+VARCACHE_PREF(
+  Live,
+  "dom.ipc.cpows.forbid-unsafe-from-browser",
+   dom_ipc_cpows_forbid_unsafe_from_browser,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.ipc.cpows.log.enabled",
+   dom_ipc_cpows_log_enabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.ipc.cpows.log.stack",
+   dom_ipc_cpows_log_stack,
+  bool, false
+)
+
+// Whether a native event loop should be used in the content process.
+VARCACHE_PREF(
+  Live,
+  "dom.ipc.useNativeEventProcessing.content",
+   dom_ipc_useNativeEventProcessing_content,
+  RelaxedAtomicBool,
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  false
+#else
+  true
+#endif
+)
 
 // If this is true, "keypress" event's keyCode value and charCode value always
 // become same if the event is not created/initialized by JS.
@@ -3840,6 +3897,17 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Prefs starting with "keyword."
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  Live,
+  "keyword.enabled",
+   keyword_enabled,
+  bool, false
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "layers."
 //---------------------------------------------------------------------------
 
@@ -5309,6 +5377,15 @@ VARCACHE_PREF(
   "layout.scrollbars.always-layerize-track",
    layout_scrollbars_always_layerize_track,
   RelaxedAtomicBool, false
+)
+
+// If layout.show_previous_page is true then during loading of a new page we
+// will draw the previous page if the new page has painting suppressed.
+VARCACHE_PREF(
+  Live,
+  "layout.show_previous_page",
+   layout_show_previous_page,
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -6864,6 +6941,22 @@ VARCACHE_PREF(
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
+
+// Enforce tracking protection in all modes.
+VARCACHE_PREF(
+  Live,
+  "privacy.trackingprotection.enabled",
+   privacy_trackingprotection_enabled,
+  bool, false
+)
+
+// Enforce tracking protection in Private Browsing mode.
+VARCACHE_PREF(
+  Live,
+  "privacy.trackingprotection.pbmode.enabled",
+   privacy_trackingprotection_pbmode_enabled,
+  bool, true
+)
 
 // Annotate channels based on the tracking protection list in all modes
 VARCACHE_PREF(

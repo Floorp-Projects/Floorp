@@ -15,15 +15,19 @@ WebGLExtensionColorBufferHalfFloat::WebGLExtensionColorBufferHalfFloat(
     WebGLContext* webgl)
     : WebGLExtensionBase(webgl) {
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+  SetRenderable(webgl::FormatRenderableState::Implicit(
+      WebGLExtensionID::EXT_color_buffer_half_float));
+}
 
-  auto& fua = webgl->mFormatUsage;
+void WebGLExtensionColorBufferHalfFloat::SetRenderable(
+    const webgl::FormatRenderableState state) {
+  auto& fua = mContext->mFormatUsage;
 
-  auto fnUpdateUsage = [&fua](GLenum sizedFormat,
-                              webgl::EffectiveFormat effFormat,
-                              const bool renderable) {
+  auto fnUpdateUsage = [&](GLenum sizedFormat, webgl::EffectiveFormat effFormat,
+                           const bool renderable) {
     auto usage = fua->EditUsage(effFormat);
     if (renderable) {
-      usage->SetRenderable();
+      usage->SetRenderable(state);
     }
     fua->AllowRBFormat(sizedFormat, usage, renderable);
   };
@@ -35,6 +39,10 @@ WebGLExtensionColorBufferHalfFloat::WebGLExtensionColorBufferHalfFloat(
                        // wicked driver bug on Mac+Intel)
 
 #undef FOO
+}
+
+void WebGLExtensionColorBufferHalfFloat::OnSetExplicit() {
+  SetRenderable(webgl::FormatRenderableState::Explicit());
 }
 
 WebGLExtensionColorBufferHalfFloat::~WebGLExtensionColorBufferHalfFloat() {}

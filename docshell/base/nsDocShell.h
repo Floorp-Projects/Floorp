@@ -12,6 +12,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -944,7 +945,9 @@ class nsDocShell final : public nsDocLoader,
   already_AddRefed<mozilla::dom::ChildSHistory> GetRootSessionHistory();
 
   inline bool UseErrorPages() {
-    return (mObserveErrorPages ? sUseErrorPages : mUseErrorPages);
+    return (mObserveErrorPages
+                ? mozilla::StaticPrefs::browser_xul_error_pages_enabled()
+                : mUseErrorPages);
   }
 
   bool CSSErrorReportingEnabled() const { return mCSSErrorReportingEnabled; }
@@ -983,9 +986,6 @@ class nsDocShell final : public nsDocLoader,
 
  private:  // data members
   static nsIURIFixup* sURIFixup;
-
-  // Cached value of the "browser.xul.error_pages.enabled" preference.
-  static bool sUseErrorPages;
 
 #ifdef DEBUG
   // We're counting the number of |nsDocShells| to help find leaks
