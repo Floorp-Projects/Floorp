@@ -30,7 +30,7 @@ load 308752-1.html
 load 308752-2.html
 load 316636-1.html
 load 317876.html
-load 322779-1.xul
+load chrome://reftest/content/crashtests/layout/tables/crashtests/322779-1.xul
 load 323489-1.html
 load 323604-1.html
 load 323604-2.xhtml
