@@ -1611,7 +1611,7 @@ pref("network.http.referer.referrerLengthLimit", 4096);
 
 // Include an origin header on non-GET and non-HEAD requests regardless of CORS
 // 0=never send, 1=send when same-origin only, 2=always send
-pref("network.http.sendOriginHeader", 2);
+pref("network.http.sendOriginHeader", 0);
 
 // Maximum number of consecutive redirects before aborting.
 pref("network.http.redirection-limit", 20);
