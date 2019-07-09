@@ -30,7 +30,6 @@
 #include "nsHTMLDocument.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsISelectionController.h"
-#include "nsILinkHandler.h"
 #include "nsIInlineSpellChecker.h"
 #include "nsIPrincipal.h"
 

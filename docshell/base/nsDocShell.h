@@ -29,7 +29,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMStorageManager.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsILinkHandler.h"
 #include "nsILoadContext.h"
 #include "nsILoadURIDelegate.h"
 #include "nsINetworkInterceptController.h"
@@ -120,7 +119,6 @@ class nsDocShell final : public nsDocLoader,
                          public nsIWebPageDescriptor,
                          public nsIAuthPromptProvider,
                          public nsILoadContext,
-                         public nsILinkHandler,
                          public nsIDOMStorageManager,
                          public nsINetworkInterceptController,
                          public nsIDeprecationWarner,
@@ -211,26 +209,80 @@ class nsDocShell final : public nsDocLoader,
     return nsDocLoader::Stop();
   }
 
-  // nsILinkHandler
-  NS_IMETHOD OnLinkClick(nsIContent* aContent, nsIURI* aURI,
-                         const nsAString& aTargetSpec,
-                         const nsAString& aFileName,
-                         nsIInputStream* aPostDataStream,
-                         nsIInputStream* aHeadersDataStream,
-                         bool aIsUserTriggered, bool aIsTrusted,
-                         nsIPrincipal* aTriggeringPrincipal,
-                         nsIContentSecurityPolicy* aCsp) override;
-  NS_IMETHOD OnLinkClickSync(
+  /**
+   * Process a click on a link.
+   *
+   * @param aContent the content object used for triggering the link.
+   * @param aURI a URI object that defines the destination for the link
+   * @param aTargetSpec indicates where the link is targeted (may be an empty
+   *        string)
+   * @param aFileName non-null when the link should be downloaded as the given
+   * file
+   * @param aPostDataStream the POST data to send
+   * @param aHeadersDataStream ??? (only used for plugins)
+   * @param aIsTrusted false if the triggerer is an untrusted DOM event.
+   * @param aTriggeringPrincipal, if not passed explicitly we fall back to
+   *        the document's principal.
+   * @param aCsp, the CSP to be used for the load, that is the CSP of the
+   *        entity responsible for causing the load to occur. Most likely
+   *        this is the CSP of the document that started the load. In case
+   *        aCsp was not passed explicitly we fall back to using
+   *        aContent's document's CSP if that document holds any.
+   */
+  nsresult OnLinkClick(nsIContent* aContent, nsIURI* aURI,
+                       const nsAString& aTargetSpec, const nsAString& aFileName,
+                       nsIInputStream* aPostDataStream,
+                       nsIInputStream* aHeadersDataStream,
+                       bool aIsUserTriggered, bool aIsTrusted,
+                       nsIPrincipal* aTriggeringPrincipal,
+                       nsIContentSecurityPolicy* aCsp);
+  /**
+   * Process a click on a link.
+   *
+   * Works the same as OnLinkClick() except it happens immediately rather than
+   * through an event.
+   *
+   * @param aContent the content object used for triggering the link.
+   * @param aURI a URI obect that defines the destination for the link
+   * @param aTargetSpec indicates where the link is targeted (may be an empty
+   *        string)
+   * @param aFileName non-null when the link should be downloaded as the given
+   * file
+   * @param aPostDataStream the POST data to send
+   * @param aHeadersDataStream ??? (only used for plugins)
+   * @param aNoOpenerImplied if the link implies "noopener"
+   * @param aDocShell (out-param) the DocShell that the request was opened on
+   * @param aRequest the request that was opened
+   * @param aTriggeringPrincipal, if not passed explicitly we fall back to
+   *        the document's principal.
+   * @param aCsp, the CSP to be used for the load, that is the CSP of the
+   *        entity responsible for causing the load to occur. Most likely
+   *        this is the CSP of the document that started the load. In case
+   *        aCsp was not passed explicitly we fall back to using
+   *        aContent's document's CSP if that document holds any.
+   */
+  nsresult OnLinkClickSync(
       nsIContent* aContent, nsIURI* aURI, const nsAString& aTargetSpec,
-      const nsAString& aFileName, nsIInputStream* aPostDataStream = 0,
-      nsIInputStream* aHeadersDataStream = 0, bool aNoOpenerImplied = false,
-      nsIDocShell** aDocShell = 0, nsIRequest** aRequest = 0,
-      bool aIsUserTriggered = false,
+      const nsAString& aFileName, nsIInputStream* aPostDataStream = nullptr,
+      nsIInputStream* aHeadersDataStream = nullptr,
+      bool aNoOpenerImplied = false, nsIDocShell** aDocShell = nullptr,
+      nsIRequest** aRequest = nullptr, bool aIsUserTriggered = false,
       nsIPrincipal* aTriggeringPrincipal = nullptr,
-      nsIContentSecurityPolicy* aCsp = nullptr) override;
-  NS_IMETHOD OnOverLink(nsIContent* aContent, nsIURI* aURI,
-                        const nsAString& aTargetSpec) override;
-  NS_IMETHOD OnLeaveLink() override;
+      nsIContentSecurityPolicy* aCsp = nullptr);
+  /**
+   * Process a mouse-over a link.
+   *
+   * @param aContent the linked content.
+   * @param aURI an URI object that defines the destination for the link
+   * @param aTargetSpec indicates where the link is targeted (it may be an empty
+   *        string)
+   */
+  nsresult OnOverLink(nsIContent* aContent, nsIURI* aURI,
+                      const nsAString& aTargetSpec);
+  /**
+   * Process the mouse leaving a link.
+   */
+  nsresult OnLeaveLink();
 
   // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
   // are shared with nsIDocShell and can't be declared twice.
