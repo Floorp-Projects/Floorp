@@ -535,7 +535,7 @@ extern "C" {
     fn is_in_compositor_thread() -> bool;
     fn is_in_render_thread() -> bool;
     fn is_in_main_thread() -> bool;
-    fn is_glcontext_egl(glcontext_ptr: *mut c_void) -> bool;
+    fn is_glcontext_gles(glcontext_ptr: *mut c_void) -> bool;
     fn is_glcontext_angle(glcontext_ptr: *mut c_void) -> bool;
     // Enables binary recording that can be used with `wrench replay`
     // Outputs a wr-record-*.bin file for each window that is shown
@@ -1106,7 +1106,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>)
     assert!(unsafe { is_in_render_thread() });
 
     let gl;
-    if unsafe { is_glcontext_egl(gl_context) } {
+    if unsafe { is_glcontext_gles(gl_context) } {
         gl = unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
     } else {
         gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
@@ -1171,7 +1171,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     };
 
     let gl;
-    if unsafe { is_glcontext_egl(gl_context) } {
+    if unsafe { is_glcontext_gles(gl_context) } {
         gl = unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
     } else {
         gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
