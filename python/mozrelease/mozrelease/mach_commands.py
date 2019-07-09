@@ -18,7 +18,12 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase
-from mozilla_version.gecko import GeckoVersion
+from mozilla_version.gecko import (
+    DeveditionVersion,
+    FennecVersion,
+    FirefoxVersion,
+    ThunderbirdVersion,
+)
 
 
 @CommandProvider
@@ -35,7 +40,6 @@ class MachCommands(MachCommandBase):
                 description="Generate list of bugs since the last release.")
     @CommandArgument('--version',
                      required=True,
-                     type=GeckoVersion.parse,
                      help="The version being built.")
     @CommandArgument('--product',
                      required=True,
@@ -47,6 +51,9 @@ class MachCommands(MachCommandBase):
                      help="The revision being built.")
     def buglist(self, version, product, revision, repo):
         self.setup_logging()
+
+        version == _convert_version_string_into_mozilla_version(product, version)
+
         from mozrelease.buglist_creator import create_bugs_url
         print(create_bugs_url(
             product=product,
@@ -64,7 +71,6 @@ class MachCommands(MachCommandBase):
                      help="The email address to send the bug list to "
                           "(may be specified more than once.")
     @CommandArgument('--version',
-                     type=GeckoVersion.parse,
                      required=True,
                      help="The version being built.")
     @CommandArgument('--product',
@@ -83,6 +89,11 @@ class MachCommands(MachCommandBase):
                      help="The task group of the build.")
     def buglist_email(self, **options):
         self.setup_logging()
+
+        options['version'] = _convert_version_string_into_mozilla_version(
+            options['product'], options['version']
+        )
+
         from mozrelease.buglist_creator import email_release_drivers
         email_release_drivers(**options)
 
@@ -105,3 +116,17 @@ class MachCommands(MachCommandBase):
 
         # all of the taskgraph logging is unstructured logging
         self.log_manager.enable_unstructured()
+
+
+_VERSION_CLASS_PER_PRODUCT = {
+    'devedition': DeveditionVersion,
+    'fennec': FennecVersion,
+    'firefox': FirefoxVersion,
+    'thunderbird': ThunderbirdVersion,
+}
+
+
+def _convert_version_string_into_mozilla_version(product, version_string):
+    product = product.lower()
+    VersionClass = _VERSION_CLASS_PER_PRODUCT[product]
+    return VersionClass.parse(version_string)
