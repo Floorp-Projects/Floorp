@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.ui
 
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -13,11 +12,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+
+import androidx.test.platform.app.InstrumentationRegistry
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
- *  Tests for verifying the presence of home screen elements
+ *  Tests for verifying the presence of home screen and first-run homescreen elements
  *
  */
 
@@ -69,6 +70,45 @@ class HomeScreenTest {
             verifyNoCollectionsText()
             verifyHomeToolbar()
             verifyHomeComponent()
+        }
+    }
+
+    @Test
+    fun firstRunHomeScreenItemsTest() {
+
+        homeScreen {
+            verifyHomeScreen()
+            verifyHomePrivateBrowsingButton()
+            verifyHomeMenu()
+            verifyHomeWordmark()
+
+            verifyWelcomeHeader()
+
+            verifyAlreadyHaveAnAccountHeader()
+            verifyGetTheMostHeader()
+            verifyAccountsSignInButton()
+            verifyGetToKnowHeader()
+
+            verifyChooseThemeHeader()
+            verifyChooseThemeText()
+            verifyLightThemeToggle()
+            verifyLightThemeDescription()
+            verifyDarkThemeToggle()
+            verifyDarkThemeDescription()
+            verifyAutomaticThemeToggle()
+            verifyAutomaticThemeDescription()
+
+            verifyProtectYourselfHeader()
+            verifyTrackingProtectionToggle()
+            verifyProtectYourselfText()
+
+            verifyBrowsePrivatelyHeader()
+            verifyBrowsePrivatelyText()
+            verifyYourPrivacyHeader()
+            verifyYourPrivacyText()
+
+            verifyPrivacyNoticeButton()
+            verifyStartBrowsingButton()
         }
     }
 }
