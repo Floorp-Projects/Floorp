@@ -12,7 +12,6 @@
     <script defer="defer" src="chrome://global/content/certviewer/components/info-item.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/info-group.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/dummy-info.js"></script>
-    <script defer="defer" src="chrome://global/content/certviewer/components/handshake-section.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/certificate-tab.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/certificate-section.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
@@ -20,16 +19,7 @@
     <title>about:certificate</title>
   </head>
   <body>
-    <h1>Certificate Viewer</h1>
-
-    <handshake-section></handshake-section> 
-
     <certificate-section></certificate-section> 
-    
-    <template id="handshake-section-template" class="section">
-      <link rel="stylesheet" href="chrome://global/content/certviewer/components/handshake-section.css">
-      <h1 class="title"></h1>
-    </template>
 
     <template id="certificate-section-template" class="section">
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/certificate-section.css">
