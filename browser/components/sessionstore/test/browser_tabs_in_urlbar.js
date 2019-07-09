@@ -111,7 +111,6 @@ add_task(async function test_unrestored_tabs_listed() {
   });
   const total = UrlbarTestUtils.getResultCount(window);
   info(`Found ${total} matches`);
-  const quantumbar = UrlbarPrefs.get("quantumbar");
 
   // Check to see the expected uris and titles match up (in any order)
   for (let i = 0; i < total; i++) {
@@ -120,9 +119,7 @@ add_task(async function test_unrestored_tabs_listed() {
       info("Skip heuristic match");
       continue;
     }
-    const url = quantumbar
-      ? result.url
-      : PlacesUtils.parseActionUrl(result.url).params.url;
+    const url = result.url;
     Assert.ok(
       url in tabsForEnsure,
       `Should have the found result '${url}' in the expected list of entries`

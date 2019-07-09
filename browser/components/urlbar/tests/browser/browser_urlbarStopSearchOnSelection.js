@@ -60,11 +60,9 @@ add_task(async function mainTest() {
       // match the open tab so that the open-tab result appears again.
       EventUtils.synthesizeKey("l");
 
-      // There should be 2 results immediately: heuristic and open tab.  (On
-      // quantumbar, there will be only 2, but on awesomebar, there will be 4
-      // since awesomebar will keep showing the excess old results for a bit.)
+      // There should be 2 results immediately: heuristic and open tab.
       await TestUtils.waitForCondition(() => {
-        return UrlbarTestUtils.getResultCount(window) >= 2;
+        return UrlbarTestUtils.getResultCount(window) == 2;
       });
 
       // Before the search completes, change the selected result.  Pressing only
@@ -102,18 +100,6 @@ add_task(async function mainTest() {
       // and amplbar should not be in the results.
       let count = UrlbarTestUtils.getResultCount(window);
       for (let i = 1; i < count; i++) {
-        if (!UrlbarPrefs.get("quantumbar")) {
-          // On awesomebar, UrlbarTestUtils.getDetailsOfResultAt() can throw due
-          // to its urlbar.controller.getFinalCompleteValueAt() call.  That's
-          // because the results at this point may contain results from two
-          // different searches.  This only seems to happen on --verify runs.
-          try {
-            gURLBar.controller.getFinalCompleteValueAt(i);
-          } catch (ex) {
-            info("getFinalCompleteValueAt exception: " + ex);
-            continue;
-          }
-        }
         result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
         Assert.ok(
           result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||

@@ -39,18 +39,6 @@ add_task(async function() {
   );
   Assert.ok(!result.displayed.action, "Should have an empty action");
 
-  if (!UrlbarPrefs.get("quantumbar")) {
-    let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-
-    // QuantumBar doesn't have separate boxes for items.
-    let urlHbox = element._urlText.parentNode.parentNode;
-    Assert.ok(
-      urlHbox.classList.contains("ac-url"),
-      "URL hbox element sanity check"
-    );
-    BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
-  }
-
   info("During override");
   EventUtils.synthesizeKey("VK_SHIFT", { type: "keydown" });
 
@@ -65,18 +53,6 @@ add_task(async function() {
     "Node should contain the name of the bookmark and query"
   );
   Assert.ok(!result.displayed.action, "Should have an empty action");
-
-  if (!UrlbarPrefs.get("quantumbar")) {
-    let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-
-    // QuantumBar doesn't have separate boxes for items.
-    let urlHbox = element._urlText.parentNode.parentNode;
-    Assert.ok(
-      urlHbox.classList.contains("ac-url"),
-      "URL hbox element sanity check"
-    );
-    BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
-  }
 
   EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
 });

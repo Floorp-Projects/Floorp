@@ -197,13 +197,6 @@ add_task(async function backspaceNoAutofill() {
   Assert.equal(gURLBar.selectionEnd, "ExA".length);
 
   let heuristicValue = "ExA";
-  if (!UrlbarPrefs.get("quantumbar")) {
-    heuristicValue = PlacesUtils.mozActionURI("searchengine", {
-      engineName: "Google",
-      searchQuery: "ExA",
-      input: "ExA",
-    });
-  }
 
   checkKeys([
     ["KEY_ArrowDown", "http://example.com/", 1],
