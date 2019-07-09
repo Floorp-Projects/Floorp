@@ -659,12 +659,13 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   return Ok();
 }
 
-/* static */ size_t SharedScriptData::AllocationSize(
-    uint32_t codeLength, uint32_t noteLength, uint32_t natoms,
-    uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
+/* static */ size_t SharedScriptData::AllocationSize(uint32_t codeLength,
+                                                     uint32_t noteLength,
+                                                     uint32_t numResumeOffsets,
+                                                     uint32_t numScopeNotes,
+                                                     uint32_t numTryNotes) {
   size_t size = sizeof(SharedScriptData);
 
-  size += natoms * sizeof(GCPtrAtom);
   size += sizeof(Flags);
   size += codeLength * sizeof(jsbytecode);
   size += noteLength * sizeof(jssrcnote);
@@ -761,17 +762,11 @@ void SharedScriptData::initOptionalArrays(size_t* pcursor,
 }
 
 SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
-                                   uint32_t natoms, uint32_t numResumeOffsets,
+                                   uint32_t numResumeOffsets,
                                    uint32_t numScopeNotes, uint32_t numTryNotes)
     : codeLength_(codeLength) {
   // Variable-length data begins immediately after SharedScriptData itself.
   size_t cursor = sizeof(*this);
-
-  // Default-initialize 'atoms'
-  static_assert(alignof(SharedScriptData) >= alignof(GCPtrAtom),
-                "Incompatible alignment");
-  initElements<GCPtrAtom>(cursor, natoms);
-  cursor += natoms * sizeof(GCPtrAtom);
 
   // The following arrays are byte-aligned with additional padding to ensure
   // that together they maintain uint32_t-alignment.
@@ -785,7 +780,6 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
 
     static_assert(alignof(Flags) >= alignof(jsbytecode),
                   "Incompatible alignment");
-    codeOffset_ = cursor;
     initElements<jsbytecode>(cursor, codeLength);
     cursor += codeLength * sizeof(jsbytecode);
 
@@ -802,12 +796,11 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
                      numTryNotes);
 
   // Check that we correctly recompute the expected values.
-  MOZ_ASSERT(this->natoms() == natoms);
   MOZ_ASSERT(this->codeLength() == codeLength);
   MOZ_ASSERT(this->noteLength() == noteLength);
 
   // Sanity check
-  MOZ_ASSERT(AllocationSize(codeLength, noteLength, natoms, numResumeOffsets,
+  MOZ_ASSERT(AllocationSize(codeLength, noteLength, numResumeOffsets,
                             numScopeNotes, numTryNotes) == cursor);
 }
 
@@ -822,12 +815,14 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   uint32_t numTryNotes = 0;
 
   JSContext* cx = xdr->cx();
+  RuntimeScriptData* rsd = nullptr;
   SharedScriptData* ssd = nullptr;
 
   if (mode == XDR_ENCODE) {
+    rsd = script->scriptData();
     ssd = script->sharedScriptData();
 
-    natoms = ssd->natoms();
+    natoms = rsd->natoms();
     codeLength = ssd->codeLength();
     noteLength = ssd->noteLength();
 
@@ -849,6 +844,7 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
                                         numTryNotes)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
+    rsd = script->scriptData();
     ssd = script->sharedScriptData();
   }
 
@@ -870,7 +866,7 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
 
   {
     RootedAtom atom(cx);
-    GCPtrAtom* vector = ssd->atoms();
+    GCPtrAtom* vector = rsd->atoms();
 
     for (uint32_t i = 0; i != natoms; ++i) {
       if (mode == XDR_ENCODE) {
@@ -908,8 +904,10 @@ template
     XDRResult
     SharedScriptData::XDR(XDRState<XDR_DECODE>* xdr, HandleScript script);
 
-/* static */ size_t RuntimeScriptData::AllocationSize() {
+/* static */ size_t RuntimeScriptData::AllocationSize(uint32_t natoms) {
   size_t size = sizeof(RuntimeScriptData);
+
+  size += natoms * sizeof(GCPtrAtom);
 
   return size;
 }
@@ -922,12 +920,22 @@ void RuntimeScriptData::initElements(size_t offset, size_t length) {
   DefaultInitializeElements<T>(reinterpret_cast<void*>(base + offset), length);
 }
 
-RuntimeScriptData::RuntimeScriptData() {
+RuntimeScriptData::RuntimeScriptData(uint32_t natoms) : natoms_(natoms) {
   // Variable-length data begins immediately after RuntimeScriptData itself.
   size_t cursor = sizeof(*this);
 
+  // Default-initialize trailing arrays.
+
+  static_assert(alignof(RuntimeScriptData) >= alignof(GCPtrAtom),
+                "Incompatible alignment");
+  initElements<GCPtrAtom>(cursor, natoms);
+  cursor += natoms * sizeof(GCPtrAtom);
+
+  // Check that we correctly recompute the expected values.
+  MOZ_ASSERT(this->natoms() == natoms);
+
   // Sanity check
-  MOZ_ASSERT(AllocationSize() == cursor);
+  MOZ_ASSERT(AllocationSize(natoms) == cursor);
 }
 
 template <XDRMode mode>
@@ -3480,14 +3488,11 @@ bool ScriptSource::setSourceMapURL(JSContext* cx,
 /*
  * [SMDOC] JSScript data layout (shared)
  *
- * Shared script data management.
- *
- * SharedScriptData::data contains data that can be shared within a runtime.
- * The atoms() data is placed first to simplify its alignment.
+ * Script data that shareable across processes. There are no pointers (GC or
+ * otherwise) and the data is relocatable.
  *
  * Array elements   Pointed to by         Length
  * --------------   -------------         ------
- * GCPtrAtom        atoms()               natoms()
  * jsbytecode       code()                codeLength()
  * jsscrnote        notes()               noteLength()
  * uint32_t         resumeOffsets()
@@ -3495,11 +3500,13 @@ bool ScriptSource::setSourceMapURL(JSContext* cx,
  * JSTryNote        tryNotes()
  */
 
-SharedScriptData* js::SharedScriptData::new_(
-    JSContext* cx, uint32_t codeLength, uint32_t noteLength, uint32_t natoms,
-    uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
+SharedScriptData* js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,
+                                             uint32_t noteLength,
+                                             uint32_t numResumeOffsets,
+                                             uint32_t numScopeNotes,
+                                             uint32_t numTryNotes) {
   // Compute size including trailing arrays
-  size_t size = AllocationSize(codeLength, noteLength, natoms, numResumeOffsets,
+  size_t size = AllocationSize(codeLength, noteLength, numResumeOffsets,
                                numScopeNotes, numTryNotes);
 
   // Allocate contiguous raw buffer
@@ -3511,14 +3518,13 @@ SharedScriptData* js::SharedScriptData::new_(
 
   // Constuct the SharedScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw)
-      SharedScriptData(codeLength, noteLength, natoms, numResumeOffsets,
-                       numScopeNotes, numTryNotes);
+  return new (raw) SharedScriptData(codeLength, noteLength, numResumeOffsets,
+                                    numScopeNotes, numTryNotes);
 }
 
-RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx) {
+RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx, uint32_t natoms) {
   // Compute size including trailing arrays
-  size_t size = AllocationSize();
+  size_t size = AllocationSize(natoms);
 
   // Allocate contiguous raw buffer
   void* raw = cx->pod_malloc<uint8_t>(size);
@@ -3529,7 +3535,7 @@ RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx) {
 
   // Constuct the RuntimeScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw) RuntimeScriptData();
+  return new (raw) RuntimeScriptData(natoms);
 }
 
 bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
@@ -3548,14 +3554,14 @@ bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
 
   MOZ_ASSERT(!scriptData_);
 
-  RefPtr<RuntimeScriptData> rsd(RuntimeScriptData::new_(cx));
+  RefPtr<RuntimeScriptData> rsd(RuntimeScriptData::new_(cx, natoms));
   if (!rsd) {
     return false;
   }
 
   js::UniquePtr<SharedScriptData> ssd(
-      SharedScriptData::new_(cx, codeLength, noteLength, natoms,
-                             numResumeOffsets, numScopeNotes, numTryNotes));
+      SharedScriptData::new_(cx, codeLength, noteLength, numResumeOffsets,
+                             numScopeNotes, numTryNotes));
   if (!ssd) {
     return false;
   }
@@ -4991,6 +4997,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
     return false;
   }
 
+  js::RuntimeScriptData* rsd = script->scriptData();
   js::SharedScriptData* data = script->sharedScriptData();
 
   // Initialize POD fields
@@ -5008,7 +5015,6 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   }
 
   // Initialize trailing arrays
-  InitAtomMap(*bce->perScriptData().atomIndices(), data->atoms());
   std::copy_n(bce->bytecodeSection().code().begin(), codeLength, data->code());
   std::copy_n(bce->bytecodeSection().notes().begin(), noteLength,
               data->notes());
@@ -5018,29 +5024,23 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   bce->bytecodeSection().scopeNoteList().finish(data->scopeNotes());
   bce->bytecodeSection().tryNoteList().finish(data->tryNotes());
 
+  InitAtomMap(*bce->perScriptData().atomIndices(), rsd->atoms());
+
   return true;
-}
-
-void SharedScriptData::traceChildren(JSTracer* trc) {
-  for (uint32_t i = 0; i < natoms(); ++i) {
-    TraceNullableEdge(trc, &atoms()[i], "atom");
-  }
-}
-
-void SharedScriptData::markForCrossZone(JSContext* cx) {
-  for (uint32_t i = 0; i < natoms(); ++i) {
-    cx->markAtom(atoms()[i]);
-  }
 }
 
 void RuntimeScriptData::traceChildren(JSTracer* trc) {
   MOZ_ASSERT(refCount() != 0);
 
-  ssd_->traceChildren(trc);
+  for (uint32_t i = 0; i < natoms(); ++i) {
+    TraceNullableEdge(trc, &atoms()[i], "atom");
+  }
 }
 
 void RuntimeScriptData::markForCrossZone(JSContext* cx) {
-  ssd_->markForCrossZone(cx);
+  for (uint32_t i = 0; i < natoms(); ++i) {
+    cx->markAtom(atoms()[i]);
+  }
 }
 
 void JSScript::traceChildren(JSTracer* trc) {
