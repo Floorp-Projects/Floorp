@@ -8,7 +8,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.MediaElement
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutMillis
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
@@ -21,6 +20,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TEST_ENDPOINT
 
 @RunWith(AndroidJUnit4::class)
 @TimeoutMillis(45000)
@@ -134,7 +134,7 @@ class MediaElementTest : BaseSessionTest() {
 
     private fun playMediaFromScript(path: String) {
         waitUntilVideoReady(path)
-        sessionRule.evaluateJS(mainSession, "$('video').play()")
+        mainSession.evaluateJS("document.querySelector('video').play()")
         waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAY)
         waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAYING)
     }
@@ -201,7 +201,7 @@ class MediaElementTest : BaseSessionTest() {
 
     private fun fullscreenMedia(path: String) {
         waitUntilVideoReady(path)
-        sessionRule.evaluateJS(mainSession, "$('video').requestFullscreen()")
+        mainSession.evaluateJS("document.querySelector('video').requestFullscreen()")
         var waiting = true
         while (waiting) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
@@ -215,36 +215,32 @@ class MediaElementTest : BaseSessionTest() {
         }
     }
 
-    @WithDevToolsAPI
     @Test
     fun oggPlayMedia() {
         playMedia(VIDEO_OGG_PATH)
     }
 
-    @WithDevToolsAPI
     @Ignore //disable test for frequent failures Bug 1554117
     @Test
     fun oggPlayMediaFromScript() {
         playMediaFromScript(VIDEO_OGG_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun oggPauseMedia() {
         pauseMedia(VIDEO_OGG_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun oggTimeMedia() {
         timeMedia(VIDEO_OGG_PATH, 2.0)
     }
 
-    @WithDevToolsAPI
     @Test
     fun oggMetadataMedia() {
         val meta = waitForMetadata(VIDEO_OGG_PATH)
-        assertThat("Current source is set", meta?.currentSource, equalTo("resource://android/assets/www/videos/video.ogg"))
+        assertThat("Current source is set", meta?.currentSource,
+                equalTo("$TEST_ENDPOINT/assets/www/videos/video.ogg"))
         assertThat("Width is set", meta?.width, equalTo(320L))
         assertThat("Height is set", meta?.height, equalTo(240L))
         assertThat("Video is seekable", meta?.isSeekable, equalTo(true))
@@ -254,25 +250,21 @@ class MediaElementTest : BaseSessionTest() {
         assertThat("Contains one audio track", meta?.audioTrackCount, equalTo(0))
     }
 
-    @WithDevToolsAPI
     @Test
     fun oggSeekMedia() {
         seekMedia(VIDEO_OGG_PATH, 2.0)
     }
 
-    @WithDevToolsAPI
     @Test
     fun oggFullscreenMedia() {
         fullscreenMedia(VIDEO_OGG_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun webmPlayMedia() {
         playMedia(VIDEO_WEBM_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun webmPlayMediaFromScript() {
         // disable test on pgo and debug for frequently failing Bug 1532404
@@ -280,23 +272,21 @@ class MediaElementTest : BaseSessionTest() {
         playMediaFromScript(VIDEO_WEBM_PATH)        
     }
 
-    @WithDevToolsAPI
     @Test
     fun webmPauseMedia() {
         pauseMedia(VIDEO_WEBM_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun webmTimeMedia() {
         timeMedia(VIDEO_WEBM_PATH, 0.2)
     }
 
-    @WithDevToolsAPI
     @Test
     fun webmMetadataMedia() {
         val meta = waitForMetadata(VIDEO_WEBM_PATH)
-        assertThat("Current source is set", meta?.currentSource, equalTo("resource://android/assets/www/videos/gizmo.webm"))
+        assertThat("Current source is set", meta?.currentSource,
+                equalTo("$TEST_ENDPOINT/assets/www/videos/gizmo.webm"))
         assertThat("Width is set", meta?.width, equalTo(560L))
         assertThat("Height is set", meta?.height, equalTo(320L))
         assertThat("Video is seekable", meta?.isSeekable, equalTo(true))
@@ -305,13 +295,11 @@ class MediaElementTest : BaseSessionTest() {
         assertThat("Contains one audio track", meta?.audioTrackCount, equalTo(1))
     }
 
-    @WithDevToolsAPI
     @Test
     fun webmSeekMedia() {
         seekMedia(VIDEO_WEBM_PATH, 0.2)
     }
 
-    @WithDevToolsAPI
     @Test
     fun webmFullscreenMedia() {
         fullscreenMedia(VIDEO_WEBM_PATH)
@@ -327,7 +315,6 @@ class MediaElementTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test
     fun webmVolumeMedia() {
         val media = waitUntilVideoReady(VIDEO_WEBM_PATH)
@@ -344,40 +331,36 @@ class MediaElementTest : BaseSessionTest() {
     }
 
     // NOTE: All MP4 tests are disabled on automation by Bug 1503952
-    @WithDevToolsAPI
     @Test
     fun mp4PlayMedia() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         playMedia(VIDEO_MP4_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun mp4PlayMediaFromScript() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         playMediaFromScript(VIDEO_MP4_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun mp4PauseMedia() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         pauseMedia(VIDEO_MP4_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun mp4TimeMedia() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         timeMedia(VIDEO_MP4_PATH, 0.2)
     }
 
-    @WithDevToolsAPI
     @Test
     fun mp4MetadataMedia() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         val meta = waitForMetadata(VIDEO_MP4_PATH)
-        assertThat("Current source is set", meta?.currentSource, equalTo("resource://android/assets/www/videos/short.mp4"))
+        assertThat("Current source is set", meta?.currentSource,
+                equalTo("$TEST_ENDPOINT/assets/www/videos/short.mp4"))
         assertThat("Width is set", meta?.width, equalTo(320L))
         assertThat("Height is set", meta?.height, equalTo(240L))
         assertThat("Video is seekable", meta?.isSeekable, equalTo(true))
@@ -386,21 +369,18 @@ class MediaElementTest : BaseSessionTest() {
         assertThat("Contains one audio track", meta?.audioTrackCount, equalTo(1))
     }
 
-    @WithDevToolsAPI
     @Test
     fun mp4SeekMedia() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         seekMedia(VIDEO_MP4_PATH, 0.2)
     }
 
-    @WithDevToolsAPI
     @Test
     fun mp4FullscreenMedia() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         fullscreenMedia(VIDEO_MP4_PATH)
     }
 
-    @WithDevToolsAPI
     @Test
     fun mp4VolumeMedia() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
@@ -418,7 +398,6 @@ class MediaElementTest : BaseSessionTest() {
     }
 
     @Ignore
-    @WithDevToolsAPI
     @Test
     fun badMediaPath() {
         // Disabled on automation by Bug 1503957
@@ -433,12 +412,12 @@ class MediaElementTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun autoplayBlocked() {
         sessionRule.runtime.settings.autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
         val media = waitUntilVideoReadyNoPrefs(AUTOPLAY_PATH)
-        val promise = sessionRule.evaluateJS(mainSession, "$('video').play()").asJSPromise()
+        val promise = sessionRule.evaluatePromiseJS(mainSession,
+                                                    "document.querySelector('video').play()")
         var exceptionCaught = false
         try {
             val result = promise.value as Boolean
@@ -456,12 +435,12 @@ class MediaElementTest : BaseSessionTest() {
         */
     }
 
-    @WithDevToolsAPI
     @Test fun autoplayAllowed() {
         sessionRule.runtime.settings.autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED
 
         val media = waitUntilVideoReadyNoPrefs(VIDEO_WEBM_PATH)
-        val promise = sessionRule.evaluateJS(mainSession, "$('video').play()").asJSPromise()
+        val promise = sessionRule.evaluatePromiseJS(mainSession,
+                                                    "document.querySelector('video').play()")
         var exceptionCaught = false
         try {
             promise.value

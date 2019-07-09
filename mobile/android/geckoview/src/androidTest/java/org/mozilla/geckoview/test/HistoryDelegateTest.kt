@@ -7,8 +7,6 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
 
 import android.support.test.filters.MediumTest
@@ -18,6 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.util.Callbacks
 import org.junit.Ignore
+import org.mozilla.geckoview.test.util.UiThreadUtils
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -28,7 +27,6 @@ class HistoryDelegateTest : BaseSessionTest() {
         const val VISITED_COLOR = "rgb(255, 0, 0)"
     }
 
-    @WithDevToolsAPI
     @Test fun getVisited() {
         val testUri = createTestUrl(LINKS_HTML_PATH)
         sessionRule.delegateDuringNextWait(object : GeckoSession.HistoryDelegate {
@@ -72,69 +70,30 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.session.waitUntilCalled(GeckoSession.HistoryDelegate::class,
                                             "onVisited", "getVisited")
 
-        // Inject a frame script to query the `:visited` style of a link, using
-        // a special chrome-only method. Note that we can't use the current
-        // browsers s
-        val frameScriptDataUri = GeckoSession.createDataUri(String.format("""
-            addMessageListener("HistoryDelegateTest:GetLinkColor", function onMessage(message) {
-                if (content.document.documentURI != "%s") {
-                    return;
-                }
-                let { selector } = message.data;
-                let element = content.document.querySelector(selector);
-                if (!element) {
-                    sendAsyncMessage("HistoryDelegateTest:GetLinkColor", {
-                        ok: false,
-                        error: "No element for " + selector,
-                    });
-                    return;
-                }
-                let color = content.windowUtils.getVisitedDependentComputedStyle(element, "", "color");
-                sendAsyncMessage("HistoryDelegateTest:GetLinkColor", { ok: true, color });
-            });
-        """, testUri).toByteArray(), null)
-
-        // Note that we can't send the message directly to the current browser,
-        // because `gBrowser` might not refer to the correct window. Instead,
-        // we broadcast the message using the global message manager, and have
-        // the frame script check the document URI.
-        sessionRule.evaluateChromeJS(String.format("""
-            Services.mm.loadFrameScript("%s", true);
-            function getLinkColor(selector) {
-                return new Promise((resolve, reject) => {
-                    Services.mm.addMessageListener("HistoryDelegateTest:GetLinkColor", function onMessage(message) {
-                        Services.mm.removeMessageListener("HistoryDelegateTest:GetLinkColor", onMessage);
-                        if (message.data.ok) {
-                            resolve(message.data.color);
-                        } else {
-                            reject(message.data.error);
-                        }
-                    });
-                    Services.mm.broadcastAsyncMessage('HistoryDelegateTest:GetLinkColor', { selector });
-                });
-            }
-        """, frameScriptDataUri))
+        // Sometimes link changes are not applied immediately, wait for a little bit
+        UiThreadUtils.waitForCondition({
+            sessionRule.getLinkColor(testUri, "#mozilla") == VISITED_COLOR
+        }, sessionRule.env.defaultTimeoutMillis)
 
         assertThat(
             "Mozilla should be visited",
-            sessionRule.waitForChromeJS("getLinkColor('#mozilla')") as String,
+            sessionRule.getLinkColor(testUri, "#mozilla"),
             equalTo(VISITED_COLOR)
         )
 
         assertThat(
             "Test Pilot should be visited",
-            sessionRule.waitForChromeJS("getLinkColor('#testpilot')") as String,
+            sessionRule.getLinkColor(testUri, "#testpilot"),
             equalTo(VISITED_COLOR)
         )
 
         assertThat(
             "Bugzilla should be unvisited",
-            sessionRule.waitForChromeJS("getLinkColor('#bugzilla')") as String,
+            sessionRule.getLinkColor(testUri, "#bugzilla"),
             equalTo(UNVISITED_COLOR)
         )
     }
 
-    @ReuseSession(false)
     @Ignore //disable test on debug for frequent failures Bug 1544169
     @Test fun onHistoryStateChange() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)

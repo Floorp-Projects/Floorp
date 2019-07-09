@@ -1,0 +1,78 @@
+[
+  {
+    "namespace": "test",
+    "description": "Additional APIs for test support in GeckoView.",
+    "functions": [
+      {
+        "name": "setPrefs",
+        "type": "function",
+        "async": true,
+        "description": "Set prefs and return a set of saved prefs",
+        "parameters": [
+          {
+            "name": "oldPrefs",
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {"type": "any"}
+          },
+          {
+            "name": "newPrefs",
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {"type": "any"}
+          }
+        ]
+      },
+      {
+        "name": "restorePrefs",
+        "type": "function",
+        "async": true,
+        "description": "Restore prefs to old value",
+        "parameters": [
+          {
+            "type": "any",
+            "name": "oldPrefs"
+          }
+        ]
+      },
+      {
+        "name": "getPrefs",
+        "type": "function",
+        "async": true,
+        "description": "Get pref values.",
+        "parameters": [
+          {
+            "name": "prefs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      {
+        "name": "getLinkColor",
+        "type": "function",
+        "async": true,
+        "description": "Get resolved color for link for a given page and selector.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "uri"
+          },
+          {
+            "type": "string",
+            "name": "selector"
+          }
+        ]
+      },
+      {
+        "name": "getRequestedLocales",
+        "type": "function",
+        "async": true,
+        "description": "Gets the requested locales.",
+        "parameters": []
+      }
+    ]
+  }
+]

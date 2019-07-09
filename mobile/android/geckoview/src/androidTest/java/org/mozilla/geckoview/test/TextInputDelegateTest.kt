@@ -8,8 +8,6 @@ import android.os.SystemClock
 import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -26,10 +24,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameter
+import org.mozilla.geckoview.test.util.UiThreadUtils
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 @MediumTest
 @RunWith(Parameterized::class)
-@WithDevToolsAPI
 class TextInputDelegateTest : BaseSessionTest() {
     // "parameters" needs to be a static field, so it has to be in a companion object.
     companion object {
@@ -46,16 +46,16 @@ class TextInputDelegateTest : BaseSessionTest() {
 
     private var textContent: String
         get() = when (id) {
-            "#contenteditable" -> mainSession.evaluateJS("$('$id').textContent")
-            "#designmode" -> mainSession.evaluateJS("$('$id').contentDocument.body.textContent")
-            else -> mainSession.evaluateJS("$('$id').value")
+            "#contenteditable" -> mainSession.evaluateJS("document.querySelector('$id').textContent")
+            "#designmode" -> mainSession.evaluateJS("document.querySelector('$id').contentDocument.body.textContent")
+            else -> mainSession.evaluateJS("document.querySelector('$id').value")
         } as String
         set(content) {
             when (id) {
-                "#contenteditable" -> mainSession.evaluateJS("$('$id').textContent = '$content'")
+                "#contenteditable" -> mainSession.evaluateJS("document.querySelector('$id').textContent = '$content'")
                 "#designmode" -> mainSession.evaluateJS(
-                        "$('$id').contentDocument.body.textContent = '$content'")
-                else -> mainSession.evaluateJS("$('$id').value = '$content'")
+                        "document.querySelector('$id').contentDocument.body.textContent = '$content'")
+                else -> mainSession.evaluateJS("document.querySelector('$id').value = '$content'")
             }
         }
 
@@ -64,19 +64,19 @@ class TextInputDelegateTest : BaseSessionTest() {
                 document.getSelection().anchorOffset,
                 document.getSelection().focusOffset]""")
         "#designmode" -> mainSession.evaluateJS("""(function() {
-                    var sel = $('$id').contentDocument.getSelection();
-                    var text = $('$id').contentDocument.body.firstChild;
+                    var sel = document.querySelector('$id').contentDocument.getSelection();
+                    var text = document.querySelector('$id').contentDocument.body.firstChild;
                     return [sel.anchorOffset, sel.focusOffset];
                 })()""")
-        else -> mainSession.evaluateJS("""($('$id').selectionDirection !== 'backward'
-            ? [ $('$id').selectionStart, $('$id').selectionEnd ]
-            : [ $('$id').selectionEnd, $('$id').selectionStart ])""")
-    }.asJSList<Double>().let {
-        Pair(it[0].toInt(), it[1].toInt())
+        else -> mainSession.evaluateJS("""(document.querySelector('$id').selectionDirection !== 'backward'
+            ? [ document.querySelector('$id').selectionStart, document.querySelector('$id').selectionEnd ]
+            : [ document.querySelector('$id').selectionEnd, document.querySelector('$id').selectionStart ])""")
+    }.asJsonArray().let {
+        Pair(it.getInt(0), it.getInt(1))
     }
 
     private fun processParentEvents() {
-        sessionRule.waitForChromeJS("")
+        sessionRule.requestedLocales
     }
 
     private fun processChildEvents() {
@@ -84,24 +84,24 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     private fun setComposingText(ic: InputConnection, text: CharSequence, newCursorPosition: Int) {
-        val promise = mainSession.evaluateJS(
+        val promise = mainSession.evaluatePromiseJS(
                 when (id) {
-                    "#designmode" -> "new Promise(r => $('$id').contentDocument.addEventListener('compositionupdate', r, { once: true }))"
-                    else -> "new Promise(r => $('$id').addEventListener('compositionupdate', r, { once: true }))"
+                    "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('compositionupdate', r, { once: true }))"
+                    else -> "new Promise(r => document.querySelector('$id').addEventListener('compositionupdate', r, { once: true }))"
                 })
         ic.setComposingText(text, newCursorPosition)
-        promise.asJSPromise().value
+        promise.value
     }
 
     private fun pressKey(keyCode: Int) {
         // Create a Promise to listen to the key event, and wait on it below.
-        val promise = mainSession.evaluateJS(
+        val promise = mainSession.evaluatePromiseJS(
                 "new Promise(r => window.addEventListener('keyup', r, { once: true }))")
         val time = SystemClock.uptimeMillis()
         val keyEvent = KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0)
         mainSession.textInput.onKeyDown(keyCode, keyEvent)
         mainSession.textInput.onKeyUp(keyCode, KeyEvent.changeAction(keyEvent, KeyEvent.ACTION_UP))
-        promise.asJSPromise().value
+        promise.value
     }
 
     @Test fun restartInput() {
@@ -109,7 +109,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.evaluateJS("$('$id').focus()")
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun restartInput(session: GeckoSession, reason: Int) {
@@ -118,7 +118,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.evaluateJS("$('$id').blur()")
+        mainSession.evaluateJS("document.querySelector('$id').blur()")
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun restartInput(session: GeckoSession, reason: Int) {
@@ -148,11 +148,11 @@ class TextInputDelegateTest : BaseSessionTest() {
 
         // Focus the input once here and once below, but we should only get a
         // single restartInput or showSoftInput call for the second focus.
-        mainSession.evaluateJS("$('$id').focus(); $('$id').blur()")
+        mainSession.evaluateJS("document.querySelector('$id').focus(); document.querySelector('$id').blur()")
 
         // Simulate a user action so we're allowed to show/hide the keyboard.
         pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
-        mainSession.evaluateJS("$('$id').focus()")
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
 
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1, order = [1])
@@ -182,13 +182,13 @@ class TextInputDelegateTest : BaseSessionTest() {
 
         // Simulate a user action so we're allowed to show/hide the keyboard.
         pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
-        mainSession.evaluateJS("$('$id').focus()")
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
         mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class,
                                     "restartInput", "showSoftInput")
 
         // We should get a pair of restartInput calls for the blur/focus,
         // but only one showSoftInput call and no hideSoftInput call.
-        mainSession.evaluateJS("$('$id').blur(); $('$id').focus()")
+        mainSession.evaluateJS("document.querySelector('$id').blur(); document.querySelector('$id').focus()")
 
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 2, order = [1])
@@ -218,7 +218,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         // Simulate a user action so we're allowed to show/hide the keyboard.
         pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
 
-        mainSession.evaluateJS("$('$id').focus()")
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun restartInput(session: GeckoSession, reason: Int) {
@@ -233,7 +233,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.evaluateJS("$('$id').blur()")
+        mainSession.evaluateJS("document.querySelector('$id').blur()")
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun restartInput(session: GeckoSession, reason: Int) {
@@ -308,11 +308,12 @@ class TextInputDelegateTest : BaseSessionTest() {
                                          checkGecko: Boolean = true) =
             assertTextAndSelection(message, ic, expected, value, value, checkGecko)
 
-    @ReuseSession(false) // Test is only reliable on automation when not reusing session.
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun inputConnection() {
         // too slow on debug
         assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
+        // too flaky on x86
+        assumeThat(sessionRule.env.isX86, equalTo(false))
 
         mainSession.textInput.view = View(InstrumentationRegistry.getTargetContext())
 
@@ -320,7 +321,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         textContent = "foo"
-        mainSession.evaluateJS("$('$id').focus()")
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
         mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
 
         val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!

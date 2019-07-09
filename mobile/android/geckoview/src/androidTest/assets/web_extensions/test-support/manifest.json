@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "Test support",
+  "version": "1.0",
+  "description": "Helper script for GeckoView tests",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["test-support.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "experiment_apis": {
+    "test": {
+      "schema": "test-schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "test-api.js",
+        "paths": [["test"]]
+      }
+    }
+  },
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging"
+  ]
+}

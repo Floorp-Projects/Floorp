@@ -4,51 +4,44 @@
 
 package org.mozilla.geckoview.test
 
-import android.app.assist.AssistStructure
+import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
+import android.os.LocaleList
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
-import org.mozilla.geckoview.test.util.UiThreadUtils
 
-import android.os.Looper
-import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
 import android.support.test.runner.AndroidJUnit4
 import android.text.InputType
+import android.util.Pair
 import android.util.SparseArray
 import android.view.Surface
 import android.view.View
 import android.view.ViewStructure
+import android.view.autofill.AutofillId
+import android.view.autofill.AutofillValue
 import android.widget.EditText
 import org.hamcrest.Matchers.*
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.test.util.HttpBin
-
-import java.net.URI
-
-import kotlin.concurrent.thread
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class ContentDelegateTest : BaseSessionTest() {
-    companion object {
-        val TEST_ENDPOINT: String = "http://localhost:4243"
-    }
-
     @Test fun titleChange() {
         sessionRule.session.loadTestPath(TITLE_CHANGE_HTML_PATH)
 
@@ -91,7 +84,6 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @IgnoreCrash
-    @ReuseSession(false)
     @Test fun crashContent() {
         // This test doesn't make sense without multiprocess
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
@@ -121,7 +113,6 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @IgnoreCrash
-    @ReuseSession(false)
     @WithDisplay(width = 10, height = 10)
     @Test fun crashContent_tapAfterCrash() {
         // This test doesn't make sense without multiprocess
@@ -148,7 +139,6 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @IgnoreCrash
-    @ReuseSession(false)
     @Test fun crashContentMultipleSessions() {
         // This test doesn't make sense without multiprocess
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
@@ -161,6 +151,9 @@ class ContentDelegateTest : BaseSessionTest() {
         // If we add multiple content processes, this test will need to be fixed to ensure the
         // test sessions go into the same one.
         val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitForPageStop()
+
         mainSession.loadUri(CONTENT_CRASH_URL)
 
         // We can inadvertently catch the `onCrash` call for the cached session if we don't specify
@@ -177,21 +170,8 @@ class ContentDelegateTest : BaseSessionTest() {
         }
     }
 
-    val ViewNode by lazy {
-        AssistStructure.ViewNode::class.java.getDeclaredConstructor().apply { isAccessible = true }
-    }
-
-    val ViewNodeBuilder by lazy {
-        Class.forName("android.app.assist.AssistStructure\$ViewNodeBuilder")
-                .getDeclaredConstructor(AssistStructure::class.java,
-                                        AssistStructure.ViewNode::class.java,
-                                        Boolean::class.javaPrimitiveType)
-                .apply { isAccessible = true }
-    }
-
     // TextInputDelegateTest is parameterized, so we put this test under ContentDelegateTest.
     @SdkSuppress(minSdkVersion = 23)
-    @WithDevToolsAPI
     @Test fun autofill() {
         // Test parts of the Oreo auto-fill API; there is another autofill test in
         // SessionAccessibility for a11y auto-fill support.
@@ -217,44 +197,44 @@ class ContentDelegateTest : BaseSessionTest() {
         // Set up promises to monitor the values changing.
         val promises = autoFills.flatMap { entry ->
             // Repeat each test with both the top document and the iframe document.
-            arrayOf("document", "$('#iframe').contentDocument").map { doc ->
-                mainSession.evaluateJS("""new Promise(resolve =>
-                $doc.querySelector('${entry.key}').addEventListener(
-                    'input', event => {
-                      let eventInterface =
-                        event instanceof InputEvent ? "InputEvent" :
-                        event instanceof UIEvent ? "UIEvent" :
-                        event instanceof Event ? "Event" : "Unknown";
-                      resolve([event.target.value, '${entry.value}', eventInterface]);
-                    }, { once: true }))""").asJSPromise()
+            arrayOf("document", "document.querySelector('#iframe').contentDocument").map { doc ->
+                mainSession.evaluatePromiseJS("""new Promise(resolve =>
+                    $doc.querySelector('${entry.key}').addEventListener(
+                      'input', event => {
+                        let eventInterface =
+                          event instanceof InputEvent ? "InputEvent" :
+                          event instanceof UIEvent ? "UIEvent" :
+                          event instanceof Event ? "Event" : "Unknown";
+                        resolve([
+                          '${entry.key}',
+                          event.target.value,
+                          '${entry.value}',
+                          eventInterface
+                        ]);
+                }, { once: true }))""")
             }
         }
 
-        val rootNode = ViewNode.newInstance()
-        val rootStructure = ViewNodeBuilder.newInstance(AssistStructure(), rootNode,
-                /* async */ false) as ViewStructure
         val autoFillValues = SparseArray<CharSequence>()
 
         // Perform auto-fill and return number of auto-fills performed.
-        fun checkAutoFillChild(child: AssistStructure.ViewNode) {
+        fun checkAutoFillChild(child: MockViewNode) {
             // Seal the node info instance so we can perform actions on it.
             if (child.childCount > 0) {
-                for (i in 0 until child.childCount) {
-                    checkAutoFillChild(child.getChildAt(i))
+                for (c in child.children) {
+                    checkAutoFillChild(c!!)
                 }
             }
 
-            if (child === rootNode) {
+            if (child.id == View.NO_ID) {
                 return
             }
 
-            assertThat("ID should be valid", child.id, not(equalTo(View.NO_ID)))
-
             if (Build.VERSION.SDK_INT >= 26) {
                 assertThat("Should have HTML tag",
-                           child.htmlInfo.tag, not(isEmptyOrNullString()))
+                           child.htmlInfo!!.tag, not(isEmptyOrNullString()))
                 assertThat("Web domain should match",
-                           child.webDomain, equalTo("android"))
+                           child.webDomain, equalTo(GeckoSessionTestRule.TEST_ENDPOINT))
             }
 
             if (EditText::class.java.name == child.className) {
@@ -270,7 +250,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 }
 
                 val htmlInfo = child.htmlInfo
-                assertThat("Should have HTML tag", htmlInfo.tag, equalTo("input"))
+                assertThat("Should have HTML tag", htmlInfo!!.tag, equalTo("input"))
                 assertThat("Should have ID attribute",
                            htmlInfo.attributes.map { it.first }, hasItem("id"))
 
@@ -302,35 +282,43 @@ class ContentDelegateTest : BaseSessionTest() {
             }
         }
 
+        val rootStructure = MockViewNode()
+
         mainSession.textInput.onProvideAutofillVirtualStructure(rootStructure, 0)
-        checkAutoFillChild(rootNode)
+        checkAutoFillChild(rootStructure)
+
         mainSession.textInput.autofill(autoFillValues)
 
         // Wait on the promises and check for correct values.
-        for ((actual, expected, eventInterface) in promises.map { it.value.asJSList<String>() }) {
+        for ((key, actual, expected, eventInterface) in promises.map { it.value.asJSList<String>() }) {
             assertThat("Auto-filled value must match", actual, equalTo(expected))
-            assertThat("input event should be dispatched with InputEvent interface", eventInterface, equalTo("InputEvent"))
+
+            // <input type=number> elements don't get InputEvent events.
+            if (key == "#number1") {
+                assertThat("input type=number event should be dispatched with Event interface", eventInterface, equalTo("Event"))
+            } else {
+                assertThat("input event should be dispatched with InputEvent interface", eventInterface, equalTo("InputEvent"))
+            }
         }
     }
 
     // TextInputDelegateTest is parameterized, so we put this test under ContentDelegateTest.
     @SdkSuppress(minSdkVersion = 23)
-    @WithDevToolsAPI
-    @WithDisplay(width = 100, height = 100)
+    // The small screen is so that the page is forced to scroll to show the input
+    // and firing the autofill event.
+    // XXX(agi): This shouldn't be necessary though? What if the page doesn't scroll?
+    @WithDisplay(width = 10, height = 10)
     @Test fun autoFill_navigation() {
-
-        fun countAutoFillNodes(cond: (AssistStructure.ViewNode) -> Boolean =
+        fun countAutoFillNodes(cond: (MockViewNode) -> Boolean =
                                        { it.className == "android.widget.EditText" },
-                               root: AssistStructure.ViewNode? = null): Int {
-            val node = if (root !== null) root else ViewNode.newInstance().also {
-                // Fill the nodes first.
-                val structure = ViewNodeBuilder.newInstance(
-                        AssistStructure(), it, /* async */ false) as ViewStructure
-                mainSession.textInput.onProvideAutofillVirtualStructure(structure, 0)
+                               root: MockViewNode? = null): Int {
+            val node = if (root !== null) root else MockViewNode().also {
+                mainSession.textInput.onProvideAutofillVirtualStructure(it, 0)
             }
+
             return (if (cond(node)) 1 else 0) +
-                    (if (node.childCount > 0) (0 until node.childCount).sumBy {
-                        countAutoFillNodes(cond, node.getChildAt(it)) } else 0)
+                    (if (node.childCount > 0) node.children.sumBy {
+                        countAutoFillNodes(cond, it) } else 0)
         }
 
         // Wait for the accessibility nodes to populate.
@@ -378,7 +366,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assertThat("Should not have focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
 
-        mainSession.evaluateJS("$('#pass1').focus()")
+        mainSession.evaluateJS("document.querySelector('#pass2').focus()")
         sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
@@ -395,7 +383,7 @@ class ContentDelegateTest : BaseSessionTest() {
                    countAutoFillNodes({ node -> node.width > 0 && node.height > 0 }),
                    equalTo(7))
 
-        mainSession.evaluateJS("$('#pass1').blur()")
+        mainSession.evaluateJS("document.querySelector('#pass2').blur()")
         sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
@@ -410,7 +398,6 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(height = 100, width = 100)
-    @WithDevToolsAPI
     @Test fun autofill_userpass() {
         if (Build.VERSION.SDK_INT < 26) {
             return
@@ -419,39 +406,35 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(FORMS2_HTML_PATH)
         // Wait for the auto-fill nodes to populate.
         sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
-            @AssertCalled(count = 2)
+            @AssertCalled(count = 1)
             override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
             }
         })
 
-        val rootNode = ViewNode.newInstance()
-        val rootStructure = ViewNodeBuilder.newInstance(AssistStructure(), rootNode,
-                /* async */ false) as ViewStructure
-
         // Perform auto-fill and return number of auto-fills performed.
-        fun checkAutoFillChild(child: AssistStructure.ViewNode): Int {
+        fun checkAutoFillChild(child: MockViewNode): Int {
             var sum = 0
             // Seal the node info instance so we can perform actions on it.
-            if (child.childCount > 0) {
-                for (i in 0 until child.childCount) {
-                    sum += checkAutoFillChild(child.getChildAt(i))
+            if (child.children.size > 0) {
+                for (c in child.children) {
+                    sum += checkAutoFillChild(c!!)
                 }
             }
 
-            if (child === rootNode) {
+            if (child.id == View.NO_ID) {
                 return sum
             }
 
             assertThat("ID should be valid", child.id, not(equalTo(View.NO_ID)))
 
             if (EditText::class.java.name == child.className) {
-                val htmlInfo = child.htmlInfo
+                val htmlInfo = child.htmlInfo!!
                 assertThat("Should have HTML tag", htmlInfo.tag, equalTo("input"))
 
                 if (child.autofillHints == null) {
                     return sum
                 }
-                child.autofillHints.forEach {
+                child.autofillHints!!.forEach {
                     when (it) {
                         View.AUTOFILL_HINT_USERNAME, View.AUTOFILL_HINT_PASSWORD -> {
                             sum++
@@ -462,17 +445,281 @@ class ContentDelegateTest : BaseSessionTest() {
             return sum
         }
 
+        val rootStructure = MockViewNode()
+
         mainSession.textInput.onProvideAutofillVirtualStructure(rootStructure, 0)
         // form and iframe have each 2 hints.
         assertThat("autofill hint count",
-                   checkAutoFillChild(rootNode), equalTo(4))
+                   checkAutoFillChild(rootStructure), equalTo(4))
+    }
+
+    class MockViewNode : ViewStructure() {
+        private var mClassName: String? = null
+        private var mEnabled = false
+        private var mVisibility = -1
+        private var mPackageName: String? = null
+        private var mTypeName: String? = null
+        private var mEntryName: String? = null
+        private var mAutofillType = -1
+        private var mAutofillHints: Array<String>? = null
+        private var mInputType = -1
+        private var mHtmlInfo: HtmlInfo? = null
+        private var mWebDomain: String? = null
+        private var mFocused = false
+        private var mFocusable = false
+
+        var children = ArrayList<MockViewNode?>()
+        var id = View.NO_ID
+        var height = 0
+        var width = 0
+
+        val className get() = mClassName
+        val htmlInfo get() = mHtmlInfo
+        val autofillHints get() = mAutofillHints
+        val autofillType get() = mAutofillType
+        val webDomain get() = mWebDomain
+        val isEnabled get() = mEnabled
+        val isFocused get() = mFocused
+        val isFocusable get() = mFocusable
+        val visibility get() = mVisibility
+        val inputType get() = mInputType
+
+        override fun setId(id: Int, packageName: String?, typeName: String?, entryName: String?) {
+            this.id = id
+            mPackageName = packageName
+            mTypeName = typeName
+            mEntryName = entryName
+        }
+
+        override fun setHint(hint: CharSequence?) {
+            TODO("not implemented")
+        }
+
+        override fun setElevation(elevation: Float) {
+            TODO("not implemented")
+        }
+
+        override fun getText(): CharSequence {
+            TODO("not implemented")
+        }
+
+        override fun setText(text: CharSequence?) {
+            TODO("not implemented")
+        }
+
+        override fun setText(text: CharSequence?, selectionStart: Int, selectionEnd: Int) {
+            TODO("not implemented")
+        }
+
+        override fun asyncCommit() {
+            TODO("not implemented")
+        }
+
+        override fun getChildCount(): Int = children.size
+
+        override fun setEnabled(state: Boolean) {
+            mEnabled = state
+        }
+
+        override fun setLocaleList(localeList: LocaleList?) {
+            TODO("not implemented")
+        }
+
+        override fun setDimens(left: Int, top: Int, scrollX: Int, scrollY: Int, width: Int, height: Int) {
+            this.width = width
+            this.height = height
+        }
+
+        override fun setChecked(state: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun setContextClickable(state: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun setAccessibilityFocused(state: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun setAlpha(alpha: Float) {
+            TODO("not implemented")
+        }
+
+        override fun setTransformation(matrix: Matrix?) {
+            TODO("not implemented")
+        }
+
+        override fun setClassName(className: String?) {
+            mClassName = className
+        }
+
+        override fun setLongClickable(state: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun newChild(index: Int): ViewStructure {
+            val child = MockViewNode()
+            children[index] = child
+            return child
+        }
+
+        override fun getHint(): CharSequence {
+            TODO("not implemented")
+        }
+
+        override fun setInputType(inputType: Int) {
+            mInputType = inputType
+        }
+
+        override fun setWebDomain(domain: String?) {
+            mWebDomain = domain
+        }
+
+        override fun setAutofillOptions(options: Array<out CharSequence>?) {
+            TODO("not implemented")
+        }
+
+        override fun setTextStyle(size: Float, fgColor: Int, bgColor: Int, style: Int) {
+            TODO("not implemented")
+        }
+
+        override fun setVisibility(visibility: Int) {
+            mVisibility = visibility
+        }
+
+        override fun getAutofillId(): AutofillId? {
+            TODO("not implemented")
+        }
+
+        override fun setHtmlInfo(htmlInfo: HtmlInfo) {
+            mHtmlInfo = htmlInfo
+        }
+
+        override fun setTextLines(charOffsets: IntArray?, baselines: IntArray?) {
+            TODO("not implemented")
+        }
+
+        override fun getExtras(): Bundle {
+            TODO("not implemented")
+        }
+
+        override fun setClickable(state: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun newHtmlInfoBuilder(tagName: String): HtmlInfo.Builder {
+            return MockHtmlInfoBuilder(tagName)
+        }
+
+        override fun getTextSelectionEnd(): Int {
+            TODO("not implemented")
+        }
+
+        override fun setAutofillId(id: AutofillId) {
+            TODO("not implemented")
+        }
+
+        override fun setAutofillId(parentId: AutofillId, virtualId: Int) {
+            TODO("not implemented")
+        }
+
+        override fun hasExtras(): Boolean {
+            TODO("not implemented")
+        }
+
+        override fun addChildCount(num: Int): Int {
+            TODO("not implemented")
+        }
+
+        override fun setAutofillType(type: Int) {
+            mAutofillType = type
+        }
+
+        override fun setActivated(state: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun setFocused(state: Boolean) {
+            mFocused = state
+        }
+
+        override fun getTextSelectionStart(): Int {
+            TODO("not implemented")
+        }
+
+        override fun setChildCount(num: Int) {
+            children = ArrayList()
+            for (i in 0 until num) {
+                children.add(null)
+            }
+        }
+
+        override fun setAutofillValue(value: AutofillValue?) {
+            TODO("not implemented")
+        }
+
+        override fun setAutofillHints(hint: Array<String>?) {
+            mAutofillHints = hint
+        }
+
+        override fun setContentDescription(contentDescription: CharSequence?) {
+            TODO("not implemented")
+        }
+
+        override fun setFocusable(state: Boolean) {
+            mFocusable = state
+        }
+
+        override fun setCheckable(state: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun asyncNewChild(index: Int): ViewStructure {
+            TODO("not implemented")
+        }
+
+        override fun setSelected(state: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun setDataIsSensitive(sensitive: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun setOpaque(opaque: Boolean) {
+            TODO("not implemented")
+        }
+    }
+
+    class MockHtmlInfoBuilder(tagName: String) : ViewStructure.HtmlInfo.Builder() {
+        val mTagName = tagName
+        val mAttributes: MutableList<Pair<String, String>> = mutableListOf()
+
+        override fun addAttribute(name: String, value: String): ViewStructure.HtmlInfo.Builder {
+            mAttributes.add(Pair(name, value))
+            return this
+        }
+
+        override fun build(): ViewStructure.HtmlInfo {
+            return MockHtmlInfo(mTagName, mAttributes)
+        }
+    }
+
+    class MockHtmlInfo(tagName: String, attributes: MutableList<Pair<String, String>>)
+            : ViewStructure.HtmlInfo() {
+        private val mTagName = tagName
+        private val mAttributes = attributes
+
+        override fun getTag() = mTagName
+        override fun getAttributes() = mAttributes
     }
 
     private fun goFullscreen() {
         sessionRule.setPrefsUntilTestEnd(mapOf("full-screen-api.allow-trusted-requests-only" to false))
         mainSession.loadTestPath(FULLSCREEN_PATH)
         mainSession.waitForPageStop()
-        mainSession.evaluateJS("$('#fullscreen').requestFullscreen()")
+        mainSession.evaluateJS("document.querySelector('#fullscreen').requestFullscreen(); true")
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
                 assertThat("Div went fullscreen", fullScreen, equalTo(true))
@@ -488,14 +735,12 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun fullscreen() {
         goFullscreen()
-        mainSession.evaluateJS("document.exitFullscreen()")
+        mainSession.evaluateJS("document.exitFullscreen(); true")
         waitForFullscreenExit()
     }
 
-    @WithDevToolsAPI
     @Test fun sessionExitFullscreen() {
         goFullscreen()
         mainSession.exitFullScreen()
@@ -526,42 +771,33 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @Test fun webAppManifest() {
-        val httpBin = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitUntilCalled(object : Callbacks.All {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Page load should succeed", success, equalTo(true))
+            }
 
-        try {
-            httpBin.start()
+            @AssertCalled(count = 1)
+            override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {
+                // These values come from the manifest at assets/www/manifest.webmanifest
+                assertThat("name should match", manifest.getString("name"), equalTo("App"))
+                assertThat("short_name should match", manifest.getString("short_name"), equalTo("app"))
+                assertThat("display should match", manifest.getString("display"), equalTo("standalone"))
 
-            mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
-            mainSession.waitUntilCalled(object : Callbacks.All {
+                // The color here is "cadetblue" converted to hex.
+                assertThat("theme_color should match", manifest.getString("theme_color"), equalTo("#5f9ea0"))
+                assertThat("background_color should match", manifest.getString("background_color"), equalTo("#c0feee"))
+                assertThat("start_url should match", manifest.getString("start_url"), endsWith("/assets/www/start/index.html"))
 
-                @AssertCalled(count = 1)
-                override fun onPageStop(session: GeckoSession, success: Boolean) {
-                    assertThat("Page load should succeed", success, equalTo(true))
-                }
+                val icon = manifest.getJSONArray("icons").getJSONObject(0);
 
-                @AssertCalled(count = 1)
-                override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {
-                    // These values come from the manifest at assets/www/manifest.webmanifest
-                    assertThat("name should match", manifest.getString("name"), equalTo("App"))
-                    assertThat("short_name should match", manifest.getString("short_name"), equalTo("app"))
-                    assertThat("display should match", manifest.getString("display"), equalTo("standalone"))
-
-                    // The color here is "cadetblue" converted to hex.
-                    assertThat("theme_color should match", manifest.getString("theme_color"), equalTo("#5f9ea0"))
-                    assertThat("background_color should match", manifest.getString("background_color"), equalTo("#c0feee"))
-                    assertThat("start_url should match", manifest.getString("start_url"), equalTo("$TEST_ENDPOINT/assets/www/start/index.html"))
-
-                    val icon = manifest.getJSONArray("icons").getJSONObject(0);
-
-                    val iconSrc = Uri.parse(icon.getString("src"))
-                    assertThat("icon should have a valid src", iconSrc, notNullValue())
-                    assertThat("icon src should be absolute", iconSrc.isAbsolute, equalTo(true))
-                    assertThat("icon should have sizes", icon.getString("sizes"),  not(isEmptyOrNullString()))
-                    assertThat("icon type should match", icon.getString("type"), equalTo("image/gif"))
-                }
-            })
-        } finally {
-            httpBin.stop()
-        }
+                val iconSrc = Uri.parse(icon.getString("src"))
+                assertThat("icon should have a valid src", iconSrc, notNullValue())
+                assertThat("icon src should be absolute", iconSrc.isAbsolute, equalTo(true))
+                assertThat("icon should have sizes", icon.getString("sizes"),  not(isEmptyOrNullString()))
+                assertThat("icon type should match", icon.getString("type"), equalTo("image/gif"))
+            }
+        })
     }
 }
