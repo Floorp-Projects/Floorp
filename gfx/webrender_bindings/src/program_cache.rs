@@ -7,7 +7,7 @@ use std::path::{PathBuf};
 use std::rc::Rc;
 use std::sync::Arc;
 
-use webrender::{ProgramBinary, ProgramCache, ProgramCacheObserver};
+use webrender::{ProgramBinary, ProgramCache, ProgramCacheObserver, ProgramSourceDigest};
 use bincode;
 use fxhash;
 use nsstring::nsAString;
@@ -83,6 +83,7 @@ fn get_cache_path_from_prof_path(prof_path: &nsAString) -> Option<PathBuf> {
 struct WrProgramBinaryDiskCache {
     cache_path: PathBuf,
     workers: Arc<ThreadPool>,
+    cached_shader_filenames: Vec<OsString>,
 }
 
 // Magic number + version. Increment the version when the binary format changes.
@@ -105,6 +106,7 @@ impl WrProgramBinaryDiskCache {
         WrProgramBinaryDiskCache {
             cache_path,
             workers: Arc::clone(workers),
+            cached_shader_filenames: Vec::new(),
         }
     }
 
@@ -184,6 +186,28 @@ impl WrProgramBinaryDiskCache {
         }
     }
 
+    pub fn try_load_shader_from_disk(&mut self, filename: &str, program_cache: &Rc<ProgramCache>) {
+        if let Some(index) = self.cached_shader_filenames.iter().position(|e| e == filename) {
+            let mut path = self.cache_path.clone();
+            path.push(filename);
+
+            self.cached_shader_filenames.swap_remove(index);
+
+            info!("Loading shader: {}", filename);
+
+            match deserialize_program_binary(&path) {
+                Ok(program) => {
+                    program_cache.load_program_binary(program);
+                }
+                Err(err) => {
+                    error!("shader-cache: Failed to deserialize program binary: {}", err);
+                }
+            };
+        } else {
+            info!("shader-cache: Program binary not found in disk cache");
+        }
+    }
+
     pub fn try_load_startup_shaders_from_disk(&mut self, program_cache: &Rc<ProgramCache>) {
         use std::time::{Instant};
         let start = Instant::now();
@@ -202,7 +226,7 @@ impl WrProgramBinaryDiskCache {
         };
         info!("Loaded startup shader whitelist in {:?}", start.elapsed());
 
-        let mut cached_shader_filenames = read_dir(&self.cache_path)
+        self.cached_shader_filenames = read_dir(&self.cache_path)
             .unwrap()
             .map(|e| e.unwrap().file_name())
             .filter(|e| e != WHITELIST_FILENAME)
@@ -210,25 +234,7 @@ impl WrProgramBinaryDiskCache {
 
         // Load whitelisted program binaries if they exist
         for entry in &whitelist {
-            if let Some(index) = cached_shader_filenames.iter().position(|e| e == entry.as_str()) {
-                let mut path = self.cache_path.clone();
-                path.push(entry);
-
-                cached_shader_filenames.swap_remove(index);
-
-                info!("Loading shader: {}", entry);
-
-                match deserialize_program_binary(&path) {
-                    Ok(program) => {
-                        program_cache.load_program_binary(program);
-                    }
-                    Err(err) => {
-                        error!("shader-cache: Failed to deserialize program binary: {}", err);
-                    }
-                };
-            } else {
-                info!("shader-cache: Program binary not found in disk cache");
-            }
+            self.try_load_shader_from_disk(&entry, program_cache);
 
             let elapsed = start.elapsed();
             info!("Loaded shader in {:?}", elapsed);
@@ -236,7 +242,11 @@ impl WrProgramBinaryDiskCache {
                 (elapsed.subsec_nanos() / 1_000_000) as u64;
 
             if elapsed_ms > MAX_LOAD_TIME_MS {
+                // Loading the startup shaders is taking too long, so bail out now.
+                // Additionally clear the list of remaining shaders cached on disk,
+                // so that we do not attempt to load any on demand during rendering.
                 error!("shader-cache: Timed out before finishing loads");
+                self.cached_shader_filenames.clear();
                 break;
             }
         }
@@ -259,6 +269,11 @@ impl WrProgramCacheObserver {
 impl ProgramCacheObserver for WrProgramCacheObserver {
     fn update_disk_cache(&self, entries: Vec<Arc<ProgramBinary>>) {
         self.disk_cache.borrow_mut().update(entries);
+    }
+
+    fn try_load_shader_from_disk(&self, digest: &ProgramSourceDigest, program_cache: &Rc<ProgramCache>) {
+        let filename = format!("{}", digest);
+        self.disk_cache.borrow_mut().try_load_shader_from_disk(&filename, program_cache);
     }
 
     fn notify_program_binary_failed(&self, _program_binary: &Arc<ProgramBinary>) {
