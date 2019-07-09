@@ -36,6 +36,8 @@ const fonts = { mono: fontUsed("mono"),
                 sans: fontUsed("sans"),
                 serif: fontUsed("serif") };
 
+let hack = 0;
+
 // Set the font whitelist to contain none, some, or all of the
 // default mono, sans, and serif fonts. Check that the rendering
 // of our three test elements uses only fonts present in the
@@ -53,7 +55,11 @@ let testFontWhitelist = async function(useMono, useSans, useSerif) {
   }
   await SpecialPowers.pushPrefEnv({"set": [["font.system.whitelist",
                                             whitelist.join(", ")]]});
-  await SpecialPowers.setIntPref("font.fixme.hack", Date.now());
+
+  await new Promise(SimpleTest.executeSoon);
+  await SpecialPowers.setIntPref("font.fixme.hack", hack++);
+  await new Promise(SimpleTest.executeSoon);
+
   // If whitelist is empty, then whitelisting is considered disabled
   // and all fonts are allowed.
   info("font whitelist: " + JSON.stringify(whitelist));
