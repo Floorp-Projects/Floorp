@@ -2667,6 +2667,7 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
       case MDefinition::Opcode::LoadTypedArrayElementHole:
       case MDefinition::Opcode::CharCodeAt:
       case MDefinition::Opcode::Mod:
+      case MDefinition::Opcode::InArray:
         // Only allowed to remove check when definition is the second operand
         if (use_def->getOperand(0) == def) {
           return true;
@@ -2697,6 +2698,8 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
         break;
       case MDefinition::Opcode::StoreElementHole:
       case MDefinition::Opcode::FallibleStoreElement:
+      case MDefinition::Opcode::StoreTypedArrayElementHole:
+      case MDefinition::Opcode::PostWriteElementBarrier:
         // Only allowed to remove check when definition is the third operand.
         for (size_t i = 0, e = use_def->numOperands(); i < e; i++) {
           if (i == 2) {
