@@ -640,9 +640,8 @@ nsresult HTMLFormElement::SubmitSubmission(
 
   // If there is no link handler, then we won't actually be able to submit.
   Document* doc = GetComposedDoc();
-  nsCOMPtr<nsISupports> container = doc ? doc->GetContainer() : nullptr;
-  nsCOMPtr<nsILinkHandler> linkHandler(do_QueryInterface(container));
-  if (!linkHandler || IsEditable()) {
+  nsCOMPtr<nsIDocShell> container = doc ? doc->GetDocShell() : nullptr;
+  if (!container || IsEditable()) {
     mIsSubmitting = false;
     return NS_OK;
   }
@@ -707,7 +706,7 @@ nsresult HTMLFormElement::SubmitSubmission(
 
     nsAutoString target;
     aFormSubmission->GetTarget(target);
-    rv = linkHandler->OnLinkClickSync(
+    rv = nsDocShell::Cast(container)->OnLinkClickSync(
         this, actionURI, target, VoidString(), postDataStream, nullptr, false,
         getter_AddRefs(docShell), getter_AddRefs(mSubmittingRequest),
         aFormSubmission->IsInitiatedFromUserInput());

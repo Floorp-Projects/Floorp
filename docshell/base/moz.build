@@ -25,9 +25,6 @@ with Files('*LoadContext.*'):
 with Files('nsAboutRedirector.*'):
     BUG_COMPONENT = ('Core', 'General')
 
-with Files('nsILinkHandler.*'):
-    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
-
 with Files('nsIScrollObserver.*'):
     BUG_COMPONENT = ('Core', 'Panning and Zooming')
 
@@ -64,7 +61,6 @@ EXPORTS += [
     'nsDocShellLoadState.h',
     'nsDocShellLoadTypes.h',
     'nsDocShellTreeOwner.h',
-    'nsILinkHandler.h',
     'nsIScrollObserver.h',
     'SerializedLoadContext.h',
 ]
