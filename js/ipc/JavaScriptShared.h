@@ -196,8 +196,13 @@ class JavaScriptShared : public CPOWManager {
   }
 #endif
 
-  static bool LoggingEnabled() { return sLoggingEnabled; }
-  static bool StackLoggingEnabled() { return sStackLoggingEnabled; }
+  static bool LoggingEnabled() {
+    return sLoggingEnabledByEnvVar || StaticPrefs::dom_ipc_cpows_log_enabled();
+  }
+  static bool StackLoggingEnabled() {
+    return sStackLoggingEnabledByEnvVar ||
+           StaticPrefs::dom_ipc_cpows_log_stack();
+  }
 
   friend class Logging;
 
@@ -239,8 +244,8 @@ class JavaScriptShared : public CPOWManager {
   }
 
   static bool sLoggingInitialized;
-  static bool sLoggingEnabled;
-  static bool sStackLoggingEnabled;
+  static bool sLoggingEnabledByEnvVar;
+  static bool sStackLoggingEnabledByEnvVar;
 };
 
 }  // namespace jsipc

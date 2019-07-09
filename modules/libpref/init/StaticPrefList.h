@@ -1587,6 +1587,20 @@ VARCACHE_PREF(
   bool, false
 )
 
+VARCACHE_PREF(
+  Live,
+  "dom.ipc.cpows.log.enabled",
+   dom_ipc_cpows_log_enabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.ipc.cpows.log.stack",
+   dom_ipc_cpows_log_stack,
+  bool, false
+)
+
 // If this is true, "keypress" event's keyCode value and charCode value always
 // become same if the event is not created/initialized by JS.
 VARCACHE_PREF(
