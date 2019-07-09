@@ -2160,39 +2160,32 @@ extern "C" fn audiounit_collection_changed_callback(
 
     // This can be called from inside an AudioUnit function, dispatch to another queue.
     async_dispatch(queue, move || {
-        let mut ctx_guard = also_mutexed_context.lock().unwrap();
+        let ctx_guard = also_mutexed_context.lock().unwrap();
         let ctx_ptr = *ctx_guard as *const AudioUnitContext;
 
-        let mutex_ptr = &mut ctx_guard.mutex as *mut OwnedCriticalSection;
-        let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
+        let mut devices = ctx_guard.devices.lock().unwrap();
 
-        if ctx_guard.input_collection_changed_callback.is_none()
-            && ctx_guard.output_collection_changed_callback.is_none()
-        {
+        if devices.input.changed_callback.is_none() && devices.output.changed_callback.is_none() {
             return;
         }
-        if ctx_guard.input_collection_changed_callback.is_some() {
-            let devices = audiounit_get_devices_of_type(DeviceType::INPUT);
-            // Elements in the vector expected sorted.
-            if ctx_guard.input_device_array != devices {
-                ctx_guard.input_device_array = devices;
+        if devices.input.changed_callback.is_some() {
+            let input_devices = audiounit_get_devices_of_type(DeviceType::INPUT);
+            if devices.input.update_devices(input_devices) {
                 unsafe {
-                    ctx_guard.input_collection_changed_callback.unwrap()(
+                    devices.input.changed_callback.unwrap()(
                         ctx_ptr as *mut ffi::cubeb,
-                        ctx_guard.input_collection_changed_user_ptr,
+                        devices.input.callback_user_ptr,
                     );
                 }
             }
         }
-        if ctx_guard.output_collection_changed_callback.is_some() {
-            let devices = audiounit_get_devices_of_type(DeviceType::OUTPUT);
-            // Elements in the vector expected sorted.
-            if ctx_guard.output_device_array != devices {
-                ctx_guard.output_device_array = devices;
+        if devices.output.changed_callback.is_some() {
+            let output_devices = audiounit_get_devices_of_type(DeviceType::OUTPUT);
+            if devices.output.update_devices(output_devices) {
                 unsafe {
-                    ctx_guard.output_collection_changed_callback.unwrap()(
+                    devices.output.changed_callback.unwrap()(
                         ctx_ptr as *mut ffi::cubeb,
-                        ctx_guard.output_collection_changed_user_ptr,
+                        devices.output.callback_user_ptr,
                     );
                 }
             }
@@ -2200,6 +2193,72 @@ extern "C" fn audiounit_collection_changed_callback(
     });
 
     NO_ERR
+}
+
+#[derive(Debug)]
+struct DevicesData {
+    changed_callback: ffi::cubeb_device_collection_changed_callback,
+    callback_user_ptr: *mut c_void,
+    devices: Vec<AudioObjectID>,
+}
+
+impl DevicesData {
+    fn set(
+        &mut self,
+        changed_callback: ffi::cubeb_device_collection_changed_callback,
+        callback_user_ptr: *mut c_void,
+        devices: Vec<AudioObjectID>,
+    ) {
+        self.changed_callback = changed_callback;
+        self.callback_user_ptr = callback_user_ptr;
+        self.devices = devices;
+    }
+
+    fn update_devices(&mut self, devices: Vec<AudioObjectID>) -> bool {
+        // Elements in the vector expected sorted.
+        if self.devices == devices {
+            return false;
+        }
+        self.devices = devices;
+        true
+    }
+
+    fn clear(&mut self) {
+        self.changed_callback = None;
+        self.callback_user_ptr = ptr::null_mut();
+        self.devices.clear();
+    }
+
+    fn is_empty(&self) -> bool {
+        self.changed_callback == None
+            && self.callback_user_ptr == ptr::null_mut()
+            && self.devices.is_empty()
+    }
+}
+
+impl Default for DevicesData {
+    fn default() -> Self {
+        Self {
+            changed_callback: None,
+            callback_user_ptr: ptr::null_mut(),
+            devices: Vec::new(),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct SharedDevices {
+    input: DevicesData,
+    output: DevicesData,
+}
+
+impl Default for SharedDevices {
+    fn default() -> Self {
+        Self {
+            input: DevicesData::default(),
+            output: DevicesData::default(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -2251,13 +2310,6 @@ pub const OPS: Ops = capi_new!(AudioUnitContext, AudioUnitStream);
 pub struct AudioUnitContext {
     _ops: *const Ops,
     mutex: OwnedCriticalSection,
-    input_collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
-    input_collection_changed_user_ptr: *mut c_void,
-    output_collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
-    output_collection_changed_user_ptr: *mut c_void,
-    // Store list of devices to detect changes
-    input_device_array: Vec<AudioObjectID>,
-    output_device_array: Vec<AudioObjectID>,
     // serial_queue will be created by dispatch_queue_create(create_dispatch_queue)
     // without ARC(Automatic Reference Counting) support, so it should be released
     // by dispatch_release(release_dispatch_queue).
@@ -2265,6 +2317,7 @@ pub struct AudioUnitContext {
     layout: atomic::Atomic<ChannelLayout>,
     channels: u32,
     latency_controller: Mutex<LatencyController>,
+    devices: Mutex<SharedDevices>,
 }
 
 impl AudioUnitContext {
@@ -2272,16 +2325,11 @@ impl AudioUnitContext {
         Self {
             _ops: &OPS as *const _,
             mutex: OwnedCriticalSection::new(),
-            input_collection_changed_callback: None,
-            input_collection_changed_user_ptr: ptr::null_mut(),
-            output_collection_changed_callback: None,
-            output_collection_changed_user_ptr: ptr::null_mut(),
-            input_device_array: Vec::new(),
-            output_device_array: Vec::new(),
             serial_queue: create_dispatch_queue(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL),
             layout: atomic::Atomic::new(ChannelLayout::UNDEFINED),
             channels: 0,
             latency_controller: Mutex::new(LatencyController::default()),
+            devices: Mutex::new(SharedDevices::default()),
         }
     }
 
@@ -2310,26 +2358,26 @@ impl AudioUnitContext {
         collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
         user_ptr: *mut c_void,
     ) -> OSStatus {
-        self.mutex.assert_current_thread_owns();
         assert!(devtype.intersects(DeviceType::INPUT | DeviceType::OUTPUT));
         assert!(collection_changed_callback.is_some());
+
+        let context_ptr = self as *mut AudioUnitContext;
+        let mut devices = self.devices.lock().unwrap();
 
         // Note: second register without unregister first causes 'nope' error.
         // Current implementation requires unregister before register a new cb.
         assert!(
-            devtype.contains(DeviceType::INPUT) && self.input_collection_changed_callback.is_none()
+            devtype.contains(DeviceType::INPUT) && devices.input.changed_callback.is_none()
                 || devtype.contains(DeviceType::OUTPUT)
-                    && self.output_collection_changed_callback.is_none()
+                    && devices.output.changed_callback.is_none()
         );
 
-        if self.input_collection_changed_callback.is_none()
-            && self.output_collection_changed_callback.is_none()
-        {
+        if devices.input.changed_callback.is_none() && devices.output.changed_callback.is_none() {
             let ret = audio_object_add_property_listener(
                 kAudioObjectSystemObject,
                 &DEVICES_PROPERTY_ADDRESS,
                 audiounit_collection_changed_callback,
-                self,
+                context_ptr,
             );
             if ret != NO_ERR {
                 return ret;
@@ -2338,41 +2386,41 @@ impl AudioUnitContext {
 
         if devtype.contains(DeviceType::INPUT) {
             // Expected empty after unregister.
-            assert!(self.input_device_array.is_empty());
-            self.input_device_array = audiounit_get_devices_of_type(DeviceType::INPUT);
-            self.input_collection_changed_callback = collection_changed_callback;
-            self.input_collection_changed_user_ptr = user_ptr;
+            assert!(devices.input.is_empty());
+            devices.input.set(
+                collection_changed_callback,
+                user_ptr,
+                audiounit_get_devices_of_type(DeviceType::INPUT),
+            );
         }
 
         if devtype.contains(DeviceType::OUTPUT) {
             // Expected empty after unregister.
-            assert!(self.output_device_array.is_empty());
-            self.output_device_array = audiounit_get_devices_of_type(DeviceType::OUTPUT);
-            self.output_collection_changed_callback = collection_changed_callback;
-            self.output_collection_changed_user_ptr = user_ptr;
+            assert!(devices.output.is_empty());
+            devices.output.set(
+                collection_changed_callback,
+                user_ptr,
+                audiounit_get_devices_of_type(DeviceType::OUTPUT),
+            );
         }
 
         NO_ERR
     }
 
     fn remove_devices_changed_listener(&mut self, devtype: DeviceType) -> OSStatus {
-        self.mutex.assert_current_thread_owns();
         assert!(devtype.intersects(DeviceType::INPUT | DeviceType::OUTPUT));
+        let context_ptr = self as *mut AudioUnitContext;
+        let mut devices = self.devices.lock().unwrap();
+
         if devtype.contains(DeviceType::INPUT) {
-            self.input_collection_changed_callback = None;
-            self.input_collection_changed_user_ptr = ptr::null_mut();
-            self.input_device_array.clear();
+            devices.input.clear();
         }
 
         if devtype.contains(DeviceType::OUTPUT) {
-            self.output_collection_changed_callback = None;
-            self.output_collection_changed_user_ptr = ptr::null_mut();
-            self.output_device_array.clear();
+            devices.output.clear();
         }
 
-        if self.input_collection_changed_callback.is_some()
-            || self.output_collection_changed_callback.is_some()
-        {
+        if devices.input.changed_callback.is_some() || devices.output.changed_callback.is_some() {
             return NO_ERR;
         }
 
@@ -2381,7 +2429,7 @@ impl AudioUnitContext {
             kAudioObjectSystemObject,
             &DEVICES_PROPERTY_ADDRESS,
             audiounit_collection_changed_callback,
-            self,
+            context_ptr,
         )
     }
 }
@@ -2708,12 +2756,8 @@ impl Drop for AudioUnitContext {
         }
 
         // Unregister the callback if necessary.
-        if self.input_collection_changed_callback.is_some() {
-            self.remove_devices_changed_listener(DeviceType::INPUT);
-        }
-        if self.output_collection_changed_callback.is_some() {
-            self.remove_devices_changed_listener(DeviceType::OUTPUT);
-        }
+        self.remove_devices_changed_listener(DeviceType::INPUT);
+        self.remove_devices_changed_listener(DeviceType::OUTPUT);
 
         release_dispatch_queue(self.serial_queue);
     }
