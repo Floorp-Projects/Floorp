@@ -52,7 +52,7 @@ internal sealed class MimeType(
                 return null
             }
 
-            val photoUri = getUri(context, FILE_PROVIDER_AUTHORITY, photoFile)
+            val photoUri = getUri(context, "${context.packageName}.fileprovider", photoFile)
 
             return intent.apply { putExtra(EXTRA_OUTPUT, photoUri) }.addCaptureHint(request.captureMode)
         }
@@ -121,7 +121,6 @@ internal sealed class MimeType(
         const val USE_FRONT_CAMERA = "android.intent.extra.USE_FRONT_CAMERA"
         const val LENS_FACING_BACK = "android.intent.extras.LENS_FACING_BACK"
         const val USE_BACK_CAMERA = "android.intent.extra.USE_BACK_CAMERA"
-        const val FILE_PROVIDER_AUTHORITY = "mozilla.components.feature.prompts.fileprovider"
     }
 }
 
