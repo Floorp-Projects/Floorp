@@ -84,11 +84,20 @@ this.storage = class extends ExtensionAPI {
               res.storagePrincipal.deserialize(this, true),
               persisted
             );
-            const changes = await db[method](...args);
-            if (changes) {
-              ExtensionStorageIDB.notifyListeners(extension.id, changes);
+            try {
+              const changes = await db[method](...args);
+              if (changes) {
+                ExtensionStorageIDB.notifyListeners(extension.id, changes);
+              }
+              return changes;
+            } catch (err) {
+              const normalizedError = ExtensionStorageIDB.normalizeStorageError(
+                err
+              ).message;
+              return Promise.reject({
+                message: String(normalizedError),
+              });
             }
-            return changes;
           },
           // Private storage.local JSONFile backend methods (used internally by the child
           // ext-storage.js module).
