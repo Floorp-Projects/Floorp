@@ -4,8 +4,7 @@
                  type="text/css"?>
 <window title="Testing composition, text and query content events"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onunload="onunload();">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
@@ -84,16 +83,6 @@ function isSimilarTo(aLeft, aRight, aAllowedDifference, aMessage)
 function isGreaterThan(aLeft, aRight, aMessage)
 {
   ok(aLeft > aRight, aMessage + ", got=" + aLeft + ", expected minimum value=" + aRight);
-}
-
-function finish()
-{
-  window.close();
-}
-
-function onunload()
-{
-  window.opener.wrappedJSObject.SimpleTest.finish();
 }
 
 var div = document.getElementById("div");
@@ -8383,21 +8372,20 @@ async function runIMEContentObserverTest()
   // await testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is div): ", iframe2.contentDocument.body, "div");
 }
 
-var gTestContinuation = null;
-
-function continueTest()
+async function runTest()
 {
-  if (!gTestContinuation) {
-    gTestContinuation = testBody();
-  }
-  let ret = gTestContinuation.next();
-  if (ret.done) {
-    finish();
-  }
-}
+  window.addEventListener("unload", window.opener.wrappedJSObject.SimpleTest.finish, {once: true, capture: true});
 
-function* testBody()
-{
+  contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");
+  windowOfContenteditable = document.getElementById("iframe4").contentWindow;
+  textareaInFrame = iframe.contentDocument.getElementById("textarea");
+
+  await runIMEContentObserverTest();
+  await runEditorReframeTests();
+  await runAsyncForceCommitTest();
+  await runRemoveContentTest();
+  await runPanelTest();
+
   runUndoRedoTest();
   runCompositionCommitAsIsTest();
   runCompositionCommitTest();
@@ -8425,21 +8413,8 @@ function* testBody()
   runControlCharTest();
   runFrameTest();
   runMaxLengthTest();
-}
 
-async function runTest()
-{
-  contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");
-  windowOfContenteditable = document.getElementById("iframe4").contentWindow;
-  textareaInFrame = iframe.contentDocument.getElementById("textarea");
-
-  await runIMEContentObserverTest();
-  await runEditorReframeTests();
-  await runAsyncForceCommitTest();
-  await runRemoveContentTest();
-  await runPanelTest();
-
-  continueTest();
+  window.close();
 }
 
 window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
