@@ -51,7 +51,8 @@ export PATH="${TOOLS_DIR}/rustc/bin:${TOOLS_DIR}/cctools/bin:${TOOLS_DIR}/llvm-d
 
 # The x86_64-darwin11-ld linker from cctools requires libraries provided
 # by clang, so we need to set LD_LIBRARY_PATH for that to work.
-export LD_LIBRARY_PATH="${CLANGDIR}/lib:${LD_LIBRARY_PATH}"
+# The linker also needs libtapi.so from cctools.
+export LD_LIBRARY_PATH="${CLANGDIR}/lib:${TOOLS_DIR}/cctools/lib:${LD_LIBRARY_PATH}"
 
 # Tell the configure script where to find zlib, because otherwise it tries
 # to use pkg-config to find it, which fails (no .pc file in the macos SDK).
