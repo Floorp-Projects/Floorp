@@ -137,10 +137,11 @@ CheckARMSupport()
 {
     char *disable_arm_neon = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON");
     char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
+    char *disable_pmull = PR_GetEnvSecure("NSS_DISABLE_PMULL");
     if (getauxval) {
         long hwcaps = getauxval(AT_HWCAP);
         arm_aes_support_ = hwcaps & HWCAP_AES && disable_hw_aes == NULL;
-        arm_pmull_support_ = hwcaps & HWCAP_PMULL;
+        arm_pmull_support_ = hwcaps & HWCAP_PMULL && disable_pmull == NULL;
         arm_sha1_support_ = hwcaps & HWCAP_SHA1;
         arm_sha2_support_ = hwcaps & HWCAP_SHA2;
     }

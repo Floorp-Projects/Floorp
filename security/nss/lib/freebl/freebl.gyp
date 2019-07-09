@@ -117,6 +117,22 @@
       ]
     },
     {
+      'target_name': 'gcm-aes-aarch64_c_lib',
+      'type': 'static_library',
+      'sources': [
+        'gcm-aarch64.c'
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports'
+      ],
+      'cflags': [
+        '-march=armv8-a+crypto'
+      ],
+      'cflags_mozilla': [
+        '-march=armv8-a+crypto'
+      ]
+    },
+    {
       'target_name': 'freebl',
       'type': 'static_library',
       'sources': [
@@ -143,6 +159,11 @@
         [ 'target_arch=="ia32" or target_arch=="x64"', {
           'dependencies': [
             'gcm-aes-x86_c_lib',
+          ],
+        }],
+        [ 'target_arch=="arm64" or target_arch=="aarch64"', {
+          'dependencies': [
+            'gcm-aes-aarch64_c_lib',
           ],
         }],
         [ 'OS=="linux"', {
@@ -181,6 +202,11 @@
           'dependencies': [
             'gcm-aes-x86_c_lib',
           ]
+        }],
+        [ 'target_arch=="arm64" or target_arch=="aarch64"', {
+          'dependencies': [
+            'gcm-aes-aarch64_c_lib',
+          ],
         }],
         [ 'OS!="linux"', {
           'conditions': [
