@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 /*
  * Helper functions extract values from manifest members
- * and reports conformance violations.
+ * and reports conformance errors.
  */
 /* globals Components*/
 "use strict";
@@ -14,8 +14,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
-function ValueExtractor(aConsole, aBundle) {
-  this.console = aConsole;
+function ValueExtractor(errors, aBundle) {
+  this.errors = errors;
   this.domBundle = aBundle;
 }
 
@@ -35,13 +35,11 @@ ValueExtractor.prototype = {
     const type = isArray ? "array" : typeof value;
     if (type !== expectedType) {
       if (type !== "undefined") {
-        this.console.warn(
-          this.domBundle.formatStringFromName("ManifestInvalidType", [
-            objectName,
-            property,
-            expectedType,
-          ])
+        const warn = this.domBundle.formatStringFromName(
+          "ManifestInvalidType",
+          [objectName, property, expectedType]
         );
+        this.errors.push({ warn });
       }
       return undefined;
     }
@@ -59,12 +57,11 @@ ValueExtractor.prototype = {
       const rgba = InspectorUtils.colorToRGBA(value);
       color = "#" + ((rgba.r << 16) | (rgba.g << 8) | rgba.b).toString(16);
     } else if (value) {
-      this.console.warn(
-        this.domBundle.formatStringFromName("ManifestInvalidCSSColor", [
-          spec.property,
-          value,
-        ])
+      const warn = this.domBundle.formatStringFromName(
+        "ManifestInvalidCSSColor",
+        [spec.property, value]
       );
+      this.errors.push({ warn });
     }
     return color;
   },
@@ -75,12 +72,11 @@ ValueExtractor.prototype = {
       try {
         langTag = Intl.getCanonicalLocales(value)[0];
       } catch (err) {
-        console.warn(
-          this.domBundle.formatStringFromName("ManifestLangIsInvalid", [
-            spec.property,
-            value,
-          ])
+        const warn = this.domBundle.formatStringFromName(
+          "ManifestLangIsInvalid",
+          [spec.property, value]
         );
+        this.errors.push({ warn });
       }
     }
     return langTag;
