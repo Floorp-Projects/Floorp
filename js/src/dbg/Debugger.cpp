@@ -12925,6 +12925,29 @@ bool DebuggerEnvironment::typeGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+bool DebuggerEnvironment::scopeKindGetter(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "get scopeKind", args, environment);
+
+  if (!environment->requireDebuggee(cx)) {
+    return false;
+  }
+
+  Maybe<ScopeKind> kind = environment->scopeKind();
+  if (kind.isSome()) {
+    const char* s = ScopeKindString(*kind);
+    JSAtom* str = Atomize(cx, s, strlen(s), PinAtom);
+    if (!str) {
+      return false;
+    }
+    args.rval().setString(str);
+  } else {
+    args.rval().setNull();
+  }
+
+  return true;
+}
+
 /* static */
 bool DebuggerEnvironment::parentGetter(JSContext* cx, unsigned argc,
                                        Value* vp) {
@@ -13110,6 +13133,7 @@ bool DebuggerEnvironment::requireDebuggee(JSContext* cx) const {
 
 const JSPropertySpec DebuggerEnvironment::properties_[] = {
     JS_PSG("type", DebuggerEnvironment::typeGetter, 0),
+    JS_PSG("scopeKind", DebuggerEnvironment::scopeKindGetter, 0),
     JS_PSG("parent", DebuggerEnvironment::parentGetter, 0),
     JS_PSG("object", DebuggerEnvironment::objectGetter, 0),
     JS_PSG("callee", DebuggerEnvironment::calleeGetter, 0),
@@ -13161,6 +13185,15 @@ DebuggerEnvironmentType DebuggerEnvironment::type() const {
     return DebuggerEnvironmentType::With;
   }
   return DebuggerEnvironmentType::Object;
+}
+
+mozilla::Maybe<ScopeKind> DebuggerEnvironment::scopeKind() const {
+  if (!referent()->is<DebugEnvironmentProxy>()) {
+    return Nothing();
+  }
+  EnvironmentObject& env = referent()->as<DebugEnvironmentProxy>().environment();
+  Scope* scope = GetEnvironmentScope(env);
+  return scope ? Some(scope->kind()) : Nothing();
 }
 
 bool DebuggerEnvironment::getParent(
