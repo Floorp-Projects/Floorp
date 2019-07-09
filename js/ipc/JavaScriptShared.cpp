@@ -99,8 +99,8 @@ void ObjectToIdMap::remove(JSObject* obj) { table_.remove(obj); }
 void ObjectToIdMap::clear() { table_.clear(); }
 
 bool JavaScriptShared::sLoggingInitialized;
-bool JavaScriptShared::sLoggingEnabled;
-bool JavaScriptShared::sStackLoggingEnabled;
+bool JavaScriptShared::sLoggingEnabledByEnvVar;
+bool JavaScriptShared::sStackLoggingEnabledByEnvVar;
 
 JavaScriptShared::JavaScriptShared()
     : refcount_(1), nextSerialNumber_(1), nextCPOWNumber_(1) {
@@ -108,13 +108,9 @@ JavaScriptShared::JavaScriptShared()
     sLoggingInitialized = true;
 
     if (PR_GetEnv("MOZ_CPOW_LOG")) {
-      sLoggingEnabled = true;
-      sStackLoggingEnabled = strstr(PR_GetEnv("MOZ_CPOW_LOG"), "stacks");
-    } else {
-      Preferences::AddBoolVarCache(&sLoggingEnabled,
-                                   "dom.ipc.cpows.log.enabled", false);
-      Preferences::AddBoolVarCache(&sStackLoggingEnabled,
-                                   "dom.ipc.cpows.log.stack", false);
+      sLoggingEnabledByEnvVar = true;
+      sStackLoggingEnabledByEnvVar =
+          !!strstr(PR_GetEnv("MOZ_CPOW_LOG"), "stacks");
     }
   }
 }
