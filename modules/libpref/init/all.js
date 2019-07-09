@@ -15,7 +15,6 @@
  * modules/libpref/parser/src/lib.rs.
  */
 
-pref("keyword.enabled", false);
 pref("general.useragent.compatMode.firefox", false);
 
 // This pref exists only for testing purposes. In order to disable all
@@ -1012,7 +1011,6 @@ pref("layout.framevisibility.numscrollportheights", 1);
 pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
-pref("browser.fixup.dns_first_for_single_words", false);
 
 // Print header customization
 // Use the following codes:
