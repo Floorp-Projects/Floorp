@@ -405,7 +405,7 @@ VARCACHE_PREF(
   Live,
   "apz.gtk.kinetic_scroll.enabled",
    apz_gtk_kinetic_scroll_enabled,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, true
 )
 #endif
 
