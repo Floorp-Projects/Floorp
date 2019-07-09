@@ -9,12 +9,19 @@ var EXPORTED_SYMBOLS = ["AboutProtectionsHandler"];
 const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var AboutProtectionsHandler = {
   _inited: false,
-  _topics: ["openContentBlockingPreferences"],
+  _topics: [
+    "openContentBlockingPreferences",
+    "OpenAboutLogins",
+    "OpenSyncPreferences",
+    "FetchUserLoginsData",
+  ],
 
   init() {
+    this.receiveMessage = this.receiveMessage.bind(this);
     this.pageListener = new RemotePages("about:protections");
     for (let topic of this._topics) {
       this.pageListener.addMessageListener(topic, this.receiveMessage);
@@ -32,6 +39,25 @@ var AboutProtectionsHandler = {
     this.pageListener.destroy();
   },
 
+  /**
+   * Retrieves login data for the user.
+   *
+   * @return {{ isLoggedIn: Boolean,
+   *            numberOfLogins: Number,
+   *            numberOfSyncedDevices: Number }}
+   *         The login data.
+   */
+  getLoginData() {
+    const logins = Services.logins.countLogins("", "", "");
+
+    const isLoggedIn = logins > 0;
+    return {
+      isLoggedIn,
+      numberOfLogins: logins,
+      numberOfSyncedDevices: 0,
+    };
+  },
+
   receiveMessage(aMessage) {
     let win = aMessage.target.browser.ownerGlobal;
     switch (aMessage.name) {
@@ -39,6 +65,18 @@ var AboutProtectionsHandler = {
         win.openPreferences("privacy-trackingprotection", {
           origin: "about-protections",
         });
+        break;
+      case "OpenAboutLogins":
+        win.openTrustedLinkIn("about:logins", "tab");
+        break;
+      case "OpenSyncPreferences":
+        win.openTrustedLinkIn("about:preferences#sync", "tab");
+        break;
+      case "FetchUserLoginsData":
+        aMessage.target.sendAsyncMessage(
+          "SendUserLoginsData",
+          this.getLoginData()
+        );
         break;
     }
   },
