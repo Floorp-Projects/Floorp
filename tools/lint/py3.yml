@@ -12,7 +12,7 @@ py3:
         - gfx
         - ipc/ipdl
         - layout/reftests
-        - layout/style
+        - layout/style/ServoCSSPropList.mako.py
         - layout/tools/reftest
         - media
         - security/manager/ssl
