@@ -31,19 +31,10 @@ function isEventForAutocompleteItem(event) {
  * search isn't finished yet.
  */
 function waitForSearchFinish() {
-  if (UrlbarPrefs.get("quantumbar")) {
-    return Promise.all([
-      gURLBar.lastQueryContextPromise,
-      BrowserTestUtils.waitForCondition(() => gURLBar.view.isOpen),
-    ]);
-  }
-  return BrowserTestUtils.waitForCondition(
-    () =>
-      gURLBar.popupOpen &&
-      gURLBar.controller.searchStatus >=
-        Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
-    "Waiting for search to complete"
-  );
+  return Promise.all([
+    gURLBar.lastQueryContextPromise,
+    BrowserTestUtils.waitForCondition(() => gURLBar.view.isOpen),
+  ]);
 }
 
 // Check that the URL bar manages accessibility focus appropriately.
@@ -132,9 +123,7 @@ async function runTests() {
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   await focused;
   testStates(textBox, STATE_FOCUSED);
-  if (UrlbarPrefs.get("quantumbar")) {
-    gURLBar.view.close();
-  }
+  gURLBar.view.close();
   // On Mac, down arrow when not at the end of the field moves to the end.
   // Move back to the end so the next press of down arrow opens the popup.
   EventUtils.synthesizeKey("KEY_ArrowRight");

@@ -38,10 +38,6 @@ add_task(async function init() {
 // Keys up and down through the history panel, i.e., the panel that's shown when
 // there's no text in the textbox.
 add_task(async function history() {
-  if (!UrlbarPrefs.get("quantumbar")) {
-    gURLBar.popup.toggleOneOffSearches(true);
-  }
-
   gURLBar.focus();
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -58,66 +54,6 @@ add_task(async function history() {
       -1,
       "example.com/browser_urlbarOneOffs.js/?" + (gMaxResults - i - 1)
     );
-  }
-
-  if (!UrlbarPrefs.get("quantumbar")) {
-    // Key down through each one-off.
-    let numButtons = oneOffSearchButtons.getSelectableButtons(true).length;
-    for (let i = 0; i < numButtons; i++) {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
-      assertState(-1, i, "");
-    }
-
-    // Key down once more.  Nothing should be selected.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertState(-1, -1, "");
-
-    // Once more.  The first result should be selected.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertState(
-      0,
-      -1,
-      "example.com/browser_urlbarOneOffs.js/?" + (gMaxResults - 1)
-    );
-
-    // Now key up.  Nothing should be selected again.
-    EventUtils.synthesizeKey("KEY_ArrowUp");
-    assertState(-1, -1, "");
-
-    // Key up through each one-off.
-    for (let i = numButtons - 1; i >= 0; i--) {
-      EventUtils.synthesizeKey("KEY_ArrowUp");
-      assertState(-1, i, "");
-    }
-
-    // Key right through each one-off.
-    for (let i = 1; i < numButtons; i++) {
-      EventUtils.synthesizeKey("KEY_ArrowRight");
-      assertState(-1, i, "");
-    }
-
-    // Key left through each one-off.
-    for (let i = numButtons - 2; i >= 0; i--) {
-      EventUtils.synthesizeKey("KEY_ArrowLeft");
-      assertState(-1, i, "");
-    }
-
-    // Key up through each result.
-    for (let i = gMaxResults - 1; i >= 0; i--) {
-      EventUtils.synthesizeKey("KEY_ArrowUp");
-      assertState(
-        i,
-        -1,
-        "example.com/browser_urlbarOneOffs.js/?" + (gMaxResults - i - 1)
-      );
-    }
-
-    // Key up once more.  Nothing should be selected.
-    EventUtils.synthesizeKey("KEY_ArrowUp");
-    assertState(-1, -1, "");
-
-    await hidePopup();
-    return;
   }
 
   // Key down once more.  Nothing should be selected as one-off buttons

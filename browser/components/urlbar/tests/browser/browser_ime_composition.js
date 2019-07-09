@@ -155,11 +155,6 @@ add_task(async function test_composition() {
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
   EventUtils.synthesizeKey("I", {});
   EventUtils.synthesizeKey("n", {});
-  // The old urlbar may close/reopen the popup and then ESC wouldn't act as
-  // expected.
-  if (!UrlbarPrefs.get("quantumbar")) {
-    await UrlbarTestUtils.promiseSearchComplete(window);
-  }
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeKey("KEY_Escape", {});
   });
