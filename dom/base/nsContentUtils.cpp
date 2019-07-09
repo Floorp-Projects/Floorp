@@ -5080,22 +5080,24 @@ bool nsContentUtils::CombineResourcePrincipals(
 }
 
 /* static */
-void nsContentUtils::TriggerLink(nsIContent* aContent, nsIURI* aLinkURI,
+void nsContentUtils::TriggerLink(nsIContent* aContent,
+                                 nsPresContext* aPresContext, nsIURI* aLinkURI,
                                  const nsString& aTargetSpec, bool aClick,
                                  bool aIsTrusted) {
+  NS_ASSERTION(aPresContext, "Need a nsPresContext");
   MOZ_ASSERT(aLinkURI, "No link URI");
 
-  if (aContent->IsEditable() || !aContent->OwnerDoc()->LinkHandlingEnabled()) {
+  if (aContent->IsEditable()) {
     return;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = aContent->OwnerDoc()->GetDocShell();
-  if (!docShell) {
+  nsILinkHandler* handler = aPresContext->GetLinkHandler();
+  if (!handler) {
     return;
   }
 
   if (!aClick) {
-    nsDocShell::Cast(docShell)->OnOverLink(aContent, aLinkURI, aTargetSpec);
+    handler->OnOverLink(aContent, aLinkURI, aTargetSpec);
     return;
   }
 
@@ -5130,7 +5132,7 @@ void nsContentUtils::TriggerLink(nsIContent* aContent, nsIURI* aLinkURI,
     nsCOMPtr<nsIPrincipal> triggeringPrincipal = aContent->NodePrincipal();
     nsCOMPtr<nsIContentSecurityPolicy> csp = aContent->GetCsp();
 
-    nsDocShell::Cast(docShell)->OnLinkClick(
+    handler->OnLinkClick(
         aContent, aLinkURI, fileName.IsVoid() ? aTargetSpec : EmptyString(),
         fileName, nullptr, nullptr, EventStateManager::IsHandlingUserInput(),
         aIsTrusted, triggeringPrincipal, csp);
