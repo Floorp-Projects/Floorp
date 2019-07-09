@@ -657,13 +657,12 @@ class BaselineInterpreter {
   uint32_t profilerEnterToggleOffset_ = 0;
   uint32_t profilerExitToggleOffset_ = 0;
 
-  // The offset for the toggledJump instruction for the debugger's
-  // IsDebuggeeCheck code in the prologue.
-  uint32_t debuggeeCheckOffset_ = 0;
+  // The offsets of toggled jumps for debugger instrumentation.
+  using CodeOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
+  CodeOffsetVector debugInstrumentationOffsets_;
 
   // Offsets of toggled calls to the DebugTrapHandler trampoline (for
   // breakpoints and stepping).
-  using CodeOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
   CodeOffsetVector debugTrapOffsets_;
 
   // Offsets of toggled jumps for code coverage.
@@ -678,7 +677,8 @@ class BaselineInterpreter {
   void init(JitCode* code, uint32_t interpretOpOffset,
             uint32_t interpretOpNoDebugTrapOffset,
             uint32_t profilerEnterToggleOffset,
-            uint32_t profilerExitToggleOffset, uint32_t debuggeeCheckOffset,
+            uint32_t profilerExitToggleOffset,
+            CodeOffsetVector&& debugInstrumentationOffsets,
             CodeOffsetVector&& debugTrapOffsets,
             CodeOffsetVector&& codeCoverageOffsets);
 
