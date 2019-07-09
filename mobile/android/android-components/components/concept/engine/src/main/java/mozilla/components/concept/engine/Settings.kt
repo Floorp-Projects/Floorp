@@ -84,6 +84,13 @@ abstract class Settings {
     open var loadWithOverviewMode: Boolean by UnsupportedSetting()
 
     /**
+     * Setting to control whether to support the viewport HTML meta tag or if a wide viewport
+     * should be used. If not null, this value overrides useWideViePort webSettings in
+     * [EngineSession.toggleDesktopMode].
+     */
+    open var useWideViewPort: Boolean by UnsupportedSetting()
+
+    /**
      * Setting to control whether or not file access is allowed.
      */
     open var allowFileAccess: Boolean by UnsupportedSetting()
@@ -175,6 +182,7 @@ data class DefaultSettings(
     override var javaScriptCanOpenWindowsAutomatically: Boolean = false,
     override var displayZoomControls: Boolean = true,
     override var loadWithOverviewMode: Boolean = false,
+    override var useWideViewPort: Boolean = false,
     override var allowFileAccess: Boolean = true,
     override var allowFileAccessFromFileURLs: Boolean = false,
     override var allowUniversalAccessFromFileURLs: Boolean = false,

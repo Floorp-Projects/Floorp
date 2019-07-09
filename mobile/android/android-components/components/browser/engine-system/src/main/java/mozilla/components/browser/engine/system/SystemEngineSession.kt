@@ -319,6 +319,7 @@ class SystemEngineSession(
                 webFontsEnabled = it.webFontsEnabled
                 displayZoomControls = it.displayZoomControls
                 loadWithOverviewMode = it.loadWithOverviewMode
+                useWideViewPort = it.useWideViewPort
                 trackingProtectionPolicy = it.trackingProtectionPolicy
                 historyTrackingDelegate = it.historyTrackingDelegate
                 requestInterceptor = it.requestInterceptor

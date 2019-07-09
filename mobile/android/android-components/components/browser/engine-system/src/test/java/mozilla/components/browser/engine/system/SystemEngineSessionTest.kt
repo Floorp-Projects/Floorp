@@ -306,6 +306,10 @@ class SystemEngineSessionTest {
         engineSession.settings.loadWithOverviewMode = true
         verify(webViewSettings).loadWithOverviewMode = true
 
+        assertFalse(engineSession.settings.useWideViewPort)
+        engineSession.settings.useWideViewPort = true
+        verify(webViewSettings).useWideViewPort = true
+
         assertTrue(engineSession.settings.allowContentAccess)
         engineSession.settings.allowContentAccess = false
         verify(webViewSettings).allowContentAccess = false
