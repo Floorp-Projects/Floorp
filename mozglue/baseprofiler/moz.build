@@ -84,6 +84,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'public/BaseProfilerCounts.h',
     'public/leb128iterator.h',
+    'public/ModuloBuffer.h',
     'public/PowerOfTwo.h',
 ]
 
