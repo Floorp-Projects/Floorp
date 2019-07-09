@@ -5891,7 +5891,7 @@ function runNestedSettingValue()
 
 }
 
-function runAsyncForceCommitTest()
+async function runAsyncForceCommitTest()
 {
   let events;
   function eventHandler(aEvent)
@@ -5905,6 +5905,7 @@ function runAsyncForceCommitTest()
   // a click during composition should cause committing composition
   // synchronously and delayed commit shouldn't cause composition events.
   let commitRequested = false;
+  let onFinishTest = null;
   function callback(aTIP, aNotification)
   {
     ok(true, aNotification.type);
@@ -5912,23 +5913,26 @@ function runAsyncForceCommitTest()
       return true;
     }
     commitRequested = true;
-    setTimeout(function () {
-      events = [];
-      aTIP.commitComposition();
+    if (onFinishTest) {
+      let resolve = onFinishTest;
+      onFinishTest = null;
 
-      is(events.length, 0,
-         "runAsyncForceCommitTest: composition events shouldn't been fired by asynchronous call of nsITextInputProcessor.commitComposition()");
+      SimpleTest.executeSoon(() => {
+        events = [];
+        aTIP.commitComposition();
 
-      window.removeEventListener("compositionstart", eventHandler, true);
-      window.removeEventListener("compositionupdate", eventHandler, true);
-      window.removeEventListener("compositionend", eventHandler, true);
-      window.removeEventListener("input", eventHandler, true);
-      window.removeEventListener("text", eventHandler, true);
+        is(events.length, 0,
+           "runAsyncForceCommitTest: composition events shouldn't been fired by asynchronous call of nsITextInputProcessor.commitComposition()");
 
-      SimpleTest.executeSoon(continueTest);
-    }, 1);
+        SimpleTest.executeSoon(resolve);
+      });
+    }
     return true;
   };
+
+  function promiseCleanUp() {
+    return new Promise(resolve => { onFinishTest = resolve; });
+  }
 
   window.addEventListener("compositionstart", eventHandler, true);
   window.addEventListener("compositionupdate", eventHandler, true);
@@ -5966,7 +5970,8 @@ function runAsyncForceCommitTest()
                   "runAsyncForceCommitTest #1");
 
   events = [];
-  commitRequested = false;
+  let waitCleanState = promiseCleanUp();
+
   synthesizeMouseAtCenter(textarea, {});
 
   ok(commitRequested,
@@ -5993,6 +5998,14 @@ function runAsyncForceCommitTest()
      "runAsyncForceCommitTest: the textarea still has composition #2");
   is(textarea.value, "\u306E",
      "runAsyncForceCommitTest: the textarea doesn't have the committed text #2");
+
+  await waitCleanState;
+
+  window.removeEventListener("compositionstart", eventHandler, true);
+  window.removeEventListener("compositionupdate", eventHandler, true);
+  window.removeEventListener("compositionend", eventHandler, true);
+  window.removeEventListener("input", eventHandler, true);
+  window.removeEventListener("text", eventHandler, true);
 }
 
 function runBug811755Test()
@@ -8431,7 +8444,6 @@ function* testBody()
   runNotRedundantChangeTest();
   runNativeLineBreakerTest();
   runControlCharTest();
-  yield runAsyncForceCommitTest();
   yield runRemoveContentTest();
   runFrameTest();
   yield runPanelTest();
@@ -8446,6 +8458,7 @@ async function runTest()
 
   await runIMEContentObserverTest();
   await runEditorReframeTests();
+  await runAsyncForceCommitTest();
 
   continueTest();
 }
