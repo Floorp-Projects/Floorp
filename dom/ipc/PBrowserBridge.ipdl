@@ -16,6 +16,9 @@ using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
 using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::dom::EffectsInfo from "mozilla/dom/TabMessageUtils.h";
+using mozilla::ScrollAxis from "mozilla/PresShellForwards.h";
+using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
+using struct nsRect from "nsRect.h";
 
 namespace mozilla {
 namespace dom {
@@ -55,6 +58,10 @@ child:
    * Fire a `load` event on this PBrowserBridge's embedding frame element.
    */
   async FireFrameLoadEvent(bool aIsTrusted);
+
+  async ScrollRectIntoView(nsRect aRect, ScrollAxis aVertical,
+                           ScrollAxis aHorizontal, ScrollFlags aScrollFlags,
+                           int32_t aAppUnitsPerDevPixel);
 
 parent:
   // Destroy the remote web browser due to the nsFrameLoader going away.

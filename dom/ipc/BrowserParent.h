@@ -447,6 +447,11 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvDispatchKeyboardEvent(
       const mozilla::WidgetKeyboardEvent& aEvent);
 
+  mozilla::ipc::IPCResult RecvScrollRectIntoView(
+      const nsRect& aRect, const ScrollAxis& aVertical,
+      const ScrollAxis& aHorizontal, const ScrollFlags& aScrollFlags,
+      const int32_t& aAppUnitsPerDevPixel);
+
   PColorPickerParent* AllocPColorPickerParent(const nsString& aTitle,
                                               const nsString& aInitialColor);
 
