@@ -1461,7 +1461,7 @@ struct Handler {
    * reflection object on which the reference is stored when the former is
    * finalized, or the latter replaced.
    */
-  virtual void drop() = 0;
+  virtual void drop(js::FreeOp* fop, DebuggerFrame* frame) = 0;
 
   /*
    * Traces the reference to the handler. This method will be called
@@ -1469,6 +1469,9 @@ struct Handler {
    * former is traced.
    */
   virtual void trace(JSTracer* tracer) = 0;
+
+  /* Allocation size in bytes for memory accounting purposes. */
+  virtual size_t allocSize() const = 0;
 };
 
 class DebuggerArguments : public NativeObject {
@@ -1503,10 +1506,11 @@ class ScriptedOnStepHandler final : public OnStepHandler {
  public:
   explicit ScriptedOnStepHandler(JSObject* object);
   virtual JSObject* object() const override;
-  virtual void drop() override;
+  virtual void drop(js::FreeOp* fop, DebuggerFrame* frame) override;
   virtual void trace(JSTracer* tracer) override;
   virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame,
                       ResumeMode& resumeMode, MutableHandleValue vp) override;
+  virtual size_t allocSize() const override;
 
  private:
   HeapPtr<JSObject*> object_;
@@ -1534,11 +1538,12 @@ class ScriptedOnPopHandler final : public OnPopHandler {
  public:
   explicit ScriptedOnPopHandler(JSObject* object);
   virtual JSObject* object() const override;
-  virtual void drop() override;
+  virtual void drop(js::FreeOp* fop, DebuggerFrame* frame) override;
   virtual void trace(JSTracer* tracer) override;
   virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
                      const Completion& completion, ResumeMode& resumeMode,
                      MutableHandleValue vp) override;
+  virtual size_t allocSize() const override;
 
  private:
   HeapPtr<JSObject*> object_;
@@ -1622,7 +1627,7 @@ class DebuggerFrame : public NativeObject {
   bool isLive() const;
   OnStepHandler* onStepHandler() const;
   OnPopHandler* onPopHandler() const;
-  void setOnPopHandler(OnPopHandler* handler);
+  void setOnPopHandler(JSContext* cx, OnPopHandler* handler);
 
   bool hasGenerator() const;
 
@@ -1728,6 +1733,7 @@ class DebuggerFrame : public NativeObject {
 
  public:
   FrameIter::Data* frameIterData() const;
+  void setFrameIterData(FrameIter::Data*);
   void freeFrameIterData(FreeOp* fop);
   void maybeDecrementFrameScriptStepperCount(FreeOp* fop,
                                              AbstractFramePtr frame);
