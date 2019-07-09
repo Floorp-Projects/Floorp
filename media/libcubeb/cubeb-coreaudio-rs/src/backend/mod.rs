@@ -2195,6 +2195,17 @@ extern "C" fn audiounit_collection_changed_callback(
     NO_ERR
 }
 
+#[derive(Debug)]
+struct ContextStreams {
+    active_streams: u32,
+}
+
+impl Default for ContextStreams {
+    fn default() -> Self {
+        Self { active_streams: 0 }
+    }
+}
+
 pub const OPS: Ops = capi_new!(AudioUnitContext, AudioUnitStream);
 
 // The fisrt member of the Cubeb context must be a pointer to a Ops struct. The Ops struct is an
@@ -2206,7 +2217,6 @@ pub const OPS: Ops = capi_new!(AudioUnitContext, AudioUnitStream);
 pub struct AudioUnitContext {
     _ops: *const Ops,
     mutex: OwnedCriticalSection,
-    active_streams: i32,
     global_latency_frames: u32,
     input_collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
     input_collection_changed_user_ptr: *mut c_void,
@@ -2221,6 +2231,7 @@ pub struct AudioUnitContext {
     serial_queue: dispatch_queue_t,
     layout: atomic::Atomic<ChannelLayout>,
     channels: u32,
+    streams: Mutex<ContextStreams>,
 }
 
 impl AudioUnitContext {
@@ -2228,7 +2239,6 @@ impl AudioUnitContext {
         Self {
             _ops: &OPS as *const _,
             mutex: OwnedCriticalSection::new(),
-            active_streams: 0,
             global_latency_frames: 0,
             input_collection_changed_callback: None,
             input_collection_changed_user_ptr: ptr::null_mut(),
@@ -2239,6 +2249,7 @@ impl AudioUnitContext {
             serial_queue: create_dispatch_queue(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL),
             layout: atomic::Atomic::new(ChannelLayout::UNDEFINED),
             channels: 0,
+            streams: Mutex::new(ContextStreams::default()),
         }
     }
 
@@ -2246,19 +2257,19 @@ impl AudioUnitContext {
         self.mutex.init();
     }
 
-    fn increase_active_streams(&mut self) {
-        self.mutex.assert_current_thread_owns();
-        self.active_streams += 1;
+    fn increase_active_streams(&self) {
+        let mut streams = self.streams.lock().unwrap();
+        streams.active_streams += 1;
     }
 
-    fn decrease_active_streams(&mut self) {
-        self.mutex.assert_current_thread_owns();
-        self.active_streams -= 1;
+    fn decrease_active_streams(&self) {
+        let mut streams = self.streams.lock().unwrap();
+        streams.active_streams -= 1;
     }
 
-    fn active_streams(&mut self) -> i32 {
-        self.mutex.assert_current_thread_owns();
-        self.active_streams
+    fn active_streams(&self) -> u32 {
+        let streams = self.streams.lock().unwrap();
+        streams.active_streams
     }
 
     fn set_global_latency(&mut self, latency_frames: u32) {
@@ -2646,15 +2657,17 @@ impl Drop for AudioUnitContext {
         let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
         let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
 
-        // Disabling this assert for bug 1083664 -- we seem to leak a stream
-        // assert(ctx->active_streams == 0);
-        let streams = self.active_streams();
-        if streams > 0 {
-            cubeb_log!(
-                "({:p}) API misuse, {} streams active when context destroyed!",
-                self as *const AudioUnitContext,
-                streams
-            );
+        {
+            let streams = self.streams.lock().unwrap();
+            // Disabling this assert for bug 1083664 -- we seem to leak a stream
+            // assert(streams.active_streams == 0);
+            if streams.active_streams > 0 {
+                cubeb_log!(
+                    "({:p}) API misuse, {} streams active when context destroyed!",
+                    self as *const AudioUnitContext,
+                    streams.active_streams
+                );
+            }
         }
 
         // Unregister the callback if necessary.
