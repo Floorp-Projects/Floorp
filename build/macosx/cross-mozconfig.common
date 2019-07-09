@@ -10,7 +10,8 @@ MOZ_AUTOMATION_L10N_CHECK=0
 mk_add_options "export PATH=$topsrcdir/cctools/bin:$topsrcdir/binutils/bin:$topsrcdir/llvm-dsymutil/bin:$PATH"
 
 # ld needs libLTO.so from llvm
-mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib"
+# ld also needs libtapi.so from cctools itself
+mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib:$topsrcdir/cctools/lib"
 
 # This SDK was copied from a local XCode install and uploaded to tooltool.
 # Generate the tarball by running this command with the proper SDK version:
