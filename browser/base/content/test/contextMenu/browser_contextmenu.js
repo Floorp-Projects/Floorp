@@ -17,7 +17,9 @@ let LOGIN_FILL_ITEMS = [
   null,
 ];
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
-let hasContainers = Services.prefs.getBoolPref("privacy.userContext.enabled");
+let hasContainers =
+  Services.prefs.getBoolPref("privacy.userContext.enabled") &&
+  ContextualIdentityService.getPublicIdentities().length;
 
 const example_base =
   "http://example.com/browser/browser/base/content/test/contextMenu/";
