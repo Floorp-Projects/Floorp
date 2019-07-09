@@ -4964,15 +4964,7 @@ bool XRE_UseNativeEventProcessing() {
   }
 #endif
   if (XRE_IsContentProcess()) {
-    static bool sInited = false;
-    static bool sUseNativeEventProcessing = false;
-    if (!sInited) {
-      Preferences::AddBoolVarCache(&sUseNativeEventProcessing,
-                                   "dom.ipc.useNativeEventProcessing.content");
-      sInited = true;
-    }
-
-    return sUseNativeEventProcessing;
+    return StaticPrefs::dom_ipc_useNativeEventProcessing_content();
   }
 
   return true;
