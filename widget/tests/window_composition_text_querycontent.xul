@@ -117,13 +117,16 @@ const nsIInterfaceRequestor = Ci.nsIInterfaceRequestor;
 const nsIWebNavigation = Ci.nsIWebNavigation;
 const nsIDocShell = Ci.nsIDocShell;
 
-function hitEventLoop(aFunc, aTimes)
+function waitForTick() {
+  return new Promise(resolve => { SimpleTest.executeSoon(resolve); });
+}
+
+async function waitForEventLoops(aTimes)
 {
-  if (--aTimes) {
-    setTimeout(hitEventLoop, 0, aFunc, aTimes);
-  } else {
-    setTimeout(aFunc, 20);
+  for (let i = 1; i < aTimes; i++) {
+    await waitForTick();
   }
+  await new Promise(resolve => { setTimeout(resolve, 20); });
 }
 
 function getEditor(aNode)
@@ -6611,7 +6614,7 @@ function runControlCharTest()
   textarea.removeEventListener("compositionend", handler, true);
 }
 
-function runRemoveContentTest()
+async function runRemoveContentTest()
 {
   let events = [];
   function eventHandler(aEvent)
@@ -6644,69 +6647,69 @@ function runRemoveContentTest()
   events = [];
   parent.removeChild(textarea);
 
-  hitEventLoop(function () {
-    // XXX Currently, "input" event isn't fired on removed content.
-    is(events.length, 3,
-       "runRemoveContentTest: wrong event count #1");
-    is(events[0].type, "compositionupdate",
-       "runRemoveContentTest: the 1st event must be compositionupdate #1");
-    is(events[1].type, "text",
-       "runRemoveContentTest: the 2nd event must be text #1");
-    is(events[2].type, "compositionend",
-       "runRemoveContentTest: the 3rd event must be compositionend #1");
-    is(events[0].data, "",
-       "runRemoveContentTest: compositionupdate has wrong data #1");
-    is(events[2].data, "",
-       "runRemoveContentTest: compositionend has wrong data #1");
-    is(events[0].target, textarea,
-       "runRemoveContentTest: The 1st event was fired on wrong event target #1");
-    is(events[1].target, textarea,
-       "runRemoveContentTest: The 2nd event was fired on wrong event target #1");
-    is(events[2].target, textarea,
-       "runRemoveContentTest: The 3rd event was fired on wrong event target #1");
-    ok(!getEditor(textarea).isComposing,
-       "runRemoveContentTest: the textarea still has composition #1");
-    todo_is(textarea.value, "",
-       "runRemoveContentTest: the textarea has the committed text? #1");
+  await waitForEventLoops(50);
 
-    parent.insertBefore(textarea, nextSibling);
+  // XXX Currently, "input" event isn't fired on removed content.
+  is(events.length, 3,
+     "runRemoveContentTest: wrong event count #1");
+  is(events[0].type, "compositionupdate",
+     "runRemoveContentTest: the 1st event must be compositionupdate #1");
+  is(events[1].type, "text",
+     "runRemoveContentTest: the 2nd event must be text #1");
+  is(events[2].type, "compositionend",
+     "runRemoveContentTest: the 3rd event must be compositionend #1");
+  is(events[0].data, "",
+     "runRemoveContentTest: compositionupdate has wrong data #1");
+  is(events[2].data, "",
+     "runRemoveContentTest: compositionend has wrong data #1");
+  is(events[0].target, textarea,
+     "runRemoveContentTest: The 1st event was fired on wrong event target #1");
+  is(events[1].target, textarea,
+     "runRemoveContentTest: The 2nd event was fired on wrong event target #1");
+  is(events[2].target, textarea,
+     "runRemoveContentTest: The 3rd event was fired on wrong event target #1");
+  ok(!getEditor(textarea).isComposing,
+     "runRemoveContentTest: the textarea still has composition #1");
+  todo_is(textarea.value, "",
+     "runRemoveContentTest: the textarea has the committed text? #1");
 
-    textarea.focus();
-    textarea.value = "";
+  parent.insertBefore(textarea, nextSibling);
 
-    synthesizeComposition({ type: "compositionstart" });
+  textarea.focus();
+  textarea.value = "";
 
-    events = [];
-    parent.removeChild(textarea);
+  synthesizeComposition({ type: "compositionstart" });
 
-    hitEventLoop(function () {
-      // XXX Currently, "input" event isn't fired on removed content.
-      is(events.length, 2,
-         "runRemoveContentTest: wrong event count #2");
-      is(events[0].type, "text",
-         "runRemoveContentTest: the 1st event must be text #2");
-      is(events[1].type, "compositionend",
-         "runRemoveContentTest: the 1st event must be compositionend #2");
-      is(events[1].data, "",
-         "runRemoveContentTest: compositionupdate has wrong data #2");
-      is(events[1].target, textarea,
-         "runRemoveContentTest: The 1st event was fired on wrong event target #2");
-      ok(!getEditor(textarea).isComposing,
-         "runRemoveContentTest: the textarea still has composition #2");
-      is(textarea.value, "",
-         "runRemoveContentTest: the textarea has the committed text? #2");
+  events = [];
+  parent.removeChild(textarea);
 
-      parent.insertBefore(textarea, nextSibling);
+  await waitForEventLoops(50);
 
-      textarea.removeEventListener("compositionstart", eventHandler, true);
-      textarea.removeEventListener("compositionupdate", eventHandler, true);
-      textarea.removeEventListener("compositionend", eventHandler, true);
-      textarea.removeEventListener("input", eventHandler, true);
-      textarea.removeEventListener("text", eventHandler, true);
+  // XXX Currently, "input" event isn't fired on removed content.
+  is(events.length, 2,
+     "runRemoveContentTest: wrong event count #2");
+  is(events[0].type, "text",
+     "runRemoveContentTest: the 1st event must be text #2");
+  is(events[1].type, "compositionend",
+     "runRemoveContentTest: the 1st event must be compositionend #2");
+  is(events[1].data, "",
+     "runRemoveContentTest: compositionupdate has wrong data #2");
+  is(events[1].target, textarea,
+     "runRemoveContentTest: The 1st event was fired on wrong event target #2");
+  ok(!getEditor(textarea).isComposing,
+     "runRemoveContentTest: the textarea still has composition #2");
+  is(textarea.value, "",
+     "runRemoveContentTest: the textarea has the committed text? #2");
 
-      SimpleTest.executeSoon(continueTest);
-    }, 50);
-  }, 50);
+  parent.insertBefore(textarea, nextSibling);
+
+  textarea.removeEventListener("compositionstart", eventHandler, true);
+  textarea.removeEventListener("compositionupdate", eventHandler, true);
+  textarea.removeEventListener("compositionend", eventHandler, true);
+  textarea.removeEventListener("input", eventHandler, true);
+  textarea.removeEventListener("text", eventHandler, true);
+
+  await waitForTick();
 }
 
 function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
@@ -7447,12 +7450,9 @@ async function runEditorReframeTests()
 
     for (const currentTest of tests) {
       currentTest.test();
-      await new Promise(resolve => {
-        hitEventLoop(() => {
-          currentTest.check();
-          SimpleTest.executeSoon(resolve);
-        }, 20);
-      });
+      await waitForEventLoops(20);
+      currentTest.check();
+      await waitForTick();
     }
 
     await new Promise(resolve => {
@@ -8444,7 +8444,6 @@ function* testBody()
   runNotRedundantChangeTest();
   runNativeLineBreakerTest();
   runControlCharTest();
-  yield runRemoveContentTest();
   runFrameTest();
   yield runPanelTest();
   runMaxLengthTest();
@@ -8459,6 +8458,7 @@ async function runTest()
   await runIMEContentObserverTest();
   await runEditorReframeTests();
   await runAsyncForceCommitTest();
+  await runRemoveContentTest();
 
   continueTest();
 }

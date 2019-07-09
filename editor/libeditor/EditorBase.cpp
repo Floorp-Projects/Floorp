@@ -388,8 +388,19 @@ nsresult EditorBase::InstallEventListeners() {
 
   nsresult rv = mEventListener->Connect(this);
   if (mComposition) {
-    // Restart to handle composition with new editor contents.
-    mComposition->StartHandlingComposition(this);
+    // If mComposition has already been destroyed, we should forget it.
+    // This may happen if it ended while we don't listen to composition
+    // events.
+    if (mComposition->Destroyed()) {
+      // XXX We may need to fix existing composition transaction here.
+      //     However, this may be called when it's not safe.
+      //     Perhaps, we should stop handling composition with events.
+      mComposition = nullptr;
+    }
+    // Otherwise, Restart to handle composition with new editor contents.
+    else {
+      mComposition->StartHandlingComposition(this);
+    }
   }
   return rv;
 }
