@@ -9485,7 +9485,7 @@ Maybe<LayoutDeviceToScreenScale> Document::ParseScaleInHeader(
   return ParseScaleString(scaleStr);
 }
 
-void Document::ParseScalesInMetaViewport() {
+bool Document::ParseScalesInMetaViewport() {
   Maybe<LayoutDeviceToScreenScale> scale;
 
   scale = ParseScaleInHeader(nsGkAtoms::viewport_initial_scale);
@@ -9508,9 +9508,10 @@ void Document::ParseScalesInMetaViewport() {
   if (mValidMaxScale && mValidMinScale) {
     mScaleMaxFloat = std::max(mScaleMinFloat, mScaleMaxFloat);
   }
+  return mValidScaleFloat || mValidMaxScale || mValidMinScale;
 }
 
-void Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
+bool Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
                                                  const nsAString& aHeightString,
                                                  bool aHasValidScale) {
   // The width and height properties
@@ -9571,6 +9572,8 @@ void Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
       }
     }
   }
+
+  return !aWidthString.IsEmpty() || !aHeightString.IsEmpty();
 }
 
 nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
@@ -9625,8 +9628,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // We might early exit if the viewport is empty. Even if we don't,
       // at the end of this case we'll note that it was empty. Later, when
       // we're using the cached values, this will trigger alternate code paths.
-      bool viewportIsEmpty = viewport.IsEmpty();
-      if (viewportIsEmpty) {
+      if (viewport.IsEmpty()) {
         // If the docType specifies that we are on a site optimized for mobile,
         // then we want to return specially crafted defaults for the viewport
         // info.
@@ -9653,7 +9655,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       }
 
       // Parse initial-scale, minimum-scale and maximum-scale.
-      ParseScalesInMetaViewport();
+      bool hasValidContents = ParseScalesInMetaViewport();
 
       nsAutoString widthStr, heightStr;
 
@@ -9662,7 +9664,10 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
 
       // Parse width and height properties
       // This function sets m{Min,Max}{Width,Height}.
-      ParseWidthAndHeightInMetaViewport(widthStr, heightStr, mValidScaleFloat);
+      if (ParseWidthAndHeightInMetaViewport(widthStr, heightStr,
+                                            mValidScaleFloat)) {
+        hasValidContents = true;
+      }
 
       mAllowZoom = true;
       nsAutoString userScalable;
@@ -9673,14 +9678,17 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
           (userScalable.EqualsLiteral("false"))) {
         mAllowZoom = false;
       }
+      if (!userScalable.IsEmpty()) {
+        hasValidContents = true;
+      }
 
       mWidthStrEmpty = widthStr.IsEmpty();
 
-      mViewportType = viewportIsEmpty ? Empty : Specified;
+      mViewportType = hasValidContents ? Specified : NoValidContent;
       MOZ_FALLTHROUGH;
     }
     case Specified:
-    case Empty:
+    case NoValidContent:
     default:
       LayoutDeviceToScreenScale effectiveMinScale = mScaleMinFloat;
       LayoutDeviceToScreenScale effectiveMaxScale = mScaleMaxFloat;
@@ -9791,7 +9799,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
           // provided, in which case we want to assume that the document is not
           // optimized for aDisplaySize, and we should instead force a useful
           // size.
-          if (mViewportType == Empty) {
+          if (mViewportType == NoValidContent) {
             // If we don't have any applicable viewport width constraints, this
             // is most likely a desktop page written without mobile devices in
             // mind. We use the desktop mode viewport for those pages by
