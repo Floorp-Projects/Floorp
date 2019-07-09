@@ -53,17 +53,13 @@ Notification.prototype = {
   },
 
   observe(subject, topic, data) {
-    let emitAndDelete = event => {
-      this.notificationsMap.emit(event, data);
-      this.notificationsMap.delete(this.id);
-    };
-
     switch (topic) {
       case "alertclickcallback":
-        emitAndDelete("clicked");
+        this.notificationsMap.emit("clicked", data);
         break;
       case "alertfinished":
-        emitAndDelete("closed");
+        this.notificationsMap.emit("closed", data);
+        this.notificationsMap.delete(this.id);
         break;
       case "alertshow":
         this.notificationsMap.emit("shown", data);
