@@ -256,6 +256,24 @@ fn create_device_info(id: AudioDeviceID, devtype: DeviceType) -> Result<device_i
     Ok(info)
 }
 
+fn set_volume(unit: AudioUnit, volume: f32) -> Result<()> {
+    assert!(!unit.is_null());
+    let r = audio_unit_set_parameter(
+        unit,
+        kHALOutputParam_Volume,
+        kAudioUnitScope_Global,
+        0,
+        volume,
+        0,
+    );
+    if r == NO_ERR {
+        Ok(())
+    } else {
+        cubeb_log!("AudioUnitSetParameter/kHALOutputParam_Volume rv={}", r);
+        Err(Error::error())
+    }
+}
+
 fn audiounit_make_silent(io_data: &mut AudioBuffer) {
     assert!(!io_data.mData.is_null());
     let bytes = unsafe {
@@ -3141,7 +3159,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             }
 
             if vol_rv.is_ok() {
-                self.set_volume(vol_rv.unwrap());
+                set_volume(self.output_unit, vol_rv.unwrap());
             }
 
             // If the stream was running, start it again.
@@ -4348,21 +4366,7 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         Ok(self.current_latency_frames.load(Ordering::SeqCst))
     }
     fn set_volume(&mut self, volume: f32) -> Result<()> {
-        assert!(!self.output_unit.is_null());
-        let mut r = NO_ERR;
-        r = audio_unit_set_parameter(
-            self.output_unit,
-            kHALOutputParam_Volume,
-            kAudioUnitScope_Global,
-            0,
-            volume,
-            0,
-        );
-        if r != NO_ERR {
-            cubeb_log!("AudioUnitSetParameter/kHALOutputParam_Volume rv={}", r);
-            return Err(Error::error());
-        }
-        Ok(())
+        set_volume(self.output_unit, volume)
     }
     fn set_panning(&mut self, panning: f32) -> Result<()> {
         if self.output_desc.mChannelsPerFrame > 2 {
