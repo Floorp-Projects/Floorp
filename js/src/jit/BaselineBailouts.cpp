@@ -2111,6 +2111,14 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
     ++iter;
   }
 
+  // If the frame has no environment chain, this must be a prologue bailout and
+  // we have to initialize with the function's initial environment to match
+  // emitInitFrameFields. This has to happen last because the earlier bailout
+  // code uses |envChain == nullptr| to indicate a prologue bailout.
+  if (!topFrame->environmentChain()) {
+    topFrame->setEnvironmentChain(topFrame->callee()->environment());
+  }
+
   MOZ_ASSERT(innerScript);
   MOZ_ASSERT(outerScript);
   MOZ_ASSERT(outerFp);

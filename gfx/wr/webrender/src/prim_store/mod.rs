@@ -2972,6 +2972,12 @@ impl PrimitiveStore {
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
                 let prim_data = &mut data_stores.image_border[*data_handle];
+                let border_data = &prim_data.kind;
+
+                // TODO: remove this in future by changing the request_image() calls to
+                // be done after the culling.
+                frame_state.resource_cache.set_image_active(border_data.request.key);
+
                 // TODO: get access to the ninepatch and to check whwther we need support
                 // for repetitions in the shader.
 
@@ -3006,13 +3012,21 @@ impl PrimitiveStore {
                 );
             }
             PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, .. } => {
-                let yuv_image_data = &mut data_stores.yuv_image[*data_handle];
+                let prim_data = &mut data_stores.yuv_image[*data_handle];
+                let common_data = &mut prim_data.common;
+                let yuv_image_data = &mut prim_data.kind;
 
-                yuv_image_data.common.may_need_repetition = false;
+                // TODO: remove this in future by changing the request_image() calls to
+                // be done after the culling.
+                for channel in 0 .. yuv_image_data.format.get_plane_num() {
+                    frame_state.resource_cache.set_image_active(yuv_image_data.yuv_key[channel]);
+                }
+
+                common_data.may_need_repetition = false;
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
-                yuv_image_data.kind.update(&mut yuv_image_data.common, frame_state);
+                yuv_image_data.update(common_data, frame_state);
 
                 write_segment(
                     *segment_instance_index,
@@ -3020,7 +3034,7 @@ impl PrimitiveStore {
                     &mut scratch.segments,
                     &mut scratch.segment_instances,
                     |request| {
-                        yuv_image_data.kind.write_prim_gpu_blocks(request);
+                        yuv_image_data.write_prim_gpu_blocks(request);
                     }
                 );
             }
@@ -3028,6 +3042,10 @@ impl PrimitiveStore {
                 let prim_data = &mut data_stores.image[*data_handle];
                 let common_data = &mut prim_data.common;
                 let image_data = &mut prim_data.kind;
+
+                // TODO: remove this in future by changing the request_image() calls to
+                // be done after the culling.
+                frame_state.resource_cache.set_image_active(image_data.key);
 
                 if image_data.stretch_size.width >= common_data.prim_size.width &&
                     image_data.stretch_size.height >= common_data.prim_size.height {

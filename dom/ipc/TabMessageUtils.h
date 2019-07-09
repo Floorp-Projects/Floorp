@@ -17,6 +17,7 @@
 #include "mozilla/dom/EffectsInfo.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "ipc/IPCMessageUtils.h"
+#include "X11UndefineNone.h"
 
 namespace mozilla {
 namespace dom {
@@ -91,6 +92,48 @@ struct ParamTraits<mozilla::dom::EffectsInfo> {
     return ReadParam(aMsg, aIter, &aResult->mVisibleRect) &&
            ReadParam(aMsg, aIter, &aResult->mScaleX) &&
            ReadParam(aMsg, aIter, &aResult->mScaleY);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::WhenToScroll>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::WhenToScroll, mozilla::WhenToScroll::Always,
+          mozilla::WhenToScroll::IfNotFullyVisible> {};
+
+template <>
+struct ParamTraits<mozilla::ScrollFlags>
+    : public BitFlagsEnumSerializer<mozilla::ScrollFlags,
+                                    mozilla::ScrollFlags::ALL_BITS> {};
+
+template <>
+struct ParamTraits<mozilla::ScrollAxis> {
+  typedef mozilla::ScrollAxis paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mWhereToScroll);
+    WriteParam(aMsg, aParam.mWhenToScroll);
+    WriteParam(aMsg, aParam.mOnlyIfPerceivedScrollableDirection);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    if (!ReadParam(aMsg, aIter, &aResult->mWhereToScroll)) {
+      return false;
+    }
+    if (!ReadParam(aMsg, aIter, &aResult->mWhenToScroll)) {
+      return false;
+    }
+
+    // We can't set mOnlyIfPerceivedScrollableDirection directly since it's
+    // a bitfield.
+    bool value;
+    if (!ReadParam(aMsg, aIter, &value)) {
+      return false;
+    }
+    aResult->mOnlyIfPerceivedScrollableDirection = value;
+
+    return true;
   }
 };
 

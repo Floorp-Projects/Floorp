@@ -678,6 +678,26 @@ add_task(async function test24c() {
   await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
+// TRR-first check that DNS result is used if domain is part of the excluded-domains pref that contains things before it.
+add_task(async function test24d() {
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.excluded-domains",
+    "foo.test.com, bar.example.com"
+  );
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
+
+// TRR-first check that DNS result is used if domain is part of the excluded-domains pref that contains things after it.
+add_task(async function test24e() {
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.excluded-domains",
+    "bar.example.com, foo.test.com"
+  );
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
+
 // TRR-only that resolving localhost with TRR-only mode will use the remote
 // resolver if it's not in the excluded domains
 add_task(async function test25() {

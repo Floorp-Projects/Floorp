@@ -235,20 +235,44 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
   return false;
 }
 
+bool WebGLContext::IsExtensionExplicit(const WebGLExtensionID ext) const {
+  MOZ_ASSERT(ext < WebGLExtensionID::Max);
+  return mExtensions[ext] && mExtensions[ext]->IsExplicit();
+}
+
+void WebGLContext::WarnIfImplicit(const WebGLExtensionID ext) {
+  MOZ_ASSERT(ext < WebGLExtensionID::Max);
+  const auto& extension = mExtensions[ext];
+  if (!extension || extension->IsExplicit()) return;
+
+  GenerateWarning(
+      "Using format enabled by implicitly enabled extension: %s. "
+      "For maximal portability enable it explicitly.",
+      GetExtensionString(ext));
+  // Don't spam warnings
+  extension->SetExplicit();
+}
+
 static bool CompareWebGLExtensionName(const nsACString& name,
                                       const char* other) {
   return name.Equals(other, nsCaseInsensitiveCStringComparator());
 }
 
 WebGLExtensionBase* WebGLContext::EnableSupportedExtension(
-    dom::CallerType callerType, WebGLExtensionID ext) {
+    dom::CallerType callerType, WebGLExtensionID ext, bool explict) {
   if (!IsExtensionEnabled(ext)) {
     if (!IsExtensionSupported(callerType, ext)) return nullptr;
 
     EnableExtension(ext);
   }
 
-  return mExtensions[ext];
+  const auto extension = mExtensions[ext];
+  MOZ_ASSERT(extension);
+  if (explict && !extension->IsExplicit()) {
+    extension->SetExplicit();
+  }
+
+  return extension;
 }
 
 void WebGLContext::GetExtension(JSContext* cx, const nsAString& wideName,
@@ -285,22 +309,25 @@ void WebGLContext::GetExtension(JSContext* cx, const nsAString& wideName,
   // Step 4: Enable any implied extensions.
   switch (ext) {
     case WebGLExtensionID::EXT_color_buffer_float:
-      EnableSupportedExtension(callerType, WebGLExtensionID::EXT_float_blend);
+      EnableSupportedExtension(callerType, WebGLExtensionID::EXT_float_blend,
+                               false);
       break;
 
     case WebGLExtensionID::OES_texture_float:
-      EnableSupportedExtension(callerType,
-                               WebGLExtensionID::WEBGL_color_buffer_float);
-      EnableSupportedExtension(callerType, WebGLExtensionID::EXT_float_blend);
+      EnableSupportedExtension(
+          callerType, WebGLExtensionID::WEBGL_color_buffer_float, false);
+      EnableSupportedExtension(callerType, WebGLExtensionID::EXT_float_blend,
+                               false);
       break;
 
     case WebGLExtensionID::OES_texture_half_float:
-      EnableSupportedExtension(callerType,
-                               WebGLExtensionID::EXT_color_buffer_half_float);
+      EnableSupportedExtension(
+          callerType, WebGLExtensionID::EXT_color_buffer_half_float, false);
       break;
 
     case WebGLExtensionID::WEBGL_color_buffer_float:
-      EnableSupportedExtension(callerType, WebGLExtensionID::EXT_float_blend);
+      EnableSupportedExtension(callerType, WebGLExtensionID::EXT_float_blend,
+                               false);
       break;
 
     default:

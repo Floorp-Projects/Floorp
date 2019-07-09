@@ -143,6 +143,9 @@ bool WebGLFBAttachPoint::IsComplete(WebGLContext* webgl,
     fnWriteErrorInfo(info.BeginReading());
     return false;
   }
+  if (!formatUsage->IsExplicitlyRenderable()) {
+    webgl->WarnIfImplicit(formatUsage->GetExtensionID());
+  }
 
   const auto format = formatUsage->format;
 

@@ -1600,17 +1600,31 @@ nsIFrame* nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
 nsIFrame* nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
                                                 nsPoint* aExtraOffset) {
   nsIFrame* p = aFrame->GetParent();
-  if (p) return p;
+  if (p) {
+    return p;
+  }
 
   nsView* v = aFrame->GetView();
-  if (!v) return nullptr;
+  if (!v) {
+    return nullptr;
+  }
   v = v->GetParent();  // anonymous inner view
-  if (!v) return nullptr;
-  if (aExtraOffset) {
-    *aExtraOffset += v->GetPosition();
+  if (!v) {
+    return nullptr;
   }
   v = v->GetParent();  // subdocumentframe's view
-  return v ? v->GetFrame() : nullptr;
+  if (!v) {
+    return nullptr;
+  }
+
+  p = v->GetFrame();
+  if (p && aExtraOffset) {
+    nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(p);
+    MOZ_ASSERT(subdocumentFrame);
+    *aExtraOffset += subdocumentFrame->GetExtraOffset();
+  }
+
+  return p;
 }
 
 // static

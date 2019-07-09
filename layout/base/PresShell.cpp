@@ -3616,12 +3616,20 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
     }
     if (!parent && !(aScrollFlags & ScrollFlags::ScrollNoParentFrames)) {
       nsPoint extraOffset(0, 0);
+      int32_t APD = container->PresContext()->AppUnitsPerDevPixel();
       parent = nsLayoutUtils::GetCrossDocParentFrame(container, &extraOffset);
       if (parent) {
-        int32_t APD = container->PresContext()->AppUnitsPerDevPixel();
         int32_t parentAPD = parent->PresContext()->AppUnitsPerDevPixel();
         rect = rect.ScaleToOtherAppUnitsRoundOut(APD, parentAPD);
         rect += extraOffset;
+      } else {
+        nsCOMPtr<nsIDocShell> docShell =
+            container->PresContext()->GetDocShell();
+        if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
+          // Defer to the parent document if this is an out-of-process iframe.
+          Unused << browserChild->SendScrollRectIntoView(
+              rect, aVertical, aHorizontal, aScrollFlags, APD);
+        }
       }
     }
     container = parent;

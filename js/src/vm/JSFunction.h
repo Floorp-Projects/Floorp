@@ -328,13 +328,12 @@ class JSFunction : public js::NativeObject {
   }
   bool isIntrinsic() const { return isSelfHostedOrIntrinsic() && isNative(); }
 
-  bool hasJITCode() const {
+  bool hasJitScript() const {
     if (!hasScript()) {
       return false;
     }
 
-    return nonLazyScript()->hasBaselineScript() ||
-           nonLazyScript()->hasIonScript();
+    return nonLazyScript()->hasJitScript();
   }
   bool hasJitEntry() const { return hasScript() || isNativeWithJitEntry(); }
 

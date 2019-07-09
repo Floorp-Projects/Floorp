@@ -1008,13 +1008,14 @@ void BaselineInterpreter::toggleDebuggerInstrumentation(bool enable) {
 
   AutoWritableJitCode awjc(code_);
 
-  // Toggle prologue IsDebuggeeCheck code.
-  CodeLocationLabel debuggeeCheckLocation(code_,
-                                          CodeOffset(debuggeeCheckOffset_));
-  if (enable) {
-    Assembler::ToggleToCmp(debuggeeCheckLocation);
-  } else {
-    Assembler::ToggleToJmp(debuggeeCheckLocation);
+  // Toggle jumps for debugger instrumentation.
+  for (uint32_t offset : debugInstrumentationOffsets_) {
+    CodeLocationLabel label(code_, CodeOffset(offset));
+    if (enable) {
+      Assembler::ToggleToCmp(label);
+    } else {
+      Assembler::ToggleToJmp(label);
+    }
   }
 
   // Toggle DebugTrapHandler calls.
@@ -1129,7 +1130,7 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t interpretOpNoDebugTrapOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
-                               uint32_t debuggeeCheckOffset,
+                               CodeOffsetVector&& debugInstrumentationOffsets,
                                CodeOffsetVector&& debugTrapOffsets,
                                CodeOffsetVector&& codeCoverageOffsets) {
   code_ = code;
@@ -1137,7 +1138,7 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
   interpretOpNoDebugTrapOffset_ = interpretOpNoDebugTrapOffset;
   profilerEnterToggleOffset_ = profilerEnterToggleOffset;
   profilerExitToggleOffset_ = profilerExitToggleOffset;
-  debuggeeCheckOffset_ = debuggeeCheckOffset;
+  debugInstrumentationOffsets_ = std::move(debugInstrumentationOffsets);
   debugTrapOffsets_ = std::move(debugTrapOffsets);
   codeCoverageOffsets_ = std::move(codeCoverageOffsets);
 }

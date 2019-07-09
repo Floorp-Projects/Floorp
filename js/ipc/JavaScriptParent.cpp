@@ -16,6 +16,7 @@
 #include "js/Wrapper.h"
 #include "xpcprivate.h"
 #include "mozilla/Casting.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
 
@@ -38,14 +39,7 @@ JavaScriptParent::~JavaScriptParent() {
 }
 
 static bool ForbidUnsafeBrowserCPOWs() {
-  static bool result;
-  static bool cached = false;
-  if (!cached) {
-    cached = true;
-    Preferences::AddBoolVarCache(
-        &result, "dom.ipc.cpows.forbid-unsafe-from-browser", false);
-  }
-  return result;
+  return StaticPrefs::dom_ipc_cpows_forbid_unsafe_from_browser();
 }
 
 bool JavaScriptParent::allowMessage(JSContext* cx) {
