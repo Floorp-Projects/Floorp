@@ -1605,9 +1605,6 @@ pref("network.http.referer.trimmingPolicy", 0);
 pref("network.http.referer.XOriginTrimmingPolicy", 0);
 // 0=always send, 1=send iff base domains match, 2=send iff hosts match
 pref("network.http.referer.XOriginPolicy", 0);
-// The maximum allowed length for a referrer header - 4096 default
-// 0 means no limit.
-pref("network.http.referer.referrerLengthLimit", 4096);
 
 // Include an origin header on non-GET and non-HEAD requests regardless of CORS
 // 0=never send, 1=send when same-origin only, 2=always send
