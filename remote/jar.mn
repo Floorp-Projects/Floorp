@@ -53,8 +53,7 @@ remote.jar:
 
   # transport layer
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
-  content/server/Stream.jsm (server/Stream.jsm)
-  content/server/WebSocket.jsm (server/WebSocket.jsm)
+  content/server/WebSocketHandshake.jsm (server/WebSocketHandshake.jsm)
   content/server/WebSocketTransport.jsm (server/WebSocketTransport.jsm)
 
   # imports from external folders

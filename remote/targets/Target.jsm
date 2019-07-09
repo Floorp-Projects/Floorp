@@ -12,8 +12,8 @@ const { Connection } = ChromeUtils.import(
 const { WebSocketDebuggerTransport } = ChromeUtils.import(
   "chrome://remote/content/server/WebSocketTransport.jsm"
 );
-const { WebSocketServer } = ChromeUtils.import(
-  "chrome://remote/content/server/WebSocket.jsm"
+const { WebSocketHandshake } = ChromeUtils.import(
+  "chrome://remote/content/server/WebSocketHandshake.jsm"
 );
 
 /**
@@ -42,7 +42,7 @@ class Target {
   // nsIHttpRequestHandler
 
   async handle(request, response) {
-    const so = await WebSocketServer.upgrade(request, response);
+    const so = await WebSocketHandshake.upgrade(request, response);
     const transport = new WebSocketDebuggerTransport(so);
     const conn = new Connection(transport, response._connection);
     this.sessions.set(conn, new this.sessionClass(conn, this));
