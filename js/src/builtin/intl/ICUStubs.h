@@ -46,8 +46,6 @@
 
 #if !ENABLE_INTL_API
 
-#  define U_ICU_VERSION_MAJOR_NUM 64
-
 enum UErrorCode {
   U_ZERO_ERROR,
   U_BUFFER_OVERFLOW_ERROR,
