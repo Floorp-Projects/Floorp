@@ -765,8 +765,10 @@ static bool AddUnsizedFormats(FormatUsageAuthority* fua, gl::GLContext* gl) {
   // clang-format on
 }
 
-void FormatUsageInfo::SetRenderable() {
-  this->isRenderable = true;
+void FormatUsageInfo::SetRenderable(const FormatRenderableState& state) {
+  if (!renderableState.IsExplicit()) {
+    renderableState = state;
+  }
 
 #ifdef DEBUG
   const auto format = this->format;
@@ -1125,6 +1127,11 @@ void FormatUsageAuthority::AllowRBFormat(GLenum sizedFormat,
   MOZ_ASSERT(usage->format->sizedFormat);
   MOZ_ASSERT(usage->IsRenderable() || !expectRenderable);
 
+  const auto& found = mRBFormatMap.find(sizedFormat);
+  if (found != mRBFormatMap.end()) {
+    MOZ_ASSERT(found->second == usage);
+    return;
+  }
   AlwaysInsert(mRBFormatMap, sizedFormat, usage);
 }
 
