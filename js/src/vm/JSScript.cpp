@@ -807,7 +807,6 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
 template <XDRMode mode>
 /* static */
 XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
-  uint32_t natoms = 0;
   uint32_t codeLength = 0;
   uint32_t noteLength = 0;
   uint32_t numResumeOffsets = 0;
@@ -815,14 +814,11 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   uint32_t numTryNotes = 0;
 
   JSContext* cx = xdr->cx();
-  RuntimeScriptData* rsd = nullptr;
   SharedScriptData* ssd = nullptr;
 
   if (mode == XDR_ENCODE) {
-    rsd = script->scriptData();
     ssd = script->sharedScriptData();
 
-    natoms = rsd->natoms();
     codeLength = ssd->codeLength();
     noteLength = ssd->noteLength();
 
@@ -831,7 +827,6 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
     numTryNotes = ssd->tryNotes().size();
   }
 
-  MOZ_TRY(xdr->codeUint32(&natoms));
   MOZ_TRY(xdr->codeUint32(&codeLength));
   MOZ_TRY(xdr->codeUint32(&noteLength));
   MOZ_TRY(xdr->codeUint32(&numResumeOffsets));
@@ -839,12 +834,12 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   MOZ_TRY(xdr->codeUint32(&numTryNotes));
 
   if (mode == XDR_DECODE) {
-    if (!script->createSharedScriptData(cx, codeLength, noteLength, natoms,
+    if (!script->createSharedScriptData(cx, codeLength, noteLength,
                                         numResumeOffsets, numScopeNotes,
                                         numTryNotes)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    rsd = script->scriptData();
+
     ssd = script->sharedScriptData();
   }
 
@@ -863,21 +858,6 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   jssrcnote* notes = ssd->notes();
   MOZ_TRY(xdr->codeBytes(code, codeLength));
   MOZ_TRY(xdr->codeBytes(notes, noteLength));
-
-  {
-    RootedAtom atom(cx);
-    GCPtrAtom* vector = rsd->atoms();
-
-    for (uint32_t i = 0; i != natoms; ++i) {
-      if (mode == XDR_ENCODE) {
-        atom = vector[i];
-      }
-      MOZ_TRY(XDRAtom(xdr, &atom));
-      if (mode == XDR_DECODE) {
-        vector[i].init(atom);
-      }
-    }
-  }
 
   for (uint32_t& elem : ssd->resumeOffsets()) {
     MOZ_TRY(xdr->codeUint32(&elem));
@@ -937,6 +917,60 @@ RuntimeScriptData::RuntimeScriptData(uint32_t natoms) : natoms_(natoms) {
   // Sanity check
   MOZ_ASSERT(AllocationSize(natoms) == cursor);
 }
+
+template <XDRMode mode>
+/* static */
+XDRResult RuntimeScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
+  uint32_t natoms = 0;
+
+  JSContext* cx = xdr->cx();
+  RuntimeScriptData* rsd = nullptr;
+
+  if (mode == XDR_ENCODE) {
+    rsd = script->scriptData();
+
+    natoms = rsd->natoms();
+  }
+
+  MOZ_TRY(xdr->codeUint32(&natoms));
+
+  if (mode == XDR_DECODE) {
+    if (!script->createScriptData(cx, natoms)) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+
+    rsd = script->scriptData();
+  }
+
+  {
+    RootedAtom atom(cx);
+    GCPtrAtom* vector = rsd->atoms();
+
+    for (uint32_t i = 0; i != natoms; ++i) {
+      if (mode == XDR_ENCODE) {
+        atom = vector[i];
+      }
+      MOZ_TRY(XDRAtom(xdr, &atom));
+      if (mode == XDR_DECODE) {
+        vector[i].init(atom);
+      }
+    }
+  }
+
+  MOZ_TRY(SharedScriptData::XDR<mode>(xdr, script));
+
+  return Ok();
+}
+
+template
+    /* static */
+    XDRResult
+    RuntimeScriptData::XDR(XDRState<XDR_ENCODE>* xdr, HandleScript script);
+
+template
+    /* static */
+    XDRResult
+    RuntimeScriptData::XDR(XDRState<XDR_DECODE>* xdr, HandleScript script);
 
 template <XDRMode mode>
 XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
@@ -1122,7 +1156,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   // NOTE: The script data is rooted by the script.
   MOZ_TRY(PrivateScriptData::XDR<mode>(xdr, script, sourceObject,
                                        scriptEnclosingScope, fun));
-  MOZ_TRY(SharedScriptData::XDR<mode>(xdr, script));
+  MOZ_TRY(RuntimeScriptData::XDR<mode>(xdr, script));
 
   if (mode == XDR_DECODE) {
     if (!script->shareScriptData(cx)) {
@@ -1151,6 +1185,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   }
 
+  MOZ_ASSERT(script->code(), "Where's our bytecode?");
   scriptDataGuard.release();
   return Ok();
 }
@@ -3538,8 +3573,20 @@ RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx, uint32_t natoms) {
   return new (raw) RuntimeScriptData(natoms);
 }
 
+bool JSScript::createScriptData(JSContext* cx, uint32_t natoms) {
+  MOZ_ASSERT(!scriptData_);
+
+  RefPtr<RuntimeScriptData> rsd(RuntimeScriptData::new_(cx, natoms));
+  if (!rsd) {
+    return false;
+  }
+
+  scriptData_ = std::move(rsd);
+  return true;
+}
+
 bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
-                                      uint32_t noteLength, uint32_t natoms,
+                                      uint32_t noteLength,
                                       uint32_t numResumeOffsets,
                                       uint32_t numScopeNotes,
                                       uint32_t numTryNotes) {
@@ -3552,12 +3599,7 @@ bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
              "Source notes should have been padded already");
 #endif
 
-  MOZ_ASSERT(!scriptData_);
-
-  RefPtr<RuntimeScriptData> rsd(RuntimeScriptData::new_(cx, natoms));
-  if (!rsd) {
-    return false;
-  }
+  MOZ_ASSERT(!scriptData_->ssd_);
 
   js::UniquePtr<SharedScriptData> ssd(
       SharedScriptData::new_(cx, codeLength, noteLength, numResumeOffsets,
@@ -3566,8 +3608,7 @@ bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
     return false;
   }
 
-  rsd->ssd_ = std::move(ssd);
-  scriptData_ = std::move(rsd);
+  scriptData_->ssd_ = std::move(ssd);
   return true;
 }
 
@@ -3930,11 +3971,10 @@ bool JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
 
   uint32_t codeLength = 1;
   uint32_t noteLength = 3;
-  uint32_t numAtoms = 0;
   uint32_t numResumeOffsets = 0;
   uint32_t numScopeNotes = 0;
   uint32_t numTryNotes = 0;
-  if (!script->createSharedScriptData(cx, codeLength, noteLength, numAtoms,
+  if (!script->createSharedScriptData(cx, codeLength, noteLength,
                                       numResumeOffsets, numScopeNotes,
                                       numTryNotes)) {
     return false;
@@ -3947,6 +3987,11 @@ bool JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
   notes[0] = SRC_NULL;
   notes[1] = SRC_NULL;
   notes[2] = SRC_NULL;
+
+  uint32_t numAtoms = 0;
+  if (!script->createScriptData(cx, numAtoms)) {
+    return false;
+  }
 
   return script->shareScriptData(cx);
 }
@@ -4057,8 +4102,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
     return false;
   }
 
-  // Create and initialize SharedScriptData
-  if (!SharedScriptData::InitFromEmitter(cx, script, bce, nslots)) {
+  // Create and initialize RuntimeScriptData/SharedScriptData
+  if (!RuntimeScriptData::InitFromEmitter(cx, script, bce, nslots)) {
     return false;
   }
   if (!script->shareScriptData(cx)) {
@@ -4971,8 +5016,6 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 /* static */ bool SharedScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce,
     uint32_t nslots) {
-  uint32_t natoms = bce->perScriptData().atomIndices()->count();
-
   size_t codeLength = bce->bytecodeSection().code().length();
   MOZ_RELEASE_ASSERT(codeLength <= frontend::MaxBytecodeLength);
 
@@ -4990,14 +5033,12 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   uint32_t numScopeNotes = bce->bytecodeSection().scopeNoteList().length();
   uint32_t numTryNotes = bce->bytecodeSection().tryNoteList().length();
 
-  // Create and initialize SharedScriptData
+  // Allocate SharedScriptData
   if (!script->createSharedScriptData(cx, codeLength, noteLength + nullLength,
-                                      natoms, numResumeOffsets, numScopeNotes,
+                                      numResumeOffsets, numScopeNotes,
                                       numTryNotes)) {
     return false;
   }
-
-  js::RuntimeScriptData* rsd = script->scriptData();
   js::SharedScriptData* data = script->sharedScriptData();
 
   // Initialize POD fields
@@ -5024,9 +5065,24 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   bce->bytecodeSection().scopeNoteList().finish(data->scopeNotes());
   bce->bytecodeSection().tryNoteList().finish(data->tryNotes());
 
-  InitAtomMap(*bce->perScriptData().atomIndices(), rsd->atoms());
-
   return true;
+}
+
+/* static */ bool RuntimeScriptData::InitFromEmitter(
+    JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce,
+    uint32_t nslots) {
+  uint32_t natoms = bce->perScriptData().atomIndices()->count();
+
+  // Allocate RuntimeScriptData
+  if (!script->createScriptData(cx, natoms)) {
+    return false;
+  }
+  js::RuntimeScriptData* data = script->scriptData();
+
+  // Initialize trailing arrays
+  InitAtomMap(*bce->perScriptData().atomIndices(), data->atoms());
+
+  return SharedScriptData::InitFromEmitter(cx, script, bce, nslots);
 }
 
 void RuntimeScriptData::traceChildren(JSTracer* trc) {
