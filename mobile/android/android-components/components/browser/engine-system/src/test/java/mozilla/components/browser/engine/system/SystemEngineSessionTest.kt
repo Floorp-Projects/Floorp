@@ -637,7 +637,8 @@ class SystemEngineSessionTest {
     @Test
     fun desktopMode() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
-        val engineSession = spy(SystemEngineSession(testContext))
+        val defaultSettings = DefaultSettings()
+        val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
         val webView = mock<WebView>()
         val webViewSettings = mock<WebSettings>()
         var desktopMode = false
