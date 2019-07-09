@@ -30,7 +30,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsStubMutationObserver.h"
 
-#include "nsILinkHandler.h"
 #include "nsISelectionListener.h"
 #include "mozilla/dom/Selection.h"
 #include "nsContentUtils.h"

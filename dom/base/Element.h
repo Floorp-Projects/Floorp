@@ -20,7 +20,6 @@
 #include "nsChangeHint.h"
 #include "nsContentUtils.h"
 #include "nsDOMAttributeMap.h"
-#include "nsILinkHandler.h"
 #include "nsINodeList.h"
 #include "nsIScrollableFrame.h"
 #include "nsNodeUtils.h"
