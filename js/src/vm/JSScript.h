@@ -1532,8 +1532,6 @@ class alignas(uintptr_t) PrivateScriptData final {
 // ----
 //   <SharedScriptData itself>
 // ----
-//   (OPTIONAL) Array of GCPtrAtom constituting atoms()
-// ----
 //   (REQUIRED) Flags structure
 //  codeOffset:
 //   (REQUIRED) Array of jsbytecode constituting code()
@@ -1573,10 +1571,9 @@ class alignas(uintptr_t) PrivateScriptData final {
 // In general, the length of each array is computed from subtracting the start
 // offset of the array from the start offset of the subsequent array. The
 // notable exception is that bytecode length is stored explicitly.
-class alignas(uintptr_t) SharedScriptData final {
-  uint32_t codeOffset_ = 0;  // Byte-offset from 'this'
+class alignas(uint32_t) SharedScriptData final {
   uint32_t codeLength_ = 0;
-  uint32_t optArrayOffset_ = 0;
+  uint32_t optArrayOffset_ = 0;  // Byte-offset from 'this'
 
   // Offset of main entry point from code, after predef'ing prologue.
   uint32_t mainOffset = 0;
@@ -1617,10 +1614,9 @@ class alignas(uintptr_t) SharedScriptData final {
   // Offsets (in bytes) from 'this' to each component array. The delta between
   // each offset and the next offset is the size of each array and is defined
   // even if an array is empty.
-  size_t atomOffset() const { return offsetOfAtoms(); }
-  size_t flagOffset() const { return codeOffset_ - sizeof(Flags); }
-  size_t codeOffset() const { return codeOffset_; }
-  size_t noteOffset() const { return codeOffset_ + codeLength_; }
+  size_t flagOffset() const { return offsetOfCode() - sizeof(Flags); }
+  size_t codeOffset() const { return offsetOfCode(); }
+  size_t noteOffset() const { return offsetOfCode() + codeLength_; }
   size_t optionalOffsetsOffset() const {
     // Determine the location to beginning of optional-offsets array by looking
     // at index for try-notes.
@@ -1650,7 +1646,7 @@ class alignas(uintptr_t) SharedScriptData final {
 
   // Size to allocate
   static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
-                               uint32_t natoms, uint32_t numResumeOffsets,
+                               uint32_t numResumeOffsets,
                                uint32_t numScopeNotes, uint32_t numTryNotes);
 
   // Translate an offset into a concrete pointer.
@@ -1668,7 +1664,7 @@ class alignas(uintptr_t) SharedScriptData final {
                           uint32_t numTryNotes);
 
   // Initialize to GC-safe state
-  SharedScriptData(uint32_t codeLength, uint32_t noteLength, uint32_t natoms,
+  SharedScriptData(uint32_t codeLength, uint32_t noteLength,
                    uint32_t numResumeOffsets, uint32_t numScopeNotes,
                    uint32_t numTryNotes);
 
@@ -1689,8 +1685,7 @@ class alignas(uintptr_t) SharedScriptData final {
 
  public:
   static SharedScriptData* new_(JSContext* cx, uint32_t codeLength,
-                                uint32_t noteLength, uint32_t natoms,
-                                uint32_t numResumeOffsets,
+                                uint32_t noteLength, uint32_t numResumeOffsets,
                                 uint32_t numScopeNotes, uint32_t numTryNotes);
 
   // The code() and note() arrays together maintain an target alignment by
@@ -1716,11 +1711,6 @@ class alignas(uintptr_t) SharedScriptData final {
     return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
   }
 
-  uint32_t natoms() const {
-    return (flagOffset() - atomOffset()) / sizeof(GCPtrAtom);
-  }
-  GCPtrAtom* atoms() { return offsetToPointer<GCPtrAtom>(atomOffset()); }
-
   Flags& flagsRef() { return *offsetToPointer<Flags>(flagOffset()); }
   const Flags& flags() const {
     return const_cast<SharedScriptData*>(this)->flagsRef();
@@ -1745,8 +1735,8 @@ class alignas(uintptr_t) SharedScriptData final {
                              offsetToPointer<JSTryNote>(endOffset()));
   }
 
-  static constexpr size_t offsetOfCodeOffset() {
-    return offsetof(SharedScriptData, codeOffset_);
+  static constexpr size_t offsetOfCode() {
+    return sizeof(SharedScriptData) + sizeof(Flags);
   }
   static constexpr size_t offsetOfResumeOffsetsOffset() {
     // Resume-offsets are the first optional array if they exist. Locate the
@@ -1762,9 +1752,6 @@ class alignas(uintptr_t) SharedScriptData final {
   static constexpr size_t offsetOfFunLength() {
     return offsetof(SharedScriptData, funLength);
   }
-  static constexpr size_t offsetOfAtoms() { return sizeof(SharedScriptData); }
-
-  void traceChildren(JSTracer* trc);
 
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
@@ -1773,9 +1760,6 @@ class alignas(uintptr_t) SharedScriptData final {
   static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
                               js::frontend::BytecodeEmitter* bce,
                               uint32_t nslots);
-
-  // Mark this SharedScriptData for use in a new zone
-  void markForCrossZone(JSContext* cx);
 
   // SharedScriptData has trailing data so isn't copyable or movable.
   SharedScriptData(const SharedScriptData&) = delete;
@@ -1793,6 +1777,8 @@ class RuntimeScriptData final {
                   mozilla::recordreplay::Behavior::DontPreserve>
       refCount_ = {};
 
+  uint32_t natoms_ = 0;
+
   js::UniquePtr<SharedScriptData> ssd_ = nullptr;
 
   // NOTE: The raw bytes of this structure are used for hashing so use explicit
@@ -1803,17 +1789,20 @@ class RuntimeScriptData final {
   friend struct js::SharedScriptDataHasher;
 
  private:
+  // Layout of trailing arrays.
+  size_t atomOffset() const { return offsetOfAtoms(); }
+
   // Size to allocate.
-  static size_t AllocationSize();
+  static size_t AllocationSize(uint32_t natoms);
 
   template <typename T>
   void initElements(size_t offset, size_t length);
 
   // Initialize to GC-safe state.
-  RuntimeScriptData();
+  explicit RuntimeScriptData(uint32_t natoms);
 
  public:
-  static RuntimeScriptData* new_(JSContext* cx);
+  static RuntimeScriptData* new_(JSContext* cx, uint32_t natoms);
 
   uint32_t refCount() const { return refCount_; }
   void AddRef() { refCount_++; }
@@ -1825,6 +1814,21 @@ class RuntimeScriptData final {
       js_free(this);
     }
   }
+
+  uint32_t natoms() const { return natoms_; }
+  GCPtrAtom* atoms() {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<GCPtrAtom*>(base + atomOffset());
+  }
+
+  mozilla::Span<const GCPtrAtom> atomsSpan() const {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    const GCPtrAtom* p =
+        reinterpret_cast<const GCPtrAtom*>(base + atomOffset());
+    return mozilla::MakeSpan(p, natoms_);
+  }
+
+  static constexpr size_t offsetOfAtoms() { return sizeof(RuntimeScriptData); }
 
   static constexpr size_t offsetOfSSD() {
     return offsetof(RuntimeScriptData, ssd_);
@@ -1851,11 +1855,16 @@ struct SharedScriptDataHasher {
 
   static HashNumber hash(const Lookup& l) {
     mozilla::Span<const uint8_t> immutableData = l->ssd_->immutableData();
-    return mozilla::HashBytes(immutableData.data(), immutableData.size());
+
+    HashNumber h =
+        mozilla::HashBytes(immutableData.data(), immutableData.size());
+    return mozilla::AddToHash(
+        h, mozilla::HashBytes(l->atoms(), l->natoms() * sizeof(GCPtrAtom)));
   }
 
   static bool match(RuntimeScriptData* entry, const Lookup& lookup) {
-    return entry->ssd_->immutableData() == lookup->ssd_->immutableData();
+    return (entry->atomsSpan() == lookup->atomsSpan()) &&
+           (entry->ssd_->immutableData() == lookup->ssd_->immutableData());
   }
 };
 
@@ -2957,11 +2966,11 @@ class JSScript : public js::gc::TenuredCell {
 
   size_t natoms() const {
     MOZ_ASSERT(scriptData_);
-    return sharedScriptData()->natoms();
+    return scriptData_->natoms();
   }
   js::GCPtrAtom* atoms() const {
     MOZ_ASSERT(scriptData_);
-    return sharedScriptData()->atoms();
+    return scriptData_->atoms();
   }
 
   js::GCPtrAtom& getAtom(size_t index) const {
