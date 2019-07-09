@@ -773,12 +773,21 @@ video > .caption-box {
   position: relative;
 }
 
-/* ::cue default settings */
+/**
+ * The pseudo element won't inheirt CSS styles from its direct parent, `::cue`
+ * would acutally inherit styles from video because it's video's pseudo element.
+ * Therefore, we have to explicitly set some styles which are aleady defined in
+ * its parent element in vtt.jsm.
+ */
 ::cue {
   color: rgba(255, 255, 255, 1);
   white-space: pre-line;
   background-color: rgba(0, 0, 0, 0.8);
   font: var(--cue-font-size) sans-serif;
+  writing-mode: var(--cue-writing-mode, inherit) !important;
+  overflow-wrap: break-word !important;
+  /* TODO : enable unicode-bidi, right now enable it would cause incorrect
+            display direction, maybe related with bug 1558431. */
 }
 
 /* details & summary */
