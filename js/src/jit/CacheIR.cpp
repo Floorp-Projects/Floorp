@@ -5055,11 +5055,10 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     return AttachDecision::TemporarilyUnoptimizable;
   }
 
-  if (isConstructing && !calleeFunc->hasJITCode()) {
-    // If we're constructing, require the callee to have JIT
-    // code. This isn't required for correctness but avoids allocating
-    // a template object below for constructors that aren't hot. See
-    // bug 1419758.
+  if (isConstructing && !calleeFunc->hasJitScript()) {
+    // If we're constructing, require the callee to have a JitScript. This isn't
+    // required for correctness but avoids allocating a template object below
+    // for constructors that aren't hot. See bug 1419758.
     return AttachDecision::TemporarilyUnoptimizable;
   }
 
