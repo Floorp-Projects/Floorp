@@ -11,14 +11,14 @@ ChromeUtils.defineModuleGetter(
 var { ignoreEvent } = ExtensionCommon;
 
 // Manages a notification popup (notifications API) created by the extension.
-function Notification(extension, notificationsMap, id, options) {
+function Notification(context, notificationsMap, id, options) {
   this.notificationsMap = notificationsMap;
   this.id = id;
   this.options = options;
 
   let imageURL;
   if (options.iconUrl) {
-    imageURL = extension.baseURI.resolve(options.iconUrl);
+    imageURL = context.extension.baseURI.resolve(options.iconUrl);
   }
 
   try {
@@ -32,7 +32,11 @@ function Notification(extension, notificationsMap, id, options) {
       true, // textClickable
       this.id,
       this,
-      this.id
+      this.id,
+      undefined,
+      undefined,
+      undefined,
+      context.principal // ensures that Close button is shown on macOS.
     );
   } catch (e) {
     // This will fail if alerts aren't available on the system.
@@ -84,7 +88,6 @@ this.notifications = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    let { extension } = context;
     let notificationsMap = this.notificationsMap;
 
     return {
@@ -99,7 +102,7 @@ this.notifications = class extends ExtensionAPI {
           }
 
           let notification = new Notification(
-            extension,
+            context,
             notificationsMap,
             notificationId,
             options
