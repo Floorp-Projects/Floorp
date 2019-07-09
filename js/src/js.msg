@@ -519,7 +519,7 @@ MSG_DEF(JSMSG_TESTING_SCRIPTS_ONLY, 0, JSEXN_TYPEERR, "only works on scripts")
 MSG_DEF(JSMSG_TRACELOGGER_ENABLE_FAIL, 1, JSEXN_ERR, "enabling tracelogger failed: {0}")
 
 // Intl
-MSG_DEF(JSMSG_DATE_NOT_FINITE,         1, JSEXN_RANGEERR, "date value is not finite in {0}.format()")
+MSG_DEF(JSMSG_DATE_NOT_FINITE,         2, JSEXN_RANGEERR, "date value is not finite in {0}.{1}()")
 MSG_DEF(JSMSG_INTERNAL_INTL_ERROR,     0, JSEXN_ERR, "internal error while computing Intl data")
 MSG_DEF(JSMSG_INVALID_CURRENCY_CODE,   1, JSEXN_RANGEERR, "invalid currency code in NumberFormat(): {0}")
 MSG_DEF(JSMSG_INVALID_DIGITS_VALUE,    1, JSEXN_RANGEERR, "invalid digits value: {0}")
