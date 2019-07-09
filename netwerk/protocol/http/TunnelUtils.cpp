@@ -355,29 +355,59 @@ nsresult TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader* aReader,
   return NS_SUCCEEDED(rv) ? mReadSegmentReturnValue : rv;
 }
 
-nsresult TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter* aWriter,
-                                             uint32_t aCount,
-                                             uint32_t* outCountWritten) {
+nsresult TLSFilterTransaction::WriteSegmentsAgain(nsAHttpSegmentWriter* aWriter,
+                                                  uint32_t aCount,
+                                                  uint32_t* outCountWritten,
+                                                  bool* again) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("TLSFilterTransaction::WriteSegments %p max=%d\n", this, aCount));
+  LOG(("TLSFilterTransaction::WriteSegmentsAgain %p max=%d\n", this, aCount));
 
   if (!mTransaction) {
     return mCloseReason;
   }
 
+  bool againBeforeWriteSegmentsCall = *again;
+
   mSegmentWriter = aWriter;
-  nsresult rv = mTransaction->WriteSegments(this, aCount, outCountWritten);
-  if (NS_SUCCEEDED(rv) && NS_FAILED(mFilterReadCode) && !(*outCountWritten)) {
-    // nsPipe turns failures into silent OK.. undo that!
-    rv = mFilterReadCode;
-    if (Connection() && (mFilterReadCode == NS_BASE_STREAM_WOULD_BLOCK)) {
-      Unused << Connection()->ResumeRecv();
+  nsresult rv =
+      mTransaction->WriteSegmentsAgain(this, aCount, outCountWritten, again);
+  if (NS_SUCCEEDED(rv) && !(*outCountWritten)) {
+    if (NS_FAILED(mFilterReadCode)) {
+      // nsPipe turns failures into silent OK.. undo that!
+      rv = mFilterReadCode;
+      if (Connection() && (mFilterReadCode == NS_BASE_STREAM_WOULD_BLOCK)) {
+        Unused << Connection()->ResumeRecv();
+      }
+    }
+    if (againBeforeWriteSegmentsCall && !*again) {
+      LOG(
+          ("TLSFilterTransaction %p called trans->WriteSegments which dropped "
+           "the 'again' flag",
+           this));
+      // The transaction (=h2 session) wishes to break the loop.  There is a
+      // pending close of the transaction that is being handled by the current
+      // input stream of the session.  After cancellation of that transaction
+      // the state of the stream will change and move the state machine of the
+      // session forward on the next call of WriteSegmentsAgain. But if there
+      // are no data on the socket to read to call this code again, the session
+      // and the stream will just hang in an intermediate state, blocking. Hence
+      // forcing receive to finish the stream cleanup.
+      if (Connection()) {
+        Unused << Connection()->ForceRecv();
+      }
     }
   }
   LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%" PRIx32
        " %d\n",
        this, static_cast<uint32_t>(rv), *outCountWritten));
   return rv;
+}
+
+nsresult TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter* aWriter,
+                                             uint32_t aCount,
+                                             uint32_t* outCountWritten) {
+  bool again = false;
+  return WriteSegmentsAgain(aWriter, aCount, outCountWritten, &again);
 }
 
 nsresult TLSFilterTransaction::GetTransactionSecurityInfo(
