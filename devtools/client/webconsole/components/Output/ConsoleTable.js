@@ -162,15 +162,20 @@ function getTableItems(data = {}, type, headers = null) {
     Object.keys(item).forEach(key => addColumn(key));
   };
 
+  const hasValidCustomHeaders =
+    Array.isArray(headers) &&
+    headers.every(
+      header => typeof header === "string" || Number.isInteger(Number(header))
+    );
+
   const addColumn = function(columnIndex) {
     const columnExists = columns.has(columnIndex);
     const hasMaxColumns = columns.size == TABLE_COLUMN_MAX_ITEMS;
-    const hasCustomHeaders = Array.isArray(headers);
 
     if (
       !columnExists &&
       !hasMaxColumns &&
-      (!hasCustomHeaders ||
+      (!hasValidCustomHeaders ||
         headers.includes(columnIndex) ||
         columnIndex === INDEX_NAME)
     ) {
@@ -224,7 +229,7 @@ function getTableItems(data = {}, type, headers = null) {
 
   // Some headers might not be present in the items, so we make sure to
   // return all the headers set by the user.
-  if (Array.isArray(headers)) {
+  if (hasValidCustomHeaders) {
     headers.forEach(header => addColumn(header));
   }
 
