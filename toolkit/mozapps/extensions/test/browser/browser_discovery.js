@@ -12,12 +12,8 @@ var gProvider;
 
 var gLoadCompleteCallback = null;
 
-// This test file is testing the old XUL disco pane.
 SpecialPowers.pushPrefEnv({
-  set: [
-    ["extensions.htmlaboutaddons.enabled", false],
-    ["extensions.htmlaboutaddons.discover.enabled", false],
-  ],
+  set: [["extensions.htmlaboutaddons.discover.enabled", false]],
 });
 
 var gProgressListener = {
@@ -653,22 +649,6 @@ async function bug_601442_test_elements(visible) {
       "Discover category should not be visible"
     );
   }
-
-  gManagerWindow.loadView("addons://list/dictionary");
-  let aManager = await wait_for_view_load(gManagerWindow);
-  var button = aManager.document.getElementById("discover-button-install");
-  if (visible) {
-    ok(
-      !BrowserTestUtils.is_hidden(button),
-      "Discover button should be visible!"
-    );
-  } else {
-    ok(
-      BrowserTestUtils.is_hidden(button),
-      "Discover button should not be visible!"
-    );
-  }
-
   close_manager(gManagerWindow, run_next_test);
 }
 

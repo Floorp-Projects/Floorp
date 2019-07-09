@@ -4,12 +4,6 @@
 
 "use strict";
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-});
-
 async function checkRecommendedBadge(id, hidden) {
   function checkBadge() {
     let card = win.document.querySelector(`addon-card[addon-id="${id}"]`);
