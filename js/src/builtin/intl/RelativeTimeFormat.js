@@ -201,42 +201,48 @@ function Intl_RelativeTimeFormat_format(value, unit) {
     // Step 4.
     let u = ToString(unit);
 
-    // PartitionRelativeTimePattern, step 4.
-    if (!Number_isFinite(t)) {
-        ThrowRangeError(JSMSG_DATE_NOT_FINITE, "RelativeTimeFormat");
+    // Step 5.
+    return intl_FormatRelativeTime(relativeTimeFormat, t, u, internals.numeric,
+                                   false);
+}
+
+/**
+ * Returns an Array composed of the components of a relative date formatted
+ * according to the effective locale and the formatting options of this
+ * RelativeTimeFormat object.
+ *
+ * Spec: ECMAScript 402 API, RelativeTImeFormat, 1.4.4.
+ */
+function Intl_RelativeTimeFormat_formatToParts(value, unit) {
+    // Step 1.
+    let relativeTimeFormat = this;
+
+    // Step 2.
+    if (!IsObject(relativeTimeFormat) ||
+        (relativeTimeFormat = GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
+    {
+        return callFunction(CallRelativeTimeFormatMethodIfWrapped, this, value, unit,
+                            "Intl_RelativeTimeFormat_formatToParts");
     }
 
-    // PartitionRelativeTimePattern, step 5.
-    switch (u) {
-      case "second":
-      case "seconds":
-      case "minute":
-      case "minutes":
-      case "hour":
-      case "hours":
-      case "day":
-      case "days":
-      case "week":
-      case "weeks":
-      case "month":
-      case "months":
-      case "quarter":
-      case "quarters":
-      case "year":
-      case "years":
-        break;
-      default:
-        ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, "unit", u);
-    }
+    // Ensure the RelativeTimeFormat internals are resolved.
+    var internals = getRelativeTimeFormatInternals(relativeTimeFormat);
+
+    // Step 3.
+    let t = ToNumber(value);
+
+    // Step 4.
+    let u = ToString(unit);
 
     // Step 5.
-    return intl_FormatRelativeTime(relativeTimeFormat, t, u, internals.numeric);
+    return intl_FormatRelativeTime(relativeTimeFormat, t, u, internals.numeric,
+                                   true);
 }
 
 /**
  * Returns the resolved options for a RelativeTimeFormat object.
  *
- * Spec: ECMAScript 402 API, RelativeTimeFormat, 1.4.4.
+ * Spec: ECMAScript 402 API, RelativeTimeFormat, 1.4.5.
  */
 function Intl_RelativeTimeFormat_resolvedOptions() {
     // Step 1.

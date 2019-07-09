@@ -341,6 +341,7 @@
   MACRO(proto, proto, "__proto__")                                             \
   MACRO(prototype, prototype, "prototype")                                     \
   MACRO(proxy, proxy, "proxy")                                                 \
+  MACRO(quarter, quarter, "quarter")                                           \
   MACRO(raw, raw, "raw")                                                       \
   MACRO(reason, reason, "reason")                                              \
   MACRO(RegExpBuiltinExec, RegExpBuiltinExec, "RegExpBuiltinExec")             \
@@ -456,6 +457,7 @@
   MACRO(WeakSetConstructorInit, WeakSetConstructorInit,                        \
         "WeakSetConstructorInit")                                              \
   MACRO(WeakSet_add, WeakSet_add, "WeakSet_add")                               \
+  MACRO(week, week, "week")                                                    \
   MACRO(weekday, weekday, "weekday")                                           \
   MACRO(weekendEnd, weekendEnd, "weekendEnd")                                  \
   MACRO(weekendStart, weekendStart, "weekendStart")                            \
