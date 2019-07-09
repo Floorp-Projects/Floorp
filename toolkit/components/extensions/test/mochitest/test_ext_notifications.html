@@ -64,21 +64,33 @@ add_task(async function test_notification_events() {
 
     // We cannot test onClicked listener without a mock
     // but we can attempt to add a listener.
-    browser.notifications.onClicked.addListener(function() {});
+    browser.notifications.onClicked.addListener(async function(id) {
+      browser.test.assertEq(createdId, id, "onClicked has the expected ID");
+      browser.test.sendMessage("notification-event", "clicked");
+    });
 
     browser.notifications.onShown.addListener(async function listener(id) {
-      browser.notifications.onShown.removeListener(listener);
-      browser.test.assertEq(createdId, id, "onShown received the expected id.");
-      let newId = await browser.notifications.create(id, opts);
-      browser.test.assertEq(createdId, newId, "create returned the expected id.");
-      browser.test.sendMessage("notification-created-twice");
+      browser.test.assertEq(createdId, id, "onShown has the expected ID");
+      browser.test.sendMessage("notification-event", "shown");
+    });
+
+    browser.test.onMessage.addListener(async function(msg, expectedCount) {
+      if (msg === "create-again") {
+        let newId = await browser.notifications.create(createdId, opts);
+        browser.test.assertEq(createdId, newId, "create returned the expected id.");
+        browser.test.sendMessage("notification-created-twice");
+      } else if (msg === "check-count") {
+        let notifications = await browser.notifications.getAll();
+        let ids = Object.keys(notifications);
+        browser.test.assertEq(expectedCount, ids.length, `getAll() = ${ids}`);
+        browser.test.sendMessage("check-count-result");
+      }
     });
 
     // Test onClosed listener.
     browser.notifications.onClosed.addListener(function listener(id) {
-      browser.notifications.onClosed.removeListener(listener);
       browser.test.assertEq(createdId, id, "onClosed received the expected id.");
-      browser.test.sendMessage("notification-closed");
+      browser.test.sendMessage("notification-event", "closed");
     });
 
     await browser.notifications.create(createdId, opts);
@@ -95,13 +107,41 @@ add_task(async function test_notification_events() {
 
   await extension.startup();
 
+  async function waitForNotificationEvent(name) {
+    info(`Waiting for notification event: ${name}`);
+    is(name, await extension.awaitMessage("notification-event"),
+       "Expected notification event");
+  }
+  async function checkNotificationCount(expectedCount) {
+    extension.sendMessage("check-count", expectedCount);
+    await extension.awaitMessage("check-count-result");
+  }
+
   await extension.awaitMessage("notification-created-once");
-  await MockAlertsService.closeNotifications();
+  await waitForNotificationEvent("shown");
+  await checkNotificationCount(1);
 
-  await extension.awaitMessage("notification-closed");
+  // On most platforms, clicking the notification closes it.
+  // But on macOS, the notification can repeatedly be clicked without closing.
+  await MockAlertsService.clickNotificationsWithoutClose();
+  await waitForNotificationEvent("clicked");
+  await checkNotificationCount(1);
+  await MockAlertsService.clickNotificationsWithoutClose();
+  await waitForNotificationEvent("clicked");
+  await checkNotificationCount(1);
+  await MockAlertsService.clickNotifications();
+  await waitForNotificationEvent("clicked");
+  await waitForNotificationEvent("closed");
+  await checkNotificationCount(0);
+
+  extension.sendMessage("create-again");
   await extension.awaitMessage("notification-created-twice");
+  await waitForNotificationEvent("shown");
+  await checkNotificationCount(1);
 
   await MockAlertsService.closeNotifications();
+  await waitForNotificationEvent("closed");
+  await checkNotificationCount(0);
 
   await extension.unload();
 });
