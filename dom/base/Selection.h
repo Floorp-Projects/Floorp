@@ -744,8 +744,8 @@ class Selection final : public nsSupportsWeakReference,
   nsresult GetIndicesForInterval(const nsINode* aBeginNode,
                                  int32_t aBeginOffset, const nsINode* aEndNode,
                                  int32_t aEndOffset, bool aAllowAdjacent,
-                                 int32_t* aStartIndex,
-                                 int32_t* aEndIndex) const;
+                                 int32_t& aStartIndex,
+                                 int32_t& aEndIndex) const;
   RangeData* FindRangeData(nsRange* aRange);
 
   static void UserSelectRangesToAdd(nsRange* aItem,
