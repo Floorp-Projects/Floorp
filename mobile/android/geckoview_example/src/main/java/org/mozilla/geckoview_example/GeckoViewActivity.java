@@ -58,7 +58,6 @@ import java.util.Locale;
 
 public class GeckoViewActivity extends AppCompatActivity {
     private static final String LOGTAG = "GeckoViewActivity";
-    private static final String DEFAULT_URL = "about:blank";
     private static final String USE_MULTIPROCESS_EXTRA = "use_multiprocess";
     private static final String FULL_ACCESSIBILITY_TREE_EXTRA = "full_accessibility_tree";
     private static final String SEARCH_URI_BASE = "https://www.google.com/search?q=";
@@ -247,7 +246,9 @@ public class GeckoViewActivity extends AppCompatActivity {
         session.open(sGeckoRuntime);
         mTabSessionManager.setCurrentSession(session);
         mGeckoView.setSession(session);
-        session.loadUri(mCurrentUri != null ? mCurrentUri : DEFAULT_URL);
+        if (mCurrentUri != null) {
+            session.loadUri(mCurrentUri);
+        }
     }
 
     @Override
@@ -406,7 +407,9 @@ public class GeckoViewActivity extends AppCompatActivity {
 
     private void loadFromIntent(final Intent intent) {
         final Uri uri = intent.getData();
-        mTabSessionManager.getCurrentSession().loadUri(uri != null ? uri.toString() : DEFAULT_URL);
+        if (uri != null) {
+            mTabSessionManager.getCurrentSession().loadUri(uri.toString());
+        }
     }
 
     @Override
@@ -449,19 +452,10 @@ public class GeckoViewActivity extends AppCompatActivity {
     private void downloadFile(GeckoSession.WebResponseInfo response) {
         mTabSessionManager.getCurrentSession()
                 .getUserAgent()
-                .then(new GeckoResult.OnValueListener<String, Void>() {
-            @Override
-            public GeckoResult<Void> onValue(String userAgent) throws Throwable {
-                downloadFile(response, userAgent);
-                return null;
-            }
-        }, new GeckoResult.OnExceptionListener<Void>() {
-            @Override
-            public GeckoResult<Void> onException(Throwable exception) throws Throwable {
-                // getUserAgent() cannot fail.
-                throw new IllegalStateException("Could not get UserAgent string.");
-            }
-        });
+                .accept(userAgent -> downloadFile(response, userAgent),
+                        exception -> {
+                    throw new IllegalStateException("Could not get UserAgent string.");
+                });
     }
 
     private void downloadFile(GeckoSession.WebResponseInfo response, String userAgent) {
@@ -622,7 +616,6 @@ public class GeckoViewActivity extends AppCompatActivity {
         public void onCrash(GeckoSession session) {
             Log.e(LOGTAG, "Crashed, reopening session");
             session.open(sGeckoRuntime);
-            session.loadUri(DEFAULT_URL);
         }
 
         @Override

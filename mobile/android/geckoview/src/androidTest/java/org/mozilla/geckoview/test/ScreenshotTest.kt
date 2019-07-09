@@ -17,7 +17,6 @@ import org.junit.Test
 import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import java.nio.ByteBuffer
 
@@ -26,7 +25,6 @@ private const val SCREEN_WIDTH = 100
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-@ReuseSession(false)
 class ScreenshotTest : BaseSessionTest() {
 
     @get:Rule

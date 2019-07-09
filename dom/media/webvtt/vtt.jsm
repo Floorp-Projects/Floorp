@@ -416,11 +416,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     let root;
     switch (mode) {
       case PARSE_CONTENT_MODE.PSUEDO_CUE:
-        root = window.document.createElement("div", {pseudo: "::cue"});
+        root = window.document.createElement("span", {pseudo: "::cue"});
         break;
       case PARSE_CONTENT_MODE.NORMAL_CUE:
       case PARSE_CONTENT_MODE.REGION_CUE:
-        root = window.document.createElement("div");
+        root = window.document.createElement("span");
         break;
       case PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT:
         root = window.document.createDocumentFragment();
@@ -508,9 +508,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     return val === 0 ? 0 : val + unit;
   };
 
-  XPCOMUtils.defineLazyPreferenceGetter(StyleBox.prototype, "supportPseudo",
-                                        "media.webvtt.pseudo.enabled", false);
-
   // TODO(alwu): remove StyleBox and change other style box to class-based.
   class StyleBoxBase {
     applyStyles(styles, div) {
@@ -542,11 +539,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       // As pseudo element won't inherit the parent div's style, so we have to
       // set the font size explicitly.
       if (supportPseudo) {
-        this.cueDiv.style.setProperty("--cue-font-size", this.fontSize);
+        this._applyDefaultStylesOnPseudoBackgroundNode();
       } else {
-        this._applyNonPseudoCueStyles();
+        this._applyDefaultStylesOnNonPseudoBackgroundNode();
       }
-      this.applyStyles(this._getNodeDefaultStyles(cue));
+      this._applyDefaultStylesOnRootNode();
     }
 
     getCueBoxPositionAndSize() {
@@ -601,58 +598,62 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       return containerBox.height * 0.05 + "px";
     }
 
-    _applyNonPseudoCueStyles() {
+    _applyDefaultStylesOnPseudoBackgroundNode() {
+      // most of the properties have been defined in `::cue` in `html.css`, but
+      // there are some css variables we have to set them dynamically.
+      this.cueDiv.style.setProperty("--cue-font-size", this.fontSize, "important");
+      this.cueDiv.style.setProperty("--cue-writing-mode", this._getCueWritingMode(), "important");
+    }
+
+    _applyDefaultStylesOnNonPseudoBackgroundNode() {
       // If cue div is not a pseudo element, we should set the default css style
       // for it, the reason we need to set these attributes to cueDiv is because
       // if we set background on the root node directly, if would cause filling
       // too large area for the background color as the size of root node won't
       // be adjusted by cue size.
       this.applyStyles({
-        "color": "rgba(255, 255, 255, 1)",
-        "white-space": "pre-line",
-        "font": this.fontSize + " sans-serif",
         "background-color": "rgba(0, 0, 0, 0.8)",
-        "display": "inline",
       }, this.cueDiv);
     }
 
     // spec https://www.w3.org/TR/webvtt1/#applying-css-properties
-    _getNodeDefaultStyles(cue) {
-      let styles = {
-        "position": "absolute",
-        // "unicode-bidi": "plaintext", (uncomment this line after fixing bug1558431)
-        "overflow-wrap": "break-word",
-        // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
-        "font": this.fontSize + " sans-serif",
-        "white-space": "pre-line",
-        "text-align": cue.align,
-      }
-
-      this._processCueSetting(cue, styles);
-      return styles;
-    }
-
-    // spec https://www.w3.org/TR/webvtt1/#processing-cue-settings
-    _processCueSetting(cue, styles) {
+    _applyDefaultStylesOnRootNode() {
+      // The variables writing-mode, top, left, width, and height are calculated
+      // in the spec 7.2, https://www.w3.org/TR/webvtt1/#processing-cue-settings
       // spec 7.2.1, calculate 'writing-mode'.
-      styles["writing-mode"] = this._getCueWritingMode(cue);
+      const writingMode = this._getCueWritingMode();
 
       // spec 7.2.2 ~ 7.2.7, calculate 'width', 'height', 'left' and 'top'.
-      const {width, height, left, top} = this._getCueSizeAndPosition(cue);
-      styles["width"] = width;
-      styles["height"] = height;
-      styles["left"] = left;
-      styles["top"] = top;
+      const {width, height, left, top} = this._getCueSizeAndPosition();
+
+      this.applyStyles({
+        "position": "absolute",
+        // "unicode-bidi": "plaintext", (uncomment this line after fixing bug1558431)
+        "writing-mode": writingMode,
+        "top": top,
+        "left": left,
+        "width": width,
+        "height": height,
+        "overflow-wrap": "break-word",
+        // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
+        "white-space": "pre-line",
+        "font": this.fontSize + " sans-serif",
+        "color": "rgba(255, 255, 255, 1)",
+        "white-space": "pre-line",
+        "text-align": this.cue.align,
+      });
     }
 
-    _getCueWritingMode(cue) {
+    _getCueWritingMode() {
+      const cue = this.cue;
       if (cue.vertical == "") {
         return "horizontal-tb";
       }
       return cue.vertical == "lr" ? "vertical-lr" : "vertical-rl";
     }
 
-    _getCueSizeAndPosition(cue) {
+    _getCueSizeAndPosition() {
+      const cue = this.cue;
       // spec 7.2.2, determine the value of maximum size for cue as per the
       // appropriate rules from the following list.
       let maximumSize;
@@ -923,6 +924,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     const cue = styleBox.cue;
     const isWritingDirectionHorizontal = cue.vertical == "";
     let box = new BoxPosition(styleBox);
+    if (!box.width || !box.height) {
+      LOG(`No way to adjust a box with zero width or height.`);
+      return;
+    }
 
     // Spec 7.2.10, adjust the positions of boxes according to the appropriate
     // steps from the following list. Also, we use offsetHeight/offsetWidth here
@@ -1266,6 +1271,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
             LOG(`cue ${i}, ` + cueBox.getBoxInfoInChars());
           } else {
             LOG(`can not find a proper position to place cue ${i}`);
+            // Clear the display state and clear the reset flag in the cue as well,
+            // which controls whether the task for updating the cue display is
+            // dispatched.
+            cue.displayState = null;
             rootOfCues.removeChild(styleBox.div);
           }
         }

@@ -11,76 +11,70 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1086997
   <script src="common.js"></script>
   <script>
 "use strict";
-
-const {
-  ConsoleAPI,
-} = SpecialPowers.Cu.import("resource://gre/modules/Console.jsm");
-
-var warning = null;
-
-var originalWarn = ConsoleAPI.prototype.warn;
-ConsoleAPI.prototype.warn = function(aWarning) {
-  warning = aWarning;
-};
-
+const options = {...data, checkConformance: true } ;
 [
   {
-    func: () => data.jsonText = JSON.stringify(1),
-    warning: "Manifest should be an object.",
+    func: () => options.jsonText = JSON.stringify(1),
+    warn: "Manifest should be an object.",
   },
   {
-    func: () => data.jsonText = JSON.stringify("a string"),
-    warning: "Manifest should be an object.",
+    func: () => options.jsonText = JSON.stringify("a string"),
+    warn: "Manifest should be an object.",
   },
   {
-    func: () => data.jsonText = JSON.stringify({
+    func: () => options.jsonText = JSON.stringify({
       scope: "https://www.mozilla.org",
     }),
-    warning: "The scope URL must be same origin as document.",
+    warn: "The scope URL must be same origin as document.",
   },
   {
-    func: () => data.jsonText = JSON.stringify({
+    func: () => options.jsonText = JSON.stringify({
       scope: "foo",
       start_url: "bar",
     }),
-    warning: "The start URL is outside the scope, so the scope is invalid.",
+    warn: "The start URL is outside the scope, so the scope is invalid.",
   },
   {
-    func: () => data.jsonText = JSON.stringify({
+    func: () => options.jsonText = JSON.stringify({
       start_url: "https://www.mozilla.org",
     }),
-    warning: "The start URL must be same origin as document.",
+    warn: "The start URL must be same origin as document.",
   },
   {
-    func: () => data.jsonText = JSON.stringify({
+    func: () => options.jsonText = JSON.stringify({
       start_url: 42,
     }),
-    warning: "Expected the manifest\u2019s start_url member to be a string.",
+    warn: "Expected the manifest\u2019s start_url member to be a string.",
   },
   {
-    func: () => data.jsonText = JSON.stringify({
+    func: () => options.jsonText = JSON.stringify({
       theme_color: "42",
     }),
-    warning: "theme_color: 42 is not a valid CSS color.",
+    warn: "theme_color: 42 is not a valid CSS color.",
   },
   {
-    func: () => data.jsonText = JSON.stringify({
+    func: () => options.jsonText = JSON.stringify({
       background_color: "42",
     }),
-    warning: "background_color: 42 is not a valid CSS color.",
+    warn: "background_color: 42 is not a valid CSS color.",
   },
-].forEach(function(test) {
+  {
+    func: () => options.jsonText = JSON.stringify({
+      icons: [
+        { "src": "http://exmaple.com", "sizes": "48x48"},
+        { "src": "http://:Invalid", "sizes": "48x48"},
+      ],
+    }),
+    warn: "icons item at index 1 is invalid. The src member is an invalid URL http://:Invalid",
+  },
+].forEach((test, index) => {
   test.func();
-
-  processor.process(data);
-
-  is(warning, test.warning, "Correct warning.");
-
-  warning = null;
-  data.manifestURL = manifestURL;
-  data.docURL = docURL;
+  const result = processor.process(options);
+  const [message] = result.moz_validation;
+  is(message.warn, test.warn, "Check warning.");
+  options.manifestURL = manifestURL;
+  options.docURL = docURL;
 });
 
-ConsoleAPI.prototype.warn = originalWarn;
   </script>
 </head>

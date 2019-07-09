@@ -10,50 +10,30 @@ import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.notNullValue
 import org.junit.Assert.assertThat
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.Timeout
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.BuildConfig
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.test.util.Environment
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class CrashTest {
-    companion object {
-        val DEFAULT_X86_EMULATOR_TIMEOUT_MILLIS = 90000L
-        val DEFAULT_X86_DEVICE_TIMEOUT_MILLIS = 60000L
-        val DEFAULT_ARM_EMULATOR_TIMEOUT_MILLIS = 180000L
-        val DEFAULT_ARM_DEVICE_TIMEOUT_MILLIS = 60000L
-    }
-
     lateinit var messenger: Messenger
+    val env = Environment()
 
     @get:Rule val rule = ServiceTestRule()
-
-    @get:Rule val timeoutRule = Timeout.millis(getTimeoutMillis())
-
-    fun getTimeoutMillis(): Long {
-        val env = Environment()
-        if (env.isX86) {
-            return if (env.isEmulator)
-                CrashTest.DEFAULT_X86_EMULATOR_TIMEOUT_MILLIS
-            else
-                CrashTest.DEFAULT_X86_DEVICE_TIMEOUT_MILLIS
-        }
-        return if (env.isEmulator)
-            CrashTest.DEFAULT_ARM_EMULATOR_TIMEOUT_MILLIS
-        else
-            CrashTest.DEFAULT_ARM_DEVICE_TIMEOUT_MILLIS
-    }
 
     @Before
     fun setup() {
         CrashTestHandler.queue.clear()
 
-        val context = InstrumentationRegistry.getTargetContext();
+        val context = InstrumentationRegistry.getTargetContext()
         val binder = rule.bindService(Intent(context, RemoteGeckoService::class.java))
         messenger = Messenger(binder)
         assertThat("messenger should not be null", binder, notNullValue())
@@ -78,13 +58,19 @@ class CrashTest {
 
     @Test
     fun crashParent() {
+        Assume.assumeFalse(env.isX86) // Too flaky on x86
+
         messenger.send(Message.obtain(null, RemoteGeckoService.CMD_CRASH_PARENT_NATIVE))
         assertCrashIntent(CrashTestHandler.queue.take(), true)
     }
 
     @Test
     fun crashContent() {
+        // We need the crash reporter for this test
+        Assume.assumeTrue(BuildConfig.MOZ_CRASHREPORTER)
+
         messenger.send(Message.obtain(null, RemoteGeckoService.CMD_CRASH_CONTENT_NATIVE))
-        assertCrashIntent(CrashTestHandler.queue.take(), false)
+        assertCrashIntent(CrashTestHandler.queue.poll(
+                env.defaultTimeoutMillis, TimeUnit.MILLISECONDS), false)
     }
 }

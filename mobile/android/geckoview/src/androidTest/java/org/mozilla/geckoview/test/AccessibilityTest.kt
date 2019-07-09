@@ -6,7 +6,6 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
 import android.graphics.Rect
 
@@ -37,6 +36,9 @@ import org.junit.Before
 import org.junit.After
 import org.junit.Ignore
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 
 const val DISPLAY_WIDTH = 480
@@ -45,7 +47,6 @@ const val DISPLAY_HEIGHT = 640
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 @WithDisplay(width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT)
-@WithDevToolsAPI
 class AccessibilityTest : BaseSessionTest() {
     lateinit var view: View
     val screenRect = Rect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
@@ -151,6 +152,13 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     private fun waitForInitialFocus(moveToFirstChild: Boolean = false) {
+        sessionRule.waitUntilCalled(object: GeckoSession.NavigationDelegate {
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: GeckoSession.NavigationDelegate.LoadRequest)
+                    : GeckoResult<AllowOrDeny>? {
+                return GeckoResult.ALLOW
+            }
+        })
         // XXX: Sometimes we get the window state change of the initial
         // about:blank page loading. Need to figure out how to ignore that.
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -233,11 +241,15 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
+    fun loadTestPage(page: String) {
+        sessionRule.session.loadTestPath("/assets/www/accessibility/$page.html")
+    }
+
     @Test fun testTextEntryNode() {
-        sessionRule.session.loadString("<input aria-label='Name' aria-describedby='desc' value='Tobias'><div id='desc'>description</div>", "text/html")
+        loadTestPage("test-text-entry-node")
         waitForInitialFocus()
 
-        mainSession.evaluateJS("$('input').focus()")
+        mainSession.evaluateJS("document.querySelector('input').focus()")
 
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -256,19 +268,19 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testMoveCaretAccessibilityFocus() {
-        sessionRule.session.loadString("<p>Hello <a href='foo'>sweet</a>, sweet <span>world</span>", "text/html")
+        loadTestPage("test-move-caret-accessibility-focus")
         waitForInitialFocus(false)
 
         mainSession.evaluateJS("""
-            function select(node, start, end) {
+            this.select = function select(node, start, end) {
                 let r = new Range();
                 r.setStart(node, start);
                 r.setEnd(node, end);
                 let s = getSelection();
                 s.removeAllRanges();
                 s.addRange(r);
-            }
-            select($('p').childNodes[2], 2, 6);
+            };
+            this.select(document.querySelector('p').childNodes[2], 2, 6);
         """.trimIndent())
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -280,7 +292,7 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         mainSession.evaluateJS("""
-            select($('p').lastElementChild.firstChild, 1, 2);
+            this.select(document.querySelector('p').lastElementChild.firstChild, 1, 2);
         """.trimIndent())
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -354,10 +366,10 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testClipboard() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
-        sessionRule.session.loadString("<input value='hello cruel world' id='input'>", "text/html")
+        loadTestPage("test-clipboard")
         waitForInitialFocus()
 
-        mainSession.evaluateJS("$('input').focus()")
+        mainSession.evaluateJS("document.querySelector('input').focus()")
 
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -498,11 +510,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testHeadings() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
-        sessionRule.session.loadString("""
-            <a href=\"%23\">preamble</a>
-            <h1>Fried cheese</h1><p>with club sauce.</p>
-            <h2>Popcorn shrimp</h2><button>with club sauce.</button>
-            <h3>Chicken fingers</h3><p>with spicy club sauce.</p>""".trimIndent(), "text/html")
+        loadTestPage("test-headings")
         waitForInitialFocus()
 
         val bundle = Bundle()
@@ -556,7 +564,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testCheckbox() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
-        sessionRule.session.loadString("<label><input type='checkbox' aria-describedby='desc'>many option</label><div id='desc'>description</div>", "text/html")
+        loadTestPage("test-checkbox")
         waitForInitialFocus(true)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -586,12 +594,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testSelectable() {
         var nodeId = View.NO_ID
-        sessionRule.session.loadString(
-                """<ul style="list-style-type: none;" role="listbox">
-                        <li id="li" role="option" onclick="this.setAttribute('aria-selected',
-                            this.getAttribute('aria-selected') == 'true' ? 'false' : 'true')">1</li>
-                        <li role="option" aria-selected="false">2</li>
-                </ul>""","text/html")
+        loadTestPage("test-selectable")
         waitForInitialFocus(true)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -619,8 +622,7 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testMutation() {
-        sessionRule.session.loadString(
-                "<div><p id='to_show'>I will be shown</p></div>","text/html")
+        loadTestPage("test-mutation")
         waitForInitialFocus()
 
         val rootNode = createNodeInfo(View.NO_ID)
@@ -628,7 +630,7 @@ class AccessibilityTest : BaseSessionTest() {
 
         assertThat("Section has 1 child",
                 createNodeInfo(rootNode.getChildId(0)).childCount, equalTo(1))
-        mainSession.evaluateJS("$('#to_show').style.display = 'none';")
+        mainSession.evaluateJS("document.querySelector('#to_show').style.display = 'none';")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 0)
             override fun onAnnouncement(event: AccessibilityEvent) { }
@@ -642,11 +644,10 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testLiveRegion() {
-        sessionRule.session.loadString(
-                "<div id=\"to_change\"aria-live=\"polite\"></div>","text/html")
+        loadTestPage("test-live-region")
         waitForInitialFocus()
 
-        mainSession.evaluateJS("$('#to_change').textContent = 'Hello';")
+        mainSession.evaluateJS("document.querySelector('#to_change').textContent = 'Hello';")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onAnnouncement(event: AccessibilityEvent) {
@@ -659,11 +660,10 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testLiveRegionDescendant() {
-        sessionRule.session.loadString(
-                "<div aria-live='polite'><p id='to_show'>I will be shown</p></div>","text/html")
+        loadTestPage("test-live-region-descendant")
         waitForInitialFocus()
 
-        mainSession.evaluateJS("$('#to_show').style.display = 'none';")
+        mainSession.evaluateJS("document.querySelector('#to_show').style.display = 'none';")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 0)
             override fun onAnnouncement(event: AccessibilityEvent) { }
@@ -672,7 +672,7 @@ class AccessibilityTest : BaseSessionTest() {
             override fun onWinContentChanged(event: AccessibilityEvent) { }
         })
 
-        mainSession.evaluateJS("$('#to_show').style.display = 'block';")
+        mainSession.evaluateJS("document.querySelector('#to_show').style.display = 'block';")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onAnnouncement(event: AccessibilityEvent) {
@@ -685,11 +685,10 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testLiveRegionAtomic() {
-        sessionRule.session.loadString(
-                "<div aria-live='polite' aria-atomic='true' id='container'>The time is <p>3pm</p></div>","text/html")
+        loadTestPage("test-live-region-atomic")
         waitForInitialFocus()
 
-        mainSession.evaluateJS("$('p').textContent = '4pm';")
+        mainSession.evaluateJS("document.querySelector('p').textContent = '4pm';")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onAnnouncement(event: AccessibilityEvent) {
@@ -700,7 +699,8 @@ class AccessibilityTest : BaseSessionTest() {
             override fun onWinContentChanged(event: AccessibilityEvent) { }
         })
 
-        mainSession.evaluateJS("$('#container').removeAttribute('aria-atomic'); $('p').textContent = '5pm';")
+        mainSession.evaluateJS("document.querySelector('#container').removeAttribute('aria-atomic');" +
+                "document.querySelector('p').textContent = '5pm';")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onAnnouncement(event: AccessibilityEvent) {
@@ -713,11 +713,10 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testLiveRegionImage() {
-        sessionRule.session.loadString(
-                "<div aria-live='polite' aria-atomic='true'>This picture is <img src='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==' alt='happy'></div>","text/html")
+        loadTestPage("test-live-region-image")
         waitForInitialFocus()
 
-        mainSession.evaluateJS("console.log('eeejay', $('img').naturalWidth); $('img').alt = 'sad';")
+        mainSession.evaluateJS("document.querySelector('img').alt = 'sad';")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onAnnouncement(event: AccessibilityEvent) {
@@ -727,11 +726,10 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testLiveRegionImageLabeledBy() {
-        sessionRule.session.loadString(
-                "<img src='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==' aria-live='polite' aria-labelledby='l1'><span id='l1'>Hello</span><span id='l2'>Goodbye</span>","text/html")
+        loadTestPage("test-live-region-image-labeled-by")
         waitForInitialFocus()
 
-        mainSession.evaluateJS("$('img').setAttribute('aria-labelledby', 'l2');")
+        mainSession.evaluateJS("document.querySelector('img').setAttribute('aria-labelledby', 'l2');")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onAnnouncement(event: AccessibilityEvent) {
@@ -750,15 +748,7 @@ class AccessibilityTest : BaseSessionTest() {
     @Ignore // Bug 1506276 - We need to reliably wait for APZC here, and it's not trivial.
     @Test fun testScroll() {
         var nodeId = View.NO_ID
-        sessionRule.session.loadString(
-                """<meta name="viewport" content="width=device-width initial-scale=1">
-                <body style="margin: 0;">
-                        <div style="height: 100vh;"></div>
-                        <button>Hello</button>
-                        <p style="margin: 0;">Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                </body>""",
-                "text/html")
+        loadTestPage("test-scroll.html")
 
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled
@@ -859,8 +849,8 @@ class AccessibilityTest : BaseSessionTest() {
         // Set up promises to monitor the values changing.
         val promises = autoFills.flatMap { entry ->
             // Repeat each test with both the top document and the iframe document.
-            arrayOf("document", "$('#iframe').contentDocument").map { doc ->
-                mainSession.evaluateJS("""new Promise(resolve =>
+            arrayOf("document", "document.querySelector('#iframe').contentDocument").map { doc ->
+                mainSession.evaluatePromiseJS("""new Promise(resolve =>
                     $doc.querySelector('${entry.key}').addEventListener(
                         'input', event => {
                           let eventInterface =
@@ -868,7 +858,7 @@ class AccessibilityTest : BaseSessionTest() {
                             event instanceof UIEvent ? "UIEvent" :
                             event instanceof Event ? "Event" : "Unknown";
                           resolve([event.target.value, '${entry.value}', eventInterface]);
-                        }, { once: true }))""").asJSPromise()
+                        }, { once: true }))""")
             }
         }
 
@@ -960,7 +950,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat("Should not have focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
 
-        mainSession.evaluateJS("$('#pass1').focus()")
+        mainSession.evaluateJS("document.querySelector('#pass1').focus()")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled
             override fun onFocused(event: AccessibilityEvent) {
@@ -969,7 +959,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat("Should have one focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(1))
 
-        mainSession.evaluateJS("$('#pass1').blur()")
+        mainSession.evaluateJS("document.querySelector('#pass1').blur()")
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled
             override fun onFocused(event: AccessibilityEvent) {
@@ -981,9 +971,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun testTree() {
-        sessionRule.session.loadString(
-                "<label for='name'>Name:</label><input id='name' type='text' value='Julie'><button>Submit</button>",
-                "text/html")
+        loadTestPage("test-tree")
         waitForInitialFocus()
 
         val rootNode = createNodeInfo(View.NO_ID)
@@ -1005,7 +993,6 @@ class AccessibilityTest : BaseSessionTest() {
                     equalTo(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT))
         }
 
-
         val buttonNode = createNodeInfo(rootNode.getChildId(2))
         assertThat("Last node is a button", buttonNode.className.toString(), equalTo("android.widget.Button"))
         // The child text leaf is pruned, so this button is childless.
@@ -1015,16 +1002,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun testCollection() {
-        sessionRule.session.loadString(
-                """<ul>
-                  |  <li>One</li>
-                  |  <li>Two</li>
-                  |</ul>
-                  |<ul>
-                  |  <li>1<ul><li>1.1</li><li>1.2</li></ul></li>
-                  |</ul>
-                """.trimMargin(),
-                "text/html")
+        loadTestPage("test-collection")
         waitForInitialFocus()
 
         val rootNode = createNodeInfo(View.NO_ID)
@@ -1056,12 +1034,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun testRange() {
-        sessionRule.session.loadString(
-                """<input type="range" aria-label="Rating" min="1" max="10" value="4">
-                  |<input type="range" aria-label="Stars" min="1" max="5" step="0.5" value="4.5">
-                  |<input type="range" aria-label="Percent" min="0" max="1" step="0.01" value="0.83">
-                """.trimMargin(),
-                "text/html")
+        loadTestPage("test-range")
         waitForInitialFocus()
 
         val rootNode = createNodeInfo(View.NO_ID)
