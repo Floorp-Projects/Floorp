@@ -283,7 +283,7 @@ void CheckOrigin(const nsACString& aSpec, const nsACString& aBase,
   OriginAttributes attrs;
 
   nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+      BasePrincipal::CreateContentPrincipal(uri, attrs);
   ASSERT_TRUE(principal);
 
   nsCString origin;

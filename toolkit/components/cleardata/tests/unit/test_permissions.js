@@ -9,7 +9,7 @@
 
 add_task(async function test_all_permissions() {
   const uri = Services.io.newURI("https://example.net");
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
@@ -40,13 +40,13 @@ add_task(async function test_all_permissions() {
 
 add_task(async function test_principal_permissions() {
   const uri = Services.io.newURI("https://example.net");
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
 
   const anotherUri = Services.io.newURI("https://example.com");
-  const anotherPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const anotherPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     anotherUri,
     {}
   );
@@ -97,7 +97,7 @@ add_task(async function test_principal_permissions() {
 
 add_task(async function test_3rdpartystorage_permissions() {
   const uri = Services.io.newURI("https://example.net");
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
@@ -108,7 +108,7 @@ add_task(async function test_3rdpartystorage_permissions() {
   );
 
   const anotherUri = Services.io.newURI("https://example.com");
-  const anotherPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const anotherPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     anotherUri,
     {}
   );
@@ -124,7 +124,7 @@ add_task(async function test_3rdpartystorage_permissions() {
   );
 
   const oneMoreUri = Services.io.newURI("https://example.org");
-  const oneMorePrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const oneMorePrincipal = Services.scriptSecurityManager.createContentPrincipal(
     oneMoreUri,
     {}
   );

@@ -35,9 +35,9 @@ function checkOriginAttributes(prin, attrs, suffix) {
     ChromeUtils.originAttributesMatchPattern(prin.originAttributes, attrs)
   );
   if (!prin.isNullPrincipal && !prin.origin.startsWith("[")) {
-    Assert.ok(ssm.createCodebasePrincipalFromOrigin(prin.origin).equals(prin));
+    Assert.ok(ssm.createContentPrincipalFromOrigin(prin.origin).equals(prin));
   } else {
-    checkThrows(() => ssm.createCodebasePrincipalFromOrigin(prin.origin));
+    checkThrows(() => ssm.createContentPrincipalFromOrigin(prin.origin));
   }
 }
 
@@ -88,13 +88,13 @@ function run_test() {
   // Attributeless origins.
   Assert.equal(ssm.getSystemPrincipal().origin, "[System Principal]");
   checkOriginAttributes(ssm.getSystemPrincipal());
-  var exampleOrg = ssm.createCodebasePrincipal(
+  var exampleOrg = ssm.createContentPrincipal(
     makeURI("http://example.org"),
     {}
   );
   Assert.equal(exampleOrg.origin, "http://example.org");
   checkOriginAttributes(exampleOrg);
-  var exampleCom = ssm.createCodebasePrincipal(
+  var exampleCom = ssm.createContentPrincipal(
     makeURI("https://www.example.com:123"),
     {}
   );
@@ -105,13 +105,13 @@ function run_test() {
     /^moz-nullprincipal:\{([0-9]|[a-z]|\-){36}\}$/.test(nullPrin.origin)
   );
   checkOriginAttributes(nullPrin);
-  var ipv6Prin = ssm.createCodebasePrincipal(
+  var ipv6Prin = ssm.createContentPrincipal(
     makeURI("https://[2001:db8::ff00:42:8329]:123"),
     {}
   );
   Assert.equal(ipv6Prin.origin, "https://[2001:db8::ff00:42:8329]:123");
   checkOriginAttributes(ipv6Prin);
-  var ipv6NPPrin = ssm.createCodebasePrincipal(
+  var ipv6NPPrin = ssm.createContentPrincipal(
     makeURI("https://[2001:db8::ff00:42:8329]"),
     {}
   );
@@ -132,7 +132,7 @@ function run_test() {
     }]]`
   );
 
-  // Make sure createCodebasePrincipal does what the rest of gecko does.
+  // Make sure createContentPrincipal does what the rest of gecko does.
   Assert.ok(
     exampleOrg.equals(
       Cu.getObjectPrincipal(new Cu.Sandbox("http://example.org"))
@@ -144,7 +144,7 @@ function run_test() {
   //
 
   // Just browser.
-  var exampleOrg_browser = ssm.createCodebasePrincipal(
+  var exampleOrg_browser = ssm.createContentPrincipal(
     makeURI("http://example.org"),
     { inIsolatedMozBrowser: true }
   );
@@ -164,7 +164,7 @@ function run_test() {
   Assert.equal(exampleOrg_browser.origin, "http://example.org^inBrowser=1");
 
   // First party Uri
-  var exampleOrg_firstPartyDomain = ssm.createCodebasePrincipal(
+  var exampleOrg_firstPartyDomain = ssm.createContentPrincipal(
     makeURI("http://example.org"),
     { firstPartyDomain: "example.org" }
   );
@@ -179,7 +179,7 @@ function run_test() {
   );
 
   // Just userContext.
-  var exampleOrg_userContext = ssm.createCodebasePrincipal(
+  var exampleOrg_userContext = ssm.createContentPrincipal(
     makeURI("http://example.org"),
     { userContextId: 42 }
   );
@@ -215,19 +215,19 @@ function run_test() {
   // Check Principal kinds.
   function checkKind(prin, kind) {
     Assert.equal(prin.isNullPrincipal, kind == "nullPrincipal");
-    Assert.equal(prin.isCodebasePrincipal, kind == "codebasePrincipal");
+    Assert.equal(prin.isContentPrincipal, kind == "contentPrincipal");
     Assert.equal(prin.isExpandedPrincipal, kind == "expandedPrincipal");
     Assert.equal(prin.isSystemPrincipal, kind == "systemPrincipal");
   }
   checkKind(ssm.createNullPrincipal({}), "nullPrincipal");
   checkKind(
-    ssm.createCodebasePrincipal(makeURI("http://www.example.com"), {}),
-    "codebasePrincipal"
+    ssm.createContentPrincipal(makeURI("http://www.example.com"), {}),
+    "contentPrincipal"
   );
   checkKind(
     Cu.getObjectPrincipal(
       Cu.Sandbox([
-        ssm.createCodebasePrincipal(makeURI("http://www.example.com"), {}),
+        ssm.createContentPrincipal(makeURI("http://www.example.com"), {}),
       ])
     ),
     "expandedPrincipal"
@@ -312,13 +312,13 @@ function run_test() {
   ];
   fileTests.forEach(t => {
     Services.prefs.setBoolPref("security.fileuri.strict_origin_policy", t[0]);
-    var filePrin = ssm.createCodebasePrincipal(fileURI, {});
+    var filePrin = ssm.createContentPrincipal(fileURI, {});
     Assert.equal(filePrin.origin, t[1]);
   });
   Services.prefs.clearUserPref("security.fileuri.strict_origin_policy");
 
   var aboutBlankURI = makeURI("about:blank");
-  var aboutBlankPrin = ssm.createCodebasePrincipal(aboutBlankURI, {});
+  var aboutBlankPrin = ssm.createContentPrincipal(aboutBlankURI, {});
   Assert.ok(
     /^moz-nullprincipal:\{([0-9]|[a-z]|\-){36}\}$/.test(aboutBlankPrin.origin)
   );

@@ -99,7 +99,7 @@ function setupChannel(params) {
       contentPolicyType: params.contentType,
     });
   } else {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       NetUtil.newURI(trackingOrigin),
       {}
     );

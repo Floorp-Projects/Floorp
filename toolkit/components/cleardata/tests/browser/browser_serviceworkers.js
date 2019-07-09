@@ -91,7 +91,7 @@ add_task(async function test_deleteFromPrincipal() {
   let unregistered = SiteDataTestUtils.promiseServiceWorkerUnregistered(
     "https://test1.example.com"
   );
-  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "https://test1.example.com/"
   );
   await new Promise(aResolve => {
@@ -119,7 +119,7 @@ add_task(async function test_deleteFromPrincipal() {
   unregistered = SiteDataTestUtils.promiseServiceWorkerUnregistered(
     "https://test1.example.org"
   );
-  principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "https://test1.example.org/"
   );
   await new Promise(aResolve => {

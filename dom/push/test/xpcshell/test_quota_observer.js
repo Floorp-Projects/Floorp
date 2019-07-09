@@ -191,7 +191,7 @@ add_task(async function test_expiration_history_observer() {
     (subject, data) => {
       if (data == "https://example.net/sales") {
         ok(
-          subject.isCodebasePrincipal,
+          subject.isContentPrincipal,
           "Should pass subscription principal as the subject"
         );
         return true;

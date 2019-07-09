@@ -439,10 +439,6 @@ skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
 skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
 
-# Need to add "numberingSystem" to resolvedOptions() to address
-# https://github.com/tc39/test262/pull/2011 apparently -- bug 1521819.
-skip script test262/intl402/RelativeTimeFormat/prototype/resolvedOptions/order.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508683
 skip script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/global/cross-realm.js

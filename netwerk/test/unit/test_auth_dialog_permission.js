@@ -109,7 +109,7 @@ function makeChan(loadingUrl, url, contentPolicy) {
     Ci.nsIScriptSecurityManager
   );
   var uri = make_uri(loadingUrl);
-  var principal = ssm.createCodebasePrincipal(uri, {});
+  var principal = ssm.createContentPrincipal(uri, {});
 
   return NetUtil.newChannel({
     uri: url,

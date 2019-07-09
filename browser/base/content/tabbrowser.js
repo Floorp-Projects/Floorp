@@ -6395,7 +6395,7 @@ var TabContextMenu = {
       }
 
       /* Create a triggering principal that is able to load the new tab
-         For codebase principals that are about: chrome: or resource: we need system to load them.
+         For content principals that are about: chrome: or resource: we need system to load them.
          Anything other than system principal needs to have the new userContextId.
       */
       let triggeringPrincipal;
@@ -6422,8 +6422,8 @@ var TabContextMenu = {
         triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal(
           { userContextId }
         );
-      } else if (triggeringPrincipal.isCodebasePrincipal) {
-        triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+      } else if (triggeringPrincipal.isContentPrincipal) {
+        triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
           triggeringPrincipal.URI,
           { userContextId }
         );

@@ -69,7 +69,7 @@ class AboutPage {
     channel.originalURI = uri;
 
     if (this.uriFlags & Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT) {
-      const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      const principal = Services.scriptSecurityManager.createContentPrincipal(
         uri,
         {}
       );

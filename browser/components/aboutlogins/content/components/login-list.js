@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import LoginListItem from "./login-list-item.js";
+import LoginListItemFactory from "./login-list-item.js";
+import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
 
 const collator = new Intl.Collator();
 const sortFnOptions = {
@@ -17,7 +18,7 @@ export default class LoginList extends HTMLElement {
     this._logins = [];
     this._filter = "";
     this._selectedGuid = null;
-    this._blankLoginListItem = new LoginListItem({});
+    this._blankLoginListItem = LoginListItemFactory.create({});
   }
 
   connectedCallback() {
@@ -29,9 +30,10 @@ export default class LoginList extends HTMLElement {
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginListTemplate.content.cloneNode(true));
 
-    this._count = this.shadowRoot.querySelector(".count");
-    this._list = this.shadowRoot.querySelector("ol");
-    this._sortSelect = this.shadowRoot.querySelector("#login-sort");
+    this._count = shadowRoot.querySelector(".count");
+    this._createLoginButton = shadowRoot.querySelector(".create-login-button");
+    this._list = shadowRoot.querySelector("ol");
+    this._sortSelect = shadowRoot.querySelector("#login-sort");
 
     this.render();
 
@@ -40,10 +42,11 @@ export default class LoginList extends HTMLElement {
       .addEventListener("change", this);
     window.addEventListener("AboutLoginsClearSelection", this);
     window.addEventListener("AboutLoginsCreateLogin", this);
-    window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
+    this._list.addEventListener("click", this);
     this.addEventListener("keydown", this);
+    this._createLoginButton.addEventListener("click", this);
   }
 
   /**
@@ -52,7 +55,7 @@ export default class LoginList extends HTMLElement {
    *                         createLogin: When set to true will show and select
    *                                      a blank login-list-item.
    */
-  render(options = {}) {
+  async render(options = {}) {
     this._list.textContent = "";
 
     if (options.createLogin) {
@@ -62,7 +65,9 @@ export default class LoginList extends HTMLElement {
         "aria-activedescendant",
         this._blankLoginListItem.id
       );
-      this._list.append(this._blankLoginListItem);
+      this._list.appendChild(this._blankLoginListItem);
+    } else {
+      this._blankLoginListItem.remove();
     }
 
     if (!this._logins.length) {
@@ -72,24 +77,62 @@ export default class LoginList extends HTMLElement {
       return;
     }
 
-    for (let login of this._logins) {
-      let listItem = new LoginListItem(login);
-      if (login.guid == this._selectedGuid) {
-        listItem.classList.add("selected");
-        listItem.setAttribute("aria-selected", "true");
-        this._list.setAttribute("aria-activedescendant", listItem.id);
-      }
-      this._list.append(listItem);
-    }
-
-    let visibleLoginCount = this._applyFilter();
+    let visibleLogins = this._applyFilter();
     document.l10n.setAttributes(this._count, "login-list-count", {
-      count: visibleLoginCount,
+      count: visibleLogins.length,
     });
+
+    let fragment = document.createDocumentFragment();
+    let chunkSize = 5;
+    for (let i = 0; i < this._logins.length; i++) {
+      let login = this._logins[i];
+      let listItem = LoginListItemFactory.create(login);
+      if (login.guid == this._selectedGuid) {
+        this._setListItemAsSelected(listItem);
+      }
+
+      if (!visibleLogins.includes(login.guid)) {
+        listItem.hidden = true;
+      }
+
+      fragment.appendChild(listItem);
+
+      // Display a first chunk of logins ASAP to improve perceived performance,
+      // then append progressively larger chunks until complete.
+      if (i == chunkSize) {
+        this._list.appendChild(fragment);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        chunkSize *= chunkSize;
+      }
+    }
+    this._list.appendChild(fragment);
   }
 
   handleEvent(event) {
     switch (event.type) {
+      case "click": {
+        if (event.originalTarget == this._createLoginButton) {
+          window.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin"));
+          recordTelemetryEvent({ object: "new_login", method: "new" });
+          return;
+        }
+
+        let loginListItem = event.originalTarget.closest(".login-list-item");
+        if (!loginListItem || !loginListItem.dataset.guid) {
+          return;
+        }
+
+        this.dispatchEvent(
+          new CustomEvent("AboutLoginsLoginSelected", {
+            bubbles: true,
+            composed: true,
+            detail: loginListItem._login,
+          })
+        );
+
+        recordTelemetryEvent({ object: "existing_login", method: "select" });
+        break;
+      }
       case "change": {
         const sort = this._sortSelect.value;
         this._logins = this._logins.sort((a, b) => sortFnOptions[sort](a, b));
@@ -117,14 +160,19 @@ export default class LoginList extends HTMLElement {
         this.render();
         break;
       }
-      case "AboutLoginsInitialLoginSelected":
       case "AboutLoginsLoginSelected": {
         if (this._selectedGuid == event.detail.guid) {
           return;
         }
 
-        this._selectedGuid = event.detail.guid;
-        this.render();
+        let listItem = this._list.querySelector(
+          `.login-list-item[data-guid="${event.detail.guid}"]`
+        );
+        if (listItem) {
+          this._setListItemAsSelected(listItem);
+        } else {
+          this.render();
+        }
         break;
       }
       case "keydown": {
@@ -149,13 +197,15 @@ export default class LoginList extends HTMLElement {
       !this._logins.findIndex(login => login.guid == this._selectedGuid) != -1
     ) {
       // Select the first visible login after any possible filter is applied.
-      let firstVisibleLogin = this._list.querySelector(
-        "login-list-item[data-guid]:not([hidden])"
+      let firstVisibleListItem = this._list.querySelector(
+        ".login-list-item[data-guid]:not([hidden])"
       );
-      if (firstVisibleLogin) {
+      if (firstVisibleListItem) {
+        this._selectedGuid = firstVisibleListItem.dataset.guid;
+        this._setListItemAsSelected(firstVisibleListItem);
         window.dispatchEvent(
           new CustomEvent("AboutLoginsInitialLoginSelected", {
-            detail: firstVisibleLogin._login,
+            detail: firstVisibleListItem._login,
           })
         );
       }
@@ -213,25 +263,28 @@ export default class LoginList extends HTMLElement {
       matchingLoginGuids = this._logins.map(login => login.guid);
     }
 
-    for (let listItem of this._list.querySelectorAll("login-list-item")) {
-      if (!listItem.dataset.guid) {
-        // Don't hide the 'New Login' item if it is present.
-        continue;
-      }
-      if (matchingLoginGuids.includes(listItem.dataset.guid)) {
-        if (listItem.hidden) {
-          listItem.hidden = false;
-        }
-      } else if (!listItem.hidden) {
-        listItem.hidden = true;
-      }
-    }
-
-    return matchingLoginGuids.length;
+    return matchingLoginGuids;
   }
 
   _handleKeyboardNav(event) {
-    if (this._list != this.shadowRoot.activeElement) {
+    if (
+      this._createLoginButton == this.shadowRoot.activeElement &&
+      event.key == "Tab"
+    ) {
+      // Bug 1562716: Pressing Tab from the create-login-button cycles back to the
+      // login-sort dropdown due to the login-list having `overflow`
+      // CSS property set. Explicitly forward focus here until
+      // this keyboard trap is fixed.
+      if (event.shiftKey) {
+        return;
+      }
+      let loginItem = document.querySelector("login-item");
+      if (loginItem) {
+        event.preventDefault();
+        loginItem.shadowRoot.querySelector(".edit-button").focus();
+      }
+      return;
+    } else if (this._list != this.shadowRoot.activeElement) {
       return;
     }
 
@@ -278,21 +331,6 @@ export default class LoginList extends HTMLElement {
         newlyFocusedItem = previousItem;
         break;
       }
-      case "Tab": {
-        // Bug 1562716: Pressing Tab from the login-list cycles back to the
-        // login-sort dropdown due to the login-list having `overflow`
-        // CSS property set. Explicitly forward focus here until
-        // this keyboard trap is fixed.
-        if (event.shiftKey) {
-          return;
-        }
-        let loginItem = document.querySelector("login-item");
-        if (loginItem) {
-          event.preventDefault();
-          loginItem.shadowRoot.querySelector(".edit-button").focus();
-        }
-        return;
-      }
       case " ":
       case "Enter": {
         event.preventDefault();
@@ -307,6 +345,21 @@ export default class LoginList extends HTMLElement {
     activeDescendant.classList.remove("keyboard-selected");
     newlyFocusedItem.classList.add("keyboard-selected");
     newlyFocusedItem.scrollIntoView(false);
+  }
+
+  _setListItemAsSelected(listItem) {
+    let oldSelectedItem = this._list.querySelector(".selected");
+    if (oldSelectedItem) {
+      oldSelectedItem.classList.remove("selected");
+      oldSelectedItem.removeAttribute("aria-selected");
+    }
+    if (listItem.dataset.guid) {
+      this._blankLoginListItem.remove();
+    }
+    listItem.classList.add("selected");
+    listItem.setAttribute("aria-selected", "true");
+    this._list.setAttribute("aria-activedescendant", listItem.id);
+    this._selectedGuid = listItem.dataset.guid;
   }
 }
 customElements.define("login-list", LoginList);

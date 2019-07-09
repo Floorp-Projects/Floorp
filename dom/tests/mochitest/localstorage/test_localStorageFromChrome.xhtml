@@ -20,7 +20,7 @@ async function startTest()
     .getService(Components.interfaces.nsIDOMStorageManager);
 
   var uri = ios.newURI(url);
-  var principal = ssm.createCodebasePrincipal(uri, {});
+  var principal = ssm.createContentPrincipal(uri, {});
   var storage = dsm.createStorage(window, principal, principal, "");
 
   storage.setItem("chromekey", "chromevalue");

@@ -246,7 +246,7 @@ var gViewSourceUtils = {
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
           let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER;
           let ssm = Services.scriptSecurityManager;
-          let principal = ssm.createCodebasePrincipal(
+          let principal = ssm.createContentPrincipal(
             data.uri,
             browser.contentPrincipal.originAttributes
           );

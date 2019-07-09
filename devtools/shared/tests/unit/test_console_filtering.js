@@ -55,7 +55,7 @@ function createFakeAddonWindow({ addonId } = {}) {
   policy.active = true;
 
   const baseURI = Services.io.newURI(`moz-extension://${uuid}/`);
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
     baseURI,
     {}
   );

@@ -744,7 +744,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
       break;
 
     case Type_Double:
-      MOZ_ASSERT(cx->runtime()->jitSupportsFloatingPoint);
+      MOZ_ASSERT(JitOptions.supportsFloatingPoint);
       masm.loadDouble(Address(esp, 0), ReturnDoubleReg);
       masm.freeStack(sizeof(double));
       break;

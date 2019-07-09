@@ -77,7 +77,7 @@ pub trait DeclarationParser<'i> {
 ///
 /// Default implementations that reject all at-rules are provided,
 /// so that `impl AtRuleParser<(), ()> for ... {}` can be used
-/// for using `DeclarationListParser` to parse a declartions list with only qualified rules.
+/// for using `DeclarationListParser` to parse a declarations list with only qualified rules.
 pub trait AtRuleParser<'i> {
     /// The intermediate representation of prelude of an at-rule without block;
     type PreludeNoBlock;

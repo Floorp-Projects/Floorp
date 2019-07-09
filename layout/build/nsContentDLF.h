@@ -48,7 +48,7 @@ class nsContentDLF final : public nsIDocumentLoaderFactory {
   /**
    * Create a blank document using the given loadgroup and given
    * principal.  aPrincipal is allowed to be null, in which case the
-   * new document will get the about:blank codebase principal.
+   * new document will get the about:blank content principal.
    */
   static already_AddRefed<mozilla::dom::Document> CreateBlankDocument(
       nsILoadGroup* aLoadGroup, nsIPrincipal* aPrincipal,

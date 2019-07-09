@@ -257,7 +257,7 @@ interface nsILoadInfo : nsISupports
    * this, never set the loadingPrincipal to the system principal when
    * the URI to be loaded is controlled by a webpage.
    * If the loadingPrincipal and triggeringPrincipal are both
-   * codebase-principals, then we will always call into
+   * content principals, then we will always call into
    * nsIContentPolicies and CheckLoadURI. The call to nsIContentPolicies
    * and CheckLoadURI happen even if the URI to be loaded is same-origin
    * with the loadingPrincipal or triggeringPrincipal.
@@ -298,7 +298,7 @@ interface nsILoadInfo : nsISupports
    * this, never set the triggeringPrincipal to the system principal when
    * the URI to be loaded is controlled by a webpage.
    * If the loadingPrincipal and triggeringPrincipal are both
-   * codebase-principals, then we will always call into
+   * content principals, then we will always call into
    * nsIContentPolicies and CheckLoadURI. The call to nsIContentPolicies
    * and CheckLoadURI happen even if the URI to be loaded is same-origin
    * with the loadingPrincipal or triggeringPrincipal.

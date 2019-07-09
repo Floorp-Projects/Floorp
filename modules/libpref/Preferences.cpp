@@ -32,6 +32,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
@@ -4518,7 +4519,7 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
                    PreferencesInternalMethods::GetPref<StripAtomic<cpp_type>>( \
                        name, value) == StaticPrefs::id(),                      \
                "Incorrect cached value for " name);
-#  include "mozilla/StaticPrefList.h"
+#  include "mozilla/StaticPrefListAll.h"
 #  undef PREF
 #  undef VARCACHE_PREF
 #endif
@@ -5440,7 +5441,7 @@ void MaybeInitOncePrefs() {
 #define PREF(name, cpp_type, value)
 #define VARCACHE_PREF(policy, name, id, cpp_type, default_value) \
   cpp_type sVarCache_##id(default_value);
-#include "mozilla/StaticPrefList.h"
+#include "mozilla/StaticPrefListAll.h"
 #undef PREF
 #undef VARCACHE_PREF
 
@@ -5474,7 +5475,7 @@ static void InitAll(bool aIsStartup) {
 #define VARCACHE_PREF(policy, name, id, cpp_type, value)           \
   InitVarCachePref(UpdatePolicy::policy, NS_LITERAL_CSTRING(name), \
                    &sVarCache_##id, value, aIsStartup, isParent);
-#include "mozilla/StaticPrefList.h"
+#include "mozilla/StaticPrefListAll.h"
 #undef PREF
 #undef VARCACHE_PREF
 }
@@ -5528,7 +5529,7 @@ static void InitOncePrefs() {
     }
 #endif
 
-#include "mozilla/StaticPrefList.h"
+#include "mozilla/StaticPrefListAll.h"
 #undef PREF
 #undef VARCACHE_PREF
 }
@@ -5617,7 +5618,7 @@ static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder) {
     SaveOncePrefToSharedMap(aBuilder, ONCE_PREF_NAME(name),         \
                             StripAtomic<cpp_type>(sVarCache_##id)); \
   }
-#include "mozilla/StaticPrefList.h"
+#include "mozilla/StaticPrefListAll.h"
 #undef PREF
 #undef VARCACHE_PREF
 }
@@ -5660,7 +5661,7 @@ static void InitStaticPrefsFromShared() {
     MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));                      \
     StaticPrefs::sVarCache_##id = val;                                 \
   }
-#include "mozilla/StaticPrefList.h"
+#include "mozilla/StaticPrefListAll.h"
 #undef PREF
 #undef VARCACHE_PREF
 

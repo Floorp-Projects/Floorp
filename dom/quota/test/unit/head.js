@@ -327,7 +327,7 @@ function getPrincipal(url) {
   let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
     Ci.nsIScriptSecurityManager
   );
-  return ssm.createCodebasePrincipal(uri, {});
+  return ssm.createContentPrincipal(uri, {});
 }
 
 function getCurrentPrincipal() {

@@ -27,7 +27,7 @@ var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManag
 var uri = make_uri("http://mochi.test:8888");
 var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                             .getService(Ci.nsIScriptSecurityManager);
-var principal = ssm.createCodebasePrincipal(uri, {});
+var principal = ssm.createContentPrincipal(uri, {});
 pm.removeFromPrincipal(principal, "fullscreen");
 
 SpecialPowers.pushPrefEnv({"set": [

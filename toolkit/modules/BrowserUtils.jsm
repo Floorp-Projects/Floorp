@@ -93,17 +93,17 @@ var BrowserUtils = {
   },
 
   /**
-   * Return or create a principal with the codebase of one, and the originAttributes
+   * Return or create a principal with the content of one, and the originAttributes
    * of an existing principal (e.g. on a docshell, where the originAttributes ought
    * not to change, that is, we should keep the userContextId, privateBrowsingId,
    * etc. the same when changing the principal).
    *
    * @param principal
-   *        The principal whose codebase/null/system-ness we want.
+   *        The principal whose content/null/system-ness we want.
    * @param existingPrincipal
    *        The principal whose originAttributes we want, usually the current
    *        principal of a docshell.
-   * @return an nsIPrincipal that matches the codebase/null/system-ness of the first
+   * @return an nsIPrincipal that matches the content/null/system-ness of the first
    *         param, and the originAttributes of the second.
    */
   principalWithMatchingOA(principal, existingPrincipal) {
@@ -118,8 +118,8 @@ var BrowserUtils = {
     }
 
     let secMan = Services.scriptSecurityManager;
-    if (principal.isCodebasePrincipal) {
-      return secMan.createCodebasePrincipal(
+    if (principal.isContentPrincipal) {
+      return secMan.createContentPrincipal(
         principal.URI,
         existingPrincipal.originAttributes
       );

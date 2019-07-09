@@ -62,7 +62,7 @@ const ContentBlockingAllowList = {
       return null;
     }
     let attrs = browser.contentPrincipal.originAttributes;
-    return Services.scriptSecurityManager.createCodebasePrincipal(
+    return Services.scriptSecurityManager.createContentPrincipal(
       baseURI,
       attrs
     );

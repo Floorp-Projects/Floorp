@@ -35,7 +35,7 @@ function makePushPermission(url, capability) {
     capability: Ci.nsIPermissionManager[capability],
     expireTime: 0,
     expireType: Ci.nsIPermissionManager.EXPIRE_NEVER,
-    principal: Services.scriptSecurityManager.createCodebasePrincipal(
+    principal: Services.scriptSecurityManager.createContentPrincipal(
       Services.io.newURI(url),
       {}
     ),

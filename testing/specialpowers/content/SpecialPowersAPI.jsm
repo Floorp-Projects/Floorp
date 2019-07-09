@@ -1564,7 +1564,7 @@ class SpecialPowersAPI extends JSWindowActorChild {
     if (typeof arg == "string") {
       // It's an URL.
       let uri = Services.io.newURI(arg);
-      principal = secMan.createCodebasePrincipal(uri, {});
+      principal = secMan.createContentPrincipal(uri, {});
     } else if (arg.nodePrincipal) {
       // It's a document.
       // In some tests the arg is a wrapped DOM element, so we unwrap it first.
@@ -1572,7 +1572,7 @@ class SpecialPowersAPI extends JSWindowActorChild {
     } else {
       let uri = Services.io.newURI(arg.url);
       let attrs = arg.originAttributes || {};
-      principal = secMan.createCodebasePrincipal(uri, attrs);
+      principal = secMan.createContentPrincipal(uri, attrs);
     }
 
     return principal;

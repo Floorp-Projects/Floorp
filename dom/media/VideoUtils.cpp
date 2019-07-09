@@ -17,6 +17,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/TaskQueue.h"

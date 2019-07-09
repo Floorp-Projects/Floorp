@@ -140,6 +140,8 @@ class TextInputDelegateTest : BaseSessionTest() {
     @Test fun restartInput_temporaryFocus() {
         // Our user action trick doesn't work for design-mode, so we can't test that here.
         assumeThat("Not in designmode", id, not(equalTo("#designmode")))
+        // Disable for frequent failures Bug 1542525
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
 
         mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()

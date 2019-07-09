@@ -34,7 +34,9 @@ add_task(async function test_create_login() {
 
     let browser = gBrowser.selectedBrowser;
     await ContentTask.spawn(browser, originTuple, async aOriginTuple => {
-      let createButton = content.document.querySelector("#create-login-button");
+      let createButton = content.document
+        .querySelector("login-list")
+        .shadowRoot.querySelector(".create-login-button");
       createButton.click();
       await Promise.resolve();
 
@@ -84,7 +86,7 @@ add_task(async function test_create_login() {
         ok(loginFound, "Expected number of logins found in login-list");
 
         let loginListItem = [
-          ...loginList.shadowRoot.querySelectorAll("login-list-item"),
+          ...loginList.shadowRoot.querySelectorAll(".login-list-item"),
         ].find(l => l._login.origin == aOriginTuple[1]);
         ok(
           !!loginListItem,

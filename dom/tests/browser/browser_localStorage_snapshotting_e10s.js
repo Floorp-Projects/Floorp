@@ -11,7 +11,7 @@ Services.scriptloader.loadSubScript(
 );
 
 function clearOrigin() {
-  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     HELPER_PAGE_ORIGIN
   );
   let request = Services.qms.clearStoragesForPrincipal(

@@ -1630,7 +1630,7 @@ var UITour = {
     let url = "about:newtab";
     aWindow.openLinkIn(url, "current", {
       targetBrowser: aBrowser,
-      triggeringPrincipal: Services.scriptSecurityManager.createCodebasePrincipal(
+      triggeringPrincipal: Services.scriptSecurityManager.createContentPrincipal(
         Services.io.newURI(url),
         {}
       ),

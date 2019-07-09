@@ -159,7 +159,7 @@ class MOZ_RAII FallbackStubAllocator {
 bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
                                                 JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
-  MOZ_ASSERT(jit::IsBaselineEnabled(cx));
+  MOZ_ASSERT(jit::IsBaselineInterpreterOrJitEnabled(cx));
 
   MOZ_ASSERT(numICEntries() == script->numICEntries());
 

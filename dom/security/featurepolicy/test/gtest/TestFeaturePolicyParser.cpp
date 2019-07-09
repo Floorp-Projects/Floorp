@@ -22,7 +22,7 @@ void CheckParser(const nsAString& aInput, bool aExpectedResults,
                  uint32_t aExpectedFeatures,
                  nsTArray<Feature>& aParsedFeatures) {
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(URL_SELF);
+      mozilla::BasePrincipal::CreateContentPrincipal(URL_SELF);
   nsTArray<Feature> parsedFeatures;
   ASSERT_TRUE(FeaturePolicyParser::ParseString(aInput, nullptr, principal,
                                                principal, parsedFeatures) ==
@@ -35,11 +35,11 @@ void CheckParser(const nsAString& aInput, bool aExpectedResults,
 TEST(FeaturePolicyParser, Basic)
 {
   nsCOMPtr<nsIPrincipal> selfPrincipal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(URL_SELF);
+      mozilla::BasePrincipal::CreateContentPrincipal(URL_SELF);
   nsCOMPtr<nsIPrincipal> exampleComPrincipal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(URL_EXAMPLE_COM);
+      mozilla::BasePrincipal::CreateContentPrincipal(URL_EXAMPLE_COM);
   nsCOMPtr<nsIPrincipal> exampleNetPrincipal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(URL_EXAMPLE_NET);
+      mozilla::BasePrincipal::CreateContentPrincipal(URL_EXAMPLE_NET);
 
   nsTArray<Feature> parsedFeatures;
 

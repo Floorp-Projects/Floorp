@@ -62,45 +62,45 @@ add_task(async function do_test() {
   );
 
   // test the default permission was applied.
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN,
     {}
   );
-  let principalHttps = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principalHttps = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN_HTTPS,
     {}
   );
-  let principal2 = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal2 = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN_2,
     {}
   );
-  let principal3 = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal3 = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN_3,
     {}
   );
 
   let attrs = { inIsolatedMozBrowser: true };
-  let principal4 = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal4 = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN,
     attrs
   );
-  let principal5 = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal5 = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN_3,
     attrs
   );
 
   attrs = { userContextId: 1 };
-  let principal6 = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal6 = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN,
     attrs
   );
   attrs = { firstPartyDomain: "cnn.com" };
-  let principal7 = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal7 = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN,
     attrs
   );
   attrs = { userContextId: 1, firstPartyDomain: "cnn.com" };
-  let principal8 = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal8 = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN,
     attrs
   );
@@ -393,7 +393,7 @@ function checkCapabilityViaDB(
 // value (ie, the "capability" in nsIPermission parlance) or null if it can't
 // be found.
 function findCapabilityViaDB(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     origin,
     {}
   );

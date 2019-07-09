@@ -156,21 +156,18 @@ void MediaEngineRemoteVideoSource::SetName(nsString aName) {
     facingMode = GetFacingMode(mDeviceName);
   }
 
-  if (facingMode.isSome()) {
-    mFacingMode.Assign(NS_ConvertUTF8toUTF16(
-        dom::VideoFacingModeEnumValues::strings[uint32_t(*facingMode)].value));
-  } else {
-    mFacingMode.Truncate();
-  }
+  mFacingMode = facingMode.map([](const auto& aFM) {
+    return NS_ConvertUTF8toUTF16(
+        dom::VideoFacingModeEnumValues::strings[uint32_t(aFM)].value);
+  });
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::SetName (facingMode updater)",
-      [settings = mSettings, hasFacingMode = facingMode.isSome(),
-       mode = mFacingMode]() {
-        if (!hasFacingMode) {
+      [settings = mSettings, mode = mFacingMode]() {
+        if (mode.isNothing()) {
           settings->mFacingMode.Reset();
           return;
         }
-        settings->mFacingMode.Construct(mode);
+        settings->mFacingMode.Construct(*mode);
       }));
 }
 
@@ -661,7 +658,7 @@ uint32_t MediaEngineRemoteVideoSource::GetFitnessDistance(
 
   typedef MediaConstraintsHelper H;
   uint64_t distance =
-      uint64_t(H::FitnessDistance(aDeviceId, aConstraints.mDeviceId)) +
+      uint64_t(H::FitnessDistance(Some(aDeviceId), aConstraints.mDeviceId)) +
       uint64_t(H::FitnessDistance(mFacingMode, aConstraints.mFacingMode)) +
       uint64_t(aCandidate.width ? H::FitnessDistance(int32_t(aCandidate.width),
                                                      aConstraints.mWidth)
@@ -687,7 +684,7 @@ uint32_t MediaEngineRemoteVideoSource::GetFeasibilityDistance(
 
   typedef MediaConstraintsHelper H;
   uint64_t distance =
-      uint64_t(H::FitnessDistance(aDeviceId, aConstraints.mDeviceId)) +
+      uint64_t(H::FitnessDistance(Some(aDeviceId), aConstraints.mDeviceId)) +
       uint64_t(H::FitnessDistance(mFacingMode, aConstraints.mFacingMode)) +
       uint64_t(aCandidate.width
                    ? H::FeasibilityDistance(int32_t(aCandidate.width),

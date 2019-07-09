@@ -30,3 +30,4 @@ load 1509442.html
 load 1511130.html
 load 1510848.html
 load 1516292.html
+skip-if(Android) pref(media.getusermedia.browser.enabled,true) load 1560207.html # No tabshare on Android
