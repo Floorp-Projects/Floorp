@@ -1836,8 +1836,16 @@ class RuntimeScriptData final {
 
   void traceChildren(JSTracer* trc);
 
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script);
+
   // Mark this RuntimeScriptData for use in a new zone.
   void markForCrossZone(JSContext* cx);
+
+  static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
+                              js::frontend::BytecodeEmitter* bce,
+                              uint32_t nslots);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(this) + mallocSizeOf(ssd_.get());
@@ -2150,8 +2158,16 @@ class JSScript : public js::gc::TenuredCell {
                                      js::MutableHandleScript scriptp);
 
   template <js::XDRMode mode>
+  friend js::XDRResult js::RuntimeScriptData::XDR(js::XDRState<mode>* xdr,
+                                                  js::HandleScript script);
+
+  template <js::XDRMode mode>
   friend js::XDRResult js::SharedScriptData::XDR(js::XDRState<mode>* xdr,
                                                  js::HandleScript script);
+
+  friend bool js::RuntimeScriptData::InitFromEmitter(
+      JSContext* cx, js::HandleScript script,
+      js::frontend::BytecodeEmitter* bce, uint32_t nslot);
 
   friend bool js::SharedScriptData::InitFromEmitter(
       JSContext* cx, js::HandleScript script,
@@ -2835,10 +2851,10 @@ class JSScript : public js::gc::TenuredCell {
  private:
   bool createJitScript(JSContext* cx);
 
+  bool createScriptData(JSContext* cx, uint32_t natoms);
   bool createSharedScriptData(JSContext* cx, uint32_t codeLength,
-                              uint32_t noteLength, uint32_t natoms,
-                              uint32_t numResumeOffsets, uint32_t numScopeNotes,
-                              uint32_t numTryNotes);
+                              uint32_t noteLength, uint32_t numResumeOffsets,
+                              uint32_t numScopeNotes, uint32_t numTryNotes);
   bool shareScriptData(JSContext* cx);
   void freeScriptData();
 
