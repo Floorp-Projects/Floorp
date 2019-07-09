@@ -2661,8 +2661,6 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
         MOZ_FALLTHROUGH;
       }
       case MDefinition::Opcode::StoreElement:
-      case MDefinition::Opcode::StoreElementHole:
-      case MDefinition::Opcode::FallibleStoreElement:
       case MDefinition::Opcode::LoadElement:
       case MDefinition::Opcode::LoadElementHole:
       case MDefinition::Opcode::LoadUnboxedScalar:
@@ -2696,6 +2694,18 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
       case MDefinition::Opcode::Abs:
       case MDefinition::Opcode::TruncateToInt32:
         // Always allowed to remove check. No matter which operand.
+        break;
+      case MDefinition::Opcode::StoreElementHole:
+      case MDefinition::Opcode::FallibleStoreElement:
+        // Only allowed to remove check when definition is the third operand.
+        for (size_t i = 0, e = use_def->numOperands(); i < e; i++) {
+          if (i == 2) {
+            continue;
+          }
+          if (use_def->getOperand(i) == def) {
+            return true;
+          }
+        }
         break;
       default:
         return true;
