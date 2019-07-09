@@ -12,6 +12,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "extensions.abuseReport.enabled",
   false
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "HTML_ABOUTADDONS_ENABLED",
+  "extensions.htmlaboutaddons.enabled",
+  false
+);
 
 let extData = {
   manifest: {
@@ -202,7 +208,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     );
     is(
       reportExtension.hidden,
-      !ABUSE_REPORT_ENABLED || !visible,
+      !ABUSE_REPORT_ENABLED || !HTML_ABOUTADDONS_ENABLED || !visible,
       `Report Extension should be ${expected}`
     );
     is(
@@ -228,16 +234,21 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     );
     await closeChromeContextMenu(menuId, manageExtension, win);
     let managerWindow = (await addonManagerPromise).linkedBrowser.contentWindow;
-
-    // Check the UI to make sure that the correct view is loaded.
-    is(
-      managerWindow.gViewController.currentViewId,
-      `addons://detail/${encodeURIComponent(id)}`,
-      "Expected extension details view in about:addons"
-    );
-    // In HTML about:addons, the default view does not show the inline
-    // options browser, so we should not receive an "options-loaded" event.
-    // (if we do, the test will fail due to the unexpected message).
+    if (managerWindow.useHtmlViews) {
+      // Check the UI to make sure that the correct view is loaded.
+      is(
+        managerWindow.gViewController.currentViewId,
+        `addons://detail/${encodeURIComponent(id)}`,
+        "Expected extension details view in about:addons"
+      );
+      // In HTML about:addons, the default view does not show the inline
+      // options browser, so we should not receive an "options-loaded" event.
+      // (if we do, the test will fail due to the unexpected message).
+    } else {
+      info("Waiting for inline options page in XUL about:addons");
+      // In XUL about:addons, the inline options page is shown by default.
+      await extension.awaitMessage("options-loaded");
+    }
 
     info(
       `Remove the opened tab, and await customize mode to be restored if necessary`
@@ -564,7 +575,10 @@ add_task(async function browseraction_contextmenu_remove_extension() {
 // mode enabled).
 add_task(async function browseraction_contextmenu_report_extension() {
   SpecialPowers.pushPrefEnv({
-    set: [["extensions.abuseReport.enabled", true]],
+    set: [
+      ["extensions.htmlaboutaddons.enabled", true],
+      ["extensions.abuseReport.enabled", true],
+    ],
   });
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let id = "addon_id@example.com";
