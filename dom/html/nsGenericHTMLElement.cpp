@@ -523,12 +523,10 @@ bool nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(
     EventChainVisitor& aVisitor) {
   MOZ_ASSERT(nsCOMPtr<Link>(do_QueryObject(this)),
              "should be called only when |this| implements |Link|");
-
   if (!aVisitor.mPresContext) {
-    // We need a pres context to do link stuff. Some events (e.g. mutation
-    // events) don't have one.
-    // XXX: ideally, shouldn't we be able to do what we need without one?
-    return false;
+    // When disconnected, only <a> should navigate away per
+    // https://html.spec.whatwg.org/#cannot-navigate
+    return IsInComposedDoc() || IsHTMLElement(nsGkAtoms::a);
   }
 
   // Need to check if we hit an imagemap area and if so see if we're handling
