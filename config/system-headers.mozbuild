@@ -1330,6 +1330,7 @@ if CONFIG['MOZ_SYSTEM_ICU']:
         'unicode/udatpg.h',
         'unicode/udisplaycontext.h',
         'unicode/uenum.h',
+        'unicode/uformattedvalue.h',
         'unicode/unistr.h',
         'unicode/unorm.h',
         'unicode/unum.h',
