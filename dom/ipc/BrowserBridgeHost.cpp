@@ -59,12 +59,11 @@ void BrowserBridgeHost::DestroyComplete() {
 }
 
 bool BrowserBridgeHost::Show(const ScreenIntSize& aSize, bool aParentIsActive) {
-  RefPtr<Element> owner = mBridge->GetFrameLoader()->GetOwnerContent();
-  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForContent(owner);
+  nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    widget = nsContentUtils::WidgetForDocument(owner->OwnerDoc());
+    NS_WARNING("No widget found in BrowserBridgeHost::Show");
+    return false;
   }
-  MOZ_DIAGNOSTIC_ASSERT(widget);
   nsSizeMode sizeMode = widget ? widget->SizeMode() : nsSizeMode_Normal;
 
   Unused << mBridge->SendShow(aSize, aParentIsActive, sizeMode);
@@ -73,12 +72,11 @@ bool BrowserBridgeHost::Show(const ScreenIntSize& aSize, bool aParentIsActive) {
 
 void BrowserBridgeHost::UpdateDimensions(const nsIntRect& aRect,
                                          const ScreenIntSize& aSize) {
-  RefPtr<Element> owner = mBridge->GetFrameLoader()->GetOwnerContent();
-  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForContent(owner);
+  nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    widget = nsContentUtils::WidgetForDocument(owner->OwnerDoc());
+    NS_WARNING("No widget found in BrowserBridgeHost::UpdateDimensions");
+    return;
   }
-  MOZ_DIAGNOSTIC_ASSERT(widget);
 
   CSSToLayoutDeviceScale widgetScale = widget->GetDefaultScale();
 
@@ -107,6 +105,15 @@ void BrowserBridgeHost::UpdateEffects(EffectsInfo aEffects) {
   }
   mEffectsInfo = aEffects;
   Unused << mBridge->SendUpdateEffects(mEffectsInfo);
+}
+
+already_AddRefed<nsIWidget> BrowserBridgeHost::GetWidget() const {
+  RefPtr<Element> owner = mBridge->GetFrameLoader()->GetOwnerContent();
+  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForContent(owner);
+  if (!widget) {
+    widget = nsContentUtils::WidgetForDocument(owner->OwnerDoc());
+  }
+  return widget.forget();
 }
 
 }  // namespace dom
