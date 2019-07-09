@@ -8,6 +8,8 @@ default-preferences pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,
 == viewport-width.html initial-scale-0_5-ref.html
 == initial-scale-1.html no-zoom-ref.html
 == minimum-scale.html no-zoom-ref.html
+== invalid-width.html invalid-width-ref.html
+== device-height-for-width.html invalid-width-ref.html
 == negative-initial-and-maximum-scale.html initial-scale-0_5-ref.html
 == no-scalable-with-minimum-scale.html no-scalable-with-minimum-scale-ref.html
 == clamped-by-default-minimum-scale.html initial-scale-0_25-ref.html

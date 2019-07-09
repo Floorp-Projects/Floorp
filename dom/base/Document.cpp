@@ -9525,7 +9525,7 @@ void Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
   //    the range: [1px, 10000px]
   // 2. Negative number values are dropped
   // 3. device-width and device-height translate to 100vw and 100vh respectively
-  // 4. Other keywords and unknown values translate to 1px
+  // 4. Other keywords and unknown values are also dropped
   mMinWidth = nsViewportInfo::Auto;
   mMaxWidth = nsViewportInfo::Auto;
   if (!aWidthString.IsEmpty()) {
@@ -9536,7 +9536,7 @@ void Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
       nsresult widthErrorCode;
       mMaxWidth = aWidthString.ToInteger(&widthErrorCode);
       if (NS_FAILED(widthErrorCode)) {
-        mMaxWidth = 1.0f;
+        mMaxWidth = nsViewportInfo::Auto;
       } else if (mMaxWidth >= 0.0f) {
         mMaxWidth = clamped(mMaxWidth, CSSCoord(1.0f), CSSCoord(10000.0f));
       } else {
@@ -9563,7 +9563,7 @@ void Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
       nsresult heightErrorCode;
       mMaxHeight = aHeightString.ToInteger(&heightErrorCode);
       if (NS_FAILED(heightErrorCode)) {
-        mMaxHeight = 1.0f;
+        mMaxHeight = nsViewportInfo::Auto;
       } else if (mMaxHeight >= 0.0f) {
         mMaxHeight = clamped(mMaxHeight, CSSCoord(1.0f), CSSCoord(10000.0f));
       } else {
