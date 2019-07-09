@@ -31,7 +31,7 @@ class MediaNotificationTest {
             ))
 
         val notification = MediaNotification(testContext)
-            .create(state)
+            .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
         assertEquals("Mozilla", notification.title)
@@ -50,7 +50,7 @@ class MediaNotificationTest {
             ))
 
         val notification = MediaNotification(testContext)
-            .create(state)
+            .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
         assertEquals("Mozilla", notification.title)
@@ -65,7 +65,7 @@ class MediaNotificationTest {
         val state = MediaState.None
 
         MediaNotification(testContext)
-            .create(state)
+            .create(state, mock())
     }
 
     @Test
@@ -77,7 +77,7 @@ class MediaNotificationTest {
             ))
 
         val notification = MediaNotification(testContext)
-            .create(state)
+            .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
         assertEquals("https://www.mozilla.org", notification.title)

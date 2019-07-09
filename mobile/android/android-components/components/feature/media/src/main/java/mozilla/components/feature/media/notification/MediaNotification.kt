@@ -8,6 +8,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import mozilla.components.browser.session.Session
@@ -26,7 +27,7 @@ internal class MediaNotification(
     /**
      * Creates a new [Notification] for the given [state].
      */
-    fun create(state: MediaState): Notification {
+    fun create(state: MediaState, mediaSession: MediaSessionCompat): Notification {
         MediaNotificationChannel.ensureChannelExists(context)
 
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
@@ -41,6 +42,8 @@ internal class MediaNotification(
             .setContentIntent(pendingIntent)
             .setLargeIcon(data.largeIcon)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
+                .setMediaSession(mediaSession.sessionToken))
             .build()
     }
 }
