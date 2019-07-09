@@ -514,10 +514,9 @@ class BaselineCodeGen {
 
   MOZ_MUST_USE bool emitHandleCodeCoverageAtPrologue();
 
-  void emitInitFrameFields();
+  void emitInitFrameFields(Register nonFunctionEnv);
   void emitIsDebuggeeCheck();
   void emitInitializeLocals();
-  void emitPreInitEnvironmentChain(Register nonFunctionEnv);
 
   void emitProfilerEnterFrame();
   void emitProfilerExitFrame();

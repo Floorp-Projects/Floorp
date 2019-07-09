@@ -1162,8 +1162,8 @@ bool BaselineCodeGen<Handler>::emitDebugPrologue() {
 }
 
 template <>
-void BaselineCompilerCodeGen::emitPreInitEnvironmentChain(
-    Register nonFunctionEnv) {
+void BaselineCompilerCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
+  masm.store32(Imm32(0), frame.addressOfFlags());
   if (handler.function()) {
     masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
   } else {
@@ -1172,27 +1172,10 @@ void BaselineCompilerCodeGen::emitPreInitEnvironmentChain(
 }
 
 template <>
-void BaselineInterpreterCodeGen::emitPreInitEnvironmentChain(
-    Register nonFunctionEnv) {
-  Label notFunction, done;
-  masm.branchTestPtr(Assembler::NonZero, frame.addressOfCalleeToken(),
-                     Imm32(CalleeTokenScriptBit), &notFunction);
-  {
-    masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
-    masm.jump(&done);
-  }
-  masm.bind(&notFunction);
-  { masm.storePtr(nonFunctionEnv, frame.addressOfEnvironmentChain()); }
-  masm.bind(&done);
-}
+void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
+  MOZ_ASSERT(nonFunctionEnv == R1.scratchReg(),
+             "Don't clobber nonFunctionEnv below");
 
-template <>
-void BaselineCompilerCodeGen::emitInitFrameFields() {
-  masm.store32(Imm32(0), frame.addressOfFlags());
-}
-
-template <>
-void BaselineInterpreterCodeGen::emitInitFrameFields() {
   // If we have a dedicated PC register we use it as scratch1 to avoid a
   // register move below.
   Register scratch1 =
@@ -1211,12 +1194,14 @@ void BaselineInterpreterCodeGen::emitInitFrameFields() {
     // CalleeToken_Function or CalleeToken_FunctionConstructing.
     masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
     masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
+    masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
     masm.jump(&done);
   }
   masm.bind(&notFunction);
   {
     // CalleeToken_Script.
     masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+    masm.storePtr(nonFunctionEnv, frame.addressOfEnvironmentChain());
   }
   masm.bind(&done);
   masm.storePtr(scratch1, frame.addressOfInterpreterScript());
@@ -6718,18 +6703,12 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   masm.moveStackPtrTo(BaselineFrameReg);
   masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
 
-  // Initialize BaselineFrame. For eval scripts, the env chain
-  // is passed in R1, so we have to be careful not to clobber it.
-
-  // Initialize BaselineFrame::flags and interpreter fields.
-  emitInitFrameFields();
-
-  // Handle env chain pre-initialization (in case GC gets run
-  // during stack check).  For global and eval scripts, the env
-  // chain is in R1.  For function scripts, the env chain is in
-  // the callee, nullptr is stored for now so that GC doesn't choke
-  // on a bogus EnvironmentChain value in the frame.
-  emitPreInitEnvironmentChain(R1.scratchReg());
+  // Initialize BaselineFrame. Also handles env chain pre-initialization (in
+  // case GC gets run during stack check). For global and eval scripts, the env
+  // chain is in R1. For function scripts, the env chain is in the callee,
+  // nullptr is stored for now so that GC doesn't choke on a bogus
+  // EnvironmentChain value in the frame.
+  emitInitFrameFields(R1.scratchReg());
 
   if (!emitIncExecutionProgressCounter(R2.scratchReg())) {
     return false;
