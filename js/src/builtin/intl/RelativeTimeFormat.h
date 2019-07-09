@@ -62,7 +62,7 @@ extern MOZ_MUST_USE bool intl_RelativeTimeFormat_availableLocales(
  * |numeric| should be "always" or "auto".
  *
  * Usage: formatted = intl_FormatRelativeTime(relativeTimeFormat, t,
- *                                            unit, numeric, formatToParts)
+ *                                            unit, numeric)
  */
 extern MOZ_MUST_USE bool intl_FormatRelativeTime(JSContext* cx, unsigned argc,
                                                  JS::Value* vp);
