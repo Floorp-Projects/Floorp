@@ -4894,7 +4894,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitLexicalScope(
             ? ScopeKind::SimpleCatch
             : ScopeKind::Catch;
   } else {
-    kind = ScopeKind::Lexical;
+    kind = lexicalScope->kind();
   }
 
   if (!lse.emitScope(kind, lexicalScope->scopeBindings())) {

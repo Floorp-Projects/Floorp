@@ -1283,7 +1283,8 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
       case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
-      case ScopeKind::StrictNamedLambda: {
+      case ScopeKind::StrictNamedLambda:
+      case ScopeKind::FunctionLexical: {
         LexicalScope::Data& data = scope->as<LexicalScope>().data();
         names = &data.trailingNames;
         length = data.length;

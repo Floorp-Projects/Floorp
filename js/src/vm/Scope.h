@@ -60,6 +60,7 @@ enum class ScopeKind : uint8_t {
   Catch,
   NamedLambda,
   StrictNamedLambda,
+  FunctionLexical,
 
   // WithScope
   With,
@@ -91,6 +92,7 @@ static inline bool ScopeKindIsCatch(ScopeKind kind) {
 static inline bool ScopeKindIsInBody(ScopeKind kind) {
   return kind == ScopeKind::Lexical || kind == ScopeKind::SimpleCatch ||
          kind == ScopeKind::Catch || kind == ScopeKind::With ||
+         kind == ScopeKind::FunctionLexical ||
          kind == ScopeKind::FunctionBodyVar ||
          kind == ScopeKind::ParameterExpressionVar;
 }
@@ -483,7 +485,8 @@ template <>
 inline bool Scope::is<LexicalScope>() const {
   return kind_ == ScopeKind::Lexical || kind_ == ScopeKind::SimpleCatch ||
          kind_ == ScopeKind::Catch || kind_ == ScopeKind::NamedLambda ||
-         kind_ == ScopeKind::StrictNamedLambda;
+         kind_ == ScopeKind::StrictNamedLambda ||
+         kind_ == ScopeKind::FunctionLexical;
 }
 
 //
@@ -1039,6 +1042,7 @@ void Scope::applyScopeDataTyped(F&& f) {
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
+      case ScopeKind::FunctionLexical:
         f(&as<LexicalScope>().data());
         break;
       case ScopeKind::With:
