@@ -735,8 +735,8 @@ extern "C" fn audiounit_property_listener_callback(
     }
 
     for _addr in addrs.iter() {
-        let _dev_cb_lock = AutoLock::new(&mut stm.device_changed_callback_lock);
-        if let Some(device_changed_callback) = stm.device_changed_callback {
+        let callback = stm.device_changed_callback.lock().unwrap();
+        if let Some(device_changed_callback) = *callback {
             unsafe {
                 device_changed_callback(stm.user_ptr);
             }
@@ -2923,8 +2923,7 @@ struct AudioUnitStream<'ctx> {
 
     data_callback: ffi::cubeb_data_callback,
     state_callback: ffi::cubeb_state_callback,
-    device_changed_callback: ffi::cubeb_device_changed_callback,
-    device_changed_callback_lock: OwnedCriticalSection,
+    device_changed_callback: Mutex<ffi::cubeb_device_changed_callback>,
     // Stream creation parameters
     input_stream_params: StreamParams,
     output_stream_params: StreamParams,
@@ -2991,8 +2990,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             user_ptr,
             data_callback,
             state_callback,
-            device_changed_callback: None,
-            device_changed_callback_lock: OwnedCriticalSection::new(),
+            device_changed_callback: Mutex::new(None),
             input_stream_params: StreamParams::from(ffi::cubeb_stream_params {
                 format: ffi::CUBEB_SAMPLE_FLOAT32NE,
                 rate: 0,
@@ -3044,7 +3042,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
     }
 
     fn init_mutex(&mut self) {
-        self.device_changed_callback_lock.init();
         self.mutex.init();
     }
 
@@ -4371,11 +4368,11 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         &mut self,
         device_changed_callback: ffi::cubeb_device_changed_callback,
     ) -> Result<()> {
-        let _dev_cb_lock = AutoLock::new(&mut self.device_changed_callback_lock);
+        let mut callback = self.device_changed_callback.lock().unwrap();
         // Note: second register without unregister first causes 'nope' error.
         // Current implementation requires unregister before register a new cb.
-        assert!(device_changed_callback.is_none() || self.device_changed_callback.is_none());
-        self.device_changed_callback = device_changed_callback;
+        assert!(device_changed_callback.is_none() || callback.is_none());
+        *callback = device_changed_callback;
         Ok(())
     }
 }
