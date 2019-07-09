@@ -16,6 +16,7 @@ slow script test262/built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js
 skip-if((xulRuntime.XPCOMABI.match(/aarch64/))&&(xulRuntime.OS=="WINNT")) script non262/Math/fround.js
 skip-if((xulRuntime.XPCOMABI.match(/aarch64/))&&(xulRuntime.OS=="WINNT")) script non262/Math/log2-approx.js
 
+
 ###########################################################################
 # Generated jstests.list for test262 when inline |reftest| isn't possible #
 ###########################################################################
@@ -435,9 +436,6 @@ skip script test262/annexB/built-ins/Function/createdynfn-no-line-terminator-htm
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1462745
 skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
-skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508683
 skip script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
