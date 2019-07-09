@@ -13,7 +13,8 @@ import mozilla.components.browser.session.SessionManager
  */
 class WebAppUseCases(
     private val applicationContext: Context,
-    sessionManager: SessionManager
+    sessionManager: SessionManager,
+    supportWebApps: Boolean = true
 ) {
 
     fun isPinningSupported() =
@@ -30,9 +31,13 @@ class WebAppUseCases(
      */
     class AddToHomescreenUseCase internal constructor(
         private val applicationContext: Context,
-        private val sessionManager: SessionManager
+        private val sessionManager: SessionManager,
+        supportWebApps: Boolean
     ) {
-        private val shortcutManager = WebAppShortcutManager(ManifestStorage(applicationContext))
+        private val shortcutManager = WebAppShortcutManager(
+            ManifestStorage(applicationContext),
+            supportWebApps
+        )
 
         suspend operator fun invoke() {
             val session = sessionManager.selectedSession ?: return
@@ -40,5 +45,5 @@ class WebAppUseCases(
         }
     }
 
-    val addToHomescreen by lazy { AddToHomescreenUseCase(applicationContext, sessionManager) }
+    val addToHomescreen by lazy { AddToHomescreenUseCase(applicationContext, sessionManager, supportWebApps) }
 }

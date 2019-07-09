@@ -19,7 +19,8 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.ext.installableManifest
 
 class WebAppShortcutManager(
-    private val storage: ManifestStorage
+    private val storage: ManifestStorage,
+    private val supportWebApps: Boolean = true
 ) {
 
     /**
@@ -28,7 +29,7 @@ class WebAppShortcutManager(
     suspend fun requestPinShortcut(context: Context, session: Session) {
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
             val manifest = session.installableManifest()
-            val shortcut = if (manifest != null) {
+            val shortcut = if (supportWebApps && manifest != null) {
                 buildWebAppShortcut(context, manifest)
             } else {
                 buildBasicShortcut(context, session)
