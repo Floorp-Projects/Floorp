@@ -45,6 +45,8 @@ function Notification(context, notificationsMap, id, options) {
     );
   } catch (e) {
     // This will fail if alerts aren't available on the system.
+
+    this.observe(null, "alertfinished", id);
   }
 }
 
