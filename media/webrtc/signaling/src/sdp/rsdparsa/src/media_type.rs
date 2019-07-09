@@ -61,7 +61,6 @@ pub enum SdpProtocolValue {
     DtlsSctp,
     UdpDtlsSctp,
     TcpDtlsSctp,
-    TcpTlsRtpSavpf, /* not standardized - to be removed */
 }
 
 impl ToString for SdpProtocolValue {
@@ -78,7 +77,6 @@ impl ToString for SdpProtocolValue {
             SdpProtocolValue::DtlsSctp => "DTLS/SCTP",
             SdpProtocolValue::UdpDtlsSctp => "UDP/DTLS/SCTP",
             SdpProtocolValue::TcpDtlsSctp => "TCP/DTLS/SCTP",
-            SdpProtocolValue::TcpTlsRtpSavpf => "TCP/TLS/RTP/SAVPF",
         }
         .to_string()
     }
@@ -322,8 +320,6 @@ fn parse_protocol_token(value: &str) -> Result<SdpProtocolValue, SdpParserIntern
         "DTLS/SCTP" => SdpProtocolValue::DtlsSctp,
         "UDP/DTLS/SCTP" => SdpProtocolValue::UdpDtlsSctp,
         "TCP/DTLS/SCTP" => SdpProtocolValue::TcpDtlsSctp,
-        /* to be removed */
-        "TCP/TLS/RTP/SAVPF" => SdpProtocolValue::TcpTlsRtpSavpf,
         _ => {
             return Err(SdpParserInternalError::Unsupported(format!(
                 "unsupported protocol value: {}",
