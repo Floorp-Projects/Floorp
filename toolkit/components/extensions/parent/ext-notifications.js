@@ -21,6 +21,10 @@ function Notification(context, notificationsMap, id, options) {
     imageURL = context.extension.baseURI.resolve(options.iconUrl);
   }
 
+  // Set before calling into nsIAlertsService, because the notification may be
+  // closed during the call.
+  notificationsMap.set(id, this);
+
   try {
     let svc = Cc["@mozilla.org/alerts-service;1"].getService(
       Ci.nsIAlertsService
@@ -36,7 +40,8 @@ function Notification(context, notificationsMap, id, options) {
       undefined,
       undefined,
       undefined,
-      context.principal // ensures that Close button is shown on macOS.
+      context.principal, // ensures that Close button is shown on macOS.
+      context.incognito
     );
   } catch (e) {
     // This will fail if alerts aren't available on the system.
@@ -101,13 +106,7 @@ this.notifications = class extends ExtensionAPI {
             notificationsMap.get(notificationId).clear();
           }
 
-          let notification = new Notification(
-            context,
-            notificationsMap,
-            notificationId,
-            options
-          );
-          notificationsMap.set(notificationId, notification);
+          new Notification(context, notificationsMap, notificationId, options);
 
           return Promise.resolve(notificationId);
         },
