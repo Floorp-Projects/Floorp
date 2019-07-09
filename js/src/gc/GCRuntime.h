@@ -51,14 +51,16 @@ class WeakCacheSweepIterator;
 enum IncrementalProgress { NotFinished = 0, Finished };
 
 // Interface to a sweep action.
-//
-// Note that we don't need perfect forwarding for args here because the
-// types are not deduced but come ultimately from the type of a function pointer
-// passed to SweepFunc.
-template <typename... Args>
 struct SweepAction {
+  // The arguments passed to each action.
+  struct Args {
+    GCRuntime* gc;
+    FreeOp* fop;
+    SliceBudget& budget;
+  };
+
   virtual ~SweepAction() {}
-  virtual IncrementalProgress run(Args... args) = 0;
+  virtual IncrementalProgress run(Args& state) = 0;
   virtual void assertFinished() const = 0;
   virtual bool shouldSkip() { return false; }
 };
@@ -897,8 +899,7 @@ class GCRuntime {
 
   MainThreadData<JS::Zone*> sweepGroups;
   MainThreadOrGCTaskData<JS::Zone*> currentSweepGroup;
-  MainThreadData<UniquePtr<SweepAction<GCRuntime*, FreeOp*, SliceBudget&>>>
-      sweepActions;
+  MainThreadData<UniquePtr<SweepAction>> sweepActions;
   MainThreadOrGCTaskData<JS::Zone*> sweepZone;
   MainThreadOrGCTaskData<AllocKind> sweepAllocKind;
   MainThreadData<mozilla::Maybe<AtomsTable::SweepIterator>> maybeAtomsToSweep;
