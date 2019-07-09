@@ -234,9 +234,9 @@ bool MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget) {
   }
 
   RefPtr<IDXGIFactory2> dxgiFactory2;
-  if (StaticPrefs::gfx_direct3d11_use_double_buffering() &&
+  if (gfxVars::UseDoubleBufferingWithCompositor() &&
       SUCCEEDED(dxgiFactory->QueryInterface(dxgiFactory2.StartAssignment())) &&
-      dxgiFactory2 && IsWin10OrLater() && XRE_IsGPUProcess()) {
+      dxgiFactory2 && XRE_IsGPUProcess()) {
     // DXGI_SCALING_NONE is not available on Windows 7 with the Platform Update:
     // This looks awful for things like the awesome bar and browser window
     // resizing, so we don't use a flip buffer chain here. (Note when using
