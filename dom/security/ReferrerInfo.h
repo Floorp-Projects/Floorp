@@ -256,11 +256,52 @@ class ReferrerInfo : public nsIReferrerInfo {
   bool IsPolicyOverrided() { return mOverridePolicyByDefault; }
 
   /*
+   *  Get origin string from a given valid referrer URI (http, https, ftp)
+   *
+   *  @aReferrer - the full referrer URI
+   *  @aResult - the resulting aReferrer in string format.
+   */
+  nsresult GetOriginFromReferrerURI(nsIURI* aReferrer,
+                                    nsACString& aResult) const;
+
+  /*
    * Trim a given referrer with a given a trimming policy,
    */
-  nsresult TrimReferrerWithPolicy(nsCOMPtr<nsIURI>& aReferrer,
+  nsresult TrimReferrerWithPolicy(nsIURI* aReferrer,
                                   TrimmingPolicy aTrimmingPolicy,
                                   nsACString& aResult) const;
+
+  /*
+   *  Limit referrer length using the following ruleset:
+   *   - If the length of referrer URL is over max length, strip down to origin.
+   *   - If the origin is still over max length, remove the referrer entirely.
+   *
+   *  This function comlements TrimReferrerPolicy and needs to be called right
+   *  after TrimReferrerPolicy.
+   *
+   *  @aChannel - used to query information needed for logging to the console.
+   *  @aReferrer - the full referrer URI; needs to be identical to aReferrer
+   *               passed to TrimReferrerPolicy.
+   *  @aTrimmingPolicy - represents the trimming policy which was applied to the
+   *                     referrer; needs to be identical to aTrimmingPolicy
+   *                     passed to TrimReferrerPolicy.
+   *  @aInAndOutTrimmedReferrer -  an in and outgoing argument representing the
+   *                               referrer value. Please pass the result of
+   *                               TrimReferrerWithPolicy as
+   *                               aInAndOutTrimmedReferrer which will then be
+   *                               reduced to the origin or completely truncated
+   *                               in case the referrer value exceeds the length
+   *                               limitation.
+   */
+  nsresult LimitReferrerLength(nsIHttpChannel* aChannel, nsIURI* aReferrer,
+                               TrimmingPolicy aTrimmingPolicy,
+                               nsACString& aInAndOutTrimmedReferrer) const;
+
+  /*
+   * Write message to the error console
+   */
+  void LogMessageToConsole(nsIHttpChannel* aChannel, const char* aMsg,
+                           const nsTArray<nsString>& aParams) const;
 
   nsCOMPtr<nsIURI> mOriginalReferrer;
 

@@ -11,7 +11,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIURIFixup.h"
 #include "nsIURL.h"
-#include "nsIURIMutator.h"
 
 #include "nsWhitespaceTokenizer.h"
 #include "nsAlgorithm.h"
@@ -43,6 +42,8 @@ NS_IMPL_ISUPPORTS_CI(ReferrerInfo, nsIReferrerInfo, nsISerializable)
 #define DEFAULT_PRIVATE_RP 2
 #define DEFAULT_TRACKER_PRIVATE_RP 2
 
+#define DEFAULT_REFERRER_HEADER_LENGTH_LIMIT 4096
+
 #define MAX_REFERRER_SENDING_POLICY 2
 #define MAX_CROSS_ORIGIN_SENDING_POLICY 2
 #define MAX_TRIMMING_POLICY 2
@@ -62,6 +63,7 @@ static uint32_t sUserReferrerSendingPolicy = 0;
 static uint32_t sUserXOriginSendingPolicy = 0;
 static uint32_t sUserTrimmingPolicy = 0;
 static uint32_t sUserXOriginTrimmingPolicy = 0;
+static uint32_t sReferrerHeaderLimit = DEFAULT_REFERRER_HEADER_LENGTH_LIMIT;
 
 static void CachePreferrenceValue() {
   static bool sPrefCached = false;
@@ -75,6 +77,9 @@ static void CachePreferrenceValue() {
                                "network.http.referer.hideOnionSource");
   Preferences::AddUintVarCache(&sUserReferrerSendingPolicy,
                                "network.http.sendRefererHeader");
+  Preferences::AddUintVarCache(&sReferrerHeaderLimit,
+                               "network.http.referer.referrerLengthLimit",
+                               DEFAULT_REFERRER_HEADER_LENGTH_LIMIT);
   sUserReferrerSendingPolicy =
       clamped<uint32_t>(sUserReferrerSendingPolicy, MIN_REFERRER_SENDING_POLICY,
                         MAX_REFERRER_SENDING_POLICY);
@@ -482,23 +487,64 @@ ReferrerInfo::TrimmingPolicy ReferrerInfo::ComputeTrimmingPolicy(
   return static_cast<TrimmingPolicy>(trimmingPolicy);
 }
 
-nsresult ReferrerInfo::TrimReferrerWithPolicy(nsCOMPtr<nsIURI>& aReferrer,
-                                              TrimmingPolicy aTrimmingPolicy,
-                                              nsACString& aResult) const {
-  if (aTrimmingPolicy == TrimmingPolicy::ePolicyFullURI) {
-    // use the full URI
-    return aReferrer->GetAsciiSpec(aResult);
+nsresult ReferrerInfo::LimitReferrerLength(
+    nsIHttpChannel* aChannel, nsIURI* aReferrer, TrimmingPolicy aTrimmingPolicy,
+    nsACString& aInAndOutTrimmedReferrer) const {
+  if (!sReferrerHeaderLimit) {
+    return NS_OK;
   }
 
-  // All output strings start with: scheme+host+port
-  // We want the IDN-normalized PrePath.  That's not something currently
+  if (aInAndOutTrimmedReferrer.Length() <= sReferrerHeaderLimit) {
+    return NS_OK;
+  }
+
+  nsAutoString referrerLengthLimit;
+  referrerLengthLimit.AppendInt(sReferrerHeaderLimit);
+  if (aTrimmingPolicy == ePolicyFullURI ||
+      aTrimmingPolicy == ePolicySchemeHostPortPath) {
+    // If referrer header is over max Length, down to origin
+    nsresult rv = GetOriginFromReferrerURI(aReferrer, aInAndOutTrimmedReferrer);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Step 6 within https://w3c.github.io/webappsec-referrer-policy/#strip-url
+    // states that the trailing "/" does not need to get stripped. However,
+    // GetOriginFromReferrerURI() also removes any trailing "/" hence we have to
+    // add it back here.
+    aInAndOutTrimmedReferrer.AppendLiteral("/");
+    if (aInAndOutTrimmedReferrer.Length() <= sReferrerHeaderLimit) {
+      AutoTArray<nsString, 2> params = {
+          referrerLengthLimit, NS_ConvertUTF8toUTF16(aInAndOutTrimmedReferrer)};
+      LogMessageToConsole(aChannel, "ReferrerLengthOverLimitation", params);
+      return NS_OK;
+    }
+  }
+
+  // If we end up here either the trimmingPolicy is equal to
+  // 'ePolicySchemeHostPort' or the 'origin' of any other policy is still over
+  // the length limit. If so, truncate the referrer entirely.
+  AutoTArray<nsString, 2> params = {
+      referrerLengthLimit, NS_ConvertUTF8toUTF16(aInAndOutTrimmedReferrer)};
+  LogMessageToConsole(aChannel, "ReferrerOriginLengthOverLimitation", params);
+  aInAndOutTrimmedReferrer.Truncate();
+
+  return NS_OK;
+}
+
+nsresult ReferrerInfo::GetOriginFromReferrerURI(nsIURI* aReferrer,
+                                                nsACString& aResult) const {
+  MOZ_ASSERT(aReferrer);
+  aResult.Truncate();
+  // We want the IDN-normalized PrePath. That's not something currently
   // available and there doesn't yet seem to be justification for adding it to
-  // the interfaces, so just build it up ourselves from scheme+AsciiHostPort
+  // the interfaces, so just build it up from scheme+AsciiHostPort
   nsAutoCString scheme, asciiHostPort;
   nsresult rv = aReferrer->GetScheme(scheme);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
   aResult = scheme;
   aResult.AppendLiteral("://");
   // Note we explicitly cleared UserPass above, so do not need to build it.
@@ -506,46 +552,90 @@ nsresult ReferrerInfo::TrimReferrerWithPolicy(nsCOMPtr<nsIURI>& aReferrer,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  aResult.Append(asciiHostPort);
 
-  switch (aTrimmingPolicy) {
-    case TrimmingPolicy::ePolicySchemeHostPortPath: {
-      nsCOMPtr<nsIURL> url(do_QueryInterface(aReferrer));
-      if (url) {
-        nsAutoCString path;
-        rv = url->GetFilePath(path);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        aResult.Append(path);
-        rv = NS_MutateURI(url)
-                 .SetQuery(EmptyCString())
-                 .SetRef(EmptyCString())
-                 .Finalize(aReferrer);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        break;
-      }
-      // No URL, so fall through to truncating the path and any query/ref off
-      // as well.
-    }
-      MOZ_FALLTHROUGH;
-    default:  // (User Pref limited to [0,2])
-    case TrimmingPolicy::ePolicySchemeHostPort:
-      aResult.AppendLiteral("/");
-      // This nukes any query/ref present as well in the case of nsStandardURL
-      rv = NS_MutateURI(aReferrer)
-               .SetPathQueryRef(EmptyCString())
-               .Finalize(aReferrer);
+  aResult.Append(asciiHostPort);
+  return NS_OK;
+}
+
+nsresult ReferrerInfo::TrimReferrerWithPolicy(nsIURI* aReferrer,
+                                              TrimmingPolicy aTrimmingPolicy,
+                                              nsACString& aResult) const {
+  MOZ_ASSERT(aReferrer);
+
+  if (aTrimmingPolicy == TrimmingPolicy::ePolicyFullURI) {
+    return aReferrer->GetAsciiSpec(aResult);
+  }
+
+  nsresult rv = GetOriginFromReferrerURI(aReferrer, aResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (aTrimmingPolicy == TrimmingPolicy::ePolicySchemeHostPortPath) {
+    nsCOMPtr<nsIURL> url(do_QueryInterface(aReferrer));
+    if (url) {
+      nsAutoCString path;
+      rv = url->GetFilePath(path);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      break;
+
+      aResult.Append(path);
+      return NS_OK;
+    }
   }
 
+  // Step 6 within https://w3c.github.io/webappsec-referrer-policy/#strip-url
+  // states that the trailing "/" does not need to get stripped. However,
+  // GetOriginFromReferrerURI() also removes any trailing "/" hence we have to
+  // add it back here.
+  aResult.AppendLiteral("/");
   return NS_OK;
 }
+
+void ReferrerInfo::LogMessageToConsole(
+    nsIHttpChannel* aChannel, const char* aMsg,
+    const nsTArray<nsString>& aParams) const {
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  uint64_t windowID = 0;
+
+  rv = aChannel->GetTopLevelContentWindowId(&windowID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (!windowID) {
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    rv = aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    if (loadGroup) {
+      windowID = nsContentUtils::GetInnerWindowID(loadGroup);
+    }
+  }
+
+  nsAutoString localizedMsg;
+  rv = nsContentUtils::FormatLocalizedString(
+      nsContentUtils::eSECURITY_PROPERTIES, aMsg, aParams, localizedMsg);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  rv = nsContentUtils::ReportToConsoleByWindowID(
+      localizedMsg, nsIScriptError::infoFlag, NS_LITERAL_CSTRING("Security"),
+      windowID, uri);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
 ReferrerInfo::ReferrerInfo()
     : mOriginalReferrer(nullptr),
       mPolicy(mozilla::net::RP_Unset),
@@ -907,15 +997,24 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
 
   TrimmingPolicy trimmingPolicy = ComputeTrimmingPolicy(aChannel);
 
-  nsAutoCString referrerSpec;
-  rv = TrimReferrerWithPolicy(referrer, trimmingPolicy, referrerSpec);
+  nsAutoCString trimmedReferrer;
+  // We first trim the referrer according to the policy by calling
+  // 'TrimReferrerWithPolicy' and right after we have to call
+  // 'LimitReferrerLength' (using the same arguments) because the trimmed
+  // referrer might exceed the allowed max referrer length.
+  rv = TrimReferrerWithPolicy(referrer, trimmingPolicy, trimmedReferrer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // finally, remember the referrer URI.
+  rv = LimitReferrerLength(aChannel, referrer, trimmingPolicy, trimmedReferrer);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // finally, remember the referrer spec.
   mComputedReferrer.reset();
-  mComputedReferrer.emplace(referrerSpec);
+  mComputedReferrer.emplace(trimmedReferrer);
 
   return NS_OK;
 }
