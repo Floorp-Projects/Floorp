@@ -1,7 +1,7 @@
-== popup-explicit-size.xul popup-explicit-size-ref.xul
-fuzzy-if(skiaContent,0-16,0-128) random-if(Android) == image-size.xul image-size-ref.xul
-== image-scaling-min-height-1.xul image-scaling-min-height-1-ref.xul
-== textbox-text-transform.xul textbox-text-transform-ref.xul
+== chrome://reftest/content/xul/reftest/popup-explicit-size.xul chrome://reftest/content/xul/reftest/popup-explicit-size-ref.xul
+fuzzy-if(skiaContent,0-16,0-128) random-if(Android) == chrome://reftest/content/xul/reftest/image-size.xul chrome://reftest/content/xul/reftest/image-size-ref.xul
+== chrome://reftest/content/xul/reftest/image-scaling-min-height-1.xul chrome://reftest/content/xul/reftest/image-scaling-min-height-1-ref.xul
+== chrome://reftest/content/xul/reftest/textbox-text-transform.xul chrome://reftest/content/xul/reftest/textbox-text-transform-ref.xul
 
-== checkbox-dynamic-change.xul checkbox-dynamic-change-ref.xul
-== radio-dynamic-change.xul radio-dynamic-change-ref.xul
+== chrome://reftest/content/xul/reftest/checkbox-dynamic-change.xul chrome://reftest/content/xul/reftest/checkbox-dynamic-change-ref.xul
+== chrome://reftest/content/xul/reftest/radio-dynamic-change.xul chrome://reftest/content/xul/reftest/radio-dynamic-change-ref.xul

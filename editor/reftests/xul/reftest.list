@@ -1,17 +1,17 @@
-fails-if(Android) skip-if(winWidget) == empty-1.xul empty-ref.xul # Windows: bug 1239170
-!= empty-2.xul empty-ref.xul
+fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/empty-1.xul chrome://reftest/content/editor/reftests/xul/empty-ref.xul # Windows: bug 1239170
+!= chrome://reftest/content/editor/reftests/xul/empty-2.xul chrome://reftest/content/editor/reftests/xul/empty-ref.xul
 # There is no way to simulate an autocomplete textbox in windows XP/Vista/7/8/10 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == autocomplete-1.xul autocomplete-ref.xul # bug 783658
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == emptyautocomplete-1.xul emptyautocomplete-ref.xul # bug 783658
-fails-if(Android) skip-if(winWidget) == emptytextbox-1.xul emptytextbox-ref.xul # Windows: bug 1239170
-fails-if(Android) skip-if(winWidget) == emptytextbox-2.xul emptytextbox-ref.xul # Windows: bug 1239170
-!= emptytextbox-4.xul emptytextbox-ref.xul
-fails-if(Android) skip-if(winWidget) == passwd-1.xul passwd-ref.xul # Windows: bug 1239170
-fails-if(Android) skip-if(winWidget) == passwd-2.xul passwd-ref.xul # Windows: bug 1239170
-!= passwd-3.xul passwd-ref.xul
-fails-if(Android) == plain-1.xul plain-ref.xul # bug 783658
-fails-if(Android) skip-if(winWidget) == textbox-1.xul textbox-ref.xul # Windows: bug 1239170
-!= textbox-disabled.xul textbox-ref.xul
+fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == chrome://reftest/content/editor/reftests/xul/autocomplete-1.xul chrome://reftest/content/editor/reftests/xul/autocomplete-ref.xul # bug 783658
+fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == chrome://reftest/content/editor/reftests/xul/emptyautocomplete-1.xul chrome://reftest/content/editor/reftests/xul/emptyautocomplete-ref.xul # bug 783658
+fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/emptytextbox-1.xul chrome://reftest/content/editor/reftests/xul/emptytextbox-ref.xul # Windows: bug 1239170
+fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/emptytextbox-2.xul chrome://reftest/content/editor/reftests/xul/emptytextbox-ref.xul # Windows: bug 1239170
+!= chrome://reftest/content/editor/reftests/xul/emptytextbox-4.xul chrome://reftest/content/editor/reftests/xul/emptytextbox-ref.xul
+fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/passwd-1.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul # Windows: bug 1239170
+fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/passwd-2.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul # Windows: bug 1239170
+!= chrome://reftest/content/editor/reftests/xul/passwd-3.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul
+fails-if(Android) == chrome://reftest/content/editor/reftests/xul/plain-1.xul chrome://reftest/content/editor/reftests/xul/plain-ref.xul # bug 783658
+fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/textbox-1.xul chrome://reftest/content/editor/reftests/xul/textbox-ref.xul # Windows: bug 1239170
+!= chrome://reftest/content/editor/reftests/xul/textbox-disabled.xul chrome://reftest/content/editor/reftests/xul/textbox-ref.xul
 # Read-only textboxes look like normal textboxes in windows Vista/7 default theme
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(6\.[012]|10\.0)/.test(http.oscpu)) skip-if(winWidget) != textbox-readonly.xul textbox-ref.xul # Windows: bug 1239170
+fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(6\.[012]|10\.0)/.test(http.oscpu)) skip-if(winWidget) != chrome://reftest/content/editor/reftests/xul/textbox-readonly.xul chrome://reftest/content/editor/reftests/xul/textbox-ref.xul # Windows: bug 1239170
