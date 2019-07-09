@@ -470,6 +470,27 @@ this.LoginManagerParent = {
     return generatedPW.value;
   },
 
+  _getPrompter(browser, openerTopWindowID) {
+    let prompterSvc = Cc[
+      "@mozilla.org/login-manager/prompter;1"
+    ].createInstance(Ci.nsILoginManagerPrompter);
+    prompterSvc.init(browser.ownerGlobal);
+    prompterSvc.browser = browser;
+
+    for (let win of Services.wm.getEnumerator(null)) {
+      let tabbrowser = win.gBrowser;
+      if (tabbrowser) {
+        let browser = tabbrowser.getBrowserForOuterWindowID(openerTopWindowID);
+        if (browser) {
+          prompterSvc.openerBrowser = browser;
+          break;
+        }
+      }
+    }
+
+    return prompterSvc;
+  },
+
   onFormSubmit(
     browser,
     {
@@ -483,29 +504,6 @@ this.LoginManagerParent = {
       dismissedPrompt,
     }
   ) {
-    function getPrompter() {
-      let prompterSvc = Cc[
-        "@mozilla.org/login-manager/prompter;1"
-      ].createInstance(Ci.nsILoginManagerPrompter);
-      prompterSvc.init(browser.ownerGlobal);
-      prompterSvc.browser = browser;
-
-      for (let win of Services.wm.getEnumerator(null)) {
-        let tabbrowser = win.gBrowser;
-        if (tabbrowser) {
-          let browser = tabbrowser.getBrowserForOuterWindowID(
-            openerTopWindowID
-          );
-          if (browser) {
-            prompterSvc.openerBrowser = browser;
-            break;
-          }
-        }
-      }
-
-      return prompterSvc;
-    }
-
     function recordLoginUse(login) {
       if (!browser || PrivateBrowsingUtils.isBrowserPrivate(browser)) {
         // don't record non-interactive use in private browsing
@@ -564,7 +562,7 @@ this.LoginManagerParent = {
     // password, allow the user to select from a list of applicable
     // logins to update the password for.
     if (!usernameField && oldPasswordField && logins.length > 0) {
-      let prompter = getPrompter();
+      let prompter = this._getPrompter(browser, openerTopWindowID);
 
       if (logins.length == 1) {
         let oldLogin = logins[0];
@@ -636,7 +634,7 @@ this.LoginManagerParent = {
       // Change password if needed.
       if (existingLogin.password != formLogin.password) {
         log("...passwords differ, prompting to change.");
-        let prompter = getPrompter();
+        let prompter = this._getPrompter(browser, openerTopWindowID);
         prompter.promptToChangePassword(
           existingLogin,
           formLogin,
@@ -644,7 +642,7 @@ this.LoginManagerParent = {
         );
       } else if (!existingLogin.username && formLogin.username) {
         log("...empty username update, prompting to change.");
-        let prompter = getPrompter();
+        let prompter = this._getPrompter(browser, openerTopWindowID);
         prompter.promptToChangePassword(
           existingLogin,
           formLogin,
@@ -658,11 +656,15 @@ this.LoginManagerParent = {
     }
 
     // Prompt user to save login (via dialog or notification bar)
-    let prompter = getPrompter();
+    let prompter = this._getPrompter(browser, openerTopWindowID);
     prompter.promptToSavePassword(formLogin, dismissedPrompt);
   },
 
-  _onGeneratedPasswordFilled({ browsingContextId, formActionOrigin }) {
+  _onGeneratedPasswordFilled({
+    browsingContextId,
+    formActionOrigin,
+    openerTopWindowID,
+  }) {
     let browsingContext = BrowsingContext.get(browsingContextId);
     let {
       originNoSuffix,
@@ -681,6 +683,13 @@ this.LoginManagerParent = {
     let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
       framePrincipalOrigin
     );
+    let password = generatedPW.value;
+    let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+      Ci.nsILoginInfo
+    );
+    formLogin.init(formOrigin, formActionOrigin, null, "", password);
+    let shouldSaveLogin = true;
+
     // This will throw if we can't look up the entry in the password/origin map
     if (!generatedPW.filled) {
       // record first use of this generated password
@@ -695,7 +704,7 @@ this.LoginManagerParent = {
 
     if (!Services.logins.getLoginSavingEnabled(formOrigin)) {
       log("_onGeneratedPasswordFilled: saving is disabled for:", formOrigin);
-      return;
+      shouldSaveLogin = false;
     }
 
     // Check if we already have a login saved for this site since we don't want to overwrite it in
@@ -709,15 +718,23 @@ this.LoginManagerParent = {
 
     if (logins.length > 0) {
       log("_onGeneratedPasswordFilled: Login already saved for this site");
-      return;
+      shouldSaveLogin = false;
     }
 
-    let password = generatedPW.value;
-    let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
-      Ci.nsILoginInfo
-    );
-    formLogin.init(formOrigin, formActionOrigin, null, "", password);
-    Services.logins.addLogin(formLogin);
+    if (shouldSaveLogin) {
+      Services.logins.addLogin(formLogin);
+      log(
+        "TODO: bug 1559994 will get/create dismissed prompt to save/update password and color the icon blue"
+      );
+    } else {
+      // show dismissed "save password" prompt
+      log(
+        "_onGeneratedPasswordFilled, login will not be saved so show dismissed save-password notification"
+      );
+      let browser = browsingContext.top.embedderElement;
+      let prompter = this._getPrompter(browser, openerTopWindowID);
+      prompter.promptToSavePassword(formLogin, true); // dimissed prompt
+    }
   },
 
   /**
