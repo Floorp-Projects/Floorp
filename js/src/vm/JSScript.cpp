@@ -519,6 +519,7 @@ static XDRResult XDRScope(XDRState<mode>* xdr, js::PrivateScriptData* data,
     case ScopeKind::Catch:
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
+    case ScopeKind::FunctionLexical:
       MOZ_TRY(LexicalScope::XDR(xdr, scopeKind, enclosing, scope));
       break;
     case ScopeKind::With:
