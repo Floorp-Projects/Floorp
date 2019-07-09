@@ -975,6 +975,14 @@ VARCACHE_PREF(
 
 PREF("browser.visited_color", String, "")
 
+// Enable xul error pages.
+VARCACHE_PREF(
+  Live,
+  "browser.xul.error_pages.enabled",
+   browser_xul_error_pages_enabled,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // Prefs starting with "canvas."
 //---------------------------------------------------------------------------
