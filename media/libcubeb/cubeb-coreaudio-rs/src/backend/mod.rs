@@ -487,10 +487,7 @@ extern "C" fn audiounit_output_callback(
     }
 
     if stm.draining.load(Ordering::SeqCst) {
-        assert_eq!(audio_output_unit_stop(stm.output_unit), NO_ERR);
-        if !stm.input_unit.is_null() {
-            assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
-        }
+        stm.stop_internal();
         stm.notify_state_changed(State::Drained);
         audiounit_make_silent(&mut buffers[0]);
         return NO_ERR;
@@ -500,14 +497,10 @@ extern "C" fn audiounit_output_callback(
                    output_frames: u32,
                    buffers: &mut [AudioBuffer]|
      -> (OSStatus, Option<State>) {
-        let mut input_frames: i64 = 0;
-        let mut output_buffer = ptr::null_mut::<c_void>();
-        let mut input_buffer = ptr::null_mut::<c_void>();
-
         let mut stream_device = stm.stream_device.lock().unwrap();
 
         // Get output buffer
-        output_buffer = match stream_device.mixer.as_mut() {
+        let output_buffer = match stream_device.mixer.as_mut() {
             None => buffers[0].mData,
             Some(mixer) => {
                 // If remixing needs to occur, we can't directly work in our final
@@ -521,7 +514,8 @@ extern "C" fn audiounit_output_callback(
             .fetch_add(i64::from(output_frames), Ordering::SeqCst);
 
         // Also get the input buffer if the stream is duplex
-        if !stm.input_unit.is_null() {
+        let (input_buffer, mut input_frames) = if !stm.input_unit.is_null() {
+            assert_ne!(stm.input_desc.mChannelsPerFrame, 0);
             // If the output callback came first and this is a duplex stream, we need to
             // fill in some additional silence in the resampler.
             // Otherwise, if we had more than expected callbacks in a row, or we're
@@ -549,13 +543,16 @@ extern "C" fn audiounit_output_callback(
                     missing_frames
                 );
             }
-            input_buffer = stm.input_linear_buffer.as_mut().unwrap().as_mut_ptr();
-            // Number of input frames in the buffer. It will change to actually used frames
-            // inside fill
-            assert_ne!(stm.input_desc.mChannelsPerFrame, 0);
-            input_frames = (stm.input_linear_buffer.as_ref().unwrap().elements()
-                / stm.input_desc.mChannelsPerFrame as usize) as i64;
-        }
+            (
+                stm.input_linear_buffer.as_mut().unwrap().as_mut_ptr(),
+                // Number of input frames in the buffer. It will change to actually used frames
+                // inside fill
+                (stm.input_linear_buffer.as_ref().unwrap().elements()
+                    / stm.input_desc.mChannelsPerFrame as usize) as i64,
+            )
+        } else {
+            (ptr::null_mut::<c_void>(), 0)
+        };
 
         // Call user callback through resampler.
         assert!(!output_buffer.is_null());
@@ -579,10 +576,7 @@ extern "C" fn audiounit_output_callback(
 
         if outframes < 0 || outframes > i64::from(output_frames) {
             *stm.shutdown.get_mut() = true;
-            assert_eq!(audio_output_unit_stop(stm.output_unit), NO_ERR);
-            if !stm.input_unit.is_null() {
-                assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
-            }
+            stm.stop_internal();
             audiounit_make_silent(&mut buffers[0]);
             return (NO_ERR, Some(State::Error));
         }
