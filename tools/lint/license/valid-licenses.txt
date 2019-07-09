@@ -1,0 +1,18 @@
+mozilla.org/MPL/
+Licensed under the Apache License, Version 2.0
+copyright is dedicated to the Public Domain.
+Licensed under the MIT License
+Redistributions of source code must retain the above copyright
+Use of this source code is governed by a BSD-style license
+The author hereby disclaims copyright to this source code
+Use, Modification and Redistribution (including distribution of any
+author grants irrevocable permission to anyone to use, modify,
+THIS FILE IS AUTO-GENERATED
+Permission is hereby granted, free of charge, to any person obtaining
+Permission to use, copy, modify, distribute, and sell this software
+Permission to use, copy, modify, distribute and sell this software
+This file is dual licensed under the MIT
+License: Public domain. You are free to use this code however you
+You are granted a license to use, reproduce and create derivative works
+GENERATED FILE, DO NOT EDIT
+This code is governed by the BSD license
