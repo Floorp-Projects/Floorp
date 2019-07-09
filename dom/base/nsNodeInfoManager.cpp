@@ -46,9 +46,7 @@ nsNodeInfoManager::nsNodeInfoManager()
       mTextNodeInfo(nullptr),
       mCommentNodeInfo(nullptr),
       mDocumentNodeInfo(nullptr),
-      mRecentlyUsedNodeInfos(),
-      mSVGEnabled(eTriUnset),
-      mMathMLEnabled(eTriUnset) {
+      mRecentlyUsedNodeInfos() {
   nsLayoutStatics::AddRef();
 
   if (gNodeInfoManagerLeakPRLog)
@@ -352,7 +350,7 @@ bool nsNodeInfoManager::InternalSVGEnabled() {
              nsIContentPolicy::TYPE_OTHER) &&
         (IsSystemOrAddonPrincipal(loadInfo->LoadingPrincipal()) ||
          IsSystemOrAddonPrincipal(loadInfo->TriggeringPrincipal()))));
-  mSVGEnabled = conclusion ? eTriTrue : eTriFalse;
+  mSVGEnabled = Some(conclusion);
   return conclusion;
 }
 
@@ -362,7 +360,7 @@ bool nsNodeInfoManager::InternalMathMLEnabled() {
   nsNameSpaceManager* nsmgr = nsNameSpaceManager::GetInstance();
   bool conclusion = ((nsmgr && !nsmgr->mMathMLDisabled) ||
                      nsContentUtils::IsSystemPrincipal(mPrincipal));
-  mMathMLEnabled = conclusion ? eTriTrue : eTriFalse;
+  mMathMLEnabled = Some(conclusion);
   return conclusion;
 }
 
