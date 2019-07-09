@@ -759,7 +759,7 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
     }
 
     if (!frames.add(p, referent, frame)) {
-      NukeDebuggerWrapper(frame);
+      frame->freeFrameIterData(cx->defaultFreeOp());
       frame->clearGenerator(cx->runtime()->defaultFreeOp(), this);
       ReportOutOfMemory(cx);
       return false;
@@ -2488,8 +2488,8 @@ ResumeMode Debugger::onTrap(JSContext* cx, MutableHandleValue vp) {
         if (isJS) {
           site = iter.script()->getBreakpointSite(pc);
         } else {
-          site = iter.wasmInstance()->debug().getOrCreateBreakpointSite(
-              cx, bytecodeOffset);
+          site = iter.wasmInstance()->debug().getOrCreateBreakpointSite(cx,
+                                                                bytecodeOffset);
         }
       }
     }
@@ -3724,7 +3724,7 @@ void Debugger::sweepAll(FreeOp* fop) {
     }
 
     if (debuggerDying) {
-      fop->delete_(dbg);
+      fop->delete_(dbg->object, dbg, MemoryUse::Debugger);
     }
 
     dbg = next;
@@ -4409,8 +4409,9 @@ bool Debugger::construct(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
+    // The object owns the released pointer.
     debugger = dbg.release();
-    obj->setPrivate(debugger);  // owns the released pointer
+    InitObjectPrivate(obj, debugger, MemoryUse::Debugger);
   }
 
   // Add the initial debuggees, if any.
@@ -4581,9 +4582,8 @@ void Debugger::recomputeDebuggeeZoneSet() {
   }
 }
 
-template <typename T>
-static T* findDebuggerInVector(Debugger* dbg,
-                               Vector<T, 0, js::SystemAllocPolicy>* vec) {
+template <typename T, typename AP>
+static T* findDebuggerInVector(Debugger* dbg, Vector<T, 0, AP>* vec) {
   T* p;
   for (p = vec->begin(); p != vec->end(); p++) {
     if (*p == dbg) {
@@ -4596,9 +4596,9 @@ static T* findDebuggerInVector(Debugger* dbg,
 
 // a WeakHeapPtr version for findDebuggerInVector
 // TODO: Bug 1515934 - findDebuggerInVector<T> triggers read barriers.
+template <typename AP>
 static WeakHeapPtr<Debugger*>* findDebuggerInVector(
-    Debugger* dbg,
-    Vector<WeakHeapPtr<Debugger*>, 0, js::SystemAllocPolicy>* vec) {
+    Debugger* dbg, Vector<WeakHeapPtr<Debugger*>, 0, AP>* vec) {
   WeakHeapPtr<Debugger*>* p;
   for (p = vec->begin(); p != vec->end(); p++) {
     if (p->unbarrieredGet() == dbg) {
@@ -7908,7 +7908,7 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
       // removeFromDebuggerFramesOnExit.
       return false;
     }
-    frameobj->setPrivate(data);
+    frameobj->setFrameIterData(data);
 
     // Remove old frame.
     dbg->frames.remove(from);
@@ -9035,9 +9035,8 @@ ScriptedOnStepHandler::ScriptedOnStepHandler(JSObject* object)
 
 JSObject* ScriptedOnStepHandler::object() const { return object_; }
 
-void ScriptedOnStepHandler::drop() {
-  this->~ScriptedOnStepHandler();
-  js_free(this);
+void ScriptedOnStepHandler::drop(FreeOp* fop, DebuggerFrame* frame) {
+  fop->delete_(frame, this, allocSize(), MemoryUse::DebuggerOnStepHandler);
 }
 
 void ScriptedOnStepHandler::trace(JSTracer* tracer) {
@@ -9056,15 +9055,16 @@ bool ScriptedOnStepHandler::onStep(JSContext* cx, HandleDebuggerFrame frame,
   return ParseResumptionValue(cx, rval, resumeMode, vp);
 };
 
+size_t ScriptedOnStepHandler::allocSize() const { return sizeof(*this); }
+
 ScriptedOnPopHandler::ScriptedOnPopHandler(JSObject* object) : object_(object) {
   MOZ_ASSERT(object->isCallable());
 }
 
 JSObject* ScriptedOnPopHandler::object() const { return object_; }
 
-void ScriptedOnPopHandler::drop() {
-  this->~ScriptedOnPopHandler();
-  js_free(this);
+void ScriptedOnPopHandler::drop(FreeOp* fop, DebuggerFrame* frame) {
+  fop->delete_(frame, this, allocSize(), MemoryUse::DebuggerOnPopHandler);
 }
 
 void ScriptedOnPopHandler::trace(JSTracer* tracer) {
@@ -9091,12 +9091,14 @@ bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
   return ParseResumptionValue(cx, rval, resumeMode, vp);
 };
 
+size_t ScriptedOnPopHandler::allocSize() const { return sizeof(*this); }
+
 bool DebuggerFrame::resume(const FrameIter& iter) {
   FrameIter::Data* data = iter.copyData();
   if (!data) {
     return false;
   }
-  setPrivate(data);
+  setFrameIterData(data);
   return true;
 }
 
@@ -9125,7 +9127,7 @@ DebuggerFrame* DebuggerFrame::create(JSContext* cx, HandleObject proto,
   if (!data) {
     return nullptr;
   }
-  frame->setPrivate(data);
+  frame->setFrameIterData(data);
 
   frame->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
 
@@ -9231,8 +9233,7 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
     ReportOutOfMemory(cx);
     return false;
   }
-  auto infoGuard =
-      MakeScopeExit([&] { cx->runtime()->defaultFreeOp()->delete_(info); });
+  auto infoGuard = MakeScopeExit([&] { js_delete(info); });
 
   if (!owner()->generatorFrames.relookupOrAdd(p, genObj, this)) {
     ReportOutOfMemory(cx);
@@ -9260,7 +9261,8 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
     }
   }
 
-  setReservedSlot(GENERATOR_INFO_SLOT, PrivateValue(info));
+  InitReservedSlot(this, GENERATOR_INFO_SLOT, info,
+                   MemoryUse::DebuggerFrameGeneratorInfo);
 
   crossCompartmentKeysGuard.release();
   generatorFramesGuard.release();
@@ -9291,13 +9293,13 @@ void DebuggerFrame::clearGenerator(FreeOp* fop) {
     if (handler) {
       generatorScript->decrementStepperCount(fop);
       setReservedSlot(ONSTEP_HANDLER_SLOT, UndefinedValue());
-      fop->delete_(handler);
+      handler->drop(fop, this);
     }
   }
 
   // 1) The DebuggerFrame must no longer point to the AbstractGeneratorObject.
   setReservedSlot(GENERATOR_INFO_SLOT, UndefinedValue());
-  fop->delete_(info);
+  fop->delete_(this, info, MemoryUse::DebuggerFrameGeneratorInfo);
 }
 
 void DebuggerFrame::clearGenerator(
@@ -9568,7 +9570,8 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
 
   OnStepHandler* prior = frame->onStepHandler();
   if (prior && handler != prior) {
-    prior->drop();
+    frame->setReservedSlot(ONSTEP_HANDLER_SLOT, UndefinedValue());
+    prior->drop(cx->defaultFreeOp(), frame);
   }
 
   AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
@@ -9610,8 +9613,13 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
   }
 
   // Now that the step mode switch has succeeded, we can install the handler.
-  frame->setReservedSlot(ONSTEP_HANDLER_SLOT,
-                         handler ? PrivateValue(handler) : UndefinedValue());
+  if (handler && handler != prior) {
+    // It's ok call InitReservedSlot because we know the slot's value is
+    // currently undefined.
+    InitReservedSlot(frame, ONSTEP_HANDLER_SLOT, handler, handler->allocSize(),
+                     MemoryUse::DebuggerOnStepHandler);
+  }
+
   return true;
 }
 
@@ -9843,16 +9851,21 @@ OnPopHandler* DebuggerFrame::onPopHandler() const {
                              : static_cast<OnPopHandler*>(value.toPrivate());
 }
 
-void DebuggerFrame::setOnPopHandler(OnPopHandler* handler) {
+void DebuggerFrame::setOnPopHandler(JSContext* cx, OnPopHandler* handler) {
   MOZ_ASSERT(isLive());
 
   OnPopHandler* prior = onPopHandler();
   if (prior && prior != handler) {
-    prior->drop();
+    setReservedSlot(ONPOP_HANDLER_SLOT, UndefinedValue());
+    prior->drop(cx->defaultFreeOp(), this);
   }
 
-  setReservedSlot(ONPOP_HANDLER_SLOT,
-                  handler ? PrivateValue(handler) : UndefinedValue());
+  if (handler && prior != handler) {
+    // It's ok call InitReservedSlot because we know the slot's value is
+    // currently undefined.
+    InitReservedSlot(this, ONPOP_HANDLER_SLOT, handler, handler->allocSize(),
+                     MemoryUse::DebuggerOnPopHandler);
+  }
 }
 
 bool DebuggerFrame::requireLive(JSContext* cx) {
@@ -9895,9 +9908,15 @@ bool DebuggerFrame::requireScriptReferent(JSContext* cx,
   return true;
 }
 
+void DebuggerFrame::setFrameIterData(FrameIter::Data* data) {
+  MOZ_ASSERT(data);
+  MOZ_ASSERT(!frameIterData());
+  InitObjectPrivate(this, data, MemoryUse::DebuggerFrameIterData);
+}
+
 void DebuggerFrame::freeFrameIterData(FreeOp* fop) {
   if (FrameIter::Data* data = frameIterData()) {
-    fop->delete_(data);
+    fop->delete_(this, data, MemoryUse::DebuggerFrameIterData);
     setPrivate(nullptr);
   }
 }
@@ -9920,7 +9939,7 @@ void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
 
   // In the case of generator frames, we may end up trying to clean up the step
   // count in more than one place, so make this method idempotent.
-  handler->drop();
+  handler->drop(fop, this);
   setReservedSlot(ONSTEP_HANDLER_SLOT, UndefinedValue());
 }
 
@@ -9932,11 +9951,11 @@ void DebuggerFrame::finalize(FreeOp* fop, JSObject* obj) {
   frameobj.clearGenerator(fop);
   OnStepHandler* onStepHandler = frameobj.onStepHandler();
   if (onStepHandler) {
-    onStepHandler->drop();
+    onStepHandler->drop(fop, &frameobj);
   }
   OnPopHandler* onPopHandler = frameobj.onPopHandler();
   if (onPopHandler) {
-    onPopHandler->drop();
+    onPopHandler->drop(fop, &frameobj);
   }
 }
 
@@ -10354,7 +10373,7 @@ bool DebuggerFrame::onStepSetter(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (!DebuggerFrame::setOnStepHandler(cx, frame, handler)) {
-    handler->drop();
+    handler->drop(cx->defaultFreeOp(), frame);
     return false;
   }
 
@@ -10394,7 +10413,7 @@ bool DebuggerFrame::onPopSetter(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  frame->setOnPopHandler(handler);
+  frame->setOnPopHandler(cx, handler);
 
   args.rval().setUndefined();
   return true;

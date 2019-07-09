@@ -855,8 +855,7 @@ class GlobalObject : public NativeObject {
                                       Handle<GlobalObject*> global,
                                       const JSFunctionSpec* builtins);
 
-  typedef js::Vector<js::WeakHeapPtr<js::Debugger*>, 0, js::SystemAllocPolicy>
-      DebuggerVector;
+  using DebuggerVector = Vector<WeakHeapPtr<Debugger*>, 0, ZoneAllocPolicy>;
 
   /*
    * The collection of Debugger objects debugging this global. If this global
