@@ -1,4 +1,5 @@
 browser/components/translation/cld2/
+browser/extensions/screenshots/build/raven.js
 devtools/client/aboutdebugging-new/test/jest/node_modules/
 devtools/client/application/test/components/node_modules/
 devtools/client/debugger/node_modules/
@@ -120,6 +121,7 @@ testing/xpcshell/node-ip/
 testing/xpcshell/dns-packet/
 third_party/
 toolkit/components/jsoncpp/
+toolkit/components/normandy/vendor/
 toolkit/components/protobuf/
 toolkit/components/url-classifier/chromium/
 toolkit/components/url-classifier/protobuf/
