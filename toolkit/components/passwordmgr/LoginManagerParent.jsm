@@ -663,6 +663,7 @@ this.LoginManagerParent = {
   _onGeneratedPasswordFilled({
     browsingContextId,
     formActionOrigin,
+    username = "",
     openerTopWindowID,
   }) {
     let browsingContext = BrowsingContext.get(browsingContextId);
@@ -677,7 +678,6 @@ this.LoginManagerParent = {
       );
       return;
     }
-
     let framePrincipalOrigin =
       browsingContext.currentWindowGlobal.documentPrincipal.origin;
     let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
@@ -687,7 +687,7 @@ this.LoginManagerParent = {
     let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
       Ci.nsILoginInfo
     );
-    formLogin.init(formOrigin, formActionOrigin, null, "", password);
+    formLogin.init(formOrigin, formActionOrigin, null, username, password);
     let shouldSaveLogin = true;
 
     // This will throw if we can't look up the entry in the password/origin map
@@ -708,7 +708,7 @@ this.LoginManagerParent = {
     }
 
     // Check if we already have a login saved for this site since we don't want to overwrite it in
-    // case the user still needs their old password to succesffully complete a password change.
+    // case the user still needs their old password to successfully complete a password change.
     // An empty formActionOrigin is used as a wildcard to not restrict to action matches.
     let logins = this._searchAndDedupeLogins(formOrigin, {
       acceptDifferentSubdomains: false,

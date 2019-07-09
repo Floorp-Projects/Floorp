@@ -1498,12 +1498,11 @@ this.LoginManagerContent = {
   /**
    * Notify the parent that a generated password was filled into a field so that it can potentially
    * be saved.
-   * @param {HTMLInputElement} input
+   * @param {HTMLInputElement} passwordField
    */
-  _generatedPasswordFilled(input) {
-    log("_generatedPasswordFilled", input);
-    let loginForm = LoginFormFactory.createFromField(input);
-    let win = input.ownerGlobal;
+  _generatedPasswordFilled(passwordField) {
+    log("_generatedPasswordFilled", passwordField);
+    let win = passwordField.ownerGlobal;
 
     if (PrivateBrowsingUtils.isContentWindowPrivate(win)) {
       log(
@@ -1518,17 +1517,24 @@ this.LoginManagerContent = {
       );
     }
 
+    let loginForm = LoginFormFactory.createFromField(passwordField);
+    let formActionOrigin = LoginHelper.getFormActionOrigin(loginForm);
+    let origin = LoginHelper.getLoginOrigin(
+      passwordField.ownerDocument.documentURI
+    );
+    let recipes = LoginRecipesContent.getRecipes(origin, win);
+    let [usernameField] = this._getFormFields(loginForm, false, recipes);
     let openerTopWindowID = null;
     if (win.opener) {
       openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
     }
-    let formActionOrigin = LoginHelper.getFormActionOrigin(loginForm);
     let messageManager = win.docShell.messageManager;
     messageManager.sendAsyncMessage(
       "PasswordManager:onGeneratedPasswordFilled",
       {
         browsingContextId: win.docShell.browsingContext.id,
         formActionOrigin,
+        username: (usernameField && usernameField.value) || "",
         openerTopWindowID,
       }
     );
