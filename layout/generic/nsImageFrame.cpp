@@ -2270,8 +2270,8 @@ nsresult nsImageFrame::HandleEvent(nsPresContext* aPresContext,
             *aEventStatus = nsEventStatus_eConsumeDoDefault;
             clicked = true;
           }
-          nsContentUtils::TriggerLink(anchorNode, aPresContext, uri, target,
-                                      clicked, /* isTrusted */ true);
+          nsContentUtils::TriggerLink(anchorNode, uri, target, clicked,
+                                      /* isTrusted */ true);
         }
       }
     }

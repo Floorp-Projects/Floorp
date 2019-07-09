@@ -1367,6 +1367,9 @@ class Document : public nsINode,
    */
   void DisableCookieAccess() { mDisableCookieAccess = true; }
 
+  void SetLinkHandlingEnabled(bool aValue) { mLinksEnabled = aValue; }
+  bool LinkHandlingEnabled() { return mLinksEnabled; }
+
   /**
    * Set compatibility mode for this document
    */
@@ -4660,6 +4663,10 @@ class Document : public nsINode,
 
   // True if the encoding menu should be disabled.
   bool mEncodingMenuDisabled : 1;
+
+  // False if we've disabled link handling for elements inside this document,
+  // true otherwise.
+  bool mLinksEnabled : 1;
 
   // True if this document is for an SVG-in-OpenType font.
   bool mIsSVGGlyphsDocument : 1;

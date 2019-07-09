@@ -1245,6 +1245,7 @@ Document::Document(const char* aContentType)
       mDidCallBeginLoad(false),
       mAllowPaymentRequest(false),
       mEncodingMenuDisabled(false),
+      mLinksEnabled(true),
       mIsSVGGlyphsDocument(false),
       mInDestructor(false),
       mIsGoingAway(false),
