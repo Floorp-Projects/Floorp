@@ -17,16 +17,6 @@ var { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
 
-/**
- * Returns a thenable promise
- * @return {Promise}
- */
-function getDeferredPromise() {
-  // Override promise with deprecated-sync-thenables
-  const promise = require("devtools/shared/deprecated-sync-thenables");
-  return promise;
-}
-
 function getAddonURIFromPath(path) {
   const chromeURI = Services.io.newURI(path, null, DEBUGGER_CHROME_URI);
   return chromeRegistry
@@ -44,7 +34,8 @@ function addTemporaryAddon(path) {
 function removeAddon(addon) {
   info("Removing addon.");
 
-  const deferred = getDeferredPromise().defer();
+  const defer = require("devtools/shared/defer");
+  const deferred = defer();
 
   const listener = {
     onUninstalled: function(uninstalledAddon) {
