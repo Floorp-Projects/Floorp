@@ -12447,20 +12447,10 @@ NS_IMETHODIMP
 nsDocShell::GetUseTrackingProtection(bool* aUseTrackingProtection) {
   *aUseTrackingProtection = false;
 
-  static bool sTPEnabled = false;
-  static bool sTPInPBEnabled = false;
-  static bool sPrefsInit = false;
-
-  if (!sPrefsInit) {
-    sPrefsInit = true;
-    Preferences::AddBoolVarCache(&sTPEnabled,
-                                 "privacy.trackingprotection.enabled", false);
-    Preferences::AddBoolVarCache(
-        &sTPInPBEnabled, "privacy.trackingprotection.pbmode.enabled", false);
-  }
-
-  if (mUseTrackingProtection || sTPEnabled ||
-      (UsePrivateBrowsing() && sTPInPBEnabled)) {
+  if (mUseTrackingProtection ||
+      StaticPrefs::privacy_trackingprotection_enabled() ||
+      (UsePrivateBrowsing() &&
+       StaticPrefs::privacy_trackingprotection_pbmode_enabled())) {
     *aUseTrackingProtection = true;
     return NS_OK;
   }
