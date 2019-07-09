@@ -152,11 +152,7 @@ WorkerThreadFunc(void *_listenSock)
         if (debug_mode) DPRINTF("\tServer accepted connection (%d bytes)\n", bytesRead);
         
         PR_AtomicIncrement(&workerThreadsBusy);
-#ifdef SYMBIAN
-        if (workerThreadsBusy == workerThreads && workerThreads<1) {
-#else
         if (workerThreadsBusy == workerThreads) {
-#endif
             PR_Lock(workerThreadsLock);
             if (workerThreadsBusy == workerThreads) {
                 PRThread *WorkerThread;
@@ -525,7 +521,6 @@ int main(int argc, char **argv)
 	PL_DestroyOptState(opt);
 
  /* main test */
-#ifndef SYMBIAN
     if (debug_mode) {
 		printf("Enter number of iterations: \n");
 		scanf("%d", &_iterations);
@@ -537,7 +532,6 @@ int main(int argc, char **argv)
 		scanf("%d", &_server_data);
 	}
 	else 
-#endif
 	{
 		_iterations = 7;
 		_clients = 7;

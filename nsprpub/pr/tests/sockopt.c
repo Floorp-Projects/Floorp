@@ -87,12 +87,10 @@ int main(int argc, char **argv)
                 case PR_SockOpt_Nonblocking:
                     data.value.non_blocking = PR_TRUE;
                     break;    
-#ifndef SYMBIAN
                 case PR_SockOpt_Linger:
                     data.value.linger.polarity = PR_TRUE;
                     data.value.linger.linger = PR_SecondsToInterval(2);          
                     break;    
-#endif
                 case PR_SockOpt_Reuseaddr:
                     data.value.reuse_addr = PR_TRUE;      
                     break;    
@@ -105,7 +103,6 @@ int main(int argc, char **argv)
                 case PR_SockOpt_SendBufferSize:  
                     data.value.send_buffer_size = segment;  
                     break;    
-#ifndef SYMBIAN
                 case PR_SockOpt_IpTimeToLive:
                     data.value.ip_ttl = 64;  
                     break;    
@@ -120,7 +117,6 @@ int main(int argc, char **argv)
                     fd = udp; 
                     data.value.mcast_loopback = PR_TRUE; 
                     break;    
-#endif
                 case PR_SockOpt_NoDelay:
                     data.value.no_delay = PR_TRUE;         
                     break;    
@@ -129,12 +125,10 @@ int main(int argc, char **argv)
                     data.value.max_segment = segment;      
                     break;    
 #endif
-#ifndef SYMBIAN
                 case PR_SockOpt_Broadcast:
                     fd = udp; 
                     data.value.broadcast = PR_TRUE;         
                     break;    
-#endif
 #ifdef SO_REUSEPORT
                 case PR_SockOpt_Reuseport:
                     data.value.reuse_port = PR_TRUE;

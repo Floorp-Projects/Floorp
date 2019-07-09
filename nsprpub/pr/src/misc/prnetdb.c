@@ -29,14 +29,13 @@ extern int h_errno;
  * The meaning of the macros related to gethostbyname, gethostbyaddr,
  * and gethostbyname2 is defined below.
  * - _PR_HAVE_THREADSAFE_GETHOST: the gethostbyXXX functions return
- *   the result in thread specific storage.  For example, AIX, HP-UX,
- *   and OSF1.
+ *   the result in thread specific storage.  For example, AIX, HP-UX.
  * -  _PR_HAVE_GETHOST_R: have the gethostbyXXX_r functions. See next
  *   two macros.
  * - _PR_HAVE_GETHOST_R_INT: the gethostbyXXX_r functions return an
  *   int.  For example, Linux glibc.
  * - _PR_HAVE_GETHOST_R_POINTER: the gethostbyXXX_r functions return
- *   a struct hostent* pointer.  For example, Solaris and IRIX.
+ *   a struct hostent* pointer.  For example, Solaris.
  */
 #if defined(_PR_NO_PREEMPT) || defined(_PR_HAVE_GETHOST_R) \
     || defined(_PR_HAVE_THREADSAFE_GETHOST)
@@ -58,12 +57,6 @@ PRLock *_pr_dnsLock = NULL;
  * Some return a pointer to struct protoent, others return
  * an int, and glibc's flavor takes five arguments.
  */
-#if defined(XP_BEOS) && defined(BONE_VERSION)
-#include <arpa/inet.h>  /* pick up define for inet_addr */
-#include <sys/socket.h>
-#define _PR_HAVE_GETPROTO_R
-#define _PR_HAVE_GETPROTO_R_POINTER
-#endif
 
 #if defined(SOLARIS) || (defined(BSDI) && defined(_REENTRANT)) \
 	|| (defined(LINUX) && defined(_REENTRANT) \
@@ -72,8 +65,7 @@ PRLock *_pr_dnsLock = NULL;
 #define _PR_HAVE_GETPROTO_R_POINTER
 #endif
 
-#if defined(OSF1) \
-        || defined(AIX4_3_PLUS) || (defined(AIX) && defined(_THREAD_SAFE)) \
+#if defined(AIX4_3_PLUS) || (defined(AIX) && defined(_THREAD_SAFE)) \
 	|| (defined(HPUX10_10) && defined(_REENTRANT)) \
         || (defined(HPUX10_20) && defined(_REENTRANT)) \
         || defined(OPENBSD)
@@ -87,7 +79,7 @@ PRLock *_pr_dnsLock = NULL;
 #endif
 
 /* BeOS has glibc but not the glibc-style getprotobyxxx_r functions. */
-#if (defined(__GLIBC__) && __GLIBC__ >= 2 && !defined(XP_BEOS))
+#if (defined(__GLIBC__) && __GLIBC__ >= 2)
 #define _PR_HAVE_GETPROTO_R
 #define _PR_HAVE_5_ARG_GETPROTO_R
 #endif
@@ -567,25 +559,6 @@ static PRStatus CopyHostent(
 	to->h_addr_list[na] = 0;
 	return PR_SUCCESS;
 }
-
-#ifdef SYMBIAN
-/* Set p_aliases by hand because Symbian's getprotobyname() returns NULL. */
-static void AssignAliases(struct protoent *Protoent, char** aliases)
-{
-    if (NULL == Protoent->p_aliases) {
-        if (0 == strcmp(Protoent->p_name, "ip"))
-            aliases[0] = "IP";
-        else if (0 == strcmp(Protoent->p_name, "tcp"))
-            aliases[0] = "TCP";
-        else if (0 == strcmp(Protoent->p_name, "udp"))
-            aliases[0] = "UDP";
-        else
-            aliases[0] = "UNKNOWN";
-        aliases[1] = NULL;
-        Protoent->p_aliases = aliases;
-    }
-}
-#endif
 
 #if !defined(_PR_HAVE_GETPROTO_R)
 /*
@@ -1249,10 +1222,6 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByName(
         }
 		else
 		{
-#if defined(SYMBIAN)
-			char* aliases[2];
-			AssignAliases(staticBuf, aliases);
-#endif
 			rv = CopyProtoent(staticBuf, buffer, buflen, result);
 			if (PR_FAILURE == rv)
 			    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
@@ -1333,10 +1302,6 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByNumber(
         }
 		else
 		{
-#if defined(SYMBIAN)
-			char* aliases[2];
-			AssignAliases(staticBuf, aliases);
-#endif
 			rv = CopyProtoent(staticBuf, buffer, buflen, result);
 			if (PR_FAILURE == rv)
 			    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);

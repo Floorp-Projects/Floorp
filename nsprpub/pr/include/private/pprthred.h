@@ -283,26 +283,6 @@ NSPR_API(PRMonitor*) PR_CTestAndEnterMonitor(void *address);
 /*---------------------------------------------------------------------------
 ** PLATFORM-SPECIFIC INITIALIZATION FUNCTIONS
 ---------------------------------------------------------------------------*/
-#if defined(IRIX)
-/*
-** Irix specific initialization funtion to be called before PR_Init
-** is called by the application. Sets the CONF_INITUSERS and CONF_INITSIZE
-** attributes of the shared arena set up by nspr.
-**
-** The environment variables _NSPR_IRIX_INITUSERS and _NSPR_IRIX_INITSIZE
-** can also be used to set these arena attributes. If _NSPR_IRIX_INITUSERS
-** is set, but not _NSPR_IRIX_INITSIZE, the value of the CONF_INITSIZE
-** attribute of the nspr arena is scaled as a function of the
-** _NSPR_IRIX_INITUSERS value.
-** 
-** If the _PR_Irix_Set_Arena_Params() is called in addition to setting the
-** environment variables, the values of the environment variables are used.
-** 
-*/
-NSPR_API(void) _PR_Irix_Set_Arena_Params(PRInt32 initusers, PRInt32 initsize);
-
-#endif /* IRIX */
-
 #if defined(XP_OS2)
 /*
 ** These functions need to be called at the start and end of a thread.

@@ -47,7 +47,7 @@ typedef struct PRHostEnt {
 } PRHostEnt;
 
 /* A safe size to use that will mostly work... */
-#if (defined(AIX) && defined(_THREAD_SAFE)) || defined(OSF1)
+#if (defined(AIX) && defined(_THREAD_SAFE))
 #define PR_NETDB_BUF_SIZE sizeof(struct protoent_data)
 #else
 #define PR_NETDB_BUF_SIZE 1024
