@@ -8,7 +8,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
-#include "nsILinkHandler.h"
 #include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"

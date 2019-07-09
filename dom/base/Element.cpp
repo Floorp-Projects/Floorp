@@ -30,7 +30,6 @@
 #include "mozilla/dom/DocumentTimeline.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFocusManager.h"
-#include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsContainerFrame.h"
