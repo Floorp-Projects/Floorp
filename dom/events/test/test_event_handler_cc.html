@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for cycle collection of event handlers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    function listener() {}
+
+    function make_weak_ref(obj) {
+      let m = new WeakMap;
+      m.set(obj, {});
+      return m;
+    }
+
+    function weak_ref_dead(r) {
+      return SpecialPowers.nondeterministicGetWeakMapKeys(r).length == 0;
+    }
+
+    function setupTarget1() {
+      let ifr = document.getElementById("target1");
+      let doc = ifr.contentDocument;
+      let b = doc.createElement("button");
+      doc.body.appendChild(b);
+      b.onclick = listener;
+      ifr.remove();
+      return make_weak_ref(b);
+    }
+
+    function setupTarget2() {
+      let ifr = document.getElementById("target2");
+      let doc = ifr.contentDocument;
+      let b = doc.createElement("button");
+      doc.body.appendChild(b);
+      let setFunc = new ifr.contentWindow.Function(`
+           var b = document.querySelector("button");
+           var proto = parent.HTMLElement.prototype;
+           var setter = Object.getOwnPropertyDescriptor(proto, "onclick").set;
+           // Here the current global (and hence CallbackObject global) will be
+           // the parent, the callback will be a known-live thing from the
+           // parent, but the incumbent global will be the child.
+           setter.call(b, parent.listener);
+         `);
+      setFunc();
+      ifr.remove();
+      return make_weak_ref(b);
+    }
+
+    addLoadEvent(function() {
+      let ref1 = setupTarget1();
+      let ref2 = setupTarget2();
+      SpecialPowers.exactGC(function () {
+        SpecialPowers.forceCC();
+        SpecialPowers.forceGC();
+        SpecialPowers.forceGC();
+
+        ok(weak_ref_dead(ref1),
+           "Should collect cycle through callback global");
+        ok(weak_ref_dead(ref2),
+           "Should collect cycle through incumbent global");
+
+        SimpleTest.finish();
+      });
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<iframe id="target1"></iframe>
+<iframe id="target2"></iframe>
+<pre id="test"></pre>
+</body>
+</html>
