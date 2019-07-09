@@ -213,7 +213,6 @@ raptor-tp6-8-firefox:
     variants: ["fission"]
     try-name: raptor-tp6-8-firefox
     treeherder-symbol: Rap(tp6-8)
-    run-on-projects: ['try', 'mozilla-central']
     mozharness:
         extra-options:
             - --test=raptor-tp6-8
@@ -235,7 +234,6 @@ raptor-tp6-9-firefox:
     variants: ["fission"]
     try-name: raptor-tp6-9-firefox
     treeherder-symbol: Rap(tp6-9)
-    run-on-projects: ['try', 'mozilla-central']
     mozharness:
         extra-options:
             - --test=raptor-tp6-9
@@ -257,7 +255,6 @@ raptor-tp6-10-firefox:
     variants: ["fission"]
     try-name: raptor-tp6-10-firefox
     treeherder-symbol: Rap(tp6-10)
-    run-on-projects: ['try', 'mozilla-central']
     mozharness:
         extra-options:
             - --test=raptor-tp6-10
@@ -279,7 +276,6 @@ raptor-tp6-binast-1-firefox:
     variants: ["fission"]
     try-name: raptor-tp6-binast-1
     treeherder-symbol: Rap(tp6-b-1)
-    run-on-projects: ['try', 'mozilla-central']
     mozharness:
         extra-options:
             - --test=raptor-tp6-binast-1
