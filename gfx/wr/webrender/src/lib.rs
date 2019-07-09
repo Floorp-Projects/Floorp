@@ -222,3 +222,4 @@ pub use crate::renderer::{
 pub use crate::screen_capture::{AsyncScreenshotHandle, RecordedFrameHandle};
 pub use crate::shade::{Shaders, WrShaders};
 pub use api as webrender_api;
+pub use webrender_build::shader::ProgramSourceDigest;
