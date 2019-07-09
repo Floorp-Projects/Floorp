@@ -786,9 +786,6 @@ static PRThread *get_thread(_PRCPU *cpu, PRBool *wakeup_cpus)
                      */
 
                     thread = NULL;
-#ifdef IRIX
-					_PR_MD_WAKEUP_PRIMORDIAL_CPU();
-#endif
                     continue;
                 } else if (thread->io_pending == PR_TRUE) {
                     /*
@@ -1453,10 +1450,10 @@ PR_IMPLEMENT(PRThread*) PR_AttachThread(PRThreadType type,
 PR_IMPLEMENT(void) PR_DetachThread(void)
 {
     /*
-     * On IRIX, Solaris, and Windows, foreign threads are detached when
+     * On Solaris, and Windows, foreign threads are detached when
      * they terminate.
      */
-#if !defined(IRIX) && !defined(WIN32) \
+#if !defined(WIN32) \
         && !(defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY))
     PRThread *me;
     if (_pr_initialized) {

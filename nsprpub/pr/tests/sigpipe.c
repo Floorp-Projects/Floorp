@@ -60,12 +60,7 @@ static void Test(void *arg)
         fprintf(stderr, "write to broken pipe should have failed with EPIPE but returned %d\n", rv);
         exit(1);
     }
-#ifdef SYMBIAN
-    /* Have mercy on the unknown 142 errno, it seems ok */
-    if (errno != EPIPE && errno != 142) {
-#else
     if (errno != EPIPE) {
-#endif
         fprintf(stderr, "write to broken pipe failed but with wrong errno: %d\n", errno);
         exit(1);
     }

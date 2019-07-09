@@ -30,9 +30,6 @@
 
 #define HAVE_FCHMOD
 
-#if defined(BEOS)
-#undef HAVE_FCHMOD
-#endif
 
 /*
  * Does getcwd() take NULL as the first argument and malloc
@@ -517,7 +514,7 @@ reversepath(char *inpath, char *name, int len, char *outpath)
 	    xchdir("..");
 	} else {
 	    cp -= 3;
-	    strncpy(cp, "../", 3);
+	    memcpy(cp, "../", 3);
 	    xchdir(buf);
 	}
     }

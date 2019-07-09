@@ -26,14 +26,10 @@ mkdir  HP-UXB.11.00_64_DBG.OBJ
 mkdir  HP-UXB.11.00_64_OPT.OBJ
 mkdir  HP-UXB.11.00_DBG.OBJ
 mkdir  HP-UXB.11.00_OPT.OBJ
-mkdir  IRIX6.5_n32_PTH_DBG.OBJ
-mkdir  IRIX6.5_n32_PTH_OPT.OBJ
 mkdir  Linux2.2_x86_glibc_PTH_DBG.OBJ
 mkdir  Linux2.2_x86_glibc_PTH_OPT.OBJ
 mkdir  Linux2.4_x86_glibc_PTH_DBG.OBJ
 mkdir  Linux2.4_x86_glibc_PTH_OPT.OBJ
-mkdir  OSF1V4.0D_DBG.OBJ
-mkdir  OSF1V4.0D_OPT.OBJ
 mkdir  SunOS5.6_DBG.OBJ
 mkdir  SunOS5.6_OPT.OBJ
 mkdir  SunOS5.7_64_DBG.OBJ

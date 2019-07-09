@@ -369,14 +369,6 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
         }
         PR_Unlock(_pr_activeLock);
 
-#ifdef IRIX
-		_PR_MD_PRE_CLEANUP(me);
-		/*
-		 * The primordial thread must now be running on the primordial cpu
-		 */
-    	PR_ASSERT((_PR_IS_NATIVE_THREAD(me)) || (me->cpu->id == 0));
-#endif
-
         _PR_MD_EARLY_CLEANUP();
 
         _PR_CleanupMW();

@@ -65,19 +65,6 @@ static void *pthread_start(void *arg)
 }  /* pthread_start */
 #endif /* defined(_PR_PTHREADS) */
 
-#if defined(IRIX) && !defined(_PR_PTHREADS)
-#include <sys/types.h>
-#include <sys/prctl.h>
-static void sproc_start(void *arg, PRSize size)
-{
-    StartObject *so = (StartObject*)arg;
-    StartFn start = so->start;
-    void *data = so->arg;
-    PR_Free(so);
-    start(data);
-}  /* sproc_start */
-#endif  /* defined(IRIX) && !defined(_PR_PTHREADS) */
-
 #if defined(WIN32)
 #include <windows.h>
 #include <process.h>  /* for _beginthreadex() */
@@ -140,22 +127,8 @@ static PRStatus NSPRPUB_TESTS_CreateThread(StartFn start, void *arg)
 #endif /* defined(_PR_PTHREADS) */
 
     case thread_sproc:
-#if defined(IRIX) && !defined(_PR_PTHREADS)
-        {
-            PRInt32 pid;
-            StartObject *start_object;
-            start_object = PR_NEW(StartObject);
-            PR_ASSERT(NULL != start_object);
-            start_object->start = start;
-            start_object->arg = arg;
-            pid = sprocsp(
-                sproc_start, PR_SALL, start_object, NULL, 64 * 1024);
-            rv = (0 < pid) ? PR_SUCCESS : PR_FAILURE;
-        }
-#else
         PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
         rv = PR_FAILURE;
-#endif  /* defined(IRIX) && !defined(_PR_PTHREADS) */
         break;
     case thread_win32:
 #if defined(WIN32)
@@ -250,11 +223,7 @@ static void OneShot(void *arg)
             break;
             
         case 6:
-#ifdef SYMBIAN
-#define TEMP_DIR "c:\\data\\"
-#else
 #define TEMP_DIR "/tmp/"
-#endif
             dir = PR_OpenDir(TEMP_DIR);
 			DPRINTF((output,"Thread[0x%x] called PR_OpenDir\n",
 			PR_GetCurrentThread()));
@@ -310,8 +279,6 @@ int main(int argc, char **argv)
 	thread_provider = thread_win32;
 #elif defined(_PR_PTHREADS)
 	thread_provider = thread_pthread;
-#elif defined(IRIX)
-	thread_provider = thread_sproc;
 #else
     thread_provider = thread_nspr;
 #endif
