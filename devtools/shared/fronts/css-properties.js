@@ -55,6 +55,17 @@ function isCssVariable(input) {
   return !!input.match(IS_VARIABLE_TOKEN);
 }
 
+/**
+ * Check that this is a valid identifier.
+ *
+ * @param {String} input
+ * @return {Boolean}
+ * @see https://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
+ */
+function isIdentifier(input) {
+  return input === CSS.escape(input);
+}
+
 var cachedCssProperties = new WeakMap();
 
 /**
@@ -143,6 +154,11 @@ CssProperties.prototype = {
    * @return {Boolean}
    */
   isValidOnClient(name, value, doc) {
+    // The property name should be an identifier.
+    if (!isIdentifier(name)) {
+      return false;
+    }
+
     let dummyElement = this._dummyElements.get(doc);
     if (!dummyElement) {
       dummyElement = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
