@@ -724,6 +724,7 @@ class RaptorAndroid(Raptor):
         self.os_baseline_data = None
         self.screen_off_timeout = 0
         self.screen_brightness = 127
+        self.app_launched = False
 
     def set_reverse_port(self, port):
         tcp_port = "tcp:{}".format(port)
@@ -1014,6 +1015,7 @@ class RaptorAndroid(Raptor):
             if not self.device.process_exist(self.config['binary']):
                 raise Exception("Error launching %s. App did not start properly!" %
                                 self.config['binary'])
+            self.app_launched = True
         except Exception as e:
             LOG.error("Exception launching %s" % self.config['binary'])
             LOG.error("Exception: %s %s" % (type(e).__name__, str(e)))
@@ -1212,6 +1214,10 @@ class RaptorAndroid(Raptor):
             self.runner.wait(timeout=None)
 
     def check_for_crashes(self):
+        if not self.app_launched:
+            LOG.info("skipping check_for_crashes: application has not been launched")
+            return
+        self.app_launched = False
         # Turn off verbose to prevent logcat from being inserted into the main log.
         verbose = self.device._verbose
         self.device._verbose = False
