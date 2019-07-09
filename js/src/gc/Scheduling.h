@@ -743,6 +743,7 @@ class MemoryTracker {
   void swapMemory(Cell* a, Cell* b, MemoryUse use);
   void registerPolicy(ZoneAllocPolicy* policy);
   void unregisterPolicy(ZoneAllocPolicy* policy);
+  void movePolicy(ZoneAllocPolicy* dst, ZoneAllocPolicy* src);
   void incPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes);
   void decPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes);
 
