@@ -946,13 +946,10 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<DateTimeFormatObject*> dateTimeFormat(cx);
   dateTimeFormat = &args[0].toObject().as<DateTimeFormatObject>();
 
-  bool formatToParts = args[2].toBoolean();
-
   ClippedTime x = TimeClip(args[1].toNumber());
   if (!x.isValid()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_DATE_NOT_FINITE, "DateTimeFormat",
-                              formatToParts ? "formatToParts" : "format");
+                              JSMSG_DATE_NOT_FINITE, "DateTimeFormat");
     return false;
   }
 
@@ -971,6 +968,7 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Use the UDateFormat to actually format the time stamp.
-  return formatToParts ? intl_FormatToPartsDateTime(cx, df, x, args.rval())
-                       : intl_FormatDateTime(cx, df, x, args.rval());
+  return args[2].toBoolean()
+             ? intl_FormatToPartsDateTime(cx, df, x, args.rval())
+             : intl_FormatDateTime(cx, df, x, args.rval());
 }
