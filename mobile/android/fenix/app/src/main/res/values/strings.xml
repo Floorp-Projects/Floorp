@@ -111,6 +111,8 @@
     <string name="preferences_set_as_default_browser">Set as default browser</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Advanced</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Privacy</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Site permissions</string>
     <!-- Preference for accessibility -->
@@ -131,6 +133,8 @@
     <string name="preferences_language">Language</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Data choices</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Data collection</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">Privacy notice</string>
     <!-- Preference category for developer tools -->
@@ -198,6 +202,10 @@
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Usage and technical data</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make %1$s better</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Crash reporter</string>
     <!-- Preference switch for Mozilla location service -->
@@ -437,6 +445,8 @@
     <string name="bookmark_undo_deletion">UNDO</string>
 
     <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Permissions</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Go to Settings</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -664,4 +674,25 @@
     <string name="onboarding_theme_dark_title">Dark theme</string>
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">Light theme</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Tabs sent!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Tab sent!</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Scan the code</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[On your computer open Firefox and go to <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Ready to scan</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Sign in with your camera</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Use email instead</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox will stop syncing with your account, but won\'t delete any of your browsing data on this device.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Disconnect</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Cancel</string>
 </resources>
