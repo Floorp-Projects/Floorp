@@ -357,9 +357,9 @@ struct Statistics {
     uint32_t tenured;
   } allocsSinceMinorGC;
 
-  /* Heap size before and after the GC ran. */
-  size_t preHeapSize;
-  size_t postHeapSize;
+  /* Total GC heap size before and after the GC ran. */
+  size_t preTotalHeapBytes;
+  size_t postTotalHeapBytes;
 
   /* If the GC was triggered by exceeding some threshold, record the
    * threshold and the value that exceeded it. */
@@ -424,6 +424,9 @@ struct Statistics {
 
   void beginGC(JSGCInvocationKind kind, const TimeStamp& currentTime);
   void endGC();
+
+  void sendGCTelemetry();
+  void sendSliceTelemetry(const SliceData& slice);
 
   void recordPhaseBegin(Phase phase);
   void recordPhaseEnd(Phase phase);
