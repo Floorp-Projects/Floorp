@@ -58,12 +58,12 @@ async function performTests() {
   );
 
   info(
-    "Check that hitting Enter does invoke the getter and return its properties"
+    "Check that hitting Tab does invoke the getter and return its properties"
   );
   let onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_Tab");
   await onPopUpOpen;
-  ok(autocompletePopup.isOpen, "popup is open after Enter");
+  ok(autocompletePopup.isOpen, "popup is open after Tab");
   is(
     getAutocompletePopupLabels(autocompletePopup).join("-"),
     "baz-bloop",
@@ -131,4 +131,8 @@ async function performTests() {
     "Invoke getter foo.bar to retrieve the property list?",
     "Dialog has expected text content"
   );
+
+  info("Close tooltip");
+  EventUtils.synthesizeKey("KEY_Escape");
+  await waitFor(() => !isConfirmDialogOpened(toolbox));
 }
