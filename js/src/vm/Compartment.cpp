@@ -12,6 +12,7 @@
 
 #include "jsfriendapi.h"
 
+#include "dbg/Debugger.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
 #include "js/Date.h"
@@ -20,7 +21,6 @@
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
-#include "vm/Debugger.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/WrapperObject.h"

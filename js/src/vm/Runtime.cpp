@@ -26,6 +26,7 @@
 #include "jsmath.h"
 
 #include "builtin/Promise.h"
+#include "dbg/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
@@ -45,7 +46,6 @@
 #endif
 #include "util/Windows.h"
 #include "vm/DateTime.h"
-#include "vm/Debugger.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"

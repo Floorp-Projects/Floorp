@@ -6,9 +6,9 @@
 
 #include "jit/BaselineFrame-inl.h"
 
+#include "dbg/Debugger.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
-#include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 
 #include "jit/JitFrames-inl.h"

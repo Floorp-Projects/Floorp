@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_Debugger_h
-#define vm_Debugger_h
+#ifndef dbg_Debugger_h
+#define dbg_Debugger_h
 
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
@@ -2258,4 +2258,4 @@ struct DeletePolicy<js::Debugger>
 
 } /* namespace JS */
 
-#endif /* vm_Debugger_h */
+#endif /* dbg_Debugger_h */
