@@ -478,6 +478,7 @@ void BaselineInterpreterCodeGen::loadScriptAtom(Register index, Register dest) {
   MOZ_ASSERT(index != dest);
   loadScript(dest);
   masm.loadPtr(Address(dest, JSScript::offsetOfScriptData()), dest);
+  masm.loadPtr(Address(dest, RuntimeScriptData::offsetOfSSD()), dest);
   masm.loadPtr(
       BaseIndex(dest, index, ScalePointer, SharedScriptData::offsetOfAtoms()),
       dest);
@@ -530,6 +531,7 @@ void BaselineInterpreterCodeGen::emitInitializeLocals() {
   Register scratch = R0.scratchReg();
   loadScript(scratch);
   masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
+  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfSSD()), scratch);
   masm.load32(Address(scratch, SharedScriptData::offsetOfNfixed()), scratch);
 
   Label top, done;
@@ -897,6 +899,7 @@ void BaselineInterpreterCodeGen::subtractScriptSlotsSize(Register reg,
   MOZ_ASSERT(reg != scratch);
   loadScript(scratch);
   masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
+  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfSSD()), scratch);
   masm.load32(Address(scratch, SharedScriptData::offsetOfNslots()), scratch);
   static_assert(sizeof(Value) == 8,
                 "shift by 3 below assumes Value is 8 bytes");
@@ -1220,6 +1223,7 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
 
   // Initialize interpreter pc.
   masm.loadPtr(Address(scratch1, JSScript::offsetOfScriptData()), scratch1);
+  masm.loadPtr(Address(scratch1, RuntimeScriptData::offsetOfSSD()), scratch1);
   masm.load32(Address(scratch1, SharedScriptData::offsetOfCodeOffset()),
               scratch2);
   masm.addPtr(scratch2, scratch1);
@@ -4860,8 +4864,9 @@ template <typename Handler>
 void BaselineCodeGen<Handler>::emitInterpJumpToResumeEntry(Register script,
                                                            Register resumeIndex,
                                                            Register scratch) {
-  // Load JSScript::scriptData() into |script|.
+  // Load JSScript::sharedScriptData() into |script|.
   masm.loadPtr(Address(script, JSScript::offsetOfScriptData()), script);
+  masm.loadPtr(Address(script, RuntimeScriptData::offsetOfSSD()), script);
 
   // Load the resume pcOffset in |resumeIndex|.
   masm.load32(Address(script, SharedScriptData::offsetOfResumeOffsetsOffset()),
