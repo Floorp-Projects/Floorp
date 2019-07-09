@@ -88,12 +88,12 @@ jobs:
     - name: ship-geckoview
       job:
           type: decision-task
-          treeherder-symbol: ship_geckoview_beta
-          target-tasks-method: ship_geckoview_beta
+          treeherder-symbol: ship_geckoview_release
+          target-tasks-method: ship_geckoview_release
           include-push-tasks: true
-          android-release-type: beta
+          android-release-type: release
       run-on-projects:
-          - mozilla-beta
+          - mozilla-release
       when: []    # never (hook only)
 
 

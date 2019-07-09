@@ -527,9 +527,9 @@ def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('ship_geckoview_beta')
-def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to ship geckoview beta. The
+@_target_task('ship_geckoview_release')
+def target_tasks_ship_geckoview_release(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to ship geckoview release. The
     build process involves a pipeline of builds and an upload to
     maven.mozilla.org."""
 
@@ -537,8 +537,8 @@ def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
         # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview and
         # its symbols to be uploaded
         return (
-            task.attributes.get('release-type') == 'beta' and
-            # XXX The shippable geckoview beta are flagged as "nightly"
+            task.attributes.get('release-type') == 'release' and
+            # XXX The shippable geckoview release are flagged as "nightly"
             task.attributes.get('nightly') is True and
             task.kind in ('beetmover-geckoview', 'upload-symbols')
         )
