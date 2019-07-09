@@ -333,13 +333,15 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
   if (!webgl->BindCurFBForDraw()) return nullptr;
 
   const auto& fb = webgl->mBoundDrawFramebuffer;
-  if (fb && !webgl->IsExtensionEnabled(WebGLExtensionID::EXT_float_blend) &&
-      webgl->mBlendEnabled) {
+  if (fb && webgl->mBlendEnabled) {
     const auto& info = *fb->GetCompletenessInfo();
     if (info.hasFloat32) {
-      webgl->ErrorInvalidOperation(
-          "Float32 blending requires EXT_float_blend.");
-      return nullptr;
+      if (!webgl->IsExtensionEnabled(WebGLExtensionID::EXT_float_blend)) {
+        webgl->ErrorInvalidOperation(
+            "Float32 blending requires EXT_float_blend.");
+        return nullptr;
+      }
+      webgl->WarnIfImplicit(WebGLExtensionID::EXT_float_blend);
     }
   }
 

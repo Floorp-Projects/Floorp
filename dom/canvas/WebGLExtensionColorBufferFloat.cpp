@@ -15,13 +15,18 @@ WebGLExtensionColorBufferFloat::WebGLExtensionColorBufferFloat(
     WebGLContext* webgl)
     : WebGLExtensionBase(webgl) {
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+  SetRenderable(webgl::FormatRenderableState::Implicit(
+      WebGLExtensionID::WEBGL_color_buffer_float));
+}
 
-  auto& fua = webgl->mFormatUsage;
+void WebGLExtensionColorBufferFloat::SetRenderable(
+    const webgl::FormatRenderableState state) {
+  auto& fua = mContext->mFormatUsage;
 
-  auto fnUpdateUsage = [&fua](GLenum sizedFormat,
-                              webgl::EffectiveFormat effFormat) {
+  auto fnUpdateUsage = [&](GLenum sizedFormat,
+                           webgl::EffectiveFormat effFormat) {
     auto usage = fua->EditUsage(effFormat);
-    usage->SetRenderable();
+    usage->SetRenderable(state);
     fua->AllowRBFormat(sizedFormat, usage);
   };
 
@@ -31,6 +36,10 @@ WebGLExtensionColorBufferFloat::WebGLExtensionColorBufferFloat(
   FOO(RGBA32F);
 
 #undef FOO
+}
+
+void WebGLExtensionColorBufferFloat::OnSetExplicit() {
+  SetRenderable(webgl::FormatRenderableState::Explicit());
 }
 
 WebGLExtensionColorBufferFloat::~WebGLExtensionColorBufferFloat() {}
