@@ -665,7 +665,6 @@ pref("mousewheel.with_meta.action", 1); // win key on Win, Super/Hyper on Linux
 pref("mousewheel.with_control.action",3);
 pref("mousewheel.with_win.action", 1);
 
-pref("browser.xul.error_pages.enabled", true);
 pref("browser.xul.error_pages.expert_bad_cert", false);
 pref("browser.xul.error_pages.show_safe_browsing_details_on_load", false);
 

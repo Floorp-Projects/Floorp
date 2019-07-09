@@ -243,10 +243,6 @@ using namespace mozilla::net;
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
-// True means sUseErrorPages has been added to
-// preferences var cache.
-static bool gAddedPreferencesVarCache = false;
-
 // Number of documents currently loading
 static int32_t gNumberOfDocumentsLoading = 0;
 
@@ -270,8 +266,6 @@ extern mozilla::LazyLogModule gPageCacheLog;
 const char kBrandBundleURL[] = "chrome://branding/locale/brand.properties";
 const char kAppstringsBundleURL[] =
     "chrome://global/locale/appstrings.properties";
-
-bool nsDocShell::sUseErrorPages = false;
 
 // Global reference to the URI fixup service.
 nsIURIFixup* nsDocShell::sURIFixup = nullptr;
@@ -2088,7 +2082,8 @@ nsDocShell::GetUseErrorPages(bool* aUseErrorPages) {
 
 NS_IMETHODIMP
 nsDocShell::SetUseErrorPages(bool aUseErrorPages) {
-  // If mUseErrorPages is set explicitly, stop using sUseErrorPages.
+  // If mUseErrorPages is set explicitly, stop using the
+  // browser.xul.error_pages_enabled pref.
   if (mObserveErrorPages) {
     mObserveErrorPages = false;
   }
@@ -4949,14 +4944,7 @@ nsDocShell::Create() {
       "security.strict_security_checks.enabled", mUseStrictSecurityChecks);
 
   // Should we use XUL error pages instead of alerts if possible?
-  mUseErrorPages =
-      Preferences::GetBool("browser.xul.error_pages.enabled", mUseErrorPages);
-
-  if (!gAddedPreferencesVarCache) {
-    Preferences::AddBoolVarCache(
-        &sUseErrorPages, "browser.xul.error_pages.enabled", mUseErrorPages);
-    gAddedPreferencesVarCache = true;
-  }
+  mUseErrorPages = StaticPrefs::browser_xul_error_pages_enabled();
 
   mDisableMetaRefreshWhenInactive =
       Preferences::GetBool("browser.meta_refresh_when_inactive.disabled",
