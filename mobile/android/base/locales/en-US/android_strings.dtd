@@ -278,6 +278,7 @@
 <!ENTITY pref_cookies_menu "Cookies">
 <!ENTITY pref_cookies_accept_all "Enabled">
 <!ENTITY pref_cookies_not_accept_foreign "Enabled, excluding 3rd party">
+<!ENTITY pref_cookies_not_accept_trackers "Enabled, excluding tracking cookies">
 <!ENTITY pref_cookies_disabled "Disabled">
 
 <!-- Localization note (pref_category_data_saver): “data saver” in this
