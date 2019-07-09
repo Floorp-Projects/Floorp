@@ -842,8 +842,9 @@ bool js::DefineToStringTag(JSContext* cx, HandleObject obj, JSAtom* tag) {
 
 static void GlobalDebuggees_finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->maybeOnHelperThread());
-  fop->delete_(
-      (GlobalObject::DebuggerVector*)obj->as<NativeObject>().getPrivate());
+  void* ptr = obj->as<NativeObject>().getPrivate();
+  auto debuggers = static_cast<GlobalObject::DebuggerVector*>(ptr);
+  fop->delete_(obj, debuggers, MemoryUse::GlobalDebuggerVector);
 }
 
 static const ClassOps GlobalDebuggees_classOps = {nullptr,
@@ -880,11 +881,11 @@ GlobalObject::DebuggerVector* GlobalObject::getDebuggers() const {
   if (!obj) {
     return nullptr;
   }
-  debuggers = cx->new_<DebuggerVector>();
+  debuggers = cx->new_<DebuggerVector>(cx->zone());
   if (!debuggers) {
     return nullptr;
   }
-  obj->setPrivate(debuggers);
+  InitObjectPrivate(obj, debuggers, MemoryUse::GlobalDebuggerVector);
   global->setReservedSlot(DEBUGGERS, ObjectValue(*obj));
   return debuggers;
 }
