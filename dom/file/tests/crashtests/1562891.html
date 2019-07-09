@@ -1,0 +1,16 @@
+<html>
+<head>
+  <script>
+    function start () {
+      const canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas')
+      SpecialPowers.forceGC();
+      canvas.toBlob(function (blob) {
+        blob.stream()
+        blob.arrayBuffer().then(() => {})
+      })
+    }
+
+    window.addEventListener('load', start)
+  </script>
+</head>
+</html>
