@@ -28,8 +28,13 @@
     const p1 = document.querySelectorAll("p")[0];
     const p2 = document.querySelectorAll("p")[1];
     const a = p2.querySelector("a");
-    a.addEventListener("click", function() {
+    // We want to test that the event listener persists after
+    // translateFragment().
+    a.addEventListener("click", function(e) {
       SimpleTest.finish();
+      // We cannot connect to non-local connections on automation, so prevent
+      // the navigation.
+      e.preventDefault();
     });
 
     await domLoc.translateFragment(document.body);
