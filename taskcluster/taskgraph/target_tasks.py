@@ -466,8 +466,8 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('nightly_geckoview')
-def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
+@_target_task('ship_geckoview')
+def target_tasks_ship_geckoview(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to ship geckoview nightly. The
     nightly build process involves a pipeline of builds and an upload to
     maven.mozilla.org."""
