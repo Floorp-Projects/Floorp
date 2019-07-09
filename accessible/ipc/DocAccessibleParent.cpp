@@ -537,38 +537,40 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   }
 
 #if defined(XP_WIN)
-  auto embeddedBrowser = static_cast<dom::BrowserParent*>(aChildDoc->Manager());
-  dom::BrowserBridgeParent* bridge = embeddedBrowser->GetBrowserBridgeParent();
-  if (bridge) {
+  if (aChildDoc->IsTopLevelInContentProcess()) {
     // aChildDoc is an embedded document in a different content process to
     // this document.
-    // Send a COM proxy for the embedded document to the embedder process
-    // hosting the iframe. This will be returned as the child of the
-    // embedder OuterDocAccessible.
-    RefPtr<IDispatch> docAcc;
-    aChildDoc->GetCOMInterface((void**)getter_AddRefs(docAcc));
-    RefPtr<IDispatch> docWrapped(
-        mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(docAcc)));
-    IDispatchHolder::COMPtrType docPtr(
-        mscom::ToProxyUniquePtr(std::move(docWrapped)));
-    IDispatchHolder docHolder(std::move(docPtr));
-    if (bridge->SendSetEmbeddedDocAccessibleCOMProxy(docHolder)) {
+    auto embeddedBrowser = static_cast<dom::BrowserParent*>(aChildDoc->Manager());
+    dom::BrowserBridgeParent* bridge = embeddedBrowser->GetBrowserBridgeParent();
+    if (bridge) {
+      // Send a COM proxy for the embedded document to the embedder process
+      // hosting the iframe. This will be returned as the child of the
+      // embedder OuterDocAccessible.
+      RefPtr<IDispatch> docAcc;
+      aChildDoc->GetCOMInterface((void**)getter_AddRefs(docAcc));
+      RefPtr<IDispatch> docWrapped(
+          mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(docAcc)));
+      IDispatchHolder::COMPtrType docPtr(
+          mscom::ToProxyUniquePtr(std::move(docWrapped)));
+      IDispatchHolder docHolder(std::move(docPtr));
+      if (bridge->SendSetEmbeddedDocAccessibleCOMProxy(docHolder)) {
 #  if defined(MOZ_SANDBOX)
-      mDocProxyStream = docHolder.GetPreservedStream();
+        mDocProxyStream = docHolder.GetPreservedStream();
 #  endif  // defined(MOZ_SANDBOX)
-    }
-    // Send a COM proxy for the embedder OuterDocAccessible to the embedded
-    // document process. This will be returned as the parent of the
-    // embedded document.
-    aChildDoc->SendParentCOMProxy(WrapperFor(outerDoc));
-    if (nsWinUtils::IsWindowEmulationStarted()) {
-      // The embedded document should use the same emulated window handle as
-      // its embedder. It will return the embedder document (not a window
-      // accessible) as the parent accessible, so we pass a null accessible
-      // when sending the window to the embedded document.
-      aChildDoc->SetEmulatedWindowHandle(mEmulatedWindowHandle);
-      Unused << aChildDoc->SendEmulatedWindow(
-          reinterpret_cast<uintptr_t>(mEmulatedWindowHandle), nullptr);
+      }
+      // Send a COM proxy for the embedder OuterDocAccessible to the embedded
+      // document process. This will be returned as the parent of the
+      // embedded document.
+      aChildDoc->SendParentCOMProxy(WrapperFor(outerDoc));
+      if (nsWinUtils::IsWindowEmulationStarted()) {
+        // The embedded document should use the same emulated window handle as
+        // its embedder. It will return the embedder document (not a window
+        // accessible) as the parent accessible, so we pass a null accessible
+        // when sending the window to the embedded document.
+        aChildDoc->SetEmulatedWindowHandle(mEmulatedWindowHandle);
+        Unused << aChildDoc->SendEmulatedWindow(
+            reinterpret_cast<uintptr_t>(mEmulatedWindowHandle), nullptr);
+      }
     }
   }
 #endif  // defined(XP_WIN)
