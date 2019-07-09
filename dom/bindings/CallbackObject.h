@@ -166,6 +166,24 @@ class CallbackObject : public nsISupports {
     return aMallocSizeOf(this);
   }
 
+  // Used for cycle collection optimization.  Should return true only if all our
+  // outgoing edges are to known-live objects.  In that case, there's no point
+  // traversing our edges to them, because we know they can't be collected
+  // anyway.
+  bool IsBlackForCC() const {
+    // Play it safe in case this gets called after unlink.
+    return (!mCallback || !JS::ObjectIsMarkedGray(mCallback)) &&
+           (!mCallbackGlobal || !JS::ObjectIsMarkedGray(mCallbackGlobal)) &&
+           (!mCreationStack || !JS::ObjectIsMarkedGray(mCreationStack)) &&
+           (!mIncumbentJSGlobal ||
+            !JS::ObjectIsMarkedGray(mIncumbentJSGlobal)) &&
+           // mIncumbentGlobal is known-live if we have a known-live
+           // mIncumbentJSGlobal, since mIncumbentJSGlobal will keep a ref to
+           // it. At this point if mIncumbentJSGlobal is not null, it's
+           // known-live.
+           (!mIncumbentGlobal || mIncumbentJSGlobal);
+  }
+
  protected:
   virtual ~CallbackObject() { mozilla::DropJSObjects(this); }
 
