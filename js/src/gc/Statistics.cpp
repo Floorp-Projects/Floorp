@@ -25,6 +25,8 @@
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 
+#include "gc/PrivateIterators-inl.h"
+
 using namespace js;
 using namespace js::gc;
 using namespace js::gcstats;
@@ -756,6 +758,8 @@ Statistics::Statistics(JSRuntime* rt)
       allocsSinceMinorGC({0, 0}),
       preTotalHeapBytes(0),
       postTotalHeapBytes(0),
+      preCollectedHeapBytes(0),
+      heapBytesFreed(0),
       thresholdTriggered(false),
       triggerAmount(0.0),
       triggerThreshold(0.0),
@@ -989,11 +993,29 @@ void Statistics::beginGC(JSGCInvocationKind kind,
   GCRuntime& gc = runtime->gc;
   preTotalHeapBytes = gc.heapSize.gcBytes();
 
+  preCollectedHeapBytes = 0;
+  heapBytesFreed = 0;
+
   startingMajorGCNumber = gc.majorGCCount();
   startingSliceNumber = gc.gcNumber();
+
   if (gc.lastGCTime()) {
     timeSinceLastGC = currentTime - gc.lastGCTime();
   }
+}
+
+void Statistics::measureInitialHeapSize() {
+  MOZ_ASSERT(preCollectedHeapBytes == 0);
+  for (GCZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
+    preCollectedHeapBytes += zone->zoneSize.gcBytes();
+  }
+}
+
+void Statistics::adoptHeapSizeDuringIncrementalGC(Zone* mergedZone) {
+  // A zone is being merged into a zone that's currently being collected so we
+  // need to adjust our record of the total size of heap for collected zones.
+  MOZ_ASSERT(runtime->gc.isIncrementalGCInProgress());
+  preCollectedHeapBytes += mergedZone->zoneSize.gcBytes();
 }
 
 void Statistics::endGC() {
@@ -1067,6 +1089,13 @@ void Statistics::sendGCTelemetry() {
       runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_COUNT, slices_.length());
     }
   }
+
+  MOZ_ASSERT(preCollectedHeapBytes >= heapBytesFreed);
+  size_t bytesSurvived = preCollectedHeapBytes - heapBytesFreed;
+  double survialRate =
+      100.0 * double(bytesSurvived) / double(preCollectedHeapBytes);
+  runtime->addTelemetry(JS_TELEMETRY_GC_TENURED_SURVIVAL_RATE,
+                        uint32_t(survialRate));
 }
 
 void Statistics::beginNurseryCollection(JS::GCReason reason) {
