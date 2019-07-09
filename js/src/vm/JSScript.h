@@ -1574,13 +1574,6 @@ class alignas(uintptr_t) PrivateScriptData final {
 // offset of the array from the start offset of the subsequent array. The
 // notable exception is that bytecode length is stored explicitly.
 class alignas(uintptr_t) SharedScriptData final {
-  // This class is reference counted as follows: each pointer from a JSScript
-  // counts as one reference plus there may be one reference from the shared
-  // script data table.
-  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      refCount_ = {};
-
   uint32_t codeOffset_ = 0;  // Byte-offset from 'this'
   uint32_t codeLength_ = 0;
   uint32_t optArrayOffset_ = 0;
@@ -1717,37 +1710,10 @@ class alignas(uintptr_t) SharedScriptData final {
     return nullLength;
   }
 
-  uint32_t refCount() const { return refCount_; }
-  void AddRef() { refCount_++; }
-  void Release() {
-    MOZ_ASSERT(refCount_ != 0);
-    uint32_t remain = --refCount_;
-    if (remain == 0) {
-      js_free(this);
-    }
-  }
-
   // Span over all raw bytes in this struct and its trailing arrays.
-  mozilla::Span<const uint8_t> allocSpan() const {
+  mozilla::Span<const uint8_t> immutableData() const {
     size_t allocSize = endOffset();
     return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
-  }
-
-  // Span over all immutable bytes in allocation. This excludes part of
-  // structure used for reference counting and is the basis of how we
-  // de-duplicate data.
-  mozilla::Span<const uint8_t> immutableData() const {
-    // The refCount_ must be first field of structure.
-    static_assert(offsetof(SharedScriptData, refCount_) == 0,
-                  "refCount_ must be at start of SharedScriptData");
-    constexpr size_t dataOffset = sizeof(refCount_);
-
-    static_assert(offsetof(SharedScriptData, numBytecodeTypeSets) +
-                          sizeof(numBytecodeTypeSets) ==
-                      sizeof(SharedScriptData),
-                  "SharedScriptData should not have padding after last field");
-
-    return allocSpan().From(dataOffset);
   }
 
   uint32_t natoms() const {
@@ -1816,25 +1782,87 @@ class alignas(uintptr_t) SharedScriptData final {
   SharedScriptData& operator=(const SharedScriptData&) = delete;
 };
 
+struct SharedScriptDataHasher;
+
+// Script data that is shareable across a JSRuntime.
+class RuntimeScriptData final {
+  // This class is reference counted as follows: each pointer from a JSScript
+  // counts as one reference plus there may be one reference from the shared
+  // script data table.
+  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      refCount_ = {};
+
+  js::UniquePtr<SharedScriptData> ssd_ = nullptr;
+
+  // NOTE: The raw bytes of this structure are used for hashing so use explicit
+  // padding values as needed for predicatable results across compilers.
+
+  friend class ::JSScript;
+  friend class js::SharedScriptData;
+  friend struct js::SharedScriptDataHasher;
+
+ private:
+  // Size to allocate.
+  static size_t AllocationSize();
+
+  template <typename T>
+  void initElements(size_t offset, size_t length);
+
+  // Initialize to GC-safe state.
+  RuntimeScriptData();
+
+ public:
+  static RuntimeScriptData* new_(JSContext* cx);
+
+  uint32_t refCount() const { return refCount_; }
+  void AddRef() { refCount_++; }
+  void Release() {
+    MOZ_ASSERT(refCount_ != 0);
+    uint32_t remain = --refCount_;
+    if (remain == 0) {
+      ssd_ = nullptr;
+      js_free(this);
+    }
+  }
+
+  static constexpr size_t offsetOfSSD() {
+    return offsetof(RuntimeScriptData, ssd_);
+  }
+
+  void traceChildren(JSTracer* trc);
+
+  // Mark this RuntimeScriptData for use in a new zone.
+  void markForCrossZone(JSContext* cx);
+
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+    return mallocSizeOf(this) + mallocSizeOf(ssd_.get());
+  }
+
+  // RuntimeScriptData has trailing data so isn't copyable or movable.
+  RuntimeScriptData(const RuntimeScriptData&) = delete;
+  RuntimeScriptData& operator=(const RuntimeScriptData&) = delete;
+};
+
 // Two SharedScriptData instances may be de-duplicated if they have the same
 // data in their immutableData() span. This Hasher enables that comparison.
 struct SharedScriptDataHasher {
-  using Lookup = RefPtr<SharedScriptData>;
+  using Lookup = RefPtr<RuntimeScriptData>;
 
   static HashNumber hash(const Lookup& l) {
-    mozilla::Span<const uint8_t> immutableData = l->immutableData();
+    mozilla::Span<const uint8_t> immutableData = l->ssd_->immutableData();
     return mozilla::HashBytes(immutableData.data(), immutableData.size());
   }
 
-  static bool match(SharedScriptData* entry, const Lookup& lookup) {
-    return entry->immutableData() == lookup->immutableData();
+  static bool match(RuntimeScriptData* entry, const Lookup& lookup) {
+    return entry->ssd_->immutableData() == lookup->ssd_->immutableData();
   }
 };
 
 class AutoLockScriptData;
 
 using ScriptDataTable =
-    HashSet<SharedScriptData*, SharedScriptDataHasher, SystemAllocPolicy>;
+    HashSet<RuntimeScriptData*, SharedScriptDataHasher, SystemAllocPolicy>;
 
 extern void SweepScriptData(JSRuntime* rt);
 
@@ -1860,7 +1888,7 @@ class JSScript : public js::gc::TenuredCell {
   uint8_t* jitCodeRaw_ = nullptr;
 
   // Shareable script data
-  RefPtr<js::SharedScriptData> scriptData_ = {};
+  RefPtr<js::RuntimeScriptData> scriptData_ = {};
 
   // Unshared variable-length data
   js::PrivateScriptData* data_ = nullptr;
@@ -2223,14 +2251,17 @@ class JSScript : public js::gc::TenuredCell {
   JS::Compartment* maybeCompartment() const { return compartment(); }
   JS::Realm* realm() const { return realm_; }
 
-  js::SharedScriptData* scriptData() { return scriptData_; }
+  js::RuntimeScriptData* scriptData() { return scriptData_; }
+  js::SharedScriptData* sharedScriptData() const {
+    return scriptData_->ssd_.get();
+  }
 
   // Script bytecode is immutable after creation.
   jsbytecode* code() const {
     if (!scriptData_) {
       return nullptr;
     }
-    return scriptData_->code();
+    return sharedScriptData()->code();
   }
 
   bool hasForceInterpreterOp() const {
@@ -2253,7 +2284,7 @@ class JSScript : public js::gc::TenuredCell {
 
   size_t length() const {
     MOZ_ASSERT(scriptData_);
-    return scriptData_->codeLength();
+    return sharedScriptData()->codeLength();
   }
 
   jsbytecode* codeEnd() const { return code() + length(); }
@@ -2282,7 +2313,7 @@ class JSScript : public js::gc::TenuredCell {
     return code() + offset;
   }
 
-  size_t mainOffset() const { return scriptData_->mainOffset; }
+  size_t mainOffset() const { return sharedScriptData()->mainOffset; }
 
   uint32_t lineno() const { return lineno_; }
 
@@ -2292,7 +2323,7 @@ class JSScript : public js::gc::TenuredCell {
 
   // The fixed part of a stack frame is comprised of vars (in function and
   // module code) and block-scoped locals (in all kinds of code).
-  size_t nfixed() const { return scriptData_->nfixed; }
+  size_t nfixed() const { return sharedScriptData()->nfixed; }
 
   // Number of fixed slots reserved for slots that are always live. Only
   // nonzero for function or module code.
@@ -2309,7 +2340,7 @@ class JSScript : public js::gc::TenuredCell {
   // Calculate the number of fixed slots that are live at a particular bytecode.
   size_t calculateLiveFixed(jsbytecode* pc);
 
-  size_t nslots() const { return scriptData_->nslots; }
+  size_t nslots() const { return sharedScriptData()->nslots; }
 
   unsigned numArgs() const {
     if (bodyScope()->is<js::FunctionScope>()) {
@@ -2339,12 +2370,12 @@ class JSScript : public js::gc::TenuredCell {
                 "MaxBytecodeTypeSets must match sizeof(numBytecodeTypeSets)");
 
   size_t numBytecodeTypeSets() const {
-    return scriptData_->numBytecodeTypeSets;
+    return sharedScriptData()->numBytecodeTypeSets;
   }
 
-  size_t numICEntries() const { return scriptData_->numICEntries; }
+  size_t numICEntries() const { return sharedScriptData()->numICEntries; }
 
-  size_t funLength() const { return scriptData_->funLength; }
+  size_t funLength() const { return sharedScriptData()->funLength; }
 
   uint32_t sourceStart() const { return sourceStart_; }
 
@@ -2740,7 +2771,7 @@ class JSScript : public js::gc::TenuredCell {
   inline bool hasGlobal(const js::GlobalObject* global) const;
   js::GlobalObject& uninlinedGlobal() const;
 
-  uint32_t bodyScopeIndex() const { return scriptData_->bodyScopeIndex; }
+  uint32_t bodyScopeIndex() const { return sharedScriptData()->bodyScopeIndex; }
 
   js::Scope* bodyScope() const { return getScope(bodyScopeIndex()); }
 
@@ -2879,10 +2910,12 @@ class JSScript : public js::gc::TenuredCell {
 
   size_t dataSize() const { return dataSize_; }
 
-  bool hasTrynotes() const { return !scriptData_->tryNotes().empty(); }
-  bool hasScopeNotes() const { return !scriptData_->scopeNotes().empty(); }
+  bool hasTrynotes() const { return !sharedScriptData()->tryNotes().empty(); }
+  bool hasScopeNotes() const {
+    return !sharedScriptData()->scopeNotes().empty();
+  }
   bool hasResumeOffsets() const {
-    return !scriptData_->resumeOffsets().empty();
+    return !sharedScriptData()->resumeOffsets().empty();
   }
 
   mozilla::Span<const JS::GCCellPtr> gcthings() const {
@@ -2890,15 +2923,15 @@ class JSScript : public js::gc::TenuredCell {
   }
 
   mozilla::Span<const JSTryNote> trynotes() const {
-    return scriptData_->tryNotes();
+    return sharedScriptData()->tryNotes();
   }
 
   mozilla::Span<const js::ScopeNote> scopeNotes() const {
-    return scriptData_->scopeNotes();
+    return sharedScriptData()->scopeNotes();
   }
 
   mozilla::Span<const uint32_t> resumeOffsets() const {
-    return scriptData_->resumeOffsets();
+    return sharedScriptData()->resumeOffsets();
   }
 
   uint32_t tableSwitchCaseOffset(jsbytecode* pc, uint32_t caseIndex) const {
@@ -2915,20 +2948,20 @@ class JSScript : public js::gc::TenuredCell {
 
   uint32_t numNotes() const {
     MOZ_ASSERT(scriptData_);
-    return scriptData_->noteLength();
+    return sharedScriptData()->noteLength();
   }
   jssrcnote* notes() const {
     MOZ_ASSERT(scriptData_);
-    return scriptData_->notes();
+    return sharedScriptData()->notes();
   }
 
   size_t natoms() const {
     MOZ_ASSERT(scriptData_);
-    return scriptData_->natoms();
+    return sharedScriptData()->natoms();
   }
   js::GCPtrAtom* atoms() const {
     MOZ_ASSERT(scriptData_);
-    return scriptData_->atoms();
+    return sharedScriptData()->atoms();
   }
 
   js::GCPtrAtom& getAtom(size_t index) const {

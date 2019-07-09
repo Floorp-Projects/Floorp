@@ -825,7 +825,7 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   SharedScriptData* ssd = nullptr;
 
   if (mode == XDR_ENCODE) {
-    ssd = script->scriptData();
+    ssd = script->sharedScriptData();
 
     natoms = ssd->natoms();
     codeLength = ssd->codeLength();
@@ -849,7 +849,7 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
                                         numTryNotes)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    ssd = script->scriptData();
+    ssd = script->sharedScriptData();
   }
 
   MOZ_TRY(xdr->codeUint32(&ssd->mainOffset));
@@ -907,6 +907,28 @@ template
     /* static */
     XDRResult
     SharedScriptData::XDR(XDRState<XDR_DECODE>* xdr, HandleScript script);
+
+/* static */ size_t RuntimeScriptData::AllocationSize() {
+  size_t size = sizeof(RuntimeScriptData);
+
+  return size;
+}
+
+// Placement-new elements of an array. This should optimize away for types with
+// trivial default initiation.
+template <typename T>
+void RuntimeScriptData::initElements(size_t offset, size_t length) {
+  uintptr_t base = reinterpret_cast<uintptr_t>(this);
+  DefaultInitializeElements<T>(reinterpret_cast<void*>(base + offset), length);
+}
+
+RuntimeScriptData::RuntimeScriptData() {
+  // Variable-length data begins immediately after RuntimeScriptData itself.
+  size_t cursor = sizeof(*this);
+
+  // Sanity check
+  MOZ_ASSERT(AllocationSize() == cursor);
+}
 
 template <XDRMode mode>
 XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
@@ -3494,6 +3516,22 @@ SharedScriptData* js::SharedScriptData::new_(
                        numScopeNotes, numTryNotes);
 }
 
+RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx) {
+  // Compute size including trailing arrays
+  size_t size = AllocationSize();
+
+  // Allocate contiguous raw buffer
+  void* raw = cx->pod_malloc<uint8_t>(size);
+  MOZ_ASSERT(uintptr_t(raw) % alignof(RuntimeScriptData) == 0);
+  if (!raw) {
+    return nullptr;
+  }
+
+  // Constuct the RuntimeScriptData. Trailing arrays are uninitialized but
+  // GCPtrs are put into a safe state.
+  return new (raw) RuntimeScriptData();
+}
+
 bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
                                       uint32_t noteLength, uint32_t natoms,
                                       uint32_t numResumeOffsets,
@@ -3509,43 +3547,51 @@ bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
 #endif
 
   MOZ_ASSERT(!scriptData_);
-  scriptData_ =
+
+  RefPtr<RuntimeScriptData> rsd(RuntimeScriptData::new_(cx));
+  if (!rsd) {
+    return false;
+  }
+
+  js::UniquePtr<SharedScriptData> ssd(
       SharedScriptData::new_(cx, codeLength, noteLength, natoms,
-                             numResumeOffsets, numScopeNotes, numTryNotes);
-  return !!scriptData_;
+                             numResumeOffsets, numScopeNotes, numTryNotes));
+  if (!ssd) {
+    return false;
+  }
+
+  rsd->ssd_ = std::move(ssd);
+  scriptData_ = std::move(rsd);
+  return true;
 }
 
 void JSScript::freeScriptData() { scriptData_ = nullptr; }
 
-/*
- * Takes ownership of its *ssd parameter and either adds it into the runtime's
- * ScriptDataTable or frees it if a matching entry already exists.
- *
- * Sets the |code| and |atoms| fields on the given JSScript.
- */
+// Takes owndership of the script's scriptData_ and either adds it into the
+// runtime's ScriptDataTable or frees it if a matching entry already exists.
 bool JSScript::shareScriptData(JSContext* cx) {
-  SharedScriptData* ssd = scriptData();
-  MOZ_ASSERT(ssd);
-  MOZ_ASSERT(ssd->refCount() == 1);
+  RuntimeScriptData* rsd = scriptData();
+  MOZ_ASSERT(rsd);
+  MOZ_ASSERT(rsd->refCount() == 1);
 
   // Calculate the hash before taking the lock. Because the data is reference
   // counted, it also will be freed after releasing the lock if necessary.
-  SharedScriptDataHasher::Lookup lookup(ssd);
+  SharedScriptDataHasher::Lookup lookup(rsd);
 
   AutoLockScriptData lock(cx->runtime());
 
   ScriptDataTable::AddPtr p = cx->scriptDataTable(lock).lookupForAdd(lookup);
   if (p) {
-    MOZ_ASSERT(ssd != *p);
+    MOZ_ASSERT(rsd != *p);
     scriptData_ = *p;
   } else {
-    if (!cx->scriptDataTable(lock).add(p, ssd)) {
+    if (!cx->scriptDataTable(lock).add(p, rsd)) {
       ReportOutOfMemory(cx);
       return false;
     }
 
     // Being in the table counts as a reference on the script data.
-    ssd->AddRef();
+    rsd->AddRef();
   }
 
   // Refs: JSScript, ScriptDataTable
@@ -3562,7 +3608,7 @@ void js::SweepScriptData(JSRuntime* rt) {
   ScriptDataTable& table = rt->scriptDataTable(lock);
 
   for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
-    SharedScriptData* scriptData = e.front();
+    RuntimeScriptData* scriptData = e.front();
     if (scriptData->refCount() == 1) {
       scriptData->Release();
       e.removeFront();
@@ -3590,9 +3636,9 @@ void js::FreeScriptData(JSRuntime* rt) {
   for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
 #ifdef DEBUG
     if (++numLive <= maxCells) {
-      SharedScriptData* scriptData = e.front();
+      RuntimeScriptData* scriptData = e.front();
       fprintf(stderr,
-              "ERROR: GC found live SharedScriptData %p with ref count %d at "
+              "ERROR: GC found live RuntimeScriptData %p with ref count %d at "
               "shutdown\n",
               scriptData, scriptData->refCount());
     }
@@ -3888,10 +3934,10 @@ bool JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
     return false;
   }
 
-  jsbytecode* code = script->scriptData_->code();
+  jsbytecode* code = script->sharedScriptData()->code();
   code[0] = JSOP_RETRVAL;
 
-  jssrcnote* notes = script->scriptData_->notes();
+  jssrcnote* notes = script->sharedScriptData()->notes();
   notes[0] = SRC_NULL;
   notes[1] = SRC_NULL;
   notes[2] = SRC_NULL;
@@ -4945,7 +4991,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
     return false;
   }
 
-  js::SharedScriptData* data = script->scriptData_;
+  js::SharedScriptData* data = script->sharedScriptData();
 
   // Initialize POD fields
   data->mainOffset = bce->mainOffset();
@@ -4976,7 +5022,6 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 }
 
 void SharedScriptData::traceChildren(JSTracer* trc) {
-  MOZ_ASSERT(refCount() != 0);
   for (uint32_t i = 0; i < natoms(); ++i) {
     TraceNullableEdge(trc, &atoms()[i], "atom");
   }
@@ -4986,6 +5031,16 @@ void SharedScriptData::markForCrossZone(JSContext* cx) {
   for (uint32_t i = 0; i < natoms(); ++i) {
     cx->markAtom(atoms()[i]);
   }
+}
+
+void RuntimeScriptData::traceChildren(JSTracer* trc) {
+  MOZ_ASSERT(refCount() != 0);
+
+  ssd_->traceChildren(trc);
+}
+
+void RuntimeScriptData::markForCrossZone(JSContext* cx) {
+  ssd_->markForCrossZone(cx);
 }
 
 void JSScript::traceChildren(JSTracer* trc) {
