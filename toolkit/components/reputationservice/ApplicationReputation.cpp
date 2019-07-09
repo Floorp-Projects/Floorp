@@ -780,7 +780,7 @@ nsresult PendingDBLookup::LookupSpecInternal(const nsACString& aSpec) {
 
   OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+      BasePrincipal::CreateContentPrincipal(uri, attrs);
   if (!principal) {
     return NS_ERROR_FAILURE;
   }

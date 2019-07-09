@@ -45,7 +45,7 @@ add_task(async function test_login_item() {
   await ContentTask.spawn(browser, [TEST_LOGIN1, TEST_LOGIN2], async logins => {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
-      "login-list-item[data-guid]"
+      ".login-list-item[data-guid]"
     );
     info("Clicking on the first login");
     loginListItem.click();

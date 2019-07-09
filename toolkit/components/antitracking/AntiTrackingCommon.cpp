@@ -161,7 +161,7 @@ uint32_t CheckCookiePermissionForPrincipal(nsICookieSettings* aCookieSettings,
   MOZ_ASSERT(aPrincipal);
 
   uint32_t cookiePermission = nsICookiePermission::ACCESS_DEFAULT;
-  if (!aPrincipal->GetIsCodebasePrincipal()) {
+  if (!aPrincipal->GetIsContentPrincipal()) {
     return cookiePermission;
   }
 
@@ -1625,7 +1625,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   MOZ_ASSERT(aCookieSettings);
 
   uint32_t access = nsICookiePermission::ACCESS_DEFAULT;
-  if (aPrincipal->GetIsCodebasePrincipal()) {
+  if (aPrincipal->GetIsContentPrincipal()) {
     nsPermissionManager* permManager = nsPermissionManager::GetInstance();
     if (permManager) {
       Unused << NS_WARN_IF(NS_FAILED(permManager->TestPermissionFromPrincipal(

@@ -99,7 +99,7 @@ add_task(async function testMixedContent() {
   // Loading principal is HTTPS; image URL is HTTP.
   var origin = "https://mochi.test:8888";
   var principal = Services.scriptSecurityManager
-                          .createCodebasePrincipalFromOrigin(origin);
+                          .createContentPrincipalFromOrigin(origin);
 
   var alert = makeAlert(null, imageServerURL + "?f=image.png",
                         null, null, false, null, null, null,

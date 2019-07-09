@@ -31,7 +31,7 @@ class ContentProcessSession {
     this.messageManager.addMessageListener("remote:destroy", this);
   }
 
-  destroy() {
+  destructor() {
     this.messageManager.removeMessageListener("remote:request", this);
     this.messageManager.removeMessageListener("remote:destroy", this);
     this.domains.clear();
@@ -93,7 +93,7 @@ class ContentProcessSession {
         break;
 
       case "remote:destroy":
-        this.destroy();
+        this.destructor();
         break;
     }
   }

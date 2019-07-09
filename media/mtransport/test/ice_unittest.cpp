@@ -1732,10 +1732,9 @@ class WebRtcIceConnectTest : public StunTest {
     caller->Connect(callee, mode);
 
     if (mode != TRICKLE_SIMULATE) {
-      ASSERT_TRUE_WAIT(caller->ready_ct() == 1 && callee->ready_ct() == 1,
-                       kDefaultTimeout);
       ASSERT_TRUE_WAIT(caller->ice_connected() && callee->ice_connected(),
                        kDefaultTimeout);
+      ASSERT_TRUE(caller->ready_ct() >= 1 && callee->ready_ct() >= 1);
       ASSERT_TRUE(caller->ice_reached_checking());
       ASSERT_TRUE(callee->ice_reached_checking());
 

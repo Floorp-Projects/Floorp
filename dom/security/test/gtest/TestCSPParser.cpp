@@ -80,7 +80,7 @@ nsresult runTest(
   nsCOMPtr<nsIPrincipal> selfURIPrincipal;
   mozilla::OriginAttributes attrs;
   selfURIPrincipal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(selfURI, attrs);
+      mozilla::BasePrincipal::CreateContentPrincipal(selfURI, attrs);
   NS_ENSURE_TRUE(selfURIPrincipal, NS_ERROR_FAILURE);
 
   // create a CSP object

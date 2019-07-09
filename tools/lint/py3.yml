@@ -6,7 +6,6 @@ py3:
         - browser/app
         - build
         - client.py
-        - config
         - dom/bindings
         - dom/canvas/test
         - dom/media/test
@@ -25,7 +24,6 @@ py3:
         - testing/tps
         - testing/web-platform
         - toolkit
-        - tools/jprof
         - tools/profiler
         - tools/rb
         - xpcom/idl-parser

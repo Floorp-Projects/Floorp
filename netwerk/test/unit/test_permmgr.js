@@ -51,7 +51,7 @@ function run_test() {
   // put a few hosts in
   for (var i = 0; i < hosts.length; ++i) {
     let uri = ioService.newURI(hosts[i][0]);
-    let principal = secMan.createCodebasePrincipal(uri, {});
+    let principal = secMan.createContentPrincipal(uri, {});
 
     pm.addFromPrincipal(principal, hosts[i][1], hosts[i][2]);
   }
@@ -59,7 +59,7 @@ function run_test() {
   // test the result
   for (var i = 0; i < results.length; ++i) {
     let uri = ioService.newURI(results[i][0]);
-    let principal = secMan.createCodebasePrincipal(uri, {});
+    let principal = secMan.createContentPrincipal(uri, {});
 
     Assert.equal(
       pm.testPermissionFromPrincipal(principal, results[i][1]),
@@ -115,7 +115,7 @@ function run_test() {
 
   uri = ioService.newURI("https://www.example.com");
   pm.add(uri, "offline-app", pm.ALLOW_ACTION);
-  let principal = secMan.createCodebasePrincipalFromOrigin(
+  let principal = secMan.createContentPrincipalFromOrigin(
     "https://www.example.com"
   );
   // Remove existing entry.

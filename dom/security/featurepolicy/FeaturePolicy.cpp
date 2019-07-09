@@ -90,7 +90,7 @@ void FeaturePolicy::ResetDeclaredPolicy() { mFeatures.Clear(); }
 
 JSObject* FeaturePolicy::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
-  return Policy_Binding::Wrap(aCx, this, aGivenProto);
+  return FeaturePolicy_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool FeaturePolicy::AllowsFeature(const nsAString& aFeatureName,
@@ -102,7 +102,7 @@ bool FeaturePolicy::AllowsFeature(const nsAString& aFeatureName,
     if (NS_FAILED(rv)) {
       return false;
     }
-    origin = BasePrincipal::CreateCodebasePrincipal(
+    origin = BasePrincipal::CreateContentPrincipal(
         uri, BasePrincipal::Cast(mDefaultOrigin)->OriginAttributesRef());
   } else {
     origin = mDefaultOrigin;
@@ -146,6 +146,16 @@ bool FeaturePolicy::AllowsFeatureInternal(const nsAString& aFeatureName,
   }
 
   return false;
+}
+
+void FeaturePolicy::Features(nsTArray<nsString>& aFeatures) {
+  RefPtr<FeaturePolicy> self = this;
+  FeaturePolicyUtils::ForEachFeature(
+      [self, &aFeatures](const char* aFeatureName) {
+        nsString featureName;
+        featureName.AppendASCII(aFeatureName);
+        aFeatures.AppendElement(featureName);
+      });
 }
 
 void FeaturePolicy::AllowedFeatures(nsTArray<nsString>& aAllowedFeatures) {

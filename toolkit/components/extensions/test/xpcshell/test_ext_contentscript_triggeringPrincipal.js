@@ -1198,7 +1198,7 @@ function mergeSources(a, b) {
 // use in verifying request triggering principals.
 function getOrigins(extension) {
   return {
-    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {})
+    page: Services.scriptSecurityManager.createContentPrincipal(pageURI, {})
       .origin,
     contentScript: Cu.getObjectPrincipal(
       Cu.Sandbox([extension.principal, pageURL])

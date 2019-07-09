@@ -1,4 +1,4 @@
-// |jit-test| --no-ion; --no-baseline; skip-if: !('gcstate' in this && 'oomAfterAllocations' in this)
+// |jit-test| --no-ion; --no-baseline; --no-blinterp; skip-if: !('gcstate' in this && 'oomAfterAllocations' in this)
 
 gczeal(0);
 

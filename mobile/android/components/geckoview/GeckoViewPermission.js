@@ -53,7 +53,7 @@ GeckoViewPermission.prototype = {
   receiveMessage(aMsg) {
     switch (aMsg.name) {
       case "GeckoView:AddCameraPermission": {
-        let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
           aMsg.data.origin
         );
 

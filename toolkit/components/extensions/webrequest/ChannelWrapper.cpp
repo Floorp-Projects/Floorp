@@ -438,7 +438,7 @@ already_AddRefed<nsIURI> ChannelWrapper::GetOriginURI() const {
   nsCOMPtr<nsIURI> uri;
   if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
     if (nsIPrincipal* prin = loadInfo->TriggeringPrincipal()) {
-      if (prin->GetIsCodebasePrincipal()) {
+      if (prin->GetIsContentPrincipal()) {
         Unused << prin->GetURI(getter_AddRefs(uri));
       }
     }
@@ -450,7 +450,7 @@ already_AddRefed<nsIURI> ChannelWrapper::GetDocumentURI() const {
   nsCOMPtr<nsIURI> uri;
   if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
     if (nsIPrincipal* prin = loadInfo->LoadingPrincipal()) {
-      if (prin->GetIsCodebasePrincipal()) {
+      if (prin->GetIsContentPrincipal()) {
         Unused << prin->GetURI(getter_AddRefs(uri));
       }
     }

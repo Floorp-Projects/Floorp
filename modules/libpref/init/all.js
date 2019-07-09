@@ -7,11 +7,12 @@
  * embedding situations. Application-specific preferences belong somewhere else,
  * such as browser/app/profile/firefox.js or mobile/android/app/mobile.js.
  *
+ * NOTE: Not all prefs should be defined in this (or any other) data file.
+ * Static prefs, especially VarCache prefs, are defined in StaticPrefList.h.
+ * Those prefs should *not* appear in this file.
+ *
  * For the syntax used by this file, consult the comments at the top of
  * modules/libpref/parser/src/lib.rs.
- *
- * Some prefs, especially VarCache prefs, are defined in StaticPrefList.h
- * rather than this (or any other) data file.
  */
 
 pref("keyword.enabled", false);
@@ -2509,7 +2510,7 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 #if defined(DEBUG) && !defined(ANDROID)
-pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,cache-entry,config,debugging,devtools,downloads,home,newtab,plugins,preferences,sessionrestore,support,sync-log,welcomeback");
+pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,config,debugging,devtools,downloads,home,newtab,plugins,preferences,sessionrestore,support,sync-log,welcomeback");
 // the following prefs are for testing purposes only.
 pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);

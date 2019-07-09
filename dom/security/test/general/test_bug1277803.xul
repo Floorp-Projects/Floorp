@@ -24,7 +24,7 @@
 
     let securityManager = Cc["@mozilla.org/scriptsecuritymanager;1"].
                           getService(Ci.nsIScriptSecurityManager);
-    let expectedPrincipal = securityManager.createCodebasePrincipal(makeURI(LOADING_URI), {});
+    let expectedPrincipal = securityManager.createContentPrincipal(makeURI(LOADING_URI), {});
     let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance();
 
     function runTest() {

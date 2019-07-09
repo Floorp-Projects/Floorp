@@ -136,7 +136,7 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
     caUtils
   );
   let httpURI = caUtils.makeURI("http://" + TEST_HOST);
-  let httpPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let httpPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     httpURI,
     {}
   );

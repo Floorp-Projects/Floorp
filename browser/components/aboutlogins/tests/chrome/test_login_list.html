@@ -74,13 +74,12 @@ add_task(async function test_empty_list() {
 add_task(async function test_keyboard_navigation() {
   gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2, TEST_LOGIN_3]);
 
-  while (document.activeElement != gLoginList) {
+  while (document.activeElement != gLoginList &&
+         gLoginList.shadowRoot.querySelector("#login-sort") != gLoginList.shadowRoot.activeElement) {
     sendKey("TAB");
     await new Promise(resolve => requestAnimationFrame(resolve));
   }
 
-  sendKey("TAB");
-  sendKey("TAB");
   let loginSort = gLoginList.shadowRoot.querySelector("#login-sort");
   await SimpleTest.promiseWaitForCondition(() => loginSort == gLoginList.shadowRoot.activeElement,
     "waiting for login-sort to get focus");
@@ -125,35 +124,33 @@ add_task(async function test_empty_login_username_in_list() {
   }));
 
   gLoginList.setLogins([TEST_LOGIN_3]);
-  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   is(loginListItems.length, 1, "The one stored login should be displayed");
   is(loginListItems[0].dataset.guid, TEST_LOGIN_3.guid, "login-list-item should have correct guid attribute");
-
-  loginListItems[0].render();
-  let loginUsername = loginListItems[0].shadowRoot.querySelector(".username");
+  let loginUsername = loginListItems[0].querySelector(".username");
   is(loginUsername.getAttribute("data-l10n-id"), "login-list-item-subtitle-missing-username", "login should show missing username text");
 });
 
 add_task(async function test_populated_list() {
   gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
-  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   is(loginListItems.length, 2, "The two stored logins should be displayed");
   is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[0].shadowRoot.querySelector(".title").textContent, TEST_LOGIN_1.title,
+  is(loginListItems[0].querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
-  is(loginListItems[0].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_1.username,
+  is(loginListItems[0].querySelector(".username").textContent, TEST_LOGIN_1.username,
      "login-list-item username should match");
   ok(loginListItems[0].classList.contains("selected"), "The first item should be selected by default");
   ok(!loginListItems[1].classList.contains("selected"), "The second item should not be selected by default");
   loginListItems[0].click();
-  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   is(loginListItems.length, 2, "After selecting one, only the two stored logins should be displayed");
   ok(loginListItems[0].classList.contains("selected"), "The first item should be selected");
   ok(!loginListItems[1].classList.contains("selected"), "The second item should still not be selected");
 });
 
 add_task(async function test_filtered_list() {
-  is(gLoginList.shadowRoot.querySelectorAll("login-list-item:not([hidden])").length, 2, "Both logins should be visible");
+  is(gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])").length, 2, "Both logins should be visible");
   let countSpan = gLoginList.shadowRoot.querySelector(".count");
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match full list length");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
@@ -161,8 +158,8 @@ add_task(async function test_filtered_list() {
     detail: "user1",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
-  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
-  is(loginListItems[0].shadowRoot.querySelector(".username").textContent, "user1", "user1 is expected first");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
+  is(loginListItems[0].querySelector(".username").textContent, "user1", "user1 is expected first");
   ok(!loginListItems[0].hidden, "user1 should remain visible");
   ok(loginListItems[1].hidden, "user2 should be hidden");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
@@ -170,7 +167,7 @@ add_task(async function test_filtered_list() {
     detail: "user2",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
-  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(!loginListItems[1].hidden, "user2 should be visible");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
@@ -178,7 +175,7 @@ add_task(async function test_filtered_list() {
     detail: "user",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match result amount");
-  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
@@ -186,7 +183,7 @@ add_task(async function test_filtered_list() {
     detail: "foo",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 0, "Count should match result amount");
-  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(loginListItems[1].hidden, "user2 should be hidden");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
@@ -194,7 +191,7 @@ add_task(async function test_filtered_list() {
     detail: "",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should be reset to full list length");
-  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
 });
@@ -203,14 +200,14 @@ add_task(async function test_login_modified() {
   let modifiedLogin = Object.assign(TEST_LOGIN_1, {username: "user11"});
   gLoginList.loginModified(modifiedLogin);
   await asyncElementRendered();
-  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   is(loginListItems.length, 2, "Both logins should be displayed");
   is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[0].shadowRoot.querySelector(".title").textContent, TEST_LOGIN_1.title,
+  is(loginListItems[0].querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
-  is(loginListItems[0].shadowRoot.querySelector(".username").textContent, modifiedLogin.username,
+  is(loginListItems[0].querySelector(".username").textContent, modifiedLogin.username,
      "login-list-item username should have been updated");
-  is(loginListItems[1].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_2.username,
+  is(loginListItems[1].querySelector(".username").textContent, TEST_LOGIN_2.username,
      "login-list-item2 username should remain unchanged");
 });
 
@@ -218,21 +215,21 @@ add_task(async function test_login_added() {
   let newLogin = Object.assign({}, TEST_LOGIN_1, {username: "user22", guid: "111222"});
   gLoginList.loginAdded(newLogin);
   await asyncElementRendered();
-  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   is(loginListItems.length, 3, "New login should be added to the list");
   is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
   is(loginListItems[1].dataset.guid, TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
   is(loginListItems[2].dataset.guid, newLogin.guid, "login-list-item3 should have correct guid attribute");
-  is(loginListItems[2].shadowRoot.querySelector(".title").textContent, newLogin.title,
+  is(loginListItems[2].querySelector(".title").textContent, newLogin.title,
      "login-list-item origin should match");
-  is(loginListItems[2].shadowRoot.querySelector(".username").textContent, newLogin.username,
+  is(loginListItems[2].querySelector(".username").textContent, newLogin.username,
      "login-list-item username should have been updated");
 });
 
 add_task(async function test_login_removed() {
   gLoginList.loginRemoved({guid: "111222"});
   await asyncElementRendered();
-  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   is(loginListItems.length, 2, "New login should be removed from the list");
   is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
   is(loginListItems[1].dataset.guid, TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
@@ -251,7 +248,7 @@ add_task(async function test_login_added_filtered() {
   let newLogin = Object.assign({}, TEST_LOGIN_1, {username: "user22", guid: "111222"});
   gLoginList.loginAdded(newLogin);
   await asyncElementRendered();
-  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   is(loginListItems.length, 3, "New login should be added to the list");
   is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
   is(loginListItems[1].dataset.guid, TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
@@ -270,7 +267,7 @@ add_task(async function test_sorted_list() {
 
   // sort by last used
   gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 1;
-  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   is(loginListItems.length, 3, "The list should contain the three stored logins");
   let timeUsed = loginListItems[0]._login.timeLastUsed;
   let timeUsed2 = loginListItems[1]._login.timeLastUsed;
@@ -278,14 +275,14 @@ add_task(async function test_sorted_list() {
 
   // sort by name
   gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 0;
-  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   let title = loginListItems[0]._login.title;
   let title2 = loginListItems[1]._login.title;
   is(title.localeCompare(title2), -1, "Logins should be sorted alphabetically by hostname");
 
   // sort by last changed
   gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 2;
-  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
   let pwChanged = loginListItems[0]._login.timePasswordChanged;
   let pwChanged2 = loginListItems[1]._login.timePasswordChanged;
   is(pwChanged2 > pwChanged, true, "Login with most recently changed password should be displayed at top of list");

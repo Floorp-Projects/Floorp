@@ -27,7 +27,7 @@ AboutCompat.prototype = {
     const channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     channel.originalURI = aURI;
 
-    channel.owner = Services.scriptSecurityManager.createCodebasePrincipal(
+    channel.owner = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       aLoadInfo.originAttributes
     );

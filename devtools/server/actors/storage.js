@@ -1386,7 +1386,7 @@ StorageActors.createActor(
     async getCachesForHost(host) {
       const uri = Services.io.newURI(host);
       const attrs = this.storageActor.document.nodePrincipal.originAttributes;
-      const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      const principal = Services.scriptSecurityManager.createContentPrincipal(
         uri,
         attrs
       );

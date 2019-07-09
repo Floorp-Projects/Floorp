@@ -38,8 +38,8 @@ add_task(
 
           let triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
           ok(
-            triggeringPrincipal.isCodebasePrincipal,
-            "sanity check to ensure principal is a codebasePrincipal"
+            triggeringPrincipal.isContentPrincipal,
+            "sanity check to ensure principal is a contentPrincipal"
           );
           is(
             triggeringPrincipal.URI.spec,

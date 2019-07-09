@@ -143,6 +143,7 @@ this.DateTimeInputBaseImplWidget = class {
      * Remove it when migrate to Fluent (bug 1504363).
      */
     const parser = new this.window.DOMParser();
+    parser.forceEnableDTD();
     let parserDoc = parser.parseFromString(
       `<!DOCTYPE bindings [
       <!ENTITY % datetimeboxDTD SYSTEM "chrome://global/locale/datetimebox.dtd">

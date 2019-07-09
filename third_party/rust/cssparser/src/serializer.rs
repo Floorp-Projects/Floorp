@@ -423,6 +423,9 @@ impl TokenSerializationType {
     /// so that they are not re-parsed as a single token.
     ///
     /// See https://drafts.csswg.org/css-syntax/#serialization
+    ///
+    /// See https://github.com/w3c/csswg-drafts/issues/4088 for the
+    /// `DelimPercent` bits.
     pub fn needs_separator_when_before(self, other: TokenSerializationType) -> bool {
         use self::TokenSerializationTypeVariants::*;
         match self.0 {
@@ -442,9 +445,13 @@ impl TokenSerializationType {
                 other.0,
                 Ident | Function | UrlOrBadUrl | DelimMinus | Number | Percentage | Dimension | CDC
             ),
-            DelimHash | DelimMinus | Number => matches!(
+            DelimHash | DelimMinus => matches!(
                 other.0,
                 Ident | Function | UrlOrBadUrl | DelimMinus | Number | Percentage | Dimension
+            ),
+            Number => matches!(
+                other.0,
+                Ident | Function | UrlOrBadUrl | DelimMinus | Number | Percentage | DelimPercent | Dimension
             ),
             DelimAt => matches!(other.0, Ident | Function | UrlOrBadUrl | DelimMinus),
             DelimDotOrPlus => matches!(other.0, Number | Percentage | Dimension),
@@ -452,7 +459,7 @@ impl TokenSerializationType {
             DelimBar => matches!(other.0, DelimEquals | DelimBar | DashMatch),
             DelimSlash => matches!(other.0, DelimAsterisk | SubstringMatch),
             Nothing | WhiteSpace | Percentage | UrlOrBadUrl | Function | CDC | OpenParen
-            | DashMatch | SubstringMatch | DelimQuestion | DelimEquals | Other => false,
+            | DashMatch | SubstringMatch | DelimQuestion | DelimEquals | DelimPercent | Other => false,
         }
     }
 }
@@ -482,6 +489,7 @@ enum TokenSerializationTypeVariants {
     DelimBar,       // '|'
     DelimSlash,     // '/'
     DelimAsterisk,  // '*'
+    DelimPercent,   // '%'
     Other,          // anything else
 }
 
@@ -502,6 +510,7 @@ impl<'a> Token<'a> {
             Token::Delim('-') => DelimMinus,
             Token::Delim('?') => DelimQuestion,
             Token::Delim('$') | Token::Delim('^') | Token::Delim('~') => DelimAssorted,
+            Token::Delim('%') => DelimPercent,
             Token::Delim('=') => DelimEquals,
             Token::Delim('|') => DelimBar,
             Token::Delim('/') => DelimSlash,

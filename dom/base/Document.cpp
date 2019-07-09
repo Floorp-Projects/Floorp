@@ -1300,6 +1300,7 @@ Document::Document(const char* aContentType)
       mType(eUnknown),
       mDefaultElementType(0),
       mAllowXULXBL(eTriUnset),
+      mSkipDTDSecurityChecks(false),
       mBidiOptions(IBMBIDI_DEFAULT_BIDI_OPTIONS),
       mSandboxFlags(0),
       mPartID(0),
@@ -2211,7 +2212,7 @@ nsresult Document::Init() {
 
   // we need to create a policy here so getting the policy within
   // ::Policy() can *always* return a non null policy
-  mFeaturePolicy = new FeaturePolicy(this);
+  mFeaturePolicy = new mozilla::dom::FeaturePolicy(this);
   mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
 
   mStyleSet = MakeUnique<ServoStyleSet>(*this);
@@ -2285,38 +2286,6 @@ void Document::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
   }
 
   mChannel = aChannel;
-}
-
-/**
- * Determine whether the principal is allowed access to the localization system.
- * We don't want the web to ever see this but all our UI including in content
- * pages should pass this test.
- */
-bool PrincipalAllowsL10n(nsIPrincipal* principal) {
-  // The system principal is always allowed.
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    return true;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = principal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool hasFlags;
-
-  // Allow access to uris that cannot be loaded by web content.
-  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
-                           &hasFlags);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (hasFlags) {
-    return true;
-  }
-
-  // UI resources also get access.
-  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                           &hasFlags);
-  NS_ENSURE_SUCCESS(rv, false);
-  return hasFlags;
 }
 
 void Document::DisconnectNodeTree() {
@@ -2455,7 +2424,7 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                  "must have a load context or pass in an explicit principal");
 
       nsCOMPtr<nsIPrincipal> principal;
-      nsresult rv = securityManager->GetLoadContextCodebasePrincipal(
+      nsresult rv = securityManager->GetLoadContextContentPrincipal(
           mDocumentURI, loadContext, getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {
         SetPrincipals(principal, principal);
@@ -3275,14 +3244,14 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
 
   mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
 
-  RefPtr<FeaturePolicy> parentPolicy = nullptr;
+  RefPtr<mozilla::dom::FeaturePolicy> parentPolicy = nullptr;
   if (mDocumentContainer) {
     nsPIDOMWindowOuter* containerWindow = mDocumentContainer->GetWindow();
     if (containerWindow) {
       nsCOMPtr<nsINode> node = containerWindow->GetFrameElementInternal();
       HTMLIFrameElement* iframe = HTMLIFrameElement::FromNodeOrNull(node);
       if (iframe) {
-        parentPolicy = iframe->Policy();
+        parentPolicy = iframe->FeaturePolicy();
       }
     }
   }
@@ -3652,11 +3621,11 @@ DocumentL10n* Document::GetL10n() { return mDocumentL10n; }
 bool Document::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject) {
   nsCOMPtr<nsIPrincipal> callerPrincipal =
       nsContentUtils::SubjectPrincipal(aCx);
-  return PrincipalAllowsL10n(callerPrincipal);
+  return nsContentUtils::PrincipalAllowsL10n(callerPrincipal);
 }
 
 void Document::LocalizationLinkAdded(Element* aLinkElement) {
-  if (!PrincipalAllowsL10n(NodePrincipal())) {
+  if (!nsContentUtils::PrincipalAllowsL10n(NodePrincipal())) {
     return;
   }
 
@@ -3694,7 +3663,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
 }
 
 void Document::LocalizationLinkRemoved(Element* aLinkElement) {
-  if (!PrincipalAllowsL10n(NodePrincipal())) {
+  if (!nsContentUtils::PrincipalAllowsL10n(NodePrincipal())) {
     return;
   }
 
@@ -5460,12 +5429,12 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
       do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service) {
     // Get a URI from the document principal. We use the original
-    // codebase in case the codebase was changed by SetDomain
-    nsCOMPtr<nsIURI> codebaseURI;
-    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+    // content URI in case the domain was changed by SetDomain
+    nsCOMPtr<nsIURI> principalURI;
+    NodePrincipal()->GetURI(getter_AddRefs(principalURI));
 
-    if (!codebaseURI) {
-      // Document's principal is not a codebase (may be system), so
+    if (!principalURI) {
+      // Document's principal is not a content or null (may be system), so
       // can't set cookies
 
       return;
@@ -5473,14 +5442,14 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
 
     nsCOMPtr<nsIChannel> channel(mChannel);
     if (!channel) {
-      channel = CreateDummyChannelForCookies(codebaseURI);
+      channel = CreateDummyChannelForCookies(principalURI);
       if (!channel) {
         return;
       }
     }
 
     nsAutoCString cookie;
-    service->GetCookieString(codebaseURI, channel, cookie);
+    service->GetCookieString(principalURI, channel, cookie);
     // CopyUTF8toUTF16 doesn't handle error
     // because it assumes that the input is valid.
     UTF_8_ENCODING->DecodeWithoutBOMHandling(cookie, aCookie);
@@ -5519,11 +5488,11 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
       do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service && mDocumentURI) {
     // The code for getting the URI matches Navigator::CookieEnabled
-    nsCOMPtr<nsIURI> codebaseURI;
-    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+    nsCOMPtr<nsIURI> principalURI;
+    NodePrincipal()->GetURI(getter_AddRefs(principalURI));
 
-    if (!codebaseURI) {
-      // Document's principal is not a codebase (may be system), so
+    if (!principalURI) {
+      // Document's principal is not a content or null (may be system), so
       // can't set cookies
 
       return;
@@ -5531,19 +5500,19 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
 
     nsCOMPtr<nsIChannel> channel(mChannel);
     if (!channel) {
-      channel = CreateDummyChannelForCookies(codebaseURI);
+      channel = CreateDummyChannelForCookies(principalURI);
       if (!channel) {
         return;
       }
     }
 
     NS_ConvertUTF16toUTF8 cookie(aCookie);
-    service->SetCookieString(codebaseURI, nullptr, cookie, channel);
+    service->SetCookieString(principalURI, nullptr, cookie, channel);
   }
 }
 
 already_AddRefed<nsIChannel> Document::CreateDummyChannelForCookies(
-    nsIURI* aCodebaseURI) {
+    nsIURI* aContentURI) {
   // The cookie service reads the privacy status of the channel we pass to it in
   // order to determine which cookie database to query.  In some cases we don't
   // have a proper channel to hand it to the cookie service though.  This
@@ -5555,7 +5524,7 @@ already_AddRefed<nsIChannel> Document::CreateDummyChannelForCookies(
   // The following channel is never openend, so it does not matter what
   // securityFlags we pass; let's follow the principle of least privilege.
   nsCOMPtr<nsIChannel> channel;
-  NS_NewChannel(getter_AddRefs(channel), aCodebaseURI, this,
+  NS_NewChannel(getter_AddRefs(channel), aContentURI, this,
                 nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                 nsIContentPolicy::TYPE_INVALID);
   nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
@@ -5657,6 +5626,10 @@ void Document::SetFgColor(const nsAString& aFgColor) {
     body->SetText(aFgColor);
   }
 }
+
+void Document::CaptureEvents() { WarnOnceAbout(Document::eUseOfCaptureEvents); }
+
+void Document::ReleaseEvents() { WarnOnceAbout(Document::eUseOfReleaseEvents); }
 
 nsresult Document::GetSrcdocData(nsAString& aSrcdocData) {
   if (mIsSrcdocDocument) {
@@ -12573,10 +12546,10 @@ void Document::MaybeResolveReadyForIdle() {
   }
 }
 
-FeaturePolicy* Document::Policy() const {
+mozilla::dom::FeaturePolicy* Document::FeaturePolicy() const {
   // The policy is created when the document is initialized. We _must_ have a
   // policy here even if the featurePolicy pref is off. If this assertion fails,
-  // it means that ::Policy() is called before ::StartDocumentLoad().
+  // it means that ::FeaturePolicy() is called before ::StartDocumentLoad().
   MOZ_ASSERT(mFeaturePolicy);
   return mFeaturePolicy;
 }

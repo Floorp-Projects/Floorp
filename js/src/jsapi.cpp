@@ -5243,6 +5243,13 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
                                                  uint32_t value) {
   JSRuntime* rt = cx->runtime();
   switch (opt) {
+    case JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER:
+      if (value == uint32_t(-1)) {
+        jit::DefaultJitOptions defaultValues;
+        value = defaultValues.baselineInterpreterWarmUpThreshold;
+      }
+      jit::JitOptions.baselineInterpreterWarmUpThreshold = value;
+      break;
     case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
       if (value == uint32_t(-1)) {
         jit::DefaultJitOptions defaultValues;
@@ -5310,6 +5317,14 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
         value = defaultValues.frequentBailoutThreshold;
       }
       jit::JitOptions.frequentBailoutThreshold = value;
+      break;
+    case JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE:
+      if (value == 1) {
+        jit::JitOptions.baselineInterpreter = true;
+      } else if (value == 0) {
+        ReleaseAllJITCode(rt->defaultFreeOp());
+        jit::JitOptions.baselineInterpreter = false;
+      }
       break;
     case JSJITCOMPILER_BASELINE_ENABLE:
       if (value == 1) {
@@ -5382,6 +5397,9 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
 #ifndef JS_CODEGEN_NONE
   JSRuntime* rt = cx->runtime();
   switch (opt) {
+    case JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER:
+      *valueOut = jit::JitOptions.baselineInterpreterWarmUpThreshold;
+      break;
     case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
       *valueOut = jit::JitOptions.baselineWarmUpThreshold;
       break;
@@ -5402,6 +5420,9 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD:
       *valueOut = jit::JitOptions.frequentBailoutThreshold;
+      break;
+    case JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE:
+      *valueOut = jit::JitOptions.baselineInterpreter;
       break;
     case JSJITCOMPILER_BASELINE_ENABLE:
       *valueOut = JS::ContextOptionsRef(cx).baseline();

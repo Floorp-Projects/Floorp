@@ -306,7 +306,7 @@ Object.defineProperties(PushRecord.prototype, {
         let uri = Services.io.newURI(this.scope);
         // Allow tests to omit origin attributes.
         let originSuffix = this.originAttributes || "";
-        principal = Services.scriptSecurityManager.createCodebasePrincipal(
+        principal = Services.scriptSecurityManager.createContentPrincipal(
           uri,
           ChromeUtils.createOriginAttributesFromOrigin(originSuffix)
         );

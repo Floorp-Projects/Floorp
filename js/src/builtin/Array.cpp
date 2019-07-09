@@ -3781,6 +3781,7 @@ static const JSFunctionSpec array_methods[] = {
 
 static const JSFunctionSpec array_static_methods[] = {
     JS_INLINABLE_FN("isArray", array_isArray, 1, 0, ArrayIsArray),
+#ifndef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("concat", "ArrayStaticConcat", 2, 0),
     JS_SELF_HOSTED_FN("lastIndexOf", "ArrayStaticLastIndexOf", 2, 0),
     JS_SELF_HOSTED_FN("indexOf", "ArrayStaticIndexOf", 2, 0),
@@ -3800,6 +3801,7 @@ static const JSFunctionSpec array_static_methods[] = {
     JS_SELF_HOSTED_FN("unshift", "ArrayStaticUnshift", 2, 0),
     JS_SELF_HOSTED_FN("splice", "ArrayStaticSplice", 3, 0),
     JS_SELF_HOSTED_FN("slice", "ArrayStaticSlice", 3, 0),
+#endif
     JS_SELF_HOSTED_FN("from", "ArrayFrom", 3, 0),
     JS_FN("of", array_of, 0, 0),
 

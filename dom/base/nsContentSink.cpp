@@ -310,21 +310,21 @@ nsresult nsContentSink::ProcessHeaderData(nsAtom* aHeader,
 
     // Get a URI from the document principal
 
-    // We use the original codebase in case the codebase was changed
+    // We use the original content URI in case the principal was changed
     // by SetDomain
 
-    // Note that a non-codebase principal (eg the system principal) will return
+    // Note that a non-content principal (eg the system principal) will return
     // a null URI.
-    nsCOMPtr<nsIURI> codebaseURI;
-    rv = mDocument->NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
-    NS_ENSURE_TRUE(codebaseURI, rv);
+    nsCOMPtr<nsIURI> contentURI;
+    rv = mDocument->NodePrincipal()->GetURI(getter_AddRefs(contentURI));
+    NS_ENSURE_TRUE(contentURI, rv);
 
     nsCOMPtr<nsIChannel> channel;
     if (mParser) {
       mParser->GetChannel(getter_AddRefs(channel));
     }
 
-    rv = cookieServ->SetCookieString(codebaseURI, nullptr,
+    rv = cookieServ->SetCookieString(contentURI, nullptr,
                                      NS_ConvertUTF16toUTF8(aValue), channel);
     if (NS_FAILED(rv)) {
       return rv;

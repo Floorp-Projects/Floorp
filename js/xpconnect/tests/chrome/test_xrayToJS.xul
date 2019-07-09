@@ -208,11 +208,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       "findIndex", "copyWithin", "fill", Symbol.iterator, Symbol.unscopables, "entries", "keys",
       "values", "constructor", "flat", "flatMap"];
   gConstructorProperties['Array'] =
-    constructorProps(["join", "reverse", "sort", "push", "pop", "shift",
-                      "unshift", "splice", "concat", "slice", "isArray",
-                      "lastIndexOf", "indexOf", "forEach", "map", "filter",
-                      "every", "some", "reduce", "reduceRight", "from", "of",
-                      Symbol.species]);
+    constructorProps(["isArray", "from", "of", Symbol.species]);
+  if (isReleaseOrBeta) {
+    gConstructorProperties['Array'].push("join", "reverse", "sort", "push", "pop", "shift",
+                                         "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf", "forEach", "map", "filter",
+                                         "every", "some", "reduce", "reduceRight");
+  }
   for (var c of typedArrayClasses) {
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT"];
     gConstructorProperties[c] = constructorProps(["BYTES_PER_ELEMENT"]);

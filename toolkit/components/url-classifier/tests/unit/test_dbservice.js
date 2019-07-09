@@ -86,7 +86,7 @@ function checkNoHost() {
   // Looking up a no-host uri such as a data: uri should throw an exception.
   var exception;
   try {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       Services.io.newURI("data:text/html,<b>test</b>"),
       {}
     );
@@ -198,7 +198,7 @@ function checkState() {
   numExpecting = 0;
 
   for (let key in phishExpected) {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       Services.io.newURI("http://" + key),
       {}
     );
@@ -207,7 +207,7 @@ function checkState() {
   }
 
   for (let key in phishUnexpected) {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       Services.io.newURI("http://" + key),
       {}
     );
@@ -216,7 +216,7 @@ function checkState() {
   }
 
   for (let key in malwareExpected) {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       Services.io.newURI("http://" + key),
       {}
     );
@@ -225,7 +225,7 @@ function checkState() {
   }
 
   for (let key in unwantedExpected) {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       Services.io.newURI("http://" + key),
       {}
     );
@@ -234,7 +234,7 @@ function checkState() {
   }
 
   for (let key in blockedExpected) {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       Services.io.newURI("http://" + key),
       {}
     );

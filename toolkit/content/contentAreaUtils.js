@@ -233,7 +233,7 @@ function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
     aBrowser.contentPrincipal.URI.spec == "resource://pdf.js/web/viewer.html" &&
     aBrowser.currentURI.schemeIs("file")
   ) {
-    let correctPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let correctPrincipal = Services.scriptSecurityManager.createContentPrincipal(
       aBrowser.currentURI,
       aBrowser.contentPrincipal.originAttributes
     );

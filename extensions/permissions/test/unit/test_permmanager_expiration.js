@@ -20,7 +20,7 @@ function* do_run_test() {
 
   let pm = Services.perms;
   let permURI = NetUtil.newURI("http://example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     permURI,
     {}
   );

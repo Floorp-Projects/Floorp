@@ -33,7 +33,6 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "MobileViewportManager.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -1051,7 +1050,7 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
 
   mTouchManager.Init(this, mDocument);
 
-  if (mPresContext->IsRootContentDocument()) {
+  if (mPresContext->IsRootContentDocumentCrossProcess()) {
     mZoomConstraintsClient = new ZoomConstraintsClient();
     mZoomConstraintsClient->Init(this, mDocument);
 
@@ -10566,7 +10565,7 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
   }
 
   if (needMVM) {
-    if (mPresContext->IsRootContentDocument()) {
+    if (mPresContext->IsRootContentDocumentCrossProcess()) {
       mMVMContext = new GeckoMVMContext(mDocument, this);
       mMobileViewportManager = new MobileViewportManager(mMVMContext);
 
@@ -10650,8 +10649,7 @@ PresShell* PresShell::GetRootPresShell() {
 
 void PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
-  mFrameArena.AddSizeOfExcludingThis(aSizes,
-                                     &nsWindowSizes::mLayoutPresShellSize);
+  mFrameArena.AddSizeOfExcludingThis(aSizes, Arena::ArenaKind::PresShell);
   aSizes.mLayoutPresShellSize += mallocSizeOf(this);
   if (mCaret) {
     aSizes.mLayoutPresShellSize += mCaret->SizeOfIncludingThis(mallocSizeOf);
