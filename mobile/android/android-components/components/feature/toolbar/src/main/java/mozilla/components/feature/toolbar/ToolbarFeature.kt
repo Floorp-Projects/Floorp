@@ -5,8 +5,8 @@
 package mozilla.components.feature.toolbar
 
 import androidx.annotation.ColorInt
-import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.feature.BackHandler
@@ -45,9 +45,7 @@ class ToolbarFeature(
      *
      * @return true if the event was handled, otherwise false.
      */
-    override fun onBackPressed(): Boolean {
-        return toolbar.onBackPressed()
-    }
+    override fun onBackPressed(): Boolean = toolbar.onBackPressed()
 
     /**
      * Stop feature: App is in the background.

@@ -17,18 +17,20 @@ import mozilla.components.concept.toolbar.Toolbar
 class ToolbarAutocompleteFeature(val toolbar: Toolbar) {
     private val historyProviders: MutableList<HistoryStorage> = mutableListOf()
     private val domainProviders: MutableList<DomainAutocompleteProvider> = mutableListOf()
-    private val allProviders = { historyProviders.asSequence() + domainProviders }
 
     init {
-        toolbar.setAutocompleteListener { value, delegate ->
-            for (provider in allProviders()) {
-                val result = provider.autocomplete(value)
-                if (result != null) {
-                    delegate.applyAutocompleteResult(result)
-                    return@setAutocompleteListener
-                }
+        toolbar.setAutocompleteListener { query, delegate ->
+            val historyResults = historyProviders.asSequence()
+                .mapNotNull { provider -> provider.getAutocompleteSuggestion(query)?.into() }
+            val domainResults = domainProviders.asSequence()
+                .mapNotNull { provider -> provider.getAutocompleteSuggestion(query)?.into() }
+
+            val result = (historyResults + domainResults).firstOrNull()
+            if (result != null) {
+                delegate.applyAutocompleteResult(result)
+            } else {
+                delegate.noAutocompleteResult(query)
             }
-            delegate.noAutocompleteResult(value)
         }
     }
 
@@ -40,32 +42,10 @@ class ToolbarAutocompleteFeature(val toolbar: Toolbar) {
         domainProviders.add(provider)
     }
 
-    // The rest is a little bit of boilerplate to tie things together.
-    // We terminate our dependency chains at the 'feature' level. This is an alternative to creating
-    // an "AutocompleteProvider" concept. This pattern allows a storage component, for example, to
-    // be standalone and not depend on something like 'concept-domains'.
-    // This pattern also helps prevent circular dependency situations from arising over time.
-
-    private fun Any.autocomplete(query: String): AutocompleteResult? {
-        if (this is HistoryStorage) {
-            return this.getAutocompleteSuggestion(query)?.into()
-        } else if (this is DomainAutocompleteProvider) {
-            return this.getAutocompleteSuggestion(query)?.into()
-        }
-        return null
-    }
-
-    private fun HistoryAutocompleteResult.into(): AutocompleteResult {
-        return AutocompleteResult(
-            input = this.input, text = this.text, url = this.url, source = this.source,
-            totalItems = this.totalItems
-        )
-    }
-
-    private fun DomainAutocompleteResult.into(): AutocompleteResult {
-        return AutocompleteResult(
-            input = this.input, text = this.text, url = this.url, source = this.source,
-            totalItems = this.totalItems
-        )
-    }
+    private fun HistoryAutocompleteResult.into() = AutocompleteResult(
+        input = input, text = text, url = url, source = source, totalItems = totalItems
+    )
+    private fun DomainAutocompleteResult.into() = AutocompleteResult(
+        input = input, text = text, url = url, source = source, totalItems = totalItems
+    )
 }

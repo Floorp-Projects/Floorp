@@ -5,7 +5,9 @@
 package mozilla.components.feature.toolbar.internal
 
 import android.text.SpannableStringBuilder
+import android.text.SpannableStringBuilder.SPAN_INCLUSIVE_INCLUSIVE
 import android.text.style.ForegroundColorSpan
+import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
@@ -58,44 +60,29 @@ internal class URLRenderer(
     @VisibleForTesting
     internal suspend fun updateUrl(url: String) {
         if (url.isEmpty() || configuration == null) {
-            setUncoloredUrl(url)
+            toolbar.url = url
             return
         }
 
-        when (configuration.renderStyle) {
-            ToolbarFeature.RenderStyle.UncoloredUrl -> setUncoloredUrl(url)
-            ToolbarFeature.RenderStyle.ColoredUrl -> setColoredUrl(url, configuration)
-            ToolbarFeature.RenderStyle.RegistrableDomain -> setRegistrableDomainUrl(url)
+        toolbar.url = when (configuration.renderStyle) {
+            // Display only the URL, uncolored
+            ToolbarFeature.RenderStyle.RegistrableDomain -> {
+                val host = url.toUri().host?.ifEmpty { null }
+                host?.let { getRegistrableDomain(host, configuration) } ?: url
+            }
+            // Display the registrableDomain with color and URL with another color
+            ToolbarFeature.RenderStyle.ColoredUrl -> SpannableStringBuilder(url).apply {
+                color(configuration.urlColor)
+                colorRegistrableDomain(configuration)
+            }
+            // Display the full URL, uncolored
+            ToolbarFeature.RenderStyle.UncoloredUrl -> url
         }
-    }
-
-    private suspend fun setRegistrableDomainUrl(url: String) {
-        val host = url.toUri().host
-
-        if (!host.isNullOrEmpty()) {
-            toolbar.url = getRegistrableDomain(host) ?: url
-        } else {
-            toolbar.url = url
-        }
-    }
-
-    private suspend fun setColoredUrl(url: String, configuration: ToolbarFeature.UrlRenderConfiguration) {
-        val builder = SpannableStringBuilder(url)
-
-        builder.color(configuration)
-        builder.colorRegistrableDomain(configuration)
-
-        toolbar.url = builder
-    }
-
-    private fun setUncoloredUrl(url: String) {
-        toolbar.url = url
-    }
-
-    private suspend fun getRegistrableDomain(host: String): CharSequence? {
-        return configuration?.publicSuffixList?.getPublicSuffixPlusOne(host)?.await()
     }
 }
+
+private suspend fun getRegistrableDomain(host: String, configuration: ToolbarFeature.UrlRenderConfiguration) =
+    configuration.publicSuffixList.getPublicSuffixPlusOne(host).await()
 
 private suspend fun SpannableStringBuilder.colorRegistrableDomain(
     configuration: ToolbarFeature.UrlRenderConfiguration
@@ -117,20 +104,15 @@ private suspend fun SpannableStringBuilder.colorRegistrableDomain(
         ForegroundColorSpan(configuration.registrableDomainColor),
         index,
         index + registrableDomain.length,
-        SpannableStringBuilder.SPAN_INCLUSIVE_INCLUSIVE)
+        SPAN_INCLUSIVE_INCLUSIVE)
 }
 
-private fun SpannableStringBuilder.color(
-    configuration: ToolbarFeature.UrlRenderConfiguration
-) {
-    if (configuration.urlColor == null) {
-        return
-    }
+private fun SpannableStringBuilder.color(@ColorInt urlColor: Int?) {
+    urlColor ?: return
 
     setSpan(
-        ForegroundColorSpan(
-            configuration.urlColor),
+        ForegroundColorSpan(urlColor),
         0,
         length,
-        SpannableStringBuilder.SPAN_INCLUSIVE_INCLUSIVE)
+        SPAN_INCLUSIVE_INCLUSIVE)
 }
