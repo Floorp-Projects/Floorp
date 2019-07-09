@@ -116,6 +116,16 @@ class Refcountable : public T, public RefcountableBase {
     return RefcountableBase::Release();
   }
 
+  Refcountable<T>& operator=(T&& aOther) {
+    T::operator=(std::move(aOther));
+    return *this;
+  }
+
+  Refcountable<T>& operator=(T& aOther) {
+    T::operator=(aOther);
+    return *this;
+  }
+
  private:
   ~Refcountable<T>() {}
 };

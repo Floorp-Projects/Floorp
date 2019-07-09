@@ -33,7 +33,8 @@ DOMParser::DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal,
       mPrincipal(aDocPrincipal),
       mDocumentURI(aDocumentURI),
       mBaseURI(aBaseURI),
-      mForceEnableXULXBL(false) {
+      mForceEnableXULXBL(false),
+      mForceEnableDTD(false) {
   MOZ_ASSERT(aDocPrincipal);
   MOZ_ASSERT(aDocumentURI);
 }
@@ -67,6 +68,10 @@ already_AddRefed<Document> DOMParser::ParseFromString(const nsAString& aStr,
     // Keep the XULXBL state in sync with the XML case.
     if (mForceEnableXULXBL) {
       document->ForceEnableXULXBL();
+    }
+
+    if (mForceEnableDTD) {
+      document->ForceSkipDTDSecurityChecks();
     }
 
     nsresult rv = nsContentUtils::ParseDocumentHTML(aStr, document, false);
@@ -181,6 +186,10 @@ already_AddRefed<Document> DOMParser::ParseFromStream(nsIInputStream* aStream,
   // Keep the XULXBL state in sync with the HTML case
   if (mForceEnableXULXBL) {
     document->ForceEnableXULXBL();
+  }
+
+  if (mForceEnableDTD) {
+    document->ForceSkipDTDSecurityChecks();
   }
 
   // Have to pass false for reset here, else the reset will remove

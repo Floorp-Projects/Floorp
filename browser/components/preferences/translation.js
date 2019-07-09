@@ -214,7 +214,7 @@ var gTranslationExceptions = {
   onSiteDeleted() {
     let removedSites = this._siteTree.getSelectedItems();
     for (let origin of removedSites) {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         origin
       );
       Services.perms.removeFromPrincipal(principal, kPermissionType);
@@ -230,7 +230,7 @@ var gTranslationExceptions = {
     this._siteTree.tree.rowCountChanged(0, -removedSites.length);
 
     for (let origin of removedSites) {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         origin
       );
       Services.perms.removeFromPrincipal(principal, kPermissionType);

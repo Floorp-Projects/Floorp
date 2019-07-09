@@ -60,9 +60,10 @@ if CONFIG['MOZ_CRASHREPORTER']:
             'google-breakpad/src/common',
             'google-breakpad/src/common/linux',
             'google-breakpad/src/processor',
-            'google-breakpad/src/tools/linux/dump_syms',
             'rust',
         ]
+        if CONFIG['HOST_OS_ARCH'] != 'Darwin':
+            DIRS += ['google-breakpad/src/tools/linux/dump_syms']
 
 
     DIRS += [

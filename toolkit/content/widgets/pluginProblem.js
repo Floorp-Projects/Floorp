@@ -17,6 +17,7 @@ this.PluginProblemWidget = class {
 
   onsetup() {
     const parser = new this.window.DOMParser();
+    parser.forceEnableDTD();
     let parserDoc = parser.parseFromString(
       `
       <!DOCTYPE bindings [

@@ -56,9 +56,10 @@ bool JSScript::createJitScript(JSContext* cx) {
   MOZ_ASSERT(!jitScript_);
   cx->check(this);
 
-  // Scripts that will never run in the Baseline Interpreter or the JITs don't
-  // need a JitScript.
-  MOZ_ASSERT(!hasForceInterpreterOp());
+  // Scripts with a JitScript can run in the Baseline Interpreter. Make sure
+  // we don't create a JitScript for scripts we shouldn't Baseline interpret.
+  MOZ_ASSERT_IF(IsBaselineInterpreterEnabled(),
+                CanBaselineInterpretScript(this));
 
   AutoEnterAnalysis enter(cx);
 

@@ -153,7 +153,7 @@ function test_speculative_connect() {
   var URI = ios.newURI(
     "http://localhost:" + serv.listener.port + "/just/a/test"
   );
-  var principal = ssm.createCodebasePrincipal(URI, {});
+  var principal = ssm.createContentPrincipal(URI, {});
 
   ios
     .QueryInterface(Ci.nsISpeculativeConnect)

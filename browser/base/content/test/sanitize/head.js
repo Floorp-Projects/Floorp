@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 function createIndexedDB(host, originAttributes) {
   let uri = Services.io.newURI("https://" + host);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     originAttributes
   );
@@ -23,7 +23,7 @@ function checkIndexedDB(host, originAttributes) {
   return new Promise(resolve => {
     let data = true;
     let uri = Services.io.newURI("https://" + host);
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       originAttributes
     );

@@ -5,7 +5,7 @@
 
 function getPersistentStoragePermStatus(origin) {
   let uri = Services.io.newURI(origin);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
@@ -57,7 +57,7 @@ add_task(async function() {
   // Always remember to clean up
   OfflineAppCacheHelper.clear();
   await new Promise(resolve => {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       TEST_QUOTA_USAGE_ORIGIN
     );
     let request = Services.qms.clearStoragesForPrincipal(

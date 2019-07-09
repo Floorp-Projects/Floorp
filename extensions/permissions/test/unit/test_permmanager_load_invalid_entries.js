@@ -251,7 +251,7 @@ function run_test() {
     Ci.nsIScriptSecurityManager
   );
   let uri = NetUtil.newURI("http://example.org");
-  let principal = ssm.createCodebasePrincipal(uri, {});
+  let principal = ssm.createContentPrincipal(uri, {});
   Assert.equal(
     pm.testPermissionFromPrincipal(principal, "test-load-invalid-entries"),
     Ci.nsIPermissionManager.ALLOW_ACTION

@@ -215,32 +215,44 @@ input {
   display: none;
 }
 
-label {
+#legend label {
   display: inline-block;
   margin: 0 0 -1px;
-  padding: 15px 25px;
-  font-weight: 600;
-  text-align: center;
-  border: 1px solid transparent;
+  padding: 15px 23px;
+  border: 3px solid transparent;
+  -moz-context-properties: fill;
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 16px;
 }
 
 label[data-type="social"] {
+  background-image: url(chrome://browser/skin/controlcenter/socialblock.svg);
+  fill: var(--social-color);
   color: var(--social-color);
 }
 
 label[data-type="crossSite"] {
+  background-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
+  fill: var(--crossSite-color);
   color: var(--crossSite-color);
 }
 
 label[data-type="tracker"] {
+  background-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+  fill: var(--tracker-color);
   color: var(--tracker-color);
 }
 
 label[data-type="fingerprinter"] {
+  background-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
+  fill: var(--fingerprinter-color);
   color: var(--fingerprinter-color);
 }
 
 label[data-type="cryptominer"] {
+  background-image: url(chrome://browser/skin/controlcenter/cryptominers.svg);
+  fill: var(--cryptominer-color);
   color: var(--cryptominer-color);
 }
 
@@ -254,7 +266,7 @@ label:hover {
   cursor: pointer;
 }
 
-input:checked + label {
+#legend input:checked + label {
   border-bottom: 3px solid var(--tab-highlight);
 }
 

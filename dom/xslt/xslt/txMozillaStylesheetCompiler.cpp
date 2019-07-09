@@ -372,7 +372,7 @@ nsresult txCompileObserver::loadURI(const nsAString& aUri,
 
   OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> referrerPrincipal =
-      BasePrincipal::CreateCodebasePrincipal(referrerUri, attrs);
+      BasePrincipal::CreateContentPrincipal(referrerUri, attrs);
   NS_ENSURE_TRUE(referrerPrincipal, NS_ERROR_FAILURE);
 
   return startLoad(uri, aCompiler, referrerPrincipal, aReferrerPolicy);
@@ -550,7 +550,7 @@ nsresult txSyncCompileObserver::loadURI(const nsAString& aUri,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> referrerPrincipal =
-      BasePrincipal::CreateCodebasePrincipal(referrerUri, OriginAttributes());
+      BasePrincipal::CreateContentPrincipal(referrerUri, OriginAttributes());
   NS_ENSURE_TRUE(referrerPrincipal, NS_ERROR_FAILURE);
 
   // This is probably called by js, a loadGroup for the channel doesn't

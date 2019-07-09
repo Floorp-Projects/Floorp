@@ -430,7 +430,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
       (PopupBlocker::PopupControlState)blockPopups);
 
   // if security checks (in particular CheckLoadURIWithPrincipal) needs
-  // to be skipped we are creating a codebasePrincipal to make sure
+  // to be skipped we are creating a contentPrincipal to make sure
   // that security check succeeds. Please note that we do not want to
   // fall back to using the systemPrincipal, because that would also
   // bypass ContentPolicy checks which should still be enforced.
@@ -438,7 +438,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
   if (!aDoCheckLoadURIChecks) {
     mozilla::OriginAttributes attrs =
         BasePrincipal::Cast(content->NodePrincipal())->OriginAttributesRef();
-    triggeringPrincipal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+    triggeringPrincipal = BasePrincipal::CreateContentPrincipal(uri, attrs);
   } else {
     triggeringPrincipal =
         NullPrincipal::CreateWithInheritedAttributes(content->NodePrincipal());

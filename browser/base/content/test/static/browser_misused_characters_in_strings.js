@@ -272,6 +272,7 @@ add_task(async function checkAllTheFluents() {
     {}
   );
   let domParser = new DOMParser();
+  domParser.forceEnableDTD();
   for (let uri of uris) {
     let rawContents = await fetchFile(uri.spec);
     let resource = FluentResource.fromString(rawContents);

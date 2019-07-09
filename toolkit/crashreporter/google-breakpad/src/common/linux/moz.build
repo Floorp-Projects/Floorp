@@ -21,21 +21,23 @@ if CONFIG['OS_TARGET'] != 'Android':
         'http_upload.cc',
     ]
 
-HostLibrary('host_breakpad_linux_common_s')
-HOST_SOURCES += [
-    'crc32.cc',
-    'dump_symbols.cc',
-    'elf_symbols_to_module.cc',
-    'elfutils.cc',
-    'file_id.cc',
-    'linux_libc_support.cc',
-    'memory_mapped_file.cc',
-]
+if CONFIG['HOST_OS_ARCH'] == 'Linux':
+    HostLibrary('host_breakpad_linux_common_s')
 
-HOST_CXXFLAGS += [
-    '-O2',
-    '-g',
-]
+    HOST_SOURCES += [
+        'crc32.cc',
+        'dump_symbols.cc',
+        'elf_symbols_to_module.cc',
+        'elfutils.cc',
+        'file_id.cc',
+        'linux_libc_support.cc',
+        'memory_mapped_file.cc',
+    ]
+
+    HOST_CXXFLAGS += [
+        '-O2',
+        '-g',
+    ]
 
 if CONFIG['OS_TARGET'] == 'Android':
     DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']

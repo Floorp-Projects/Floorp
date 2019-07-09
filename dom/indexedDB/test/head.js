@@ -124,7 +124,7 @@ function dispatchEvent(eventName) {
 
 function setPermission(url, permission) {
   let uri = Services.io.newURI(url);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
@@ -138,7 +138,7 @@ function setPermission(url, permission) {
 
 function removePermission(url, permission) {
   let uri = Services.io.newURI(url);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
@@ -148,7 +148,7 @@ function removePermission(url, permission) {
 
 function getPermission(url, permission) {
   let uri = Services.io.newURI(url);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );

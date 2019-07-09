@@ -87,56 +87,49 @@ struct nsStyleSizes {
 #define NS_ARENA_SIZES_FIELD(classname) mArena##classname
 
 struct nsArenaSizes {
-#define FOR_EACH_SIZE(MACRO) MACRO(Other, mLineBoxes)
-
   nsArenaSizes()
-      : FOR_EACH_SIZE(ZERO_SIZE)
-#define FRAME_ID(classname, ...) NS_ARENA_SIZES_FIELD(classname)(0),
-#define ABSTRACT_FRAME_ID(...)
-#include "mozilla/FrameIdList.h"
-#undef FRAME_ID
-#undef ABSTRACT_FRAME_ID
-
-            dummy() {
+      :
+#define PRES_ARENA_OBJECT(name_) NS_ARENA_SIZES_FIELD(name_)(0),
+#define DISPLAY_LIST_ARENA_OBJECT(name_) PRES_ARENA_OBJECT(name_)
+#include "nsPresArenaObjectList.h"
+#include "nsDisplayListArenaTypes.h"
+#undef PRES_ARENA_OBJECT
+#undef DISPLAY_LIST_ARENA_OBJECT
+        dummy() {
   }
 
   void addToTabSizes(nsTabSizes* aSizes) const {
-    FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
-
-#define FRAME_ID(classname, ...) \
-  aSizes->add(nsTabSizes::Other, NS_ARENA_SIZES_FIELD(classname));
-#define ABSTRACT_FRAME_ID(...)
-#include "mozilla/FrameIdList.h"
-#undef FRAME_ID
-#undef ABSTRACT_FRAME_ID
+#define PRES_ARENA_OBJECT(name_) \
+  aSizes->add(nsTabSizes::Other, NS_ARENA_SIZES_FIELD(name_));
+#define DISPLAY_LIST_ARENA_OBJECT(name_) PRES_ARENA_OBJECT(name_)
+#include "nsPresArenaObjectList.h"
+#include "nsDisplayListArenaTypes.h"
+#undef PRES_ARENA_OBJECT
+#undef DISPLAY_LIST_ARENA_OBJECT
   }
 
   size_t getTotalSize() const {
     size_t total = 0;
 
-    FOR_EACH_SIZE(ADD_TO_TOTAL_SIZE)
-
-#define FRAME_ID(classname, ...) total += NS_ARENA_SIZES_FIELD(classname);
-#define ABSTRACT_FRAME_ID(...)
-#include "mozilla/FrameIdList.h"
-#undef FRAME_ID
-#undef ABSTRACT_FRAME_ID
+#define PRES_ARENA_OBJECT(name_) total += NS_ARENA_SIZES_FIELD(name_);
+#define DISPLAY_LIST_ARENA_OBJECT(name_) PRES_ARENA_OBJECT(name_)
+#include "nsPresArenaObjectList.h"
+#include "nsDisplayListArenaTypes.h"
+#undef PRES_ARENA_OBJECT
+#undef DISPLAY_LIST_ARENA_OBJECT
 
     return total;
   }
 
-  FOR_EACH_SIZE(DECL_SIZE)
-
-#define FRAME_ID(classname, ...) size_t NS_ARENA_SIZES_FIELD(classname);
-#define ABSTRACT_FRAME_ID(...)
-#include "mozilla/FrameIdList.h"
-#undef FRAME_ID
-#undef ABSTRACT_FRAME_ID
+#define PRES_ARENA_OBJECT(name_) size_t NS_ARENA_SIZES_FIELD(name_);
+#define DISPLAY_LIST_ARENA_OBJECT(name_) PRES_ARENA_OBJECT(name_)
+#include "nsPresArenaObjectList.h"
+#include "nsDisplayListArenaTypes.h"
+#undef PRES_ARENA_OBJECT
+#undef DISPLAY_LIST_ARENA_OBJECT
 
   // Present just to absorb the trailing comma in the constructor.
   int dummy;
-
-#undef FOR_EACH_SIZE
 };
 
 class nsWindowSizes {

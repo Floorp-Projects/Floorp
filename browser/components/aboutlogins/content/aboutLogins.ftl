@@ -11,7 +11,7 @@ about-logins-page-title = Logins & Passwords
 login-filter =
   .placeholder = Search Logins
 
-create-login-button = New Login
+create-login-button = Create New Login
 
 ## The ⋯ menu that is in the top corner of the page
 menu =

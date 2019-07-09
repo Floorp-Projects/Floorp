@@ -516,7 +516,7 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx,
   if (frameScript()->hasBaselineScript()) {
     resumePCinCurrentFrame_ = frameScript()->baselineScript()->method()->raw();
   } else {
-    MOZ_ASSERT(JitOptions.baselineInterpreter);
+    MOZ_ASSERT(IsBaselineInterpreterEnabled());
     resumePCinCurrentFrame_ =
         cx->runtime()->jitRuntime()->baselineInterpreter().codeRaw();
   }
@@ -642,18 +642,25 @@ void JSJitProfilingFrameIterator::fixBaselineReturnAddress() {
   // Certain exception handling cases such as debug OSR or resuming a generator
   // with .throw() will use BaselineFrame::setOverridePc() to indicate the
   // effective |pc|. We translate the effective-pc into a Baseline code
-  // address. Don't do this for frames running in the Baseline Interpreter,
-  // because we don't use the return address in that case.
-  jsbytecode* overridePC = bl->maybeOverridePc();
-  if (overridePC && !bl->runningInInterpreter()) {
-    PCMappingSlotInfo slotInfo;
+  // address.
+  if (jsbytecode* overridePC = bl->maybeOverridePc()) {
     JSScript* script = bl->script();
-    BaselineScript* blScript = script->baselineScript();
-    resumePCinCurrentFrame_ =
-        blScript->nativeCodeForPC(script, overridePC, &slotInfo);
+    if (bl->runningInInterpreter()) {
+      // The return address won't be used for pc mapping when running in the
+      // Baseline interpreter, but JitCodeMap expects a non-null return address
+      // for the entry lookup so use the interpret-op address.
+      JitRuntime* jrt = script->runtimeFromAnyThread()->jitRuntime();
+      resumePCinCurrentFrame_ =
+          jrt->baselineInterpreter().interpretOpAddr().value;
+    } else {
+      PCMappingSlotInfo slotInfo;
+      BaselineScript* blScript = script->baselineScript();
+      resumePCinCurrentFrame_ =
+          blScript->nativeCodeForPC(script, overridePC, &slotInfo);
+      // NOTE: The stack may not be synced at this PC. For the purpose of
+      // profiler sampling this is fine.
+    }
 
-    // NOTE: The stack may not be synced at this PC. For the purpose of
-    // profiler sampling this is fine.
     return;
   }
 }

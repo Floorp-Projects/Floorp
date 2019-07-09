@@ -69,14 +69,16 @@ const convertSubjectToLogin = subject => {
   return augmentVanillaLoginObject(login);
 };
 
+const SCHEME_REGEX = new RegExp(/^http(s)?:\/\//);
+const SUBDOMAIN_REGEX = new RegExp(/^www\d*\./);
 const augmentVanillaLoginObject = login => {
   let title;
   try {
     title = new URL(login.origin).host;
   } catch (ex) {
-    title = login.origin;
+    title = login.origin.replace(SCHEME_REGEX, "");
   }
-  title = title.replace(/^http(s)?:\/\//, "").replace(/^www\d*\./, "");
+  title = title.replace(SUBDOMAIN_REGEX, "");
   return Object.assign({}, login, {
     title,
   });

@@ -235,6 +235,16 @@ class BaselineFrame {
     interpreterICEntry_ = nullptr;
   }
 
+  void initInterpFieldsForGeneratorThrowOrReturn(JSScript* script,
+                                                 jsbytecode* pc) {
+    // Note: we can initialize interpreterICEntry_ to nullptr because it won't
+    // be used anyway (we are going to enter the exception handler).
+    flags_ |= RUNNING_IN_INTERPRETER;
+    interpreterScript_ = script;
+    interpreterPC_ = pc;
+    interpreterICEntry_ = nullptr;
+  }
+
   bool runningInInterpreter() const { return flags_ & RUNNING_IN_INTERPRETER; }
 
   JSScript* interpreterScript() const {

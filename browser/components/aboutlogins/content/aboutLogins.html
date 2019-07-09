@@ -25,7 +25,6 @@
     <header>
       <img id="branding-logo" src="chrome://branding/content/aboutlogins.svg" alt=""/>
       <login-filter></login-filter>
-      <button id="create-login-button" data-l10n-id="create-login-button"></button>
       <menu-button></menu-button>
     </header>
     <login-list></login-list>
@@ -70,14 +69,14 @@
       </div>
       <ol role="listbox" tabindex="0" data-l10n-id="login-list">
       </ol>
+      <button class="create-login-button" data-l10n-id="create-login-button"></button>
     </template>
 
     <template id="login-list-item-template">
-      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list-item.css">
-      <span class="title"></span>
-      <span class="username"></span>
+      <li class="login-list-item">
+        <span class="title"></span>
+        <span class="username"></span>
+      </li>
     </template>
 
     <template id="login-item-template">

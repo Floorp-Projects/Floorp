@@ -269,9 +269,12 @@ partial interface Document {
   [SameObject] readonly attribute HTMLCollection anchors;
   [SameObject] readonly attribute HTMLCollection applets;
 
-  //(HTML only)void clear();
-  //(HTML only)void captureEvents();
-  //(HTML only)void releaseEvents();
+  void clear();
+  // @deprecated These are old Netscape 4 methods. Do not use,
+  //             the implementation is no-op.
+  // XXXbz do we actually need these anymore?
+  void captureEvents();
+  void releaseEvents();
 
   //(HTML only)[SameObject] readonly attribute HTMLAllCollection all;
 };
@@ -601,10 +604,10 @@ Document implements GeometryUtils;
 Document implements FontFaceSource;
 Document implements DocumentOrShadowRoot;
 
-// https://wicg.github.io/feature-policy/#policy
+// https://w3c.github.io/webappsec-feature-policy/#idl-index
 partial interface Document {
     [SameObject, Pref="dom.security.featurePolicy.webidl.enabled"]
-    readonly attribute Policy policy;
+    readonly attribute FeaturePolicy featurePolicy;
 };
 
 /**

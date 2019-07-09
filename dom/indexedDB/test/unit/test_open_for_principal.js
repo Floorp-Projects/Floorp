@@ -46,7 +46,7 @@ function* testSteps() {
   is(event.target.result, data.key, "Got correct key");
 
   let uri = Services.io.newURI("http://appdata.example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );

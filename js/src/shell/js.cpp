@@ -10417,7 +10417,25 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 
   if (op.getBoolOption("baseline-eager")) {
+    jit::JitOptions.baselineInterpreterWarmUpThreshold = 0;
     jit::JitOptions.baselineWarmUpThreshold = 0;
+  }
+
+  if (op.getBoolOption("blinterp")) {
+    jit::JitOptions.baselineInterpreter = true;
+  }
+
+  if (op.getBoolOption("no-blinterp")) {
+    jit::JitOptions.baselineInterpreter = false;
+  }
+
+  warmUpThreshold = op.getIntOption("blinterp-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.baselineInterpreterWarmUpThreshold = warmUpThreshold;
+  }
+
+  if (op.getBoolOption("blinterp-eager")) {
+    jit::JitOptions.baselineInterpreterWarmUpThreshold = 0;
   }
 
   if (const char* str = op.getStringOption("ion-regalloc")) {
@@ -11037,6 +11055,16 @@ int main(int argc, char** argv, char** envp) {
       !op.addIntOption(
           '\0', "baseline-warmup-threshold", "COUNT",
           "Wait for COUNT calls or iterations before baseline-compiling "
+          "(default: 10)",
+          -1) ||
+      !op.addBoolOption('\0', "blinterp", "Enable Baseline Interpreter") ||
+      !op.addBoolOption('\0', "no-blinterp",
+                        "Disable Baseline Interpreter (default)") ||
+      !op.addBoolOption('\0', "blinterp-eager",
+                        "Always Baseline-interpret scripts") ||
+      !op.addIntOption(
+          '\0', "blinterp-warmup-threshold", "COUNT",
+          "Wait for COUNT calls or iterations before Baseline-interpreting "
           "(default: 10)",
           -1) ||
       !op.addBoolOption(

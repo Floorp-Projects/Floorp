@@ -315,16 +315,24 @@ void gfxPlatformFontList::ApplyWhitelist() {
     ToLowerCase(list[i], key);
     familyNamesWhitelist.PutEntry(key);
   }
+  AutoTArray<RefPtr<gfxFontFamily>,128> accepted;
   for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
-    // Don't continue if we only have one font left.
-    if (mFontFamilies.Count() == 1) {
-      break;
-    }
     nsAutoCString fontFamilyName(iter.Key());
     ToLowerCase(fontFamilyName);
-    if (!familyNamesWhitelist.Contains(fontFamilyName)) {
-      iter.Remove();
+    if (familyNamesWhitelist.Contains(fontFamilyName)) {
+      accepted.AppendElement(iter.Data());
     }
+  }
+  if (accepted.IsEmpty()) {
+    // No whitelisted fonts found! Ignore the whitelist.
+    return;
+  }
+  // Replace the original full list with the accepted subset.
+  mFontFamilies.Clear();
+  for (auto& f : accepted) {
+    nsAutoCString fontFamilyName(f->Name());
+    ToLowerCase(fontFamilyName);
+    mFontFamilies.Put(fontFamilyName, f);
   }
 }
 
@@ -342,24 +350,22 @@ void gfxPlatformFontList::ApplyWhitelist(
     ToLowerCase(item, key);
     familyNamesWhitelist.PutEntry(key);
   }
-  int count = int(aFamilies.Length());
-  // Find the first non-hidden family; we won't delete this, if no other
-  // non-hidden family has been kept.
-  int firstNonHidden = 0;
-  while (firstNonHidden < count && aFamilies[firstNonHidden].mHidden) {
-    ++firstNonHidden;
-  }
+  AutoTArray<fontlist::Family::InitData,128> accepted;
   bool keptNonHidden = false;
-  for (int i = count - 1; i >= firstNonHidden; --i) {
-    if (aFamilies[i].mHidden) {
-      continue;
-    }
-    if (familyNamesWhitelist.Contains(aFamilies[i].mKey)) {
-      keptNonHidden = true;
-    } else if (keptNonHidden || i > firstNonHidden) {
-      aFamilies.RemoveElementAt(i);
+  for (auto& f : aFamilies) {
+    if (f.mHidden || familyNamesWhitelist.Contains(f.mKey)) {
+      accepted.AppendElement(f);
+      if (!f.mHidden) {
+        keptNonHidden = true;
+      }
     }
   }
+  if (!keptNonHidden) {
+    // No (visible) families were whitelisted: ignore the whitelist
+    // and just leave the fontlist unchanged.
+    return;
+  }
+  aFamilies = accepted;
 }
 
 bool gfxPlatformFontList::AddWithLegacyFamilyName(const nsACString& aLegacyName,
