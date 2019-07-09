@@ -1043,9 +1043,15 @@ class AsyncPanZoomController {
   // Position on screen where user first put their finger down.
   ExternalPoint mStartTouch;
 
+  nsTArray<CompositionPayload> mPrevFrameScrolls;
+  nsTArray<CompositionPayload> mIncomingFrameScrolls;
+  nsTArray<CompositionPayload> mSampledFrameScrolls;
+
   friend class Axis;
 
  public:
+  nsTArray<CompositionPayload> NotifyScrollSampling();
+
   /**
    * Invoke |callable|, passing |mLastContentPaintMetrics| as argument,
    * while holding the APZC lock required to access |mLastContentPaintMetrics|.
@@ -1458,7 +1464,8 @@ class AsyncPanZoomController {
    * scroll gesture was consumed by APZCs in the handoff chain.
    */
   bool AttemptScroll(ParentLayerPoint& aStartPoint, ParentLayerPoint& aEndPoint,
-                     OverscrollHandoffState& aOverscrollHandoffState);
+                     OverscrollHandoffState& aOverscrollHandoffState,
+                     const TimeStamp& aTimeStamp);
 
   void FlushRepaintForOverscrollHandoff();
 
@@ -1497,7 +1504,8 @@ class AsyncPanZoomController {
    */
   void CallDispatchScroll(ParentLayerPoint& aStartPoint,
                           ParentLayerPoint& aEndPoint,
-                          OverscrollHandoffState& aOverscrollHandoffState);
+                          OverscrollHandoffState& aOverscrollHandoffState,
+                          const TimeStamp& aTimeStamp);
 
   /**
    * A helper function for overscrolling during panning. This is a wrapper
