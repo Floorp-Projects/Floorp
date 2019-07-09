@@ -1306,3 +1306,55 @@ security.ui.permissionprompt:
       thisPermGranted: How many permissions of the same kind were granted by the user in total
     products:
       - firefox
+
+pictureinpicture:
+  create:
+    objects: ["player"]
+    description: >
+      Recorded when the Picture-in-Picture player window is created.
+    extra_keys:
+      width: The width that the window was created at
+      height: The height that the window was created at
+      screenX: The screen X coordinate that the window was created at
+      screenY: The screen Y coordinate that the window was created at
+    notification_emails:
+      - mconley@mozilla.com
+      - astevenson@mozilla.com
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1560590
+    expiry_version: "74"
+    release_channel_collection: opt-in
+  resize:
+    objects: ["player"]
+    description: >
+      Recorded when the Picture-in-Picture player window is resized.
+    extra_keys:
+      width: The width that the window was resized to
+      height: The height that the window was resize to
+    notification_emails:
+      - mconley@mozilla.com
+      - astevenson@mozilla.com
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1560590
+    expiry_version: "74"
+    release_channel_collection: opt-in
+  move:
+    objects: ["player"]
+    description: >
+      Recorded when the Picture-in-Picture player window is moved.
+    extra_keys:
+      screenX: The screen X coordinate that the window was moved to
+      screenY: The screen Y coordinate that the window was moved to
+    notification_emails:
+      - mconley@mozilla.com
+      - astevenson@mozilla.com
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1560590
+    expiry_version: "74"
+    release_channel_collection: opt-in
