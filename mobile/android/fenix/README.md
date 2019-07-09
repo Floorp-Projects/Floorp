@@ -17,6 +17,8 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * [View the Wiki](https://github.com/mozilla-mobile/fenix/wiki).
 
+* Localization happens on [Pontoon](https://pontoon.mozilla.org/projects/android-l10n/). Please get in touch with delphine (at) mozilla (dot) com directly for more information.
+
 **Beginners!** - Watch out for [Issues with the "Good First Issue" label](https://github.com/mozilla-mobile/fenix/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22). These are easy bugs that have been left for first timers to have a go, get involved and make a positive contribution to the project!
 
 
