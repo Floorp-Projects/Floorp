@@ -144,6 +144,10 @@ class TLSFilterTransaction final : public nsAHttpTransaction,
   NullHttpTransaction* QueryNullTransaction() override;
   nsHttpTransaction* QueryHttpTransaction() override;
   SpdyConnectTransaction* QuerySpdyConnectTransaction() override;
+  MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
+                                           uint32_t count,
+                                           uint32_t* countWritten,
+                                           bool* again) override;
 
  private:
   MOZ_MUST_USE nsresult StartTimerCallback();
