@@ -789,6 +789,56 @@ class TestConfigure(unittest.TestCase):
                 'QUX': NegativeOptionValue(),
             })
 
+        config_path = mozpath.abspath(
+            mozpath.join(test_data_path, 'moz.configure'))
+
+        # Same test as above, but using `when` in the `imply_option`.
+        with self.moz_configure('''
+            option('--with-foo', help='foo')
+
+            @depends('--with-foo')
+            def qux_default(foo):
+                return bool(foo)
+
+            option('--with-qux', default=qux_default, help='qux')
+
+            imply_option('--with-foo', True, when='--with-qux')
+
+            set_config('FOO', depends('--with-foo')(lambda x: x))
+            set_config('QUX', depends('--with-qux')(lambda x: x))
+        '''):
+            config = self.get_config()
+            self.assertEquals(config, {
+                'FOO': NegativeOptionValue(),
+                'QUX': NegativeOptionValue(),
+            })
+
+            config = self.get_config(['--with-foo'])
+            self.assertEquals(config, {
+                'FOO': PositiveOptionValue(),
+                'QUX': PositiveOptionValue(),
+            })
+
+            with self.assertRaises(InvalidOptionError) as e:
+                config = self.get_config(['--with-qux'])
+
+            self.assertEquals(e.exception.message,
+                              "'--with-foo' implied by 'imply_option at %s:10' conflicts "
+                              "with '--without-foo' from the default" % config_path)
+
+            with self.assertRaises(InvalidOptionError) as e:
+                config = self.get_config(['--without-foo', '--with-qux'])
+
+            self.assertEquals(e.exception.message,
+                              "'--with-foo' implied by 'imply_option at %s:10' conflicts "
+                              "with '--without-foo' from the command-line" % config_path)
+
+            config = self.get_config(['--without-qux'])
+            self.assertEquals(config, {
+                'FOO': NegativeOptionValue(),
+                'QUX': NegativeOptionValue(),
+            })
+
     def test_imply_option_recursion(self):
         config_path = mozpath.abspath(
             mozpath.join(test_data_path, 'moz.configure'))
