@@ -993,8 +993,8 @@ nsAppStartup::CreateInstanceWithProfile(nsIToolkitProfile* aProfile) {
     return rv;
   }
 
-  const char* args[] = {"-no-remote", "-P", profileName.get()};
-  rv = process->Run(false, args, 3);
+  const char16_t* args[] = {u"-no-remote", u"-P", NS_ConvertUTF8toUTF16(profileName).get()};
+  rv = process->Runw(false, args, 3);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
