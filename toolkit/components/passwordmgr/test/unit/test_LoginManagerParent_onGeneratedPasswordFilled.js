@@ -47,12 +47,31 @@ add_task(async function test_onGeneratedPasswordFilled() {
             "https://www.example.com^userContextId=6"
           ),
         },
+        get top() {
+          return this;
+        },
       };
     });
   ok(
     LMP._browsingContextGlobal.get(99),
     "Checking BrowsingContext.get(99) stub"
   );
+
+  info("Stubbing _getPrompter");
+  let fakePromptToSavePassword = sinon.stub();
+  sinon.stub(LMP, "_getPrompter").callsFake(() => {
+    return {
+      promptToSavePassword: fakePromptToSavePassword,
+    };
+  });
+  LMP._getPrompter().promptToSavePassword();
+  ok(LMP._getPrompter.calledOnce, "Checking _getPrompter stub");
+  ok(
+    fakePromptToSavePassword.calledOnce,
+    "Checking fakePromptToSavePassword stub"
+  );
+  LMP._getPrompter.resetHistory();
+  fakePromptToSavePassword.resetHistory();
 
   let password1 = LMP.getGeneratedPassword(99);
   notEqual(password1, null, "Check password was returned");
@@ -71,6 +90,12 @@ add_task(async function test_onGeneratedPasswordFilled() {
     (_, data) => data == "addLogin"
   );
 
+  equal(
+    Services.logins.getAllLogins().length,
+    0,
+    "Should have no saved logins at the start of the test"
+  );
+
   LMP._onGeneratedPasswordFilled({
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
@@ -86,6 +111,14 @@ add_task(async function test_onGeneratedPasswordFilled() {
   );
 
   ok(login.equals(expected), "Check added login");
+  ok(LMP._getPrompter.notCalled, "Checking _getPrompter was not called");
+  ok(
+    fakePromptToSavePassword.notCalled,
+    "Checking promptToSavePassword was not called"
+  );
+  LMP._getPrompter.resetHistory();
+  fakePromptToSavePassword.resetHistory();
+
   Services.logins.removeAllLogins();
 
   info("Disable login saving for the site");
@@ -99,5 +132,18 @@ add_task(async function test_onGeneratedPasswordFilled() {
     0,
     "Should have no saved logins since saving is disabled"
   );
+
+  ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
+  ok(
+    fakePromptToSavePassword.calledOnce,
+    "Checking promptToSavePassword was called"
+  );
+  ok(
+    fakePromptToSavePassword.getCall(0).args[1],
+    "promptToSavePassword had a truthy 'dismissed' argument"
+  );
+  LMP._getPrompter.resetHistory();
+  fakePromptToSavePassword.resetHistory();
+
   Services.logins.setLoginSavingEnabled("https://www.example.com", true);
 });
