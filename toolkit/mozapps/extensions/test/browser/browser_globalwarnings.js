@@ -7,20 +7,15 @@
 async function loadDetail(aWindow, id) {
   let loaded = wait_for_view_load(aWindow, undefined, true);
   // Check the detail view.
-  if (aWindow.useHtmlViews) {
-    let browser = await aWindow.getHtmlBrowser();
-    let card = browser.contentDocument.querySelector(
-      `addon-card[addon-id="${id}"]`
-    );
-    EventUtils.synthesizeMouseAtCenter(card, {}, browser.contentWindow);
-  } else {
-    let card = aWindow.document.querySelector(`.addon.card[value="${id}"]`);
-    EventUtils.synthesizeMouseAtCenter(card, {}, aWindow);
-  }
+  let browser = await aWindow.getHtmlBrowser();
+  let card = browser.contentDocument.querySelector(
+    `addon-card[addon-id="${id}"]`
+  );
+  EventUtils.synthesizeMouseAtCenter(card, {}, browser.contentWindow);
   await loaded;
 }
 
-async function checkCompatibility(hboxSelector, buttonSelector) {
+add_task(async function checkCompatibility() {
   info("Testing compatibility checking warning");
 
   info("Setting checkCompatibility to false");
@@ -34,8 +29,12 @@ async function checkCompatibility(hboxSelector, buttonSelector) {
   await extension.startup();
 
   let aWindow = await open_manager("addons://list/extension");
-  let hbox = aWindow.document.querySelector(hboxSelector);
-  let button = aWindow.document.querySelector(buttonSelector);
+  let hbox = aWindow.document.querySelector(
+    "#html-view .global-warning-checkcompatibility"
+  );
+  let button = aWindow.document.querySelector(
+    "#html-view .global-warning-checkcompatibility button"
+  );
 
   function checkMessage(visible) {
     if (visible) {
@@ -86,9 +85,9 @@ async function checkCompatibility(hboxSelector, buttonSelector) {
 
   await close_manager(aWindow);
   await extension.unload();
-}
+});
 
-async function checkSecurity(hboxSelector, buttonSelector) {
+add_task(async function checkSecurity() {
   info("Testing update security checking warning");
 
   var pref = "extensions.checkUpdateSecurity";
@@ -103,8 +102,12 @@ async function checkSecurity(hboxSelector, buttonSelector) {
   await extension.startup();
 
   let aWindow = await open_manager("addons://list/extension");
-  let hbox = aWindow.document.querySelector(hboxSelector);
-  let button = aWindow.document.querySelector(buttonSelector);
+  let hbox = aWindow.document.querySelector(
+    "#html-view .global-warning-updatesecurity"
+  );
+  let button = aWindow.document.querySelector(
+    "#html-view .global-warning-updatesecurity button"
+  );
 
   function checkMessage(visible) {
     if (visible) {
@@ -155,9 +158,9 @@ async function checkSecurity(hboxSelector, buttonSelector) {
 
   await close_manager(aWindow);
   await extension.unload();
-}
+});
 
-async function checkSafeMode(hboxSelector) {
+add_task(async function checkSafeMode() {
   info("Testing safe mode warning");
 
   let id = "test-safemode@mochi.test";
@@ -168,7 +171,9 @@ async function checkSafeMode(hboxSelector) {
   await extension.startup();
 
   let aWindow = await open_manager("addons://list/extension");
-  let hbox = aWindow.document.querySelector(hboxSelector);
+  let hbox = aWindow.document.querySelector(
+    "#html-view .global-warning-safemode"
+  );
 
   function checkMessage(visible) {
     if (visible) {
@@ -202,64 +207,4 @@ async function checkSafeMode(hboxSelector) {
 
   await close_manager(aWindow);
   await extension.unload();
-}
-
-add_task(async function testCompatCheckXUL() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", false]],
-  });
-  await checkCompatibility(
-    "#list-view hbox.global-warning-checkcompatibility",
-    "#list-view button.global-warning-checkcompatibility"
-  );
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(async function testCompatCheckHTML() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-  await checkCompatibility(
-    "#html-view .global-warning-checkcompatibility",
-    "#html-view .global-warning-checkcompatibility button"
-  );
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(async function testSecurityCheckXUL() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", false]],
-  });
-  await checkSecurity(
-    "#list-view hbox.global-warning-updatesecurity",
-    "#list-view button.global-warning-updatesecurity"
-  );
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(async function testSecurityCheckHTML() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-  await checkSecurity(
-    "#html-view .global-warning-updatesecurity",
-    "#html-view .global-warning-updatesecurity button"
-  );
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(async function testSafeModeXUL() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", false]],
-  });
-  await checkSafeMode("#list-view hbox.global-warning-safemode");
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(async function testSafeModeHTML() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-  await checkSafeMode("#html-view .global-warning-safemode");
-  // No popPrefEnv because of bug 1557397.
 });

@@ -55,19 +55,11 @@ MockGMPInstallManager.prototype = {
 
 function openDetailsView(aId) {
   let view = get_current_view(gManagerWindow);
-  if (gManagerWindow.useHtmlViews) {
-    Assert.equal(
-      view.id,
-      "html-view",
-      "Should be in the list view to use this function"
-    );
-  } else {
-    Assert.equal(
-      view.id,
-      "list-view",
-      "Should be in the list view to use this function"
-    );
-  }
+  Assert.equal(
+    view.id,
+    "html-view",
+    "Should be in the list view to use this function"
+  );
 
   let item = get_addon_element(gManagerWindow, aId);
   Assert.ok(item, "Should have got add-on element.");
@@ -82,11 +74,7 @@ function openDetailsView(aId) {
   });
 }
 
-async function initializeState({ useHtmlViews }) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", useHtmlViews]],
-  });
-
+async function initializeState() {
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_LOGGING_DUMP, true);
   gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_LOGGING_LEVEL, 0);
 
@@ -163,66 +151,18 @@ async function testNotInstalledDisabled() {
   for (let addon of gMockAddons) {
     let item = get_addon_element(gManagerWindow, addon.id);
     Assert.ok(item, "Got add-on element:" + addon.id);
-    if (gManagerWindow.useHtmlViews) {
-      is(item.parentNode.getAttribute("section"), "1", "Should be disabled");
-      // Open the options menu (needed to check the disabled buttons).
-      const pluginOptions = item.querySelector("plugin-options");
-      pluginOptions.querySelector("panel-list").open = true;
-      const neverActivate = pluginOptions.querySelector(
-        "panel-item[action=never-activate]"
-      );
-      ok(
-        neverActivate.hasAttribute("checked"),
-        "Plugin state should be never-activate"
-      );
-      pluginOptions.querySelector("panel-list").open = false;
-    } else {
-      item.parentNode.ensureElementIsVisible(item);
-      is(item.getAttribute("active"), "false", "Should be disabled");
-
-      let el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "warning"
-      );
-      is_element_hidden(el, "Warning notification is hidden.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "class",
-        "disabled-postfix"
-      );
-      is_element_visible(el, "disabled-postfix is visible.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "disable-btn"
-      );
-      is_element_hidden(el, "Disable button not visible.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "enable-btn"
-      );
-      is_element_hidden(el, "Enable button not visible.");
-
-      let menu = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "state-menulist"
-      );
-      is_element_visible(menu, "State menu should be visible.");
-
-      let neverActivate = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "never-activate-menuitem"
-      );
-      is(
-        menu.selectedItem,
-        neverActivate,
-        "Plugin state should be never-activate."
-      );
-    }
+    is(item.parentNode.getAttribute("section"), "1", "Should be disabled");
+    // Open the options menu (needed to check the disabled buttons).
+    const pluginOptions = item.querySelector("plugin-options");
+    pluginOptions.querySelector("panel-list").open = true;
+    const neverActivate = pluginOptions.querySelector(
+      "panel-item[action=never-activate]"
+    );
+    ok(
+      neverActivate.hasAttribute("checked"),
+      "Plugin state should be never-activate"
+    );
+    pluginOptions.querySelector("panel-list").open = false;
   }
 }
 
@@ -251,87 +191,31 @@ async function testNotInstalled() {
     );
     let item = get_addon_element(gManagerWindow, addon.id);
     Assert.ok(item, "Got add-on element:" + addon.id);
-    if (gManagerWindow.useHtmlViews) {
-      is(item.parentNode.getAttribute("section"), "0", "Should be enabled");
-      // Open the options menu (needed to check the disabled buttons).
-      const pluginOptions = item.querySelector("plugin-options");
-      pluginOptions.querySelector("panel-list").open = true;
-      const alwaysActivate = pluginOptions.querySelector(
-        "panel-item[action=always-activate]"
-      );
-      ok(
-        alwaysActivate.hasAttribute("checked"),
-        "Plugin state should be always-activate"
-      );
-      pluginOptions.querySelector("panel-list").open = false;
-    } else {
-      item.parentNode.ensureElementIsVisible(item);
-      is(item.getAttribute("active"), "true");
 
-      let el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "warning"
-      );
-      is_element_visible(el, "Warning notification is visible.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "class",
-        "disabled-postfix"
-      );
-      is_element_hidden(el, "disabled-postfix is hidden.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "disable-btn"
-      );
-      is_element_hidden(el, "Disable button not visible.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "enable-btn"
-      );
-      is_element_hidden(el, "Enable button not visible.");
-
-      let menu = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "state-menulist"
-      );
-      is_element_visible(menu, "State menu should be visible.");
-
-      let alwaysActivate = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "always-activate-menuitem"
-      );
-      is(
-        menu.selectedItem,
-        alwaysActivate,
-        "Plugin state should be always-activate."
-      );
-    }
+    is(item.parentNode.getAttribute("section"), "0", "Should be enabled");
+    // Open the options menu (needed to check the disabled buttons).
+    const pluginOptions = item.querySelector("plugin-options");
+    pluginOptions.querySelector("panel-list").open = true;
+    const alwaysActivate = pluginOptions.querySelector(
+      "panel-item[action=always-activate]"
+    );
+    ok(
+      alwaysActivate.hasAttribute("checked"),
+      "Plugin state should be always-activate"
+    );
+    pluginOptions.querySelector("panel-list").open = false;
   }
 }
 
 async function testNotInstalledDetails() {
   for (let addon of gMockAddons) {
     await openDetailsView(addon.id);
-    if (gManagerWindow.useHtmlViews) {
-      const addonCard = get_addon_element(gManagerWindow, addon.id);
-      let el = addonCard.querySelector("[action=update-check]");
-      is_element_visible(el, "Check for Updates action is visible");
-      // TODO: add assertion for the warning notification once implemented
-      // as part of Bug 1544950.
-    } else {
-      let doc = gManagerWindow.document;
-      let el = doc.getElementsByClassName("disabled-postfix")[0];
-      is_element_hidden(el, "disabled-postfix is hidden.");
-      el = doc.getElementById("detail-findUpdates-btn");
-      is_element_visible(el, "Find updates link is visible.");
-      el = doc.getElementById("detail-warning");
-      is_element_visible(el, "Warning notification is visible.");
-    }
+
+    const addonCard = get_addon_element(gManagerWindow, addon.id);
+    let el = addonCard.querySelector("[action=update-check]");
+    is_element_visible(el, "Check for Updates action is visible");
+    // TODO: add assertion for the warning notification once implemented
+    // as part of Bug 1544950.
 
     await gCategoryUtilities.openType("plugin");
   }
@@ -354,66 +238,19 @@ async function testInstalled() {
 
     let item = get_addon_element(gManagerWindow, addon.id);
     Assert.ok(item, "Got add-on element.");
-    if (gManagerWindow.useHtmlViews) {
-      is(item.parentNode.getAttribute("section"), "0", "Should be enabled");
-      // Open the options menu (needed to check the disabled buttons).
-      const pluginOptions = item.querySelector("plugin-options");
-      pluginOptions.querySelector("panel-list").open = true;
-      const alwaysActivate = pluginOptions.querySelector(
-        "panel-item[action=always-activate]"
-      );
-      ok(
-        alwaysActivate.hasAttribute("checked"),
-        "Plugin state should be always-activate"
-      );
-      pluginOptions.querySelector("panel-list").open = false;
-    } else {
-      item.parentNode.ensureElementIsVisible(item);
-      is(item.getAttribute("active"), "true");
 
-      let el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "warning"
-      );
-      is_element_hidden(el, "Warning notification is hidden.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "class",
-        "disabled-postfix"
-      );
-      is_element_hidden(el, "disabled-postfix is hidden.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "disable-btn"
-      );
-      is_element_hidden(el, "Disable button not visible.");
-      el = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "enable-btn"
-      );
-      is_element_hidden(el, "Enable button not visible.");
-
-      let menu = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "state-menulist"
-      );
-      is_element_visible(menu, "State menu should be visible.");
-
-      let alwaysActivate = item.ownerDocument.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "always-activate-menuitem"
-      );
-      is(
-        menu.selectedItem,
-        alwaysActivate,
-        "Plugin state should be always-activate."
-      );
-    }
+    is(item.parentNode.getAttribute("section"), "0", "Should be enabled");
+    // Open the options menu (needed to check the disabled buttons).
+    const pluginOptions = item.querySelector("plugin-options");
+    pluginOptions.querySelector("panel-list").open = true;
+    const alwaysActivate = pluginOptions.querySelector(
+      "panel-item[action=always-activate]"
+    );
+    ok(
+      alwaysActivate.hasAttribute("checked"),
+      "Plugin state should be always-activate"
+    );
+    pluginOptions.querySelector("panel-list").open = false;
   }
 }
 
@@ -421,44 +258,11 @@ async function testInstalledDetails() {
   for (let addon of gMockAddons) {
     await openDetailsView(addon.id);
 
-    if (gManagerWindow.useHtmlViews) {
-      let card = get_addon_element(gManagerWindow, addon.id);
-      is_element_visible(
-        card.querySelector("[action=update-check]"),
-        "Find updates link is bisible"
-      );
-    } else {
-      let doc = gManagerWindow.document;
-
-      let el = doc.getElementsByClassName("disabled-postfix")[0];
-      is_element_hidden(el, "disabled-postfix is hidden.");
-      el = doc.getElementById("detail-findUpdates-btn");
-      is_element_visible(el, "Find updates link is visible.");
-      el = doc.getElementById("detail-warning");
-      is_element_hidden(el, "Warning notification is hidden.");
-      el = doc.getElementsByTagName("setting")[0];
-
-      let contextMenu = doc.getElementById("addonitem-popup");
-      await new Promise(resolve => {
-        let listener = () => {
-          contextMenu.removeEventListener("popupshown", listener);
-          resolve();
-        };
-        contextMenu.addEventListener("popupshown", listener);
-        el = doc.getElementsByClassName("detail-view-container")[0];
-        EventUtils.synthesizeMouse(el, 4, 4, {}, gManagerWindow);
-        EventUtils.synthesizeMouse(
-          el,
-          4,
-          4,
-          { type: "contextmenu", button: 2 },
-          gManagerWindow
-        );
-      });
-      let menuSep = doc.getElementById("addonitem-menuseparator");
-      is_element_hidden(menuSep, "Menu separator is hidden.");
-      contextMenu.hidePopup();
-    }
+    let card = get_addon_element(gManagerWindow, addon.id);
+    is_element_visible(
+      card.querySelector("[action=update-check]"),
+      "Find updates link is bisible"
+    );
 
     await gCategoryUtilities.openType("plugin");
   }
@@ -469,22 +273,18 @@ async function testInstalledGlobalEmeDisabled() {
   for (let addon of gMockAddons) {
     let item = get_addon_element(gManagerWindow, addon.id);
     if (addon.isEME) {
-      if (gManagerWindow.useHtmlViews) {
-        is(item.parentNode.getAttribute("section"), "1", "Should be disabled");
-        // Open the options menu (needed to check the disabled buttons).
-        const pluginOptions = item.querySelector("plugin-options");
-        pluginOptions.querySelector("panel-list").open = true;
-        const askActivate = pluginOptions.querySelector(
-          "panel-item[action=ask-to-activate]"
-        );
-        ok(
-          askActivate.shadowRoot.querySelector("button").disabled,
-          "ask-to-activate should be disabled"
-        );
-        pluginOptions.querySelector("panel-list").open = false;
-      } else {
-        Assert.ok(!item, "Couldn't get add-on element.");
-      }
+      is(item.parentNode.getAttribute("section"), "1", "Should be disabled");
+      // Open the options menu (needed to check the disabled buttons).
+      const pluginOptions = item.querySelector("plugin-options");
+      pluginOptions.querySelector("panel-list").open = true;
+      const askActivate = pluginOptions.querySelector(
+        "panel-item[action=ask-to-activate]"
+      );
+      ok(
+        askActivate.shadowRoot.querySelector("button").disabled,
+        "ask-to-activate should be disabled"
+      );
+      pluginOptions.querySelector("panel-list").open = false;
     } else {
       Assert.ok(item, "Got add-on element.");
     }
@@ -520,34 +320,19 @@ async function testPreferencesButton() {
       );
 
       await gCategoryUtilities.openType("plugin");
-      let doc = gManagerWindow.document;
       let item = get_addon_element(gManagerWindow, addon.id);
 
-      if (gManagerWindow.useHtmlViews) {
-        // Open the options menu (needed to check the more options action is enabled).
-        const pluginOptions = item.querySelector("plugin-options");
-        pluginOptions.querySelector("panel-list").open = true;
-        const moreOptions = pluginOptions.querySelector(
-          "panel-item[action=expand]"
-        );
-        ok(
-          !moreOptions.shadowRoot.querySelector("button").disabled,
-          "more options action should be enabled"
-        );
-        moreOptions.click();
-      } else {
-        let button = doc.getAnonymousElementByAttribute(
-          item,
-          "anonid",
-          "preferences-btn"
-        );
-        is_element_visible(button);
-        EventUtils.synthesizeMouseAtCenter(
-          button,
-          { clickCount: 1 },
-          gManagerWindow
-        );
-      }
+      // Open the options menu (needed to check the more options action is enabled).
+      const pluginOptions = item.querySelector("plugin-options");
+      pluginOptions.querySelector("panel-list").open = true;
+      const moreOptions = pluginOptions.querySelector(
+        "panel-item[action=expand]"
+      );
+      ok(
+        !moreOptions.shadowRoot.querySelector("button").disabled,
+        "more options action should be enabled"
+      );
+      moreOptions.click();
 
       await wait_for_view_load(gManagerWindow);
     }
@@ -567,38 +352,15 @@ async function testUpdateButton() {
 
   for (let addon of gMockAddons) {
     await gCategoryUtilities.openType("plugin");
-    let doc = gManagerWindow.document;
     let item = get_addon_element(gManagerWindow, addon.id);
 
     gInstalledAddonId = "";
     gInstallDeferred = Promise.defer();
 
-    if (gManagerWindow.useHtmlViews) {
-      item.querySelector("[action=expand]").click();
-      await wait_for_view_load(gManagerWindow);
-      let detail = get_addon_element(gManagerWindow, addon.id);
-      detail.querySelector("[action=update-check]").click();
-    } else {
-      let button = doc.getAnonymousElementByAttribute(
-        item,
-        "anonid",
-        "preferences-btn"
-      );
-      EventUtils.synthesizeMouseAtCenter(
-        button,
-        { clickCount: 1 },
-        gManagerWindow
-      );
-      await wait_for_view_load(gManagerWindow);
-
-      button = doc.getElementById("detail-findUpdates-btn");
-      Assert.ok(button != null, "Got detail-findUpdates-btn");
-      EventUtils.synthesizeMouseAtCenter(
-        button,
-        { clickCount: 1 },
-        gManagerWindow
-      );
-    }
+    item.querySelector("[action=expand]").click();
+    await wait_for_view_load(gManagerWindow);
+    let detail = get_addon_element(gManagerWindow, addon.id);
+    detail.querySelector("[action=update-check]").click();
 
     await gInstallDeferred.promise;
     Assert.equal(gInstalledAddonId, addon.id);
@@ -672,8 +434,8 @@ async function testCleanupState() {
 // This function run the sequence of all the gmpProvider tests
 // under the same initializeStateOptions (which will enable or disable
 // the HTML about:addons views).
-async function test_gmpProvider(initializeStateOptions) {
-  await initializeState(initializeStateOptions);
+add_task(async function test_gmpProvider(initializeStateOptions) {
+  await initializeState();
   await testNotInstalledDisabled();
   await testNotInstalledDisabledDetails();
   await testNotInstalled();
@@ -685,12 +447,4 @@ async function test_gmpProvider(initializeStateOptions) {
   await testUpdateButton();
   await testEmeSupport();
   await testCleanupState();
-}
-
-add_task(function test_gmpProvider_on_XUL_aboutaddons() {
-  return test_gmpProvider({ useHtmlViews: false });
-});
-
-add_task(async function test_gmpProvider_on_HTML_aboutaddons() {
-  return test_gmpProvider({ useHtmlViews: true });
 });
