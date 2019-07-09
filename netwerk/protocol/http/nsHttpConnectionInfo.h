@@ -60,6 +60,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   }
 
   void BuildHashKey();
+  void RebuildHashKey();
 
  public:
   const nsCString& HashKey() const { return mHashKey; }
@@ -133,7 +134,7 @@ class nsHttpConnectionInfo final : public ARefBase {
 
   void SetIsolated(bool aIsolated) {
     mIsolated = aIsolated;
-    BuildHashKey();
+    RebuildHashKey();
   }
   bool GetIsolated() const { return mIsolated; }
 
