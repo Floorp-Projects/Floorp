@@ -29,7 +29,7 @@ use self::utils::*;
 use atomic;
 use cubeb_backend::{
     ffi, ChannelLayout, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType,
-    Error, Ops, Result, SampleFormat, Stream, StreamOps, StreamParams, StreamParamsRef,
+    Error, Ops, Result, SampleFormat, State, Stream, StreamOps, StreamParams, StreamParamsRef,
     StreamPrefs,
 };
 use std::cmp;
@@ -289,15 +289,7 @@ extern "C" fn audiounit_input_callback(
     if outframes < total_input_frames {
         assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
 
-        if stm.state_callback.is_some() {
-            unsafe {
-                (stm.state_callback.unwrap())(
-                    stm as *mut AudioUnitStream as *mut ffi::cubeb_stream,
-                    stm.user_ptr,
-                    ffi::CUBEB_STATE_DRAINED,
-                );
-            }
-        }
+        stm.notify_state_changed(State::Drained);
 
         return NO_ERR;
     }
@@ -359,15 +351,7 @@ extern "C" fn audiounit_output_callback(
         if !stm.input_unit.is_null() {
             assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
         }
-        if stm.state_callback.is_some() {
-            unsafe {
-                (stm.state_callback.unwrap())(
-                    stm as *mut AudioUnitStream as *mut ffi::cubeb_stream,
-                    stm.user_ptr,
-                    ffi::CUBEB_STATE_DRAINED,
-                );
-            }
-        }
+        stm.notify_state_changed(State::Drained);
         audiounit_make_silent(&mut buffers[0]);
         return NO_ERR;
     }
@@ -458,15 +442,7 @@ extern "C" fn audiounit_output_callback(
         if !stm.input_unit.is_null() {
             assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
         }
-        if stm.state_callback.is_some() {
-            unsafe {
-                (stm.state_callback.unwrap())(
-                    stm as *mut AudioUnitStream as *mut ffi::cubeb_stream,
-                    stm.user_ptr,
-                    ffi::CUBEB_STATE_ERROR,
-                );
-            }
-        }
+        stm.notify_state_changed(State::Error);
         audiounit_make_silent(&mut buffers[0]);
         return NO_ERR;
     }
@@ -2911,6 +2887,20 @@ impl<'ctx> AudioUnitStream<'ctx> {
         )
     }
 
+    fn notify_state_changed(&mut self, state: State) {
+        if self.state_callback.is_none() {
+            return;
+        }
+        let callback = self.state_callback.unwrap();
+        unsafe {
+            callback(
+                self as *const AudioUnitStream as *mut ffi::cubeb_stream,
+                self.user_ptr,
+                state.into(),
+            );
+        }
+    }
+
     fn has_input(&self) -> bool {
         self.input_stream_params.rate() > 0
     }
@@ -3196,15 +3186,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                         stm_ptr
                     );
                 }
-                if stm_guard.state_callback.is_some() {
-                    unsafe {
-                        (stm_guard.state_callback.unwrap())(
-                            stm_ptr as *mut ffi::cubeb_stream,
-                            stm_guard.user_ptr,
-                            ffi::CUBEB_STATE_ERROR,
-                        );
-                    }
-                }
+                stm_guard.notify_state_changed(State::Error);
                 cubeb_log!(
                     "({:p}) Could not reopen the stream after switching.",
                     stm_ptr
@@ -4323,15 +4305,7 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
 
         self.start_internal()?;
 
-        if self.state_callback.is_some() {
-            unsafe {
-                (self.state_callback.unwrap())(
-                    self as *mut AudioUnitStream as *mut ffi::cubeb_stream,
-                    self.user_ptr,
-                    ffi::CUBEB_STATE_STARTED,
-                );
-            }
-        }
+        self.notify_state_changed(State::Started);
 
         cubeb_log!(
             "Cubeb stream ({:p}) started successfully.",
@@ -4344,15 +4318,7 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
 
         self.stop_internal();
 
-        if self.state_callback.is_some() {
-            unsafe {
-                (self.state_callback.unwrap())(
-                    self as *mut AudioUnitStream as *mut ffi::cubeb_stream,
-                    self.user_ptr,
-                    ffi::CUBEB_STATE_STOPPED,
-                );
-            }
-        }
+        self.notify_state_changed(State::Stopped);
 
         cubeb_log!(
             "Cubeb stream ({:p}) stopped successfully.",
