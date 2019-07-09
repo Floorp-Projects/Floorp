@@ -1,0 +1,18 @@
+[package]
+name = "cubeb-coreaudio"
+version = "0.1.0"
+authors = ["Chun-Min Chang <chun.m.chang@gmail.com>"]
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+atomic = "0.4"
+bitflags = "1.0"
+core-foundation-sys = { version = "0.6" }
+coreaudio-sys-utils = { path = "coreaudio-sys-utils" }
+# BMO 1532645: https://bugzilla.mozilla.org/show_bug.cgi?id=1532645
+# To workaround https://github.com/rust-lang/rust/issues/58881 and make `cubeb_logv!` work,
+# the minimal version of cubeb-backend is 0.5.1.
+cubeb-backend = "0.5.3"
+libc = "0.2"
