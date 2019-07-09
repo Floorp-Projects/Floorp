@@ -8,6 +8,7 @@
 import copy
 import json
 import time
+import glob
 import os
 import sys
 import posixpath
@@ -203,7 +204,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
 
         outputdir = self.config.get('output_directory', '/sdcard/pgo_profile')
         jarlog = posixpath.join(outputdir, 'en-US.log')
-        profdata = posixpath.join(outputdir, 'default.profraw')
+        profdata = posixpath.join(outputdir, 'default_%p_random_%m.profraw')
 
         env = {}
         env["XPCOM_DEBUG_BREAK"] = "warn"
@@ -263,9 +264,8 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
             else:
                 raise Exception("Android App (%s) never quit" % app)
 
-            localprof = '/builds/worker/workspace/default.profraw'
-            adbdevice.pull(profdata, localprof)
-            adbdevice.pull(jarlog, '/builds/worker/workspace/en-US.log')
+            # Pull all the profraw files and en-US.log
+            adbdevice.pull(outputdir, '/builds/worker/workspace/')
         except ADBTimeoutError:
             self.fatal('INFRA-ERROR: Failed with an ADBTimeoutError',
                        EXIT_STATUS_DICT[TBPL_RETRY])
@@ -274,13 +274,15 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         # build, but Android runs sometimes result in a truncated profile. We do
         # a merge here to make sure the data isn't corrupt so we can retry the
         # 'run' task if necessary.
+        profraw_files = glob.glob('/builds/worker/workspace/*.profraw')
+        if not profraw_files:
+            self.fatal('Could not find any profraw files in /builds/worker/workspace')
         merge_cmd = [
             '/builds/worker/workspace/build/clang/bin/llvm-profdata',
             'merge',
-            '/builds/worker/workspace/default.profraw',
             '-o',
             '/builds/worker/workspace/merged.profraw',
-        ]
+        ] + profraw_files
         rc = subprocess.call(merge_cmd)
         if rc != 0:
             self.fatal('INFRA-ERROR: Failed to merge profile data. Corrupt profile?',
