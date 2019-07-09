@@ -10,13 +10,9 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
 
-  <panel id="panel" hidden="true"
-         orient="vertical"
-         onpopupshown="onPanelShown(event);"
-         onpopuphidden="onPanelHidden(event);">
+  <panel id="panel" hidden="true" orient="vertical">
     <vbox id="vbox">
-      <html:textarea id="textbox" onfocus="onFocusPanelTextbox(event);"
-                     cols="20" rows="4" style="font-size: 36px;"/>
+      <html:textarea id="textbox" cols="20" rows="4" style="font-size: 36px;"/>
     </vbox>
   </panel>
 
@@ -6817,49 +6813,32 @@ function runFrameTest()
   runCharAtPointTest(textareaInFrame, "textarea in the iframe");
 }
 
-let gPanelShown = false;
-let gPanelFocused = false;
-function onPanelShown(aEvent)
-{
-  gPanelShown = true;
-  textbox.focus();
-  setTimeout(doPanelTest, 0);
-}
-
-function onFocusPanelTextbox(aEvent)
-{
-  gPanelFocused = true;
-  setTimeout(doPanelTest, 0);
-}
-
-let gIsPanelHiding = false;
-let gIsRunPanelTestInternal = false;
-function doPanelTest()
-{
-  if (!gPanelFocused || !gPanelShown) {
-    return;
-  }
-  if (gIsRunPanelTestInternal) {
-    return;
-  }
-  gIsRunPanelTestInternal = true;
-  runTestOnAnotherContext(panel, textbox, "runPanelTest");
-  runCharAtPointTest(textbox, "textbox in the panel");
-  gIsPanelHiding = true;
-  panel.hidePopup();
-}
-
-function onPanelHidden(aEvent)
-{
-  panel.hidden = true;
-  ok(gIsPanelHiding, "runPanelTest: the panel is hidden unexpectedly");
-  SimpleTest.executeSoon(continueTest);
-}
-
-function runPanelTest()
+async function runPanelTest()
 {
   panel.hidden = false;
+  let waitOpenPopup = new Promise(resolve => {
+    panel.addEventListener("popupshown", resolve, {once: true});
+  });
+  let waitFocusTextBox = new Promise(resolve => {
+    textbox.addEventListener("focus", resolve, {once: true});
+  });
   panel.openPopupAtScreen(window.screenX + window.outerWidth, 0, false);
+  await waitOpenPopup;
+  textbox.focus();
+  await waitFocusTextBox;
+  is(panel.state, "open", "The panel should be open (after textbox.focus())");
+  await waitForTick();
+  is(panel.state, "open", "The panel should be open (after waitForTick())");
+  runTestOnAnotherContext(panel, textbox, "runPanelTest");
+  is(panel.state, "open", "The panel should be open (after runTestOnAnotherContext())");
+  runCharAtPointTest(textbox, "textbox in the panel");
+  is(panel.state, "open", "The panel should be open (after runCharAtPointTest())");
+  let waitClosePopup = new Promise(resolve => {
+    panel.addEventListener("popuphidden", resolve, {once: true});
+  });
+  panel.hidePopup();
+  await waitClosePopup;
+  await waitForTick();
 }
 
 function runMaxLengthTest()
@@ -8445,7 +8424,6 @@ function* testBody()
   runNativeLineBreakerTest();
   runControlCharTest();
   runFrameTest();
-  yield runPanelTest();
   runMaxLengthTest();
 }
 
@@ -8459,6 +8437,7 @@ async function runTest()
   await runEditorReframeTests();
   await runAsyncForceCommitTest();
   await runRemoveContentTest();
+  await runPanelTest();
 
   continueTest();
 }
