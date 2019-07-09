@@ -9,6 +9,8 @@ interface HTMLDocument : Document {
   // DOM tree accessors
   [Throws]
   getter object (DOMString name);
+
+  readonly attribute HTMLAllCollection all;
 };
 
 partial interface HTMLDocument {
