@@ -24,6 +24,8 @@ ChromeUtils.defineModuleGetter(
  * Platform-dependent regular expression used by the "sanitize" method.
  */
 XPCOMUtils.defineLazyGetter(this, "gConvertToSpaceRegExp", () => {
+  // Note: we remove colons everywhere to avoid issues in subresource URL
+  // parsing, as well as filename restrictions on some OSes (see bug 1562176).
   /* eslint-disable no-control-regex */
   switch (AppConstants.platform) {
     // On mobile devices, the file system may be very limited in what it
@@ -32,10 +34,8 @@ XPCOMUtils.defineLazyGetter(this, "gConvertToSpaceRegExp", () => {
       return /[\x00-\x1f\x7f-\x9f:*?|"<>;,+=\[\]]+/g;
     case "win":
       return /[\x00-\x1f\x7f-\x9f:*?|]+/g;
-    case "macosx":
-      return /[\x00-\x1f\x7f-\x9f:]+/g;
     default:
-      return /[\x00-\x1f\x7f-\x9f]+/g;
+      return /[\x00-\x1f\x7f-\x9f:]+/g;
   }
   /* eslint-enable no-control-regex */
 });
