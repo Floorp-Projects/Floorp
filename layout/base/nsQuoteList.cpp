@@ -11,6 +11,7 @@
 #include "nsIContent.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/intl/Quotes.h"
 
 using namespace mozilla;
 
@@ -41,8 +42,30 @@ nsString nsQuoteNode::Text() {
   int32_t depth = Depth();
   MOZ_ASSERT(depth >= -1);
 
-  Span<const StyleQuotePair> quotes =
-      mPseudoFrame->StyleList()->mQuotes._0.AsSpan();
+  if (depth < 0) {
+    return result;
+  }
+
+  const auto& quotesProp = mPseudoFrame->StyleList()->mQuotes;
+
+  if (quotesProp.IsAuto()) {
+    // Look up CLDR-derived quotation marks for current language;
+    // if none available, use built-in default.
+    const intl::Quotes* quotes =
+        intl::QuotesForLang(mPseudoFrame->StyleFont()->mLanguage);
+    if (!quotes) {
+      static const intl::Quotes sDefaultQuotes = {
+          {0x201c, 0x201d, 0x2018, 0x2019}};
+      quotes = &sDefaultQuotes;
+    }
+    size_t index = (depth == 0 ? 0 : 2);  // select first or second pair
+    index += (mType == StyleContentType::OpenQuote ? 0 : 1);  // open or close
+    result.Append(quotes->mChars[index]);
+    return result;
+  }
+
+  MOZ_ASSERT(quotesProp.IsQuoteList());
+  const Span<const StyleQuotePair> quotes = quotesProp.AsQuoteList().AsSpan();
 
   // Reuse the last pair when the depth is greater than the number of
   // pairs of quotes.  (Also make 'quotes: none' and close-quote from
