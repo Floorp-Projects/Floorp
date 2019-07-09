@@ -45,9 +45,8 @@ async function performTests() {
   );
 
   info("Check that Escape closes the confirm tooltip");
-  let onConfirmTooltipClosed = waitFor(() => !isConfirmDialogOpened(toolbox));
   EventUtils.synthesizeKey("KEY_Escape");
-  await onConfirmTooltipClosed;
+  await waitFor(() => !isConfirmDialogOpened(toolbox));
 
   info("Check that typing a letter won't show the tooltip");
   const onAutocompleteUpdate = jsterm.once("autocomplete-updated");
@@ -66,8 +65,26 @@ async function performTests() {
     "Dialog has expected text content"
   );
 
-  info("Check that ArrowLeft closes the confirm tooltip");
-  onConfirmTooltipClosed = waitFor(() => !isConfirmDialogOpened(toolbox));
-  EventUtils.synthesizeKey("KEY_ArrowLeft");
-  await onConfirmTooltipClosed;
+  info("Check that clicking on the close button closes the tooltip");
+  const closeButtonEl = tooltip.querySelector(".close-confirm-dialog-button");
+  is(closeButtonEl.title, "Close (Esc)", "Close button has the expected title");
+  closeButtonEl.click();
+  await waitFor(() => !isConfirmDialogOpened(toolbox));
+  ok(true, "Clicking the close button does close the tooltip");
+
+  info(
+    "Check that the tooltip closes when there's no more reason to display it"
+  );
+  // Open the tooltip again
+  EventUtils.synthesizeKey(" ", { ctrlKey: true });
+  await waitFor(() => isConfirmDialogOpened(toolbox));
+
+  // Adding a space will make the input `foo.rab.t `, which we shouldn't try to
+  // autocomplete.
+  EventUtils.sendString(" ");
+  await waitFor(() => !isConfirmDialogOpened(toolbox));
+  ok(
+    true,
+    "The tooltip is now closed since the input doesn't match a getter name"
+  );
 }

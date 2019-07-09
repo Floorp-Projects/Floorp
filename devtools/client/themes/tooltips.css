@@ -702,16 +702,35 @@ strong {
   max-width: 212px;
 }
 
+.invoke-confirm .close-confirm-dialog-button::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+}
+
 .invoke-confirm .confirm-label {
   margin: 0;
   padding: 4px;
   background-color: var(--theme-toolbar-background-alt);
+  display: flex;
+  align-items: start;
+}
+
+.invoke-confirm .confirm-label p {
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
+  hyphens: auto;
 }
 
 .invoke-confirm .emphasized {
   font-family: var(--monospace-font-family);
   font-weight: bold;
   overflow-wrap: break-word;
+}
+
+.invoke-confirm .close-confirm-dialog-button {
+  padding: 0;
+  margin: 0;
+  flex-grow: 0;
 }
 
 .invoke-confirm .confirm-button {
