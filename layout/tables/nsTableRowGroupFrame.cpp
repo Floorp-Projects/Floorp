@@ -348,7 +348,8 @@ void nsTableRowGroupFrame::ReflowChildren(
 
   bool haveRow = false;
   bool reflowAllKids = aReflowInput.reflowInput.ShouldReflowAllKids() ||
-                       tableFrame->IsGeometryDirty();
+                       tableFrame->IsGeometryDirty() ||
+                       tableFrame->NeedToCollapse();
 
   // in vertical-rl mode, we always need the row bsizes in order to
   // get the necessary containerSize for placing our kids
