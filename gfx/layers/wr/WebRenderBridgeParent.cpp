@@ -85,15 +85,9 @@ bool gecko_profiler_thread_is_being_profiled() {
 #endif
 }
 
-bool is_glcontext_egl(void* glcontext_ptr) {
-  MOZ_ASSERT(glcontext_ptr);
-
-  mozilla::gl::GLContext* glcontext =
-      reinterpret_cast<mozilla::gl::GLContext*>(glcontext_ptr);
-  if (!glcontext) {
-    return false;
-  }
-  return glcontext->GetContextType() == mozilla::gl::GLContextType::EGL;
+bool is_glcontext_gles(void* const glcontext_ptr) {
+  MOZ_RELEASE_ASSERT(glcontext_ptr);
+  return reinterpret_cast<mozilla::gl::GLContext*>(glcontext_ptr)->IsGLES();
 }
 
 bool is_glcontext_angle(void* glcontext_ptr) {
