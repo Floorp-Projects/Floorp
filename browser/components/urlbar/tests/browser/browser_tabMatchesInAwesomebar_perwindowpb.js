@@ -83,10 +83,7 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
   );
 
   // Wait for the Awesomebar popup to appear.
-  // Use a slice to workaround bug 1507755.
-  let searchString = UrlbarPrefs.get("quantumbar")
-    ? TEST_URL
-    : TEST_URL.slice(1);
+  let searchString = TEST_URL;
   await promiseAutocompleteResultPopup(searchString, aDestWindow);
 
   info(`awesomebar popup appeared. aExpectSwitch: ${aExpectSwitch}`);

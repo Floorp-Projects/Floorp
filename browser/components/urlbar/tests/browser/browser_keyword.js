@@ -14,30 +14,15 @@ async function promise_first_result(inputText) {
 }
 
 function assertURL(result, expectedUrl, keyword, input, postData) {
-  if (UrlbarPrefs.get("quantumbar")) {
-    Assert.equal(result.url, expectedUrl, "Should have the correct URL");
-    if (postData) {
-      Assert.equal(
-        NetUtil.readInputStreamToString(
-          result.postData,
-          result.postData.available()
-        ),
-        postData,
-        "Should have the correct postData"
-      );
-    }
-  } else {
-    // We need to make a real URI out of this to ensure it's normalised for
-    // comparison.
+  Assert.equal(result.url, expectedUrl, "Should have the correct URL");
+  if (postData) {
     Assert.equal(
-      result.url,
-      PlacesUtils.mozActionURI("keyword", {
-        url: expectedUrl,
-        keyword,
-        input,
-        postData,
-      }),
-      "Expect correct url"
+      NetUtil.readInputStreamToString(
+        result.postData,
+        result.postData.available()
+      ),
+      postData,
+      "Should have the correct postData"
     );
   }
 }
@@ -132,16 +117,6 @@ add_task(async function test_keyword_using_get() {
   assertURL(result, TEST_URL + "?q=something", "get", "get something");
 
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-
-  if (!UrlbarPrefs.get("quantumbar")) {
-    // QuantumBar doesn't have separate boxes for items.
-    let urlHbox = element._urlText.parentNode.parentNode;
-    Assert.ok(
-      urlHbox.classList.contains("ac-url"),
-      "URL hbox element sanity check"
-    );
-    BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
-  }
 
   // Click on the result
   info("Normal click on result");

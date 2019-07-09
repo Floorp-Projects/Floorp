@@ -33,7 +33,6 @@ add_task(async function basic() {
   ok(gURLBar.hasAttribute("focused"), "url bar is focused");
   await assertUrlbarValue("basic");
 
-  assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(true);
 
   await UrlbarTestUtils.promisePopupClose(window, () =>
@@ -55,7 +54,6 @@ add_task(async function searchEngineAlias() {
   ok(gURLBar.hasAttribute("focused"), "url bar is focused");
   await assertUrlbarValue("@example");
 
-  assertSearchSuggestionsNotificationVisible(false);
   assertOneOffButtonsVisible(false);
 
   await UrlbarTestUtils.promisePopupClose(window, () =>
@@ -69,7 +67,6 @@ add_task(async function searchEngineAlias() {
     gURLBar.search("not an engine alias")
   );
   await assertUrlbarValue("not an engine alias");
-  assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(true);
 
   await UrlbarTestUtils.promisePopupClose(window, () =>
@@ -91,7 +88,6 @@ add_task(async function searchRestriction() {
   // We always add a whitespace to restrict tokens.
   await assertUrlbarValue(UrlbarTokenizer.RESTRICT.SEARCH + " ");
 
-  assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(false);
 
   await UrlbarTestUtils.promisePopupClose(window);
@@ -107,14 +103,12 @@ add_task(async function searchTwice() {
   await UrlbarTestUtils.promisePopupOpen(window, () => gURLBar.search("test"));
   ok(gURLBar.hasAttribute("focused"), "url bar is focused");
   await assertUrlbarValue("test");
-  assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(true);
   await UrlbarTestUtils.promisePopupClose(window);
 
   await UrlbarTestUtils.promisePopupOpen(window, () => gURLBar.search("test"));
   ok(gURLBar.hasAttribute("focused"), "url bar is focused");
   await assertUrlbarValue("test");
-  assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(true);
   await UrlbarTestUtils.promisePopupClose(window);
 
@@ -146,7 +140,6 @@ add_task(async function searchIME() {
     EventUtils.synthesizeComposition({ type: "compositioncommitasis" })
   );
 
-  assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(true);
 
   await UrlbarTestUtils.promisePopupClose(window);
@@ -173,28 +166,6 @@ function enableSearchSuggestionsNotification() {
     }
     Services.prefs.clearUserPref("timesBeforeHidingSuggestionsHint");
   };
-}
-
-/**
- * Asserts that the search-suggestion notification is or isn't visible.
- *
- * @param {boolean} visible
- *        True if it should be visible, false if not.
- */
-function assertSearchSuggestionsNotificationVisible(visible) {
-  // TODO Bug 1525296: Not implemented for QuantumBar.
-  if (UrlbarPrefs.get("quantumbar")) {
-    return;
-  }
-  Assert.equal(
-    gURLBar.popup.classList.contains("showSearchSuggestionsNotification"),
-    visible
-  );
-  Assert.equal(
-    window.getComputedStyle(gURLBar.popup.searchSuggestionsNotification)
-      .display,
-    visible ? "-moz-deck" : "none"
-  );
 }
 
 /**

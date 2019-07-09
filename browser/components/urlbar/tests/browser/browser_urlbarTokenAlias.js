@@ -269,12 +269,6 @@ add_task(async function enterAndFillAlias() {
     }
   }
 
-  if (!UrlbarPrefs.get("quantumbar")) {
-    // With awesomebar, the first result ends up preselected, so one fewer key
-    // down is needed to reach the engine.
-    index--;
-  }
-
   // Key down to it and press enter.
   EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
   EventUtils.synthesizeKey("KEY_Enter");

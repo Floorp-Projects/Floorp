@@ -11,10 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  TestUtils: "resource://testing-common/TestUtils.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -22,18 +18,13 @@ var UrlbarTestUtils = {
   /**
    * Waits to a search to be complete.
    * @param {object} win The window containing the urlbar
-   * @param {function} restoreAnimationsFn optional Function to be used to
-   *        restore animations once done.
    * @returns {Promise} Resolved when done.
    */
-  promiseSearchComplete(win, restoreAnimationsFn = null) {
+  promiseSearchComplete(win) {
     let urlbar = getUrlbarAbstraction(win);
     return BrowserTestUtils.waitForPopupEvent(urlbar.panel, "shown").then(
       async () => {
         await urlbar.promiseSearchComplete();
-        if (typeof restoreAnimations == "function") {
-          restoreAnimationsFn();
-        }
       }
     );
   },
@@ -58,7 +49,6 @@ var UrlbarTestUtils = {
     selectionEnd = -1,
   } = {}) {
     let urlbar = getUrlbarAbstraction(window);
-    let restoreAnimationsFn = urlbar.disableAnimations();
     await new Promise(resolve => waitForFocus(resolve, window));
     let lastSearchString = urlbar.lastSearchString;
     urlbar.focus();
@@ -78,16 +68,11 @@ var UrlbarTestUtils = {
     // would start two searches.  The first exception is when the new search and
     // old search are the same.  Many tests do consecutive searches with the
     // same string and expect new searches to start, so call startSearch
-    // directly then.  The second exception is when searching with the legacy
-    // urlbar and an empty string.
-    if (
-      !fireInputEvent ||
-      value == lastSearchString ||
-      (!urlbar.quantumbar && !value)
-    ) {
+    // directly then.
+    if (!fireInputEvent || value == lastSearchString) {
       urlbar.startSearch(value, selectionStart, selectionEnd);
     }
-    return this.promiseSearchComplete(window, restoreAnimationsFn);
+    return this.promiseSearchComplete(window);
   },
 
   /**
@@ -296,7 +281,6 @@ class UrlbarAbstraction {
       throw new Error("Must provide a browser window");
     }
     this.urlbar = win.gURLBar;
-    this.quantumbar = UrlbarPrefs.get("quantumbar");
     this.window = win;
     this.window.addEventListener(
       "unload",
@@ -306,21 +290,6 @@ class UrlbarAbstraction {
       },
       { once: true }
     );
-  }
-
-  /**
-   * Disable animations.
-   * @returns {function} can be invoked to restore the previous behavior.
-   */
-  disableAnimations() {
-    if (!this.quantumbar) {
-      let dontAnimate = !!this.urlbar.popup.getAttribute("dontanimate");
-      this.urlbar.popup.setAttribute("dontanimate", "true");
-      return () => {
-        this.urlbar.popup.setAttribute("dontanimate", dontAnimate);
-      };
-    }
-    return () => {};
   }
 
   /**
@@ -350,13 +319,11 @@ class UrlbarAbstraction {
   }
 
   get lastSearchString() {
-    return this.quantumbar
-      ? this.urlbar._lastSearchString
-      : this.urlbar.controller.searchString;
+    return this.urlbar._lastSearchString;
   }
 
   get panel() {
-    return this.quantumbar ? this.urlbar.panel : this.urlbar.popup;
+    return this.urlbar.panel;
   }
 
   get dropMarker() {
@@ -368,83 +335,34 @@ class UrlbarAbstraction {
   }
 
   get oneOffSearchButtons() {
-    return this.quantumbar
-      ? this.urlbar.view.oneOffSearchButtons
-      : this.urlbar.popup.oneOffSearchButtons;
+    return this.urlbar.view.oneOffSearchButtons;
   }
 
   get oneOffSearchButtonsVisible() {
-    if (!this.quantumbar) {
-      return (
-        this.window.getComputedStyle(this.oneOffSearchButtons.container)
-          .display != "none"
-      );
-    }
-
     return this.oneOffSearchButtons.style.display != "none";
   }
 
   startSearch(text, selectionStart = -1, selectionEnd = -1) {
-    if (this.quantumbar) {
-      this.urlbar.value = text;
-      if (selectionStart >= 0 && selectionEnd >= 0) {
-        this.urlbar.selectionEnd = selectionEnd;
-        this.urlbar.selectionStart = selectionStart;
-      }
-      this.urlbar.setAttribute("pageproxystate", "invalid");
-      this.urlbar.startQuery();
-    } else {
-      // Force the controller to do consecutive searches for the same string by
-      // calling resetInternalState.
-      this.urlbar.controller.resetInternalState();
-      this.urlbar.controller.startSearch(text);
+    this.urlbar.value = text;
+    if (selectionStart >= 0 && selectionEnd >= 0) {
+      this.urlbar.selectionEnd = selectionEnd;
+      this.urlbar.selectionStart = selectionStart;
     }
+    this.urlbar.setAttribute("pageproxystate", "invalid");
+    this.urlbar.startQuery();
   }
 
   promiseSearchComplete() {
-    if (this.quantumbar) {
-      return this.urlbar.lastQueryContextPromise;
-    }
-    return BrowserTestUtils.waitForCondition(
-      () =>
-        this.urlbar.controller.searchStatus >=
-        Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
-      "waiting urlbar search to complete",
-      100,
-      50
-    );
+    return this.urlbar.lastQueryContextPromise;
   }
 
   async promiseUserContextId() {
     const defaultId = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
-    if (this.quantumbar) {
-      let context = await this.urlbar.lastQueryContextPromise;
-      return context.userContextId || defaultId;
-    }
-    return this.urlbar.userContextId || defaultId;
+    let context = await this.urlbar.lastQueryContextPromise;
+    return context.userContextId || defaultId;
   }
 
   async promiseResultAt(index) {
-    if (!this.quantumbar) {
-      // In the legacy address bar, old results are replaced when new results
-      // arrive, thus it's possible for a result to be present but refer to
-      // a previous query. This ensures the given result refers to the current
-      // query by checking its query string against the string being searched
-      // for.
-      let searchString = this.urlbar.controller.searchString;
-      await BrowserTestUtils.waitForCondition(
-        () =>
-          this.panel.richlistbox.itemChildren.length > index &&
-          this.panel.richlistbox.itemChildren[index].getAttribute("ac-text") ==
-            searchString.trim(),
-        `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`
-      );
-      // Ensure the addition is complete, for proper mouse events on the entries.
-      await new Promise(resolve =>
-        this.window.requestIdleCallback(resolve, { timeout: 1000 })
-      );
-      return this.panel.richlistbox.itemChildren[index];
-    }
     // TODO Bug 1530338: Quantum Bar doesn't yet implement lazy results replacement.
     await this.promiseSearchComplete();
     if (index >= this.urlbar.view._rows.length) {
@@ -454,163 +372,67 @@ class UrlbarAbstraction {
   }
 
   getSelectedElement() {
-    if (this.quantumbar) {
-      return this.urlbar.view._selected || null;
-    }
-    return this.panel.selectedIndex >= 0
-      ? this.panel.richlistbox.itemChildren[this.panel.selectedIndex]
-      : null;
+    return this.urlbar.view._selected || null;
   }
 
   getSelectedIndex() {
-    return this.quantumbar
-      ? this.urlbar.view.selectedIndex
-      : this.panel.selectedIndex;
+    return this.urlbar.view.selectedIndex;
   }
 
   setSelectedIndex(index) {
-    if (!this.quantumbar) {
-      return (this.panel.selectedIndex = index);
-    }
     return (this.urlbar.view.selectedIndex = index);
   }
 
   getResultCount() {
-    return this.quantumbar
-      ? this.urlbar.view._rows.children.length
-      : this.urlbar.controller.matchCount;
+    return this.urlbar.view._rows.children.length;
   }
 
   async getDetailsOfResultAt(index) {
     let element = await this.promiseResultAt(index);
-    function getType(style, action) {
-      if (style.includes("searchengine") || style.includes("suggestions")) {
-        return UrlbarUtils.RESULT_TYPE.SEARCH;
-      } else if (style.includes("extension")) {
-        return UrlbarUtils.RESULT_TYPE.OMNIBOX;
-      } else if (action && action.type == "keyword") {
-        return UrlbarUtils.RESULT_TYPE.KEYWORD;
-      } else if (action && action.type == "remotetab") {
-        return UrlbarUtils.RESULT_TYPE.REMOTE_TAB;
-      } else if (action && action.type == "switchtab") {
-        return UrlbarUtils.RESULT_TYPE.TAB_SWITCH;
-      }
-      return UrlbarUtils.RESULT_TYPE.URL;
-    }
     let details = {};
-    if (this.quantumbar) {
-      let result = element.result;
-      let { url, postData } = UrlbarUtils.getUrlFromResult(result);
-      details.url = url;
-      details.postData = postData;
-      details.type = result.type;
-      details.heuristic = result.heuristic;
-      details.autofill = !!result.autofill;
-      details.image = element.getElementsByClassName(
-        "urlbarView-favicon"
-      )[0].src;
-      details.title = result.title;
-      details.tags = "tags" in result.payload ? result.payload.tags : [];
-      let actions = element.getElementsByClassName("urlbarView-action");
-      let urls = element.getElementsByClassName("urlbarView-url");
-      let typeIcon = element.querySelector(".urlbarView-type-icon");
-      let typeIconStyle = this.window.getComputedStyle(typeIcon);
-      details.displayed = {
-        title: element.getElementsByClassName("urlbarView-title")[0]
-          .textContent,
-        action: actions.length > 0 ? actions[0].textContent : null,
-        url: urls.length > 0 ? urls[0].textContent : null,
-        typeIcon: typeIconStyle["background-image"],
+    let result = element.result;
+    let { url, postData } = UrlbarUtils.getUrlFromResult(result);
+    details.url = url;
+    details.postData = postData;
+    details.type = result.type;
+    details.heuristic = result.heuristic;
+    details.autofill = !!result.autofill;
+    details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
+    details.title = result.title;
+    details.tags = "tags" in result.payload ? result.payload.tags : [];
+    let actions = element.getElementsByClassName("urlbarView-action");
+    let urls = element.getElementsByClassName("urlbarView-url");
+    let typeIcon = element.querySelector(".urlbarView-type-icon");
+    let typeIconStyle = this.window.getComputedStyle(typeIcon);
+    details.displayed = {
+      title: element.getElementsByClassName("urlbarView-title")[0].textContent,
+      action: actions.length > 0 ? actions[0].textContent : null,
+      url: urls.length > 0 ? urls[0].textContent : null,
+      typeIcon: typeIconStyle["background-image"],
+    };
+    details.element = {
+      action: element.getElementsByClassName("urlbarView-action")[0],
+      row: element,
+      separator: element.getElementsByClassName(
+        "urlbarView-title-separator"
+      )[0],
+      title: element.getElementsByClassName("urlbarView-title")[0],
+      url: element.getElementsByClassName("urlbarView-url")[0],
+    };
+    if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+      details.searchParams = {
+        engine: result.payload.engine,
+        keyword: result.payload.keyword,
+        query: result.payload.query,
+        suggestion: result.payload.suggestion,
       };
-      details.element = {
-        action: element.getElementsByClassName("urlbarView-action")[0],
-        row: element,
-        separator: element.getElementsByClassName(
-          "urlbarView-title-separator"
-        )[0],
-        title: element.getElementsByClassName("urlbarView-title")[0],
-        url: element.getElementsByClassName("urlbarView-url")[0],
-      };
-      if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
-        details.searchParams = {
-          engine: result.payload.engine,
-          keyword: result.payload.keyword,
-          query: result.payload.query,
-          suggestion: result.payload.suggestion,
-        };
-      } else if (details.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
-        details.keyword = result.payload.keyword;
-      }
-    } else {
-      details.url = this.urlbar.controller.getFinalCompleteValueAt(index);
-
-      let style = this.urlbar.controller.getStyleAt(index);
-      let action = PlacesUtils.parseActionUrl(
-        this.urlbar.controller.getValueAt(index)
-      );
-      details.type = getType(style, action);
-      details.heuristic = style.includes("heuristic");
-      details.autofill = style.includes("autofill");
-      details.image = element.getAttribute("image");
-      details.title = element.getAttribute("title");
-      details.tags = style.includes("tag")
-        ? [...element.getElementsByClassName("ac-tags")].map(e => e.textContent)
-        : [];
-      let typeIconStyle = this.window.getComputedStyle(element._typeIcon);
-      details.displayed = {
-        title: element._titleText.textContent,
-        action: action ? element._actionText.textContent : "",
-        url: element._urlText.textContent,
-        typeIcon: typeIconStyle.listStyleImage,
-      };
-      details.element = {
-        action: element._actionText,
-        row: element,
-        separator: element._separator,
-        title: element._titleText,
-        url: element._urlText,
-      };
-      if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH && action) {
-        // Strip restriction tokens from input.
-        let query = action.params.input;
-        let restrictTokens = Object.values(UrlbarTokenizer.RESTRICT);
-        if (restrictTokens.includes(query[0])) {
-          query = query.substring(1).trim();
-        } else if (restrictTokens.includes(query[query.length - 1])) {
-          query = query.substring(0, query.length - 1).trim();
-        }
-        details.searchParams = {
-          engine: action.params.engineName,
-          keyword: action.params.alias,
-          query,
-          suggestion: action.params.searchSuggestion,
-        };
-      } else if (details.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
-        details.keyword = action.params.keyword;
-      }
+    } else if (details.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
+      details.keyword = result.payload.keyword;
     }
     return details;
   }
 
   async promiseSearchSuggestions() {
-    if (!this.quantumbar) {
-      return TestUtils.waitForCondition(() => {
-        let controller = this.urlbar.controller;
-        let matchCount = controller.matchCount;
-        for (let i = 0; i < matchCount; i++) {
-          let url = controller.getValueAt(i);
-          let action = PlacesUtils.parseActionUrl(url);
-          if (
-            action &&
-            action.type == "searchengine" &&
-            action.params.searchSuggestion
-          ) {
-            return true;
-          }
-        }
-        return false;
-      }, "Waiting for suggestions");
-    }
     // TODO Bug 1530338: Quantum Bar doesn't yet implement lazy results replacement. When
     // we do that, we'll have to be sure the suggestions we find are relevant
     // for the current query. For now let's just wait for the search to be
@@ -633,11 +455,7 @@ class UrlbarAbstraction {
   }
 
   closePopup() {
-    if (this.quantumbar) {
-      this.urlbar.view.close();
-    } else {
-      this.urlbar.popup.hidePopup();
-    }
+    this.urlbar.view.close();
   }
 
   async promisePopupClose(closeFn) {

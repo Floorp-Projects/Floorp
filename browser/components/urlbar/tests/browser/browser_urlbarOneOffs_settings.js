@@ -62,12 +62,6 @@ async function selectSettings(activateFn) {
 }
 
 add_task(async function test_open_settings_with_enter() {
-  if (!UrlbarPrefs.get("quantumbar")) {
-    // The old urlbar bindings can sometimes be in a state where they
-    // won't show the one off searches, so force it here.
-    gURLBar.popup.toggleOneOffSearches(true);
-  }
-
   await selectSettings(() => {
     EventUtils.synthesizeKey("KEY_ArrowUp");
 

@@ -75,9 +75,7 @@ add_task(async function test_switchtab_override() {
     EventUtils.synthesizeKey("KEY_Shift", { type: "keyup" });
   });
 
-  let attribute = UrlbarPrefs.get("quantumbar")
-    ? "actionoverride"
-    : "noactions";
+  let attribute = "actionoverride";
   Assert.ok(
     UrlbarTestUtils.getPanel(window).hasAttribute(attribute),
     "We should be overriding"
