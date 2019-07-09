@@ -1369,6 +1369,7 @@ class DebuggerEnvironment : public NativeObject {
                                      HandleNativeObject debugger);
 
   DebuggerEnvironmentType type() const;
+  mozilla::Maybe<ScopeKind> scopeKind() const;
   MOZ_MUST_USE bool getParent(JSContext* cx,
                               MutableHandleDebuggerEnvironment result) const;
   MOZ_MUST_USE bool getObject(JSContext* cx,
@@ -1411,6 +1412,8 @@ class DebuggerEnvironment : public NativeObject {
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
+  static MOZ_MUST_USE bool scopeKindGetter(JSContext* cx, unsigned argc,
+                                           Value* vp);
   static MOZ_MUST_USE bool parentGetter(JSContext* cx, unsigned argc,
                                         Value* vp);
   static MOZ_MUST_USE bool objectGetter(JSContext* cx, unsigned argc,

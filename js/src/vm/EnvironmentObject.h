@@ -890,6 +890,7 @@ extern JSObject* GetDebugEnvironmentForFrame(JSContext* cx,
                                              jsbytecode* pc);
 
 extern JSObject* GetDebugEnvironmentForGlobalLexicalEnvironment(JSContext* cx);
+extern Scope* GetEnvironmentScope(const JSObject& env);
 
 /* Provides debugger access to a environment. */
 class DebugEnvironmentProxy : public ProxyObject {
