@@ -51,7 +51,7 @@ def generate(output, dataFile):
     # Generate kIDLNameSortPositionTable
     ps = sorted(properties, key=lambda p: p.idlname)
     ps = [(p, position) for position, p in enumerate(ps)]
-    ps.sort(key=lambda (p, position): p.index)
+    ps.sort(key=lambda item: item[0].index)
     output.write("const int32_t nsCSSProps::"
                  "kIDLNameSortPositionTable[eCSSProperty_COUNT] = {\n")
     for (p, position) in ps:
