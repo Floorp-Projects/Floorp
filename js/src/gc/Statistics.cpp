@@ -17,10 +17,10 @@
 
 #include "jsutil.h"
 
+#include "dbg/Debugger.h"
 #include "gc/GC.h"
 #include "gc/Memory.h"
 #include "util/Text.h"
-#include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"

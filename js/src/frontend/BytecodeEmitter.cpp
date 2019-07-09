@@ -25,6 +25,7 @@
 #include "jstypes.h"  // JS_BIT
 #include "jsutil.h"   // Min
 
+#include "dbg/Debugger.h"                        // Debugger
 #include "ds/Nestable.h"                         // Nestable
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl
 #include "frontend/CallOrNewEmitter.h"           // CallOrNewEmitter
@@ -55,7 +56,6 @@
 #include "js/CompileOptions.h"       // TransitiveCompileOptions, CompileOptions
 #include "vm/AsyncFunction.h"        // AsyncFunctionResolveKind
 #include "vm/BytecodeUtil.h"  // IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
-#include "vm/Debugger.h"      // Debugger
 #include "vm/GeneratorObject.h"  // AbstractGeneratorObject
 #include "vm/JSAtom.h"           // JSAtom, js_*_str
 #include "vm/JSContext.h"        // JSContext

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/Debugger-inl.h"
+#include "dbg/Debugger-inl.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ScopeExit.h"
@@ -17,6 +17,7 @@
 #include "jsnum.h"
 
 #include "builtin/Promise.h"
+#include "dbg/DebuggerMemory.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"
@@ -41,7 +42,6 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
-#include "vm/DebuggerMemory.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"

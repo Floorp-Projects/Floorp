@@ -7,12 +7,11 @@
 #ifndef jit_BaselineDebugModeOSR_h
 #define jit_BaselineDebugModeOSR_h
 
+#include "dbg/Debugger.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JSJitFrameIter.h"
-
-#include "vm/Debugger.h"
 
 namespace js {
 namespace jit {
