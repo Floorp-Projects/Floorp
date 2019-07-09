@@ -2705,6 +2705,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                         "({:p}) Create input device info failed. This can happen when last media device is unplugged",
                         self as *const AudioUnitStream
                     );
+                    self.close();
                     e
                 })?;
             }
@@ -2717,6 +2718,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                     "({:p}) Create output device info failed. This can happen when last media device is unplugged",
                     self as *const AudioUnitStream
                 );
+                self.close();
                 e
             })?;
 
@@ -2735,6 +2737,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                                 "({:p}) Create input device info failed. This can happen when last media device is unplugged",
                                 self as *const AudioUnitStream
                             );
+                            self.close();
                             e
                         })?;
                     self.setup().map_err(|e| {
@@ -2742,6 +2745,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                             "({:p}) Second stream reinit failed.",
                             self as *const AudioUnitStream
                         );
+                        self.close();
                         e
                     })?;
                 }
@@ -2753,7 +2757,14 @@ impl<'ctx> AudioUnitStream<'ctx> {
 
             // If the stream was running, start it again.
             if !self.shutdown.load(Ordering::SeqCst) {
-                self.start_internal()?;
+                self.start_internal().map_err(|e| {
+                    cubeb_log!(
+                        "({:p}) Start audiounit failed.",
+                        self as *const AudioUnitStream
+                    );
+                    self.close();
+                    e
+                })?;
             }
         }
 
