@@ -10,52 +10,13 @@
 const TEST_ORIGIN = "https://example.com";
 const FORM_PAGE_PATH =
   "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
-
 const CONTEXT_MENU = document.getElementById("contentAreaContextMenu");
-const POPUP_HEADER = document.getElementById("fill-login");
+
+const passwordInputSelector = "#form-basic-password";
 
 registerCleanupFunction(async function cleanup_resetPrefs() {
   await SpecialPowers.popPrefEnv();
 });
-
-async function doFillGeneratedPasswordContextMenuItem(browser) {
-  await openPasswordContextMenu(browser, "#form-basic-password");
-
-  let loginPopup = document.getElementById("fill-login-popup");
-  let generatedPasswordItem = document.getElementById(
-    "fill-login-generated-password"
-  );
-  let generatedPasswordSeparator = document.getElementById(
-    "generated-password-separator"
-  );
-
-  // Check the content of the password manager popup
-  ok(BrowserTestUtils.is_visible(loginPopup), "Popup is visible");
-  ok(
-    BrowserTestUtils.is_visible(generatedPasswordItem),
-    "generated password item is visible"
-  );
-  ok(
-    BrowserTestUtils.is_visible(generatedPasswordSeparator),
-    "separator is visible"
-  );
-
-  let passwordChangedPromise = ContentTask.spawn(
-    browser,
-    null,
-    async function() {
-      let passwordInput = content.document.getElementById(
-        "form-basic-password"
-      );
-      await ContentTaskUtils.waitForEvent(passwordInput, "input");
-    }
-  );
-
-  generatedPasswordItem.doCommand();
-  info("Waiting for input event");
-  await passwordChangedPromise;
-  CONTEXT_MENU.hidePopup();
-}
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
@@ -86,7 +47,7 @@ add_task(async function fill_generated_password_hidden() {
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
-      await openPasswordContextMenu(browser, "#form-basic-password");
+      await openPasswordContextMenu(browser, passwordInputSelector);
 
       let loginPopup = document.getElementById("fill-login-popup");
       let generatedPasswordItem = document.getElementById(
@@ -122,22 +83,33 @@ add_task(async function fill_generated_password_empty_field() {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
-      await ContentTask.spawn(browser, null, function checkInitialFieldValue() {
-        is(
-          content.document.getElementById("form-basic-password").value.length,
-          0,
-          "Password field is empty"
-        );
-      });
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function checkInitialFieldValue(inputSelector) {
+          is(
+            content.document.querySelector(inputSelector).value.length,
+            0,
+            "Password field is empty"
+          );
+        }
+      );
 
-      await doFillGeneratedPasswordContextMenuItem(browser);
-      await ContentTask.spawn(browser, null, function checkFinalFieldValue() {
-        is(
-          content.document.getElementById("form-basic-password").value.length,
-          15,
-          "Password field was filled with generated password"
-        );
-      });
+      await doFillGeneratedPasswordContextMenuItem(
+        browser,
+        passwordInputSelector
+      );
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function checkFinalFieldValue(inputSelector) {
+          is(
+            content.document.querySelector(inputSelector).value.length,
+            15,
+            "Password field was filled with generated password"
+          );
+        }
+      );
     }
   );
 });
@@ -151,20 +123,29 @@ add_task(async function fill_generated_password_nonempty_field() {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
-      await ContentTask.spawn(browser, null, function checkInitialFieldValue() {
-        content.document
-          .getElementById("form-basic-password")
-          .setUserInput("aa");
-      });
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function checkInitialFieldValue(inputSelector) {
+          content.document.querySelector(inputSelector).setUserInput("aa");
+        }
+      );
 
-      await doFillGeneratedPasswordContextMenuItem(browser);
-      await ContentTask.spawn(browser, null, function checkFinalFieldValue() {
-        is(
-          content.document.getElementById("form-basic-password").value.length,
-          15,
-          "Password field was filled with generated password"
-        );
-      });
+      await doFillGeneratedPasswordContextMenuItem(
+        browser,
+        passwordInputSelector
+      );
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function checkFinalFieldValue(inputSelector) {
+          is(
+            content.document.querySelector(inputSelector).value.length,
+            15,
+            "Password field was filled with generated password"
+          );
+        }
+      );
     }
   );
 });
@@ -191,22 +172,33 @@ add_task(async function fill_generated_password_with_matching_logins() {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
-      await ContentTask.spawn(browser, null, function checkInitialFieldValue() {
-        is(
-          content.document.getElementById("form-basic-password").value,
-          "pass1",
-          "Password field has initial value"
-        );
-      });
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function checkInitialFieldValue(inputSelector) {
+          is(
+            content.document.querySelector(inputSelector).value,
+            "pass1",
+            "Password field has initial value"
+          );
+        }
+      );
 
-      await doFillGeneratedPasswordContextMenuItem(browser);
-      await ContentTask.spawn(browser, null, function checkFinalFieldValue() {
-        is(
-          content.document.getElementById("form-basic-password").value.length,
-          15,
-          "Password field was filled with generated password"
-        );
-      });
+      await doFillGeneratedPasswordContextMenuItem(
+        browser,
+        passwordInputSelector
+      );
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function checkFinalFieldValue(inputSelector) {
+          is(
+            content.document.querySelector(inputSelector).value.length,
+            15,
+            "Password field was filled with generated password"
+          );
+        }
+      );
     }
   );
 });
