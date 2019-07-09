@@ -33,8 +33,14 @@ function createMessageBar(messageBarStack, { attrs, children, onclose } = {}) {
 }
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", true]],
+  });
+
   htmlAboutAddonsWindow = await loadInitialView("extension");
-  registerCleanupFunction(() => closeView(htmlAboutAddonsWindow));
+  registerCleanupFunction(async () => {
+    await closeView(htmlAboutAddonsWindow);
+  });
 });
 
 add_task(async function test_message_bar_stack() {

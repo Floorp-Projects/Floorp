@@ -107,7 +107,10 @@ async function hasPrivateAllowed(id) {
 
 add_task(async function enableHtmlViews() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+    set: [
+      ["extensions.htmlaboutaddons.enabled", true],
+      ["extensions.allowPrivateBrowsingByDefault", false],
+    ],
   });
 
   gProvider = new MockProvider();

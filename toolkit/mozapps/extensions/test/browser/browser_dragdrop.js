@@ -75,7 +75,10 @@ async function checkInstallConfirmation(...names) {
 }
 
 function getViewContainer(gManagerWindow) {
-  return gManagerWindow.document.getElementById("category-box");
+  if (gManagerWindow.useHtmlViews) {
+    return gManagerWindow.document.getElementById("category-box");
+  }
+  return gManagerWindow.document.getElementById("view-port");
 }
 
 // Simulates dropping a URL onto the manager

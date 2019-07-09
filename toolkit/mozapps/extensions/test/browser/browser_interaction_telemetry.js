@@ -213,7 +213,7 @@ function clickLinks(doc) {
   }
 }
 
-async function init(startPage) {
+async function init(startPage, isHtmlViews) {
   gManagerWindow = await open_manager(null);
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
@@ -226,20 +226,26 @@ async function init(startPage) {
 
   await gCategoryUtilities.openType(startPage);
 
-  return gManagerWindow.document.getElementById("html-view-browser")
-    .contentDocument;
+  if (isHtmlViews) {
+    return gManagerWindow.document.getElementById("html-view-browser")
+      .contentDocument;
+  }
+  return gManagerWindow.document;
 }
 
 /* Test functions start here. */
 
-add_task(async function setup() {
+async function setup(isHtmlViews) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", isHtmlViews]],
+  });
   // Clear out any telemetry data that existed before this file is run.
   Services.telemetry.clearEvents();
-});
+}
 
-add_task(async function testBasicViewTelemetry() {
+async function testBasicViewTelemetry(isHtmlViews) {
   let addons = await Promise.all([installTheme(), installExtension()]);
-  let doc = await init("discover");
+  let doc = await init("discover", isHtmlViews);
 
   await gCategoryUtilities.openType("theme");
   openDetailView(doc, "theme@mochi.test");
@@ -272,12 +278,12 @@ add_task(async function testBasicViewTelemetry() {
 
   await close_manager(gManagerWindow);
   await Promise.all(addons.map(addon => addon.unload()));
-});
+}
 
-add_task(async function testExtensionEvents() {
+async function testExtensionEvents(isHtmlViews) {
   let addon = await installExtension();
   let type = "extension";
-  let doc = await init("extension");
+  let doc = await init("extension", isHtmlViews);
 
   // Check/clear the current telemetry.
   assertTelemetryMatches(
@@ -309,7 +315,7 @@ add_task(async function testExtensionEvents() {
 
   // Check remove/undo.
   await removeAddonAndUndo(doc, row);
-  let uninstallValue = "accepted";
+  let uninstallValue = isHtmlViews ? "accepted" : null;
   assertTelemetryMatches(
     [
       [
@@ -449,10 +455,10 @@ add_task(async function testExtensionEvents() {
   await close_manager(gManagerWindow);
   await addon.unload();
   await upgraded.unload();
-});
+}
 
-add_task(async function testGeneralActions() {
-  await init("extension");
+async function testGeneralActions(isHtmlViews) {
+  await init("extension", isHtmlViews);
 
   let doc = gManagerWindow.document;
   let menu = doc.getElementById("utils-menu");
@@ -544,12 +550,12 @@ add_task(async function testGeneralActions() {
   await close_manager(gManagerWindow);
 
   assertTelemetryMatches([]);
-});
+}
 
-add_task(async function testPreferencesLink() {
+async function testPreferencesLink(isHtmlViews) {
   assertTelemetryMatches([]);
 
-  await init("theme");
+  await init("theme", isHtmlViews);
 
   let doc = gManagerWindow.document;
 
@@ -582,4 +588,31 @@ add_task(async function testPreferencesLink() {
   );
 
   await close_manager(gManagerWindow);
-});
+}
+
+const testFns = [
+  testBasicViewTelemetry,
+  testExtensionEvents,
+  testGeneralActions,
+  testPreferencesLink,
+];
+
+/**
+ * Setup the tasks. This will add tasks for each of testFns to run with the
+ * XUL and HTML version of about:addons.
+ *
+ * To add a test, add it to the testFns array.
+ */
+function addTestTasks(isHtmlViews) {
+  add_task(() => setup(isHtmlViews));
+
+  for (let fn of testFns) {
+    let localTestFnName = fn.name + (isHtmlViews ? "HTML" : "XUL");
+    // Get an informative name for the function in stack traces.
+    let obj = { [localTestFnName]: () => fn(isHtmlViews) };
+    add_task(obj[localTestFnName]);
+  }
+}
+
+addTestTasks(false);
+addTestTasks(true);
