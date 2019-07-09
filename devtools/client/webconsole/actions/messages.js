@@ -119,27 +119,27 @@ function messageGetMatchingElements(id, cssSelectors) {
 }
 
 function messageGetTableData(id, client, dataType) {
-  return ({ dispatch }) => {
-    let fetchObjectActorData;
-    if (["Map", "WeakMap", "Set", "WeakSet"].includes(dataType)) {
-      fetchObjectActorData = cb => client.enumEntries(cb);
-    } else {
-      fetchObjectActorData = cb =>
-        client.enumProperties(
-          {
-            ignoreNonIndexedProperties: dataType === "Array",
-          },
-          cb
-        );
+  return async ({ dispatch }) => {
+    let enumResponse;
+    try {
+      if (["Map", "WeakMap", "Set", "WeakSet"].includes(dataType)) {
+        enumResponse = await client.enumEntries();
+      } else {
+        enumResponse = await client.enumProperties({
+          ignoreNonIndexedProperties: dataType === "Array",
+        });
+      }
+    } catch (e) {
+      if (e.error === "noSuchActor") {
+        return;
+      }
     }
 
-    fetchObjectActorData(enumResponse => {
-      const { iterator } = enumResponse;
-      // eslint-disable-next-line mozilla/use-returnValue
-      iterator.slice(0, iterator.count, sliceResponse => {
-        const { ownProperties } = sliceResponse;
-        dispatch(messageUpdatePayload(id, ownProperties));
-      });
+    const { iterator } = enumResponse;
+    // eslint-disable-next-line mozilla/use-returnValue
+    iterator.slice(0, iterator.count, sliceResponse => {
+      const { ownProperties } = sliceResponse;
+      dispatch(messageUpdatePayload(id, ownProperties));
     });
   };
 }

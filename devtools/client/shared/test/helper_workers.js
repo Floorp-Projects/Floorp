@@ -14,20 +14,11 @@ Services.scriptloader.loadSubScript(
 var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { Toolbox } = require("devtools/client/framework/toolbox");
+loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
 
 var nextId = 0;
-
-/**
- * Returns a thenable promise
- * @return {Promise}
- */
-function getDeferredPromise() {
-  // Override promise with deprecated-sync-thenables
-  const promise = require("devtools/shared/deprecated-sync-thenables");
-  return promise;
-}
 
 function jsonrpc(tab, method, params) {
   return new Promise(function(resolve, reject) {
@@ -208,7 +199,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 this.addTab = function addTab(url, win) {
   info("Adding tab: " + url);
 
-  const deferred = getDeferredPromise().defer();
+  const deferred = defer();
   const targetWindow = win || window;
   const targetBrowser = targetWindow.gBrowser;
 
@@ -233,7 +224,7 @@ this.addTab = function addTab(url, win) {
 this.removeTab = function removeTab(tab, win) {
   info("Removing tab.");
 
-  const deferred = getDeferredPromise().defer();
+  const deferred = defer();
   const targetWindow = win || window;
   const targetBrowser = targetWindow.gBrowser;
   const tabContainer = targetBrowser.tabContainer;
@@ -260,13 +251,13 @@ async function attachThreadActorForTab(tab) {
 }
 
 function pushPrefs(...aPrefs) {
-  const deferred = getDeferredPromise().defer();
+  const deferred = defer();
   SpecialPowers.pushPrefEnv({ set: aPrefs }, deferred.resolve);
   return deferred.promise;
 }
 
 function popPrefs() {
-  const deferred = getDeferredPromise().defer();
+  const deferred = defer();
   SpecialPowers.popPrefEnv(deferred.resolve);
   return deferred.promise;
 }
