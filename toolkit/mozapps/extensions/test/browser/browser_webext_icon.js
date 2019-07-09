@@ -66,36 +66,6 @@ add_task(async function test_addon_icon() {
   const extension = ExtensionTestUtils.loadExtension(extensionDefinition);
   await extension.startup();
 
-  info(`Testing XUL about:addons`);
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", false]],
-  });
-
-  await checkIconInView("addons://list/extension", "list", doc => {
-    const addon = get_addon_element(doc.defaultView, id);
-    const content = doc.getAnonymousElementByAttribute(
-      addon,
-      "class",
-      "content-container"
-    );
-    return content.querySelector(".icon");
-  });
-
-  await checkIconInView(
-    "addons://detail/" + encodeURIComponent(id),
-    "details",
-    doc => {
-      return doc.getElementById("detail-icon");
-    }
-  );
-
-  await SpecialPowers.popPrefEnv();
-
-  info(`Testing HTML about:addons`);
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-
   await checkIconInView("addons://list/extension", "list", doc => {
     return get_addon_element(doc.defaultView, id).querySelector(".addon-icon");
   });
@@ -109,8 +79,6 @@ add_task(async function test_addon_icon() {
       );
     }
   );
-
-  await SpecialPowers.popPrefEnv();
 
   await extension.unload();
 });

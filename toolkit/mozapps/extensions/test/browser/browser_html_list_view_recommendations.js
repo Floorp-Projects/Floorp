@@ -41,7 +41,6 @@ add_task(async function setup() {
     set: [
       // Disable personalized recommendations, they will break the data URI.
       ["browser.discovery.enabled", false],
-      ["extensions.htmlaboutaddons.enabled", true],
       ["extensions.getAddons.discovery.api_url", `data:;base64,${results}`],
       [
         "extensions.recommendations.themeRecommendationUrl",
