@@ -95,8 +95,7 @@ const FILE_UPDATES_XML = "updates.xml";
 const FILE_UPDATES_XML_TMP = "updates.xml.tmp";
 
 const UPDATE_SETTINGS_CONTENTS =
-  // eslint-disable-next-line no-useless-concat
-  "[Settings]\n" + "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
+  "[Settings]\nACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
 const PRECOMPLETE_CONTENTS = 'rmdir "nonexistent_dir/"\n';
 
 const PR_RDWR = 0x04;

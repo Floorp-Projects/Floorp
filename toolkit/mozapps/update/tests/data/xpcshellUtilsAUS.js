@@ -154,7 +154,6 @@ var gShouldResetEnv = undefined;
 var gAddedEnvXRENoWindowsCrashDialog = false;
 var gEnvXPCOMDebugBreak;
 var gEnvXPCOMMemLeakLog;
-var gEnvDyldLibraryPath;
 
 const URL_HTTP_UPDATE_SJS = "http://test_details/";
 const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("", false)).spec;
@@ -1768,59 +1767,25 @@ function removeUpdateInProgressLockFile(aDir) {
 }
 
 /**
- * Gets the test updater from the test data direcory.
- *
- * @return  nsIFIle for the test updater.
- */
-function getTestUpdater() {
-  let updater = getTestDirFile("updater.app", true);
-  if (!updater.exists()) {
-    updater = getTestDirFile(FILE_UPDATER_BIN);
-    if (!updater.exists()) {
-      do_throw("Unable to find the updater binary!");
-    }
-  }
-  Assert.ok(updater.exists(), MSG_SHOULD_EXIST + getMsgPath(updater.path));
-  return updater;
-}
-
-/**
  * Copies the test updater to the GRE binary directory and returns the nsIFile
  * for the copied test updater.
  *
  * @return  nsIFIle for the copied test updater.
  */
 function copyTestUpdaterToBinDir() {
-  let testUpdater = getTestUpdater();
+  let updaterLeafName =
+    AppConstants.platform == "macosx" ? "updater.app" : FILE_UPDATER_BIN;
+  let testUpdater = getTestDirFile(updaterLeafName);
   let updater = getGREBinDir();
-  updater.append(testUpdater.leafName);
+  updater.append(updaterLeafName);
   if (!updater.exists()) {
-    testUpdater.copyToFollowingLinks(updater.parent, updater.leafName);
+    testUpdater.copyToFollowingLinks(updater.parent, updaterLeafName);
   }
-  return updater;
-}
-
-/**
- * Copies the test updater to the location where it will be launched to apply an
- * update and returns the nsIFile for the copied test updater.
- *
- * @return  nsIFIle for the copied test updater.
- */
-function copyTestUpdaterForRunUsingUpdater() {
-  if (AppConstants.platform == "win" || AppConstants.platform == "linux") {
-    return copyTestUpdaterToBinDir();
+  if (AppConstants.platform == "macosx") {
+    updater.append("Contents");
+    updater.append("MacOS");
+    updater.append("org.mozilla.updater");
   }
-
-  let testUpdater = getTestUpdater();
-  let updater = getUpdateDirFile(DIR_PATCH);
-  updater.append(testUpdater.leafName);
-  if (!updater.exists()) {
-    testUpdater.copyToFollowingLinks(updater.parent, updater.leafName);
-  }
-
-  updater.append("Contents");
-  updater.append("MacOS");
-  updater.append("org.mozilla.updater");
   return updater;
 }
 
@@ -1937,8 +1902,7 @@ function runUpdate(
     gEnv.set("MOZ_TEST_SHORTER_WAIT_PID", "1");
   }
 
-  // Copy the updater binary to the directory where it will apply updates.
-  let updateBin = copyTestUpdaterForRunUsingUpdater();
+  let updateBin = copyTestUpdaterToBinDir();
   Assert.ok(updateBin.exists(), MSG_SHOULD_EXIST + getMsgPath(updateBin.path));
 
   let updatesDirPath = aPatchDirPath || getUpdateDirFile(DIR_PATCH).path;
@@ -3279,8 +3243,8 @@ function checkUpdateLogContents(
     // The FindFile results when enumerating the filesystem on Windows is not
     // determistic so the results matching the following need to be fixed.
     let re = new RegExp(
-      // eslint-disable-next-line no-useless-concat
-      "([^\n]* 7/7text1[^\n]*)\n" + "([^\n]* 7/7text0[^\n]*)\n",
+      // eslint-disable-next-line no-control-regex
+      "([^\n]* 7/7text1[^\n]*)\n([^\n]* 7/7text0[^\n]*)\n",
       "g"
     );
     updateLogContents = updateLogContents.replace(re, "$2\n$1\n");
@@ -4576,30 +4540,6 @@ function setEnvironment() {
     gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "1");
   }
 
-  if (AppConstants.platform == "macosx") {
-    let shouldSetEnv = true;
-    let appGreBinDir = gGREBinDirOrig.clone();
-    let envGreBinDir = Cc["@mozilla.org/file/local;1"].createInstance(
-      Ci.nsIFile
-    );
-    if (gEnv.exists("DYLD_LIBRARY_PATH")) {
-      gEnvDyldLibraryPath = gEnv.get("DYLD_LIBRARY_PATH");
-      envGreBinDir.initWithPath(gEnvDyldLibraryPath);
-      if (envGreBinDir.path == appGreBinDir.path) {
-        gEnvDyldLibraryPath = null;
-        shouldSetEnv = false;
-      }
-    }
-
-    if (shouldSetEnv) {
-      debugDump(
-        "setting DYLD_LIBRARY_PATH environment variable value to " +
-          appGreBinDir.path
-      );
-      gEnv.set("DYLD_LIBRARY_PATH", appGreBinDir.path);
-    }
-  }
-
   if (gEnv.exists("XPCOM_MEM_LEAK_LOG")) {
     gEnvXPCOMMemLeakLog = gEnv.get("XPCOM_MEM_LEAK_LOG");
     debugDump(
@@ -4661,20 +4601,6 @@ function resetEnvironment() {
   } else if (gEnv.exists("XPCOM_DEBUG_BREAK")) {
     debugDump("clearing the XPCOM_DEBUG_BREAK environment variable");
     gEnv.set("XPCOM_DEBUG_BREAK", "");
-  }
-
-  if (AppConstants.platform == "macosx") {
-    if (gEnvDyldLibraryPath) {
-      debugDump(
-        "setting DYLD_LIBRARY_PATH environment variable value " +
-          "back to " +
-          gEnvDyldLibraryPath
-      );
-      gEnv.set("DYLD_LIBRARY_PATH", gEnvDyldLibraryPath);
-    } else if (gEnvDyldLibraryPath !== null) {
-      debugDump("removing DYLD_LIBRARY_PATH environment variable");
-      gEnv.set("DYLD_LIBRARY_PATH", "");
-    }
   }
 
   if (AppConstants.platform == "win" && gAddedEnvXRENoWindowsCrashDialog) {
