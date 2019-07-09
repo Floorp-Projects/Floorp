@@ -895,7 +895,7 @@ WebRenderProgramCache::WebRenderProgramCache(wr::WrThreadPool* aThreadPool) {
   }
   mProgramCache = wr_program_cache_new(&path, aThreadPool);
   if (gfxVars::UseWebRenderProgramBinaryDisk()) {
-    wr_try_load_shader_from_disk(mProgramCache);
+    wr_try_load_startup_shaders_from_disk(mProgramCache);
   }
 }
 
