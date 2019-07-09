@@ -722,3 +722,73 @@ add_task(async function test_storage_local_data_migration_clear_pref() {
   await promiseShutdownManager();
   await TelemetryController.testShutdown();
 });
+
+add_task(async function setup_quota_manager_testing_prefs() {
+  Services.prefs.setBoolPref("dom.quotaManager.testing", true);
+  Services.prefs.setIntPref(
+    "dom.quotaManager.temporaryStorage.fixedLimit",
+    100
+  );
+  await promiseQuotaManagerServiceReset();
+});
+
+add_task(async function test_quota_exceeded_while_migrating_data() {
+  const EXT_ID = "test-data-migration-stuck@mochi.test";
+  const dataSize = 1000 * 1024;
+
+  await createExtensionJSONFileWithData(EXT_ID, {
+    data: new Array(dataSize).fill("x").join(""),
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["storage"],
+      applications: { gecko: { id: EXT_ID } },
+    },
+    background() {
+      browser.test.onMessage.addListener(async (msg, dataSize) => {
+        if (msg !== "verify-stored-data") {
+          return;
+        }
+        const res = await browser.storage.local.get();
+        browser.test.assertEq(
+          res.data && res.data.length,
+          dataSize,
+          "Got the expected data"
+        );
+        browser.test.sendMessage("verify-stored-data:done");
+      });
+
+      browser.test.sendMessage("bg-page:ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("bg-page:ready");
+
+  extension.sendMessage("verify-stored-data", dataSize);
+  await extension.awaitMessage("verify-stored-data:done");
+
+  await ok(
+    !ExtensionStorageIDB.isMigratedExtension(extension),
+    "The extension falls back to the JSONFile backend because of the migration failure"
+  );
+  await extension.unload();
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: EXT_ID,
+        extra: {
+          backend: "JSONFile",
+          error_name: "QuotaExceededError",
+        },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTER
+  );
+
+  Services.prefs.clearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
+  await promiseQuotaManagerServiceClear();
+  Services.prefs.clearUserPref("dom.quotaManager.testing");
+});
