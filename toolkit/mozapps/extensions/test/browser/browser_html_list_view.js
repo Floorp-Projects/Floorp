@@ -35,6 +35,9 @@ function waitForThemeChange(list) {
 }
 
 add_task(async function enableHtmlViews() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", true]],
+  });
   promptService = mockPromptService();
   Services.telemetry.clearEvents();
 });

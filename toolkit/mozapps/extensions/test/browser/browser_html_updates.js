@@ -6,7 +6,10 @@ const { AddonTestUtils } = ChromeUtils.import(
 
 AddonTestUtils.initMochitest(this);
 
-add_task(async function setup() {
+add_task(async function enableHtmlViews() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", true]],
+  });
   Services.telemetry.clearEvents();
 });
 

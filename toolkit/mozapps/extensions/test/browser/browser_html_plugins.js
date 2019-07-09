@@ -7,6 +7,10 @@
 const TEST_PLUGIN_DESCRIPTION = "Flash plug-in for testing purposes.";
 
 add_task(async function enableHtmlViews() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", true]],
+  });
+
   let gProvider = new MockProvider();
   gProvider.createAddons([
     {

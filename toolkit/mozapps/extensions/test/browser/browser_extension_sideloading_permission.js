@@ -14,34 +14,74 @@ AddonTestUtils.initMochitest(this);
 
 function assertDisabledSideloadedExtensionElement(managerWindow, addonElement) {
   const doc = addonElement.ownerDocument;
-  const toggleDisabled = addonElement.querySelector(
-    '[action="toggle-disabled"]'
-  );
-  is(
-    doc.l10n.getAttributes(toggleDisabled).id,
-    "enable-addon-button",
-    "Addon toggle-disabled action has the enable label"
-  );
+  if (managerWindow.useHtmlViews) {
+    const toggleDisabled = addonElement.querySelector(
+      '[action="toggle-disabled"]'
+    );
+    is(
+      doc.l10n.getAttributes(toggleDisabled).id,
+      "enable-addon-button",
+      "Addon toggle-disabled action has the enable label"
+    );
+  } else {
+    let el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "disable-btn"
+    );
+    is_element_hidden(el, "Disable button not visible.");
+    el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "enable-btn"
+    );
+    is_element_visible(el, "Enable button visible");
+  }
 }
 
 function assertEnabledSideloadedExtensionElement(managerWindow, addonElement) {
   const doc = addonElement.ownerDocument;
-  const toggleDisabled = addonElement.querySelector(
-    '[action="toggle-disabled"]'
-  );
-  is(
-    doc.l10n.getAttributes(toggleDisabled).id,
-    "enable-addon-button",
-    "Addon toggle-disabled action has the enable label"
-  );
+  if (managerWindow.useHtmlViews) {
+    const toggleDisabled = addonElement.querySelector(
+      '[action="toggle-disabled"]'
+    );
+    is(
+      doc.l10n.getAttributes(toggleDisabled).id,
+      "enable-addon-button",
+      "Addon toggle-disabled action has the enable label"
+    );
+  } else {
+    let el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "disable-btn"
+    );
+    is_element_hidden(el, "Disable button not visible.");
+    el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "enable-btn"
+    );
+    is_element_visible(el, "Enable button visible");
+  }
 }
 
 function clickEnableExtension(managerWindow, addonElement) {
-  addonElement.querySelector('[action="toggle-disabled"]').click();
+  if (managerWindow.useHtmlViews) {
+    addonElement.querySelector('[action="toggle-disabled"]').click();
+  } else {
+    const doc = addonElement.ownerDocument;
+    const el = doc.getAnonymousElementByAttribute(
+      addonElement,
+      "anonid",
+      "enable-btn"
+    );
+    EventUtils.synthesizeMouseAtCenter(el, { clickCount: 1 }, managerWindow);
+  }
 }
 
 // Loading extension by sideloading method
-add_task(async function test_sideloaded_extension_permissions_prompt() {
+async function test_sideloaded_extension_permissions_prompt() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["xpinstall.signatures.required", false],
@@ -124,4 +164,20 @@ add_task(async function test_sideloaded_extension_permissions_prompt() {
 
   await close_manager(manager);
   await addon.uninstall();
+}
+
+add_task(async function test_XUL_aboutaddons_sideloaded_permissions_prompt() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", false]],
+  });
+  await test_sideloaded_extension_permissions_prompt();
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_HTML_aboutaddons_sideloaded_permissions_prompt() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", true]],
+  });
+  await test_sideloaded_extension_permissions_prompt();
+  await SpecialPowers.popPrefEnv();
 });

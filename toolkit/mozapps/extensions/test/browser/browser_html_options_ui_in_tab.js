@@ -6,7 +6,10 @@
 
 add_task(async function enableHtmlViews() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.inline-options.enabled", true]],
+    set: [
+      ["extensions.htmlaboutaddons.enabled", true],
+      ["extensions.htmlaboutaddons.inline-options.enabled", true],
+    ],
   });
 });
 
