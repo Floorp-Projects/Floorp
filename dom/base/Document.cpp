@@ -91,7 +91,6 @@
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/FramingChecker.h"
-#include "mozilla/dom/HTMLAllCollection.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Performance.h"
@@ -2005,7 +2004,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuppressedEventListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypeDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMidasCommandManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAll)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreloadingImages)
@@ -5633,13 +5631,6 @@ void Document::SetFgColor(const nsAString& aFgColor) {
 void Document::CaptureEvents() { WarnOnceAbout(Document::eUseOfCaptureEvents); }
 
 void Document::ReleaseEvents() { WarnOnceAbout(Document::eUseOfReleaseEvents); }
-
-HTMLAllCollection* Document::All() {
-  if (!mAll) {
-    mAll = new HTMLAllCollection(this);
-  }
-  return mAll;
-}
 
 nsresult Document::GetSrcdocData(nsAString& aSrcdocData) {
   if (mIsSrcdocDocument) {
