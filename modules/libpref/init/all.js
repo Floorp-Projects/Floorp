@@ -1231,10 +1231,6 @@ pref("privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "");
 // opened more than this number of popups.
 pref("privacy.popups.maxReported", 100);
 
-// Enforce tracking protection in all modes
-pref("privacy.trackingprotection.enabled",  false);
-// Enforce tracking protection in Private Browsing mode
-pref("privacy.trackingprotection.pbmode.enabled",  true);
 // Enable Origin Telemetry by default
 #ifdef NIGHTLY_BUILD
 pref("privacy.trackingprotection.origin_telemetry.enabled", true);

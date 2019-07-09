@@ -6920,6 +6920,22 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Enforce tracking protection in all modes.
+VARCACHE_PREF(
+  Live,
+  "privacy.trackingprotection.enabled",
+   privacy_trackingprotection_enabled,
+  bool, false
+)
+
+// Enforce tracking protection in Private Browsing mode.
+VARCACHE_PREF(
+  Live,
+  "privacy.trackingprotection.pbmode.enabled",
+   privacy_trackingprotection_pbmode_enabled,
+  bool, true
+)
+
 // Annotate channels based on the tracking protection list in all modes
 VARCACHE_PREF(
   Live,
