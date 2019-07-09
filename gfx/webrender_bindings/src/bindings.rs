@@ -1073,8 +1073,8 @@ pub unsafe extern "C" fn wr_program_cache_delete(program_cache: *mut WrProgramCa
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_try_load_shader_from_disk(program_cache: *mut WrProgramCache) {
-    (*program_cache).try_load_from_disk();
+pub unsafe extern "C" fn wr_try_load_startup_shaders_from_disk(program_cache: *mut WrProgramCache) {
+    (*program_cache).try_load_startup_shaders_from_disk();
 }
 
 #[no_mangle]
