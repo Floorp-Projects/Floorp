@@ -7,7 +7,7 @@
 "use strict";
 
 const kUrl = "https://example.com/";
-const kPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+const kPrincipal = Services.scriptSecurityManager.createContentPrincipal(
   Services.io.newURI(kUrl),
   {}
 );

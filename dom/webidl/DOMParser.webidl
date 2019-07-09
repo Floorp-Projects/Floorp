@@ -36,5 +36,10 @@ interface DOMParser {
   // principal it's using for the document.
   [ChromeOnly]
   void forceEnableXULXBL();
+
+  // Can be used to allow a DOMParser to load DTDs from URLs that
+  // normally would not be allowed based on the document principal.
+  [Func="IsChromeOrXBLOrUAWidget"]
+    void forceEnableDTD();
 };
 

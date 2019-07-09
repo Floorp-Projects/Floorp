@@ -26,8 +26,8 @@ class PermissionManager : public ::testing::Test {
         getter_AddRefs(uri),
         NS_LITERAL_CSTRING("https://test.origin.with.subdomains.example.com"));
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    mPrincipal = mozilla::BasePrincipal::CreateCodebasePrincipal(
-        uri, OriginAttributes());
+    mPrincipal =
+        mozilla::BasePrincipal::CreateContentPrincipal(uri, OriginAttributes());
   }
 
   void TearDown() override {

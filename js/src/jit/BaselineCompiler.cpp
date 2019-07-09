@@ -6064,7 +6064,7 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
     masm.jump(scratch);
   };
 
-  if (!JitOptions.baselineInterpreter) {
+  if (!IsBaselineInterpreterEnabled()) {
     // We must have a BaselineScript.
     emitEnterBaseline();
     return true;
@@ -6124,7 +6124,7 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   Register scratch1 = regs.takeAny();
   masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
   Address baselineAddr(scratch1, JSScript::offsetOfBaselineScript());
-  if (JitOptions.baselineInterpreter) {
+  if (IsBaselineInterpreterEnabled()) {
     Address jitScriptAddr(scratch1, JSScript::offsetOfJitScript());
     masm.branchPtr(Assembler::Equal, jitScriptAddr, ImmPtr(nullptr),
                    &interpret);

@@ -71,7 +71,7 @@
       let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
                      .getService(Ci.nsIScriptSecurityManager);
       addMessageListener("getScope", (msg) => {
-        let principal = secMan.createCodebasePrincipalFromOrigin(msg.principal);
+        let principal = secMan.createContentPrincipalFromOrigin(msg.principal);
         try {
           return { scope: swm.getScopeForUrl(principal, msg.path) };
         } catch (e) {

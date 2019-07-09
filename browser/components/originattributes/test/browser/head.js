@@ -39,7 +39,7 @@ async function openTabInUserContext(aURL, aUserContextId) {
   let originAttributes = {
     userContextId: aUserContextId,
   };
-  let triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     makeURI(aURL),
     originAttributes
   );

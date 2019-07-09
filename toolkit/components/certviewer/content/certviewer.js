@@ -9,8 +9,6 @@
 let gElements = {};
 
 document.addEventListener("DOMContentLoaded", e => {
-  RPMAddMessageListener("Certificate", showCertificate);
-  RPMSendAsyncMessage("getCertificate");
   gElements.certificateSection = document.querySelector("certificate-section");
 });
 
@@ -27,21 +25,3 @@ const updateSelectedItem = (() => {
     return state;
   };
 })();
-
-const str2ab = str => {
-  let buf = new ArrayBuffer(str.length);
-  let bufView = new Uint8Array(buf);
-  for (let i = 0; i < str.length; i++) {
-    bufView[i] = str.charCodeAt(i);
-  }
-  return buf;
-};
-
-const showCertificate = message => {
-  console.log("certificate ", message.data.certs);
-  let chain = message.data.certs;
-  let builtChain = chain.map(cert => {
-    return str2ab(cert);
-  });
-  console.log("builtChain ", builtChain);
-};

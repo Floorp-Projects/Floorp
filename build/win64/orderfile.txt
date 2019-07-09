@@ -3665,15 +3665,15 @@ NS_NewWindowsRegKey
 ?Construct_nsIScriptSecurityManager@@YA?AW4nsresult@@PEAVnsISupports@@AEBUnsID@@PEAPEAX@Z
 ?QueryInterface@nsScriptSecurityManager@@UEAA?AW4nsresult@@AEBUnsID@@PEAPEAX@Z
 ?Release@nsScriptSecurityManager@@UEAAKXZ
-?CreateCodebasePrincipal@nsScriptSecurityManager@@UEAA?AW4nsresult@@PEAVnsIURI@@V?$Handle@TValue@JS@@@JS@@PEAUJSContext@@PEAPEAVnsIPrincipal@@@Z
+?CreateContentPrincipal@nsScriptSecurityManager@@UEAA?AW4nsresult@@PEAVnsIURI@@V?$Handle@TValue@JS@@@JS@@PEAUJSContext@@PEAPEAVnsIPrincipal@@@Z
 ?InitIds@OriginAttributesDictionary@dom@mozilla@@CA_NPEAUJSContext@@PEAUOriginAttributesDictionaryAtoms@23@@Z
 ??$emplace@AEAPEAUJSContext@@PEAVJSObject@@@?$Maybe@V?$Rooted@PEAVJSObject@@@JS@@@mozilla@@QEAAXAEAPEAUJSContext@@$$QEAPEAVJSObject@@@Z
 ??$emplace@AEAPEAUJSContext@@@?$Maybe@V?$Rooted@TValue@JS@@@JS@@@mozilla@@QEAAXAEAPEAUJSContext@@@Z
-?CreateCodebasePrincipal@BasePrincipal@mozilla@@SA?AU?$already_AddRefed@VBasePrincipal@mozilla@@@@PEAVnsIURI@@AEBVOriginAttributes@2@@Z
+?CreateContentPrincipal@BasePrincipal@mozilla@@SA?AU?$already_AddRefed@VBasePrincipal@mozilla@@@@PEAVnsIURI@@AEBVOriginAttributes@2@@Z
 ?GenerateOriginNoSuffixFromURI@ContentPrincipal@mozilla@@SA?AW4nsresult@@PEAVnsIURI@@AEAV?$nsTSubstring@D@@@Z
 ?NS_GetInnermostURI@@YA?AU?$already_AddRefed@VnsIURI@@@@PEAVnsIURI@@@Z
 ?GetBlobURLPrincipal@BlobURLProtocolHandler@dom@mozilla@@SA_NPEAVnsIURI@@PEAPEAVnsIPrincipal@@@Z
-?CreateCodebasePrincipal@BasePrincipal@mozilla@@CA?AU?$already_AddRefed@VBasePrincipal@mozilla@@@@PEAVnsIURI@@AEBVOriginAttributes@2@AEBV?$nsTSubstring@D@@@Z
+?CreateContentPrincipal@BasePrincipal@mozilla@@CA?AU?$already_AddRefed@VBasePrincipal@mozilla@@@@PEAVnsIURI@@AEBVOriginAttributes@2@AEBV?$nsTSubstring@D@@@Z
 ?GetFlagsForURI@ExtensionProtocolHandler@net@mozilla@@UEAA?AW4nsresult@@PEAVnsIURI@@PEAI@Z
 ??0URLInfo@extensions@mozilla@@QEAA@PEAVnsIURI@@@Z
 ?GetByURL@ExtensionPolicyService@mozilla@@QEAAPEAVWebExtensionPolicy@extensions@2@AEBVURLInfo@42@@Z
@@ -15412,7 +15412,7 @@ Gecko_DestroyAnonymousContentList
 ?SendRpcMessage@nsFrameMessageManager@@QEAAXPEAUJSContext@@AEBV?$nsTSubstring@_S@@V?$Handle@TValue@JS@@@JS@@V?$Handle@PEAVJSObject@@@5@PEAVnsIPrincipal@@AEAV?$nsTArray@TValue@JS@@@@AEAVErrorResult@mozilla@@@Z
 ?GetContent@InProcessTabChildMessageManager@dom@mozilla@@UEAA?AU?$Nullable@VWindowProxyHolder@dom@mozilla@@@23@AEAVErrorResult@3@@Z
 ?MaybeCreateDoc@nsPIDOMWindowOuter@@IEAAXXZ
-?GetLoadContextCodebasePrincipal@nsScriptSecurityManager@@UEAA?AW4nsresult@@PEAVnsIURI@@PEAVnsILoadContext@@PEAPEAVnsIPrincipal@@@Z
+?GetLoadContextContentPrincipal@nsScriptSecurityManager@@UEAA?AW4nsresult@@PEAVnsIURI@@PEAVnsILoadContext@@PEAPEAVnsIPrincipal@@@Z
 ?GetNearestWidget@nsView@@QEBAPEAVnsIWidget@@PEAUnsPoint@@@Z
 ?GetNearestWidget@nsView@@QEBAPEAVnsIWidget@@PEAUnsPoint@@H@Z
 ?InvalidateHierarchy@nsView@@AEAAXXZ
@@ -19135,7 +19135,7 @@ Gecko_BeginWritingCString
 ?UpdateAggregateCallbacks@nsHttpChannel@net@mozilla@@AEAAXXZ
 ?SetLoadFlags@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@I@Z
 ?SetInheritApplicationCache@nsHttpChannel@net@mozilla@@UEAA?AW4nsresult@@_N@Z
-?GetDocShellCodebasePrincipal@nsScriptSecurityManager@@UEAA?AW4nsresult@@PEAVnsIURI@@PEAVnsIDocShell@@PEAPEAVnsIPrincipal@@@Z
+?GetDocShellContentPrincipal@nsScriptSecurityManager@@UEAA?AW4nsresult@@PEAVnsIURI@@PEAVnsIDocShell@@PEAPEAVnsIPrincipal@@@Z
 ?NS_ShouldCheckAppCache@@YA_NPEAVnsIPrincipal@@@Z
 ?GetInstance@nsOfflineCacheUpdateService@@SA?AU?$already_AddRefed@VnsOfflineCacheUpdateService@@@@XZ
 ??0nsOfflineCacheUpdateService@@QEAA@XZ
@@ -19460,7 +19460,7 @@ XPCOMService_GetThirdPartyUtil
 ?IsFirstPartyStorageAccessGrantedFor@AntiTrackingCommon@mozilla@@SA_NPEAVnsIHttpChannel@@PEAVnsIURI@@PEAI@Z
 ?GetTopLevelPrincipal@LoadInfo@net@mozilla@@UEAAPEAVnsIPrincipal@@XZ
 ?GetIsMainDocumentChannel@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@PEA_N@Z
-?GetIsCodebasePrincipal@BasePrincipal@mozilla@@UEAA?AW4nsresult@@PEA_N@Z
+?GetIsContentPrincipal@BasePrincipal@mozilla@@UEAA?AW4nsresult@@PEA_N@Z
 ?CookiePermission@CookieSettings@net@mozilla@@UEAA?AW4nsresult@@PEAVnsIPrincipal@@PEAI@Z
 ?GetInstance@nsPermissionManager@@SAPEAV1@XZ
 ?Run@?$RunnableMethodImpl@PEAVnsHostResolver@@P81@EAAXXZ$00$0A@$$V@detail@mozilla@@UEAA?AW4nsresult@@XZ
@@ -20797,7 +20797,7 @@ nsEscape
 ?ParseUserInfo@nsAuthURLParser@@UEAA?AW4nsresult@@PEBDHPEAIPEAH12@Z
 ?SetPort@?$TemplatedMutator@VSubstitutingURL@net@mozilla@@@nsStandardURL@net@mozilla@@EEAA?AW4nsresult@@HPEAPEAVnsIURIMutator@@@Z
 ?SetPort@nsStandardURL@net@mozilla@@MEAA?AW4nsresult@@H@Z
-?CreateCodebasePrincipal@BasePrincipal@mozilla@@SA?AU?$already_AddRefed@VBasePrincipal@mozilla@@@@AEBV?$nsTSubstring@D@@@Z
+?CreateContentPrincipal@BasePrincipal@mozilla@@SA?AU?$already_AddRefed@VBasePrincipal@mozilla@@@@AEBV?$nsTSubstring@D@@@Z
 ?flushConsoleMessages@nsCSPContext@@QEAAXXZ
 ?ClearAndRetainStorage@?$nsTArray_Impl@UConsoleMsgQueueElem@@UnsTArrayInfallibleAllocator@@@@QEAAXXZ
 ?PopulateContentSecurityPolicies@ipc@mozilla@@YA?AW4nsresult@@PEAVnsIContentSecurityPolicy@@AEAV?$nsTArray@VContentSecurityPolicy@ipc@mozilla@@@@@Z
@@ -21054,7 +21054,7 @@ nsEscape
 ?ShouldPrepareForIntercept@ServiceWorkerInterceptController@dom@mozilla@@UEAA?AW4nsresult@@PEAVnsIURI@@PEAVnsIChannel@@PEA_N@Z
 ?IsAvailable@ServiceWorkerManager@dom@mozilla@@QEAA_NPEAVnsIPrincipal@@PEAVnsIURI@@@Z
 ?GetServiceWorkerRegistrationInfo@ServiceWorkerManager@dom@mozilla@@AEBA?AU?$already_AddRefed@VServiceWorkerRegistrationInfo@dom@mozilla@@@@PEAVnsIPrincipal@@PEAVnsIURI@@@Z
-?IsCodebasePrincipal@ContentPrincipal@mozilla@@UEBA_NXZ
+?IsContentPrincipal@ContentPrincipal@mozilla@@UEBA_NXZ
 ?GetServiceWorkerRegistrationInfo@ServiceWorkerManager@dom@mozilla@@AEBA?AU?$already_AddRefed@VServiceWorkerRegistrationInfo@dom@mozilla@@@@AEBV?$nsTSubstring@D@@PEAVnsIURI@@@Z
 ?FindScopeForPath@ServiceWorkerManager@dom@mozilla@@CA_NAEBV?$nsTSubstring@D@@0PEAPEAURegistrationDataPerPrincipal@123@AEAV4@@Z
 ?CacheQueueSize@CacheStorageService@net@mozilla@@SAI_N@Z

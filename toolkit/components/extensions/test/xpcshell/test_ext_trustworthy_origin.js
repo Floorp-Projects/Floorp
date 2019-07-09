@@ -10,7 +10,7 @@ add_task(
       "@mozilla.org/contentsecuritymanager;1"
     ].getService(Ci.nsIContentSecurityManager);
     let uri = NetUtil.newURI("moz-extension://foobar/something.html");
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       {}
     );

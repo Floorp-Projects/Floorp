@@ -39,7 +39,7 @@ function registerConverter() {
       });
       channel.originalURI = aRequest.QueryInterface(Ci.nsIChannel).URI;
       channel.loadGroup = aRequest.loadGroup;
-      channel.owner = Services.scriptSecurityManager.createCodebasePrincipal(
+      channel.owner = Services.scriptSecurityManager.createContentPrincipal(
         channel.URI,
         {}
       );

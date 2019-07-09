@@ -4004,12 +4004,12 @@ CookieStatus nsCookieService::CheckPrefs(
   }
 
   nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(aHostURI, aOriginAttrs);
+      BasePrincipal::CreateContentPrincipal(aHostURI, aOriginAttrs);
 
   if (!principal) {
     COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                       aHostURI, aCookieHeader,
-                      "non-codebase principals cannot get/set cookies");
+                      "non-content principals cannot get/set cookies");
     return STATUS_REJECTED_WITH_ERROR;
   }
 

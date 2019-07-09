@@ -109,6 +109,9 @@ struct DefaultJitOptions {
   bool spectreValueMasking;
   bool spectreJitToCxxCalls;
 
+  bool supportsFloatingPoint;
+  bool supportsUnalignedAccesses;
+
   DefaultJitOptions();
   bool isSmallFunction(JSScript* script) const;
   void setEagerIonCompilation();

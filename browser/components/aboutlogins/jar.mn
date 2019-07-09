@@ -11,7 +11,6 @@ browser.jar:
   content/browser/aboutlogins/components/login-item.js         (content/components/login-item.js)
   content/browser/aboutlogins/components/login-list.css        (content/components/login-list.css)
   content/browser/aboutlogins/components/login-list.js         (content/components/login-list.js)
-  content/browser/aboutlogins/components/login-list-item.css   (content/components/login-list-item.css)
   content/browser/aboutlogins/components/login-list-item.js    (content/components/login-list-item.js)
   content/browser/aboutlogins/components/menu-button.css       (content/components/menu-button.css)
   content/browser/aboutlogins/components/menu-button.js        (content/components/menu-button.js)

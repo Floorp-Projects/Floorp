@@ -143,7 +143,7 @@ function check_login_exists(aHost, aExists) {
  */
 function add_permission(aURI) {
   check_permission_exists(aURI, false);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     aURI,
     {}
   );
@@ -161,7 +161,7 @@ function add_permission(aURI) {
  *        True if the permission should exist, false otherwise.
  */
 function check_permission_exists(aURI, aExists) {
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     aURI,
     {}
   );
@@ -375,7 +375,7 @@ async function test_content_preferences_not_cleared_with_uri_contains_domain() {
 
 function push_registration_exists(aURL, ps) {
   return new Promise(resolve => {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       aURL
     );
     return ps.getSubscription(aURL, principal, (status, record) => {
@@ -482,7 +482,7 @@ async function test_cache_cleared() {
 
 async function test_storage_cleared() {
   function getStorageForURI(aURI) {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       aURI,
       {}
     );

@@ -51,7 +51,7 @@ add_task(async function test_telemetry_events() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
-      "login-list-item:nth-child(2)"
+      ".login-list-item:nth-child(2)"
     );
     loginListItem.click();
   });
@@ -111,7 +111,9 @@ add_task(async function test_telemetry_events() {
   await waitForTelemetryEventCount(6);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-    let newLoginButton = content.document.querySelector("#create-login-button");
+    let newLoginButton = content.document
+      .querySelector("login-list")
+      .shadowRoot.querySelector(".create-login-button");
     newLoginButton.click();
   });
   await waitForTelemetryEventCount(7);
@@ -126,7 +128,7 @@ add_task(async function test_telemetry_events() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
-      "login-list-item[data-guid]"
+      ".login-list-item[data-guid]"
     );
     loginListItem.click();
   });

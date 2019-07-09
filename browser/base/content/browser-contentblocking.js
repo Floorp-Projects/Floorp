@@ -728,7 +728,7 @@ var ThirdPartyCookies = {
       }
     }
 
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       origin
     );
     // Cookie exceptions get "inherited" from parent- to sub-domain, so we need to

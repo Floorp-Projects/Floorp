@@ -186,7 +186,7 @@ add_task(async function test_aboutURL() {
       let flags = am.getURIFlags(uri);
 
       // We load pages with URI_SAFE_FOR_UNTRUSTED_CONTENT set, this means they
-      // are not loaded with System Principal but with codebase principal.
+      // are not loaded with System Principal but with content principal.
       // Also we skip pages with HIDE_FROM_ABOUTABOUT, some of them may have
       // errors while loading.
       if (
@@ -227,8 +227,8 @@ add_task(async function test_aboutURL() {
         "The about page should have firstPartyDomain set"
       );
       Assert.ok(
-        content.document.nodePrincipal.isCodebasePrincipal,
-        "The principal should be a codebase principal."
+        content.document.nodePrincipal.isContentPrincipal,
+        "The principal should be a content principal."
       );
     });
 

@@ -22,7 +22,7 @@ add_task(async function test_settingsOpen_observer() {
       let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, expectedURL);
       info("simulate a notifications-open-settings notification");
       let uri = NetUtil.newURI("https://example.com");
-      let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
         uri,
         {}
       );

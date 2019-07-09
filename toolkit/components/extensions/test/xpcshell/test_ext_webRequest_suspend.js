@@ -195,7 +195,7 @@ add_task(async function test_set_responseHeaders() {
 
     let channel = NetUtil.newChannel({
       uri: "http://example.com/?modify_headers",
-      loadingPrincipal: ssm.createCodebasePrincipalFromOrigin(
+      loadingPrincipal: ssm.createContentPrincipalFromOrigin(
         "http://example.com"
       ),
       contentPolicyType: Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST,

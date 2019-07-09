@@ -4,6 +4,9 @@
 
 # general jit flags
 --baseline-eager
+--blinterp
+--no-blinterp
+--blinterp-eager
 --cache-ir-stubs=off
 --cache-ir-stubs=on
 --ion-check-range-analysis

@@ -35,7 +35,7 @@ class Context extends BaseContext {
  */
 async function withContext(f) {
   const ssm = Services.scriptSecurityManager;
-  const PRINCIPAL1 = ssm.createCodebasePrincipalFromOrigin(
+  const PRINCIPAL1 = ssm.createContentPrincipalFromOrigin(
     "http://www.example.org"
   );
   const context = new Context(PRINCIPAL1);
