@@ -549,7 +549,8 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
   bool finishFunctionScopes(bool isStandaloneFunction);
   LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope,
-                                          Node body);
+                                          Node body,
+                                          ScopeKind kind = ScopeKind::Lexical);
   bool finishFunction(
       bool isStandaloneFunction = false,
       IsFieldInitializer isFieldInitializer = IsFieldInitializer::No);
