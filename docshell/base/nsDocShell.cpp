@@ -12639,8 +12639,7 @@ OnLinkClickEvent::OnLinkClickEvent(
       mTriggeringPrincipal(aTriggeringPrincipal),
       mCsp(aCsp) {}
 
-NS_IMETHODIMP
-nsDocShell::OnLinkClick(
+nsresult nsDocShell::OnLinkClick(
     nsIContent* aContent, nsIURI* aURI, const nsAString& aTargetSpec,
     const nsAString& aFileName, nsIInputStream* aPostDataStream,
     nsIInputStream* aHeadersDataStream, bool aIsUserTriggered, bool aIsTrusted,
