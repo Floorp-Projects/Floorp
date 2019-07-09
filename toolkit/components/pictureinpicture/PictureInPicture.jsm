@@ -21,12 +21,6 @@ const WINDOW_TYPE = "Toolkit:PictureInPicture";
 let gCloseReasons = new WeakMap();
 
 /**
- * To differentiate windows in the Telemetry Event Log, each Picture-in-Picture
- * player window is given a unique ID.
- */
-let gNextWindowID = 0;
-
-/**
  * This module is responsible for creating a Picture in Picture window to host
  * a clone of a video element running in web content.
  */
@@ -139,9 +133,7 @@ var PictureInPicture = {
     // set attribute which shows pip icon in tab
     let tab = parentWin.gBrowser.getTabForBrowser(browser);
     tab.setAttribute("pictureinpicture", true);
-
-    win.setupPlayer(gNextWindowID.toString(), browser, videoData);
-    gNextWindowID++;
+    win.setupPlayer(browser, videoData);
   },
 
   /**
