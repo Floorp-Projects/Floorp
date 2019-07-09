@@ -201,7 +201,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         # bool pref.
         prefs["browser.tabs.remote.autostart"] = False
 
-        outputdir = self.config.get('output_directory', '/sdcard')
+        outputdir = self.config.get('output_directory', '/sdcard/pgo_profile')
         jarlog = posixpath.join(outputdir, 'en-US.log')
         profdata = posixpath.join(outputdir, 'default.profraw')
 
@@ -213,6 +213,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
 
         adbdevice = ADBDevice(adb=adb,
                               device='emulator-5554')
+        adbdevice.mkdir(outputdir)
 
         try:
             # Run Fennec a first time to initialize its profile
