@@ -31,6 +31,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -75,6 +76,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -121,6 +123,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -165,6 +168,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
