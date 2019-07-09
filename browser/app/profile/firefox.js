@@ -1841,7 +1841,7 @@ pref("app.shield.optoutstudies.enabled", false);
 #endif
 
 // Multi-lingual preferences
-#ifdef RELEASE_OR_BETA
+#if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
 pref("intl.multilingual.enabled", true);
 pref("intl.multilingual.downloadEnabled", true);
 #else
