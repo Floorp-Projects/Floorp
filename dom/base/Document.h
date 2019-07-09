@@ -2339,7 +2339,7 @@ class Document : public nsINode,
   /**
    * Get the container (docshell) for this document.
    */
-  virtual nsISupports* GetContainer() const;
+  nsISupports* GetContainer() const;
 
   /**
    * Get the container's load context for this document.
