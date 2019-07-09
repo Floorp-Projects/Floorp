@@ -844,6 +844,21 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Fix up common scheme typos?
+VARCACHE_PREF(
+  Live,
+  "browser.fixup.typo.scheme",
+   browser_fixup_typo_scheme,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "browser.fixup.dns_first_for_single_words",
+   browser_fixup_dns_first_for_single_words,
+  bool, false
+)
+
 // Render animations and videos as a solid color
 VARCACHE_PREF(
   Live,
@@ -3858,6 +3873,17 @@ VARCACHE_PREF(
   "intl.charset.detector.iso2022jp.allowed",
    intl_charset_detector_iso2022jp_allowed,
   bool, true
+)
+
+//---------------------------------------------------------------------------
+// Prefs starting with "keyword."
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  Live,
+  "keyword.enabled",
+   keyword_enabled,
+  bool, false
 )
 
 //---------------------------------------------------------------------------
