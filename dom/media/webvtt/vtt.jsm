@@ -542,9 +542,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       // As pseudo element won't inherit the parent div's style, so we have to
       // set the font size explicitly.
       if (supportPseudo) {
-        this.cueDiv.style.setProperty("--cue-font-size", this.fontSize);
+        this._applyDefaultStylesOnPseudoBackgroundNode();
       } else {
-        this._applyNonPseudoCueStyles();
+        this._applyDefaultStylesOnNonPseudoBackgroundNode();
       }
       this._applyDefaultStylesOnRootNode();
     }
@@ -601,7 +601,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       return containerBox.height * 0.05 + "px";
     }
 
-    _applyNonPseudoCueStyles() {
+    _applyDefaultStylesOnPseudoBackgroundNode() {
+      // most of the properties have been defined in `::cue` in `html.css`, but
+      // there are some css variables we have to set them dynamically.
+      this.cueDiv.style.setProperty("--cue-font-size", this.fontSize, "important");
+      this.cueDiv.style.setProperty("--cue-writing-mode", this._getCueWritingMode(), "important");
+    }
+
+    _applyDefaultStylesOnNonPseudoBackgroundNode() {
       // If cue div is not a pseudo element, we should set the default css style
       // for it, the reason we need to set these attributes to cueDiv is because
       // if we set background on the root node directly, if would cause filling
