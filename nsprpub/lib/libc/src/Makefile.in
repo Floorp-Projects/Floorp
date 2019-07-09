@@ -52,10 +52,6 @@ OS_LIBS = -lc_r
 endif
 endif
 
-ifeq ($(OS_ARCH),IRIX)
-OS_LIBS = -lc
-endif
-
 ifeq ($(OS_ARCH),SunOS)
 OS_LIBS = -lc
 MAPFILE = $(OBJDIR)/plcmap.sun

@@ -556,26 +556,6 @@ static pthread_mutex_t _PR_MD_malloc_crustylock;
 #else /* _PR_PTHREADS */
 static _MDLock _PR_MD_malloc_crustylock;
 
-#ifdef IRIX
-#define _PR_Lock_Malloc() {						\
-			   PRIntn _is;					\
-    				if(PR_TRUE == _PR_malloc_initialised) { \
-				if (_PR_MD_GET_ATTACHED_THREAD() && 		\
-					!_PR_IS_NATIVE_THREAD( 		\
-					_PR_MD_GET_ATTACHED_THREAD()))	\
-						_PR_INTSOFF(_is); 	\
-					_PR_MD_LOCK(&_PR_MD_malloc_crustylock); \
-				}
-
-#define _PR_Unlock_Malloc() 	if(PR_TRUE == _PR_malloc_initialised) { \
-					_PR_MD_UNLOCK(&_PR_MD_malloc_crustylock); \
-				if (_PR_MD_GET_ATTACHED_THREAD() && 		\
-					!_PR_IS_NATIVE_THREAD( 		\
-					_PR_MD_GET_ATTACHED_THREAD()))	\
-						_PR_INTSON(_is);	\
-				}					\
-			  }
-#else	/* IRIX */
 #define _PR_Lock_Malloc() {						\
 			   PRIntn _is;					\
     				if(PR_TRUE == _PR_malloc_initialised) { \
@@ -594,7 +574,6 @@ static _MDLock _PR_MD_malloc_crustylock;
 						_PR_INTSON(_is);	\
 				}					\
 			  }
-#endif	/* IRIX	*/
 #endif /* _PR_PTHREADS */
 
 PR_IMPLEMENT(PRStatus) _PR_MallocInit(void)
@@ -635,22 +614,6 @@ void *malloc(size_t size)
     _PR_Unlock_Malloc();
     return p;
 }
-
-#if defined(IRIX)
-void *memalign(size_t alignment, size_t size)
-{
-    void *p;
-    _PR_Lock_Malloc();
-    p = _PR_UnlockedMemalign(alignment, size);
-    _PR_Unlock_Malloc();
-    return p;
-}
-
-void *valloc(size_t size)
-{
-    return(memalign(sysconf(_SC_PAGESIZE),size));
-}
-#endif	/* IRIX */
 
 void free(void *ptr)
 {

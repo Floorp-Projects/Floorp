@@ -54,28 +54,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 }
 #endif
 
-#elif defined(OSF1)
-
-#include <c_asm.h>
-
-/*
- * Use the "get the cycle counter" instruction on the alpha.
- * The low 32 bits completely turn over in less than a minute.
- * The high 32 bits are some non-counter gunk that changes sometimes.
- */
-static size_t
-GetHighResClock(void *buf, size_t maxbytes)
-{
-    unsigned long t;
-
-#ifdef __GNUC__
-    __asm__("rpcc %0" : "=r" (t));
-#else
-    t = asm("rpcc %v0");
-#endif
-    return _pr_CopyLowBits(buf, maxbytes, &t, sizeof(t));
-}
-
 #elif defined(AIX)
 
 static size_t
@@ -86,7 +64,7 @@ GetHighResClock(void *buf, size_t maxbytes)
 
 #elif (defined(LINUX) || defined(FREEBSD) || defined(__FreeBSD_kernel__) \
     || defined(NETBSD) || defined(__NetBSD_kernel__) || defined(OPENBSD) \
-    || defined(SYMBIAN) || defined(__GNU__))
+    || defined(__GNU__))
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -124,89 +102,6 @@ static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {             
     return(GetDevURandom( buf, maxbytes ));
-}
-
-#elif defined(IRIX)
-#include <fcntl.h>
-#undef PRIVATE
-#include <sys/mman.h>
-#include <sys/syssgi.h>
-#include <sys/immu.h>
-#include <sys/systeminfo.h>
-#include <sys/utsname.h>
-
-static size_t GetHighResClock(void *buf, size_t maxbuf)
-{
-    unsigned phys_addr, raddr, cycleval;
-    static volatile unsigned *iotimer_addr = NULL;
-    static int tries = 0;
-    static int cntr_size;
-    int mfd;
-    unsigned s0[2];
-
-#ifndef SGI_CYCLECNTR_SIZE
-#define SGI_CYCLECNTR_SIZE      165     /* Size user needs to use to read CC */
-#endif
-
-    if (iotimer_addr == NULL) {
-	    if (tries++ > 1) {
-	        /* Don't keep trying if it didn't work */
-	        return 0;
-	    }
-
-	    /*
-	    ** For SGI machines we can use the cycle counter, if it has one,
-	    ** to generate some truly random numbers
-	    */
-	    phys_addr = syssgi(SGI_QUERY_CYCLECNTR, &cycleval);
-	    if (phys_addr) {
-	        int pgsz = getpagesize();
-	        int pgoffmask = pgsz - 1;
-
-	        raddr = phys_addr & ~pgoffmask;
-	        mfd = open("/dev/mmem", O_RDONLY);
-	        if (mfd < 0) {
-    		    return 0;
-	        }
-	        iotimer_addr = (unsigned *)
-		    mmap(0, pgoffmask, PROT_READ, MAP_PRIVATE, mfd, (int)raddr);
-	        if (iotimer_addr == (unsigned*)-1) {
-	    	    close(mfd);
-		        iotimer_addr = NULL;
-		        return 0;
-	        }
-	        iotimer_addr = (unsigned*)
-		    ((__psint_t)iotimer_addr | (phys_addr & pgoffmask));
-	        /*
-	         * The file 'mfd' is purposefully not closed.
-	         */
-	        cntr_size = syssgi(SGI_CYCLECNTR_SIZE);
-	        if (cntr_size < 0) {
-    		    struct utsname utsinfo;
-
-		        /* 
-		         * We must be executing on a 6.0 or earlier system, since the
-		         * SGI_CYCLECNTR_SIZE call is not supported.
-		         * 
-		         * The only pre-6.1 platforms with 64-bit counters are
-		         * IP19 and IP21 (Challenge, PowerChallenge, Onyx).
-		         */
-		        uname(&utsinfo);
-		        if (!strncmp(utsinfo.machine, "IP19", 4) ||
-		            !strncmp(utsinfo.machine, "IP21", 4))
-			        cntr_size = 64;
-		        else
-			        cntr_size = 32;
-	        }
-	        cntr_size /= 8;	/* Convert from bits to bytes */
-	    }
-    }
-
-    s0[0] = *iotimer_addr;
-    if (cntr_size > 4)
-	s0[1] = *(iotimer_addr + 1);
-    memcpy(buf, (char *)&s0[0], cntr_size);
-    return _pr_CopyLowBits(buf, maxbuf, &s0, cntr_size);
 }
 
 #elif defined(SCO) || defined(UNIXWARE) || defined(BSDI) || defined(NTO) \

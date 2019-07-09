@@ -217,13 +217,6 @@ int main(int argc, char **argv)
         printf("Fork succeeded.  Parent process continues.\n");
         DoIO();
         if ((rv = waitpid(pid, &childStatus, 0)) != pid) {
-#if defined(IRIX) && !defined(_PR_PTHREADS)
-			/*
-			 * nspr may handle SIGCLD signal
-			 */
-			if ((rv < 0) && (errno == ECHILD)) {
-			} else 
-#endif
 			{
 				fprintf(stderr, "waitpid failed: %d\n", errno);
 				failed_already = 1;
@@ -240,10 +233,6 @@ int main(int argc, char **argv)
         }
         return failed_already;
     } else {
-#if defined(IRIX) && !defined(_PR_PTHREADS)
-		extern void _PR_IRIX_CHILD_PROCESS(void);
-		_PR_IRIX_CHILD_PROCESS();
-#endif
         printf("Fork succeeded.  Child process continues.\n");
         DoIO();
         printf("Child process exits.\n");

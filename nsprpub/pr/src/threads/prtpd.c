@@ -32,7 +32,6 @@
 ** the routines in pr/src/btthreads/
 */
 
-#ifndef XP_BEOS
 
 #include "primpl.h"
 
@@ -249,4 +248,3 @@ void _PR_DestroyThreadPrivate(PRThread* self)
     }
 }  /* _PR_DestroyThreadPrivate */
 
-#endif /* !XP_BEOS */

@@ -623,7 +623,6 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 MT
 NEXT_ROOT
-SYMBIAN_SDK_DIR
 MACOS_SDK_DIR
 WRAP_SYSTEM_INCLUDES
 VISIBILITY_FLAGS
@@ -757,6 +756,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -792,10 +792,8 @@ enable_optimize
 enable_debug
 enable_debug_symbols
 enable_win32_target
-enable_symbian_target
 enable_debug_rtl
 enable_static_rtl
-enable_n32
 enable_x32
 enable_64bit
 enable_mdupdate
@@ -811,13 +809,11 @@ with_arch
 with_fpu
 with_float_abi
 with_soft_float
-with_symbian_sdk
 with_ccache
 enable_strip
 with_pthreads
 enable_user_pthreads
 enable_nspr_threads
-with_bthreads
 enable_ipv6
 enable_wrap_malloc
 with_wrap_malloc
@@ -872,7 +868,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE}'
@@ -1125,6 +1121,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1262,7 +1267,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1415,6 +1420,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1453,11 +1459,8 @@ Optional Features:
                                        (using compiler flags DBG)
   --enable-win32-target=\$t
                           Specify win32 flavor. (WIN95 or WINNT)
-  --enable-symbian-target=\$t
-                          Specify symbian flavor. (WINSCW or GCCE)
   --enable-debug-rtl      Use the MSVC debug runtime library
   --enable-static-rtl     Use the MSVC static runtime library
-  --enable-n32            Enable n32 ABI support (IRIX only)
   --enable-x32            Enable x32 ABI support (x86_64 only)
   --enable-64bit          Enable 64-bit support (on certain platforms)
   --enable-mdupdate       Enable use of certain compilers' mdupdate feature
@@ -1506,13 +1509,9 @@ Optional Packages:
                            Use specific arm float ABI (-mfloat-abi=type)
   --with-soft-float[=yes|no|toolchain-default]
                            Use soft float library (-msoft-float)
-  --with-symbian-sdk=SYMBIAN_SDK_DIR
-                          The path to the Symbian SDK
   --with-ccache=path/to/ccache
                           Enable compiling with ccache
   --with-pthreads         Use system pthreads library as thread subsystem
-  --with-bthreads         Use system bthreads library as thread subsystem
-                          (BeOS only)
   --with-wrap-malloc=SHAREDLIB  Location of malloc wrapper library
 
 Some influential environment variables:
@@ -2487,7 +2486,7 @@ test -n "$target_alias" &&
   program_prefix=${target_alias}-
 
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=21
+MOD_MINOR_VERSION=22
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -2641,6 +2640,12 @@ fi
 
 
 case "$target" in
+x86_64-linux*-android*)
+    android_tool_prefix="x86_64-linux-android"
+    ;;
+aarch64-linux*-android*)
+    android_tool_prefix="aarch64-linux-android"
+    ;;
 arm-linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
     ;;
@@ -2855,11 +2860,6 @@ if test "${enable_win32_target+set}" = set; then :
 fi
 
 
-# Check whether --enable-symbian-target was given.
-if test "${enable_symbian_target+set}" = set; then :
-  enableval=$enable_symbian_target; OS_TARGET=`echo $enableval | tr a-z A-Z`
-fi
-
 
 # Check whether --enable-debug-rtl was given.
 if test "${enable_debug_rtl+set}" = set; then :
@@ -2876,17 +2876,6 @@ if test "${enable_static_rtl+set}" = set; then :
   enableval=$enable_static_rtl;  if test "$enableval" = "yes"; then
 	    USE_STATIC_RTL=1
       fi
-fi
-
-
-# Check whether --enable-n32 was given.
-if test "${enable_n32+set}" = set; then :
-  enableval=$enable_n32;  if test "$enableval" = "yes"; then
-	USE_N32=1
-      else if test "$enableval" = "no"; then
-	USE_N32=
-      fi
-    fi
 fi
 
 
@@ -2978,14 +2967,6 @@ if test -z "$CC"; then
         CC=cc
     ;;
 
-    *-irix*)
-        CC=cc
-    ;;
-
-    *-osf*)
-        CC=cc
-    ;;
-
     *-solaris*)
         CC=cc
     ;;
@@ -3016,14 +2997,6 @@ if test -z "$CXX"; then
             CXX=CC
             ;;
         esac
-    ;;
-
-    *-irix*)
-        CXX=CC
-    ;;
-
-    *-osf*)
-        CXX=cxx
     ;;
 
     *-solaris*)
@@ -3083,9 +3056,6 @@ if test -n "$MOZ_DEBUG"; then
     DEFINES="$DEFINES -UNDEBUG"
 
     case "${target_os}" in
-    beos*)
-        DEFINES="$DEFINES -DDEBUG_${USER}"
-        ;;
     mks*|cygwin*|mingw*|msys*|os2*)
         DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
@@ -5626,10 +5596,6 @@ else
     OS_TEST=`uname -m`
 fi
 
-if test "$OS_ARCH" = "IRIX64"; then
-    OS_ARCH=IRIX
-fi
-
 if test "$OS_ARCH" = "AIX"; then
     OS_RELEASE=`uname -v`.`uname -r`
 fi
@@ -6016,9 +5982,6 @@ case "$host" in
         CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
     fi
     ;;
-*-beos*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
-    ;;
 *os2*)
     ;;
 *)
@@ -6374,77 +6337,6 @@ fi
     RESOLVE_LINK_SYMBOLS=1
     ;;
 
-*-beos*)
-    $as_echo "#define XP_BEOS 1" >>confdefs.h
-
-    $as_echo "#define BeOS 1" >>confdefs.h
-
-    $as_echo "#define BEOS 1" >>confdefs.h
-
-    $as_echo "#define _POSIX_SOURCE 1" >>confdefs.h
-
-    DSO_LDOPTS=-nostart
-    MDCPUCFG_H=_beos.cfg
-    USE_BTHREADS=1
-    PR_MD_ARCH_DIR=beos
-    RESOLVE_LINK_SYMBOLS=1
-    case "${target_cpu}" in
-    i*86)
-        _OPTIMIZE_FLAGS=-O2
-        _DEBUG_FLAGS='-gdwarf-2 -O0'
-        MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gethostbyaddr in -lbind" >&5
-$as_echo_n "checking for gethostbyaddr in -lbind... " >&6; }
-if ${ac_cv_lib_bind_gethostbyaddr+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lbind  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char gethostbyaddr ();
-int
-main ()
-{
-return gethostbyaddr ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_bind_gethostbyaddr=yes
-else
-  ac_cv_lib_bind_gethostbyaddr=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_bind_gethostbyaddr" >&5
-$as_echo "$ac_cv_lib_bind_gethostbyaddr" >&6; }
-if test "x$ac_cv_lib_bind_gethostbyaddr" = xyes; then :
-  OS_LIBS="$OS_LIBS -lbind -lsocket"
-fi
-
-        ;;
-    powerpc)
-        CC=mwcc
-        CCC=mwcc
-        LD=mwld
-        DSO_LDOPTS='-xms -export pragma -init _init_routine_ -term _term_routine_ -lroot -lnet /boot/develop/lib/ppc/glue-noinit.a /boot/develop/lib/ppc/init_term_dyn.o /boot/develop/lib/ppc/start_dyn.o'
-        _OPTIMIZE_FLAGS=-O2
-        _DEBUG_FLAGS='-g -O0'
-        ;;
-    esac
-    ;;
-
 *-bsdi*)
     $as_echo "#define XP_UNIX 1" >>confdefs.h
 
@@ -6667,28 +6559,6 @@ tools are selected during the Xcode/Developer Tools installation." "$LINENO" 5
     fi
     ;;
 
-*-dgux*)
-    $as_echo "#define XP_UNIX 1" >>confdefs.h
-
-    $as_echo "#define _PR_LOCAL_THREADS_ONLY 1" >>confdefs.h
-
-    $as_echo "#define SVR4 1" >>confdefs.h
-
-    $as_echo "#define SYSV 1" >>confdefs.h
-
-    $as_echo "#define DGUX 1" >>confdefs.h
-
-    $as_echo "#define _DGUX_SOURCE 1" >>confdefs.h
-
-    $as_echo "#define _POSIX4A_DRAFT6_SOURCE 1" >>confdefs.h
-
-    DSO_LDOPTS=-G
-    _OPTIMIZE_FLAGS=-O2
-    _DEBUG_FLAGS=
-    MDCPUCFG_H=_dgux.cfg
-    PR_MD_CSRCS=dgux.c
-    ;;
-
 *-freebsd*)
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
@@ -6724,7 +6594,7 @@ tools are selected during the Xcode/Developer Tools installation." "$LINENO" 5
 
     $as_echo "#define _HPUX_SOURCE 1" >>confdefs.h
 
-    # OSF1 and HPUX report the POLLHUP event for a socket when the
+    # HPUX report the POLLHUP event for a socket when the
     # shutdown(SHUT_WR) operation is called for the remote end, even though
     # the socket is still writeable. Use select(), instead of poll(), to
     # workaround this problem.
@@ -6888,110 +6758,6 @@ tools are selected during the Xcode/Developer Tools installation." "$LINENO" 5
             USE_PTHREADS=
         fi
     fi
-    ;;
-
-*-irix*)
-    $as_echo "#define XP_UNIX 1" >>confdefs.h
-
-    $as_echo "#define IRIX 1" >>confdefs.h
-
-    $as_echo "#define SVR4 1" >>confdefs.h
-
-    $as_echo "#define _SGI_MP_SOURCE 1" >>confdefs.h
-
-    $as_echo "#define HAVE_FCNTL_FILE_LOCKING 1" >>confdefs.h
-
-    PR_MD_CSRCS=irix.c
-    PR_MD_ASFILES=os_Irix.s
-    MKSHLIB='$(LD) $(DSO_LDOPTS) -rdata_shared -shared -soname $(notdir $@) -o $@'
-    STRIP="$STRIP -f"
-    RESOLVE_LINK_SYMBOLS=1
-    if test -n "$USE_64"; then
-        MDCPUCFG_H=_irix64.cfg
-    else
-        MDCPUCFG_H=_irix32.cfg
-    fi
-    case "${target_os}" in
-    irix6*)
-        $as_echo "#define IRIX6 1" >>confdefs.h
-
-        USE_PTHREADS=1
-        USE_N32=1
-        COMPILER_TAG=_n32
-        IMPL_STRATEGY=_PTH
-        ;;
-    irix5*)
-        $as_echo "#define IRIX5 1" >>confdefs.h
-
-        USE_NSPR_THREADS=1
-        ;;
-    *)
-        USE_PTHREADS=1
-        USE_N32=1
-        ;;
-    esac
-    if test "$GNU_CC"; then
-                                                        	    AS='$(CC) -Wp,-P -x assembler-with-cpp -D_ASM -mips2 $(INCLUDES)'
-	    CFLAGS="$CFLAGS -Wall -Wno-format"
-	    _OPTIMIZE_FLAGS="-O6"
-    else
-	    if test -n "$USE_N32"; then
-		AS='as -D_ASM $(INCLUDES) -n32'
-	    else
-		AS='as -D_ASM $(INCLUDES)'
-	    fi
-	    CFLAGS="$CFLAGS -fullwarn -xansi"
-	    if test "$USE_N32"; then
-	        _OPTIMIZE_FLAGS="-O -OPT:Olimit=4000"
-	    else
-	        _OPTIMIZE_FLAGS="-O -Olimit 4000"
-	    fi
-	    if test "$USE_MDUPDATE"; then
-                CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
-	    fi
-	    case "${target}" in
-	    *-irix6.*)
-	        CFLAGS="$CFLAGS -multigot"
-	        DSO_LDOPTS="-no_unresolved"
-	        if test "$USE_N32"; then
-		        CFLAGS="$CFLAGS -n32 -woff 1209"
-		        DSO_LDOPTS="$DSO_LDOPTS -n32"
-	        else
-		        if test "$USE_64"; then
-		            CFLAGS="$CFLAGS -64"
-		        else
-		            CFLAGS="$CFLAGS -32"
-		        fi
-	        fi
-	        ;;
-	    *)
-	        CFLAGS="$CFLAGS -xgot"
-	        ;;
-	    esac
-    fi
-    if test "${target_os}" = "irix5.3"; then
-	    $as_echo "#define IRIX5_3 1" >>confdefs.h
-
-    fi
-    case "${target_os}" in
-	irix6.5)
-	    if test -z "$GNU_CC"; then
-		    CFLAGS="$CFLAGS -mips3"
-	    fi
-	    $as_echo "#define _PR_HAVE_GETPROTO_R 1" >>confdefs.h
-
-	    $as_echo "#define _PR_HAVE_GETPROTO_R_POINTER 1" >>confdefs.h
-
-	    $as_echo "#define _PR_HAVE_SGI_PRDA_PROCMASK 1" >>confdefs.h
-
-	    ;;
-	irix5*)
-	    ;;
-	*)
-	    $as_echo "#define _PR_HAVE_SGI_PRDA_PROCMASK 1" >>confdefs.h
-
-	    ;;
-	esac
     ;;
 
 *-linux*|*-gnu*|*-k*bsd*-gnu|*-android*|*-linuxandroid*)
@@ -7292,6 +7058,11 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
 
 	    USE_64=1
 	    ;;
+    aarch64)
+	    $as_echo "#define _ARM64_ 1" >>confdefs.h
+
+	    USE_64=1
+	    ;;
     ia64)
 	    $as_echo "#define _IA64_ 1" >>confdefs.h
 
@@ -7385,61 +7156,6 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
     fi
     DSO_LDOPTS='-shared -fPIC -Wl,-soname,$(notdir $@)'
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
-    ;;
-
-*-osf*)
-    SHELL_OVERRIDE="SHELL		= /usr/bin/ksh"
-    $as_echo "#define XP_UNIX 1" >>confdefs.h
-
-    $as_echo "#define OSF1 1" >>confdefs.h
-
-    $as_echo "#define _REENTRANT 1" >>confdefs.h
-
-    # OSF1 and HPUX report the POLLHUP event for a socket when the
-    # shutdown(SHUT_WR) operation is called for the remote end, even though
-    # the socket is still writeable. Use select(), instead of poll(), to
-    # workaround this problem.
-    $as_echo "#define _PR_POLL_WITH_SELECT 1" >>confdefs.h
-
-
-    if echo "$OS_RELEASE" | egrep -c '(V2.0|V3.2)' 2>/dev/null ; then
-        USE_NSPR_THREADS=1
-    fi
-
-    if test -z "$GNU_CC"; then
-        CC="$CC -std1 -ieee_with_inexact"
-        if test "$OS_RELEASE" != "V2.0"; then
-            CC="$CC -readonly_strings"
-        fi
-        _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Olimit 4000"
-        ac_fn_c_check_header_mongrel "$LINENO" "machine/builtins.h" "ac_cv_header_machine_builtins_h" "$ac_includes_default"
-if test "x$ac_cv_header_machine_builtins_h" = xyes; then :
-  $as_echo "#define OSF1_HAVE_MACHINE_BUILTINS_H 1" >>confdefs.h
-
-fi
-
-
-    else
-        CFLAGS="$CFLAGS -mieee"
-        CXXFLAGS="$CXXFLAGS -mieee"
-    fi
-
-    if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
-        $as_echo "#define HAVE_INT_LOCALTIME_R 1" >>confdefs.h
-
-    else
-        $as_echo "#define HAVE_FCNTL_FILE_LOCKING 1" >>confdefs.h
-
-        $as_echo "#define HAVE_POINTER_LOCALTIME_R 1" >>confdefs.h
-
-    fi
-    if echo $OS_RELEASE | grep -c V4.0 >/dev/null; then
-        $as_echo "#define OSF1V4_MAP_PRIVATE_BUG 1" >>confdefs.h
-
-    fi
-    DSO_LDOPTS='-shared -all -expect_unresolved "*" -soname $(notdir $@)'
-    MDCPUCFG_H=_osf1.cfg
-    PR_MD_CSRCS=osf1.c
     ;;
 
 *-qnx*)
@@ -7683,94 +7399,6 @@ fi
     CPU_ARCH=x86
     ;;
 
-*-symbian*)
-
-# Check whether --with-symbian-sdk was given.
-if test "${with_symbian_sdk+set}" = set; then :
-  withval=$with_symbian_sdk; SYMBIAN_SDK_DIR=$withval
-fi
-
-
-    echo -----------------------------------------------------------------------------
-    echo Building with Symbian SDK in: $SYMBIAN_SDK_DIR
-    echo -----------------------------------------------------------------------------
-
-    $as_echo "#define XP_UNIX 1" >>confdefs.h
-
-    $as_echo "#define SYMBIAN 1" >>confdefs.h
-
-    $as_echo "#define __arm__ 1" >>confdefs.h
-
-    $as_echo "#define __SYMBIAN32__ 1" >>confdefs.h
-
-    $as_echo "#define _UNICODE 1" >>confdefs.h
-
-    $as_echo "#define NDEBUG 1" >>confdefs.h
-
-    $as_echo "#define __SUPPORT_CPP_EXCEPTIONS__ 1" >>confdefs.h
-
-    $as_echo "#define MOZ_STDERR_TO_STDOUT 1" >>confdefs.h
-
-    $as_echo "#define HAVE_FCNTL_FILE_LOCKING 1" >>confdefs.h
-
-    $as_echo "#define HAVE_SOCKLEN_T 1" >>confdefs.h
-
-    USE_PTHREADS=1
-    LIB_SUFFIX=lib
-    DLL_SUFFIX=dll
-    MKSHLIB=
-    DSO_LDOPTS=
-    DSO_CFLAGS=
-    VISIBILITY_FLAGS=
-    MDCPUCFG_H=_symbian.cfg
-    PR_MD_CSRCS=symbian.c
-    NSINSTALL=nsinstall
-    RANLIB='echo no ranlib '
-    CPU_ARCH=ARM
-    OS_ARCH=SYMBIAN
-    OS_EXE_CFLAGS="$OS_EXE_CFLAGS -D__EXE__"
-    CFLAGS="$CFLAGS -MD -nostdinc"
-    SYMBIAN_SYS_INCLUDE="-I$SYMBIAN_SDK_DIR/Epoc32/include/variant -I$SYMBIAN_SDK_DIR/Epoc32/include -I$SYMBIAN_SDK_DIR/Epoc32/include/stdapis"
-    echo -------------------------------------------------------
-    echo SYMBIAN_SYS_INCLUDE is: $SYMBIAN_SYS_INCLUDE
-    echo -------------------------------------------------------
-    case "$OS_TARGET" in
-    WINSCW)
-        CC=mwccsym2.exe
-        CXX=mwccsym2.exe
-        LD=mwldsym2.exe
-        AR=mwldsym2.exe
-        WINSCW_LD_DIR="\$(SYMBIAN_SDK_DIR)/EPOC32/RELEASE/WINSCW/UDEB"
-        CFLAGS="$CFLAGS -O0 -inline off -wchar_t off -align 4 -warnings on -w nohidevirtual,nounusedexpr -msgstyle gcc -enum int -str pool -exc ms -trigraphs on -nostderr -gccdep -cwd source -i- -I\$(VPATH)"
-        SYMBIAN_SYS_INCLUDE="$SYMBIAN_SYS_INCLUDE -include Symbian_OS_v9.2.hrh"
-        AR_FLAGS="-library -msgstyle gcc -stdlib -subsystem windows -noimplib -o \$@"
-        $as_echo "#define _DEBUG 1" >>confdefs.h
-
-        $as_echo "#define __CW32__ 1" >>confdefs.h
-
-        $as_echo "#define __WINS__ 1" >>confdefs.h
-
-        $as_echo "#define __WINSCW__ 1" >>confdefs.h
-
-        DEFINES="$DEFINES -U_WIN32"
-	    ;;
-    GCCE)
-        CFLAGS="$CFLAGS -Wall -Wno-unknown-pragmas -fexceptions -march=armv5t -mapcs -pipe -x c -msoft-float"
-        CXXFLAGS="$CXXFLAGS $CFLAGS -Wno-ctor-dtor-privacy"
-        SYMBIAN_SYS_INCLUDE="$SYMBIAN_SYS_INCLUDE -include $SYMBIAN_SDK_DIR/EPOC32/INCLUDE/GCCE/GCCE.h"
-        $as_echo "#define __GCCE__ 1" >>confdefs.h
-
-        $as_echo "#define __EABI__ 1" >>confdefs.h
-
-        DEFINES="$DEFINES -D__PRODUCT_INCLUDE__=$SYMBIAN_SDK_DIR/Epoc32/include/variant/Symbian_OS_v9.2.hrh"
-	    ;;
-    *)
-	    as_fn_error $? "Missing OS_TARGET for ${target}. Set --enable-symbian-target to with 'WINSCW' or 'GCCE'." "$LINENO" 5
-   	;;
-    esac
-    CFLAGS="$CFLAGS ${SYMBIAN_SYS_INCLUDE}"
-    ;;
-
 *-os2*)
     $as_echo "#define XP_OS2 1" >>confdefs.h
 
@@ -7828,7 +7456,7 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
 
 
 case $target in
-*-darwin*|*-beos*|*-os2*)
+*-darwin*|*-os2*)
     ;;
 *)
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
@@ -8281,21 +7909,6 @@ if test "${enable_nspr_threads+set}" = set; then :
 fi
 
 
-case "$target" in
-*-beos*)
-
-# Check whether --with-bthreads was given.
-if test "${with_bthreads+set}" = set; then :
-  withval=$with_bthreads; 	if test "$withval" = "yes"; then
-    	    USE_BTHREADS=1
-	        USE_USER_PTHREADS=
-	        USE_PTHREADS=
-	    fi
-fi
-
-    ;;
-esac
-
 fi # SKIP_LIBRARY_CHECKS
 
 # Check whether --enable-ipv6 was given.
@@ -8473,23 +8086,13 @@ _ACEOF
 
     fi
     ;;
-*-irix*)
-    if test "${target_os}" = "irix6.5"; then
-        if test -n "$USE_PTHREADS"; then
-            $as_echo "#define _PR_HAVE_GETHOST_R 1" >>confdefs.h
-
-            $as_echo "#define _PR_HAVE_GETHOST_R_POINTER 1" >>confdefs.h
-
-        fi
-    fi
-    ;;
 *-linux*|*-gnu*|*-k*bsd*-gnu)
     if test -n "$USE_NSPR_THREADS"; then
         $as_echo "#define _PR_LOCAL_THREADS_ONLY 1" >>confdefs.h
 
     fi
     ;;
-*-mingw*|*-msys*|*-cygwin*|*-mks*|*-os2*|*-beos*)
+*-mingw*|*-msys*|*-cygwin*|*-mks*|*-os2*)
         USE_PTHREADS=
     _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=
@@ -8498,20 +8101,6 @@ _ACEOF
     if test -n "$USE_NSPR_THREADS"; then
         $as_echo "#define _PR_LOCAL_THREADS_ONLY 1" >>confdefs.h
 
-    fi
-    ;;
-*-osf*)
-    if test -n "$USE_NSPR_THREADS"; then
-        $as_echo "#define _PR_LOCAL_THREADS_ONLY 1" >>confdefs.h
-
-    fi
-    if test -n "$USE_PTHREADS"; then
-        if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
-            :
-        else
-            $as_echo "#define _PR_HAVE_THREADSAFE_GETHOST 1" >>confdefs.h
-
-        fi
     fi
     ;;
 *-solaris*)
@@ -8611,7 +8200,6 @@ fi
 if test "${with_wrap_malloc+set}" = set; then :
   withval=$with_wrap_malloc; WRAP_LDFLAGS="${WRAP_LDFLAGS} $withval"
 fi
-
 
 
 

@@ -48,11 +48,7 @@ static PRStatus PrintAddress(const PRNetAddr* address)
 static void ConnectingThread(void *arg)
 {
     PRInt32 nbytes;
-#ifdef SYMBIAN
-    char buf[256];
-#else
     char buf[1024];
-#endif
     PRFileDesc *sock;
     PRNetAddr peer_addr, *addr;
 

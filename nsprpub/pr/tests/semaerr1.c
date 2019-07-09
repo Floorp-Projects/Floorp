@@ -8,13 +8,8 @@
 
 #include <stdio.h>
 
-#ifdef SYMBIAN
-#define SEM_NAME1 "c:\\data\\foo.sem"
-#define SEM_NAME2 "c:\\data\\bar.sem"
-#else
 #define SEM_NAME1 "/tmp/foo.sem"
 #define SEM_NAME2 "/tmp/bar.sem"
-#endif
 #define SEM_MODE  0666
 
 static PRBool debug_mode = PR_FALSE;

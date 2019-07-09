@@ -8,10 +8,6 @@
 #include "prprf.h"
 #include "prlong.h"
 
-#if defined(BEOS)
-#include <kernel/OS.h>
-#endif
-
 #if defined(OS2)
 #define INCL_DOS
 #define INCL_DOSMISC
@@ -183,11 +179,6 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
 
     GetSystemInfo( &info );
     numCpus = info.dwNumberOfProcessors;
-#elif defined(BEOS)
-    system_info sysInfo;
-
-    get_system_info(&sysInfo);
-    numCpus = sysInfo.cpu_count;
 #elif defined(OS2)
     DosQuerySysInfo( QSV_NUMPROCESSORS, QSV_NUMPROCESSORS, &numCpus, sizeof(numCpus));
 #elif defined(_PR_HAVE_SYSCTL)
@@ -208,9 +199,7 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
         numCpus = -1; /* set to -1 for return value on error */
         _PR_MD_MAP_DEFAULT_ERROR( _MD_ERRNO() );
     }
-#elif defined(IRIX)
-    numCpus = sysconf( _SC_NPROC_ONLN );
-#elif defined(RISCOS) || defined(SYMBIAN)
+#elif defined(RISCOS)
     numCpus = 1;
 #elif defined(LINUX)
     /* for the benefit of devices with advanced power-saving, that
