@@ -36,6 +36,7 @@ class nsDocumentFragment;
 class nsHTMLDocument;
 class nsITransferable;
 class nsIClipboard;
+class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsRange;
 
@@ -2625,8 +2626,7 @@ class HTMLEditor final : public TextEditor,
   void AddMouseClickListener(Element* aElement);
   void RemoveMouseClickListener(Element* aElement);
 
-  bool mDisabledLinkHandling = false;
-  bool mOldLinkHandlingEnabled = false;
+  nsCOMPtr<nsILinkHandler> mLinkHandler;
 
   ParagraphSeparator mDefaultParagraphSeparator;
 

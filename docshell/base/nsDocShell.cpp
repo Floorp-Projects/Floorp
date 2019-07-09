@@ -557,6 +557,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
   NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsILoadContext)
+  NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageManager)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsINetworkInterceptController,
                                      mInterceptController)
@@ -12639,7 +12640,8 @@ OnLinkClickEvent::OnLinkClickEvent(
       mTriggeringPrincipal(aTriggeringPrincipal),
       mCsp(aCsp) {}
 
-nsresult nsDocShell::OnLinkClick(
+NS_IMETHODIMP
+nsDocShell::OnLinkClick(
     nsIContent* aContent, nsIURI* aURI, const nsAString& aTargetSpec,
     const nsAString& aFileName, nsIInputStream* aPostDataStream,
     nsIInputStream* aHeadersDataStream, bool aIsUserTriggered, bool aIsTrusted,
@@ -12697,7 +12699,8 @@ static bool IsElementAnchorOrArea(nsIContent* aContent) {
   return aContent->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area);
 }
 
-nsresult nsDocShell::OnLinkClickSync(
+NS_IMETHODIMP
+nsDocShell::OnLinkClickSync(
     nsIContent* aContent, nsIURI* aURI, const nsAString& aTargetSpec,
     const nsAString& aFileName, nsIInputStream* aPostDataStream,
     nsIInputStream* aHeadersDataStream, bool aNoOpenerImplied,
@@ -12881,8 +12884,9 @@ nsresult nsDocShell::OnLinkClickSync(
   return rv;
 }
 
-nsresult nsDocShell::OnOverLink(nsIContent* aContent, nsIURI* aURI,
-                                const nsAString& aTargetSpec) {
+NS_IMETHODIMP
+nsDocShell::OnOverLink(nsIContent* aContent, nsIURI* aURI,
+                       const nsAString& aTargetSpec) {
   if (aContent->IsEditable()) {
     return NS_OK;
   }
@@ -12916,7 +12920,8 @@ nsresult nsDocShell::OnOverLink(nsIContent* aContent, nsIURI* aURI,
   return rv;
 }
 
-nsresult nsDocShell::OnLeaveLink() {
+NS_IMETHODIMP
+nsDocShell::OnLeaveLink() {
   nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
   nsresult rv = NS_ERROR_FAILURE;
 
