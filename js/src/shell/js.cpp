@@ -71,6 +71,7 @@
 #include "builtin/Promise.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
+#include "dbg/Debugger.h"
 #if defined(JS_BUILD_BINAST)
 #  include "frontend/BinASTParser.h"
 #endif  // defined(JS_BUILD_BINAST)
@@ -119,7 +120,6 @@
 #include "util/Windows.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
-#include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"

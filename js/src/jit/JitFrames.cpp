@@ -10,6 +10,7 @@
 
 #include "jsutil.h"
 
+#include "dbg/Debugger.h"
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
@@ -26,7 +27,6 @@
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/Interpreter.h"
 #include "vm/JSFunction.h"
@@ -37,9 +37,9 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 
+#include "dbg/Debugger-inl.h"
 #include "gc/Nursery-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
-#include "vm/Debugger-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/TypeInference-inl.h"

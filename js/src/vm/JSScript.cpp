@@ -29,6 +29,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "dbg/Debugger.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SharedContext.h"
@@ -52,7 +53,6 @@
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Compression.h"
-#include "vm/Debugger.h"
 #include "vm/HelperThreads.h"  // js::RunPendingSourceCompressions
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"

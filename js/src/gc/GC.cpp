@@ -213,6 +213,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "dbg/Debugger.h"
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
@@ -230,7 +231,6 @@
 #include "proxy/DeadObjectProxy.h"
 #include "util/Windows.h"
 #include "vm/BigIntType.h"
-#include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"

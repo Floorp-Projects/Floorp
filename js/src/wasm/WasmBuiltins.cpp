@@ -30,7 +30,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 
-#include "vm/Debugger-inl.h"
+#include "dbg/Debugger-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

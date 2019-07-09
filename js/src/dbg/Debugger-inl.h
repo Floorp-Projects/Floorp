@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_Debugger_inl_h
-#define vm_Debugger_inl_h
+#ifndef dbg_Debugger_inl_h
+#define dbg_Debugger_inl_h
 
-#include "vm/Debugger.h"
+#include "dbg/Debugger.h"
 
 #include "builtin/Promise.h"
 #include "vm/GeneratorObject.h"
@@ -147,4 +147,4 @@ inline js::DebuggerFrame::GeneratorInfo* js::DebuggerFrame::generatorInfo()
       getReservedSlot(GENERATOR_INFO_SLOT).toPrivate());
 }
 
-#endif /* vm_Debugger_inl_h */
+#endif /* dbg_Debugger_inl_h */
