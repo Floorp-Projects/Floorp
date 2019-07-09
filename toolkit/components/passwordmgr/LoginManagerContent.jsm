@@ -415,6 +415,14 @@ this.LoginManagerContent = {
           recipes: msg.data.recipes,
           inputElementIdentifier: msg.data.inputElementIdentifier,
         });
+        let inputElement = ContentDOMReference.resolve(
+          msg.data.inputElementIdentifier
+        );
+        if (inputElement) {
+          this._generatedPasswordFilled(inputElement);
+        } else {
+          log("Could not resolve inputElementIdentifier to a living element.");
+        }
         break;
       }
 
@@ -1510,6 +1518,10 @@ this.LoginManagerContent = {
       );
     }
 
+    let openerTopWindowID = null;
+    if (win.opener) {
+      openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
+    }
     let formActionOrigin = LoginHelper.getFormActionOrigin(loginForm);
     let messageManager = win.docShell.messageManager;
     messageManager.sendAsyncMessage(
@@ -1517,6 +1529,7 @@ this.LoginManagerContent = {
       {
         browsingContextId: win.docShell.browsingContext.id,
         formActionOrigin,
+        openerTopWindowID,
       }
     );
   },

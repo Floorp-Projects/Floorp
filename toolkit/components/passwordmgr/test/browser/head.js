@@ -231,6 +231,7 @@ async function openPasswordContextMenu(
 ) {
   const CONTEXT_MENU = document.getElementById("contentAreaContextMenu");
   const POPUP_HEADER = document.getElementById("fill-login");
+  const LOGIN_POPUP = document.getElementById("fill-login-popup");
 
   let contextMenuShownPromise = BrowserTestUtils.waitForEvent(
     CONTEXT_MENU,
@@ -265,7 +266,7 @@ async function openPasswordContextMenu(
 
   // Synthesize a mouse click over the fill login menu header.
   let popupShownPromise = BrowserTestUtils.waitForCondition(
-    () => POPUP_HEADER.open
+    () => POPUP_HEADER.open && BrowserTestUtils.is_visible(LOGIN_POPUP)
   );
   EventUtils.synthesizeMouseAtCenter(POPUP_HEADER, {});
   await popupShownPromise;
@@ -275,6 +276,7 @@ async function openPasswordContextMenu(
  * Use the contextmenu to fill a field with a generated password
  */
 async function doFillGeneratedPasswordContextMenuItem(browser, passwordInput) {
+  await SimpleTest.promiseFocus(browser);
   await openPasswordContextMenu(browser, passwordInput);
 
   let loginPopup = document.getElementById("fill-login-popup");
