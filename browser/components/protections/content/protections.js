@@ -4,6 +4,8 @@
 
 /* eslint-env mozilla/frame-script */
 
+import LockwiseCard from "./lockwise-card.js";
+
 document.addEventListener("DOMContentLoaded", e => {
   let dataTypes = [
     "cryptominer",
@@ -143,6 +145,11 @@ document.addEventListener("DOMContentLoaded", e => {
       });
     }
   };
+
   createGraph();
   addListeners();
+
+  // Create the Lockwise card.
+  const lockwiseCard = new LockwiseCard(document);
+  lockwiseCard.init();
 });
