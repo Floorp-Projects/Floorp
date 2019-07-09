@@ -138,6 +138,15 @@ add_task(async function() {
         ],
       },
     },
+    {
+      info: "Testing invalid headers",
+      input: ["apples", "oranges", "bananas"],
+      headers: [[]],
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "apples"], ["1", "oranges"], ["2", "bananas"]],
+      },
+    },
   ];
 
   await ContentTask.spawn(gBrowser.selectedBrowser, testCases, function(tests) {
