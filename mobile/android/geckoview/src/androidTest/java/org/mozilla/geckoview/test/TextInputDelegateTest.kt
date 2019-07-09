@@ -312,6 +312,8 @@ class TextInputDelegateTest : BaseSessionTest() {
     @Test fun inputConnection() {
         // too slow on debug
         assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
+        // too flaky on x86
+        assumeThat(sessionRule.env.isX86, equalTo(false))
 
         mainSession.textInput.view = View(InstrumentationRegistry.getTargetContext())
 
