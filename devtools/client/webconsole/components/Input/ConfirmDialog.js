@@ -81,7 +81,6 @@ class ConfirmDialog extends Component {
 
     if (getterPath) {
       this.tooltip.show(serviceContainer.getJsTermTooltipAnchor(), { y: 5 });
-      this.tooltip.focus();
     } else {
       this.tooltip.hide();
       this.props.webConsoleUI.jsterm.focus();
@@ -123,9 +122,19 @@ class ConfirmDialog extends Component {
     const description = l10n.getStr("webconsole.confirmDialog.getter.label");
     const [descriptionPrefix, descriptionSuffix] = description.split("%S");
 
+    const closeButtonTooltip = l10n.getFormatStr(
+      "webconsole.confirmDialog.getter.closeButton.tooltip",
+      ["Esc"]
+    );
+    const invokeButtonLabel = l10n.getFormatStr(
+      "webconsole.confirmDialog.getter.invokeButtonLabelWithShortcut",
+      ["Tab"]
+    );
+
     const learnMoreElement = dom.a(
       {
         className: "learn-more-link",
+        key: "learn-more-link",
         title: LEARN_MORE_URL.split("?")[0],
         onClick: this.onLearnMoreClick,
       },
@@ -134,44 +143,31 @@ class ConfirmDialog extends Component {
 
     return createPortal(
       [
-        dom.p(
+        dom.div(
           {
             className: "confirm-label",
+            key: "confirm-label",
           },
-          dom.span({}, descriptionPrefix),
-          dom.span({ className: "emphasized" }, getterName),
-          dom.span({}, descriptionSuffix)
+          dom.p(
+            {},
+            dom.span({}, descriptionPrefix),
+            dom.span({ className: "emphasized" }, getterName),
+            dom.span({}, descriptionSuffix)
+          ),
+          dom.button({
+            className: "devtools-button close-confirm-dialog-button",
+            key: "close-button",
+            title: closeButtonTooltip,
+            onClick: this.cancel,
+          })
         ),
         dom.button(
           {
             className: "confirm-button",
-            onBlur: () => this.cancel(),
-            onKeyDown: event => {
-              const { key } = event;
-              if (["Escape", "ArrowLeft", "Backspace"].includes(key)) {
-                this.cancel();
-                event.stopPropagation();
-                return;
-              }
-
-              if (["Tab", "Enter", " "].includes(key)) {
-                this.confirm();
-                event.stopPropagation();
-              }
-
-              if (key === "?") {
-                this.onLearnMoreClick();
-                event.stopPropagation();
-              }
-            },
-            // We can't use onClick because it would respond to Enter and Space keypress.
-            // We don't want that because we have a Ctrl+Space shortcut to force an
-            // autocomplete update; if the ConfirmDialog need to be displayed, since
-            // we automatically focus the button, the keyup on space would fire the onClick
-            // handler.
-            onMouseDown: this.confirm,
+            key: "confirm-button",
+            onClick: this.confirm,
           },
-          l10n.getStr("webconsole.confirmDialog.getter.invokeButtonLabel")
+          invokeButtonLabel
         ),
         learnMoreElement,
       ],

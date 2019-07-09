@@ -56,14 +56,14 @@ async function performTests() {
     `Check that clicking on the "Learn more" link navigates to the expected page`
   );
   const expectedUri = MDN_URL + GA_PARAMS;
-  let { link } = await simulateLinkClick(learnMoreEl);
+  const { link } = await simulateLinkClick(learnMoreEl);
   is(
     link,
     expectedUri,
     `Click on "Learn More" link navigates user to ${expectedUri}`
   );
 
-  info(`Check that hitting "?" navigates to the Learn more target page`);
-  link = (await overrideOpenLink(() => EventUtils.synthesizeKey("?"))).link;
-  is(link, expectedUri, `Hitting "?" navigates user to ${expectedUri}`);
+  info("Close the popup");
+  EventUtils.synthesizeKey("KEY_Escape");
+  await waitFor(() => !isConfirmDialogOpened(toolbox));
 }
