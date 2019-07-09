@@ -29,15 +29,41 @@ JSObject* PerformanceNavigationTiming::WrapObject(
       rawValue, mPerformance->GetRandomTimelineSeed())
 
 DOMHighResTimeStamp PerformanceNavigationTiming::UnloadEventStart() const {
-  DOMHighResTimeStamp rawValue =
-      mPerformance->GetDOMTiming()->GetUnloadEventStartHighRes();
+  DOMHighResTimeStamp rawValue = 0;
+  /*
+   * Per Navigation Timing Level 2, the value is 0 if
+   * a. there is no previous document or
+   * b. the same-origin-check fails.
+   *
+   * The same-origin-check is defined as:
+   * 1. If the previous document exists and its origin is not same
+   *    origin as the current document's origin, return "fail".
+   * 2. Let request be the current document's request.
+   * 3. If request's redirect count is not zero, and all of request's
+   *    HTTP redirects have the same origin as the current document,
+   *    return "pass".
+   * 4. Otherwise, return "fail".
+   */
+  if (mTimingData->AllRedirectsSameOrigin()) {  // same-origin-check:2/3
+    /*
+     * GetUnloadEventStartHighRes returns 0 if
+     * 1. there is no previous document (a, above) or
+     * 2. the current URI does not have the same origin as
+     *    the previous document's URI. (same-origin-check:1)
+     */
+    rawValue = mPerformance->GetDOMTiming()->GetUnloadEventStartHighRes();
+  }
 
   REDUCE_TIME_PRECISION;
 }
 
 DOMHighResTimeStamp PerformanceNavigationTiming::UnloadEventEnd() const {
-  DOMHighResTimeStamp rawValue =
-      mPerformance->GetDOMTiming()->GetUnloadEventEndHighRes();
+  DOMHighResTimeStamp rawValue = 0;
+
+  // See comments in PerformanceNavigationTiming::UnloadEventEnd().
+  if (mTimingData->AllRedirectsSameOrigin()) {
+    rawValue = mPerformance->GetDOMTiming()->GetUnloadEventEndHighRes();
+  }
 
   REDUCE_TIME_PRECISION;
 }
