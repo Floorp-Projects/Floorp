@@ -28,9 +28,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-function ImageObjectProcessor(aConsole, aExtractor) {
-  this.console = aConsole;
+function ImageObjectProcessor(aErrors, aExtractor, aBundle) {
+  this.errors = aErrors;
   this.extractor = aExtractor;
+  this.domBundle = aBundle;
 }
 
 // Static getters
@@ -59,13 +60,13 @@ ImageObjectProcessor.prototype.process = function(
     expectedType: "array",
     trim: false,
   };
-  const extractor = this.extractor;
+  const { domBundle, extractor, errors } = this;
   const images = [];
   const value = extractor.extractValue(spec);
   if (Array.isArray(value)) {
     // Filter out images whose "src" is not useful.
     value
-      .filter(item => !!processSrcMember(item, aBaseURL))
+      .filter((item, index) => !!processSrcMember(item, aBaseURL, index))
       .map(toImageObject)
       .forEach(image => images.push(image));
   }
@@ -100,9 +101,9 @@ ImageObjectProcessor.prototype.process = function(
     return value || undefined;
   }
 
-  function processSrcMember(aImage, aBaseURL) {
+  function processSrcMember(aImage, aBaseURL, index) {
     const spec = {
-      objectName: "image",
+      objectName: aMemberName,
       object: aImage,
       property: "src",
       expectedType: "string",
@@ -113,7 +114,13 @@ ImageObjectProcessor.prototype.process = function(
     if (value && value.length) {
       try {
         url = new URL(value, aBaseURL).href;
-      } catch (e) {}
+      } catch (e) {
+        const warn = domBundle.formatStringFromName(
+          "ManifestImageURLIsInvalid",
+          [aMemberName, index, "src", value]
+        );
+        errors.push({ warn });
+      }
     }
     return url;
   }
