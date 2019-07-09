@@ -784,6 +784,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
                   const dom::Nullable<dom::ArrayBufferView>& maybeView,
                   dom::CallerType aCallerType, ErrorResult& rv) {
     const FuncScope funcScope(*this, "readPixels");
+    if (IsContextLost()) return;
     if (!ValidateNonNull("pixels", maybeView)) return;
     ReadPixels(x, y, width, height, format, type, maybeView.Value(), 0,
                aCallerType, rv);
