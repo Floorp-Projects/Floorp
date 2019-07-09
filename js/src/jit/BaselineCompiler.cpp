@@ -1165,7 +1165,10 @@ template <>
 void BaselineCompilerCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   masm.store32(Imm32(0), frame.addressOfFlags());
   if (handler.function()) {
-    masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
+    Register scratch = R0.scratchReg();
+    masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), scratch);
+    masm.loadPtr(Address(scratch, JSFunction::offsetOfEnvironment()), scratch);
+    masm.storePtr(scratch, frame.addressOfEnvironmentChain());
   } else {
     masm.storePtr(nonFunctionEnv, frame.addressOfEnvironmentChain());
   }
@@ -1193,8 +1196,10 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   {
     // CalleeToken_Function or CalleeToken_FunctionConstructing.
     masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+    masm.loadPtr(Address(scratch1, JSFunction::offsetOfEnvironment()),
+                 scratch2);
+    masm.storePtr(scratch2, frame.addressOfEnvironmentChain());
     masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
-    masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
     masm.jump(&done);
   }
   masm.bind(&notFunction);
@@ -1287,15 +1292,6 @@ bool BaselineCodeGen<Handler>::initEnvironmentChain() {
   }
 
   auto initFunctionEnv = [this, phase]() {
-    // Use callee->environment as env chain. Note that we do this also
-    // for needsSomeEnvironmentObject functions, so that the env chain
-    // slot is properly initialized if the call triggers GC.
-    Register callee = R0.scratchReg();
-    Register scope = R1.scratchReg();
-    masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), callee);
-    masm.loadPtr(Address(callee, JSFunction::offsetOfEnvironment()), scope);
-    masm.storePtr(scope, frame.addressOfEnvironmentChain());
-
     auto initEnv = [this, phase]() {
       // Call into the VM to create the proper environment objects.
       prepareVMCall();
@@ -6705,9 +6701,7 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
 
   // Initialize BaselineFrame. Also handles env chain pre-initialization (in
   // case GC gets run during stack check). For global and eval scripts, the env
-  // chain is in R1. For function scripts, the env chain is in the callee,
-  // nullptr is stored for now so that GC doesn't choke on a bogus
-  // EnvironmentChain value in the frame.
+  // chain is in R1. For function scripts, the env chain is in the callee.
   emitInitFrameFields(R1.scratchReg());
 
   if (!emitIncExecutionProgressCounter(R2.scratchReg())) {
