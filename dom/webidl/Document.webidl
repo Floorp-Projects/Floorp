@@ -276,7 +276,7 @@ partial interface Document {
   void captureEvents();
   void releaseEvents();
 
-  //(HTML only)[SameObject] readonly attribute HTMLAllCollection all;
+  [SameObject] readonly attribute HTMLAllCollection all;
 };
 
 // https://fullscreen.spec.whatwg.org/#api

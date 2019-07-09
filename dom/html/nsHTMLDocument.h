@@ -27,7 +27,6 @@ class nsILoadGroup;
 
 namespace mozilla {
 namespace dom {
-class HTMLAllCollection;
 template <typename T>
 struct Nullable;
 class WindowProxyHolder;
@@ -49,9 +48,6 @@ class nsHTMLDocument : public mozilla::dom::Document {
   nsHTMLDocument();
   virtual nsresult Init() override;
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDocument, Document)
-
   // Document
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
@@ -72,8 +68,6 @@ class nsHTMLDocument : public mozilla::dom::Document {
   virtual Element* GetUnfocusedKeyEventTarget() override;
 
   nsContentList* GetExistingForms() const { return mForms; }
-
-  mozilla::dom::HTMLAllCollection* All();
 
   // Returns whether an object was found for aName.
   bool ResolveName(JSContext* aCx, const nsAString& aName,
@@ -171,8 +165,6 @@ class nsHTMLDocument : public mozilla::dom::Document {
 
   friend class ContentListHolder;
   ContentListHolder* mContentListHolder;
-
-  RefPtr<mozilla::dom::HTMLAllCollection> mAll;
 
   /** # of forms in the document, synchronously set */
   int32_t mNumForms;
