@@ -318,6 +318,11 @@ void nsNodeInfoManager::RemoveNodeInfo(NodeInfo* aNodeInfo) {
   MOZ_ASSERT(ret, "Can't find mozilla::dom::NodeInfo to remove!!!");
 }
 
+static bool IsSystemOrAddonPrincipal(nsIPrincipal* aPrincipal) {
+  return nsContentUtils::IsSystemPrincipal(aPrincipal) ||
+         BasePrincipal::Cast(aPrincipal)->AddonPolicy();
+}
+
 bool nsNodeInfoManager::InternalSVGEnabled() {
   // If the svg.disabled pref. is true, convert all SVG nodes into
   // disabled SVG nodes by swapping the namespace.
@@ -334,15 +339,19 @@ bool nsNodeInfoManager::InternalSVGEnabled() {
       loadInfo = channel->LoadInfo();
     }
   }
+
+  // We allow SVG (regardless of the pref) if this is a system or add-on
+  // principal, or if this load was requested for a system or add-on principal
+  // (e.g. a remote image being served as part of system or add-on UI)
   bool conclusion =
-      (SVGEnabled || nsContentUtils::IsSystemPrincipal(mPrincipal) ||
+      (SVGEnabled || IsSystemOrAddonPrincipal(mPrincipal) ||
        (loadInfo &&
         (loadInfo->GetExternalContentPolicyType() ==
              nsIContentPolicy::TYPE_IMAGE ||
          loadInfo->GetExternalContentPolicyType() ==
              nsIContentPolicy::TYPE_OTHER) &&
-        (nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal()) ||
-         nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()))));
+        (IsSystemOrAddonPrincipal(loadInfo->LoadingPrincipal()) ||
+         IsSystemOrAddonPrincipal(loadInfo->TriggeringPrincipal()))));
   mSVGEnabled = conclusion ? eTriTrue : eTriFalse;
   return conclusion;
 }
