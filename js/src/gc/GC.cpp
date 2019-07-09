@@ -6462,34 +6462,40 @@ class js::gc::SweepGroupsIter {
 namespace sweepaction {
 
 // Implementation of the SweepAction interface that calls a method on GCRuntime.
-template <typename... Args>
-class SweepActionCall final : public SweepAction<GCRuntime*, Args...> {
-  using Method = IncrementalProgress (GCRuntime::*)(Args...);
+class SweepActionCall final : public SweepAction {
+  using Method = IncrementalProgress (GCRuntime::*)(FreeOp* fop,
+                                                    SliceBudget& budget);
 
   Method method;
 
  public:
   explicit SweepActionCall(Method m) : method(m) {}
-  IncrementalProgress run(GCRuntime* gc, Args... args) override {
-    return (gc->*method)(args...);
+  IncrementalProgress run(Args& args) override {
+    return (args.gc->*method)(args.fop, args.budget);
   }
   void assertFinished() const override {}
 };
 
 // Implementation of the SweepAction interface that yields in a specified zeal
 // mode.
-template <typename... Args>
-class SweepActionMaybeYield final : public SweepAction<GCRuntime*, Args...> {
+class SweepActionMaybeYield final : public SweepAction {
+#ifdef JS_GC_ZEAL
   ZealMode mode;
   bool isYielding;
+#endif
 
  public:
   explicit SweepActionMaybeYield(ZealMode mode)
-      : mode(mode), isYielding(false) {}
-
-  IncrementalProgress run(GCRuntime* gc, Args... args) override {
 #ifdef JS_GC_ZEAL
-    if (!isYielding && gc->shouldYieldForZeal(mode)) {
+      : mode(mode),
+        isYielding(false)
+#endif
+  {
+  }
+
+  IncrementalProgress run(Args& args) override {
+#ifdef JS_GC_ZEAL
+    if (!isYielding && args.gc->shouldYieldForZeal(mode)) {
       isYielding = true;
       return NotFinished;
     }
@@ -6509,17 +6515,15 @@ class SweepActionMaybeYield final : public SweepAction<GCRuntime*, Args...> {
 
 // Implementation of the SweepAction interface that calls a list of actions in
 // sequence.
-template <typename... Args>
-class SweepActionSequence final : public SweepAction<Args...> {
-  using Action = SweepAction<Args...>;
-  using ActionVector = Vector<UniquePtr<Action>, 0, SystemAllocPolicy>;
+class SweepActionSequence final : public SweepAction {
+  using ActionVector = Vector<UniquePtr<SweepAction>, 0, SystemAllocPolicy>;
   using Iter = IncrementalIter<ContainerIter<ActionVector>>;
 
   ActionVector actions;
   typename Iter::State iterState;
 
  public:
-  bool init(UniquePtr<Action>* acts, size_t count) {
+  bool init(UniquePtr<SweepAction>* acts, size_t count) {
     for (size_t i = 0; i < count; i++) {
       auto& action = acts[i];
       if (!action) {
@@ -6535,9 +6539,9 @@ class SweepActionSequence final : public SweepAction<Args...> {
     return true;
   }
 
-  IncrementalProgress run(Args... args) override {
+  IncrementalProgress run(Args& args) override {
     for (Iter iter(iterState, actions); !iter.done(); iter.next()) {
-      if (iter.get()->run(args...) == NotFinished) {
+      if (iter.get()->run(args) == NotFinished) {
         return NotFinished;
       }
     }
@@ -6552,27 +6556,27 @@ class SweepActionSequence final : public SweepAction<Args...> {
   }
 };
 
-template <typename Iter, typename Init, typename... Args>
-class SweepActionForEach final : public SweepAction<Args...> {
+template <typename Iter, typename Init>
+class SweepActionForEach final : public SweepAction {
   using Elem = decltype(mozilla::DeclVal<Iter>().get());
-  using Action = SweepAction<Args...>;
   using IncrIter = IncrementalIter<Iter>;
 
   Init iterInit;
   Elem* elemOut;
-  UniquePtr<Action> action;
+  UniquePtr<SweepAction> action;
   typename IncrIter::State iterState;
 
  public:
-  SweepActionForEach(const Init& init, Elem* elemOut, UniquePtr<Action> action)
+  SweepActionForEach(const Init& init, Elem* elemOut,
+                     UniquePtr<SweepAction> action)
       : iterInit(init), elemOut(elemOut), action(std::move(action)) {}
 
-  IncrementalProgress run(Args... args) override {
+  IncrementalProgress run(Args& args) override {
     MOZ_ASSERT(*elemOut == Elem());
     auto clearElem = mozilla::MakeScopeExit([&] { *elemOut = Elem(); });
     for (IncrIter iter(iterState, iterInit); !iter.done(); iter.next()) {
       *elemOut = iter.get();
-      if (action->run(args...) == NotFinished) {
+      if (action->run(args) == NotFinished) {
         return NotFinished;
       }
     }
@@ -6585,23 +6589,22 @@ class SweepActionForEach final : public SweepAction<Args...> {
   }
 };
 
-template <typename Iter, typename Init, typename... Args>
-class SweepActionRepeatFor final : public SweepAction<Args...> {
+template <typename Iter, typename Init>
+class SweepActionRepeatFor final : public SweepAction {
  protected:
-  using Action = SweepAction<Args...>;
   using IncrIter = IncrementalIter<Iter>;
 
   Init iterInit;
-  UniquePtr<Action> action;
+  UniquePtr<SweepAction> action;
   typename IncrIter::State iterState;
 
  public:
-  SweepActionRepeatFor(const Init& init, UniquePtr<Action> action)
+  SweepActionRepeatFor(const Init& init, UniquePtr<SweepAction> action)
       : iterInit(init), action(std::move(action)) {}
 
-  IncrementalProgress run(Args... args) override {
+  IncrementalProgress run(Args& args) override {
     for (IncrIter iter(iterState, iterInit); !iter.done(); iter.next()) {
-      if (action->run(args...) == NotFinished) {
+      if (action->run(args) == NotFinished) {
         return NotFinished;
       }
     }
@@ -6614,62 +6617,56 @@ class SweepActionRepeatFor final : public SweepAction<Args...> {
   }
 };
 
-template <typename... Args>
-static UniquePtr<SweepAction<GCRuntime*, Args...>> Call(
-    IncrementalProgress (GCRuntime::*method)(Args...)) {
-  return MakeUnique<SweepActionCall<Args...>>(method);
+static UniquePtr<SweepAction> Call(IncrementalProgress (GCRuntime::*method)(
+    FreeOp* fop, SliceBudget& budget)) {
+  return MakeUnique<SweepActionCall>(method);
 }
 
-static UniquePtr<SweepAction<GCRuntime*, FreeOp*, SliceBudget&>> MaybeYield(
-    ZealMode zealMode) {
-  return js::MakeUnique<SweepActionMaybeYield<FreeOp*, SliceBudget&>>(zealMode);
+static UniquePtr<SweepAction> MaybeYield(ZealMode zealMode) {
+  return MakeUnique<SweepActionMaybeYield>(zealMode);
 }
 
-template <typename... Args, typename... Rest>
-static UniquePtr<SweepAction<Args...>> Sequence(
-    UniquePtr<SweepAction<Args...>> first, Rest... rest) {
-  UniquePtr<SweepAction<Args...>> actions[] = {std::move(first),
-                                               std::move(rest)...};
-  auto seq = MakeUnique<SweepActionSequence<Args...>>();
+template <typename... Rest>
+static UniquePtr<SweepAction> Sequence(UniquePtr<SweepAction> first,
+                                       Rest... rest) {
+  UniquePtr<SweepAction> actions[] = {std::move(first), std::move(rest)...};
+  auto seq = MakeUnique<SweepActionSequence>();
   if (!seq || !seq->init(actions, ArrayLength(actions))) {
     return nullptr;
   }
 
-  return UniquePtr<SweepAction<Args...>>(std::move(seq));
+  return UniquePtr<SweepAction>(std::move(seq));
 }
 
-template <typename... Args>
-static UniquePtr<SweepAction<Args...>> RepeatForSweepGroup(
-    JSRuntime* rt, UniquePtr<SweepAction<Args...>> action) {
+static UniquePtr<SweepAction> RepeatForSweepGroup(
+    JSRuntime* rt, UniquePtr<SweepAction> action) {
   if (!action) {
     return nullptr;
   }
 
-  using Action = SweepActionRepeatFor<SweepGroupsIter, JSRuntime*, Args...>;
+  using Action = SweepActionRepeatFor<SweepGroupsIter, JSRuntime*>;
   return js::MakeUnique<Action>(rt, std::move(action));
 }
 
-template <typename... Args>
-static UniquePtr<SweepAction<Args...>> ForEachZoneInSweepGroup(
-    JSRuntime* rt, Zone** zoneOut, UniquePtr<SweepAction<Args...>> action) {
+static UniquePtr<SweepAction> ForEachZoneInSweepGroup(
+    JSRuntime* rt, Zone** zoneOut, UniquePtr<SweepAction> action) {
   if (!action) {
     return nullptr;
   }
 
-  using Action = SweepActionForEach<SweepGroupZonesIter, JSRuntime*, Args...>;
+  using Action = SweepActionForEach<SweepGroupZonesIter, JSRuntime*>;
   return js::MakeUnique<Action>(rt, zoneOut, std::move(action));
 }
 
-template <typename... Args>
-static UniquePtr<SweepAction<Args...>> ForEachAllocKind(
-    AllocKinds kinds, AllocKind* kindOut,
-    UniquePtr<SweepAction<Args...>> action) {
+static UniquePtr<SweepAction> ForEachAllocKind(AllocKinds kinds,
+                                               AllocKind* kindOut,
+                                               UniquePtr<SweepAction> action) {
   if (!action) {
     return nullptr;
   }
 
   using Action =
-      SweepActionForEach<ContainerIter<AllocKinds>, AllocKinds, Args...>;
+      SweepActionForEach<ContainerIter<AllocKinds>, AllocKinds>;
   return js::MakeUnique<Action>(kinds, kindOut, std::move(action));
 }
 
@@ -6732,7 +6729,8 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
     }
   }
 
-  return sweepActions->run(this, &fop, budget);
+  SweepAction::Args args{this, &fop, budget};
+  return sweepActions->run(args);
 }
 
 bool GCRuntime::allCCVisibleZonesWereCollected() const {
