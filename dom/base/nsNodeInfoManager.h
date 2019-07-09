@@ -100,24 +100,16 @@ class nsNodeInfoManager final {
 
   nsBindingManager* GetBindingManager() const { return mBindingManager; }
 
-  enum Tri { eTriUnset = 0, eTriFalse, eTriTrue };
-
   /**
    * Returns true if SVG nodes in this document have real SVG semantics.
    */
-  bool SVGEnabled() {
-    return mSVGEnabled == eTriTrue
-               ? true
-               : mSVGEnabled == eTriFalse ? false : InternalSVGEnabled();
-  }
+  bool SVGEnabled() { return mSVGEnabled.valueOr(InternalSVGEnabled()); }
 
   /**
    * Returns true if MathML nodes in this document have real MathML semantics.
    */
   bool MathMLEnabled() {
-    return mMathMLEnabled == eTriTrue
-               ? true
-               : mMathMLEnabled == eTriFalse ? false : InternalMathMLEnabled();
+    return mMathMLEnabled.valueOr(InternalMathMLEnabled());
   }
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
@@ -171,8 +163,8 @@ class nsNodeInfoManager final {
       mDocumentNodeInfo;  // WEAK to avoid circular ownership
   RefPtr<nsBindingManager> mBindingManager;
   NodeInfoCache mRecentlyUsedNodeInfos;
-  Tri mSVGEnabled;
-  Tri mMathMLEnabled;
+  mozilla::Maybe<bool> mSVGEnabled;     // Lazily initialized.
+  mozilla::Maybe<bool> mMathMLEnabled;  // Lazily initialized.
 };
 
 #endif /* nsNodeInfoManager_h___ */
