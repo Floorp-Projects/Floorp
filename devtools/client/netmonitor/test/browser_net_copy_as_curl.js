@@ -48,6 +48,7 @@ add_task(async function() {
     "--data " + quote(POST_PAYLOAD),
     header("Content-Type: text/plain;charset=UTF-8"),
   ];
+  const ORIGIN_RESULT = [header("Origin: http://example.com")];
 
   const HEAD_PARTIAL_RESULT = ["-I"];
 
@@ -85,6 +86,7 @@ add_task(async function() {
     ...BASE_RESULT,
     ...COOKIE_PARTIAL_RESULT,
     ...POST_PARTIAL_RESULT,
+    ...ORIGIN_RESULT,
   ]);
 
   // HEAD request
