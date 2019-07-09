@@ -154,6 +154,9 @@ void nsHttpConnectionInfo::BuildHashKey() {
   // byte 5 is X/. X is for disallow_spdy flag
   // byte 6 is C/. C is for be Conservative
   // byte 7 is i/. i is for isolated
+  // Note: when adding/removing fields from this list which do not have
+  // corresponding data fields on the object itself, you may also need to
+  // modify RebuildHashKey.
 
   mHashKey.AssignLiteral("........[tlsflags0x00000000]");
   if (mIsolated) {
@@ -267,10 +270,31 @@ void nsHttpConnectionInfo::BuildHashKey() {
   mHashKey.Append(originAttributes);
 }
 
+void nsHttpConnectionInfo::RebuildHashKey() {
+  // Create copies of all properties stored in our hash key.
+  bool isAnonymous = GetAnonymous();
+  bool isPrivate = GetPrivate();
+  bool isInsecureScheme = GetInsecureScheme();
+  bool isNoSpdy = GetNoSpdy();
+  bool isBeConservative = GetBeConservative();
+
+  BuildHashKey();
+
+  // Restore all of those properties.
+  SetAnonymous(isAnonymous);
+  SetPrivate(isPrivate);
+  SetInsecureScheme(isInsecureScheme);
+  SetNoSpdy(isNoSpdy);
+  SetBeConservative(isBeConservative);
+}
+
 void nsHttpConnectionInfo::SetOriginServer(const nsACString& host,
                                            int32_t port) {
   mOrigin = host;
   mOriginPort = port == -1 ? DefaultPort() : port;
+  // Use BuildHashKey() since this can only be called when constructing an
+  // nsHttpConnectionInfo object.
+  MOZ_DIAGNOSTIC_ASSERT(mHashKey.IsEmpty());
   BuildHashKey();
 }
 
@@ -351,21 +375,21 @@ nsresult nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo** outParam) {
 void nsHttpConnectionInfo::SetTrrDisabled(bool aNoTrr) {
   if (mTrrDisabled != aNoTrr) {
     mTrrDisabled = aNoTrr;
-    BuildHashKey();
+    RebuildHashKey();
   }
 }
 
 void nsHttpConnectionInfo::SetIPv4Disabled(bool aNoIPv4) {
   if (mIPv4Disabled != aNoIPv4) {
     mIPv4Disabled = aNoIPv4;
-    BuildHashKey();
+    RebuildHashKey();
   }
 }
 
 void nsHttpConnectionInfo::SetIPv6Disabled(bool aNoIPv6) {
   if (mIPv6Disabled != aNoIPv6) {
     mIPv6Disabled = aNoIPv6;
-    BuildHashKey();
+    RebuildHashKey();
   }
 }
 
