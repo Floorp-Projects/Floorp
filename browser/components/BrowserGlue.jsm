@@ -454,7 +454,6 @@ XPCOMUtils.defineLazyGetter(
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutCertViewerHandler: "resource://gre/modules/AboutCertViewerHandler.jsm",
   AboutNetErrorHandler:
     "resource:///modules/aboutpages/AboutNetErrorHandler.jsm",
   AboutPrivateBrowsingHandler:
@@ -1614,8 +1613,6 @@ BrowserGlue.prototype = {
 
     NewTabUtils.init();
 
-    AboutCertViewerHandler.init();
-
     AboutNetErrorHandler.init();
 
     AboutPrivateBrowsingHandler.init();
@@ -1736,14 +1733,6 @@ BrowserGlue.prototype = {
     );
     Services.telemetry.getHistogramById("COOKIE_BEHAVIOR").add(cookieBehavior);
 
-    let exceptions = 0;
-    for (let permission of Services.perms.enumerator) {
-      if (permission.type == "trackingprotection") {
-        exceptions++;
-      }
-    }
-    Services.telemetry.scalarSet("contentblocking.exceptions", exceptions);
-
     let fpEnabled = Services.prefs.getBoolPref(
       "privacy.trackingprotection.fingerprinting.enabled"
     );
@@ -1829,7 +1818,6 @@ BrowserGlue.prototype = {
 
     PageThumbs.uninit();
     NewTabUtils.uninit();
-    AboutCertViewerHandler.uninit();
     AboutNetErrorHandler.uninit();
     AboutPrivateBrowsingHandler.uninit();
     AboutProtectionsHandler.uninit();

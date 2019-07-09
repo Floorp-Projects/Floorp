@@ -1685,6 +1685,34 @@ bool nsContentUtils::OfflineAppAllowed(nsIPrincipal* aPrincipal) {
   return NS_SUCCEEDED(rv) && allowed;
 }
 
+/* static */
+bool nsContentUtils::PrincipalAllowsL10n(nsIPrincipal* aPrincipal) {
+  // The system principal is always allowed.
+  if (IsSystemPrincipal(aPrincipal)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool hasFlags;
+
+  // Allow access to uris that cannot be loaded by web content.
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
+                           &hasFlags);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (hasFlags) {
+    return true;
+  }
+
+  // UI resources also get access.
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                           &hasFlags);
+  NS_ENSURE_SUCCESS(rv, false);
+  return hasFlags;
+}
+
 bool nsContentUtils::MaybeAllowOfflineAppByDefault(nsIPrincipal* aPrincipal) {
   if (!Preferences::GetRootBranch()) return false;
 
@@ -8963,7 +8991,7 @@ bool nsContentUtils::HttpsStateIsModern(Document* aDocument) {
     return false;
   }
 
-  MOZ_ASSERT(principal->GetIsCodebasePrincipal());
+  MOZ_ASSERT(principal->GetIsContentPrincipal());
 
   nsCOMPtr<nsIContentSecurityManager> csm =
       do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);

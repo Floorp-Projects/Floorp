@@ -102,6 +102,7 @@ class XULInfoTester:
                 # crashes when running code here. In particular, msan will
                 # error out if the jit is active.
                 '--no-baseline',
+                '--no-blinterp',
                 '-e', self.js_prologue,
                 '-e', 'print(!!({}))'.format(cond)
             ]

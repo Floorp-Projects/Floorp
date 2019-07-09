@@ -69,11 +69,6 @@ class nsQueryFrame {
 #include "mozilla/FrameIdList.h"
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
-
-    // This marker allows mozilla::ArenaObjectID to "extend" this enum
-    // with additional sequential values for use in nsPresArena and
-    // PresShell::{Allocate,Free}ByObjectId
-    NON_FRAME_MARKER
   };
 
   // A strict subset of FrameIID above for frame classes that we instantiate.

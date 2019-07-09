@@ -67,7 +67,7 @@ function localStorageClearAll(callback) {
 
         let clearRequestCount = 0;
         for (let item of request.result) {
-          let principal = ssm.createCodebasePrincipalFromOrigin(item.origin);
+          let principal = ssm.createContentPrincipalFromOrigin(item.origin);
           let clearRequest = qms.clearStoragesForPrincipal(
             principal,
             "default",

@@ -2319,7 +2319,7 @@ class Document : public nsINode,
 
   /**
    * Reset this document to aURI, aLoadGroup, aPrincipal and aStoragePrincipal.
-   * aURI must not be null.  If aPrincipal is null, a codebase principal based
+   * aURI must not be null.  If aPrincipal is null, a content principal based
    * on aURI will be used.
    */
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
@@ -2691,15 +2691,15 @@ class Document : public nsINode,
 
     // If we are a document "whose URL's scheme is not a network scheme."
     // NB: Explicitly allow file: URIs to store cookies.
-    nsCOMPtr<nsIURI> codebaseURI;
-    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+    nsCOMPtr<nsIURI> contentURI;
+    NodePrincipal()->GetURI(getter_AddRefs(contentURI));
 
-    if (!codebaseURI) {
+    if (!contentURI) {
       return true;
     }
 
     nsAutoCString scheme;
-    codebaseURI->GetScheme(scheme);
+    contentURI->GetScheme(scheme);
     return !scheme.EqualsLiteral("http") && !scheme.EqualsLiteral("https") &&
            !scheme.EqualsLiteral("ftp") && !scheme.EqualsLiteral("file");
   }
@@ -2997,7 +2997,15 @@ class Document : public nsINode,
                : mAllowXULXBL == eTriFalse ? false : InternalAllowXULXBL();
   }
 
+  /**
+   * Returns true if this document is allowed to load DTDs from UI resources
+   * no matter what.
+   */
+  bool SkipDTDSecurityChecks() { return mSkipDTDSecurityChecks; }
+
   void ForceEnableXULXBL() { mAllowXULXBL = eTriTrue; }
+
+  void ForceSkipDTDSecurityChecks() { mSkipDTDSecurityChecks = true; }
 
   /**
    * Returns the template content owner document that owns the content of
@@ -3565,6 +3573,11 @@ class Document : public nsINode,
   void SetAlinkColor(const nsAString& aAlinkColor);
   void GetBgColor(nsAString& aBgColor);
   void SetBgColor(const nsAString& aBgColor);
+  void Clear() const {
+    // Deprecated
+  }
+  void CaptureEvents();
+  void ReleaseEvents();
 
   static bool IsUnprefixedFullscreenEnabled(JSContext* aCx, JSObject* aObject);
   static bool DocumentSupportsL10n(JSContext* aCx, JSObject* aObject);
@@ -4052,7 +4065,7 @@ class Document : public nsINode,
     mAllowPaymentRequest = aAllowPaymentRequest;
   }
 
-  FeaturePolicy* Policy() const;
+  mozilla::dom::FeaturePolicy* FeaturePolicy() const;
 
   bool ModuleScriptsEnabled();
 
@@ -4359,7 +4372,7 @@ class Document : public nsINode,
 
   // This should *ONLY* be used in GetCookie/SetCookie.
   already_AddRefed<nsIChannel> CreateDummyChannelForCookies(
-      nsIURI* aCodebaseURI);
+      nsIURI* aContentURI);
 
   nsCOMPtr<nsIReferrerInfo> mPreloadReferrerInfo;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
@@ -4474,7 +4487,7 @@ class Document : public nsINode,
 
   RefPtr<Promise> mReadyForIdle;
 
-  RefPtr<FeaturePolicy> mFeaturePolicy;
+  RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
 
   UniquePtr<ResizeObserverController> mResizeObserverController;
 
@@ -4810,6 +4823,8 @@ class Document : public nsINode,
   enum Tri { eTriUnset = 0, eTriFalse, eTriTrue };
 
   Tri mAllowXULXBL;
+
+  bool mSkipDTDSecurityChecks;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the

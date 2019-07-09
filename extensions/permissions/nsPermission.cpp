@@ -41,7 +41,7 @@ already_AddRefed<nsIPrincipal> nsPermission::ClonePrincipalForPermission(
   rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  return mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+  return mozilla::BasePrincipal::CreateContentPrincipal(uri, attrs);
 }
 
 already_AddRefed<nsPermission> nsPermission::Create(
@@ -220,7 +220,7 @@ nsPermission::MatchesURI(nsIURI* aURI, bool aExactHost, bool* aMatches) {
 
   mozilla::OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+      mozilla::BasePrincipal::CreateContentPrincipal(aURI, attrs);
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
   return Matches(principal, aExactHost, aMatches);

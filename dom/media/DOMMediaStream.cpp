@@ -732,7 +732,7 @@ void DOMMediaStream::NotifyPrincipalChanged() {
     LOG(LogLevel::Info, ("DOMMediaStream %p Principal changed. Now: "
                          "null=%d, codebase=%d, expanded=%d, system=%d",
                          this, mPrincipal->GetIsNullPrincipal(),
-                         mPrincipal->GetIsCodebasePrincipal(),
+                         mPrincipal->GetIsContentPrincipal(),
                          mPrincipal->GetIsExpandedPrincipal(),
                          mPrincipal->IsSystemPrincipal()));
   }

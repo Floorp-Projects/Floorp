@@ -1067,9 +1067,10 @@ security.ui.certerror:
     bug_numbers:
       - 1484255
       - 1505310
+      - 1553181
     description: >
       The about:certerror page is loaded, keyed by error code, see https://searchfox.org/mozilla-central/source/security/nss/lib/mozpkix/include/pkix/Result.h
-    expiry_version: "70"
+    expiry_version: "72"
     notification_emails:
       - jhofmann@mozilla.com
       - rtestard@mozilla.com
@@ -1096,9 +1097,10 @@ security.ui.certerror:
     bug_numbers:
       - 1484255
       - 1505310
+      - 1553181
     description: >
       User interaction by click events on the cert error page. Keyed by error code, see https://searchfox.org/mozilla-central/source/security/nss/lib/mozpkix/include/pkix/Result.h
-    expiry_version: "70"
+    expiry_version: "72"
     notification_emails:
       - jhofmann@mozilla.com
       - rtestard@mozilla.com
@@ -1119,12 +1121,13 @@ security.ui.identitypopup:
       - 1484251
       - 1522256
       - 1522919
+      - 1553181
     description: >
       How many times the control center was opened.
       Keyed by the state of the content blocking shield, where the shield-showing key indicates
       that the shield icon in the identity UI is visible to the user, and shield-hidden indicates
       that it is not visible.
-    expiry_version: "70"
+    expiry_version: "72"
     notification_emails:
       - jhofmann@mozilla.com
       - pdol@mozilla.com
@@ -1156,9 +1159,10 @@ security.ui.identitypopup:
     ]
     bug_numbers:
       - 1484251
+      - 1553181
     description: >
       User interaction by click events in the identity popup.
-    expiry_version: "70"
+    expiry_version: "72"
     notification_emails:
       - jhofmann@mozilla.com
       - pdol@mozilla.com

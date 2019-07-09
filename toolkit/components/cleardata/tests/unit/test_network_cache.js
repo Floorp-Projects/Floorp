@@ -86,7 +86,7 @@ add_task(async function test_deleteFromPrincipal() {
     "The memory cache has an entry"
   );
 
-  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "http://example.com/"
   );
   await new Promise(aResolve => {

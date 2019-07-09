@@ -228,7 +228,7 @@ Sanitizer.prototype = {
             }
 
             for (let item of request.result) {
-              let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+              let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
                 item.origin
               );
               let uri = principal.URI;

@@ -1,6 +1,6 @@
 browser/components/translation/cld2/
 devtools/client/aboutdebugging-new/test/jest/node_modules/
-devtools/client/application/test/node_modules/
+devtools/client/application/test/components/node_modules/
 devtools/client/debugger/node_modules/
 devtools/client/shared/build/babel.js
 devtools/client/shared/sourceeditor/codemirror/
@@ -123,6 +123,7 @@ toolkit/components/jsoncpp/
 toolkit/components/protobuf/
 toolkit/components/url-classifier/chromium/
 toolkit/components/url-classifier/protobuf/
+toolkit/components/utils/mozjexl.js
 toolkit/crashreporter/breakpad-client/
 toolkit/crashreporter/google-breakpad/
 toolkit/recordreplay/udis86/

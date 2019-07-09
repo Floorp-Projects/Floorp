@@ -364,6 +364,18 @@ interface nsIContentPolicy : nsISupports
    */
   const nsContentPolicyType TYPE_INTERNAL_MODULE_PRELOAD = 46;
 
+  /**
+   * Indicates a DTD loaded by an XML document the URI of which could
+   * not be mapped to a known local DTD.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_DTD = 47;
+
+  /**
+   * Indicates a TYPE_INTERNAL_DTD which will not be blocked no matter
+   * what principal is being loaded from.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_FORCE_ALLOWED_DTD = 48;
+
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
    * DoContentSecurityChecks, all nsIContentPolicy implementations, the

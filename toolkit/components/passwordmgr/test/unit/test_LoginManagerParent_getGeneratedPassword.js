@@ -35,7 +35,7 @@ add_task(async function test_getGeneratedPassword() {
     .callsFake(() => {
       return {
         currentWindowGlobal: {
-          documentPrincipal: Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+          documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             "https://www.example.com^userContextId=6"
           ),
         },
@@ -72,7 +72,7 @@ add_task(async function test_getGeneratedPassword() {
     .callsFake(() => {
       return {
         currentWindowGlobal: {
-          documentPrincipal: Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+          documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             "https://www.mozilla.org^userContextId=2"
           ),
         },

@@ -519,7 +519,7 @@ function setMaxSerializedMsgSize(aSize) {
 
 function getPrincipal(url) {
   let uri = Services.io.newURI(url);
-  return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  return Services.scriptSecurityManager.createContentPrincipal(uri, {});
 }
 
 function expectingSuccess(request) {

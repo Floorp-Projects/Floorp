@@ -16,6 +16,7 @@
 #include "gfxSkipChars.h"
 #include "gfxPlatform.h"
 #include "gfxPlatformFontList.h"
+#include "gfxUserFontSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
 #include "nsPoint.h"
@@ -34,8 +35,6 @@
 
 class gfxContext;
 class gfxFontGroup;
-class gfxUserFontEntry;
-class gfxUserFontSet;
 class nsAtom;
 class nsLanguageAtomService;
 class gfxMissingFontRecorder;
@@ -1213,6 +1212,17 @@ class gfxFontGroup final : public gfxTextRunFactory {
     bool CheckForFallbackFaces() const { return mCheckForFallbackFaces; }
     void SetCheckForFallbackFaces() { mCheckForFallbackFaces = true; }
 
+    // Return true if we're currently loading (or waiting for) a resource that
+    // may support the given character.
+    bool IsLoadingFor(uint32_t aCh) {
+      if (!IsLoading()) {
+        return false;
+      }
+      MOZ_ASSERT(IsUserFontContainer());
+      return static_cast<gfxUserFontEntry*>(FontEntry())
+          ->CharacterInUnicodeRange(aCh);
+    }
+
     void SetFont(gfxFont* aFont) {
       NS_ASSERTION(aFont, "font pointer must not be null");
       NS_ADDREF(aFont);
@@ -1308,14 +1318,21 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // Initialize the list of fonts
   void BuildFontList();
 
-  // Get the font at index i within the fontlist.
+  // Get the font at index i within the fontlist, for character aCh (in case
+  // of fonts with multiple resources and unicode-range partitioning).
   // Will initiate userfont load if not already loaded.
-  // May return null if userfont not loaded or if font invalid
-  gfxFont* GetFontAt(int32_t i, uint32_t aCh = 0x20);
+  // May return null if userfont not loaded or if font invalid.
+  // If *aLoading is true, a relevant resource is already being loaded so no
+  // new download will be initiated; if a download is started, *aLoading will
+  // be set to true on return.
+  gfxFont* GetFontAt(int32_t i, uint32_t aCh, bool* aLoading);
 
-  // Whether there's a font loading for a given family in the fontlist
-  // for a given character
-  bool FontLoadingForFamily(const FamilyFace& aFamily, uint32_t aCh) const;
+  // Simplified version of GetFontAt() for use where we just need a font for
+  // metrics, math layout tables, etc.
+  gfxFont* GetFontAt(int32_t i, uint32_t aCh = 0x20) {
+    bool loading = false;
+    return GetFontAt(i, aCh, &loading);
+  }
 
   // will always return a font or force a shutdown
   gfxFont* GetDefaultFont();

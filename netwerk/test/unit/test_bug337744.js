@@ -27,7 +27,7 @@ const error_specs = [
 // Create some fake principal that has not enough
 // privileges to access any resource: uri.
 var uri = NetUtil.newURI("http://www.example.com");
-var principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+var principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
 
 function get_channel(spec) {
   var channelURI = NetUtil.newURI(spec);

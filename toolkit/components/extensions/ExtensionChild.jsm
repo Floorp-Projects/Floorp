@@ -775,7 +775,7 @@ class BrowserExtensionContent extends EventEmitter {
     this.baseURI = Services.io.newURI(`moz-extension://${this.uuid}/`);
     this.baseURL = this.baseURI.spec;
 
-    this.principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    this.principal = Services.scriptSecurityManager.createContentPrincipal(
       this.baseURI,
       {}
     );

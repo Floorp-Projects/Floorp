@@ -1,4 +1,4 @@
-// |jit-test| --no-baseline
+// |jit-test| --no-baseline; --no-blinterp
 // Turn off baseline and since it messes up the GC finalization assertions by
 // adding spurious edges to the GC graph.
 

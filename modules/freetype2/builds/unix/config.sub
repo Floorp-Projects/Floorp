@@ -2,7 +2,7 @@
 # Configuration validation subroutine script.
 #   Copyright 1992-2019 Free Software Foundation, Inc.
 
-timestamp='2019-01-05'
+timestamp='2019-05-23'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -822,7 +822,9 @@ case $basic_machine in
 		cpu=m68k
 		vendor=next
 		case $os in
-		    nextstep* )
+		    openstep*)
+		        ;;
+		    nextstep*)
 			;;
 		    ns2*)
 		      os=nextstep2
@@ -1170,7 +1172,7 @@ case $cpu-$vendor in
 			| asmjs \
 			| ba \
 			| be32 | be64 \
-			| bfin | bs2000 \
+			| bfin | bpf | bs2000 \
 			| c[123]* | c30 | [cjt]90 | c4x \
 			| c8051 | clipper | craynv | csky | cydra \
 			| d10v | d30v | dlx | dsp16xx \
@@ -1245,7 +1247,8 @@ case $cpu-$vendor in
 			| v70 | v850 | v850e | v850e1 | v850es | v850e2 | v850e2v3 \
 			| vax \
 			| visium \
-			| w65 | wasm32 \
+			| w65 \
+			| wasm32 | wasm64 \
 			| we32k \
 			| x86 | x86_64 | xc16x | xgate | xps100 \
 			| xstormy16 | xtensa* \
@@ -1365,7 +1368,7 @@ case $os in
 	     | powermax* | dnix* | nx6 | nx7 | sei* | dragonfly* \
 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
-	     | midnightbsd* | amdhsa* | unleashed* | emscripten*)
+	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi*)
 	# Remember, each alternative MUST END IN *, to match a version number.
 		;;
 	qnx*)

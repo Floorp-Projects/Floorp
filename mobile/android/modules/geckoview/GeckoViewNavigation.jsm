@@ -126,7 +126,7 @@ class GeckoViewNavigation extends GeckoViewModule {
             parsedUri.schemeIs("moz-extension")
           ) {
             // Only allow privileged loading for certain URIs.
-            triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+            triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
               parsedUri,
               {}
             );

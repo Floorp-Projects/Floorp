@@ -347,13 +347,13 @@ add_test(function test_redirect_on_blocklist() {
 
   let redirect1 = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
-    principal: secman.createCodebasePrincipal(exampleURI, {}),
+    principal: secman.createContentPrincipal(exampleURI, {}),
   };
   badRedirects.appendElement(redirect1);
 
   let redirect2 = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
-    principal: secman.createCodebasePrincipal(blocklistedURI, {}),
+    principal: secman.createContentPrincipal(blocklistedURI, {}),
   };
   badRedirects.appendElement(redirect2);
 
@@ -361,7 +361,7 @@ add_test(function test_redirect_on_blocklist() {
   // whitelist (i.e. it will match NO_LIST).
   let redirect3 = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
-    principal: secman.createCodebasePrincipal(whitelistedURI, {}),
+    principal: secman.createContentPrincipal(whitelistedURI, {}),
   };
   badRedirects.appendElement(redirect3);
 
@@ -454,7 +454,7 @@ add_test(function test_whitelisted_redirect() {
 
   let redirect1 = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
-    principal: secman.createCodebasePrincipal(exampleURI, {}),
+    principal: secman.createContentPrincipal(exampleURI, {}),
   };
   okayRedirects.appendElement(redirect1);
 
@@ -462,7 +462,7 @@ add_test(function test_whitelisted_redirect() {
   // whitelist (i.e. it will match NO_LIST).
   let redirect2 = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
-    principal: secman.createCodebasePrincipal(whitelistedURI, {}),
+    principal: secman.createContentPrincipal(whitelistedURI, {}),
   };
   okayRedirects.appendElement(redirect2);
 
@@ -499,7 +499,7 @@ add_test(function test_remote_lookup_protocolbuf() {
   let redirects = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   let redirect1 = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
-    principal: secman.createCodebasePrincipal(exampleRedirectURI, {}),
+    principal: secman.createContentPrincipal(exampleRedirectURI, {}),
   };
   redirects.appendElement(redirect1);
 

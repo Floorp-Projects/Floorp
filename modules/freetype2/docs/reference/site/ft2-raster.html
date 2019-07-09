@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.0">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.1">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>Scanline Converter - FreeType-2.10.0 API Reference</title>
+        <title>Scanline Converter - FreeType-2.10.1 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="index.html" title="FreeType-2.10.0 API Reference" class="md-header-nav__button md-logo">
+        <a href="index.html" title="FreeType-2.10.1 API Reference" class="md-header-nav__button md-logo">
           
             <img src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.0 API Reference
+              FreeType-2.10.1 API Reference
             </span>
             <span class="md-header-nav__topic">
               Scanline Converter
@@ -166,12 +166,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="index.html" title="FreeType-2.10.0 API Reference" class="md-nav__button md-logo">
+    <a href="index.html" title="FreeType-2.10.1 API Reference" class="md-nav__button md-logo">
       
         <img src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.0 API Reference
+    FreeType-2.10.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1316,7 +1316,7 @@
 
 <table class="fields">
 <tr><td class="val" id="y">y</td><td class="desc">
-<p>The scanline's y&nbsp;coordinate.</p>
+<p>The scanline's upward y&nbsp;coordinate.</p>
 </td></tr>
 <tr><td class="val" id="count">count</td><td class="desc">
 <p>The number of spans to draw on this scanline.</p>
@@ -1355,7 +1355,7 @@
 </pre>
 </div>
 
-<p>A structure to hold the arguments used by a raster's render function.</p>
+<p>A structure to hold the parameters used by a raster's render function, passed as an argument to <code><a href="ft2-outline_processing.html#ft_outline_render">FT_Outline_Render</a></code>.</p>
 <h4>fields</h4>
 
 <table class="fields">
@@ -1423,12 +1423,11 @@
 <p>This flag is set to indicate that an anti-aliased glyph image should be generated. Otherwise, it will be monochrome (1-bit).</p>
 </td></tr>
 <tr><td class="val" id="ft_raster_flag_direct">FT_RASTER_FLAG_DIRECT</td><td class="desc">
-<p>This flag is set to indicate direct rendering. In this mode, client applications must provide their own span callback. This lets them directly draw or compose over an existing bitmap. If this bit is not set, the target pixmap's buffer <em>must</em> be zeroed before rendering.</p>
+<p>This flag is set to indicate direct rendering. In this mode, client applications must provide their own span callback. This lets them directly draw or compose over an existing bitmap. If this bit is <em>not</em> set, the target pixmap's buffer <em>must</em> be zeroed before rendering and the output will be clipped to its size.</p>
 <p>Direct rendering is only possible with anti-aliased glyphs.</p>
 </td></tr>
 <tr><td class="val" id="ft_raster_flag_clip">FT_RASTER_FLAG_CLIP</td><td class="desc">
-<p>This flag is only used in direct rendering mode. If set, the output will be clipped to a box specified in the <code>clip_box</code> field of the <code><a href="ft2-raster.html#ft_raster_params">FT_Raster_Params</a></code> structure.</p>
-<p>Note that by default, the glyph bitmap is clipped to the target pixmap, except in direct rendering mode where all spans are generated if no clipping box is set.</p>
+<p>This flag is only used in direct rendering mode. If set, the output will be clipped to a box specified in the <code>clip_box</code> field of the <code><a href="ft2-raster.html#ft_raster_params">FT_Raster_Params</a></code> structure. Otherwise, the <code>clip_box</code> is effectively set to the bounding box and all spans are generated.</p>
 </td></tr>
 </table>
 

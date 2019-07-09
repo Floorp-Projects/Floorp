@@ -93,7 +93,7 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
 
   dump("Created test " + id + " : " + policy + "\n\n");
 
-  principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  principal = Services.scriptSecurityManager.createContentPrincipal(
     selfuri,
     {}
   );

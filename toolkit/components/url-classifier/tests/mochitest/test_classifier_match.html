@@ -153,7 +153,7 @@ function runTest() {
       }
       let test = testDatas.shift();
       let uri = SpecialPowers.Services.io.newURI(test.url);
-      let prin = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+      let prin = SpecialPowers.Services.scriptSecurityManager.createContentPrincipal(uri, {});
       SpecialPowers.doUrlClassify(prin, null, function(errorCode, table, provider, fullhash) {
         is(errorCode, test.expect.error, `Test url ${test.url} correct error`);
         is(table, test.expect.table, `Test url ${test.url} correct table`);

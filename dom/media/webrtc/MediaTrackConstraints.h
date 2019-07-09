@@ -311,7 +311,8 @@ class MediaConstraintsHelper {
   static uint32_t FeasibilityDistance(ValueType aN,
                                       const NormalizedRange& aRange);
   static uint32_t FitnessDistance(
-      const nsString& aN, const NormalizedConstraintSet::StringRange& aParams);
+      const Maybe<nsString>& aN,
+      const NormalizedConstraintSet::StringRange& aParams);
 
  protected:
   static bool SomeSettingsFit(const NormalizedConstraints& aConstraints,

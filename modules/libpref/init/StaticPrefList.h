@@ -7,17 +7,26 @@
 // This file defines static prefs, i.e. those that are defined at startup and
 // used entirely or mostly from C++ code.
 //
-// If a pref is listed here and also in a prefs data file such as all.js, the
-// value from the latter will override the value given here. For vanilla
-// browser builds such overrides are discouraged, but they are necessary for
-// some configurations (e.g. Thunderbird).
-//
 // The file is separated into sections, where the sections are determined by
 // the first segment of the prefnames within (e.g. "network.predictor.enabled"
 // is within the `Prefs starting with "network."` section). Sections must be
 // kept in alphabetical order, but prefs within sections need not be. Please
 // follow the existing naming convention when considering adding a new pref and
 // whether you need a new section.
+//
+// Basics
+// ------
+// Any pref defined in one of the files included here should *not* be defined
+// in a data file such as all.js; that would just be useless duplication.
+//
+// (Except under unusual circumstances where the value defined here must be
+// overridden, e.g. for some Thunderbird prefs. In those cases the default
+// value from the data file will override the static default value defined
+// here.)
+//
+// Please follow the existing prefs naming convention when considering adding a
+// new pref, and don't invent a new first segment unless it's appropriate and
+// there are likely to be multiple prefs with that same first segment.
 //
 // Normal prefs
 // ------------
@@ -112,24 +121,6 @@
 #else
 # define NOT_IN_RELEASE_OR_BETA_VALUE true
 #endif
-
-//---------------------------------------------------------------------------
-// Prefs starting with "accessibility."
-//---------------------------------------------------------------------------
-
-VARCACHE_PREF(
-  Live,
-  "accessibility.monoaudio.enable",
-   accessibility_monoaudio_enable,
-  RelaxedAtomicBool, false
-)
-
-VARCACHE_PREF(
-  Live,
-  "accessibility.browsewithcaret",
-   accessibility_browsewithcaret,
-  RelaxedAtomicBool, false
-)
 
 //---------------------------------------------------------------------------
 // Prefs starting with "apz."
@@ -4709,18 +4700,12 @@ VARCACHE_PREF(
 )
 
 // Is support for CSS contain enabled?
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   Live,
   "layout.css.contain.enabled",
   layout_css_contain_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 // Should stray control characters be rendered visibly?
 #ifdef RELEASE_OR_BETA

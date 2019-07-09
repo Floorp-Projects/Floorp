@@ -190,7 +190,7 @@ ContentAreaDropListener.prototype =
         .getService(Ci.nsIIOService);
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
         getService(Ci.nsIScriptSecurityManager);
-    return secMan.createCodebasePrincipal(ioService.newURI(principalURISpec), {});
+    return secMan.createContentPrincipal(ioService.newURI(principalURISpec), {});
   },
 
   getTriggeringPrincipal: function(aEvent)

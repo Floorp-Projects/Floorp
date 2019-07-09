@@ -76,7 +76,7 @@ add_task(async function test_nullPrincipal() {
 add_task(async function test_contentPrincipal() {
   const contentId = "1";
   // fields
-  const codebase = 0;
+  const content = 0;
   // const domain = 1;
   const suffix = 2;
   // const csp = 3;
@@ -88,33 +88,33 @@ add_task(async function test_contentPrincipal() {
   let tests = [
     {
       input: { uri: "http://example.com/", OA: {} },
-      expected: `{"${contentId}":{"${codebase}":"http://example.com/"}}`,
+      expected: `{"${contentId}":{"${content}":"http://example.com/"}}`,
     },
     {
       input: { uri: "http://mozilla1.com/", OA: {} },
-      expected: `{"${contentId}":{"${codebase}":"http://mozilla1.com/"}}`,
+      expected: `{"${contentId}":{"${content}":"http://mozilla1.com/"}}`,
     },
     {
       input: { uri: "http://mozilla2.com/", OA: { userContextId: 0 } },
-      expected: `{"${contentId}":{"${codebase}":"http://mozilla2.com/"}}`,
+      expected: `{"${contentId}":{"${content}":"http://mozilla2.com/"}}`,
     },
     {
       input: { uri: "http://mozilla3.com/", OA: { userContextId: 2 } },
-      expected: `{"${contentId}":{"${codebase}":"http://mozilla3.com/","${suffix}":"^userContextId=2"}}`,
+      expected: `{"${contentId}":{"${content}":"http://mozilla3.com/","${suffix}":"^userContextId=2"}}`,
     },
     {
       input: { uri: "http://mozilla4.com/", OA: { privateBrowsingId: 1 } },
-      expected: `{"${contentId}":{"${codebase}":"http://mozilla4.com/","${suffix}":"^privateBrowsingId=1"}}`,
+      expected: `{"${contentId}":{"${content}":"http://mozilla4.com/","${suffix}":"^privateBrowsingId=1"}}`,
     },
     {
       input: { uri: "http://mozilla5.com/", OA: { privateBrowsingId: 0 } },
-      expected: `{"${contentId}":{"${codebase}":"http://mozilla5.com/"}}`,
+      expected: `{"${contentId}":{"${content}":"http://mozilla5.com/"}}`,
     },
   ];
 
   for (let test of tests) {
     let uri = Services.io.newURI(test.input.uri);
-    let p = Services.scriptSecurityManager.createCodebasePrincipal(
+    let p = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       test.input.OA
     );

@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
 import os
 import time
 import zipfile
@@ -47,7 +48,7 @@ class ZipFile(zipfile.ZipFile):
                                     date_time=time.localtime(time.time()))
             zinfo.compress_type = self.compression
             # Add some standard UNIX file access permissions (-rw-r--r--).
-            zinfo.external_attr = (0x81a4 & 0xFFFF) << 16L
+            zinfo.external_attr = (0x81a4 & 0xFFFF) << 16
         else:
             zinfo = zinfo_or_arcname
 

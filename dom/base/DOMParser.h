@@ -53,7 +53,12 @@ class DOMParser final : public nsISupports, public nsWrapperCache {
                                              SupportedType aType,
                                              ErrorResult& aRv);
 
-  void ForceEnableXULXBL() { mForceEnableXULXBL = true; }
+  void ForceEnableXULXBL() {
+    mForceEnableXULXBL = true;
+    ForceEnableDTD();
+  }
+
+  void ForceEnableDTD() { mForceEnableDTD = true; }
 
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
@@ -78,6 +83,7 @@ class DOMParser final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIURI> mBaseURI;
 
   bool mForceEnableXULXBL;
+  bool mForceEnableDTD;
 };
 
 }  // namespace dom

@@ -1840,7 +1840,7 @@ bool gfxFontGroup::HasFont(const gfxFontEntry* aFontEntry) {
   return false;
 }
 
-gfxFont* gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh) {
+gfxFont* gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh, bool* aLoading) {
   if (uint32_t(i) >= mFonts.Length()) {
     return nullptr;
   }
@@ -1857,10 +1857,10 @@ gfxFont* gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh) {
     if (fe->mIsUserFontContainer) {
       gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
       if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED &&
-          ufe->CharacterInUnicodeRange(aCh) && !mSkipDrawing &&
-          !FontLoadingForFamily(ff, aCh)) {
+          ufe->CharacterInUnicodeRange(aCh) && !*aLoading) {
         ufe->Load();
         ff.CheckState(mSkipDrawing);
+        *aLoading = ff.IsLoading();
       }
       fe = ufe->GetPlatformFontEntry();
       if (!fe) {
@@ -1915,26 +1915,6 @@ bool gfxFontGroup::FamilyFace::EqualsUserFont(
     }
   } else if (fe == aUserFont) {
     return true;
-  }
-  return false;
-}
-
-bool gfxFontGroup::FontLoadingForFamily(const FamilyFace& aFamily,
-                                        uint32_t aCh) const {
-  if (aFamily.IsSharedFamily()) {
-    return false;
-  }
-  uint32_t count = mFonts.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    const FamilyFace& ff = mFonts[i];
-    if (!ff.IsSharedFamily() && ff.IsLoading() &&
-        ff.OwnedFamily() == aFamily.OwnedFamily()) {
-      const gfxUserFontEntry* ufe =
-          static_cast<gfxUserFontEntry*>(ff.FontEntry());
-      if (ufe->CharacterInUnicodeRange(aCh)) {
-        return true;
-      }
-    }
   }
   return false;
 }
@@ -2060,6 +2040,7 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
 gfxFont* gfxFontGroup::GetFirstValidFont(uint32_t aCh,
                                          StyleGenericFontFamily* aGeneric) {
   uint32_t count = mFonts.Length();
+  bool loading = false;
   for (uint32_t i = 0; i < count; ++i) {
     FamilyFace& ff = mFonts[i];
     if (ff.IsInvalid()) {
@@ -2082,17 +2063,22 @@ gfxFont* gfxFontGroup::GetFirstValidFont(uint32_t aCh,
       gfxUserFontEntry* ufe =
           static_cast<gfxUserFontEntry*>(mFonts[i].FontEntry());
       bool inRange = ufe->CharacterInUnicodeRange(aCh);
-      if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED && inRange &&
-          !mSkipDrawing && !FontLoadingForFamily(ff, aCh)) {
-        ufe->Load();
-        ff.CheckState(mSkipDrawing);
+      if (inRange) {
+        if (!loading &&
+            ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED) {
+          ufe->Load();
+          ff.CheckState(mSkipDrawing);
+        }
+        if (ff.IsLoading()) {
+          loading = true;
+        }
       }
       if (ufe->LoadState() != gfxUserFontEntry::STATUS_LOADED || !inRange) {
         continue;
       }
     }
 
-    font = GetFontAt(i, aCh);
+    font = GetFontAt(i, aCh, &loading);
     if (font) {
       if (aGeneric) {
         *aGeneric = mFonts[i].Generic();
@@ -2820,13 +2806,18 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
 
   // To optimize common cases, try the first font in the font-group
   // before going into the more detailed checks below
+  uint32_t fontListLength = mFonts.Length();
   uint32_t nextIndex = 0;
   bool isJoinControl = gfxFontUtils::IsJoinControl(aCh);
   bool wasJoinCauser = gfxFontUtils::IsJoinCauser(aPrevCh);
   bool isVarSelector = gfxFontUtils::IsVarSelector(aCh);
 
+  // Whether we've seen a font that is currently loading a resource that may
+  // provide this character (so we should not start a new load).
+  bool loading = false;
+
   if (!isJoinControl && !wasJoinCauser && !isVarSelector) {
-    gfxFont* firstFont = GetFontAt(0, aCh);
+    gfxFont* firstFont = GetFontAt(0, aCh, &loading);
     if (firstFont) {
       if (firstFont->HasCharacter(aCh)) {
         *aMatchType = {FontMatchType::Kind::kFontGroup, mFonts[0].Generic()};
@@ -2846,6 +2837,10 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
       if (font) {
         *aMatchType = {FontMatchType::Kind::kFontGroup, mFonts[0].Generic()};
         return font;
+      }
+    } else {
+      if (fontListLength > 0) {
+        loading = loading || mFonts[0].IsLoadingFor(aCh);
       }
     }
 
@@ -2883,10 +2878,12 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
   }
 
   // 1. check remaining fonts in the font group
-  uint32_t fontListLength = mFonts.Length();
   for (uint32_t i = nextIndex; i < fontListLength; i++) {
     FamilyFace& ff = mFonts[i];
     if (ff.IsInvalid() || ff.IsLoading()) {
+      if (ff.IsLoadingFor(aCh)) {
+        loading = true;
+      }
       continue;
     }
 
@@ -2912,16 +2909,20 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
         continue;
       }
 
-      // load if not already loaded but only if no other font in similar
-      // range within family is loading
-      if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED &&
-          !mSkipDrawing && !FontLoadingForFamily(ff, aCh)) {
+      // Load if not already loaded, unless we've already seen an in-
+      // progress load that is expected to satisfy this request.
+      if (!loading && ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED) {
         ufe->Load();
         ff.CheckState(mSkipDrawing);
       }
+
+      if (ff.IsLoading()) {
+        loading = true;
+      }
+
       gfxFontEntry* pfe = ufe->GetPlatformFontEntry();
       if (pfe && pfe->HasCharacter(aCh)) {
-        font = GetFontAt(i, aCh);
+        font = GetFontAt(i, aCh, &loading);
         if (font) {
           *aMatchType = {FontMatchType::Kind::kFontGroup, mFonts[i].Generic()};
           return font;
@@ -2930,7 +2931,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     } else if (fe->HasCharacter(aCh)) {
       // for normal platform fonts, after checking the cmap
       // build the font via GetFontAt
-      font = GetFontAt(i, aCh);
+      font = GetFontAt(i, aCh, &loading);
       if (font) {
         *aMatchType = {FontMatchType::Kind::kFontGroup, mFonts[i].Generic()};
         return font;

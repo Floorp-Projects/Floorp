@@ -93,11 +93,11 @@ bool wasm::HasCompilerSupport(JSContext* cx) {
     return false;
   }
 
-  if (!cx->jitSupportsFloatingPoint()) {
+  if (!JitOptions.supportsFloatingPoint) {
     return false;
   }
 
-  if (!cx->jitSupportsUnalignedAccesses()) {
+  if (!JitOptions.supportsUnalignedAccesses) {
     return false;
   }
 
@@ -1233,7 +1233,8 @@ void WasmInstanceObject::finalize(FreeOp* fop, JSObject* obj) {
   WasmInstanceObject& instance = obj->as<WasmInstanceObject>();
   fop->delete_(obj, &instance.exports(), MemoryUse::WasmInstanceExports);
   fop->delete_(obj, &instance.scopes(), MemoryUse::WasmInstanceScopes);
-  fop->delete_(obj, &instance.indirectGlobals(), MemoryUse::WasmInstanceGlobals);
+  fop->delete_(obj, &instance.indirectGlobals(),
+               MemoryUse::WasmInstanceGlobals);
   if (!instance.isNewborn()) {
     fop->delete_(obj, &instance.instance(), MemoryUse::WasmInstanceInstance);
   }

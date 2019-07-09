@@ -285,13 +285,6 @@ struct JSContext : public JS::RootingContext,
   uintptr_t stackLimit(JS::StackKind kind) { return nativeStackLimit[kind]; }
   uintptr_t stackLimitForJitCode(JS::StackKind kind);
   size_t gcSystemPageSize() { return js::gc::SystemPageSize(); }
-  bool jitSupportsFloatingPoint() const {
-    return runtime_->jitSupportsFloatingPoint;
-  }
-  bool jitSupportsUnalignedAccesses() const {
-    return runtime_->jitSupportsUnalignedAccesses;
-  }
-  bool jitSupportsSimd() const { return runtime_->jitSupportsSimd; }
 
   /*
    * "Entering" a realm changes cx->realm (which changes cx->global). Note

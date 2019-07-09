@@ -30,4 +30,49 @@ ol {
   margin-bottom: 0;
   padding-inline-start: 0;
   overflow: hidden auto;
+  flex-grow: 1;
+  box-shadow: inset 0 -10px 10px -10px var(--grey-90-a20);
+}
+
+.create-login-button {
+  margin: 18px;
+}
+
+.login-list-item {
+  display: block;
+  padding: 10px;
+  padding-inline-end: 18px;
+  padding-inline-start: 14px;
+  border-inline-start: 4px solid transparent;
+  border-bottom: 1px solid var(--in-content-box-border-color);
+}
+
+.login-list-item:hover {
+  background-color: var(--in-content-box-background-hover);
+}
+
+.login-list-item:hover:active {
+  background-color: var(--in-content-box-background-active);
+}
+
+.login-list-item.keyboard-selected {
+  border-inline-start-color: var(--in-content-border-active-shadow);
+  background-color: var(--in-content-box-background-odd);
+}
+
+.login-list-item.selected {
+  border-inline-start-color: var(--in-content-border-highlight);
+  background-color: var(--in-content-box-background-hover);
+}
+
+.title {
+  font-weight: bold;
+}
+
+.title,
+.username {
+  display: block;
+  max-width: 50ch;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }

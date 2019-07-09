@@ -1,5 +1,5 @@
-This directory contains FreeType v2.10.0 downloaded from
+This directory contains FreeType v2.10.1 downloaded from
 https://download.savannah.gnu.org/releases/freetype/
 
-No post-2.10.0 commits have been cherry-picked from the upstream FreeType
+No post-2.10.1 commits have been cherry-picked from the upstream FreeType
 repository at this time.

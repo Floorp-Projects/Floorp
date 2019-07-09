@@ -129,7 +129,7 @@ JitContext::JitContext() : JitContext(nullptr, nullptr, nullptr) {}
 
 JitContext::~JitContext() { SetJitContext(prev_); }
 
-bool jit::InitializeIon() {
+bool jit::InitializeJit() {
   if (!TlsJitContext.init()) {
     return false;
   }
@@ -146,6 +146,12 @@ bool jit::InitializeIon() {
 #if defined(JS_CODEGEN_ARM)
   InitARMFlags();
 #endif
+
+  // Note: these flags need to be initialized after the InitARMFlags call above.
+  JitOptions.supportsFloatingPoint = MacroAssembler::SupportsFloatingPoint();
+  JitOptions.supportsUnalignedAccesses =
+      MacroAssembler::SupportsUnalignedAccesses();
+
   CheckPerf();
   return true;
 }
@@ -228,7 +234,7 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting bailout tail stub");
   generateBailoutTailStub(masm, &bailoutTail);
 
-  if (cx->runtime()->jitSupportsFloatingPoint) {
+  if (JitOptions.supportsFloatingPoint) {
     JitSpew(JitSpew_Codegen, "# Emitting bailout tables");
 
     // Initialize some Ion-only stubs that require floating-point support.
@@ -3034,14 +3040,6 @@ void jit::TraceJitScripts(JSTracer* trc, JSScript* script) {
   if (script->hasJitScript()) {
     script->jitScript()->trace(trc);
   }
-}
-
-bool jit::JitSupportsFloatingPoint() {
-  return js::jit::MacroAssembler::SupportsFloatingPoint();
-}
-
-bool jit::JitSupportsUnalignedAccesses() {
-  return js::jit::MacroAssembler::SupportsUnalignedAccesses();
 }
 
 bool jit::JitSupportsSimd() { return js::jit::MacroAssembler::SupportsSimd(); }

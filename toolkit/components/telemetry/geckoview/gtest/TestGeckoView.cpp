@@ -451,6 +451,7 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
 /**
  * Test GeckoView timer telemetry is correctly recorded.
  */
+/*
 TEST_F(TelemetryGeckoViewFixture, TimerHitCountProbe) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
@@ -476,6 +477,7 @@ TEST_F(TelemetryGeckoViewFixture, TimerHitCountProbe) {
   // Cleanup/remove the files.
   RemovePersistenceFile();
 }
+*/
 
 TEST_F(TelemetryGeckoViewFixture, EmptyPendingOperations) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
@@ -630,6 +632,7 @@ TEST_F(TelemetryGeckoViewFixture, MultipleAppendOperations) {
                        cx.GetJSContext(), keyedScalarsSnapshot, true);
 }
 
+/*
 TEST_F(TelemetryGeckoViewFixture, PendingOperationsHighWater) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
@@ -672,3 +675,4 @@ TEST_F(TelemetryGeckoViewFixture, PendingOperationsHighWater) {
                   expectedValue + 1);
   CheckUintScalar(reachedName, cx.GetJSContext(), scalarsSnapshot, 1);
 }
+*/

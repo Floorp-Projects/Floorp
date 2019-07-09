@@ -232,6 +232,7 @@ def VS(version):
             '_MSC_VER': '%02d%02d' % (version.major, version.minor),
             '_MSC_FULL_VER': '%02d%02d%05d' % (version.major, version.minor,
                                                version.patch),
+            '_MT': '1',
         },
         '*.cpp': DEFAULT_CXX_97,
     })

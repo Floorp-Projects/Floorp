@@ -123,7 +123,7 @@ function validatedWebRemoteType(
   // If we're within a fission window, extract site information from the URI in
   // question, and use it to generate an isolated origin.
   if (aRemoteSubframes) {
-    let targetPrincipal = sm.createCodebasePrincipal(aTargetUri, {});
+    let targetPrincipal = sm.createContentPrincipal(aTargetUri, {});
     return "webIsolated=" + targetPrincipal.siteOrigin;
   }
 
@@ -436,9 +436,9 @@ var E10SUtils = {
 
     // We might care about the currently loaded URI. Pull it out of our current
     // principal. We never care about the current URI when working with a
-    // non-codebase principal.
+    // non-content principal.
     let currentURI =
-      aCurrentPrincipal && aCurrentPrincipal.isCodebasePrincipal
+      aCurrentPrincipal && aCurrentPrincipal.isContentPrincipal
         ? aCurrentPrincipal.URI
         : null;
     return E10SUtils.getRemoteTypeForURIObject(

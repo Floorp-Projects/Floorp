@@ -333,7 +333,9 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
                   nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD == 43 &&
                   nsIContentPolicy::TYPE_SPECULATIVE == 44 &&
                   nsIContentPolicy::TYPE_INTERNAL_MODULE == 45 &&
-                  nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD == 46,
+                  nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD == 46 &&
+                  nsIContentPolicy::TYPE_INTERNAL_DTD == 47 &&
+                  nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD == 48,
               "nsContentPolicyType values are as expected");
 
 namespace {

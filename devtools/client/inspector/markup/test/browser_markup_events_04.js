@@ -91,13 +91,13 @@ const TEST_DATA = [ // eslint-disable-line
     ],
   },
   {
-    selector: "#arraysort",
+    selector: "#math-pow",
     expected: [
       {
         type: "click",
         filename: "[native code]",
         attributes: ["Bubbling", "DOM2"],
-        handler: "function sort(, ) {\n" + "  [native code]\n" + "}",
+        handler: "function pow(, ) {\n" + "  [native code]\n" + "}",
       },
     ],
   },

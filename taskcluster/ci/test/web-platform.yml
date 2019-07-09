@@ -54,6 +54,7 @@ web-platform-tests:
     max-run-time:
         by-test-platform:
             .*-ccov/debug: 10800
+            linux64-qr/debug: 9000
             default: 7200
     e10s: true
     run-on-projects:
