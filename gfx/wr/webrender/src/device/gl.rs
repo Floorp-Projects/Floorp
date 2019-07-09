@@ -798,6 +798,7 @@ impl ProgramBinary {
 /// The interfaces that an application can implement to handle ProgramCache update
 pub trait ProgramCacheObserver {
     fn update_disk_cache(&self, entries: Vec<Arc<ProgramBinary>>);
+    fn try_load_shader_from_disk(&self, digest: &ProgramSourceDigest, program_cache: &Rc<ProgramCache>);
     fn notify_program_binary_failed(&self, program_binary: &Arc<ProgramBinary>);
 }
 
@@ -1676,6 +1677,16 @@ impl Device {
 
         // See if we hit the binary shader cache
         if let Some(ref cached_programs) = self.cached_programs {
+            // If the shader is not in the cache, attempt to load it from disk
+            if cached_programs.entries.borrow().get(&program.source_info.digest).is_none() {
+                if let Some(ref handler) = cached_programs.program_cache_handler {
+                    handler.try_load_shader_from_disk(&program.source_info.digest, cached_programs);
+                    if let Some(entry) = cached_programs.entries.borrow().get(&program.source_info.digest) {
+                        self.gl.program_binary(program.id, entry.binary.format, &entry.binary.bytes);
+                    }
+                }
+            }
+
             if let Some(entry) = cached_programs.entries.borrow_mut().get_mut(&info.digest) {
                 let mut link_status = [0];
                 unsafe {
