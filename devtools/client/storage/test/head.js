@@ -1003,7 +1003,7 @@ function setPermission(url, permission) {
   const nsIPermissionManager = Ci.nsIPermissionManager;
 
   const uri = Services.io.newURI(url);
-  const principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );

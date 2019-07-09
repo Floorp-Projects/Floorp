@@ -2660,7 +2660,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAddPermission(
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+      mozilla::BasePrincipal::CreateContentPrincipal(uri, attrs);
 
   // child processes don't care about modification time.
   int64_t modificationTime = 0;

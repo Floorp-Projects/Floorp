@@ -38,7 +38,7 @@ function startTest() {
   function testURL(url, func) {
     let secMan = Services.scriptSecurityManager;
     let ios = Services.io;
-    let artificialPrincipal = secMan.createCodebasePrincipal(
+    let artificialPrincipal = secMan.createContentPrincipal(
       ios.newURI("http://example.com/"),
       {}
     );

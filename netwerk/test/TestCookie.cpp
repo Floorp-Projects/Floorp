@@ -94,8 +94,8 @@ void SetASameSiteCookie(nsICookieService* aCookieService, const char* aSpec1,
   ASSERT_TRUE(NS_SUCCEEDED(rv0));
   nsCOMPtr<nsIPrincipal> spec1Principal;
   nsCString tmpString(aSpec1);
-  ssm->CreateCodebasePrincipalFromOrigin(tmpString,
-                                         getter_AddRefs(spec1Principal));
+  ssm->CreateContentPrincipalFromOrigin(tmpString,
+                                        getter_AddRefs(spec1Principal));
 
   nsCOMPtr<nsIChannel> dummyChannel;
   NS_NewChannel(getter_AddRefs(dummyChannel), uri1, spec1Principal,

@@ -674,8 +674,8 @@ this.tabs = class extends ExtensionAPI {
               // Make sure things like about:blank and data: URIs never inherit,
               // and instead always get a NullPrincipal.
               options.allowInheritPrincipal = false;
-              // Falling back to codebase here as about: requires it, however is safe.
-              principal = Services.scriptSecurityManager.createCodebasePrincipal(
+              // Falling back to content here as about: requires it, however is safe.
+              principal = Services.scriptSecurityManager.createContentPrincipal(
                 Services.io.newURI(url),
                 {
                   userContextId: options.userContextId,

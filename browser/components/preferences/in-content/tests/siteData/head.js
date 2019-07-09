@@ -229,7 +229,7 @@ async function addTestData(data) {
       SiteDataTestUtils.addToCookies(site.origin, Cu.now());
     }
 
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       site.origin
     );
     hosts.push(principal.URI.host);
@@ -273,7 +273,7 @@ function promiseServiceWorkersCleared() {
 function promiseServiceWorkerRegisteredFor(url) {
   return BrowserTestUtils.waitForCondition(() => {
     try {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         url
       );
       let sw = serviceWorkerManager.getRegistrationByPrincipal(

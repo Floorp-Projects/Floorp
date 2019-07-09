@@ -70,7 +70,7 @@ interface nsIPrincipal : nsISerializable
     [notxpcom, nostdcall] readonly attribute unsigned long hashValue;
 
     /**
-     * The codebase URI to which this principal pertains.  This is
+     * The principal URI to which this principal pertains.  This is
      * generally the document URI.
      */
     [infallible] readonly attribute nsIURI URI;
@@ -122,7 +122,7 @@ interface nsIPrincipal : nsISerializable
     /**
      * Checks whether this principal is allowed to load the network resource
      * located at the given URI under the same-origin policy. This means that
-     * codebase principals are only allowed to load resources from the same
+     * content principals are only allowed to load resources from the same
      * domain, the system principal is allowed to load anything, and null
      * principals can only load URIs where they are the principal. This is
      * changed by the optional flag allowIfInheritsPrincipal (which defaults to
@@ -170,7 +170,7 @@ interface nsIPrincipal : nsISerializable
 
     /**
      * A canonical representation of the origin for this principal. This
-     * consists of a base string (which, for codebase principals, is of the
+     * consists of a base string (which, for content principals, is of the
      * format scheme://host:port), concatenated with |originAttributes| (see
      * below).
      *
@@ -212,7 +212,7 @@ interface nsIPrincipal : nsISerializable
     readonly attribute ACString siteOrigin;
 
     /**
-     * The base domain of the codebase URI to which this principal pertains
+     * The base domain of the principal URI to which this principal pertains
      * (generally the document URI), handling null principals and
      * non-hierarchical schemes correctly.
      */
@@ -255,9 +255,9 @@ interface nsIPrincipal : nsISerializable
     [infallible] readonly attribute boolean isNullPrincipal;
 
     /**
-     * Returns true iff this principal corresponds to a codebase origin.
+     * Returns true iff this principal corresponds to a principal origin.
      */
-    [infallible] readonly attribute boolean isCodebasePrincipal;
+    [infallible] readonly attribute boolean isContentPrincipal;
 
     /**
      * Returns true iff this is an expanded principal.

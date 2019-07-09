@@ -25,6 +25,10 @@ login-filter {
   align-self: center;
 }
 
+menu-button {
+  margin-inline-start: 18px;
+}
+
 login-list {
   grid-area: logins;
 }
@@ -36,11 +40,6 @@ login-item {
 
 #branding-logo {
   height: 32px;
-  margin-inline-end: 18px;
-}
-
-#create-login-button {
-  margin-inline-start: 18px;
   margin-inline-end: 18px;
 }
 

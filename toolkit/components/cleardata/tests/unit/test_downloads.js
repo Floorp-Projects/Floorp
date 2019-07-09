@@ -167,7 +167,7 @@ add_task(async function test_principal_downloads() {
   await list.addView(view);
 
   let uri = Services.io.newURI("http://example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );

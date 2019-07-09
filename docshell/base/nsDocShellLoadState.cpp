@@ -388,7 +388,7 @@ nsresult nsDocShellLoadState::SetupTriggeringPrincipal(
     if (mReferrerInfo) {
       nsCOMPtr<nsIURI> referrer = mReferrerInfo->GetOriginalReferrer();
       mTriggeringPrincipal =
-          BasePrincipal::CreateCodebasePrincipal(referrer, aOriginAttributes);
+          BasePrincipal::CreateContentPrincipal(referrer, aOriginAttributes);
 
       if (!mTriggeringPrincipal) {
         return NS_ERROR_FAILURE;

@@ -151,7 +151,8 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
     // We only create MobileViewportManager for root content documents. If that
     // ever changes we'd need to limit the size of this displayport base rect
     // because non-toplevel documents have no limit on their size.
-    MOZ_ASSERT(mPresShell->GetPresContext()->IsRootContentDocument());
+    MOZ_ASSERT(
+        mPresShell->GetPresContext()->IsRootContentDocumentCrossProcess());
     nsLayoutUtils::SetDisplayPortBaseIfNotSet(root->GetContent(),
                                               displayportBase);
     nsIScrollableFrame* scrollable = do_QueryFrame(root);

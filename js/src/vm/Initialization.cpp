@@ -147,7 +147,7 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   RETURN_IF_FAIL(js::MemoryProtectionExceptionHandler::install());
 
-  RETURN_IF_FAIL(js::jit::InitializeIon());
+  RETURN_IF_FAIL(js::jit::InitializeJit());
 
   RETURN_IF_FAIL(js::InitDateTimeState());
 

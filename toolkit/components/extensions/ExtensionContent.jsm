@@ -763,7 +763,7 @@ class ContentScriptContextChild extends BaseContext {
     // Copy origin attributes from the content window origin attributes to
     // preserve the user context id.
     let attrs = contentPrincipal.originAttributes;
-    let extensionPrincipal = ssm.createCodebasePrincipal(
+    let extensionPrincipal = ssm.createContentPrincipal(
       this.extension.baseURI,
       attrs
     );

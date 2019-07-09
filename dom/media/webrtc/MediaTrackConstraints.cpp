@@ -343,7 +343,7 @@ bool MediaConstraintsHelper::SomeSettingsFit(
 /* static */
 uint32_t MediaConstraintsHelper::GetMinimumFitnessDistance(
     const NormalizedConstraintSet& aConstraints, const nsString& aDeviceId) {
-  return FitnessDistance(aDeviceId, aConstraints.mDeviceId);
+  return FitnessDistance(Some(aDeviceId), aConstraints.mDeviceId);
 }
 
 template <class ValueType, class NormalizedRange>
@@ -388,13 +388,14 @@ uint32_t MediaConstraintsHelper::FeasibilityDistance(
 
 /* static */
 uint32_t MediaConstraintsHelper::FitnessDistance(
-    const nsString& aN, const NormalizedConstraintSet::StringRange& aParams) {
+    const Maybe<nsString>& aN,
+    const NormalizedConstraintSet::StringRange& aParams) {
   if (!aParams.mExact.empty() &&
-      aParams.mExact.find(aN) == aParams.mExact.end()) {
+      (aN.isNothing() || aParams.mExact.find(*aN) == aParams.mExact.end())) {
     return UINT32_MAX;
   }
   if (!aParams.mIdeal.empty() &&
-      aParams.mIdeal.find(aN) == aParams.mIdeal.end()) {
+      (aN.isNothing() || aParams.mIdeal.find(*aN) == aParams.mIdeal.end())) {
     return 1000;
   }
   return 0;

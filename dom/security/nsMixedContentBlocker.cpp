@@ -415,7 +415,7 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
   }
 
   // Blobs are expected to inherit their principal so we don't expect to have
-  // a codebase principal with scheme 'blob' here.  We can't assert that though
+  // a content principal with scheme 'blob' here.  We can't assert that though
   // since someone could mess with a non-blob URI to give it that scheme.
   NS_WARNING_ASSERTION(!scheme.EqualsLiteral("blob"),
                        "IsOriginPotentiallyTrustworthy ignoring blob scheme");

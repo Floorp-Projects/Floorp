@@ -69,7 +69,7 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
     return true;
   }
   RefPtr<BasePrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(aURI, OriginAttributes());
+      BasePrincipal::CreateContentPrincipal(aURI, OriginAttributes());
   nsString addonId;
   if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
     if (StringEndsWith(addonId, NS_LITERAL_STRING("@mozilla.org")) ||

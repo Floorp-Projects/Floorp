@@ -490,7 +490,7 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
             python,
             os.path.join(self.topsrcdir, 'js', 'src', 'tests', 'jstests.py'),
             js,
-            '--jitflags=all',
+            '--jitflags=jstests',
         ] + params
         return subprocess.call(jstest_cmd)
 

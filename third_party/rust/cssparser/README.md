@@ -1,7 +1,7 @@
 rust-cssparser
 ==============
 
-[![Build Status](https://travis-ci.org/servo/rust-cssparser.svg?branch=travis)](https://travis-ci.org/servo/rust-cssparser)
+[![Build Status](https://travis-ci.com/servo/rust-cssparser.svg)](https://travis-ci.com/servo/rust-cssparser)
 
 [Documentation](https://docs.rs/cssparser/)
 

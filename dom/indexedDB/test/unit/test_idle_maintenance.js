@@ -8,7 +8,7 @@ var testGenerator = testSteps();
 
 function* testSteps() {
   let uri = Services.io.newURI("https://www.example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );

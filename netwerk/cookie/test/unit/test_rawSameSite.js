@@ -59,7 +59,7 @@ add_task(async _ => {
 
   let uri = NetUtil.newURI("http://example.org/");
 
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );

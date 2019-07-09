@@ -17,7 +17,7 @@ static int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
   mozilla::OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> selfURIPrincipal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(selfURI, attrs);
+      mozilla::BasePrincipal::CreateContentPrincipal(selfURI, attrs);
   if (!selfURIPrincipal) return 0;
 
   nsCOMPtr<nsIContentSecurityPolicy> csp =

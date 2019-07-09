@@ -2,7 +2,7 @@
 
 exports[`Dummy test shallow renders a component 1`] = `
 <article
-  className="worker-list-empty"
+  className="worker-list-empty js-worker-list-empty"
 >
   <Localized
     a={

@@ -106,7 +106,7 @@ AboutRedirector.prototype = {
 
     if (!moduleInfo.privileged) {
       // Setting the owner to null means that we'll go through the normal
-      // path in GetChannelPrincipal and create a codebase principal based
+      // path in GetChannelPrincipal and create a content principal based
       // on the channel's originalURI
       channel.owner = null;
     }

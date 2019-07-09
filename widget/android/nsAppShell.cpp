@@ -139,7 +139,7 @@ class GeckoThreadSupport final
 
     OriginAttributes attrs;
     nsCOMPtr<nsIPrincipal> principal =
-        BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+        BasePrincipal::CreateContentPrincipal(uri, attrs);
     specConn->SpeculativeConnect(uri, principal, nullptr);
   }
 

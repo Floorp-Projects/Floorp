@@ -29,6 +29,10 @@
 #  include "YuvStamper.h"
 #endif
 
+#define VIDEO_WIDTH_MIN 160
+#define VIDEO_WIDTH_MAX 4096
+#define VIDEO_HEIGHT_MIN 90
+#define VIDEO_HEIGHT_MAX 2160
 #define DEFAULT_AUDIO_TIMER_MS 10
 namespace mozilla {
 
@@ -98,15 +102,30 @@ uint32_t MediaEngineDefaultVideoSource::GetBestFitnessDistance(
     const nsString& aDeviceId) const {
   AssertIsOnOwningThread();
 
-  uint32_t distance = 0;
+  uint64_t distance = 0;
 #ifdef MOZ_WEBRTC
   for (const auto* cs : aConstraintSets) {
-    distance =
-        MediaConstraintsHelper::GetMinimumFitnessDistance(*cs, aDeviceId);
+    distance +=
+        MediaConstraintsHelper::FitnessDistance(Some(aDeviceId), cs->mDeviceId);
+
+    Maybe<nsString> facingMode = Nothing();
+    distance +=
+        MediaConstraintsHelper::FitnessDistance(facingMode, cs->mFacingMode);
+
+    if (cs->mWidth.mMax < VIDEO_WIDTH_MIN ||
+        cs->mWidth.mMin > VIDEO_WIDTH_MAX) {
+      distance += UINT32_MAX;
+    }
+
+    if (cs->mHeight.mMax < VIDEO_HEIGHT_MIN ||
+        cs->mHeight.mMin > VIDEO_HEIGHT_MAX) {
+      distance += UINT32_MAX;
+    }
+
     break;  // distance is read from first entry only
   }
 #endif
-  return distance;
+  return uint32_t(std::min(distance, uint64_t(UINT32_MAX)));
 }
 
 void MediaEngineDefaultVideoSource::GetSettings(
@@ -151,8 +170,11 @@ nsresult MediaEngineDefaultVideoSource::Allocate(
                                    MediaEnginePrefs::DEFAULT_43_VIDEO_HEIGHT
 #endif
       );
-  mOpts.mWidth = std::max(160, std::min(mOpts.mWidth, 4096)) & ~1;
-  mOpts.mHeight = std::max(90, std::min(mOpts.mHeight, 2160)) & ~1;
+  mOpts.mWidth =
+      std::max(VIDEO_WIDTH_MIN, std::min(mOpts.mWidth, VIDEO_WIDTH_MAX)) & ~1;
+  mOpts.mHeight =
+      std::max(VIDEO_HEIGHT_MIN, std::min(mOpts.mHeight, VIDEO_HEIGHT_MAX)) &
+      ~1;
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       __func__, [settings = mSettings, frameRate = mOpts.mFPS,

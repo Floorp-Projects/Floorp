@@ -104,7 +104,7 @@ add_task(async function test_principal_cookies() {
   Assert.equal(Services.cookies.countCookiesFromHost("example.net"), 1);
 
   let uri = Services.io.newURI("http://example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
     {}
   );
@@ -124,7 +124,7 @@ add_task(async function test_principal_cookies() {
 
   // Now we delete all.
   uri = Services.io.newURI("http://example.net");
-  principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
   await new Promise(aResolve => {
     Services.clearData.deleteDataFromPrincipal(
       principal,

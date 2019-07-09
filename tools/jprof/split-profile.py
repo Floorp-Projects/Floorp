@@ -96,7 +96,7 @@ def generate_profile(options, destfile):
     Run jprof to generate one split of the profile.
     """
     args = [jprof] + options + passthrough
-    print "Generating {0}".format(destfile)
+    print("Generating {}".format(destfile))
     destio = open(destfile, "w")
     # jprof expects the "jprof-map" file to be in its current working directory
     cwd = None
@@ -104,7 +104,7 @@ def generate_profile(options, destfile):
         if option.find("jprof-log"):
             cwd = os.path.dirname(option)
     if cwd is None:
-        raise StandardError("no jprof-log option given")
+        raise Exception("no jprof-log option given")
     process = subprocess.Popen(args, stdout=destio, cwd=cwd)
     process.wait()
     destio.close()

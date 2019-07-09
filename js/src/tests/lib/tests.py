@@ -17,7 +17,17 @@ JITFLAGS = {
         ['--ion-eager', '--ion-offthread-compile=off',
          '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
         ['--baseline-eager'],
-        ['--no-baseline', '--no-ion', '--more-compartments'],
+        ['--no-blinterp', '--no-baseline', '--no-ion', '--more-compartments'],
+        ['--blinterp', '--blinterp-eager'],
+    ],
+    # Like 'all' above but for jstests. This has fewer jit-specific
+    # configurations.
+    'jstests': [
+        [],  # no flags, normal baseline and ion
+        ['--ion-eager', '--ion-offthread-compile=off',  # implies --baseline-eager
+         '--more-compartments'],
+        ['--baseline-eager'],
+        ['--no-blinterp', '--no-baseline', '--no-ion', '--more-compartments'],
     ],
     # used by jit_test.py
     'ion': [
@@ -36,14 +46,15 @@ JITFLAGS = {
     'tsan': [
         [],
         ['--ion-eager', '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3'],
-        ['--no-baseline', '--no-ion'],
+        ['--no-blinterp', '--no-baseline', '--no-ion'],
     ],
     'baseline': [
         ['--no-ion'],
     ],
     # Interpreter-only, for tools that cannot handle binary code generation.
     'interp': [
-        ['--no-baseline', '--no-asmjs', '--wasm-compiler=none', '--no-native-regexp']
+        ['--no-blinterp', '--no-baseline', '--no-asmjs', '--wasm-compiler=none',
+         '--no-native-regexp']
     ],
     'none': [
         []  # no flags, normal baseline and ion

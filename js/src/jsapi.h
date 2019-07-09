@@ -2852,6 +2852,7 @@ extern JS_PUBLIC_API void JS_SetOffthreadIonCompilationEnabled(JSContext* cx,
 
 // clang-format off
 #define JIT_COMPILER_OPTIONS(Register) \
+  Register(BASELINE_INTERPRETER_WARMUP_TRIGGER, "blinterp.warmup.trigger") \
   Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger") \
   Register(ION_NORMAL_WARMUP_TRIGGER, "ion.warmup.trigger") \
   Register(ION_FULL_WARMUP_TRIGGER, "ion.full.warmup.trigger") \
@@ -2860,6 +2861,7 @@ extern JS_PUBLIC_API void JS_SetOffthreadIonCompilationEnabled(JSContext* cx,
   Register(ION_ENABLE, "ion.enable") \
   Register(ION_CHECK_RANGE_ANALYSIS, "ion.check-range-analysis") \
   Register(ION_FREQUENT_BAILOUT_THRESHOLD, "ion.frequent-bailout-threshold") \
+  Register(BASELINE_INTERPRETER_ENABLE, "blinterp.enable") \
   Register(BASELINE_ENABLE, "baseline.enable") \
   Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \
   Register(FULL_DEBUG_CHECKS, "jit.full-debug-checks") \

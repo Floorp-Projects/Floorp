@@ -139,7 +139,7 @@ FaviconObserver.prototype = {
   reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL) {
     this._curUserContextId = aUserContextId;
     this._expectedCookie = aExpectedCookie;
-    this._expectedPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+    this._expectedPrincipal = Services.scriptSecurityManager.createContentPrincipal(
       aPageURI,
       { userContextId: aUserContextId }
     );

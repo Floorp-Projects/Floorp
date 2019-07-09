@@ -7,7 +7,7 @@ function checkDataForAboutURL() {
   return new Promise(resolve => {
     let data = true;
     let uri = Services.io.newURI("about:newtab");
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       {}
     );
@@ -49,7 +49,7 @@ add_task(async function deleteStorageInAboutURL() {
   // Clean up.
   await Sanitizer.sanitize(["cookies", "offlineApps"]);
 
-  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "about:newtab"
   );
   await new Promise(aResolve => {
@@ -92,7 +92,7 @@ add_task(async function deleteStorageOnlyCustomPermissionInAboutURL() {
   // Clean up.
   await Sanitizer.sanitize(["cookies", "offlineApps"]);
 
-  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "about:newtab"
   );
   await new Promise(aResolve => {

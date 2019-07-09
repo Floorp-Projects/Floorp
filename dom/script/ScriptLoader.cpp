@@ -345,9 +345,9 @@ nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
 
 /* static */
 bool ScriptLoader::IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest) {
-  // if we are not dealing with a codebasePrincipal it can not be a
+  // if we are not dealing with a contentPrincipal it can not be a
   // Principal with a scheme of about: and there is nothing left to do
-  if (!aRequest->TriggeringPrincipal()->GetIsCodebasePrincipal()) {
+  if (!aRequest->TriggeringPrincipal()->GetIsContentPrincipal()) {
     return false;
   }
 

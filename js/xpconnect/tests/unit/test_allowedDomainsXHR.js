@@ -61,7 +61,7 @@ function run_test()
   Assert.ok(checkResults(res));
 
   var principal = res.responseXML.nodePrincipal;
-  Assert.ok(principal.isCodebasePrincipal);
+  Assert.ok(principal.isContentPrincipal);
   var requestURL = "http://localhost:4444/simple";
   Assert.equal(principal.URI.spec, requestURL);
 
@@ -83,7 +83,7 @@ function run_test()
   Assert.ok(checkResults(res));
 
   var principal = res.responseXML.nodePrincipal;
-  Assert.ok(principal.isCodebasePrincipal);
+  Assert.ok(principal.isContentPrincipal);
   var requestURL = "http://localhost:4444/simple";
   Assert.equal(principal.URI.spec, requestURL);
 

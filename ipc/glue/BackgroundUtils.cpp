@@ -85,7 +85,7 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
         return nullptr;
       }
 
-      principal = BasePrincipal::CreateCodebasePrincipal(uri, info.attrs());
+      principal = BasePrincipal::CreateContentPrincipal(uri, info.attrs());
       if (NS_WARN_IF(!principal)) {
         return nullptr;
       }

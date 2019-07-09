@@ -8314,7 +8314,7 @@ var CanvasPermissionPromptHelper = {
       1
     );
 
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       aData
     );
 

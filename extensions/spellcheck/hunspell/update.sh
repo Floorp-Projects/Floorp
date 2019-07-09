@@ -21,10 +21,10 @@ cp ${tmpclonedir}/license.hunspell ${hunspell_dir}/src/LICENSE
 cp ${tmpclonedir}/README ${hunspell_dir}/src
 rm ${hunspell_dir}/src/Makefile.am
 rm ${hunspell_dir}/src/hunvisapi.h.in
+rm ${hunspell_dir}/src/hunzip.cxx
+rm ${hunspell_dir}/src/hunzip.hxx
 rm ${hunspell_dir}/src/utf_info.cxx
 rm -rf ${tmpclonedir}
 
 cd ${hunspell_dir}/src
-patch -p5 < ../patches/bug1261841.patch
 patch -p5 < ../patches/bug1410214.patch
-patch -p5 < ../patches/bug1460600.patch
