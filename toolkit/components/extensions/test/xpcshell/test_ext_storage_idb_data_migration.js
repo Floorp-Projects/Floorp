@@ -19,6 +19,9 @@ const { ExtensionStorage } = ChromeUtils.import(
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 const { ExtensionStorageIDB } = ChromeUtils.import(
   "resource://gre/modules/ExtensionStorageIDB.jsm"
@@ -45,6 +48,11 @@ const EVENT_OBJECT = "storageLocal";
 const EVENT_METHODS = ["migrateResult"];
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
 const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";
+const TELEMETRY_EVENTS_FILTER = {
+  category: "extensions.data",
+  method: "migrateResult",
+  object: "storageLocal",
+};
 
 async function createExtensionJSONFileWithData(extensionId, data) {
   await ExtensionStorage.set(extensionId, data);
@@ -544,6 +552,53 @@ add_task(async function test_storage_local_data_migration_failure() {
 
   assertMigrationHistogramCount("success", 0);
   assertMigrationHistogramCount("failure", 1);
+});
+
+add_task(async function test_migration_aborted_on_shutdown() {
+  const EXTENSION_ID = "test-migration-aborted-on-shutdown@mochi.test";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["storage"],
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+        },
+      },
+    },
+  });
+
+  await extension.startup();
+
+  equal(
+    extension.extension.hasShutdown,
+    false,
+    "The extension is still running"
+  );
+
+  await extension.unload();
+  equal(extension.extension.hasShutdown, true, "The extension has shutdown");
+
+  // Trigger a data migration after the extension has been unloaded.
+  const result = await ExtensionStorageIDB.selectBackend({
+    extension: extension.extension,
+  });
+  Assert.deepEqual(
+    result,
+    { backendEnabled: false },
+    "Expect migration to have been aborted"
+  );
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: EXTENSION_ID,
+        extra: {
+          backend: "JSONFile",
+          error_name: "DataMigrationAbortedError",
+        },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTER
+  );
 });
 
 add_task(async function test_storage_local_data_migration_clear_pref() {
