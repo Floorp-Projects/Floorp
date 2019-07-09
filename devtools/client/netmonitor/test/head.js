@@ -154,10 +154,6 @@ Services.prefs.setCharPref(
 // Increase UI limit for responses rendered using CodeMirror in tests.
 Services.prefs.setIntPref("devtools.netmonitor.response.ui.limit", 1024 * 105);
 
-// Support for columns resizing is currently hidden behind this pref,
-// but testing is on
-Services.prefs.setBoolPref("devtools.netmonitor.features.resizeColumns", true);
-
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
 
@@ -167,7 +163,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.netmonitor.columnsData");
   Services.prefs.clearUserPref("devtools.netmonitor.response.ui.limit");
   Services.prefs.clearUserPref("devtools.netmonitor.visibleColumns");
-  Services.prefs.clearUserPref("devtools.netmonitor.features.resizeColumns");
   Services.cookies.removeAll();
 });
 
