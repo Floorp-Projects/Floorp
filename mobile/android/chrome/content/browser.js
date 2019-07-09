@@ -7330,7 +7330,11 @@ var SearchEngines = {
             name = title.value + " " + i;
           }
 
-          await Services.search.addEngineWithDetails(name, details);
+          await Services.search.addEngineWithDetails(name, {
+            iconURL: data,
+            method,
+            template: formURL,
+          });
           Snackbars.show(
             Strings.browser.formatStringFromName(
               "alertSearchEngineAddedToast",
