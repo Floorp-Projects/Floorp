@@ -277,9 +277,6 @@ pref("chrome.override_package.global", "browser");
 pref("chrome.override_package.mozapps", "browser");
 pref("chrome.override_package.passwordmgr", "browser");
 
-// enable xul error pages
-pref("browser.xul.error_pages.enabled", true);
-
 // disable color management
 pref("gfx.color_management.mode", 0);
 
