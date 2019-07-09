@@ -18,7 +18,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-98,0-152) fuzzy-if(skiaCon
 fuzzy-if(skiaContent,0-1,0-17) random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 fuzzy-if(skiaContent,0-1,0-17) == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
 random-if(d2d) fuzzy-if(skiaContent,0-1,0-212) fuzzy-if(webrender,0-127,0-3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
-fuzzy-if(skiaContent,0-1,0-50) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
+fuzzy-if(skiaContent,0-1,0-50) == chrome://reftest/content/box-shadow/boxshadow-dynamic.xul chrome://reftest/content/box-shadow/boxshadow-dynamic-ref.xul
 random-if(d2d) fuzzy-if(skiaContent,0-1,0-14) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 random-if(d2d) fuzzy-if(skiaContent,0-1,0-22) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
 random-if(d2d) fuzzy-if(skiaContent,0-1,0-36) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
