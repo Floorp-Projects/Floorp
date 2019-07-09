@@ -79,6 +79,9 @@ add_task(async function test_sanitize() {
   // Stripping of BIDI formatting characters.
   testSanitize("\u200e \u202b\u202c\u202d\u202etest\x7f\u200f", "test");
   testSanitize("AB\x7f\u202a\x7f\u202a\x7fCD", "AB CD");
+
+  // Stripping of colons:
+  testSanitize("foo:bar", "foo bar");
 });
 
 add_task(async function test_splitBaseNameAndExtension() {
