@@ -457,6 +457,7 @@ export type Scope = {|
     parameterNames: string[],
   },
   type: string,
+  scopeKind: string,
 |};
 
 export type MainThread = {

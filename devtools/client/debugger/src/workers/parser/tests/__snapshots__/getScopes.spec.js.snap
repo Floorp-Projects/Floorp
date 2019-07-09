@@ -75,6 +75,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/flowtype-bindings/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -90,6 +91,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/flowtype-bindings/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -125,6 +127,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/flowtype-bindings/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -154,6 +157,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/flowtype-bindings/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 9,
@@ -234,6 +238,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/flowtype-bindings/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -249,6 +254,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/flowtype-bindings/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -284,6 +290,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/flowtype-bindings/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -354,6 +361,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -369,6 +377,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -446,6 +455,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -497,6 +507,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 13,
       "line": 3,
@@ -562,6 +573,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -577,6 +589,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -654,6 +667,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -728,6 +742,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 3,
       "line": 6,
@@ -774,6 +789,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 13,
       "line": 3,
@@ -839,6 +855,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -854,6 +871,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -931,6 +949,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -982,6 +1001,7 @@ Array [
       "line": 9,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 17,
       "line": 7,
@@ -1051,6 +1071,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 3,
       "line": 6,
@@ -1097,6 +1118,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 13,
       "line": 3,
@@ -1162,6 +1184,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1177,6 +1200,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1254,6 +1278,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/arrow-function/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1369,6 +1394,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/block-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1384,6 +1410,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/block-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1399,6 +1426,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/block-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1540,6 +1568,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/block-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 5,
@@ -1650,6 +1679,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/block-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1665,6 +1695,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/block-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1680,6 +1711,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/block-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1765,6 +1797,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1780,6 +1813,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1848,6 +1882,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -1899,6 +1934,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 11,
       "line": 4,
@@ -1923,6 +1959,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 4,
@@ -1969,6 +2006,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -2049,6 +2087,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2064,6 +2103,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2132,6 +2172,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2176,6 +2217,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 6,
       "line": 6,
@@ -2222,6 +2264,7 @@ Array [
       "line": 9,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 4,
       "line": 5,
@@ -2268,6 +2311,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 11,
       "line": 4,
@@ -2292,6 +2336,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 4,
@@ -2338,6 +2383,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -2418,6 +2464,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2433,6 +2480,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2501,6 +2549,7 @@ Array [
       "line": 15,
       "sourceId": "scopes/class-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2556,6 +2605,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2571,6 +2621,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2620,6 +2671,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2679,6 +2731,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 4,
@@ -2725,6 +2778,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 12,
       "line": 3,
@@ -2775,6 +2829,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2790,6 +2845,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2839,6 +2895,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -2883,6 +2940,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 6,
       "line": 6,
@@ -2937,6 +2995,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 4,
@@ -2983,6 +3042,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 12,
       "line": 3,
@@ -3033,6 +3093,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3048,6 +3109,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3097,6 +3159,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/class-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3152,6 +3215,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3167,6 +3231,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3182,6 +3247,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3253,6 +3319,7 @@ Array [
       "line": 4,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 9,
       "line": 4,
@@ -3299,6 +3366,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -3349,6 +3417,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3364,6 +3433,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3379,6 +3449,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3438,6 +3509,7 @@ Array [
       "line": 9,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 10,
       "line": 6,
@@ -3484,6 +3556,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -3534,6 +3607,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3549,6 +3623,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3564,6 +3639,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3615,6 +3691,7 @@ Array [
       "line": 9,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 13,
       "line": 6,
@@ -3669,6 +3746,7 @@ Array [
       "line": 9,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 10,
       "line": 6,
@@ -3715,6 +3793,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -3765,6 +3844,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3780,6 +3860,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -3795,6 +3876,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/class-property/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -4044,6 +4126,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 14,
       "line": 11,
@@ -4154,6 +4237,7 @@ Array [
       "line": 26,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 10,
@@ -4438,6 +4522,7 @@ Array [
       "line": 29,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 1,
@@ -4453,6 +4538,7 @@ Array [
       "line": 30,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -4653,6 +4739,7 @@ Array [
       "line": 30,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -4712,6 +4799,7 @@ Array [
       "line": 21,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 31,
       "line": 18,
@@ -4758,6 +4846,7 @@ Array [
       "line": 21,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 16,
       "line": 18,
@@ -5002,6 +5091,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 14,
       "line": 11,
@@ -5112,6 +5202,7 @@ Array [
       "line": 26,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 10,
@@ -5396,6 +5487,7 @@ Array [
       "line": 29,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 1,
@@ -5411,6 +5503,7 @@ Array [
       "line": 30,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -5611,6 +5704,7 @@ Array [
       "line": 30,
       "sourceId": "scopes/complex-nesting/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -5631,6 +5725,7 @@ Array [
       "line": 3,
       "sourceId": "scopes/pattern-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -5711,6 +5806,7 @@ Array [
       "line": 3,
       "sourceId": "scopes/pattern-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -5826,6 +5922,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -5841,6 +5938,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -5856,6 +5954,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -5971,6 +6070,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -5986,6 +6086,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6001,6 +6102,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6052,6 +6154,7 @@ Array [
       "line": 4,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 5,
       "line": 4,
@@ -6162,6 +6265,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6177,6 +6281,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6192,6 +6297,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6243,6 +6349,7 @@ Array [
       "line": 5,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 5,
       "line": 5,
@@ -6353,6 +6460,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6368,6 +6476,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6383,6 +6492,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6498,6 +6608,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6513,6 +6624,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6528,6 +6640,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6579,6 +6692,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 5,
       "line": 8,
@@ -6689,6 +6803,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6704,6 +6819,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6719,6 +6835,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6770,6 +6887,7 @@ Array [
       "line": 9,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 5,
       "line": 9,
@@ -6880,6 +6998,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6895,6 +7014,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -6910,6 +7030,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7025,6 +7146,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7040,6 +7162,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7055,6 +7178,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7106,6 +7230,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 5,
       "line": 12,
@@ -7216,6 +7341,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7231,6 +7357,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7246,6 +7373,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7297,6 +7425,7 @@ Array [
       "line": 13,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 5,
       "line": 13,
@@ -7407,6 +7536,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7422,6 +7552,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7437,6 +7568,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/for-loops/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7492,6 +7624,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7507,6 +7640,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7556,6 +7690,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7615,6 +7750,7 @@ Array [
       "line": 3,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 3,
@@ -7665,6 +7801,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7680,6 +7817,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7729,6 +7867,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7780,6 +7919,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 5,
@@ -7830,6 +7970,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7845,6 +7986,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7894,6 +8036,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -7998,6 +8141,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 18,
       "line": 6,
@@ -8044,6 +8188,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 5,
@@ -8094,6 +8239,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8109,6 +8255,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8158,6 +8305,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/function-declaration/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8243,6 +8391,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8258,6 +8407,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8307,6 +8457,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8366,6 +8517,7 @@ Array [
       "line": 3,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 18,
       "line": 3,
@@ -8446,6 +8598,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8461,6 +8614,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8510,6 +8664,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8584,6 +8739,7 @@ Array [
       "line": 7,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 28,
       "line": 5,
@@ -8630,6 +8786,7 @@ Array [
       "line": 7,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 10,
       "line": 5,
@@ -8710,6 +8867,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8725,6 +8883,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8774,6 +8933,7 @@ Array [
       "line": 8,
       "sourceId": "scopes/function-expression/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8904,6 +9064,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8919,6 +9080,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -8968,6 +9130,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -9143,6 +9306,7 @@ Array [
       "line": 19,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 3,
@@ -9268,6 +9432,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -9283,6 +9448,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -9332,6 +9498,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -9464,6 +9631,7 @@ Array [
       "line": 16,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 10,
@@ -9634,6 +9802,7 @@ Array [
       "line": 19,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 3,
@@ -9759,6 +9928,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -9774,6 +9944,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -9823,6 +9994,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -9955,6 +10127,7 @@ Array [
       "line": 16,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 10,
@@ -10125,6 +10298,7 @@ Array [
       "line": 19,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 3,
@@ -10250,6 +10424,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10265,6 +10440,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10314,6 +10490,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10489,6 +10666,7 @@ Array [
       "line": 19,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 3,
@@ -10614,6 +10792,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10629,6 +10808,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10678,6 +10858,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/out-of-order-declarations/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10733,6 +10914,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10748,6 +10930,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10811,6 +10994,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10892,6 +11076,7 @@ Array [
       "line": 13,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -10942,6 +11127,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -10957,6 +11143,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11020,6 +11207,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11101,6 +11289,7 @@ Array [
       "line": 13,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -11151,6 +11340,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11166,6 +11356,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11229,6 +11420,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11310,6 +11502,7 @@ Array [
       "line": 13,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -11360,6 +11553,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11375,6 +11569,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11438,6 +11633,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11489,6 +11685,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 16,
       "line": 10,
@@ -11565,6 +11762,7 @@ Array [
       "line": 13,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 3,
@@ -11615,6 +11813,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11630,6 +11829,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11693,6 +11893,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11744,6 +11945,7 @@ Array [
       "line": 18,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 15,
@@ -11794,6 +11996,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11809,6 +12012,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11872,6 +12076,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11923,6 +12128,7 @@ Array [
       "line": 22,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 19,
@@ -11973,6 +12179,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -11988,6 +12195,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12051,6 +12259,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/switch-statement/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12136,6 +12345,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12151,6 +12361,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12166,6 +12377,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12217,6 +12429,7 @@ Array [
       "line": 6,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 4,
       "line": 3,
@@ -12297,6 +12510,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12312,6 +12526,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12327,6 +12542,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12378,6 +12594,7 @@ Array [
       "line": 9,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 14,
       "line": 6,
@@ -12424,6 +12641,7 @@ Array [
       "line": 9,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 6,
@@ -12504,6 +12722,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12519,6 +12738,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12534,6 +12754,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/try-catch/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12646,6 +12867,7 @@ Array [
       "line": 7,
       "sourceId": "scopes/jsx-component/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12661,6 +12883,7 @@ Array [
       "line": 7,
       "sourceId": "scopes/jsx-component/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12676,6 +12899,7 @@ Array [
       "line": 7,
       "sourceId": "scopes/jsx-component/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12881,6 +13105,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/simple-module/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12896,6 +13121,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/simple-module/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -12945,6 +13171,7 @@ Array [
       "line": 12,
       "sourceId": "scopes/simple-module/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -13070,6 +13297,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -13186,6 +13414,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -13245,6 +13474,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 21,
       "line": 12,
@@ -13291,6 +13521,7 @@ Array [
       "line": 19,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 10,
@@ -13411,6 +13642,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -13527,6 +13759,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -13556,6 +13789,7 @@ Array [
       "line": 18,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 16,
@@ -13602,6 +13836,7 @@ Array [
       "line": 19,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 10,
@@ -13722,6 +13957,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -13838,6 +14074,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -13867,6 +14104,7 @@ Array [
       "line": 34,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 32,
@@ -13913,6 +14151,7 @@ Array [
       "line": 35,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 19,
       "line": 31,
@@ -14033,6 +14272,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -14149,6 +14389,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -14274,6 +14515,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -14395,6 +14637,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -14454,6 +14697,7 @@ Array [
       "line": 14,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 21,
       "line": 12,
@@ -14500,6 +14744,7 @@ Array [
       "line": 19,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 10,
@@ -14620,6 +14865,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -14741,6 +14987,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -14770,6 +15017,7 @@ Array [
       "line": 18,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 16,
@@ -14816,6 +15064,7 @@ Array [
       "line": 19,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 10,
@@ -14936,6 +15185,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15057,6 +15307,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15086,6 +15337,7 @@ Array [
       "line": 34,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 32,
@@ -15132,6 +15384,7 @@ Array [
       "line": 35,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 19,
       "line": 31,
@@ -15252,6 +15505,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15373,6 +15627,7 @@ Array [
       "line": 42,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15432,6 +15687,7 @@ Array [
       "line": 18,
       "sourceId": "scopes/vue-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 12,
@@ -15482,6 +15738,7 @@ Array [
       "line": 27,
       "sourceId": "scopes/vue-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15497,6 +15754,7 @@ Array [
       "line": 27,
       "sourceId": "scopes/vue-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15512,6 +15770,7 @@ Array [
       "line": 27,
       "sourceId": "scopes/vue-sample/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15563,6 +15822,7 @@ Array [
       "line": 5,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 14,
       "line": 1,
@@ -15617,6 +15877,7 @@ Array [
       "line": 5,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15632,6 +15893,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15772,6 +16034,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -15823,6 +16086,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 7,
@@ -15877,6 +16141,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 7,
@@ -15892,6 +16157,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -16032,6 +16298,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -16083,6 +16350,7 @@ Array [
       "line": 17,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 13,
@@ -16137,6 +16405,7 @@ Array [
       "line": 17,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 13,
@@ -16152,6 +16421,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -16292,6 +16562,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -16343,6 +16614,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 15,
       "line": 19,
@@ -16397,6 +16669,7 @@ Array [
       "line": 23,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 19,
@@ -16412,6 +16685,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -16552,6 +16826,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/fn-body-lex-and-nonlex/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -16862,6 +17137,7 @@ Array [
       "line": 7,
       "sourceId": "scopes/expressions/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -16934,6 +17210,7 @@ Array [
       "line": 7,
       "sourceId": "scopes/expressions/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -17232,6 +17509,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -17247,6 +17525,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -17262,6 +17541,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -17291,6 +17571,7 @@ Array [
       "line": 10,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 2,
       "line": 8,
@@ -17337,6 +17618,7 @@ Array [
       "line": 11,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 7,
@@ -17630,6 +17912,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -17645,6 +17928,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -17660,6 +17944,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -17719,6 +18004,7 @@ Array [
       "line": 20,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 1,
       "line": 17,
@@ -17765,6 +18051,7 @@ Array [
       "line": 20,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 1,
       "line": 17,
@@ -18058,6 +18345,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -18073,6 +18361,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -18088,6 +18377,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -18139,6 +18429,7 @@ Array [
       "line": 24,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 22,
@@ -18432,6 +18723,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -18447,6 +18739,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,
@@ -18462,6 +18755,7 @@ Array [
       "line": 25,
       "sourceId": "scopes/binding-types/originalSource-1",
     },
+    "scopeKind": "",
     "start": Object {
       "column": 0,
       "line": 1,

@@ -77,6 +77,7 @@ function findScopes(
   return found.map(i => {
     return {
       type: i.type,
+      scopeKind: i.scopeKind,
       displayName: i.displayName,
       start: i.start,
       end: i.end,
