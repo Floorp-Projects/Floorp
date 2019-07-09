@@ -834,13 +834,15 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   LogicalSize lcbSize(frameWM, cbSize);
   ReflowInput reflowInput(aFrame->PresContext(), parentReflowInput, aFrame,
                           availSize, Some(lcbSize));
-  nsSize computedSize(reflowInput.ComputedWidth(),
-                      reflowInput.ComputedHeight());
-  computedSize.width += reflowInput.ComputedPhysicalBorderPadding().LeftRight();
-  if (computedSize.height != NS_UNCONSTRAINEDSIZE) {
-    computedSize.height +=
-        reflowInput.ComputedPhysicalBorderPadding().TopBottom();
+  nscoord computedISize = reflowInput.ComputedISize();
+  nscoord computedBSize = reflowInput.ComputedBSize();
+  computedISize +=
+      reflowInput.ComputedLogicalBorderPadding().IStartEnd(frameWM);
+  if (computedBSize != NS_UNCONSTRAINEDSIZE) {
+    computedBSize +=
+        reflowInput.ComputedLogicalBorderPadding().BStartEnd(frameWM);
   }
+  LogicalSize logicalSize = aFrame->GetLogicalSize(frameWM);
   nsSize size = aFrame->GetSize();
   // The RecomputePosition hint is not used if any offset changed between auto
   // and non-auto. If computedSize.height == NS_UNCONSTRAINEDSIZE then the new
@@ -848,11 +850,14 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   // auto-ness hasn't changed, the old height must also be its intrinsic
   // height, which we can assume hasn't changed (or reflow would have
   // been triggered).
-  if (computedSize.width == size.width &&
-      (computedSize.height == NS_UNCONSTRAINEDSIZE ||
-       computedSize.height == size.height)) {
+  if (computedISize == logicalSize.ISize(frameWM) &&
+      (computedBSize == NS_UNCONSTRAINEDSIZE ||
+       computedBSize == logicalSize.BSize(frameWM))) {
     // If we're solving for 'left' or 'top', then compute it here, in order to
     // match the reflow code path.
+    //
+    // TODO(emilio): It'd be nice if this did logical math instead, but it seems
+    // to me the math should work out on vertical writing modes as well.
     if (NS_AUTOOFFSET == reflowInput.ComputedPhysicalOffsets().left) {
       reflowInput.ComputedPhysicalOffsets().left =
           cbSize.width - reflowInput.ComputedPhysicalOffsets().right -
