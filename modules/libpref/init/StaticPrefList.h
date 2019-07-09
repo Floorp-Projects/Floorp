@@ -5380,6 +5380,15 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// If layout.show_previous_page is true then during loading of a new page we
+// will draw the previous page if the new page has painting suppressed.
+VARCACHE_PREF(
+  Live,
+  "layout.show_previous_page",
+   layout_show_previous_page,
+  bool, true
+)
+
 VARCACHE_PREF(
   Live,
   "layout.smaller-painted-layers",
