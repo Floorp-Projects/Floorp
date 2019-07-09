@@ -347,17 +347,6 @@ class nsPresContext : public nsISupports,
 
   nsIDocShell* GetDocShell() const;
 
-  // XXX this are going to be replaced with set/get container
-  void SetLinkHandler(nsILinkHandler* aHandler) { mLinkHandler = aHandler; }
-  nsILinkHandler* GetLinkHandler() { return mLinkHandler; }
-
-  /**
-   * Detach this pres context - i.e. cancel relevant timers,
-   * SetLinkHandler(null), etc.
-   * Only to be used by the DocumentViewer.
-   */
-  virtual void Detach();
-
   /**
    * Get the visible area associated with this presentation context.
    * This is the size of the visible area that is used for
@@ -1135,10 +1124,6 @@ class nsPresContext : public nsISupports,
   RefPtr<nsAtom> mMediaEmulated;
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
 
-  // This pointer is nulled out through SetLinkHandler() in the destructors of
-  // the classes which set it. (using SetLinkHandler() again).
-  nsILinkHandler* MOZ_NON_OWNING_REF mLinkHandler;
-
  public:
   // The following are public member variables so that we can use them
   // with mozilla::AutoToggle or mozilla::AutoRestore.
@@ -1304,7 +1289,6 @@ class nsRootPresContext final : public nsPresContext {
  public:
   nsRootPresContext(mozilla::dom::Document* aDocument, nsPresContextType aType);
   virtual ~nsRootPresContext();
-  virtual void Detach() override;
 
   /**
    * Registers a plugin to receive geometry updates (position and clip
