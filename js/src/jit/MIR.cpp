@@ -2687,6 +2687,7 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
         break;
       case MDefinition::Opcode::ToString:
       case MDefinition::Opcode::FromCharCode:
+      case MDefinition::Opcode::FromCodePoint:
       case MDefinition::Opcode::TableSwitch:
       case MDefinition::Opcode::Compare:
       case MDefinition::Opcode::BitAnd:
