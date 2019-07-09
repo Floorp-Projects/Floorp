@@ -43,11 +43,6 @@ class CallbackFunction : public CallbackObject {
     return CallbackPreserveColor();
   }
 
-  bool HasGrayCallable() const {
-    // Play it safe in case this gets called after unlink.
-    return mCallback && JS::ObjectIsMarkedGray(mCallback);
-  }
-
  protected:
   explicit CallbackFunction(CallbackFunction* aCallbackFunction)
       : CallbackObject(aCallbackFunction) {}
