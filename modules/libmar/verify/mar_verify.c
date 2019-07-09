@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef XP_WIN
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
 #endif
 
 #include <sys/types.h>
@@ -17,11 +17,11 @@
 #include "mar.h"
 #include "cryptox.h"
 
-int mar_read_entire_file(const char *filePath, uint32_t maxSize,
-                         /*out*/ const uint8_t **data,
-                         /*out*/ uint32_t *size) {
+int mar_read_entire_file(const char* filePath, uint32_t maxSize,
+                         /*out*/ const uint8_t** data,
+                         /*out*/ uint32_t* size) {
   int result;
-  FILE *f;
+  FILE* f;
 
   if (!filePath || !data || !size) {
     return -1;
@@ -36,7 +36,7 @@ int mar_read_entire_file(const char *filePath, uint32_t maxSize,
   if (!fseeko(f, 0, SEEK_END)) {
     int64_t fileSize = ftello(f);
     if (fileSize > 0 && fileSize <= maxSize && !fseeko(f, 0, SEEK_SET)) {
-      unsigned char *fileData;
+      unsigned char* fileData;
 
       *size = (unsigned int)fileSize;
       fileData = malloc(*size);
@@ -56,14 +56,14 @@ int mar_read_entire_file(const char *filePath, uint32_t maxSize,
   return result;
 }
 
-int mar_extract_and_verify_signatures_fp(FILE *fp,
+int mar_extract_and_verify_signatures_fp(FILE* fp,
                                          CryptoX_ProviderHandle provider,
-                                         CryptoX_PublicKey *keys,
+                                         CryptoX_PublicKey* keys,
                                          uint32_t keyCount);
-int mar_verify_signatures_for_fp(FILE *fp, CryptoX_ProviderHandle provider,
-                                 CryptoX_PublicKey *keys,
-                                 const uint8_t *const *extractedSignatures,
-                                 uint32_t keyCount, uint32_t *numVerified);
+int mar_verify_signatures_for_fp(FILE* fp, CryptoX_ProviderHandle provider,
+                                 CryptoX_PublicKey* keys,
+                                 const uint8_t* const* extractedSignatures,
+                                 uint32_t keyCount, uint32_t* numVerified);
 
 /**
  * Reads the specified number of bytes from the file pointer and
@@ -80,9 +80,9 @@ int mar_verify_signatures_for_fp(FILE *fp, CryptoX_ProviderHandle provider,
  *         -1 on read error
  *         -2 on verify update error
  */
-int ReadAndUpdateVerifyContext(FILE *fp, void *buffer, uint32_t size,
-                               CryptoX_SignatureHandle *ctxs, uint32_t count,
-                               const char *err) {
+int ReadAndUpdateVerifyContext(FILE* fp, void* buffer, uint32_t size,
+                               CryptoX_SignatureHandle* ctxs, uint32_t count,
+                               const char* err) {
   uint32_t k;
   if (!fp || !buffer || !ctxs || count == 0 || !err) {
     fprintf(stderr, "ERROR: Invalid parameter specified.\n");
@@ -122,8 +122,8 @@ int ReadAndUpdateVerifyContext(FILE *fp, void *buffer, uint32_t size,
  * @param  certCount      The number of elements in certData and certDataSizes
  * @return 0 on success
  */
-int mar_verify_signatures(MarFile *mar, const uint8_t *const *certData,
-                          const uint32_t *certDataSizes, uint32_t certCount) {
+int mar_verify_signatures(MarFile* mar, const uint8_t* const* certData,
+                          const uint32_t* certDataSizes, uint32_t certCount) {
   int rv = -1;
   CryptoX_ProviderHandle provider = CryptoX_InvalidHandleValue;
   CryptoX_PublicKey keys[MAX_SIGNATURES];
@@ -177,13 +177,13 @@ failure:
  * @param  keyCount The number of keys pointed to by keys
  * @return 0 on success
  */
-int mar_extract_and_verify_signatures_fp(FILE *fp,
+int mar_extract_and_verify_signatures_fp(FILE* fp,
                                          CryptoX_ProviderHandle provider,
-                                         CryptoX_PublicKey *keys,
+                                         CryptoX_PublicKey* keys,
                                          uint32_t keyCount) {
   uint32_t signatureCount, signatureLen, numVerified = 0;
   uint32_t signatureAlgorithmIDs[MAX_SIGNATURES];
-  uint8_t *extractedSignatures[MAX_SIGNATURES];
+  uint8_t* extractedSignatures[MAX_SIGNATURES];
   uint32_t i;
 
   memset(signatureAlgorithmIDs, 0, sizeof(signatureAlgorithmIDs));
@@ -274,7 +274,7 @@ int mar_extract_and_verify_signatures_fp(FILE *fp,
     return CryptoX_Error;
   }
   if (mar_verify_signatures_for_fp(
-          fp, provider, keys, (const uint8_t *const *)extractedSignatures,
+          fp, provider, keys, (const uint8_t* const*)extractedSignatures,
           signatureCount, &numVerified) == CryptoX_Error) {
     return CryptoX_Error;
   }
@@ -317,11 +317,11 @@ int mar_extract_and_verify_signatures_fp(FILE *fp,
  *                              error messages.
  * @return 0 on success, *numVerified == signatureCount.
  */
-int mar_verify_signatures_for_fp(FILE *fp, CryptoX_ProviderHandle provider,
-                                 CryptoX_PublicKey *keys,
-                                 const uint8_t *const *extractedSignatures,
+int mar_verify_signatures_for_fp(FILE* fp, CryptoX_ProviderHandle provider,
+                                 CryptoX_PublicKey* keys,
+                                 const uint8_t* const* extractedSignatures,
                                  uint32_t signatureCount,
-                                 uint32_t *numVerified) {
+                                 uint32_t* numVerified) {
   CryptoX_SignatureHandle signatureHandles[MAX_SIGNATURES];
   char buf[BLOCKSIZE];
   uint32_t signatureLengths[MAX_SIGNATURES];

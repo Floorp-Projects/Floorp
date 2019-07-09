@@ -12,6 +12,7 @@
 #include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
 #include "WebGLTypes.h"
+#include "WebGLFormats.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -42,6 +43,13 @@ class WebGLExtensionBase : public nsWrapperCache,
 
   void MarkLost();
 
+  void SetExplicit() {
+    mIsExplicit = true;
+    OnSetExplicit();
+  }
+
+  bool IsExplicit() { return mIsExplicit; }
+
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLExtensionBase)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLExtensionBase)
 
@@ -51,6 +59,10 @@ class WebGLExtensionBase : public nsWrapperCache,
   virtual void OnMarkLost() {}
 
   bool mIsLost;
+
+  virtual void OnSetExplicit() {}
+
+  bool mIsExplicit;
 };
 
 #define DECL_WEBGL_EXTENSION_GOOP             \
@@ -321,6 +333,10 @@ class WebGLExtensionColorBufferFloat : public WebGLExtensionBase {
 
   static bool IsSupported(const WebGLContext*);
 
+  void SetRenderable(const webgl::FormatRenderableState);
+
+  void OnSetExplicit() override;
+
   DECL_WEBGL_EXTENSION_GOOP
 };
 
@@ -330,6 +346,10 @@ class WebGLExtensionColorBufferHalfFloat : public WebGLExtensionBase {
   virtual ~WebGLExtensionColorBufferHalfFloat();
 
   static bool IsSupported(const WebGLContext*);
+
+  void SetRenderable(const webgl::FormatRenderableState);
+
+  void OnSetExplicit() override;
 
   DECL_WEBGL_EXTENSION_GOOP
 };

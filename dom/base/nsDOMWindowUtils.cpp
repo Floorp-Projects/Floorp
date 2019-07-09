@@ -344,32 +344,6 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::Redraw(uint32_t aCount, uint32_t* aDurationOut) {
-  if (aCount == 0) aCount = 1;
-
-  if (PresShell* presShell = GetPresShell()) {
-    nsIFrame* rootFrame = presShell->GetRootFrame();
-
-    if (rootFrame) {
-      PRIntervalTime iStart = PR_IntervalNow();
-
-      for (uint32_t i = 0; i < aCount; i++) rootFrame->InvalidateFrame();
-
-#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK)
-      if (!gfxPlatform::IsHeadless()) {
-        XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), False);
-      }
-#endif
-
-      *aDurationOut = PR_IntervalToMilliseconds(PR_IntervalNow() - iStart);
-
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::UpdateLayerTree() {
   if (RefPtr<PresShell> presShell = GetPresShell()) {
     // Don't flush throttled animations since it might fire MozAfterPaint event

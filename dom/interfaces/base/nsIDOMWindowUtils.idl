@@ -96,14 +96,6 @@ interface nsIDOMWindowUtils : nsISupports {
   AString getDocumentMetadata(in AString aName);
 
   /**
-   * Force an immediate redraw of this window.  The parameter specifies
-   * the number of times to redraw, and the return value is the length,
-   * in milliseconds, that the redraws took.  If aCount is not specified
-   * or is 0, it is taken to be 1.
-   */
-  unsigned long redraw([optional] in unsigned long aCount);
-
-  /**
    * Force a synchronous layer transaction for this window if necessary.
    */
   [can_run_script]

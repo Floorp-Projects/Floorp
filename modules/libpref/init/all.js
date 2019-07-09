@@ -15,7 +15,6 @@
  * modules/libpref/parser/src/lib.rs.
  */
 
-pref("keyword.enabled", false);
 pref("general.useragent.compatMode.firefox", false);
 
 // This pref exists only for testing purposes. In order to disable all
@@ -1012,7 +1011,6 @@ pref("layout.framevisibility.numscrollportheights", 1);
 pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
-pref("browser.fixup.dns_first_for_single_words", false);
 
 // Print header customization
 // Use the following codes:
@@ -1233,10 +1231,6 @@ pref("privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "");
 // opened more than this number of popups.
 pref("privacy.popups.maxReported", 100);
 
-// Enforce tracking protection in all modes
-pref("privacy.trackingprotection.enabled",  false);
-// Enforce tracking protection in Private Browsing mode
-pref("privacy.trackingprotection.pbmode.enabled",  true);
 // Enable Origin Telemetry by default
 #ifdef NIGHTLY_BUILD
 pref("privacy.trackingprotection.origin_telemetry.enabled", true);
@@ -1274,14 +1268,17 @@ pref("javascript.options.strict",           false);
 pref("javascript.options.strict.debug",     false);
 #endif
 pref("javascript.options.unboxed_objects",  false);
+pref("javascript.options.blinterp",         false);
+// Duplicated in JitOptions - ensure both match.
+pref("javascript.options.blinterp.threshold", 10);
 pref("javascript.options.baselinejit",      true);
-//Duplicated in JitOptions - ensure both match.
+// Duplicated in JitOptions - ensure both match.
 pref("javascript.options.baselinejit.threshold", 10);
 pref("javascript.options.ion",              true);
-//Duplicated in JitOptions - ensure both match.
+// Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.threshold",    1000);
 pref("javascript.options.ion.full.threshold", 100000);
-//Duplicated in JitOptions - ensure both match.
+// Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.frequent_bailout_threshold", 10);
 pref("javascript.options.asmjs",            true);
 pref("javascript.options.wasm",             true);
@@ -2510,7 +2507,7 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 #if defined(DEBUG) && !defined(ANDROID)
-pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,config,debugging,devtools,downloads,home,newtab,plugins,preferences,sessionrestore,support,sync-log,welcomeback");
+pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,config,debugging,downloads,home,newtab,plugins,preferences,sessionrestore,support,sync-log,welcomeback");
 // the following prefs are for testing purposes only.
 pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
@@ -3135,13 +3132,6 @@ pref("dom.ipc.processCount.webIsolated", 1);
 // e.g. we do not want to throw content processes out every time we navigate
 // away from about:newtab.
 pref("dom.ipc.keepProcessesAlive.privilegedabout", 1);
-
-// Whether a native event loop should be used in the content process.
-#if defined(XP_WIN) || defined(XP_MACOSX)
-pref("dom.ipc.useNativeEventProcessing.content", false);
-#else
-pref("dom.ipc.useNativeEventProcessing.content", true);
-#endif
 
 // Disable support for SVG
 pref("svg.disabled", false);

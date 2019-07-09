@@ -276,7 +276,7 @@ class nsAtomString : public nsString {
 
 class nsAtomCString : public nsCString {
  public:
-  explicit nsAtomCString(nsAtom* aAtom) { aAtom->ToUTF8String(*this); }
+  explicit nsAtomCString(const nsAtom* aAtom) { aAtom->ToUTF8String(*this); }
 };
 
 class nsDependentAtomString : public nsDependentString {

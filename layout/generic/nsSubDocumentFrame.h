@@ -96,6 +96,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   nsresult BeginSwapDocShells(nsIFrame* aOther);
   void EndSwapDocShells(nsIFrame* aOther);
   nsView* EnsureInnerView();
+  nsPoint GetExtraOffset() const;
   nsIFrame* GetSubdocumentRootFrame();
   enum { IGNORE_PAINT_SUPPRESSION = 0x1 };
   mozilla::PresShell* GetSubdocumentPresShellForPainting(uint32_t aFlags);

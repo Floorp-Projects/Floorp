@@ -28,6 +28,9 @@ namespace {
 // consistency.
 const uint32_t kWorkletStackSize = 256 * sizeof(size_t) * 1024;
 
+// Half the size of the actual C stack, to be safe.
+#define WORKLET_CONTEXT_NATIVE_STACK_LIMIT 128 * sizeof(size_t) * 1024
+
 // Helper functions
 
 bool PreserveWrapper(JSContext* aCx, JS::HandleObject aObj) {
@@ -289,12 +292,14 @@ void WorkletThread::EnsureCycleCollectedJSContext(JSRuntime* aParentRuntime) {
 
   // FIXME: JS_SetDefaultLocale
   // FIXME: JSSettings
-  // FIXME: JS_SetNativeStackQuota
   // FIXME: JS_SetSecurityCallbacks
   // FIXME: JS::SetAsyncTaskCallbacks
   // FIXME: JS_AddInterruptCallback
   // FIXME: JS::SetCTypesActivityCallback
   // FIXME: JS_SetGCZeal
+
+  JS_SetNativeStackQuota(context->Context(),
+                         WORKLET_CONTEXT_NATIVE_STACK_LIMIT);
 
   if (!JS::InitSelfHostedCode(context->Context())) {
     // TODO: error propagation

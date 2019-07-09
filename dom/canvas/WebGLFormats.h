@@ -309,11 +309,35 @@ GLenum ComponentType(const FormatInfo* format);
 */
 ////////////////////////////////////////
 
+struct FormatRenderableState final {
+ private:
+  enum class RenderableState {
+    Disabled,
+    Implicit,
+    Explicit,
+  };
+
+ public:
+  RenderableState state = RenderableState::Disabled;
+  WebGLExtensionID extid = WebGLExtensionID::Max;
+
+  static FormatRenderableState Explicit() {
+    return {RenderableState::Explicit};
+  }
+
+  static FormatRenderableState Implicit(WebGLExtensionID extid) {
+    return {RenderableState::Implicit, extid};
+  }
+
+  bool IsRenderable() const { return state != RenderableState::Disabled; }
+  bool IsExplicit() const { return state == RenderableState::Explicit; }
+};
+
 struct FormatUsageInfo {
   const FormatInfo* const format;
 
  private:
-  bool isRenderable = false;
+  FormatRenderableState renderableState;
 
  public:
   bool isFilterable = false;
@@ -338,8 +362,14 @@ struct FormatUsageInfo {
     }
   }
 
-  bool IsRenderable() const { return isRenderable; }
-  void SetRenderable();
+  bool IsRenderable() const { return renderableState.IsRenderable(); }
+  void SetRenderable(
+      const FormatRenderableState& state = FormatRenderableState::Explicit());
+  bool IsExplicitlyRenderable() const { return renderableState.IsExplicit(); }
+  WebGLExtensionID GetExtensionID() const {
+    MOZ_ASSERT(renderableState.extid != WebGLExtensionID::Max);
+    return renderableState.extid;
+  }
 
   bool IsUnpackValid(const PackingInfo& key,
                      const DriverUnpackInfo** const out_value) const;

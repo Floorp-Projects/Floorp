@@ -9,11 +9,11 @@ var EXPORTED_SYMBOLS = ["Target"];
 const { Connection } = ChromeUtils.import(
   "chrome://remote/content/Connection.jsm"
 );
-const { WebSocketDebuggerTransport } = ChromeUtils.import(
+const { WebSocketTransport } = ChromeUtils.import(
   "chrome://remote/content/server/WebSocketTransport.jsm"
 );
-const { WebSocketServer } = ChromeUtils.import(
-  "chrome://remote/content/server/WebSocket.jsm"
+const { WebSocketHandshake } = ChromeUtils.import(
+  "chrome://remote/content/server/WebSocketHandshake.jsm"
 );
 
 /**
@@ -42,8 +42,8 @@ class Target {
   // nsIHttpRequestHandler
 
   async handle(request, response) {
-    const so = await WebSocketServer.upgrade(request, response);
-    const transport = new WebSocketDebuggerTransport(so);
+    const so = await WebSocketHandshake.upgrade(request, response);
+    const transport = new WebSocketTransport(so);
     const conn = new Connection(transport, response._connection);
     this.sessions.set(conn, new this.sessionClass(conn, this));
   }

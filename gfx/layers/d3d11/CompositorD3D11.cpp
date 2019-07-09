@@ -201,8 +201,8 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
         (IDXGIFactory2**)getter_AddRefs(dxgiFactory2));
 
 #if (_WIN32_WINDOWS_MAXVER >= 0x0A00)
-    if (StaticPrefs::gfx_direct3d11_use_double_buffering() && SUCCEEDED(hr) &&
-        dxgiFactory2 && IsWindows10OrGreater()) {
+    if (gfxVars::UseDoubleBufferingWithCompositor() && SUCCEEDED(hr) &&
+        dxgiFactory2) {
       // DXGI_SCALING_NONE is not available on Windows 7 with Platform Update.
       // This looks awful for things like the awesome bar and browser window
       // resizing so we don't use a flip buffer chain here. When using

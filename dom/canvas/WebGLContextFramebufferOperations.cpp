@@ -72,11 +72,27 @@ void WebGLContext::ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
   const FuncScope funcScope(*this, "clearColor");
   if (IsContextLost()) return;
 
-  const bool supportsFloatColorBuffers =
-      (IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_float) ||
-       IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float) ||
-       IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float));
-  if (!supportsFloatColorBuffers) {
+  if (IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_float)) {
+    MOZ_ASSERT(IsExtensionExplicit(WebGLExtensionID::EXT_color_buffer_float));
+
+  } else if (IsExtensionEnabled(
+                 WebGLExtensionID::EXT_color_buffer_half_float) ||
+             IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float)) {
+    const bool explict =
+        (IsExtensionExplicit(WebGLExtensionID::EXT_color_buffer_half_float) ||
+         IsExtensionExplicit(WebGLExtensionID::WEBGL_color_buffer_float));
+    const bool wouldHaveClamped =
+        (r != GLClampFloat(r) || g != GLClampFloat(g) || b != GLClampFloat(b) ||
+         a != GLClampFloat(a));
+    if (!explict && wouldHaveClamped) {
+      if (IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float)) {
+        WarnIfImplicit(WebGLExtensionID::EXT_color_buffer_half_float);
+      } else if (IsExtensionEnabled(
+                     WebGLExtensionID::WEBGL_color_buffer_float)) {
+        WarnIfImplicit(WebGLExtensionID::WEBGL_color_buffer_float);
+      }
+    }
+  } else {
     r = GLClampFloat(r);
     g = GLClampFloat(g);
     b = GLClampFloat(b);
