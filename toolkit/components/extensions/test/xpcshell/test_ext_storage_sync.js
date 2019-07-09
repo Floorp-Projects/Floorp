@@ -10,6 +10,7 @@ const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
 const {
+  cleanUpForContext,
   CollectionKeyEncryptionRemoteTransformer,
   CryptoCollection,
   ExtensionStorageSync,
@@ -21,6 +22,12 @@ const { BulkKeyBundle } = ChromeUtils.import(
   "resource://services-sync/keys.js"
 );
 const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+
+const { createAppInfo, promiseStartupManager } = AddonTestUtils;
+
+AddonTestUtils.init(this);
+
+createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "69");
 
 /* globals BulkKeyBundle, CommonUtils, EncryptionRemoteTransformer */
 /* globals Utils */
@@ -637,6 +644,10 @@ function uuid() {
   return uuidgen.generateUUID().toString();
 }
 
+add_task(async function test_setup() {
+  await promiseStartupManager();
+});
+
 add_task(async function test_key_to_id() {
   equal(keyToId("foo"), "key-foo");
   equal(keyToId("my-new-key"), "key-my_2D_new_2D_key");
@@ -684,46 +695,92 @@ add_task(async function test_extension_id_to_collection_id() {
 });
 
 add_task(async function ensureCanSync_clearAll() {
-  const extensionId = uuid();
-  const extension = { id: extensionId };
+  // A test extension that will not have any active context around
+  // but it is returned from a call to AddonManager.getExtensionsByType.
+  const extensionId = "test-wipe-on-enabled-and-synced@mochi.test";
+  const testExtension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      permissions: ["storage"],
+      applications: { gecko: { id: extensionId } },
+    },
+  });
+
+  await testExtension.startup();
+
+  // Retrieve the Extension class instance from the test extension.
+  const { extension } = testExtension;
+
+  // Another test extension that will have an active extension context.
+  const extensionId2 = "test-wipe-on-active-context@mochi.test";
+  const extension2 = { id: extensionId2 };
 
   await withContextAndServer(async function(context, server) {
     await withSignedInUser(loggedInUser, async function(
       extensionStorageSync,
       fxaService
     ) {
+      async function assertSetAndGetData(extension, data) {
+        await extensionStorageSync.set(extension, data, context);
+        let storedData = await extensionStorageSync.get(
+          extension,
+          Object.keys(data),
+          context
+        );
+        const extId = extensionId;
+        deepEqual(storedData, data, `${extId} should get back the data we set`);
+      }
+
+      async function assertDataCleared(extension, keys) {
+        const storedData = await extensionStorageSync.get(
+          extension,
+          keys,
+          context
+        );
+        deepEqual(storedData, {}, `${extension.id} should have lost the data`);
+      }
+
       server.installCollection("storage-sync-crypto");
       server.etag = 1000;
 
-      let newKeys = await extensionStorageSync.ensureCanSync([extensionId]);
+      let newKeys = await extensionStorageSync.ensureCanSync([
+        extensionId,
+        extensionId2,
+      ]);
       ok(
         newKeys.hasKeysFor([extensionId]),
         `key isn't present for ${extensionId}`
       );
+      ok(
+        newKeys.hasKeysFor([extensionId2]),
+        `key isn't present for ${extensionId2}`
+      );
 
       let posts = server.getPosts();
       equal(posts.length, 1);
-      const post = posts[0];
-      assertPostedNewRecord(post);
+      assertPostedNewRecord(posts[0]);
 
-      // Set data for an extension and sync.
-      await extensionStorageSync.set(extension, { "my-key": 5 }, context);
-      let keyValue = await extensionStorageSync.get(
-        extension,
-        ["my-key"],
-        context
-      );
-      equal(keyValue["my-key"], 5, "should get back the data we set");
+      await assertSetAndGetData(extension, { "my-key": 1 });
+      await assertSetAndGetData(extension2, { "my-key": 2 });
+
+      // Call cleanup for the first extension, to double check it has
+      // been wiped out even without an active extension context.
+      cleanUpForContext(extension, context);
 
       // clear everything.
       await extensionStorageSync.clearAll();
 
-      keyValue = await extensionStorageSync.get(extension, ["my-key"], context);
-      deepEqual(keyValue, {}, "should have lost the data");
+      // Assert that the data is gone for both the extensions.
+      await assertDataCleared(extension, ["my-key"]);
+      await assertDataCleared(extension2, ["my-key"]);
+
       // should have been no posts caused by the clear.
+      posts = server.getPosts();
       equal(posts.length, 1);
     });
   });
+
+  await testExtension.unload();
 });
 
 add_task(async function ensureCanSync_posts_new_keys() {
@@ -1613,6 +1670,86 @@ add_task(async function test_storage_sync_pulls_changes() {
       deepEqual(calls[0][0], { "remote-key": { oldValue: 6, newValue: 7 } });
     });
   });
+});
+
+// Tests that an enabled extension which have been synced before it is going
+// to be synced on ExtensionStorageSync.syncAll even if there is no active
+// context that is currently using the API.
+add_task(async function test_storage_sync_on_no_active_context() {
+  const extensionId = "sync@mochi.test";
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      permissions: ["storage"],
+      applications: { gecko: { id: extensionId } },
+    },
+    files: {
+      "ext-page.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <script src="ext-page.js"></script>
+          </head>
+        </html>
+      `,
+      "ext-page.js": function() {
+        const { browser } = this;
+        browser.test.onMessage.addListener(async msg => {
+          if (msg === "get-sync-data") {
+            browser.test.sendMessage(
+              "get-sync-data:done",
+              await browser.storage.sync.get(["remote-key"])
+            );
+          }
+        });
+      },
+    },
+  });
+
+  await extension.startup();
+
+  await withServer(async server => {
+    await withSignedInUser(loggedInUser, async function(
+      extensionStorageSync,
+      fxaService
+    ) {
+      const cryptoCollection = new CryptoCollection(fxaService);
+      let transformer = new CollectionKeyEncryptionRemoteTransformer(
+        cryptoCollection,
+        extensionId
+      );
+      server.installCollection("storage-sync-crypto");
+
+      await extensionStorageSync.ensureCanSync([extensionId]);
+      const collectionId = await cryptoCollection.extensionIdToCollectionId(
+        extensionId
+      );
+      await server.encryptAndAddRecord(transformer, {
+        collectionId,
+        data: {
+          id: "key-remote_2D_key",
+          key: "remote-key",
+          data: 6,
+        },
+        predicate: appearsAt(850),
+      });
+
+      server.etag = 1000;
+      await extensionStorageSync.syncAll();
+    });
+  });
+
+  const extPage = await ExtensionTestUtils.loadContentPage(
+    `moz-extension://${extension.uuid}/ext-page.html`,
+    { extension }
+  );
+
+  await extension.sendMessage("get-sync-data");
+  const res = await extension.awaitMessage("get-sync-data:done");
+  Assert.deepEqual(res, { "remote-key": 6 }, "Got the expected sync data");
+
+  await extPage.close();
+
+  await extension.unload();
 });
 
 add_task(async function test_storage_sync_pushes_changes() {
