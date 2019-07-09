@@ -27,7 +27,6 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 
 #if defined(ANDROID)
@@ -58,6 +57,9 @@ static const bool gLoggingBuffered = true;
 #ifdef XP_WIN
 static bool gLoggingToDebugger = true;
 #endif  // XP_WIN
+#if defined(ANDROID)
+static bool gLoggingLogcat = false;
+#endif  // defined(ANDROID)
 
 nsConsoleService::MessageElement::~MessageElement() {}
 
@@ -136,6 +138,16 @@ class AddConsolePrefWatchers : public Runnable {
       : mozilla::Runnable("AddConsolePrefWatchers"), mConsole(aConsole) {}
 
   NS_IMETHOD Run() override {
+#if defined(ANDROID)
+    Preferences::AddBoolVarCache(&gLoggingLogcat, "consoleservice.logcat",
+#  ifdef RELEASE_OR_BETA
+                                 false
+#  else
+                                 true
+#  endif
+    );
+#endif  // defined(ANDROID)
+
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     MOZ_ASSERT(obs);
     obs->AddObserver(mConsole, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
@@ -236,7 +248,7 @@ nsresult nsConsoleService::LogMessageWithMode(
     MutexAutoLock lock(mLock);
 
 #if defined(ANDROID)
-    if (StaticPrefs::consoleservice_logcat() && aOutputMode == OutputToLog) {
+    if (gLoggingLogcat && aOutputMode == OutputToLog) {
       nsCString msg;
       aMessage->ToString(msg);
 
