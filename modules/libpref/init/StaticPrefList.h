@@ -1638,6 +1638,19 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Whether a native event loop should be used in the content process.
+VARCACHE_PREF(
+  Live,
+  "dom.ipc.useNativeEventProcessing.content",
+   dom_ipc_useNativeEventProcessing_content,
+  RelaxedAtomicBool,
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  false
+#else
+  true
+#endif
+)
+
 // If this is true, "keypress" event's keyCode value and charCode value always
 // become same if the event is not created/initialized by JS.
 VARCACHE_PREF(
