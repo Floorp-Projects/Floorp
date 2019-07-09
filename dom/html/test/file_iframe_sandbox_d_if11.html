@@ -9,18 +9,7 @@
 <script type="application/javascript">
 
 function navigateAway() {
-  // Anchor clicks are only handled if we have a pres-context, and we may not
-  // have one yet by the time this runs, and getBoundingClientRect() won't
-  // construct it after bug 1440537.
-  //
-  // So we may need to wait a few frames to make this reliable.
-  //
-  // FIXME(emilio, bug 1218456): This dance shouldn't be needed.
-  let anchor = document.getElementById("anchor");
-  if (anchor.getBoundingClientRect().width > 0)
-    anchor.click();
-  else
-    requestAnimationFrame(navigateAway);
+  document.getElementById("anchor").click();
 }
 
 function doTest() {
