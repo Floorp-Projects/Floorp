@@ -5864,7 +5864,7 @@ bool StructType::DefineInternal(JSContext* cx, JSObject* typeObj_,
     return false;
 
   // Create a FieldInfoHash to stash on the type object.
-  Rooted<FieldInfoHash> fields(cx, len);
+  Rooted<FieldInfoHash> fields(cx, FieldInfoHash(cx->zone(), len));
 
   // Process the field types.
   size_t structSize, structAlign;
@@ -6654,7 +6654,7 @@ void FunctionType::BuildSymbolName(JSContext* cx, JSString* name,
 static bool CreateFunctionInfo(JSContext* cx, HandleObject typeObj,
                                HandleValue abiType, HandleObject returnType,
                                const HandleValueArray& args) {
-  FunctionInfo* fninfo(cx->new_<FunctionInfo>());
+  FunctionInfo* fninfo(cx->new_<FunctionInfo>(cx->zone()));
   if (!fninfo) {
     return false;
   }

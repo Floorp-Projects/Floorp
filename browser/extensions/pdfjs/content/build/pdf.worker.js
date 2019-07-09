@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.213';
-const pdfjsBuild = '2cc0bfd1';
+const pdfjsVersion = '2.2.224';
+const pdfjsBuild = 'a98ce9cb';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -240,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.213';
+    let workerVersion = '2.2.224';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -4771,10 +4771,16 @@ var XRef = function XRefClosure() {
           entry.gen = parser.getObj();
           var type = parser.getObj();
 
-          if ((0, _primitives.isCmd)(type, 'f')) {
-            entry.free = true;
-          } else if ((0, _primitives.isCmd)(type, 'n')) {
-            entry.uncompressed = true;
+          if (type instanceof _primitives.Cmd) {
+            switch (type.cmd) {
+              case 'f':
+                entry.free = true;
+                break;
+
+              case 'n':
+                entry.uncompressed = true;
+                break;
+            }
           }
 
           if (!Number.isInteger(entry.offset) || !Number.isInteger(entry.gen) || !(entry.free || entry.uncompressed)) {
@@ -5270,7 +5276,7 @@ var XRef = function XRefClosure() {
         obj2 = parseInt(obj2, 10);
       }
 
-      if (obj1 !== num || obj2 !== gen || !(0, _primitives.isCmd)(obj3)) {
+      if (obj1 !== num || obj2 !== gen || !(obj3 instanceof _primitives.Cmd)) {
         throw new _core_utils.XRefEntryException(`Bad (uncompressed) XRef entry: ${ref}`);
       }
 
