@@ -255,7 +255,7 @@ public class StringUtils {
     }
 
     /**
-     * @return  the index of the path segment of URLs
+     * @return  The index of the path segment of an URL, or -1 if no path segment was detected.
      */
     public static int pathStartIndex(final String text) {
         if (text.contains("://")) {

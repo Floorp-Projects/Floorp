@@ -332,7 +332,13 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             return;
         }
 
-        int index = url.indexOf(baseDomain);
+        // Check if the URL contains something that looks like a path segment -
+        // we only want to find highlighting targets within the domain segment.
+        int domainEnd = StringUtils.pathStartIndex(url);
+        if (domainEnd == -1) {
+            domainEnd = url.length();
+        }
+        int index = url.lastIndexOf(baseDomain, domainEnd);
         if (index == -1) {
             setTitle(url);
             return;
