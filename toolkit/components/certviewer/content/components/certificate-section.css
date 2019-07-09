@@ -18,3 +18,21 @@ h1 {
 .info-groups.selected {
   display: contents;
 }
+
+.tab {
+  margin: 0;
+  border-radius: 0;
+  padding: 12px;
+  border: 1px solid var(--in-content-box-border-color);
+  flex: 1 1 auto;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 1.363rem;
+}
+
+.tab.selected {
+  border-bottom: 2px solid var(--in-content-border-highlight);
+  color: var(--in-content-item-selected);
+  text-overflow: unset;
+  overflow: visible;
+}
