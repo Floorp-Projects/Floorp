@@ -4,4 +4,9 @@
 
 package org.mozilla.samples.browser
 
-class CustomTabActivity : BrowserActivity()
+import androidx.fragment.app.Fragment
+
+class CustomTabActivity : BrowserActivity() {
+    override fun createBrowserFragment(sessionId: String?): Fragment =
+        CustomTabBrowserFragment.create(sessionId!!)
+}

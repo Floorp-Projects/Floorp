@@ -14,11 +14,21 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  */
 class SessionFeature(
     private val sessionManager: SessionManager,
-    private val sessionUseCases: SessionUseCases,
+    private val goBackUseCase: SessionUseCases.GoBackUseCase,
     engineView: EngineView,
     private val sessionId: String? = null
 ) : LifecycleAwareFeature, BackHandler {
     internal val presenter = EngineViewPresenter(sessionManager, engineView, sessionId)
+
+    /**
+     * @deprecated Pass [SessionUseCases.GoBackUseCase] directly instead.
+     */
+    constructor(
+        sessionManager: SessionManager,
+        sessionUseCases: SessionUseCases,
+        engineView: EngineView,
+        sessionId: String? = null
+    ) : this(sessionManager, sessionUseCases.goBack, engineView, sessionId)
 
     /**
      * Start feature: App is in the foreground.
@@ -38,7 +48,7 @@ class SessionFeature(
         } ?: sessionManager.selectedSession
 
         if (session?.canGoBack == true) {
-            sessionUseCases.goBack(session)
+            goBackUseCase(session)
             return true
         }
 

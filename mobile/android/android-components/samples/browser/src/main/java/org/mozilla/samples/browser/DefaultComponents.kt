@@ -139,15 +139,15 @@ open class DefaultComponents(private val applicationContext: Context) {
             BrowserMenuDivider()
         )
 
-        if (webAppUseCases.isPinningSupported()) {
-            items.add(
-                SimpleBrowserMenuItem("Add to homescreen") {
-                    MainScope().launch {
-                        webAppUseCases.addToHomescreen()
-                    }
+        items.add(
+            SimpleBrowserMenuItem("Add to homescreen") {
+                MainScope().launch {
+                    webAppUseCases.addToHomescreen()
                 }
-            )
-        }
+            }.apply {
+                visible = { webAppUseCases.isPinningSupported() && sessionManager.selectedSession != null }
+            }
+        )
 
         items.add(
             SimpleBrowserMenuItem("Clear Data") {
