@@ -2,7 +2,7 @@
 
 # AndroidDownloadManager
 
-`class AndroidDownloadManager : `[`DownloadManager`](../-download-manager/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/AndroidDownloadManager.kt#L39)
+`class AndroidDownloadManager : `[`DownloadManager`](../-download-manager/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/AndroidDownloadManager.kt#L35)
 
 Handles the interactions with the [AndroidDownloadManager](./index.md).
 
@@ -10,17 +10,25 @@ Handles the interactions with the [AndroidDownloadManager](./index.md).
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AndroidDownloadManager(applicationContext: <ERROR CLASS>, onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md)` = { _, _ -> })`<br>Handles the interactions with the [AndroidDownloadManager](./index.md). |
+| [&lt;init&gt;](-init-.md) | `AndroidDownloadManager(applicationContext: <ERROR CLASS>, onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md)` = noop)`<br>Handles the interactions with the [AndroidDownloadManager](./index.md). |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [onDownloadCompleted](on-download-completed.md) | `var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md)<br>a callback to be notified when a download is completed. |
+| [onDownloadCompleted](on-download-completed.md) | `var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md) |
+| [permissions](permissions.md) | `val permissions: <ERROR CLASS>` |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [download](download.md) | `fun download(download: `[`Download`](../../mozilla.components.browser.session/-download/index.md)`, refererUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, cookie: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>Schedule a download through the [AndroidDownloadManager](./index.md). |
-| [unregisterListener](unregister-listener.md) | `fun unregisterListener(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Remove all the listeners. |
+| [download](download.md) | `fun download(download: `[`Download`](../../mozilla.components.browser.session/-download/index.md)`, cookie: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`?`<br>Schedules a download through the [AndroidDownloadManager](./index.md). |
+| [onReceive](on-receive.md) | `fun onReceive(context: <ERROR CLASS>, intent: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a download is complete. Calls [onDownloadCompleted](on-download-completed.md) and unregisters the broadcast receiver if there are no more queued downloads. |
+| [unregisterListeners](unregister-listeners.md) | `fun unregisterListeners(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Remove all the listeners. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [validatePermissionGranted](../validate-permission-granted.md) | `fun `[`DownloadManager`](../-download-manager/index.md)`.validatePermissionGranted(context: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

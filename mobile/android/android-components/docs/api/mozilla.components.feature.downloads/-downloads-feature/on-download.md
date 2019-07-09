@@ -2,7 +2,7 @@
 
 # onDownload
 
-`fun onDownload(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, download: `[`Download`](../../mozilla.components.browser.session/-download/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L82)
+`fun onDownload(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, download: `[`Download`](../../mozilla.components.browser.session/-download/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L91)
 
 Overrides [Observer.onDownload](../../mozilla.components.browser.session/-session/-observer/on-download.md)
 

@@ -2,4 +2,10 @@
 
 # session
 
-`val session: `[`Session`](../../../mozilla.components.browser.session/-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/state/MediaState.kt#L25)
+`val session: `[`Session`](../../../mozilla.components.browser.session/-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/state/MediaState.kt#L28)
+
+The [Session](../../../mozilla.components.browser.session/-session/index.md) with currently playing media.
+
+### Property
+
+`session` - The [Session](../../../mozilla.components.browser.session/-session/index.md) with currently playing media.

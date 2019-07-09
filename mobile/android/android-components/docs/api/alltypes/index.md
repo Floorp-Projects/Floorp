@@ -5,6 +5,7 @@
 | Name | Summary |
 |---|---|
 | [mozilla.components.feature.customtabs.AbstractCustomTabsService](../mozilla.components.feature.customtabs/-abstract-custom-tabs-service/index.md) | [Service](#) providing Custom Tabs related functionality. |
+| [mozilla.components.feature.downloads.AbstractFetchDownloadService](../mozilla.components.feature.downloads/-abstract-fetch-download-service/index.md) | Service that performs downloads through a fetch [Client](../mozilla.components.concept.fetch/-client/index.md) rather than through the native Android download manager. |
 | [mozilla.components.lib.push.firebase.AbstractFirebasePushService](../mozilla.components.lib.push.firebase/-abstract-firebase-push-service/index.md) | A Firebase Cloud Messaging implementation of the [PushService](../mozilla.components.concept.push/-push-service/index.md) for Android devices that support Google Play Services. |
 | [mozilla.components.feature.pwa.AbstractWebAppShellActivity](../mozilla.components.feature.pwa/-abstract-web-app-shell-activity/index.md) | Activity for "standalone" and "fullscreen" web applications. |
 | [mozilla.components.concept.sync.AccessTokenInfo](../mozilla.components.concept.sync/-access-token-info/index.md) | The result of authentication with FxA via an OAuth flow. |
@@ -84,6 +85,7 @@
 | [org.mozilla.telemetry.measurement.ClientIdMeasurement](../org.mozilla.telemetry.measurement/-client-id-measurement/index.md) | A unique, randomly generated UUID for this client. |
 | [mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider](../mozilla.components.feature.awesomebar.provider/-clipboard-suggestion-provider/index.md) | An [AwesomeBar.SuggestionProvider](../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that returns a suggestions for an URL in the clipboard (if there's any). |
 | [mozilla.components.support.base.facts.processor.CollectionProcessor](../mozilla.components.support.base.facts.processor/-collection-processor/index.md) | A [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) implementation that keeps all [Fact](../mozilla.components.support.base.facts/-fact/index.md) objects in a list. |
+| [mozilla.components.feature.prompts.ColorItem](../mozilla.components.feature.prompts/-color-item/index.md) | Represents an item in the [BasicColorAdapter](#) list. |
 | [mozilla.components.browser.icons.processor.ColorProcessor](../mozilla.components.browser.icons.processor/-color-processor/index.md) | [IconProcessor](../mozilla.components.browser.icons.processor/-icon-processor/index.md) implementation to extract the dominant color from the icon. |
 | [mozilla.components.support.utils.ColorUtils](../mozilla.components.support.utils/-color-utils/index.md) |  |
 | [mozilla.components.service.glean.private.CommonMetricData](../mozilla.components.service.glean.private/-common-metric-data/index.md) | This defines the common set of data shared across all the different metric types. |
@@ -101,6 +103,7 @@
 | [org.mozilla.telemetry.util.ContextUtils](../org.mozilla.telemetry.util/-context-utils/index.md) |  |
 | [mozilla.components.feature.session.CoordinateScrollingFeature](../mozilla.components.feature.session/-coordinate-scrolling-feature/index.md) | Feature implementation for connecting an [EngineView](../mozilla.components.concept.engine/-engine-view/index.md) with any View that you want to coordinate scrolling behavior with. |
 | [kotlinx.coroutines.CoroutineScope](../mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/index.md) (extensions in package mozilla.components.browser.engine.gecko) |  |
+| [mozilla.components.feature.downloads.CoroutineService](../mozilla.components.feature.downloads/-coroutine-service/index.md) | Service that runs suspend functions in parallel. When all jobs are completed, the service is stopped automatically. |
 | [mozilla.components.service.glean.private.CounterMetricType](../mozilla.components.service.glean.private/-counter-metric-type/index.md) | This implements the developer facing API for recording counter metrics. |
 | [mozilla.components.lib.crash.Crash](../mozilla.components.lib.crash/-crash/index.md) | Crash types that are handled by this library. |
 | [mozilla.components.lib.crash.handler.CrashHandlerService](../mozilla.components.lib.crash.handler/-crash-handler-service/index.md) | Service receiving native code crashes (from GeckoView). |
@@ -187,6 +190,7 @@
 | [mozilla.components.support.base.facts.FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) | A [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) receives [Fact](../mozilla.components.support.base.facts/-fact/index.md) instances to process them further. |
 | [mozilla.components.support.base.facts.Facts](../mozilla.components.support.base.facts/-facts/index.md) | Global API for collecting [Fact](../mozilla.components.support.base.facts/-fact/index.md) objects and forwarding them to [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) instances. |
 | [mozilla.components.service.fxa.manager.FailedToLoadAccountException](../mozilla.components.service.fxa.manager/-failed-to-load-account-exception/index.md) | Propagated via [AccountObserver.onError](../mozilla.components.concept.sync/-account-observer/on-error.md) if we fail to load a locally stored account during initialization. No action is necessary from consumers. Account state has been re-initialized. |
+| [mozilla.components.feature.downloads.manager.FetchDownloadManager](../mozilla.components.feature.downloads.manager/-fetch-download-manager/index.md) | Handles the interactions with [AbstractFetchDownloadService](../mozilla.components.feature.downloads/-abstract-fetch-download-service/index.md). |
 | [mozilla.components.tooling.fetch.tests.FetchTestCases](../mozilla.components.tooling.fetch.tests/-fetch-test-cases/index.md) | Generic test cases for concept-fetch implementations. |
 | [java.io.File](../mozilla.components.support.ktx.java.io/java.io.-file/index.md) (extensions in package mozilla.components.support.ktx.java.io) |  |
 | [org.mozilla.telemetry.storage.FileTelemetryStorage](../org.mozilla.telemetry.storage/-file-telemetry-storage/index.md) | TelemetryStorage implementation that stores pings as files on disk. |
@@ -308,6 +312,7 @@
 | [kotlin.collections.Map](../mozilla.components.support.ktx.kotlin/kotlin.collections.-map/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [mozilla.components.support.android.test.Matchers](../mozilla.components.support.android.test/-matchers/index.md) | A collection of non-domain specific [Matcher](#)s. |
 | [mozilla.components.concept.engine.media.Media](../mozilla.components.concept.engine.media/-media/index.md) | Value type that represents a media element that is present on the currently displayed page in a session. |
+| [mozilla.components.feature.media.notification.MediaNotificationFeature](../mozilla.components.feature.media.notification/-media-notification-feature/index.md) | Feature for displaying an ongoing notification (keeping the app process alive) while web content is playing media. |
 | [mozilla.components.feature.media.state.MediaState](../mozilla.components.feature.media.state/-media-state/index.md) | Accumulated state of all [Media](../mozilla.components.concept.engine.media/-media/index.md) of all [Session](../mozilla.components.browser.session/-session/index.md)s. |
 | [mozilla.components.feature.media.state.MediaStateMachine](../mozilla.components.feature.media.state/-media-state-machine/index.md) | A state machine that subscribes to all [Session](../mozilla.components.browser.session/-session/index.md) instances and watches changes to their [Media](../mozilla.components.concept.engine.media/-media/index.md) to create an aggregated [MediaState](../mozilla.components.feature.media.state/-media-state/index.md). |
 | [mozilla.components.browser.icons.loader.MemoryIconLoader](../mozilla.components.browser.icons.loader/-memory-icon-loader/index.md) | An [IconLoader](../mozilla.components.browser.icons.loader/-icon-loader/index.md) implementation that loads icons from an in-memory cache. |
@@ -336,6 +341,7 @@
 | [mozilla.components.feature.downloads.manager.OnDownloadCompleted](../mozilla.components.feature.downloads.manager/-on-download-completed.md) |  |
 | [mozilla.components.ui.autocomplete.OnFilterListener](../mozilla.components.ui.autocomplete/-on-filter-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnKeyPreImeListener](../mozilla.components.ui.autocomplete/-on-key-pre-ime-listener.md) |  |
+| [mozilla.components.feature.prompts.OnNeedToRequestPermissions](../mozilla.components.feature.prompts/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.support.base.feature.OnNeedToRequestPermissions](../mozilla.components.support.base.feature/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.feature.readerview.OnReaderViewAvailableChange](../mozilla.components.feature.readerview/-on-reader-view-available-change.md) |  |
 | [mozilla.components.feature.qr.OnScanResult](../mozilla.components.feature.qr/-on-scan-result.md) |  |

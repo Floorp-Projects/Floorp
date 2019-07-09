@@ -2,7 +2,7 @@
 
 # Paused
 
-`data class Paused : `[`MediaState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/state/MediaState.kt#L32)
+`data class Paused : `[`MediaState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/state/MediaState.kt#L38)
 
 Paused: [media](media.md) of [session](session.md) is currently paused.
 
@@ -16,5 +16,5 @@ Paused: [media](media.md) of [session](session.md) is currently paused.
 
 | Name | Summary |
 |---|---|
-| [media](media.md) | `val media: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`>` |
-| [session](session.md) | `val session: `[`Session`](../../../mozilla.components.browser.session/-session/index.md) |
+| [media](media.md) | `val media: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`>`<br>The paused [Media](../../../mozilla.components.concept.engine.media/-media/index.md) of the [Session](../../../mozilla.components.browser.session/-session/index.md). |
+| [session](session.md) | `val session: `[`Session`](../../../mozilla.components.browser.session/-session/index.md)<br>The [Session](../../../mozilla.components.browser.session/-session/index.md) with currently paused media. |
