@@ -242,6 +242,9 @@ ifeq ($(CPU_ARCH),arm)
     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
     MPI_SRCS += mpi_arm.c
 endif
+ifeq ($(CPU_ARCH),aarch64)
+    EXTRA_SRCS += gcm-aarch64.c
+endif
 ifeq ($(CPU_ARCH),ppc)
 ifdef USE_64
     DEFINES += -DNSS_NO_INIT_SUPPORT
@@ -756,4 +759,8 @@ ifdef INTEL_GCM_CLANG_CL
 # clang-cl needs -mssse3
 #
 $(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): CFLAGS += -mssse3
+endif
+
+ifeq ($(CPU_ARCH),aarch64)
+$(OBJDIR)/$(PROG_PREFIX)gcm-aarch64$(OBJ_SUFFIX): CFLAGS += -march=armv8-a+crypto
 endif
