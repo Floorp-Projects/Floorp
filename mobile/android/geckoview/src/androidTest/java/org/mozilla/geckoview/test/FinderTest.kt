@@ -5,8 +5,6 @@
 package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
@@ -18,7 +16,6 @@ import org.junit.runner.RunWith
 @MediumTest
 class FinderTest : BaseSessionTest() {
 
-    @ReuseSession(false) // "wrapped" in the first result depends on a fresh session.
     @Test fun find() {
         mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
         mainSession.waitForPageStop()
@@ -148,7 +145,6 @@ class FinderTest : BaseSessionTest() {
                    result.flags, equalTo(GeckoSession.FINDER_FIND_LINKS_ONLY))
     }
 
-    @WithDevToolsAPI
     @Test fun clear() {
         mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
         mainSession.waitForPageStop()

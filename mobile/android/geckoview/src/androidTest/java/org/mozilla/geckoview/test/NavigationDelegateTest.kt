@@ -17,25 +17,25 @@ import org.mozilla.geckoview.WebRequestError
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.util.HttpBin
+import org.mozilla.geckoview.test.util.UiThreadUtils
 import java.net.URI
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-@ReuseSession(false)
 class NavigationDelegateTest : BaseSessionTest() {
     companion object {
         val TEST_ENDPOINT: String = "http://localhost:4242"
@@ -281,7 +281,8 @@ class NavigationDelegateTest : BaseSessionTest() {
                     GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", request.uri, notNullValue())
-                assertThat("URI should match", request.uri, startsWith("resource://android"))
+                assertThat("URI should match", request.uri,
+                        startsWith(GeckoSessionTestRule.TEST_ENDPOINT))
                 return null
             }
         })
@@ -420,7 +421,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 userAgent, equalTo(GeckoSession.getDefaultUserAgent()))
     }
 
-    @WithDevToolsAPI
     @Test fun desktopMode() {
         sessionRule.session.loadUri("https://example.com")
         sessionRule.waitForPageStop()
@@ -479,7 +479,6 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     }
 
-    @WithDevToolsAPI
     @Test fun uaOverride() {
         sessionRule.session.loadUri("https://example.com")
         sessionRule.waitForPageStop()
@@ -550,7 +549,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 userAgent, containsString(vrSubStr))
     }
 
-    @WithDevToolsAPI
     @WithDisplay(width = 600, height = 200)
     @Test fun viewportMode() {
         sessionRule.session.loadTestPath(VIEWPORT_PATH)
@@ -959,7 +957,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_calledForWindowOpen() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -990,7 +987,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_calledForTargetBlankLink() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -998,7 +994,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
         sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             // We get two onLoadRequest calls for the link click,
@@ -1036,7 +1032,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         return newSession
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_childShouldLoad() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1045,7 +1040,10 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
+        // about:blank
+        newSession.waitForPageStop()
+        // NEW_SESSION_CHILD_HTML_PATH
         newSession.waitForPageStop()
 
         newSession.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
@@ -1061,7 +1059,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_setWindowOpener() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1070,7 +1067,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
         newSession.waitForPageStop()
 
         assertThat("window.opener should be set",
@@ -1079,7 +1076,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Setting(key = Setting.Key.USE_MULTIPROCESS, value = "false")
-    @WithDevToolsAPI
     @Test fun onNewSession_openRemoteFromNonRemote() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1089,18 +1085,22 @@ class NavigationDelegateTest : BaseSessionTest() {
                    mainSession.settings.useMultiprocess,
                    equalTo(false))
 
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
         val newSession = delegateNewSession(
                 GeckoSessionSettings.Builder(mainSession.settings)
                 .useMultiprocess(true)
                 .build())
-        mainSession.evaluateJS("window.open('http://example.com')")
+
+        mainSession.evaluateJS("window.open('http://example.com'); true")
         newSession.waitForPageStop()
 
         assertThat("window.opener should be set",
-                   newSession.evaluateJS("window.opener"), notNullValue())
+                   newSession.evaluateJS("window.opener != null") as Boolean,
+                   equalTo(true))
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_supportNoOpener() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1109,14 +1109,14 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        sessionRule.session.evaluateJS("$('#noOpenerLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#noOpenerLink').click()")
         newSession.waitForPageStop()
 
         assertThat("window.opener should not be set",
-                   newSession.evaluateJS("window.opener"), nullValue())
+                   newSession.evaluateJS("window.opener"),
+                   equalTo(JSONObject.NULL))
     }
 
-    @WithDevToolsAPI
     @Test fun onNewSession_notCalledForHandledLoads() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -1139,7 +1139,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
@@ -1162,7 +1162,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDevToolsAPI
     @Test fun loadUriReferrer() {
         val uri = "https://example.com"
         val referrer = "https://foo.org/"
@@ -1175,7 +1174,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                    equalTo(referrer))
     }
 
-    @WithDevToolsAPI
     @Test(expected = GeckoResult.UncaughtException::class)
     fun onNewSession_doesNotAllowOpened() {
         // Disable popup blocker.
@@ -1191,10 +1189,11 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
         sessionRule.session.waitUntilCalled(GeckoSession.NavigationDelegate::class,
                                             "onNewSession")
+        UiThreadUtils.loopUntilIdle(sessionRule.env.defaultTimeoutMillis)
     }
 
     @Test

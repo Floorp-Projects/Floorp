@@ -165,6 +165,12 @@ bool SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(
     uint32_t segType = SVGPathSegUtils::DecodeType(mData[i]);
     SVGPathSegUtils::TraversePathSegment(&mData[i], state);
 
+    // With degenerately large point coordinates, TraversePathSegment can fail
+    // and end up producing NaNs.
+    if (!isfinite(state.length)) {
+      return false;
+    }
+
     // We skip all moveto commands except an initial moveto. See the text 'A
     // "move to" command does not count as an additional point when dividing up
     // the duration...':

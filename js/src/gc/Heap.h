@@ -22,7 +22,7 @@ namespace js {
 class AutoLockGC;
 class AutoLockGCBgAlloc;
 class FreeOp;
-class NurseryDecommitChunksTask;
+class NurseryDecommitTask;
 
 namespace gc {
 
@@ -543,7 +543,7 @@ struct ChunkInfo {
 
  private:
   friend class ChunkPool;
-  friend class js::NurseryDecommitChunksTask;
+  friend class js::NurseryDecommitTask;
   Chunk* next;
   Chunk* prev;
 

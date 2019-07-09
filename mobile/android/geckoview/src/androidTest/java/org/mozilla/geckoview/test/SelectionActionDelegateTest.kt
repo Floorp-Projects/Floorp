@@ -9,7 +9,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -21,6 +20,7 @@ import android.support.test.filters.MediumTest
 
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.*
+import org.json.JSONArray
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,7 +30,6 @@ import org.junit.runners.Parameterized.Parameters
 
 @MediumTest
 @RunWith(Parameterized::class)
-@WithDevToolsAPI
 @WithDisplay(width = 100, height = 100)
 class SelectionActionDelegateTest : BaseSessionTest() {
     enum class ContentType {
@@ -267,25 +266,26 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                                  override val initialContent: String) : SelectedContent {
         protected fun selectTo(to: Int) {
             mainSession.evaluateJS("""document.getSelection().setBaseAndExtent(
-                $('$id').firstChild, 0, $('$id').firstChild, $to)""")
+                document.querySelector('$id').firstChild, 0,
+                document.querySelector('$id').firstChild, $to)""")
         }
 
         override fun select() = selectTo(initialContent.length)
 
         override val content: String get() {
-            return mainSession.evaluateJS("$('$id').textContent") as String
+            return mainSession.evaluateJS("document.querySelector('$id').textContent") as String
         }
 
         override val selectionOffsets: Pair<Int, Int> get() {
             if (mainSession.evaluateJS("""
-                document.getSelection().anchorNode !== $('$id').firstChild ||
-                document.getSelection().focusNode !== $('$id').firstChild""") as Boolean) {
+                document.getSelection().anchorNode !== document.querySelector('$id').firstChild ||
+                document.getSelection().focusNode !== document.querySelector('$id').firstChild""") as Boolean) {
                 return Pair(-1, -1)
             }
             val offsets = mainSession.evaluateJS("""[
                 document.getSelection().anchorOffset,
-                document.getSelection().focusOffset]""").asJSList<Double>()
-            return Pair(offsets[0].toInt(), offsets[1].toInt())
+                document.getSelection().focusOffset]""") as JSONArray
+            return Pair(offsets[0] as Int, offsets[1] as Int)
         }
     }
 
@@ -296,39 +296,40 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     open inner class SelectedEditableElement(
             val id: String, override val initialContent: String) : SelectedContent {
         override fun focus() {
-            mainSession.waitForJS("$('$id').focus()")
+            mainSession.waitForJS("document.querySelector('$id').focus()")
         }
 
         override fun select() {
-            mainSession.evaluateJS("$('$id').select()")
+            mainSession.evaluateJS("document.querySelector('$id').select()")
         }
 
         override val content: String get() {
-            return mainSession.evaluateJS("$('$id').value") as String
+            return mainSession.evaluateJS("document.querySelector('$id').value") as String
         }
 
         override val selectionOffsets: Pair<Int, Int> get() {
             val offsets = mainSession.evaluateJS(
-                    "[ $('$id').selectionStart, $('$id').selectionEnd ]").asJSList<Double>()
-            return Pair(offsets[0].toInt(), offsets[1].toInt())
+                    """[ document.querySelector('$id').selectionStart,
+                        |document.querySelector('$id').selectionEnd ]""".trimMargin()) as JSONArray
+            return Pair(offsets[0] as Int, offsets[1] as Int)
         }
     }
 
     inner class CollapsedEditableElement(id: String) : SelectedEditableElement(id, "") {
         override fun select() {
-            mainSession.evaluateJS("$('$id').setSelectionRange(0, 0)")
+            mainSession.evaluateJS("document.querySelector('$id').setSelectionRange(0, 0)")
         }
     }
 
     open inner class SelectedFrame(val id: String,
                                    override val initialContent: String) : SelectedContent {
         override fun focus() {
-            mainSession.evaluateJS("$('$id').contentWindow.focus()")
+            mainSession.evaluateJS("document.querySelector('$id').contentWindow.focus()")
         }
 
         protected fun selectTo(to: Int) {
             mainSession.evaluateJS("""(function() {
-                    var doc = $('$id').contentDocument;
+                    var doc = document.querySelector('$id').contentDocument;
                     var text = doc.body.firstChild;
                     doc.getSelection().setBaseAndExtent(text, 0, text, $to);
                 })()""")
@@ -337,19 +338,19 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         override fun select() = selectTo(initialContent.length)
 
         override val content: String get() {
-            return mainSession.evaluateJS("$('$id').contentDocument.body.textContent") as String
+            return mainSession.evaluateJS("document.querySelector('$id').contentDocument.body.textContent") as String
         }
 
         override val selectionOffsets: Pair<Int, Int> get() {
             val offsets = mainSession.evaluateJS("""(function() {
-                    var sel = $('$id').contentDocument.getSelection();
-                    var text = $('$id').contentDocument.body.firstChild;
+                    var sel = document.querySelector('$id').contentDocument.getSelection();
+                    var text = document.querySelector('$id').contentDocument.body.firstChild;
                     if (sel.anchorNode !== text || sel.focusNode !== text) {
                         return [-1, -1];
                     }
                     return [sel.anchorOffset, sel.focusOffset];
-                })()""").asJSList<Double>()
-            return Pair(offsets[0].toInt(), offsets[1].toInt())
+                })()""") as JSONArray
+            return Pair(offsets[0] as Int, offsets[1] as Int)
         }
     }
 

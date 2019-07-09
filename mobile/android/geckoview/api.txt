@@ -239,6 +239,8 @@ package org.mozilla.geckoview {
     ctor public GeckoResult();
     ctor public GeckoResult(Handler);
     ctor public GeckoResult(GeckoResult<T>);
+    method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>);
+    method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>, @Nullable GeckoResult.Consumer<Throwable>);
     method public synchronized void complete(@Nullable T);
     method public synchronized void completeExceptionally(@NonNull Throwable);
     method @NonNull public <U> GeckoResult<U> exceptionally(@NonNull GeckoResult.OnExceptionListener<U>);
@@ -252,6 +254,10 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoResult<T> withHandler(@Nullable Handler);
     field public static final GeckoResult<AllowOrDeny> ALLOW;
     field public static final GeckoResult<AllowOrDeny> DENY;
+  }
+
+  public static interface GeckoResult.Consumer<T> {
+    method @AnyThread public void accept(@Nullable T);
   }
 
   public static interface GeckoResult.OnExceptionListener<V> {
@@ -393,7 +399,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public SessionFinder getFinder();
     method @AnyThread @Nullable public GeckoSession.HistoryDelegate getHistoryDelegate();
     method @AnyThread @Nullable public GeckoSession.MediaDelegate getMediaDelegate();
-    method @AnyThread @Nullable public WebExtension.MessageDelegate getMessageDelegate(@NonNull String);
+    method @AnyThread @Nullable public WebExtension.MessageDelegate getMessageDelegate(@NonNull WebExtension, @NonNull String);
     method @UiThread @Nullable public GeckoSession.NavigationDelegate getNavigationDelegate();
     method @UiThread @NonNull public OverscrollEdgeEffect getOverscrollEdgeEffect();
     method @UiThread public void getPageToScreenMatrix(@NonNull Matrix);
@@ -431,7 +437,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void setFocused(boolean);
     method @AnyThread public void setHistoryDelegate(@Nullable GeckoSession.HistoryDelegate);
     method @AnyThread public void setMediaDelegate(@Nullable GeckoSession.MediaDelegate);
-    method @AnyThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
+    method @AnyThread public void setMessageDelegate(@NonNull WebExtension, @Nullable WebExtension.MessageDelegate, @NonNull String);
     method @UiThread public void setNavigationDelegate(@Nullable GeckoSession.NavigationDelegate);
     method @UiThread public void setPermissionDelegate(@Nullable GeckoSession.PermissionDelegate);
     method @UiThread public void setProgressDelegate(@Nullable GeckoSession.ProgressDelegate);

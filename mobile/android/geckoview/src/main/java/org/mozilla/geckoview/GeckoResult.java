@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * GeckoResult is a class that represents an asynchronous result. The result is initially pending,
@@ -292,6 +293,64 @@ public class GeckoResult<T> {
      */
     public @NonNull <U> GeckoResult<U> exceptionally(@NonNull final OnExceptionListener<U> exceptionListener) {
         return then(null, exceptionListener);
+    }
+
+    /**
+     * Replacement for {@link java.util.function.Consumer} for devices with minApi &lt; 24.
+     *
+     * @param <T> the type of the input for this consumer.
+     */
+    // TODO: Remove this when we move to min API 24
+    public interface Consumer<T> {
+        /**
+         * Run this consumer for the given input.
+         *
+         * @param t the input value.
+         */
+        @AnyThread
+        void accept(@Nullable T t);
+    }
+
+    /**
+     * Convenience method for {@link #accept(Consumer, Consumer)}.
+     *
+     * @param valueListener An instance of {@link Consumer}, called when the
+     *                      {@link GeckoResult} is completed with a value.
+     * @return A new {@link GeckoResult} that the listeners will complete.
+     */
+    public @NonNull GeckoResult<Void> accept(@Nullable final Consumer<T> valueListener) {
+        return accept(valueListener, null);
+    }
+
+    /**
+     * Adds listeners to be called when the {@link GeckoResult} is completed either with
+     * a value or {@link Throwable}. Listeners will be invoked on the {@link Looper} returned from
+     * {@link #getLooper()}. If null, this method will throw {@link IllegalThreadStateException}.
+     *
+     * If the result is already complete when this method is called, listeners will be invoked in
+     * a future {@link Looper} iteration.
+     *
+     * @param valueConsumer An instance of {@link Consumer}, called when the
+     *                      {@link GeckoResult} is completed with a value.
+     * @param exceptionConsumer An instance of {@link Consumer}, called when the
+     *                          {@link GeckoResult} is completed with an {@link Throwable}.
+     * @return A new {@link GeckoResult} that the listeners will complete.
+     */
+    public @NonNull GeckoResult<Void> accept(@Nullable final Consumer<T> valueConsumer,
+                                             @Nullable final Consumer<Throwable> exceptionConsumer) {
+        final OnValueListener<T, Void> valueListener = valueConsumer == null ? null :
+            value -> {
+                valueConsumer.accept(value);
+                return null;
+            };
+
+        final OnExceptionListener<Void> exceptionListener = exceptionConsumer == null ? null :
+            value -> {
+                exceptionConsumer.accept(value);
+                return null;
+            };
+
+        return then(valueListener, exceptionListener);
     }
 
     /**
