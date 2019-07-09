@@ -1569,7 +1569,7 @@ void CodeGenerator::visitDoubleToString(LDoubleToString* lir) {
       lir, ArgList(input), StoreRegisterTo(output));
 
   // Try double to integer conversion and run integer to string code.
-  masm.convertDoubleToInt32(input, temp, ool->entry(), true);
+  masm.convertDoubleToInt32(input, temp, ool->entry(), false);
   emitIntToString(temp, output, ool->entry());
 
   masm.bind(ool->rejoin());
