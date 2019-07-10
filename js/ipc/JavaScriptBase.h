@@ -118,8 +118,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base {
     return IPC_OK();
   }
   mozilla::ipc::IPCResult RecvCallOrConstruct(
-      const uint64_t& objId, InfallibleTArray<JSParam>&& argv,
-      const bool& construct, ReturnStatus* rs, JSVariant* result,
+      const uint64_t& objId, nsTArray<JSParam>&& argv, const bool& construct,
+      ReturnStatus* rs, JSVariant* result,
       nsTArray<JSParam>* outparams) override {
     Maybe<ObjectId> obj(ObjectId::deserialize(objId));
     if (obj.isNothing() ||

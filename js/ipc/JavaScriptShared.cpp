@@ -582,8 +582,7 @@ JSObject* JavaScriptShared::fromObjectOrNullVariant(
 }
 
 CrossProcessCpowHolder::CrossProcessCpowHolder(
-    dom::CPOWManagerGetter* managerGetter,
-    const InfallibleTArray<CpowEntry>& cpows)
+    dom::CPOWManagerGetter* managerGetter, const nsTArray<CpowEntry>& cpows)
     : js_(nullptr), cpows_(cpows), unwrapped_(false) {
   // Only instantiate the CPOW manager if we might need it later.
   if (cpows.Length()) {
@@ -627,8 +626,7 @@ bool CrossProcessCpowHolder::ToObject(JSContext* cx,
   return js_->Unwrap(cx, cpows_, objp);
 }
 
-bool JavaScriptShared::Unwrap(JSContext* cx,
-                              const InfallibleTArray<CpowEntry>& aCpows,
+bool JavaScriptShared::Unwrap(JSContext* cx, const nsTArray<CpowEntry>& aCpows,
                               JS::MutableHandleObject objp) {
   // Middleman processes never operate on CPOWs.
   MOZ_ASSERT(!recordreplay::IsMiddleman());
@@ -664,7 +662,7 @@ bool JavaScriptShared::Unwrap(JSContext* cx,
 }
 
 bool JavaScriptShared::Wrap(JSContext* cx, HandleObject aObj,
-                            InfallibleTArray<CpowEntry>* outCpows) {
+                            nsTArray<CpowEntry>* outCpows) {
   if (!aObj) {
     return true;
   }
