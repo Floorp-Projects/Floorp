@@ -109,8 +109,6 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   bool IsInitialDocument() { return mIsInitialDocument; }
 
-  bool HasBeforeUnload() { return mHasBeforeUnload; }
-
   already_AddRefed<Promise> ChangeFrameRemoteness(dom::BrowsingContext* aBc,
                                                   const nsAString& aRemoteType,
                                                   uint64_t aPendingSwitchId,
@@ -144,7 +142,6 @@ class WindowGlobalParent final : public WindowGlobalActor,
     mIsInitialDocument = aIsInitialDocument;
     return IPC_OK();
   }
-  mozilla::ipc::IPCResult RecvSetHasBeforeUnload(bool aHasBeforeUnload);
   mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal();
   mozilla::ipc::IPCResult RecvDestroy();
   mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
@@ -173,9 +170,6 @@ class WindowGlobalParent final : public WindowGlobalActor,
   bool mInProcess;
   bool mIPCClosed;
   bool mIsInitialDocument;
-
-  // True if this window has a "beforeunload" event listener.
-  bool mHasBeforeUnload;
 };
 
 }  // namespace dom

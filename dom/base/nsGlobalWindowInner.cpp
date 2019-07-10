@@ -1181,12 +1181,12 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   // This breaks a cycle between the window and the ClientSource object.
   mClientSource.reset();
 
-  if (mWindowGlobalChild) {
-    // Remove any remaining listeners.
-    for (int64_t i = 0; i < mWindowGlobalChild->BeforeUnloadListeners(); ++i) {
-      mWindowGlobalChild->BeforeUnloadRemoved();
+  if (mBrowserChild) {
+    // Remove any remaining listeners, and reset mBeforeUnloadListenerCount.
+    for (int i = 0; i < mBeforeUnloadListenerCount; ++i) {
+      mBrowserChild->BeforeUnloadRemoved();
     }
-    MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() == 0);
+    mBeforeUnloadListenerCount = 0;
   }
 
   // If we have any promiseDocumentFlushed callbacks, fire them now so
@@ -6070,8 +6070,9 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
 
   if (aType == nsGkAtoms::onbeforeunload && mBrowserChild &&
       (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
-    mWindowGlobalChild->BeforeUnloadAdded();
-    MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() > 0);
+    mBeforeUnloadListenerCount++;
+    MOZ_ASSERT(mBeforeUnloadListenerCount > 0);
+    mBrowserChild->BeforeUnloadAdded();
   }
 
   // We need to initialize localStorage in order to receive notifications.
@@ -6092,8 +6093,9 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
 void nsGlobalWindowInner::EventListenerRemoved(nsAtom* aType) {
   if (aType == nsGkAtoms::onbeforeunload && mBrowserChild &&
       (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
-    mWindowGlobalChild->BeforeUnloadRemoved();
-    MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() >= 0);
+    mBeforeUnloadListenerCount--;
+    MOZ_ASSERT(mBeforeUnloadListenerCount >= 0);
+    mBrowserChild->BeforeUnloadRemoved();
   }
 
   if (aType == nsGkAtoms::onstorage) {

@@ -274,6 +274,8 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvAccessKeyNotHandled(
       const WidgetKeyboardEvent& aEvent);
 
+  mozilla::ipc::IPCResult RecvSetHasBeforeUnload(const bool& aHasBeforeUnload);
+
   mozilla::ipc::IPCResult RecvRegisterProtocolHandler(const nsString& aScheme,
                                                       nsIURI* aHandlerURI,
                                                       const nsString& aTitle,
@@ -714,6 +716,7 @@ class BrowserParent final : public PBrowserParent,
   void Deprioritize();
 
   bool GetHasContentOpener();
+  bool GetHasBeforeUnload();
 
   bool StartApzAutoscroll(float aAnchorX, float aAnchorY, nsViewID aScrollId,
                           uint32_t aPresShellId);
@@ -938,6 +941,10 @@ class BrowserParent final : public PBrowserParent,
   // True if this BrowserParent has had its layer tree sent to the compositor
   // at least once.
   bool mHasPresented;
+
+  // True if at least one window hosted in the BrowserChild has added a
+  // beforeunload event listener.
+  bool mHasBeforeUnload;
 
   // True when the remote browser is created and ready to handle input events.
   bool mIsReadyToHandleInputEvents;
