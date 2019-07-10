@@ -5362,9 +5362,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         // If we noticed the mouse moving in our draggable region, forward the
         // message as a normal WM_MOUSEMOVE.
         SendMessage(mWnd, WM_MOUSEMOVE, 0, lParamClient);
-      } else if (mMousePresent && !sIsInMouseCapture) {
-        // If we receive a mouse move event on non-client chrome, make sure and
-        // send an eMouseExitFromWidget event as well.
+      } else {
+        // We've transitioned from a draggable area to somewhere else within
+        // the non-client area - perhaps one of the edges of the window for
+        // resizing.
+        mMouseInDraggableArea = false;
+      }
+
+      if (mMousePresent && !sIsInMouseCapture && !mMouseInDraggableArea) {
         SendMessage(mWnd, WM_MOUSELEAVE, 0, 0);
       }
     } break;
