@@ -137,6 +137,7 @@ bool CheckHook(OrigFuncT& aOrigFunc, const char* aDllName,
         "TEST-PASS | WindowsDllInterceptor | "
         "Executed hooked function %s from %s\n",
         aFuncName, aDllName);
+    fflush(stdout);
     return true;
   }
   printf(
@@ -273,11 +274,13 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
     interceptorFunc.SetStub(reinterpret_cast<uintptr_t>(orig_func->GetStub()));
     printf("TEST-PASS | WindowsDllInterceptor | Could hook %s from %s\n", func,
            dll);
+    fflush(stdout);
     if (!aPred) {
       printf(
           "TEST-SKIPPED | WindowsDllInterceptor | "
           "Will not attempt to execute patched %s.\n",
           func);
+      fflush(stdout);
       return true;
     }
 
@@ -296,6 +299,7 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
         "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to hook %s from "
         "%s\n",
         func, dll);
+    fflush(stdout);
 
     // Print out the function's bytes so that we can easily analyze the error.
     nsModuleHandle mod(::LoadLibrary(dll));
@@ -320,6 +324,8 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
         char suffix = (i < (kNumBytesToDump - 1)) ? ' ' : '\n';
         printf("%02hhX%c", code[i], suffix);
       }
+
+      fflush(stdout);
     }
     return false;
   }
@@ -344,11 +350,13 @@ bool TestDetour(const char (&dll)[N], const char* func, PredicateT&& aPred) {
     interceptorFunc.SetStub(reinterpret_cast<uintptr_t>(orig_func->GetStub()));
     printf("TEST-PASS | WindowsDllInterceptor | Could detour %s from %s\n",
            func, dll);
+    fflush(stdout);
     if (!aPred) {
       printf(
           "TEST-SKIPPED | WindowsDllInterceptor | "
           "Will not attempt to execute patched %s.\n",
           func);
+      fflush(stdout);
       return true;
     }
 
@@ -366,6 +374,7 @@ bool TestDetour(const char (&dll)[N], const char* func, PredicateT&& aPred) {
         "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to detour %s "
         "from %s\n",
         func, dll);
+    fflush(stdout);
     return false;
   }
 }
@@ -527,6 +536,7 @@ bool MaybeTestHook(const bool cond, const char (&dll)[N], const char* func,
         "TEST-SKIPPED | WindowsDllInterceptor | Skipped hook test for %s from "
         "%s\n",
         func, dll);
+    fflush(stdout);
     return true;
   }
 
@@ -620,6 +630,7 @@ bool TestShortDetour() {
     printf(
         "TEST-FAILED | WindowsDllInterceptor | "
         "Failed to resolve ntdll!NtMapViewOfSection\n");
+    fflush(stdout);
     return false;
   }
 
@@ -637,6 +648,7 @@ bool TestShortDetour() {
       printf(
           "TEST-FAILED | WindowsDllInterceptor | "
           "Failed to hook ntdll!NtMapViewOfSection via 10-byte patch\n");
+      fflush(stdout);
       return false;
     }
 
@@ -663,12 +675,14 @@ bool TestShortDetour() {
           "TEST-FAILED | WindowsDllInterceptor | "
           "Unexpected successful call to ntdll!NtMapViewOfSection after "
           "removing short-patched hook\n");
+      fflush(stdout);
       return false;
     }
 
     printf(
         "TEST-PASS | WindowsDllInterceptor | "
         "Successfully unhooked ntdll!NtMapViewOfSection via short patch\n");
+    fflush(stdout);
   }
 
   return true;
@@ -698,10 +712,12 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
     if (orig_rotatePayload.Set(ExeIntercept, "rotatePayload",
                                &patched_rotatePayload)) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook added\n");
+      fflush(stdout);
     } else {
       printf(
           "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to add "
           "hook\n");
+      fflush(stdout);
       return 1;
     }
 
@@ -709,19 +725,23 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
 
     if (patched_func_called) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook called\n");
+      fflush(stdout);
     } else {
       printf(
           "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook was not "
           "called\n");
+      fflush(stdout);
       return 1;
     }
 
     if (p0 == p1) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook works properly\n");
+      fflush(stdout);
     } else {
       printf(
           "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook didn't return "
           "the right information\n");
+      fflush(stdout);
       return 1;
     }
   }
@@ -736,11 +756,13 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
         "TEST-PASS | WindowsDllInterceptor | Hook was %scalled after "
         "unregistration\n",
         ShouldTestUnhookFunction ? "not " : "");
+    fflush(stdout);
   } else {
     printf(
         "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook was %scalled "
         "after unregistration\n",
         ShouldTestUnhookFunction ? "" : "not ");
+    fflush(stdout);
     return 1;
   }
 
@@ -748,10 +770,12 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
     printf(
         "TEST-PASS | WindowsDllInterceptor | Original function worked "
         "properly\n");
+    fflush(stdout);
   } else {
     printf(
         "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Original function "
         "didn't return the right information\n");
+    fflush(stdout);
     return 1;
   }
 #endif
@@ -759,15 +783,9 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
   CredHandle credHandle;
   memset(&credHandle, 0, sizeof(CredHandle));
 
-  if (TEST_HOOK("user32.dll", GetWindowInfo, Equals, FALSE) &&
-#if defined(_M_X64)
-      TEST_HOOK("user32.dll", SetWindowLongPtrA, Equals, 0) &&
-      TEST_HOOK("user32.dll", SetWindowLongPtrW, Equals, 0) &&
-#elif defined(_M_IX86)
-      TEST_HOOK("user32.dll", SetWindowLongA, Equals, 0) &&
-      TEST_HOOK("user32.dll", SetWindowLongW, Equals, 0) &&
-#endif
-      TEST_HOOK("user32.dll", TrackPopupMenu, Equals, FALSE) &&
+  // NB: These tests should be ordered such that lower-level APIs are tested
+  // before higher-level APIs.
+  if (TestShortDetour() &&
 #ifdef _M_IX86
       // We keep this test to hook complex code on x86. (Bug 850957)
       TEST_HOOK("ntdll.dll", NtFlushBuffersFile, NotEquals, 0) &&
@@ -778,6 +796,15 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK("ntdll.dll", NtWriteFile, NotEquals, 0) &&
       TEST_HOOK("ntdll.dll", NtWriteFileGather, NotEquals, 0) &&
       TEST_HOOK("ntdll.dll", NtQueryFullAttributesFile, NotEquals, 0) &&
+      TEST_DETOUR_SKIP_EXEC("ntdll.dll", LdrLoadDll) &&
+      TEST_HOOK("ntdll.dll", LdrUnloadDll, NotEquals, 0) &&
+      MAYBE_TEST_HOOK_SKIP_EXEC(IsWin8OrLater(), "ntdll.dll",
+                                LdrResolveDelayLoadedAPI) &&
+      MAYBE_TEST_HOOK_PARAMS(HasApiSetQueryApiSetPresence(),
+                             "Api-ms-win-core-apiquery-l1-1-0.dll",
+                             ApiSetQueryApiSetPresence, Equals, FALSE,
+                             &gEmptyUnicodeString, &gIsPresent) &&
+      TEST_HOOK("kernelbase.dll", QueryDosDeviceW, Equals, 0) &&
 #if !defined(_M_ARM64)
 #  ifndef MOZ_ASAN
       // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
@@ -792,9 +819,32 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
 #if !defined(_M_ARM64)
       TEST_HOOK_FOR_INVALID_HANDLE_VALUE("kernel32.dll", CreateFileA) &&
 #endif  // !defined(_M_ARM64)
-      TEST_HOOK("kernelbase.dll", QueryDosDeviceW, Equals, 0) &&
+#if !defined(_M_ARM64)
+      TEST_HOOK("kernel32.dll", TlsAlloc, NotEquals, TLS_OUT_OF_INDEXES) &&
+      TEST_HOOK_PARAMS("kernel32.dll", TlsFree, Equals, FALSE,
+                       TLS_OUT_OF_INDEXES) &&
+      TEST_HOOK("kernel32.dll", CloseHandle, Equals, FALSE) &&
+      TEST_HOOK("kernel32.dll", DuplicateHandle, Equals, FALSE) &&
+#endif  // !defined(_M_ARM64)
+      TEST_DETOUR_SKIP_EXEC("kernel32.dll", BaseThreadInitThunk) &&
+#if defined(_M_X64) || defined(_M_ARM64)
+      MAYBE_TEST_HOOK(!IsWin8OrLater(), "kernel32.dll",
+                      RtlInstallFunctionTableCallback, Equals, FALSE) &&
+      TEST_HOOK("user32.dll", GetKeyState, Ignore, 0) &&  // see Bug 1316415
+#endif
+      TEST_HOOK("user32.dll", GetWindowInfo, Equals, FALSE) &&
+#if defined(_M_X64)
+      TEST_HOOK("user32.dll", SetWindowLongPtrA, Equals, 0) &&
+      TEST_HOOK("user32.dll", SetWindowLongPtrW, Equals, 0) &&
+#elif defined(_M_IX86)
+      TEST_HOOK("user32.dll", SetWindowLongA, Equals, 0) &&
+      TEST_HOOK("user32.dll", SetWindowLongW, Equals, 0) &&
+#endif
+      TEST_HOOK("user32.dll", TrackPopupMenu, Equals, FALSE) &&
       TEST_DETOUR("user32.dll", CreateWindowExW, Equals, nullptr) &&
       TEST_HOOK("user32.dll", InSendMessageEx, Equals, ISMEX_NOSEND) &&
+      TEST_HOOK("user32.dll", SendMessageTimeoutW, Equals, 0) &&
+      TEST_HOOK("user32.dll", SetCursorPos, NotEquals, FALSE) &&
 #if !defined(_M_ARM64)
       TEST_HOOK("imm32.dll", ImmGetContext, Equals, nullptr) &&
 #endif  // !defined(_M_ARM64)
@@ -803,28 +853,11 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK("imm32.dll", ImmNotifyIME, Equals, 0) &&
       TEST_HOOK("comdlg32.dll", GetSaveFileNameW, Ignore, FALSE) &&
       TEST_HOOK("comdlg32.dll", GetOpenFileNameW, Ignore, FALSE) &&
-#if defined(_M_X64) || defined(_M_ARM64)
-      TEST_HOOK("user32.dll", GetKeyState, Ignore, 0) &&  // see Bug 1316415
-      TEST_HOOK("ntdll.dll", LdrUnloadDll, NotEquals, 0) &&
-      MAYBE_TEST_HOOK_SKIP_EXEC(IsWin8OrLater(), "ntdll.dll",
-                                LdrResolveDelayLoadedAPI) &&
-      MAYBE_TEST_HOOK(!IsWin8OrLater(), "kernel32.dll",
-                      RtlInstallFunctionTableCallback, Equals, FALSE) &&
-#endif
 #if defined(_M_X64)
       TEST_HOOK("comdlg32.dll", PrintDlgW, Ignore, 0) &&
 #endif
       MAYBE_TEST_HOOK(ShouldTestTipTsf(), "tiptsf.dll", ProcessCaretEvents,
                       Ignore, nullptr) &&
-      TEST_HOOK("user32.dll", SendMessageTimeoutW, Equals, 0) &&
-      TEST_HOOK("user32.dll", SetCursorPos, NotEquals, FALSE) &&
-#if !defined(_M_ARM64)
-      TEST_HOOK("kernel32.dll", TlsAlloc, NotEquals, TLS_OUT_OF_INDEXES) &&
-      TEST_HOOK_PARAMS("kernel32.dll", TlsFree, Equals, FALSE,
-                       TLS_OUT_OF_INDEXES) &&
-      TEST_HOOK("kernel32.dll", CloseHandle, Equals, FALSE) &&
-      TEST_HOOK("kernel32.dll", DuplicateHandle, Equals, FALSE) &&
-#endif  // !defined(_M_ARM64)
       TEST_HOOK("wininet.dll", InternetOpenA, NotEquals, nullptr) &&
       TEST_HOOK("wininet.dll", InternetCloseHandle, Equals, FALSE) &&
       TEST_HOOK("wininet.dll", InternetConnectA, Equals, nullptr) &&
@@ -844,14 +877,7 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK_PARAMS("sspicli.dll", QueryCredentialsAttributesA, Equals,
                        SEC_E_INVALID_HANDLE, &credHandle, 0, nullptr) &&
       TEST_HOOK_PARAMS("sspicli.dll", FreeCredentialsHandle, Equals,
-                       SEC_E_INVALID_HANDLE, &credHandle) &&
-      TEST_DETOUR_SKIP_EXEC("kernel32.dll", BaseThreadInitThunk) &&
-      TEST_DETOUR_SKIP_EXEC("ntdll.dll", LdrLoadDll) &&
-      MAYBE_TEST_HOOK_PARAMS(HasApiSetQueryApiSetPresence(),
-                             "Api-ms-win-core-apiquery-l1-1-0.dll",
-                             ApiSetQueryApiSetPresence, Equals, FALSE,
-                             &gEmptyUnicodeString, &gIsPresent) &&
-      TestShortDetour()) {
+                       SEC_E_INVALID_HANDLE, &credHandle)) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
 
     LARGE_INTEGER end, freq;
