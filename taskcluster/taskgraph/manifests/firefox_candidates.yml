@@ -147,11 +147,6 @@ mapping:
         description: "File containing metadata about all other files and testing harnesses specifics"
         pretty_name: firefox-${version}.test_packages.json
         checksums_path: ${path_platform}/${locale}/firefox-${version}.test_packages.json
-    target.txt:
-        <<: *default
-        description: "File containing buildid and revision"
-        pretty_name: firefox-${version}.txt
-        checksums_path: ${path_platform}/${locale}/firefox-${version}.txt
     target.web-platform.tests.tar.gz:
         <<: *default
         description: "Results for running the webplatform testing framework to cover standard Web platform features"

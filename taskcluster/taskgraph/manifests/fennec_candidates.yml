@@ -103,12 +103,6 @@ mapping:
         all_locales: true
         pretty_name: fennec-${version}.${locale}.${filename_platform}.test_packages.json
         checksums_path: fennec-${version}.${locale}.${filename_platform}.test_packages.json
-    target.txt:
-        <<: *default
-        description: "File containing buildid and revision"
-        all_locales: true
-        pretty_name: fennec-${version}.${locale}.${filename_platform}.txt
-        checksums_path: fennec-${version}.${locale}.${filename_platform}.txt
     target.web-platform.tests.tar.gz:
         <<: *default
         description: "Results for running the webplatform testing framework to cover standard Web platform features"
