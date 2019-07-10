@@ -5,6 +5,7 @@
   "ui:order": [
     "engineName",
     "default",
+    "defaultPrivate",
     "application",
     "orderHint",
     "telemetryId",

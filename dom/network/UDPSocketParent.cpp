@@ -340,7 +340,7 @@ mozilla::ipc::IPCResult UDPSocketParent::RecvOutgoingData(
     }
 
     bool allowed;
-    const InfallibleTArray<uint8_t>& data(aData.get_ArrayOfuint8_t());
+    const nsTArray<uint8_t>& data(aData.get_ArrayOfuint8_t());
     rv = mFilter->FilterPacket(&aAddr.get_NetAddr(), data.Elements(),
                                data.Length(), nsISocketFilter::SF_OUTGOING,
                                &allowed);
@@ -366,7 +366,7 @@ mozilla::ipc::IPCResult UDPSocketParent::RecvOutgoingData(
   return IPC_OK();
 }
 
-void UDPSocketParent::Send(const InfallibleTArray<uint8_t>& aData,
+void UDPSocketParent::Send(const nsTArray<uint8_t>& aData,
                            const UDPSocketAddr& aAddr) {
   nsresult rv;
   uint32_t count;
@@ -527,7 +527,7 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket,
     FireInternalError(__LINE__);
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  InfallibleTArray<uint8_t> infallibleArray;
+  nsTArray<uint8_t> infallibleArray;
   infallibleArray.SwapElements(fallibleArray);
 
   // compose callback

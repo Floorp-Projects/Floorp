@@ -2419,11 +2419,6 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
       "following in Histograms.json: GC_MINOR_REASON, GC_MINOR_REASON_LONG, "
       "GC_REASON_2");
 
-  static_assert((mozilla::StartupTimeline::MAX_EVENT_ID + 1) ==
-      gHistogramInfos[mozilla::Telemetry::STARTUP_MEASUREMENT_ERRORS].bucketCount,
-      "MAX_EVENT_ID is assumed to be a fixed value in Histograms.json.  If this"
-      " was an intentional change, update the n_values for the following in "
-      "Histograms.json: STARTUP_MEASUREMENT_ERRORS");
   // clang-format on
 
   gInitDone = true;

@@ -26,7 +26,7 @@ class VRServiceHost {
   void CreateService(volatile VRExternalShmem* aShmem);
 #endif
 
-  void PuppetSubmit(const InfallibleTArray<uint64_t>& aBuffer);
+  void PuppetSubmit(const nsTArray<uint64_t>& aBuffer);
   void PuppetReset();
   bool PuppetHasEnded();
 

@@ -927,7 +927,7 @@ class nsTArray_Impl
   }
   // And we have to do this for our subclasses too
   operator const nsTArray<E>&() const {
-    return *reinterpret_cast<const InfallibleTArray<E>*>(this);
+    return *reinterpret_cast<const nsTArray<E>*>(this);
   }
   operator const FallibleTArray<E>&() const {
     return *reinterpret_cast<const FallibleTArray<E>*>(this);

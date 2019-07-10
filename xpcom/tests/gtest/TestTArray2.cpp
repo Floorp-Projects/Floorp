@@ -991,9 +991,6 @@ TEST(TArray, test_conversion_operator)
   FallibleTArray<int> f;
   const FallibleTArray<int> fconst;
 
-  InfallibleTArray<int> i;
-  const InfallibleTArray<int> iconst;
-
   nsTArray<int> t;
   const nsTArray<int> tconst;
   AutoTArray<int, 8> tauto;
@@ -1005,10 +1002,6 @@ TEST(TArray, test_conversion_operator)
     ASSERT_EQ((void*)&z1, (void*)&f);           \
     const type<int>& z2 = fconst;               \
     ASSERT_EQ((void*)&z2, (void*)&fconst);      \
-    const type<int>& z5 = i;                    \
-    ASSERT_EQ((void*)&z5, (void*)&i);           \
-    const type<int>& z6 = iconst;               \
-    ASSERT_EQ((void*)&z6, (void*)&iconst);      \
     const type<int>& z9 = t;                    \
     ASSERT_EQ((void*)&z9, (void*)&t);           \
     const type<int>& z10 = tconst;              \
@@ -1020,7 +1013,6 @@ TEST(TArray, test_conversion_operator)
   } while (0)
 
   CHECK_ARRAY_CAST(FallibleTArray);
-  CHECK_ARRAY_CAST(InfallibleTArray);
   CHECK_ARRAY_CAST(nsTArray);
 
 #undef CHECK_ARRAY_CAST
@@ -1037,8 +1029,6 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
   const int N = 1050;
   FallibleTArray<int> f;
 
-  InfallibleTArray<int> i;
-
   nsTArray<int> t;
   AutoTArray<int, N> tauto;
 
@@ -1047,7 +1037,6 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
 #define FOR_EACH(pre, post) \
   do {                      \
     pre f post;             \
-    pre i post;             \
     pre t post;             \
     pre tauto post;         \
   } while (0)
@@ -1060,7 +1049,6 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
 
   void* initial_Hdrs[] = {
       static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
-      static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
       static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
       static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(), nullptr};
 
@@ -1070,7 +1058,6 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
   FOR_EACH(;, .SetLengthAndRetainStorage(12));
   for (int n = 0; n < 12; ++n) {
     ASSERT_EQ(f[n], n);
-    ASSERT_EQ(i[n], n);
     ASSERT_EQ(t[n], n);
     ASSERT_EQ(tauto[n], n);
   }
@@ -1078,14 +1065,12 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
   FOR_EACH(;, .SetLengthAndRetainStorage(N));
   for (int n = 0; n < N; ++n) {
     ASSERT_EQ(f[n], n);
-    ASSERT_EQ(i[n], n);
     ASSERT_EQ(t[n], n);
     ASSERT_EQ(tauto[n], n);
   }
 
   void* current_Hdrs[] = {
       static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
-      static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
       static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
       static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(), nullptr};
 

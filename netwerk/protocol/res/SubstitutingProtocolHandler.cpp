@@ -226,7 +226,7 @@ void SubstitutingProtocolHandler::ConstructInternal() {
 //
 
 nsresult SubstitutingProtocolHandler::CollectSubstitutions(
-    InfallibleTArray<SubstitutionMapping>& aMappings) {
+    nsTArray<SubstitutionMapping>& aMappings) {
   AutoReadLock lock(mSubstitutionsLock);
   for (auto iter = mSubstitutions.ConstIter(); !iter.Done(); iter.Next()) {
     SubstitutionEntry& entry = iter.Data();

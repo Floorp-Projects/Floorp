@@ -41,7 +41,7 @@ void UpdateHandler(nsITimer* aTimer, void* aClosure) {
       continue;
     }
     SensorType sensor = static_cast<SensorType>(i);
-    InfallibleTArray<float> values;
+    nsTArray<float> values;
     if (sensor == SENSOR_ACCELERATION) {
       sms_acceleration accel;
       smsGetData(&accel);

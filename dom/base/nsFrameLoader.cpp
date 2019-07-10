@@ -89,8 +89,6 @@
 #include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "mozilla/ServoCSSParser.h"
-#include "mozilla/ServoStyleSet.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "GeckoProfiler.h"
 
@@ -2918,7 +2916,7 @@ nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
       MOZ_CRASH();
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
-    InfallibleTArray<mozilla::jsipc::CpowEntry> cpows;
+    nsTArray<mozilla::jsipc::CpowEntry> cpows;
     jsipc::CPOWManager* mgr = cp->GetCPOWManager();
     if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
       return NS_ERROR_UNEXPECTED;
@@ -3217,54 +3215,6 @@ void nsFrameLoader::Print(uint64_t aOuterWindowID,
     return;
   }
 #endif
-}
-
-already_AddRefed<mozilla::dom::Promise> nsFrameLoader::DrawSnapshot(
-    double aX, double aY, double aW, double aH, double aScale,
-    const nsAString& aBackgroundColor, mozilla::ErrorResult& aRv) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  if (!XRE_IsParentProcess()) {
-    aRv = NS_ERROR_FAILURE;
-    return nullptr;
-  }
-
-  RefPtr<nsIGlobalObject> global = GetOwnerContent()->GetOwnerGlobal();
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RefPtr<Document> document = GetOwnerContent()->GetOwnerDocument();
-  if (NS_WARN_IF(!document)) {
-    aRv = NS_ERROR_FAILURE;
-    return nullptr;
-  }
-  PresShell* presShell = document->GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
-    aRv = NS_ERROR_FAILURE;
-    return nullptr;
-  }
-
-  nscolor color;
-  css::Loader* loader = document->CSSLoader();
-  ServoStyleSet* set = presShell->StyleSet();
-  if (NS_WARN_IF(!ServoCSSParser::ComputeColor(
-          set, NS_RGB(0, 0, 0), aBackgroundColor, &color, nullptr, loader))) {
-    aRv = NS_ERROR_FAILURE;
-    return nullptr;
-  }
-
-  gfx::IntRect rect = gfx::IntRect::RoundOut(gfx::Rect(aX, aY, aW, aH));
-
-  if (IsRemoteFrame()) {
-    gfx::CrossProcessPaint::StartRemote(GetBrowserParent()->GetTabId(), rect,
-                                        aScale, color, promise);
-  } else {
-    gfx::CrossProcessPaint::StartLocal(GetDocShell(), rect, aScale, color,
-                                       promise);
-  }
-
-  return promise.forget();
 }
 
 already_AddRefed<nsIRemoteTab> nsFrameLoader::GetRemoteTab() {

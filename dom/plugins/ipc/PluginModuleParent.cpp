@@ -795,10 +795,9 @@ struct CpuUsageSamples {
   uint64_t cpuTimes[2];
 };
 
-bool GetProcessCpuUsage(
-    const InfallibleTArray<base::ProcessHandle>& processHandles,
-    InfallibleTArray<float>& cpuUsage) {
-  InfallibleTArray<CpuUsageSamples> samples(processHandles.Length());
+bool GetProcessCpuUsage(const nsTArray<base::ProcessHandle>& processHandles,
+                        nsTArray<float>& cpuUsage) {
+  nsTArray<CpuUsageSamples> samples(processHandles.Length());
   FILETIME creationTime, exitTime, kernelTime, userTime, currentTime;
   BOOL res;
 
@@ -1113,7 +1112,7 @@ void PluginModuleChromeParent::TerminateChildProcess(
 #ifdef XP_WIN
   // collect cpu usage for plugin processes
 
-  InfallibleTArray<base::ProcessHandle> processHandles;
+  nsTArray<base::ProcessHandle> processHandles;
 
   if (childOpened) {
     processHandles.AppendElement(geckoChildProcess);
@@ -1428,8 +1427,8 @@ void PluginModuleParent::NotifyPluginCrashed() {
 }
 
 PPluginInstanceParent* PluginModuleParent::AllocPPluginInstanceParent(
-    const nsCString& aMimeType, const InfallibleTArray<nsCString>& aNames,
-    const InfallibleTArray<nsCString>& aValues) {
+    const nsCString& aMimeType, const nsTArray<nsCString>& aNames,
+    const nsTArray<nsCString>& aValues) {
   NS_ERROR("Not reachable!");
   return nullptr;
 }
@@ -2003,8 +2002,8 @@ nsresult PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
   }
 
   // create the instance on the other side
-  InfallibleTArray<nsCString> names;
-  InfallibleTArray<nsCString> values;
+  nsTArray<nsCString> names;
+  nsTArray<nsCString> values;
 
   for (int i = 0; i < argc; ++i) {
     names.AppendElement(NullableString(argn[i]));
@@ -2023,8 +2022,8 @@ class nsCaseInsensitiveUTF8StringArrayComparator {
 };
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-static void ForceWindowless(InfallibleTArray<nsCString>& names,
-                            InfallibleTArray<nsCString>& values) {
+static void ForceWindowless(nsTArray<nsCString>& names,
+                            nsTArray<nsCString>& values) {
   nsCaseInsensitiveUTF8StringArrayComparator comparator;
   NS_NAMED_LITERAL_CSTRING(wmodeAttributeName, "wmode");
   NS_NAMED_LITERAL_CSTRING(opaqueAttributeValue, "opaque");
@@ -2040,8 +2039,8 @@ static void ForceWindowless(InfallibleTArray<nsCString>& names,
 }
 #endif  // windows or linux
 #if defined(XP_WIN)
-static void ForceDirect(InfallibleTArray<nsCString>& names,
-                        InfallibleTArray<nsCString>& values) {
+static void ForceDirect(nsTArray<nsCString>& names,
+                        nsTArray<nsCString>& values) {
   nsCaseInsensitiveUTF8StringArrayComparator comparator;
   NS_NAMED_LITERAL_CSTRING(wmodeAttributeName, "wmode");
   NS_NAMED_LITERAL_CSTRING(directAttributeValue, "direct");
@@ -2058,8 +2057,8 @@ static void ForceDirect(InfallibleTArray<nsCString>& names,
 #endif  // windows
 
 nsresult PluginModuleParent::NPP_NewInternal(
-    NPMIMEType pluginType, NPP instance, InfallibleTArray<nsCString>& names,
-    InfallibleTArray<nsCString>& values, NPSavedData* saved, NPError* error) {
+    NPMIMEType pluginType, NPP instance, nsTArray<nsCString>& names,
+    nsTArray<nsCString>& values, NPSavedData* saved, NPError* error) {
   MOZ_ASSERT(names.Length() == values.Length());
   if (mPluginName.IsEmpty()) {
     GetPluginDetails();

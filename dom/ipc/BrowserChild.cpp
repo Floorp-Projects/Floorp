@@ -2172,7 +2172,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvAsyncMessage(
-    const nsString& aMessage, InfallibleTArray<CpowEntry>&& aCpows,
+    const nsString& aMessage, nsTArray<CpowEntry>&& aCpows,
     nsIPrincipal* aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserChild::RecvAsyncMessage",
                                              OTHER, aMessage);
@@ -2484,34 +2484,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
 
   UpdateVisibility(true);
 
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvRequestRootPaint(
-    const IntRect& aRect, const float& aScale, const nscolor& aBackgroundColor,
-    RequestRootPaintResolver&& aResolve) {
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  if (!docShell) {
-    return IPC_OK();
-  }
-
-  aResolve(
-      gfx::PaintFragment::Record(docShell, aRect, aScale, aBackgroundColor));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvRequestSubPaint(
-    const float& aScale, const nscolor& aBackgroundColor,
-    RequestSubPaintResolver&& aResolve) {
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  if (!docShell) {
-    return IPC_OK();
-  }
-
-  gfx::IntRect rect = gfx::RoundedIn(gfx::Rect(
-      0.0f, 0.0f, mUnscaledInnerSize.width, mUnscaledInnerSize.height));
-  aResolve(
-      gfx::PaintFragment::Record(docShell, rect, aScale, aBackgroundColor));
   return IPC_OK();
 }
 
@@ -2912,7 +2884,7 @@ bool BrowserChild::DoSendBlockingMessage(
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return false;
   }
-  InfallibleTArray<CpowEntry> cpows;
+  nsTArray<CpowEntry> cpows;
   if (aCpows) {
     jsipc::CPOWManager* mgr = Manager()->GetCPOWManager();
     if (!mgr || !mgr->Wrap(aCx, aCpows, &cpows)) {
@@ -2937,7 +2909,7 @@ nsresult BrowserChild::DoSendAsyncMessage(JSContext* aCx,
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
-  InfallibleTArray<CpowEntry> cpows;
+  nsTArray<CpowEntry> cpows;
   if (aCpows) {
     jsipc::CPOWManager* mgr = Manager()->GetCPOWManager();
     if (!mgr || !mgr->Wrap(aCx, aCpows, &cpows)) {

@@ -63,7 +63,7 @@ class SensorEvent final : public ISensorEvents {
   STDMETHODIMP OnDataUpdated(ISensor* aSensor, ISensorDataReport* aReport) {
     PROPVARIANT v;
     HRESULT hr;
-    InfallibleTArray<float> values;
+    nsTArray<float> values;
 
     // X-axis acceleration in g's
     hr = aReport->GetSensorValue(SENSOR_DATA_TYPE_ACCELERATION_X_G, &v);

@@ -10,6 +10,9 @@
 label {
   text-align: right;
   margin-inline-end: 0;
+  color: var(--in-content-text-color);
+  font-weight: 700;
+  font-size: 1em;
 }
 
 label:dir(rtl) {

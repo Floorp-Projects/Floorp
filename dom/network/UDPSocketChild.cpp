@@ -136,7 +136,7 @@ nsresult UDPSocketChild::SendDataInternal(const UDPSocketAddr& aAddr,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  InfallibleTArray<uint8_t> array;
+  nsTArray<uint8_t> array;
   array.SwapElements(fallibleArray);
 
   SendOutgoingData(array, aAddr);
@@ -214,7 +214,7 @@ mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackClosed() {
 }
 
 mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackReceivedData(
-    const UDPAddressInfo& aAddressInfo, InfallibleTArray<uint8_t>&& aData) {
+    const UDPAddressInfo& aAddressInfo, nsTArray<uint8_t>&& aData) {
   UDPSOCKET_LOG(("%s: %s:%u length %zu", __FUNCTION__,
                  aAddressInfo.addr().get(), aAddressInfo.port(),
                  aData.Length()));

@@ -134,7 +134,7 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback) {
 mozilla::ipc::IPCResult nsFilePickerProxy::Recv__delete__(
     const MaybeInputData& aData, const int16_t& aResult) {
   if (aData.type() == MaybeInputData::TInputBlobs) {
-    const InfallibleTArray<IPCBlob>& blobs = aData.get_InputBlobs().blobs();
+    const nsTArray<IPCBlob>& blobs = aData.get_InputBlobs().blobs();
     for (uint32_t i = 0; i < blobs.Length(); ++i) {
       RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(blobs[i]);
       NS_ENSURE_TRUE(blobImpl, IPC_OK());

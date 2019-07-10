@@ -334,24 +334,6 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     return false;
   }
 
-  auto origin = gfx::IntPoint(0, 0);
-  if (aTileOffset) {
-    origin =
-        gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
-    dt = gfx::Factory::CreateOffsetDrawTarget(dt, origin);
-  }
-
-  auto bounds = gfx::IntRect(origin, aSize);
-
-  if (aDirtyRect) {
-    Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y,
-               aDirtyRect->size.width, aDirtyRect->size.height);
-    dt->PushClipRect(dirty);
-    bounds = bounds.Intersect(
-        IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,
-                aDirtyRect->size.width, aDirtyRect->size.height));
-  }
-
   struct Reader {
     const uint8_t* buf;
     size_t len;
@@ -396,11 +378,35 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
   // We try hard to not have empty blobs but we can end up with
   // them because of CompositorHitTestInfo and merging.
-  MOZ_RELEASE_ASSERT(aBlob.length() >= sizeof(size_t));
-  size_t indexOffset = *(size_t*)(aBlob.end().get() - sizeof(size_t));
-  MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - sizeof(size_t));
+  size_t footerSize = sizeof(size_t) + sizeof(IntPoint);
+  MOZ_RELEASE_ASSERT(aBlob.length() >= footerSize);
+  size_t indexOffset = *(size_t*)(aBlob.end().get() - footerSize);
+  IntPoint recordingOrigin =
+      *(IntPoint*)(aBlob.end().get() - footerSize + sizeof(size_t));
+  // Apply the visibleRect's offset to make (0, 0) in the DT correspond to (0,
+  // 0) in the texture
+
+  MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - footerSize);
   Reader reader(aBlob.begin().get() + indexOffset,
-                aBlob.length() - sizeof(size_t) - indexOffset);
+                aBlob.length() - footerSize - indexOffset);
+
+  IntPoint origin;
+  if (aTileOffset) {
+    origin +=
+        gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
+  }
+  dt = gfx::Factory::CreateOffsetDrawTarget(dt, recordingOrigin + origin);
+
+  auto bounds = gfx::IntRect(origin, aSize);
+
+  if (aDirtyRect) {
+    Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y,
+               aDirtyRect->size.width, aDirtyRect->size.height);
+    dt->PushClipRect(dirty);
+    bounds = bounds.Intersect(
+        IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,
+                aDirtyRect->size.width, aDirtyRect->size.height));
+  }
 
   bool ret = true;
   size_t offset = 0;

@@ -70,15 +70,14 @@ class PluginModuleChild : public PPluginModuleChild {
       Endpoint<PFunctionBrokerChild>&& endpoint);
 
   PPluginInstanceChild* AllocPPluginInstanceChild(
-      const nsCString& aMimeType, const InfallibleTArray<nsCString>& aNames,
-      const InfallibleTArray<nsCString>& aValues);
+      const nsCString& aMimeType, const nsTArray<nsCString>& aNames,
+      const nsTArray<nsCString>& aValues);
 
   bool DeallocPPluginInstanceChild(PPluginInstanceChild* aActor);
 
   mozilla::ipc::IPCResult RecvPPluginInstanceConstructor(
       PPluginInstanceChild* aActor, const nsCString& aMimeType,
-      InfallibleTArray<nsCString>&& aNames,
-      InfallibleTArray<nsCString>&& aValues) override;
+      nsTArray<nsCString>&& aNames, nsTArray<nsCString>&& aValues) override;
   mozilla::ipc::IPCResult AnswerNP_Shutdown(NPError* rv);
 
   mozilla::ipc::IPCResult AnswerOptionalFunctionsSupported(

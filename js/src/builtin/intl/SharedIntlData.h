@@ -179,8 +179,16 @@ class SharedIntlData {
    * There is almost no difference between lower-case first and when case
    * first is disabled (UCOL_LOWER_FIRST resp. UCOL_OFF), so we only need to
    * track locales which use upper-case first as their default setting.
+   *
+   * Instantiating collator objects for each available locale is slow
+   * (bug 1527879), therefore we're hardcoding the two locales using upper-case
+   * first ("da" (Danish) and "mt" (Maltese)) and only assert in debug-mode
+   * these two locales match the upper-case first locales returned by ICU. A
+   * system-ICU may support a different set of locales, therefore we're always
+   * calling into ICU to find the upper-case first locales in that case.
    */
 
+#if DEBUG || MOZ_SYSTEM_ICU
   using Locale = JSAtom*;
 
   struct LocaleHasher {
@@ -202,6 +210,7 @@ class SharedIntlData {
    * Precomputes the available locales which use upper-case first sorting.
    */
   bool ensureUpperCaseFirstLocales(JSContext* cx);
+#endif
 
  public:
   /**
