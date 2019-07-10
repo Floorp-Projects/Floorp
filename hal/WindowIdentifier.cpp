@@ -19,7 +19,7 @@ WindowIdentifier::WindowIdentifier(nsPIDOMWindowInner* window)
   mID.AppendElement(GetWindowID());
 }
 
-WindowIdentifier::WindowIdentifier(const InfallibleTArray<uint64_t>& id,
+WindowIdentifier::WindowIdentifier(const nsTArray<uint64_t>& id,
                                    nsPIDOMWindowInner* window)
     : mID(id), mWindow(window), mIsEmpty(false) {
   mID.AppendElement(GetWindowID());
@@ -28,7 +28,7 @@ WindowIdentifier::WindowIdentifier(const InfallibleTArray<uint64_t>& id,
 WindowIdentifier::WindowIdentifier(const WindowIdentifier& other)
     : mID(other.mID), mWindow(other.mWindow), mIsEmpty(other.mIsEmpty) {}
 
-const InfallibleTArray<uint64_t>& WindowIdentifier::AsArray() const {
+const nsTArray<uint64_t>& WindowIdentifier::AsArray() const {
   MOZ_ASSERT(!mIsEmpty);
   return mID;
 }
