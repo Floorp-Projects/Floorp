@@ -51,18 +51,17 @@ class TestDataStructuresParent : public PTestDataStructuresParent {
 
   bool DeallocPTestDataStructuresSubParent(PTestDataStructuresSubParent* actor);
 
-  mozilla::ipc::IPCResult RecvTest1(InfallibleTArray<int>&& i1,
-                                    InfallibleTArray<int>* o1);
+  mozilla::ipc::IPCResult RecvTest1(nsTArray<int>&& i1, nsTArray<int>* o1);
 
   mozilla::ipc::IPCResult RecvTest2(
-      InfallibleTArray<PTestDataStructuresSubParent*>&& i1,
-      InfallibleTArray<PTestDataStructuresSubParent*>* o1);
+      nsTArray<PTestDataStructuresSubParent*>&& i1,
+      nsTArray<PTestDataStructuresSubParent*>* o1);
 
   mozilla::ipc::IPCResult RecvTest3(const IntDouble& i1, const IntDouble& i2,
                                     IntDouble* o1, IntDouble* o2);
 
-  mozilla::ipc::IPCResult RecvTest4(InfallibleTArray<IntDouble>&& i1,
-                                    InfallibleTArray<IntDouble>* o1);
+  mozilla::ipc::IPCResult RecvTest4(nsTArray<IntDouble>&& i1,
+                                    nsTArray<IntDouble>* o1);
 
   mozilla::ipc::IPCResult RecvTest5(const IntDoubleArrays& i1,
                                     const IntDoubleArrays& i2,
@@ -70,8 +69,8 @@ class TestDataStructuresParent : public PTestDataStructuresParent {
                                     IntDoubleArrays* o1, IntDoubleArrays* o2,
                                     IntDoubleArrays* o3);
 
-  mozilla::ipc::IPCResult RecvTest6(InfallibleTArray<IntDoubleArrays>&& i1,
-                                    InfallibleTArray<IntDoubleArrays>* o1);
+  mozilla::ipc::IPCResult RecvTest6(nsTArray<IntDoubleArrays>&& i1,
+                                    nsTArray<IntDoubleArrays>* o1);
 
   mozilla::ipc::IPCResult RecvTest7_0(const ActorWrapper& i1, ActorWrapper* o1);
 
@@ -79,16 +78,16 @@ class TestDataStructuresParent : public PTestDataStructuresParent {
                                     const Actors& i3, Actors* o1, Actors* o2,
                                     Actors* o3);
 
-  mozilla::ipc::IPCResult RecvTest8(InfallibleTArray<Actors>&& i1,
-                                    InfallibleTArray<Actors>* o1);
+  mozilla::ipc::IPCResult RecvTest8(nsTArray<Actors>&& i1,
+                                    nsTArray<Actors>* o1);
 
   mozilla::ipc::IPCResult RecvTest9(const Unions& i1, const Unions& i2,
                                     const Unions& i3, const Unions& i4,
                                     Unions* o1, Unions* o2, Unions* o3,
                                     Unions* o4);
 
-  mozilla::ipc::IPCResult RecvTest10(InfallibleTArray<Unions>&& i1,
-                                     InfallibleTArray<Unions>* o1);
+  mozilla::ipc::IPCResult RecvTest10(nsTArray<Unions>&& i1,
+                                     nsTArray<Unions>* o1);
 
   mozilla::ipc::IPCResult RecvTest11(const SIntDouble& i, SIntDouble* o);
 
@@ -106,9 +105,9 @@ class TestDataStructuresParent : public PTestDataStructuresParent {
 
   mozilla::ipc::IPCResult RecvTest16(const WithUnions& i, WithUnions* o);
 
-  mozilla::ipc::IPCResult RecvTest17(InfallibleTArray<Op>&& sa);
+  mozilla::ipc::IPCResult RecvTest17(nsTArray<Op>&& sa);
 
-  mozilla::ipc::IPCResult RecvTest18(InfallibleTArray<nsIntRegion>&& ra);
+  mozilla::ipc::IPCResult RecvTest18(nsTArray<nsIntRegion>&& ra);
 
   mozilla::ipc::IPCResult RecvDummy(const ShmemUnion& su, ShmemUnion* rsu) {
     *rsu = su;
@@ -122,7 +121,7 @@ class TestDataStructuresParent : public PTestDataStructuresParent {
   }
 
  private:
-  InfallibleTArray<PTestDataStructuresSubParent*> mKids;
+  nsTArray<PTestDataStructuresSubParent*> mKids;
 };
 
 class TestDataStructuresChild : public PTestDataStructuresChild {
@@ -172,7 +171,7 @@ class TestDataStructuresChild : public PTestDataStructuresChild {
   void Test17();
   void Test18();
 
-  InfallibleTArray<PTestDataStructuresSubChild*> mKids;
+  nsTArray<PTestDataStructuresSubChild*> mKids;
 };
 
 }  // namespace _ipdltest
