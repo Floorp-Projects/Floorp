@@ -365,11 +365,7 @@ GetFloat(ScanfState *state)
         if (state->sizeSpec == _PR_size_l) {
             *va_arg(state->ap, PRFloat64 *) = dval;
         } else if (state->sizeSpec == _PR_size_L) {
-#if defined(OSF1) || defined(IRIX)
-            *va_arg(state->ap, double *) = dval;
-#else
             *va_arg(state->ap, long double *) = dval;
-#endif
         } else {
             *va_arg(state->ap, float *) = (float) dval;
         }

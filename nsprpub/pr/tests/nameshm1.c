@@ -72,17 +72,10 @@
 #include <string.h>
 #include <private/primpl.h>
 
-#ifdef SYMBIAN
-#define SEM_NAME1 "c:\\data\\nameshmSEM1"
-#define SEM_NAME2 "c:\\data\\nameshmSEM2"
-#define OPT_NAME "c:\\data\\xxxNSPRshm"
-#define EXE_NAME "nspr_tests_nameshm1.exe"
-#else
 #define SEM_NAME1 "/tmp/nameshmSEM1"
 #define SEM_NAME2 "/tmp/nameshmSEM2"
 #define OPT_NAME "/tmp/xxxNSPRshm"
 #define EXE_NAME "nameshm1"
-#endif
 #define SEM_MODE  0666
 #define SHM_MODE  0666
 

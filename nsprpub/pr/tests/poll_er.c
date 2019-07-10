@@ -20,15 +20,6 @@
 **			recognize the return code from tha main program.
 ***********************************************************************/
 
-#ifdef XP_BEOS
-#include <stdio.h>
-int main()
-{
-    printf( "This test is not ported to the BeOS\n" );
-    return 0;
-}
-#else
-
 /***********************************************************************
 ** Includes
 ***********************************************************************/
@@ -207,4 +198,3 @@ exit_now:
 		return 0;
 }
 
-#endif /* XP_BEOS */

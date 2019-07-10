@@ -388,9 +388,6 @@ PR_IMPLEMENT(PRInt32) PR_GetSysfdTableMax(void)
     ULONG ulCurMaxFH = 0;
     DosSetRelMaxFH(&ulReqCount, &ulCurMaxFH);
     return ulCurMaxFH;
-#elif defined(XP_BEOS)
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-   return -1;
 #else
     write me;
 #endif
@@ -434,7 +431,7 @@ PR_IMPLEMENT(PRInt32) PR_SetSysfdTableSize(int table_size)
     } 
     return tableMax;
 #elif defined(AIX) || defined(QNX) \
-        || defined(WIN32) || defined(WIN16) || defined(XP_BEOS)
+        || defined(WIN32) || defined(WIN16)
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return -1;
 #else
@@ -692,7 +689,7 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     (*readPipe)->secret->inheritable = _PR_TRI_TRUE;
     (*writePipe)->secret->inheritable = _PR_TRI_TRUE;
     return PR_SUCCESS;
-#elif defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_OS2)
 #ifdef XP_OS2
     HFILE pipefd[2];
 #else
@@ -722,13 +719,9 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
         close(pipefd[1]);
         return PR_FAILURE;
     }
-#ifndef XP_BEOS /* Pipes are nonblocking on BeOS */
     _PR_MD_MAKE_NONBLOCK(*readPipe);
-#endif
     _PR_MD_INIT_FD_INHERITABLE(*readPipe, PR_FALSE);
-#ifndef XP_BEOS /* Pipes are nonblocking on BeOS */
     _PR_MD_MAKE_NONBLOCK(*writePipe);
-#endif
     _PR_MD_INIT_FD_INHERITABLE(*writePipe, PR_FALSE);
     return PR_SUCCESS;
 #else

@@ -198,6 +198,21 @@
 #endif
     </ul>
 
+#ifdef APP_LICENSE_LIST_BLOCK
+#ifndef APP_LICENSE_BODY_BLOCK
+#error
+#endif
+#ifndef APP_LICENSE_PRODUCT_NAME
+#error
+#endif
+The following licenses are specific to code used by the
+#includesubst @APP_LICENSE_PRODUCT_NAME@
+product.
+
+<!-- Index of product-specific licenses for non-Firefox apps. -->
+#includesubst @APP_LICENSE_LIST_BLOCK@
+#endif
+
     </div>
 
     <hr>
@@ -7304,6 +7319,13 @@ following terms:
 
 #endif
 
+#ifdef APP_LICENSE_BODY_BLOCK
+#ifndef APP_LICENSE_LIST_BLOCK
+#error
+#endif
+<!-- List of product-specific licenses for non-Firefox apps. -->
+#includesubst @APP_LICENSE_BODY_BLOCK@
+#endif
 
       <hr>
 

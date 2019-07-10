@@ -62,7 +62,6 @@ PRStatus PR_CALLBACK _PR_SocketGetSocketOption(PRFileDesc *fd, PRSocketOptionDat
         {
             case PR_SockOpt_Linger:
             {
-#if !defined(XP_BEOS) || defined(BONE_VERSION)
                 struct linger linger;
                 length = sizeof(linger);
                 rv = _PR_MD_GETSOCKOPT(
@@ -76,10 +75,6 @@ PRStatus PR_CALLBACK _PR_SocketGetSocketOption(PRFileDesc *fd, PRSocketOptionDat
                         PR_SecondsToInterval(linger.l_linger);
                 }
                 break;
-#else
-                PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
-                return PR_FAILURE;
-#endif
             }
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
@@ -221,17 +216,12 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
         {
             case PR_SockOpt_Linger:
             {
-#if !defined(XP_BEOS) || defined(BONE_VERSION)
                 struct linger linger;
                 linger.l_onoff = data->value.linger.polarity;
                 linger.l_linger = PR_IntervalToSeconds(data->value.linger.linger);
                 rv = _PR_MD_SETSOCKOPT(
                     fd, level, name, (char*)&linger, sizeof(linger));
                 break;
-#else
-                PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
-                return PR_FAILURE;
-#endif
             }
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:

@@ -472,7 +472,7 @@ class nsContentUtils {
                                int32_t* aNode2Index = nullptr);
 
   struct ComparePointsCache {
-    int32_t ComputeIndexOf(nsINode* aParent, nsINode* aChild) {
+    int32_t ComputeIndexOf(const nsINode* aParent, const nsINode* aChild) {
       if (aParent == mParent && aChild == mChild) {
         return mIndex;
       }
@@ -484,8 +484,8 @@ class nsContentUtils {
     }
 
    private:
-    nsINode* mParent = nullptr;
-    nsINode* mChild = nullptr;
+    const nsINode* mParent = nullptr;
+    const nsINode* mChild = nullptr;
     int32_t mIndex = 0;
   };
 
@@ -508,8 +508,8 @@ class nsContentUtils {
    *      On the other hand, nsINode can have ATTRCHILD_ARRAY_MAX_CHILD_COUN
    *      (0x3FFFFF) at most.  Therefore, they can be int32_t for now.
    */
-  static int32_t ComparePoints(nsINode* aParent1, int32_t aOffset1,
-                               nsINode* aParent2, int32_t aOffset2,
+  static int32_t ComparePoints(const nsINode* aParent1, int32_t aOffset1,
+                               const nsINode* aParent2, int32_t aOffset2,
                                bool* aDisconnected = nullptr,
                                ComparePointsCache* aParent1Cache = nullptr);
   template <typename FPT, typename FRT, typename SPT, typename SRT>
