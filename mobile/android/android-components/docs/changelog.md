@@ -18,6 +18,13 @@ permalink: /changelog/
 * **feature-downloads**
   * Added custom notification icon for `FetchDownloadManager`.
 
+* **feature-accounts**
+  * ⚠️ **This is a breaking change**: Public API for interacting with `FxaAccountManager` and sync changes
+  * `FxaAccountManager` now has a new, simplified public API.
+  * `BackgroundSyncManager` is longer exists; sync functionality exposed directly via `FxaAccountManager`.
+  * See component's [README](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/README.md) for detailed description of the new API.
+  * As part of these changes, token caching issue has been fixed. See [#3579](https://github.com/mozilla-mobile/android-components/pull/3579) for details.
+
 # 3.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v2.0.0...v3.0.0)
