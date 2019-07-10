@@ -86,8 +86,8 @@ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
   // TODO: This may OOM crash if the content is complex enough
   RefPtr<DrawEventRecorderMemory> recorder =
       MakeAndAddRef<DrawEventRecorderMemory>(nullptr);
-  RefPtr<DrawTarget> dt =
-      Factory::CreateRecordingDrawTarget(recorder, referenceDt, surfaceSize);
+  RefPtr<DrawTarget> dt = Factory::CreateRecordingDrawTarget(
+      recorder, referenceDt, IntRect(IntPoint(0, 0), surfaceSize));
 
   // Perform the actual rendering
   {

@@ -677,7 +677,7 @@ struct DIGroup {
         gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
 
     RefPtr<gfx::DrawTarget> dt =
-        gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, dtSize);
+        gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, IntRect(IntPoint(0, 0), dtSize));
     // Setup the gfxContext
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     GP("ctx-offset %f %f\n", bounds.x, bounds.y);
@@ -2267,7 +2267,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
       RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
           gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
-          recorder, dummyDt, dtSize.ToUnknownSize());
+          recorder, dummyDt, IntRect(IntPoint(0, 0), dtSize.ToUnknownSize()));
       if (!fallbackData->mBasicLayerManager) {
         fallbackData->mBasicLayerManager =
             new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
@@ -2487,7 +2487,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     RefPtr<DrawTarget> dummyDt = Factory::CreateDrawTarget(
         BackendType::SKIA, IntSize(1, 1), SurfaceFormat::A8);
     RefPtr<DrawTarget> dt =
-        Factory::CreateRecordingDrawTarget(recorder, dummyDt, size);
+        Factory::CreateRecordingDrawTarget(recorder, dummyDt, IntRect(IntPoint(0, 0), size));
 
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(context);

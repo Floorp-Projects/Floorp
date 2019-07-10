@@ -211,21 +211,21 @@ class FilterNodeRecording : public FilterNode {
 };
 
 DrawTargetRecording::DrawTargetRecording(DrawEventRecorder* aRecorder,
-                                         DrawTarget* aDT, IntSize aSize,
+                                         DrawTarget* aDT, IntRect aRect,
                                          bool aHasData)
     : mRecorder(static_cast<DrawEventRecorderPrivate*>(aRecorder)),
       mFinalDT(aDT),
-      mSize(aSize) {
+      mRect(aRect) {
   RefPtr<SourceSurface> snapshot = aHasData ? mFinalDT->Snapshot() : nullptr;
   mRecorder->RecordEvent(
-      RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mSize,
+      RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mRect,
                                  mFinalDT->GetFormat(), aHasData, snapshot));
   mFormat = mFinalDT->GetFormat();
 }
 
 DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording* aDT,
-                                         IntSize aSize, SurfaceFormat aFormat)
-    : mRecorder(aDT->mRecorder), mFinalDT(aDT->mFinalDT), mSize(aSize) {
+                                         IntRect aRect, SurfaceFormat aFormat)
+    : mRecorder(aDT->mRecorder), mFinalDT(aDT->mFinalDT), mRect(aRect) {
   mFormat = aFormat;
 }
 
@@ -361,7 +361,7 @@ void DrawTargetRecording::Stroke(const Path* aPath, const Pattern& aPattern,
 
 already_AddRefed<SourceSurface> DrawTargetRecording::Snapshot() {
   RefPtr<SourceSurface> retSurf =
-      new SourceSurfaceRecording(mSize, mFormat, mRecorder);
+      new SourceSurfaceRecording(mRect.Size(), mFormat, mRecorder);
 
   mRecorder->RecordEvent(RecordedSnapshot(retSurf, this));
 
@@ -371,7 +371,7 @@ already_AddRefed<SourceSurface> DrawTargetRecording::Snapshot() {
 already_AddRefed<SourceSurface> DrawTargetRecording::IntoLuminanceSource(
     LuminanceType aLuminanceType, float aOpacity) {
   RefPtr<SourceSurface> retSurf =
-      new SourceSurfaceRecording(mSize, SurfaceFormat::A8, mRecorder);
+      new SourceSurfaceRecording(mRect.Size(), SurfaceFormat::A8, mRecorder);
 
   mRecorder->RecordEvent(
       RecordedIntoLuminanceSource(retSurf, this, aLuminanceType, aOpacity));
@@ -519,7 +519,8 @@ already_AddRefed<DrawTarget> DrawTargetRecording::CreateSimilarDrawTarget(
     const IntSize& aSize, SurfaceFormat aFormat) const {
   RefPtr<DrawTarget> similarDT;
   if (mFinalDT->CanCreateSimilarDrawTarget(aSize, aFormat)) {
-    similarDT = new DrawTargetRecording(this, aSize, aFormat);
+    similarDT =
+        new DrawTargetRecording(this, IntRect(IntPoint(0, 0), aSize), aFormat);
     mRecorder->RecordEvent(
         RecordedCreateSimilarDrawTarget(similarDT.get(), aSize, aFormat));
   } else if (XRE_IsContentProcess()) {
@@ -542,7 +543,7 @@ bool DrawTargetRecording::CanCreateSimilarDrawTarget(
 RefPtr<DrawTarget> DrawTargetRecording::CreateClippedDrawTarget(
     const Rect& aBounds, SurfaceFormat aFormat) {
   RefPtr<DrawTarget> similarDT;
-  similarDT = new DrawTargetRecording(this, mSize, aFormat);
+  similarDT = new DrawTargetRecording(this, mRect, aFormat);
   mRecorder->RecordEvent(
       RecordedCreateClippedDrawTarget(similarDT.get(), aBounds, aFormat));
   similarDT->SetTransform(mTransform);
@@ -555,7 +556,8 @@ DrawTargetRecording::CreateSimilarDrawTargetForFilter(
     FilterNode* aSource, const Rect& aSourceRect, const Point& aDestPoint) {
   RefPtr<DrawTarget> similarDT;
   if (mFinalDT->CanCreateSimilarDrawTarget(aMaxSize, aFormat)) {
-    similarDT = new DrawTargetRecording(this, aMaxSize, aFormat);
+    similarDT = new DrawTargetRecording(this, IntRect(IntPoint(0, 0), aMaxSize),
+                                        aFormat);
     mRecorder->RecordEvent(RecordedCreateDrawTargetForFilter(
         this, similarDT.get(), aMaxSize, aFormat, aFilter, aSource, aSourceRect,
         aDestPoint));
@@ -623,7 +625,7 @@ void DrawTargetRecording::FlushItem(const IntRect& aBounds) {
   // Tell the new recording about our draw target
   // This code should match what happens in the DrawTargetRecording constructor.
   mRecorder->RecordEvent(
-      RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mSize,
+      RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mRect,
                                  mFinalDT->GetFormat(), false, nullptr));
   // Add the current transform to the new recording
   mRecorder->RecordEvent(
