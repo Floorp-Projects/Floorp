@@ -14,7 +14,9 @@
 #include "nsCOMPtr.h"
 #include "imgINotificationObserver.h"
 #include "nsIContentPolicy.h"
+#include "nsIconLoaderService.h"
 
+class nsIconLoaderService;
 class nsIURI;
 class nsIContent;
 class nsIPrincipal;
@@ -23,7 +25,7 @@ class nsMenuObjectX;
 
 #import <Cocoa/Cocoa.h>
 
-class nsMenuItemIconX : public imgINotificationObserver {
+class nsMenuItemIconX : public nsIconLoaderObserver {
  public:
   nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
                   NSMenuItem* aNativeMenuItem);
@@ -32,9 +34,6 @@ class nsMenuItemIconX : public imgINotificationObserver {
   virtual ~nsMenuItemIconX();
 
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGINOTIFICATIONOBSERVER
-
   // SetupIcon succeeds if it was able to set up the icon, or if there should
   // be no icon, in which case it clears any existing icon but still succeeds.
   nsresult SetupIcon();
@@ -42,9 +41,9 @@ class nsMenuItemIconX : public imgINotificationObserver {
   // GetIconURI fails if the item should not have any icon.
   nsresult GetIconURI(nsIURI** aIconURI);
 
-  // LoadIcon will set a placeholder image and start a load request for the
-  // icon.  The request may not complete until after LoadIcon returns.
-  nsresult LoadIcon(nsIURI* aIconURI);
+  // Overrides nsIconLoaderObserver::OnComplete. Handles the NSImage* created
+  // by nsIconLoaderService.
+  nsresult OnComplete(NSImage* aImage) override;
 
   // Unless we take precautions, we may outlive the object that created us
   // (mMenuObject, which owns our native menu item (mNativeMenuItem)).
@@ -53,17 +52,16 @@ class nsMenuItemIconX : public imgINotificationObserver {
   void Destroy();
 
  protected:
-  nsresult OnFrameComplete(imgIRequest* aRequest);
-
   nsCOMPtr<nsIContent> mContent;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsContentPolicyType mContentType;
-  RefPtr<imgRequestProxy> mIconRequest;
   nsMenuObjectX* mMenuObject;  // [weak]
   nsIntRect mImageRegionRect;
-  bool mLoadedIcon;
   bool mSetIcon;
   NSMenuItem* mNativeMenuItem;  // [weak]
+  // The icon loader object should never outlive its creating nsMenuItemIconX
+  // object.
+  RefPtr<nsIconLoaderService> mIconLoader;
 };
 
 #endif  // nsMenuItemIconX_h_
