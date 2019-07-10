@@ -2948,23 +2948,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         Ok(())
     }
 
-    fn layout_init(&mut self, side: io_side) {
-        // We currently don't support the input layout setting.
-        if side == io_side::INPUT {
-            return;
-        }
-
-        self.context.layout.store(
-            audiounit_get_current_channel_layout(self.output_unit),
-            atomic::Ordering::SeqCst,
-        );
-        audiounit_set_channel_layout(
-            self.output_unit,
-            io_side::OUTPUT,
-            self.context.layout.load(atomic::Ordering::SeqCst),
-        );
-    }
-
     fn configure_input(&mut self) -> Result<()> {
         assert!(!self.input_unit.is_null());
 
@@ -3160,7 +3143,15 @@ impl<'ctx> AudioUnitStream<'ctx> {
         self.context.channels = output_hw_desc.mChannelsPerFrame;
 
         // Set the input layout to match the output device layout.
-        self.layout_init(io_side::OUTPUT);
+        self.context.layout.store(
+            audiounit_get_current_channel_layout(self.output_unit),
+            atomic::Ordering::SeqCst,
+        );
+        audiounit_set_channel_layout(
+            self.output_unit,
+            io_side::OUTPUT,
+            self.context.layout.load(atomic::Ordering::SeqCst),
+        );
         cubeb_log!(
             "({:p}) Output hardware layout: {:?}",
             self,
