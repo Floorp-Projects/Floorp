@@ -2650,6 +2650,7 @@ static void UpdateWRQualificationForAMD(FeatureState& aFeature,
       (aDeviceId >= 0x6860 && aDeviceId < 0x6880) ||
       (aDeviceId >= 0x6900 && aDeviceId < 0x6a00) ||
       (aDeviceId == 0x7300) ||
+      (aDeviceId >= 0x7310 && aDeviceId < 0x7320) ||
       (aDeviceId >= 0x9830 && aDeviceId < 0x9870) ||
       (aDeviceId >= 0x9900 && aDeviceId < 0x9a00);
 
