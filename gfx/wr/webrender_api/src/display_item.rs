@@ -744,6 +744,15 @@ pub struct FloodPrimitive {
     pub color: ColorF,
 }
 
+impl FloodPrimitive {
+    pub fn sanitize(&mut self) {
+        self.color.r = self.color.r.min(1.0).max(0.0);
+        self.color.g = self.color.g.min(1.0).max(0.0);
+        self.color.b = self.color.b.min(1.0).max(0.0);
+        self.color.a = self.color.a.min(1.0).max(0.0);
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlurPrimitive {
@@ -751,11 +760,23 @@ pub struct BlurPrimitive {
     pub radius: f32,
 }
 
+impl BlurPrimitive {
+    pub fn sanitize(&mut self) {
+        self.radius = self.radius.min(MAX_BLUR_RADIUS);
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct OpacityPrimitive {
     pub input: FilterPrimitiveInput,
     pub opacity: f32,
+}
+
+impl OpacityPrimitive {
+    pub fn sanitize(&mut self) {
+        self.opacity = self.opacity.min(1.0).max(0.0);
+    }
 }
 
 /// cbindgen:derive-eq=false
@@ -771,6 +792,12 @@ pub struct ColorMatrixPrimitive {
 pub struct DropShadowPrimitive {
     pub input: FilterPrimitiveInput,
     pub shadow: Shadow,
+}
+
+impl DropShadowPrimitive {
+    pub fn sanitize(&mut self) {
+        self.shadow.blur_radius = self.shadow.blur_radius.min(MAX_BLUR_RADIUS);
+    }
 }
 
 #[repr(C)]
@@ -803,6 +830,24 @@ pub enum FilterPrimitiveKind {
     ComponentTransfer(ComponentTransferPrimitive),
 }
 
+impl FilterPrimitiveKind {
+    pub fn sanitize(&mut self) {
+        match self {
+            FilterPrimitiveKind::Flood(flood) => flood.sanitize(),
+            FilterPrimitiveKind::Blur(blur) => blur.sanitize(),
+            FilterPrimitiveKind::Opacity(opacity) => opacity.sanitize(),
+            FilterPrimitiveKind::DropShadow(drop_shadow) => drop_shadow.sanitize(),
+
+            // No sanitization needed.
+            FilterPrimitiveKind::Identity(..) |
+            FilterPrimitiveKind::Blend(..) |
+            FilterPrimitiveKind::ColorMatrix(..) |
+            // Component transfer's filter data is sanitized separately.
+            FilterPrimitiveKind::ComponentTransfer(..) => {}
+        }
+    }
+}
+
 /// SVG Filter Primitive.
 /// See: https://github.com/eqrion/cbindgen/issues/9
 /// cbindgen:derive-eq=false
@@ -811,6 +856,12 @@ pub enum FilterPrimitiveKind {
 pub struct FilterPrimitive {
     pub kind: FilterPrimitiveKind,
     pub color_space: ColorSpace,
+}
+
+impl FilterPrimitive {
+    pub fn sanitize(&mut self) {
+        self.kind.sanitize();
+    }
 }
 
 /// CSS filter.
