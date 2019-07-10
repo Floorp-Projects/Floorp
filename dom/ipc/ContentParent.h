@@ -723,7 +723,7 @@ class ContentParent final : public PContentParent,
       mozilla::Variant<bool*, RefPtr<LaunchPromise>*>&& aRetval);
 
   // Common initialization after sub process launch.
-  void InitInternal(ProcessPriority aPriority);
+  bool InitInternal(ProcessPriority aPriority);
 
   // Generate a minidump for the child process and one for the main process
   void GeneratePairedMinidump(const char* aReason);
