@@ -5881,8 +5881,7 @@ class Database final
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBTransactionConstructor(
       PBackgroundIDBTransactionParent* aActor,
-      InfallibleTArray<nsString>&& aObjectStoreNames,
-      const Mode& aMode) override;
+      nsTArray<nsString>&& aObjectStoreNames, const Mode& aMode) override;
 
   bool DeallocPBackgroundIDBTransactionParent(
       PBackgroundIDBTransactionParent* aActor) override;
@@ -13007,7 +13006,7 @@ PBackgroundIDBTransactionParent* Database::AllocPBackgroundIDBTransactionParent(
 
 mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
     PBackgroundIDBTransactionParent* aActor,
-    InfallibleTArray<nsString>&& aObjectStoreNames, const Mode& aMode) {
+    nsTArray<nsString>&& aObjectStoreNames, const Mode& aMode) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!aObjectStoreNames.IsEmpty());
