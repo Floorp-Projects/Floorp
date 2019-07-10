@@ -96,7 +96,6 @@ class UrlbarInput {
     this.controller.setInput(this);
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;
-    this.userInitiatedFocus = false;
     this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.window);
     this.lastQueryContextPromise = Promise.resolve();
     this._actionOverrideKeyCount = 0;
