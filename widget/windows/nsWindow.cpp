@@ -5393,7 +5393,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_NCMOUSELEAVE: {
       mMouseInDraggableArea = false;
 
-      if (WindowAtMouse() == mWnd) {
+      if (EventIsInsideWindow(this)) {
         // If we're handling WM_NCMOUSELEAVE and the mouse is still over the
         // window, then by process of elimination, the mouse has moved from the
         // non-client to client area, so no need to fall-through to the
