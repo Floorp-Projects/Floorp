@@ -109,6 +109,20 @@ pub struct ScalingInstance {
     pub src_task_address: RenderTaskAddress,
 }
 
+#[derive(Debug)]
+#[repr(C)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct SvgFilterInstance {
+    pub task_address: RenderTaskAddress,
+    pub input_1_task_address: RenderTaskAddress,
+    pub input_2_task_address: RenderTaskAddress,
+    pub kind: u16,
+    pub input_count: u16,
+    pub generic_int: u16,
+    pub extra_data_address: GpuCacheAddress,
+}
+
 #[derive(Copy, Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
