@@ -2160,7 +2160,13 @@ void ContentParent::LaunchSubprocessInternal(
 #endif
 
     mLifecycleState = LifecycleState::ALIVE;
-    InitInternal(aInitialPriority);
+    if (!InitInternal(aInitialPriority)) {
+      NS_ERROR("failed to initialize child in the parent");
+      // We've already called Open() by this point, so we need to close the
+      // channel to avoid leaking the process.
+      ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
+      return LaunchPromise::CreateAndReject(LaunchError{}, __func__);
+    }
 
     ContentProcessManager::GetSingleton()->AddContentProcess(this);
 
@@ -2326,7 +2332,7 @@ ContentParent::~ContentParent() {
   }
 }
 
-void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
+bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   XPCOMInitData xpcomInit;
 
   nsCOMPtr<nsIIOService> io(do_GetIOService());
@@ -2526,10 +2532,12 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   Endpoint<PRemoteDecoderManagerChild> videoManager;
   AutoTArray<uint32_t, 3> namespaces;
 
-  DebugOnly<bool> opened =
-      gpm->CreateContentBridges(OtherPid(), &compositor, &imageBridge,
-                                &vrBridge, &videoManager, &namespaces);
-  MOZ_ASSERT(opened);
+  if (!gpm->CreateContentBridges(OtherPid(), &compositor, &imageBridge,
+                                 &vrBridge, &videoManager, &namespaces)) {
+    // This can fail if we've already started shutting down the compositor
+    // thread. See Bug 1562763 comment 8.
+    return false;
+  }
 
   Unused << SendInitRendering(std::move(compositor), std::move(imageBridge),
                               std::move(vrBridge), std::move(videoManager),
@@ -2601,7 +2609,7 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
           SandboxBroker::Create(std::move(policy), Pid(), brokerFd.ref());
       if (!mSandboxBroker) {
         KillHard("SandboxBroker::Create failed");
-        return;
+        return false;
       }
       MOZ_ASSERT(brokerFd.ref().IsValid());
     }
@@ -2657,6 +2665,8 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   pluginHost->SendPluginsToContent();
   MaybeEnableRemoteInputEventQueue();
+
+  return true;
 }
 
 bool ContentParent::IsAlive() const {
