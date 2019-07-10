@@ -53,7 +53,7 @@ class VRManager {
                         const TimeDuration& aTimeout);
   void Shutdown();
 #if !defined(MOZ_WIDGET_ANDROID)
-  bool RunPuppet(const InfallibleTArray<uint64_t>& aBuffer,
+  bool RunPuppet(const nsTArray<uint64_t>& aBuffer,
                  VRManagerParent* aManagerParent);
   void ResetPuppet(VRManagerParent* aManagerParent);
 #endif
