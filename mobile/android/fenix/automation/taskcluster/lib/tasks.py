@@ -40,8 +40,7 @@ class TaskBuilder(object):
         self.date = arrow.get(date_string)
         self.trust_level = trust_level
 
-    def craft_assemble_release_task(self, architectures, build_type, is_staging, version_name, index_channel=None):
-        index_channel = index_channel or build_type
+    def craft_assemble_release_task(self, architectures, build_type, is_staging, version_name):
         artifacts = {
             'public/target.{}.apk'.format(arch): {
                 "type": 'file',
@@ -55,7 +54,7 @@ class TaskBuilder(object):
         if is_staging:
             secret_index = 'garbage/staging/project/mobile/fenix'
         else:
-            secret_index = 'project/mobile/fenix/{}'.format(index_channel)
+            secret_index = 'project/mobile/fenix/{}'.format(build_type)
 
         pre_gradle_commands = (
             'python automation/taskcluster/helper/get-secret.py -s {} -k {} -f {}'.format(
@@ -65,6 +64,7 @@ class TaskBuilder(object):
                 ('sentry_dsn', '.sentry_token'),
                 ('leanplum', '.leanplum_token'),
                 ('adjust', '.adjust_token'),
+                ('firebase', 'app/src/{}/res/values/firebase.xml'.format(build_type)),
             )
         )
 

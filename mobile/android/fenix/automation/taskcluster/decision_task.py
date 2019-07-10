@@ -153,7 +153,7 @@ def nightly_to_production_app(is_staging, version_name):
     push_tasks = {}
 
     build_task_id = taskcluster.slugId()
-    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, build_type, is_staging, version_name, index_channel='nightly')
+    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, build_type, is_staging, version_name)
 
     signing_task_id = taskcluster.slugId()
     signing_tasks[signing_task_id] = BUILDER.craft_release_signing_task(
@@ -194,6 +194,7 @@ if __name__ == "__main__":
 
     release_parser = subparsers.add_parser('github-release')
     release_parser.add_argument('tag')
+    release_parser.add_argument('--staging', action='store_true')
 
     result = parser.parse_args()
     command = result.command
@@ -214,9 +215,9 @@ if __name__ == "__main__":
         beta_semver = re.compile(r'^v\d+\.\d+\.\d+-beta\.\d+$')
         production_semver = re.compile(r'^v\d+\.\d+\.\d+(-rc\.\d+)?$')
         if beta_semver.match(result.tag):
-            ordered_groups_of_tasks = release('beta', False, version)
+            ordered_groups_of_tasks = release('beta', result.staging, version)
         elif production_semver.match(result.tag):
-            ordered_groups_of_tasks = release('production', False, version)
+            ordered_groups_of_tasks = release('production', result.staging, version)
         else:
             raise ValueError('Github tag must be in semver format and prefixed with a "v", '
                              'e.g.: "v1.0.0-beta.0" (beta), "v1.0.0-rc.0" (production) or "v1.0.0" (production)')
