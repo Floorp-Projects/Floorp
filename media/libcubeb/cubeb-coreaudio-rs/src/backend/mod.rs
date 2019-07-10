@@ -370,6 +370,15 @@ fn get_volume(unit: AudioUnit) -> Result<f32> {
     }
 }
 
+fn minimum_resampling_input_frames(input_rate: f64, output_rate: f64, output_frames: i64) -> i64 {
+    assert_ne!(input_rate, 0_f64);
+    assert_ne!(output_rate, 0_f64);
+    if input_rate == output_rate {
+        return output_frames;
+    }
+    (input_rate * output_frames as f64 / output_rate).ceil() as i64
+}
+
 fn audiounit_make_silent(io_data: &mut AudioBuffer) {
     assert!(!io_data.mData.is_null());
     let bytes = unsafe {
@@ -602,7 +611,11 @@ extern "C" fn audiounit_output_callback(
             // currently switching, we add some silence as well to compensate for the
             // fact that we're lacking some input data.
             let frames_written = stm.frames_written.load(Ordering::SeqCst);
-            let input_frames_needed = stm.minimum_resampling_input_frames(frames_written);
+            let input_frames_needed = minimum_resampling_input_frames(
+                stm.input_hw_rate,
+                f64::from(stm.output_stream_params.rate()),
+                frames_written,
+            );
             let missing_frames = input_frames_needed - stm.frames_read.load(Ordering::SeqCst);
             if missing_frames > 0 {
                 stm.input_linear_buffer.as_mut().unwrap().push_zeros(
@@ -2638,17 +2651,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
 
     fn has_output(&self) -> bool {
         self.output_stream_params.rate() > 0
-    }
-
-    fn minimum_resampling_input_frames(&self, output_frames: i64) -> i64 {
-        assert_ne!(self.input_hw_rate, 0_f64);
-        assert_ne!(self.output_stream_params.rate(), 0);
-        if self.input_hw_rate == f64::from(self.output_stream_params.rate()) {
-            // Fast path.
-            return output_frames;
-        }
-        (self.input_hw_rate * output_frames as f64 / f64::from(self.output_stream_params.rate()))
-            .ceil() as i64
     }
 
     fn reinit(&mut self) -> Result<()> {
