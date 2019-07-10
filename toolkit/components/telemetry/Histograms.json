@@ -4780,13 +4780,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Time spent waiting for off-thread compiles in the script preloader."
   },
-  "STARTUP_MEASUREMENT_ERRORS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "enumerated",
-    "n_values": 16,
-    "description": "Flags errors in startup calculation()"
-  },
   "NETWORK_DISK_CACHE_TRASHRENAME": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
