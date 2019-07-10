@@ -12,7 +12,9 @@
 
 .info-group-title {
   text-align: right;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--in-content-deemphasized-text);
+  font-size: 1em;
 }
 
 .info-group-title:dir(rtl) {
@@ -21,7 +23,7 @@
 
 .info-group-title-hr {
   height: 1px;
-  background-color: black;
+  background-color: var(--in-content-deemphasized-text);
   width: calc(100% - 3.5em);
   position: relative;
   margin: auto 0;
@@ -30,4 +32,3 @@
   right: 0;
   bottom: 0;
 }
-
