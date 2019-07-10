@@ -15,7 +15,7 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=21
+MOD_MINOR_VERSION=22
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -133,6 +133,12 @@ AC_ARG_WITH(android-platform,
     android_platform=$withval)
 
 case "$target" in
+x86_64-linux*-android*)
+    android_tool_prefix="x86_64-linux-android"
+    ;;
+aarch64-linux*-android*)
+    android_tool_prefix="aarch64-linux-android"
+    ;;
 arm-linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
     ;;
@@ -333,10 +339,6 @@ AC_ARG_ENABLE(win32-target,
                           Specify win32 flavor. (WIN95 or WINNT)],
     OS_TARGET=`echo $enableval | tr a-z A-Z`)
 
-AC_ARG_ENABLE(symbian-target,
-    [  --enable-symbian-target=\$t
-                          Specify symbian flavor. (WINSCW or GCCE)],
-    OS_TARGET=`echo $enableval | tr a-z A-Z`)
 
 AC_ARG_ENABLE(debug-rtl,
     [  --enable-debug-rtl      Use the MSVC debug runtime library],
@@ -351,15 +353,6 @@ AC_ARG_ENABLE(static-rtl,
     [ if test "$enableval" = "yes"; then
 	    USE_STATIC_RTL=1
       fi ])
-
-AC_ARG_ENABLE(n32,
-    [  --enable-n32            Enable n32 ABI support (IRIX only)],
-    [ if test "$enableval" = "yes"; then
-	USE_N32=1
-      else if test "$enableval" = "no"; then
-	USE_N32=
-      fi
-    fi ])
 
 AC_ARG_ENABLE(x32,
     [  --enable-x32            Enable x32 ABI support (x86_64 only)],
@@ -448,14 +441,6 @@ if test -z "$CC"; then
         CC=cc
     ;;
 
-    *-irix*)
-        CC=cc
-    ;;
-
-    *-osf*)
-        CC=cc
-    ;;
-
     *-solaris*)
         CC=cc
     ;;
@@ -493,14 +478,6 @@ if test -z "$CXX"; then
         esac
     ;;
 
-    *-irix*)
-        CXX=CC
-    ;;
-
-    *-osf*)
-        CXX=cxx
-    ;;
-
     *-solaris*)
         CXX=CC
     ;;
@@ -517,9 +494,6 @@ if test -n "$MOZ_DEBUG"; then
     DEFINES="$DEFINES -UNDEBUG"
 
     case "${target_os}" in
-    beos*)
-        DEFINES="$DEFINES -DDEBUG_${USER}"
-        ;;
     mks*|cygwin*|mingw*|msys*|os2*)
         DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
@@ -856,10 +830,6 @@ else
     OS_TEST=`uname -m`
 fi
 
-if test "$OS_ARCH" = "IRIX64"; then
-    OS_ARCH=IRIX
-fi
-
 if test "$OS_ARCH" = "AIX"; then
     OS_RELEASE=`uname -v`.`uname -r`
 fi
@@ -1193,9 +1163,6 @@ case "$host" in
         CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
     fi
     ;;
-*-beos*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
-    ;;
 *os2*)
     ;;
 *)
@@ -1268,34 +1235,6 @@ case "$target" in
     RESOLVE_LINK_SYMBOLS=1
     ;;
         
-*-beos*)
-    AC_DEFINE(XP_BEOS)
-    AC_DEFINE(BeOS)
-    AC_DEFINE(BEOS)
-    AC_DEFINE(_POSIX_SOURCE)
-    DSO_LDOPTS=-nostart
-    MDCPUCFG_H=_beos.cfg
-    USE_BTHREADS=1
-    PR_MD_ARCH_DIR=beos
-    RESOLVE_LINK_SYMBOLS=1
-    case "${target_cpu}" in
-    i*86)
-        _OPTIMIZE_FLAGS=-O2
-        _DEBUG_FLAGS='-gdwarf-2 -O0'
-        MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
-        AC_CHECK_LIB(bind, gethostbyaddr, [OS_LIBS="$OS_LIBS -lbind -lsocket"])
-        ;;
-    powerpc)
-        CC=mwcc
-        CCC=mwcc
-        LD=mwld
-        DSO_LDOPTS='-xms -export pragma -init _init_routine_ -term _term_routine_ -lroot -lnet /boot/develop/lib/ppc/glue-noinit.a /boot/develop/lib/ppc/init_term_dyn.o /boot/develop/lib/ppc/start_dyn.o'
-        _OPTIMIZE_FLAGS=-O2    
-        _DEBUG_FLAGS='-g -O0'
-        ;;
-    esac
-    ;;
-
 *-bsdi*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(BSDI)
@@ -1521,21 +1460,6 @@ tools are selected during the Xcode/Developer Tools installation.])
     fi
     ;;
 
-*-dgux*)
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
-    AC_DEFINE(SVR4)
-    AC_DEFINE(SYSV)
-    AC_DEFINE(DGUX)
-    AC_DEFINE(_DGUX_SOURCE)
-    AC_DEFINE(_POSIX4A_DRAFT6_SOURCE)
-    DSO_LDOPTS=-G
-    _OPTIMIZE_FLAGS=-O2
-    _DEBUG_FLAGS=
-    MDCPUCFG_H=_dgux.cfg
-    PR_MD_CSRCS=dgux.c
-    ;;
-
 *-freebsd*)
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
@@ -1563,7 +1487,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(HPUX)
     AC_DEFINE(_HPUX_SOURCE)
-    # OSF1 and HPUX report the POLLHUP event for a socket when the
+    # HPUX report the POLLHUP event for a socket when the
     # shutdown(SHUT_WR) operation is called for the remote end, even though
     # the socket is still writeable. Use select(), instead of poll(), to
     # workaround this problem.
@@ -1706,105 +1630,6 @@ tools are selected during the Xcode/Developer Tools installation.])
             USE_PTHREADS=
         fi
     fi
-    ;;
-
-*-irix*)
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(IRIX)
-    AC_DEFINE(SVR4)
-    AC_DEFINE(_SGI_MP_SOURCE)
-    AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    PR_MD_CSRCS=irix.c
-    PR_MD_ASFILES=os_Irix.s
-    MKSHLIB='$(LD) $(DSO_LDOPTS) -rdata_shared -shared -soname $(notdir $@) -o $@'
-    STRIP="$STRIP -f"
-    RESOLVE_LINK_SYMBOLS=1
-    if test -n "$USE_64"; then
-        MDCPUCFG_H=_irix64.cfg
-    else
-        MDCPUCFG_H=_irix32.cfg
-    fi
-    case "${target_os}" in
-    irix6*)
-        AC_DEFINE(IRIX6)
-        USE_PTHREADS=1
-        USE_N32=1
-        COMPILER_TAG=_n32
-        IMPL_STRATEGY=_PTH
-        ;;
-    irix5*)
-        AC_DEFINE(IRIX5)
-        USE_NSPR_THREADS=1
-        ;;
-    *)
-        USE_PTHREADS=1
-        USE_N32=1
-        ;;
-    esac
-    if test "$GNU_CC"; then
-        dnl
-        dnl If we are using gcc with native binutils, we need to
-        dnl suppress the
-        dnl #lineno "filename" num num
-        dnl lines, which confuse IRIX native as.  Add -Wp,-P to the
-        dnl gcc command line, which passes -P to the preprocessor.
-        dnl
-	    AS='$(CC) -Wp,-P -x assembler-with-cpp -D_ASM -mips2 $(INCLUDES)'
-	    CFLAGS="$CFLAGS -Wall -Wno-format"
-	    _OPTIMIZE_FLAGS="-O6"
-    else
-	    if test -n "$USE_N32"; then
-		AS='as -D_ASM $(INCLUDES) -n32'
-	    else
-		AS='as -D_ASM $(INCLUDES)'
-	    fi
-	    CFLAGS="$CFLAGS -fullwarn -xansi"
-	    if test "$USE_N32"; then
-	        _OPTIMIZE_FLAGS="-O -OPT:Olimit=4000"
-	    else
-	        _OPTIMIZE_FLAGS="-O -Olimit 4000"
-	    fi
-	    if test "$USE_MDUPDATE"; then
-                CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
-	    fi
-	    case "${target}" in
-	    *-irix6.*)
-	        CFLAGS="$CFLAGS -multigot"
-	        DSO_LDOPTS="-no_unresolved"
-	        if test "$USE_N32"; then
-		        CFLAGS="$CFLAGS -n32 -woff 1209"
-		        DSO_LDOPTS="$DSO_LDOPTS -n32"
-	        else
-		        if test "$USE_64"; then
-		            CFLAGS="$CFLAGS -64"
-		        else
-		            CFLAGS="$CFLAGS -32"
-		        fi
-	        fi
-	        ;;
-	    *)
-	        CFLAGS="$CFLAGS -xgot"
-	        ;;
-	    esac
-    fi
-    if test "${target_os}" = "irix5.3"; then
-	    AC_DEFINE(IRIX5_3)
-    fi
-    case "${target_os}" in
-	irix6.5)
-	    if test -z "$GNU_CC"; then
-		    CFLAGS="$CFLAGS -mips3"
-	    fi
-	    AC_DEFINE(_PR_HAVE_GETPROTO_R)
-	    AC_DEFINE(_PR_HAVE_GETPROTO_R_POINTER)
-	    AC_DEFINE(_PR_HAVE_SGI_PRDA_PROCMASK)
-	    ;;
-	irix5*)
-	    ;;
-	*)
-	    AC_DEFINE(_PR_HAVE_SGI_PRDA_PROCMASK)
-	    ;;
-	esac
     ;;
 
 *-linux*|*-gnu*|*-k*bsd*-gnu|*-android*|*-linuxandroid*)
@@ -2173,47 +1998,6 @@ tools are selected during the Xcode/Developer Tools installation.])
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     ;;
 
-*-osf*)
-    SHELL_OVERRIDE="SHELL		= /usr/bin/ksh"
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(OSF1)
-    AC_DEFINE(_REENTRANT)
-    # OSF1 and HPUX report the POLLHUP event for a socket when the
-    # shutdown(SHUT_WR) operation is called for the remote end, even though
-    # the socket is still writeable. Use select(), instead of poll(), to
-    # workaround this problem.
-    AC_DEFINE(_PR_POLL_WITH_SELECT)
-
-    if echo "$OS_RELEASE" | egrep -c '(V2.0|V3.2)' 2>/dev/null ; then
-        USE_NSPR_THREADS=1
-    fi
-
-    if test -z "$GNU_CC"; then
-        CC="$CC -std1 -ieee_with_inexact"
-        if test "$OS_RELEASE" != "V2.0"; then
-            CC="$CC -readonly_strings"
-        fi
-        _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Olimit 4000"
-        AC_CHECK_HEADER(machine/builtins.h, AC_DEFINE(OSF1_HAVE_MACHINE_BUILTINS_H))
-    else
-        CFLAGS="$CFLAGS -mieee"
-        CXXFLAGS="$CXXFLAGS -mieee"
-    fi
-
-    if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
-        AC_DEFINE(HAVE_INT_LOCALTIME_R)
-    else
-        AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-        AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
-    fi
-    if echo $OS_RELEASE | grep -c V4.0 >/dev/null; then
-        AC_DEFINE(OSF1V4_MAP_PRIVATE_BUG)
-    fi
-    DSO_LDOPTS='-shared -all -expect_unresolved "*" -soname $(notdir $@)'
-    MDCPUCFG_H=_osf1.cfg
-    PR_MD_CSRCS=osf1.c
-    ;;
-
 *-qnx*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(QNX)
@@ -2421,76 +2205,6 @@ tools are selected during the Xcode/Developer Tools installation.])
     CPU_ARCH=x86
     ;;
 
-*-symbian*)
-    AC_ARG_WITH(symbian-sdk,
-    [  --with-symbian-sdk=SYMBIAN_SDK_DIR
-                          The path to the Symbian SDK],
-    SYMBIAN_SDK_DIR=$withval)
-
-    echo -----------------------------------------------------------------------------
-    echo Building with Symbian SDK in: $SYMBIAN_SDK_DIR
-    echo -----------------------------------------------------------------------------
-
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(SYMBIAN)
-    AC_DEFINE(__arm__)
-    AC_DEFINE(__SYMBIAN32__)
-    AC_DEFINE(_UNICODE)
-    AC_DEFINE(NDEBUG)
-    AC_DEFINE(__SUPPORT_CPP_EXCEPTIONS__)
-    AC_DEFINE(MOZ_STDERR_TO_STDOUT)
-    AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    AC_DEFINE(HAVE_SOCKLEN_T)
-    USE_PTHREADS=1
-    LIB_SUFFIX=lib
-    DLL_SUFFIX=dll
-    MKSHLIB=
-    DSO_LDOPTS=
-    DSO_CFLAGS=
-    VISIBILITY_FLAGS=
-    MDCPUCFG_H=_symbian.cfg
-    PR_MD_CSRCS=symbian.c
-    NSINSTALL=nsinstall
-    RANLIB='echo no ranlib '
-    CPU_ARCH=ARM
-    OS_ARCH=SYMBIAN
-    OS_EXE_CFLAGS="$OS_EXE_CFLAGS -D__EXE__"
-    CFLAGS="$CFLAGS -MD -nostdinc"
-    SYMBIAN_SYS_INCLUDE="-I$SYMBIAN_SDK_DIR/Epoc32/include/variant -I$SYMBIAN_SDK_DIR/Epoc32/include -I$SYMBIAN_SDK_DIR/Epoc32/include/stdapis"
-    echo -------------------------------------------------------
-    echo SYMBIAN_SYS_INCLUDE is: $SYMBIAN_SYS_INCLUDE
-    echo -------------------------------------------------------
-    case "$OS_TARGET" in
-    WINSCW)
-        CC=mwccsym2.exe
-        CXX=mwccsym2.exe
-        LD=mwldsym2.exe
-        AR=mwldsym2.exe
-        WINSCW_LD_DIR="\$(SYMBIAN_SDK_DIR)/EPOC32/RELEASE/WINSCW/UDEB"
-        CFLAGS="$CFLAGS -O0 -inline off -wchar_t off -align 4 -warnings on -w nohidevirtual,nounusedexpr -msgstyle gcc -enum int -str pool -exc ms -trigraphs on -nostderr -gccdep -cwd source -i- -I\$(VPATH)"
-        SYMBIAN_SYS_INCLUDE="$SYMBIAN_SYS_INCLUDE -include Symbian_OS_v9.2.hrh"
-        AR_FLAGS="-library -msgstyle gcc -stdlib -subsystem windows -noimplib -o \$@"
-        AC_DEFINE(_DEBUG)
-        AC_DEFINE(__CW32__)
-        AC_DEFINE(__WINS__)
-        AC_DEFINE(__WINSCW__)
-        DEFINES="$DEFINES -U_WIN32"
-	    ;;
-    GCCE)
-        CFLAGS="$CFLAGS -Wall -Wno-unknown-pragmas -fexceptions -march=armv5t -mapcs -pipe -x c -msoft-float"
-        CXXFLAGS="$CXXFLAGS $CFLAGS -Wno-ctor-dtor-privacy"
-        SYMBIAN_SYS_INCLUDE="$SYMBIAN_SYS_INCLUDE -include $SYMBIAN_SDK_DIR/EPOC32/INCLUDE/GCCE/GCCE.h"
-        AC_DEFINE(__GCCE__)
-        AC_DEFINE(__EABI__)
-        DEFINES="$DEFINES -D__PRODUCT_INCLUDE__=$SYMBIAN_SDK_DIR/Epoc32/include/variant/Symbian_OS_v9.2.hrh"
-	    ;;
-    *)
-	    AC_MSG_ERROR([Missing OS_TARGET for ${target}. Set --enable-symbian-target to with 'WINSCW' or 'GCCE'.])
-   	;;
-    esac
-    CFLAGS="$CFLAGS ${SYMBIAN_SYS_INCLUDE}"
-    ;;
-
 *-os2*)
     AC_DEFINE(XP_OS2)
     AC_DEFINE(XP_PC)
@@ -2548,7 +2262,7 @@ dnl The same goes for BeOS.
 dnl OS/2 has dlfcn in libc.
 
 case $target in
-*-darwin*|*-beos*|*-os2*)
+*-darwin*|*-os2*)
     ;;
 *)
     AC_CHECK_LIB(dl, dlopen,
@@ -2714,19 +2428,6 @@ AC_ARG_ENABLE(nspr-threads,
 	    USE_NSPR_THREADS=1
 	  fi])
 
-case "$target" in
-*-beos*)
-    AC_ARG_WITH(bthreads,
-    [  --with-bthreads         Use system bthreads library as thread subsystem
-                          (BeOS only)],
-    [	if test "$withval" = "yes"; then
-    	    USE_BTHREADS=1
-	        USE_USER_PTHREADS=
-	        USE_PTHREADS=
-	    fi])
-    ;;
-esac
-
 fi # SKIP_LIBRARY_CHECKS
 
 AC_ARG_ENABLE(ipv6,
@@ -2884,21 +2585,13 @@ case "$target" in
         AC_DEFINE_UNQUOTED(_POSIX_C_SOURCE,199506L)
     fi
     ;;
-*-irix*)
-    if test "${target_os}" = "irix6.5"; then
-        if test -n "$USE_PTHREADS"; then
-            AC_DEFINE(_PR_HAVE_GETHOST_R)
-            AC_DEFINE(_PR_HAVE_GETHOST_R_POINTER)
-        fi
-    fi
-    ;;
 *-linux*|*-gnu*|*-k*bsd*-gnu)
     if test -n "$USE_NSPR_THREADS"; then
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     ;;
-*-mingw*|*-msys*|*-cygwin*|*-mks*|*-os2*|*-beos*)
-    dnl win32, os2 & beos cannot use pthreads
+*-mingw*|*-msys*|*-cygwin*|*-mks*|*-os2*)
+    dnl win32, os2 cannot use pthreads
     USE_PTHREADS=
     _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=
@@ -2906,18 +2599,6 @@ case "$target" in
 *-netbsd*|*-openbsd*)
     if test -n "$USE_NSPR_THREADS"; then
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
-    fi
-    ;;
-*-osf*)
-    if test -n "$USE_NSPR_THREADS"; then
-        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
-    fi
-    if test -n "$USE_PTHREADS"; then
-        if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
-            :
-        else
-            AC_DEFINE(_PR_HAVE_THREADSAFE_GETHOST)
-        fi
     fi
     ;;
 *-solaris*)
@@ -3124,7 +2805,6 @@ AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(VISIBILITY_FLAGS)
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(MACOS_SDK_DIR)
-AC_SUBST(SYMBIAN_SDK_DIR)
 AC_SUBST(NEXT_ROOT)
 AC_SUBST(MT)
 

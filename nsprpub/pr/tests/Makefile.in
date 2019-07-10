@@ -150,8 +150,6 @@ CSRCS =             \
 	sockping.c		\
 	sockpong.c		\
 	sprintf.c		\
-	sproc_ch.c	    \
-	sproc_p.c	    \
 	stack.c		    \
 	stdio.c		    \
 	str2addr.c		\
@@ -235,49 +233,6 @@ else
 PWD = $(shell pwd)
 ABSOLUTE_LIB_DIR = $(PWD)/$(dist_libdir)
 endif
-endif
-
-ifeq ($(OS_ARCH), IRIX)
-    ifeq ($(USE_CPLUS), 1)
-        CC = CC
-    endif
-    LDOPTS += -rpath $(ABSOLUTE_LIB_DIR)
-    ifdef NS_USE_GCC
-        LDOPTS += -Wl,-rdata_shared
-    else
-        LDOPTS += -rdata_shared
-    endif
-# For 6.x machines, include this flag
-    ifeq ($(basename $(OS_RELEASE)),6)
-        ifndef NS_USE_GCC
-            ifeq ($(USE_N32),1)
-                LDOPTS += -n32
-            else
-                LDOPTS += -32
-            endif
-
-            ifeq ($(USE_PTHREADS), 1)
-                ifeq ($(OS_RELEASE), 6.2)
-                    LDOPTS += -Wl,-woff,85
-                endif
-            endif
-        endif
-    endif
-endif
-
-ifeq ($(OS_ARCH), OSF1)
-    ifeq ($(USE_CPLUS), 1)
-        CC = cxx
-    endif
-# I haven't figured out how to pass -rpath to cc on OSF1 V3.2, so
-# we do static linking.
-    ifeq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
-        LIBNSPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
-        LIBPLC = $(dist_libdir)/libplc$(MOD_MAJOR_VERSION).a
-        EXTRA_LIBS = -lc_r
-    else
-        LDOPTS += -rpath $(ABSOLUTE_LIB_DIR)
-    endif
 endif
 
 ifeq ($(OS_ARCH), HP-UX)

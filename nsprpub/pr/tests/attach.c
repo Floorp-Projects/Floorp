@@ -40,11 +40,6 @@
 #elif defined(_PR_PTHREADS)
 #include <pthread.h>
 #include "md/_pth.h"
-#elif defined(IRIX)
-#include <sys/types.h>
-#include <sys/prctl.h>
-#include <sys/wait.h>
-#include <errno.h>
 #elif defined(SOLARIS)
 #include <thread.h>
 #elif defined(OS2)
@@ -52,8 +47,6 @@
 #define INCL_ERRORS
 #include <os2.h>
 #include <process.h>
-#elif defined(XP_BEOS)
-#include <kernel/OS.h>
 #endif
 
 #define DEFAULT_COUNT 1000
@@ -103,19 +96,13 @@ static void Measure(void (*func)(void), const char *msg)
 
 #ifdef WIN32
 static unsigned __stdcall threadStartFunc(void *arg)
-#elif defined(IRIX) && !defined(_PR_PTHREADS)
-static void threadStartFunc(void *arg)
-#elif defined(XP_BEOS)
-static int32 threadStartFunc(void *arg)
 #else
 static void * threadStartFunc(void *arg)
 #endif
 {
     Measure(AttachDetach, "Attach/Detach");
 
-#ifndef IRIX
     return 0;
-#endif
 }
 
 int main(int argc, char **argv)
@@ -131,16 +118,9 @@ int main(int argc, char **argv)
     DWORD rv;
     unsigned threadID;
     HANDLE hThread;
-#elif defined(IRIX)
-    int rv;
-    int threadID;
 #elif defined(OS2)
     int rv;
     TID threadID;
-#elif defined(XP_BEOS)
-	thread_id threadID;
-	int32 threadRV;
-	status_t waitRV;
 #endif
 
 	/* The command line argument: -d is used to determine if the test is being run
@@ -262,30 +242,6 @@ int main(int argc, char **argv)
 		goto exit_now;
 	}
 
-#elif defined(IRIX)
-
-    threadID = sproc(threadStartFunc, PR_SALL, NULL);
-    if (threadID == -1) {
-
-			fprintf(stderr, "thread creation failed: error code %d\n",
-					errno);
-			failed_already=1;
-			goto exit_now;
-	
-	}
-	else {
-		if (debug_mode) 
-			printf ("thread creation succeeded \n");
-		sleep(3);
-		goto exit_now;
-	}
-    rv = waitpid(threadID, NULL, 0);
-    if (debug_mode) PR_ASSERT(rv != -1);
-	else  if (rv != -1) {
-		failed_already=1;
-		goto exit_now;
-	}
-
 #elif defined(OS2)
 
     threadID = (TID) _beginthread((void *)threadStartFunc, NULL,
@@ -303,29 +259,6 @@ int main(int argc, char **argv)
         goto exit_now;
     }
 
-#elif defined(XP_BEOS)
-	
-	threadID = spawn_thread(threadStartFunc, NULL, B_NORMAL_PRIORITY, NULL);
-	if (threadID <= B_ERROR) {
-		fprintf(stderr, "thread creation failed: error code %08lx\n", threadID);
-		failed_already = 1;
-		goto exit_now;
-	}
-	if (resume_thread(threadID) != B_OK) {
-		fprintf(stderr, "failed starting thread: error code %08lx\n", threadID);
-		failed_already = 1;
-		goto exit_now;
-	}
-
-	waitRV = wait_for_thread(threadID, &threadRV);
-	if (debug_mode)
-		PR_ASSERT(waitRV == B_OK);
-	else if (waitRV != B_OK) {
-		failed_already = 1;
-		goto exit_now;
-	}
-	
-#else
 	if (!debug_mode)
 		failed_already=1;
 	else	
@@ -333,7 +266,6 @@ int main(int argc, char **argv)
 	    "either this platform does not have native threads or the\n"
 	    "test needs to be written for this platform.\n");
 	goto exit_now;
-#endif
 
 exit_now:
    if(failed_already)	

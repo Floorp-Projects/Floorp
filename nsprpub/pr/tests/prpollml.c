@@ -15,14 +15,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef SYMBIAN
-#define POLL_DESC_COUNT 128
-#else
 #define POLL_DESC_COUNT 256  /* This should be greater than the
                               * STACK_POLL_DESC_COUNT macro in
                               * ptio.c to cause syspoll_list to
                               * be created. */
-#endif
 
 static PRPollDesc pd[POLL_DESC_COUNT];
 

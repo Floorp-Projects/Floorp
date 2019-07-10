@@ -65,14 +65,6 @@ ifneq ($(OS_ARCH), WINNT)
 PWD = $(shell pwd)
 endif
 
-ifeq ($(OS_ARCH), IRIX)
-LDOPTS += -rpath $(PWD)/$(dist_libdir)
-endif
-
-ifeq ($(OS_ARCH), OSF1)
-LDOPTS += -rpath $(PWD)/$(dist_libdir) -lpthread
-endif
-
 ifeq ($(OS_ARCH), HP-UX)
 LDOPTS += -Wl,+s,+b,$(PWD)/$(dist_libdir)
 endif

@@ -727,18 +727,25 @@ class Selection final : public nsSupportsWeakReference,
   nsresult AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
                              int32_t* aOutIndex);
 
-  nsresult FindInsertionPoint(nsTArray<RangeData>* aElementArray,
-                              nsINode* aPointNode, int32_t aPointOffset,
-                              nsresult (*aComparator)(nsINode*, int32_t,
-                                                      nsRange*, int32_t*),
-                              int32_t* aPoint);
-  bool EqualsRangeAtPoint(nsINode* aBeginNode, int32_t aBeginOffset,
-                          nsINode* aEndNode, int32_t aEndOffset,
-                          int32_t aRangeIndex);
-  nsresult GetIndicesForInterval(nsINode* aBeginNode, int32_t aBeginOffset,
-                                 nsINode* aEndNode, int32_t aEndOffset,
-                                 bool aAllowAdjacent, int32_t* aStartIndex,
-                                 int32_t* aEndIndex);
+  static nsresult FindInsertionPoint(
+      const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
+      int32_t aPointOffset,
+      nsresult (*aComparator)(const nsINode*, int32_t, const nsRange*,
+                              int32_t*),
+      int32_t* aPoint);
+  bool EqualsRangeAtPoint(const nsINode* aBeginNode, int32_t aBeginOffset,
+                          const nsINode* aEndNode, int32_t aEndOffset,
+                          int32_t aRangeIndex) const;
+  /**
+   * Works on the same principle as GetRangesForIntervalArray, however
+   * instead this returns the indices into mRanges between which the
+   * overlapping ranges lie.
+   */
+  nsresult GetIndicesForInterval(const nsINode* aBeginNode,
+                                 int32_t aBeginOffset, const nsINode* aEndNode,
+                                 int32_t aEndOffset, bool aAllowAdjacent,
+                                 int32_t* aStartIndex,
+                                 int32_t* aEndIndex) const;
   RangeData* FindRangeData(nsRange* aRange);
 
   static void UserSelectRangesToAdd(nsRange* aItem,

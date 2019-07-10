@@ -66,13 +66,6 @@ endif
 endif	# sparc
 endif	# SunOS
 
-ifeq ($(OS_ARCH), IRIX)
-ifeq ($(USE_PTHREADS), 1)
-OS_LIBS = -lpthread
-endif
-OS_LIBS += -lc
-endif
-
 ifeq ($(OS_ARCH),AIX)
 DSO_LDOPTS	+= -binitfini::_PR_Fini
 OS_LIBS		= -lodm -lcfg
@@ -107,15 +100,6 @@ MAPFILE = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).def
 ADD_TO_DEF_FILE = cat $(srcdir)/os2extra.def >> $(MAPFILE)
 GARBAGE += $(MAPFILE)
 MKSHLIB += $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),OSF1)
-ifeq ($(USE_PTHREADS), 1)
-OS_LIBS 	= -lpthread -lrt
-endif
-ifneq ($(OS_RELEASE),V2.0)
-OS_LIBS		+= -lc_r
-endif
 endif
 
 # Linux, GNU/Hurd, and GNU/kFreeBSD systems
