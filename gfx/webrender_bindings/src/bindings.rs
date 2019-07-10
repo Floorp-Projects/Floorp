@@ -2189,7 +2189,6 @@ pub extern "C" fn wr_dp_push_stacking_context(
                                 params.mix_blend_mode,
                                 &filters,
                                 &r_filter_datas,
-                                &[],
                                 glyph_raster_space,
                                 params.cache_tiles);
 

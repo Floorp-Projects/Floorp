@@ -192,7 +192,6 @@ impl LazilyCompiledShader {
                 VertexArrayKind::Border => &desc::BORDER,
                 VertexArrayKind::Scale => &desc::SCALE,
                 VertexArrayKind::Resolve => &desc::RESOLVE,
-                VertexArrayKind::SvgFilter => &desc::SVG_FILTER,
             };
 
             device.link_program(program, vertex_descriptor)?;
@@ -512,7 +511,6 @@ pub struct Shaders {
     pub cs_scale: LazilyCompiledShader,
     pub cs_line_decoration: LazilyCompiledShader,
     pub cs_gradient: LazilyCompiledShader,
-    pub cs_svg_filter: LazilyCompiledShader,
 
     // Brush shaders
     brush_solid: BrushShader,
@@ -631,14 +629,6 @@ impl Shaders {
             ShaderKind::Cache(VertexArrayKind::Blur),
             "cs_blur",
             &["COLOR_TARGET"],
-            device,
-            options.precache_flags,
-        )?;
-
-        let cs_svg_filter = LazilyCompiledShader::new(
-            ShaderKind::Cache(VertexArrayKind::SvgFilter),
-            "cs_svg_filter",
-            &[],
             device,
             options.precache_flags,
         )?;
@@ -856,7 +846,6 @@ impl Shaders {
             cs_gradient,
             cs_border_solid,
             cs_scale,
-            cs_svg_filter,
             brush_solid,
             brush_image,
             brush_fast_image,
@@ -941,7 +930,6 @@ impl Shaders {
         self.cs_scale.deinit(device);
         self.cs_blur_a8.deinit(device);
         self.cs_blur_rgba8.deinit(device);
-        self.cs_svg_filter.deinit(device);
         self.brush_solid.deinit(device);
         self.brush_blend.deinit(device);
         self.brush_mix_blend.deinit(device);
