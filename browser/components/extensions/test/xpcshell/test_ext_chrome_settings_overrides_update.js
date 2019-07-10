@@ -18,7 +18,12 @@ AddonTestUtils.createAppInfo(
 );
 
 add_task(async function setup() {
+  Services.prefs.setCharPref("browser.search.region", "US");
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+  Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
+
   await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 });
 
 add_task(async function test_overrides_update_removal() {
