@@ -1,4 +1,0 @@
-
-1 Added function:
-
-  'function SECStatus PK11_FindRawCertsWithSubject(PK11SlotInfo*, SECItem*, CERTCertificateList**)'    {PK11_FindRawCertsWithSubject@@NSS_3.45}
