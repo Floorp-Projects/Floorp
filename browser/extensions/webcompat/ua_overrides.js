@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 /**
  * For detailed information on our policies, and a documention on this format
  * and its possibilites, please check the Mozilla-Wiki at
@@ -24,6 +28,26 @@ for (const override of [
           UAHelpers.getPrefix(originalUA) +
           " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36"
         );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1563839 - rolb.santanderbank.com - Build UA override
+     * WebCompat issue #33462 - https://webcompat.com/issues/33462
+     *
+     * santanderbank expects UA to have 'like Gecko', otherwise it runs
+     * xmlDoc.onload whose support has been dropped. It results in missing labels in forms
+     * and some other issues.  Adding 'like Gecko' fixes those issues.
+     */
+    id: "bug1563839",
+    platform: "all",
+    domain: "rolb.santanderbank.com",
+    bug: "1563839",
+    config: {
+      matches: ["*://rolb.santanderbank.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA.replace("Gecko", "like Gecko");
       },
     },
   },

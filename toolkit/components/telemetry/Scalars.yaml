@@ -2142,40 +2142,6 @@ telemetry:
     record_in_processes:
       - 'main'
 
-  # While the following probe could be restricted to GeckoView, we can't
-  # turn the product filter on as we don't run GeckoView test coverage on
-  # GeckoView.
-  persistence_timer_hit_count:
-    bug_numbers:
-      - 1463152
-    description: >
-      How many times the GeckoView Telemetry persistence timer was hit during
-      the current subsession.
-    expires: "70"
-    kind: uint
-    notification_emails:
-      - telemetry-client-dev@mozilla.com
-      - aplacitelli@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
-  pending_operations_highwatermark_reached:
-    bug_numbers:
-      - 1465052
-    description: >
-      The number of times the pending operations list reached the
-      high-water mark, leading to operations being applied immediately.
-    expires: "70"
-    kind: uint
-    keyed: false
-    notification_emails:
-      - jrediger@mozilla.com
-      - telemetry-client-dev@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
   data_upload_optin:
     bug_numbers:
       - 1445921

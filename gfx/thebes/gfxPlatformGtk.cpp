@@ -243,7 +243,7 @@ void gfxPlatformGtk::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
 }
 
 void gfxPlatformGtk::ReadSystemFontList(
-    InfallibleTArray<SystemFontListEntry>* retValue) {
+    nsTArray<SystemFontListEntry>* retValue) {
   gfxFcPlatformFontList::PlatformFontList()->ReadSystemFontList(retValue);
 }
 

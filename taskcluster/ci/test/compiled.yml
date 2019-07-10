@@ -37,7 +37,10 @@ cppunit:
         by-test-platform:
             android-em.*: xlarge
             default: default
-    tier: default
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     run-on-projects:
         by-test-platform:
             android-em-4.3-arm7-api-16/opt: []  # bug 1548659

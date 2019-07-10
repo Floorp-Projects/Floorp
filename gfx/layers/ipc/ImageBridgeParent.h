@@ -17,7 +17,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/PImageBridgeParent.h"
 #include "nsISupportsImpl.h"
-#include "nsTArrayForwardDeclare.h"  // for InfallibleTArray
+#include "nsTArrayForwardDeclare.h"  // for nsTArray
 
 class MessageLoop;
 
@@ -41,8 +41,8 @@ class ImageBridgeParent final : public PImageBridgeParent,
                                 public CompositableParentManager,
                                 public ShmemAllocator {
  public:
-  typedef InfallibleTArray<CompositableOperation> EditArray;
-  typedef InfallibleTArray<OpDestroy> OpDestroyArray;
+  typedef nsTArray<CompositableOperation> EditArray;
+  typedef nsTArray<OpDestroy> OpDestroyArray;
 
  protected:
   ImageBridgeParent(MessageLoop* aLoop, ProcessId aChildProcessId);
@@ -66,7 +66,7 @@ class ImageBridgeParent final : public PImageBridgeParent,
 
   // CompositableParentManager
   void SendAsyncMessage(
-      const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+      const nsTArray<AsyncParentMessageData>& aMessage) override;
 
   void NotifyNotUsed(PTextureParent* aTexture,
                      uint64_t aTransactionId) override;

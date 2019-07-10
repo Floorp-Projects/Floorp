@@ -11,4 +11,4 @@ gleam = "0.6.2"
 mozangle = {version = "0.1", features = ["egl"]}
 webrender = {path = "../webrender"}
 winapi = {version = "0.3", features = ["winerror", "d3d11", "dcomp"]}
-winit = "0.16"
+winit = "0.19"

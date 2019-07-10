@@ -255,7 +255,7 @@ void DataStorage::GetAllChildProcessData(
 
 // static
 void DataStorage::SetCachedStorageEntries(
-    const InfallibleTArray<mozilla::dom::DataStorageEntry>& aEntries) {
+    const nsTArray<mozilla::dom::DataStorageEntry>& aEntries) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   // Make sure to initialize all DataStorage classes.
@@ -300,7 +300,7 @@ size_t DataStorage::SizeOfIncludingThis(
 }
 
 nsresult DataStorage::Init(
-    const InfallibleTArray<mozilla::dom::DataStorageItem>* aItems) {
+    const nsTArray<mozilla::dom::DataStorageItem>* aItems) {
   // Don't access the observer service or preferences off the main thread.
   if (!NS_IsMainThread()) {
     MOZ_ASSERT_UNREACHABLE("DataStorage::Init called off main thread");
@@ -676,9 +676,9 @@ DataStorage::DataStorageTable& DataStorage::GetTableForType(
   MOZ_CRASH("given bad DataStorage storage type");
 }
 
-void DataStorage::ReadAllFromTable(
-    DataStorageType aType, InfallibleTArray<dom::DataStorageItem>* aItems,
-    const MutexAutoLock& aProofOfLock) {
+void DataStorage::ReadAllFromTable(DataStorageType aType,
+                                   nsTArray<dom::DataStorageItem>* aItems,
+                                   const MutexAutoLock& aProofOfLock) {
   for (auto iter = GetTableForType(aType, aProofOfLock).Iter(); !iter.Done();
        iter.Next()) {
     DataStorageItem* item = aItems->AppendElement();
@@ -688,7 +688,7 @@ void DataStorage::ReadAllFromTable(
   }
 }
 
-void DataStorage::GetAll(InfallibleTArray<dom::DataStorageItem>* aItems) {
+void DataStorage::GetAll(nsTArray<dom::DataStorageItem>* aItems) {
   WaitForReady();
   MutexAutoLock lock(mMutex);
 

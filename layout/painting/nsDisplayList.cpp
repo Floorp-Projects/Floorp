@@ -501,7 +501,7 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
       break;
     }
     case eCSSProperty_transform: {
-      aAnimatable = InfallibleTArray<TransformFunction>();
+      aAnimatable = nsTArray<TransformFunction>();
       AddTransformFunctions(aAnimationValue.GetTransformProperty(), aRefBox,
                             aAnimatable.get_ArrayOfTransformFunction());
       break;
@@ -1591,6 +1591,15 @@ uint32_t nsDisplayListBuilder::GetImageDecodeFlags() const {
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
   return flags;
+}
+
+void nsDisplayListBuilder::ComputeDefaultRenderRootRect(LayoutDeviceIntSize aClientSize) {
+  LayoutDeviceIntRegion cutout;
+  LayoutDeviceIntRect clientRect(LayoutDeviceIntPoint(), aClientSize);
+  cutout.OrWith(clientRect);
+  cutout.SubOut(RoundedToInt(mRenderRootRects[mozilla::wr::RenderRoot::Content]));
+
+  mRenderRootRects[mozilla::wr::RenderRoot::Default] = LayoutDeviceRect(cutout.GetBounds());
 }
 
 void nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
@@ -7006,7 +7015,6 @@ bool nsDisplayRenderRoot::CreateWebRenderCommands(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-
   // It's important to get the userData here even in the early-return case,
   // because this has the important side-effect of marking the user data "used"
   // so it doesn't get discarded at the end of the transaction.
@@ -7055,8 +7063,8 @@ bool nsDisplayRenderRoot::CreateWebRenderCommands(
         nullptr, nullptr, nullptr, builder, params,
         LayoutDeviceRect(scOrigin, LayoutDeviceSize()));
 
-    nsDisplayWrapList::CreateWebRenderCommands(builder, resources, sc,
-                                               aManager, aDisplayListBuilder);
+    nsDisplayWrapList::CreateWebRenderCommands(builder, resources, sc, aManager,
+                                               aDisplayListBuilder);
   }
   mBuiltWRCommands = true;
   return true;

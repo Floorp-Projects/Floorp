@@ -201,6 +201,7 @@ function isLayerized(elementId) {
 function promiseApzRepaintsFlushed(aWindow = window) {
   return new Promise(function(resolve, reject) {
     var repaintDone = function() {
+      dump("PromiseApzRepaintsFlushed: APZ flush done\n");
       SpecialPowers.Services.obs.removeObserver(
         repaintDone,
         "apz-repaints-flushed"
@@ -209,10 +210,12 @@ function promiseApzRepaintsFlushed(aWindow = window) {
     };
     SpecialPowers.Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
     if (SpecialPowers.getDOMWindowUtils(aWindow).flushApzRepaints()) {
-      dump("Flushed APZ repaints, waiting for callback...\n");
+      dump(
+        "PromiseApzRepaintsFlushed: Flushed APZ repaints, waiting for callback...\n"
+      );
     } else {
       dump(
-        "Flushing APZ repaints was a no-op, triggering callback directly...\n"
+        "PromiseApzRepaintsFlushed: Flushing APZ repaints was a no-op, triggering callback directly...\n"
       );
       repaintDone();
     }
@@ -470,6 +473,7 @@ async function waitUntilApzStable() {
         var topUtils = topWin.windowUtils;
 
         var repaintDone = function() {
+          dump("WaitUntilApzStable: APZ flush done in parent proc\n");
           Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
           // send message back to content process
           sendAsyncMessage("apz-flush-done", null);
@@ -485,11 +489,11 @@ async function waitUntilApzStable() {
           Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
           if (topUtils.flushApzRepaints()) {
             dump(
-              "Parent process: flushed APZ repaints, waiting for callback...\n"
+              "WaitUntilApzStable: flushed APZ repaints in parent proc, waiting for callback...\n"
             );
           } else {
             dump(
-              "Parent process: flushing APZ repaints was a no-op, triggering callback directly...\n"
+              "WaitUntilApzStable: flushing APZ repaints in parent proc was a no-op, triggering callback directly...\n"
             );
             repaintDone();
           }
@@ -522,11 +526,15 @@ async function waitUntilApzStable() {
     // Actually trigger the parent-process flush and wait for it to finish
     waitUntilApzStable.chromeHelper.sendAsyncMessage("apz-flush", null);
     await waitUntilApzStable.chromeHelper.promiseOneMessage("apz-flush-done");
+    dump("WaitUntilApzStable: got apz-flush-done in child proc\n");
   }
 
   await SimpleTest.promiseFocus(window);
+  dump("WaitUntilApzStable: done promiseFocus\n");
   await promiseAllPaintsDone();
+  dump("WaitUntilApzStable: done promiseAllPaintsDone\n");
   await promiseApzRepaintsFlushed();
+  dump("WaitUntilApzStable: all done\n");
 }
 
 // This function returns a promise that is resolved after at least one paint

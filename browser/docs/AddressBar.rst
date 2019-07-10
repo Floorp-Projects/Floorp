@@ -307,8 +307,6 @@ Implements an input box *View*, owns an *UrlbarView*.
     // Uses UrlbarValueFormatter to highlight the base host, search aliases
     // and to keep the host visible on overflow.
     formatValue(val);
-    // Manage view visibility.
-    closePopup();
     openResults();
     // Converts an internal URI (e.g. a URI with a username or password) into
     // one which we can expose to the user.

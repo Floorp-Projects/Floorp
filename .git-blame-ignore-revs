@@ -116,3 +116,338 @@ cfc0d52d902cd58293f32a97f286a5e2a3683386 # cinnabar
 abc28896717209d5f0ed2a6b0a46f8e03880ad19 # cinnabar
 47a5dd1fb80fa5bbe608c32db426f1ed29b7fd79 # gecko-dev
 
+# Bug 1561435 - Format remaining devtools/, a=automatic-formatting, CLOSED TREE
+# https://hg.mozilla.org/mozilla-central/rev/041abaa4aa85f5a776e2a6d6fa3e6874d007faad
+b8157dfaafc42deb3b9824ab6aab1c3e11636d76 # gecko-dev
+
+# Bug 1561435 - Fix test failures for devtools/server/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/80230ef725c44b076b7394ca7ca36dc817e2e26b
+66e8f7440d0a2813fa88a1e90d4c1b2537dd4393 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for devtools/server/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/ab820f7fdd388a64a447285fb2b6b1af1fb37bd1
+d8903e9911f2ee27f9f5549772dcdb2f605419ff # gecko-dev
+
+# Bug 1561435 - Format devtools/server/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/dd987949a7c2bd6fbb801748fd5d74bbf7676ed3
+24d2c754702196fe8ec396cdf1844cbbf7398392 # gecko-dev
+
+# Bug 1561435 - Update `pageError stubs file` after formatting devtools/client/ by running `browser_webconsole_update_stubs_page_error.js`, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/84db9ca75c299ea78d7f7bc9efdaf03ee83c83a5
+60b8254b35c210f2a283068ee15caf21750f49a0 # gecko-dev
+
+# Bug 1561435 - Fix test failures for devtools/client/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/6d3e80bc6e5d7e1785f66bf8b7934190bb25aa84
+e22aa772cc2fc3aaaf129a9dde2892f62e9bf8e7 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for devtools/client/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/25b5e323c763aa6d0341bfb92a1d58d1ce6f074e
+56ef3d567908850d4c72e49fb4956e124fc438fe # gecko-dev
+
+# Bug 1561435 - Format devtools/client/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/c7a227149b8fa85074c9442467c81d77081faa4e
+f6db0ee55782a171ce893389645b7ec1473bc6a6 # gecko-dev
+
+# Bug 1561435 - Format xpfe/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/0e52ffb26be74d2bae4cee9600ea6d6dcd44ed97
+7676fc16e4540c0299bdfc3c2d0a3f1dfa076df2 # gecko-dev
+
+# Bug 1561435 - Format xpcom/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/285c79c476cd11b3bcf9f1541d5c8be39b6287fe
+1fcaa7d4459c314ed3f6f9b769f3fbced5110dd4 # gecko-dev
+
+# Bug 1561435 - Format widget/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/b53e2f4066e82af48eb86f80840d4afbcb8d1ad1
+c03a3e486b93c158654f6072753f47d176db6e6c # gecko-dev
+
+# Bug 1561435 - Format view/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/06715c4f165df5f02bd18583a6676eaa034e7265
+664ac086f76bbff6d0e43ae5af27fe4d1e8b9d9a # gecko-dev
+
+# Bug 1561435 - Format uriloader/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/52e9f4dddabf88123eb835da03c74c0db2f90fce
+afb5dbbfbb1d1f497311cb4aa71e2bfba26f4d05 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for tools/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/c97b04d9be60c34e87a47e591f2830a0d09273e4
+472d3c137a21908e3fd4832dafde54dad6b30d3a # gecko-dev
+
+# Bug 1561435 - Format tools/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/2106cbe66fff3ea3be766493a665cd96c1475e12
+5c7cdbd4ba1d42ccf20c9b0818826b096dc06a8b # gecko-dev
+
+# Bug 1561435 - Fix test failures for toolkit/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/970453d65b194690181134c0271dfe675f813f81
+336c4fb8a4b4707e7f50705d5776277aa3852499 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for toolkit/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/aaadca9b31255590a2df9c0fa01dd2f25ac0f808
+815b9d372b35c82b87ac227265ff5ff902245ee0 # gecko-dev
+
+# Bug 1561435 - Format toolkit/xre/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/d8d9a53c4c13fe5cb4c6a865590f40633a12a27d
+4b7b29cff0bb8adbd743bccf3c65306c260022a2 # gecko-dev
+
+# Bug 1561435 - Format toolkit/profile/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/8be6c7ab9d2793c8d085c6868f6bb7591e3cd6bb
+463c2994cb3cadae5d03f198168671f82fcb9e44 # gecko-dev
+
+# Bug 1561435 - Format toolkit/mozapps/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/58fd5776802aa7dd7e6d3fddd7d433da5ef30426
+584e273f90666e9d070f9892ab7151813afff7a5 # gecko-dev
+
+# Bug 1561435 - Format toolkit/modules/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/e5be4c59b7f15f98fabb32a68fc64050ddb62bcb
+b503616295d69fee56300e5e2093599e6fb4f0e2 # gecko-dev
+
+# Bug 1561435 - Format toolkit/forgetaboutsite/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/b8561ed633b2d32582f0503e60aae8c95bda9ba4
+92fd7d7c3676451bf79dfc6df9b2a2726bf59447 # gecko-dev
+
+# Bug 1561435 - Format toolkit/crashreporter/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/7f9969319147bff459f4c97bcb85fc2637189805
+30de4722a3da8f88d64b9f19d05628577cc87bc0 # gecko-dev
+
+# Bug 1561435 - Format toolkit/content/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/e8bd1069715d19b1a80cff5d61fbe804b396de59
+0773795931241c0d6cdb9fc8540fae5006b1649a # gecko-dev
+
+# Bug 1561435 - Format toolkit/components/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/becae3f8f590d3e913f106aea634e86f84c80b3e
+4a06c925ac8ae7a96aa2d737ceee0508cf8df994 # gecko-dev
+
+# Bug 1561435 - Format toolkit/actors, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/a331a8e092dc59bb39f1a682f24e80fbb826e5a9
+d3a1b5aeaad92f8c3e1fd10305e811161c14b816 # gecko-dev
+
+# Bug 1561435 - Update `pageError stubs file` after formatting testing/ by running `browser_webconsole_update_stubs_page_error.js`, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/799f4b64f756bd37df5d4581998cf1fd9b305dd9
+57a6febcece83b53db098bf076baee45c5701c25 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for testing/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/b0c9aa13768f2ff899b564a9970bb4bdf4482949
+97787f6eaba0411c48f02f2992a75bff730df7c6 # gecko-dev
+
+# Bug 1561435 - Format testing/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/51c89fcec893529391427e14709a2d1bc9c2a962
+2b036e45c518c1c6d9f217d6ad6001e4a40998b1 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for taskcluster/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/1a154e62b8300000eec6e0ad38d251f939279066
+4998c97d04a3ce67df7002df568d4f5d17cdb5c8 # gecko-dev
+
+# Bug 1561435 - Format taskcluster/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/0df3e32ec2fb26b534c09dfc5a729e13884a2d35
+9b61ac048207b0bd4a5e706b3ddf3f0cc3f76b03 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for storage/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/1e3121039456ff51e0cae5ddd297be773f22b6af
+93517ce01402f161c50628aa8fd6ff15b7f4f1e7 # gecko-dev
+
+# Bug 1561435 - Format storage/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/f6fff703eb2618a94afb9018ab902ffbeaf8c199
+9eeaa5c80cc5b546c2a42de43c6f2643e78fb080 # gecko-dev
+
+# Bug 1561435 - Format startupcache/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/168bec380944da26de7ecd53222aaf94a2d2c65b
+942931c838287635f223cbf2977a3849fa843842 # gecko-dev
+
+# Bug 1561435 - Format servo/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/d40e8f24f114101d93e5ff2ace39b75e9d440382
+9a6450341744b158ef5e38eec6ba916827a722e8 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for services/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/dcd5e22d383858713ce4e73bfd66fb277fa87b5b
+34c33b48c49f10ee76e92ae5d3320bfaeb98ef7d # gecko-dev
+
+# Bug 1561435 - Format services/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/854373e1ab9e7a438d9a666d76d4cfd227a7e0ae
+9d673f1f0f8e6565db6244e4fd265025de42e75e # gecko-dev
+
+# Bug 1561435 - Fix linting errors for security/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/6ceb52b9a600947561a2f5495bbac8c262003e81
+221861fb7c9bd6bbb53099ec2016aa45a53ae288 # gecko-dev
+
+# Bug 1561435 - Format security/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/8062fdb434272ca7620c9caae8d3b8a5096c9f46
+858f3b554bd39b1a4f3af978985bdd5a23f25c69 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for remote/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/1b243b4ec0ace507906efdae9ef0725abc581e20
+77c95c13f477051c8c2b080f8c04d7448a411cc9 # gecko-dev
+
+# Bug 1561435 - Format remote/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/07ce31daca134d974d5d1ee2c86f6fdc307d9aa4
+991b3c93c6c3c2a8764688739ba4fc0469a1b229 # gecko-dev
+
+# Bug 1561435 - Format python/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/aa12389b6701bd7a6a08c9134667a25e7749aaa4
+91f67eb25e3be9fd07bf15330c76e89e91030872 # gecko-dev
+
+# Bug 1561435 - Format parser/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/ca57fd3d5fa50aaa7c7f9f77bdfc56b11467166b
+572c392d309c854e3291d5d957b71ec63514c3f8 # gecko-dev
+
+# Bug 1561435 - Format other-licenses/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/d020968b38583e0b80c8179bbce86f5b3099525b
+27cc1e60920379a11d2261fd12af9a9b9157f557 # gecko-dev
+
+# Bug 1561435 - Format nsprpub/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/17cf3eb8f0ee8ad657ccc77a34df7877a09ad13b
+9ecb4e2e8282282b76cb537a743532b9439f14be # gecko-dev
+
+# Bug 1561435 - Fix linting errors for netwerk/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/9d81554c410bd0b5d0f384fc5ceb3117bc7f5ced
+4bd76df603060181aee88593d7f9580209168356 # gecko-dev
+
+# Bug 1561435 - Format netwerk/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/d9a6985d5acd2cdd1c8e582868a5975473a78794
+2c53a5dcd94f093ac8c3c2acd77b902307662088 # gecko-dev
+
+# Bug 1561435 - Format mozglue/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/b0329baff86060df3bfd0f2aecc8ab5381056036
+ea8b91c51d0bb4d52d54fb2d453f1215bab20a95 # gecko-dev
+
+# Bug 1561435 - Format modules/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/5b0e589285f730c4f2ae3250148d4ada0e72d6b6
+8c3cfe4881e7cdb45e231d748ae7b6c56f822125 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for mobile/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/d2c1fb7f1c917b6715f3bfe98c71a0f75ddebb7d
+9e9be26a9b7428e5995b50e39114cbb65a7a7575 # gecko-dev
+
+# Bug 1561435 - Format mobile/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/d9ed067030a57dd50198c02044d999a51fe55591
+e999ae1989ac4156e3f0ae7faccb8d0c57a7ef28 # gecko-dev
+
+# Bug 1561435 - Format mfbt/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/5f1dccb626a04af3885507f110e446edad9f83a0
+1db7cbcab0f289daa90fc2a3fc39ff5f67c93b6a # gecko-dev
+
+# Bug 1561435 - Format memory/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/fe31b52c5ca48a4f0109ef8583349e32460330f4
+feaa92296b9496fa802c8c5d1a6eb2a9a27e6c8a # gecko-dev
+
+# Bug 1561435 - Format media/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/b70cef7801ae482fd042a58473fb5254c729c579
+379161a602aa945f3ab581ea40cdc9131eb1dd36 # gecko-dev
+
+# Bug 1561435 - Format layout/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/a85aec1aa92d1e067a5813a662175d4a76ce50a8
+6a261b9e7704fa1287248a642744c1d4514fc4ae # gecko-dev
+
+# Bug 1561435 - Format js/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/4b8b3495f071a07d9641c39a59edd0b95fb3d1ea
+baef0fa8174b305be79303eba9acbcab850d3b0f # gecko-dev
+
+# Bug 1561435 - Format ipc/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/d381ac512d900965a9ffef3740b5a92aed223ee2
+251f88082d5c4b543721a8a31508ad164410a245 # gecko-dev
+
+# Bug 1561435 - Format intl/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/928cc5362416f47d61bea6fc55965e5084b8204c
+d7fc67848210194e820557295ab2be1c1a8cb124 # gecko-dev
+
+# Bug 1561435 - Fix linting errors for image/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/62a5aeaf0dffe36b7157d4efe10afd0ff8369026
+2ecd1b8386d150be53f1acd9a267304a3db1c2cc # gecko-dev
+
+# Bug 1561435 - Format image/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/bcb509a14173f2e859626bc4eeaeb63b13d5dc73
+06e7696b74e079cdcfdb39f4e6def0887fb82e90 # gecko-dev
+
+# Bug 1561435 - Format hal/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/c822e46e3c168fed3aa8df3b064abedfc22aec2e
+054a393a76b590a8ace3275971e2d9bbab4ca11d # gecko-dev
+
+# Bug 1561435 - Format gradle/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/8075dd0530542c507e570f7f903d23c51e108a11
+273c6c8f77816016d79ea313b0c5cd5b48b99dce # gecko-dev
+
+# Bug 1561435 - Reposition comments in gfx/, r=kats
+# https://hg.mozilla.org/mozilla-central/rev/516d28fb9aebe12994d4bf960865ca65370b1ef6
+e974a88416d76e4b5e59503e8af23295f0a40842 # gecko-dev
+
+# Bug 1561435 - Format gfx/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/1982faa9eafa193e25814a6f328386292c8f285c
+85064fe4c35813705c1a641b5fbb6ca1f0e186c8 # gecko-dev
+
+# Bug 1561435 - Format extensions/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/599bcfdc8eee2a5c6df4bfebdf5dd94c31d6b501
+5af464dcc459d28bdbbbd9753dfa9b7a0bcfe628 # gecko-dev
+
+# Bug 1561435 - Format editor/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/05c53825de05f73ef88c89d7b9696cd69e49b7d5
+5065489a4e925b5887ee43e7171e08c65e986c88 # gecko-dev
+
+# Bug 1561435 - Avoid formatting sensitive fixtures for dom/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/6fc1f92ea98de3b3d09b783f052f56f638c583cf
+dcd795c16b2c7f3e680b9b83bfc380e56bca4ef1 # gecko-dev
+
+# Bug 1561435 - Fix test failures for dom/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/4e7dbc3bfab6fd3f1d2f2aae0df37ad1ab0e2292
+64a157bec47b9a41a328b4d5fe5f36b7a4ffca5e # gecko-dev
+
+# Bug 1561435 - Fix linting errors for dom/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/23e4bd9e52e4d74dff7f69ab0435b6770ec63791
+9bb757c75bf9414c2475460ef438889349fbf290 # gecko-dev
+
+# Bug 1561435 - Format dom/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/f3b422727b92f4933ca41fa7a4013d829a98240d
+0a8ff0ad85edf5cab74fdf16c75ce2588906177c # gecko-dev
+
+# Bug 1561435 - Format docshell/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/f63d6dbcb2436de83803c6281fdcaa5608242c15
+bcdc3a9567d90ca352829052be62ffd298926feb # gecko-dev
+
+# Bug 1561435 - Format config/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/a26eba0ab47dfb80481ff2e3d58a8e0a0424e642
+a6c398f85c2ebb90c2db9322ad3f44581f7764e7 # gecko-dev
+
+# Bug 1561435 - Format chrome/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/0bbd90cb5368ff59418cf16fcdadb2a59d61f18f
+4688ecdc4a70919a130d607b441e27f68bbcc632 # gecko-dev
+
+# Bug 1561435 - Format caps/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/0513b22f434f7b18b21d73deabfb62fd3cddbb74
+c24167d1982d5ebe9743c5a8bf8aba9e06f3fe31 # gecko-dev
+
+# Bug 1561435 - Format build/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/dfb231a91cc39dc056617bf5c18006bcbb1cd2e8
+0e8a695ad55bd89a7533bb2247d4ac095d94377a # gecko-dev
+
+# Bug 1561435 - Fix linting errors for browser/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/feb5267686912acdc1fa83dea843c3878b80fd58
+ad522e3aaee5d8d1dca1b0d280865dfab3e5698b # gecko-dev
+
+# Bug 1561435 - Format browser/tools/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/c577840a8063252f29870121b2ce8e01240db032
+645607437588ef3d0a27774d203b6adb106e5e49 # gecko-dev
+
+# Bug 1561435 - Format browser/modules/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/e8225f3e114bf1fc01f9e574cc41eb2df4e314c6
+af7d1d3b67eb3df4249b92d4678c6170e1baa0ad # gecko-dev
+
+# Bug 1561435 - Format browser/extensions/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/39b4804c504ce6b71e92aad9d8e934e1a5577b8d
+2995d5960c328801dbeabcb6e9a5032bf29ce75f # gecko-dev
+
+# Bug 1561435 - Format browser/components/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/4381f16ec9948a70802d7cc28cd021b094c7ba74
+1f830c96da027db1df4719eb54d50461fa2c8966 # gecko-dev
+
+# Bug 1561435 - Format browser/base/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/aa12d9e8a4f1cad6b8057ef69fa4b3273c3c3fab
+f9f59140398bc4d04d840e8217c04e0d7eafafb9 # gecko-dev
+
+# Bug 1561435 - Format browser/actors/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/fb99af508d47ca0bfecbe0e6be3fc3f998576d63
+55d8d8e0e00ab140088122be39f05e4cd867616a # gecko-dev
+
+# Bug 1561435 - Fix linting errors for accessible/, r=standard8
+# https://hg.mozilla.org/mozilla-central/rev/e78cfc62325608065dbb0819d2ceecf38fb0e233
+6117c06951ec8ab8a52363022667711f8bebba07 # gecko-dev
+
+# Bug 1561435 - Format accessible/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/59f51c65dbf0c25ac557546d970c32648ab5d007
+058dce8bba0e081c60130f5523c0b9609a6bbf0f # gecko-dev

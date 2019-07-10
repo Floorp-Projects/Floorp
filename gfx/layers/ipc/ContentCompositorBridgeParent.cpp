@@ -229,7 +229,7 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
     }
   }
 
-  InfallibleTArray<RefPtr<wr::WebRenderAPI>> apis;
+  nsTArray<RefPtr<wr::WebRenderAPI>> apis;
   bool cloneSuccess = false;
   if (root) {
     cloneSuccess = root->CloneWebRenderAPIs(apis);

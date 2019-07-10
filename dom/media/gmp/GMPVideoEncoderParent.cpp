@@ -245,7 +245,7 @@ void GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 mozilla::ipc::IPCResult GMPVideoEncoderParent::RecvEncoded(
     const GMPVideoEncodedFrameData& aEncodedFrame,
-    InfallibleTArray<uint8_t>&& aCodecSpecificInfo) {
+    nsTArray<uint8_t>&& aCodecSpecificInfo) {
   if (!mCallback) {
     return IPC_FAIL_NO_REASON(this);
   }

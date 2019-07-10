@@ -1343,10 +1343,15 @@ class StaticAnalysis(MachCommandBase):
         prettier = os.path.join(self.topsrcdir, "node_modules", "prettier", "bin-prettier.js")
         path = os.path.join(self.topsrcdir, path[0])
 
+        # Bug 1564824. Prettier fails on patches with moved files where the
+        # original directory also does not exist.
+        assume_dir = os.path.dirname(os.path.join(self.topsrcdir, assume_filename[0]))
+        assume_filename = assume_filename[0] if os.path.isdir(assume_dir) else path
+
         # We use --stdin-filepath in order to better determine the path for
         # the prettier formatter when it is ran outside of the repo, for example
         # by the extension hg-formatsource.
-        args = [binary, prettier, '--stdin-filepath', assume_filename[0]]
+        args = [binary, prettier, '--stdin-filepath', assume_filename]
 
         process = subprocess.Popen(args, stdin=subprocess.PIPE)
         with open(path, 'r') as fin:

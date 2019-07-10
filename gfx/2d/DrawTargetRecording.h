@@ -17,7 +17,7 @@ class DrawTargetRecording : public DrawTarget {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetRecording, override)
   DrawTargetRecording(DrawEventRecorder* aRecorder, DrawTarget* aDT,
-                      IntSize aSize, bool aHasData = false);
+                      IntRect aRect, bool aHasData = false);
 
   ~DrawTargetRecording();
 
@@ -35,7 +35,8 @@ class DrawTargetRecording : public DrawTarget {
 
   virtual void DetachAllSnapshots() override;
 
-  virtual IntSize GetSize() const override { return mSize; }
+  virtual IntSize GetSize() const override { return mRect.Size(); }
+  virtual IntRect GetRect() const override { return mRect; }
 
   virtual void Flush() override;
 
@@ -354,7 +355,7 @@ class DrawTargetRecording : public DrawTarget {
    * @param aSize size of the the similar DrawTarget
    * @param aFormat format of the similar DrawTarget
    */
-  DrawTargetRecording(const DrawTargetRecording* aDT, IntSize aSize,
+  DrawTargetRecording(const DrawTargetRecording* aDT, IntRect aRect,
                       SurfaceFormat aFormat);
 
   Path* GetPathForPathRecording(const Path* aPath) const;
@@ -363,7 +364,7 @@ class DrawTargetRecording : public DrawTarget {
 
   RefPtr<DrawEventRecorderPrivate> mRecorder;
   RefPtr<DrawTarget> mFinalDT;
-  IntSize mSize;
+  IntRect mRect;
 };
 
 }  // namespace gfx

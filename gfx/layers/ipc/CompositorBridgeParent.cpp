@@ -151,7 +151,7 @@ void CompositorBridgeParentBase::NotifyNotUsed(PTextureParent* aTexture,
 }
 
 void CompositorBridgeParentBase::SendAsyncMessage(
-    const InfallibleTArray<AsyncParentMessageData>& aMessage) {
+    const nsTArray<AsyncParentMessageData>& aMessage) {
   Unused << SendParentAsyncMessages(aMessage);
 }
 
@@ -404,7 +404,7 @@ LayersId CompositorBridgeParent::RootLayerTreeId() {
 }
 
 CompositorBridgeParent::~CompositorBridgeParent() {
-  InfallibleTArray<PTextureParent*> textures;
+  nsTArray<PTextureParent*> textures;
   ManagedPTextureParent(textures);
   // We expect all textures to be destroyed by now.
   MOZ_DIAGNOSTIC_ASSERT(textures.Length() == 0);
@@ -618,7 +618,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvStartFrameTimeRecording(
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvStopFrameTimeRecording(
-    const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) {
+    const uint32_t& aStartIndex, nsTArray<float>* intervals) {
   if (mLayerManager) {
     mLayerManager->StopFrameTimeRecording(aStartIndex, *intervals);
   } else if (mWrBridge) {
@@ -1777,7 +1777,7 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     // Same as for mApzUpdater, but for the sampler thread.
     mApzSampler->SetWebRenderWindowId(windowId);
   }
-  InfallibleTArray<RefPtr<wr::WebRenderAPI>> apis;
+  nsTArray<RefPtr<wr::WebRenderAPI>> apis;
   apis.AppendElement(
       wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize));
   if (!apis[0]) {
@@ -1793,7 +1793,7 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
         apis[0]->CreateDocument(aSize, 2, wr::RenderRoot::Popover));
   }
 
-  InfallibleTArray<RefPtr<wr::WebRenderAPI>> clonedApis;
+  nsTArray<RefPtr<wr::WebRenderAPI>> clonedApis;
   for (auto& api : apis) {
     wr::TransactionBuilder txn;
     txn.SetRootPipeline(aPipelineId);
