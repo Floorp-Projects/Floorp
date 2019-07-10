@@ -268,7 +268,7 @@ class PlacesHistoryStorageTest {
         // Empty search.
         assertEquals(4, history.getSuggestions("", 100).size)
 
-        val search2 = history.getSuggestions("Mozilla", 100)
+        val search2 = history.getSuggestions("Mozilla", 100).sortedByDescending { it.url }
         assertEquals(2, search2.size)
         assertEquals("http://www.mozilla.org/", search2[0].id)
         assertEquals("http://www.mozilla.org/", search2[0].url)
@@ -277,15 +277,16 @@ class PlacesHistoryStorageTest {
         assertEquals("http://www.firefox.com/", search2[1].url)
         assertEquals("Mozilla Firefox", search2[1].title)
 
-        val search3 = history.getSuggestions("Mo", 100)
+        val search3 = history.getSuggestions("Mo", 100).sortedByDescending { it.url }
         assertEquals(3, search3.size)
-        assertEquals("http://www.moscow.ru/", search3[0].id)
-        assertEquals("http://www.moscow.ru/", search3[0].url)
-        assertEquals("Moscow City", search3[0].title)
 
-        assertEquals("http://www.mozilla.org/", search3[1].id)
-        assertEquals("http://www.mozilla.org/", search3[1].url)
-        assertEquals("Mozilla", search3[1].title)
+        assertEquals("http://www.mozilla.org/", search3[0].id)
+        assertEquals("http://www.mozilla.org/", search3[0].url)
+        assertEquals("Mozilla", search3[0].title)
+
+        assertEquals("http://www.moscow.ru/", search3[1].id)
+        assertEquals("http://www.moscow.ru/", search3[1].url)
+        assertEquals("Moscow City", search3[1].title)
 
         assertEquals("http://www.firefox.com/", search3[2].id)
         assertEquals("http://www.firefox.com/", search3[2].url)
