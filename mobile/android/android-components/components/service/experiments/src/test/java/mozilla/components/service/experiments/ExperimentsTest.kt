@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import mozilla.components.service.glean.Glean
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -79,6 +80,7 @@ class ExperimentsTest {
         `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
         `when`(sharedPrefs.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
+        `when`(prefsEditor.clear()).thenReturn(prefsEditor)
         `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs)
 
         val packageInfo: PackageInfo = mock()
@@ -320,6 +322,32 @@ class ExperimentsTest {
 
         assertNotNull(experiments.activeExperiment)
         assertEquals("second-id", experiments.activeExperiment!!.experiment.id)
+    }
+
+    @Test
+    fun `enrollment and unenrollment recorded in Glean`() {
+        resetExperiments()
+        experiments.initialize(mockContext, configuration)
+
+        // Update the experiments with an empty list to unenroll from any experiments
+        experiments.onExperimentsUpdated(ExperimentsSnapshot(listOf(), null))
+
+        // Make sure that we aren't already enrolled
+        assertFalse(Glean.testIsExperimentActive("second-id"))
+
+        // Simulate update from server that should enroll us in 'second-id' experiment
+        experiments.onExperimentsUpdated(ExperimentsSnapshot(experimentsList, null))
+        assertNotNull(experiments.activeExperiment)
+        assertEquals("second-id", experiments.activeExperiment!!.experiment.id)
+
+        // Verify that we are now enrolled in the experiment
+        assertTrue(Glean.testIsExperimentActive("second-id"))
+
+        // Update the experiments with an empty list to unenroll from any experiments
+        experiments.onExperimentsUpdated(ExperimentsSnapshot(listOf(), null))
+
+        // Verify we are now unenrolled
+        assertFalse(Glean.testIsExperimentActive("second-id"))
     }
 
     @Test

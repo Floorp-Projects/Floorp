@@ -187,6 +187,10 @@ open class ExperimentsInternalAPI internal constructor() {
     private fun stopActiveExperiment() {
         assert(activeExperiment != null) { "Should have an active experiment" }
 
+        activeExperiment?.let {
+            Glean.setExperimentInactive(it.experiment.id)
+        }
+
         ActiveExperiment.clear(context)
         activeExperiment = null
     }
