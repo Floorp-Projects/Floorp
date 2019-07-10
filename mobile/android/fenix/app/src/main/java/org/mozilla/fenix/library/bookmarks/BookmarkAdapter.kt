@@ -262,8 +262,16 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         BookmarkNodeViewHolder(view, actionEmitter, job, containerView) {
 
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
-
-            bookmark_favicon.setImageResource(R.drawable.ic_folder_icon)
+            containerView?.context?.let {
+                val drawable = it.getDrawable(R.drawable.ic_folder_icon)
+                drawable?.setTint(
+                    ContextCompat.getColor(
+                        it,
+                        R.color.primary_text_light_theme
+                    )
+                )
+                bookmark_favicon.setImageDrawable(drawable)
+            }
             bookmark_favicon.visibility = View.VISIBLE
             bookmark_title.visibility = View.VISIBLE
             bookmark_url.visibility = View.GONE
@@ -364,7 +372,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             bookmark_title.visibility = View.GONE
             bookmark_url.visibility = View.GONE
             bookmark_overflow.increaseTapArea(bookmarkOverflowExtraDips)
-            bookmark_overflow.visibility = View.VISIBLE
+            bookmark_overflow.visibility = View.GONE
             bookmark_separator.visibility = View.VISIBLE
             bookmark_layout.isClickable = false
 
