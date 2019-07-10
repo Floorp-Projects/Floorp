@@ -13,7 +13,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
@@ -27,7 +26,7 @@ class BenchmarkPlayback : public QueueObject {
   void DemuxSamples();
   void DemuxNextSample();
   void GlobalShutdown();
-  void InitDecoder(UniquePtr<TrackInfo>&& aInfo);
+  void InitDecoder(TrackInfo&& aInfo);
 
   void Output(MediaDataDecoder::DecodedData&& aResults);
   void Error(const MediaResult& aError);
@@ -45,7 +44,6 @@ class BenchmarkPlayback : public QueueObject {
   RefPtr<MediaDataDemuxer> mDemuxer;
   RefPtr<MediaTrackDemuxer> mTrackDemuxer;
   nsTArray<RefPtr<MediaRawData>> mSamples;
-  UniquePtr<TrackInfo> mInfo;
   size_t mSampleIndex;
   Maybe<TimeStamp> mDecodeStartTime;
   uint32_t mFrameCount;
