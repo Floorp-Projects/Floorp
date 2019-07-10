@@ -366,7 +366,7 @@ extern bool gDisablePoisoning;
 // environment variable.
 static inline void Poison(void* ptr, uint8_t value, size_t num,
                           MemCheckKind kind) {
-#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
+#if defined(JS_GC_POISONING)
   if (!js::gDisablePoisoning) {
     PoisonImpl(ptr, value, num);
   }
