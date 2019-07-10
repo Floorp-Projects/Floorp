@@ -250,15 +250,22 @@ BrowserHost::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
 /* readonly attribute boolean hasBeforeUnload; */
 NS_IMETHODIMP
 BrowserHost::GetHasBeforeUnload(bool* aHasBeforeUnload) {
-  if (!mRoot) {
+  if (!mRoot || !GetBrowsingContext()) {
     *aHasBeforeUnload = false;
     return NS_OK;
   }
+
   bool result = false;
 
-  VisitAll([&result](BrowserParent* aBrowserParent) {
-    result |= aBrowserParent->GetHasBeforeUnload();
-  });
+  GetBrowsingContext()->PreOrderWalk(
+      [&result](BrowsingContext* aBrowsingContext) {
+        WindowGlobalParent* windowGlobal =
+            aBrowsingContext->Canonical()->GetCurrentWindowGlobal();
+
+        if (windowGlobal) {
+          result |= windowGlobal->HasBeforeUnload();
+        }
+      });
 
   *aHasBeforeUnload = result;
   return NS_OK;
