@@ -2767,7 +2767,15 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
 #else
   // Windows release, Linux nightly, Linux release. Do screen size
   // checks. (macOS is still completely blocked by the blocklist).
+  // On Windows release, we only allow really small screens (sub-WUXGA). On
+  // Linux we allow medium size screens as well (anything sub-4k).
+#  if defined(XP_WIN)
+  // Allow up to WUXGA on Windows release
+  const int32_t kMaxPixels = 1920 * 1200;  // WUXGA
+#  else
+  // Allow up to 4k on Linux
   const int32_t kMaxPixels = 3440 * 1440;  // UWQHD
+#  endif
   if (aScreenPixels > kMaxPixels) {
     aFeature.Disable(
         FeatureStatus::BlockedScreenTooLarge, "Screen size too large",
@@ -2782,10 +2790,9 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
   }
 #endif
 
-#if ((defined(XP_WIN) && defined(EARLY_BETA_OR_EARLIER)) || \
-     (defined(MOZ_WIDGET_GTK) && defined(NIGHTLY_BUILD)))
-  // Qualify Intel graphics cards on Windows up to early beta, and
-  // on Linux nightly.
+#if (defined(XP_WIN) || (defined(MOZ_WIDGET_GTK) && defined(NIGHTLY_BUILD)))
+  // Qualify Intel graphics cards on Windows to release and on Linux nightly
+  // (subject to device whitelist and screen size checks above).
 #else
   // Disqualify everywhere else
   aFeature.Disable(
