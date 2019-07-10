@@ -39,6 +39,18 @@ pub fn cubeb_sample_size(format: fmt) -> usize {
     }
 }
 
+struct Finalizer<F: FnOnce()>(Option<F>);
+
+impl<F: FnOnce()> Drop for Finalizer<F> {
+    fn drop(&mut self) {
+        self.0.take().map(|f| f());
+    }
+}
+
+pub fn finally<F: FnOnce()>(f: F) -> impl Drop {
+    Finalizer(Some(f))
+}
+
 #[test]
 fn test_forget_vec_and_retake_it() {
     let expected: Vec<u32> = (10..20).collect();
@@ -65,4 +77,18 @@ fn test_cubeb_sample_size() {
         let (fotmat, size) = pair;
         assert_eq!(cubeb_sample_size(*fotmat), *size);
     }
+}
+
+#[test]
+fn test_finally() {
+    let mut x = 0;
+
+    {
+        let y = &mut x;
+        let _finally = finally(|| {
+            *y = 100;
+        });
+    }
+
+    assert_eq!(x, 100);
 }
