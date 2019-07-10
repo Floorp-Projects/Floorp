@@ -4371,9 +4371,12 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         let mut callback = self.device_changed_callback.lock().unwrap();
         // Note: second register without unregister first causes 'nope' error.
         // Current implementation requires unregister before register a new cb.
-        assert!(device_changed_callback.is_none() || callback.is_none());
-        *callback = device_changed_callback;
-        Ok(())
+        if device_changed_callback.is_some() && callback.is_some() {
+            Err(Error::invalid_parameter())
+        } else {
+            *callback = device_changed_callback;
+            Ok(())
+        }
     }
 }
 
