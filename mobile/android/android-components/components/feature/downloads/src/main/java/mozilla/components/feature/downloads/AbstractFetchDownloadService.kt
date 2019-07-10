@@ -209,7 +209,7 @@ abstract class AbstractFetchDownloadService(
         val channelId = ensureChannelExists(this)
 
         return NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setSmallIcon(R.drawable.mozac_feature_download_ic_download)
             .setContentTitle(getString(R.string.mozac_feature_downloads_ongoing_notification_title))
             .setContentText(getString(R.string.mozac_feature_downloads_ongoing_notification_text))
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)

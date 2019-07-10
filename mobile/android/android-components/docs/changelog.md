@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-media**
   * Added `MediaNotificationFeature` - a feature implementation to show an ongoing notification (keeping the app process alive) while web content is playing media.
 
+* **feature-downloads**
+  * Added custom notification icon for `FetchDownloadManager`.
+
 # 3.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v2.0.0...v3.0.0)
