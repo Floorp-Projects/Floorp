@@ -276,7 +276,7 @@ class gfxFcPlatformFontList : public gfxPlatformFontList {
                    nsTArray<nsString>& aListOfFonts) override;
 
   void ReadSystemFontList(
-      InfallibleTArray<mozilla::dom::SystemFontListEntry>* retValue);
+      nsTArray<mozilla::dom::SystemFontListEntry>* retValue);
 
   gfxFontEntry* CreateFontEntry(
       mozilla::fontlist::Face* aFace,
