@@ -621,15 +621,6 @@ extern "C" fn audiounit_property_listener_callback(
         }
     }
 
-    // Allow restart to choose the new default
-    let mut switch_side = device_flags::DEV_UNKNOWN;
-    if stm.has_input() {
-        switch_side |= device_flags::DEV_INPUT;
-    }
-    if stm.has_output() {
-        switch_side |= device_flags::DEV_OUTPUT;
-    }
-
     for _addr in addrs.iter() {
         let _dev_cb_lock = AutoLock::new(&mut stm.device_changed_callback_lock);
         if let Some(device_changed_callback) = stm.device_changed_callback {
@@ -639,7 +630,7 @@ extern "C" fn audiounit_property_listener_callback(
         }
     }
 
-    stm.reinit_async(switch_side);
+    stm.reinit_async();
 
     NO_ERR
 }
@@ -2961,7 +2952,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                 // kAudioUnitErr_CannotDoInCurrentContext is returned when using a BT
                 // headset and the profile is changed from A2DP to HFP/HSP. The previous
                 // output device is no longer valid and must be reset.
-                self.reinit_async(device_flags::DEV_INPUT | device_flags::DEV_OUTPUT);
+                self.reinit_async();
             }
             // For now state that no error occurred and feed silence, stream will be
             // resumed once reinit has completed.
@@ -3082,12 +3073,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
         Ok(())
     }
 
-    fn reinit(&mut self, flags: device_flags) -> Result<()> {
-        assert!(!self.input_unit.is_null() || !self.output_unit.is_null());
-        assert!(
-            (self.input_unit.is_null() || flags.contains(device_flags::DEV_INPUT))
-                && (self.output_unit.is_null() || flags.contains(device_flags::DEV_OUTPUT))
-        );
+    fn reinit(&mut self) -> Result<()> {
         if !self.shutdown.load(Ordering::SeqCst) {
             self.stop_internal();
         }
@@ -3102,6 +3088,8 @@ impl<'ctx> AudioUnitStream<'ctx> {
         {
             let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
             let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
+
+            assert!(!self.input_unit.is_null() || !self.output_unit.is_null());
             let vol_rv = if self.output_unit.is_null() {
                 Err(Error::error())
             } else {
@@ -3116,15 +3104,14 @@ impl<'ctx> AudioUnitStream<'ctx> {
             // - The bluetooth device changed from A2DP to/from HFP/HSP profile
             // We first attempt to re-use the same device id, should that fail we will
             // default to the (potentially new) default device.
-            let input_device = if flags.contains(device_flags::DEV_INPUT) {
+            let has_input = !self.input_unit.is_null();
+            let input_device = if has_input {
                 self.input_device.id
             } else {
                 kAudioObjectUnknown
             };
 
-            if flags.contains(device_flags::DEV_INPUT)
-                && self.set_device_info(input_device, io_side::INPUT).is_err()
-            {
+            if has_input && self.set_device_info(input_device, io_side::INPUT).is_err() {
                 cubeb_log!("({:p}) Set input device info failed. This can happen when last media device is unplugged", self as *const AudioUnitStream);
                 return Err(Error::error());
             }
@@ -3145,7 +3132,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                     "({:p}) Stream reinit failed.",
                     self as *const AudioUnitStream
                 );
-                if flags.contains(device_flags::DEV_INPUT) && input_device != kAudioObjectUnknown {
+                if has_input && input_device != kAudioObjectUnknown {
                     // Attempt to re-use the same device-id failed, so attempt again with
                     // default input device.
                     self.close();
@@ -3176,7 +3163,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
         Ok(())
     }
 
-    fn reinit_async(&mut self, flags: device_flags) {
+    fn reinit_async(&mut self) {
         if self.reinit_pending.swap(true, Ordering::SeqCst) {
             // A reinit task is already pending, nothing more to do.
             cubeb_log!(
@@ -3202,7 +3189,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                 return;
             }
 
-            if stm_guard.reinit(flags).is_err() {
+            if stm_guard.reinit().is_err() {
                 if stm_guard.uninstall_system_changed_callback().is_err() {
                     cubeb_log!(
                         "({:p}) Could not uninstall system changed callback",
