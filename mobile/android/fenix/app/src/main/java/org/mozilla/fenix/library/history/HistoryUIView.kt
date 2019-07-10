@@ -4,16 +4,11 @@
 
 package org.mozilla.fenix.library.history
 
-import android.graphics.PorterDuff.Mode.SRC_IN
-import android.graphics.PorterDuffColorFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -23,16 +18,15 @@ import kotlinx.android.synthetic.main.component_history.view.*
 import kotlinx.android.synthetic.main.delete_history_button.*
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.getColorIntFromAttr
-import org.mozilla.fenix.mvi.UIView
+import org.mozilla.fenix.library.LibraryPageUIView
 
 class HistoryUIView(
     container: ViewGroup,
     actionEmitter: Observer<HistoryAction>,
     changesObservable: Observable<HistoryChange>
 ) :
-    UIView<HistoryState, HistoryAction, HistoryChange>(container, actionEmitter, changesObservable),
+    LibraryPageUIView<HistoryState, HistoryAction, HistoryChange>(container, actionEmitter, changesObservable),
     BackHandler {
 
     var mode: HistoryState.Mode = HistoryState.Mode.Normal
@@ -40,8 +34,6 @@ class HistoryUIView(
 
     private val historyAdapter: HistoryAdapter
     private var items: List<HistoryItem> = listOf()
-    private val context = container.context
-    private val activity = context?.asActivity()
 
     fun getSelected(): List<HistoryItem> = historyAdapter.selected
 
@@ -77,7 +69,7 @@ class HistoryUIView(
     private fun setUIForSelectingMode(
         mode: HistoryState.Mode.Editing
     ) {
-        (activity as? AppCompatActivity)?.title =
+        activity?.title =
                 context.getString(R.string.history_multi_select_title, mode.selectedItems.size)
         setToolbarColors(
             R.color.white_color,
@@ -86,46 +78,13 @@ class HistoryUIView(
     }
 
     private fun setUIForNormalMode(isEmpty: Boolean) {
-        (activity as? AppCompatActivity)?.title = context.getString(R.string.library_history)
-        delete_history_button?.visibility = if (isEmpty) View.GONE else View.VISIBLE
-        history_empty_view.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        activity?.title = context.getString(R.string.library_history)
+        delete_history_button?.isVisible = !isEmpty
+        history_empty_view.isVisible = isEmpty
         setToolbarColors(
             R.attr.primaryText.getColorIntFromAttr(context!!),
             R.attr.foundation.getColorIntFromAttr(context)
         )
-    }
-
-    private fun setToolbarColors(foreground: Int, background: Int) {
-        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
-        val colorFilter = PorterDuffColorFilter(ContextCompat.getColor(context, foreground), SRC_IN)
-        toolbar.setBackgroundColor(ContextCompat.getColor(context, background))
-        toolbar.setTitleTextColor(ContextCompat.getColor(context, foreground))
-
-        themeToolbar(
-            toolbar, foreground,
-            background, colorFilter
-        )
-    }
-
-    private fun themeToolbar(
-        toolbar: androidx.appcompat.widget.Toolbar,
-        textColor: Int,
-        backgroundColor: Int,
-        colorFilter: PorterDuffColorFilter? = null
-    ) {
-        toolbar.setTitleTextColor(ContextCompat.getColor(context!!, textColor))
-        toolbar.setBackgroundColor(ContextCompat.getColor(context, backgroundColor))
-
-        if (colorFilter == null) {
-            return
-        }
-
-        toolbar.overflowIcon?.colorFilter = colorFilter
-        (0 until toolbar.childCount).forEach {
-            when (val item = toolbar.getChildAt(it)) {
-                is ImageButton -> item.drawable.colorFilter = colorFilter
-            }
-        }
     }
 
     override fun onBackPressed(): Boolean {
