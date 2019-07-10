@@ -326,7 +326,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    * content process. Currently implemented only on MacOSX and Linux.
    */
   virtual void ReadSystemFontList(
-      InfallibleTArray<mozilla::dom::SystemFontListEntry>* aFontList) {}
+      nsTArray<mozilla::dom::SystemFontListEntry>* aFontList) {}
 
   /**
    * Rebuilds the any cached system font lists

@@ -1649,7 +1649,7 @@ class GFX2D_API Factory {
       DrawEventRecorder* aRecorder, DrawTarget* aDT);
 
   static already_AddRefed<DrawTarget> CreateRecordingDrawTarget(
-      DrawEventRecorder* aRecorder, DrawTarget* aDT, IntSize aSize);
+      DrawEventRecorder* aRecorder, DrawTarget* aDT, IntRect aRect);
 
   static already_AddRefed<DrawTarget> CreateDrawTargetForData(
       BackendType aBackend, unsigned char* aData, const IntSize& aSize,

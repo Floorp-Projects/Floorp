@@ -728,8 +728,8 @@ mozilla::ipc::IPCResult PluginScriptableObjectParent::AnswerHasMethod(
 }
 
 mozilla::ipc::IPCResult PluginScriptableObjectParent::AnswerInvoke(
-    const PluginIdentifier& aId, InfallibleTArray<Variant>&& aArgs,
-    Variant* aResult, bool* aSuccess) {
+    const PluginIdentifier& aId, nsTArray<Variant>&& aArgs, Variant* aResult,
+    bool* aSuccess) {
   if (!mObject) {
     NS_WARNING("Calling AnswerInvoke with an invalidated object!");
     *aResult = void_t();
@@ -816,7 +816,7 @@ mozilla::ipc::IPCResult PluginScriptableObjectParent::AnswerInvoke(
 }
 
 mozilla::ipc::IPCResult PluginScriptableObjectParent::AnswerInvokeDefault(
-    InfallibleTArray<Variant>&& aArgs, Variant* aResult, bool* aSuccess) {
+    nsTArray<Variant>&& aArgs, Variant* aResult, bool* aSuccess) {
   if (!mObject) {
     NS_WARNING("Calling AnswerInvoke with an invalidated object!");
     *aResult = void_t();
@@ -1065,7 +1065,7 @@ mozilla::ipc::IPCResult PluginScriptableObjectParent::AnswerRemoveProperty(
 }
 
 mozilla::ipc::IPCResult PluginScriptableObjectParent::AnswerEnumerate(
-    InfallibleTArray<PluginIdentifier>* aProperties, bool* aSuccess) {
+    nsTArray<PluginIdentifier>* aProperties, bool* aSuccess) {
   if (!mObject) {
     NS_WARNING("Calling AnswerEnumerate with an invalidated object!");
     *aSuccess = false;
@@ -1112,7 +1112,7 @@ mozilla::ipc::IPCResult PluginScriptableObjectParent::AnswerEnumerate(
 }
 
 mozilla::ipc::IPCResult PluginScriptableObjectParent::AnswerConstruct(
-    InfallibleTArray<Variant>&& aArgs, Variant* aResult, bool* aSuccess) {
+    nsTArray<Variant>&& aArgs, Variant* aResult, bool* aSuccess) {
   if (!mObject) {
     NS_WARNING("Calling AnswerConstruct with an invalidated object!");
     *aResult = void_t();

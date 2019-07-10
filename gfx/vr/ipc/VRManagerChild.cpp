@@ -260,7 +260,7 @@ mozilla::ipc::IPCResult VRManagerChild::RecvNotifyPuppetResetComplete() {
   return IPC_OK();
 }
 
-void VRManagerChild::RunPuppet(const InfallibleTArray<uint64_t>& aBuffer,
+void VRManagerChild::RunPuppet(const nsTArray<uint64_t>& aBuffer,
                                dom::Promise* aPromise, ErrorResult& aRv) {
   if (mRunPuppetPromise) {
     // We only allow one puppet script to run simultaneously.

@@ -282,7 +282,7 @@ DrawTargetWrapAndRecord::DrawTargetWrapAndRecord(DrawEventRecorder* aRecorder,
       mFinalDT(aDT) {
   RefPtr<SourceSurface> snapshot = aHasData ? mFinalDT->Snapshot() : nullptr;
   mRecorder->RecordEvent(RecordedDrawTargetCreation(
-      this, mFinalDT->GetBackendType(), mFinalDT->GetSize(),
+      this, mFinalDT->GetBackendType(), mFinalDT->GetRect(),
       mFinalDT->GetFormat(), aHasData, snapshot));
   mFormat = mFinalDT->GetFormat();
 }

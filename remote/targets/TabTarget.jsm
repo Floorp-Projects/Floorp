@@ -48,9 +48,9 @@ class TabTarget extends Target {
     Services.obs.addObserver(this, "message-manager-disconnect");
   }
 
-  disconnect() {
+  destructor() {
     Services.obs.removeObserver(this, "message-manager-disconnect");
-    super.disconnect();
+    super.destructor();
   }
 
   get id() {

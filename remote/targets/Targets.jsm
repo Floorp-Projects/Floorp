@@ -53,12 +53,16 @@ class Targets {
     const target = this._targets.get(browser.browsingContext.id);
     if (target) {
       this.emit("disconnect", target);
-      target.disconnect();
+      target.destructor();
       this._targets.delete(target.id);
     }
   }
 
-  clear() {
+  /**
+   * Destroy all the registered target of all kinds.
+   * This will end up dropping all connections made to debug any of them.
+   */
+  destructor() {
     for (const target of this) {
       // The main process target doesn't have a `browser` and so would fail here.
       // Ignore it here, and instead destroy it individually right after this.
@@ -68,7 +72,7 @@ class Targets {
     }
     this._targets.clear();
     if (this.mainProcessTarget) {
-      this.mainProcessTarget.disconnect();
+      this.mainProcessTarget.destructor();
       this.mainProcessTarget = null;
     }
   }

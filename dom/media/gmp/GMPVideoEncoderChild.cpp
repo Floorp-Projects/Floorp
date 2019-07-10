@@ -60,9 +60,8 @@ void GMPVideoEncoderChild::Error(GMPErr aError) {
 }
 
 mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvInitEncode(
-    const GMPVideoCodec& aCodecSettings,
-    InfallibleTArray<uint8_t>&& aCodecSpecific, const int32_t& aNumberOfCores,
-    const uint32_t& aMaxPayloadSize) {
+    const GMPVideoCodec& aCodecSettings, nsTArray<uint8_t>&& aCodecSpecific,
+    const int32_t& aNumberOfCores, const uint32_t& aMaxPayloadSize) {
   if (!mVideoEncoder) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -78,8 +77,8 @@ mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvInitEncode(
 
 mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvEncode(
     const GMPVideoi420FrameData& aInputFrame,
-    InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
-    InfallibleTArray<GMPVideoFrameType>&& aFrameTypes) {
+    nsTArray<uint8_t>&& aCodecSpecificInfo,
+    nsTArray<GMPVideoFrameType>&& aFrameTypes) {
   if (!mVideoEncoder) {
     return IPC_FAIL_NO_REASON(this);
   }

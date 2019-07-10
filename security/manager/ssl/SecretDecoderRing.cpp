@@ -35,7 +35,7 @@ void BackgroundSdrEncryptStrings(const nsTArray<nsCString>& plaintexts,
                                  RefPtr<Promise>& aPromise) {
   nsCOMPtr<nsISecretDecoderRing> sdrService =
       do_GetService(NS_SECRETDECODERRING_CONTRACTID);
-  InfallibleTArray<nsString> cipherTexts(plaintexts.Length());
+  nsTArray<nsString> cipherTexts(plaintexts.Length());
 
   nsresult rv = NS_ERROR_FAILURE;
   for (const auto& plaintext : plaintexts) {
@@ -66,7 +66,7 @@ void BackgroundSdrDecryptStrings(const nsTArray<nsCString>& encryptedStrings,
                                  RefPtr<Promise>& aPromise) {
   nsCOMPtr<nsISecretDecoderRing> sdrService =
       do_GetService(NS_SECRETDECODERRING_CONTRACTID);
-  InfallibleTArray<nsString> plainTexts(encryptedStrings.Length());
+  nsTArray<nsString> plainTexts(encryptedStrings.Length());
 
   nsresult rv = NS_ERROR_FAILURE;
   for (const auto& encryptedString : encryptedStrings) {

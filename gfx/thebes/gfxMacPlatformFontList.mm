@@ -910,7 +910,7 @@ void gfxMacPlatformFontList::AddFamily(CFStringRef aFamily) {
   AddFamily(NS_ConvertUTF16toUTF8(familyName), isHiddenSystemFont);
 }
 
-void gfxMacPlatformFontList::ReadSystemFontList(InfallibleTArray<SystemFontListEntry>* aList) {
+void gfxMacPlatformFontList::ReadSystemFontList(nsTArray<SystemFontListEntry>* aList) {
   // Note: We rely on the records for mSystemTextFontFamilyName and
   // mSystemDisplayFontFamilyName (if present) being *before* the main
   // font list, so that those names are known in the content process

@@ -188,7 +188,7 @@ mozilla::ipc::IPCResult VRManagerParent::RecvControllerListenerRemoved() {
 }
 
 mozilla::ipc::IPCResult VRManagerParent::RecvRunPuppet(
-    const InfallibleTArray<uint64_t>& aBuffer) {
+    const nsTArray<uint64_t>& aBuffer) {
 #if defined(MOZ_WIDGET_ANDROID)
   // Not yet implemented for Android / GeckoView
   // See Bug 1555192

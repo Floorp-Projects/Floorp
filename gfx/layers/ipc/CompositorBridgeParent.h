@@ -162,7 +162,7 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   void NotifyNotUsed(PTextureParent* aTexture,
                      uint64_t aTransactionId) override;
   void SendAsyncMessage(
-      const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+      const nsTArray<AsyncParentMessageData>& aMessage) override;
 
   // ShmemAllocator
   bool AllocShmem(size_t aSize,
@@ -340,7 +340,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   mozilla::ipc::IPCResult RecvStartFrameTimeRecording(
       const int32_t& aBufferSize, uint32_t* aOutStartIndex) override;
   mozilla::ipc::IPCResult RecvStopFrameTimeRecording(
-      const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override;
+      const uint32_t& aStartIndex, nsTArray<float>* intervals) override;
 
   mozilla::ipc::IPCResult RecvCheckContentOnlyTDR(
       const uint32_t& sequenceNum, bool* isContentOnlyTDR) override {

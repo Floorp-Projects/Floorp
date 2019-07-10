@@ -14,6 +14,10 @@
 #include "js/RootingAPI.h"
 #include "vm/NativeObject.h"
 
+struct UFormattedNumber;
+struct UNumberFormatter;
+struct UPluralRules;
+
 namespace js {
 
 class FreeOp;
@@ -24,12 +28,49 @@ class PluralRulesObject : public NativeObject {
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t UPLURAL_RULES_SLOT = 1;
-  static constexpr uint32_t UNUMBER_FORMAT_SLOT = 2;
-  static constexpr uint32_t SLOT_COUNT = 3;
+  static constexpr uint32_t UNUMBER_FORMATTER_SLOT = 2;
+  static constexpr uint32_t UFORMATTED_NUMBER_SLOT = 3;
+  static constexpr uint32_t SLOT_COUNT = 4;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
+
+  UPluralRules* getPluralRules() const {
+    const auto& slot = getFixedSlot(UPLURAL_RULES_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<UPluralRules*>(slot.toPrivate());
+  }
+
+  void setPluralRules(UPluralRules* pluralRules) {
+    setFixedSlot(UPLURAL_RULES_SLOT, PrivateValue(pluralRules));
+  }
+
+  UNumberFormatter* getNumberFormatter() const {
+    const auto& slot = getFixedSlot(UNUMBER_FORMATTER_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<UNumberFormatter*>(slot.toPrivate());
+  }
+
+  void setNumberFormatter(UNumberFormatter* formatter) {
+    setFixedSlot(UNUMBER_FORMATTER_SLOT, PrivateValue(formatter));
+  }
+
+  UFormattedNumber* getFormattedNumber() const {
+    const auto& slot = getFixedSlot(UFORMATTED_NUMBER_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<UFormattedNumber*>(slot.toPrivate());
+  }
+
+  void setFormattedNumber(UFormattedNumber* formatted) {
+    setFixedSlot(UFORMATTED_NUMBER_SLOT, PrivateValue(formatted));
+  }
 
  private:
   static const ClassOps classOps_;

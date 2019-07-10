@@ -12,7 +12,7 @@ static nsString String(const char* const str) {
   return NS_ConvertUTF8toUTF16(str);
 }
 
-static void Array123(InfallibleTArray<JSONVariant>& a123) {
+static void Array123(nsTArray<JSONVariant>& a123) {
   a123.AppendElement(1);
   a123.AppendElement(2);
   a123.AppendElement(3);
@@ -38,7 +38,7 @@ JSONVariant MakeTestVariant(HandleT* handle) {
   //     }
   //   ]
   //
-  InfallibleTArray<JSONVariant> outer;
+  nsTArray<JSONVariant> outer;
 
   outer.AppendElement(void_t());
   outer.AppendElement(null_t());
@@ -48,18 +48,18 @@ JSONVariant MakeTestVariant(HandleT* handle) {
 
   outer.AppendElement(handle);
 
-  InfallibleTArray<JSONVariant> tmp;
+  nsTArray<JSONVariant> tmp;
   Array123(tmp);
   outer.AppendElement(tmp);
 
-  InfallibleTArray<KeyValue> obj;
+  nsTArray<KeyValue> obj;
   obj.AppendElement(KeyValue(String("undefined"), void_t()));
   obj.AppendElement(KeyValue(String("null"), null_t()));
   obj.AppendElement(KeyValue(String("true"), true));
   obj.AppendElement(KeyValue(String("1.25"), 1.25));
   obj.AppendElement(KeyValue(String("string"), String("value")));
   obj.AppendElement(KeyValue(String("handle"), handle));
-  InfallibleTArray<JSONVariant> tmp2;
+  nsTArray<JSONVariant> tmp2;
   Array123(tmp2);
   obj.AppendElement(KeyValue(String("array"), tmp2));
 

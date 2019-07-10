@@ -18,6 +18,9 @@
 #include "vm/NativeObject.h"
 #include "vm/Runtime.h"
 
+struct UFormattedNumber;
+struct UNumberFormatter;
+
 namespace js {
 
 class ArrayObject;
@@ -28,12 +31,37 @@ class NumberFormatObject : public NativeObject {
   static const Class class_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
-  static constexpr uint32_t UNUMBER_FORMAT_SLOT = 1;
-  static constexpr uint32_t SLOT_COUNT = 2;
+  static constexpr uint32_t UNUMBER_FORMATTER_SLOT = 1;
+  static constexpr uint32_t UFORMATTED_NUMBER_SLOT = 2;
+  static constexpr uint32_t SLOT_COUNT = 3;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
+
+  UNumberFormatter* getNumberFormatter() const {
+    const auto& slot = getFixedSlot(UNUMBER_FORMATTER_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<UNumberFormatter*>(slot.toPrivate());
+  }
+
+  void setNumberFormatter(UNumberFormatter* formatter) {
+    setFixedSlot(UNUMBER_FORMATTER_SLOT, PrivateValue(formatter));
+  }
+
+  UFormattedNumber* getFormattedNumber() const {
+    const auto& slot = getFixedSlot(UFORMATTED_NUMBER_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<UFormattedNumber*>(slot.toPrivate());
+  }
+
+  void setFormattedNumber(UFormattedNumber* formatted) {
+    setFixedSlot(UFORMATTED_NUMBER_SLOT, PrivateValue(formatted));
+  }
 
  private:
   static const ClassOps classOps_;
@@ -89,6 +117,103 @@ extern MOZ_MUST_USE bool intl_FormatNumber(JSContext* cx, unsigned argc,
                                            Value* vp);
 
 namespace intl {
+
+/**
+ * Class to create a number formatter skeleton.
+ *
+ * The skeleton syntax is documented at:
+ * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md
+ */
+class MOZ_STACK_CLASS NumberFormatterSkeleton final {
+  static constexpr size_t DefaultVectorSize = 128;
+  using SkeletonVector = Vector<char16_t, DefaultVectorSize>;
+
+  SkeletonVector vector_;
+
+  bool append(char16_t c) { return vector_.append(c); }
+
+  bool appendN(char16_t c, size_t times) { return vector_.appendN(c, times); }
+
+  template <size_t N>
+  bool append(const char16_t (&chars)[N]) {
+    static_assert(N > 0,
+                  "should only be used with string literals or properly "
+                  "null-terminated arrays");
+    MOZ_ASSERT(chars[N - 1] == '\0',
+               "should only be used with string literals or properly "
+               "null-terminated arrays");
+    return vector_.append(chars, N - 1);  // Without trailing \0.
+  }
+
+  template <size_t N>
+  bool appendToken(const char16_t (&token)[N]) {
+    return append(token) && append(' ');
+  }
+
+ public:
+  explicit NumberFormatterSkeleton(JSContext* cx) : vector_(cx) {}
+
+  /**
+   * Return a new UNumberFormatter based on this skeleton.
+   */
+  UNumberFormatter* toFormatter(JSContext* cx, const char* locale);
+
+  enum class CurrencyDisplay { Code, Name, Symbol };
+
+  /**
+   * Set this skeleton to display a currency amount. |currency| must be a
+   * three-letter currency code.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
+   */
+  MOZ_MUST_USE bool currency(CurrencyDisplay display, JSLinearString* currency);
+
+  /**
+   * Set this skeleton to display a percent number.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#scale
+   */
+  MOZ_MUST_USE bool percent();
+
+  /**
+   * Set the fraction digits settings for this skeleton. |min| can be zero,
+   * |max| must be larger-or-equal to |min|.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#fraction-precision
+   */
+  MOZ_MUST_USE bool fractionDigits(uint32_t min, uint32_t max);
+
+  /**
+   * Set the integer-width settings for this skeleton. |min| must be a non-zero
+   * number.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#integer-width
+   */
+  MOZ_MUST_USE bool integerWidth(uint32_t min);
+
+  /**
+   * Set the significant digits settings for this skeleton. |min| must be a
+   * non-zero number, |max| must be larger-or-equal to |min|.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#significant-digits-precision
+   */
+  MOZ_MUST_USE bool significantDigits(uint32_t min, uint32_t max);
+
+  /**
+   * Enable or disable grouping for this skeleton.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#grouping
+   */
+  MOZ_MUST_USE bool useGrouping(bool on);
+
+  /**
+   * Set the rounding mode to 'half-up' for this skeleton.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#rounding-mode
+   */
+  MOZ_MUST_USE bool roundingModeHalfUp();
+};
 
 using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
 
