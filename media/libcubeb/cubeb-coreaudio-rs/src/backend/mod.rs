@@ -2393,6 +2393,25 @@ impl Drop for AudioUnitContext {
 unsafe impl Send for AudioUnitContext {}
 unsafe impl Sync for AudioUnitContext {}
 
+// In the process of defusing our own custom mutex, those variables in the critical sections
+// created by our own custom mutex will be moved to this struct. As a result, they will still
+// be in the critical sections but the sections are created by this struct. However, some
+// struct members don't really need locks to be used since their code paths give thread-safe
+// guarantees. In fact, the mutex around this struct will be removed at the end of the
+// mutex-defusing refactoring so it's fine to keep them in this struct for now.
+#[derive(Debug)]
+struct StreamDevice {
+    aggregate_device: AggregateDevice,
+}
+
+impl Default for StreamDevice {
+    fn default() -> Self {
+        Self {
+            aggregate_device: AggregateDevice::default(),
+        }
+    }
+}
+
 // The fisrt two members of the Cubeb stream must be a pointer to its Cubeb context and a void user
 // defined pointer. The Cubeb interface use this assumption to operate the Cubeb APIs.
 // #[repr(C)] is used to prevent any padding from being added in the beginning of the AudioUnitStream.
@@ -2454,7 +2473,7 @@ struct AudioUnitStream<'ctx> {
     input_alive_listener: Option<device_property_listener>,
     input_source_listener: Option<device_property_listener>,
     output_source_listener: Option<device_property_listener>,
-    aggregate_device: AggregateDevice,
+    stream_device: Mutex<StreamDevice>,
 }
 
 impl<'ctx> AudioUnitStream<'ctx> {
@@ -2516,7 +2535,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             input_alive_listener: None,
             input_source_listener: None,
             output_source_listener: None,
-            aggregate_device: AggregateDevice::default(),
+            stream_device: Mutex::new(StreamDevice::default()),
         }
     }
 
@@ -3324,7 +3343,8 @@ impl<'ctx> AudioUnitStream<'ctx> {
                     out_dev_info.id = device.get_device_id();
                     in_dev_info.flags = device_flags::DEV_INPUT;
                     out_dev_info.flags = device_flags::DEV_OUTPUT;
-                    self.aggregate_device = device;
+                    let mut stream_device = self.stream_device.lock().unwrap();
+                    stream_device.aggregate_device = device;
                 }
                 Err(status) => {
                     cubeb_log!(
@@ -3495,7 +3515,10 @@ impl<'ctx> AudioUnitStream<'ctx> {
         self.resampler.reset(ptr::null_mut());
         self.mixer.reset(ptr::null_mut());
 
-        self.aggregate_device = AggregateDevice::default();
+        {
+            let mut stream_device = self.stream_device.lock().unwrap();
+            stream_device.aggregate_device = AggregateDevice::default();
+        }
     }
 
     fn destroy_internal(&mut self) {
