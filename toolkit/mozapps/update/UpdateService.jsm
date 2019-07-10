@@ -59,7 +59,6 @@ const PREF_APP_UPDATE_ELEVATE_ATTEMPTS = "app.update.elevate.attempts";
 const PREF_APP_UPDATE_ELEVATE_MAXATTEMPTS = "app.update.elevate.maxAttempts";
 const PREF_APP_UPDATE_LOG = "app.update.log";
 const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
-const PREF_APP_UPDATE_POSTUPDATE = "app.update.postupdate";
 const PREF_APP_UPDATE_PROMPTWAITTIME = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SERVICE_ENABLED = "app.update.service.enabled";
 const PREF_APP_UPDATE_SERVICE_ERRORS = "app.update.service.errors";
@@ -2100,13 +2099,6 @@ UpdateService.prototype = {
         // regarding its use.
         Services.prefs.clearUserPref("app.update.enabled");
         Services.prefs.clearUserPref("app.update.BITS.inTrialGroup");
-
-        if (readStatusFile(getUpdatesDir()) == STATE_SUCCEEDED) {
-          // After a successful update the post update preference needs to be
-          // set early during startup so applications can perform post update
-          // actions when they are defined in the update's metadata.
-          Services.prefs.setBoolPref(PREF_APP_UPDATE_POSTUPDATE, true);
-        }
 
         if (Services.appinfo.ID in APPID_TO_TOPIC) {
           // Delay post-update processing to ensure that possible update

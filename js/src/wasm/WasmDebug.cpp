@@ -20,11 +20,11 @@
 
 #include "mozilla/BinarySearch.h"
 
+#include "dbg/Debugger.h"
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/MacroAssembler.h"
-#include "vm/Debugger.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmValidate.h"
 

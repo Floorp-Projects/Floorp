@@ -61,21 +61,11 @@ async function promiseTestResult(test) {
     }'`
   );
 
-  if (!UrlbarPrefs.get("quantumbar") && test.resultListActionText == "Visit") {
-    Assert.equal(
-      result.displayed.action,
-      "",
-      `Autocomplete action text should be empty for search '${test.search}'`
-    );
-  } else {
-    Assert.equal(
-      result.displayed.action,
-      test.resultListActionText,
-      `Autocomplete action text should be as expected for search '${
-        test.search
-      }'`
-    );
-  }
+  Assert.equal(
+    result.displayed.action,
+    test.resultListActionText,
+    `Autocomplete action text should be as expected for search '${test.search}'`
+  );
 
   Assert.equal(
     result.type,

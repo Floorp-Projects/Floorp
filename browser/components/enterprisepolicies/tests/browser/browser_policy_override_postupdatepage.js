@@ -7,7 +7,6 @@ const UPDATE_PROVIDED_PAGE = "https://default.example.com/";
 const POLICY_PROVIDED_PAGE = "https://policy.example.com/";
 
 const PREF_MSTONE = "browser.startup.homepage_override.mstone";
-const PREF_POSTUPDATE = "app.update.postupdate";
 
 /*
  * The important parts for this test are:
@@ -28,26 +27,25 @@ const XML_UPDATE = `<?xml version="1.0"?>
   </update>
 </updates>`;
 
-const XML_EMPTY = `<?xml version="1.0"?>
-<updates xmlns="http://www.mozilla.org/2005/app-update">
-</updates>`;
-
-let gOriginalMStone = null;
-
 add_task(async function test_override_postupdate_page() {
-  // Remember this to clean-up afterwards
-  if (Services.prefs.prefHasUserValue(PREF_MSTONE)) {
-    gOriginalMStone = Services.prefs.getCharPref(PREF_MSTONE);
-  }
-  Services.prefs.setBoolPref(PREF_POSTUPDATE, true);
+  let originalMstone = Services.prefs.getCharPref(PREF_MSTONE);
+  // Set the preferences needed for the test: they will be cleared up
+  // after it runs.
+  await SpecialPowers.pushPrefEnv({ set: [[PREF_MSTONE, originalMstone]] });
+
+  registerCleanupFunction(async () => {
+    let activeUpdateFile = getActiveUpdateFile();
+    activeUpdateFile.remove(false);
+    reloadUpdateManagerData(true);
+  });
 
   writeUpdatesToXMLFile(XML_UPDATE);
-  reloadUpdateManagerData();
+  reloadUpdateManagerData(false);
 
   is(
     getPostUpdatePage(),
     UPDATE_PROVIDED_PAGE,
-    "Post-update page was provided by update.xml."
+    "Post-update page was provided by active-update.xml."
   );
 
   // Now perform the same action but set the policy to override this page
@@ -62,14 +60,6 @@ add_task(async function test_override_postupdate_page() {
     POLICY_PROVIDED_PAGE,
     "Post-update page was provided by policy."
   );
-
-  // Clean-up
-  writeUpdatesToXMLFile(XML_EMPTY);
-  if (gOriginalMStone) {
-    Services.prefs.setCharPref(PREF_MSTONE, gOriginalMStone);
-  }
-  Services.prefs.clearUserPref(PREF_POSTUPDATE);
-  reloadUpdateManagerData();
 });
 
 function getPostUpdatePage() {
@@ -78,14 +68,49 @@ function getPostUpdatePage() {
     .defaultArgs;
 }
 
-function reloadUpdateManagerData() {
-  // Reloads the update metadata from disk
+/**
+ * Removes the updates.xml file and returns the nsIFile for the
+ * active-update.xml file.
+ *
+ * @return  The nsIFile for the active-update.xml file.
+ */
+function getActiveUpdateFile() {
+  let updateRootDir = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
+  let updatesFile = updateRootDir.clone();
+  updatesFile.append("updates.xml");
+  if (updatesFile.exists()) {
+    // The following is non-fatal.
+    try {
+      updatesFile.remove(false);
+    } catch (e) {}
+  }
+  let activeUpdateFile = updateRootDir.clone();
+  activeUpdateFile.append("active-update.xml");
+  return activeUpdateFile;
+}
+
+/**
+ * Reloads the update xml files.
+ *
+ * @param  skipFiles (optional)
+ *         If true, the update xml files will not be read and the metadata will
+ *         be reset. If false (the default), the update xml files will be read
+ *         to populate the update metadata.
+ */
+function reloadUpdateManagerData(skipFiles = false) {
   Cc["@mozilla.org/updates/update-manager;1"]
     .getService(Ci.nsIUpdateManager)
     .QueryInterface(Ci.nsIObserver)
-    .observe(null, "um-reload-update-data", "");
+    .observe(null, "um-reload-update-data", skipFiles ? "skip-files" : "");
 }
 
+/**
+ * Writes the updates specified to the active-update.xml file.
+ *
+ * @param  aText
+ *         The updates represented as a string to write to the active-update.xml
+ *         file.
+ */
 function writeUpdatesToXMLFile(aText) {
   const PERMS_FILE = 0o644;
 
@@ -93,15 +118,15 @@ function writeUpdatesToXMLFile(aText) {
   const MODE_CREATE = 0x08;
   const MODE_TRUNCATE = 0x20;
 
-  let file = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
-  file.append("updates.xml");
+  let activeUpdateFile = getActiveUpdateFile();
+  if (!activeUpdateFile.exists()) {
+    activeUpdateFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+  }
   let fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
     Ci.nsIFileOutputStream
   );
-  if (!file.exists()) {
-    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
-  }
-  fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE, 0);
+  let flags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+  fos.init(activeUpdateFile, flags, PERMS_FILE, 0);
   fos.write(aText, aText.length);
   fos.close();
 }

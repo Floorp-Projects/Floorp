@@ -410,7 +410,7 @@ async function generateConsoleApiStubs() {
 
   Services.prefs.clearUserPref(PREFS.FILTER.LOG);
 
-  await closeTabAndToolbox();
+  await closeTabAndToolbox().catch(() => {});
   return formatFile(stubs, "ConsoleMessage");
 }
 

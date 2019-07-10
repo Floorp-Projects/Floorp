@@ -188,8 +188,7 @@ DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow)
       mTracksCreated(false),
       mNotifiedOfMediaStreamGraphShutdown(false),
       mActive(false),
-      mFinishedOnInactive(true),
-      mCORSMode(CORS_NONE) {
+      mFinishedOnInactive(true) {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
       do_GetService("@mozilla.org/uuid-generator;1", &rv);

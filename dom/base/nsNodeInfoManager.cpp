@@ -46,9 +46,7 @@ nsNodeInfoManager::nsNodeInfoManager()
       mTextNodeInfo(nullptr),
       mCommentNodeInfo(nullptr),
       mDocumentNodeInfo(nullptr),
-      mRecentlyUsedNodeInfos(),
-      mSVGEnabled(eTriUnset),
-      mMathMLEnabled(eTriUnset) {
+      mRecentlyUsedNodeInfos() {
   nsLayoutStatics::AddRef();
 
   if (gNodeInfoManagerLeakPRLog)
@@ -318,6 +316,11 @@ void nsNodeInfoManager::RemoveNodeInfo(NodeInfo* aNodeInfo) {
   MOZ_ASSERT(ret, "Can't find mozilla::dom::NodeInfo to remove!!!");
 }
 
+static bool IsSystemOrAddonPrincipal(nsIPrincipal* aPrincipal) {
+  return nsContentUtils::IsSystemPrincipal(aPrincipal) ||
+         BasePrincipal::Cast(aPrincipal)->AddonPolicy();
+}
+
 bool nsNodeInfoManager::InternalSVGEnabled() {
   // If the svg.disabled pref. is true, convert all SVG nodes into
   // disabled SVG nodes by swapping the namespace.
@@ -334,16 +337,20 @@ bool nsNodeInfoManager::InternalSVGEnabled() {
       loadInfo = channel->LoadInfo();
     }
   }
+
+  // We allow SVG (regardless of the pref) if this is a system or add-on
+  // principal, or if this load was requested for a system or add-on principal
+  // (e.g. a remote image being served as part of system or add-on UI)
   bool conclusion =
-      (SVGEnabled || nsContentUtils::IsSystemPrincipal(mPrincipal) ||
+      (SVGEnabled || IsSystemOrAddonPrincipal(mPrincipal) ||
        (loadInfo &&
         (loadInfo->GetExternalContentPolicyType() ==
              nsIContentPolicy::TYPE_IMAGE ||
          loadInfo->GetExternalContentPolicyType() ==
              nsIContentPolicy::TYPE_OTHER) &&
-        (nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal()) ||
-         nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()))));
-  mSVGEnabled = conclusion ? eTriTrue : eTriFalse;
+        (IsSystemOrAddonPrincipal(loadInfo->LoadingPrincipal()) ||
+         IsSystemOrAddonPrincipal(loadInfo->TriggeringPrincipal()))));
+  mSVGEnabled = Some(conclusion);
   return conclusion;
 }
 
@@ -353,7 +360,7 @@ bool nsNodeInfoManager::InternalMathMLEnabled() {
   nsNameSpaceManager* nsmgr = nsNameSpaceManager::GetInstance();
   bool conclusion = ((nsmgr && !nsmgr->mMathMLDisabled) ||
                      nsContentUtils::IsSystemPrincipal(mPrincipal));
-  mMathMLEnabled = conclusion ? eTriTrue : eTriFalse;
+  mMathMLEnabled = Some(conclusion);
   return conclusion;
 }
 

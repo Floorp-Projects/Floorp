@@ -2325,6 +2325,11 @@ void RecordCompositionPayloadsPresented(
             mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY, payload.mTimeStamp,
             presented);
       }
+      if (payload.mType == CompositionPayloadType::eAPZScroll) {
+        Telemetry::AccumulateTimeDelta(
+            mozilla::Telemetry::SCROLL_PRESENT_LATENCY, payload.mTimeStamp,
+            presented);
+      }
     }
   }
 }

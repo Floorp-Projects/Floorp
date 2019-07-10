@@ -5,13 +5,14 @@
 #ifndef INDEX_H_
 #define INDEX_H_
 
+#include "ByteStream.h"
 #include "MediaData.h"
 #include "MediaResource.h"
-#include "TimeUnits.h"
 #include "MoofParser.h"
+#include "mozilla/Result.h"
 #include "MP4Interval.h"
-#include "ByteStream.h"
 #include "nsISupportsImpl.h"
+#include "TimeUnits.h"
 
 template <class T>
 class nsAutoPtr;
@@ -40,6 +41,14 @@ class SampleIterator {
   // called without a valid current moof.
   SampleDescriptionEntry* GetSampleDescriptionEntry();
   CencSampleEncryptionInfoEntry* GetSampleEncryptionEntry();
+
+  // Determines the encryption scheme in use for the current sample. If the
+  // the scheme cannot be unambiguously determined, will return an error with
+  // the reason.
+  //
+  // Returns: Ok(CryptoScheme) if a crypto scheme, including None, can be
+  // determined, or Err(nsCString) if there is an issue determining the scheme.
+  Result<CryptoScheme, const nsCString> GetEncryptionScheme();
 
   void Next();
   RefPtr<Index> mIndex;

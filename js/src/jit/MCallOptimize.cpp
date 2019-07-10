@@ -2234,13 +2234,17 @@ IonBuilder::InliningResult IonBuilder::inlineStrFromCodePoint(
   if (getInlineReturnType() != MIRType::String) {
     return InliningStatus_NotInlined;
   }
-  if (callInfo.getArg(0)->type() != MIRType::Int32) {
+  MIRType argType = callInfo.getArg(0)->type();
+  if (argType != MIRType::Int32 && argType != MIRType::Double) {
     return InliningStatus_NotInlined;
   }
 
   callInfo.setImplicitlyUsedUnchecked();
 
-  MFromCodePoint* string = MFromCodePoint::New(alloc(), callInfo.getArg(0));
+  auto* codePoint = MToNumberInt32::New(alloc(), callInfo.getArg(0));
+  current->add(codePoint);
+
+  MFromCodePoint* string = MFromCodePoint::New(alloc(), codePoint);
   current->add(string);
   current->push(string);
   return InliningStatus_Inlined;

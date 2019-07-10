@@ -7,7 +7,6 @@
 #ifndef OutputStreamManager_h
 #define OutputStreamManager_h
 
-#include "mozilla/CORSMode.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StateMirroring.h"
 #include "nsTArray.h"
@@ -40,8 +39,7 @@ class OutputStreamData {
   // created track to mDOMStream, as is required by spec for the "addtrack"
   // event.
   void AddTrack(TrackID aTrackID, MediaSegment::Type aType,
-                nsIPrincipal* aPrincipal, CORSMode aCORSMode,
-                bool aAsyncAddTrack);
+                nsIPrincipal* aPrincipal, bool aAsyncAddTrack);
   // Ends the MediaStreamTrack with aTrackID. Calling this with a TrackID that
   // doesn't exist in mDOMStream is an error.
   void RemoveTrack(TrackID aTrackID);
@@ -70,7 +68,6 @@ class OutputStreamManager {
  public:
   explicit OutputStreamManager(SourceMediaStream* aSourceStream,
                                TrackID aNextTrackID, nsIPrincipal* aPrincipal,
-                               CORSMode aCORSMode,
                                AbstractThread* aAbstractMainThread);
   // Add the output stream to the collection.
   void Add(DOMMediaStream* aDOMStream);
@@ -93,11 +90,6 @@ class OutputStreamManager {
   AbstractCanonical<PrincipalHandle>* CanonicalPrincipalHandle();
   // Called when the underlying decoder's principal has changed.
   void SetPrincipal(nsIPrincipal* aPrincipal);
-  // The CORSMode for the media element owning the decoder.
-  AbstractCanonical<CORSMode>* CanonicalCORSMode();
-  // Called when the CORSMode for the media element owning the decoder has
-  // changed.
-  void SetCORSMode(CORSMode aCORSMode);
   // Returns the track id that would be used the next time a track is added.
   TrackID NextTrackID() const;
   // Returns the TrackID for the currently live track of the given type, or
@@ -155,7 +147,6 @@ class OutputStreamManager {
   nsTArray<Pair<TrackID, MediaSegment::Type>> mLiveTracks;
   Canonical<PrincipalHandle> mPrincipalHandle;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  const CORSMode mCORSMode;
   TrackID mNextTrackID;
   bool mPlaying;
 };

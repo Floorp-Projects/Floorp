@@ -7212,7 +7212,8 @@ function rootsChanged(props) {
 function releaseActors(state, client) {
   const actors = getActors(state);
   for (const actor of actors) {
-    client.releaseActor(actor);
+    // Ignore release failure, since the object actor may have been already GC.
+    client.releaseActor(actor).catch(() => {});
   }
 }
 

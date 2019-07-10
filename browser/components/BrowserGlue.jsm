@@ -1026,7 +1026,7 @@ BrowserGlue.prototype = {
         // parent only: configure default prefs, set up pref observers, register
         // pdf content handler, and initializes parent side message manager
         // shim for privileged api access.
-        PdfJs.init(true);
+        PdfJs.init();
         break;
       case "shield-init-complete":
         this._shieldInitComplete = true;

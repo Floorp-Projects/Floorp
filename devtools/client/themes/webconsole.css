@@ -4,7 +4,7 @@
 
 /* Webconsole specific theme variables */
 :root {
-  --console-output-line-height: 14px;
+  --console-output-line-height: calc(14 / 11);
   --console-output-vertical-padding: 3px;
   /* Width of the left gutter where icons appear */
   --console-inline-start-gutter: 32px;

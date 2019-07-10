@@ -62,12 +62,12 @@ async function performTests() {
   );
 
   info(
-    "Check that hitting Enter does invoke the getter and return its properties"
+    "Check that hitting Tab does invoke the getter and return its properties"
   );
   let onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_Tab");
   await onPopUpOpen;
-  ok(autocompletePopup.isOpen, "popup is open after Enter");
+  ok(autocompletePopup.isOpen, "popup is open after Tab");
   is(
     getAutocompletePopupLabels(autocompletePopup).join("-"),
     "baz-bloop",
@@ -77,7 +77,7 @@ async function performTests() {
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
   let onPopUpClose = autocompletePopup.once("popup-closed");
-  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_Tab");
   await onPopUpClose;
   checkInputValueAndCursorPosition(hud, "window.foo.bar.baz|");
 
@@ -141,13 +141,7 @@ async function performTests() {
     "Check clicking the confirm button invokes the getter and return its properties"
   );
   onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.synthesizeMouseAtCenter(
-    tooltip.querySelector(".confirm-button"),
-    {
-      type: "mousedown",
-    },
-    toolbox.win
-  );
+  tooltip.querySelector(".confirm-button").click();
   await onPopUpOpen;
   ok(
     autocompletePopup.isOpen,
@@ -158,31 +152,5 @@ async function performTests() {
     "popup has expected items"
   );
   checkInputValueAndCursorPosition(hud, "window.foo.rab.|");
-  is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
-
-  info("Open the tooltip again");
-  tooltip = await setInputValueForGetterConfirmDialog(
-    toolbox,
-    hud,
-    "window.foo.bar."
-  );
-  labelEl = tooltip.querySelector(".confirm-label");
-  is(
-    labelEl.textContent,
-    "Invoke getter window.foo.bar to retrieve the property list?",
-    "Dialog has expected text content"
-  );
-
-  info("Check that Space invokes the getter and return its properties");
-  onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.synthesizeKey(" ");
-  await onPopUpOpen;
-  ok(autocompletePopup.isOpen, "popup is open after space");
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join("-"),
-    "baz-bloop",
-    "popup has expected items"
-  );
-  checkInputValueAndCursorPosition(hud, "window.foo.bar.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 }

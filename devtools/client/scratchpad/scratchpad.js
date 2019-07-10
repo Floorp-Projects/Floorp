@@ -2306,7 +2306,8 @@ ScratchpadSidebar.prototype = {
               return this._scratchpad.webConsoleClient.longString(actor);
             },
             releaseActor: actor => {
-              this._scratchpad.debuggerClient.release(actor);
+              // Ignore release failure, since the object actor may have been already GC.
+              this._scratchpad.debuggerClient.release(actor).catch(() => {});
             },
           });
         }

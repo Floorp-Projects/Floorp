@@ -8,6 +8,7 @@
 
 #include "jsutil.h"
 
+#include "dbg/Debugger.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
@@ -21,7 +22,6 @@
 #include "jit/RematerializedFrame.h"
 #include "js/Utility.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/Debugger.h"
 #include "vm/TraceLogging.h"
 
 #include "jit/JitFrames-inl.h"

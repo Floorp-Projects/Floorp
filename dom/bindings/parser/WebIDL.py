@@ -4838,6 +4838,9 @@ class IDLMethodOverload:
         deps.add(self.returnType)
         return deps
 
+    def includesRestrictedFloatArgument(self):
+        return any(arg.type.includesRestrictedFloat() for arg in self.arguments)
+
 
 class IDLMethod(IDLInterfaceMember, IDLScope):
 
@@ -5009,10 +5012,25 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def addOverload(self, method):
         assert len(method._overloads) == 1
 
-        if self._extendedAttrDict != method ._extendedAttrDict:
-            raise WebIDLError("Extended attributes differ on different "
-                              "overloads of %s" % method.identifier,
-                              [self.location, method.location])
+        if self._extendedAttrDict != method._extendedAttrDict:
+            extendedAttrDiff = set(self._extendedAttrDict.keys()) ^ set(method._extendedAttrDict.keys())
+
+            if extendedAttrDiff == { "LenientFloat" }:
+                if "LenientFloat" not in self._extendedAttrDict:
+                    for overload in self._overloads:
+                        if overload.includesRestrictedFloatArgument():
+                            raise WebIDLError("Restricted float behavior differs on different "
+                                              "overloads of %s" % method.identifier,
+                                              [overload.location, method.location])
+                    self._extendedAttrDict["LenientFloat"] = method._extendedAttrDict["LenientFloat"]
+                elif method._overloads[0].includesRestrictedFloatArgument():
+                    raise WebIDLError("Restricted float behavior differs on different "
+                                      "overloads of %s" % method.identifier,
+                                      [self.location, method.location])
+            else:
+                raise WebIDLError("Extended attributes differ on different "
+                                "overloads of %s" % method.identifier,
+                                [self.location, method.location])
 
         self._overloads.extend(method._overloads)
 
@@ -5252,12 +5270,12 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                               [attr.location, self.location])
         elif identifier == "LenientFloat":
             # This is called before we've done overload resolution
-            assert len(self.signatures()) == 1
-            sig = self.signatures()[0]
-            if not sig[0].isVoid():
+            overloads = self._overloads
+            assert len(overloads) == 1
+            if not overloads[0].returnType.isVoid():
                 raise WebIDLError("[LenientFloat] used on a non-void method",
                                   [attr.location, self.location])
-            if not any(arg.type.includesRestrictedFloat() for arg in sig[1]):
+            if not overloads[0].includesRestrictedFloatArgument():
                 raise WebIDLError("[LenientFloat] used on an operation with no "
                                   "restricted float type arguments",
                                   [attr.location, self.location])
@@ -5328,7 +5346,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             if self.signatures()[0][0] != BuiltinTypes[IDLBuiltinType.Types.object]:
                 raise WebIDLError("The return type of the default toJSON "
                                   "operation must be 'object'",
-                                  [attr.location, self.location]);
+                                  [attr.location, self.location])
         elif (identifier == "Throws" or
               identifier == "CanOOM" or
               identifier == "NewObject" or

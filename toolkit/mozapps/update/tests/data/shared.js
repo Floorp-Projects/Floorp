@@ -95,8 +95,7 @@ const FILE_UPDATES_XML = "updates.xml";
 const FILE_UPDATES_XML_TMP = "updates.xml.tmp";
 
 const UPDATE_SETTINGS_CONTENTS =
-  // eslint-disable-next-line no-useless-concat
-  "[Settings]\n" + "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
+  "[Settings]\nACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
 const PRECOMPLETE_CONTENTS = 'rmdir "nonexistent_dir/"\n';
 
 const PR_RDWR = 0x04;
@@ -201,7 +200,14 @@ function initUpdateServiceStub() {
   );
 }
 
-/* Reloads the update metadata from disk */
+/**
+ * Reloads the update xml files.
+ *
+ * @param  skipFiles (optional)
+ *         If true, the update xml files will not be read and the metadata will
+ *         be reset. If false (the default), the update xml files will be read
+ *         to populate the update metadata.
+ */
 function reloadUpdateManagerData(skipFiles = false) {
   let observeData = skipFiles ? "skip-files" : "";
   gUpdateManager

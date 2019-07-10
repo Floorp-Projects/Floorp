@@ -38,7 +38,6 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIDocumentEncoder.h"
 #include "nsFocusManager.h"
-#include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"

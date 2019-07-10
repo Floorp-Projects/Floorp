@@ -1480,7 +1480,7 @@ public class GeckoSession implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = true,
             value = { LOAD_FLAGS_NONE, LOAD_FLAGS_BYPASS_CACHE, LOAD_FLAGS_BYPASS_PROXY,
-                      LOAD_FLAGS_EXTERNAL, LOAD_FLAGS_ALLOW_POPUPS })
+                      LOAD_FLAGS_EXTERNAL, LOAD_FLAGS_ALLOW_POPUPS, LOAD_FLAGS_FORCE_ALLOW_DATA_URI })
     /* package */ @interface LoadFlags {}
 
     // These flags follow similarly named ones in Gecko's nsIWebNavigation.idl
@@ -1518,6 +1518,12 @@ public class GeckoSession implements Parcelable {
      * Bypass the URI classifier (content blocking and Safe Browsing).
      */
     public static final int LOAD_FLAGS_BYPASS_CLASSIFIER = 1 << 4;
+
+    /**
+     * Allows a top-level data: navigation to occur. E.g. view-image
+     * is an explicit user action which should be allowed.
+     */
+    public static final int LOAD_FLAGS_FORCE_ALLOW_DATA_URI = 1 << 5;
 
     /**
      * Load the given URI.
@@ -1620,7 +1626,7 @@ public class GeckoSession implements Parcelable {
             throw new IllegalArgumentException("data cannot be null");
         }
 
-        loadUri(createDataUri(bytes, mimeType), null, LOAD_FLAGS_NONE);
+        loadUri(createDataUri(bytes, mimeType), null, LOAD_FLAGS_FORCE_ALLOW_DATA_URI);
     }
 
     /**

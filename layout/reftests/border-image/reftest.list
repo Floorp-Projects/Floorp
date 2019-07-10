@@ -11,7 +11,7 @@ fuzzy-if(winWidget,0-1,0-1) == multicolor-image-2.html multicolor-image-2-ref.ht
 == multicolor-image-5.html multicolor-image-5-ref.html
 == transparent-image-1.html transparent-image-1-ref.html
 != repeat-image-1.html repeat-image-1-ref.html
-fails-if(geckoview&&webrender) == 470250-1.html 470250-1-ref.html
+== 470250-1.html 470250-1-ref.html
 == 470250-2.html 470250-2-ref.html
 != different-h-v-1.html different-h-v-ref.html
 != different-h-v-2.html different-h-v-ref.html
@@ -81,7 +81,7 @@ fuzzy-if(webrender,0-3,0-117768) == border-image-repeating-radial-gradient-repea
 fuzzy(0-1,0-1054) fails-if(OSX) fuzzy-if(skiaContent,0-2,0-952) fuzzy-if(webrender,0-3,0-116185) == border-image-repeating-radial-gradient-repeat-round-2.html border-image-repeating-radial-gradient-repeat-round-2-ref.html
 
 # border-image-source (-moz-)element
-fuzzy(0-125,0-5808) == border-image-element.html border-image-element-ref.html
+fuzzy(0-125,0-5903) == border-image-element.html border-image-element-ref.html
 
 # svg-as-border-image
 == svg-as-border-image-1a.html svg-as-border-image-1-ref.html

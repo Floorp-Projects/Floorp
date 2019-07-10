@@ -247,6 +247,9 @@ class Transaction {
       transaction.onerror = () => {
         reject(transaction.error);
       };
+      transaction.onabort = () => {
+        reject(transaction.error);
+      };
     });
   }
 
@@ -256,7 +259,7 @@ class Transaction {
 
   /**
    * Returns a Promise which resolves when the transaction completes, or
-   * rejects when a transaction error occurs.
+   * rejects when a transaction error or abort occurs.
    *
    * @returns {Promise}
    */

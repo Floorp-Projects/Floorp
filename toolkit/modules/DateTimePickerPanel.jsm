@@ -102,7 +102,14 @@ var DateTimePickerPanel = class {
   initPicker(detail) {
     // TODO: When bug 1376616 lands, replace this.setGregorian with
     //       mozIntl.Locale for setting calendar to Gregorian
-    const locale = this.setGregorian(Services.locale.webExposedLocales[0]);
+    let locale = this.setGregorian(Services.locale.webExposedLocales[0]);
+
+    // Workaround for bug 1418061, while we wait for resolution of
+    // http://bugs.icu-project.org/trac/ticket/13592: drop the PT region code,
+    // because it results in "abbreviated" day names that are too long;
+    // the region-less "pt" locale has shorter forms that are better here.
+    locale = locale.replace(/^pt-PT/i, "pt");
+
     const dir = Services.intl.getLocaleInfo(locale).direction;
 
     switch (this.type) {

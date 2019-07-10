@@ -29,13 +29,5 @@ add_task(async function() {
 });
 
 function assertOpen() {
-  if (UrlbarPrefs.get("quantumbar")) {
-    Assert.equal(
-      gURLBar.view.panel.state,
-      "open",
-      "Should be showing the popup"
-    );
-  } else {
-    Assert.ok(gURLBar.popupOpen, "Should be showing the popup");
-  }
+  Assert.equal(gURLBar.view.panel.state, "open", "Should be showing the popup");
 }

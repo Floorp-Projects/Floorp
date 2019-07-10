@@ -15,6 +15,7 @@ const { IndexedDB } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   getTrimmedString: "resource://gre/modules/ExtensionTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -43,6 +44,12 @@ const BACKEND_ENABLED_PREF =
   "extensions.webextensions.ExtensionStorageIDB.enabled";
 const IDB_MIGRATED_PREF_BRANCH =
   "extensions.webextensions.ExtensionStorageIDB.migrated";
+
+class DataMigrationAbortedError extends Error {
+  get name() {
+    return "DataMigrationAbortedError";
+  }
+}
 
 var DataMigrationTelemetry = {
   initialized: false,
@@ -77,7 +84,10 @@ var DataMigrationTelemetry = {
       return undefined;
     }
 
-    if (error instanceof DOMException) {
+    if (
+      error instanceof DOMException ||
+      error instanceof DataMigrationAbortedError
+    ) {
       if (error.name.length > 80) {
         return getTrimmedString(error.name);
       }
@@ -385,15 +395,24 @@ async function migrateJSONFileData(extension, storagePrincipal) {
   let dataMigrateCompleted = false;
   let hasOldData = false;
 
+  function abortIfShuttingDown() {
+    if (extension.hasShutdown || Services.startup.shuttingDown) {
+      throw new DataMigrationAbortedError("extension or app is shutting down");
+    }
+  }
+
   if (ExtensionStorageIDB.isMigratedExtension(extension)) {
     return;
   }
 
   try {
+    abortIfShuttingDown();
     idbConn = await ExtensionStorageIDB.open(
       storagePrincipal,
       extension.hasPermission("unlimitedStorage")
     );
+    abortIfShuttingDown();
+
     hasEmptyIDB = await idbConn.isEmpty();
 
     if (!hasEmptyIDB) {
@@ -422,6 +441,8 @@ async function migrateJSONFileData(extension, storagePrincipal) {
   }
 
   try {
+    abortIfShuttingDown();
+
     oldStoragePath = ExtensionStorage.getStorageFile(extension.id);
     oldStorageExists = await OS.File.exists(oldStoragePath).catch(fileErr => {
       // If we can't access the oldStoragePath here, then extension is also going to be unable to
@@ -438,11 +459,17 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     // Migrate any data stored in the JSONFile backend (if any), and remove the old data file
     // if the migration has been completed successfully.
     if (oldStorageExists) {
+      // Do not load the old JSON file content if shutting down is already in progress.
+      abortIfShuttingDown();
+
       Services.console.logStringMessage(
         `Migrating storage.local data for ${extension.policy.debugName}...`
       );
 
       jsonFile = await ExtensionStorage.getFile(extension.id);
+
+      abortIfShuttingDown();
+
       const data = {};
       for (let [key, value] of jsonFile.data.entries()) {
         data[key] = value;
@@ -464,12 +491,6 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     );
 
     if (oldStorageExists && !dataMigrateCompleted) {
-      // If the data failed to be stored into the IndexedDB backend, then we clear the IndexedDB
-      // backend to allow the extension to retry the migration on its next startup, and reject
-      // the data migration promise explicitly (which would prevent the new backend
-      // from being enabled for this session).
-      Services.qms.clearStoragesForPrincipal(storagePrincipal);
-
       DataMigrationTelemetry.recordResult({
         backend: "JSONFile",
         dataMigrated: dataMigrateCompleted,
@@ -478,6 +499,15 @@ async function migrateJSONFileData(extension, storagePrincipal) {
         hasJSONFile: oldStorageExists,
         hasOldData,
         histogramCategory: "failure",
+      });
+
+      // If the data failed to be stored into the IndexedDB backend, then we clear the IndexedDB
+      // backend to allow the extension to retry the migration on its next startup, and reject
+      // the data migration promise explicitly (which would prevent the new backend
+      // from being enabled for this session).
+      await new Promise(resolve => {
+        let req = Services.qms.clearStoragesForPrincipal(storagePrincipal);
+        req.callback = resolve;
       });
 
       throw err;
@@ -736,6 +766,49 @@ this.ExtensionStorageIDB = {
     return setPersistentMode.then(() =>
       ExtensionStorageLocalIDB.openForPrincipal(storagePrincipal)
     );
+  },
+
+  /**
+   * Ensure that an error originated from the ExtensionStorageIDB methods is normalized
+   * into an ExtensionError (e.g. DataCloneError and QuotaExceededError instances raised
+   * from the internal IndexedDB operations have to be converted into an ExtensionError
+   * to be accessible to the extension code).
+   *
+   * @param {Error|ExtensionError|DOMException} error
+   *        The error object to normalize.
+   *
+   * @returns {ExtensionError}
+   *          Return an ExtensionError error instance.
+   */
+  normalizeStorageError(error) {
+    const { ExtensionError } = ExtensionUtils;
+
+    if (error instanceof ExtensionError) {
+      return error;
+    }
+
+    let errorMessage;
+
+    if (error instanceof DOMException) {
+      switch (error.name) {
+        case "DataCloneError":
+          errorMessage = String(error);
+          break;
+        case "QuotaExceededError":
+          errorMessage = `${
+            error.name
+          }: storage.local API call exceeded its quota limitations.`;
+          break;
+      }
+    }
+
+    if (!errorMessage) {
+      Cu.reportError(error);
+
+      errorMessage = "An unexpected error occurred";
+    }
+
+    return new ExtensionError(errorMessage);
   },
 
   addOnChangedListener(extensionId, listener) {

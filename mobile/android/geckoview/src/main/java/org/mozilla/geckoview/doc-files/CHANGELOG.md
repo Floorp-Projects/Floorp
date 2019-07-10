@@ -12,6 +12,8 @@ exclude: true
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
   longer has any effect on ['setFontInflationEnabled'][69.2]
 
+- Add GeckoSession.LOAD_FLAGS_FORCE_ALLOW_DATA_URI
+
 [69.1]: ./GeckoRuntimeSettings.html#setAutomaticFontSizeAdjustment-boolean-
 [69.2]: ./GeckoRuntimeSettings.html#setFontInflationEnabled-boolean-
 
@@ -340,4 +342,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 5728f5c65b2be03fcf31d7da12050bf26d07e30f
+[api-version]: 95d443eb3946aeb5b278a258ab5a527d3281edda
