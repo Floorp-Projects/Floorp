@@ -35,14 +35,8 @@ add_task(async function test_content_and_chrome_selection() {
     "Write something here",
     "The macOS services got the selected content text"
   );
-
   gURLBar.value = "test.mozilla.org";
-  await gURLBar.focus();
-  await BrowserTestUtils.synthesizeKey(
-    "KEY_ArrowRight",
-    { shiftKey: true, ctrlKey: true },
-    gBrowser.selectedBrowser
-  );
+  await gURLBar.editor.selectAll();
   selectedText = DOMWindowUtils.GetSelectionAsPlaintext();
   is(
     selectedText,
