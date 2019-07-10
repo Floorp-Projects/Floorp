@@ -31,9 +31,9 @@ class Target {
   }
 
   /**
-   * Close all pending connections to this target.
+   * Close all active connections made to this target.
    */
-  disconnect() {
+  destructor() {
     for (const [conn] of this.sessions) {
       conn.close();
     }

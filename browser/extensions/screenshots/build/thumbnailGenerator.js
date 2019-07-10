@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 this.thumbnailGenerator = (function () {let exports={}; // This is used in webextension/background/takeshot.js,
 // server/src/pages/shot/controller.js, and
 // server/scr/pages/shotindex/view.js. It is used in a browser

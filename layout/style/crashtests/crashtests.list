@@ -19,9 +19,9 @@ load 404470-1.html
 load 411603-1.html
 load 412588-1.html
 load 413274-1.xhtml
-load 416461-1.xul
+load chrome://reftest/content/crashtests/layout/style/crashtests/416461-1.xul
 load 418007-1.xhtml
-load 431705-1.xul
+load chrome://reftest/content/crashtests/layout/style/crashtests/431705-1.xul
 load 432561-1.html
 load 437170-1.html
 load 437532-1.html
@@ -304,6 +304,6 @@ load 1533891.html
 pref(gfx.omta.background-color,true) load 1533968.html
 load 1541126.html
 load 1545177.html
-skip-if(geckoview&&webrender) load 1546255.html # Bug 1563020 for GV+WR
+skip-if(geckoview&&webrender) skip-if(Android&&!isDebugBuild) load 1546255.html # Bug 1563020 for GV+WR & Bug 1553971
 pref(layout.css.resizeobserver.enabled,true) load 1552911.html
 load 1562361.html

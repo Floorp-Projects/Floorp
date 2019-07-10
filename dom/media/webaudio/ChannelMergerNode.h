@@ -36,6 +36,20 @@ class ChannelMergerNode final : public AudioNode {
 
   const char* NodeType() const override { return "ChannelMergerNode"; }
 
+  virtual void SetChannelCount(uint32_t aChannelCount,
+                               ErrorResult& aRv) override {
+    if (aChannelCount != 1) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+  }
+
+  virtual void SetChannelCountModeValue(ChannelCountMode aMode,
+                                        ErrorResult& aRv) override {
+    if (aMode != ChannelCountMode::Explicit) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+  }
+
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

@@ -35,7 +35,7 @@ class BrowserParent;
 
 class ContentCache {
  public:
-  typedef InfallibleTArray<LayoutDeviceIntRect> RectArray;
+  typedef nsTArray<LayoutDeviceIntRect> RectArray;
   typedef widget::IMENotification IMENotification;
 
   ContentCache();

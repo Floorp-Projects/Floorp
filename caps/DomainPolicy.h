@@ -40,7 +40,7 @@ class DomainSet final : public nsIDomainSet {
 
   explicit DomainSet(DomainSetType aType) : mType(aType) {}
 
-  void CloneSet(InfallibleTArray<mozilla::ipc::URIParams>* aDomains);
+  void CloneSet(nsTArray<mozilla::ipc::URIParams>* aDomains);
 
  protected:
   virtual ~DomainSet() {}

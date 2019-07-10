@@ -78,7 +78,7 @@ class GMPStorageChild : public PGMPStorageChild {
                                            const GMPErr& aStatus);
   mozilla::ipc::IPCResult RecvReadComplete(const nsCString& aRecordName,
                                            const GMPErr& aStatus,
-                                           InfallibleTArray<uint8_t>&& aBytes);
+                                           nsTArray<uint8_t>&& aBytes);
   mozilla::ipc::IPCResult RecvWriteComplete(const nsCString& aRecordName,
                                             const GMPErr& aStatus);
   mozilla::ipc::IPCResult RecvShutdown();

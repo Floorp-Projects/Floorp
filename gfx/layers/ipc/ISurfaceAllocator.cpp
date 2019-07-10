@@ -51,7 +51,7 @@ void HostIPCAllocator::SendPendingAsyncMessages() {
   static const uint32_t kMaxMessageNumber = 250;
 #endif
 
-  InfallibleTArray<AsyncParentMessageData> messages;
+  nsTArray<AsyncParentMessageData> messages;
   messages.SetCapacity(mPendingAsyncMessage.size());
   for (size_t i = 0; i < mPendingAsyncMessage.size(); i++) {
     messages.AppendElement(mPendingAsyncMessage[i]);

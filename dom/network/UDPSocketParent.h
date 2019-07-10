@@ -58,7 +58,7 @@ class UDPSocketParent : public mozilla::net::PUDPSocketParent,
   virtual ~UDPSocketParent();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
-  void Send(const InfallibleTArray<uint8_t>& aData, const UDPSocketAddr& aAddr);
+  void Send(const nsTArray<uint8_t>& aData, const UDPSocketAddr& aAddr);
   void Send(const IPCStream& aStream, const UDPSocketAddr& aAddr);
   nsresult BindInternal(const nsCString& aHost, const uint16_t& aPort,
                         const bool& aAddressReuse, const bool& aLoopback,

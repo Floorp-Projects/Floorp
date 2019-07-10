@@ -1105,7 +1105,7 @@ nsPluginHost::GetPluginTags(nsTArray<RefPtr<nsIPluginTag>>& aResults) {
 }
 
 nsPluginTag* nsPluginHost::FindPreferredPlugin(
-    const InfallibleTArray<nsPluginTag*>& matches) {
+    const nsTArray<nsPluginTag*>& matches) {
   // We prefer the plugin with the highest version number.
   /// XXX(johns): This seems to assume the only time multiple plugins will have
   ///             the same MIME type is if they're multiple versions of the same
@@ -1179,7 +1179,7 @@ nsPluginTag* nsPluginHost::FindNativePluginForType(const nsACString& aMimeType,
 
   LoadPlugins();
 
-  InfallibleTArray<nsPluginTag*> matchingPlugins;
+  nsTArray<nsPluginTag*> matchingPlugins;
 
   nsPluginTag* plugin = mPlugins;
   while (plugin) {
@@ -1202,7 +1202,7 @@ nsPluginTag* nsPluginHost::FindNativePluginForExtension(
 
   LoadPlugins();
 
-  InfallibleTArray<nsPluginTag*> matchingPlugins;
+  nsTArray<nsPluginTag*> matchingPlugins;
   nsCString matchingMime;  // Don't mutate aMimeType unless returning a match
   nsPluginTag* plugin = mPlugins;
 
@@ -1380,9 +1380,10 @@ nsresult nsPluginHost::NormalizeHostname(nsCString& host) {
 // any of them have a base domain in common with 'domain'; if so, append them
 // to the 'result' array. If 'firstMatchOnly' is true, return after finding the
 // first match.
-nsresult nsPluginHost::EnumerateSiteData(
-    const nsACString& domain, const InfallibleTArray<nsCString>& sites,
-    InfallibleTArray<nsCString>& result, bool firstMatchOnly) {
+nsresult nsPluginHost::EnumerateSiteData(const nsACString& domain,
+                                         const nsTArray<nsCString>& sites,
+                                         nsTArray<nsCString>& result,
+                                         bool firstMatchOnly) {
   NS_ASSERTION(!domain.IsVoid(), "null domain string");
 
   nsresult rv;
@@ -1605,7 +1606,7 @@ class ClearDataFromSitesClosure : public nsIClearSiteDataCallback,
 
   // Callback from NPP_GetSitesWithData, kick the iteration off to clear the
   // data
-  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites) override {
+  NS_IMETHOD SitesWithData(nsTArray<nsCString>& sites) override {
     // Enumerate the sites and build a list of matches.
     nsresult rv = host->EnumerateSiteData(domain, sites, matches, false);
     Callback(rv);
@@ -1614,7 +1615,7 @@ class ClearDataFromSitesClosure : public nsIClearSiteDataCallback,
 
   nsCString domain;
   nsCOMPtr<nsIClearSiteDataCallback> callback;
-  InfallibleTArray<nsCString> matches;
+  nsTArray<nsCString> matches;
   nsIPluginTag* tag;
   uint64_t flags;
   int64_t maxAge;
@@ -1701,13 +1702,13 @@ class GetSitesClosure : public nsIGetSitesWithDataCallback {
         keepWaiting(true),
         retVal(NS_ERROR_NOT_INITIALIZED) {}
 
-  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites) override {
+  NS_IMETHOD SitesWithData(nsTArray<nsCString>& sites) override {
     retVal = HandleGetSites(sites);
     keepWaiting = false;
     return NS_OK;
   }
 
-  nsresult HandleGetSites(InfallibleTArray<nsCString>& sites) {
+  nsresult HandleGetSites(nsTArray<nsCString>& sites) {
     // If there's no data, we're done.
     if (sites.IsEmpty()) {
       result = false;
@@ -1722,7 +1723,7 @@ class GetSitesClosure : public nsIGetSitesWithDataCallback {
     }
 
     // Enumerate the sites and determine if there's a match.
-    InfallibleTArray<nsCString> matches;
+    nsTArray<nsCString> matches;
     nsresult rv = host->EnumerateSiteData(domain, sites, matches, true);
     NS_ENSURE_SUCCESS(rv, rv);
 

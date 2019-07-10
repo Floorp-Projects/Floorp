@@ -11,5 +11,10 @@ def test_lint_with_global_exclude(lint, config, paths):
     assert len(results) == 0
 
 
+def test_no_files_to_lint(lint, config, paths):
+    ret = lint(paths('nolint'), root=build.topsrcdir)
+    assert ret == []
+
+
 if __name__ == '__main__':
     mozunit.main()

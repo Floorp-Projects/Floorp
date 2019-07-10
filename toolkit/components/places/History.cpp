@@ -612,7 +612,7 @@ class NotifyManyVisitsObservers : public Runnable {
 
     PRTime now = PR_Now();
     if (mPlaces.Length() > 0) {
-      InfallibleTArray<URIParams> serializableUris(mPlaces.Length());
+      nsTArray<URIParams> serializableUris(mPlaces.Length());
       for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
         nsresult rv =
             NotifyVisit(navHistory, obsService, now, uris[i], mPlaces[i]);
@@ -925,7 +925,7 @@ class InsertVisitedURIs final : public Runnable {
     const VisitData* lastFetchedPlace = nullptr;
     uint32_t lastFetchedVisitCount = 0;
     bool shouldChunkNotifications = mPlaces.Length() > NOTIFY_VISITS_CHUNK_SIZE;
-    InfallibleTArray<VisitData> notificationChunk;
+    nsTArray<VisitData> notificationChunk;
     if (shouldChunkNotifications) {
       notificationChunk.SetCapacity(NOTIFY_VISITS_CHUNK_SIZE);
     }

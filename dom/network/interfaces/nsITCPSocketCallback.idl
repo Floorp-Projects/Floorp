@@ -14,7 +14,7 @@
 %{C++
 #include "nsTArrayForwardDeclare.h"
 %}
-[ref] native nsUint8TArrayRef(InfallibleTArray<uint8_t>);
+[ref] native nsUint8TArrayRef(nsTArray<uint8_t>);
 [ptr] native JSContextPtr(JSContext);
 
 

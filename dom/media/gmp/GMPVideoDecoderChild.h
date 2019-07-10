@@ -49,13 +49,12 @@ class GMPVideoDecoderChild : public PGMPVideoDecoderChild,
   virtual ~GMPVideoDecoderChild();
 
   // PGMPVideoDecoderChild
-  mozilla::ipc::IPCResult RecvInitDecode(
-      const GMPVideoCodec& aCodecSettings,
-      InfallibleTArray<uint8_t>&& aCodecSpecific, const int32_t& aCoreCount);
+  mozilla::ipc::IPCResult RecvInitDecode(const GMPVideoCodec& aCodecSettings,
+                                         nsTArray<uint8_t>&& aCodecSpecific,
+                                         const int32_t& aCoreCount);
   mozilla::ipc::IPCResult RecvDecode(
       const GMPVideoEncodedFrameData& aInputFrame, const bool& aMissingFrames,
-      InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
-      const int64_t& aRenderTimeMs);
+      nsTArray<uint8_t>&& aCodecSpecificInfo, const int64_t& aRenderTimeMs);
   mozilla::ipc::IPCResult RecvChildShmemForPool(Shmem&& aFrameBuffer);
   mozilla::ipc::IPCResult RecvReset();
   mozilla::ipc::IPCResult RecvDrain();

@@ -40,13 +40,13 @@ class SocketProcessParent final : public PSocketProcessParent {
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
   mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
   mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
-      InfallibleTArray<HistogramAccumulation>&& aAccumulations);
+      nsTArray<HistogramAccumulation>&& aAccumulations);
   mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(
-      InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations);
+      nsTArray<KeyedHistogramAccumulation>&& aAccumulations);
   mozilla::ipc::IPCResult RecvUpdateChildScalars(
-      InfallibleTArray<ScalarAction>&& aScalarActions);
+      nsTArray<ScalarAction>&& aScalarActions);
   mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(
-      InfallibleTArray<KeyedScalarAction>&& aScalarActions);
+      nsTArray<KeyedScalarAction>&& aScalarActions);
   mozilla::ipc::IPCResult RecvRecordChildEvents(
       nsTArray<ChildEventData>&& events);
   mozilla::ipc::IPCResult RecvRecordDiscardedData(

@@ -195,7 +195,7 @@ class VRServiceTest final : public DOMEventTargetHelper {
   // mCommandBuffer.
   // VRServiceTest::Reset() will effectively cancel all transactions and clear
   // mCommandBuffer before submitting the reset request to the PuppetSession.
-  InfallibleTArray<uint64_t> mCommandBuffer;
+  nsTArray<uint64_t> mCommandBuffer;
   bool mShuttingDown;
 };
 

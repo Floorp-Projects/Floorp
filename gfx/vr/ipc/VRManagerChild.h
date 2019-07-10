@@ -84,8 +84,8 @@ class VRManagerChild : public PVRManagerChild {
 
   virtual void HandleFatalError(const char* aMsg) const override;
 
-  void RunPuppet(const InfallibleTArray<uint64_t>& aBuffer,
-                 dom::Promise* aPromise, ErrorResult& aRv);
+  void RunPuppet(const nsTArray<uint64_t>& aBuffer, dom::Promise* aPromise,
+                 ErrorResult& aRv);
   void ResetPuppet(dom::Promise* aPromise, ErrorResult& aRv);
 
  protected:

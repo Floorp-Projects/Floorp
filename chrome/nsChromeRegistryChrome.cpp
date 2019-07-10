@@ -238,9 +238,9 @@ static void SerializeURI(nsIURI* aURI, SerializedURI& aSerializedURI) {
 
 void nsChromeRegistryChrome::SendRegisteredChrome(
     mozilla::dom::PContentParent* aParent) {
-  InfallibleTArray<ChromePackage> packages;
-  InfallibleTArray<SubstitutionMapping> resources;
-  InfallibleTArray<OverrideMapping> overrides;
+  nsTArray<ChromePackage> packages;
+  nsTArray<SubstitutionMapping> resources;
+  nsTArray<OverrideMapping> overrides;
 
   for (auto iter = mPackagesHash.Iter(); !iter.Done(); iter.Next()) {
     ChromePackage chromePackage;

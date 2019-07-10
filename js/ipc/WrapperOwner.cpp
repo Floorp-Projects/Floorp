@@ -580,7 +580,7 @@ bool WrapperOwner::callOrConstruct(JSContext* cx, HandleObject proxy,
                                    const CallArgs& args, bool construct) {
   ObjectId objId = idOf(proxy);
 
-  InfallibleTArray<JSParam> vals;
+  nsTArray<JSParam> vals;
   RootedValueVector outobjects(cx);
 
   RootedValue v(cx);
@@ -622,7 +622,7 @@ bool WrapperOwner::callOrConstruct(JSContext* cx, HandleObject proxy,
 
   JSVariant result;
   ReturnStatus status;
-  InfallibleTArray<JSParam> outparams;
+  nsTArray<JSParam> outparams;
   if (!SendCallOrConstruct(objId, vals, construct, &status, &result,
                            &outparams)) {
     return ipcfail(cx);
@@ -894,7 +894,7 @@ bool WrapperOwner::getPropertyKeys(JSContext* cx, HandleObject proxy,
   ObjectId objId = idOf(proxy);
 
   ReturnStatus status;
-  InfallibleTArray<JSIDVariant> ids;
+  nsTArray<JSIDVariant> ids;
   if (!SendGetPropertyKeys(objId, flags, &status, &ids)) {
     return ipcfail(cx);
   }

@@ -93,9 +93,10 @@ void main(void) {
         case SEGMENT_TOP_LEFT:
         case SEGMENT_TOP_RIGHT:
         case SEGMENT_BOTTOM_RIGHT:
-        case SEGMENT_BOTTOM_LEFT:
+        case SEGMENT_BOTTOM_LEFT: {
             mix_colors = do_aa ? MIX_AA : MIX_NO_AA;
             break;
+        }
         default:
             mix_colors = DONT_MIX;
             break;

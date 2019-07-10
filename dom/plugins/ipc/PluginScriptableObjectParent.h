@@ -47,10 +47,10 @@ class PluginScriptableObjectParent : public PPluginScriptableObjectParent {
                                           bool* aHasMethod);
 
   mozilla::ipc::IPCResult AnswerInvoke(const PluginIdentifier& aId,
-                                       InfallibleTArray<Variant>&& aArgs,
+                                       nsTArray<Variant>&& aArgs,
                                        Variant* aResult, bool* aSuccess);
 
-  mozilla::ipc::IPCResult AnswerInvokeDefault(InfallibleTArray<Variant>&& aArgs,
+  mozilla::ipc::IPCResult AnswerInvokeDefault(nsTArray<Variant>&& aArgs,
                                               Variant* aResult, bool* aSuccess);
 
   mozilla::ipc::IPCResult AnswerHasProperty(const PluginIdentifier& aId,
@@ -68,9 +68,9 @@ class PluginScriptableObjectParent : public PPluginScriptableObjectParent {
                                                bool* aSuccess);
 
   mozilla::ipc::IPCResult AnswerEnumerate(
-      InfallibleTArray<PluginIdentifier>* aProperties, bool* aSuccess);
+      nsTArray<PluginIdentifier>* aProperties, bool* aSuccess);
 
-  mozilla::ipc::IPCResult AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
+  mozilla::ipc::IPCResult AnswerConstruct(nsTArray<Variant>&& aArgs,
                                           Variant* aResult, bool* aSuccess);
 
   mozilla::ipc::IPCResult AnswerNPN_Evaluate(const nsCString& aScript,

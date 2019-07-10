@@ -3,8 +3,8 @@ load 185285-1.xml
 load 382636-1.xml
 load 382636-2.svg
 load 382636-3.xhtml
-load 382636-4.xul # Throws (bug 455856)
-load 420429.xul
+load chrome://reftest/content/crashtests/dom/xml/crashtests/382636-4.xul # Throws (bug 455856)
+load chrome://reftest/content/crashtests/dom/xml/crashtests/420429.xul
 load 431703-1.xhtml
 load 453278.html
 load 803586.xhtml
