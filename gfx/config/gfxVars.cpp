@@ -54,7 +54,7 @@ void gfxVars::Initialize() {
                "Initial updates should be provided in content process");
     if (!gGfxVarInitUpdates) {
       // No provided initial updates, sync-request them from parent.
-      InfallibleTArray<GfxVarUpdate> initUpdates;
+      nsTArray<GfxVarUpdate> initUpdates;
       dom::ContentChild::GetSingleton()->SendGetGfxVars(&initUpdates);
       gGfxVarInitUpdates = new nsTArray<GfxVarUpdate>(std::move(initUpdates));
     }
