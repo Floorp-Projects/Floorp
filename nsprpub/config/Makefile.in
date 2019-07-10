@@ -48,22 +48,6 @@ ifeq (,$(filter-out QNX SCOOS UNIXWARE,$(OS_ARCH)))
 DEFINES += -DOMIT_LIB_BUILD_TIME
 endif
 
-ifeq ($(OS_ARCH), IRIX)
-    ifeq ($(basename $(OS_RELEASE)),6)
-        ifndef NS_USE_GCC
-            ifeq ($(USE_N32),1)
-                XLDOPTS += -n32 -Wl,-woff,85
-            else
-                ifeq ($(USE_64),1)
-                    XLDOPTS += -64
-                else
-                    XLDOPTS += -32
-                endif
-            endif
-        endif
-    endif
-endif
-
 ifeq ($(OS_ARCH), HP-UX)
     ifeq ($(USE_64),1)
         XLDOPTS += +DD64
@@ -81,7 +65,7 @@ PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
 ifeq (,$(CROSS_COMPILE)$(filter-out OS2 WINNT,$(OS_ARCH)))
 TARGETS = $(PROGS)
 else
-ifeq (,$(filter-out SYMBIAN WINCE,$(OS_ARCH)))
+ifeq (,$(filter-out WINCE,$(OS_ARCH)))
 TARGETS = $(PROGS)
 else
 PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)

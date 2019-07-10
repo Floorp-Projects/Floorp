@@ -1055,6 +1055,20 @@ VARCACHE_PREF(
 #undef PREF_VALUE
 
 //---------------------------------------------------------------------------
+// Prefs starting with "consoleservice."
+//---------------------------------------------------------------------------
+
+#if defined(ANDROID)
+// Disable sending console to logcat on release builds.
+VARCACHE_PREF(
+  Live,
+  "consoleservice.logcat",
+   consoleservice_logcat,
+  RelaxedAtomicBool, NOT_IN_RELEASE_OR_BETA_VALUE
+)
+#endif
+
+//---------------------------------------------------------------------------
 // Prefs starting with "device."
 //---------------------------------------------------------------------------
 
