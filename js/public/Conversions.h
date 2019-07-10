@@ -17,8 +17,11 @@
 #include "mozilla/WrappingOperations.h"
 
 #include <math.h>
+#include <stddef.h>  // size_t
+#include <stdint.h>  // {u,}int{8,16,32,64}_t
 
 #include "jspubtd.h"
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/RootingAPI.h"
 #include "js/Value.h"
@@ -553,6 +556,20 @@ inline int64_t ToInt64(double d) { return ToSignedInteger<int64_t>(d); }
 
 /* WEBIDL 4.2.11 */
 inline uint64_t ToUint64(double d) { return ToUnsignedInteger<uint64_t>(d); }
+
+/**
+ * The maximum space needed for the null-terminated result of |ToString| on a
+ * Number (sign, fractional part, "e+", and exponent of at most three digits,
+ * e.g. |String(-Number.MAX_VALUE)| as "-1.7976931348623157e+308" is length 24).
+ */
+static constexpr size_t MaximumNumberToStringLength = 24 + 1;
+
+/**
+ * Store in |out| the null-terminated, base-10 result of |ToString| applied to
+ * |d| per <https://tc39.es/ecma262/#sec-tostring-applied-to-the-number-type>.
+ */
+extern JS_PUBLIC_API void NumberToString(
+    double d, char (&out)[MaximumNumberToStringLength]);
 
 }  // namespace JS
 
