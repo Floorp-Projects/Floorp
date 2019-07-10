@@ -59,7 +59,7 @@ class nsBaseFilePicker : public nsIFilePicker {
   nsCOMPtr<nsPIDOMWindowOuter> mParent;
   int16_t mMode;
   nsString mOkButtonLabel;
-  InfallibleTArray<nsString> mRawFilters;
+  nsTArray<nsString> mRawFilters;
 };
 
 #endif  // nsBaseFilePicker_h__

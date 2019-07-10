@@ -264,7 +264,7 @@ bool TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
   TilesPlacement newTiles(aTiles.firstTileX(), aTiles.firstTileY(),
                           aTiles.retainedWidth(), aTiles.retainedHeight());
 
-  const InfallibleTArray<TileDescriptor>& tileDescriptors = aTiles.tiles();
+  const nsTArray<TileDescriptor>& tileDescriptors = aTiles.tiles();
 
   TextureSourceRecycler oldRetainedTiles(std::move(mRetainedTiles));
   mRetainedTiles.SetLength(tileDescriptors.Length());

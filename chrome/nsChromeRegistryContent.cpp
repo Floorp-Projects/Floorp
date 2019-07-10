@@ -13,10 +13,10 @@
 nsChromeRegistryContent::nsChromeRegistryContent() {}
 
 void nsChromeRegistryContent::RegisterRemoteChrome(
-    const InfallibleTArray<ChromePackage>& aPackages,
-    const InfallibleTArray<SubstitutionMapping>& aSubstitutions,
-    const InfallibleTArray<OverrideMapping>& aOverrides,
-    const nsACString& aLocale, bool aReset) {
+    const nsTArray<ChromePackage>& aPackages,
+    const nsTArray<SubstitutionMapping>& aSubstitutions,
+    const nsTArray<OverrideMapping>& aOverrides, const nsACString& aLocale,
+    bool aReset) {
   MOZ_ASSERT(aReset || mLocale.IsEmpty(), "RegisterChrome twice?");
 
   if (aReset) {

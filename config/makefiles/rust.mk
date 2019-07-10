@@ -298,9 +298,9 @@ ifdef RUST_PROGRAMS
 
 GARBAGE_DIRS += $(RUST_TARGET)
 
-force-cargo-program-build:
+force-cargo-program-build: $(RESFILE)
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
+	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) -- $(if $(RESFILE),-C link-arg=$(CURDIR)/$(RESFILE))
 
 $(RUST_PROGRAMS): force-cargo-program-build
 

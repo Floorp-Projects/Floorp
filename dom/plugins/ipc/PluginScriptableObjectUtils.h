@@ -180,21 +180,19 @@ class ProtectedVariantArray {
   }
 
   ~ProtectedVariantArray() {
-    InfallibleTArray<Variant>& vars = EnsureAndGetShadowArray();
+    nsTArray<Variant>& vars = EnsureAndGetShadowArray();
     uint32_t count = vars.Length();
     for (uint32_t index = 0; index < count; index++) {
       ReleaseRemoteVariant(vars[index]);
     }
   }
 
-  operator const InfallibleTArray<Variant>&() {
-    return EnsureAndGetShadowArray();
-  }
+  operator const nsTArray<Variant>&() { return EnsureAndGetShadowArray(); }
 
   bool IsOk() { return mOk; }
 
  private:
-  InfallibleTArray<Variant>& EnsureAndGetShadowArray() {
+  nsTArray<Variant>& EnsureAndGetShadowArray() {
     if (!mUsingShadowArray) {
       mShadowArray.SwapElements(mArray);
       mUsingShadowArray = true;
@@ -205,7 +203,7 @@ class ProtectedVariantArray {
   // We convert the variants fallibly, but pass them to Call*()
   // methods as an infallible array
   nsTArray<Variant> mArray;
-  InfallibleTArray<Variant> mShadowArray;
+  nsTArray<Variant> mShadowArray;
   bool mOk;
   bool mUsingShadowArray;
 };

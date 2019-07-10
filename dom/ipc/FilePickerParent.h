@@ -37,16 +37,12 @@ class FilePickerParent : public PFilePickerParent {
 
   void SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData);
 
-  mozilla::ipc::IPCResult RecvOpen(const int16_t& aSelectedType,
-                                   const bool& aAddToRecentDocs,
-                                   const nsString& aDefaultFile,
-                                   const nsString& aDefaultExtension,
-                                   InfallibleTArray<nsString>&& aFilters,
-                                   InfallibleTArray<nsString>&& aFilterNames,
-                                   InfallibleTArray<nsString>&& aRawFilters,
-                                   const nsString& aDisplayDirectory,
-                                   const nsString& aDisplaySpecialDirectory,
-                                   const nsString& aOkButtonLabel);
+  mozilla::ipc::IPCResult RecvOpen(
+      const int16_t& aSelectedType, const bool& aAddToRecentDocs,
+      const nsString& aDefaultFile, const nsString& aDefaultExtension,
+      nsTArray<nsString>&& aFilters, nsTArray<nsString>&& aFilterNames,
+      nsTArray<nsString>&& aRawFilters, const nsString& aDisplayDirectory,
+      const nsString& aDisplaySpecialDirectory, const nsString& aOkButtonLabel);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

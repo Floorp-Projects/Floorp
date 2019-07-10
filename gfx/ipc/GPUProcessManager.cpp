@@ -450,6 +450,11 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError) {
         .ForceDisable(gfx::FeatureStatus::Unavailable,
                       "Failed to render WebRender",
                       NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_RENDER"));
+  } else if (aError == wr::WebRenderError::NEW_SURFACE) {
+    gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
+        .ForceDisable(
+            gfx::FeatureStatus::Unavailable, "Failed to create new surface",
+            NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_NEW_SURFACE"));
   } else {
     MOZ_ASSERT_UNREACHABLE("Invalid value");
   }

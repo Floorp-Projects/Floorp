@@ -76,8 +76,7 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
     return IPC_OK();
   }
   mozilla::ipc::IPCResult RecvStopFrameTimeRecording(
-      const uint32_t& aStartIndex,
-      InfallibleTArray<float>* intervals) override {
+      const uint32_t& aStartIndex, nsTArray<float>* intervals) override {
     return IPC_OK();
   }
 

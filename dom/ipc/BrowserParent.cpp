@@ -1830,7 +1830,7 @@ bool BrowserParent::SendHandleTap(TapType aType,
 
 mozilla::ipc::IPCResult BrowserParent::RecvSyncMessage(
     const nsString& aMessage, const ClonedMessageData& aData,
-    InfallibleTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
+    nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
     nsTArray<StructuredCloneData>* aRetVal) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserParent::RecvSyncMessage",
                                              OTHER, aMessage);
@@ -1848,7 +1848,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSyncMessage(
 
 mozilla::ipc::IPCResult BrowserParent::RecvRpcMessage(
     const nsString& aMessage, const ClonedMessageData& aData,
-    InfallibleTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
+    nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
     nsTArray<StructuredCloneData>* aRetVal) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserParent::RecvRpcMessage",
                                              OTHER, aMessage);
@@ -1865,7 +1865,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRpcMessage(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvAsyncMessage(
-    const nsString& aMessage, InfallibleTArray<CpowEntry>&& aCpows,
+    const nsString& aMessage, nsTArray<CpowEntry>&& aCpows,
     nsIPrincipal* aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserParent::RecvAsyncMessage",
                                              OTHER, aMessage);
@@ -3328,39 +3328,6 @@ void BrowserParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch,
   mFrameElement->DispatchEvent(*event);
 }
 
-void BrowserParent::RequestRootPaint(gfx::CrossProcessPaint* aPaint,
-                                     IntRect aRect, float aScale,
-                                     nscolor aBackgroundColor) {
-  auto promise = SendRequestRootPaint(aRect, aScale, aBackgroundColor);
-
-  RefPtr<gfx::CrossProcessPaint> paint(aPaint);
-  TabId tabId(GetTabId());
-  promise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [paint, tabId](PaintFragment&& aFragment) {
-        paint->ReceiveFragment(tabId, std::move(aFragment));
-      },
-      [paint, tabId](ResponseRejectReason&& aReason) {
-        paint->LostFragment(tabId);
-      });
-}
-
-void BrowserParent::RequestSubPaint(gfx::CrossProcessPaint* aPaint,
-                                    float aScale, nscolor aBackgroundColor) {
-  auto promise = SendRequestSubPaint(aScale, aBackgroundColor);
-
-  RefPtr<gfx::CrossProcessPaint> paint(aPaint);
-  TabId tabId(GetTabId());
-  promise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [paint, tabId](PaintFragment&& aFragment) {
-        paint->ReceiveFragment(tabId, std::move(aFragment));
-      },
-      [paint, tabId](ResponseRejectReason&& aReason) {
-        paint->LostFragment(tabId);
-      });
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvPaintWhileInterruptingJSNoOp(
     const LayersObserverEpoch& aEpoch) {
   // We sent a PaintWhileInterruptingJS message when layers were already
@@ -3452,8 +3419,8 @@ nsresult BrowserParent::HandleEvent(Event* aEvent) {
 
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  if (eventType.EqualsLiteral("MozUpdateWindowPos")
-      || eventType.EqualsLiteral("fullscreenchange")) {
+  if (eventType.EqualsLiteral("MozUpdateWindowPos") ||
+      eventType.EqualsLiteral("fullscreenchange")) {
     // Events that signify the window moving are used to update the position
     // and notify the BrowserChild.
     return UpdatePosition();
@@ -3708,7 +3675,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvVisitURI(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvQueryVisitedState(
-    InfallibleTArray<URIParams>&& aURIs) {
+    nsTArray<URIParams>&& aURIs) {
 #ifdef MOZ_ANDROID_HISTORY
   nsCOMPtr<IHistory> history = services::GetHistoryService();
   if (NS_WARN_IF(!history)) {

@@ -23,7 +23,7 @@ namespace IPC {
 
 // Defined in TCPSocketChild.cpp
 extern bool DeserializeArrayBuffer(JSContext* aCx,
-                                   const InfallibleTArray<uint8_t>& aBuffer,
+                                   const nsTArray<uint8_t>& aBuffer,
                                    JS::MutableHandle<JS::Value> aVal);
 
 }  // namespace IPC
@@ -208,7 +208,7 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvData(
     bool allowed;
     MOZ_ASSERT(aData.type() == SendableData::TArrayOfuint8_t,
                "Unsupported data type for filtering");
-    const InfallibleTArray<uint8_t>& data(aData.get_ArrayOfuint8_t());
+    const nsTArray<uint8_t>& data(aData.get_ArrayOfuint8_t());
     nsresult nsrv =
         mFilter->FilterPacket(&addr, data.Elements(), data.Length(),
                               nsISocketFilter::SF_OUTGOING, &allowed);
@@ -271,7 +271,7 @@ void TCPSocketParent::FireEvent(const nsAString& aType,
 
 void TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer,
                                                TCPReadyState aReadyState) {
-  InfallibleTArray<uint8_t> arr;
+  nsTArray<uint8_t> arr;
   arr.SwapElements(aBuffer);
 
   if (mFilter) {

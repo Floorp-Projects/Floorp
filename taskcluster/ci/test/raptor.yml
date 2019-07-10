@@ -2224,7 +2224,7 @@ raptor-youtube-playback-geckoview:
     treeherder-symbol: Rap(ytp)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-.*/pgo: ['try', 'mozilla-central']
+            android-hw-p2.*aarch64.*/pgo: ['try', 'mozilla-central']
             android-hw-g5.*/pgo: ['try', 'mozilla-central']
             default: ['try']
     target: geckoview_example.apk

@@ -372,9 +372,6 @@ void PersistenceThreadPersist() {
         []() -> void { MainThreadArmPersistenceTimer(); }));
   });
 
-  TelemetryScalar::Add(
-      mozilla::Telemetry::ScalarID::TELEMETRY_PERSISTENCE_TIMER_HIT_COUNT, 1);
-
   nsCOMPtr<nsIFile> persistenceFile;
   if (NS_FAILED(GetPersistenceFile(persistenceFile))) {
     ANDROID_LOG(

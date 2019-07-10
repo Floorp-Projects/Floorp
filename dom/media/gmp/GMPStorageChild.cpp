@@ -202,7 +202,7 @@ mozilla::ipc::IPCResult GMPStorageChild::RecvOpenComplete(
 
 mozilla::ipc::IPCResult GMPStorageChild::RecvReadComplete(
     const nsCString& aRecordName, const GMPErr& aStatus,
-    InfallibleTArray<uint8_t>&& aBytes) {
+    nsTArray<uint8_t>&& aBytes) {
   if (mShutdown) {
     return IPC_OK();
   }

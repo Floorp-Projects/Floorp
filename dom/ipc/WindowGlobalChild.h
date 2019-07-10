@@ -103,6 +103,11 @@ class WindowGlobalChild final : public WindowGlobalActor,
       dom::BrowsingContext* aBc, const nsString& aRemoteType,
       uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvDrawSnapshot(const Maybe<IntRect>& aRect,
+                                           const float& aScale,
+                                           const nscolor& aBackgroundColor,
+                                           DrawSnapshotResolver&& aResolve);
+
   mozilla::ipc::IPCResult RecvGetSecurityInfo(
       GetSecurityInfoResolver&& aResolve);
 

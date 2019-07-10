@@ -7,7 +7,7 @@ load 308917-1.svg
 load 310436-1.svg
 load 310638.svg
 load 313737-1.xml
-load 314244-1.xul
+load chrome://reftest/content/crashtests/layout/svg/crashtests/314244-1.xul
 load 322185-1.svg
 load 322215-1.svg
 load 323704-1.svg
@@ -18,7 +18,7 @@ load 327706-1.svg
 load 327711-1.svg
 load 328137-1.svg
 load 329848-1.svg
-load 337408-1.xul
+load chrome://reftest/content/crashtests/layout/svg/crashtests/337408-1.xul
 load 338301-1.xhtml
 load 338312-1.xhtml
 load 340083-1.svg

@@ -47,7 +47,7 @@ load 620078-1.html
 load 620078-2.html
 load 631421.html
 load 673853.html
-load 680922-1.xul
+load chrome://reftest/content/crashtests/dom/html/crashtests/680922-1.xul
 load 682058.xhtml
 load 682460.html
 load 738744.xhtml

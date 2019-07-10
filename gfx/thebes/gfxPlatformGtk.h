@@ -32,7 +32,7 @@ class gfxPlatformGtk : public gfxPlatform {
   }
 
   void ReadSystemFontList(
-      InfallibleTArray<mozilla::dom::SystemFontListEntry>* retValue) override;
+      nsTArray<mozilla::dom::SystemFontListEntry>* retValue) override;
 
   already_AddRefed<gfxASurface> CreateOffscreenSurface(
       const IntSize& aSize, gfxImageFormat aFormat) override;

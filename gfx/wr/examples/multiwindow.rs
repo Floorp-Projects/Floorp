@@ -9,7 +9,7 @@ extern crate webrender;
 extern crate winit;
 
 use gleam::gl;
-use glutin::GlContext;
+use glutin::NotCurrent;
 use std::fs::File;
 use std::io::Read;
 use webrender::api::*;
@@ -50,7 +50,7 @@ impl RenderNotifier for Notifier {
 
 struct Window {
     events_loop: winit::EventsLoop, //TODO: share events loop?
-    window: glutin::GlWindow,
+    context: Option<glutin::WindowedContext<NotCurrent>>,
     renderer: webrender::Renderer,
     name: &'static str,
     pipeline_id: PipelineId,
@@ -63,33 +63,31 @@ struct Window {
 impl Window {
     fn new(name: &'static str, clear_color: ColorF) -> Self {
         let events_loop = winit::EventsLoop::new();
-        let context_builder = glutin::ContextBuilder::new()
-            .with_gl(glutin::GlRequest::GlThenGles {
-                opengl_version: (3, 2),
-                opengles_version: (3, 0),
-            });
         let window_builder = winit::WindowBuilder::new()
             .with_title(name)
             .with_multitouch()
             .with_dimensions(LogicalSize::new(800., 600.));
-        let window = glutin::GlWindow::new(window_builder, context_builder, &events_loop)
+        let context = glutin::ContextBuilder::new()
+            .with_gl(glutin::GlRequest::GlThenGles {
+                opengl_version: (3, 2),
+                opengles_version: (3, 0),
+            })
+            .build_windowed(window_builder, &events_loop)
             .unwrap();
 
-        unsafe {
-            window.make_current().ok();
-        }
+        let context = unsafe { context.make_current().unwrap() };
 
-        let gl = match window.get_api() {
+        let gl = match context.get_api() {
             glutin::Api::OpenGl => unsafe {
-                gl::GlFns::load_with(|symbol| window.get_proc_address(symbol) as *const _)
+                gl::GlFns::load_with(|symbol| context.get_proc_address(symbol) as *const _)
             },
             glutin::Api::OpenGlEs => unsafe {
-                gl::GlesFns::load_with(|symbol| window.get_proc_address(symbol) as *const _)
+                gl::GlesFns::load_with(|symbol| context.get_proc_address(symbol) as *const _)
             },
             glutin::Api::WebGl => unimplemented!(),
         };
 
-        let device_pixel_ratio = window.get_hidpi_factor() as f32;
+        let device_pixel_ratio = context.window().get_hidpi_factor() as f32;
 
         let opts = webrender::RendererOptions {
             device_pixel_ratio,
@@ -98,7 +96,8 @@ impl Window {
         };
 
         let device_size = {
-            let size = window
+            let size = context
+                .window()
                 .get_inner_size()
                 .unwrap()
                 .to_physical(device_pixel_ratio as f64);
@@ -124,7 +123,7 @@ impl Window {
 
         Window {
             events_loop,
-            window,
+            context: Some(unsafe { context.make_not_current().unwrap() }),
             renderer,
             name,
             epoch,
@@ -136,9 +135,6 @@ impl Window {
     }
 
     fn tick(&mut self) -> bool {
-        unsafe {
-            self.window.make_current().ok();
-        }
         let mut do_exit = false;
         let my_name = &self.name;
         let renderer = &mut self.renderer;
@@ -175,9 +171,11 @@ impl Window {
             return true
         }
 
-        let device_pixel_ratio = self.window.get_hidpi_factor() as f32;
+        let context = unsafe { self.context.take().unwrap().make_current().unwrap() };
+        let device_pixel_ratio = context.window().get_hidpi_factor() as f32;
         let device_size = {
-            let size = self.window
+            let size = context
+                .window()
                 .get_inner_size()
                 .unwrap()
                 .to_physical(device_pixel_ratio as f64);
@@ -287,7 +285,9 @@ impl Window {
 
         renderer.update();
         renderer.render(device_size).unwrap();
-        self.window.swap_buffers().ok();
+        context.swap_buffers().ok();
+
+        self.context = Some(unsafe { context.make_not_current().unwrap() });
 
         false
     }

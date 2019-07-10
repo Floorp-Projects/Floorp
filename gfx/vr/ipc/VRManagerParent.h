@@ -68,8 +68,7 @@ class VRManagerParent final : public PVRManagerParent {
   mozilla::ipc::IPCResult RecvStartActivity();
   mozilla::ipc::IPCResult RecvStopActivity();
 
-  mozilla::ipc::IPCResult RecvRunPuppet(
-      const InfallibleTArray<uint64_t>& aBuffer);
+  mozilla::ipc::IPCResult RecvRunPuppet(const nsTArray<uint64_t>& aBuffer);
   mozilla::ipc::IPCResult RecvResetPuppet();
 
  private:

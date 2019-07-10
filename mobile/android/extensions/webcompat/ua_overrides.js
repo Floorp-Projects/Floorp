@@ -29,6 +29,26 @@ for (const override of [
   },
   {
     /*
+     * Bug 1563839 - rolb.santanderbank.com - Build UA override
+     * WebCompat issue #33462 - https://webcompat.com/issues/33462
+     *
+     * santanderbank expects UA to have 'like Gecko', otherwise it runs
+     * xmlDoc.onload whose support has been dropped. It results in missing labels in forms
+     * and some other issues.  Adding 'like Gecko' fixes those issues.
+     */
+    id: "bug1563839",
+    platform: "all",
+    domain: "rolb.santanderbank.com",
+    bug: "1563839",
+    config: {
+      matches: ["*://rolb.santanderbank.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA.replace("Gecko", "like Gecko");
+      },
+    },
+  },
+  {
+    /*
      * Bug 1480710 - m.imgur.com - Build UA override
      * WebCompat issue #13154 - https://webcompat.com/issues/13154
      *
