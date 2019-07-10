@@ -4,8 +4,6 @@
 package mozilla.components.service.glean.storages
 
 import android.os.SystemClock
-import androidx.test.core.app.ApplicationProvider
-import androidx.work.testing.WorkManagerTestInitHelper
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
@@ -55,9 +53,6 @@ class EventsStorageEngineTest {
         resetGlean()
         assert(Glean.initialized)
         EventsStorageEngine.clearAllStores()
-
-        // Initialize WorkManager using the WorkManagerTestInitHelper.
-        WorkManagerTestInitHelper.initializeTestWorkManager(ApplicationProvider.getApplicationContext())
     }
 
     @Test

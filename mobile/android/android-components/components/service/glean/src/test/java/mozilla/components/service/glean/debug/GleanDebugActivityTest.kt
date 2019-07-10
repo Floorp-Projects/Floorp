@@ -16,7 +16,6 @@ import org.junit.Before
 import org.robolectric.Robolectric
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
-import androidx.work.testing.WorkManagerTestInitHelper
 import mozilla.components.service.glean.private.BooleanMetricType
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.resetGlean
@@ -34,9 +33,6 @@ class GleanDebugActivityTest {
     @Before
     fun setup() {
         resetGlean()
-
-        WorkManagerTestInitHelper.initializeTestWorkManager(
-            ApplicationProvider.getApplicationContext())
 
         // This makes sure we have a "launch" intent in our package, otherwise
         // it will fail looking for it in `GleanDebugActivityTest`.
