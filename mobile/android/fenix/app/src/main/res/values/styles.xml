@@ -211,22 +211,6 @@
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
-    <style name="CurrentSessionBottomSheetDialogTheme" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/CurrentSessionBottomSheetStyle</item>
-        <item name="android:textColor">@color/primary_text_normal_theme</item>
-
-        <!-- This doesn't seem to work see https://issuetracker.google.com/issues/120426520 -->
-        <item name="scrimBackground">@drawable/session_sheet_background</item>
-    </style>
-
-    <style name="CurrentSessionBottomSheetStyle" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
-        <item name="android:background">@android:color/transparent</item>
-        <item name="android:textColor">@color/primary_text_normal_theme</item>
-
-        <!-- This doesn't seem to work see https://issuetracker.google.com/issues/120426520 -->
-        <item name="scrimBackground">@drawable/session_sheet_background</item>
-    </style>
-
     <style name="HeaderTextStyle" parent="TextAppearance.MaterialComponents.Subtitle1">
         <item name="android:textSize">18sp</item>
         <item name="android:textColor">?primaryText</item>

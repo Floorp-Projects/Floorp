@@ -327,11 +327,6 @@
     <string name="collection_rename">コレクションの名前を変更</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">タブを開く</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">削除</string>
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">%1$d サイト…</string>
 
 
     <!-- History -->

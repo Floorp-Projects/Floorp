@@ -340,12 +340,6 @@
     <string name="collection_rename">Rinomina raccolta</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Apri schede</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">Elimina</string>
-
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">%1$d siti...</string>
 
 
     <!-- History -->
