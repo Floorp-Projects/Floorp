@@ -17,6 +17,12 @@
 
 #include <limits.h>
 
+/* old gcc doesn't support some poly64x2_t intrinsic */
+#if defined(__aarch64__) && defined(IS_LITTLE_ENDIAN) && \
+    (defined(__clang__) || defined(__GNUC__) && __GNUC__ > 6)
+#define USE_ARM_GCM
+#endif
+
 /* Forward declarations */
 SECStatus gcm_HashInit_hw(gcmHashContext *ghash);
 SECStatus gcm_HashWrite_hw(gcmHashContext *ghash, unsigned char *outbuf);
@@ -30,7 +36,7 @@ SECStatus gcm_HashMult_sftw32(gcmHashContext *ghash, const unsigned char *buf,
 
 /* Stub definitions for the above *_hw functions, which shouldn't be
  * used unless NSS_X86_OR_X64 is defined */
-#ifndef NSS_X86_OR_X64
+#if !defined(NSS_X86_OR_X64) && !defined(USE_ARM_GCM)
 SECStatus
 gcm_HashWrite_hw(gcmHashContext *ghash, unsigned char *outbuf)
 {
@@ -59,7 +65,7 @@ gcm_HashZeroX_hw(gcmHashContext *ghash)
     PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     return SECFailure;
 }
-#endif /* NSS_X86_OR_X64 */
+#endif /* !NSS_X86_OR_X64 && !USE_ARM_GCM */
 
 uint64_t
 get64(const unsigned char *bytes)
@@ -86,7 +92,11 @@ gcmHash_InitContext(gcmHashContext *ghash, const unsigned char *H, PRBool sw)
 
     ghash->h_low = get64(H + 8);
     ghash->h_high = get64(H);
+#ifdef USE_ARM_GCM
+    if (arm_pmull_support() && !sw) {
+#else
     if (clmul_support() && !sw) {
+#endif
         rv = gcm_HashInit_hw(ghash);
     } else {
 /* We fall back to the software implementation if we can't use / don't
