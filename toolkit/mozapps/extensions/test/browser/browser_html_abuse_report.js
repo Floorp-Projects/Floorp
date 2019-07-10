@@ -597,7 +597,10 @@ add_task(async function test_abusereport_panel_refresh() {
     icon_url: addon.iconURL,
   });
 
-  const allButtons = Array.from(reportPanel.querySelectorAll("buttons"));
+  const allButtons = Array.from(reportPanel.querySelectorAll("button")).filter(
+    el => el !== reportPanel._iconClose
+  );
+  ok(allButtons.length > 0, "panel buttons should have been found");
   ok(
     allButtons.every(el => el.hasAttribute("data-l10n-id")),
     "All the panel buttons have a data-l10n-id"
@@ -1576,4 +1579,25 @@ add_task(async function test_no_report_checkbox_for_unsupported_addon_types() {
     const addon = await AddonManager.getAddonByID(id);
     await test_report_checkbox_hidden(addon);
   }
+});
+
+add_task(async function test_author_hidden_when_missing() {
+  const EXT_ID = "test-no-author@mochi.test";
+  const extension = await installTestExtension(EXT_ID, "extension", {
+    author: undefined,
+  });
+
+  const abuseReportEl = await openAbuseReport(EXT_ID);
+  await promiseAbuseReportRendered(abuseReportEl);
+
+  const addon = await AddonManager.getAddonByID(EXT_ID);
+
+  ok(!addon.creator, "addon.creator should not be undefined");
+  ok(
+    abuseReportEl._addonAuthorContainer.hidden,
+    "author container should be hidden"
+  );
+
+  await closeAboutAddons();
+  await extension.unload();
 });
