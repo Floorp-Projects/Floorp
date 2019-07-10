@@ -286,7 +286,14 @@ function makeUrlbarResult(tokens, info) {
         );
       case "keyword": {
         let title = info.comment;
-        if (tokens && tokens.length > 1) {
+        if (!title) {
+          // If the url doesn't have an host (e.g. javascript urls), comment
+          // will be empty, and we can't build the usual title. Thus use the url.
+          title = Services.textToSubURI.unEscapeURIForUI(
+            "UTF-8",
+            action.params.url
+          );
+        } else if (tokens && tokens.length > 1) {
           title = bundle.formatStringFromName("bookmarkKeywordSearch", [
             info.comment,
             tokens
