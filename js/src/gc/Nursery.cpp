@@ -58,7 +58,9 @@ struct NurseryChunk {
   char data[Nursery::NurseryChunkUsableSize];
   gc::ChunkTrailer trailer;
   static NurseryChunk* fromChunk(gc::Chunk* chunk);
-  void poisonAndInit(JSRuntime* rt, size_t extent = ChunkSize);
+  void poisonAndInit(JSRuntime* rt, size_t size = ChunkSize);
+  void poisonRange(size_t from, size_t size, uint8_t value,
+                   MemCheckKind checkKind);
   void poisonAfterEvict(size_t extent = ChunkSize);
   uintptr_t start() const { return uintptr_t(&data); }
   uintptr_t end() const { return uintptr_t(&trailer); }
@@ -69,23 +71,29 @@ static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
 
 } /* namespace js */
 
-inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t extent) {
-  MOZ_ASSERT(extent <= ChunkSize);
-  MOZ_MAKE_MEM_UNDEFINED(this, extent);
+inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t size) {
+  poisonRange(0, size, JS_FRESH_NURSERY_PATTERN, MemCheckKind::MakeUndefined);
   MOZ_MAKE_MEM_UNDEFINED(&trailer, sizeof(trailer));
-
-  Poison(this, JS_FRESH_NURSERY_PATTERN, extent, MemCheckKind::MakeUndefined);
-
   new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
+}
+
+inline void js::NurseryChunk::poisonRange(size_t from, size_t size,
+                                          uint8_t value,
+                                          MemCheckKind checkKind) {
+  MOZ_ASSERT(from <= js::Nursery::NurseryChunkUsableSize);
+  MOZ_ASSERT(from + size <= ChunkSize);
+
+  uint8_t* start = reinterpret_cast<uint8_t*>(this) + from;
+
+  // We can poison the same chunk more than once, so first make sure memory
+  // sanitizers will let us poison it.
+  MOZ_MAKE_MEM_UNDEFINED(start, size);
+  Poison(start, value, size, checkKind);
 }
 
 inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
   MOZ_ASSERT(extent <= ChunkSize);
-  // We can poison the same chunk more than once, so first make sure memory
-  // sanitizers will let us poison it.
-  MOZ_MAKE_MEM_UNDEFINED(this, extent);
-
-  Poison(this, JS_SWEPT_NURSERY_PATTERN, extent, MemCheckKind::MakeNoAccess);
+  poisonRange(0, extent, JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
 }
 
 /* static */
