@@ -1982,14 +1982,32 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         if !stacking_context.composite_ops.filter_primitives.is_empty() {
-            let composite_mode = PictureCompositeMode::SvgFilter(stacking_context.composite_ops.filter_primitives.clone());
+            let filter_datas = stacking_context.composite_ops.filter_datas.iter()
+                .map(|filter_data| filter_data.sanitize())
+                .map(|filter_data| {
+                    SFilterData {
+                        r_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_r_type, &filter_data.r_values),
+                        g_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_g_type, &filter_data.g_values),
+                        b_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_b_type, &filter_data.b_values),
+                        a_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_a_type, &filter_data.a_values),
+                    }
+                })
+                .collect();
+
+            let composite_mode = PictureCompositeMode::SvgFilter(
+                stacking_context.composite_ops.filter_primitives,
+                filter_datas,
+            );
 
             let filter_pic_index = PictureIndex(self.prim_store.pictures
                 .alloc()
                 .init(PicturePrimitive::new_image(
                     Some(composite_mode.clone()),
                     Picture3DContext::Out,
-                    stacking_context.pipeline_id,
                     None,
                     true,
                     stacking_context.is_backface_visible,
@@ -3106,6 +3124,11 @@ impl FlattenedStackingContext {
 
         // If there are filters / mix-blend-mode
         if !self.composite_ops.filters.is_empty() {
+            return false;
+        }
+
+        // If there are svg filters
+        if !self.composite_ops.filter_primitives.is_empty() {
             return false;
         }
 
