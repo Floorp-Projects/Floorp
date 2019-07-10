@@ -74,7 +74,7 @@ struct AnimationProperty {
 
   Maybe<AnimationPerformanceWarning> mPerformanceWarning;
 
-  InfallibleTArray<AnimationPropertySegment> mSegments;
+  nsTArray<AnimationPropertySegment> mSegments;
 
   // The copy constructor/assignment doesn't copy mIsRunningOnCompositor and
   // mPerformanceWarning.
@@ -240,9 +240,7 @@ class KeyframeEffect : public AnimationEffect {
   nsCSSPropertyIDSet GetPropertiesForCompositor(EffectSet& aEffects,
                                                 const nsIFrame* aFrame) const;
 
-  const InfallibleTArray<AnimationProperty>& Properties() const {
-    return mProperties;
-  }
+  const nsTArray<AnimationProperty>& Properties() const { return mProperties; }
 
   // Update |mProperties| by recalculating from |mKeyframes| using
   // |aComputedStyle| to resolve specified values.
