@@ -33,17 +33,17 @@ class PJavaScriptChild;
 
 class CPOWManager {
  public:
-  virtual bool Unwrap(JSContext* cx, const InfallibleTArray<CpowEntry>& aCpows,
+  virtual bool Unwrap(JSContext* cx, const nsTArray<CpowEntry>& aCpows,
                       JS::MutableHandleObject objp) = 0;
 
   virtual bool Wrap(JSContext* cx, JS::HandleObject aObj,
-                    InfallibleTArray<CpowEntry>* outCpows) = 0;
+                    nsTArray<CpowEntry>* outCpows) = 0;
 };
 
 class CrossProcessCpowHolder : public CpowHolder {
  public:
   CrossProcessCpowHolder(dom::CPOWManagerGetter* managerGetter,
-                         const InfallibleTArray<CpowEntry>& cpows);
+                         const nsTArray<CpowEntry>& cpows);
 
   ~CrossProcessCpowHolder();
 
@@ -51,7 +51,7 @@ class CrossProcessCpowHolder : public CpowHolder {
 
  private:
   CPOWManager* js_;
-  const InfallibleTArray<CpowEntry>& cpows_;
+  const nsTArray<CpowEntry>& cpows_;
   bool unwrapped_;
 };
 
