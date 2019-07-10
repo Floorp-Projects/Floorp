@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, BorderStyle, MixBlendMode, PipelineId, PremultipliedColorF};
-use api::{DocumentLayer, FilterData, ImageFormat, LineOrientation};
+use api::{DocumentLayer, FilterData, FilterPrimitive, ImageFormat, LineOrientation};
 use api::units::*;
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
@@ -1332,18 +1332,23 @@ pub struct CompositeOps {
     // Requires only a single texture as input (e.g. most filters)
     pub filters: Vec<Filter>,
     pub filter_datas: Vec<FilterData>,
+    pub filter_primitives: Vec<FilterPrimitive>,
 
     // Requires two source textures (e.g. mix-blend-mode)
     pub mix_blend_mode: Option<MixBlendMode>,
 }
 
 impl CompositeOps {
-    pub fn new(filters: Vec<Filter>,
-               filter_datas: Vec<FilterData>,
-               mix_blend_mode: Option<MixBlendMode>) -> Self {
+    pub fn new(
+        filters: Vec<Filter>,
+        filter_datas: Vec<FilterData>,
+        filter_primitives: Vec<FilterPrimitive>,
+        mix_blend_mode: Option<MixBlendMode>
+    ) -> Self {
         CompositeOps {
             filters,
             filter_datas,
+            filter_primitives,
             mix_blend_mode,
         }
     }
