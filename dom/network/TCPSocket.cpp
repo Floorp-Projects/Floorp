@@ -481,7 +481,7 @@ TCPSocket::FireEvent(const nsAString& aType) {
 
 NS_IMETHODIMP
 TCPSocket::FireDataArrayEvent(const nsAString& aType,
-                              const InfallibleTArray<uint8_t>& buffer) {
+                              const nsTArray<uint8_t>& buffer) {
   AutoJSAPI api;
   if (NS_WARN_IF(!api.Init(GetOwnerGlobal()))) {
     return NS_ERROR_FAILURE;

@@ -23,7 +23,7 @@ class CryptoBuffer : public FallibleTArray<uint8_t> {
   uint8_t* Assign(const uint8_t* aData, uint32_t aLength);
   uint8_t* Assign(const nsACString& aString);
   uint8_t* Assign(const SECItem* aItem);
-  uint8_t* Assign(const InfallibleTArray<uint8_t>& aData);
+  uint8_t* Assign(const nsTArray<uint8_t>& aData);
   uint8_t* Assign(const ArrayBuffer& aData);
   uint8_t* Assign(const ArrayBufferView& aData);
   uint8_t* Assign(const ArrayBufferViewOrArrayBuffer& aData);

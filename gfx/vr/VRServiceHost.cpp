@@ -181,7 +181,7 @@ void VRServiceHost::ShutdownVRProcess() {
 
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
-void VRServiceHost::PuppetSubmit(const InfallibleTArray<uint64_t>& aBuffer) {
+void VRServiceHost::PuppetSubmit(const nsTArray<uint64_t>& aBuffer) {
   if (mVRProcessEnabled) {
     mPuppetActive = true;
     // TODO - Implement VR puppet support for VR process (Bug 1555188)

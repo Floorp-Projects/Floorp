@@ -13,6 +13,7 @@
 
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
+#include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
@@ -94,11 +95,10 @@ static bool PluralRules(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  pluralRules->setReservedSlot(PluralRulesObject::INTERNALS_SLOT, NullValue());
-  pluralRules->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT,
-                               PrivateValue(nullptr));
-  pluralRules->setReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT,
-                               PrivateValue(nullptr));
+  pluralRules->setFixedSlot(PluralRulesObject::INTERNALS_SLOT, NullValue());
+  pluralRules->setPluralRules(nullptr);
+  pluralRules->setNumberFormatter(nullptr);
+  pluralRules->setFormattedNumber(nullptr);
 
   HandleValue locales = args.get(0);
   HandleValue options = args.get(1);
@@ -117,22 +117,19 @@ static bool PluralRules(JSContext* cx, unsigned argc, Value* vp) {
 void js::PluralRulesObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
-  PluralRulesObject* pluralRules = &obj->as<PluralRulesObject>();
-
-  const Value& prslot =
-      pluralRules->getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT);
-  UPluralRules* pr = static_cast<UPluralRules*>(prslot.toPrivate());
-
-  const Value& nfslot =
-      pluralRules->getReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT);
-  UNumberFormat* nf = static_cast<UNumberFormat*>(nfslot.toPrivate());
+  auto* pluralRules = &obj->as<PluralRulesObject>();
+  UPluralRules* pr = pluralRules->getPluralRules();
+  UNumberFormatter* nf = pluralRules->getNumberFormatter();
+  UFormattedNumber* formatted = pluralRules->getFormattedNumber();
 
   if (pr) {
     uplrules_close(pr);
   }
-
   if (nf) {
-    unum_close(nf);
+    unumf_close(nf);
+  }
+  if (formatted) {
+    unumf_closeResult(formatted);
   }
 }
 
@@ -188,13 +185,13 @@ bool js::intl_PluralRules_availableLocales(JSContext* cx, unsigned argc,
 }
 
 /**
- * This creates new UNumberFormat with calculated digit formatting
+ * This creates a new UNumberFormatter with calculated digit formatting
  * properties for PluralRules.
  *
- * This is similar to NewUNumberFormat but doesn't allow for currency or
+ * This is similar to NewUNumberFormatter but doesn't allow for currency or
  * percent types.
  */
-static UNumberFormat* NewUNumberFormatForPluralRules(
+static UNumberFormatter* NewUNumberFormatterForPluralRules(
     JSContext* cx, Handle<PluralRulesObject*> pluralRules) {
   RootedObject internals(cx, intl::GetInternalsObject(cx, pluralRules));
   if (!internals) {
@@ -211,72 +208,70 @@ static UNumberFormat* NewUNumberFormatForPluralRules(
     return nullptr;
   }
 
-  uint32_t uMinimumIntegerDigits = 1;
-  uint32_t uMinimumFractionDigits = 0;
-  uint32_t uMaximumFractionDigits = 3;
-  int32_t uMinimumSignificantDigits = -1;
-  int32_t uMaximumSignificantDigits = -1;
+  intl::NumberFormatterSkeleton skeleton(cx);
 
-  bool hasP;
+  bool hasMinimumSignificantDigits;
   if (!HasProperty(cx, internals, cx->names().minimumSignificantDigits,
-                   &hasP)) {
+                   &hasMinimumSignificantDigits)) {
     return nullptr;
   }
 
-  if (hasP) {
+  if (hasMinimumSignificantDigits) {
     if (!GetProperty(cx, internals, internals,
                      cx->names().minimumSignificantDigits, &value)) {
       return nullptr;
     }
-    uMinimumSignificantDigits = value.toInt32();
+    uint32_t minimumSignificantDigits = AssertedCast<uint32_t>(value.toInt32());
 
     if (!GetProperty(cx, internals, internals,
                      cx->names().maximumSignificantDigits, &value)) {
       return nullptr;
     }
-    uMaximumSignificantDigits = value.toInt32();
+    uint32_t maximumSignificantDigits = AssertedCast<uint32_t>(value.toInt32());
+
+    if (!skeleton.significantDigits(minimumSignificantDigits,
+                                    maximumSignificantDigits)) {
+      return nullptr;
+    }
   } else {
     if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
                      &value)) {
       return nullptr;
     }
-    uMinimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
+    uint32_t minimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
 
     if (!GetProperty(cx, internals, internals,
                      cx->names().minimumFractionDigits, &value)) {
       return nullptr;
     }
-    uMinimumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
+    uint32_t minimumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
 
     if (!GetProperty(cx, internals, internals,
                      cx->names().maximumFractionDigits, &value)) {
       return nullptr;
     }
-    uMaximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
+    uint32_t maximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
+
+    if (!skeleton.fractionDigits(minimumFractionDigits,
+                                 maximumFractionDigits)) {
+      return nullptr;
+    }
+    if (!skeleton.integerWidth(minimumIntegerDigits)) {
+      return nullptr;
+    }
   }
 
+  return skeleton.toFormatter(cx, locale.get());
+}
+
+static UFormattedNumber* NewUFormattedNumberForPluralRules(JSContext* cx) {
   UErrorCode status = U_ZERO_ERROR;
-  UNumberFormat* nf = unum_open(UNUM_DECIMAL, nullptr, 0,
-                                IcuLocale(locale.get()), nullptr, &status);
+  UFormattedNumber* formatted = unumf_openResult(&status);
   if (U_FAILURE(status)) {
     intl::ReportInternalError(cx);
     return nullptr;
   }
-  ScopedICUObject<UNumberFormat, unum_close> toClose(nf);
-
-  if (uMinimumSignificantDigits != -1) {
-    unum_setAttribute(nf, UNUM_SIGNIFICANT_DIGITS_USED, true);
-    unum_setAttribute(nf, UNUM_MIN_SIGNIFICANT_DIGITS,
-                      uMinimumSignificantDigits);
-    unum_setAttribute(nf, UNUM_MAX_SIGNIFICANT_DIGITS,
-                      uMaximumSignificantDigits);
-  } else {
-    unum_setAttribute(nf, UNUM_MIN_INTEGER_DIGITS, uMinimumIntegerDigits);
-    unum_setAttribute(nf, UNUM_MIN_FRACTION_DIGITS, uMinimumFractionDigits);
-    unum_setAttribute(nf, UNUM_MAX_FRACTION_DIGITS, uMaximumFractionDigits);
-  }
-
-  return toClose.forget();
+  return formatted;
 }
 
 /**
@@ -339,35 +334,45 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
   double x = args[1].toNumber();
 
   // Obtain a cached UPluralRules object.
-  void* priv =
-      pluralRules->getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT)
-          .toPrivate();
-  UPluralRules* pr = static_cast<UPluralRules*>(priv);
+  UPluralRules* pr = pluralRules->getPluralRules();
   if (!pr) {
     pr = NewUPluralRules(cx, pluralRules);
     if (!pr) {
       return false;
     }
-    pluralRules->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT,
-                                 PrivateValue(pr));
+    pluralRules->setPluralRules(pr);
   }
 
   // Obtain a cached UNumberFormat object.
-  priv = pluralRules->getReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT)
-             .toPrivate();
-  UNumberFormat* nf = static_cast<UNumberFormat*>(priv);
+  UNumberFormatter* nf = pluralRules->getNumberFormatter();
   if (!nf) {
-    nf = NewUNumberFormatForPluralRules(cx, pluralRules);
+    nf = NewUNumberFormatterForPluralRules(cx, pluralRules);
     if (!nf) {
       return false;
     }
-    pluralRules->setReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT,
-                                 PrivateValue(nf));
+    pluralRules->setNumberFormatter(nf);
   }
 
-  JSString* str =
-      CallICU(cx, [pr, x, nf](UChar* chars, int32_t size, UErrorCode* status) {
-        return uplrules_selectWithFormat(pr, x, nf, chars, size, status);
+  // Obtain a cached UFormattedNumber object.
+  UFormattedNumber* formatted = pluralRules->getFormattedNumber();
+  if (!formatted) {
+    formatted = NewUFormattedNumberForPluralRules(cx);
+    if (!formatted) {
+      return false;
+    }
+    pluralRules->setFormattedNumber(formatted);
+  }
+
+  UErrorCode status = U_ZERO_ERROR;
+  unumf_formatDouble(nf, x, formatted, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+
+  JSString* str = CallICU(
+      cx, [pr, formatted](UChar* chars, int32_t size, UErrorCode* status) {
+        return uplrules_selectFormatted(pr, formatted, chars, size, status);
       });
   if (!str) {
     return false;
@@ -385,17 +390,13 @@ bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {
       cx, &args[0].toObject().as<PluralRulesObject>());
 
   // Obtain a cached UPluralRules object.
-  void* priv =
-      pluralRules->getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT)
-          .toPrivate();
-  UPluralRules* pr = static_cast<UPluralRules*>(priv);
+  UPluralRules* pr = pluralRules->getPluralRules();
   if (!pr) {
     pr = NewUPluralRules(cx, pluralRules);
     if (!pr) {
       return false;
     }
-    pluralRules->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT,
-                                 PrivateValue(pr));
+    pluralRules->setPluralRules(pr);
   }
 
   UErrorCode status = U_ZERO_ERROR;

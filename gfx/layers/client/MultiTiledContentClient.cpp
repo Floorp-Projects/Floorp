@@ -62,7 +62,7 @@ void ClientMultiTiledLayerBuffer::DiscardBuffers() {
 
 SurfaceDescriptorTiles
 ClientMultiTiledLayerBuffer::GetSurfaceDescriptorTiles() {
-  InfallibleTArray<TileDescriptor> tiles;
+  nsTArray<TileDescriptor> tiles;
 
   for (TileClient& tile : mRetainedTiles) {
     TileDescriptor tileDesc = tile.GetTileDescriptor();

@@ -92,28 +92,28 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvFinishMemoryReport(
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvAccumulateChildHistograms(
-    InfallibleTArray<HistogramAccumulation>&& aAccumulations) {
+    nsTArray<HistogramAccumulation>&& aAccumulations) {
   TelemetryIPC::AccumulateChildHistograms(Telemetry::ProcessID::Socket,
                                           aAccumulations);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvAccumulateChildKeyedHistograms(
-    InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations) {
+    nsTArray<KeyedHistogramAccumulation>&& aAccumulations) {
   TelemetryIPC::AccumulateChildKeyedHistograms(Telemetry::ProcessID::Socket,
                                                aAccumulations);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvUpdateChildScalars(
-    InfallibleTArray<ScalarAction>&& aScalarActions) {
+    nsTArray<ScalarAction>&& aScalarActions) {
   TelemetryIPC::UpdateChildScalars(Telemetry::ProcessID::Socket,
                                    aScalarActions);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvUpdateChildKeyedScalars(
-    InfallibleTArray<KeyedScalarAction>&& aScalarActions) {
+    nsTArray<KeyedScalarAction>&& aScalarActions) {
   TelemetryIPC::UpdateChildKeyedScalars(Telemetry::ProcessID::Socket,
                                         aScalarActions);
   return IPC_OK();

@@ -13,6 +13,9 @@
     "default": {
       "$ref": "#/definitions/default"
     },
+    "defaultPrivate": {
+      "$ref": "#/definitions/defaultPrivate"
+    },
     "application": {
       "$ref": "#/definitions/application"
     },
@@ -87,6 +90,16 @@
       "type": "string",
       "title": "Default Status",
       "description": "Whether or not this engine should be default.",
+      "enum": [
+        "yes",
+        "yes-if-no-other",
+        "no"
+      ]
+    },
+    "defaultPrivate": {
+      "type": "string",
+      "title": "Default Status (PBM)",
+      "description": "Whether or not this engine should be default in private browsing mode.",
       "enum": [
         "yes",
         "yes-if-no-other",
@@ -263,6 +276,9 @@
       "properties": {
         "default": {
           "$ref": "#/definitions/default"
+        },
+        "defaultPrivate": {
+          "$ref": "#/definitions/defaultPrivate"
         },
         "orderHint": {
           "$ref": "#/definitions/orderHint"

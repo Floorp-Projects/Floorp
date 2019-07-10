@@ -11,7 +11,7 @@ load 317502-1.xhtml
 load 321894.html
 load 323499-1.html
 load 343510-1.html
-load 363696-1.xul
+load chrome://reftest/content/crashtests/layout/forms/crashtests/363696-1.xul
 load 363696-2.html
 load 363696-3.html
 load 366205-1.html

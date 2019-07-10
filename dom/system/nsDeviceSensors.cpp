@@ -297,7 +297,7 @@ static Orientation RotationVectorToOrientation(double aX, double aY, double aZ,
 void nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData) {
   uint32_t type = aSensorData.sensor();
 
-  const InfallibleTArray<float>& values = aSensorData.values();
+  const nsTArray<float>& values = aSensorData.values();
   size_t len = values.Length();
   double x = len > 0 ? values[0] : 0.0;
   double y = len > 1 ? values[1] : 0.0;

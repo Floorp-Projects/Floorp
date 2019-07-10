@@ -32,7 +32,7 @@ VRPuppetCommandBuffer::~VRPuppetCommandBuffer() {
   MOZ_COUNT_DTOR(VRPuppetCommandBuffer);
 }
 
-void VRPuppetCommandBuffer::Submit(const InfallibleTArray<uint64_t>& aBuffer) {
+void VRPuppetCommandBuffer::Submit(const nsTArray<uint64_t>& aBuffer) {
   MutexAutoLock lock(mMutex);
   mBuffer.AppendElements(aBuffer);
   mEnded = false;

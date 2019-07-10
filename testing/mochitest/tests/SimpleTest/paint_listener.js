@@ -1,15 +1,19 @@
 (function() {
   var accumulatedRect = null;
   var onpaint = new Array();
-  var debug = false;
+  var debug = SpecialPowers.getBoolPref("testing.paint_listener.debug", false);
   const FlushModes = {
     FLUSH: 0,
     NOFLUSH: 1
   };
 
   function paintListener(event) {
-    if (event.target != window)
+    if (event.target != window) {
+      if (debug) {
+        dump("got MozAfterPaint for wrong window\n");
+      }
       return;
+    }
     var clientRect = event.boundingClientRect;
     var eventRect;
     if (clientRect) {
@@ -28,6 +32,9 @@
                         Math.max(accumulatedRect[2], eventRect[2]),
                         Math.max(accumulatedRect[3], eventRect[3]) ]
                     : eventRect;
+    if (debug) {
+      dump("Dispatching " + onpaint.length + " onpaint listeners\n");
+    }
     while (onpaint.length > 0) {
       window.setTimeout(onpaint.pop(), 0);
     }

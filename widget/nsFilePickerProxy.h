@@ -74,8 +74,8 @@ class nsFilePickerProxy : public nsBaseFilePicker,
 
   bool mIPCActive;
 
-  InfallibleTArray<nsString> mFilters;
-  InfallibleTArray<nsString> mFilterNames;
+  nsTArray<nsString> mFilters;
+  nsTArray<nsString> mFilterNames;
 };
 
 #endif  // NSFILEPICKERPROXY_H

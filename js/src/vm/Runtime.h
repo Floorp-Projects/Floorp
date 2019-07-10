@@ -805,10 +805,11 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   // within the runtime. This may be modified by threads using
   // AutoLockScriptData.
  private:
-  js::ScriptDataLockData<js::ScriptDataTable> scriptDataTable_;
+  js::ScriptDataLockData<js::RuntimeScriptDataTable> scriptDataTable_;
 
  public:
-  js::ScriptDataTable& scriptDataTable(const js::AutoLockScriptData& lock) {
+  js::RuntimeScriptDataTable& scriptDataTable(
+      const js::AutoLockScriptData& lock) {
     return scriptDataTable_.ref();
   }
 

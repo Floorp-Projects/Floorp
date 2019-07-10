@@ -1911,7 +1911,7 @@ inline bool ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
 template <typename T>
 void DoTraceSequence(JSTracer* trc, FallibleTArray<T>& seq);
 template <typename T>
-void DoTraceSequence(JSTracer* trc, InfallibleTArray<T>& seq);
+void DoTraceSequence(JSTracer* trc, nsTArray<T>& seq);
 
 // Class used to trace sequences, with specializations for various
 // sequence types.
@@ -2064,7 +2064,7 @@ void DoTraceSequence(JSTracer* trc, FallibleTArray<T>& seq) {
 }
 
 template <typename T>
-void DoTraceSequence(JSTracer* trc, InfallibleTArray<T>& seq) {
+void DoTraceSequence(JSTracer* trc, nsTArray<T>& seq) {
   SequenceTracer<T>::TraceSequence(trc, seq.Elements(),
                                    seq.Elements() + seq.Length());
 }
@@ -2082,7 +2082,7 @@ class MOZ_RAII SequenceRooter final : private JS::CustomAutoRooter {
 
   template <typename CX>
   SequenceRooter(const CX& cx,
-                 InfallibleTArray<T>* aSequence MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                 nsTArray<T>* aSequence MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
         mInfallibleArray(aSequence),
         mSequenceType(eInfallibleArray) {}
@@ -2111,7 +2111,7 @@ class MOZ_RAII SequenceRooter final : private JS::CustomAutoRooter {
   }
 
   union {
-    InfallibleTArray<T>* mInfallibleArray;
+    nsTArray<T>* mInfallibleArray;
     FallibleTArray<T>* mFallibleArray;
     Nullable<nsTArray<T>>* mNullableArray;
   };

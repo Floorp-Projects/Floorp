@@ -16,8 +16,7 @@
 class nsITCPSocketCallback;
 
 namespace IPC {
-bool DeserializeArrayBuffer(JSContext* cx,
-                            const InfallibleTArray<uint8_t>& aBuffer,
+bool DeserializeArrayBuffer(JSContext* cx, const nsTArray<uint8_t>& aBuffer,
                             JS::MutableHandle<JS::Value> aVal);
 }
 

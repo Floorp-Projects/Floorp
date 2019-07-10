@@ -898,7 +898,7 @@ void VRManager::StopVRNavigation(const uint32_t& aDisplayID,
 
 #if !defined(MOZ_WIDGET_ANDROID)
 
-bool VRManager::RunPuppet(const InfallibleTArray<uint64_t>& aBuffer,
+bool VRManager::RunPuppet(const nsTArray<uint64_t>& aBuffer,
                           VRManagerParent* aManagerParent) {
   if (!StaticPrefs::dom_vr_puppet_enabled()) {
     // Sanity check to ensure that a compromised content process

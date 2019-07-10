@@ -115,7 +115,7 @@ class DataStorage : public nsIObserver {
   // aItems is used in the content process to initialize a cache of the items
   // received from the parent process over IPC. nullptr must be passed for the
   // parent process.
-  nsresult Init(const InfallibleTArray<mozilla::dom::DataStorageItem>* aItems);
+  nsresult Init(const nsTArray<mozilla::dom::DataStorageItem>* aItems);
   // Given a key and a type of data, returns a value. Returns an empty string if
   // the key is not present for that type of data. If Get is called before the
   // "data-storage-ready" event is observed, it will block. NB: It is not
@@ -139,11 +139,11 @@ class DataStorage : public nsIObserver {
       nsTArray<mozilla::dom::DataStorageEntry>& aEntries);
 
   // Read all of the data items.
-  void GetAll(InfallibleTArray<DataStorageItem>* aItems);
+  void GetAll(nsTArray<DataStorageItem>* aItems);
 
   // Set the cached copy of our DataStorage entries in the content process.
   static void SetCachedStorageEntries(
-      const InfallibleTArray<mozilla::dom::DataStorageEntry>& aEntries);
+      const nsTArray<mozilla::dom::DataStorageEntry>& aEntries);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -207,7 +207,7 @@ class DataStorage : public nsIObserver {
                                     const MutexAutoLock& aProofOfLock);
 
   void ReadAllFromTable(DataStorageType aType,
-                        InfallibleTArray<DataStorageItem>* aItems,
+                        nsTArray<DataStorageItem>* aItems,
                         const MutexAutoLock& aProofOfLock);
 
   Mutex mMutex;  // This mutex protects access to the following members:

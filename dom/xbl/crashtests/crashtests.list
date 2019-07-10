@@ -1,7 +1,7 @@
 load 205735-1.xhtml
-load 223799-1.xul
+load chrome://reftest/content/crashtests/dom/xbl/crashtests/223799-1.xul
 load 226744-1.xhtml
-load 232095-1.xul
+load chrome://reftest/content/crashtests/dom/xbl/crashtests/232095-1.xul
 load 277523-1.xhtml
 load 277950-1.xhtml
 skip-if(Android) load 336744-1.html # bug 1268050
@@ -14,10 +14,10 @@ load 378521-1.xhtml
 load 382376-1.xhtml
 load 382376-2.xhtml
 load 397596-1.xhtml
-load 406900-1.xul
+load chrome://reftest/content/crashtests/dom/xbl/crashtests/406900-1.xul
 load 406904-1.xhtml
 load 406904-2.xhtml
-load 415192-1.xul
+load chrome://reftest/content/crashtests/dom/xbl/crashtests/415192-1.xul
 load 418133-1.xhtml
 load 420233-1.xhtml
 load 421997-1.xhtml
@@ -27,12 +27,12 @@ load 460665-1.xhtml
 load 464863-1.xhtml
 load 472260-1.xhtml
 load 477878-1.html
-load 492978-1.xul
+load chrome://reftest/content/crashtests/dom/xbl/crashtests/492978-1.xul
 load 493123-1.xhtml
 load 495354-1.xhtml
 load 507628-1.xhtml
 load 507991-1.xhtml
-load 830614-1.xul
+load chrome://reftest/content/crashtests/dom/xbl/crashtests/830614-1.xul
 load 895805-1.xhtml
 load set-field-bad-this.xhtml
 load 1382357.xhtml

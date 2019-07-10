@@ -33,7 +33,7 @@ uint8_t* CryptoBuffer::Assign(const SECItem* aItem) {
   return Assign(aItem->data, aItem->len);
 }
 
-uint8_t* CryptoBuffer::Assign(const InfallibleTArray<uint8_t>& aData) {
+uint8_t* CryptoBuffer::Assign(const nsTArray<uint8_t>& aData) {
   return ReplaceElementsAt(0, Length(), aData.Elements(), aData.Length(),
                            fallible);
 }
