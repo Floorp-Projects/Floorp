@@ -1769,8 +1769,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   // unconstrained reflow, because it will occur later when the parent reflows
   // with a constrained isize.
   if (NS_SUBTREE_DIRTY(this) || aReflowInput.ShouldReflowAllKids() ||
-      IsGeometryDirty() || isPaginated || aReflowInput.IsBResize() ||
-      NeedToCollapse()) {
+      IsGeometryDirty() || isPaginated || aReflowInput.IsBResize()) {
     if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE ||
         // Also check IsBResize(), to handle the first Reflow preceding a
         // special bsize Reflow, when we've already had a special bsize
@@ -1909,13 +1908,8 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowInput);
   SetColumnDimensions(aDesiredSize.BSize(wm), wm, borderPadding,
                       aDesiredSize.PhysicalSize());
-  NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableISize(),
-               "reflow branch removed unconstrained available isizes");
-  if (NeedToCollapse()) {
-    // This code and the code it depends on assumes that all row groups
-    // and rows have just been reflowed (i.e., it makes adjustments to
-    // their rects that are not idempotent).  Thus the reflow code
-    // checks NeedToCollapse() to ensure this is true.
+  if (NeedToCollapse() &&
+      (NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableISize())) {
     AdjustForCollapsingRowsCols(aDesiredSize, wm, borderPadding);
   }
 
@@ -2910,8 +2904,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
   aOverflowAreas.Clear();
 
   bool reflowAllKids = aReflowInput.reflowInput.ShouldReflowAllKids() ||
-                       mBits.mResizedColumns || IsGeometryDirty() ||
-                       NeedToCollapse();
+                       mBits.mResizedColumns || IsGeometryDirty();
 
   RowGroupArray rowGroups;
   nsTableRowGroupFrame *thead, *tfoot;

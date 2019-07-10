@@ -97,7 +97,7 @@ load 403249-1.html
 load 403579-1.html
 load 404301-1.xhtml
 load 408753-1.xhtml
-asserts(2) load 410426-1.html # hitting a width of NS_UNCONSTRAINEDSIZE
+load 410426-1.html
 load 410428-1.xhtml
 load 411582.xhtml
 load 413091.xhtml
