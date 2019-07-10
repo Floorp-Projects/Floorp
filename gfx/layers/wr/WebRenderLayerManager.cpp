@@ -434,7 +434,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   {
     AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction", GRAPHICS);
-    InfallibleTArray<RenderRootDisplayListData> renderRootDLs;
+    nsTArray<RenderRootDisplayListData> renderRootDLs;
     for (auto renderRoot : wr::kRenderRoots) {
       if (builder.GetSendSubBuilderDisplayList(renderRoot)) {
         auto renderRootDL = renderRootDLs.AppendElement();

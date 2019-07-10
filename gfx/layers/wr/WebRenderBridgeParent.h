@@ -113,7 +113,7 @@ class WebRenderBridgeParent final
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvShutdownSync() override;
   mozilla::ipc::IPCResult RecvDeleteCompositorAnimations(
-      InfallibleTArray<uint64_t>&& aIds) override;
+      nsTArray<uint64_t>&& aIds) override;
   mozilla::ipc::IPCResult RecvUpdateResources(
       nsTArray<OpUpdateResource>&& aUpdates,
       nsTArray<RefCountedShmem>&& aSmallShmems,
@@ -121,22 +121,21 @@ class WebRenderBridgeParent final
       const wr::RenderRoot& aRenderRoot) override;
   mozilla::ipc::IPCResult RecvSetDisplayList(
       nsTArray<RenderRootDisplayListData>&& aDisplayLists,
-      InfallibleTArray<OpDestroy>&& aToDestroy,
-      const uint64_t& aFwdTransactionId, const TransactionId& aTransactionId,
-      const wr::IdNamespace& aIdNamespace, const bool& aContainsSVGGroup,
-      const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
-      const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-      const nsCString& aTxnURL, const TimeStamp& aFwdTime,
+      nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
+      const TransactionId& aTransactionId, const wr::IdNamespace& aIdNamespace,
+      const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
+      const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
+      const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+      const TimeStamp& aFwdTime,
       nsTArray<CompositionPayload>&& aPayloads) override;
   mozilla::ipc::IPCResult RecvEmptyTransaction(
       const FocusTarget& aFocusTarget, const uint32_t& aPaintSequenceNumber,
       nsTArray<RenderRootUpdates>&& aRenderRootUpdates,
-      InfallibleTArray<OpDestroy>&& aToDestroy,
-      const uint64_t& aFwdTransactionId, const TransactionId& aTransactionId,
-      const wr::IdNamespace& aIdNamespace, const VsyncId& aVsyncId,
-      const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
-      const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-      const TimeStamp& aFwdTime,
+      nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
+      const TransactionId& aTransactionId, const wr::IdNamespace& aIdNamespace,
+      const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
+      const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
+      const nsCString& aTxnURL, const TimeStamp& aFwdTime,
       nsTArray<CompositionPayload>&& aPayloads) override;
   mozilla::ipc::IPCResult RecvSetFocusTarget(
       const FocusTarget& aFocusTarget) override;
@@ -191,7 +190,7 @@ class WebRenderBridgeParent final
   void NotifyNotUsed(PTextureParent* aTexture,
                      uint64_t aTransactionId) override;
   void SendAsyncMessage(
-      const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+      const nsTArray<AsyncParentMessageData>& aMessage) override;
   void SendPendingAsyncMessages() override;
   void SetAboutToSendAsyncMessages() override;
 
@@ -356,7 +355,7 @@ class WebRenderBridgeParent final
   void ReleaseTextureOfImage(const wr::ImageKey& aKey);
 
   bool ProcessWebRenderParentCommands(
-      const InfallibleTArray<WebRenderParentCommand>& aCommands,
+      const nsTArray<WebRenderParentCommand>& aCommands,
       wr::TransactionBuilder& aTxn, wr::RenderRoot aRenderRoot);
 
   void ClearResources();
@@ -440,11 +439,11 @@ class WebRenderBridgeParent final
 
   struct CompositorAnimationIdsForEpoch {
     CompositorAnimationIdsForEpoch(const wr::Epoch& aEpoch,
-                                   InfallibleTArray<uint64_t>&& aIds)
+                                   nsTArray<uint64_t>&& aIds)
         : mEpoch(aEpoch), mIds(std::move(aIds)) {}
 
     wr::Epoch mEpoch;
-    InfallibleTArray<uint64_t> mIds;
+    nsTArray<uint64_t> mIds;
   };
 
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;

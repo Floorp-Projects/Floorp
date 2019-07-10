@@ -33,7 +33,7 @@
 #include "nsRect.h"                  // for mozilla::gfx::IntRect
 #include "nsRegion.h"                // for nsIntRegion
 #include "nsTArray.h"                // for nsTArray, nsTArray_Impl, etc
-#include "nsTArrayForwardDeclare.h"  // for InfallibleTArray
+#include "nsTArrayForwardDeclare.h"  // for nsTArray
 #include "UnitTransforms.h"          // for TransformTo
 #if defined(MOZ_WIDGET_ANDROID)
 #  include <android/log.h>

@@ -116,8 +116,7 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
 
       bool success = tiledHost->UseTiledLayerBuffer(this, tileDesc);
 
-      const InfallibleTArray<TileDescriptor>& tileDescriptors =
-          tileDesc.tiles();
+      const nsTArray<TileDescriptor>& tileDescriptors = tileDesc.tiles();
       for (size_t i = 0; i < tileDescriptors.Length(); i++) {
         const TileDescriptor& tileDesc = tileDescriptors[i];
         if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {

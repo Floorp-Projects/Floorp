@@ -117,7 +117,7 @@ class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender final {
  public:
   explicit AutoLayerTransactionParentAsyncMessageSender(
       LayerTransactionParent* aLayerTransaction,
-      const InfallibleTArray<OpDestroy>* aDestroyActors = nullptr)
+      const nsTArray<OpDestroy>* aDestroyActors = nullptr)
       : mLayerTransaction(aLayerTransaction), mActorsToDestroy(aDestroyActors) {
     mLayerTransaction->SetAboutToSendAsyncMessages();
   }
@@ -135,7 +135,7 @@ class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender final {
 
  private:
   LayerTransactionParent* mLayerTransaction;
-  const InfallibleTArray<OpDestroy>* mActorsToDestroy;
+  const nsTArray<OpDestroy>* mActorsToDestroy;
 };
 
 mozilla::ipc::IPCResult LayerTransactionParent::RecvPaintTime(
@@ -957,7 +957,7 @@ TransactionId LayerTransactionParent::FlushTransactionId(
 }
 
 void LayerTransactionParent::SendAsyncMessage(
-    const InfallibleTArray<AsyncParentMessageData>& aMessage) {
+    const nsTArray<AsyncParentMessageData>& aMessage) {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
 }
 

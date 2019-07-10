@@ -184,7 +184,7 @@ void ImageBridgeChild::ShutdownStep1(SynchronousTask* aTask) {
   MediaSystemResourceManager::Shutdown();
 
   // Force all managed protocols to shut themselves down cleanly
-  InfallibleTArray<PTextureChild*> textures;
+  nsTArray<PTextureChild*> textures;
   ManagedPTextureChild(textures);
   for (int i = textures.Length() - 1; i >= 0; --i) {
     RefPtr<TextureClient> client = TextureClient::AsTextureClient(textures[i]);
@@ -885,7 +885,7 @@ bool ImageBridgeChild::DeallocPMediaSystemResourceManagerChild(
 }
 
 mozilla::ipc::IPCResult ImageBridgeChild::RecvParentAsyncMessages(
-    InfallibleTArray<AsyncParentMessageData>&& aMessages) {
+    nsTArray<AsyncParentMessageData>&& aMessages) {
   for (AsyncParentMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
     const AsyncParentMessageData& message = aMessages[i];
 
@@ -915,7 +915,7 @@ RefPtr<ImageContainerListener> ImageBridgeChild::FindListener(
 }
 
 mozilla::ipc::IPCResult ImageBridgeChild::RecvDidComposite(
-    InfallibleTArray<ImageCompositeNotification>&& aNotifications) {
+    nsTArray<ImageCompositeNotification>&& aNotifications) {
   for (auto& n : aNotifications) {
     RefPtr<ImageContainerListener> listener = FindListener(n.compositable());
     if (listener) {
