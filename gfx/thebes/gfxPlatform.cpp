@@ -2796,7 +2796,7 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
 }
 
 static FeatureState& WebRenderHardwareQualificationStatus(
-    const IntSize& aScreenSize, bool aHasBattery, nsCString& aOutFailureId) {
+    const IntSize& aScreenSize, bool aHasBattery) {
   FeatureState& featureWebRenderQualified =
       gfxConfig::GetFeature(Feature::WEBRENDER_QUALIFIED);
   featureWebRenderQualified.EnableByDefault();
@@ -2811,9 +2811,10 @@ static FeatureState& WebRenderHardwareQualificationStatus(
   }
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsCString failureId;
   int32_t status;
   if (NS_FAILED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRENDER,
-                                          aOutFailureId, &status))) {
+                                          failureId, &status))) {
     featureWebRenderQualified.Disable(
         FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_NO_GFX_INFO"));
@@ -2822,7 +2823,7 @@ static FeatureState& WebRenderHardwareQualificationStatus(
 
   if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
     featureWebRenderQualified.Disable(FeatureStatus::Blacklisted,
-                                      "No qualified hardware", aOutFailureId);
+                                      "No qualified hardware", failureId);
     return featureWebRenderQualified;
   }
 
@@ -2914,10 +2915,8 @@ void gfxPlatform::InitWebRenderConfig() {
     return;
   }
 
-  nsCString failureId;
   FeatureState& featureWebRenderQualified =
-      WebRenderHardwareQualificationStatus(GetScreenSize(), HasBattery(),
-                                           failureId);
+      WebRenderHardwareQualificationStatus(GetScreenSize(), HasBattery());
   FeatureState& featureWebRender = gfxConfig::GetFeature(Feature::WEBRENDER);
 
   featureWebRender.DisableByDefault(
