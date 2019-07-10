@@ -601,7 +601,12 @@ nsresult GfxInfoBase::Init() {
 NS_IMETHODIMP
 GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
                               int32_t* aStatus) {
+  // Ignore the gfx.blocklist.all pref on release and beta.
+#if defined(RELEASE_OR_BETA)
+  int32_t blocklistAll = 0;
+#else
   int32_t blocklistAll = StaticPrefs::gfx_blocklist_all();
+#endif
   if (blocklistAll > 0) {
     gfxCriticalErrorOnce(gfxCriticalError::DefaultOptions(false))
         << "Forcing blocklisting all features";
