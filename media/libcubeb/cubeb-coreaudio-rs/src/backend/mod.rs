@@ -13,6 +13,7 @@ mod auto_array;
 mod auto_release;
 mod owned_critical_section;
 mod property_address;
+mod resampler;
 mod utils;
 
 use self::aggregate_device::*;
@@ -27,6 +28,7 @@ use self::coreaudio_sys_utils::string::*;
 use self::coreaudio_sys_utils::sys::*;
 use self::owned_critical_section::*;
 use self::property_address::*;
+use self::resampler::*;
 use self::utils::*;
 use atomic;
 use cubeb_backend::{
@@ -416,15 +418,12 @@ extern "C" fn audiounit_input_callback(
     let mut total_input_frames = (stm.input_linear_buffer.as_ref().unwrap().elements()
         / stm.input_desc.mChannelsPerFrame as usize) as i64;
     assert!(!stm.input_linear_buffer.as_ref().unwrap().as_ptr().is_null());
-    let outframes = unsafe {
-        ffi::cubeb_resampler_fill(
-            stm.resampler.as_mut(),
-            stm.input_linear_buffer.as_mut().unwrap().as_mut_ptr(),
-            &mut total_input_frames,
-            ptr::null_mut(),
-            0,
-        )
-    };
+    let outframes = stm.resampler.fill(
+        stm.input_linear_buffer.as_mut().unwrap().as_mut_ptr(),
+        &mut total_input_frames,
+        ptr::null_mut(),
+        0,
+    );
     if outframes < total_input_frames {
         assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
 
@@ -553,20 +552,16 @@ extern "C" fn audiounit_output_callback(
 
     // Call user callback through resampler.
     assert!(!output_buffer.is_null());
-    let outframes = unsafe {
-        ffi::cubeb_resampler_fill(
-            stm.resampler.as_mut(),
-            input_buffer,
-            if input_buffer.is_null() {
-                ptr::null_mut()
-            } else {
-                &mut input_frames
-            },
-            output_buffer,
-            i64::from(output_frames),
-        )
-    };
-
+    let outframes = stm.resampler.fill(
+        input_buffer,
+        if input_buffer.is_null() {
+            ptr::null_mut()
+        } else {
+            &mut input_frames
+        },
+        output_buffer,
+        i64::from(output_frames),
+    );
     if !input_buffer.is_null() {
         // Pop from the buffer the frames used by the the resampler.
         stm.input_linear_buffer
@@ -2458,7 +2453,7 @@ struct AudioUnitStream<'ctx> {
     latency_frames: u32,
     current_latency_frames: AtomicU32,
     panning: atomic::Atomic<f32>,
-    resampler: AutoRelease<ffi::cubeb_resampler>,
+    resampler: Resampler,
     // This is true if a device change callback is currently running.
     switching_device: AtomicBool,
     // Mixer interface
@@ -2525,7 +2520,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             latency_frames,
             current_latency_frames: AtomicU32::new(0),
             panning: atomic::Atomic::new(0.0_f32),
-            resampler: AutoRelease::new(ptr::null_mut(), ffi::cubeb_resampler_destroy),
+            resampler: Resampler::default(),
             switching_device: AtomicBool::new(false),
             mixer: AutoRelease::new(ptr::null_mut(), ffi::cubeb_mixer_destroy),
             temp_buffer: Vec::new(),
@@ -3408,43 +3403,28 @@ impl<'ctx> AudioUnitStream<'ctx> {
             self.output_stream_params.rate()
         };
 
-        let mut input_unconverted_params: ffi::cubeb_stream_params =
-            unsafe { ::std::mem::zeroed() };
-        if self.has_input() {
-            input_unconverted_params = unsafe { (*(self.input_stream_params.as_ptr())) }; // Perform copy.
-            input_unconverted_params.rate = self.input_hw_rate as u32;
-        }
-
+        let resampler_input_params = if self.has_input() {
+            let mut params = unsafe { (*(self.input_stream_params.as_ptr())) };
+            params.rate = self.input_hw_rate as u32;
+            Some(params)
+        } else {
+            None
+        };
+        let resampler_output_params = if self.has_output() {
+            let params = unsafe { (*(self.output_stream_params.as_ptr())) };
+            Some(params)
+        } else {
+            None
+        };
         let stm_ptr = self as *mut AudioUnitStream as *mut ffi::cubeb_stream;
-        let stm_input_params = if self.has_input() {
-            &mut input_unconverted_params
-        } else {
-            ptr::null_mut()
-        };
-        let stm_output_params = if self.has_output() {
-            self.output_stream_params.as_ptr()
-        } else {
-            ptr::null_mut()
-        };
-        self.resampler.reset(unsafe {
-            ffi::cubeb_resampler_create(
-                stm_ptr,
-                stm_input_params,
-                stm_output_params,
-                target_sample_rate,
-                self.data_callback,
-                self.user_ptr,
-                ffi::CUBEB_RESAMPLER_QUALITY_DESKTOP,
-            )
-        });
-
-        if self.resampler.as_ptr().is_null() {
-            cubeb_log!(
-                "({:p}) Could not create resampler.",
-                self as *const AudioUnitStream
-            );
-            return Err(Error::error());
-        }
+        self.resampler = Resampler::new(
+            stm_ptr,
+            resampler_input_params,
+            resampler_output_params,
+            target_sample_rate,
+            self.data_callback,
+            self.user_ptr,
+        );
 
         if !self.input_unit.is_null() {
             let r = audio_unit_initialize(self.input_unit);
@@ -3512,7 +3492,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             self.output_unit = ptr::null_mut();
         }
 
-        self.resampler.reset(ptr::null_mut());
+        self.resampler.destroy();
         self.mixer.reset(ptr::null_mut());
 
         {
