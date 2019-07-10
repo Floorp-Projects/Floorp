@@ -3799,6 +3799,24 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
     // anonymous content subtrees we cache style for.
     differing_properties.remove(LonghandId::XLang);
 
+    // Ignore any difference in pref-controlled, inherited properties.  These
+    // properties may or may not be set by the 'all' declaration in the
+    // minimal-xul.css rule, depending on whether the pref was enabled at the
+    // time the UA sheets were parsed.
+    //
+    // If you add a new pref-controlled, inherited property, it must be defined
+    // with `has_effect_on_gecko_scrollbars=False` to declare that
+    // different values of this property on a <scrollbar> element or its
+    // descendant scrollbar part elements should have no effect on their
+    // rendering and behavior.
+    //
+    // If you do need a pref-controlled, inherited property to have an effect
+    // on these elements, then you will need to add some checks to the
+    // nsIAnonymousContentCreator::CreateAnonymousContent implementations of
+    // ScrollFrameHelper and nsScrollbarFrame to clear the AnonymousContentKey
+    // if a non-initial value is used.
+    differing_properties.remove_all(&LonghandIdSet::has_no_effect_on_gecko_scrollbars());
+
     if !differing_properties.is_empty() {
         println_stderr!("Actual style:");
         dump_properties_and_rules(a, &differing_properties);
