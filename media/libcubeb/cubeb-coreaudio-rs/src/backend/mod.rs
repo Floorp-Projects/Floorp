@@ -220,6 +220,13 @@ fn set_notification_runloop() {
     }
 }
 
+fn clamp_latency(latency_frames: u32) -> u32 {
+    cmp::max(
+        cmp::min(latency_frames, SAFE_MAX_LATENCY_FRAMES),
+        SAFE_MIN_LATENCY_FRAMES,
+    )
+}
+
 fn audiounit_make_silent(io_data: &mut AudioBuffer) {
     assert!(!io_data.mData.is_null());
     let bytes = unsafe {
@@ -2196,13 +2203,40 @@ extern "C" fn audiounit_collection_changed_callback(
 }
 
 #[derive(Debug)]
-struct ContextStreams {
-    active_streams: u32,
+struct LatencyController {
+    streams: u32,
+    latency: Option<u32>,
 }
 
-impl Default for ContextStreams {
+impl LatencyController {
+    fn add_stream(&mut self, latency: u32) -> Option<u32> {
+        self.streams += 1;
+        // For the 1st stream set anything within safe min-max
+        if self.streams == 1 {
+            assert!(self.latency.is_none());
+            // Silently clamp the latency down to the platform default, because we
+            // synthetize the clock from the callbacks, and we want the clock to update often.
+            self.latency = Some(clamp_latency(latency));
+        }
+        self.latency
+    }
+
+    fn subtract_stream(&mut self) -> Option<u32> {
+        self.streams -= 1;
+        if self.streams == 0 {
+            assert!(self.latency.is_some());
+            self.latency = None;
+        }
+        self.latency
+    }
+}
+
+impl Default for LatencyController {
     fn default() -> Self {
-        Self { active_streams: 0 }
+        Self {
+            streams: 0,
+            latency: None,
+        }
     }
 }
 
@@ -2217,7 +2251,6 @@ pub const OPS: Ops = capi_new!(AudioUnitContext, AudioUnitStream);
 pub struct AudioUnitContext {
     _ops: *const Ops,
     mutex: OwnedCriticalSection,
-    global_latency_frames: u32,
     input_collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
     input_collection_changed_user_ptr: *mut c_void,
     output_collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
@@ -2231,7 +2264,7 @@ pub struct AudioUnitContext {
     serial_queue: dispatch_queue_t,
     layout: atomic::Atomic<ChannelLayout>,
     channels: u32,
-    streams: Mutex<ContextStreams>,
+    latency_controller: Mutex<LatencyController>,
 }
 
 impl AudioUnitContext {
@@ -2239,7 +2272,6 @@ impl AudioUnitContext {
         Self {
             _ops: &OPS as *const _,
             mutex: OwnedCriticalSection::new(),
-            global_latency_frames: 0,
             input_collection_changed_callback: None,
             input_collection_changed_user_ptr: ptr::null_mut(),
             output_collection_changed_callback: None,
@@ -2249,7 +2281,7 @@ impl AudioUnitContext {
             serial_queue: create_dispatch_queue(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL),
             layout: atomic::Atomic::new(ChannelLayout::UNDEFINED),
             channels: 0,
-            streams: Mutex::new(ContextStreams::default()),
+            latency_controller: Mutex::new(LatencyController::default()),
         }
     }
 
@@ -2257,25 +2289,19 @@ impl AudioUnitContext {
         self.mutex.init();
     }
 
-    fn increase_active_streams(&self) {
-        let mut streams = self.streams.lock().unwrap();
-        streams.active_streams += 1;
-    }
-
-    fn decrease_active_streams(&self) {
-        let mut streams = self.streams.lock().unwrap();
-        streams.active_streams -= 1;
-    }
-
     fn active_streams(&self) -> u32 {
-        let streams = self.streams.lock().unwrap();
-        streams.active_streams
+        let controller = self.latency_controller.lock().unwrap();
+        controller.streams
     }
 
-    fn set_global_latency(&mut self, latency_frames: u32) {
-        self.mutex.assert_current_thread_owns();
-        assert_eq!(self.active_streams(), 1);
-        self.global_latency_frames = latency_frames;
+    fn update_latency_by_adding_stream(&self, latency_frames: u32) -> Option<u32> {
+        let mut controller = self.latency_controller.lock().unwrap();
+        controller.add_stream(latency_frames)
+    }
+
+    fn update_latency_by_removing_stream(&self) -> Option<u32> {
+        let mut controller = self.latency_controller.lock().unwrap();
+        controller.subtract_stream()
     }
 
     fn add_devices_changed_listener(
@@ -2550,23 +2576,34 @@ impl ContextOps for AudioUnitContext {
         state_callback: ffi::cubeb_state_callback,
         user_ptr: *mut c_void,
     ) -> Result<Stream> {
-        assert!(latency_frames > 0);
-
         if (!input_device.is_null() && input_stream_params.is_none())
             || (!output_device.is_null() && output_stream_params.is_none())
         {
             return Err(Error::invalid_parameter());
         }
 
+        // Latency cannot change if another stream is operating in parallel. In this case
+        // latency is set to the other stream value.
+        let global_latency_frames = self
+            .update_latency_by_adding_stream(latency_frames)
+            .unwrap();
+        if global_latency_frames != latency_frames {
+            cubeb_log!(
+                "Use global latency {} instead of the requested latency {}.",
+                global_latency_frames,
+                latency_frames
+            );
+        }
+
         let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
         let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
-        self.increase_active_streams();
+
         let mut boxed_stream = Box::new(AudioUnitStream::new(
             self,
             user_ptr,
             data_callback,
             state_callback,
-            latency_frames,
+            global_latency_frames,
         ));
         boxed_stream.init_mutex();
 
@@ -2658,14 +2695,14 @@ impl Drop for AudioUnitContext {
         let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
 
         {
-            let streams = self.streams.lock().unwrap();
+            let controller = self.latency_controller.lock().unwrap();
             // Disabling this assert for bug 1083664 -- we seem to leak a stream
-            // assert(streams.active_streams == 0);
-            if streams.active_streams > 0 {
+            // assert(controller.streams == 0);
+            if controller.streams > 0 {
                 cubeb_log!(
                     "({:p}) API misuse, {} streams active when context destroyed!",
                     self as *const AudioUnitContext,
-                    streams.active_streams
+                    controller.streams
                 );
             }
         }
@@ -3529,15 +3566,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         Ok(())
     }
 
-    fn clamp_latency(&mut self, latency_frames: u32) -> u32 {
-        // For the 1st stream set anything within safe min-max
-        assert_eq!(self.context.active_streams(), 1);
-        cmp::max(
-            cmp::min(latency_frames, SAFE_MAX_LATENCY_FRAMES),
-            SAFE_MIN_LATENCY_FRAMES,
-        )
-    }
-
     fn set_buffer_size(&mut self, new_size_frames: u32, side: io_side) -> Result<()> {
         use std::thread;
 
@@ -4023,23 +4051,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
             }
         }
 
-        // Latency cannot change if another stream is operating in parallel. In this case
-        // latency is set to the other stream value.
-        if self.context.active_streams() > 1 {
-            cubeb_log!(
-                "({:p}) More than one active stream, use global latency.",
-                self as *const AudioUnitStream
-            );
-            self.latency_frames = self.context.global_latency_frames;
-        } else {
-            // Silently clamp the latency down to the platform default, because we
-            // synthetize the clock from the callbacks, and we want the clock to update often.
-            let latency_frames = self.latency_frames;
-            self.latency_frames = self.clamp_latency(latency_frames);
-            assert!(self.latency_frames > 0); // Ugly error check
-            self.context.set_global_latency(self.latency_frames);
-        }
-
         // Configure I/O stream
         if self.has_input() {
             if let Err(r) = self.configure_input() {
@@ -4214,7 +4225,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
         let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
         self.close();
         assert!(self.context.active_streams() >= 1);
-        self.context.decrease_active_streams();
+        self.context.update_latency_by_removing_stream();
     }
 
     fn start_internal(&self) -> Result<()> {
