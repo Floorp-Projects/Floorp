@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{MixBlendMode, PipelineId, PremultipliedColorF};
-use api::{PropertyBinding, PropertyBindingId, FontRenderMode};
+use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF};
 use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
@@ -1573,6 +1573,8 @@ pub enum PictureCompositeMode {
     /// Used to cache a picture as a series of tiles.
     TileCache {
     },
+    /// Apply an SVG filter
+    SvgFilter(Vec<FilterPrimitive>),
 }
 
 /// Enum value describing the place of a picture in a 3D context.
@@ -1938,7 +1940,8 @@ impl PicturePrimitive {
             Some(RasterConfig { composite_mode: PictureCompositeMode::MixBlend(..), .. }) |
             Some(RasterConfig { composite_mode: PictureCompositeMode::Filter(..), .. }) |
             Some(RasterConfig { composite_mode: PictureCompositeMode::ComponentTransferFilter(..), .. }) |
-            Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, ..}) |
+            Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) |
+            Some(RasterConfig { composite_mode: PictureCompositeMode::SvgFilter(..), .. }) |
             None => {
                 false
             }
@@ -2441,6 +2444,30 @@ impl PicturePrimitive {
                         let render_task_id = frame_state.render_tasks.add(picture_task);
 
                         Some((render_task_id, render_task_id))
+                    }
+                    PictureCompositeMode::SvgFilter(..) => {
+                        let uv_rect_kind = calculate_uv_rect_kind(
+                            &pic_rect,
+                            &transform,
+                            &clipped,
+                            device_pixel_scale,
+                            true,
+                        );
+
+                        let picture_task = RenderTask::new_picture(
+                            RenderTaskLocation::Dynamic(None, clipped.size),
+                            unclipped.size,
+                            pic_index,
+                            clipped.origin,
+                            uv_rect_kind,
+                            raster_spatial_node_index,
+                            surface_spatial_node_index,
+                            device_pixel_scale,
+                        );
+
+                        let render_task_id = frame_state.render_tasks.add(picture_task);
+
+                        (render_task_id, render_task_id)
                     }
                 };
 
@@ -2990,7 +3017,8 @@ impl PicturePrimitive {
                 filter_data.update(frame_state);
             }
             PictureCompositeMode::MixBlend(..) |
-            PictureCompositeMode::Blit(_) => {}
+            PictureCompositeMode::Blit(_) |
+            PictureCompositeMode::SvgFilter(_) => {}
         }
 
         true
