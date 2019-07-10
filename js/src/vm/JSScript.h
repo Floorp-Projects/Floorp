@@ -1766,7 +1766,7 @@ class alignas(uint32_t) SharedScriptData final {
   SharedScriptData& operator=(const SharedScriptData&) = delete;
 };
 
-struct SharedScriptDataHasher;
+struct RuntimeScriptDataHasher;
 
 // Script data that is shareable across a JSRuntime.
 class RuntimeScriptData final {
@@ -1786,7 +1786,7 @@ class RuntimeScriptData final {
 
   friend class ::JSScript;
   friend class js::SharedScriptData;
-  friend struct js::SharedScriptDataHasher;
+  friend struct js::RuntimeScriptDataHasher;
 
  private:
   // Layout of trailing arrays.
@@ -1858,7 +1858,7 @@ class RuntimeScriptData final {
 
 // Two SharedScriptData instances may be de-duplicated if they have the same
 // data in their immutableData() span. This Hasher enables that comparison.
-struct SharedScriptDataHasher {
+struct RuntimeScriptDataHasher {
   using Lookup = RefPtr<RuntimeScriptData>;
 
   static HashNumber hash(const Lookup& l) {
@@ -1878,8 +1878,8 @@ struct SharedScriptDataHasher {
 
 class AutoLockScriptData;
 
-using ScriptDataTable =
-    HashSet<RuntimeScriptData*, SharedScriptDataHasher, SystemAllocPolicy>;
+using RuntimeScriptDataTable =
+    HashSet<RuntimeScriptData*, RuntimeScriptDataHasher, SystemAllocPolicy>;
 
 extern void SweepScriptData(JSRuntime* rt);
 

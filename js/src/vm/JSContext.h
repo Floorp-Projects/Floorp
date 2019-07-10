@@ -368,7 +368,7 @@ struct JSContext : public JS::RootingContext,
   js::SymbolRegistry& symbolRegistry() { return runtime_->symbolRegistry(); }
 
   // Methods to access runtime data that must be protected by locks.
-  js::ScriptDataTable& scriptDataTable(js::AutoLockScriptData& lock) {
+  js::RuntimeScriptDataTable& scriptDataTable(js::AutoLockScriptData& lock) {
     return runtime_->scriptDataTable(lock);
   }
 
