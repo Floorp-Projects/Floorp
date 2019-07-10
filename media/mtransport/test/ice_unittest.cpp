@@ -3202,8 +3202,8 @@ TEST_F(WebRtcIceConnectTest, TestConsentDelayed) {
   /* Note: We don't have a list of STUN transaction IDs of the previously timed
            out consent requests. Thus responses after sending the next consent
            request are ignored. */
-  p1_->SetStunResponseDelay(300);
-  p2_->SetStunResponseDelay(300);
+  p1_->SetStunResponseDelay(200);
+  p2_->SetStunResponseDelay(200);
   PR_Sleep(1000);
   AssertConsentRefresh();
   SendReceive();
