@@ -418,12 +418,15 @@ extern "C" fn audiounit_input_callback(
     let mut total_input_frames = (stm.input_linear_buffer.as_ref().unwrap().elements()
         / stm.input_desc.mChannelsPerFrame as usize) as i64;
     assert!(!stm.input_linear_buffer.as_ref().unwrap().as_ptr().is_null());
-    let outframes = stm.resampler.fill(
-        stm.input_linear_buffer.as_mut().unwrap().as_mut_ptr(),
-        &mut total_input_frames,
-        ptr::null_mut(),
-        0,
-    );
+    let outframes = {
+        let mut stream_device = stm.stream_device.lock().unwrap();
+        stream_device.resampler.fill(
+            stm.input_linear_buffer.as_mut().unwrap().as_mut_ptr(),
+            &mut total_input_frames,
+            ptr::null_mut(),
+            0,
+        )
+    };
     if outframes < total_input_frames {
         assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
 
@@ -552,16 +555,19 @@ extern "C" fn audiounit_output_callback(
 
     // Call user callback through resampler.
     assert!(!output_buffer.is_null());
-    let outframes = stm.resampler.fill(
-        input_buffer,
-        if input_buffer.is_null() {
-            ptr::null_mut()
-        } else {
-            &mut input_frames
-        },
-        output_buffer,
-        i64::from(output_frames),
-    );
+    let outframes = {
+        let mut stream_device = stm.stream_device.lock().unwrap();
+        stream_device.resampler.fill(
+            input_buffer,
+            if input_buffer.is_null() {
+                ptr::null_mut()
+            } else {
+                &mut input_frames
+            },
+            output_buffer,
+            i64::from(output_frames),
+        )
+    };
     if !input_buffer.is_null() {
         // Pop from the buffer the frames used by the the resampler.
         stm.input_linear_buffer
@@ -2397,12 +2403,14 @@ unsafe impl Sync for AudioUnitContext {}
 #[derive(Debug)]
 struct StreamDevice {
     aggregate_device: AggregateDevice,
+    resampler: Resampler,
 }
 
 impl Default for StreamDevice {
     fn default() -> Self {
         Self {
             aggregate_device: AggregateDevice::default(),
+            resampler: Resampler::default(),
         }
     }
 }
@@ -2453,7 +2461,6 @@ struct AudioUnitStream<'ctx> {
     latency_frames: u32,
     current_latency_frames: AtomicU32,
     panning: atomic::Atomic<f32>,
-    resampler: Resampler,
     // This is true if a device change callback is currently running.
     switching_device: AtomicBool,
     // Mixer interface
@@ -2520,7 +2527,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
             latency_frames,
             current_latency_frames: AtomicU32::new(0),
             panning: atomic::Atomic::new(0.0_f32),
-            resampler: Resampler::default(),
             switching_device: AtomicBool::new(false),
             mixer: AutoRelease::new(ptr::null_mut(), ffi::cubeb_mixer_destroy),
             temp_buffer: Vec::new(),
@@ -3416,15 +3422,20 @@ impl<'ctx> AudioUnitStream<'ctx> {
         } else {
             None
         };
-        let stm_ptr = self as *mut AudioUnitStream as *mut ffi::cubeb_stream;
-        self.resampler = Resampler::new(
-            stm_ptr,
-            resampler_input_params,
-            resampler_output_params,
-            target_sample_rate,
-            self.data_callback,
-            self.user_ptr,
-        );
+
+        {
+            let stm_ptr = self as *mut AudioUnitStream as *mut ffi::cubeb_stream;
+
+            let mut stream_device = self.stream_device.lock().unwrap();
+            stream_device.resampler = Resampler::new(
+                stm_ptr,
+                resampler_input_params,
+                resampler_output_params,
+                target_sample_rate,
+                self.data_callback,
+                self.user_ptr,
+            );
+        }
 
         if !self.input_unit.is_null() {
             let r = audio_unit_initialize(self.input_unit);
@@ -3492,11 +3503,11 @@ impl<'ctx> AudioUnitStream<'ctx> {
             self.output_unit = ptr::null_mut();
         }
 
-        self.resampler.destroy();
         self.mixer.reset(ptr::null_mut());
 
         {
             let mut stream_device = self.stream_device.lock().unwrap();
+            stream_device.resampler.destroy();
             stream_device.aggregate_device = AggregateDevice::default();
         }
     }
