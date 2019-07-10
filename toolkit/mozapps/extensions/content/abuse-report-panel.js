@@ -42,6 +42,7 @@ const ABUSE_REASONS = (window.ABUSE_REPORT_REASONS = {
     hasSuggestions: true,
     isExampleHidden: hideOnThemeType,
     isReasonHidden: showOnAnyType,
+    requiresSupportURL: true,
   },
   policy: {
     hasSuggestions: true,
@@ -68,17 +69,24 @@ function getReasonL10nId(reason, addonType) {
   return l10nId;
 }
 
-function getSuggestionsTemplate(reason, addonType) {
+function getSuggestionsTemplate({ addonType, reason, supportURL }) {
   const reasonInfo = ABUSE_REASONS[reason];
-  if (!reasonInfo.hasSuggestions) {
+
+  if (
+    !addonType ||
+    !reasonInfo.hasSuggestions ||
+    (reasonInfo.requiresSupportURL && !supportURL)
+  ) {
     return null;
   }
+
   let templateId = `tmpl-suggestions-${reason}`;
   // Special case reasons that have a addonType-specific
   // suggestion template.
   if (reasonInfo.hasAddonTypeSuggestionTemplate) {
     templateId += `-${addonType}`;
   }
+
   return document.getElementById(templateId);
 }
 
@@ -308,13 +316,14 @@ class AbuseReasonSuggestions extends HTMLElement {
   update() {
     const { addonType, extensionSupportURL, reason } = this;
 
-    if (!addonType) {
-      return;
-    }
-
     this.textContent = "";
 
-    let template = getSuggestionsTemplate(reason, addonType);
+    let template = getSuggestionsTemplate({
+      addonType,
+      reason,
+      supportURL: extensionSupportURL,
+    });
+
     if (template) {
       let content = document.importNode(template.content, true);
 
