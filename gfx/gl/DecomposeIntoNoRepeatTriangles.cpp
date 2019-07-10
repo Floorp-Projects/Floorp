@@ -10,9 +10,8 @@
 namespace mozilla {
 namespace gl {
 
-void RectTriangles::AppendRectToCoordArray(InfallibleTArray<coord>& array,
-                                           GLfloat x0, GLfloat y0, GLfloat x1,
-                                           GLfloat y1) {
+void RectTriangles::AppendRectToCoordArray(nsTArray<coord>& array, GLfloat x0,
+                                           GLfloat y0, GLfloat x1, GLfloat y1) {
   coord* v = array.AppendElements(6);
 
   v[0].x = x0;
