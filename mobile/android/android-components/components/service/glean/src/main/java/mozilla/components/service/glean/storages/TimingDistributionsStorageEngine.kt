@@ -246,8 +246,8 @@ data class TimingDistributionData(
 
     /**
      * Accumulates a sample to the correct bucket, using a binary search to locate the index of the
-     * bucket where the sample is bigger than or equal to the bucket value.
-     * If a mapped value doesn't exist for this bucket yet, one is created.
+     * bucket where the sample is bigger than or equal to the bucket limit.
+     * If a value doesn't exist for this bucket yet, one is created.
      *
      * @param sample Long value representing the sample that is being accumulated
      */
