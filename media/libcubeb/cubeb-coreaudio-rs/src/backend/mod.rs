@@ -256,6 +256,48 @@ fn create_device_info(id: AudioDeviceID, devtype: DeviceType) -> Result<device_i
     Ok(info)
 }
 
+fn create_stream_description(stream_params: &StreamParams) -> Result<AudioStreamBasicDescription> {
+    assert!(stream_params.rate() > 0);
+    assert!(stream_params.channels() > 0);
+
+    let mut desc = AudioStreamBasicDescription::default();
+
+    match stream_params.format() {
+        SampleFormat::S16LE => {
+            desc.mBitsPerChannel = 16;
+            desc.mFormatFlags = kAudioFormatFlagIsSignedInteger;
+        }
+        SampleFormat::S16BE => {
+            desc.mBitsPerChannel = 16;
+            desc.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsBigEndian;
+        }
+        SampleFormat::Float32LE => {
+            desc.mBitsPerChannel = 32;
+            desc.mFormatFlags = kAudioFormatFlagIsFloat;
+        }
+        SampleFormat::Float32BE => {
+            desc.mBitsPerChannel = 32;
+            desc.mFormatFlags = kAudioFormatFlagIsFloat | kAudioFormatFlagIsBigEndian;
+        }
+        _ => {
+            return Err(Error::invalid_format());
+        }
+    }
+
+    desc.mFormatID = kAudioFormatLinearPCM;
+    desc.mFormatFlags |= kLinearPCMFormatFlagIsPacked;
+    desc.mSampleRate = f64::from(stream_params.rate());
+    desc.mChannelsPerFrame = stream_params.channels();
+
+    desc.mBytesPerFrame = (desc.mBitsPerChannel / 8) * desc.mChannelsPerFrame;
+    desc.mFramesPerPacket = 1;
+    desc.mBytesPerPacket = desc.mBytesPerFrame * desc.mFramesPerPacket;
+
+    desc.mReserved = 0;
+
+    Ok(desc)
+}
+
 fn set_volume(unit: AudioUnit, volume: f32) -> Result<()> {
     assert!(!unit.is_null());
     let r = audio_unit_set_parameter(
@@ -844,49 +886,6 @@ fn audiounit_get_current_channel_layout(output_unit: AudioUnit) -> ChannelLayout
     }
 
     audiounit_convert_channel_layout(layout.as_ref())
-}
-
-fn audio_stream_desc_init(
-    ss: &mut AudioStreamBasicDescription,
-    stream_params: &StreamParams,
-) -> Result<()> {
-    assert!(stream_params.rate() > 0);
-    assert!(stream_params.channels() > 0);
-
-    match stream_params.format() {
-        SampleFormat::S16LE => {
-            ss.mBitsPerChannel = 16;
-            ss.mFormatFlags = kAudioFormatFlagIsSignedInteger;
-        }
-        SampleFormat::S16BE => {
-            ss.mBitsPerChannel = 16;
-            ss.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsBigEndian;
-        }
-        SampleFormat::Float32LE => {
-            ss.mBitsPerChannel = 32;
-            ss.mFormatFlags = kAudioFormatFlagIsFloat;
-        }
-        SampleFormat::Float32BE => {
-            ss.mBitsPerChannel = 32;
-            ss.mFormatFlags = kAudioFormatFlagIsFloat | kAudioFormatFlagIsBigEndian;
-        }
-        _ => {
-            return Err(Error::invalid_format());
-        }
-    }
-
-    ss.mFormatID = kAudioFormatLinearPCM;
-    ss.mFormatFlags |= kLinearPCMFormatFlagIsPacked;
-    ss.mSampleRate = f64::from(stream_params.rate());
-    ss.mChannelsPerFrame = stream_params.channels();
-
-    ss.mBytesPerFrame = (ss.mBitsPerChannel / 8) * ss.mChannelsPerFrame;
-    ss.mFramesPerPacket = 1;
-    ss.mBytesPerPacket = ss.mBytesPerFrame * ss.mFramesPerPacket;
-
-    ss.mReserved = 0;
-
-    Ok(())
 }
 
 fn audiounit_set_channel_layout(
@@ -3773,13 +3772,13 @@ impl<'ctx> AudioUnitStream<'ctx> {
         );
 
         // Set format description according to the input params.
-        if let Err(r) = audio_stream_desc_init(&mut self.input_desc, &self.input_stream_params) {
+        self.input_desc = create_stream_description(&self.input_stream_params).map_err(|e| {
             cubeb_log!(
                 "({:p}) Setting format description for input failed.",
                 self as *const AudioUnitStream
             );
-            return Err(r);
-        }
+            e
+        })?;
 
         // Use latency to set buffer size
         assert_ne!(self.latency_frames, 0);
@@ -3887,13 +3886,13 @@ impl<'ctx> AudioUnitStream<'ctx> {
             self.latency_frames
         );
 
-        if let Err(r) = audio_stream_desc_init(&mut self.output_desc, &self.output_stream_params) {
+        self.output_desc = create_stream_description(&self.output_stream_params).map_err(|e| {
             cubeb_log!(
                 "({:p}) Could not initialize the audio stream description.",
                 self as *const AudioUnitStream
             );
-            return Err(r);
-        }
+            e
+        })?;
 
         // Get output device sample rate.
         let mut output_hw_desc = AudioStreamBasicDescription::default();
