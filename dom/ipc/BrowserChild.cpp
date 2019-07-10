@@ -2172,7 +2172,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvAsyncMessage(
-    const nsString& aMessage, InfallibleTArray<CpowEntry>&& aCpows,
+    const nsString& aMessage, nsTArray<CpowEntry>&& aCpows,
     nsIPrincipal* aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserChild::RecvAsyncMessage",
                                              OTHER, aMessage);
@@ -2912,7 +2912,7 @@ bool BrowserChild::DoSendBlockingMessage(
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return false;
   }
-  InfallibleTArray<CpowEntry> cpows;
+  nsTArray<CpowEntry> cpows;
   if (aCpows) {
     jsipc::CPOWManager* mgr = Manager()->GetCPOWManager();
     if (!mgr || !mgr->Wrap(aCx, aCpows, &cpows)) {
@@ -2937,7 +2937,7 @@ nsresult BrowserChild::DoSendAsyncMessage(JSContext* aCx,
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
-  InfallibleTArray<CpowEntry> cpows;
+  nsTArray<CpowEntry> cpows;
   if (aCpows) {
     jsipc::CPOWManager* mgr = Manager()->GetCPOWManager();
     if (!mgr || !mgr->Wrap(aCx, aCpows, &cpows)) {

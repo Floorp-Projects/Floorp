@@ -332,16 +332,16 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
-      InfallibleTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
+      nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
       nsTArray<ipc::StructuredCloneData>* aRetVal);
 
   mozilla::ipc::IPCResult RecvRpcMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
-      InfallibleTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
+      nsTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
       nsTArray<ipc::StructuredCloneData>* aRetVal);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMessage,
-                                           InfallibleTArray<CpowEntry>&& aCpows,
+                                           nsTArray<CpowEntry>&& aCpows,
                                            nsIPrincipal* aPrincipal,
                                            const ClonedMessageData& aData);
 
@@ -772,8 +772,7 @@ class BrowserParent final : public PBrowserParent,
                                        const Maybe<URIParams>& aLastVisitedURI,
                                        const uint32_t& aFlags);
 
-  mozilla::ipc::IPCResult RecvQueryVisitedState(
-      InfallibleTArray<URIParams>&& aURIs);
+  mozilla::ipc::IPCResult RecvQueryVisitedState(nsTArray<URIParams>&& aURIs);
 
   mozilla::ipc::IPCResult RecvFireFrameLoadEvent(bool aIsTrusted);
 
