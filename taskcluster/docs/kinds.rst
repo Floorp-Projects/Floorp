@@ -232,11 +232,6 @@ Beetmover, takes source specific artifact checksums and pushes it to a location 
 of Taskcluster's task artifacts (archive.mozilla.org as one place) and in the
 process determines the final location and "pretty" names it (version product name)
 
-google-play-strings
--------------------
-Download strings to display on Google Play from https://l10n.mozilla-community.org/stores_l10n/.
-Artifact is then used by push-apk.
-
 push-apk
 --------
 PushApk publishes Android packages onto Google Play Store. Jobs of this kind take
