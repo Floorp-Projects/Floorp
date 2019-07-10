@@ -181,11 +181,6 @@ function hasPermission(addon, permission) {
   return !!(addon.permissions & PERMISSION_MASKS[permission]);
 }
 
-function isPending(addon, action) {
-  const amAction = AddonManager["PENDING_" + action.toUpperCase()];
-  return !!(addon.pendingOperations & amAction);
-}
-
 async function getAddonMessageInfo(addon) {
   const { name } = addon;
   const appName = brandBundle.GetStringFromName("brandShortName");
