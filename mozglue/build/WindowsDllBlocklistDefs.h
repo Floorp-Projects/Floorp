@@ -209,6 +209,10 @@ DLL_BLOCKLIST_ENTRY("nviewh64.dll", MAKE_VERSION(6, 14, 10, 14847))
 DLL_BLOCKLIST_ENTRY("wbload.dll", ALL_VERSIONS,
                     DllBlockInfo::CHILD_PROCESSES_ONLY)
 
+// Ivanti Endpoint Security, bug 1553776
+DLL_BLOCKLIST_ENTRY("sxwmon.dll", ALL_VERSIONS)
+DLL_BLOCKLIST_ENTRY("sxwmon64.dll", ALL_VERSIONS)
+
 #ifdef ENABLE_TESTS
 
 // DLLs used by TestDllBlocklist* gTests
