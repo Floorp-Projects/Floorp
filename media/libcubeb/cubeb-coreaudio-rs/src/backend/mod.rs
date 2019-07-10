@@ -227,6 +227,35 @@ fn clamp_latency(latency_frames: u32) -> u32 {
     )
 }
 
+fn create_device_info(id: AudioDeviceID, devtype: DeviceType) -> Result<device_info> {
+    assert_ne!(id, kAudioObjectSystemObject);
+
+    let mut info = device_info {
+        id: id,
+        flags: match devtype {
+            DeviceType::INPUT => device_flags::DEV_INPUT,
+            DeviceType::OUTPUT => device_flags::DEV_OUTPUT,
+            _ => panic!("Only accept input or output type"),
+        },
+    };
+
+    let default_device_id = audiounit_get_default_device_id(devtype);
+    if default_device_id == kAudioObjectUnknown {
+        return Err(Error::error());
+    }
+
+    if id == kAudioObjectUnknown {
+        info.id = default_device_id;
+        info.flags |= device_flags::DEV_SELECTED_DEFAULT;
+    }
+
+    if info.id == default_device_id {
+        info.flags |= device_flags::DEV_SYSTEM_DEFAULT;
+    }
+
+    Ok(info)
+}
+
 fn audiounit_make_silent(io_data: &mut AudioBuffer) {
     assert!(!io_data.mData.is_null());
     let bytes = unsafe {
@@ -2634,29 +2663,31 @@ impl ContextOps for AudioUnitContext {
             assert!(!stream_params_ref.as_ptr().is_null());
             boxed_stream.input_stream_params =
                 StreamParams::from(unsafe { (*stream_params_ref.as_ptr()) });
-            if let Err(r) =
-                boxed_stream.set_device_info(input_device as AudioDeviceID, io_side::INPUT)
-            {
-                cubeb_log!(
-                    "({:p}) Fail to set device info for input.",
-                    boxed_stream.as_ref()
-                );
-                return Err(r);
-            }
+            boxed_stream.input_device =
+                create_device_info(input_device as AudioDeviceID, DeviceType::INPUT).map_err(
+                    |e| {
+                        cubeb_log!(
+                            "({:p}) Fail to create device info for input.",
+                            boxed_stream.as_ref()
+                        );
+                        e
+                    },
+                )?;
         }
         if let Some(stream_params_ref) = output_stream_params {
             assert!(!stream_params_ref.as_ptr().is_null());
             boxed_stream.output_stream_params =
                 StreamParams::from(unsafe { *(stream_params_ref.as_ptr()) });
-            if let Err(r) =
-                boxed_stream.set_device_info(output_device as AudioDeviceID, io_side::OUTPUT)
-            {
-                cubeb_log!(
-                    "({:p}) Fail to set device info for output.",
-                    boxed_stream.as_ref()
-                );
-                return Err(r);
-            }
+            boxed_stream.output_device =
+                create_device_info(output_device as AudioDeviceID, DeviceType::OUTPUT).map_err(
+                    |e| {
+                        cubeb_log!(
+                            "({:p}) Fail to create device info for output.",
+                            boxed_stream.as_ref()
+                        );
+                        e
+                    },
+                )?;
         }
 
         if let Err(r) = {
@@ -3023,46 +3054,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
             .ceil() as i64
     }
 
-    fn set_device_info(&mut self, id: AudioDeviceID, side: io_side) -> Result<()> {
-        let (info, devtype) = if side == io_side::INPUT {
-            (&mut self.input_device, DeviceType::INPUT)
-        } else {
-            (&mut self.output_device, DeviceType::OUTPUT)
-        };
-
-        *info = device_info::default();
-        info.id = id;
-        info.flags |= if side == io_side::INPUT {
-            device_flags::DEV_INPUT
-        } else {
-            device_flags::DEV_OUTPUT
-        };
-
-        let default_device_id = audiounit_get_default_device_id(devtype);
-        if default_device_id == kAudioObjectUnknown {
-            return Err(Error::error());
-        }
-
-        if id == kAudioObjectUnknown {
-            info.id = default_device_id;
-            info.flags |= device_flags::DEV_SELECTED_DEFAULT;
-        }
-
-        if info.id == default_device_id {
-            info.flags |= device_flags::DEV_SYSTEM_DEFAULT;
-        }
-
-        assert_ne!(info.id, kAudioObjectUnknown);
-        assert!(
-            info.flags.contains(device_flags::DEV_INPUT)
-                && !info.flags.contains(device_flags::DEV_OUTPUT)
-                || !info.flags.contains(device_flags::DEV_INPUT)
-                    && info.flags.contains(device_flags::DEV_OUTPUT)
-        );
-
-        Ok(())
-    }
-
     fn reinit(&mut self) -> Result<()> {
         if !self.shutdown.load(Ordering::SeqCst) {
             self.stop_internal();
@@ -3101,21 +3092,26 @@ impl<'ctx> AudioUnitStream<'ctx> {
                 kAudioObjectUnknown
             };
 
-            if has_input && self.set_device_info(input_device, io_side::INPUT).is_err() {
-                cubeb_log!("({:p}) Set input device info failed. This can happen when last media device is unplugged", self as *const AudioUnitStream);
-                return Err(Error::error());
+            if has_input {
+                self.input_device = create_device_info(input_device, DeviceType::INPUT).map_err(|e| {
+                    cubeb_log!(
+                        "({:p}) Create input device info failed. This can happen when last media device is unplugged",
+                        self as *const AudioUnitStream
+                    );
+                    e
+                })?;
             }
 
             // Always use the default output on reinit. This is not correct in every
             // case but it is sufficient for Firefox and prevent reinit from reporting
             // failures. It will change soon when reinit mechanism will be updated.
-            if self
-                .set_device_info(kAudioObjectUnknown, io_side::OUTPUT)
-                .is_err()
-            {
-                cubeb_log!("({:p}) Set output device info failed. This can happen when last media device is unplugged", self as *const AudioUnitStream);
-                return Err(Error::error());
-            }
+            self.output_device = create_device_info(kAudioObjectUnknown, DeviceType::OUTPUT).map_err(|e| {
+                cubeb_log!(
+                    "({:p}) Create output device info failed. This can happen when last media device is unplugged",
+                    self as *const AudioUnitStream
+                );
+                e
+            })?;
 
             if self.setup().is_err() {
                 cubeb_log!(
@@ -3126,17 +3122,21 @@ impl<'ctx> AudioUnitStream<'ctx> {
                     // Attempt to re-use the same device-id failed, so attempt again with
                     // default input device.
                     self.close();
-                    if self
-                        .set_device_info(kAudioObjectUnknown, io_side::INPUT)
-                        .is_err()
-                        || self.setup().is_err()
-                    {
+                    self.input_device = create_device_info(kAudioObjectUnknown, DeviceType::INPUT)
+                        .map_err(|e| {
+                            cubeb_log!(
+                                "({:p}) Create input device info failed. This can happen when last media device is unplugged",
+                                self as *const AudioUnitStream
+                            );
+                            e
+                        })?;
+                    self.setup().map_err(|e| {
                         cubeb_log!(
                             "({:p}) Second stream reinit failed.",
                             self as *const AudioUnitStream
                         );
-                        return Err(Error::error());
-                    }
+                        e
+                    })?;
                 }
             }
 
