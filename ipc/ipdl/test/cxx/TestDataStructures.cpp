@@ -4,7 +4,7 @@
 
 #include "IPDLUnitTests.h"  // fail etc.
 
-typedef InfallibleTArray<nsIntRegion> RegionArray;
+typedef nsTArray<nsIntRegion> RegionArray;
 
 namespace mozilla {
 namespace _ipdltest {
@@ -15,8 +15,7 @@ static const uint32_t nactors = 10;
   if (!(_cond)) fail(_msg)
 
 template <typename T>
-static void assert_arrays_equal(const InfallibleTArray<T>& a,
-                                const InfallibleTArray<T>& b) {
+static void assert_arrays_equal(const nsTArray<T>& a, const nsTArray<T>& b) {
   test_assert(a == b, "arrays equal");
 }
 
@@ -52,8 +51,8 @@ bool TestDataStructuresParent::DeallocPTestDataStructuresSubParent(
   return true;
 }
 
-mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest1(
-    InfallibleTArray<int>&& ia, InfallibleTArray<int>* oa) {
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest1(nsTArray<int>&& ia,
+                                                            nsTArray<int>* oa) {
   test_assert(5 == ia.Length(), "wrong length");
   for (int i = 0; i < 5; ++i) test_assert(i == ia[i], "wrong value");
 
@@ -63,8 +62,8 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest1(
 }
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest2(
-    InfallibleTArray<PTestDataStructuresSubParent*>&& i1,
-    InfallibleTArray<PTestDataStructuresSubParent*>* o1) {
+    nsTArray<PTestDataStructuresSubParent*>&& i1,
+    nsTArray<PTestDataStructuresSubParent*>* o1) {
   test_assert(nactors == i1.Length(), "wrong #actors");
   for (uint32_t i = 0; i < i1.Length(); ++i)
     test_assert(i == Cast(i1[i]).mI, "wrong mI value");
@@ -86,7 +85,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest3(const IntDouble& i1,
 }
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest4(
-    InfallibleTArray<IntDouble>&& i1, InfallibleTArray<IntDouble>* o1) {
+    nsTArray<IntDouble>&& i1, nsTArray<IntDouble>* o1) {
   test_assert(4 == i1.Length(), "wrong length");
   test_assert(1 == i1[0].get_int(), "wrong value");
   test_assert(2.0 == i1[1].get_double(), "wrong value");
@@ -104,13 +103,13 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest5(
     IntDoubleArrays* o3) {
   test_assert(42 == i1.get_int(), "wrong value");
 
-  const InfallibleTArray<int>& i2a = i2.get_ArrayOfint();
+  const nsTArray<int>& i2a = i2.get_ArrayOfint();
   test_assert(3 == i2a.Length(), "wrong length");
   test_assert(1 == i2a[0], "wrong value");
   test_assert(2 == i2a[1], "wrong value");
   test_assert(3 == i2a[2], "wrong value");
 
-  const InfallibleTArray<double>& i3a = i3.get_ArrayOfdouble();
+  const nsTArray<double>& i3a = i3.get_ArrayOfdouble();
   test_assert(3 == i3a.Length(), "wrong length");
   test_assert(1.0 == i3a[0], "wrong value");
   test_assert(2.0 == i3a[1], "wrong value");
@@ -139,20 +138,19 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest7_0(
 }
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest6(
-    InfallibleTArray<IntDoubleArrays>&& i1,
-    InfallibleTArray<IntDoubleArrays>* o1) {
+    nsTArray<IntDoubleArrays>&& i1, nsTArray<IntDoubleArrays>* o1) {
   test_assert(3 == i1.Length(), "wrong length");
 
   IntDoubleArrays id1(i1[0]);
   test_assert(42 == id1.get_int(), "wrong value");
 
-  InfallibleTArray<int> i2a(i1[1].get_ArrayOfint());
+  nsTArray<int> i2a(i1[1].get_ArrayOfint());
   test_assert(3 == i2a.Length(), "wrong length");
   test_assert(1 == i2a[0], "wrong value");
   test_assert(2 == i2a[1], "wrong value");
   test_assert(3 == i2a[2], "wrong value");
 
-  InfallibleTArray<double> i3a(i1[2].get_ArrayOfdouble());
+  nsTArray<double> i3a(i1[2].get_ArrayOfdouble());
   test_assert(3 == i3a.Length(), "wrong length");
   test_assert(1.0 == i3a[0], "wrong value");
   test_assert(2.0 == i3a[1], "wrong value");
@@ -170,7 +168,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest7(
     Actors* o2, Actors* o3) {
   test_assert(42 == i1.get_int(), "wrong value");
 
-  InfallibleTArray<int> i2a(i2.get_ArrayOfint());
+  nsTArray<int> i2a(i2.get_ArrayOfint());
   test_assert(3 == i2a.Length(), "wrong length");
   test_assert(1 == i2a[0], "wrong value");
   test_assert(2 == i2a[1], "wrong value");
@@ -186,11 +184,11 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest7(
 }
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest8(
-    InfallibleTArray<Actors>&& i1, InfallibleTArray<Actors>* o1) {
+    nsTArray<Actors>&& i1, nsTArray<Actors>* o1) {
   test_assert(3 == i1.Length(), "wrong length");
   test_assert(42 == i1[0].get_int(), "wrong value");
 
-  const InfallibleTArray<int>& i2a = i1[1].get_ArrayOfint();
+  const nsTArray<int>& i2a = i1[1].get_ArrayOfint();
   test_assert(3 == i2a.Length(), "wrong length");
   test_assert(1 == i2a[0], "wrong value");
   test_assert(2 == i2a[1], "wrong value");
@@ -208,7 +206,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest9(
     Unions* o1, Unions* o2, Unions* o3, Unions* o4) {
   test_assert(42 == i1.get_int(), "wrong value");
 
-  const InfallibleTArray<int>& i2a = i2.get_ArrayOfint();
+  const nsTArray<int>& i2a = i2.get_ArrayOfint();
   test_assert(3 == i2a.Length(), "wrong length");
   test_assert(1 == i2a[0], "wrong value");
   test_assert(2 == i2a[1], "wrong value");
@@ -216,7 +214,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest9(
 
   assert_arrays_equal(mKids, i3.get_ArrayOfPTestDataStructuresSubParent());
 
-  const InfallibleTArray<PTestDataStructuresSubParent*>& i4a =
+  const nsTArray<PTestDataStructuresSubParent*>& i4a =
       i4.get_ArrayOfActors()[0].get_ArrayOfPTestDataStructuresSubParent();
   assert_arrays_equal(mKids, i4a);
 
@@ -229,10 +227,10 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest9(
 }
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest10(
-    InfallibleTArray<Unions>&& i1, InfallibleTArray<Unions>* o1) {
+    nsTArray<Unions>&& i1, nsTArray<Unions>* o1) {
   test_assert(42 == i1[0].get_int(), "wrong value");
 
-  const InfallibleTArray<int>& i2a = i1[1].get_ArrayOfint();
+  const nsTArray<int>& i2a = i1[1].get_ArrayOfint();
   test_assert(3 == i2a.Length(), "wrong length");
   test_assert(1 == i2a[0], "wrong value");
   test_assert(2 == i2a[1], "wrong value");
@@ -240,7 +238,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest10(
 
   assert_arrays_equal(mKids, i1[2].get_ArrayOfPTestDataStructuresSubParent());
 
-  const InfallibleTArray<PTestDataStructuresSubParent*>& i4a =
+  const nsTArray<PTestDataStructuresSubParent*>& i4a =
       i1[3].get_ArrayOfActors()[0].get_ArrayOfPTestDataStructuresSubParent();
   assert_arrays_equal(mKids, i4a);
 
@@ -259,12 +257,12 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest11(
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest12(
     const SIntDoubleArrays& i, SIntDoubleArrays* o) {
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
 
-  InfallibleTArray<double> ad;
+  nsTArray<double> ad;
   ad.AppendElement(.5);
   ad.AppendElement(1.0);
   ad.AppendElement(2.0);
@@ -280,7 +278,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest12(
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest13(const SActors& i,
                                                              SActors* o) {
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
@@ -296,7 +294,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest13(const SActors& i,
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest14(const Structs& i,
                                                              Structs* o) {
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
@@ -319,7 +317,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest15(
     const WithStructs& i1, const WithStructs& i2, const WithStructs& i3,
     const WithStructs& i4, const WithStructs& i5, WithStructs* o1,
     WithStructs* o2, WithStructs* o3, WithStructs* o4, WithStructs* o5) {
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
@@ -356,7 +354,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest16(
     const WithUnions& i, WithUnions* o) {
   test_assert(i.i() == 42, "wrong value");
 
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
@@ -367,7 +365,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest16(
   assert_arrays_equal(mKids,
                       i.aa()[0].get_ArrayOfPTestDataStructuresSubParent());
 
-  const InfallibleTArray<Unions>& iau = i.au();
+  const nsTArray<Unions>& iau = i.au();
   test_assert(iau[0] == 42, "wrong value");
   assert_arrays_equal(ai, iau[1].get_ArrayOfint());
   assert_arrays_equal(mKids, iau[2].get_ArrayOfPTestDataStructuresSubParent());
@@ -381,7 +379,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest16(
 }
 
 mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest17(
-    InfallibleTArray<Op>&& sa) {
+    nsTArray<Op>&& sa) {
   test_assert(sa.Length() == 1 && Op::TSetAttrs == sa[0].type(), "wrong value");
   return IPC_OK();
 }
@@ -445,11 +443,11 @@ mozilla::ipc::IPCResult TestDataStructuresChild::RecvStart() {
 }
 
 void TestDataStructuresChild::Test1() {
-  InfallibleTArray<int> ia;
+  nsTArray<int> ia;
 
   for (int i = 0; i < 5; ++i) ia.AppendElement(i);
 
-  InfallibleTArray<int> oa;
+  nsTArray<int> oa;
   if (!SendTest1(ia, &oa)) fail("can't send Test1");
 
   assert_arrays_equal(ia, oa);
@@ -458,7 +456,7 @@ void TestDataStructuresChild::Test1() {
 }
 
 void TestDataStructuresChild::Test2() {
-  InfallibleTArray<PTestDataStructuresSubChild*> oa;
+  nsTArray<PTestDataStructuresSubChild*> oa;
   if (!SendTest2(mKids, &oa)) fail("can't send Test2");
   assert_arrays_equal(mKids, oa);
 
@@ -481,13 +479,13 @@ void TestDataStructuresChild::Test3() {
 }
 
 void TestDataStructuresChild::Test4() {
-  InfallibleTArray<IntDouble> i1;
+  nsTArray<IntDouble> i1;
   i1.AppendElement(IntDouble(int(1)));
   i1.AppendElement(IntDouble(2.0));
   i1.AppendElement(IntDouble(int(3)));
   i1.AppendElement(IntDouble(4.0));
 
-  InfallibleTArray<IntDouble> o1;
+  nsTArray<IntDouble> o1;
   if (!SendTest4(i1, &o1)) fail("can't send Test4");
 
   // TODO Union::operator==()
@@ -502,11 +500,11 @@ void TestDataStructuresChild::Test4() {
 
 void TestDataStructuresChild::Test5() {
   IntDoubleArrays i1(int(42));
-  InfallibleTArray<int> i2;
+  nsTArray<int> i2;
   i2.AppendElement(1);
   i2.AppendElement(2);
   i2.AppendElement(3);
-  InfallibleTArray<double> i3;
+  nsTArray<double> i3;
   i3.AppendElement(1.0);
   i3.AppendElement(2.0);
   i3.AppendElement(3.0);
@@ -524,27 +522,27 @@ void TestDataStructuresChild::Test5() {
 
 void TestDataStructuresChild::Test6() {
   IntDoubleArrays id1(int(42));
-  InfallibleTArray<int> id2;
+  nsTArray<int> id2;
   id2.AppendElement(1);
   id2.AppendElement(2);
   id2.AppendElement(3);
-  InfallibleTArray<double> id3;
+  nsTArray<double> id3;
   id3.AppendElement(1.0);
   id3.AppendElement(2.0);
   id3.AppendElement(3.0);
 
-  InfallibleTArray<IntDoubleArrays> i1;
+  nsTArray<IntDoubleArrays> i1;
   i1.AppendElement(id1);
   i1.AppendElement(IntDoubleArrays(id2));
   i1.AppendElement(IntDoubleArrays(id3));
 
-  InfallibleTArray<IntDoubleArrays> o1;
+  nsTArray<IntDoubleArrays> o1;
   if (!SendTest6(i1, &o1)) fail("can't send Test6");
 
   test_assert(3 == o1.Length(), "wrong length");
   IntDoubleArrays od1(o1[0]);
-  InfallibleTArray<int> od2(o1[1].get_ArrayOfint());
-  InfallibleTArray<double> od3(o1[2].get_ArrayOfdouble());
+  nsTArray<int> od2(o1[1].get_ArrayOfint());
+  nsTArray<double> od3(o1[2].get_ArrayOfdouble());
 
   test_assert(42 == od1.get_int(), "wrong value");
   assert_arrays_equal(id2, od2);
@@ -576,7 +574,7 @@ void TestDataStructuresChild::Test7_0() {
 
 void TestDataStructuresChild::Test7() {
   Actors i1(42);
-  InfallibleTArray<int> i2a;
+  nsTArray<int> i2a;
   i2a.AppendElement(1);
   i2a.AppendElement(2);
   i2a.AppendElement(3);
@@ -594,17 +592,17 @@ void TestDataStructuresChild::Test7() {
 
 void TestDataStructuresChild::Test8() {
   Actors i1e(42);
-  InfallibleTArray<int> i2a;
+  nsTArray<int> i2a;
   i2a.AppendElement(1);
   i2a.AppendElement(2);
   i2a.AppendElement(3);
 
-  InfallibleTArray<Actors> i1;
+  nsTArray<Actors> i1;
   i1.AppendElement(i1e);
   i1.AppendElement(i2a);
   i1.AppendElement(mKids);
 
-  InfallibleTArray<Actors> o1;
+  nsTArray<Actors> o1;
   if (!SendTest8(i1, &o1)) fail("can't send Test8");
 
   test_assert(3 == o1.Length(), "wrong length");
@@ -618,12 +616,12 @@ void TestDataStructuresChild::Test8() {
 void TestDataStructuresChild::Test9() {
   Unions i1(int(42));
 
-  InfallibleTArray<int> i2a;
+  nsTArray<int> i2a;
   i2a.AppendElement(1);
   i2a.AppendElement(2);
   i2a.AppendElement(3);
 
-  InfallibleTArray<Actors> i4a;
+  nsTArray<Actors> i4a;
   i4a.AppendElement(mKids);
 
   Unions o1, o2, o3, o4;
@@ -644,21 +642,21 @@ void TestDataStructuresChild::Test9() {
 void TestDataStructuresChild::Test10() {
   Unions i1a(int(42));
 
-  InfallibleTArray<int> i2a;
+  nsTArray<int> i2a;
   i2a.AppendElement(1);
   i2a.AppendElement(2);
   i2a.AppendElement(3);
 
-  InfallibleTArray<Actors> i4a;
+  nsTArray<Actors> i4a;
   i4a.AppendElement(mKids);
 
-  InfallibleTArray<Unions> i1;
+  nsTArray<Unions> i1;
   i1.AppendElement(i1a);
   i1.AppendElement(Unions(i2a));
   i1.AppendElement(Unions(mKids));
   i1.AppendElement(Unions(i4a));
 
-  InfallibleTArray<Unions> o1;
+  nsTArray<Unions> o1;
   if (!SendTest10(i1, &o1)) fail("can't send Test10");
 
   test_assert(4 == o1.Length(), "wrong length");
@@ -684,12 +682,12 @@ void TestDataStructuresChild::Test11() {
 }
 
 void TestDataStructuresChild::Test12() {
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
 
-  InfallibleTArray<double> ad;
+  nsTArray<double> ad;
   ad.AppendElement(.5);
   ad.AppendElement(1.0);
   ad.AppendElement(2.0);
@@ -707,7 +705,7 @@ void TestDataStructuresChild::Test12() {
 }
 
 void TestDataStructuresChild::Test13() {
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
@@ -728,7 +726,7 @@ void TestDataStructuresChild::Test13() {
 }
 
 void TestDataStructuresChild::Test14() {
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
@@ -737,7 +735,7 @@ void TestDataStructuresChild::Test14() {
   ia.i() = 42;
   ia.ai() = ai;
   ia.apChild() = mKids;
-  InfallibleTArray<SActors> aa;
+  nsTArray<SActors> aa;
   aa.AppendElement(ia);
 
   Structs i;
@@ -762,7 +760,7 @@ void TestDataStructuresChild::Test14() {
 }
 
 void TestDataStructuresChild::Test15() {
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
@@ -771,7 +769,7 @@ void TestDataStructuresChild::Test15() {
   ia.i() = 42;
   ia.ai() = ai;
   ia.apChild() = mKids;
-  InfallibleTArray<SActors> iaa;
+  nsTArray<SActors> iaa;
   iaa.AppendElement(ia);
 
   Structs is;
@@ -779,7 +777,7 @@ void TestDataStructuresChild::Test15() {
   is.ai() = ai;
   is.apChild() = mKids;
   is.aa() = iaa;
-  InfallibleTArray<Structs> isa;
+  nsTArray<Structs> isa;
   isa.AppendElement(is);
 
   WithStructs o1, o2, o3, o4, o5;
@@ -814,7 +812,7 @@ void TestDataStructuresChild::Test16() {
 
   i.i() = 42;
 
-  InfallibleTArray<int> ai;
+  nsTArray<int> ai;
   ai.AppendElement(1);
   ai.AppendElement(2);
   ai.AppendElement(3);
@@ -822,11 +820,11 @@ void TestDataStructuresChild::Test16() {
 
   i.apChild() = mKids;
 
-  InfallibleTArray<Actors> iaa;
+  nsTArray<Actors> iaa;
   iaa.AppendElement(mKids);
   i.aa() = iaa;
 
-  InfallibleTArray<Unions> iau;
+  nsTArray<Unions> iau;
   iau.AppendElement(int(42));
   iau.AppendElement(ai);
   iau.AppendElement(mKids);
@@ -843,7 +841,7 @@ void TestDataStructuresChild::Test16() {
   const Actors& oaa = o.aa()[0];
   assert_arrays_equal(oaa.get_ArrayOfPTestDataStructuresSubChild(), mKids);
 
-  const InfallibleTArray<Unions>& oau = o.au();
+  const nsTArray<Unions>& oau = o.au();
   test_assert(oau[0] == 42, "wrong value");
   assert_arrays_equal(oau[1].get_ArrayOfint(), ai);
   assert_arrays_equal(oau[2].get_ArrayOfPTestDataStructuresSubChild(), mKids);
@@ -859,7 +857,7 @@ void TestDataStructuresChild::Test17() {
   attrs.common() = CommonAttrs(true);
   attrs.specific() = BarAttrs(1.0f);
 
-  InfallibleTArray<Op> ops;
+  nsTArray<Op> ops;
   ops.AppendElement(SetAttrs(nullptr, mKids[0], attrs));
 
   if (!SendTest17(ops)) fail("sending Test17");
