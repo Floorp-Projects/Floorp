@@ -23,6 +23,7 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
   (moz-deny default)
   ; These are not included in (deny default)
   (moz-deny process-info*)
+  (allow process-info-pidinfo (target self))
   ; This isn't available in some older macOS releases.
   (if (defined? 'nvram*)
     (moz-deny nvram*))
