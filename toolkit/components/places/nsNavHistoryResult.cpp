@@ -1071,8 +1071,13 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_URILess(
   if (a->IsURI() && b->IsURI()) {
     // normal URI or visit
     value = a->mURI.Compare(b->mURI.get());
+  } else if (a->IsContainer() && !b->IsContainer()) {
+    // Containers appear before entries with a uri.
+    return -1;
+  } else if (b->IsContainer() && !a->IsContainer()) {
+    return 1;
   } else {
-    // for everything else, use title (= host name)
+    // For everything else, use title sorting.
     value = SortComparison_StringLess(NS_ConvertUTF8toUTF16(a->mTitle),
                                       NS_ConvertUTF8toUTF16(b->mTitle));
   }
