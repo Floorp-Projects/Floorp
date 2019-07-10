@@ -9,6 +9,8 @@
 #include "MainThreadUtils.h"
 #include "mozilla/gfx/DrawTargetRecording.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/layers/CanvasDrawEventRecorder.h"
 #include "RecordedCanvasEventImpl.h"
 
@@ -104,7 +106,7 @@ already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
   RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
       gfx::BackendType::SKIA, gfx::IntSize(1, 1), aFormat);
   RefPtr<gfx::DrawTarget> dt =
-      MakeAndAddRef<gfx::DrawTargetRecording>(mRecorder, dummyDt, aSize);
+      MakeAndAddRef<gfx::DrawTargetRecording>(mRecorder, dummyDt, gfx::IntRect(gfx::IntPoint(0, 0), aSize));
   return dt.forget();
 }
 
