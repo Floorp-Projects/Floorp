@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
     'nsCursorManager.mm',
     'nsDeviceContextSpecX.mm',
     'nsFilePicker.mm',
+    'nsIconLoaderService.mm',
     'nsIdleServiceX.mm',
     'nsLookAndFeel.mm',
     'nsMacCursor.mm',
