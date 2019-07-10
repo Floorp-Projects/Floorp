@@ -28,9 +28,6 @@ add_task(async function() {
     // about:debugging requires specific wait code for internal pending RDP requests.
     "debugging",
     "debugging-new",
-    // about:protections uses RPM to send a message as soon as the page loads,
-    // the page is destoryed before getting a response.
-    "protections",
   ];
 
   for (let cid in Cc) {
