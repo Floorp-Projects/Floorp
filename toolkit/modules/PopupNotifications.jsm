@@ -341,8 +341,9 @@ PopupNotifications.prototype = {
    *        header.  The string may optionally contain one or two "<>" as a
    *        placeholder which is later replaced by a host name or an addon name
    *        that is formatted to look bold, in which case the options.name
-   *        property (as well as options.secondName if passing two "<>"
-   *        placeholders) needs to be specified.
+   *        property (as well as options.secondName if passing a "<>" and a "{}"
+   *        placeholder) needs to be specified. "<>" will be considered as the
+   *        first and "{}" as the second placeholder.
    * @param anchorID
    *        The ID of the element that should be used as this notification
    *        popup's anchor. May be null, in which case the notification will be
@@ -474,7 +475,9 @@ PopupNotifications.prototype = {
    *                     An optional string formatted to look bold and used in the
    *                     notification description header text. Usually a host name or
    *                     addon name. This is similar to name, and only used in case
-   *                     where message contains two "<>" placeholders.
+   *                     where message contains a "<>" and a "{}" placeholder. "<>"
+   *                     is considered the first and "{}" is considered the second
+   *                     placeholder.
    *        escAction:
    *                     An optional string indicating the action to take when the
    *                     Esc key is pressed. This should be set to the name of the
@@ -790,13 +793,21 @@ PopupNotifications.prototype = {
    */
   _formatDescriptionMessage(n) {
     let text = {};
-    let array = n.message.split("<>");
+    let array = n.message.split(/<>|{}/);
     text.start = array[0] || "";
     text.name = n.options.name || "";
     text.end = array[1] || "";
     if (array.length == 3) {
       text.secondName = n.options.secondName || "";
       text.secondEnd = array[2] || "";
+
+      // name and secondName should be in logical positions.  Swap them in case
+      // the second placeholder came before the first one in the original string.
+      if (n.message.indexOf("{}") < n.message.indexOf("<>")) {
+        let tmp = text.name;
+        text.name = text.secondName;
+        text.secondName = tmp;
+      }
     } else if (array.length > 3) {
       Cu.reportError("Unexpected array length encountered in " +
                      "_formatDescriptionMessage: " + array.length);
