@@ -669,8 +669,7 @@ void FT2FontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
  * the font list from chrome to content via IPC.
  */
 
-void FT2FontFamily::AddFacesToFontList(
-    InfallibleTArray<FontListEntry>* aFontList) {
+void FT2FontFamily::AddFacesToFontList(nsTArray<FontListEntry>* aFontList) {
   for (int i = 0, n = mAvailableFonts.Length(); i < n; ++i) {
     const FT2FontEntry* fe =
         static_cast<const FT2FontEntry*>(mAvailableFonts[i].get());
@@ -1260,7 +1259,7 @@ void gfxFT2FontList::FindFonts() {
 
   if (!XRE_IsParentProcess()) {
     // Content process: ask the Chrome process to give us the list
-    InfallibleTArray<FontListEntry> fonts;
+    nsTArray<FontListEntry> fonts;
     mozilla::dom::ContentChild::GetSingleton()->SendReadFontList(&fonts);
     for (uint32_t i = 0, n = fonts.Length(); i < n; ++i) {
       // We don't need to identify "standard" font files here,
@@ -1449,8 +1448,7 @@ void gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
   }
 }
 
-void gfxFT2FontList::GetSystemFontList(
-    InfallibleTArray<FontListEntry>* retValue) {
+void gfxFT2FontList::GetSystemFontList(nsTArray<FontListEntry>* retValue) {
   for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
     auto family = static_cast<FT2FontFamily*>(iter.Data().get());
     family->AddFacesToFontList(retValue);
