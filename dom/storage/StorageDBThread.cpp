@@ -313,8 +313,7 @@ bool StorageDBThread::ShouldPreloadOrigin(const nsACString& aOrigin) {
   return mOriginsHavingData.Contains(aOrigin);
 }
 
-void StorageDBThread::GetOriginsHavingData(
-    InfallibleTArray<nsCString>* aOrigins) {
+void StorageDBThread::GetOriginsHavingData(nsTArray<nsCString>* aOrigins) {
   MonitorAutoLock monitor(mThreadObserver->GetMonitor());
   for (auto iter = mOriginsHavingData.Iter(); !iter.Done(); iter.Next()) {
     aOrigins->AppendElement(iter.Get()->GetKey());
