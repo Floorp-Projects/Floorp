@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.state.state
 
+import android.graphics.Bitmap
+
 /**
  * Value type that represents the state of the content within a [SessionState].
  *
@@ -14,8 +16,10 @@ package mozilla.components.browser.state.state
  * @property searchTerms the last used search terms, or an empty string if no
  * search was executed for this session.
  * @property securityInfo the security information as [SecurityInfoState],
- * describing whether or not the current session is for a secure URL, as well
+ * describing whether or not the this session is for a secure URL, as well
  * as the host and SSL certificate authority.
+ * @property thumbnail the last generated [Bitmap] of this session's content, to
+ * be used as a preview in e.g. a tab switcher.
  */
 data class ContentState(
     val url: String,
@@ -24,5 +28,6 @@ data class ContentState(
     val progress: Int = 0,
     val loading: Boolean = false,
     val searchTerms: String = "",
-    val securityInfo: SecurityInfoState = SecurityInfoState()
+    val securityInfo: SecurityInfoState = SecurityInfoState(),
+    val thumbnail: Bitmap? = null
 )

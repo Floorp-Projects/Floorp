@@ -15,6 +15,9 @@ internal object ContentStateReducer {
      */
     fun reduce(state: BrowserState, action: ContentAction): BrowserState {
         return when (action) {
+            is ContentAction.RemoveThumbnailAction -> updateContentState(state, action.sessionId) {
+                it.copy(thumbnail = null)
+            }
             is ContentAction.UpdateUrlAction -> updateContentState(state, action.sessionId) {
                 it.copy(url = action.url)
             }
@@ -32,6 +35,9 @@ internal object ContentStateReducer {
             }
             is ContentAction.UpdateSecurityInfo -> updateContentState(state, action.sessionId) {
                 it.copy(securityInfo = action.securityInfo)
+            }
+            is ContentAction.UpdateThumbnailAction -> updateContentState(state, action.sessionId) {
+                it.copy(thumbnail = action.thumbnail)
             }
         }
     }

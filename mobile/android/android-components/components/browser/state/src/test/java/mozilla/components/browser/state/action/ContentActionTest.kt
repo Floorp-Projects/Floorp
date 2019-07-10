@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.action
 
+import android.graphics.Bitmap
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
@@ -15,9 +16,11 @@ import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.spy
 
 class ContentActionTest {
     private lateinit var store: BrowserStore
@@ -154,6 +157,40 @@ class ContentActionTest {
         assertEquals(true, tab.content.securityInfo.secure)
         assertEquals("mozilla.org", tab.content.securityInfo.host)
         assertEquals("The Mozilla Team", tab.content.securityInfo.issuer)
+    }
+
+    @Test
+    fun `UpdateThumbnailAction updates thumbnail`() {
+        val thumbnail = spy(Bitmap::class.java)
+
+        assertNotEquals(thumbnail, tab.content.thumbnail)
+        assertNotEquals(thumbnail, otherTab.content.thumbnail)
+
+        store.dispatch(
+                ContentAction.UpdateThumbnailAction(tab.id, thumbnail)
+        ).joinBlocking()
+
+        assertEquals(thumbnail, tab.content.thumbnail)
+        assertNotEquals(thumbnail, otherTab.content.thumbnail)
+    }
+
+    @Test
+    fun `RemoveThumbnailAction removes thumbnail`() {
+        val thumbnail = spy(Bitmap::class.java)
+
+        assertNotEquals(thumbnail, tab.content.thumbnail)
+
+        store.dispatch(
+                ContentAction.UpdateThumbnailAction(tab.id, thumbnail)
+        ).joinBlocking()
+
+        assertEquals(thumbnail, tab.content.thumbnail)
+
+        store.dispatch(
+                ContentAction.RemoveThumbnailAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.thumbnail)
     }
 
     @Test

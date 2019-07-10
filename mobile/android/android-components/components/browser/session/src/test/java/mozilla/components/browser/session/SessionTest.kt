@@ -677,6 +677,24 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when thumbnail changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        val emptyThumbnail = spy(Bitmap::class.java)
+        session.thumbnail = emptyThumbnail
+        verify(store).dispatch(ContentAction.UpdateThumbnailAction(session.id, emptyThumbnail))
+
+        session.thumbnail = null
+        verify(store).dispatch(ContentAction.RemoveThumbnailAction(session.id))
+
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
     fun `session observer has default methods`() {
         val session = Session("")
         val defaultObserver = object : Session.Observer {}

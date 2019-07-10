@@ -11,10 +11,12 @@ import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfo
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
+import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
 import mozilla.components.browser.state.store.BrowserStore
@@ -332,6 +334,9 @@ class Session(
      */
     var thumbnail: Bitmap? by Delegates.observable<Bitmap?>(null) { _, _, new ->
         notifyObservers { onThumbnailChanged(this@Session, new) }
+
+        val action = if (new != null) UpdateThumbnailAction(id, new) else RemoveThumbnailAction(id)
+        store?.syncDispatch(action)
     }
 
     /**

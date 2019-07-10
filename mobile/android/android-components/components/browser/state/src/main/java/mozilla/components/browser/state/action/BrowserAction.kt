@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.action
 
+import android.graphics.Bitmap
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SecurityInfoState
@@ -99,6 +100,11 @@ sealed class CustomTabListAction : BrowserAction() {
  */
 sealed class ContentAction : BrowserAction() {
     /**
+     * Removes the thumbnail of the [ContentState] with the given [sessionId].
+     */
+    data class RemoveThumbnailAction(val sessionId: String) : ContentAction()
+
+    /**
      * Updates the URL of the [ContentState] with the given [sessionId].
      */
     data class UpdateUrlAction(val sessionId: String, val url: String) : ContentAction()
@@ -127,4 +133,9 @@ sealed class ContentAction : BrowserAction() {
      * Updates the [SecurityInfoState] of the [ContentState] with the given [sessionId].
      */
     data class UpdateSecurityInfo(val sessionId: String, val securityInfo: SecurityInfoState) : ContentAction()
+
+    /**
+     * Updates the thumbnail of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateThumbnailAction(val sessionId: String, val thumbnail: Bitmap) : ContentAction()
 }
