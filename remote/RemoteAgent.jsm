@@ -117,9 +117,9 @@ class RemoteAgentClass {
   async close() {
     if (this.listening) {
       try {
-        // Disconnect the targets first in order to ensure closing all pending
-        // connection first. Otherwise Httpd's stop is not going to resolve.
-        this.targets.clear();
+        // Destroy all the targets first in order to ensure closing all pending
+        // connections first. Otherwise Httpd's stop is not going to resolve.
+        this.targets.destructor();
 
         await this.server.stop();
 
