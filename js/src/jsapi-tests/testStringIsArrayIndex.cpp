@@ -61,6 +61,8 @@ static const struct TestTuple {
     {"123abc", 2, true, 12},
 };
 
+#undef STR
+
 BEGIN_TEST(testStringIsArrayIndex) {
   for (size_t i = 0, sz = ArrayLength(tests); i < sz; i++) {
     uint32_t index;

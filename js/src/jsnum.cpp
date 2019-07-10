@@ -21,7 +21,7 @@
 #  include <locale.h>
 #endif
 #include <math.h>
-#include <string.h>
+#include <string.h>  // memmove
 
 #include "jstypes.h"
 
@@ -55,6 +55,7 @@ using mozilla::IsAsciiDigit;
 using mozilla::Maybe;
 using mozilla::MinNumberValue;
 using mozilla::NegativeInfinity;
+using mozilla::NumberEqualsInt32;
 using mozilla::PositiveInfinity;
 using mozilla::RangedPtr;
 using mozilla::Utf8AsUnsignedChars;
@@ -1440,7 +1441,7 @@ static char* FracNumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
 #ifdef DEBUG
   {
     int32_t _;
-    MOZ_ASSERT(!mozilla::NumberEqualsInt32(d, &_));
+    MOZ_ASSERT(!NumberEqualsInt32(d, &_));
   }
 #endif
 
@@ -1468,13 +1469,35 @@ static char* FracNumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
   return numStr;
 }
 
+void JS::NumberToString(double d, char (&out)[MaximumNumberToStringLength]) {
+  int32_t i;
+  if (NumberEqualsInt32(d, &i)) {
+    ToCStringBuf cbuf;
+    size_t len;
+    char* loc = Int32ToCString(&cbuf, i, &len, 10);
+    memmove(out, loc, len);
+    out[len] = '\0';
+  } else {
+    const double_conversion::DoubleToStringConverter& converter =
+        double_conversion::DoubleToStringConverter::EcmaScriptConverter();
+
+    double_conversion::StringBuilder builder(out, sizeof(out));
+    converter.ToShortest(d, &builder);
+
+#ifdef DEBUG
+    char* result =
+#endif
+        builder.Finalize();
+    MOZ_ASSERT(out == result);
+  }
+}
+
 char* js::NumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
                           int base /* = 10*/) {
   int32_t i;
   size_t len;
-  return mozilla::NumberEqualsInt32(d, &i)
-             ? Int32ToCString(cbuf, i, &len, base)
-             : FracNumberToCString(cx, cbuf, d, base);
+  return NumberEqualsInt32(d, &i) ? Int32ToCString(cbuf, i, &len, base)
+                                  : FracNumberToCString(cx, cbuf, d, base);
 }
 
 template <AllowGC allowGC>
@@ -1489,7 +1512,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
 
   int32_t i;
   bool isBase10Int = false;
-  if (mozilla::NumberEqualsInt32(d, &i)) {
+  if (NumberEqualsInt32(d, &i)) {
     isBase10Int = (base == 10);
     if (isBase10Int && StaticStrings::hasInt(i)) {
       return cx->staticStrings().getInt(i);
@@ -1561,7 +1584,7 @@ JSString* js::NumberToStringHelperPure(JSContext* cx, double d) {
 
 JSAtom* js::NumberToAtom(JSContext* cx, double d) {
   int32_t si;
-  if (mozilla::NumberEqualsInt32(d, &si)) {
+  if (NumberEqualsInt32(d, &si)) {
     return Int32ToAtom(cx, si);
   }
 
