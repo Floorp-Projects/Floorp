@@ -10,4 +10,11 @@ interface nsIURI;
 interface nsIRemoteWebProgressRequest : nsISupports
 {
   void init(in nsIURI aURI, in nsIURI aOriginalURI);
+
+  // This field is available to users in |OnStateChange| methods only
+  // when the document whose progress is being described by this progress
+  // request is top level and its status has just changed from loading to
+  // completely loaded; for invocations of |OnStateChange| before or after
+  // that transition, this field will throw |NS_ERROR_UNAVAILABLE|.
+  readonly attribute uint64_t elapsedLoadTimeMS;
 };

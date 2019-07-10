@@ -3522,6 +3522,25 @@ NS_IMETHODIMP BrowserChild::OnStateChange(nsIWebProgress* aWebProgress,
   MOZ_TRY(PrepareProgressListenerData(aWebProgress, aRequest, webProgressData,
                                       requestData));
 
+  /*
+   * If
+   * 1) this document is top-level,
+   * 2) this document is completely loaded (STATE_STOP), and
+   * 3) this is the end of activity for a document
+   *    (STATE_IS_WINDOW, STATE_IS_NETWORK),
+   * then record the elapsed time that it took to load.
+   */
+  if (webProgressData->isTopLevel() &&
+      (aStateFlags & nsIWebProgressListener::STATE_STOP) &&
+      (aStateFlags & nsIWebProgressListener::STATE_IS_WINDOW) &&
+      (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)) {
+    RefPtr<nsDOMNavigationTiming> navigationTiming =
+        document->GetNavigationTiming();
+    TimeDuration elapsedLoadTimeMS =
+        TimeStamp::Now() - navigationTiming->GetNavigationStartTimeStamp();
+    requestData.elapsedLoadTimeMS() = Some(elapsedLoadTimeMS.ToMilliseconds());
+  }
+
   if (webProgressData->isTopLevel()) {
     stateChangeData.emplace();
 
