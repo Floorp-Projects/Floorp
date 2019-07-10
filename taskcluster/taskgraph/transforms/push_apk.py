@@ -30,7 +30,6 @@ push_apk_description_schema = Schema({
     Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('worker'): object,
     Required('scopes'): None,
-    Required('requires'): task_description_schema['requires'],
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
     Optional('extra'): task_description_schema['extra'],
@@ -109,7 +108,7 @@ def generate_dependencies(dependent_tasks):
     dependencies = {}
     for task in dependent_tasks:
         platform_match = PLATFORM_REGEX.match(task.label)
-        # platform_match is None when the google-play-string task is given, for instance
+        # platform_match is None when the push-apk-checks task is given, for instance
         task_kind = task.kind if platform_match is None else \
             '{}-{}'.format(task.kind, platform_match.group(1))
         dependencies[task_kind] = task.label
@@ -118,24 +117,13 @@ def generate_dependencies(dependent_tasks):
 
 def generate_upstream_artifacts(job, dependencies):
     artifact_prefix = get_artifact_prefix(job)
-    apks = [{
+    return [{
         'taskId': {'task-reference': '<{}>'.format(task_kind)},
         'taskType': 'signing',
         'paths': ['{}/target.apk'.format(artifact_prefix)],
     } for task_kind in dependencies.keys()
-      if task_kind not in ('google-play-strings', 'push-apk-checks')
+      if task_kind != 'push-apk-checks'
     ]
-
-    google_play_strings = [{
-        'taskId': {'task-reference': '<{}>'.format(task_kind)},
-        'taskType': 'build',
-        'paths': ['public/google_play_strings.json'],
-        'optional': True,
-    } for task_kind in dependencies.keys()
-      if 'google-play-strings' in task_kind
-    ]
-
-    return apks + google_play_strings
 
 
 @transforms.add
