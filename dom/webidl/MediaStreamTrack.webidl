@@ -46,7 +46,7 @@ dictionary MediaTrackConstraintSet {
     ConstrainLong height;
     ConstrainDouble frameRate;
     ConstrainDOMString facingMode;
-    DOMString mediaSource = "camera";
+    DOMString mediaSource;
     long long browserWindow;
     boolean scrollWithPage;
     ConstrainDOMString deviceId;
