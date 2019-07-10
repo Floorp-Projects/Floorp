@@ -283,7 +283,7 @@ macosx1014-64-shippable/opt:
         - web-platform-tests-wdspec-headless
 
 macosx1014-64/debug:
-    build-platform: macosx64-shippable/opt
+    build-platform: macosx64/debug
     test-sets:
         - macosx1014-64-tests
         # - marionette-media-tests
