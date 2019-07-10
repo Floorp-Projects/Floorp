@@ -715,11 +715,6 @@ nsAppStartup::GetStartupInfo(JSContext* aCx,
 
     procTime = TimeStamp::ProcessCreation(&error);
 
-    if (error) {
-      Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS,
-                            StartupTimeline::PROCESS_CREATION);
-    }
-
     StartupTimeline::Record(StartupTimeline::PROCESS_CREATION, procTime);
   }
 
@@ -732,8 +727,6 @@ nsAppStartup::GetStartupInfo(JSContext* aCx,
       // Always define main to aid with bug 689256.
       stamp = procTime;
       MOZ_ASSERT(!stamp.IsNull());
-      Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS,
-                            StartupTimeline::MAIN);
     }
 
     if (!stamp.IsNull()) {
@@ -743,8 +736,6 @@ nsAppStartup::GetStartupInfo(JSContext* aCx,
             aCx, JS::NewDateObject(aCx, JS::TimeClip(prStamp)));
         JS_DefineProperty(aCx, obj, StartupTimeline::Describe(ev), date,
                           JSPROP_ENUMERATE);
-      } else {
-        Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, ev);
       }
     }
   }
