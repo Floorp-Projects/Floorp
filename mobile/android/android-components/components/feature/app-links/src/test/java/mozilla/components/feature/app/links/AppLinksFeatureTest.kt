@@ -93,7 +93,8 @@ class AppLinksFeatureTest {
             mockContext,
             mockSessionManager,
             useCases = mockUseCases,
-            interceptLinkClicks = false
+            interceptLinkClicks = false,
+            whitelistedSchemes = setOf()
         )
 
         subject.start()
@@ -119,6 +120,28 @@ class AppLinksFeatureTest {
     }
 
     @Test
+    fun `it tests for whitelisted schemes links when triggered by user clicking on a link`() {
+        val whitelistedScheme = "whitelisted"
+        val session = createSession(false)
+        val subject = AppLinksFeature(
+            mockContext,
+            mockSessionManager,
+            interceptLinkClicks = false,
+            whitelistedSchemes = setOf(whitelistedScheme),
+            useCases = mockUseCases
+        )
+
+        val url = "$whitelistedScheme://example.com"
+        val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(url, 0), url, false)
+        `when`(mockGetRedirect.invoke(url)).thenReturn(whitelistedRedirect)
+
+        subject.handleLoadRequest(session, url, true)
+
+        verify(mockGetRedirect).invoke(url)
+        verify(mockOpenRedirect).invoke(whitelistedRedirect)
+    }
+
+    @Test
     fun `when valid sessionId is provided, observe its session`() {
         feature = AppLinksFeature(
             mockContext,
@@ -140,6 +163,21 @@ class AppLinksFeatureTest {
             mockContext,
             sessionManager = mockSessionManager,
             useCases = mockUseCases
+        )
+
+        feature.start()
+
+        verify(mockSessionManager).register(feature.observer)
+    }
+
+    @Test
+    fun `when a whitelist of schemes is provided, observe the selected session`() {
+        feature = AppLinksFeature(
+            mockContext,
+            sessionManager = mockSessionManager,
+            useCases = mockUseCases,
+            interceptLinkClicks = false,
+            whitelistedSchemes = setOf("whitelisted")
         )
 
         feature.start()

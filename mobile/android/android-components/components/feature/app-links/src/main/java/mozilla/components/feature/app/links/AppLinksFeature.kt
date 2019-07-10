@@ -40,7 +40,8 @@ class AppLinksFeature(
     private val context: Context,
     private val sessionManager: SessionManager,
     private val sessionId: String? = null,
-    private val interceptLinkClicks: Boolean = true,
+    private val interceptLinkClicks: Boolean = false,
+    private val whitelistedSchemes: Set<String> = setOf("mailto", "market", "sms", "tel"),
     private val fragmentManager: FragmentManager? = null,
     private var dialog: RedirectDialogFragment = SimpleRedirectDialogFragment.newInstance(),
     private val useCases: AppLinksUseCases = AppLinksUseCases(context)
@@ -62,7 +63,7 @@ class AppLinksFeature(
      * Starts observing app links on the selected session.
      */
     override fun start() {
-        if (interceptLinkClicks) {
+        if (interceptLinkClicks || whitelistedSchemes.isNotEmpty()) {
             observer.observeIdOrSelected(sessionId)
         }
         findPreviousDialogFragment()?.let {
@@ -71,7 +72,7 @@ class AppLinksFeature(
     }
 
     override fun stop() {
-        if (interceptLinkClicks) {
+        if (interceptLinkClicks || whitelistedSchemes.isNotEmpty()) {
             observer.stop()
         }
     }
@@ -95,6 +96,12 @@ class AppLinksFeature(
         if (!redirect.hasExternalApp()) {
             handleFallback(redirect, session)
             return
+        }
+
+        redirect.appIntent?.data?.scheme?.let {
+            if (!interceptLinkClicks && !whitelistedSchemes.contains(it)) {
+                return
+            }
         }
 
         val doOpenApp = {

@@ -18,6 +18,9 @@ permalink: /changelog/
 * **feature-downloads**
   * Added custom notification icon for `FetchDownloadManager`.
 
+* **feature-app-links**
+  * Added whitelist for schemes of URLs to open with an external app. This defaults to `mailto`, `market`, `sms` and `tel`.
+
 * **feature-accounts**
   * ⚠️ **This is a breaking change**: Public API for interacting with `FxaAccountManager` and sync changes
   * `FxaAccountManager` now has a new, simplified public API.
