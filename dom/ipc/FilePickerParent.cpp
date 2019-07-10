@@ -151,7 +151,7 @@ void FilePickerParent::SendFilesOrDirectories(
     return;
   }
 
-  InfallibleTArray<IPCBlob> ipcBlobs;
+  nsTArray<IPCBlob> ipcBlobs;
 
   for (unsigned i = 0; i < aData.Length(); i++) {
     IPCBlob ipcBlob;
@@ -239,9 +239,8 @@ bool FilePickerParent::CreateFilePicker() {
 mozilla::ipc::IPCResult FilePickerParent::RecvOpen(
     const int16_t& aSelectedType, const bool& aAddToRecentDocs,
     const nsString& aDefaultFile, const nsString& aDefaultExtension,
-    InfallibleTArray<nsString>&& aFilters,
-    InfallibleTArray<nsString>&& aFilterNames,
-    InfallibleTArray<nsString>&& aRawFilters, const nsString& aDisplayDirectory,
+    nsTArray<nsString>&& aFilters, nsTArray<nsString>&& aFilterNames,
+    nsTArray<nsString>&& aRawFilters, const nsString& aDisplayDirectory,
     const nsString& aDisplaySpecialDirectory, const nsString& aOkButtonLabel) {
   if (!CreateFilePicker()) {
     Unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
