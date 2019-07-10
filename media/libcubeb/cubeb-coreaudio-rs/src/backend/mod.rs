@@ -12,7 +12,6 @@ mod aggregate_device;
 mod auto_array;
 mod auto_release;
 mod mixer;
-mod owned_critical_section;
 mod property_address;
 mod resampler;
 mod utils;
@@ -28,7 +27,6 @@ use self::coreaudio_sys_utils::dispatch::*;
 use self::coreaudio_sys_utils::string::*;
 use self::coreaudio_sys_utils::sys::*;
 use self::mixer::*;
-use self::owned_critical_section::*;
 use self::property_address::*;
 use self::resampler::*;
 use self::utils::*;
@@ -2465,7 +2463,6 @@ impl ContextOps for AudioUnitContext {
             state_callback,
             global_latency_frames,
         ));
-        boxed_stream.init_mutex();
 
         boxed_stream.core_stream_data = Mutex::new(CoreStreamData::new(
             boxed_stream.as_ref(),
@@ -2474,10 +2471,6 @@ impl ContextOps for AudioUnitContext {
         ));
 
         if let Err(r) = {
-            // It's not critical to lock here, because no other thread has been started
-            // yet, but it allows to assert that the lock has been taken in `AudioUnitStream::setup`.
-            let mutex_ptr = &mut boxed_stream.mutex as *mut OwnedCriticalSection;
-            let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
             let mut core_stream_data = boxed_stream.core_stream_data.lock().unwrap();
             core_stream_data.setup()
         } {
@@ -3337,7 +3330,6 @@ struct AudioUnitStream<'ctx> {
     data_callback: ffi::cubeb_data_callback,
     state_callback: ffi::cubeb_state_callback,
     device_changed_callback: Mutex<ffi::cubeb_device_changed_callback>,
-    mutex: OwnedCriticalSection,
     // Frame counters
     frames_played: AtomicU64,
     frames_queued: u64,
@@ -3373,7 +3365,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
             data_callback,
             state_callback,
             device_changed_callback: Mutex::new(None),
-            mutex: OwnedCriticalSection::new(),
             frames_played: AtomicU64::new(0),
             frames_queued: 0,
             frames_read: AtomicI64::new(0),
@@ -3388,10 +3379,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
             switching_device: AtomicBool::new(false),
             core_stream_data: Mutex::new(CoreStreamData::default()),
         }
-    }
-
-    fn init_mutex(&mut self) {
-        self.mutex.init();
     }
 
     fn add_device_listener(&self, listener: &device_property_listener) -> OSStatus {
@@ -3433,9 +3420,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         }
 
         {
-            let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
-            let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
-
             let mut core_stream_data = self.core_stream_data.lock().unwrap();
 
             assert!(
@@ -3565,8 +3549,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
     }
 
     fn destroy_internal(&mut self) {
-        let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
-        let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
         let mut core_stream_data = self.core_stream_data.lock().unwrap();
         core_stream_data.close();
         assert!(self.context.active_streams() >= 1);
