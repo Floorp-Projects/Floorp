@@ -30,6 +30,10 @@ const STATE_QUOTE = Symbol("STATE_QUOTE");
 const STATE_DQUOTE = Symbol("STATE_DQUOTE");
 const STATE_TEMPLATE_LITERAL = Symbol("STATE_TEMPLATE_LITERAL");
 const STATE_ESCAPE = Symbol("STATE_ESCAPE");
+const STATE_SLASH = Symbol("STATE_SLASH");
+const STATE_INLINE_COMMENT = Symbol("STATE_INLINE_COMMENT");
+const STATE_MULTILINE_COMMENT = Symbol("STATE_MULTILINE_COMMENT");
+const STATE_MULTILINE_COMMENT_CLOSE = Symbol("STATE_MULTILINE_COMMENT_CLOSE");
 
 const OPEN_BODY = "{[(".split("");
 const CLOSE_BODY = "}])".split("");
@@ -40,7 +44,7 @@ const OPEN_CLOSE_BODY = {
 };
 
 const NO_AUTOCOMPLETE_PREFIXES = ["var", "const", "let", "function", "class"];
-const OPERATOR_CHARS_SET = new Set(";,:=<>+-*/%|&^~?!".split(""));
+const OPERATOR_CHARS_SET = new Set(";,:=<>+-*%|&^~?!".split(""));
 
 function hasArrayIndex(str) {
   return /\[\d+\]$/.test(str);
@@ -115,6 +119,8 @@ function analyzeInputString(str) {
           state = STATE_QUOTE;
         } else if (c == "`") {
           state = STATE_TEMPLATE_LITERAL;
+        } else if (c == "/") {
+          state = STATE_SLASH;
         } else if (OPERATOR_CHARS_SET.has(c)) {
           // If the character is an operator, we can update the current statement.
           resetLastStatement = true;
@@ -191,6 +197,38 @@ function analyzeInputString(str) {
           };
         } else if (c == "'") {
           state = STATE_NORMAL;
+        }
+        break;
+      case STATE_SLASH:
+        if (c == "/") {
+          state = STATE_INLINE_COMMENT;
+        } else if (c == "*") {
+          state = STATE_MULTILINE_COMMENT;
+        } else {
+          lastStatement = "";
+          state = STATE_NORMAL;
+        }
+        break;
+
+      case STATE_INLINE_COMMENT:
+        if (c === "\n") {
+          state = STATE_NORMAL;
+          resetLastStatement = true;
+        }
+        break;
+
+      case STATE_MULTILINE_COMMENT:
+        if (c === "*") {
+          state = STATE_MULTILINE_COMMENT_CLOSE;
+        }
+        break;
+
+      case STATE_MULTILINE_COMMENT_CLOSE:
+        if (c === "/") {
+          state = STATE_NORMAL;
+          resetLastStatement = true;
+        } else {
+          state = STATE_MULTILINE_COMMENT;
         }
         break;
     }
