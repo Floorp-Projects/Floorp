@@ -1,3 +1,9 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Note: This test may cause intermittents if run at exactly midnight.
+
 "use strict";
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -263,6 +269,83 @@ add_task(async function test_timestamp_aggragation() {
   // Make sure the data was deleted.
   rows = await db.execute(SQL.selectAll);
   equal(rows.length, 0, "length is 0");
+  await db.close();
+  Services.prefs.clearUserPref("browser.contentblocking.database.enabled");
+});
+
+// This tests that TrackingDBService.getEventsByDateRange can accept two timestamps in unix epoch time
+// and return entries that occur within the timestamps, rounded to the nearest day and inclusive.
+add_task(async function test_getEventsByDateRange() {
+  Services.prefs.setBoolPref("browser.contentblocking.database.enabled", true);
+  // This creates the schema.
+  await TrackingDBService.saveEvents(JSON.stringify({}));
+  let db = await Sqlite.openConnection({ path: DB_PATH });
+
+  let d = new Date(1521009000000);
+  let date = d.toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.CRYPTOMINERS_ID,
+    count: 3,
+    timestamp: date,
+  });
+
+  date = new Date(d - 2 * 24 * 60 * 60 * 1000).toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKERS_ID,
+    count: 2,
+    timestamp: date,
+  });
+
+  date = new Date(d - 3 * 24 * 60 * 60 * 1000).toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKING_COOKIES_ID,
+    count: 2,
+    timestamp: date,
+  });
+
+  date = new Date(d - 4 * 24 * 60 * 60 * 1000).toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKING_COOKIES_ID,
+    count: 2,
+    timestamp: date,
+  });
+
+  date = new Date(d - 9 * 24 * 60 * 60 * 1000).toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.FINGERPRINTERS_ID,
+    count: 2,
+    timestamp: date,
+  });
+
+  let daysBefore1 = new Date(d - 24 * 60 * 60 * 1000);
+  let daysBefore4 = new Date(d - 4 * 24 * 60 * 60 * 1000);
+  let daysBefore9 = new Date(d - 9 * 24 * 60 * 60 * 1000);
+
+  let events = await TrackingDBService.getEventsByDateRange(daysBefore1, d);
+  equal(
+    events.length,
+    1,
+    "There is 1 event entry between the date and one day before, inclusive"
+  );
+
+  events = await TrackingDBService.getEventsByDateRange(daysBefore4, d);
+  equal(
+    events.length,
+    4,
+    "There is 4 event entries between the date and four days before, inclusive"
+  );
+
+  events = await TrackingDBService.getEventsByDateRange(
+    daysBefore9,
+    daysBefore4
+  );
+  equal(
+    events.length,
+    2,
+    "There is 2 event entries between nine and four days before, inclusive"
+  );
+
+  await TrackingDBService.clearAll();
   await db.close();
   Services.prefs.clearUserPref("browser.contentblocking.database.enabled");
 });
