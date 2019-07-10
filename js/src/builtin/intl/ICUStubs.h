@@ -31,6 +31,7 @@
 #  include "unicode/uformattedvalue.h"
 #  include "unicode/uloc.h"
 #  include "unicode/unum.h"
+#  include "unicode/unumberformatter.h"
 #  include "unicode/unumsys.h"
 #  include "unicode/upluralrules.h"
 #  include "unicode/ureldatefmt.h"
@@ -163,10 +164,6 @@ using UNumberFormat = void*;
 
 enum UNumberFormatStyle {
   UNUM_DECIMAL = 1,
-  UNUM_CURRENCY,
-  UNUM_PERCENT,
-  UNUM_CURRENCY_ISO,
-  UNUM_CURRENCY_PLURAL,
 };
 
 enum UNumberFormatRoundingMode {
@@ -174,7 +171,6 @@ enum UNumberFormatRoundingMode {
 };
 
 enum UNumberFormatAttribute {
-  UNUM_GROUPING_USED,
   UNUM_MIN_INTEGER_DIGITS,
   UNUM_MAX_FRACTION_DIGITS,
   UNUM_MIN_FRACTION_DIGITS,
@@ -182,10 +178,6 @@ enum UNumberFormatAttribute {
   UNUM_SIGNIFICANT_DIGITS_USED,
   UNUM_MIN_SIGNIFICANT_DIGITS,
   UNUM_MAX_SIGNIFICANT_DIGITS,
-};
-
-enum UNumberFormatTextAttribute {
-  UNUM_CURRENCY_CODE,
 };
 
 inline int32_t unum_countAvailable() {
@@ -205,14 +197,6 @@ inline UNumberFormat* unum_open(UNumberFormatStyle style, const UChar* pattern,
 inline void unum_setAttribute(UNumberFormat* fmt, UNumberFormatAttribute attr,
                               int32_t newValue) {
   MOZ_CRASH("unum_setAttribute: Intl API disabled");
-}
-
-inline int32_t unum_formatDoubleForFields(const UNumberFormat* fmt,
-                                          double number, UChar* result,
-                                          int32_t resultLength,
-                                          UFieldPositionIterator* fpositer,
-                                          UErrorCode* status) {
-  MOZ_CRASH("unum_formatDoubleForFields: Intl API disabled");
 }
 
 enum UNumberFormatFields {
@@ -236,13 +220,6 @@ inline void unum_close(UNumberFormat* fmt) {
   MOZ_CRASH("unum_close: Intl API disabled");
 }
 
-inline void unum_setTextAttribute(UNumberFormat* fmt,
-                                  UNumberFormatTextAttribute tag,
-                                  const UChar* newValue, int32_t newValueLength,
-                                  UErrorCode* status) {
-  MOZ_CRASH("unum_setTextAttribute: Intl API disabled");
-}
-
 using UNumberingSystem = void*;
 
 inline UNumberingSystem* unumsys_open(const char* locale, UErrorCode* status) {
@@ -255,6 +232,45 @@ inline const char* unumsys_getName(const UNumberingSystem* unumsys) {
 
 inline void unumsys_close(UNumberingSystem* unumsys) {
   MOZ_CRASH("unumsys_close: Intl API disabled");
+}
+
+struct UNumberFormatter;
+struct UFormattedNumber;
+
+inline UNumberFormatter* unumf_openForSkeletonAndLocale(const UChar* skeleton,
+                                                        int32_t skeletonLen,
+                                                        const char* locale,
+                                                        UErrorCode* status) {
+  MOZ_CRASH("unumf_openForSkeletonAndLocale: Intl API disabled");
+}
+
+inline void unumf_close(UNumberFormatter* f) {
+  MOZ_CRASH("unumf_close: Intl API disabled");
+}
+
+inline UFormattedNumber* unumf_openResult(UErrorCode* status) {
+  MOZ_CRASH("unumf_openResult: Intl API disabled");
+}
+
+inline void unumf_closeResult(UFormattedNumber* uresult) {
+  MOZ_CRASH("unumf_closeResult: Intl API disabled");
+}
+
+inline void unumf_formatDouble(const UNumberFormatter* uformatter, double value,
+                               UFormattedNumber* uresult, UErrorCode* status) {
+  MOZ_CRASH("unumf_formatDouble: Intl API disabled");
+}
+
+inline void unumf_resultGetAllFieldPositions(const UFormattedNumber* uresult,
+                                             UFieldPositionIterator* ufpositer,
+                                             UErrorCode* status) {
+  MOZ_CRASH("unumf_resultGetAllFieldPositions: Intl API disabled");
+}
+
+inline int32_t unumf_resultToString(const UFormattedNumber* uresult,
+                                    UChar* buffer, int32_t bufferCapacity,
+                                    UErrorCode* status) {
+  MOZ_CRASH("unumf_resultToString: Intl API disabled");
 }
 
 using UCalendar = void*;
