@@ -410,6 +410,7 @@ class AbuseReport extends HTMLElement {
       _btnCancel: "button.abuse-report-cancel",
       _btnGoBack: "button.abuse-report-goback",
       _btnSubmit: "button.abuse-report-submit",
+      _addonAuthorContainer: ".abuse-report-header .addon-author-box",
       _addonIconElement: ".abuse-report-header img.addon-icon",
       _addonNameElement: ".abuse-report-header .addon-name",
       _linkAddonAuthor: ".abuse-report-header .addon-author-box a.author",
@@ -536,6 +537,7 @@ class AbuseReport extends HTMLElement {
 
     const {
       addonId,
+      _addonAuthorContainer,
       _addonIconElement,
       _addonNameElement,
       _linkAddonAuthor,
@@ -555,13 +557,18 @@ class AbuseReport extends HTMLElement {
 
     _addonNameElement.textContent = this.addonName;
 
-    _linkAddonAuthor.href = this.authorURL || this.homepageURL;
-    _linkAddonAuthor.textContent = this.authorName;
-    document.l10n.setAttributes(
-      _linkAddonAuthor.parentNode,
-      "abuse-report-addon-authored-by",
-      { "author-name": this.authorName }
-    );
+    if (this.authorName) {
+      _linkAddonAuthor.href = this.authorURL || this.homepageURL;
+      _linkAddonAuthor.textContent = this.authorName;
+      document.l10n.setAttributes(
+        _linkAddonAuthor.parentNode,
+        "abuse-report-addon-authored-by",
+        { "author-name": this.authorName }
+      );
+      _addonAuthorContainer.hidden = false;
+    } else {
+      _addonAuthorContainer.hidden = true;
+    }
 
     _addonIconElement.setAttribute("src", this.iconURL);
 
