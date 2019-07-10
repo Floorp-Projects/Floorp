@@ -120,8 +120,7 @@ void DomainPolicy::CloneDomainPolicy(DomainPolicyClone* aClone) {
   mSuperAllowlist->CloneSet(&aClone->superAllowlist());
 }
 
-static void CopyURIs(const InfallibleTArray<URIParams>& aDomains,
-                     nsIDomainSet* aSet) {
+static void CopyURIs(const nsTArray<URIParams>& aDomains, nsIDomainSet* aSet) {
   for (uint32_t i = 0; i < aDomains.Length(); i++) {
     nsCOMPtr<nsIURI> uri = DeserializeURI(aDomains[i]);
     aSet->Add(uri);
@@ -215,7 +214,7 @@ DomainSet::ContainsSuperDomain(nsIURI* aDomain, bool* aContains) {
   return NS_OK;
 }
 
-void DomainSet::CloneSet(InfallibleTArray<URIParams>* aDomains) {
+void DomainSet::CloneSet(nsTArray<URIParams>* aDomains) {
   for (auto iter = mHashTable.Iter(); !iter.Done(); iter.Next()) {
     nsIURI* key = iter.Get()->GetKey();
 
