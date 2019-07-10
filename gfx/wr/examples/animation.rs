@@ -71,6 +71,7 @@ impl App {
             true,
             &filters,
             &[],
+            &[]
         );
 
         let space_and_clip = SpaceAndClipInfo {
