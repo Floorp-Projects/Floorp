@@ -390,57 +390,137 @@ extern "C" fn audiounit_input_callback(
     input_frames: u32,
     _: *mut AudioBufferList,
 ) -> OSStatus {
-    let stm = unsafe { &mut *(user_ptr as *mut AudioUnitStream) };
+    enum ErrorHandle {
+        Return(OSStatus),
+        Reinit,
+    };
 
-    assert!(!stm.input_unit.is_null());
+    assert!(input_frames > 0);
     assert_eq!(bus, AU_IN_BUS);
+
+    assert!(!user_ptr.is_null());
+    let stm = unsafe { &mut *(user_ptr as *mut AudioUnitStream) };
 
     if stm.shutdown.load(Ordering::SeqCst) {
         cubeb_log!("({:p}) input shutdown", stm as *const AudioUnitStream);
         return NO_ERR;
     }
 
-    let r = stm.render_input(flags, tstamp, bus, input_frames);
-    if r != NO_ERR {
-        return r;
-    }
+    let handler = |stm: &mut AudioUnitStream,
+                   flags: *mut AudioUnitRenderActionFlags,
+                   tstamp: *const AudioTimeStamp,
+                   bus: u32,
+                   input_frames: u32|
+     -> (ErrorHandle, Option<State>) {
+        // Create the AudioBufferList to store input.
+        let mut input_buffer_list = AudioBufferList::default();
+        input_buffer_list.mBuffers[0].mDataByteSize = stm.input_desc.mBytesPerFrame * input_frames;
+        input_buffer_list.mBuffers[0].mData = ptr::null_mut();
+        input_buffer_list.mBuffers[0].mNumberChannels = stm.input_desc.mChannelsPerFrame;
+        input_buffer_list.mNumberBuffers = 1;
 
-    // Full Duplex. We'll call data_callback in the AudioUnit output callback.
-    if !stm.output_unit.is_null() {
-        return NO_ERR;
-    }
+        assert!(!stm.input_unit.is_null());
+        let status = audio_unit_render(
+            stm.input_unit,
+            flags,
+            tstamp,
+            bus,
+            input_frames,
+            &mut input_buffer_list,
+        );
+        if (status != NO_ERR)
+            && (status != kAudioUnitErr_CannotDoInCurrentContext || stm.output_unit.is_null())
+        {
+            return (ErrorHandle::Return(status), None);
+        }
+        let handle = if status == kAudioUnitErr_CannotDoInCurrentContext {
+            assert!(!stm.output_unit.is_null());
+            // kAudioUnitErr_CannotDoInCurrentContext is returned when using a BT
+            // headset and the profile is changed from A2DP to HFP/HSP. The previous
+            // output device is no longer valid and must be reset.
+            // For now state that no error occurred and feed silence, stream will be
+            // resumed once reinit has completed.
+            cubeb_logv!(
+                "({:p}) input: reinit pending feeding silence instead",
+                stm as *const AudioUnitStream
+            );
+            stm.input_linear_buffer
+                .as_mut()
+                .unwrap()
+                .push_zeros((input_frames * stm.input_desc.mChannelsPerFrame) as usize);
+            ErrorHandle::Reinit
+        } else {
+            assert_eq!(status, NO_ERR);
+            // Copy input data in linear buffer.
+            stm.input_linear_buffer.as_mut().unwrap().push(
+                input_buffer_list.mBuffers[0].mData,
+                (input_frames * stm.input_desc.mChannelsPerFrame) as usize,
+            );
+            ErrorHandle::Return(status)
+        };
 
-    // Input only. Call the user callback through resampler.
-    // Resampler will deliver input buffer in the correct rate.
-    assert!(
-        input_frames as usize
-            <= stm.input_linear_buffer.as_ref().unwrap().elements()
+        // Advance input frame counter.
+        stm.frames_read
+            .fetch_add(i64::from(input_frames), atomic::Ordering::SeqCst);
+
+        cubeb_logv!(
+            "({:p}) input: buffers {}, size {}, channels {}, rendered frames {}, total frames {}.",
+            stm as *const AudioUnitStream,
+            input_buffer_list.mNumberBuffers,
+            input_buffer_list.mBuffers[0].mDataByteSize,
+            input_buffer_list.mBuffers[0].mNumberChannels,
+            input_frames,
+            stm.input_linear_buffer.as_ref().unwrap().elements()
                 / stm.input_desc.mChannelsPerFrame as usize
-    );
-    let mut total_input_frames = (stm.input_linear_buffer.as_ref().unwrap().elements()
-        / stm.input_desc.mChannelsPerFrame as usize) as i64;
-    assert!(!stm.input_linear_buffer.as_ref().unwrap().as_ptr().is_null());
-    let outframes = {
-        let mut stream_device = stm.stream_device.lock().unwrap();
-        stream_device.resampler.fill(
-            stm.input_linear_buffer.as_mut().unwrap().as_mut_ptr(),
-            &mut total_input_frames,
-            ptr::null_mut(),
-            0,
-        )
+        );
+
+        // Full Duplex. We'll call data_callback in the AudioUnit output callback.
+        if !stm.output_unit.is_null() {
+            return (handle, None);
+        }
+
+        // Input only. Call the user callback through resampler.
+        // Resampler will deliver input buffer in the correct rate.
+        assert!(
+            input_frames as usize
+                <= stm.input_linear_buffer.as_ref().unwrap().elements()
+                    / stm.input_desc.mChannelsPerFrame as usize
+        );
+        let mut total_input_frames = (stm.input_linear_buffer.as_ref().unwrap().elements()
+            / stm.input_desc.mChannelsPerFrame as usize)
+            as i64;
+        assert!(!stm.input_linear_buffer.as_ref().unwrap().as_ptr().is_null());
+        let outframes = {
+            let mut stream_device = stm.stream_device.lock().unwrap();
+            stream_device.resampler.fill(
+                stm.input_linear_buffer.as_mut().unwrap().as_mut_ptr(),
+                &mut total_input_frames,
+                ptr::null_mut(),
+                0,
+            )
+        };
+        if outframes < total_input_frames {
+            assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
+            return (handle, Some(State::Drained));
+        }
+        // Reset input buffer
+        stm.input_linear_buffer.as_mut().unwrap().clear();
+
+        (handle, None)
     };
-    if outframes < total_input_frames {
-        assert_eq!(audio_output_unit_stop(stm.input_unit), NO_ERR);
 
-        stm.notify_state_changed(State::Drained);
-
-        return NO_ERR;
+    let (handle, notification) = handler(stm, flags, tstamp, bus, input_frames);
+    if let Some(state) = notification {
+        stm.notify_state_changed(state);
     }
-
-    // Reset input buffer
-    stm.input_linear_buffer.as_mut().unwrap().clear();
-
-    NO_ERR
+    let status = match handle {
+        ErrorHandle::Reinit => {
+            stm.reinit_async();
+            NO_ERR
+        }
+        ErrorHandle::Return(s) => s,
+    };
+    status
 }
 
 extern "C" fn audiounit_output_callback(
@@ -2568,78 +2648,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
 
     fn has_output(&self) -> bool {
         self.output_stream_params.rate() > 0
-    }
-
-    fn render_input(
-        &mut self,
-        flags: *mut AudioUnitRenderActionFlags,
-        tstamp: *const AudioTimeStamp,
-        bus: u32,
-        input_frames: u32,
-    ) -> OSStatus {
-        // Create the AudioBufferList to store input.
-        let mut input_buffer_list = AudioBufferList::default();
-        input_buffer_list.mBuffers[0].mDataByteSize = self.input_desc.mBytesPerFrame * input_frames;
-        input_buffer_list.mBuffers[0].mData = ptr::null_mut();
-        input_buffer_list.mBuffers[0].mNumberChannels = self.input_desc.mChannelsPerFrame;
-        input_buffer_list.mNumberBuffers = 1;
-
-        assert!(!self.input_unit.is_null());
-        let r = audio_unit_render(
-            self.input_unit,
-            flags,
-            tstamp,
-            bus,
-            input_frames,
-            &mut input_buffer_list,
-        );
-
-        if r != NO_ERR {
-            cubeb_log!("AudioUnitRender rv={}", r);
-            if r != kAudioUnitErr_CannotDoInCurrentContext {
-                return r;
-            }
-            if !self.output_unit.is_null() {
-                // kAudioUnitErr_CannotDoInCurrentContext is returned when using a BT
-                // headset and the profile is changed from A2DP to HFP/HSP. The previous
-                // output device is no longer valid and must be reset.
-                self.reinit_async();
-            }
-            // For now state that no error occurred and feed silence, stream will be
-            // resumed once reinit has completed.
-            cubeb_logv!(
-                "({:p}) input: reinit pending feeding silence instead",
-                self as *const AudioUnitStream
-            );
-            self.input_linear_buffer
-                .as_mut()
-                .unwrap()
-                .push_zeros((input_frames * self.input_desc.mChannelsPerFrame) as usize);
-        } else {
-            // Copy input data in linear buffer.
-            self.input_linear_buffer.as_mut().unwrap().push(
-                input_buffer_list.mBuffers[0].mData,
-                (input_frames * self.input_desc.mChannelsPerFrame) as usize,
-            );
-        }
-
-        // Advance input frame counter.
-        assert!(input_frames > 0);
-        self.frames_read
-            .fetch_add(i64::from(input_frames), Ordering::SeqCst);
-
-        cubeb_logv!(
-            "({:p}) input: buffers {}, size {}, channels {}, rendered frames {}, total frames {}.",
-            self as *const AudioUnitStream,
-            input_buffer_list.mNumberBuffers,
-            input_buffer_list.mBuffers[0].mDataByteSize,
-            input_buffer_list.mBuffers[0].mNumberChannels,
-            input_frames,
-            self.input_linear_buffer.as_ref().unwrap().elements()
-                / self.input_desc.mChannelsPerFrame as usize
-        );
-
-        NO_ERR
     }
 
     fn minimum_resampling_input_frames(&self, output_frames: i64) -> i64 {
