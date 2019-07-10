@@ -63,10 +63,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   uint64_t ContentParentId();
 
-  int64_t BeforeUnloadListeners() { return mBeforeUnloadListeners; }
-  void BeforeUnloadAdded();
-  void BeforeUnloadRemoved();
-
   bool IsCurrentGlobal();
 
   bool IsProcessRoot();
@@ -126,7 +122,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorChild> mWindowActors;
   uint64_t mInnerWindowId;
   uint64_t mOuterWindowId;
-  int64_t mBeforeUnloadListeners;
   bool mIPCClosed;
 };
 
