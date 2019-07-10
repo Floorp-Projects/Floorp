@@ -3187,7 +3187,7 @@ ContentParent::GetInterface(const nsIID& aIID, void** aResult) {
 mozilla::ipc::IPCResult ContentParent::RecvInitBackground(
     Endpoint<PBackgroundParent>&& aEndpoint) {
   if (!BackgroundParent::Alloc(this, std::move(aEndpoint))) {
-    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
+    NS_WARNING("BackgroundParent::Alloc failed");
   }
 
   return IPC_OK();
