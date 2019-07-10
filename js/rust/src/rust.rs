@@ -178,11 +178,6 @@ impl Runtime {
                 STACK_QUOTA - SYSTEM_CODE_BUFFER,
                 STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
 
-            let opts = JS::ContextOptionsRef(js_context);
-            (*opts).set_baseline_(true);
-            (*opts).set_ion_(true);
-            (*opts).set_nativeRegExp_(true);
-
             CONTEXT.with(|context| {
                 assert!(context.get().is_null());
                 context.set(js_context);

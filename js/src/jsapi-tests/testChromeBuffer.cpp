@@ -51,14 +51,16 @@ BEGIN_TEST(testChromeBuffer) {
    */
   {
     // Disable the JIT because if we don't this test fails.  See bug 1160414.
-    JS::ContextOptions oldOptions = JS::ContextOptionsRef(cx);
     uint32_t oldBaselineInterpreterEnabled;
     CHECK(JS_GetGlobalJitCompilerOption(
         cx, JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE,
         &oldBaselineInterpreterEnabled));
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE,
                                   0);
-    JS::ContextOptionsRef(cx).setIon(false).setBaseline(false);
+    uint32_t oldBaselineJitEnabled;
+    CHECK(JS_GetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE,
+                                        &oldBaselineJitEnabled));
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE, 0);
     {
       JSAutoRealm ar(cx, trusted_glob);
       const char* paramName = "x";
@@ -111,9 +113,10 @@ BEGIN_TEST(testChromeBuffer) {
     JS::RootedValue rval(cx);
     CHECK(JS_CallFunction(cx, nullptr, fun, JS::HandleValueArray(v), &rval));
     CHECK(rval.toInt32() == 100);
-    JS::ContextOptionsRef(cx) = oldOptions;
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE,
                                   oldBaselineInterpreterEnabled);
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE,
+                                  oldBaselineJitEnabled);
   }
 
   /*

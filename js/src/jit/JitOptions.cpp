@@ -132,6 +132,15 @@ DefaultJitOptions::DefaultJitOptions() {
   // Whether the Baseline Interpreter is enabled.
   SET_DEFAULT(baselineInterpreter, false);
 
+  // Whether the Baseline JIT is enabled.
+  SET_DEFAULT(baselineJit, true);
+
+  // Whether the IonMonkey JIT is enabled.
+  SET_DEFAULT(ion, true);
+
+  // Whether the RegExp JIT is enabled.
+  SET_DEFAULT(nativeRegExp, true);
+
   // Whether IonBuilder should prefer IC generation above specialized MIR.
   SET_DEFAULT(forceInlineCaches, false);
 

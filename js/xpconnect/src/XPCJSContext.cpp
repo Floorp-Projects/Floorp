@@ -779,7 +779,7 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
   JSContext* cx = xpccx->Context();
 
   bool useBaselineInterp = Preferences::GetBool(JS_OPTIONS_DOT_STR "blinterp");
-  bool useBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit");
+  bool useBaselineJit = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit");
   bool useIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion");
   bool useAsmJS = Preferences::GetBool(JS_OPTIONS_DOT_STR "asmjs");
   bool useWasm = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm");
@@ -880,8 +880,6 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
 #endif
 
   JS::ContextOptionsRef(cx)
-      .setBaseline(useBaseline)
-      .setIon(useIon)
       .setAsmJS(useAsmJS)
       .setWasm(useWasm)
       .setWasmIon(useWasmIon)
@@ -894,7 +892,6 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
 #endif
       .setWasmVerbose(useWasmVerbose)
       .setThrowOnAsmJSValidationFailure(throwOnAsmJSValidationFailure)
-      .setNativeRegExp(useNativeRegExp)
       .setAsyncStack(useAsyncStack)
       .setThrowOnDebuggeeWouldRun(throwOnDebuggeeWouldRun)
       .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun)
@@ -911,17 +908,26 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
     if (safeMode) {
       JS::ContextOptionsRef(cx).disableOptionsForSafeMode();
       useBaselineInterp = false;
+      useBaselineJit = false;
+      useIon = false;
+      useNativeRegExp = false;
     }
   }
 
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE,
                                 useBaselineInterp);
-  JS_SetGlobalJitCompilerOption(
-      cx, JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER,
-      baselineInterpThreshold);
+  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE,
+                                useBaselineJit);
+  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_ENABLE, useIon);
+  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_NATIVE_REGEXP_ENABLE,
+                                useNativeRegExp);
 
   JS_SetParallelParsingEnabled(cx, parallelParsing);
   JS_SetOffthreadIonCompilationEnabled(cx, offthreadIonCompilation);
+
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER,
+      baselineInterpThreshold);
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_WARMUP_TRIGGER,
                                 useBaselineEager ? 0 : baselineThreshold);
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER,

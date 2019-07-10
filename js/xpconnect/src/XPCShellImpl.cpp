@@ -871,9 +871,6 @@ static void ProcessArgsForCompartment(JSContext* cx, char** argv, int argc) {
       case 's':
         ContextOptionsRef(cx).toggleExtraWarnings();
         break;
-      case 'I':
-        ContextOptionsRef(cx).toggleIon().toggleAsmJS().toggleWasm();
-        break;
     }
   }
 }
@@ -1006,7 +1003,6 @@ static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
         break;
       case 'S':
       case 's':
-      case 'I':
         // These options are processed in ProcessArgsForCompartment.
         break;
       case 'p': {

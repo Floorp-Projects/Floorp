@@ -466,11 +466,8 @@ struct MOZ_STACK_CLASS EnvironmentPreparer
 static bool enableCodeCoverage = false;
 static bool enableDisassemblyDumps = false;
 static bool offthreadCompilation = false;
-static bool enableBaseline = false;
-static bool enableIon = false;
 static bool enableAsmJS = false;
 static bool enableWasm = false;
-static bool enableNativeRegExp = false;
 static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
 static bool enableWasmBaseline = false;
 static bool enableWasmIon = false;
@@ -10176,10 +10173,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
 }
 
 static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
-  enableBaseline = !op.getBoolOption("no-baseline");
-  enableIon = !op.getBoolOption("no-ion");
   enableAsmJS = !op.getBoolOption("no-asmjs");
-  enableNativeRegExp = !op.getBoolOption("no-native-regexp");
 
   // Default values for wasm.
   enableWasm = true;
@@ -10221,8 +10215,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
 
   JS::ContextOptionsRef(cx)
-      .setBaseline(enableBaseline)
-      .setIon(enableIon)
       .setAsmJS(enableAsmJS)
       .setWasm(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
@@ -10235,7 +10227,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
-      .setNativeRegExp(enableNativeRegExp)
       .setAsyncStack(enableAsyncStacks);
 
   if (const char* str = op.getStringOption("cache-ir-stubs")) {
@@ -10438,6 +10429,18 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.baselineInterpreterWarmUpThreshold = 0;
   }
 
+  if (op.getBoolOption("no-baseline")) {
+    jit::JitOptions.baselineJit = false;
+  }
+
+  if (op.getBoolOption("no-ion")) {
+    jit::JitOptions.ion = false;
+  }
+
+  if (op.getBoolOption("no-native-regexp")) {
+    jit::JitOptions.nativeRegExp = false;
+  }
+
   if (const char* str = op.getStringOption("ion-regalloc")) {
     jit::JitOptions.forcedRegisterAllocator = jit::LookupRegisterAllocator(str);
     if (!jit::JitOptions.forcedRegisterAllocator.isSome()) {
@@ -10540,8 +10543,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 static void SetWorkerContextOptions(JSContext* cx) {
   // Copy option values from the main thread.
   JS::ContextOptionsRef(cx)
-      .setBaseline(enableBaseline)
-      .setIon(enableIon)
       .setAsmJS(enableAsmJS)
       .setWasm(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
@@ -10553,8 +10554,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
       .setWasmGc(enableWasmGc)
 #endif
       .setWasmVerbose(enableWasmVerbose)
-      .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
-      .setNativeRegExp(enableNativeRegExp);
+      .setTestWasmAwaitTier2(enableTestWasmAwaitTier2);
 
   cx->runtime()->setOffthreadIonCompilationEnabled(offthreadCompilation);
   cx->runtime()->profilingScripts =

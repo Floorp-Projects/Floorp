@@ -5304,10 +5304,10 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_ION_ENABLE:
       if (value == 1) {
-        JS::ContextOptionsRef(cx).setIon(true);
+        jit::JitOptions.ion = true;
         JitSpew(js::jit::JitSpew_IonScripts, "Enable ion");
       } else if (value == 0) {
-        JS::ContextOptionsRef(cx).setIon(false);
+        jit::JitOptions.ion = false;
         JitSpew(js::jit::JitSpew_IonScripts, "Disable ion");
       }
       break;
@@ -5328,14 +5328,17 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_BASELINE_ENABLE:
       if (value == 1) {
-        JS::ContextOptionsRef(cx).setBaseline(true);
+        jit::JitOptions.baselineJit = true;
         ReleaseAllJITCode(rt->defaultFreeOp());
         JitSpew(js::jit::JitSpew_BaselineScripts, "Enable baseline");
       } else if (value == 0) {
-        JS::ContextOptionsRef(cx).setBaseline(false);
+        jit::JitOptions.baselineJit = false;
         ReleaseAllJITCode(rt->defaultFreeOp());
         JitSpew(js::jit::JitSpew_BaselineScripts, "Disable baseline");
       }
+      break;
+    case JSJITCOMPILER_NATIVE_REGEXP_ENABLE:
+      jit::JitOptions.nativeRegExp = !!value;
       break;
     case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
       if (value == 1) {
@@ -5416,7 +5419,7 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       *valueOut = jit::JitOptions.checkRangeAnalysis;
       break;
     case JSJITCOMPILER_ION_ENABLE:
-      *valueOut = JS::ContextOptionsRef(cx).ion();
+      *valueOut = jit::JitOptions.ion;
       break;
     case JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD:
       *valueOut = jit::JitOptions.frequentBailoutThreshold;
@@ -5425,7 +5428,10 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       *valueOut = jit::JitOptions.baselineInterpreter;
       break;
     case JSJITCOMPILER_BASELINE_ENABLE:
-      *valueOut = JS::ContextOptionsRef(cx).baseline();
+      *valueOut = jit::JitOptions.baselineJit;
+      break;
+    case JSJITCOMPILER_NATIVE_REGEXP_ENABLE:
+      *valueOut = jit::JitOptions.nativeRegExp;
       break;
     case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
       *valueOut = rt->canUseOffthreadIonCompilation();
