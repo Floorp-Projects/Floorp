@@ -3,6 +3,8 @@
 
 "use strict";
 
+Cu.importGlobalProperties(["fetch"]);
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -10,7 +12,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  SearchExtensionLoader: "resource://gre/modules/SearchUtils.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
+  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -25,6 +29,21 @@ const SUBMISSION_PURPOSES = [
   "homepage",
   "newtab",
 ];
+
+const ORIG_LIST_JSON_URL = SearchUtils.LIST_JSON_URL;
+SearchExtensionLoader._chaosMode = true;
+
+function traverse(obj, fun) {
+  for (var i in obj) {
+    let r = fun.apply(this, [i, obj[i]]);
+    if (r !== undefined) {
+      obj[i] = r;
+    }
+    if (obj[i] !== null && typeof obj[i] == "object") {
+      traverse(obj[i], fun);
+    }
+  }
+}
 
 /**
  * This class implements the test harness for search configuration tests.
@@ -81,10 +100,45 @@ class SearchConfigTest {
     this._testDebug = false;
   }
 
+  // Search init loads a bunch of extensions which can take a lot of time.
+  // This reduces that down to any default engines, and the engine that is
+  // specifically being tested.
+  async setupListJSON() {
+    let origListJSON = await fetch(ORIG_LIST_JSON_URL).then(req => req.json());
+    let target = this._config.identifier;
+    let listJSON = Object.assign({}, origListJSON);
+    // XXX these are all possible "searchDefault" engines in list.json.  Since the searchDefault
+    // value is a localized name, we have no good way to map these.  We need the engines that
+    // could be default, along with the engine being tested.
+    let defaults = ["google", "yandex", "baidu"];
+    // info(`testing with default engines ${defaults.values()}`)
+    traverse(listJSON, (key, val) => {
+      if (key === "searchOrder") {
+        return val.filter(
+          v =>
+            v.startsWith(target) ||
+            defaults.filter(d => v.startsWith(d)).length > 0
+        );
+      }
+      if (key === "visibleDefaultEngines") {
+        return val.filter(
+          v =>
+            v.startsWith(target) ||
+            defaults.filter(d => v.startsWith(d)).length > 0
+        );
+      }
+      return val;
+    });
+    SearchUtils.LIST_JSON_URL =
+      "data:application/json," + JSON.stringify(listJSON);
+  }
+
   /**
    * Sets up the test.
    */
   async setup() {
+    await this.setupListJSON();
+
     AddonTestUtils.init(GLOBAL_SCOPE);
     AddonTestUtils.createAppInfo(
       "xpcshell@tests.mozilla.org",
@@ -96,6 +150,9 @@ class SearchConfigTest {
     // Disable region checks.
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
     Services.prefs.setCharPref("browser.search.geoip.url", "");
+    Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
+    // Shut off a bunch of logging from AOM.
+    Services.prefs.setBoolPref("extensions.logging.enabled", false);
 
     await AddonTestUtils.promiseStartupManager();
     await Services.search.init();
