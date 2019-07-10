@@ -15,15 +15,20 @@ class CertificateSection extends HTMLElement {
 
     this.attachShadow({ mode: "open" }).appendChild(templateHtml);
 
+    document.l10n.connectRoot(this.shadowRoot);
+
     this.infoGroupsContainers = [];
     this.createInfoGroupsContainers();
+
     this.render();
   }
 
   render() {
     let certificateTabs = this.shadowRoot.querySelector(".certificate-tabs");
+
     let title = this.shadowRoot.querySelector(".title");
-    title.textContent = "Certificate";
+    title.setAttribute("data-l10n-id", "certificate-section-title");
+
     this.infoGroupContainer = this.shadowRoot.querySelector(".info-groups");
     for (let i = 0; i < certArray.length; i++) {
       let tab = document.createElement("button");
