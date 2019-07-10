@@ -220,7 +220,8 @@ class LegacySessionManager(
                 engineSession = it.engineSession,
                 engineSessionState = it.engineSessionState,
                 parent = null,
-                viaRestore = true)
+                viaRestore = true
+            )
         }
 
         if (updateSelection) {

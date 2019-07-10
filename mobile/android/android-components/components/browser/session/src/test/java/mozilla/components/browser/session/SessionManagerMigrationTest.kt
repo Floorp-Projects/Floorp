@@ -324,6 +324,9 @@ class SessionManagerMigrationTest {
         assertEquals("https://example.org/private2", store.state.selectedTab!!.content.url)
         assertEquals("private2", store.state.selectedTabId)
 
+        manager.sessions.forEachIndexed { index, session ->
+            assertEquals("Incorrect browser store on session ${session.id} at index $index", store, session.store)
+        }
         assertEquals("https://www.mozilla.org", manager.sessions[0].url)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
 

@@ -122,6 +122,9 @@ class SessionManager(
      * @param updateSelection Whether the selected session should be updated from the restored snapshot.
      */
     fun restore(snapshot: Snapshot, updateSelection: Boolean = true) {
+        // Add store to each Session so that it can dispatch actions whenever it changes.
+        snapshot.sessions.forEach { it.session.store = store }
+
         delegate.restore(snapshot, updateSelection)
 
         val tabs = snapshot.sessions
