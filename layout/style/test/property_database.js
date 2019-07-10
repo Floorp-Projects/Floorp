@@ -236,12 +236,8 @@ var validGradientAndElementValues = [
   "repeating-radial-gradient(50px 60px at 15% 20%, red, blue)",
   "repeating-radial-gradient(7em 8em at 45px, red, blue)",
 
-  // FIXME(emilio): We should not be allowing 3-value positions anywhere else
-  // than on `background-position`, see
-  // https://github.com/w3c/csswg-drafts/issues/2140.
-  //
   // When that happens this should be moved to the `invalid` list.
-  "repeating-radial-gradient(circle closest-side at left bottom 7in, hsl(2,2%,5%), rgb(1,6,0))",
+  "repeating-radial-gradient(circle closest-side at left 0px bottom 7in, hsl(2,2%,5%), rgb(1,6,0))",
 
   "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 2, 10, 10, 2)",
   "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10%, 50%, 30%, 0%)",
@@ -706,7 +702,7 @@ var basicShapeOtherValues = [
 
   "circle()",
   "circle(at center)",
-  "circle(at top left 20px)",
+  "circle(at top 0px left 20px)",
   "circle(at bottom right)",
   "circle(20%)",
   "circle(300px)",
@@ -722,7 +718,7 @@ var basicShapeOtherValues = [
 
   "ellipse()",
   "ellipse(at center)",
-  "ellipse(at top left 20px)",
+  "ellipse(at top 0px left 20px)",
   "ellipse(at bottom right)",
   "ellipse(20% 20%)",
   "ellipse(300px 50%)",
@@ -792,6 +788,7 @@ var basicShapeInvalidValues = [
   "circle(20% 20%)",
   "circle(at farthest-side)",
   "circle(calc(20px + rubbish))",
+  "circle(at top left 20px)",
 
   "ellipse(at)",
   "ellipse(at 20% 20% 30%)",
@@ -804,6 +801,7 @@ var basicShapeInvalidValues = [
   "ellipse(20%)",
   "ellipse(at farthest-side farthest-side)",
   "ellipse(at top left calc(20px + rubbish))",
+  "ellipse(at top left 20px)",
 
   "polygon(at)",
   "polygon(at 20% 20% 30%)",
@@ -3036,7 +3034,6 @@ var gCSSProperties = {
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     initial_values: [
       "top 0% left 0%",
-      "top 0% left",
       "top left",
       "left top",
       "0% 0%",
@@ -3096,8 +3093,6 @@ var gCSSProperties = {
       "top 3em right 10px",
       "left 15px",
       "10px top",
-      "left top 15px",
-      "left 10px top",
       "left 20%",
       "right 20%",
     ],
@@ -3117,6 +3112,8 @@ var gCSSProperties = {
       "top 20px bottom 20px",
       "left left",
       "0px calc(0px + rubbish)",
+      "left top 15px",
+      "left 10px top",
     ],
   },
   "mask-position-x": {
@@ -3983,7 +3980,7 @@ var gCSSProperties = {
       "top left / 100px auto",
       "top left / 100px 10%",
       "top left / 100px calc(20px)",
-      "bottom right scroll none transparent repeat",
+      "bottom right 8px scroll none transparent repeat",
       "50% transparent",
       "transparent 50%",
       "50%",
@@ -6625,8 +6622,6 @@ var gCSSProperties = {
       "top 3em right 10px",
       "left 15px",
       "10px top",
-      "left top 15px",
-      "left 10px top",
       "left 20%",
       "right 20%",
     ],
@@ -6645,6 +6640,8 @@ var gCSSProperties = {
       "top 20px bottom 20px",
       "left left",
       "20 20",
+      "left top 15px",
+      "left 10px top",
     ],
   },
   opacity: {
