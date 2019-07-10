@@ -38,9 +38,6 @@ interface nsIBrowserChild : nsISupports
    */
   attribute boolean hasSiblings;
 
-  [noscript, notxpcom] void beforeUnloadAdded();
-  [noscript, notxpcom] void beforeUnloadRemoved();
-
   /**
    * Tell the nsIBrowserChild that it should begin sending its nsIWebProgress
    * events to its nsIBrowserParent.

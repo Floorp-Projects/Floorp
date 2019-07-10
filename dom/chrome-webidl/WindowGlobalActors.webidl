@@ -27,6 +27,9 @@ interface WindowGlobalParent {
   // embedder is in a different process.
   readonly attribute boolean isProcessRoot;
 
+  // True if this window has registered a "beforeunload" event handler.
+  readonly attribute boolean hasBeforeUnload;
+
   // Is the document loaded in this WindowGlobalParent the initial document
   // implicitly created while "creating a new browsing context".
   // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
