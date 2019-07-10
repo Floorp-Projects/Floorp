@@ -219,6 +219,9 @@ function getPostUpdateOverridePage(update, defaultOverridePage) {
  *        url, or null.
  * @param forcePrivate (optional)
  *        Boolean. If set to true, the new window will be a private browsing one.
+ *
+ * @returns {ChromeWindow}
+ *          Returns the top level window opened.
  */
 function openBrowserWindow(
   cmdLine,
@@ -308,7 +311,7 @@ function openBrowserWindow(
       win.location = chromeURL;
       win.arguments = args; // <-- needs to be a plain JS array here.
 
-      return;
+      return win;
     }
   }
 
@@ -343,29 +346,31 @@ function openBrowserWindow(
     features += ",private";
   }
 
-  Services.ww.openWindow(null, chromeURL, "_blank", features, args);
+  return Services.ww.openWindow(null, chromeURL, "_blank", features, args);
 }
 
 function openPreferences(cmdLine, extraArgs) {
   openBrowserWindow(cmdLine, gSystemPrincipal, "about:preferences");
 }
 
-function doSearch(searchTerm, cmdLine) {
-  var engine = Services.search.defaultEngine;
+async function doSearch(searchTerm, cmdLine) {
+  // XXXbsmedberg: use handURIToExistingBrowser to obey tabbed-browsing
+  // preferences, but need nsIBrowserDOMWindow extensions
+  // Open the window immediately as BrowserContentHandler needs to
+  // be handled synchronously. Then load the search URI when the
+  // SearchService has loaded.
+  let win = openBrowserWindow(cmdLine, gSystemPrincipal, "about:blank");
+  var engine = await Services.search.getDefault();
   var countId = (engine.identifier || "other-" + engine.name) + ".system";
   var count = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
   count.add(countId);
 
   var submission = engine.getSubmission(searchTerm, null, "system");
 
-  // XXXbsmedberg: use handURIToExistingBrowser to obey tabbed-browsing
-  // preferences, but need nsIBrowserDOMWindow extensions
-  openBrowserWindow(
-    cmdLine,
-    gSystemPrincipal,
-    submission.uri.spec,
-    submission.postData
-  );
+  win.gBrowser.selectedBrowser.loadURI(submission.uri.spec, {
+    triggeringPrincipal: gSystemPrincipal,
+    postData: submission.postData,
+  });
 }
 
 function nsBrowserContentHandler() {
