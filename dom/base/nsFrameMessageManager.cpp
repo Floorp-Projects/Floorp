@@ -1459,7 +1459,7 @@ class ChildProcessMessageManagerCallback : public MessageManagerCallback {
     if (!BuildClonedMessageDataForChild(cc, aData, data)) {
       return false;
     }
-    InfallibleTArray<mozilla::jsipc::CpowEntry> cpows;
+    nsTArray<mozilla::jsipc::CpowEntry> cpows;
     if (aCpows && !cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return false;
     }
@@ -1483,7 +1483,7 @@ class ChildProcessMessageManagerCallback : public MessageManagerCallback {
     if (!BuildClonedMessageDataForChild(cc, aData, data)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
-    InfallibleTArray<mozilla::jsipc::CpowEntry> cpows;
+    nsTArray<mozilla::jsipc::CpowEntry> cpows;
     if (aCpows && !cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return NS_ERROR_UNEXPECTED;
     }
