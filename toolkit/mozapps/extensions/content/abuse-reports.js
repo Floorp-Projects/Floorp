@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint max-len: ["error", 80] */
-
+/* import-globals-from aboutaddonsCommon.js */
 /* exported openAbuseReport */
 
 /**
@@ -170,7 +170,10 @@ async function submitReport({ report, reason, message }) {
     // Create a submitted message bar when the submission has been
     // successful.
     let barId;
-    if (!(addon.permissions & AddonManager.PERM_CAN_UNINSTALL)) {
+    if (
+      !(addon.permissions & AddonManager.PERM_CAN_UNINSTALL) &&
+      !isPending(addon, "uninstall")
+    ) {
       // Do not offer remove action if the addon can't be uninstalled.
       barId = "submitted-no-remove-action";
     } else if (report.reportEntryPoint === "uninstall") {
