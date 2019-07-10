@@ -166,8 +166,8 @@ class PluginInstanceChild : public PPluginInstanceChild {
  public:
   PluginInstanceChild(const NPPluginFuncs* aPluginIface,
                       const nsCString& aMimeType,
-                      const InfallibleTArray<nsCString>& aNames,
-                      const InfallibleTArray<nsCString>& aValues);
+                      const nsTArray<nsCString>& aNames,
+                      const nsTArray<nsCString>& aValues);
 
   virtual ~PluginInstanceChild();
 
@@ -320,8 +320,8 @@ class PluginInstanceChild : public PPluginInstanceChild {
 #endif  // #if defined(OS_WIN)
   const NPPluginFuncs* mPluginIface;
   nsCString mMimeType;
-  InfallibleTArray<nsCString> mNames;
-  InfallibleTArray<nsCString> mValues;
+  nsTArray<nsCString> mNames;
+  nsTArray<nsCString> mValues;
   NPP_t mData;
   NPWindow mWindow;
 #if defined(XP_DARWIN) || defined(XP_WIN)

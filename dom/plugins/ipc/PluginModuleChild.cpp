@@ -660,7 +660,7 @@ mozilla::ipc::IPCResult PluginModuleChild::RecvNPP_ClearSiteData(
 mozilla::ipc::IPCResult PluginModuleChild::RecvNPP_GetSitesWithData(
     const uint64_t& aCallbackId) {
   char** result = mFunctions.getsiteswithdata();
-  InfallibleTArray<nsCString> array;
+  nsTArray<nsCString> array;
   if (!result) {
     SendReturnSitesWithData(array, aCallbackId);
     return IPC_OK();
@@ -1582,8 +1582,8 @@ NPError PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings) {
 }
 
 PPluginInstanceChild* PluginModuleChild::AllocPPluginInstanceChild(
-    const nsCString& aMimeType, const InfallibleTArray<nsCString>& aNames,
-    const InfallibleTArray<nsCString>& aValues) {
+    const nsCString& aMimeType, const nsTArray<nsCString>& aNames,
+    const nsTArray<nsCString>& aValues) {
   PLUGIN_LOG_DEBUG_METHOD;
   AssertPluginThread();
 
@@ -1623,8 +1623,7 @@ mozilla::ipc::IPCResult PluginModuleChild::AnswerModuleSupportsAsyncRender(
 
 mozilla::ipc::IPCResult PluginModuleChild::RecvPPluginInstanceConstructor(
     PPluginInstanceChild* aActor, const nsCString& aMimeType,
-    InfallibleTArray<nsCString>&& aNames,
-    InfallibleTArray<nsCString>&& aValues) {
+    nsTArray<nsCString>&& aNames, nsTArray<nsCString>&& aValues) {
   PLUGIN_LOG_DEBUG_METHOD;
   AssertPluginThread();
 
