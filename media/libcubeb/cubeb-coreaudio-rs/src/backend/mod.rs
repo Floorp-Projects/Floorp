@@ -11,6 +11,7 @@ extern crate libc;
 mod aggregate_device;
 mod auto_array;
 mod auto_release;
+mod mixer;
 mod owned_critical_section;
 mod property_address;
 mod resampler;
@@ -26,6 +27,7 @@ use self::coreaudio_sys_utils::cf_mutable_dict::*;
 use self::coreaudio_sys_utils::dispatch::*;
 use self::coreaudio_sys_utils::string::*;
 use self::coreaudio_sys_utils::sys::*;
+use self::mixer::*;
 use self::owned_critical_section::*;
 use self::property_address::*;
 use self::resampler::*;
@@ -498,20 +500,15 @@ extern "C" fn audiounit_output_callback(
     }
 
     // Get output buffer
-    if stm.mixer.as_ptr().is_null() {
-        output_buffer = buffers[0].mData;
-    } else {
-        // If remixing needs to occur, we can't directly work in our final
-        // destination buffer as data may be overwritten or too small to start with.
-        let size_needed = (output_frames * stm.output_stream_params.channels()) as usize
-            * cubeb_sample_size(stm.output_stream_params.format());
-        if stm.temp_buffer_size < size_needed {
-            stm.temp_buffer = allocate_array_by_size(size_needed);
-            assert_eq!(stm.temp_buffer.len() * mem::size_of::<u8>(), size_needed);
-            stm.temp_buffer_size = size_needed;
+    output_buffer = match stm.mixer.as_mut() {
+        None => buffers[0].mData,
+        Some(mixer) => {
+            // If remixing needs to occur, we can't directly work in our final
+            // destination buffer as data may be overwritten or too small to start with.
+            mixer.update_buffer_size(output_frames as usize);
+            mixer.get_buffer_mut_ptr() as *mut c_void
         }
-        output_buffer = stm.temp_buffer.as_mut_ptr() as *mut c_void;
-    }
+    };
 
     stm.frames_written
         .fetch_add(i64::from(output_frames), Ordering::SeqCst);
@@ -619,7 +616,7 @@ extern "C" fn audiounit_output_callback(
     }
 
     // Mixing
-    if stm.mixer.as_ptr().is_null() {
+    if stm.mixer.is_none() {
         // Pan stereo.
         if panning != 0.0 {
             unsafe {
@@ -639,17 +636,9 @@ extern "C" fn audiounit_output_callback(
             }
         }
     } else {
-        assert!(!stm.temp_buffer.is_empty());
-        assert_eq!(
-            stm.temp_buffer_size,
-            stm.temp_buffer.len() * mem::size_of::<u8>()
-        );
-        assert_eq!(output_buffer, stm.temp_buffer.as_mut_ptr() as *mut c_void);
-        let temp_buffer_size = stm.temp_buffer_size;
-        stm.mix_output_buffer(
+        assert!(buffers[0].mDataByteSize >= stm.output_desc.mBytesPerFrame * output_frames);
+        stm.mixer.as_mut().unwrap().mix(
             output_frames as usize,
-            output_buffer,
-            temp_buffer_size,
             buffers[0].mData,
             buffers[0].mDataByteSize as usize,
         );
@@ -2464,11 +2453,7 @@ struct AudioUnitStream<'ctx> {
     // This is true if a device change callback is currently running.
     switching_device: AtomicBool,
     // Mixer interface
-    mixer: AutoRelease<ffi::cubeb_mixer>,
-    // Buffer where remixing/resampling will occur when upmixing is required
-    // Only accessed from callback thread
-    temp_buffer: Vec<u8>,
-    temp_buffer_size: usize,
+    mixer: Option<Mixer>,
     // Listeners indicating what system events are monitored.
     default_input_listener: Option<device_property_listener>,
     default_output_listener: Option<device_property_listener>,
@@ -2528,9 +2513,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             current_latency_frames: AtomicU32::new(0),
             panning: atomic::Atomic::new(0.0_f32),
             switching_device: AtomicBool::new(false),
-            mixer: AutoRelease::new(ptr::null_mut(), ffi::cubeb_mixer_destroy),
-            temp_buffer: Vec::new(),
-            temp_buffer_size: 0,
+            mixer: None,
             default_input_listener: None,
             default_output_listener: None,
             input_alive_listener: None,
@@ -2654,37 +2637,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         );
 
         NO_ERR
-    }
-
-    fn mix_output_buffer(
-        &mut self,
-        output_frames: usize,
-        input_buffer: *mut c_void,
-        input_buffer_size: usize,
-        output_buffer: *mut c_void,
-        output_buffer_size: usize,
-    ) {
-        assert!(
-            input_buffer_size
-                >= cubeb_sample_size(self.output_stream_params.format())
-                    * self.output_stream_params.channels() as usize
-                    * output_frames
-        );
-        assert!(output_buffer_size >= self.output_desc.mBytesPerFrame as usize * output_frames);
-
-        let r = unsafe {
-            ffi::cubeb_mixer_mix(
-                self.mixer.as_mut(),
-                output_frames,
-                input_buffer,
-                input_buffer_size,
-                output_buffer,
-                output_buffer_size,
-            )
-        };
-        if r != 0 {
-            cubeb_log!("Remix error = {}", r);
-        }
     }
 
     fn minimum_resampling_input_frames(&self, output_frames: i64) -> i64 {
@@ -2995,19 +2947,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         Ok(())
     }
 
-    fn init_mixer(&mut self) {
-        self.mixer.reset(unsafe {
-            ffi::cubeb_mixer_create(
-                self.output_stream_params.format().into(),
-                self.output_stream_params.channels(),
-                self.output_stream_params.layout().into(),
-                self.context.channels,
-                self.context.layout.load(atomic::Ordering::SeqCst).into(),
-            )
-        });
-        assert!(!self.mixer.as_ptr().is_null());
-    }
-
     fn layout_init(&mut self, side: io_side) {
         // We currently don't support the input layout setting.
         if side == io_side::INPUT {
@@ -3231,7 +3170,13 @@ impl<'ctx> AudioUnitStream<'ctx> {
                 != self.output_stream_params.layout()
         {
             cubeb_log!("Incompatible channel layouts detected, setting up remixer");
-            self.init_mixer();
+            self.mixer = Some(Mixer::new(
+                self.output_stream_params.format(),
+                self.output_stream_params.channels(),
+                self.output_stream_params.layout(),
+                self.context.channels,
+                self.context.layout.load(atomic::Ordering::SeqCst),
+            ));
             // We will be remixing the data before it reaches the output device.
             // We need to adjust the number of channels and other
             // AudioStreamDescription details.
@@ -3241,7 +3186,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             self.output_desc.mBytesPerPacket =
                 self.output_desc.mBytesPerFrame * self.output_desc.mFramesPerPacket;
         } else {
-            self.mixer.reset(ptr::null_mut());
+            self.mixer = None;
         }
 
         r = audio_unit_set_property(
@@ -3503,7 +3448,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             self.output_unit = ptr::null_mut();
         }
 
-        self.mixer.reset(ptr::null_mut());
+        self.mixer = None;
 
         {
             let mut stream_device = self.stream_device.lock().unwrap();
