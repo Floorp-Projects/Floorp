@@ -39,7 +39,7 @@ private object Versions {
     // The version number below tracks the application-services version
     // that we depend on directly for tests, and it's important that it
     // be kept in sync with the version used by android-components above.
-    const val mozilla_appservices = "0.31.2"
+    const val mozilla_appservices = "0.34.0"
 
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
