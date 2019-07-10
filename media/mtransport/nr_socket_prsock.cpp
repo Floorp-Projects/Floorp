@@ -1677,7 +1677,7 @@ NS_IMETHODIMP NrTcpSocketIpc::UpdateBufferedAmount(uint32_t buffered_amount,
 }
 
 NS_IMETHODIMP NrTcpSocketIpc::FireDataArrayEvent(
-    const nsAString& aType, const InfallibleTArray<uint8_t>& buffer) {
+    const nsAString& aType, const nsTArray<uint8_t>& buffer) {
   // Called when we received data.
   uint8_t* buf = const_cast<uint8_t*>(buffer.Elements());
 
@@ -1833,16 +1833,15 @@ int NrTcpSocketIpc::write(const void* msg, size_t len, size_t* written) {
 
   buffered_bytes_ += len;
   {
-    InfallibleTArray<uint8_t>* arr = new InfallibleTArray<uint8_t>();
+    nsTArray<uint8_t>* arr = new nsTArray<uint8_t>();
     arr->AppendElements(static_cast<const uint8_t*>(msg), len);
     // keep track of un-acknowleged writes by tracking number.
     writes_in_flight_.push_back(len);
-    RUN_ON_THREAD(
-        io_thread_,
-        mozilla::WrapRunnable(
-            RefPtr<NrTcpSocketIpc>(this), &NrTcpSocketIpc::write_i,
-            nsAutoPtr<InfallibleTArray<uint8_t>>(arr), ++tracking_number_),
-        NS_DISPATCH_NORMAL);
+    RUN_ON_THREAD(io_thread_,
+                  mozilla::WrapRunnable(
+                      RefPtr<NrTcpSocketIpc>(this), &NrTcpSocketIpc::write_i,
+                      nsAutoPtr<nsTArray<uint8_t>>(arr), ++tracking_number_),
+                  NS_DISPATCH_NORMAL);
   }
   *written = len;
 abort:
@@ -1916,7 +1915,7 @@ void NrTcpSocketIpc::connect_i(const nsACString& remote_addr,
   }
 }
 
-void NrTcpSocketIpc::write_i(nsAutoPtr<InfallibleTArray<uint8_t>> arr,
+void NrTcpSocketIpc::write_i(nsAutoPtr<nsTArray<uint8_t>> arr,
                              uint32_t tracking_number) {
   ASSERT_ON_THREAD(io_thread_);
   if (!socket_child_) {
