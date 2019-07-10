@@ -2918,7 +2918,7 @@ nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
       MOZ_CRASH();
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
-    InfallibleTArray<mozilla::jsipc::CpowEntry> cpows;
+    nsTArray<mozilla::jsipc::CpowEntry> cpows;
     jsipc::CPOWManager* mgr = cp->GetCPOWManager();
     if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
       return NS_ERROR_UNEXPECTED;
