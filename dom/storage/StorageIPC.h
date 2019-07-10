@@ -343,8 +343,8 @@ class StorageDBParent final : public PBackgroundStorageParent {
   mozilla::ipc::IPCResult RecvPreload(const nsCString& aOriginSuffix,
                                       const nsCString& aOriginNoSuffix,
                                       const uint32_t& aAlreadyLoadedCount,
-                                      InfallibleTArray<nsString>* aKeys,
-                                      InfallibleTArray<nsString>* aValues,
+                                      nsTArray<nsString>* aKeys,
+                                      nsTArray<nsString>* aValues,
                                       nsresult* aRv) override;
   mozilla::ipc::IPCResult RecvAsyncGetUsage(
       const nsCString& aOriginNoSuffix) override;
