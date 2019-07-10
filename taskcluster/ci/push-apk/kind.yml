@@ -10,7 +10,6 @@ transforms:
 
 kind-dependencies:
     - build-signing
-    - google-play-strings
     - push-apk-checks
 
 jobs:
@@ -48,7 +47,6 @@ jobs:
                     release-rc: 5
                     beta: 10
                     default: null
-        requires: all-resolved
         scopes:  # see transforms
         treeherder:
             symbol: pub(gp)
