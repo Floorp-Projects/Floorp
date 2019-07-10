@@ -701,7 +701,14 @@ pub enum MixBlendMode {
 
 /// An input to a SVG filter primitive.
 #[repr(C)]
-#[derive(Clone, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+pub enum ColorSpace {
+    Srgb,
+    LinearRgb,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
 pub enum FilterPrimitiveInput {
     /// The input is the original graphic that the filter is being applied to.
     Original,
@@ -711,19 +718,99 @@ pub enum FilterPrimitiveInput {
     OutputOfPrimitiveIndex(usize),
 }
 
+impl FilterPrimitiveInput {
+    /// Gets the index of the input.
+    /// Returns `None` if the source graphic is the input.
+    pub fn to_index(self, cur_index: usize) -> Option<usize> {
+        match self {
+            FilterPrimitiveInput::Previous if cur_index > 0 => Some(cur_index - 1),
+            FilterPrimitiveInput::OutputOfPrimitiveIndex(index) => Some(index),
+            _ => None,
+        }
+    }
+}
+
 #[repr(C)]
-#[derive(Clone, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlendPrimitive {
     pub input1: FilterPrimitiveInput,
     pub input2: FilterPrimitiveInput,
     pub mode: MixBlendMode,
 }
 
-/// SVG Filter Primitive.
 #[repr(C)]
-#[derive(Clone, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
-pub enum FilterPrimitive {
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct FloodPrimitive {
+    pub color: ColorF,
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BlurPrimitive {
+    pub input: FilterPrimitiveInput,
+    pub radius: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct OpacityPrimitive {
+    pub input: FilterPrimitiveInput,
+    pub opacity: f32,
+}
+
+/// cbindgen:derive-eq=false
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ColorMatrixPrimitive {
+    pub input: FilterPrimitiveInput,
+    pub matrix: [f32; 20],
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct DropShadowPrimitive {
+    pub input: FilterPrimitiveInput,
+    pub shadow: Shadow,
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ComponentTransferPrimitive {
+    pub input: FilterPrimitiveInput,
+    // Component transfer data is stored in FilterData.
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct IdentityPrimitive {
+    pub input: FilterPrimitiveInput,
+}
+
+/// See: https://github.com/eqrion/cbindgen/issues/9
+/// cbindgen:derive-eq=false
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub enum FilterPrimitiveKind {
+    Identity(IdentityPrimitive),
     Blend(BlendPrimitive),
+    Flood(FloodPrimitive),
+    Blur(BlurPrimitive),
+    // TODO: Support animated opacity?
+    Opacity(OpacityPrimitive),
+    /// cbindgen:derive-eq=false
+    ColorMatrix(ColorMatrixPrimitive),
+    DropShadow(DropShadowPrimitive),
+    ComponentTransfer(ComponentTransferPrimitive),
+}
+
+/// SVG Filter Primitive.
+/// See: https://github.com/eqrion/cbindgen/issues/9
+/// cbindgen:derive-eq=false
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct FilterPrimitive {
+    pub kind: FilterPrimitiveKind,
+    pub color_space: ColorSpace,
 }
 
 /// CSS filter.
