@@ -134,11 +134,6 @@ impl ::std::ops::Sub<usize> for FrameId {
     }
 }
 
-enum RenderBackendStatus {
-    Continue,
-    ShutDown(Option<MsgSender<()>>),
-}
-
 /// Identifier to track a sequence of frames.
 ///
 /// This is effectively a `FrameId` with a ridealong timestamp corresponding
@@ -869,13 +864,13 @@ impl RenderBackend {
 
     pub fn run(&mut self, mut profile_counters: BackendProfileCounters) {
         let mut frame_counter: u32 = 0;
-        let mut status = RenderBackendStatus::Continue;
+        let mut keep_going = true;
 
         if let Some(ref sampler) = self.sampler {
             sampler.register();
         }
 
-        while let RenderBackendStatus::Continue = status {
+        while keep_going {
             profile_scope!("handle_msg");
 
             while let Ok(msg) = self.scene_rx.try_recv() {
@@ -957,14 +952,14 @@ impl RenderBackend {
                 }
             }
 
-            status = match self.api_rx.recv() {
+            keep_going = match self.api_rx.recv() {
                 Ok(msg) => {
                     if let Some(ref mut r) = self.recorder {
                         r.write_msg(frame_counter, &msg);
                     }
                     self.process_api_msg(msg, &mut profile_counters, &mut frame_counter)
                 }
-                Err(..) => { RenderBackendStatus::ShutDown(None) }
+                Err(..) => { false }
             };
         }
 
@@ -985,18 +980,12 @@ impl RenderBackend {
             }
         }
 
-        self.documents.clear();
-
         self.notifier.shut_down();
 
         if let Some(ref sampler) = self.sampler {
             sampler.deregister();
         }
 
-
-        if let RenderBackendStatus::ShutDown(Some(sender)) = status {
-            let _ = sender.send(());
-        }
     }
 
     fn process_api_msg(
@@ -1004,7 +993,7 @@ impl RenderBackend {
         msg: ApiMsg,
         profile_counters: &mut BackendProfileCounters,
         frame_counter: &mut u32,
-    ) -> RenderBackendStatus {
+    ) -> bool {
         match msg {
             ApiMsg::WakeUp => {}
             ApiMsg::WakeSceneBuilder => {
@@ -1109,7 +1098,7 @@ impl RenderBackend {
                         )).unwrap();
 
                         // We don't want to forward this message to the renderer.
-                        return RenderBackendStatus::Continue;
+                        return true;
                     }
                     DebugCommand::FetchDocuments => {
                         let json = self.get_docs_for_debugger();
@@ -1164,21 +1153,21 @@ impl RenderBackend {
 
                         // Note: we can't pass `LoadCapture` here since it needs to arrive
                         // before the `PublishDocument` messages sent by `load_capture`.
-                        return RenderBackendStatus::Continue;
+                        return true;
                     }
                     DebugCommand::ClearCaches(mask) => {
                         self.resource_cache.clear(mask);
-                        return RenderBackendStatus::Continue;
+                        return true;
                     }
                     DebugCommand::SimulateLongSceneBuild(time_ms) => {
                         self.scene_tx.send(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)).unwrap();
-                        return RenderBackendStatus::Continue;
+                        return true;
                     }
                     DebugCommand::SimulateLongLowPrioritySceneBuild(time_ms) => {
                         self.low_priority_scene_tx.send(
                             SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(time_ms)
                         ).unwrap();
-                        return RenderBackendStatus::Continue;
+                        return true;
                     }
                     DebugCommand::SetFlags(flags) => {
                         self.resource_cache.set_debug_flags(flags);
@@ -1206,9 +1195,9 @@ impl RenderBackend {
                 self.result_tx.send(msg).unwrap();
                 self.notifier.wake_up();
             }
-            ApiMsg::ShutDown(sender) => {
+            ApiMsg::ShutDown => {
                 info!("Recycling stats: {:?}", self.recycler);
-                return RenderBackendStatus::ShutDown(sender);
+                return false;
             }
             ApiMsg::UpdateDocuments(document_ids, transaction_msgs) => {
                 self.prepare_transactions(
@@ -1220,7 +1209,7 @@ impl RenderBackend {
             }
         }
 
-        RenderBackendStatus::Continue
+        true
     }
 
     fn prepare_for_frames(&mut self) {

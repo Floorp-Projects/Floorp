@@ -47,16 +47,7 @@ class WebRenderThreadPool {
 
   ~WebRenderThreadPool();
 
-  wr::WrThreadPool* Raw() {
-    // If this pointer is null we are likely at some late shutdown stage,
-    // when threads are no longer safe to interact with.
-    MOZ_RELEASE_ASSERT(mThreadPool);
-    return mThreadPool;
-  }
-
-  /// Prematurely destroys this handle to the thread pool.
-  /// After calling this the object is useless.
-  void Release();
+  wr::WrThreadPool* Raw() { return mThreadPool; }
 
  protected:
   wr::WrThreadPool* mThreadPool;

@@ -1320,7 +1320,7 @@ pub unsafe extern "C" fn wr_api_delete(dh: *mut DocumentHandle) {
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
-    dh.api.shut_down(true);
+    dh.api.shut_down();
 }
 
 #[no_mangle]
