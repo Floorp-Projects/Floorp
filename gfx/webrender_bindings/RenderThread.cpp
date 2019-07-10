@@ -1042,7 +1042,7 @@ void wr_finished_scene_build(mozilla::wr::WrWindowId aWindowId,
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
   RefPtr<wr::WebRenderPipelineInfo> info = new wr::WebRenderPipelineInfo(aInfo);
   if (cbp) {
-    InfallibleTArray<wr::RenderRoot> renderRoots;
+    nsTArray<wr::RenderRoot> renderRoots;
     renderRoots.SetLength(aDocumentIdsCount);
     for (size_t i = 0; i < aDocumentIdsCount; ++i) {
       renderRoots[i] = wr::RenderRootFromId(aDocumentIds[i]);
