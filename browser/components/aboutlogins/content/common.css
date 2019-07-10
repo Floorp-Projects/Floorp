@@ -7,15 +7,3 @@
 [hidden] {
   display: none !important;
 }
-
-.alternate-button {
-  background-color: transparent;
-}
-
-.alternate-button:hover {
-  background-color: var(--in-content-button-background-hover);
-}
-
-.alternate-button:hover:active {
-  background-color: var(--in-content-button-background-active);
-}
