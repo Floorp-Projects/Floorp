@@ -1998,6 +1998,11 @@ impl<'a> DisplayListFlattener<'a> {
                 })
                 .collect();
 
+            // Sanitize filter inputs
+            for primitive in &mut stacking_context.composite_ops.filter_primitives {
+                primitive.sanitize();
+            }
+
             let composite_mode = PictureCompositeMode::SvgFilter(
                 stacking_context.composite_ops.filter_primitives,
                 filter_datas,
