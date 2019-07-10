@@ -35,7 +35,7 @@ extern mozilla::LogModule* GetSpeechSynthLog();
 namespace {
 
 void GetAllSpeechSynthActors(
-    InfallibleTArray<mozilla::dom::SpeechSynthesisParent*>& aActors) {
+    nsTArray<mozilla::dom::SpeechSynthesisParent*>& aActors) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActors.IsEmpty());
 
@@ -187,8 +187,8 @@ bool nsSynthVoiceRegistry::SendInitialVoicesAndState(
     SpeechSynthesisParent* aParent) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  InfallibleTArray<RemoteVoice> voices;
-  InfallibleTArray<nsString> defaults;
+  nsTArray<RemoteVoice> voices;
+  nsTArray<nsString> defaults;
 
   for (uint32_t i = 0; i < mVoices.Length(); ++i) {
     RefPtr<VoiceData> voice = mVoices[i];
