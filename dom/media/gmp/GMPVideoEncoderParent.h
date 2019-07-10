@@ -67,7 +67,7 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
   void ActorDestroy(ActorDestroyReason aWhy) override;
   mozilla::ipc::IPCResult RecvEncoded(
       const GMPVideoEncodedFrameData& aEncodedFrame,
-      InfallibleTArray<uint8_t>&& aCodecSpecificInfo) override;
+      nsTArray<uint8_t>&& aCodecSpecificInfo) override;
   mozilla::ipc::IPCResult RecvError(const GMPErr& aError) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvParentShmemForPool(Shmem&& aFrameBuffer) override;
