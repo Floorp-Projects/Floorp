@@ -2969,22 +2969,13 @@ VARCACHE_PREF(
   bool, false
 )
 
-#if defined(RELEASE_OR_BETA)
-// "Skip" means this is locked to the default value in beta and release.
-VARCACHE_PREF(
-  Skip,
-  "gfx.blocklist.all",
-   gfx_blocklist_all,
-  int32_t, 0
-)
-#else
+// Nb: we ignore this pref on release and beta.
 VARCACHE_PREF(
   Once,
   "gfx.blocklist.all",
    gfx_blocklist_all,
   int32_t, 0
 )
-#endif
 
 // 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
 VARCACHE_PREF(
