@@ -1533,164 +1533,149 @@ fn audiounit_destroy_aggregate_device(
     Ok(())
 }
 
-#[cfg(target_os = "ios")]
-fn audiounit_new_unit_instance(unit: &mut AudioUnit, _: &device_info) -> Result<()> {
-    assert!((*unit).is_null());
+fn create_audiounit(device: &device_info) -> Result<AudioUnit> {
+    assert!(device
+        .flags
+        .intersects(device_flags::DEV_INPUT | device_flags::DEV_OUTPUT));
+    assert!(!device
+        .flags
+        .contains(device_flags::DEV_INPUT | device_flags::DEV_OUTPUT));
 
-    let mut desc = AudioComponentDescription::default();
-    let mut comp: AudioComponent;
-    let mut rv = NO_ERR;
-
-    desc.componentType = kAudioUnitType_Output;
-    desc.componentSubType = kAudioUnitSubType_RemoteIO;
-
-    desc.componentManufacturer = kAudioUnitManufacturer_Apple;
-    desc.componentFlags = 0;
-    desc.componentFlagsMask = 0;
-    comp = unsafe { AudioComponentFindNext(ptr::null_mut(), &desc) };
-    if comp.is_null() {
-        cubeb_log!("Could not find matching audio hardware.");
-        return Err(Error::error());
-    }
-
-    rv = unsafe { AudioComponentInstanceNew(comp, unit) };
-    if rv != NO_ERR {
-        cubeb_log!("AudioComponentInstanceNew rv={}", rv);
-        return Err(Error::error());
-    }
-    Ok(())
-}
-
-#[cfg(not(target_os = "ios"))]
-fn audiounit_new_unit_instance(unit: &mut AudioUnit, device: &device_info) -> Result<()> {
-    assert!((*unit).is_null());
-
-    let mut desc = AudioComponentDescription::default();
-    let mut comp: AudioComponent = ptr::null_mut();
-    let mut rv = NO_ERR;
-
-    desc.componentType = kAudioUnitType_Output;
-    // Use the DefaultOutputUnit for output when no device is specified
-    // so we retain automatic output device switching when the default
-    // changes.  Once we have complete support for device notifications
-    // and switching, we can use the AUHAL for everything.
+    let unit = create_default_audiounit(device.flags)?;
     if device
         .flags
         .contains(device_flags::DEV_SYSTEM_DEFAULT | device_flags::DEV_OUTPUT)
     {
-        desc.componentSubType = kAudioUnitSubType_DefaultOutput;
-    } else {
-        desc.componentSubType = kAudioUnitSubType_HALOutput;
-    }
-
-    desc.componentManufacturer = kAudioUnitManufacturer_Apple;
-    desc.componentFlags = 0;
-    desc.componentFlagsMask = 0;
-    comp = unsafe { AudioComponentFindNext(ptr::null_mut(), &desc) };
-    if comp.is_null() {
-        cubeb_log!("Could not find matching audio hardware.");
-        return Err(Error::error());
-    }
-
-    rv = unsafe { AudioComponentInstanceNew(comp, unit as *mut AudioUnit) };
-    if rv != NO_ERR {
-        cubeb_log!("AudioComponentInstanceNew rv={}", rv);
-        return Err(Error::error());
-    }
-    Ok(())
-}
-
-#[allow(non_camel_case_types)]
-#[derive(PartialEq)]
-enum enable_state {
-    DISABLE,
-    ENABLE,
-}
-
-fn audiounit_enable_unit_scope(unit: &AudioUnit, side: io_side, state: enable_state) -> Result<()> {
-    assert!(!(*unit).is_null());
-
-    let mut rv = NO_ERR;
-    let enable: u32 = if state == enable_state::DISABLE { 0 } else { 1 };
-    rv = audio_unit_set_property(
-        *unit,
-        kAudioOutputUnitProperty_EnableIO,
-        if side == io_side::INPUT {
-            kAudioUnitScope_Input
-        } else {
-            kAudioUnitScope_Output
-        },
-        if side == io_side::INPUT {
-            AU_IN_BUS
-        } else {
-            AU_OUT_BUS
-        },
-        &enable,
-        mem::size_of::<u32>(),
-    );
-    if rv != NO_ERR {
-        cubeb_log!(
-            "AudioUnitSetProperty/kAudioOutputUnitProperty_EnableIO rv={}",
-            rv
-        );
-        return Err(Error::error());
-    }
-    Ok(())
-}
-
-fn audiounit_create_unit(unit: &mut AudioUnit, device: &device_info) -> Result<()> {
-    assert!((*unit).is_null());
-
-    let mut rv = NO_ERR;
-    audiounit_new_unit_instance(unit, device)?;
-    assert!(!(*unit).is_null());
-
-    if device
-        .flags
-        .contains(device_flags::DEV_SYSTEM_DEFAULT | device_flags::DEV_OUTPUT)
-    {
-        return Ok(());
+        return Ok(unit);
     }
 
     if device.flags.contains(device_flags::DEV_INPUT) {
-        if let Err(r) = audiounit_enable_unit_scope(unit, io_side::INPUT, enable_state::ENABLE) {
-            cubeb_log!("Failed to enable audiounit input scope");
-            return Err(r);
-        }
-        if let Err(r) = audiounit_enable_unit_scope(unit, io_side::OUTPUT, enable_state::DISABLE) {
-            cubeb_log!("Failed to disable audiounit output scope");
-            return Err(r);
-        }
-    } else if device.flags.contains(device_flags::DEV_OUTPUT) {
-        if let Err(r) = audiounit_enable_unit_scope(unit, io_side::OUTPUT, enable_state::ENABLE) {
-            cubeb_log!("Failed to enable audiounit output scope");
-            return Err(r);
-        }
-        if let Err(r) = audiounit_enable_unit_scope(unit, io_side::INPUT, enable_state::DISABLE) {
-            cubeb_log!("Failed to disable audiounit input scope");
-            return Err(r);
-        }
-    } else {
-        assert!(false);
+        // Input only.
+        enable_audiounit_scope(unit, io_side::INPUT, true).map_err(|e| {
+            cubeb_log!("Fail to enable audiounit input scope. Error: {}", e);
+            Error::error()
+        })?;
+        enable_audiounit_scope(unit, io_side::OUTPUT, false).map_err(|e| {
+            cubeb_log!("Fail to disable audiounit output scope. Error: {}", e);
+            Error::error()
+        })?;
     }
 
-    rv = audio_unit_set_property(
-        *unit,
+    if device.flags.contains(device_flags::DEV_OUTPUT) {
+        // Output only.
+        enable_audiounit_scope(unit, io_side::OUTPUT, true).map_err(|e| {
+            cubeb_log!("Fail to enable audiounit output scope. Error: {}", e);
+            Error::error()
+        })?;
+        enable_audiounit_scope(unit, io_side::INPUT, false).map_err(|e| {
+            cubeb_log!("Fail to disable audiounit input scope. Error: {}", e);
+            Error::error()
+        })?;
+    }
+
+    set_device_to_audiounit(unit, device.id).map_err(|e| {
+        cubeb_log!(
+            "Fail to set device {} to the created audiounit. Error: {}",
+            device.id,
+            e
+        );
+        Error::error()
+    })?;
+
+    Ok(unit)
+}
+
+fn enable_audiounit_scope(
+    unit: AudioUnit,
+    side: io_side,
+    enable_io: bool,
+) -> std::result::Result<(), OSStatus> {
+    assert!(!unit.is_null());
+
+    let enable: u32 = if enable_io { 1 } else { 0 };
+    let (scope, element) = match side {
+        io_side::INPUT => (kAudioUnitScope_Input, AU_IN_BUS),
+        io_side::OUTPUT => (kAudioUnitScope_Output, AU_OUT_BUS),
+    };
+    let status = audio_unit_set_property(
+        unit,
+        kAudioOutputUnitProperty_EnableIO,
+        scope,
+        element,
+        &enable,
+        mem::size_of::<u32>(),
+    );
+    if status == NO_ERR {
+        Ok(())
+    } else {
+        Err(status)
+    }
+}
+
+fn set_device_to_audiounit(
+    unit: AudioUnit,
+    device_id: AudioObjectID,
+) -> std::result::Result<(), OSStatus> {
+    assert!(!unit.is_null());
+
+    let status = audio_unit_set_property(
+        unit,
         kAudioOutputUnitProperty_CurrentDevice,
         kAudioUnitScope_Global,
         0,
-        &device.id,
+        &device_id,
         mem::size_of::<AudioDeviceID>(),
     );
-    if rv != NO_ERR {
-        cubeb_log!(
-            "AudioUnitSetProperty/kAudioOutputUnitProperty_CurrentDevice rv={}",
-            rv
-        );
+    if status == NO_ERR {
+        Ok(())
+    } else {
+        Err(status)
+    }
+}
+
+fn create_default_audiounit(flags: device_flags) -> Result<AudioUnit> {
+    let desc = get_audiounit_description(flags);
+    create_audiounit_by_description(desc)
+}
+
+fn get_audiounit_description(flags: device_flags) -> AudioComponentDescription {
+    AudioComponentDescription {
+        componentType: kAudioUnitType_Output,
+        // Use the DefaultOutputUnit for output when no device is specified
+        // so we retain automatic output device switching when the default
+        // changes. Once we have complete support for device notifications
+        // and switching, we can use the AUHAL for everything.
+        #[cfg(not(target_os = "ios"))]
+        componentSubType: if flags
+            .contains(device_flags::DEV_SYSTEM_DEFAULT | device_flags::DEV_OUTPUT)
+        {
+            kAudioUnitSubType_DefaultOutput
+        } else {
+            kAudioUnitSubType_HALOutput
+        },
+        #[cfg(target_os = "ios")]
+        componentSubType: kAudioUnitSubType_RemoteIO,
+        componentManufacturer: kAudioUnitManufacturer_Apple,
+        componentFlags: 0,
+        componentFlagsMask: 0,
+    }
+}
+
+fn create_audiounit_by_description(desc: AudioComponentDescription) -> Result<AudioUnit> {
+    let comp = unsafe { AudioComponentFindNext(ptr::null_mut(), &desc) };
+    if comp.is_null() {
+        cubeb_log!("Could not find matching audio hardware.");
         return Err(Error::error());
     }
-
-    Ok(())
+    let mut unit: AudioUnit = ptr::null_mut();
+    let status = unsafe { AudioComponentInstanceNew(comp, &mut unit) };
+    if status == NO_ERR {
+        assert!(!unit.is_null());
+        Ok(unit)
+    } else {
+        cubeb_log!("Fail to get a new AudioUnit. Error: {}", status);
+        Err(Error::error())
+    }
 }
 
 // Change buffer size is prone to deadlock thus we change it following the steps:
@@ -4073,28 +4058,16 @@ impl<'ctx> AudioUnitStream<'ctx> {
             }
         }
 
+        // Configure I/O stream
         if self.has_input() {
-            if let Err(r) = audiounit_create_unit(&mut self.input_unit, &in_dev_info) {
+            self.input_unit = create_audiounit(&in_dev_info).map_err(|e| {
                 cubeb_log!(
                     "({:p}) AudioUnit creation for input failed.",
                     self as *const AudioUnitStream
                 );
-                return Err(r);
-            }
-        }
+                e
+            })?;
 
-        if self.has_output() {
-            if let Err(r) = audiounit_create_unit(&mut self.output_unit, &out_dev_info) {
-                cubeb_log!(
-                    "({:p}) AudioUnit creation for output failed.",
-                    self as *const AudioUnitStream
-                );
-                return Err(r);
-            }
-        }
-
-        // Configure I/O stream
-        if self.has_input() {
             if let Err(r) = self.configure_input() {
                 cubeb_log!(
                     "({:p}) Configure audiounit input failed.",
@@ -4105,6 +4078,14 @@ impl<'ctx> AudioUnitStream<'ctx> {
         }
 
         if self.has_output() {
+            self.output_unit = create_audiounit(&out_dev_info).map_err(|e| {
+                cubeb_log!(
+                    "({:p}) AudioUnit creation for output failed.",
+                    self as *const AudioUnitStream
+                );
+                e
+            })?;
+
             if let Err(r) = self.configure_output() {
                 cubeb_log!(
                     "({:p}) Configure audiounit output failed.",
