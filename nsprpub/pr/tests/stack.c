@@ -53,7 +53,7 @@ PRFileDesc  *errhandle;
 
 int main(int argc, char **argv)
 {
-#if !(defined(SYMBIAN) && defined(__WINS__))
+#if defined(__WINS__))
     PRInt32 rv, cnt, sum;
 	DataRecord	*Item;
 	PRStack		*list1, *list2;

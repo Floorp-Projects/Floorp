@@ -23,9 +23,6 @@
 ** Make win16 unit_time interval 300 milliseconds, others get 100
 */
 #define UNIT_TIME  200       /* unit time in milliseconds */
-#elif defined(SYMBIAN)
-#define UNIT_TIME  5000      /* unit time in milliseconds */
-#else
 #define UNIT_TIME  100       /* unit time in milliseconds */
 #endif
 #define CHUNK_SIZE 10

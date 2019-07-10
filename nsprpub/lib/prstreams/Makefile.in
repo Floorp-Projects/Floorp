@@ -14,12 +14,6 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(OS_ARCH), IRIX)
-    ifneq ($(OS_RELEASE),5.3)
-        CCC_ONLY_FLAGS += -exceptions
-    endif
-endif
-
 ifeq ($(OS_ARCH), BeOS)
     CFLAGS += -frtti -fexceptions
 endif

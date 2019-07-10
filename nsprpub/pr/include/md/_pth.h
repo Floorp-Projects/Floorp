@@ -84,12 +84,12 @@
  *   PR_EnterMonitor calls any of these functions, infinite
  *   recursion ensues.
  */
-#if defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
+#if defined(AIX) || defined(SOLARIS) \
 	|| defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
 	|| defined(HPUX) || defined(FREEBSD) \
 	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
 	|| defined(NTO) || defined(DARWIN) \
-	|| defined(UNIXWARE) || defined(RISCOS)	|| defined(SYMBIAN)
+	|| defined(UNIXWARE) || defined(RISCOS)
 #define _PT_PTHREAD_INVALIDATE_THR_HANDLE(t)  (t) = 0
 #define _PT_PTHREAD_THR_HANDLE_IS_INVALID(t)  (t) == 0
 #define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -116,18 +116,11 @@
 	|| defined(LINUX) || defined(__GNU__)|| defined(__GLIBC__) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
 	|| defined(BSDI) || defined(UNIXWARE) \
-	|| defined(DARWIN) || defined(SYMBIAN)
+	|| defined(DARWIN)
 #define PT_NO_SIGTIMEDWAIT
 #endif
 
-#if defined(OSF1)
-#define PT_PRIO_MIN            PRI_OTHER_MIN
-#define PT_PRIO_MAX            PRI_OTHER_MAX
-#elif defined(IRIX)
-#include <sys/sched.h>
-#define PT_PRIO_MIN            PX_PRIO_MIN
-#define PT_PRIO_MAX            PX_PRIO_MAX
-#elif defined(AIX)
+#if defined(AIX)
 #include <sys/priv.h>
 #include <sys/sched.h>
 #ifndef PTHREAD_CREATE_JOINABLE
@@ -140,7 +133,7 @@
 #define PT_PRIO_MIN            sched_get_priority_min(SCHED_OTHER)
 #define PT_PRIO_MAX            sched_get_priority_max(SCHED_OTHER)
 #elif defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
-	|| defined(FREEBSD) || defined(SYMBIAN)
+	|| defined(FREEBSD)
 #define PT_PRIO_MIN            sched_get_priority_min(SCHED_OTHER)
 #define PT_PRIO_MAX            sched_get_priority_max(SCHED_OTHER)
 #elif defined(NTO)
@@ -177,28 +170,14 @@
  * Needed for garbage collection -- Look at PR_Suspend/PR_Resume
  * implementation.
  */
-#if defined(OSF1)
-/*
- * sched_yield can't be called from a signal handler.  Must use
- * the _np version.
- */
-#define _PT_PTHREAD_YIELD()            	pthread_yield_np()
-#elif defined(AIX)
+#if defined(AIX)
 extern int (*_PT_aix_yield_fcn)();
 #define _PT_PTHREAD_YIELD()			(*_PT_aix_yield_fcn)()
-#elif defined(IRIX)
-#include <time.h>
-#define _PT_PTHREAD_YIELD() \
-    PR_BEGIN_MACRO               				\
-		struct timespec onemillisec = {0};		\
-		onemillisec.tv_nsec = 1000000L;			\
-        nanosleep(&onemillisec,NULL);			\
-    PR_END_MACRO
 #elif defined(HPUX) || defined(SOLARIS) \
 	|| defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
 	|| defined(BSDI) || defined(NTO) || defined(DARWIN) \
-	|| defined(UNIXWARE) || defined(RISCOS) || defined(SYMBIAN)
+	|| defined(UNIXWARE) || defined(RISCOS)
 #define _PT_PTHREAD_YIELD()            	sched_yield()
 #else
 #error "Need to define _PT_PTHREAD_YIELD for this platform"

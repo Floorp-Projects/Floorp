@@ -144,7 +144,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-#if defined(XP_UNIX) && !defined(SYMBIAN)
+#if defined(XP_UNIX)
 	/*
 	 * Test PR_Available for pipes
 	 */

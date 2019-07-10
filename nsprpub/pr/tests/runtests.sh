@@ -36,8 +36,6 @@ fi
 #dceemu		- used to tests special functions in NSPR for DCE emulation
 #ipv6		- IPV6 not in use by NSPR clients
 #mbcs       - tests use of multi-byte charset for filenames. See BugZilla #25140
-#sproc_ch	- obsolete; sproc-based tests for Irix
-#sproc_p	- obsolete; sproc-based tests for Irix
 #io_timeoutk - obsolete; subsumed in io_timeout
 #io_timeoutu - obsolete; subsumed in io_timeout
 #prftest1	- obsolete; subsumed by prftest

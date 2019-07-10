@@ -64,10 +64,6 @@ ifneq ($(OS_ARCH), WINNT)
 PWD = $(shell pwd)
 endif
 
-ifeq ($(OS_ARCH), IRIX)
-LDOPTS += -rpath $(PWD)/$(dist_libdir)
-endif
-
 ifeq ($(OS_ARCH), Linux)
     ifeq ($(OS_RELEASE), 1.2)
         EXTRA_LIBS = -ldl
@@ -83,10 +79,6 @@ ifeq (,$(filter-out OpenBSD,$(OS_ARCH)))
     ifeq ($(USE_PTHREADS),1)
         EXTRA_LIBS = -lpthread
     endif
-endif
-
-ifeq ($(OS_ARCH), OSF1)
-LDOPTS += -rpath $(PWD)/$(dist_libdir) -lpthread
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
