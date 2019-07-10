@@ -38,6 +38,9 @@ pub trait YamlHelper {
     fn as_vec_filter_op(&self) -> Option<Vec<FilterOp>>;
     fn as_filter_data(&self) -> Option<FilterData>;
     fn as_vec_filter_data(&self) -> Option<Vec<FilterData>>;
+    fn as_filter_input(&self) -> Option<FilterPrimitiveInput>;
+    fn as_filter_primitive(&self) -> Option<FilterPrimitive>;
+    fn as_vec_filter_primitive(&self) -> Option<Vec<FilterPrimitive>>;
 }
 
 fn string_to_color(color: &str) -> Option<ColorF> {
@@ -674,11 +677,54 @@ impl YamlHelper for Yaml {
         None
     }
 
+    fn as_filter_input(&self) -> Option<FilterPrimitiveInput> {
+        if let Some(input) = self.as_str() {
+            match input {
+                "original" => Some(FilterPrimitiveInput::Original),
+                "previous" => Some(FilterPrimitiveInput::Previous),
+                _ => None,
+            }
+        } else if let Some(index) = self.as_i64() {
+            if index >= 0 {
+                Some(FilterPrimitiveInput::OutputOfPrimitiveIndex(index as usize))
+            } else {
+                panic!("Filter input index cannot be negative");
+            }
+        } else {
+            panic!("Invalid filter input");
+        }
+    }
+
     fn as_vec_filter_data(&self) -> Option<Vec<FilterData>> {
         if let Some(v) = self.as_vec() {
             Some(v.iter().map(|x| x.as_filter_data().unwrap()).collect())
         } else {
             self.as_filter_data().map(|data| vec![data])
+        }
+    }
+
+    fn as_filter_primitive(&self) -> Option<FilterPrimitive> {
+        if let Some(filter_type) = self["type"].as_str() {
+            match filter_type {
+                "blend" => {
+                    Some(FilterPrimitive::Blend(BlendPrimitive {
+                        input1: self["in1"].as_filter_input().unwrap(),
+                        input2: self["in2"].as_filter_input().unwrap(),
+                        mode: self["blend-mode"].as_mix_blend_mode().unwrap(),
+                    }))
+                }
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
+
+    fn as_vec_filter_primitive(&self) -> Option<Vec<FilterPrimitive>> {
+        if let Some(v) = self.as_vec() {
+            Some(v.iter().map(|x| x.as_filter_primitive().unwrap()).collect())
+        } else {
+            self.as_filter_primitive().map(|data| vec![data])
         }
     }
 }
