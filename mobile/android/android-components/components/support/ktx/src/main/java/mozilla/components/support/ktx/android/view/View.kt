@@ -9,6 +9,7 @@ import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.getSystemService
 import androidx.core.view.ViewCompat
@@ -97,6 +98,19 @@ fun View.setPadding(padding: Padding) {
             padding.bottom.dpToPx(displayMetrics)
         )
     }
+}
+
+/**
+ * Registers a one-time callback to be invoked when the global layout state
+ * or the visibility of views within the view tree changes.
+ */
+inline fun View.onNextGlobalLayout(crossinline callback: () -> Unit) {
+    var listener: ViewTreeObserver.OnGlobalLayoutListener? = null
+    listener = ViewTreeObserver.OnGlobalLayoutListener {
+        viewTreeObserver.removeOnGlobalLayoutListener(listener)
+        callback()
+    }
+    viewTreeObserver.addOnGlobalLayoutListener(listener)
 }
 
 private class ShowKeyboard(

@@ -18,7 +18,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.shadows.ShadowLooper
 
 @RunWith(AndroidJUnit4::class)
@@ -95,5 +98,36 @@ class ViewTest {
         assertEquals(200, outRect.top)
         assertEquals(250, outRect.right)
         assertEquals(450, outRect.bottom)
+    }
+
+    @Test
+    fun `called after next layout`() {
+        val view = View(testContext)
+
+        var callbackInvoked = false
+        view.onNextGlobalLayout {
+            callbackInvoked = true
+        }
+
+        assertFalse(callbackInvoked)
+
+        view.viewTreeObserver.dispatchOnGlobalLayout()
+
+        assertTrue(callbackInvoked)
+    }
+
+    @Test
+    fun `remove listener after next layout`() {
+        val view = spy(View(testContext))
+        val viewTreeObserver = spy(view.viewTreeObserver)
+        doReturn(viewTreeObserver).`when`(view).viewTreeObserver
+
+        view.onNextGlobalLayout {}
+
+        verify(viewTreeObserver, never()).removeOnGlobalLayoutListener(any())
+
+        viewTreeObserver.dispatchOnGlobalLayout()
+
+        verify(viewTreeObserver).removeOnGlobalLayoutListener(any())
     }
 }

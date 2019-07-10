@@ -12,11 +12,9 @@ import android.os.Build
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.widget.PopupWindow
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.PopupWindowCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.menu.BrowserMenu.Orientation.DOWN
 import mozilla.components.browser.menu.BrowserMenu.Orientation.UP
 import mozilla.components.support.ktx.android.view.isRTL
+import mozilla.components.support.ktx.android.view.onNextGlobalLayout
 
 /**
  * A popup menu composed of BrowserMenuItem objects.
@@ -33,9 +32,6 @@ class BrowserMenu internal constructor(
 ) {
     private var currentPopup: PopupWindow? = null
     private var menuList: RecyclerView? = null
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal var scrollOnceToTheBottomWasCalled = false
 
     /**
      * @param anchor the view on which to pin the popup window.
@@ -90,23 +86,17 @@ class BrowserMenu internal constructor(
         // as a result, we have to provided a backwards support.
         // See: https://github.com/mozilla-mobile/android-components/issues/3211
         if (endOfMenuAlwaysVisible && Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-            scrollOnceToTheBottom()
+            scrollOnceToTheBottom(this)
         } else {
             layoutManager.stackFromEnd = endOfMenuAlwaysVisible
         }
     }
 
-    private fun RecyclerView.scrollOnceToTheBottom() {
-        var listener: ViewTreeObserver.OnGlobalLayoutListener? = null
-        listener = ViewTreeObserver.OnGlobalLayoutListener {
-            adapter?.let {
-                scrollToPosition(it.itemCount - 1)
-                // Unregister the listener to only call scrollToPosition once
-                viewTreeObserver.removeOnGlobalLayoutListener(listener)
-            }
+    @VisibleForTesting
+    internal fun scrollOnceToTheBottom(recyclerView: RecyclerView) {
+        recyclerView.onNextGlobalLayout {
+            recyclerView.adapter?.let { recyclerView.scrollToPosition(it.itemCount - 1) }
         }
-        viewTreeObserver.addOnGlobalLayoutListener(listener)
-        scrollOnceToTheBottomWasCalled = true
     }
 
     fun dismiss() {

@@ -52,6 +52,9 @@ permalink: /changelog/
   * `Tab.restore()` now returns a `Session` instead of a `SessionManager.Snapshot`
   * `TabCollection.restore()` and `TabCollection.restoreSubset()` now return a `List<Session>` instead of a `SessionManager.Snapshot`
 
+* **support-ktx**
+  * Added `onNextGlobalLayout` to add a `ViewTreeObserver.OnGlobalLayoutListener` that is only called once.
+
 # 3.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v2.0.0...v3.0.0)

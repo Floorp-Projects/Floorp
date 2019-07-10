@@ -10,12 +10,12 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
-import android.view.ViewTreeObserver
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import mozilla.components.support.ktx.android.view.onNextGlobalLayout
 import mozilla.components.support.utils.DrawableUtils
 import java.text.NumberFormat
 
@@ -251,16 +251,13 @@ open class TabCounter @JvmOverloads constructor(
 
         if (newRatio != currentTextRatio) {
             currentTextRatio = newRatio
-            text.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    text.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    val sizeInPixel = (box.width * newRatio).toInt()
-                    if (sizeInPixel > 0) {
-                        // Only apply the size when we calculate a valid value.
-                        text.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPixel.toFloat())
-                    }
+            text.onNextGlobalLayout {
+                val sizeInPixel = (box.width * newRatio).toInt()
+                if (sizeInPixel > 0) {
+                    // Only apply the size when we calculate a valid value.
+                    text.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPixel.toFloat())
                 }
-            })
+            }
         }
     }
 

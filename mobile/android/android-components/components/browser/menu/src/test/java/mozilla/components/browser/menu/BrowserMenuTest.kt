@@ -25,6 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -98,17 +99,18 @@ class BrowserMenuTest {
             SimpleBrowserMenuItem("Hello") {},
             SimpleBrowserMenuItem("World") {})
 
-        val adapter = spy(BrowserMenuAdapter(testContext, items))
-        val menu = BrowserMenu(adapter)
+        val adapter = BrowserMenuAdapter(testContext, items)
+        val menu = spy(BrowserMenu(adapter))
+        doNothing().`when`(menu).scrollOnceToTheBottom(any())
 
         val anchor = Button(testContext)
         val popup = menu.show(anchor, endOfMenuAlwaysVisible = true)
-        val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
 
+        val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
         val layoutManager = recyclerView.layoutManager as LinearLayoutManager
 
         assertFalse(layoutManager.stackFromEnd)
-        assertNotNull(menu.scrollOnceToTheBottomWasCalled)
+        verify(menu).scrollOnceToTheBottom(any())
     }
 
     @Test
