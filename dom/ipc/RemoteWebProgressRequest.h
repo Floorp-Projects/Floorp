@@ -26,8 +26,12 @@ class RemoteWebProgressRequest final : public nsIRemoteWebProgressRequest,
       : mURI(nullptr), mOriginalURI(nullptr), mMatchedList(VoidCString()) {}
 
   RemoteWebProgressRequest(nsIURI* aURI, nsIURI* aOriginalURI,
-                           const nsACString& aMatchedList)
-      : mURI(aURI), mOriginalURI(aOriginalURI), mMatchedList(aMatchedList) {}
+                           const nsACString& aMatchedList,
+                           const Maybe<uint64_t>& aMaybeElapsedLoadTimeMS)
+      : mURI(aURI),
+        mOriginalURI(aOriginalURI),
+        mMatchedList(aMatchedList),
+        mMaybeElapsedLoadTimeMS(aMaybeElapsedLoadTimeMS) {}
 
  protected:
   ~RemoteWebProgressRequest() = default;
@@ -36,6 +40,13 @@ class RemoteWebProgressRequest final : public nsIRemoteWebProgressRequest,
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
   nsCString mMatchedList;
+
+  // This field is only Some(...) when the RemoteWebProgressRequest
+  // is created at a time that the document whose progress is being
+  // described by this request is top level and its status changes
+  // from loading to completely loaded.
+  // See BrowserChild::OnStateChange.
+  Maybe<uint64_t> mMaybeElapsedLoadTimeMS;
 };
 
 }  // namespace dom
