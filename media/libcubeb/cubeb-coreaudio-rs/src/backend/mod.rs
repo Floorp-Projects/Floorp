@@ -298,6 +298,36 @@ fn create_stream_description(stream_params: &StreamParams) -> Result<AudioStream
     Ok(desc)
 }
 
+fn create_auto_array(
+    desc: AudioStreamBasicDescription,
+    latency_frames: u32,
+    capacity: usize,
+) -> Result<Box<AutoArrayWrapper>> {
+    assert_ne!(desc.mFormatFlags, 0);
+    assert_ne!(desc.mChannelsPerFrame, 0);
+    assert_ne!(latency_frames, 0);
+    assert!(!contains_bits(
+        desc.mFormatFlags,
+        kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsFloat
+    ));
+
+    let size = (latency_frames * desc.mChannelsPerFrame) as usize * capacity;
+
+    if desc.mFormatFlags & kAudioFormatFlagIsSignedInteger != 0 {
+        return Ok(Box::new(AutoArrayImpl::<i16>::new(size)));
+    }
+
+    if desc.mFormatFlags & kAudioFormatFlagIsFloat != 0 {
+        return Ok(Box::new(AutoArrayImpl::<f32>::new(size)));
+    }
+
+    fn contains_bits(mask: AudioFormatFlags, bits: AudioFormatFlags) -> bool {
+        mask & bits == bits
+    }
+
+    Err(Error::invalid_format())
+}
+
 fn set_volume(unit: AudioUnit, volume: f32) -> Result<()> {
     assert!(!unit.is_null());
     let r = audio_unit_set_parameter(
@@ -3571,27 +3601,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         Ok(())
     }
 
-    fn init_input_linear_buffer(&mut self, capacity: u32) -> Result<()> {
-        assert_ne!(self.input_desc.mFormatFlags, 0);
-        assert_ne!(self.input_desc.mChannelsPerFrame, 0);
-        assert_ne!(self.latency_frames, 0);
-        let size = (capacity * self.latency_frames * self.input_desc.mChannelsPerFrame) as usize;
-        if self.input_desc.mFormatFlags & kAudioFormatFlagIsSignedInteger != 0 {
-            assert_eq!(self.input_desc.mFormatFlags & kAudioFormatFlagIsFloat, 0);
-            self.input_linear_buffer = Some(Box::new(AutoArrayImpl::<i16>::new(size)));
-        } else {
-            assert_ne!(self.input_desc.mFormatFlags & kAudioFormatFlagIsFloat, 0);
-            assert_eq!(
-                self.input_desc.mFormatFlags & kAudioFormatFlagIsSignedInteger,
-                0
-            );
-            self.input_linear_buffer = Some(Box::new(AutoArrayImpl::<f32>::new(size)));
-        }
-        assert_eq!(self.input_linear_buffer.as_ref().unwrap().elements(), 0);
-
-        Ok(())
-    }
-
     fn set_buffer_size(&mut self, new_size_frames: u32, side: io_side) -> Result<()> {
         use std::thread;
 
@@ -3835,9 +3844,11 @@ impl<'ctx> AudioUnitStream<'ctx> {
             1 // Input only capacity
         };
 
-        if self.init_input_linear_buffer(array_capacity).is_err() {
-            return Err(Error::error());
-        }
+        self.input_linear_buffer = Some(create_auto_array(
+            self.input_desc,
+            self.latency_frames,
+            array_capacity,
+        )?);
 
         aurcbs_in.inputProc = Some(audiounit_input_callback);
         aurcbs_in.inputProcRefCon = self as *mut AudioUnitStream as *mut c_void;
