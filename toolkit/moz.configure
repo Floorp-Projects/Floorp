@@ -153,6 +153,15 @@ pulseaudio = pkg_check_modules('MOZ_PULSEAUDIO', 'libpulse', when='--enable-puls
 set_config('MOZ_PULSEAUDIO', depends_if(pulseaudio)(lambda _: True))
 set_define('MOZ_PULSEAUDIO', depends_if(pulseaudio)(lambda _: True))
 
+# AudioUnit cubeb Rust backend
+# ==============================================================
+@depends(target)
+def enable_audiounit_rust(target):
+    return target.os == 'OSX' and target.kernel == 'Darwin'
+
+set_config('MOZ_AUDIOUNIT_RUST', True, when=enable_audiounit_rust)
+set_define('MOZ_AUDIOUNIT_RUST', True, when=enable_audiounit_rust)
+
 # Javascript engine
 # ==============================================================
 include('../js/moz.configure')
