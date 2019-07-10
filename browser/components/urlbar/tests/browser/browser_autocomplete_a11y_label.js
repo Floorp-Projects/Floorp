@@ -66,13 +66,8 @@ add_task(async function switchToTab() {
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
   is(
     await getResultText(element),
-    UrlbarPrefs.get("quantumbar")
-      ? // The extra spaces are here due to bug 1550644.
-        "about : about— Switch to Tab"
-      : "about:about about:about Tab",
-    UrlbarPrefs.get("quantumbar")
-      ? "Result a11y label should be: <title>— Switch to Tab"
-      : "Result a11y label should be: <title> <url> Tab"
+    "about : about— Switch to Tab",
+    "Result a11y label should be: <title>— Switch to Tab"
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
@@ -109,7 +104,7 @@ add_task(async function searchSuggestions() {
     "foo",
     "foofoo",
     // The extra spaces is here due to bug 1550644.
-    UrlbarPrefs.get("quantumbar") ? "foo bar " : "foobar",
+    "foo bar ",
   ];
   for (let i = 0; i < length; i++) {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
@@ -131,14 +126,9 @@ add_task(async function searchSuggestions() {
       }
       Assert.equal(
         await getResultText(element),
-        UrlbarPrefs.get("quantumbar")
-          ? suggestion +
-              "— Search with browser_searchSuggestionEngine searchSuggestionEngine.xml"
-          : suggestion +
-              " browser_searchSuggestionEngine searchSuggestionEngine.xml Search",
-        UrlbarPrefs.get("quantumbar")
-          ? "Result label should be: <search term>— Search with <engine name>"
-          : "Result label should be: <search term> <engine name> Search"
+        suggestion +
+          "— Search with browser_searchSuggestionEngine searchSuggestionEngine.xml",
+        "Result label should be: <search term>— Search with <engine name>"
       );
       if (!selected) {
         element.toggleAttribute("selected", false);

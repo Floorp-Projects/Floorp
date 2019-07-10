@@ -14,6 +14,7 @@
 
 #include "builtin/String.h"
 
+#include "dbg/Debugger.h"
 #include "jit/IonCode.h"
 #include "js/Debug.h"
 #include "js/TracingAPI.h"
@@ -23,7 +24,6 @@
 #include "js/Vector.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
-#include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -34,7 +34,7 @@
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
 
-#include "vm/Debugger-inl.h"
+#include "dbg/Debugger-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;

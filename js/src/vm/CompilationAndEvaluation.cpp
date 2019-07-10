@@ -17,6 +17,7 @@
 #include "jsfriendapi.h"  // js::GetErrorMessage
 #include "jstypes.h"      // JS_PUBLIC_API
 
+#include "dbg/Debugger.h"                  // js::Debugger
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
 #include "frontend/FullParseHandler.h"     // frontend::FullParseHandler
 #include "frontend/ParseContext.h"         // frontend::UsedNameTracker
@@ -29,7 +30,6 @@
 #include "js/Value.h"              // JS::Value
 #include "util/CompleteFile.h"     // js::FileContents, js::ReadCompleteFile
 #include "util/StringBuffer.h"     // js::StringBuffer
-#include "vm/Debugger.h"           // js::Debugger
 #include "vm/EnvironmentObject.h"  // js::CreateNonSyntacticEnvironmentChain
 #include "vm/Interpreter.h"        // js::Execute
 #include "vm/JSContext.h"          // JSContext

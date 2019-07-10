@@ -2,10 +2,10 @@ Again Selector
 ==============
 
 When you push to try, the computed ``try_task_config.json`` is saved in a
-history file under ``~/.mozbuild/history`` (note: the ``syntax`` selector does
-not use ``try_task_config.json`` yet so does not save any history). You can
-then use the ``again`` selector to re-push any of your previously generated
-task configs.
+history file under ``~/.mozbuild/srcdirs/<srcdir hash>/history`` (note: the
+``syntax`` selector does not use ``try_task_config.json`` yet so does not save
+any history). You can then use the ``again`` selector to re-push any of your
+previously generated task configs.
 
 In the simple case, you can re-run your last try push with:
 

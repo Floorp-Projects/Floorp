@@ -11,15 +11,19 @@ ChromeUtils.defineModuleGetter(
 var { ignoreEvent } = ExtensionCommon;
 
 // Manages a notification popup (notifications API) created by the extension.
-function Notification(extension, notificationsMap, id, options) {
+function Notification(context, notificationsMap, id, options) {
   this.notificationsMap = notificationsMap;
   this.id = id;
   this.options = options;
 
   let imageURL;
   if (options.iconUrl) {
-    imageURL = extension.baseURI.resolve(options.iconUrl);
+    imageURL = context.extension.baseURI.resolve(options.iconUrl);
   }
+
+  // Set before calling into nsIAlertsService, because the notification may be
+  // closed during the call.
+  notificationsMap.set(id, this);
 
   try {
     let svc = Cc["@mozilla.org/alerts-service;1"].getService(
@@ -32,10 +36,17 @@ function Notification(extension, notificationsMap, id, options) {
       true, // textClickable
       this.id,
       this,
-      this.id
+      this.id,
+      undefined,
+      undefined,
+      undefined,
+      context.principal, // ensures that Close button is shown on macOS.
+      context.incognito
     );
   } catch (e) {
     // This will fail if alerts aren't available on the system.
+
+    this.observe(null, "alertfinished", id);
   }
 }
 
@@ -53,17 +64,13 @@ Notification.prototype = {
   },
 
   observe(subject, topic, data) {
-    let emitAndDelete = event => {
-      this.notificationsMap.emit(event, data);
-      this.notificationsMap.delete(this.id);
-    };
-
     switch (topic) {
       case "alertclickcallback":
-        emitAndDelete("clicked");
+        this.notificationsMap.emit("clicked", data);
         break;
       case "alertfinished":
-        emitAndDelete("closed");
+        this.notificationsMap.emit("closed", data);
+        this.notificationsMap.delete(this.id);
         break;
       case "alertshow":
         this.notificationsMap.emit("shown", data);
@@ -88,7 +95,6 @@ this.notifications = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    let { extension } = context;
     let notificationsMap = this.notificationsMap;
 
     return {
@@ -102,13 +108,7 @@ this.notifications = class extends ExtensionAPI {
             notificationsMap.get(notificationId).clear();
           }
 
-          let notification = new Notification(
-            extension,
-            notificationsMap,
-            notificationId,
-            options
-          );
-          notificationsMap.set(notificationId, notification);
+          new Notification(context, notificationsMap, notificationId, options);
 
           return Promise.resolve(notificationId);
         },

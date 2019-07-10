@@ -34,7 +34,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadClient.once("paused", async function(packet) {
     const args = packet.frame.arguments;
     const objActor = args[0].actor;
     Assert.equal(args[0].class, "Object");
@@ -42,19 +42,25 @@ function test_pause_frame() {
 
     // Make a bogus request to the grip actor.  Should get
     // unrecognized-packet-type (and not no-such-actor).
-    gClient.request({ to: objActor, type: "bogusRequest" }, function(response) {
-      Assert.equal(response.error, "unrecognizedPacketType");
+    try {
+      await gClient.request({ to: objActor, type: "bogusRequest" });
+      ok(false, "bogusRequest should throw");
+    } catch (e) {
+      ok(true, "bogusRequest thrown");
+      Assert.equal(e.error, "unrecognizedPacketType");
+    }
 
-      gThreadClient.resume().then(function() {
-        // Now that we've resumed, should get no-such-actor for the
-        // same request.
-        gClient.request({ to: objActor, type: "bogusRequest" }, function(
-          response
-        ) {
-          Assert.equal(response.error, "noSuchActor");
-          finishClient(gClient);
-        });
-      });
+    gThreadClient.resume().then(async function() {
+      // Now that we've resumed, should get no-such-actor for the
+      // same request.
+      try {
+        await gClient.request({ to: objActor, type: "bogusRequest" });
+        ok(false, "bogusRequest should throw");
+      } catch (e) {
+        ok(true, "bogusRequest thrown");
+        Assert.equal(e.error, "noSuchActor");
+      }
+      finishClient(gClient);
     });
   });
 

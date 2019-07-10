@@ -30,7 +30,6 @@
 #include "mozilla/dom/DocumentTimeline.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFocusManager.h"
-#include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsContainerFrame.h"
@@ -2172,12 +2171,14 @@ nsresult Element::DispatchClickEvent(nsPresContext* aPresContext,
 
 //----------------------------------------------------------------------
 nsresult Element::LeaveLink(nsPresContext* aPresContext) {
-  nsILinkHandler* handler = aPresContext->GetLinkHandler();
-  if (!handler) {
+  if (!aPresContext || !aPresContext->Document()->LinkHandlingEnabled()) {
     return NS_OK;
   }
-
-  return handler->OnLeaveLink();
+  nsIDocShell* shell = aPresContext->Document()->GetDocShell();
+  if (!shell) {
+    return NS_OK;
+  }
+  return nsDocShell::Cast(shell)->OnLeaveLink();
 }
 
 nsresult Element::SetEventHandler(nsAtom* aEventName, const nsAString& aValue,
@@ -2975,7 +2976,6 @@ bool Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
        (aVisitor.mEvent->mMessage != eMouseClick) &&
        (aVisitor.mEvent->mMessage != eKeyPress) &&
        (aVisitor.mEvent->mMessage != eLegacyDOMActivate)) ||
-      !aVisitor.mPresContext ||
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented) {
     return false;
   }
@@ -3016,7 +3016,7 @@ void Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor) {
       if (!focusEvent || !focusEvent->mIsRefocus) {
         nsAutoString target;
         GetLinkTarget(target);
-        nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
+        nsContentUtils::TriggerLink(this, absURI, target,
                                     /* click */ false, /* isTrusted */ true);
         // Make sure any ancestor links don't also TriggerLink
         aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
@@ -3064,27 +3064,29 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
 
   switch (aVisitor.mEvent->mMessage) {
     case eMouseDown: {
-      if (aVisitor.mEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
-        // don't make the link grab the focus if there is no link handler
-        nsILinkHandler* handler = aVisitor.mPresContext->GetLinkHandler();
-        Document* document = GetComposedDoc();
-        if (handler && document) {
-          nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-          if (fm) {
-            aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+      if (aVisitor.mEvent->AsMouseEvent()->mButton == MouseButton::eLeft &&
+          OwnerDoc()->LinkHandlingEnabled()) {
+        aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+
+        if (IsInComposedDoc()) {
+          if (nsIFocusManager* fm = nsFocusManager::GetFocusManager()) {
             RefPtr<Element> kungFuDeathGrip(this);
             fm->SetFocus(kungFuDeathGrip, nsIFocusManager::FLAG_BYMOUSE |
                                               nsIFocusManager::FLAG_NOSCROLL);
           }
+        }
 
+        if (aVisitor.mPresContext) {
           EventStateManager::SetActiveManager(
               aVisitor.mPresContext->EventStateManager(), this);
+        }
 
-          // OK, we're pretty sure we're going to load, so warm up a speculative
-          // connection to be sure we have one ready when we open the channel.
+        // OK, we're pretty sure we're going to load, so warm up a speculative
+        // connection to be sure we have one ready when we open the channel.
+        if (nsIDocShell* shell = OwnerDoc()->GetDocShell()) {
           nsCOMPtr<nsISpeculativeConnect> sc =
               do_QueryInterface(nsContentUtils::GetIOService());
-          nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(handler);
+          nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(shell);
           sc->SpeculativeConnect(absURI, NodePrincipal(), ir);
         }
       }
@@ -3099,19 +3101,16 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
         }
 
         // The default action is simply to dispatch DOMActivate
-        if (RefPtr<PresShell> presShell =
-                aVisitor.mPresContext->GetPresShell()) {
-          // single-click
-          nsEventStatus status = nsEventStatus_eIgnore;
-          // DOMActive event should be trusted since the activation is actually
-          // occurred even if the cause is an untrusted click event.
-          InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
-          actEvent.mDetail = 1;
+        nsEventStatus status = nsEventStatus_eIgnore;
+        // DOMActive event should be trusted since the activation is actually
+        // occurred even if the cause is an untrusted click event.
+        InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
+        actEvent.mDetail = 1;
 
-          rv = presShell->HandleDOMEventWithTarget(this, &actEvent, &status);
-          if (NS_SUCCEEDED(rv)) {
-            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-          }
+        rv = EventDispatcher::Dispatch(this, aVisitor.mPresContext, &actEvent,
+                                       nullptr, &status);
+        if (NS_SUCCEEDED(rv)) {
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
       }
       break;
@@ -3122,8 +3121,7 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
         GetLinkTarget(target);
         const InternalUIEvent* activeEvent = aVisitor.mEvent->AsUIEvent();
         MOZ_ASSERT(activeEvent);
-        nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                    /* click */ true,
+        nsContentUtils::TriggerLink(this, absURI, target, /* click */ true,
                                     activeEvent->IsTrustable());
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }

@@ -2589,7 +2589,6 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
   master->mVolume.DisconnectIfConnected();
   master->mPreservesPitch.DisconnectIfConnected();
   master->mLooping.DisconnectIfConnected();
-  master->mSameOriginMedia.DisconnectIfConnected();
 
   master->mDuration.DisconnectAll();
   master->mCurrentPosition.DisconnectAll();
@@ -2639,7 +2638,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       INIT_MIRROR(mVolume, 1.0),
       INIT_MIRROR(mPreservesPitch, true),
       INIT_MIRROR(mLooping, false),
-      INIT_MIRROR(mSameOriginMedia, false),
       INIT_CANONICAL(mDuration, NullableTimeUnit()),
       INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
       INIT_CANONICAL(mIsAudioDataAudible, false),
@@ -2670,7 +2668,6 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   mVolume.Connect(aDecoder->CanonicalVolume());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
   mLooping.Connect(aDecoder->CanonicalLooping());
-  mSameOriginMedia.Connect(aDecoder->CanonicalSameOriginMedia());
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered,
@@ -2711,10 +2708,9 @@ already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink(
     bool aAudioCaptured, OutputStreamManager* aManager) {
   MOZ_ASSERT_IF(aAudioCaptured, aManager);
   RefPtr<MediaSink> audioSink =
-      aAudioCaptured
-          ? new DecodedStream(mTaskQueue, mAbstractMainThread, mAudioQueue,
-                              mVideoQueue, aManager, mSameOriginMedia.Ref())
-          : CreateAudioSink();
+      aAudioCaptured ? new DecodedStream(mTaskQueue, mAbstractMainThread,
+                                         mAudioQueue, mVideoQueue, aManager)
+                     : CreateAudioSink();
 
   RefPtr<MediaSink> mediaSink =
       new VideoSink(mTaskQueue, audioSink, mVideoQueue, mVideoFrameContainer,
@@ -3739,19 +3735,12 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::RequestDebugInfo(
 }
 
 void MediaDecoderStateMachine::SetOutputStreamPrincipal(
-    const nsCOMPtr<nsIPrincipal>& aPrincipal) {
+    nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   mOutputStreamPrincipal = aPrincipal;
   if (mOutputStreamManager) {
     mOutputStreamManager->SetPrincipal(mOutputStreamPrincipal);
   }
-}
-
-void MediaDecoderStateMachine::SetOutputStreamCORSMode(CORSMode aCORSMode) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mOutputStreamCORSMode == CORS_NONE);
-  MOZ_ASSERT(!mOutputStreamManager);
-  mOutputStreamCORSMode = aCORSMode;
 }
 
 void MediaDecoderStateMachine::AddOutputStream(DOMMediaStream* aStream) {
@@ -3795,7 +3784,7 @@ void MediaDecoderStateMachine::EnsureOutputStreamManager(
   }
   mOutputStreamManager = new OutputStreamManager(
       aGraph->CreateSourceStream(), mNextOutputStreamTrackID,
-      mOutputStreamPrincipal, mOutputStreamCORSMode, mAbstractMainThread);
+      mOutputStreamPrincipal, mAbstractMainThread);
 }
 
 void MediaDecoderStateMachine::EnsureOutputStreamManagerHasTracks(

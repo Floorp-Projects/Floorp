@@ -10,7 +10,6 @@
 #include "AudioNodeExternalInputStream.h"
 #include "AudioStreamTrack.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/CORSMode.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "nsID.h"
@@ -245,7 +244,7 @@ void MediaStreamAudioSourceNode::PrincipalChanged(
     }
   }
   auto stream = static_cast<AudioNodeExternalInputStream*>(mStream.get());
-  bool enabled = subsumes || aMediaStreamTrack->GetCORSMode() != CORS_NONE;
+  bool enabled = subsumes;
   stream->SetInt32Parameter(MediaStreamAudioSourceNodeEngine::ENABLE, enabled);
 
   if (!enabled && doc) {

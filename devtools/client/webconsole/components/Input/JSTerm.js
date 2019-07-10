@@ -282,6 +282,17 @@ class JSTerm extends Component {
                 return false;
               }
 
+              if (
+                this.props.autocompleteData &&
+                this.props.autocompleteData.getterPath
+              ) {
+                this.props.autocompleteUpdate(
+                  true,
+                  this.props.autocompleteData.getterPath
+                );
+                return false;
+              }
+
               const isSomethingSelected = this.editor.somethingSelected();
               const hasSuggestion = this.hasAutocompletionSuggestion();
 
@@ -460,13 +471,21 @@ class JSTerm extends Component {
         cm.on("drop", (_, event) => this.props.onPaste(event));
 
         this.node.addEventListener("keydown", event => {
-          if (
-            event.keyCode === KeyCodes.DOM_VK_ESCAPE &&
-            this.autocompletePopup.isOpen
-          ) {
-            this.clearCompletion();
-            event.preventDefault();
-            event.stopPropagation();
+          if (event.keyCode === KeyCodes.DOM_VK_ESCAPE) {
+            if (this.autocompletePopup.isOpen) {
+              this.clearCompletion();
+              event.preventDefault();
+              event.stopPropagation();
+            }
+
+            if (
+              this.props.autocompleteData &&
+              this.props.autocompleteData.getterPath
+            ) {
+              this.props.autocompleteClear();
+              event.preventDefault();
+              event.stopPropagation();
+            }
           }
         });
       }
@@ -1070,10 +1089,19 @@ class JSTerm extends Component {
       }
     }
 
+    const { props } = this;
+
     switch (event.keyCode) {
       case KeyCodes.DOM_VK_ESCAPE:
         if (this.autocompletePopup.isOpen) {
           this.clearCompletion();
+          event.preventDefault();
+          event.stopPropagation();
+        } else if (
+          props.autocompleteData &&
+          props.autocompleteData.getterPath
+        ) {
+          props.autocompleteClear();
           event.preventDefault();
           event.stopPropagation();
         }
@@ -1082,7 +1110,7 @@ class JSTerm extends Component {
       case KeyCodes.DOM_VK_RETURN:
         if (this.hasAutocompletionSuggestion()) {
           this.acceptProposedCompletion();
-        } else if (!this.props.editorMode) {
+        } else if (!props.editorMode) {
           this.execute();
         } else {
           this.insertStringAtCursor("\n");
@@ -1187,6 +1215,12 @@ class JSTerm extends Component {
         if (this.hasAutocompletionSuggestion()) {
           this.acceptProposedCompletion();
           event.preventDefault();
+        } else if (
+          props.autocompleteData &&
+          props.autocompleteData.getterPath
+        ) {
+          event.preventDefault();
+          props.autocompleteUpdate(true, props.autocompleteData.getterPath);
         } else if (!this.hasEmptyInput()) {
           if (!event.shiftKey) {
             this.insertStringAtCursor("\t");
@@ -1803,8 +1837,8 @@ function mapDispatchToProps(dispatch) {
     clearHistory: () => dispatch(historyActions.clearHistory()),
     updateHistoryPosition: (direction, expression) =>
       dispatch(historyActions.updateHistoryPosition(direction, expression)),
-    autocompleteUpdate: force =>
-      dispatch(autocompleteActions.autocompleteUpdate(force)),
+    autocompleteUpdate: (force, getterPath) =>
+      dispatch(autocompleteActions.autocompleteUpdate(force, getterPath)),
     autocompleteClear: () => dispatch(autocompleteActions.autocompleteClear()),
   };
 }

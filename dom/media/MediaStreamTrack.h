@@ -9,7 +9,6 @@
 #include "MediaTrackConstraints.h"
 #include "PrincipalChangeObserver.h"
 #include "StreamTracks.h"
-#include "mozilla/CORSMode.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaTrackSettingsBinding.h"
@@ -122,13 +121,6 @@ class MediaStreamTrackSource : public nsISupports {
    * Get this TrackSource's principal.
    */
   nsIPrincipal* GetPrincipal() const { return mPrincipal; }
-
-  /**
-   * Get the source's current CORSMode. If not applicable CORS_NONE is returned.
-   * The sink will be notified of changes to our CORSMode through
-   * PrincipalChanged().
-   */
-  virtual CORSMode GetCORSMode() const { return CORS_NONE; }
 
   /**
    * This is used in WebRTC. A peerIdentity constrained MediaStreamTrack cannot
@@ -450,11 +442,6 @@ class MediaStreamTrack : public DOMEventTargetHelper,
    * Notifies all MediaStreamTrackConsumers that this track ended.
    */
   void NotifyEnded();
-
-  /**
-   * Get this track's CORS mode.
-   */
-  CORSMode GetCORSMode() const { return GetSource().GetCORSMode(); }
 
   /**
    * Get this track's PeerIdentity.

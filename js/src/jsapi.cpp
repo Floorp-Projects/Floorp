@@ -42,6 +42,7 @@
 #ifdef ENABLE_TYPED_OBJECTS
 #  include "builtin/TypedObject.h"
 #endif
+#include "dbg/Debugger.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
@@ -75,7 +76,6 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/DateObject.h"
-#include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorObject.h"
 #include "vm/HelperThreads.h"

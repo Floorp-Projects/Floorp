@@ -117,4 +117,4 @@ wrench-deps:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/wrench-deps.tar.bz2
     toolchains:
-        - linux64-rust-1.35  # whatever m-c is built with
+        - linux64-rust-1.36  # whatever m-c is built with

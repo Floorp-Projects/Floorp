@@ -42,6 +42,7 @@ class nsHttpResponseHead {
       : mVersion(HttpVersion::v1_1),
         mStatus(200),
         mContentLength(-1),
+        mCacheControlPublic(false),
         mCacheControlPrivate(false),
         mCacheControlNoStore(false),
         mCacheControlNoCache(false),
@@ -62,6 +63,7 @@ class nsHttpResponseHead {
   int64_t ContentLength();
   void ContentType(nsACString& aContentType);
   void ContentCharset(nsACString& aContentCharset);
+  bool Public();
   bool Private();
   bool NoStore();
   bool NoCache();
@@ -194,6 +196,7 @@ class nsHttpResponseHead {
   int64_t mContentLength;
   nsCString mContentType;
   nsCString mContentCharset;
+  bool mCacheControlPublic;
   bool mCacheControlPrivate;
   bool mCacheControlNoStore;
   bool mCacheControlNoCache;

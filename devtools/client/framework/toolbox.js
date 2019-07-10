@@ -583,6 +583,9 @@ Toolbox.prototype = {
       ignoreCaughtExceptions: Services.prefs.getBoolPref(
         "devtools.debugger.ignore-caught-exceptions"
       ),
+      showOverlayStepButtons: Services.prefs.getBoolPref(
+        "devtools.debugger.features.overlay-step-buttons"
+      ),
     };
     const [, threadClient] = await this._target.attachThread(threadOptions);
 

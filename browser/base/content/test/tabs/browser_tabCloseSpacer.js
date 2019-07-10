@@ -52,6 +52,12 @@ add_task(async function() {
 
 async function overflowTabs() {
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
+  const originalSmoothScroll = arrowScrollbox.smoothScroll;
+  arrowScrollbox.smoothScroll = false;
+  registerCleanupFunction(() => {
+    arrowScrollbox.smoothScroll = originalSmoothScroll;
+  });
+
   let width = ele => ele.getBoundingClientRect().width;
   let tabMinWidth = parseInt(
     getComputedStyle(gBrowser.selectedTab, null).minWidth
@@ -65,7 +71,11 @@ async function overflowTabs() {
       index: 0,
     });
   }
-  await window.promiseDocumentFlushed(() => {});
+
+  // Make sure scrolling finished.
+  await new Promise(resolve => {
+    arrowScrollbox.addEventListener("scrollend", resolve, { once: true });
+  });
 }
 
 function getLastCloseButton() {

@@ -357,14 +357,12 @@ DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
                              AbstractThread* aMainThread,
                              MediaQueue<AudioData>& aAudioQueue,
                              MediaQueue<VideoData>& aVideoQueue,
-                             OutputStreamManager* aOutputStreamManager,
-                             const bool& aSameOrigin)
+                             OutputStreamManager* aOutputStreamManager)
     : mOwnerThread(aOwnerThread),
       mAbstractMainThread(aMainThread),
       mOutputStreamManager(aOutputStreamManager),
       mWatchManager(this, mOwnerThread),
       mPlaying(false, "DecodedStream::mPlaying"),
-      mSameOrigin(aSameOrigin),
       mPrincipalHandle(aOwnerThread, PRINCIPAL_HANDLE_NONE,
                        "DecodedStream::mPrincipalHandle (Mirror)"),
       mAudioQueue(aAudioQueue),
@@ -610,7 +608,7 @@ static void SendStreamAudio(DecodedStreamData* aStream,
   aStream->mNextAudioTime = audio->GetEndTime();
 }
 
-void DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin,
+void DecodedStream::SendAudio(double aVolume,
                               const PrincipalHandle& aPrincipalHandle) {
   AssertOwnerThread();
 
@@ -637,10 +635,6 @@ void DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin,
   }
 
   output.ApplyVolume(aVolume);
-
-  if (!aIsSameOrigin) {
-    output.ReplaceWithDisabled();
-  }
 
   // |mNextAudioTime| is updated as we process each audio sample in
   // SendStreamAudio().
@@ -726,8 +720,7 @@ void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
   mData->mLastVideoTimeStamp = currentTime;
 }
 
-void DecodedStream::SendVideo(bool aIsSameOrigin,
-                              const PrincipalHandle& aPrincipalHandle) {
+void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
   AssertOwnerThread();
 
   if (!mInfo.HasVideo()) {
@@ -801,12 +794,9 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
 
   // Check the output is not empty.
   bool compensateEOS = false;
+  bool forceBlack = false;
   if (output.GetLastFrame()) {
     compensateEOS = ZeroDurationAtLastChunk(output);
-  }
-
-  if (!aIsSameOrigin) {
-    output.ReplaceWithDisabled();
   }
 
   if (output.GetDuration() > 0) {
@@ -823,7 +813,7 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
       // Force a frame - can be null
       compensateEOS = true;
       // Force frame to be black
-      aIsSameOrigin = false;
+      forceBlack = true;
       // Override the frame's size (will be 0x0 otherwise)
       mData->mLastVideoImageDisplaySize = mInfo.mVideo.mDisplay;
     }
@@ -841,7 +831,7 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
           currentTime + (start + deviation - currentPosition).ToTimeDuration(),
           &endSegment, aPrincipalHandle);
       MOZ_ASSERT(endSegment.GetDuration() > 0);
-      if (!aIsSameOrigin) {
+      if (forceBlack) {
         endSegment.ReplaceWithDisabled();
       }
       mData->mStreamVideoWritten +=
@@ -874,8 +864,8 @@ void DecodedStream::SendData() {
     return;
   }
 
-  SendAudio(mParams.mVolume, mSameOrigin, mPrincipalHandle);
-  SendVideo(mSameOrigin, mPrincipalHandle);
+  SendAudio(mParams.mVolume, mPrincipalHandle);
+  SendVideo(mPrincipalHandle);
 }
 
 TimeUnit DecodedStream::GetEndTime(TrackType aType) const {

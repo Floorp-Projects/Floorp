@@ -421,7 +421,7 @@ WebConsoleConnectionProxy.prototype = {
    */
   releaseActor: function(actor) {
     if (this.client) {
-      this.client.release(actor);
+      this.client.release(actor).catch(() => {});
     }
   },
 

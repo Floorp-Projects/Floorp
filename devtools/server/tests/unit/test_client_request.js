@@ -105,7 +105,7 @@ function test_client_request_promise() {
   request.then(response => {
     Assert.equal(response.from, gActorId);
     Assert.equal(response.hello, "world");
-    checkStack("test_client_request_promise");
+    checkStack("test_client_request_promise/<");
     run_next_test();
   });
 }
@@ -126,7 +126,7 @@ function test_client_request_promise_error() {
       Assert.equal(response.from, gActorId);
       Assert.equal(response.error, "code");
       Assert.equal(response.message, "human message");
-      checkStack("test_client_request_promise_error");
+      checkStack("test_client_request_promise_error/<");
       run_next_test();
     }
   );
@@ -242,20 +242,22 @@ function test_client_request_after_close() {
 function test_client_request_after_close_callback() {
   // Test that DebuggerClient.request fails after we called client.close()
   // (with callback API)
-  gClient.request(
-    {
-      to: gActorId,
-      type: "hello",
-    },
-    response => {
-      ok(true, "Request failed after client.close");
-      Assert.equal(response.error, "connectionClosed");
-      ok(
-        response.message.match(
-          /'hello' request packet to '.*' can't be sent as the connection is closed./
-        )
-      );
-      run_next_test();
-    }
-  );
+  gClient
+    .request(
+      {
+        to: gActorId,
+        type: "hello",
+      },
+      response => {
+        ok(true, "Request failed after client.close");
+        Assert.equal(response.error, "connectionClosed");
+        ok(
+          response.message.match(
+            /'hello' request packet to '.*' can't be sent as the connection is closed./
+          )
+        );
+        run_next_test();
+      }
+    )
+    .catch(() => info("Caught rejected promise as expected"));
 }

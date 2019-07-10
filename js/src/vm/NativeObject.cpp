@@ -11,11 +11,11 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 
+#include "dbg/Debugger.h"
 #include "gc/Marking.h"
 #include "jit/BaselineIC.h"
 #include "js/CharacterEncoding.h"
 #include "js/Value.h"
-#include "vm/Debugger.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/TypedArrayObject.h"
 

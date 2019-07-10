@@ -186,8 +186,7 @@ class MediaDecoderStateMachine
   RefPtr<GenericPromise> RequestDebugInfo(
       dom::MediaDecoderStateMachineDebugInfo& aInfo);
 
-  void SetOutputStreamPrincipal(const nsCOMPtr<nsIPrincipal>& aPrincipal);
-  void SetOutputStreamCORSMode(CORSMode aCORSMode);
+  void SetOutputStreamPrincipal(nsIPrincipal* aPrincipal);
   // If an OutputStreamManager does not exist, one will be created.
   void EnsureOutputStreamManager(MediaStreamGraph* aGraph);
   // If an OutputStreamManager exists, tracks matching aLoadedInfo will be
@@ -686,9 +685,6 @@ class MediaDecoderStateMachine
   // Principal used by output streams. Main thread only.
   nsCOMPtr<nsIPrincipal> mOutputStreamPrincipal;
 
-  // CORSMode used by output streams. Main thread only.
-  CORSMode mOutputStreamCORSMode = CORS_NONE;
-
   // The next TrackID to be used when a DecodedStream allocates a track.
   // Main thread only.
   TrackID mNextOutputStreamTrackID = 1;
@@ -746,10 +742,6 @@ class MediaDecoderStateMachine
   // Whether to seek back to the start of the media resource
   // upon reaching the end.
   Mirror<bool> mLooping;
-
-  // True if the media is same-origin with the element. Data can only be
-  // passed to MediaStreams when this is true.
-  Mirror<bool> mSameOriginMedia;
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.

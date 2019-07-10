@@ -37,14 +37,3 @@ using :doc:`mach try fuzzy <fuzzy>` instead.
 While using ``mach try syntax -b do -p all -u all -t all`` will work, heavy use
 of ``all`` is discouraged as it consumes a lot of unnecessary resources (some of
 which are hardware constrained).
-
-Trychooser
-~~~~~~~~~~
-
-Commonly the `trychooser`_ web page is used to help build a try syntax, though
-it isn't always kept up to date. Check the boxes for the tasks you wish to run
-then copy/paste the computed ``mach try`` command into your terminal.
-
-
-.. _try_option_syntax.py: https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/taskgraph/try_option_syntax.py
-.. _trychooser: https://mozilla-releng.net/trychooser/

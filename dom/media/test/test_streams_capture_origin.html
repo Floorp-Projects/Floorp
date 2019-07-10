@@ -10,8 +10,11 @@
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1189506">Mozilla Bug 1189506</a>
 <p id="display"></p>
 <video id="vin"></video>
-<video id="vout" style="position:absolute; top:0; left:0"></video>
-<canvas id="c"></canvas>
+<video id="vout"></video>
+<video id="vout_cors" crossorigin></video>
+<canvas id="cin" width="40" height="30"></canvas>
+<canvas id="cout" width="40" height="30"></canvas>
+<canvas id="cout_cors" width="40" height="30"></canvas>
 <div id="content" style="display: none">
 </div>
 <pre id="test">
@@ -21,26 +24,65 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var resource = getPlayableVideo(gSmallTests).name;
+async function start() {
+  const resource = getPlayableVideo(gSmallTests).name;
+  vin.src = "http://example.org:8000/tests/dom/media/test/" + resource;
+  vin.preload = "metadata";
 
-vin.src = "http://example.org:8000/tests/dom/media/test/" + resource;
-vin.preload = "metadata";
-
-vin.onloadedmetadata = function () {
+  await new Promise(r => vin.onloadedmetadata = r);
   vout.srcObject = vin.mozCaptureStreamUntilEnded();
+  vout_cors.srcObject = vin.mozCaptureStreamUntilEnded();
   vin.play();
   vout.play();
-};
+  vout_cors.play();
 
-vout.onended = function() {
-  var ctx = SpecialPowers.wrap(c.getContext("2d"));
-  ctx.drawWindow(window, 0, 0, 10, 10, "rgb(255, 255, 0)", 0);
-  var data = ctx.getImageData(2, 2, 1, 1);
-  // Captured cross-origin video streams should render entirely black.
-  is(data.data.join(','), "0,0,0,255", "expected black");
-  vout.style.position = "";
-  SimpleTest.finish();
-};
+  await new Promise(r => vout.onended = r);
+  is(vin.ended, vout.ended, "Source media element ends first");
+
+  const ctxin = SpecialPowers.wrap(cin.getContext("2d"));
+  ctxin.drawImage(vin, 0, 0);
+
+  {
+    info("Testing that the last frame is rendered");
+    const powerCtx = SpecialPowers.wrap(cout.getContext("2d"));
+    powerCtx.drawImage(vout, 0, 0);
+    const datain = ctxin.getImageData(0, 0, cin.width, cin.height);
+    const dataout = powerCtx.getImageData(0, 0, cout.width, cout.height);
+    for (let i = 0; i < datain.data.length; i += 4) {
+      const pixelin = datain.data.slice(i, i + 4).join(',');
+      const pixelout = dataout.data.slice(i, i + 4).join(',');
+      if (pixelin != pixelout) {
+        is(pixelout, pixelin, `Pixel #${i/4} is rendered as expected`);
+        break;
+      }
+    }
+    is(datain.data.length / 4, cin.width * cin.height,
+      "Checked expected number of pixels");
+  }
+
+  {
+    info("Testing that the principal is set");
+    const ctx = cout.getContext("2d");
+    ctx.drawImage(vout, 0, 0);
+    SimpleTest.doesThrow(() => ctx.getImageData(0, 0, cout.width, cout.height),
+      "SecurityError");
+  }
+
+  {
+    info("Testing that the crossorigin attribute is ignored for MediaStreams");
+    const ctx = cout_cors.getContext("2d");
+    ctx.drawImage(vout_cors, 0, 0);
+    SimpleTest.doesThrow(
+      () => ctx.getImageData(0, 0, cout_cors.width, cout_cors.height),
+      "SecurityError");
+  }
+}
+
+(async () => {
+  try { await start(); }
+  catch(e) { ok(false, `Rejected with ${e}`); }
+  finally { SimpleTest.finish(); }
+})();
 </script>
 </pre>
 </body>

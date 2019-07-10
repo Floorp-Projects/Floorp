@@ -1379,9 +1379,6 @@ void PresShell::Destroy() {
     // to us. To avoid the pres context having a dangling reference, set its
     // pres shell to nullptr
     mPresContext->DetachPresShell();
-
-    // Clear the link handler (weak reference) as well
-    mPresContext->SetLinkHandler(nullptr);
   }
 
   mHaveShutDown = true;

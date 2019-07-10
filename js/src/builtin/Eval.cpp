@@ -9,11 +9,11 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Range.h"
 
+#include "dbg/Debugger.h"
 #include "frontend/BytecodeCompilation.h"
 #include "gc/HashUtil.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
-#include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSONParser.h"

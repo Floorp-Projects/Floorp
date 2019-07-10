@@ -212,6 +212,22 @@ function run_test() {
     referer_uri_2
   );
 
+  // test referrer length limitation
+  // referer_uri's length is 27 and origin's length is 23
+  prefs.setIntPref("network.http.referer.referrerLengthLimit", 27);
+  Assert.equal(getTestReferrer(server_uri, referer_uri), referer_uri);
+  prefs.setIntPref("network.http.referer.referrerLengthLimit", 26);
+  Assert.equal(
+    getTestReferrer(server_uri, referer_uri),
+    "http://foo.example.com/"
+  );
+  prefs.setIntPref("network.http.referer.referrerLengthLimit", 22);
+  Assert.equal(getTestReferrer(server_uri, referer_uri), null);
+  prefs.setIntPref("network.http.referer.referrerLengthLimit", 0);
+  Assert.equal(getTestReferrer(server_uri, referer_uri), referer_uri);
+  prefs.setIntPref("network.http.referer.referrerLengthLimit", 4096);
+  Assert.equal(getTestReferrer(server_uri, referer_uri), referer_uri);
+
   // combination test: send spoofed path-only when hosts match
   var combo_referer_uri = "http://blah.foo.com/path?q=hot";
   var dest_uri = "http://blah.foo.com:9999/spoofedpath?q=bad";

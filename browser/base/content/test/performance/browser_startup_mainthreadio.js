@@ -426,13 +426,6 @@ const startupPhases = {
       close: 1,
     },
     {
-      // bug 1545167
-      path: "/etc/mime.types",
-      condition: LINUX,
-      read: 1,
-      close: 1,
-    },
-    {
       // We only hit this for new profiles.
       path: "XREAppDist:distribution.ini",
       condition: WIN,

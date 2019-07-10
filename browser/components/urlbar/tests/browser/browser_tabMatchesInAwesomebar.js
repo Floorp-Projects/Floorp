@@ -198,9 +198,6 @@ async function checkAutocompleteResults(expected) {
     );
 
     let url = result.url;
-    if (!UrlbarPrefs.get("quantumbar")) {
-      url = PlacesUtils.parseActionUrl(url).params.url;
-    }
 
     info(`Search for ${url} in open tabs.`);
     let inExpected = url in expected;

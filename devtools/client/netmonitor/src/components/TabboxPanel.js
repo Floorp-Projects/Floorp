@@ -56,7 +56,7 @@ class TabboxPanel extends Component {
       selectTab: PropTypes.func.isRequired,
       sourceMapService: PropTypes.object,
       hideToggleButton: PropTypes.bool,
-      toggleNetworkDetails: PropTypes.func.isRequired,
+      toggleNetworkDetails: PropTypes.func,
       openNetworkDetails: PropTypes.func.isRequired,
       showWebSocketsTab: PropTypes.bool,
     };
