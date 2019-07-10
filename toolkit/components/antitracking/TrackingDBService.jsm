@@ -52,6 +52,10 @@ const SQL = {
   deleteEventsRecords: "DELETE FROM events;",
 
   removeRecordsSince: "DELETE FROM events WHERE timestamp >= date(:date);",
+
+  selectByDateRange:
+    "SELECT * FROM events " +
+    "WHERE timestamp BETWEEN date(:dateFrom) AND date(:dateTo);",
 };
 
 /**
@@ -242,7 +246,15 @@ TrackingDBService.prototype = {
 
   async clearSince(date) {
     let db = await this.ensureDB();
+    date = new Date(date).toISOString();
     await removeRecordsSince(db, date);
+  },
+
+  async getEventsByDateRange(dateFrom, dateTo) {
+    let db = await this.ensureDB();
+    dateFrom = new Date(dateFrom).toISOString();
+    dateTo = new Date(dateTo).toISOString();
+    return db.execute(SQL.selectByDateRange, { dateFrom, dateTo });
   },
 };
 

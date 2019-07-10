@@ -38,6 +38,13 @@ interface nsITrackingDBService : nsISupports
    */
   Promise clearSince(in int64_t since);
 
+  /**
+   * Fetch events from the content blocking database
+   * @param dateFrom   a unix timestamp.
+   * @param dateTo     a unix timestamp.
+   */
+  Promise getEventsByDateRange(in int64_t dateFrom, in int64_t dateTo);
+
   const unsigned long OTHER_COOKIES_BLOCKED_ID = 0;
   const unsigned long TRACKERS_ID = 1;
   const unsigned long TRACKING_COOKIES_ID = 2;
