@@ -37,7 +37,8 @@
 
 using namespace js;
 
-ObjectRealm::ObjectRealm(JS::Zone* zone) : innerViews(zone) {}
+ObjectRealm::ObjectRealm(JS::Zone* zone)
+    : innerViews(zone, zone), iteratorCache(zone) {}
 
 ObjectRealm::~ObjectRealm() {
   MOZ_ASSERT(enumerators == iteratorSentinel_.get());
@@ -50,6 +51,7 @@ Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
       creationOptions_(options.creationOptions()),
       behaviors_(options.behaviors()),
       objects_(zone_),
+      varNames_(zone_),
       randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
       wasm(runtime_) {
   MOZ_ASSERT_IF(creationOptions_.mergeable(),

@@ -10,10 +10,6 @@
 #include <pthread.h>
 #endif
 
-#if defined(_PR_BTHREADS)
-#include <kernel/OS.h>
-#endif
-
 #ifdef WIN32
 /*
  * Allow use of functions and symbols first defined in Win2k.
@@ -274,7 +270,7 @@ typedef struct _PRInterruptTable {
 #define _PR_CPU_PTR(_qp) \
     ((_PRCPU*) ((char*) (_qp) - offsetof(_PRCPU,links)))
 
-#if !defined(IRIX) && !defined(WIN32) && !defined(XP_OS2) \
+#if !defined(WIN32) && !defined(XP_OS2) \
         && !(defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY))
 #define _MD_GET_ATTACHED_THREAD()        (_PR_MD_CURRENT_THREAD())
 #endif
@@ -947,10 +943,6 @@ extern void _PR_MD_BEGIN_RESUME_ALL(void);
 
 extern void _PR_MD_END_RESUME_ALL(void);
 #define    _PR_MD_END_RESUME_ALL _MD_END_RESUME_ALL
-
-#if defined(IRIX) 
-NSPR_API(void) _PR_IRIX_CHILD_PROCESS(void);
-#endif        /* IRIX */
 
 #endif        /* !_PR_LOCAL_THREADS_ONLY */
 
@@ -2139,23 +2131,6 @@ extern PRSize _PR_MD_GetRandomNoise( void *buf, PRSize size );
 extern PRSize _pr_CopyLowBits( void *dest, PRSize dstlen, void *src, PRSize srclen );
 
 /* end PR_GetRandomNoise() related */
-
-#ifdef XP_BEOS
-
-extern PRLock *_connectLock;
-
-typedef struct _ConnectListNode {
-	PRInt32		osfd;
-	PRNetAddr	addr;
-	PRUint32	addrlen;
-	PRIntervalTime	timeout;
-} ConnectListNode;
-
-extern ConnectListNode connectList[64];
-
-extern PRUint32 connectCount;
-
-#endif /* XP_BEOS */
 
 #if defined(_WIN64) && defined(WIN95)
 typedef struct _PRFileDescList {

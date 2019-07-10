@@ -41,7 +41,8 @@ Compartment::Compartment(Zone* zone, bool invisibleToDebugger)
     : zone_(zone),
       runtime_(zone->runtimeFromAnyThread()),
       invisibleToDebugger_(invisibleToDebugger),
-      crossCompartmentWrappers(0) {}
+      crossCompartmentWrappers(zone, 0),
+      realms_(zone) {}
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 

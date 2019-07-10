@@ -77,6 +77,8 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   RefPtr<Document> mOwner;
   RangeBoundary mStart;
   RangeBoundary mEnd;
+  // `true` if `mStart` has a container and potentially other conditions are
+  // fulfilled.
   bool mIsPositioned;
 
   // Used by nsRange, but this should have this for minimizing the size.

@@ -280,11 +280,7 @@ PR_IMPLEMENT(PRInt32) PR_GetThreadAffinityMask(PRThread *thread, PRUint32 *mask)
 PR_IMPLEMENT(PRInt32) PR_SetThreadAffinityMask(PRThread *thread, PRUint32 mask )
 {
 #ifdef HAVE_THREAD_AFFINITY
-#ifndef IRIX
     return _PR_MD_SETTHREADAFFINITYMASK(thread, mask);
-#else
-	return 0;
-#endif
 #else
     return 0;
 #endif

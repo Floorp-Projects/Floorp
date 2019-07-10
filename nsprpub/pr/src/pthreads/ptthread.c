@@ -25,11 +25,8 @@
 #include <pthread_np.h>
 #endif
 
-#ifdef SYMBIAN
-/* In Open C sched_get_priority_min/max do not work properly, so we undefine
- * _POSIX_THREAD_PRIORITY_SCHEDULING here.
- */
-#undef _POSIX_THREAD_PRIORITY_SCHEDULING
+#if defined(ANDROID)
+#include <sys/prctl.h>
 #endif
 
 #ifdef _PR_NICE_PRIORITY_SCHEDULING
@@ -434,17 +431,6 @@ static PRThread* _PR_CreateThread(
 
         if (EPERM == rv)
         {
-#if defined(IRIX)
-        	if (PR_GLOBAL_BOUND_THREAD == scope) {
-				/*
-				 * SCOPE_SYSTEM requires appropriate privilege
-				 * reset to process scope and try again
-				 */
-    			rv = pthread_attr_setscope(&tattr, PTHREAD_SCOPE_PROCESS);
-    			PR_ASSERT(0 == rv);
-            	thred->state &= ~PT_THREAD_BOUND;
-			}
-#else
             /* Remember that we don't have thread scheduling privilege. */
             pt_schedpriv = EPERM;
             PR_LOG(_pr_thread_lm, PR_LOG_MIN,
@@ -454,7 +440,6 @@ static PRThread* _PR_CreateThread(
             rv = pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED);
             PR_ASSERT(0 == rv);
 #endif
-#endif	/* IRIX */
             rv = _PT_PTHREAD_CREATE(&id, tattr, _pt_root, thred);
         }
 
@@ -1194,7 +1179,6 @@ static void null_signal_handler(PRIntn sig);
  */
 static void init_pthread_gc_support(void)
 {
-#ifndef SYMBIAN
     PRIntn rv;
 
 	{
@@ -1224,7 +1208,6 @@ static void init_pthread_gc_support(void)
 	    PR_ASSERT(0 ==rv); 
     }
 #endif  /* defined(PT_NO_SIGTIMEDWAIT) */
-#endif /* SYMBIAN */
 }
 
 PR_IMPLEMENT(void) PR_SetThreadGCAble(void)
@@ -1370,8 +1353,7 @@ static void suspend_signal_handler(PRIntn sig)
 	{
 #if !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD) \
     && !defined(BSDI) && !defined(UNIXWARE) \
-    && !defined(DARWIN) && !defined(RISCOS) \
-    && !defined(SYMBIAN) /*XXX*/
+    && !defined(DARWIN) && !defined(RISCOS)
         PRIntn rv;
 	    sigwait(&sigwait_set, &rv);
 #endif
@@ -1415,12 +1397,7 @@ static void pt_SuspendSet(PRThread *thred)
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
 	   ("doing pthread_kill in pt_SuspendSet thred %p tid = %X\n",
 	   thred, thred->id));
-#if defined(SYMBIAN)
-    /* All signal group functions are not implemented in Symbian OS */
-    rv = 0;
-#else
     rv = pthread_kill (thred->id, SIGUSR2);
-#endif
     PR_ASSERT(0 == rv);
 }
 
@@ -1472,11 +1449,7 @@ static void pt_ResumeSet(PRThread *thred)
     thred->suspend &= ~PT_THREAD_SUSPENDED;
 
 #if defined(PT_NO_SIGTIMEDWAIT)
-#if defined(SYMBIAN) 
-	/* All signal group functions are not implemented in Symbian OS */
-#else
 	pthread_kill(thred->id, SIGUSR1);
-#endif
 #endif
 
 }  /* pt_ResumeSet */
@@ -1633,6 +1606,8 @@ PR_IMPLEMENT(PRStatus) PR_SetCurrentThreadName(const char *name)
 
 #if defined(OPENBSD) || defined(FREEBSD) || defined(DRAGONFLY)
     pthread_set_name_np(thread->id, name);
+#elif defined(ANDROID)
+    prctl(PR_SET_NAME, (unsigned long)(name));
 #elif defined(NETBSD)
     result = pthread_setname_np(thread->id, "%s", (void *)name);
 #else /* not BSD */

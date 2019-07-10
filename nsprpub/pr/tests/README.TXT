@@ -317,12 +317,6 @@ sockopt.c
 sprintf.c
 	Tests sprintf.
 
-sproc_ch.c
-	Obsolete. Tests IRIX sproc-based threads.
-
-sproc_p.c
-	Obsolete. Tests IRIX sproc-based threads.
-
 stack.c
 	Test atomic stack operations.
 
