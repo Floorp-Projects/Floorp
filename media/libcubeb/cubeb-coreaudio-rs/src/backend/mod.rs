@@ -274,6 +274,24 @@ fn set_volume(unit: AudioUnit, volume: f32) -> Result<()> {
     }
 }
 
+fn get_volume(unit: AudioUnit) -> Result<f32> {
+    assert!(!unit.is_null());
+    let mut volume: f32 = 0.0;
+    let r = audio_unit_get_parameter(
+        unit,
+        kHALOutputParam_Volume,
+        kAudioUnitScope_Global,
+        0,
+        &mut volume,
+    );
+    if r == NO_ERR {
+        Ok(volume)
+    } else {
+        cubeb_log!("AudioUnitGetParameter/kHALOutputParam_Volume rv={}", r);
+        Err(Error::error())
+    }
+}
+
 fn audiounit_make_silent(io_data: &mut AudioBuffer) {
     assert!(!io_data.mData.is_null());
     let bytes = unsafe {
@@ -3092,7 +3110,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             let vol_rv = if self.output_unit.is_null() {
                 Err(Error::error())
             } else {
-                self.get_volume()
+                get_volume(self.output_unit)
             };
 
             self.close();
@@ -4267,23 +4285,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         if !self.output_unit.is_null() {
             assert_eq!(audio_output_unit_stop(self.output_unit), NO_ERR);
         }
-    }
-
-    fn get_volume(&self) -> Result<f32> {
-        assert!(!self.output_unit.is_null());
-        let mut volume: f32 = 0.0;
-        let r = audio_unit_get_parameter(
-            self.output_unit,
-            kHALOutputParam_Volume,
-            kAudioUnitScope_Global,
-            0,
-            &mut volume,
-        );
-        if r != NO_ERR {
-            cubeb_log!("AudioUnitGetParameter/kHALOutputParam_Volume rv={}", r);
-            return Err(Error::error());
-        }
-        Ok(volume)
     }
 
     fn destroy(&mut self) {
