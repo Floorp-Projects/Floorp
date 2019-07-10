@@ -13,6 +13,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "GeckoProfiler.h"
 
 class nsIEventTarget;
 class nsIPrincipal;
@@ -50,6 +51,10 @@ class Timeout final : public LinkedListElement<RefPtr<Timeout>> {
   // Can only be called when frozen.
   const TimeDuration& TimeRemaining() const;
 
+#ifdef MOZ_GECKO_PROFILER
+  UniqueProfilerBacktrace TakeProfilerBacktrace() { return std::move(mCause); }
+#endif
+
  private:
   // mWhen and mTimeRemaining can't be in a union, sadly, because they
   // have constructors.
@@ -81,6 +86,10 @@ class Timeout final : public LinkedListElement<RefPtr<Timeout>> {
 
   // Interval
   TimeDuration mInterval;
+
+#ifdef MOZ_GECKO_PROFILER
+  UniqueProfilerBacktrace mCause;
+#endif
 
   // Returned as value of setTimeout()
   uint32_t mTimeoutId;
