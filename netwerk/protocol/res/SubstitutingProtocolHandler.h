@@ -46,7 +46,7 @@ class SubstitutingProtocolHandler {
                   nsIURI* aBaseURI, nsIURI** aResult);
 
   MOZ_MUST_USE nsresult
-  CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aResources);
+  CollectSubstitutions(nsTArray<SubstitutionMapping>& aResources);
 
  protected:
   virtual ~SubstitutingProtocolHandler() = default;
