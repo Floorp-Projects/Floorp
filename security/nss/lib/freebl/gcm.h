@@ -26,6 +26,10 @@
 #endif /* NSS_DISABLE_SSE2 */
 #endif
 
+#ifdef __aarch64__
+#include <arm_neon.h>
+#endif
+
 SEC_BEGIN_PROTOS
 
 #ifdef HAVE_INT128_SUPPORT
@@ -61,6 +65,8 @@ typedef SECStatus (*ghash_t)(gcmHashContext *, const unsigned char *,
 pre_align struct gcmHashContextStr {
 #ifdef NSS_X86_OR_X64
     __m128i x, h;
+#elif defined(__aarch64__)
+    uint64x2_t x, h;
 #endif
     uint64_t x_low, x_high, h_high, h_low;
     unsigned char buffer[MAX_BLOCK_SIZE];
