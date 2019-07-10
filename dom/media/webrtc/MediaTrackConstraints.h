@@ -201,9 +201,12 @@ class NormalizedConstraintSet {
         bool advanced, nsTArray<MemberPtrType>* aList);
 
     StringRange(StringPtrType aMemberPtr, const char* aName,
-                const nsString& aOther, nsTArray<MemberPtrType>* aList)
+                const dom::Optional<nsString>& aOther,
+                nsTArray<MemberPtrType>* aList)
         : BaseRange((MemberPtrType)aMemberPtr, aName, aList) {
-      mIdeal.insert(aOther);
+      if (aOther.WasPassed()) {
+        mIdeal.insert(aOther.Value());
+      }
     }
 
     ~StringRange() = default;
