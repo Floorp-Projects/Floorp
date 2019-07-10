@@ -41,6 +41,7 @@ pub trait YamlHelper {
     fn as_filter_input(&self) -> Option<FilterPrimitiveInput>;
     fn as_filter_primitive(&self) -> Option<FilterPrimitive>;
     fn as_vec_filter_primitive(&self) -> Option<Vec<FilterPrimitive>>;
+    fn as_color_space(&self) -> Option<ColorSpace>;
 }
 
 fn string_to_color(color: &str) -> Option<ColorF> {
@@ -152,6 +153,14 @@ define_string_enum!(
         Discrete = "Discrete",
         Linear = "Linear",
         Gamma = "Gamma"
+    ]
+);
+
+define_string_enum!(
+    ColorSpace,
+    [
+        Srgb = "srgb",
+        LinearRgb = "linear-rgb"
     ]
 );
 
@@ -705,16 +714,68 @@ impl YamlHelper for Yaml {
 
     fn as_filter_primitive(&self) -> Option<FilterPrimitive> {
         if let Some(filter_type) = self["type"].as_str() {
-            match filter_type {
+            let kind = match filter_type {
+                "identity" => {
+                    FilterPrimitiveKind::Identity(IdentityPrimitive {
+                        input: self["in"].as_filter_input().unwrap(),
+                    })
+                }
                 "blend" => {
-                    Some(FilterPrimitive::Blend(BlendPrimitive {
+                    FilterPrimitiveKind::Blend(BlendPrimitive {
                         input1: self["in1"].as_filter_input().unwrap(),
                         input2: self["in2"].as_filter_input().unwrap(),
                         mode: self["blend-mode"].as_mix_blend_mode().unwrap(),
-                    }))
+                    })
                 }
-                _ => None,
-            }
+                "flood" => {
+                    FilterPrimitiveKind::Flood(FloodPrimitive {
+                        color: self["color"].as_colorf().unwrap(),
+                    })
+                }
+                "blur" => {
+                    FilterPrimitiveKind::Blur(BlurPrimitive {
+                        input: self["in"].as_filter_input().unwrap(),
+                        radius: self["radius"].as_f32().unwrap(),
+                    })
+                }
+                "opacity" => {
+                    FilterPrimitiveKind::Opacity(OpacityPrimitive {
+                        input: self["in"].as_filter_input().unwrap(),
+                        opacity: self["opacity"].as_f32().unwrap(),
+                    })
+                }
+                "color-matrix" => {
+                    let m: Vec<f32> = self["matrix"].as_vec_f32().unwrap();
+                    let mut matrix: [f32; 20] = [0.0; 20];
+                    matrix.clone_from_slice(&m);
+
+                    FilterPrimitiveKind::ColorMatrix(ColorMatrixPrimitive {
+                        input: self["in"].as_filter_input().unwrap(),
+                        matrix,
+                    })
+                }
+                "drop-shadow" => {
+                    FilterPrimitiveKind::DropShadow(DropShadowPrimitive {
+                        input: self["in"].as_filter_input().unwrap(),
+                        shadow: Shadow {
+                            offset: self["offset"].as_vector().unwrap(),
+                            color: self["color"].as_colorf().unwrap(),
+                            blur_radius: self["radius"].as_f32().unwrap(),
+                        }
+                    })
+                }
+                "component-transfer" => {
+                    FilterPrimitiveKind::ComponentTransfer(ComponentTransferPrimitive {
+                        input: self["in"].as_filter_input().unwrap(),
+                    })
+                }
+                _ => return None,
+            };
+
+            Some(FilterPrimitive {
+                kind,
+                color_space: self["color-space"].as_color_space().unwrap_or(ColorSpace::LinearRgb),
+            })
         } else {
             None
         }
@@ -726,5 +787,9 @@ impl YamlHelper for Yaml {
         } else {
             self.as_filter_primitive().map(|data| vec![data])
         }
+    }
+
+    fn as_color_space(&self) -> Option<ColorSpace> {
+        self.as_str().and_then(|x| StringEnum::from_str(x))
     }
 }
