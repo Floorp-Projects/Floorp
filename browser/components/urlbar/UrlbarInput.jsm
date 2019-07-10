@@ -500,6 +500,12 @@ class UrlbarInput {
     openParams.postData = postData;
 
     switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.KEYWORD: {
+        // If this result comes from a bookmark keyword, let it inherit the
+        // current document's principal, otherwise bookmarklets would break.
+        openParams.allowInheritPrincipal = true;
+        break;
+      }
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
         if (this.hasAttribute("actionoverride")) {
           where = "current";
