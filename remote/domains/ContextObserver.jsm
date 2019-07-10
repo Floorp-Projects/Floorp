@@ -65,7 +65,7 @@ class ContextObserver {
 
   handleEvent({ type, target, persisted }) {
     const window = target.defaultView;
-    if (window.top != this.chromeEventHandler.ownerGlobal) {
+    if (window != this.chromeEventHandler.ownerGlobal) {
       // Ignore iframes for now.
       return;
     }
