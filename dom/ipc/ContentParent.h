@@ -22,6 +22,7 @@
 #include "mozilla/HalTypes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReportingProcess.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
@@ -148,9 +149,9 @@ class ContentParent final : public PContentParent,
 #endif
 
  public:
-  using LaunchError = GeckoChildProcessHost::LaunchError;
+  using LaunchError = mozilla::ipc::LaunchError;
   using LaunchPromise =
-      GeckoChildProcessHost::LaunchPromise<RefPtr<ContentParent>>;
+      mozilla::MozPromise<RefPtr<ContentParent>, LaunchError, false>;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CONTENTPARENT_IID)
 

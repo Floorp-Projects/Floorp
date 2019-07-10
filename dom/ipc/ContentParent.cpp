@@ -2052,8 +2052,8 @@ void ContentParent::LaunchSubprocessInternal(
     if (isSync) {
       *aRetval.as<bool*>() = false;
     } else {
-      *aRetval.as<RefPtr<LaunchPromise>*>() = LaunchPromise::CreateAndReject(
-          GeckoChildProcessHost::LaunchError(), __func__);
+      *aRetval.as<RefPtr<LaunchPromise>*>() =
+          LaunchPromise::CreateAndReject(LaunchError(), __func__);
     }
   };
 
@@ -2119,7 +2119,7 @@ void ContentParent::LaunchSubprocessInternal(
 
   RefPtr<ContentParent> self(this);
 
-  auto reject = [self, this](GeckoChildProcessHost::LaunchError err) {
+  auto reject = [self, this](LaunchError err) {
     NS_ERROR("failed to launch child in the parent");
     MarkAsDead();
     return LaunchPromise::CreateAndReject(err, __func__);
@@ -2207,19 +2207,19 @@ void ContentParent::LaunchSubprocessInternal(
     if (ok) {
       Unused << resolve(mSubprocess->GetChildProcessHandle());
     } else {
-      Unused << reject(GeckoChildProcessHost::LaunchError{});
+      Unused << reject(LaunchError{});
     }
     *aRetval.as<bool*>() = ok;
   } else {
     auto* retptr = aRetval.as<RefPtr<LaunchPromise>*>();
     if (mSubprocess->AsyncLaunch(std::move(extraArgs))) {
-      RefPtr<GeckoChildProcessHost::HandlePromise> ready =
+      RefPtr<ProcessHandlePromise> ready =
           mSubprocess->WhenProcessHandleReady();
       mLaunchYieldTS = TimeStamp::Now();
       *retptr = ready->Then(GetCurrentThreadSerialEventTarget(), __func__,
                             std::move(resolve), std::move(reject));
     } else {
-      *retptr = reject(GeckoChildProcessHost::LaunchError{});
+      *retptr = reject(LaunchError{});
     }
   }
 }
