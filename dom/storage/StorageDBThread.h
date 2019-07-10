@@ -378,7 +378,7 @@ class StorageDBThread final {
   virtual bool ShouldPreloadOrigin(const nsACString& aOrigin);
 
   // Get the complete list of scopes having data.
-  void GetOriginsHavingData(InfallibleTArray<nsCString>* aOrigins);
+  void GetOriginsHavingData(nsTArray<nsCString>* aOrigins);
 
  private:
   nsCOMPtr<nsIFile> mDatabaseFile;
