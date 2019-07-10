@@ -1,5 +1,5 @@
-commit a1dd3c5661404aa93924e737aeb86acf130b8889
+commit a5a09d3c755a339f972fb9bee3c0522995bf6449
 Author: yumaoka <y.umaoka@gmail.com>
-Date:   Tue Mar 26 19:02:10 2019 -0400
+Date:   Fri Jul 5 00:27:25 2019 -0400
 
-    ICU-20522 tzdata2019a updates
+    ICU-20692 tzdata2019b update
