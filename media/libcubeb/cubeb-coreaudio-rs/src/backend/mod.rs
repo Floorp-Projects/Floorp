@@ -2409,14 +2409,6 @@ impl ContextOps for AudioUnitContext {
             return Err(r);
         }
 
-        if let Err(r) = boxed_stream.install_system_changed_callback() {
-            cubeb_log!(
-                "({:p}) Could not install the device change callback.",
-                boxed_stream.as_ref()
-            );
-            return Err(r);
-        }
-
         let cubeb_stream = unsafe { Stream::from_ptr(Box::into_raw(boxed_stream) as *mut _) };
         cubeb_log!(
             "({:p}) Cubeb stream init successful.",
@@ -2666,13 +2658,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
             self.stop_internal();
         }
 
-        if self.uninstall_device_changed_callback().is_err() {
-            cubeb_log!(
-                "({:p}) Could not uninstall all device change listeners.",
-                self as *const AudioUnitStream
-            );
-        }
-
         {
             let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
             let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
@@ -2798,12 +2783,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
             }
 
             if stm_guard.reinit().is_err() {
-                if stm_guard.uninstall_system_changed_callback().is_err() {
-                    cubeb_log!(
-                        "({:p}) Could not uninstall system changed callback",
-                        stm_ptr
-                    );
-                }
                 stm_guard.notify_state_changed(State::Error);
                 cubeb_log!(
                     "({:p}) Could not reopen the stream after switching.",
@@ -3449,11 +3428,20 @@ impl<'ctx> AudioUnitStream<'ctx> {
             }
         }
 
-        if self.install_device_changed_callback().is_err() {
+        if let Err(r) = self.install_system_changed_callback() {
+            cubeb_log!(
+                "({:p}) Could not install the device change callback.",
+                self as *const AudioUnitStream
+            );
+            return Err(r);
+        }
+
+        if let Err(r) = self.install_device_changed_callback() {
             cubeb_log!(
                 "({:p}) Could not install all device change callback.",
                 self as *const AudioUnitStream
             );
+            return Err(r);
         }
 
         Ok(())
@@ -3461,6 +3449,20 @@ impl<'ctx> AudioUnitStream<'ctx> {
 
     fn close(&mut self) {
         self.mutex.assert_current_thread_owns();
+
+        if self.uninstall_system_changed_callback().is_err() {
+            cubeb_log!(
+                "({:p}) Could not uninstall the system changed callback",
+                self as *const AudioUnitStream
+            );
+        }
+
+        if self.uninstall_device_changed_callback().is_err() {
+            cubeb_log!(
+                "({:p}) Could not uninstall all device change listeners",
+                self as *const AudioUnitStream
+            );
+        }
 
         if !self.input_unit.is_null() {
             audio_unit_uninitialize(self.input_unit);
@@ -3483,20 +3485,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
     }
 
     fn destroy_internal(&mut self) {
-        if self.uninstall_system_changed_callback().is_err() {
-            cubeb_log!(
-                "({:p}) Could not uninstall the device changed callback",
-                self as *const AudioUnitStream
-            );
-        }
-
-        if self.uninstall_device_changed_callback().is_err() {
-            cubeb_log!(
-                "({:p}) Could not uninstall all device change listeners",
-                self as *const AudioUnitStream
-            );
-        }
-
         let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
         let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
         self.close();
