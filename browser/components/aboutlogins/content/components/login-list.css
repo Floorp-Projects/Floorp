@@ -65,6 +65,10 @@ ol {
   background-color: var(--in-content-box-background-hover);
 }
 
+.login-list-item.breached {
+  border-inline-start-color: var(--in-content-border-invalid);
+}
+
 .title {
   font-weight: bold;
 }

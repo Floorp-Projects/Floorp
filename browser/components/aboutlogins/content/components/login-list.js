@@ -90,7 +90,12 @@ export default class LoginList extends HTMLElement {
       if (login.guid == this._selectedGuid) {
         this._setListItemAsSelected(listItem);
       }
-
+      if (
+        this._breachesByLoginGUID &&
+        this._breachesByLoginGUID.has(login.guid)
+      ) {
+        listItem.classList.add("breached");
+      }
       if (!visibleLogins.includes(login.guid)) {
         listItem.hidden = true;
       }
@@ -210,6 +215,14 @@ export default class LoginList extends HTMLElement {
         );
       }
     }
+  }
+
+  /**
+   * @param {Map} breachesByLoginGUID A Map of breaches by login GUIDs used for displaying breached login indicators.
+   */
+  updateBreaches(breachesByLoginGUID) {
+    this._breachesByLoginGUID = breachesByLoginGUID;
+    this.render();
   }
 
   /**
