@@ -1195,7 +1195,7 @@ StorageAccessPermissionPrompt.prototype = {
   get message() {
     return gBrowserBundle.formatStringFromName("storageAccess.message", [
       "<>",
-      "<>",
+      "{}",
     ]);
   },
 
