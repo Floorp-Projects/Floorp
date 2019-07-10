@@ -30,7 +30,4 @@ class FallibleTArray;
 template <class E, size_t N>
 class AutoTArray;
 
-template <class E>
-using InfallibleTArray = nsTArray<E>;
-
 #endif
