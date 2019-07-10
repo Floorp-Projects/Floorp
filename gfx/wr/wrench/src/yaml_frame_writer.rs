@@ -140,6 +140,10 @@ fn table_node(parent: &mut Table, key: &str, value: Table) {
     yaml_node(parent, key, Yaml::Hash(value));
 }
 
+fn filter_input_node(parent: &mut Table, key: &str, value: FilterPrimitiveInput) {
+    yaml_node(parent, key, Yaml::String(filter_input_to_string(value)));
+}
+
 fn string_vec_yaml(value: &[String], check_unique: bool) -> Yaml {
     if !value.is_empty() && check_unique && array_elements_are_same(value) {
         Yaml::String(value[0].clone())
@@ -363,14 +367,49 @@ fn write_stacking_context(
     let mut filter_primitives = vec![];
     for filter_primitive in filter_primitive_iter {
         let mut table = new_table();
-        match filter_primitive {
-            FilterPrimitive::Blend(blend_primitive) => {
+        match filter_primitive.kind {
+            FilterPrimitiveKind::Identity(identity_primitive) => {
+                yaml_node(&mut table, "type", Yaml::String("identity".into()));
+                filter_input_node(&mut table, "in", identity_primitive.input);
+            }
+            FilterPrimitiveKind::Blend(blend_primitive) => {
                 yaml_node(&mut table, "type", Yaml::String("blend".into()));
-                yaml_node(&mut table, "in1", Yaml::String(filter_input_to_string(blend_primitive.input1)));
-                yaml_node(&mut table, "in2", Yaml::String(filter_input_to_string(blend_primitive.input2)));
+                filter_input_node(&mut table, "in1", blend_primitive.input1);
+                filter_input_node(&mut table, "in2", blend_primitive.input2);
                 enum_node(&mut table, "mode", blend_primitive.mode);
             }
+            FilterPrimitiveKind::Flood(flood_primitive) => {
+                yaml_node(&mut table, "type", Yaml::String("flood".into()));
+                color_node(&mut table, "color", flood_primitive.color);
+            }
+            FilterPrimitiveKind::Blur(blur_primitive) => {
+                yaml_node(&mut table, "type", Yaml::String("blur".into()));
+                filter_input_node(&mut table, "in", blur_primitive.input);
+                f32_node(&mut table, "radius", blur_primitive.radius);
+            }
+            FilterPrimitiveKind::Opacity(opacity_primitive) => {
+                yaml_node(&mut table, "type", Yaml::String("opacity".into()));
+                filter_input_node(&mut table, "in", opacity_primitive.input);
+                f32_node(&mut table, "opacity", opacity_primitive.opacity);
+            }
+            FilterPrimitiveKind::ColorMatrix(color_matrix_primitive) => {
+                yaml_node(&mut table, "type", Yaml::String("color-matrix".into()));
+                filter_input_node(&mut table, "in", color_matrix_primitive.input);
+                f32_vec_node(&mut table, "matrix", &color_matrix_primitive.matrix);
+            }
+            FilterPrimitiveKind::DropShadow(drop_shadow_primitive) => {
+                yaml_node(&mut table, "type", Yaml::String("drop-shadow".into()));
+                filter_input_node(&mut table, "in", drop_shadow_primitive.input);
+                vector_node(&mut table, "offset", &drop_shadow_primitive.shadow.offset);
+                color_node(&mut table, "color", drop_shadow_primitive.shadow.color);
+                f32_node(&mut table, "radius", drop_shadow_primitive.shadow.blur_radius);
+            }
+            FilterPrimitiveKind::ComponentTransfer(component_transfer_primitive) => {
+                yaml_node(&mut table, "type", Yaml::String("component-transfer".into()));
+                filter_input_node(&mut table, "in", component_transfer_primitive.input);
+            }
         }
+        enum_node(&mut table, "color-space", filter_primitive.color_space);
         filter_primitives.push(Yaml::Hash(table));
     }
 
