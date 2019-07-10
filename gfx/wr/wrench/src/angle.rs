@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use glutin::{self, ContextBuilder, CreationError};
-#[cfg(not(windows))]
-use winit::dpi::PhysicalSize;
+use glutin::{self, ContextBuilder, ContextCurrentState, CreationError};
 use winit::{EventsLoop, Window, WindowBuilder};
 
 #[cfg(not(windows))]
@@ -15,18 +13,20 @@ pub use crate::egl::Context;
 
 impl Context {
     #[cfg(not(windows))]
-    pub fn with_window(
+    pub fn with_window<T: ContextCurrentState>(
         _: WindowBuilder,
-        _: ContextBuilder,
+        _: ContextBuilder<'_, T>,
         _: &EventsLoop,
     ) -> Result<(Window, Self), CreationError> {
-        Err(CreationError::PlatformSpecific("ANGLE rendering is only supported on Windows".into()))
+        Err(CreationError::PlatformSpecific(
+            "ANGLE rendering is only supported on Windows".into(),
+        ))
     }
 
     #[cfg(windows)]
-    pub fn with_window(
+    pub fn with_window<T: ContextCurrentState>(
         window_builder: WindowBuilder,
-        context_builder: ContextBuilder,
+        context_builder: ContextBuilder<'_, T>,
         events_loop: &EventsLoop,
     ) -> Result<(Window, Self), CreationError> {
         use winit::os::windows::WindowExt;
@@ -39,36 +39,24 @@ impl Context {
             .and_then(|p| p.finish(window.get_hwnd() as _))
             .map(|context| (window, context))
     }
-}
 
-#[cfg(not(windows))]
-impl glutin::GlContext for Context {
-    unsafe fn make_current(&self) -> Result<(), glutin::ContextError> {
+    #[cfg(not(windows))]
+    pub unsafe fn make_current(&self) -> Result<(), glutin::ContextError> {
         match *self {}
     }
 
-    fn is_current(&self) -> bool {
+    #[cfg(not(windows))]
+    pub fn get_proc_address(&self, _: &str) -> *const () {
         match *self {}
     }
 
-    fn get_proc_address(&self, _: &str) -> *const () {
+    #[cfg(not(windows))]
+    pub fn swap_buffers(&self) -> Result<(), glutin::ContextError> {
         match *self {}
     }
 
-    fn swap_buffers(&self) -> Result<(), glutin::ContextError> {
-        match *self {}
-    }
-
-    fn get_api(&self) -> glutin::Api {
-        match *self {}
-    }
-
-    fn get_pixel_format(&self) -> glutin::PixelFormat {
-        match *self {}
-    }
-
-    fn resize(&self, _: PhysicalSize) {
+    #[cfg(not(windows))]
+    pub fn get_api(&self) -> glutin::Api {
         match *self {}
     }
 }
-
