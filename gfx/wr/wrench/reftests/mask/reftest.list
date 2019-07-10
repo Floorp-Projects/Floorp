@@ -10,7 +10,7 @@ platform(linux,mac) == rounded-corners.yaml rounded-corners.png
 platform(linux,mac) fuzzy(1,17500) color_targets(3) alpha_targets(1) == mask-atomicity.yaml mask-atomicity-ref.yaml
 platform(linux,mac) fuzzy(1,17500) == mask-atomicity-tiling.yaml mask-atomicity-ref.yaml
 platform(linux,mac) == mask-perspective.yaml mask-perspective.png
-skip_on(android,emulator) == fuzzy(1,6) mask-perspective-tiling.yaml mask-perspective.yaml  # Android emulator: GL error 502 at tex_sub_image_3d_pbo, fails on opt
+skip_on(android,emulator) == fuzzy(1,7) mask-perspective-tiling.yaml mask-perspective.yaml  # Android emulator: GL error 502 at tex_sub_image_3d_pbo, fails on opt
 platform(linux,mac) == checkerboard.yaml checkerboard.png
 skip_on(android) == checkerboard.yaml checkerboard-tiling.yaml  # Android emulator: GL error 502 at blit_framebuffer, fails on opt emulator and on a Pixel2
 == missing-mask.yaml missing-mask-ref.yaml
