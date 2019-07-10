@@ -42,8 +42,8 @@ const BUF_SIZE_LIMIT: usize = 1024 * 1024;
 // frame per table entry in 30 fps.
 const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24 * 7;
 
-// TODO: vec_push() and vec_reserve() needs to be replaced when Rust supports
-// fallible memory allocation in raw_vec.
+// TODO: vec_push() needs to be replaced when Rust supports fallible memory
+// allocation in raw_vec.
 #[allow(unreachable_code)]
 pub fn vec_push<T>(vec: &mut Vec<T>, val: T) -> std::result::Result<(), ()> {
     #[cfg(feature = "mp4parse_fallible")]
@@ -56,23 +56,12 @@ pub fn vec_push<T>(vec: &mut Vec<T>, val: T) -> std::result::Result<(), ()> {
 }
 
 #[allow(unreachable_code)]
-pub fn vec_reserve<T>(vec: &mut Vec<T>, size: usize) -> std::result::Result<(), ()> {
-    #[cfg(feature = "mp4parse_fallible")]
-    {
-        return FallibleVec::try_reserve(vec, size);
-    }
-
-    vec.reserve(size);
-    Ok(())
-}
-
-#[allow(unreachable_code)]
 fn allocate_read_buf(size: usize) -> std::result::Result<Vec<u8>, ()> {
     #[cfg(feature = "mp4parse_fallible")]
     {
         let mut buf: Vec<u8> = Vec::new();
         FallibleVec::try_reserve(&mut buf, size)?;
-        unsafe { buf.set_len(size); }
+        buf.extend(std::iter::repeat(0).take(size));
         return Ok(buf);
     }
 
@@ -626,7 +615,7 @@ fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
             }
             size64
         }
-        2...7 => return Err(Error::InvalidData("malformed size")),
+        2 ..= 7 => return Err(Error::InvalidData("malformed size")),
         _ => size32 as u64,
     };
     let mut offset = match size32 {
@@ -1285,7 +1274,7 @@ fn read_ctts<T: Read>(src: &mut BMFFBox<T>) -> Result<CompositionOffsetBox> {
             // According to spec, Version0 shoule be used when version == 0;
             // however, some buggy contents have negative value when version == 0.
             // So we always use Version1 here.
-            0...1 => {
+            0 ..= 1 => {
                 let count = be_u32_with_limit(src)?;
                 let offset = TimeOffsetVersion::Version1(be_i32(src)?);
                 (count, offset)
@@ -1580,7 +1569,7 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
     };
 
     match audio_object_type {
-        1 ... 4 | 6 | 7 | 17 | 19 ... 23 => {
+        1 ..= 4 | 6 | 7 | 17 | 19 ..= 23 => {
             if sample_frequency.is_none() {
                 return Err(Error::Unsupported("unknown frequency"));
             }
@@ -1597,17 +1586,17 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
             // to associate an implied sampling frequency with the desired
             // sampling frequency dependent tables.
             let sample_frequency_value = match sample_frequency.unwrap() {
-                0 ... 9390 => 8000,
-                9391 ... 11501 => 11025,
-                11502 ... 13855 => 12000,
-                13856 ... 18782 => 16000,
-                18783 ... 23003 => 22050,
-                23004 ... 27712 => 24000,
-                27713 ... 37565 => 32000,
-                37566 ... 46008 => 44100,
-                46009 ... 55425 => 48000,
-                55426 ... 75131 => 64000,
-                75132 ... 92016 => 88200,
+                0 ..= 9390 => 8000,
+                9391 ..= 11501 => 11025,
+                11502 ..= 13855 => 12000,
+                13856 ..= 18782 => 16000,
+                18783 ..= 23003 => 22050,
+                23004 ..= 27712 => 24000,
+                27713 ..= 37565 => 32000,
+                37566 ..= 46008 => 44100,
+                46009 ..= 55425 => 48000,
+                55426 ..= 75131 => 64000,
+                75132 ..= 92016 => 88200,
                 _ => 96000
             };
 
@@ -1654,7 +1643,7 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
                     _channel_counts += read_surround_channel_count(bit_reader, num_lfe_channel)?;
                     _channel_counts
                 },
-                1 ... 7 => channel_configuration,
+                1 ..= 7 => channel_configuration,
                 // Amendment 4 of the AAC standard in 2013 below
                 11 => 7, // 6.1 Amendment 4 of the AAC standard in 2013
                 12 | 14 => 8, // 7.1 (a/d) of ITU BS.2159
