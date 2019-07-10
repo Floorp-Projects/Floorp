@@ -50,15 +50,11 @@ add_task(async function() {
     "Should have the correct result parameters."
   );
 
-  if (UrlbarPrefs.get("quantumbar")) {
-    Assert.equal(
-      result.image,
-      UrlbarUtils.ICON.SEARCH_GLASS,
-      "Should have the search icon image"
-    );
-  } else {
-    Assert.equal(result.image, "", "Should not have an image defined");
-  }
+  Assert.equal(
+    result.image,
+    UrlbarUtils.ICON.SEARCH_GLASS,
+    "Should have the search icon image"
+  );
 
   let tabPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);

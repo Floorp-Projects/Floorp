@@ -157,6 +157,47 @@ add_task(async function test_nonexistent_manifest() {
 
 const USER_TEST_JSON = OS.Path.join(userDir.path, TYPE_SLUG, "test.json");
 
+add_task(async function test_nonexistent_manifest_with_registry_entry() {
+  if (registry) {
+    registry.setValue(
+      Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+      `${REGPATH}\\test`,
+      "",
+      USER_TEST_JSON
+    );
+  }
+
+  await OS.File.remove(USER_TEST_JSON);
+  let { messages, result } = await promiseConsoleOutput(() =>
+    lookupApplication("test", context)
+  );
+  equal(
+    result,
+    null,
+    "lookupApplication returns null for non-existent manifest"
+  );
+
+  let noSuchFileErrors = messages.filter(logMessage =>
+    logMessage.message.includes(
+      "file is referenced in the registry but does not exist"
+    )
+  );
+
+  if (registry) {
+    equal(
+      noSuchFileErrors.length,
+      1,
+      "lookupApplication logs a non-existent manifest file pointed to by the registry"
+    );
+  } else {
+    equal(
+      noSuchFileErrors.length,
+      0,
+      "lookupApplication does not log about registry on non-windows platforms"
+    );
+  }
+});
+
 add_task(async function test_good_manifest() {
   await writeManifest(USER_TEST_JSON, templateManifest);
   if (registry) {

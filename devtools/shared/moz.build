@@ -51,7 +51,6 @@ DevToolsModules(
     'content-observer.js',
     'debounce.js',
     'defer.js',
-    'deprecated-sync-thenables.js',
     'DevToolsUtils.js',
     'dom-node-constants.js',
     'dom-node-filter-constants.js',

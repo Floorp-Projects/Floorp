@@ -8,6 +8,7 @@
 
 #include "jsutil.h"
 
+#include "dbg/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
@@ -15,7 +16,6 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/JitRealm.h"
-#include "vm/Debugger.h"
 #include "vm/Runtime.h"
 #include "wasm/WasmInstance.h"
 

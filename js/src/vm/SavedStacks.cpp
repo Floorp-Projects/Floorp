@@ -19,6 +19,7 @@
 #include "jsmath.h"
 #include "jsnum.h"
 
+#include "dbg/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/HashUtil.h"
 #include "gc/Marking.h"
@@ -29,7 +30,6 @@
 #include "js/SavedFrameAPI.h"
 #include "js/Vector.h"
 #include "util/StringBuffer.h"
-#include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSScript.h"
 #include "vm/Realm.h"

@@ -391,12 +391,11 @@ android-opt-tests:
     - robocop
 
 android-x86_64-opt-tests:
-    # crashtests failing on debug; bug 1524493
-    - crashtest
     - geckoview-junit
 
 android-x86_64-tests:
     - cppunit
+    - crashtest
     - gtest
     - marionette
     - mochitest

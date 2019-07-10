@@ -115,20 +115,22 @@ function checkMissing({ client }, actorID) {
       "Front shouldn't be accessible from the client for actorID: " + actorID
     );
 
-    client.request(
-      {
-        to: actorID,
-        type: "request",
-      },
-      response => {
-        is(
-          response.error,
-          "noSuchActor",
-          "node list actor should no longer be contactable."
-        );
-        resolve(undefined);
-      }
-    );
+    client
+      .request(
+        {
+          to: actorID,
+          type: "request",
+        },
+        response => {
+          is(
+            response.error,
+            "noSuchActor",
+            "node list actor should no longer be contactable."
+          );
+          resolve(undefined);
+        }
+      )
+      .catch(() => {});
   });
 }
 

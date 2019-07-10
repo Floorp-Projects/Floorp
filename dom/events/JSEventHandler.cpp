@@ -101,7 +101,7 @@ bool JSEventHandler::IsBlackForCC() {
   // We can claim to be black if all the things we reference are
   // effectively black already.
   return !mTypedHandler.HasEventHandler() ||
-         !mTypedHandler.Ptr()->HasGrayCallable();
+         mTypedHandler.Ptr()->IsBlackForCC();
 }
 
 nsresult JSEventHandler::HandleEvent(Event* aEvent) {

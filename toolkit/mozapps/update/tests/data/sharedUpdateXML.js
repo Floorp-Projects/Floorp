@@ -110,8 +110,7 @@ const DEFAULT_UPDATE_VERSION = "999999.0";
  * @return The string representing a remote update xml file.
  */
 function getRemoteUpdatesXMLString(aUpdates) {
-  // eslint-disable-next-line no-useless-concat
-  return '<?xml version="1.0"?>' + "<updates>" + aUpdates + "</updates>";
+  return '<?xml version="1.0"?><updates>' + aUpdates + "</updates>";
 }
 
 /**

@@ -195,12 +195,6 @@ add_task(async function() {
     type: UrlbarUtils.RESULT_TYPE.URL,
   });
 
-  // The remaining tests fail on awesomebar because it doesn't properly handle
-  // them.
-  if (!UrlbarPrefs.get("quantumbar")) {
-    return;
-  }
-
   await test_autocomplete({
     desc:
       "End and then backspace should delete the backslash and not re-trigger autofill",

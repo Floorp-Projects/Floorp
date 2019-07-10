@@ -11,12 +11,12 @@
 #include "jstypes.h"
 
 #include "builtin/MapObject.h"
+#include "dbg/Debugger.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "jit/MacroAssembler.h"
 #include "js/HashTable.h"
-#include "vm/Debugger.h"
 #include "vm/JSContext.h"
 #include "vm/JSONParser.h"
 

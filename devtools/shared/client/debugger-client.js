@@ -4,8 +4,7 @@
 
 "use strict";
 
-const promise = require("devtools/shared/deprecated-sync-thenables");
-
+const defer = require("devtools/shared/defer");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {
   getStack,
@@ -184,7 +183,7 @@ DebuggerClient.prototype = {
    *         and behaviors of the server we connect to. See RootActor).
    */
   connect: function(onConnected) {
-    const deferred = promise.defer();
+    const deferred = defer();
 
     this.once("connected", (applicationType, traits) => {
       this.traits = traits;
@@ -209,7 +208,7 @@ DebuggerClient.prototype = {
    *         Resolves after the underlying transport is closed.
    */
   close: function(onClosed) {
-    const deferred = promise.defer();
+    const deferred = defer();
     if (onClosed) {
       deferred.promise.then(onClosed);
     }
@@ -327,7 +326,7 @@ DebuggerClient.prototype = {
         "' " +
         "can't be sent as the connection is closed.";
       const resp = { error: "connectionClosed", message: msg };
-      return promise.reject(safeOnResponse(resp));
+      return Promise.reject(safeOnResponse(resp));
     }
 
     const request = new Request(packet);
@@ -336,31 +335,33 @@ DebuggerClient.prototype = {
 
     // Implement a Promise like API on the returned object
     // that resolves/rejects on request response
-    const deferred = promise.defer();
-    function listenerJson(resp) {
-      removeRequestListeners();
-      resp = safeOnResponse(resp);
-      if (resp.error) {
-        deferred.reject(resp);
-      } else {
-        deferred.resolve(resp);
+    const promise = new Promise((resolve, reject) => {
+      function listenerJson(resp) {
+        removeRequestListeners();
+        resp = safeOnResponse(resp);
+        if (resp.error) {
+          reject(resp);
+        } else {
+          resolve(resp);
+        }
       }
-    }
-    function listenerBulk(resp) {
-      removeRequestListeners();
-      deferred.resolve(safeOnResponse(resp));
-    }
+      function listenerBulk(resp) {
+        removeRequestListeners();
+        resolve(safeOnResponse(resp));
+      }
 
-    const removeRequestListeners = () => {
-      request.off("json-reply", listenerJson);
-      request.off("bulk-reply", listenerBulk);
-    };
+      const removeRequestListeners = () => {
+        request.off("json-reply", listenerJson);
+        request.off("bulk-reply", listenerBulk);
+      };
 
-    request.on("json-reply", listenerJson);
-    request.on("bulk-reply", listenerBulk);
+      request.on("json-reply", listenerJson);
+      request.on("bulk-reply", listenerBulk);
+    });
 
     this._sendOrQueueRequest(request);
-    request.then = deferred.promise.then.bind(deferred.promise);
+    request.then = promise.then.bind(promise);
+    request.catch = promise.catch.bind(promise);
 
     return request;
   },

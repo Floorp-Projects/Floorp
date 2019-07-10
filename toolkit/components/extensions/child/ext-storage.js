@@ -244,11 +244,18 @@ this.storage = class extends ExtensionAPI {
             // if this context has been destroyed in the meantime.
             if (method !== "get") {
               // Let the outer try to catch rejections returned by the backend methods.
-              const result = await context.childManager.callParentAsyncFunction(
-                "storage.local.callMethodInParentProcess",
-                [method, args]
-              );
-              return result;
+              try {
+                const result = await context.childManager.callParentAsyncFunction(
+                  "storage.local.callMethodInParentProcess",
+                  [method, args]
+                );
+                return result;
+              } catch (err) {
+                // Just return the rejection as is, the error has been normalized in the
+                // parent process by callMethodInParentProcess and the original error
+                // logged in the browser console.
+                return Promise.reject(err);
+              }
             }
 
             // Get the selected backend and cache it for the next API calls from this context.
@@ -259,10 +266,7 @@ this.storage = class extends ExtensionAPI {
           const result = await selectedBackend[method](...args);
           return result;
         } catch (err) {
-          // Ensure that the error we throw is converted into an ExtensionError
-          // (e.g. DataCloneError instances raised from the internal IndexedDB
-          // operation have to be converted to be accessible to the extension code).
-          throw new ExtensionUtils.ExtensionError(String(err));
+          throw ExtensionStorageIDB.normalizeStorageError(err);
         }
       };
     }

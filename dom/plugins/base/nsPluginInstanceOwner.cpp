@@ -28,7 +28,6 @@ using mozilla::DefaultXDisplay;
 #include "nsIStringStream.h"
 #include "nsNetUtil.h"
 #include "mozilla/Preferences.h"
-#include "nsILinkHandler.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsLayoutUtils.h"
@@ -389,10 +388,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
   }
 
   // the container of the pres context will give us the link handler
-  nsCOMPtr<nsISupports> container = presContext->GetContainerWeak();
+  nsCOMPtr<nsIDocShell> container = presContext->GetDocShell();
   NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
-  nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
-  NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
 
   nsAutoString unitarget;
   if ((0 == PL_strcmp(aTarget, "newwindow")) ||
@@ -446,10 +443,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
 
   nsCOMPtr<nsIContentSecurityPolicy> csp = content->GetCsp();
 
-  rv = lh->OnLinkClick(content, uri, unitarget, VoidString(), aPostStream,
-                       headersDataStream,
-                       /* isUserTriggered */ false,
-                       /* isTrusted */ true, triggeringPrincipal, csp);
+  rv = nsDocShell::Cast(container)->OnLinkClick(
+      content, uri, unitarget, VoidString(), aPostStream, headersDataStream,
+      /* isUserTriggered */ false, /* isTrusted */ true, triggeringPrincipal,
+      csp);
 
   return rv;
 }

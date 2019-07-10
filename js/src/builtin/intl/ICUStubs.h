@@ -28,6 +28,7 @@
 #  include "unicode/udatpg.h"
 #  include "unicode/udisplaycontext.h"
 #  include "unicode/uenum.h"
+#  include "unicode/uformattedvalue.h"
 #  include "unicode/uloc.h"
 #  include "unicode/unum.h"
 #  include "unicode/unumsys.h"
@@ -45,8 +46,6 @@
  */
 
 #if !ENABLE_INTL_API
-
-#  define U_ICU_VERSION_MAJOR_NUM 64
 
 enum UErrorCode {
   U_ZERO_ERROR,
@@ -672,6 +671,76 @@ inline int32_t ureldatefmt_formatNumeric(
     URelativeDateTimeUnit unit, UChar* result, int32_t resultCapacity,
     UErrorCode* status) {
   MOZ_CRASH("ureldatefmt_formatNumeric: Intl API disabled");
+}
+
+struct UFormattedRelativeDateTime;
+
+inline UFormattedRelativeDateTime* ureldatefmt_openResult(UErrorCode* status) {
+  MOZ_CRASH("ureldatefmt_openResult: Intl API disabled");
+}
+
+inline void ureldatefmt_closeResult(UFormattedRelativeDateTime* ufrdt) {
+  MOZ_CRASH("ureldatefmt_closeResult: Intl API disabled");
+}
+
+inline void ureldatefmt_formatToResult(
+    const URelativeDateTimeFormatter* reldatefmt, double offset,
+    URelativeDateTimeUnit unit, UFormattedRelativeDateTime* result,
+    UErrorCode* status) {
+  MOZ_CRASH("ureldatefmt_formatToResult: Intl API disabled");
+}
+
+inline void ureldatefmt_formatNumericToResult(
+    const URelativeDateTimeFormatter* reldatefmt, double offset,
+    URelativeDateTimeUnit unit, UFormattedRelativeDateTime* result,
+    UErrorCode* status) {
+  MOZ_CRASH("ureldatefmt_formatToResult: Intl API disabled");
+}
+
+struct UFormattedValue;
+
+inline const UFormattedValue* ureldatefmt_resultAsValue(
+    const UFormattedRelativeDateTime* ufrdt, UErrorCode* status) {
+  MOZ_CRASH("ureldatefmt_resultAsValue: Intl API disabled");
+}
+
+inline const UChar* ufmtval_getString(const UFormattedValue* ufmtval,
+                                      int32_t* pLength, UErrorCode* status) {
+  MOZ_CRASH("ufmtval_getString: Intl API disabled");
+}
+
+struct UConstrainedFieldPosition;
+
+inline UConstrainedFieldPosition* ucfpos_open(UErrorCode* status) {
+  MOZ_CRASH("ucfpos_open: Intl API disabled");
+}
+
+inline void ucfpos_close(UConstrainedFieldPosition* ucfpos) {
+  MOZ_CRASH("ucfpos_close: Intl API disabled");
+}
+
+typedef enum UFieldCategory { UFIELD_CATEGORY_NUMBER } UFieldCategory;
+
+inline void ucfpos_constrainCategory(UConstrainedFieldPosition* ucfpos,
+                                     int32_t category, UErrorCode* status) {
+  MOZ_CRASH("ucfpos_constrainCategory: Intl API disabled");
+}
+
+inline bool ufmtval_nextPosition(const UFormattedValue* ufmtval,
+                                 UConstrainedFieldPosition* ucfpos,
+                                 UErrorCode* status) {
+  MOZ_CRASH("ufmtval_nextPosition: Intl API disabled");
+}
+
+inline int32_t ucfpos_getField(const UConstrainedFieldPosition* ucfpos,
+                               UErrorCode* status) {
+  MOZ_CRASH("ucfpos_getField: Intl API disabled");
+}
+
+inline void ucfpos_getIndexes(const UConstrainedFieldPosition* ucfpos,
+                              int32_t* pStart, int32_t* pLimit,
+                              UErrorCode* status) {
+  MOZ_CRASH("ucfpos_getIndexes: Intl API disabled");
 }
 
 #endif  // !ENABLE_INTL_API

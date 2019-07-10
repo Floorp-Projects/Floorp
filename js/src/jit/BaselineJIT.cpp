@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "dbg/Debugger.h"
 #include "gc/FreeOp.h"
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineIC.h"
@@ -18,7 +19,6 @@
 #include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
 #include "util/StructuredSpewer.h"
-#include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
 

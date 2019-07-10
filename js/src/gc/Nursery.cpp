@@ -15,6 +15,7 @@
 #include "jsutil.h"
 
 #include "builtin/MapObject.h"
+#include "dbg/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
@@ -22,7 +23,6 @@
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
 #include "vm/ArrayObject.h"
-#include "vm/Debugger.h"
 #if defined(DEBUG)
 #  include "vm/EnvironmentObject.h"
 #endif

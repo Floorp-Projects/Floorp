@@ -26,6 +26,7 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"
 #include "builtin/String.h"
+#include "dbg/Debugger.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -37,7 +38,6 @@
 #include "vm/AsyncIteration.h"
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/Debugger.h"
 #include "vm/EqualityOperations.h"  // js::StrictlyEqual
 #include "vm/GeneratorObject.h"
 #include "vm/Iteration.h"
@@ -54,8 +54,8 @@
 #include "vm/TraceLogging.h"
 
 #include "builtin/Boolean-inl.h"
+#include "dbg/Debugger-inl.h"
 #include "jit/JitFrames-inl.h"
-#include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSAtom-inl.h"

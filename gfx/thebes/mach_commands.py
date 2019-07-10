@@ -140,7 +140,10 @@ class PullRequestImporter(MachCommandBase):
                     date = line[6:]
                 elif line.startswith('Subject: '):
                     line = line[9:]
-                    commit_msg = re.sub(r'^\[PATCH[0-9 /]+\] ', 'Bug %s - ' % bug_number, line)
+                    bug_prefix = ''
+                    if bug_number is not None:
+                        bug_prefix = 'Bug %s - ' % bug_number
+                    commit_msg = re.sub(r'^\[PATCH[0-9 /]*\] ', bug_prefix, line)
                     state = COMMIT_MESSAGE_SUMMARY
             elif state == COMMIT_MESSAGE_SUMMARY:
                 if len(line) > 0 and line[0] == ' ':

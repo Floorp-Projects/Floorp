@@ -39,7 +39,12 @@ add_task(async function task() {
   const statusCodeNode = messageNode.querySelector(".status-code");
   info("Network message found.");
 
-  ok(statusCodeNode.title, l10n.getStr("webConsoleMoreInfoLabel"));
+  is(
+    statusCodeNode.title,
+    l10n.getStr("webConsoleMoreInfoLabel"),
+    "Status code has the expected tooltip"
+  );
+
   const {
     rightClickMouseEvent,
     rightClickCtrlOrCmdKeyMouseEvent,
@@ -52,6 +57,7 @@ add_task(async function task() {
   ];
 
   for (const testCase of testCases) {
+    info("Test case");
     const { clickEvent } = testCase;
     const onConsoleMenuOpened = [
       rightClickMouseEvent,
@@ -70,6 +76,7 @@ add_task(async function task() {
     if (onConsoleMenuOpened) {
       info("Check if context menu is opened on right clicking the status-code");
       await onConsoleMenuOpened;
+      ok(true, "Console menu is opened");
     }
   }
 });

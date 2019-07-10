@@ -34,21 +34,23 @@ function run_test() {
 }
 
 function test_thread_lifetime() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadClient.once("paused", async function(packet) {
     const pauseGrip = packet.frame.arguments[0];
 
     // Create a thread-lifetime actor for this object.
-    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(
-      response
-    ) {
-      // Successful promotion won't return an error.
-      Assert.equal(response.error, undefined);
-      gThreadClient.once("paused", function(packet) {
-        // Verify that the promoted actor is returned again.
-        Assert.equal(pauseGrip.actor, packet.frame.arguments[0].actor);
-        // Now that we've resumed, release the thread-lifetime grip.
-        gClient.release(pauseGrip.actor, function(response) {
-          gClient.request(
+    const response = await gClient.request({
+      to: pauseGrip.actor,
+      type: "threadGrip",
+    });
+    // Successful promotion won't return an error.
+    Assert.equal(response.error, undefined);
+    gThreadClient.once("paused", function(packet) {
+      // Verify that the promoted actor is returned again.
+      Assert.equal(pauseGrip.actor, packet.frame.arguments[0].actor);
+      // Now that we've resumed, release the thread-lifetime grip.
+      gClient.release(pauseGrip.actor, async function(response) {
+        try {
+          await gClient.request(
             { to: pauseGrip.actor, type: "bogusRequest" },
             function(response) {
               Assert.equal(response.error, "noSuchActor");
@@ -57,10 +59,13 @@ function test_thread_lifetime() {
               });
             }
           );
-        });
+          ok(false, "bogusRequest should throw");
+        } catch (e) {
+          ok(true, "bogusRequest thrown");
+        }
       });
-      gThreadClient.resume();
     });
+    gThreadClient.resume();
   });
 
   gDebuggee.eval(

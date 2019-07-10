@@ -142,13 +142,9 @@ bool HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   }
 
   // cannot focus links if there is no link handler
-  Document* doc = GetComposedDoc();
-  if (doc) {
-    nsPresContext* presContext = doc->GetPresContext();
-    if (presContext && !presContext->GetLinkHandler()) {
-      *aIsFocusable = false;
-      return false;
-    }
+  if (!OwnerDoc()->LinkHandlingEnabled()) {
+    *aIsFocusable = false;
+    return false;
   }
 
   // Links that are in an editable region should never be focusable, even if

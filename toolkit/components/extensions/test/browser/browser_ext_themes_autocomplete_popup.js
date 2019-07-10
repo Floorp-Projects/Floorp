@@ -43,8 +43,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_popup_url() {
-  const quantumbar = UrlbarPrefs.get("quantumbar");
-
   // Load extension with brighttext not set
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -112,15 +110,11 @@ add_task(async function test_popup_url() {
     `Popup background color should be set to ${POPUP_COLOR}`
   );
 
-  if (quantumbar) {
-    Assert.equal(
-      popupCS.borderBottomColor,
-      `rgb(${hexToRGB(CHROME_CONTENT_SEPARATOR_COLOR).join(", ")})`,
-      `Popup bottom color should be set to ${CHROME_CONTENT_SEPARATOR_COLOR}`
-    );
-  } else {
-    testBorderColor(popup, POPUP_BORDER_COLOR);
-  }
+  Assert.equal(
+    popupCS.borderBottomColor,
+    `rgb(${hexToRGB(CHROME_CONTENT_SEPARATOR_COLOR).join(", ")})`,
+    `Popup bottom color should be set to ${CHROME_CONTENT_SEPARATOR_COLOR}`
+  );
 
   Assert.equal(
     popupCS.color,
@@ -228,10 +222,7 @@ add_task(async function test_popup_url() {
   // Since brighttext is enabled, the seperator color should be
   // POPUP_TEXT_COLOR_BRIGHT with added alpha.
   Assert.equal(
-    window.getComputedStyle(
-      urlResult.element.separator,
-      quantumbar ? ":before" : null
-    ).color,
+    window.getComputedStyle(urlResult.element.separator, ":before").color,
     `rgba(${hexToRGB(POPUP_TEXT_COLOR_BRIGHT).join(", ")}, 0.5)`,
     `Urlbar popup separator color should be set to ${POPUP_TEXT_COLOR_BRIGHT} with alpha`
   );
@@ -270,10 +261,7 @@ add_task(async function test_popup_url() {
   span.remove();
 
   Assert.equal(
-    window.getComputedStyle(
-      urlResult.element.separator,
-      quantumbar ? ":before" : null
-    ).color,
+    window.getComputedStyle(urlResult.element.separator, ":before").color,
     GRAY_TEXT,
     `Urlbar popup separator color should be set to ${GRAY_TEXT}`
   );
