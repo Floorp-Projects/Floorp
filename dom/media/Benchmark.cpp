@@ -218,7 +218,7 @@ void BenchmarkPlayback::DemuxNextSample() {
         mSamples.AppendElements(std::move(aHolder->mSamples));
         if (ref->mParameters.mStopAtFrame &&
             mSamples.Length() == ref->mParameters.mStopAtFrame.ref()) {
-          InitDecoder(std::move(*mTrackDemuxer->GetInfo()));
+          InitDecoder(mTrackDemuxer->GetInfo());
         } else {
           Dispatch(
               NS_NewRunnableFunction("BenchmarkPlayback::DemuxNextSample",
@@ -228,7 +228,7 @@ void BenchmarkPlayback::DemuxNextSample() {
       [this, ref](const MediaResult& aError) {
         switch (aError.Code()) {
           case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-            InitDecoder(std::move(*mTrackDemuxer->GetInfo()));
+            InitDecoder(mTrackDemuxer->GetInfo());
             break;
           default:
             Error(aError);
@@ -237,11 +237,12 @@ void BenchmarkPlayback::DemuxNextSample() {
       });
 }
 
-void BenchmarkPlayback::InitDecoder(TrackInfo&& aInfo) {
+void BenchmarkPlayback::InitDecoder(UniquePtr<TrackInfo>&& aInfo) {
   MOZ_ASSERT(OnThread());
 
   RefPtr<PDMFactory> platform = new PDMFactory();
-  mDecoder = platform->CreateDecoder({aInfo, mDecoderTaskQueue});
+  mInfo = std::move(aInfo);
+  mDecoder = platform->CreateDecoder({*mInfo, mDecoderTaskQueue});
   if (!mDecoder) {
     Error(MediaResult(NS_ERROR_FAILURE, "Failed to create decoder"));
     return;
@@ -288,6 +289,7 @@ void BenchmarkPlayback::GlobalShutdown() {
               Thread(), __func__, [ref, this]() { FinalizeShutdown(); },
               []() { MOZ_CRASH("not reached"); });
           mDecoder = nullptr;
+          mInfo = nullptr;
         },
         []() { MOZ_CRASH("not reached"); });
   } else {
