@@ -54,6 +54,7 @@
     <style name="NormalTheme" parent="NormalThemeBase" />
 
     <style name="DialogStyle" parent="Theme.MaterialComponents.Dialog.Alert">
+        <item name="dialogCornerRadius">@dimen/tab_corner_radius</item>
         <item name="android:colorBackground">?above</item>
         <item name="colorAccent">?accent</item>
         <item name="android:textColorPrimary">?primaryText</item>

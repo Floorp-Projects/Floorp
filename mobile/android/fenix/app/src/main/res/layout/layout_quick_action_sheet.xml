@@ -6,7 +6,8 @@
     android:id="@+id/quick_action_sheet"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?foundation"
+    android:backgroundTint="?foundation"
+    android:background="@drawable/rounded_top_corners"
     android:orientation="vertical">
 
     <View
