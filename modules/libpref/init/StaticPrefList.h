@@ -4009,25 +4009,21 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-// If MOZ_GFX_OPTIMIZE_MOBILE is defined, we force component alpha off
-// and ignore the preference.
-VARCACHE_PREF(
-  Skip,
-  "layers.componentalpha.enabled",
-   layers_componentalpha_enabled,
-  bool, false
-)
-#else
-// If MOZ_GFX_OPTIMIZE_MOBILE is not defined, we actually take the
-// preference value, defaulting to true.
 VARCACHE_PREF(
   Once,
   "layers.componentalpha.enabled",
-   layers_componentalpha_enabled,
-  bool, true
-)
+   layers_componentalpha_enabled_do_not_use_directly,
+  bool,
+  // Nb: we ignore this pref if MOZ_GFX_OPTIMIZE_MOBILE is defined, as if this
+  // pref was always false. But we go to the effort of setting it to false so
+  // that telemetry's reporting of the pref value is more likely to reflect
+  // what the code is doing.
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  false
+#else
+  true
 #endif
+)
 
 VARCACHE_PREF(
   Once,

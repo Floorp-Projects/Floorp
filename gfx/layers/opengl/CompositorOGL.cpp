@@ -1550,7 +1550,7 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
       BindAndDrawGeometry(program, aGeometry);
     } break;
     case EffectTypes::COMPONENT_ALPHA: {
-      MOZ_ASSERT(StaticPrefs::layers_componentalpha_enabled());
+      MOZ_ASSERT(LayerManager::LayersComponentAlphaEnabled());
       MOZ_ASSERT(blendMode == gfx::CompositionOp::OP_OVER,
                  "Can't support blend modes with component alpha!");
       EffectComponentAlpha* effectComponentAlpha =
