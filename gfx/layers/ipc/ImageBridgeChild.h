@@ -118,7 +118,7 @@ class ImageBridgeChild final : public PImageBridgeChild,
                                public TextureForwarder {
   friend class ImageContainer;
 
-  typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
+  typedef nsTArray<AsyncParentMessageData> AsyncParentMessageArray;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageBridgeChild, override);
@@ -192,10 +192,10 @@ class ImageBridgeChild final : public PImageBridgeChild,
       PMediaSystemResourceManagerChild* aActor);
 
   mozilla::ipc::IPCResult RecvParentAsyncMessages(
-      InfallibleTArray<AsyncParentMessageData>&& aMessages);
+      nsTArray<AsyncParentMessageData>&& aMessages);
 
   mozilla::ipc::IPCResult RecvDidComposite(
-      InfallibleTArray<ImageCompositeNotification>&& aNotifications);
+      nsTArray<ImageCompositeNotification>&& aNotifications);
 
   mozilla::ipc::IPCResult RecvReportFramesDropped(
       const CompositableHandle& aHandle, const uint32_t& aFrames);

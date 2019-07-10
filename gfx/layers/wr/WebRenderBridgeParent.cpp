@@ -265,7 +265,7 @@ class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender final {
  public:
   explicit AutoWebRenderBridgeParentAsyncMessageSender(
       WebRenderBridgeParent* aWebRenderBridgeParent,
-      InfallibleTArray<OpDestroy>* aDestroyActors = nullptr)
+      nsTArray<OpDestroy>* aDestroyActors = nullptr)
       : mWebRenderBridgeParent(aWebRenderBridgeParent),
         mActorsToDestroy(aDestroyActors) {
     mWebRenderBridgeParent->SetAboutToSendAsyncMessages();
@@ -284,7 +284,7 @@ class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender final {
 
  private:
   WebRenderBridgeParent* mWebRenderBridgeParent;
-  InfallibleTArray<OpDestroy>* mActorsToDestroy;
+  nsTArray<OpDestroy>* mActorsToDestroy;
 };
 
 WebRenderBridgeParent::WebRenderBridgeParent(
@@ -758,7 +758,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvDeleteCompositorAnimations(
-    InfallibleTArray<uint64_t>&& aIds) {
+    nsTArray<uint64_t>&& aIds) {
   if (mDestroyed) {
     return IPC_OK();
   }
@@ -966,7 +966,7 @@ bool WebRenderBridgeParent::SetDisplayList(
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     nsTArray<RenderRootDisplayListData>&& aDisplayLists,
-    InfallibleTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
+    nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
     const TransactionId& aTransactionId, const wr::IdNamespace& aIdNamespace,
     const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
     const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
@@ -1107,7 +1107,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     const FocusTarget& aFocusTarget, const uint32_t& aPaintSequenceNumber,
     nsTArray<RenderRootUpdates>&& aRenderRootUpdates,
-    InfallibleTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
+    nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
     const TransactionId& aTransactionId, const wr::IdNamespace& aIdNamespace,
     const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
     const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
@@ -1289,14 +1289,14 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
 }
 
 bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
-    const InfallibleTArray<WebRenderParentCommand>& aCommands,
+    const nsTArray<WebRenderParentCommand>& aCommands,
     wr::TransactionBuilder& aTxn, wr::RenderRoot aRenderRoot) {
   // Transaction for async image pipeline that uses ImageBridge always need to
   // be non low priority.
   wr::TransactionBuilder txnForImageBridge;
   wr::AutoTransactionSender sender(Api(aRenderRoot), &txnForImageBridge);
 
-  for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0;
+  for (nsTArray<WebRenderParentCommand>::index_type i = 0;
        i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
@@ -2360,7 +2360,7 @@ bool WebRenderBridgeParent::ShouldParentObserveEpoch() {
 }
 
 void WebRenderBridgeParent::SendAsyncMessage(
-    const InfallibleTArray<AsyncParentMessageData>& aMessage) {
+    const nsTArray<AsyncParentMessageData>& aMessage) {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
 }
 

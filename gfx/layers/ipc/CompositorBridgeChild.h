@@ -52,7 +52,7 @@ struct FrameMetrics;
 
 class CompositorBridgeChild final : public PCompositorBridgeChild,
                                     public TextureForwarder {
-  typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
+  typedef nsTArray<AsyncParentMessageData> AsyncParentMessageArray;
 
   friend class PCompositorBridgeChild;
 
@@ -115,7 +115,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   bool DeallocPTextureChild(PTextureChild* actor);
 
   mozilla::ipc::IPCResult RecvParentAsyncMessages(
-      InfallibleTArray<AsyncParentMessageData>&& aMessages);
+      nsTArray<AsyncParentMessageData>&& aMessages);
   PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                const ReadLockDescriptor& aReadLock,
                                LayersBackend aLayersBackend,

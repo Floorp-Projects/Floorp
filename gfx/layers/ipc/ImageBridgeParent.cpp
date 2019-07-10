@@ -30,7 +30,7 @@
 #include "nsDebug.h"                 // for NS_ASSERTION, etc
 #include "nsISupportsImpl.h"         // for ImageBridgeParent::Release, etc
 #include "nsTArray.h"                // for nsTArray, nsTArray_Impl
-#include "nsTArrayForwardDeclare.h"  // for InfallibleTArray
+#include "nsTArrayForwardDeclare.h"  // for nsTArray
 #include "nsXULAppAPI.h"             // for XRE_GetIOMessageLoop
 #include "mozilla/layers/TextureHost.h"
 #include "nsThreadUtils.h"
@@ -157,7 +157,7 @@ class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender final {
  public:
   explicit AutoImageBridgeParentAsyncMessageSender(
       ImageBridgeParent* aImageBridge,
-      InfallibleTArray<OpDestroy>* aToDestroy = nullptr)
+      nsTArray<OpDestroy>* aToDestroy = nullptr)
       : mImageBridge(aImageBridge), mToDestroy(aToDestroy) {
     mImageBridge->SetAboutToSendAsyncMessages();
   }
@@ -173,7 +173,7 @@ class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender final {
 
  private:
   ImageBridgeParent* mImageBridge;
-  InfallibleTArray<OpDestroy>* mToDestroy;
+  nsTArray<OpDestroy>* mToDestroy;
 };
 
 mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
@@ -260,7 +260,7 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvWillClose() {
   // device data (GL textures, etc.) now because shortly after SenStop() returns
   // on the child side the widget will be destroyed along with it's associated
   // GL context.
-  InfallibleTArray<PTextureParent*> textures;
+  nsTArray<PTextureParent*> textures;
   ManagedPTextureParent(textures);
   for (unsigned int i = 0; i < textures.Length(); ++i) {
     RefPtr<TextureHost> tex = TextureHost::AsTextureHost(textures[i]);
@@ -314,7 +314,7 @@ bool ImageBridgeParent::DeallocPMediaSystemResourceManagerParent(
 }
 
 void ImageBridgeParent::SendAsyncMessage(
-    const InfallibleTArray<AsyncParentMessageData>& aMessage) {
+    const nsTArray<AsyncParentMessageData>& aMessage) {
   mozilla::Unused << SendParentAsyncMessages(aMessage);
 }
 

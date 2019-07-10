@@ -14,7 +14,7 @@
 #include "mozilla/ipc/SharedMemory.h"  // for SharedMemory, etc
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "nsRefPtrHashtable.h"
-#include "nsTArrayForwardDeclare.h"  // for InfallibleTArray
+#include "nsTArrayForwardDeclare.h"  // for nsTArray
 
 namespace mozilla {
 
@@ -34,9 +34,9 @@ class CompositorBridgeParentBase;
 class LayerTransactionParent final : public PLayerTransactionParent,
                                      public CompositableParentManager,
                                      public ShmemAllocator {
-  typedef InfallibleTArray<Edit> EditArray;
-  typedef InfallibleTArray<OpDestroy> OpDestroyArray;
-  typedef InfallibleTArray<PluginWindowData> PluginsArray;
+  typedef nsTArray<Edit> EditArray;
+  typedef nsTArray<OpDestroy> OpDestroyArray;
+  typedef nsTArray<PluginWindowData> PluginsArray;
 
   friend class PLayerTransactionParent;
 
@@ -85,7 +85,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 
   // CompositableParentManager
   void SendAsyncMessage(
-      const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+      const nsTArray<AsyncParentMessageData>& aMessage) override;
 
   void SendPendingAsyncMessages() override;
 
