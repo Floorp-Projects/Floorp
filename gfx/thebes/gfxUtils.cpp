@@ -1478,7 +1478,8 @@ wr::RenderRoot gfxUtils::GetContentRenderRoot() {
 
 Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForFrame(const nsIFrame* aFrame) {
   if (!gfxVars::UseWebRender() ||
-      !StaticPrefs::gfx_webrender_split_render_roots()) {
+      !StaticPrefs::gfx_webrender_split_render_roots() ||
+      !XRE_IsParentProcess()) {
     return Nothing();
   }
   if (!aFrame->GetContent()) {
@@ -1487,24 +1488,13 @@ Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForFrame(const nsIFrame* aFrame) {
   if (!aFrame->GetContent()->IsElement()) {
     return Nothing();
   }
-  return gfxUtils::GetRenderRootForElement(aFrame->GetContent()->AsElement());
-}
-
-Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForElement(
-    const dom::Element* aElement) {
-  if (!aElement) {
-    return Nothing();
-  }
-  if (!gfxVars::UseWebRender() ||
-      !StaticPrefs::gfx_webrender_split_render_roots()) {
-    return Nothing();
-  }
-  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
-                            NS_LITERAL_STRING("content"), eCaseMatters)) {
+  const dom::Element* element = aFrame->GetContent()->AsElement();
+  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
+                           NS_LITERAL_STRING("content"), eCaseMatters)) {
     return Some(wr::RenderRoot::Content);
   }
-  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
-                            NS_LITERAL_STRING("popover"), eCaseMatters)) {
+  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
+                           NS_LITERAL_STRING("popover"), eCaseMatters)) {
     return Some(wr::RenderRoot::Popover);
   }
   return Nothing();
@@ -1513,7 +1503,8 @@ Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForElement(
 wr::RenderRoot gfxUtils::RecursivelyGetRenderRootForFrame(
     const nsIFrame* aFrame) {
   if (!gfxVars::UseWebRender() ||
-      !StaticPrefs::gfx_webrender_split_render_roots()) {
+      !StaticPrefs::gfx_webrender_split_render_roots() ||
+      !XRE_IsParentProcess()) {
     return wr::RenderRoot::Default;
   }
 
