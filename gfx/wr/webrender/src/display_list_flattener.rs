@@ -1981,6 +1981,48 @@ impl<'a> DisplayListFlattener<'a> {
             self.prim_store.optimize_picture_if_possible(current_pic_index);
         }
 
+        if !stacking_context.composite_ops.filter_primitives.is_empty() {
+            let composite_mode = PictureCompositeMode::SvgFilter(stacking_context.composite_ops.filter_primitives.clone());
+
+            let filter_pic_index = PictureIndex(self.prim_store.pictures
+                .alloc()
+                .init(PicturePrimitive::new_image(
+                    Some(composite_mode.clone()),
+                    Picture3DContext::Out,
+                    stacking_context.pipeline_id,
+                    None,
+                    true,
+                    stacking_context.is_backface_visible,
+                    stacking_context.requested_raster_space,
+                    PrimitiveList::new(
+                        vec![cur_instance.clone()],
+                        &self.interners,
+                    ),
+                    stacking_context.spatial_node_index,
+                    None,
+                    PictureOptions::default(),
+                ))
+            );
+
+            current_pic_index = filter_pic_index;
+            cur_instance = create_prim_instance(
+                current_pic_index,
+                Some(composite_mode).into(),
+                stacking_context.is_backface_visible,
+                ClipChainId::NONE,
+                stacking_context.spatial_node_index,
+                &mut self.interners,
+            );
+
+            if cur_instance.is_chased() {
+                println!("\tis a composite picture for a stacking context with an SVG filter");
+            }
+
+            // Run the optimize pass on this picture, to see if we can
+            // collapse opacity and avoid drawing to an off-screen surface.
+            self.prim_store.optimize_picture_if_possible(current_pic_index);
+        }
+
         // Same for mix-blend-mode, except we can skip if this primitive is the first in the parent
         // stacking context.
         // From https://drafts.fxtf.org/compositing-1/#generalformula, the formula for blending is:
