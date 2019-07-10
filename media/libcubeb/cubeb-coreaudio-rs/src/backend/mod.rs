@@ -2309,7 +2309,6 @@ pub const OPS: Ops = capi_new!(AudioUnitContext, AudioUnitStream);
 #[derive(Debug)]
 pub struct AudioUnitContext {
     _ops: *const Ops,
-    mutex: OwnedCriticalSection,
     // serial_queue will be created by dispatch_queue_create(create_dispatch_queue)
     // without ARC(Automatic Reference Counting) support, so it should be released
     // by dispatch_release(release_dispatch_queue).
@@ -2324,17 +2323,12 @@ impl AudioUnitContext {
     fn new() -> Self {
         Self {
             _ops: &OPS as *const _,
-            mutex: OwnedCriticalSection::new(),
             serial_queue: create_dispatch_queue(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL),
             layout: atomic::Atomic::new(ChannelLayout::UNDEFINED),
             channels: 0,
             latency_controller: Mutex::new(LatencyController::default()),
             devices: Mutex::new(SharedDevices::default()),
         }
-    }
-
-    fn init(&mut self) {
-        self.mutex.init();
     }
 
     fn active_streams(&self) -> u32 {
@@ -2455,8 +2449,7 @@ impl AudioUnitContext {
 impl ContextOps for AudioUnitContext {
     fn init(_context_name: Option<&CStr>) -> Result<Context> {
         set_notification_runloop();
-        let mut ctx = Box::new(AudioUnitContext::new());
-        ctx.init();
+        let ctx = Box::new(AudioUnitContext::new());
         Ok(unsafe { Context::from_ptr(Box::into_raw(ctx) as *mut _) })
     }
 
@@ -2661,9 +2654,6 @@ impl ContextOps for AudioUnitContext {
             );
         }
 
-        let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
-        let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
-
         let mut boxed_stream = Box::new(AudioUnitStream::new(
             self,
             user_ptr,
@@ -2740,8 +2730,6 @@ impl ContextOps for AudioUnitContext {
         if devtype == DeviceType::UNKNOWN {
             return Err(Error::invalid_parameter());
         }
-        let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
-        let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
         if collection_changed_callback.is_some() {
             self.add_devices_changed_listener(devtype, collection_changed_callback, user_ptr)
         } else {
@@ -2752,9 +2740,6 @@ impl ContextOps for AudioUnitContext {
 
 impl Drop for AudioUnitContext {
     fn drop(&mut self) {
-        let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
-        let _lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
-
         {
             let controller = self.latency_controller.lock().unwrap();
             // Disabling this assert for bug 1083664 -- we seem to leak a stream
@@ -3101,8 +3086,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
     }
 
     fn reinit(&mut self, flags: device_flags) -> Result<()> {
-        let mutex_ptr = &mut self.context.mutex as *mut OwnedCriticalSection;
-        let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
         assert!(!self.input_unit.is_null() || !self.output_unit.is_null());
         assert!(
             (self.input_unit.is_null() || flags.contains(device_flags::DEV_INPUT))
@@ -4262,8 +4245,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
     }
 
     fn destroy_internal(&mut self) {
-        self.context.mutex.assert_current_thread_owns();
-
         if self.uninstall_system_changed_callback().is_err() {
             cubeb_log!(
                 "({:p}) Could not uninstall the device changed callback",
@@ -4331,8 +4312,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
 
     fn destroy(&mut self) {
         if !self.shutdown.load(Ordering::SeqCst) {
-            let mutex_ptr = &mut self.context.mutex as *mut OwnedCriticalSection;
-            let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
             self.stop_internal();
             *self.shutdown.get_mut() = true;
         }
@@ -4346,8 +4325,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         // with reinit when un/plug devices
         sync_dispatch(queue, move || {
             let mut stm_guard = also_mutexed_stm.lock().unwrap();
-            let mutex_ptr = &mut stm_guard.context.mutex as *mut OwnedCriticalSection;
-            let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
             stm_guard.destroy_internal();
         });
 
@@ -4365,9 +4342,6 @@ impl<'ctx> Drop for AudioUnitStream<'ctx> {
 
 impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
     fn start(&mut self) -> Result<()> {
-        let mutex_ptr = &mut self.context.mutex as *mut OwnedCriticalSection;
-        let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
-
         *self.shutdown.get_mut() = false;
         *self.draining.get_mut() = false;
 
@@ -4390,9 +4364,6 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         Ok(())
     }
     fn stop(&mut self) -> Result<()> {
-        let mutex_ptr = &mut self.context.mutex as *mut OwnedCriticalSection;
-        let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
-
         *self.shutdown.get_mut() = true;
 
         self.stop_internal();
