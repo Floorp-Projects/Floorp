@@ -1283,6 +1283,37 @@ add_task(async function test_trigger_abusereport_from_aboutaddons_remove() {
   await extension.unload();
 });
 
+add_task(async function test_no_broken_suggestion_on_missing_supportURL() {
+  const EXT_ID = "test-no-author@mochi.test";
+  const extension = await installTestExtension(EXT_ID, "extension", {
+    homepage_url: undefined,
+  });
+
+  const abuseReportEl = await openAbuseReport(EXT_ID);
+  await promiseAbuseReportRendered(abuseReportEl);
+
+  info("Select broken as the abuse reason");
+  abuseReportEl.querySelector("#abuse-reason-broken").checked = true;
+
+  info("Clicking the 'next' button");
+  let oncePanelUpdated = promiseAbuseReportUpdated(abuseReportEl, "submit");
+  EventUtils.synthesizeMouseAtCenter(
+    abuseReportEl._btnNext,
+    {},
+    abuseReportEl.ownerGlobal
+  );
+  await oncePanelUpdated;
+
+  const suggestionEl = abuseReportEl.querySelector(
+    "abuse-report-reason-suggestions"
+  );
+  is(suggestionEl.reason, "broken", "Got the expected suggestion element");
+  ok(suggestionEl.hidden, "suggestion element should be empty");
+
+  await closeAboutAddons();
+  await extension.unload();
+});
+
 add_task(async function test_trigger_abusereport_from_browserAction_remove() {
   const EXT_ID = "test-report-from-browseraction-remove@mochi.test";
   const xpiFile = AddonTestUtils.createTempWebExtensionFile({
