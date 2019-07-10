@@ -10,6 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { requestIdleCallback } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 const SCHEMA_VERSION = 1;
 
@@ -143,7 +146,7 @@ TrackingDBService.prototype = {
 
   async recordContentBlockingLog(inputStream) {
     let json = await this._readAsyncStream(inputStream);
-    await this.saveEvents(json);
+    requestIdleCallback(this.saveEvents.bind(this, json));
   },
 
   identifyType(events) {
