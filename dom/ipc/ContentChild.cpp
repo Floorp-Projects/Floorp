@@ -1874,8 +1874,7 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
   return IPC_OK();
 }
 
-void ContentChild::GetAvailableDictionaries(
-    InfallibleTArray<nsString>& aDictionaries) {
+void ContentChild::GetAvailableDictionaries(nsTArray<nsString>& aDictionaries) {
   aDictionaries = mAvailableDictionaries;
 }
 
@@ -2272,9 +2271,9 @@ bool ContentChild::DeallocPWebrtcGlobalChild(PWebrtcGlobalChild* aActor) {
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvRegisterChrome(
-    InfallibleTArray<ChromePackage>&& packages,
-    InfallibleTArray<SubstitutionMapping>&& resources,
-    InfallibleTArray<OverrideMapping>&& overrides, const nsCString& locale,
+    nsTArray<ChromePackage>&& packages,
+    nsTArray<SubstitutionMapping>&& resources,
+    nsTArray<OverrideMapping>&& overrides, const nsCString& locale,
     const bool& reset) {
   nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
   nsChromeRegistryContent* chromeRegistry =
@@ -2529,7 +2528,7 @@ mozilla::ipc::IPCResult ContentChild::RecvLoadProcessScript(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvAsyncMessage(
-    const nsString& aMsg, InfallibleTArray<CpowEntry>&& aCpows,
+    const nsString& aMsg, nsTArray<CpowEntry>&& aCpows,
     const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentChild::RecvAsyncMessage",
                                              OTHER, aMsg);
@@ -2609,14 +2608,14 @@ mozilla::ipc::IPCResult ContentChild::RecvGeolocationError(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUpdateDictionaryList(
-    InfallibleTArray<nsString>&& aDictionaries) {
+    nsTArray<nsString>&& aDictionaries) {
   mAvailableDictionaries = aDictionaries;
   mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUpdateFontList(
-    InfallibleTArray<SystemFontListEntry>&& aFontList) {
+    nsTArray<SystemFontListEntry>&& aFontList) {
   mFontList = std::move(aFontList);
   gfxPlatform::GetPlatform()->UpdateFontList();
   return IPC_OK();
@@ -3146,7 +3145,7 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateWindow(
 
 PContentPermissionRequestChild*
 ContentChild::AllocPContentPermissionRequestChild(
-    const InfallibleTArray<PermissionRequest>& aRequests,
+    const nsTArray<PermissionRequest>& aRequests,
     const IPC::Principal& aPrincipal, const IPC::Principal& aTopLevelPrincipal,
     const bool& aIsHandlingUserInput, const bool& aDocumentHasUserInput,
     const DOMTimeStamp aPageLoadTimestamp, const TabId& aTabId) {
@@ -3345,7 +3344,7 @@ mozilla::ipc::IPCResult ContentChild::RecvPush(const nsCString& aScope,
 
 mozilla::ipc::IPCResult ContentChild::RecvPushWithData(
     const nsCString& aScope, const IPC::Principal& aPrincipal,
-    const nsString& aMessageId, InfallibleTArray<uint8_t>&& aData) {
+    const nsString& aMessageId, nsTArray<uint8_t>&& aData) {
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Some(aData));
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
