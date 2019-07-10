@@ -678,11 +678,6 @@ class BrowserParent final : public PBrowserParent,
 
   void LayerTreeUpdate(const LayersObserverEpoch& aEpoch, bool aActive);
 
-  void RequestRootPaint(gfx::CrossProcessPaint* aPaint, IntRect aRect,
-                        float aScale, nscolor aBackgroundColor);
-  void RequestSubPaint(gfx::CrossProcessPaint* aPaint, float aScale,
-                       nscolor aBackgroundColor);
-
   mozilla::ipc::IPCResult RecvInvokeDragSession(
       nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
       Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,

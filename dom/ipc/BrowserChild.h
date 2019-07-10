@@ -685,14 +685,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const bool& aEnabled, const bool& aForce,
       const layers::LayersObserverEpoch& aEpoch);
 
-  mozilla::ipc::IPCResult RecvRequestRootPaint(
-      const IntRect& aRect, const float& aScale,
-      const nscolor& aBackgroundColor, RequestRootPaintResolver&& aResolve);
-
-  mozilla::ipc::IPCResult RecvRequestSubPaint(
-      const float& aScale, const nscolor& aBackgroundColor,
-      RequestSubPaintResolver&& aResolve);
-
   mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
                                             const bool& aForDocumentNavigation);
 
