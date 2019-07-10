@@ -936,17 +936,7 @@ class nsDisplayListBuilder {
     return mNeedsDisplayListBuild[aRenderRoot];
   }
 
-  void ComputeDefaultRenderRootRect(LayoutDeviceIntSize aClientSize) {
-    nsRegion cutout;
-    nsRect clientRect(nsPoint(),
-                      mozilla::LayoutDevicePixel::ToAppUnits(aClientSize, 1));
-    cutout.OrWith(clientRect);
-    cutout.SubWith(mozilla::LayoutDevicePixel::ToAppUnits(
-        mRenderRootRects[mozilla::wr::RenderRoot::Content], 1));
-
-    mRenderRootRects[mozilla::wr::RenderRoot::Default] =
-        mozilla::LayoutDevicePixel::FromAppUnits(cutout.GetBounds(), 1);
-  }
+  void ComputeDefaultRenderRootRect(LayoutDeviceIntSize aClientSize);
 
   LayoutDeviceRect GetRenderRootRect(mozilla::wr::RenderRoot aRenderRoot) {
     return mRenderRootRects[aRenderRoot];
