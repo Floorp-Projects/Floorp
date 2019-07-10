@@ -94,7 +94,6 @@ case $cmd in
     cp -pPR \
         ${TOPSRCDIR}/memory/moz.build \
         ${TOPSRCDIR}/memory/build \
-        ${TOPSRCDIR}/memory/fallible \
         ${TOPSRCDIR}/memory/mozalloc \
         ${tgtpath}/memory/
 
