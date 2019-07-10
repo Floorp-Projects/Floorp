@@ -8,14 +8,12 @@
 use glutin::ContextError;
 use glutin::CreationError;
 use glutin::GlAttributes;
-use glutin::GlContext;
 use glutin::GlRequest;
 use glutin::PixelFormat;
 use glutin::PixelFormatRequirements;
 use glutin::ReleaseBehavior;
 use glutin::Robustness;
 use glutin::Api;
-use winit::dpi::PhysicalSize;
 
 use std::ffi::{CStr, CString};
 use std::os::raw::c_int;
@@ -145,38 +143,9 @@ impl Context {
             pixel_format: pixel_format,
         })
     }
-}
-
-impl GlContext for Context {
-    unsafe fn make_current(&self) -> Result<(), ContextError> {
-        let ret = egl::MakeCurrent(self.display, self.surface.get(), self.surface.get(), self.context);
-
-        if ret == 0 {
-            match egl::GetError() as u32 {
-                ffi::egl::CONTEXT_LOST => return Err(ContextError::ContextLost),
-                err => panic!("eglMakeCurrent failed (eglGetError returned 0x{:x})", err)
-            }
-
-        } else {
-            Ok(())
-        }
-    }
 
     #[inline]
-    fn is_current(&self) -> bool {
-        unsafe { egl::GetCurrentContext() == self.context }
-    }
-
-    fn get_proc_address(&self, addr: &str) -> *const () {
-        let addr = CString::new(addr.as_bytes()).unwrap();
-        let addr = addr.as_ptr();
-        unsafe {
-            egl::GetProcAddress(addr) as *const _
-        }
-    }
-
-    #[inline]
-    fn swap_buffers(&self) -> Result<(), ContextError> {
+    pub fn swap_buffers(&self) -> Result<(), ContextError> {
         if self.surface.get() == ffi::egl::NO_SURFACE {
             return Err(ContextError::ContextLost);
         }
@@ -196,18 +165,42 @@ impl GlContext for Context {
         }
     }
 
+    pub unsafe fn make_current(&self) -> Result<(), ContextError> {
+        let ret = egl::MakeCurrent(self.display, self.surface.get(), self.surface.get(), self.context);
+
+        if ret == 0 {
+            match egl::GetError() as u32 {
+                ffi::egl::CONTEXT_LOST => return Err(ContextError::ContextLost),
+                err => panic!("eglMakeCurrent failed (eglGetError returned 0x{:x})", err)
+            }
+
+        } else {
+            Ok(())
+        }
+    }
+
     #[inline]
-    fn get_api(&self) -> Api {
+    pub fn is_current(&self) -> bool {
+        unsafe { egl::GetCurrentContext() == self.context }
+    }
+
+    pub fn get_proc_address(&self, addr: &str) -> *const () {
+        let addr = CString::new(addr.as_bytes()).unwrap();
+        let addr = addr.as_ptr();
+        unsafe {
+            egl::GetProcAddress(addr) as *const _
+        }
+    }
+
+    #[inline]
+    pub fn get_api(&self) -> Api {
         self.api
     }
 
     #[inline]
-    fn get_pixel_format(&self) -> PixelFormat {
+    pub fn get_pixel_format(&self) -> PixelFormat {
         self.pixel_format.clone()
     }
-
-    #[inline]
-    fn resize(&self, _: PhysicalSize) {}
 }
 
 unsafe impl Send for Context {}
