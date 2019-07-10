@@ -23,7 +23,7 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "nsCOMPtr.h"                // for already_AddRefed
 #include "nsRegion.h"                // for nsIntRegion
-#include "nsTArrayForwardDeclare.h"  // for InfallibleTArray
+#include "nsTArrayForwardDeclare.h"  // for nsTArray
 #include "nsIWidget.h"
 #include <vector>
 
@@ -258,8 +258,8 @@ class ShadowLayerForwarder final : public LayersIPCActor,
                       const mozilla::TimeStamp& aRefreshStart,
                       const mozilla::TimeStamp& aTransactionStart,
                       bool aContainsSVG, const nsCString& aURL, bool* aSent,
-                      const InfallibleTArray<CompositionPayload>& aPayload =
-                          InfallibleTArray<CompositionPayload>());
+                      const nsTArray<CompositionPayload>& aPayload =
+                          nsTArray<CompositionPayload>());
 
   /**
    * Set an actor through which layer updates will be pushed.
@@ -425,7 +425,7 @@ class ShadowLayerForwarder final : public LayersIPCActor,
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;
   bool mWindowOverlayChanged;
-  InfallibleTArray<PluginWindowData> mPluginWindowData;
+  nsTArray<PluginWindowData> mPluginWindowData;
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
   uint64_t mNextLayerHandle;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;

@@ -145,7 +145,7 @@ void GLBlitTextureImageHelper::BlitTextureImage(TextureImage* aSrc,
 
         // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
         // from the 0..1 that it comes out of decompose
-        InfallibleTArray<RectTriangles::coord>& coords = rects.vertCoords();
+        nsTArray<RectTriangles::coord>& coords = rects.vertCoords();
 
         for (unsigned int i = 0; i < coords.Length(); ++i) {
           coords[i].x = (coords[i].x * (dx1 - dx0)) + dx0;
