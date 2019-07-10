@@ -235,6 +235,35 @@ class TimingDistributionsStorageEngineTest {
     }
 
     @Test
+    fun `underflow values accumulate in the first bucket`() {
+        // Define a timing distribution metric, which will be stored in "store1".
+        val metric = TimingDistributionMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.User,
+            name = "test_timing_distribution",
+            sendInPings = listOf("store1"),
+            timeUnit = TimeUnit.Millisecond
+        )
+
+        // Attempt to accumulate an overflow sample
+        TimingManager.getElapsedNanos = { 0 }
+        val timerId = metric.start()
+        TimingManager.getElapsedNanos = { 0 }
+        metric.stopAndAccumulate(timerId)
+
+        // Check that timing distribution was recorded.
+        assertTrue("Accumulating underflow values records data",
+            metric.testHasValue())
+
+        // Make sure that the underflow landed in the correct (first) bucket
+        val snapshot = metric.testGetValue()
+        assertEquals("Accumulating overflow values should increment underflow bucket",
+            1L,
+            snapshot.values[0])
+    }
+
+    @Test
     fun `overflow values accumulate in the last bucket`() {
         // Define a timing distribution metric, which will be stored in "store1".
         val metric = TimingDistributionMetricType(
