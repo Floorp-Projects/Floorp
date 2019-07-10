@@ -88,7 +88,7 @@ class UDPSocketChild : public mozilla::net::PUDPSocketChild,
       const UDPAddressInfo& aAddressInfo);
   mozilla::ipc::IPCResult RecvCallbackClosed();
   mozilla::ipc::IPCResult RecvCallbackReceivedData(
-      const UDPAddressInfo& aAddressInfo, InfallibleTArray<uint8_t>&& aData);
+      const UDPAddressInfo& aAddressInfo, nsTArray<uint8_t>&& aData);
   mozilla::ipc::IPCResult RecvCallbackError(const nsCString& aMessage,
                                             const nsCString& aFilename,
                                             const uint32_t& aLineNumber);
