@@ -6,7 +6,7 @@
 "use strict";
 
 /* exported attachUpdateHandler, gBrowser, getBrowserElement, isCorrectlySigned,
- *          isDisabledUnsigned, loadReleaseNotes, openOptionsInTab,
+ *          isDisabledUnsigned, isPending, loadReleaseNotes, openOptionsInTab,
  *          promiseEvent, shouldShowPermissionsPrompt, showPermissionsPrompt */
 
 const { AddonSettings } = ChromeUtils.import(
@@ -200,4 +200,9 @@ function isDisabledUnsigned(addon) {
       ? AddonSettings.LANGPACKS_REQUIRE_SIGNING
       : AddonSettings.REQUIRE_SIGNING;
   return signingRequired && !isCorrectlySigned(addon);
+}
+
+function isPending(addon, action) {
+  const amAction = AddonManager["PENDING_" + action.toUpperCase()];
+  return !!(addon.pendingOperations & amAction);
 }
