@@ -41,6 +41,10 @@ var XULRuntime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
 // Expand the amount of information available in error logs
 Services.prefs.setBoolPref("browser.search.log", true);
 
+// Some tests load tons of extensions and will timeout, disable the timeout
+// here to allow tests to be slow.
+Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
+
 // The geo-specific search tests assume certain prefs are already setup, which
 // might not be true when run in comm-central etc.  So create them here.
 Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
