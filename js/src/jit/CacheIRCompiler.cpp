@@ -1318,7 +1318,7 @@ bool CacheIRCompiler::emitGuardIsNumber() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsObject() {
+bool CacheIRCompiler::emitGuardToObject() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
   if (allocator.knownType(inputId) == JSVAL_TYPE_OBJECT) {
@@ -1434,7 +1434,7 @@ bool CacheIRCompiler::emitGuardIsObjectOrNull() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsBoolean() {
+bool CacheIRCompiler::emitGuardToBoolean() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
   Register output = allocator.defineRegister(masm, reader.int32OperandId());
@@ -1456,7 +1456,7 @@ bool CacheIRCompiler::emitGuardIsBoolean() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsString() {
+bool CacheIRCompiler::emitGuardToString() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
   if (allocator.knownType(inputId) == JSVAL_TYPE_STRING) {
@@ -1472,7 +1472,7 @@ bool CacheIRCompiler::emitGuardIsString() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsSymbol() {
+bool CacheIRCompiler::emitGuardToSymbol() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
   if (allocator.knownType(inputId) == JSVAL_TYPE_SYMBOL) {
@@ -1488,7 +1488,7 @@ bool CacheIRCompiler::emitGuardIsSymbol() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsBigInt() {
+bool CacheIRCompiler::emitGuardToBigInt() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
   if (allocator.knownType(inputId) == JSVAL_TYPE_BIGINT) {
@@ -1504,7 +1504,7 @@ bool CacheIRCompiler::emitGuardIsBigInt() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsInt32() {
+bool CacheIRCompiler::emitGuardToInt32() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
   Register output = allocator.defineRegister(masm, reader.int32OperandId());
@@ -1526,7 +1526,7 @@ bool CacheIRCompiler::emitGuardIsInt32() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsInt32Index() {
+bool CacheIRCompiler::emitGuardToInt32Index() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
   Register output = allocator.defineRegister(masm, reader.int32OperandId());

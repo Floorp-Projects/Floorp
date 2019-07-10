@@ -198,19 +198,19 @@ extern const uint32_t ArgLengths[];
 #endif
 
 #define CACHE_IR_OPS(_) /****************************************************/ \
-  _(GuardIsObject, Id)                                                         \
+  _(GuardToObject, Id)                                                         \
   _(GuardIsObjectOrNull, Id)                                                   \
   _(GuardIsNullOrUndefined, Id)                                                \
   _(GuardIsNotNullOrUndefined, Id)                                             \
   _(GuardIsNull, Id)                                                           \
   _(GuardIsUndefined, Id)                                                      \
-  _(GuardIsBoolean, Id, Id)                                                    \
-  _(GuardIsString, Id)                                                         \
-  _(GuardIsSymbol, Id)                                                         \
-  _(GuardIsBigInt, Id)                                                         \
+  _(GuardToBoolean, Id, Id)                                                    \
+  _(GuardToString, Id)                                                         \
+  _(GuardToSymbol, Id)                                                         \
+  _(GuardToBigInt, Id)                                                         \
   _(GuardIsNumber, Id)                                                         \
-  _(GuardIsInt32, Id, Id)                                                      \
-  _(GuardIsInt32Index, Id, Id)                                                 \
+  _(GuardToInt32, Id, Id)                                                      \
+  _(GuardToInt32Index, Id, Id)                                                 \
   _(GuardType, Id, Byte)                                                       \
   _(GuardShape, Id, Field)                                                     \
   _(GuardGroup, Id, Field)                                                     \
@@ -802,43 +802,43 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   // shouldn't bake in stub values.
   StubField readStubFieldForIon(uint32_t offset, StubField::Type type) const;
 
-  ObjOperandId guardIsObject(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsObject, val);
+  ObjOperandId guardToObject(ValOperandId val) {
+    writeOpWithOperandId(CacheOp::GuardToObject, val);
     return ObjOperandId(val.id());
   }
 
-  Int32OperandId guardIsBoolean(ValOperandId val) {
+  Int32OperandId guardToBoolean(ValOperandId val) {
     Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardIsBoolean, val);
+    writeOpWithOperandId(CacheOp::GuardToBoolean, val);
     writeOperandId(res);
     return res;
   }
 
-  StringOperandId guardIsString(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsString, val);
+  StringOperandId guardToString(ValOperandId val) {
+    writeOpWithOperandId(CacheOp::GuardToString, val);
     return StringOperandId(val.id());
   }
 
-  SymbolOperandId guardIsSymbol(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsSymbol, val);
+  SymbolOperandId guardToSymbol(ValOperandId val) {
+    writeOpWithOperandId(CacheOp::GuardToSymbol, val);
     return SymbolOperandId(val.id());
   }
 
-  BigIntOperandId guardIsBigInt(ValOperandId val) {
-    writeOpWithOperandId(CacheOp::GuardIsBigInt, val);
+  BigIntOperandId guardToBigInt(ValOperandId val) {
+    writeOpWithOperandId(CacheOp::GuardToBigInt, val);
     return BigIntOperandId(val.id());
   }
 
-  Int32OperandId guardIsInt32(ValOperandId val) {
+  Int32OperandId guardToInt32(ValOperandId val) {
     Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardIsInt32, val);
+    writeOpWithOperandId(CacheOp::GuardToInt32, val);
     writeOperandId(res);
     return res;
   }
 
-  Int32OperandId guardIsInt32Index(ValOperandId val) {
+  Int32OperandId guardToInt32Index(ValOperandId val) {
     Int32OperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::GuardIsInt32Index, val);
+    writeOpWithOperandId(CacheOp::GuardToInt32Index, val);
     writeOperandId(res);
     return res;
   }
