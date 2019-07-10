@@ -255,7 +255,7 @@ class ObjectRealm {
 
   using IteratorCache =
       js::HashSet<js::PropertyIteratorObject*, js::IteratorHashPolicy,
-                  js::SystemAllocPolicy>;
+                  js::ZoneAllocPolicy>;
   IteratorCache iteratorCache;
 
   static inline ObjectRealm& get(const JSObject* obj);
@@ -330,7 +330,7 @@ class JS::Realm : public JS::shadow::Realm {
   // Names are only removed from this list by a |delete IdentifierReference|
   // that successfully removes that global property.
   using VarNamesSet =
-      JS::GCHashSet<JSAtom*, js::DefaultHasher<JSAtom*>, js::SystemAllocPolicy>;
+      JS::GCHashSet<JSAtom*, js::DefaultHasher<JSAtom*>, js::ZoneAllocPolicy>;
   VarNamesSet varNames_;
 
   friend class js::AutoSetNewObjectMetadata;

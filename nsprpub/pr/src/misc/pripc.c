@@ -17,7 +17,7 @@
  * A POSIX IPC name must begin with a '/'.
  * A POSIX IPC name on Solaris cannot contain any '/' except
  * the required leading '/'.
- * A POSIX IPC name on HP-UX and OSF1 must be a valid pathname
+ * A POSIX IPC name on HP-UX must be a valid pathname
  * in the file system.
  *
  * The ftok() function for System V IPC requires a valid pathname

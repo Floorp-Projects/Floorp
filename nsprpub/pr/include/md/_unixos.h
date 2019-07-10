@@ -46,13 +46,11 @@
  */
 #include <sys/time.h>
 #include <sys/types.h>
-#if defined(AIX) || defined(SYMBIAN)
+#if defined(AIX)
 #include <sys/select.h>
 #endif
 
-#ifndef SYMBIAN
 #define HAVE_NETINET_TCP_H
-#endif
 
 #define _PR_HAVE_O_APPEND
 
@@ -261,9 +259,7 @@ extern void		_MD_Wakeup_CPUs(void);
 #define _MD_CLEANUP_BEFORE_EXIT()
 #endif
 
-#ifndef IRIX
 #define _MD_EXIT(status)		_exit(status)
-#endif
 
 /************************************************************************/
 

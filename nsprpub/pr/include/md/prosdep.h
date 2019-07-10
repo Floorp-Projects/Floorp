@@ -49,14 +49,8 @@ PR_BEGIN_EXTERN_C
 #elif defined(HPUX)
 #include "md/_hpux.h"
 
-#elif defined(IRIX)
-#include "md/_irix.h"
-
 #elif defined(LINUX) || defined(__GNU__) || defined(__GLIBC__)
 #include "md/_linux.h"
-
-#elif defined(OSF1)
-#include "md/_osf1.h"
 
 #elif defined(DARWIN)
 #include "md/_darwin.h"
@@ -70,9 +64,6 @@ PR_BEGIN_EXTERN_C
 #elif defined(UNIXWARE)
 #include "md/_unixware.h"
 
-#elif defined(DGUX)
-#include "md/_dgux.h"
-
 #elif defined(QNX)
 #include "md/_qnx.h"
 
@@ -82,9 +73,6 @@ PR_BEGIN_EXTERN_C
 #elif defined(RISCOS)
 #include "md/_riscos.h"
 
-#elif defined(SYMBIAN)
-#include "md/_symbian.h"
-
 #else
 #error unknown Unix flavor
 
@@ -93,14 +81,9 @@ PR_BEGIN_EXTERN_C
 #include "md/_unixos.h"
 #include "md/_unix_errors.h"
 
-#elif defined(XP_BEOS)
-
-#include "md/_beos.h"
-#include "md/_unix_errors.h"
-
 #else
 
-#error "The platform is not BeOS, Unix, Windows, or Mac"
+#error "The platform is not Unix, Windows, or Mac"
 
 #endif
 

@@ -177,13 +177,13 @@ static PRBool _pr_ipv6_v6only_on_by_default;
 #define _PRSelectFdSetArg_t int *
 #elif defined(AIX4_1)
 #define _PRSelectFdSetArg_t void *
-#elif defined(IRIX) || (defined(AIX) && !defined(AIX4_1)) \
-    || defined(OSF1) || defined(SOLARIS) \
+#elif (defined(AIX) && !defined(AIX4_1)) \
+    || defined(SOLARIS) \
     || defined(HPUX10_30) || defined(HPUX11) \
     || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
     || defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
     || defined(BSDI) || defined(NTO) || defined(DARWIN) \
-    || defined(UNIXWARE) || defined(RISCOS) || defined(SYMBIAN)
+    || defined(UNIXWARE) || defined(RISCOS)
 #define _PRSelectFdSetArg_t fd_set *
 #else
 #error "Cannot determine architecture"
@@ -403,7 +403,7 @@ PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
 
 #if defined(_PR_POLL_WITH_SELECT)
 /*
- * OSF1 and HPUX report the POLLHUP event for a socket when the
+ * HPUX report the POLLHUP event for a socket when the
  * shutdown(SHUT_WR) operation is called for the remote end, even though
  * the socket is still writeable. Use select(), instead of poll(), to
  * workaround this problem.
@@ -1254,26 +1254,8 @@ static PRStatus pt_Close(PRFileDesc *fd)
     {
         if (-1 == close(fd->secret->md.osfd))
         {
-#ifdef OSF1
-            /*
-             * Bug 86941: On Tru64 UNIX V5.0A and V5.1, the close()
-             * system call, when called to close a TCP socket, may
-             * return -1 with errno set to EINVAL but the system call
-             * does close the socket successfully.  An application
-             * may safely ignore the EINVAL error.  This bug is fixed
-             * on Tru64 UNIX V5.1A and later.  The defect tracking
-             * number is QAR 81431.
-             */
-            if (PR_DESC_SOCKET_TCP != fd->methods->file_type
-            || EINVAL != errno)
-            {
-                pt_MapError(_PR_MD_MAP_CLOSE_ERROR, errno);
-                return PR_FAILURE;
-            }
-#else
             pt_MapError(_PR_MD_MAP_CLOSE_ERROR, errno);
             return PR_FAILURE;
-#endif
         }
         fd->secret->state = _PR_FILEDESC_CLOSED;
     }
@@ -1647,17 +1629,8 @@ static PRFileDesc* pt_Accept(
     PRFileDesc *newfd = NULL;
     PRIntn syserrno, osfd = -1;
     pt_SockLen addr_len = sizeof(PRNetAddr);
-#ifdef SYMBIAN
-    PRNetAddr dummy_addr;
-#endif
 
     if (pt_TestAbort()) return newfd;
-
-#ifdef SYMBIAN
-    /* On Symbian OS, accept crashes if addr is NULL. */
-    if (!addr)
-        addr = &dummy_addr;
-#endif
 
 #ifdef _PR_STRICT_ADDR_LEN
     if (addr)
@@ -1835,13 +1808,7 @@ static PRInt32 pt_Recv(
         osflags = 0;
     else if (PR_MSG_PEEK == flags)
     {
-#ifdef SYMBIAN
-        /* MSG_PEEK doesn't work as expected. */
-        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-        return bytes;
-#else
         osflags = MSG_PEEK;
-#endif
     }
     else
     {
@@ -3352,12 +3319,11 @@ static PRIOMethods _pr_socketpollfd_methods = {
     (PRReservedFN)_PR_InvalidInt
 };
 
-#if defined(HPUX) || defined(OSF1) || defined(SOLARIS) || defined (IRIX) \
+#if defined(HPUX) || defined(SOLARIS) \
     || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
     || defined(AIX) || defined(FREEBSD) || defined(NETBSD) \
     || defined(OPENBSD) || defined(BSDI) || defined(NTO) \
-    || defined(DARWIN) || defined(UNIXWARE) || defined(RISCOS) \
-    || defined(SYMBIAN)
+    || defined(DARWIN) || defined(UNIXWARE) || defined(RISCOS)
 #define _PR_FCNTL_FLAGS O_NONBLOCK
 #else
 #error "Can't determine architecture"
@@ -4106,7 +4072,7 @@ retry:
 
 #if defined(_PR_POLL_WITH_SELECT)
 /*
- * OSF1 and HPUX report the POLLHUP event for a socket when the
+ * HPUX report the POLLHUP event for a socket when the
  * shutdown(SHUT_WR) operation is called for the remote end, even though
  * the socket is still writeable. Use select(), instead of poll(), to
  * workaround this problem.
@@ -4483,84 +4449,6 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenTCPSocket(PRIntn af)
 
 PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2])
 {
-#ifdef SYMBIAN
-    /*
-     * For the platforms that don't have socketpair.
-     *
-     * Copied from prsocket.c, with the parameter f[] renamed fds[] and the
-     * _PR_CONNECT_DOES_NOT_BIND code removed.
-     */
-    PRFileDesc *listenSock;
-    PRNetAddr selfAddr, peerAddr;
-    PRUint16 port;
-
-    fds[0] = fds[1] = NULL;
-    listenSock = PR_NewTCPSocket();
-    if (listenSock == NULL) {
-        goto failed;
-    }
-    PR_InitializeNetAddr(PR_IpAddrLoopback, 0, &selfAddr); /* BugZilla: 35408 */
-    if (PR_Bind(listenSock, &selfAddr) == PR_FAILURE) {
-        goto failed;
-    }
-    if (PR_GetSockName(listenSock, &selfAddr) == PR_FAILURE) {
-        goto failed;
-    }
-    port = ntohs(selfAddr.inet.port);
-    if (PR_Listen(listenSock, 5) == PR_FAILURE) {
-        goto failed;
-    }
-    fds[0] = PR_NewTCPSocket();
-    if (fds[0] == NULL) {
-        goto failed;
-    }
-    PR_InitializeNetAddr(PR_IpAddrLoopback, port, &selfAddr);
-
-    /*
-     * Only a thread is used to do the connect and accept.
-     * I am relying on the fact that PR_Connect returns
-     * successfully as soon as the connect request is put
-     * into the listen queue (but before PR_Accept is called).
-     * This is the behavior of the BSD socket code.  If
-     * connect does not return until accept is called, we
-     * will need to create another thread to call connect.
-     */
-    if (PR_Connect(fds[0], &selfAddr, PR_INTERVAL_NO_TIMEOUT)
-            == PR_FAILURE) {
-        goto failed;
-    }
-    /*
-     * A malicious local process may connect to the listening
-     * socket, so we need to verify that the accepted connection
-     * is made from our own socket fds[0].
-     */
-    if (PR_GetSockName(fds[0], &selfAddr) == PR_FAILURE) {
-        goto failed;
-    }
-    fds[1] = PR_Accept(listenSock, &peerAddr, PR_INTERVAL_NO_TIMEOUT);
-    if (fds[1] == NULL) {
-        goto failed;
-    }
-    if (peerAddr.inet.port != selfAddr.inet.port) {
-        /* the connection we accepted is not from fds[0] */
-        PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
-        goto failed;
-    }
-    PR_Close(listenSock);
-    return PR_SUCCESS;
-
-failed:
-    if (listenSock) {
-        PR_Close(listenSock);
-    }
-    if (fds[0]) {
-        PR_Close(fds[0]);
-    }
-    if (fds[1]) {
-        PR_Close(fds[1]);
-    }
-    return PR_FAILURE;
-#else
     PRInt32 osfd[2];
 
     if (pt_TestAbort()) return PR_FAILURE;
@@ -4583,7 +4471,6 @@ failed:
         return PR_FAILURE;
     }
     return PR_SUCCESS;
-#endif
 }  /* PR_NewTCPSocketPair */
 
 PR_IMPLEMENT(PRStatus) PR_CreatePipe(
@@ -4812,7 +4699,7 @@ PR_IMPLEMENT(PRStatus) PR_UnlockFile(PRFileDesc *fd)
 
 PR_IMPLEMENT(PRInt32) PR_GetSysfdTableMax(void)
 {
-#if defined(AIX) || defined(SYMBIAN)
+#if defined(AIX)
     return sysconf(_SC_OPEN_MAX);
 #else
     struct rlimit rlim;
@@ -4826,7 +4713,7 @@ PR_IMPLEMENT(PRInt32) PR_GetSysfdTableMax(void)
 
 PR_IMPLEMENT(PRInt32) PR_SetSysfdTableSize(PRIntn table_size)
 {
-#if defined(AIX) || defined(SYMBIAN)
+#if defined(AIX)
     return -1;
 #else
     struct rlimit rlim;
