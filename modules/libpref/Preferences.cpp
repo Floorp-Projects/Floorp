@@ -4500,24 +4500,19 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
     //
     // we generate checking code like this:
     //
-    //   MOZ_ASSERT(StaticPrefs::UpdatePolicy::$POLICY ==
-    //                StaticPrefs::UpdatePolicy::Skip ||
-    //              PreferencesInternalMethods::GetPref<int32_t>(name, value) ==
+    //   MOZ_ASSERT(PreferencesInternalMethods::GetPref<int32_t>(name, value) ==
     //              StaticPrefs::my_pref(),
     //              "Incorrect cached value for my.pref");
     //
     // This checks that all VarCache preferences match their current values.
     // This can currently fail if the default value of a static VarCache
     // preference is changed in a preference file or at runtime, rather than in
-    // StaticPrefList_*.h. StaticPrefs with a Skip policy aren't updated with
-    // an overridden value, and shouldn't be checked.
+    // StaticPrefList*.h.
     //
 #  define PREF(name, cpp_type, value)
-#  define VARCACHE_PREF(policy, name, id, cpp_type, value)                     \
-    MOZ_ASSERT(StaticPrefs::UpdatePolicy::policy ==                            \
-                       StaticPrefs::UpdatePolicy::Skip ||                      \
-                   PreferencesInternalMethods::GetPref<StripAtomic<cpp_type>>( \
-                       name, value) == StaticPrefs::id(),                      \
+#  define VARCACHE_PREF(policy, name, id, cpp_type, value)                 \
+    MOZ_ASSERT(PreferencesInternalMethods::GetPref<StripAtomic<cpp_type>>( \
+                   name, value) == StaticPrefs::id(),                      \
                "Incorrect cached value for " name);
 #  include "mozilla/StaticPrefListAll.h"
 #  undef PREF
@@ -5394,7 +5389,7 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
   // 1- On startup, `Once` prefs will be initialized lazily in InitOncePrefs(),
   // 2- After that, `Once` prefs are immutable.
 
-  if (aSetValue && MOZ_LIKELY(aPolicy != StaticPrefs::UpdatePolicy::Skip)) {
+  if (aSetValue) {
     SetPref(PromiseFlatCString(aName).get(), aDefaultValue);
     if (MOZ_LIKELY(aPolicy == StaticPrefs::UpdatePolicy::Live)) {
       *aCache = aDefaultValue;
@@ -5634,7 +5629,7 @@ static void InitStaticPrefsFromShared() {
   //
   // we generate an initialization like this:
   //
-  //   if (UpdatePolicy::$POLICY != UpdatePolicy::Skip) {
+  //   {
   //     int32_t val;
   //     nsresult rv;
   //     if (UpdatePolicy::$POLICY == UpdatePolicy::Once) {
@@ -5649,7 +5644,7 @@ static void InitStaticPrefsFromShared() {
   //
 #define PREF(name, cpp_type, value)
 #define VARCACHE_PREF(policy, name, id, cpp_type, value)               \
-  if (UpdatePolicy::policy != UpdatePolicy::Skip) {                    \
+  {                                                                    \
     StripAtomic<cpp_type> val;                                         \
     nsresult rv;                                                       \
     if (UpdatePolicy::policy == UpdatePolicy::Once) {                  \
