@@ -1619,7 +1619,7 @@ var UITour = {
       let panel = aWindow.gIdentityHandler._identityPopup;
       panel.hidePopup();
     } else if (aMenuName == "urlbar") {
-      aWindow.gURLBar.closePopup();
+      aWindow.gURLBar.view.close();
     } else if (aMenuName == "pageActionPanel") {
       aWindow.BrowserPageActions.panelNode.hidePopup();
     }
