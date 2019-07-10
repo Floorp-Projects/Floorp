@@ -301,15 +301,6 @@ class UrlbarInput {
     }
   }
 
-  /**
-   * This exists for legacy compatibility, and can be removed once the old
-   * urlbar code goes away, by changing callers. Internal consumers should use
-   * view.close().
-   */
-  closePopup() {
-    this.view.close();
-  }
-
   focus() {
     this.inputField.focus();
   }
