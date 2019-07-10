@@ -1039,7 +1039,7 @@ void nsMultiplexInputStream::SerializeInternal(
 
   uint32_t streamCount = mStreams.Length();
   if (streamCount) {
-    InfallibleTArray<InputStreamParams>& streams = params.streams();
+    nsTArray<InputStreamParams>& streams = params.streams();
 
     streams.SetCapacity(streamCount);
     for (uint32_t index = 0; index < streamCount; index++) {
@@ -1081,7 +1081,7 @@ bool nsMultiplexInputStream::Deserialize(
   const MultiplexInputStreamParams& params =
       aParams.get_MultiplexInputStreamParams();
 
-  const InfallibleTArray<InputStreamParams>& streams = params.streams();
+  const nsTArray<InputStreamParams>& streams = params.streams();
 
   uint32_t streamCount = streams.Length();
   for (uint32_t index = 0; index < streamCount; index++) {
