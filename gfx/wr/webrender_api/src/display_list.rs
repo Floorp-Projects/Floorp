@@ -131,6 +131,7 @@ pub struct BuiltDisplayListIter<'a> {
     cur_glyphs: ItemRange<'a, GlyphInstance>,
     cur_filters: ItemRange<'a, di::FilterOp>,
     cur_filter_data: Vec<TempFilterData<'a>>,
+    cur_filter_primitives: ItemRange<'a, di::FilterPrimitive>,
     cur_clip_chain_items: ItemRange<'a, di::ClipId>,
     cur_complex_clip: ItemRange<'a, di::ComplexClipRegion>,
     peeking: Peek,
@@ -297,6 +298,7 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_glyphs: ItemRange::default(),
             cur_filters: ItemRange::default(),
             cur_filter_data: Vec::new(),
+            cur_filter_primitives: ItemRange::default(),
             cur_clip_chain_items: ItemRange::default(),
             cur_complex_clip: ItemRange::default(),
             peeking: Peek::NotPeeking,
@@ -335,7 +337,8 @@ impl<'a> BuiltDisplayListIter<'a> {
             match self.cur_item {
                 SetGradientStops |
                 SetFilterOps |
-                SetFilterData => {
+                SetFilterData |
+                SetFilterPrimitives => {
                     // These are marker items for populating other display items, don't yield them.
                     continue;
                 }
@@ -390,6 +393,10 @@ impl<'a> BuiltDisplayListIter<'a> {
                 self.debug_stats.log_slice("set_filter_data.g_values", &data.g_values);
                 self.debug_stats.log_slice("set_filter_data.b_values", &data.b_values);
                 self.debug_stats.log_slice("set_filter_data.a_values", &data.a_values);
+            }
+            SetFilterPrimitives => {
+                self.cur_filter_primitives = skip_slice::<di::FilterPrimitive>(&mut self.data);
+                self.debug_stats.log_slice("set_filter_primitives.primitives", &self.cur_filter_primitives);
             }
             ClipChain(_) => {
                 self.cur_clip_chain_items = skip_slice::<di::ClipId>(&mut self.data);
@@ -502,6 +509,10 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
         &self.iter.cur_filter_data
     }
 
+    pub fn filter_primitives(&self) -> ItemRange<di::FilterPrimitive> {
+        self.iter.cur_filter_primitives
+    }
+
     pub fn clip_chain_items(&self) -> ItemRange<di::ClipId> {
         self.iter.cur_clip_chain_items
     }
@@ -602,6 +613,9 @@ impl Serialize for BuiltDisplayList {
                         a_values: temp_filter_data.a_values.iter().collect(),
                     })
                 },
+                Real::SetFilterPrimitives => Debug::SetFilterPrimitives(
+                    item.iter.cur_filter_primitives.iter().collect()
+                ),
                 Real::SetGradientStops => Debug::SetGradientStops(
                     item.iter.cur_stops.iter().collect()
                 ),
@@ -700,6 +714,10 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     DisplayListBuilder::push_iter_impl(&mut temp, filter_data.a_values);
                     Real::SetFilterData
                 },
+                Debug::SetFilterPrimitives(filter_primitives) => {
+                    DisplayListBuilder::push_iter_impl(&mut temp, filter_primitives);
+                    Real::SetFilterPrimitives
+                }
                 Debug::SetGradientStops(stops) => {
                     DisplayListBuilder::push_iter_impl(&mut temp, stops);
                     Real::SetGradientStops
@@ -1425,6 +1443,7 @@ impl DisplayListBuilder {
         mix_blend_mode: di::MixBlendMode,
         filters: &[di::FilterOp],
         filter_datas: &[di::FilterData],
+        filter_primitives: &[di::FilterPrimitive],
         raster_space: di::RasterSpace,
         cache_tiles: bool,
     ) {
@@ -1443,6 +1462,11 @@ impl DisplayListBuilder {
             self.push_iter(&filter_data.g_values);
             self.push_iter(&filter_data.b_values);
             self.push_iter(&filter_data.a_values);
+        }
+
+        if !filter_primitives.is_empty() {
+            self.push_item(&di::DisplayItem::SetFilterPrimitives);
+            self.push_iter(filter_primitives);
         }
 
         let item = di::DisplayItem::PushStackingContext(di::PushStackingContextDisplayItem {
@@ -1468,7 +1492,7 @@ impl DisplayListBuilder {
         spatial_id: di::SpatialId,
         is_backface_visible: bool,
     ) {
-        self.push_simple_stacking_context_with_filters(origin, spatial_id, is_backface_visible, &[], &[]);
+        self.push_simple_stacking_context_with_filters(origin, spatial_id, is_backface_visible, &[], &[], &[]);
     }
 
     /// Helper for examples/ code.
@@ -1479,6 +1503,7 @@ impl DisplayListBuilder {
         is_backface_visible: bool,
         filters: &[di::FilterOp],
         filter_datas: &[di::FilterData],
+        filter_primitives: &[di::FilterPrimitive],
     ) {
         self.push_stacking_context(
             origin,
@@ -1489,6 +1514,7 @@ impl DisplayListBuilder {
             di::MixBlendMode::Normal,
             filters,
             filter_datas,
+            filter_primitives,
             di::RasterSpace::Screen,
             /* cache_tiles = */ false,
         );

@@ -121,6 +121,7 @@ pub enum DisplayItem {
     SetGradientStops,
     SetFilterOps,
     SetFilterData,
+    SetFilterPrimitives,
 
     // These marker items terminate a scope introduced by a previous item.
     PopReferenceFrame,
@@ -159,6 +160,7 @@ pub enum DebugDisplayItem {
     SetGradientStops(Vec<GradientStop>),
     SetFilterOps(Vec<FilterOp>),
     SetFilterData(FilterData),
+    SetFilterPrimitives(Vec<FilterPrimitive>),
 
     PopReferenceFrame,
     PopStackingContext,
@@ -638,7 +640,7 @@ pub struct StackingContext {
     pub raster_space: RasterSpace,
     /// True if picture caching should be used on this stacking context.
     pub cache_tiles: bool,
-} // IMPLICIT: filters: Vec<FilterOp>, filter_datas: Vec<FilterData>
+} // IMPLICIT: filters: Vec<FilterOp>, filter_datas: Vec<FilterData>, filter_primitives: Vec<FilterPrimitive>
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -697,6 +699,34 @@ pub enum MixBlendMode {
     Luminosity = 15,
 }
 
+/// An input to a SVG filter primitive.
+#[repr(C)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub enum FilterPrimitiveInput {
+    /// The input is the original graphic that the filter is being applied to.
+    Original,
+    /// The input is the output of the previous filter primitive in the filter primitive chain.
+    Previous,
+    /// The input is the output of the filter primitive at the given index in the filter primitive chain.
+    OutputOfPrimitiveIndex(usize),
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct BlendPrimitive {
+    pub input1: FilterPrimitiveInput,
+    pub input2: FilterPrimitiveInput,
+    pub mode: MixBlendMode,
+}
+
+/// SVG Filter Primitive.
+#[repr(C)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub enum FilterPrimitive {
+    Blend(BlendPrimitive),
+}
+
+/// CSS filter.
 #[repr(C)]
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum FilterOp {
@@ -1162,6 +1192,7 @@ impl DisplayItem {
             DisplayItem::PushStackingContext(..) => "push_stacking_context",
             DisplayItem::SetFilterOps => "set_filter_ops",
             DisplayItem::SetFilterData => "set_filter_data",
+            DisplayItem::SetFilterPrimitives => "set_filter_primitives",
             DisplayItem::RadialGradient(..) => "radial_gradient",
             DisplayItem::Rectangle(..) => "rectangle",
             DisplayItem::ScrollFrame(..) => "scroll_frame",
