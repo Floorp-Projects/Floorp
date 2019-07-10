@@ -2357,7 +2357,7 @@ impl AudioUnitContext {
         devtype: DeviceType,
         collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
         user_ptr: *mut c_void,
-    ) -> OSStatus {
+    ) -> Result<()> {
         assert!(devtype.intersects(DeviceType::INPUT | DeviceType::OUTPUT));
         assert!(collection_changed_callback.is_some());
 
@@ -2366,11 +2366,11 @@ impl AudioUnitContext {
 
         // Note: second register without unregister first causes 'nope' error.
         // Current implementation requires unregister before register a new cb.
-        assert!(
-            devtype.contains(DeviceType::INPUT) && devices.input.changed_callback.is_none()
-                || devtype.contains(DeviceType::OUTPUT)
-                    && devices.output.changed_callback.is_none()
-        );
+        if devtype.contains(DeviceType::INPUT) && devices.input.changed_callback.is_some()
+            || devtype.contains(DeviceType::OUTPUT) && devices.output.changed_callback.is_some()
+        {
+            return Err(Error::invalid_parameter());
+        }
 
         if devices.input.changed_callback.is_none() && devices.output.changed_callback.is_none() {
             let ret = audio_object_add_property_listener(
@@ -2380,7 +2380,12 @@ impl AudioUnitContext {
                 context_ptr,
             );
             if ret != NO_ERR {
-                return ret;
+                cubeb_log!(
+                    "Cannot add devices-changed listener for {:?}, Error: {}",
+                    devtype,
+                    ret
+                );
+                return Err(Error::error());
             }
         }
 
@@ -2404,11 +2409,14 @@ impl AudioUnitContext {
             );
         }
 
-        NO_ERR
+        Ok(())
     }
 
-    fn remove_devices_changed_listener(&mut self, devtype: DeviceType) -> OSStatus {
-        assert!(devtype.intersects(DeviceType::INPUT | DeviceType::OUTPUT));
+    fn remove_devices_changed_listener(&mut self, devtype: DeviceType) -> Result<()> {
+        if !devtype.intersects(DeviceType::INPUT | DeviceType::OUTPUT) {
+            return Err(Error::invalid_parameter());
+        }
+
         let context_ptr = self as *mut AudioUnitContext;
         let mut devices = self.devices.lock().unwrap();
 
@@ -2421,16 +2429,26 @@ impl AudioUnitContext {
         }
 
         if devices.input.changed_callback.is_some() || devices.output.changed_callback.is_some() {
-            return NO_ERR;
+            return Ok(());
         }
 
         // Note: unregister a non registered cb is not a problem, not checking.
-        audio_object_remove_property_listener(
+        let r = audio_object_remove_property_listener(
             kAudioObjectSystemObject,
             &DEVICES_PROPERTY_ADDRESS,
             audiounit_collection_changed_callback,
             context_ptr,
-        )
+        );
+        if r == NO_ERR {
+            Ok(())
+        } else {
+            cubeb_log!(
+                "Cannot remove devices-changed listener for {:?}, Error: {}",
+                devtype,
+                r
+            );
+            Err(Error::error())
+        }
     }
 }
 
@@ -2724,15 +2742,10 @@ impl ContextOps for AudioUnitContext {
         }
         let mutex_ptr = &mut self.mutex as *mut OwnedCriticalSection;
         let _context_lock = AutoLock::new(unsafe { &mut (*mutex_ptr) });
-        let ret = if collection_changed_callback.is_some() {
+        if collection_changed_callback.is_some() {
             self.add_devices_changed_listener(devtype, collection_changed_callback, user_ptr)
         } else {
             self.remove_devices_changed_listener(devtype)
-        };
-        if ret == NO_ERR {
-            Ok(())
-        } else {
-            Err(Error::error())
         }
     }
 }
