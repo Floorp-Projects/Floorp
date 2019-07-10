@@ -18,9 +18,7 @@ namespace JS {
 class JS_PUBLIC_API ContextOptions {
  public:
   ContextOptions()
-      : baseline_(true),
-        ion_(true),
-        asmJS_(true),
+      : asmJS_(true),
         wasm_(true),
         wasmVerbose_(false),
         wasmBaseline_(true),
@@ -33,7 +31,6 @@ class JS_PUBLIC_API ContextOptions {
 #endif
         testWasmAwaitTier2_(false),
         throwOnAsmJSValidationFailure_(false),
-        nativeRegExp_(true),
         asyncStack_(true),
         throwOnDebuggeeWouldRun_(true),
         dumpStackOnDebuggeeWouldRun_(false),
@@ -45,26 +42,6 @@ class JS_PUBLIC_API ContextOptions {
         fuzzing_(false)
 #endif
   {
-  }
-
-  bool baseline() const { return baseline_; }
-  ContextOptions& setBaseline(bool flag) {
-    baseline_ = flag;
-    return *this;
-  }
-  ContextOptions& toggleBaseline() {
-    baseline_ = !baseline_;
-    return *this;
-  }
-
-  bool ion() const { return ion_; }
-  ContextOptions& setIon(bool flag) {
-    ion_ = flag;
-    return *this;
-  }
-  ContextOptions& toggleIon() {
-    ion_ = !ion_;
-    return *this;
   }
 
   bool asmJS() const { return asmJS_; }
@@ -139,12 +116,6 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-  bool nativeRegExp() const { return nativeRegExp_; }
-  ContextOptions& setNativeRegExp(bool flag) {
-    nativeRegExp_ = flag;
-    return *this;
-  }
-
   bool asyncStack() const { return asyncStack_; }
   ContextOptions& setAsyncStack(bool flag) {
     asyncStack_ = flag;
@@ -204,8 +175,6 @@ class JS_PUBLIC_API ContextOptions {
 #endif
 
   void disableOptionsForSafeMode() {
-    setBaseline(false);
-    setIon(false);
     setAsmJS(false);
     setWasm(false);
     setWasmBaseline(false);
@@ -213,12 +182,9 @@ class JS_PUBLIC_API ContextOptions {
 #ifdef ENABLE_WASM_GC
     setWasmGc(false);
 #endif
-    setNativeRegExp(false);
   }
 
  private:
-  bool baseline_ : 1;
-  bool ion_ : 1;
   bool asmJS_ : 1;
   bool wasm_ : 1;
   bool wasmVerbose_ : 1;
@@ -232,7 +198,6 @@ class JS_PUBLIC_API ContextOptions {
 #endif
   bool testWasmAwaitTier2_ : 1;
   bool throwOnAsmJSValidationFailure_ : 1;
-  bool nativeRegExp_ : 1;
   bool asyncStack_ : 1;
   bool throwOnDebuggeeWouldRun_ : 1;
   bool dumpStackOnDebuggeeWouldRun_ : 1;

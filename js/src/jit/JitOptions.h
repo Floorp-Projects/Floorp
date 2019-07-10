@@ -60,6 +60,9 @@ struct DefaultJitOptions {
   bool disableSink;
   bool disableOptimizationLevels;
   bool baselineInterpreter;
+  bool baselineJit;
+  bool ion;
+  bool nativeRegExp;
   bool forceInlineCaches;
   bool fullDebugChecks;
   bool limitScriptSize;

@@ -85,7 +85,7 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
   nogc.emplace(cx);
 #endif
 
-  MOZ_ASSERT(IsBaselineInterpreterOrJitEnabled(cx));
+  MOZ_ASSERT(IsBaselineInterpreterOrJitEnabled());
   MOZ_ASSERT(CheckFrame(data.osrFrame));
 
   EnterJitCode enter = cx->runtime()->jitRuntime()->enterJit();
@@ -206,7 +206,7 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
   cx->check(script);
   MOZ_ASSERT(!script->hasBaselineScript());
   MOZ_ASSERT(script->canBaselineCompile());
-  MOZ_ASSERT(IsBaselineEnabled(cx));
+  MOZ_ASSERT(IsBaselineJitEnabled());
   AutoGeckoProfilerEntry pseudoFrame(
       cx, "Baseline script compilation",
       JS::ProfilingCategoryPair::JS_BaselineCompilation);
@@ -245,7 +245,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
     return Method_Skipped;
   }
 
-  if (!IsBaselineEnabled(cx)) {
+  if (!IsBaselineJitEnabled()) {
     script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
     return Method_CantCompile;
   }
