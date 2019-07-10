@@ -16,6 +16,12 @@ async function bumpScore(uri, searchString, counts, useMouseClick = false) {
   if (counts.picks) {
     for (let i = 0; i < counts.picks; ++i) {
       await promiseAutocompleteResultPopup(searchString);
+      if (!UrlbarPrefs.get("quantumbar")) {
+        // For the legacy urlbar, ensure the results are current.
+        let count = UrlbarTestUtils.getResultCount(window);
+        await UrlbarTestUtils.waitForAutocompleteResultAt(window, count - 1);
+      }
+
       let promise = BrowserTestUtils.waitForDocLoadAndStopIt(
         uri,
         gBrowser.selectedBrowser
