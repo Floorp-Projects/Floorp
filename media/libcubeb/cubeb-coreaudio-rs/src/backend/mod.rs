@@ -8,12 +8,14 @@
 extern crate coreaudio_sys_utils;
 extern crate libc;
 
+mod aggregate_device;
 mod auto_array;
 mod auto_release;
 mod owned_critical_section;
 mod property_address;
 mod utils;
 
+use self::aggregate_device::*;
 use self::auto_array::*;
 use self::auto_release::*;
 use self::coreaudio_sys_utils::aggregate_device::*;
@@ -41,7 +43,7 @@ use std::ptr;
 use std::slice;
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 const NO_ERR: OSStatus = 0;
 
@@ -1025,211 +1027,6 @@ fn audiounit_get_sub_devices(device_id: AudioDeviceID) -> Vec<AudioObjectID> {
     sub_devices
 }
 
-fn audiounit_create_blank_aggregate_device(
-    plugin_id: &mut AudioObjectID,
-    aggregate_device_id: &mut AudioDeviceID,
-) -> Result<()> {
-    let address_plugin_bundle_id = AudioObjectPropertyAddress {
-        mSelector: kAudioHardwarePropertyPlugInForBundleID,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
-
-    let mut size: usize = 0;
-    let mut r = audio_object_get_property_data_size(
-        kAudioObjectSystemObject,
-        &address_plugin_bundle_id,
-        &mut size,
-    );
-    if r != NO_ERR {
-        cubeb_log!(
-            "AudioObjectGetPropertyDataSize/kAudioHardwarePropertyPlugInForBundleID, rv={}",
-            r
-        );
-        return Err(Error::error());
-    }
-    assert_ne!(size, 0);
-
-    let mut in_bundle_ref = cfstringref_from_static_string("com.apple.audio.CoreAudio");
-    let mut translation_value = AudioValueTranslation {
-        mInputData: &mut in_bundle_ref as *mut CFStringRef as *mut c_void,
-        mInputDataSize: mem::size_of_val(&in_bundle_ref) as u32,
-        mOutputData: plugin_id as *mut AudioObjectID as *mut c_void,
-        mOutputDataSize: mem::size_of_val(plugin_id) as u32,
-    };
-
-    r = audio_object_get_property_data(
-        kAudioObjectSystemObject,
-        &address_plugin_bundle_id,
-        &mut size,
-        &mut translation_value,
-    );
-    if r != NO_ERR {
-        cubeb_log!(
-            "AudioObjectGetPropertyData/kAudioHardwarePropertyPlugInForBundleID, rv={}",
-            r
-        );
-        return Err(Error::error());
-    }
-    assert_ne!(*plugin_id, kAudioObjectUnknown);
-
-    let create_aggregate_device_address = AudioObjectPropertyAddress {
-        mSelector: kAudioPlugInCreateAggregateDevice,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
-
-    r = audio_object_get_property_data_size(
-        *plugin_id,
-        &create_aggregate_device_address,
-        &mut size,
-    );
-    if r != NO_ERR {
-        cubeb_log!(
-            "AudioObjectGetPropertyDataSize/kAudioPlugInCreateAggregateDevice, rv={}",
-            r
-        );
-        return Err(Error::error());
-    }
-    assert_ne!(size, 0);
-
-    let sys_time = SystemTime::now();
-    let time_id = sys_time.duration_since(UNIX_EPOCH).unwrap().as_nanos();
-    let device_name = format!("{}_{}", PRIVATE_AGGREGATE_DEVICE_NAME, time_id);
-    let device_uid = format!("org.mozilla.{}", device_name);
-
-    unsafe {
-        let aggregate_device_dict = CFMutableDictRef::default();
-
-        let aggregate_device_name = cfstringref_from_string(&device_name);
-        aggregate_device_dict.add_value(
-            cfstringref_from_static_string(AGGREGATE_DEVICE_NAME_KEY),
-            aggregate_device_name,
-        );
-        CFRelease(aggregate_device_name as *const c_void);
-
-        let aggregate_device_uid = cfstringref_from_string(&device_uid);
-        aggregate_device_dict.add_value(
-            cfstringref_from_static_string(AGGREGATE_DEVICE_UID_KEY),
-            aggregate_device_uid,
-        );
-        CFRelease(aggregate_device_uid as *const c_void);
-
-        let private_value: i32 = 1;
-        let aggregate_device_private_key = CFNumberCreate(
-            kCFAllocatorDefault,
-            i64::from(kCFNumberIntType),
-            &private_value as *const i32 as *const c_void,
-        );
-        aggregate_device_dict.add_value(
-            cfstringref_from_static_string(AGGREGATE_DEVICE_PRIVATE_KEY),
-            aggregate_device_private_key,
-        );
-        CFRelease(aggregate_device_private_key as *const c_void);
-
-        let stacked_value: i32 = 0;
-        let aggregate_device_stacked_key = CFNumberCreate(
-            kCFAllocatorDefault,
-            i64::from(kCFNumberIntType),
-            &stacked_value as *const i32 as *const c_void,
-        );
-        aggregate_device_dict.add_value(
-            cfstringref_from_static_string(AGGREGATE_DEVICE_STACKED_KEY),
-            aggregate_device_stacked_key,
-        );
-        CFRelease(aggregate_device_stacked_key as *const c_void);
-
-        // This call will fire `audiounit_collection_changed_callback` indirectly!
-        r = audio_object_get_property_data_with_qualifier(
-            *plugin_id,
-            &create_aggregate_device_address,
-            mem::size_of_val(&aggregate_device_dict),
-            &aggregate_device_dict,
-            &mut size,
-            aggregate_device_id,
-        );
-        if r != NO_ERR {
-            cubeb_log!(
-                "AudioObjectGetPropertyData/kAudioPlugInCreateAggregateDevice, rv={}",
-                r
-            );
-            return Err(Error::error());
-        }
-        assert_ne!(*aggregate_device_id, kAudioObjectUnknown);
-        cubeb_log!("New aggregate device {}", *aggregate_device_id);
-    }
-
-    Ok(())
-}
-
-fn audiounit_create_blank_aggregate_device_sync(
-    plugin_id: &mut AudioObjectID,
-    aggregate_device_id: &mut AudioDeviceID,
-) -> Result<()> {
-    let waiting_time = Duration::new(5, 0);
-
-    let condvar_pair = Arc::new((Mutex::new(Vec::<AudioObjectID>::new()), Condvar::new()));
-    let mut cloned_condvar_pair = condvar_pair.clone();
-    let data_ptr = &mut cloned_condvar_pair;
-
-    assert_eq!(
-        audio_object_add_property_listener(
-            kAudioObjectSystemObject,
-            &DEVICES_PROPERTY_ADDRESS,
-            devices_changed_callback,
-            data_ptr,
-        ),
-        NO_ERR
-    );
-
-    let _teardown = finally(|| {
-        assert_eq!(
-            audio_object_remove_property_listener(
-                kAudioObjectSystemObject,
-                &DEVICES_PROPERTY_ADDRESS,
-                devices_changed_callback,
-                data_ptr,
-            ),
-            NO_ERR
-        );
-    });
-
-    audiounit_create_blank_aggregate_device(plugin_id, aggregate_device_id)?;
-
-    // Wait until the aggregate is created.
-    let &(ref lock, ref cvar) = &*condvar_pair;
-    let devices = lock.lock().unwrap();
-    if !devices.contains(aggregate_device_id) {
-        let (devs, timeout_res) = cvar.wait_timeout(devices, waiting_time).unwrap();
-        if timeout_res.timed_out() {
-            cubeb_log!(
-                "Time out for waiting the creation of aggregate device {}!",
-                aggregate_device_id
-            );
-        }
-        if !devs.contains(aggregate_device_id) {
-            return Err(Error::device_unavailable());
-        }
-    }
-
-    extern "C" fn devices_changed_callback(
-        id: AudioObjectID,
-        _number_of_addresses: u32,
-        _addresses: *const AudioObjectPropertyAddress,
-        data: *mut c_void,
-    ) -> OSStatus {
-        assert_eq!(id, kAudioObjectSystemObject);
-        let pair = unsafe { &mut *(data as *mut Arc<(Mutex<Vec<AudioObjectID>>, Condvar)>) };
-        let &(ref lock, ref cvar) = &**pair;
-        let mut devices = lock.lock().unwrap();
-        *devices = audiounit_get_devices();
-        cvar.notify_one();
-        NO_ERR
-    }
-
-    Ok(())
-}
-
 fn get_device_name(id: AudioDeviceID) -> CFStringRef {
     let mut size = mem::size_of::<CFStringRef>();
     let mut uiname: CFStringRef = ptr::null();
@@ -1244,322 +1041,6 @@ fn get_device_name(id: AudioDeviceID) -> CFStringRef {
     } else {
         ptr::null()
     }
-}
-
-fn audiounit_set_aggregate_sub_device_list(
-    aggregate_device_id: AudioDeviceID,
-    input_device_id: AudioDeviceID,
-    output_device_id: AudioDeviceID,
-) -> Result<()> {
-    assert_ne!(aggregate_device_id, kAudioObjectUnknown);
-    assert_ne!(input_device_id, kAudioObjectUnknown);
-    assert_ne!(output_device_id, kAudioObjectUnknown);
-    assert_ne!(input_device_id, output_device_id);
-
-    cubeb_log!(
-        "Add devices input {} and output {} into aggregate device {}",
-        input_device_id,
-        output_device_id,
-        aggregate_device_id
-    );
-    let output_sub_devices = audiounit_get_sub_devices(output_device_id);
-    let input_sub_devices = audiounit_get_sub_devices(input_device_id);
-
-    unsafe {
-        let aggregate_sub_devices_array =
-            CFArrayCreateMutable(ptr::null(), 0, &kCFTypeArrayCallBacks);
-        // The order of the items in the array is significant and is used to determine the order of the streams
-        // of the AudioAggregateDevice.
-        for device in output_sub_devices {
-            let strref = get_device_name(device);
-            if strref.is_null() {
-                CFRelease(aggregate_sub_devices_array as *const c_void);
-                return Err(Error::error());
-            }
-            CFArrayAppendValue(aggregate_sub_devices_array, strref as *const c_void);
-            CFRelease(strref as *const c_void);
-        }
-
-        for device in input_sub_devices {
-            let strref = get_device_name(device);
-            if strref.is_null() {
-                CFRelease(aggregate_sub_devices_array as *const c_void);
-                return Err(Error::error());
-            }
-            CFArrayAppendValue(aggregate_sub_devices_array, strref as *const c_void);
-            CFRelease(strref as *const c_void);
-        }
-
-        let aggregate_sub_device_list = AudioObjectPropertyAddress {
-            mSelector: kAudioAggregateDevicePropertyFullSubDeviceList,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMaster,
-        };
-
-        let size = mem::size_of::<CFMutableArrayRef>();
-        let rv = audio_object_set_property_data(
-            aggregate_device_id,
-            &aggregate_sub_device_list,
-            size,
-            &aggregate_sub_devices_array,
-        );
-        CFRelease(aggregate_sub_devices_array as *const c_void);
-        if rv != NO_ERR {
-            cubeb_log!(
-                "AudioObjectSetPropertyData/kAudioAggregateDevicePropertyFullSubDeviceList, rv={}",
-                rv
-            );
-            return Err(Error::error());
-        }
-    }
-
-    Ok(())
-}
-
-fn audiounit_set_aggregate_sub_device_list_sync(
-    aggregate_device_id: AudioDeviceID,
-    input_device_id: AudioDeviceID,
-    output_device_id: AudioDeviceID,
-) -> Result<()> {
-    let address = AudioObjectPropertyAddress {
-        mSelector: kAudioAggregateDevicePropertyFullSubDeviceList,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
-
-    let waiting_time = Duration::new(5, 0);
-
-    let condvar_pair = Arc::new((Mutex::new(AudioObjectID::default()), Condvar::new()));
-    let mut cloned_condvar_pair = condvar_pair.clone();
-    let data_ptr = &mut cloned_condvar_pair;
-
-    assert_eq!(
-        audio_object_add_property_listener(
-            aggregate_device_id,
-            &address,
-            devices_changed_callback,
-            data_ptr,
-        ),
-        NO_ERR
-    );
-
-    let _teardown = finally(|| {
-        assert_eq!(
-            audio_object_remove_property_listener(
-                aggregate_device_id,
-                &address,
-                devices_changed_callback,
-                data_ptr,
-            ),
-            NO_ERR
-        );
-    });
-
-    audiounit_set_aggregate_sub_device_list(
-        aggregate_device_id,
-        input_device_id,
-        output_device_id,
-    )?;
-
-    // Wait until the sub devices are added.
-    let &(ref lock, ref cvar) = &*condvar_pair;
-    let device = lock.lock().unwrap();
-    if *device != aggregate_device_id {
-        let (dev, timeout_res) = cvar.wait_timeout(device, waiting_time).unwrap();
-        if timeout_res.timed_out() {
-            cubeb_log!(
-                "Time out for waiting the devices({}, {}) adding!",
-                input_device_id,
-                output_device_id
-            );
-        }
-        if *dev != aggregate_device_id {
-            return Err(Error::device_unavailable());
-        }
-    }
-
-    extern "C" fn devices_changed_callback(
-        id: AudioObjectID,
-        _number_of_addresses: u32,
-        _addresses: *const AudioObjectPropertyAddress,
-        data: *mut c_void,
-    ) -> OSStatus {
-        let pair = unsafe { &mut *(data as *mut Arc<(Mutex<AudioObjectID>, Condvar)>) };
-        let &(ref lock, ref cvar) = &**pair;
-        let mut device = lock.lock().unwrap();
-        *device = id;
-        cvar.notify_one();
-        NO_ERR
-    }
-
-    Ok(())
-}
-
-fn audiounit_set_master_aggregate_device(aggregate_device_id: AudioDeviceID) -> Result<()> {
-    assert_ne!(aggregate_device_id, kAudioObjectUnknown);
-    let master_aggregate_sub_device = AudioObjectPropertyAddress {
-        mSelector: kAudioAggregateDevicePropertyMasterSubDevice,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
-
-    // Master become the 1st output sub device
-    let output_device_id = audiounit_get_default_device_id(DeviceType::OUTPUT);
-    assert_ne!(output_device_id, kAudioObjectUnknown);
-    let output_sub_devices = audiounit_get_sub_devices(output_device_id);
-    assert!(!output_sub_devices.is_empty());
-    let master_sub_device = get_device_name(output_sub_devices[0]);
-    let size = mem::size_of::<CFStringRef>();
-    let rv = audio_object_set_property_data(
-        aggregate_device_id,
-        &master_aggregate_sub_device,
-        size,
-        &master_sub_device,
-    );
-    if !master_sub_device.is_null() {
-        unsafe {
-            CFRelease(master_sub_device as *const c_void);
-        }
-    }
-    if rv != NO_ERR {
-        cubeb_log!(
-            "AudioObjectSetPropertyData/kAudioAggregateDevicePropertyMasterSubDevice, rv={}",
-            rv
-        );
-        return Err(Error::error());
-    }
-    Ok(())
-}
-
-fn audiounit_activate_clock_drift_compensation(aggregate_device_id: AudioDeviceID) -> Result<()> {
-    assert_ne!(aggregate_device_id, kAudioObjectUnknown);
-    let address_owned = AudioObjectPropertyAddress {
-        mSelector: kAudioObjectPropertyOwnedObjects,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
-
-    let qualifier_data_size = mem::size_of::<AudioObjectID>();
-    let class_id: AudioClassID = kAudioSubDeviceClassID;
-    let qualifier_data = &class_id;
-    let mut size: usize = 0;
-
-    let mut rv = audio_object_get_property_data_size_with_qualifier(
-        aggregate_device_id,
-        &address_owned,
-        qualifier_data_size,
-        qualifier_data,
-        &mut size,
-    );
-
-    if rv != NO_ERR {
-        cubeb_log!(
-            "AudioObjectGetPropertyDataSize/kAudioObjectPropertyOwnedObjects, rv={}",
-            rv
-        );
-        return Err(Error::error());
-    }
-
-    assert!(
-        size > 0,
-        "The sub devices of the aggregate device have not been added yet."
-    );
-
-    let subdevices_num = size / mem::size_of::<AudioObjectID>();
-    let mut sub_devices: Vec<AudioObjectID> = allocate_array(subdevices_num);
-
-    rv = audio_object_get_property_data_with_qualifier(
-        aggregate_device_id,
-        &address_owned,
-        qualifier_data_size,
-        qualifier_data,
-        &mut size,
-        sub_devices.as_mut_ptr(),
-    );
-
-    if rv != NO_ERR {
-        cubeb_log!(
-            "AudioObjectGetPropertyData/kAudioObjectPropertyOwnedObjects, rv={}",
-            rv
-        );
-        return Err(Error::error());
-    }
-
-    let address_drift = AudioObjectPropertyAddress {
-        mSelector: kAudioSubDevicePropertyDriftCompensation,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
-
-    assert!(
-        subdevices_num >= 2,
-        "We should have at least 2 devices for the aggregate device."
-    );
-    // Start from the second device since the first is the master clock
-    for device in &sub_devices[1..] {
-        let drift_compensation_value: u32 = 1;
-        rv = audio_object_set_property_data(
-            *device,
-            &address_drift,
-            mem::size_of::<u32>(),
-            &drift_compensation_value,
-        );
-        if rv != NO_ERR {
-            cubeb_log!(
-                "AudioObjectSetPropertyData/kAudioSubDevicePropertyDriftCompensation, rv={}",
-                rv
-            );
-            return Ok(());
-        }
-    }
-
-    Ok(())
-}
-
-fn audiounit_destroy_aggregate_device(
-    plugin_id: AudioObjectID,
-    aggregate_device_id: &mut AudioDeviceID,
-) -> Result<()> {
-    assert_ne!(plugin_id, kAudioObjectUnknown);
-    assert_ne!(*aggregate_device_id, kAudioObjectUnknown);
-
-    let destroy_aggregate_device_addr = AudioObjectPropertyAddress {
-        mSelector: kAudioPlugInDestroyAggregateDevice,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
-
-    let mut size: usize = 0;
-    let mut rv =
-        audio_object_get_property_data_size(plugin_id, &destroy_aggregate_device_addr, &mut size);
-    if rv != NO_ERR {
-        cubeb_log!(
-            "AudioObjectGetPropertyDataSize/kAudioPlugInDestroyAggregateDevice, rv={}",
-            rv
-        );
-        return Err(Error::error());
-    }
-
-    assert!(size > 0);
-
-    rv = audio_object_get_property_data(
-        plugin_id,
-        &destroy_aggregate_device_addr,
-        &mut size,
-        aggregate_device_id,
-    );
-    if rv != NO_ERR {
-        cubeb_log!(
-            "AudioObjectGetPropertyData/kAudioPlugInDestroyAggregateDevice, rv={}",
-            rv
-        );
-        return Err(Error::error());
-    }
-
-    cubeb_log!("Destroyed aggregate device {}", *aggregate_device_id);
-    *aggregate_device_id = kAudioObjectUnknown;
-
-    Ok(())
 }
 
 fn create_audiounit(device: &device_info) -> Result<AudioUnit> {
@@ -2961,8 +2442,6 @@ struct AudioUnitStream<'ctx> {
     resampler: AutoRelease<ffi::cubeb_resampler>,
     // This is true if a device change callback is currently running.
     switching_device: AtomicBool,
-    aggregate_device_id: AudioDeviceID, // the aggregate device id
-    plugin_id: AudioObjectID,           // used to create aggregate device
     // Mixer interface
     mixer: AutoRelease<ffi::cubeb_mixer>,
     // Buffer where remixing/resampling will occur when upmixing is required
@@ -2975,6 +2454,7 @@ struct AudioUnitStream<'ctx> {
     input_alive_listener: Option<device_property_listener>,
     input_source_listener: Option<device_property_listener>,
     output_source_listener: Option<device_property_listener>,
+    aggregate_device: AggregateDevice,
 }
 
 impl<'ctx> AudioUnitStream<'ctx> {
@@ -3028,8 +2508,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
             panning: atomic::Atomic::new(0.0_f32),
             resampler: AutoRelease::new(ptr::null_mut(), ffi::cubeb_resampler_destroy),
             switching_device: AtomicBool::new(false),
-            aggregate_device_id: kAudioObjectUnknown,
-            plugin_id: kAudioObjectUnknown,
             mixer: AutoRelease::new(ptr::null_mut(), ffi::cubeb_mixer_destroy),
             temp_buffer: Vec::new(),
             temp_buffer_size: 0,
@@ -3038,6 +2516,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             input_alive_listener: None,
             input_source_listener: None,
             output_source_listener: None,
+            aggregate_device: AggregateDevice::default(),
         }
     }
 
@@ -3526,176 +3005,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
         );
     }
 
-    fn workaround_for_airpod(&self) {
-        assert_ne!(self.input_device.id, self.output_device.id);
-        assert_ne!(self.aggregate_device_id, kAudioObjectUnknown);
-
-        let mut input_device_info = ffi::cubeb_device_info::default();
-        assert_ne!(self.input_device.id, kAudioObjectUnknown);
-        audiounit_create_device_from_hwdev(
-            &mut input_device_info,
-            self.input_device.id,
-            DeviceType::INPUT,
-        );
-
-        let mut output_device_info = ffi::cubeb_device_info::default();
-        assert_ne!(self.output_device.id, kAudioObjectUnknown);
-        audiounit_create_device_from_hwdev(
-            &mut output_device_info,
-            self.output_device.id,
-            DeviceType::OUTPUT,
-        );
-
-        let input_name_str = unsafe {
-            CString::from_raw(input_device_info.friendly_name as *mut c_char)
-                .into_string()
-                .expect("Fail to convert input name from CString into String")
-        };
-        input_device_info.friendly_name = ptr::null();
-
-        let output_name_str = unsafe {
-            CString::from_raw(output_device_info.friendly_name as *mut c_char)
-                .into_string()
-                .expect("Fail to convert output name from CString into String")
-        };
-        output_device_info.friendly_name = ptr::null();
-
-        if input_name_str.contains("AirPods") && output_name_str.contains("AirPods") {
-            let mut input_min_rate = 0;
-            let mut input_max_rate = 0;
-            let mut input_nominal_rate = 0;
-            audiounit_get_available_samplerate(
-                self.input_device.id,
-                kAudioObjectPropertyScopeGlobal,
-                &mut input_min_rate,
-                &mut input_max_rate,
-                &mut input_nominal_rate,
-            );
-            cubeb_log!(
-                "({:p}) Input device {}, name: {}, min: {}, max: {}, nominal rate: {}",
-                self as *const AudioUnitStream,
-                self.input_device.id,
-                input_name_str,
-                input_min_rate,
-                input_max_rate,
-                input_nominal_rate
-            );
-
-            let mut output_min_rate = 0;
-            let mut output_max_rate = 0;
-            let mut output_nominal_rate = 0;
-            audiounit_get_available_samplerate(
-                self.output_device.id,
-                kAudioObjectPropertyScopeGlobal,
-                &mut output_min_rate,
-                &mut output_max_rate,
-                &mut output_nominal_rate,
-            );
-            cubeb_log!(
-                "({:p}) Output device {}, name: {}, min: {}, max: {}, nominal rate: {}",
-                self as *const AudioUnitStream,
-                self.output_device.id,
-                output_name_str,
-                output_min_rate,
-                output_max_rate,
-                output_nominal_rate
-            );
-
-            let rate = f64::from(input_nominal_rate);
-            let addr = AudioObjectPropertyAddress {
-                mSelector: kAudioDevicePropertyNominalSampleRate,
-                mScope: kAudioObjectPropertyScopeGlobal,
-                mElement: kAudioObjectPropertyElementMaster,
-            };
-
-            let rv = audio_object_set_property_data(
-                self.aggregate_device_id,
-                &addr,
-                mem::size_of::<f64>(),
-                &rate,
-            );
-            if rv != NO_ERR {
-                cubeb_log!("Non fatal error, AudioObjectSetPropertyData/kAudioDevicePropertyNominalSampleRate, rv={}", rv);
-            }
-        }
-
-        // Retrieve the rest lost memory.
-        // No need to retrieve the memory of {input,output}_device_info.friendly_name
-        // since they are already retrieved/retaken above.
-        assert!(input_device_info.friendly_name.is_null());
-        audiounit_device_destroy(&mut input_device_info);
-        assert!(output_device_info.friendly_name.is_null());
-        audiounit_device_destroy(&mut output_device_info);
-    }
-
-    // Aggregate Device is a virtual audio interface which utilizes inputs and outputs
-    // of one or more physical audio interfaces. It is possible to use the clock of
-    // one of the devices as a master clock for all the combined devices and enable
-    // drift compensation for the devices that are not designated clock master.
-    //
-    // Creating a new aggregate device programmatically requires [0][1]:
-    // 1. Locate the base plug-in ("com.apple.audio.CoreAudio")
-    // 2. Create a dictionary that describes the aggregate device
-    //    (don't add sub-devices in that step, prone to fail [0])
-    // 3. Ask the base plug-in to create the aggregate device (blank)
-    // 4. Add the array of sub-devices.
-    // 5. Set the master device (1st output device in our case)
-    // 6. Enable drift compensation for the non-master devices
-    //
-    // [0] https://lists.apple.com/archives/coreaudio-api/2006/Apr/msg00092.html
-    // [1] https://lists.apple.com/archives/coreaudio-api/2005/Jul/msg00150.html
-    // [2] CoreAudio.framework/Headers/AudioHardware.h
-    fn create_aggregate_device(&mut self) -> Result<()> {
-        if let Err(r) = audiounit_create_blank_aggregate_device_sync(
-            &mut self.plugin_id,
-            &mut self.aggregate_device_id,
-        ) {
-            cubeb_log!(
-                "({:p}) Failed to create blank aggregate device",
-                self as *const AudioUnitStream
-            );
-            return Err(r);
-        }
-
-        // The aggregate device may not be created at this point!
-        // It's better to listen the system devices changing to make sure it's added.
-
-        if let Err(r) = audiounit_set_aggregate_sub_device_list_sync(
-            self.aggregate_device_id,
-            self.input_device.id,
-            self.output_device.id,
-        ) {
-            cubeb_log!(
-                "({:p}) Failed to set aggregate sub-device list",
-                self as *const AudioUnitStream
-            );
-            audiounit_destroy_aggregate_device(self.plugin_id, &mut self.aggregate_device_id);
-            return Err(r);
-        }
-
-        if let Err(r) = audiounit_set_master_aggregate_device(self.aggregate_device_id) {
-            cubeb_log!(
-                "({:p}) Failed to set master sub-device for aggregate device",
-                self as *const AudioUnitStream
-            );
-            audiounit_destroy_aggregate_device(self.plugin_id, &mut self.aggregate_device_id);
-            return Err(r);
-        }
-
-        if let Err(r) = audiounit_activate_clock_drift_compensation(self.aggregate_device_id) {
-            cubeb_log!(
-                "({:p}) Failed to activate clock drift compensation for aggregate device",
-                self as *const AudioUnitStream
-            );
-            audiounit_destroy_aggregate_device(self.plugin_id, &mut self.aggregate_device_id);
-            return Err(r);
-        }
-
-        self.workaround_for_airpod();
-
-        Ok(())
-    }
-
     fn configure_input(&mut self) -> Result<()> {
         assert!(!self.input_unit.is_null());
 
@@ -4009,21 +3318,25 @@ impl<'ctx> AudioUnitStream<'ctx> {
         let mut out_dev_info = self.output_device.clone();
 
         if self.has_input() && self.has_output() && self.input_device.id != self.output_device.id {
-            if self.create_aggregate_device().is_err() {
-                self.aggregate_device_id = kAudioObjectUnknown;
-                cubeb_log!(
-                    "({:p}) Create aggregate devices failed.",
-                    self as *const AudioUnitStream
-                );
-            // !!!NOTE: It is not necessary to return here. If it does not
-            // return it will fallback to the old implementation. The intention
-            // is to investigate how often it fails. I plan to remove
-            // it after a couple of weeks.
-            } else {
-                in_dev_info.id = self.aggregate_device_id;
-                out_dev_info.id = self.aggregate_device_id;
-                in_dev_info.flags = device_flags::DEV_INPUT;
-                out_dev_info.flags = device_flags::DEV_OUTPUT;
+            match AggregateDevice::new(self.input_device.id, self.output_device.id) {
+                Ok(device) => {
+                    in_dev_info.id = device.get_device_id();
+                    out_dev_info.id = device.get_device_id();
+                    in_dev_info.flags = device_flags::DEV_INPUT;
+                    out_dev_info.flags = device_flags::DEV_OUTPUT;
+                    self.aggregate_device = device;
+                }
+                Err(status) => {
+                    cubeb_log!(
+                        "({:p}) Create aggregate devices failed. Error: {}",
+                        self as *const AudioUnitStream,
+                        status
+                    );
+                    // !!!NOTE: It is not necessary to return here. If it does not
+                    // return it will fallback to the old implementation. The intention
+                    // is to investigate how often it fails. I plan to remove
+                    // it after a couple of weeks.
+                }
             }
         }
 
@@ -4182,10 +3495,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
         self.resampler.reset(ptr::null_mut());
         self.mixer.reset(ptr::null_mut());
 
-        if self.aggregate_device_id != kAudioObjectUnknown {
-            audiounit_destroy_aggregate_device(self.plugin_id, &mut self.aggregate_device_id);
-            self.aggregate_device_id = kAudioObjectUnknown;
-        }
+        self.aggregate_device = AggregateDevice::default();
     }
 
     fn destroy_internal(&mut self) {
