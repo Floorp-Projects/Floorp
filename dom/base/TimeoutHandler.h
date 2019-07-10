@@ -34,6 +34,12 @@ class TimeoutHandler : public nsISupports {
   // nsITimeoutHandler and should not be freed by the caller.
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn);
+  // Append a UTF-8 string to aOutString that describes the callback function,
+  // for use in logging or profiler markers.
+  // The string contains the function name and its source location, if
+  // available, in the following format:
+  // "<functionName> (<sourceURL>:<lineNumber>:<columnNumber>)"
+  virtual void GetDescription(nsACString& aOutString);
   virtual void MarkForCC() {}
 
  protected:
@@ -65,6 +71,7 @@ class ScriptTimeoutHandler : public TimeoutHandler {
   MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* /* unused */) override {
     return false;
   };
+  virtual void GetDescription(nsACString& aOutString) override;
 
  protected:
   virtual ~ScriptTimeoutHandler() {}
@@ -87,6 +94,7 @@ class CallbackTimeoutHandler final : public TimeoutHandler {
 
   MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* aExecutionReason) override;
   virtual void MarkForCC() override;
+  virtual void GetDescription(nsACString& aOutString) override;
 
   void ReleaseJSObjects();
 

@@ -29,6 +29,11 @@ void TimeoutHandler::GetLocation(const char** aFileName, uint32_t* aLineNo,
   *aColumn = mColumn;
 }
 
+void TimeoutHandler::GetDescription(nsACString& aOutString) {
+  aOutString.AppendPrintf("<generic handler> (%s:%d:%d)", mFileName.get(),
+                          mLineNo, mColumn);
+}
+
 NS_IMPL_CYCLE_COLLECTION_0(TimeoutHandler)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TimeoutHandler)
@@ -83,6 +88,19 @@ NS_INTERFACE_MAP_END_INHERITING(TimeoutHandler)
 
 NS_IMPL_ADDREF_INHERITED(ScriptTimeoutHandler, TimeoutHandler)
 NS_IMPL_RELEASE_INHERITED(ScriptTimeoutHandler, TimeoutHandler)
+
+void ScriptTimeoutHandler::GetDescription(nsACString& aOutString) {
+  if (mExpr.Length() > 15) {
+    aOutString.AppendPrintf(
+        "<string handler (truncated): \"%s...\"> (%s:%d:%d)",
+        NS_ConvertUTF16toUTF8(Substring(mExpr, 0, 13)).get(), mFileName.get(),
+        mLineNo, mColumn);
+  } else {
+    aOutString.AppendPrintf("<string handler: \"%s\"> (%s:%d:%d)",
+                            NS_ConvertUTF16toUTF8(mExpr).get(), mFileName.get(),
+                            mLineNo, mColumn);
+  }
+}
 
 //-----------------------------------------------------------------------------
 // CallbackTimeoutHandler
@@ -166,6 +184,10 @@ bool CallbackTimeoutHandler::Call(const char* aExecutionReason) {
 }
 
 void CallbackTimeoutHandler::MarkForCC() { mFunction->MarkForCC(); }
+
+void CallbackTimeoutHandler::GetDescription(nsACString& aOutString) {
+  mFunction->GetDescription(aOutString);
+}
 
 }  // namespace dom
 }  // namespace mozilla
