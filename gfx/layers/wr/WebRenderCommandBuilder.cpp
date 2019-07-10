@@ -1575,11 +1575,11 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       mClipManagers[renderRoot].BeginBuild(mManager,
                                            aBuilder.SubBuilder(renderRoot));
     }
+    mBuilderDumpIndex[renderRoot] = 0;
   }
   MOZ_ASSERT(mLayerScrollDatas.IsEmpty());
   mLastCanvasDatas.Clear();
   mLastAsr = nullptr;
-  mBuilderDumpIndex = 0;
   mContainsSVGGroup = false;
   MOZ_ASSERT(mDumpIndent == 0);
 
@@ -1608,8 +1608,10 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       }
     }
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
-      mBuilderDumpIndex =
-          aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
+      mBuilderDumpIndex[aBuilder.GetRenderRoot()] =
+          aBuilder.Dump(mDumpIndent + 1,
+                        Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
+                        Nothing());
     }
     MOZ_ASSERT(mRootStackingContexts == nullptr);
     AutoRestore<wr::RenderRootArray<Maybe<StackingContextHelper>>*> rootScs(
@@ -1683,8 +1685,10 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
   if (dumpEnabled) {
     // If we're inside a nested display list, print the WR DL items from the
     // wrapper item before we start processing the nested items.
-    mBuilderDumpIndex =
-        aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
+    mBuilderDumpIndex[aBuilder.GetRenderRoot()] =
+        aBuilder.Dump(mDumpIndent + 1,
+                      Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
+                      Nothing());
   }
 
   mDumpIndent++;
@@ -1793,8 +1797,10 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       }
 
       if (dumpEnabled) {
-        mBuilderDumpIndex =
-            aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
+        mBuilderDumpIndex[aBuilder.GetRenderRoot()] =
+            aBuilder.Dump(mDumpIndent + 1,
+                          Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
+                          Nothing());
       }
     }
 
