@@ -1593,6 +1593,15 @@ uint32_t nsDisplayListBuilder::GetImageDecodeFlags() const {
   return flags;
 }
 
+void nsDisplayListBuilder::ComputeDefaultRenderRootRect(LayoutDeviceIntSize aClientSize) {
+  LayoutDeviceIntRegion cutout;
+  LayoutDeviceIntRect clientRect(LayoutDeviceIntPoint(), aClientSize);
+  cutout.OrWith(clientRect);
+  cutout.SubOut(RoundedToInt(mRenderRootRects[mozilla::wr::RenderRoot::Content]));
+
+  mRenderRootRects[mozilla::wr::RenderRoot::Default] = LayoutDeviceRect(cutout.GetBounds());
+}
+
 void nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
                                                      const nsRegion& aRegion) {
   if (aRegion.IsEmpty()) {
