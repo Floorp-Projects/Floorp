@@ -38,6 +38,7 @@
 #include "irregexp/RegExpMacroAssembler.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCommon.h"
+#include "jit/JitOptions.h"
 
 #include "irregexp/RegExpCharacters-inl.h"
 
@@ -1725,12 +1726,12 @@ SampleChars(FrequencyCollator* collator, const CharT* chars, size_t length)
 }
 
 static bool
-IsNativeRegExpEnabled(JSContext* cx)
+IsNativeRegExpEnabled()
 {
 #ifdef JS_CODEGEN_NONE
     return false;
 #else
-    return cx->options().nativeRegExp();
+    return jit::JitOptions.nativeRegExp;
 #endif
 }
 
@@ -1827,7 +1828,7 @@ irregexp::CompilePattern(JSContext* cx, LifoAlloc& alloc, HandleRegExpShared sha
     Maybe<InterpretedRegExpMacroAssembler> interpreted_assembler;
 
     RegExpMacroAssembler* assembler;
-    if (IsNativeRegExpEnabled(cx) &&
+    if (IsNativeRegExpEnabled() &&
         !force_bytecode &&
         jit::CanLikelyAllocateMoreExecutableMemory() &&
         shared->getSource()->length() < 32 * 1024)

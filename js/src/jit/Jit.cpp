@@ -25,7 +25,7 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
   MOZ_ASSERT(code);
   MOZ_ASSERT(code != cx->runtime()->jitRuntime()->interpreterStub().value);
 
-  MOZ_ASSERT(IsBaselineInterpreterOrJitEnabled(cx));
+  MOZ_ASSERT(IsBaselineInterpreterOrJitEnabled());
 
   if (!CheckRecursionLimit(cx)) {
     return EnterJitStatus::Error;
@@ -153,7 +153,7 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
     script->incWarmUpCounter();
 
     // Try to Ion-compile.
-    if (jit::IsIonEnabled(cx)) {
+    if (jit::IsIonEnabled()) {
       jit::MethodStatus status = jit::CanEnterIon(cx, state);
       if (status == jit::Method_Error) {
         return EnterJitStatus::Error;
@@ -165,7 +165,7 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
     }
 
     // Try to Baseline-compile.
-    if (jit::IsBaselineEnabled(cx)) {
+    if (jit::IsBaselineJitEnabled()) {
       jit::MethodStatus status =
           jit::CanEnterBaselineMethod<BaselineTier::Compiler>(cx, state);
       if (status == jit::Method_Error) {

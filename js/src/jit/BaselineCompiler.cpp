@@ -60,8 +60,7 @@ BaselineCompilerHandler::BaselineCompilerHandler(JSContext* cx,
       pc_(script->code()),
       icEntryIndex_(0),
       compileDebugInstrumentation_(script->isDebuggee()),
-      ionCompileable_(jit::IsIonEnabled(cx) &&
-                      CanIonCompileScript(cx, script)) {}
+      ionCompileable_(jit::IsIonEnabled() && CanIonCompileScript(cx, script)) {}
 
 BaselineInterpreterHandler::BaselineInterpreterHandler(JSContext* cx,
                                                        MacroAssembler& masm)

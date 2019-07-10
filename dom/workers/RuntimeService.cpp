@@ -300,9 +300,6 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmVerbose(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_verbose")))
       .setThrowOnAsmJSValidationFailure(GetWorkerPref<bool>(
           NS_LITERAL_CSTRING("throw_on_asmjs_validation_failure")))
-      .setBaseline(GetWorkerPref<bool>(NS_LITERAL_CSTRING("baselinejit")))
-      .setIon(GetWorkerPref<bool>(NS_LITERAL_CSTRING("ion")))
-      .setNativeRegExp(GetWorkerPref<bool>(NS_LITERAL_CSTRING("native_regexp")))
       .setAsyncStack(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asyncstack")))
       .setWerror(GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror")))
 #ifdef FUZZING

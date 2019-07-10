@@ -163,11 +163,11 @@ void FreeIonBuilder(IonBuilder* builder);
 void LinkIonScript(JSContext* cx, HandleScript calleescript);
 uint8_t* LazyLinkTopActivation(JSContext* cx, LazyLinkExitFrameLayout* frame);
 
-static inline bool IsIonEnabled(JSContext* cx) {
+static inline bool IsIonEnabled() {
 #if defined(JS_CODEGEN_NONE)
   return false;
 #else
-  return cx->options().ion() && cx->options().baseline() &&
+  return JitOptions.ion && JitOptions.baselineJit &&
          JitOptions.supportsFloatingPoint;
 #endif
 }

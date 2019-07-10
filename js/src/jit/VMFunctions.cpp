@@ -1325,7 +1325,7 @@ bool RecompileImpl(JSContext* cx, bool force) {
   RootedScript script(cx, frame.script());
   MOZ_ASSERT(script->hasIonScript());
 
-  if (!IsIonEnabled(cx)) {
+  if (!IsIonEnabled()) {
     return true;
   }
 
