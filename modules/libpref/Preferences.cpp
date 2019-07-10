@@ -3391,7 +3391,7 @@ class AddPreferencesMemoryReporterRunnable : public Runnable {
 }  // namespace
 
 // A list of changed prefs sent from the parent via shared memory.
-static InfallibleTArray<dom::Pref>* gChangedDomPrefs;
+static nsTArray<dom::Pref>* gChangedDomPrefs;
 
 static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
 static const char kChannelPref[] = "app.update.channel";
@@ -3685,7 +3685,7 @@ void Preferences::DeserializePreferences(char* aStr, size_t aPrefsLen) {
   MOZ_ASSERT(!XRE_IsParentProcess());
 
   MOZ_ASSERT(!gChangedDomPrefs);
-  gChangedDomPrefs = new InfallibleTArray<dom::Pref>();
+  gChangedDomPrefs = new nsTArray<dom::Pref>();
 
   char* p = aStr;
   while (*p != '\0') {
