@@ -66,13 +66,12 @@ class WindowIdentifier {
    * This automatically grabs the window's ID and appends it to the
    * array.
    */
-  WindowIdentifier(const InfallibleTArray<uint64_t>& id,
-                   nsPIDOMWindowInner* window);
+  WindowIdentifier(const nsTArray<uint64_t>& id, nsPIDOMWindowInner* window);
 
   /**
    * Get the list of window and process IDs we contain.
    */
-  typedef InfallibleTArray<uint64_t> IDArrayType;
+  typedef nsTArray<uint64_t> IDArrayType;
   const IDArrayType& AsArray() const;
 
   /**
