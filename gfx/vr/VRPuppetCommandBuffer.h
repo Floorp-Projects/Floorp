@@ -180,7 +180,7 @@ class VRPuppetCommandBuffer {
   static VRPuppetCommandBuffer& Get();
 
   // Interface to VRTestSystem
-  void Submit(const InfallibleTArray<uint64_t>& aBuffer);
+  void Submit(const nsTArray<uint64_t>& aBuffer);
   void Reset();
   bool HasEnded();
 
