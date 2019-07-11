@@ -10,9 +10,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getFramePayload } = require("../../utils/request-utils");
 
 /**
- * Renders the "Data" column of a WebSocket frame.
+ * Renders the "Payload" column of a WebSocket frame.
  */
-class FrameListColumnData extends Component {
+class FrameListColumnPayload extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
@@ -61,4 +61,4 @@ class FrameListColumnData extends Component {
   }
 }
 
-module.exports = FrameListColumnData;
+module.exports = FrameListColumnPayload;
