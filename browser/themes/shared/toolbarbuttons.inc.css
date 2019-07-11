@@ -389,3 +389,21 @@ toolbarbutton.bookmark-item {
   padding: 1px var(--toolbarbutton-inner-padding);
   border-radius: var(--toolbarbutton-border-radius);
 }
+
+/* Alternative style for .toolbarbutton-badge used by CFR notifications */
+.toolbarbutton-badge.feature-callout {
+  width: 14px;
+  height: 14px;
+  min-width: auto;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  display: block;
+  margin: -7px 0 0 !important;
+  margin-inline-end: -6px !important;
+  background: url(chrome://browser/skin/badge-blue.svg);
+}
+
+.toolbarbutton-icon.feature-callout {
+  clip-path: url(chrome://browser/skin/badge-cutout.svg#badge-cutout);
+}
