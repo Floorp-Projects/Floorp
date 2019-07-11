@@ -719,6 +719,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+VARCACHE_PREF(
+  Live,
+  "browser.cache.memory.enable",
+   browser_cache_memory_enable,
+  RelaxedAtomicBool, true
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,

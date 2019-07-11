@@ -70,7 +70,6 @@ pref("ui.caretBlinkCount", 10);
 /* cache prefs */
 pref("browser.cache.disk.smart_size.enabled", true);
 
-pref("browser.cache.memory.enable", true);
 pref("browser.cache.memory.capacity", 1024); // kilobytes
 
 pref("browser.cache.memory_limit", 5120); // 5 MB
