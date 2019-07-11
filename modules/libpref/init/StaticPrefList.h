@@ -6801,6 +6801,18 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Prefs starting with "plain_text."
+//---------------------------------------------------------------------------
+
+// When false, text in plaintext documents does not wrap long lines.
+VARCACHE_PREF(
+  Live,
+  "plain_text.wrap_long_lines",
+  plain_text_wrap_long_lines,
+  bool, true
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "plugins."
 //---------------------------------------------------------------------------
 
