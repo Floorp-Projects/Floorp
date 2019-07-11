@@ -28,8 +28,6 @@ pref("general.warnOnAboutConfig", true);
 // maximum number of dated backups to keep at any time
 pref("browser.bookmarks.max_backups",       5);
 
-// Does the user want smart-sizing?
-pref("browser.cache.disk.smart_size.enabled", true);
 // Size (in KB) explicitly set by the user. Used when smart_size.enabled == false
 pref("browser.cache.disk.capacity",         256000);
 // When smartsizing is disabled we could potentially fill all disk space by
