@@ -491,6 +491,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     if (this._targetActor.threadActor) {
       this._targetActor.threadActor.showOverlay();
     }
+
     if (this._isPicking) {
       this._highlighter.hide();
       this._stopPickerListeners();
