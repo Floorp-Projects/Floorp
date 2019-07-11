@@ -307,6 +307,7 @@ bool DecodePoolImpl::CreateThread() {
     MOZ_ASSERT_UNREACHABLE("Should successfully create image decoding threads");
     return false;
   }
+  thread->SetNameForWakeupTelemetry(NS_LITERAL_CSTRING("ImgDecoder (all)"));
 
   mThreads.AppendElement(std::move(thread));
   --mAvailableThreads;
