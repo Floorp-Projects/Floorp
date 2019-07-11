@@ -62,46 +62,186 @@ class Connection {
     this.transport.send(message);
   }
 
-  error(id, e) {
+  /**
+   * Send an error back to the client.
+   *
+   * @param Number id
+   *        Id of the packet which lead to an error.
+   * @param Error e
+   *        Error object with `message` and `stack` attributes.
+   * @param Number sessionId (Optional)
+   *        Id of the session used to send this packet.
+   *        This will be null if that was the default session.
+   */
+  onError(id, e, sessionId) {
     const error = {
       message: e.message,
       data: e.stack,
     };
-    this.send({ id, error });
+    this.send({ id, sessionId, error });
   }
 
-  deserialize(data) {
-    const id = data.id;
-    const method = data.method;
-    const params = data.params || {};
-    return { id, method, params };
+  /**
+   * Send the result of a call to a Domain's function.
+   *
+   * @param Number id
+   *        The request id being sent by the client to call the domain's method.
+   * @param Object result
+   *        A JSON-serializable value which is the actual result.
+   * @param Number sessionId
+   *        The sessionId from which this packet is emitted.
+   *        This will be undefined for the default session.
+   */
+  onResult(id, result, sessionId) {
+    this.sendResult(id, result, sessionId);
+
+    // When a client attaches to a secondary target via
+    // `Target.attachToTarget`, and it executes a command via
+    // `Target.sendMessageToTarget`, we should emit an event back with the
+    // result including the `sessionId` attribute of this secondary target's
+    // session. `Target.attachToTarget` creates the secondary session and
+    // returns the session ID.
+    if (sessionId) {
+      this.sendEvent("Target.receivedMessageFromTarget", {
+        sessionId,
+        // receivedMessageFromTarget is expected to send a raw CDP packet
+        // in the `message` property and it to be already serialized to a
+        // string
+        message: JSON.stringify({
+          id,
+          result,
+        }),
+      });
+    }
+  }
+
+  sendResult(id, result, sessionId) {
+    this.send({
+      sessionId, // this will be undefined for the default session
+      id,
+      result,
+    });
+  }
+
+  /**
+   * Send an event coming from a Domain to the CDP client.
+   *
+   * @param String method
+   *        The event name. This is composed by a domain name,
+   *        a dot character followed by the event name.
+   *        e.g. `Target.targetCreated`
+   * @param Object params
+   *        A JSON-serializable value which is the payload
+   *        associated with this event.
+   * @param Number sessionId
+   *        The sessionId from which this packet is emitted.
+   *        This will be undefined for the default session.
+   */
+  onEvent(method, params, sessionId) {
+    this.sendEvent(method, params, sessionId);
+
+    // When a client attaches to a secondary target via
+    // `Target.attachToTarget`, we should emit an event back with the
+    // result including the `sessionId` attribute of this secondary target's
+    // session. `Target.attachToTarget` creates the secondary session and
+    // returns the session ID.
+    if (sessionId) {
+      this.sendEvent("Target.receivedMessageFromTarget", {
+        sessionId,
+        message: JSON.stringify({
+          method,
+          params,
+        }),
+      });
+    }
+  }
+
+  sendEvent(method, params, sessionId) {
+    this.send({
+      sessionId, // this will be undefined for the default session
+      method,
+      params,
+    });
   }
 
   // transport hooks
 
-  onPacket(packet) {
+  /**
+   * Receive a packet from the WebSocket layer.
+   * This packet is sent by a CDP client and is meant to execute
+   * a particular function on a given Domain.
+   *
+   * @param Object packet
+   *        JSON-serializable object sent by the client
+   */
+  async onPacket(packet) {
     log.trace(`(connection ${this.id})-> ${JSON.stringify(packet)}`);
 
-    let message = { id: null };
     try {
-      message = this.deserialize(packet);
-      const { sessionId } = packet;
+      const { id, method, params, sessionId } = packet;
+
+      // First check for mandatory field in the packets
+      if (typeof id == "undefined") {
+        throw new TypeError("Message missing 'id' field");
+      }
+      if (typeof method == "undefined") {
+        throw new TypeError("Message missing 'method' field");
+      }
+
+      // Extract the domain name and the method name out of `method` attribute
+      const { domain, command } = Connection.splitMethod(method);
+
+      // If a `sessionId` field is passed, retrieve the session to which we
+      // should forward this packet. Otherwise send it to the default session.
+      let session;
       if (!sessionId) {
         if (!this.defaultSession) {
           throw new Error(`Connection is missing a default Session.`);
         }
-        this.defaultSession.onMessage(message);
+        session = this.defaultSession;
       } else {
-        const session = this.sessions.get(sessionId);
+        session = this.sessions.get(sessionId);
         if (!session) {
           throw new Error(`Session '${sessionId}' doesn't exists.`);
         }
-        session.onMessage(message);
       }
+
+      // Finally, instruct the targeted session to execute the command
+      const result = await session.execute(id, domain, command, params);
+      this.onResult(id, result, sessionId);
     } catch (e) {
       log.warn(e);
-      this.error(message.id, e);
+      this.onError(packet.id, e, packet.sessionId);
     }
+  }
+
+  /**
+   * Interpret a given CDP packet for a given Session.
+   *
+   * @param String sessionId
+   *               ID of the session for which we should execute a command.
+   * @param String message
+   *               JSON payload of the CDP packet stringified to a string.
+   *               The CDP packet is about executing a Domain's function.
+   */
+  sendMessageToTarget(sessionId, message) {
+    const session = this.sessions.get(sessionId);
+    if (!session) {
+      throw new Error(`Session '${sessionId}' doesn't exists.`);
+    }
+    // `message` is received from `Target.sendMessageToTarget` where the
+    // message attribute is a stringify JSON payload which represent a CDP
+    // packet.
+    const packet = JSON.parse(message);
+
+    // The CDP packet sent by the client shouldn't have a sessionId attribute
+    // as it is passed as another argument of `Target.sendMessageToTarget`.
+    // Set it here in order to reuse the codepath of flatten session, where
+    // the client sends CDP packets with a `sessionId` attribute instead
+    // of going through the old and probably deprecated
+    // `Target.sendMessageToTarget` API.
+    packet.sessionId = sessionId;
+    this.onPacket(packet);
   }
 
   close() {
@@ -115,6 +255,21 @@ class Connection {
   }
 
   onClosed(status) {}
+
+  /**
+   * Splits a method, e.g. "Browser.getVersion",
+   * into domain ("Browser") and command ("getVersion") components.
+   */
+  static splitMethod(s) {
+    const ss = s.split(".");
+    if (ss.length != 2 || ss[0].length == 0 || ss[1].length == 0) {
+      throw new TypeError(`Invalid method format: "${s}"`);
+    }
+    return {
+      domain: ss[0],
+      command: ss[1],
+    };
+  }
 
   toString() {
     return `[object Connection ${this.id}]`;

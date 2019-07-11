@@ -19,6 +19,7 @@ remote.jar:
   # sessions
   content/sessions/frame-script.js (sessions/frame-script.js)
   content/sessions/ContentProcessSession.jsm (sessions/ContentProcessSession.jsm)
+  content/sessions/MainProcessSession.jsm (sessions/MainProcessSession.jsm)
   content/sessions/Session.jsm (sessions/Session.jsm)
   content/sessions/TabSession.jsm (sessions/TabSession.jsm)
 
