@@ -4974,10 +4974,9 @@ void JSScript::destroyBreakpointSite(FreeOp* fop, jsbytecode* pc) {
   BreakpointSite*& site = debug->breakpoints[pcToOffset(pc)];
   MOZ_ASSERT(site);
 
-  size_t size = site->type() == BreakpointSite::Type::JS
-                    ? sizeof(JSBreakpointSite)
-                    : sizeof(WasmBreakpointSite);
-  fop->delete_(this, site, size, MemoryUse::BreakpointSite);
+  RemoveCellMemory(this, sizeof(JSBreakpointSite), MemoryUse::BreakpointSite);
+
+  fop->delete_(site);
   site = nullptr;
 
   debug->numSites--;

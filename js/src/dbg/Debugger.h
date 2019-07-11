@@ -2047,9 +2047,6 @@ class BreakpointSite {
   BreakpointList breakpoints;
   size_t enabledCount; /* number of breakpoints in the list that are enabled */
 
-  gc::Cell* owningCellUnbarriered();
-  size_t allocSize();
-
  protected:
   virtual void recompile(FreeOp* fop) = 0;
   bool isEnabled() const { return enabledCount > 0; }
@@ -2145,14 +2142,14 @@ inline JSBreakpointSite* BreakpointSite::asJS() {
 
 class WasmBreakpointSite : public BreakpointSite {
  public:
-  wasm::Instance* instance;
+  wasm::DebugState* debug;
   uint32_t offset;
 
- private:
+ protected:
   void recompile(FreeOp* fop) override;
 
  public:
-  WasmBreakpointSite(wasm::Instance* instance, uint32_t offset);
+  WasmBreakpointSite(wasm::DebugState* debug, uint32_t offset);
 
   void destroyIfEmpty(FreeOp* fop) override;
 };

@@ -340,8 +340,7 @@ JSString* js::ComputeStackString(JSContext* cx) {
 static void exn_finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->maybeOnHelperThread());
   if (JSErrorReport* report = obj->as<ErrorObject>().getErrorReport()) {
-    // Bug 1560019: This allocation is not currently tracked.
-    fop->deleteUntracked(report);
+    fop->delete_(report);
   }
 }
 

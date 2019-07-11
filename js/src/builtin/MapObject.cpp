@@ -258,9 +258,7 @@ void MapIteratorObject::finalize(FreeOp* fop, JSObject* obj) {
   auto range = MapIteratorObjectRange(&obj->as<NativeObject>());
   MOZ_ASSERT(!fop->runtime()->gc.nursery().isInside(range));
 
-  // Bug 1560019: Malloc memory associated with MapIteratorObjects is not
-  // currently tracked.
-  fop->deleteUntracked(range);
+  fop->delete_(range);
 }
 
 size_t MapIteratorObject::objectMoved(JSObject* obj, JSObject* old) {
@@ -1030,9 +1028,7 @@ void SetIteratorObject::finalize(FreeOp* fop, JSObject* obj) {
   auto range = SetIteratorObjectRange(&obj->as<NativeObject>());
   MOZ_ASSERT(!fop->runtime()->gc.nursery().isInside(range));
 
-  // Bug 1560019: Malloc memory associated with SetIteratorObjects is not
-  // currently tracked.
-  fop->deleteUntracked(range);
+  fop->delete_(range);
 }
 
 size_t SetIteratorObject::objectMoved(JSObject* obj, JSObject* old) {
