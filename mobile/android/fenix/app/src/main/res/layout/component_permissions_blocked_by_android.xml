@@ -30,13 +30,15 @@
             android:textAppearance="?android:attr/textAppearanceListItemSmall"
             android:text="@string/phone_feature_blocked_by_android_explanation"/>
 
-    <Button
-            android:id="@+id/settings_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@style/SitePermissionButton"
-            android:text="@string/phone_feature_go_to_settings"
-            android:layout_marginTop="24dp"/>
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/settings_button"
+        style="@style/ThemeIndependentMaterialGreyButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:text="@string/phone_feature_go_to_settings" />
 
 </LinearLayout>
 
