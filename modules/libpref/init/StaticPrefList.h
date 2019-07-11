@@ -7252,6 +7252,20 @@ VARCACHE_PREF(
   int32_t, 1000
 )
 
+VARCACHE_PREF(
+  Live,
+  "privacy.sanitize.sanitizeOnShutdown",
+   privacy_sanitize_sanitizeOnShutdown,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "privacy.clearOnShutdown.cache",
+   privacy_clearOnShutdown_cache,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Prefs starting with "security."
 //---------------------------------------------------------------------------
