@@ -8,7 +8,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 
 add_task(async function() {
   const { promisesFront } = await createMainProcessPromisesFront();

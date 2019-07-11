@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const loaders = ChromeUtils.import(
-  "resource://devtools/shared/base-loader.js",
-  null
-);
+const loaders = ChromeUtils.import("resource://devtools/shared/base-loader.js");
 const { devtools, loader } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );

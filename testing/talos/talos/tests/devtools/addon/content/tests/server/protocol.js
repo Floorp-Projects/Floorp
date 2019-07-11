@@ -44,7 +44,7 @@ module.exports = async function() {
     "data:,(" +
       encodeURIComponent(
         `function () {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
       const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
       ActorRegistry.registerModule("${url}", {
