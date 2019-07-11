@@ -13,13 +13,9 @@ import six
 import subprocess
 import sys
 import errno
-try:
-    from shutil import which
-except ImportError:
-    # shutil.which is not available in Python 2.7
-    import which
 
 from mach.mixin.process import ProcessExecutionMixin
+from mozfile import which
 from mozversioncontrol import (
     get_repository_from_build_config,
     get_repository_object,
@@ -581,9 +577,8 @@ class MozbuildObject(ProcessExecutionMixin):
 
         try:
             if sys.platform.startswith('darwin'):
-                try:
-                    notifier = which.which('terminal-notifier')
-                except which.WhichError:
+                notifier = which('terminal-notifier')
+                if not notifier:
                     raise Exception('Install terminal-notifier to get '
                                     'a notification when the build finishes.')
                 self.run_process([notifier, '-title',
@@ -616,9 +611,8 @@ class MozbuildObject(ProcessExecutionMixin):
                                      FLASHW_CAPTION | FLASHW_TRAY | FLASHW_TIMERNOFG, 3, 0)
                 FlashWindowEx(params)
             else:
-                try:
-                    notifier = which.which('notify-send')
-                except which.WhichError:
+                notifier = which('notify-send')
+                if not notifier:
                     raise Exception('Install notify-send (usually part of '
                                     'the libnotify package) to get a notification when '
                                     'the build finishes.')
@@ -785,9 +779,8 @@ class MozbuildObject(ProcessExecutionMixin):
             if os.path.isabs(test):
                 make = test
             else:
-                try:
-                    make = which.which(test)
-                except which.WhichError:
+                make = which(test)
+                if not make:
                     continue
             result, xcode_lisense_error_tmp = validate_make(make)
             if result:

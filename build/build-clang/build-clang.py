@@ -14,10 +14,11 @@ import fnmatch
 import glob
 import errno
 import re
-from contextlib import contextmanager
 import sys
-import which
+from contextlib import contextmanager
 from distutils.dir_util import copy_tree
+
+from mozfile import which
 
 
 def symlink(source, link_name):
@@ -436,10 +437,10 @@ def get_tool(config, key):
             return f
 
     # Assume that we have the name of some program that should be on PATH.
-    try:
-        return which.which(f) if f else which.which(key)
-    except which.WhichError:
-        raise ValueError("%s not found on PATH" % f)
+    tool = which(f) if f else which(key)
+    if not tool:
+        raise ValueError("%s not found on PATH" % (f or key))
+    return tool
 
 
 # This function is intended to be called on the final build directory when

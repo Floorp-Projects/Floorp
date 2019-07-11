@@ -13,7 +13,6 @@ import os
 import subprocess
 import sys
 import time
-import which
 
 from collections import (
     Counter,
@@ -528,15 +527,13 @@ class BuildMonitor(MozbuildObject):
     def ccache_stats(self):
         ccache_stats = None
 
-        try:
-            ccache = which.which('ccache')
-            output = subprocess.check_output([ccache, '-s'])
-            ccache_stats = CCacheStats(output)
-        except which.WhichError:
-            pass
-        except ValueError as e:
-            self.log(logging.WARNING, 'ccache', {'msg': str(e)}, '{msg}')
-
+        ccache = mozfile.which('ccache')
+        if ccache:
+            try:
+                output = subprocess.check_output([ccache, '-s'])
+                ccache_stats = CCacheStats(output)
+            except ValueError as e:
+                self.log(logging.WARNING, 'ccache', {'msg': str(e)}, '{msg}')
         return ccache_stats
 
 
