@@ -108,8 +108,7 @@ class Target extends Domain {
     const session = new TabSession(
       this.session.connection,
       target,
-      sessionIds++,
-      this.session
+      sessionIds++
     );
     this.emit("Target.attachedToTarget", {
       targetInfo: {
@@ -126,12 +125,7 @@ class Target extends Domain {
   setAutoAttach() {}
 
   sendMessageToTarget({ sessionId, message }) {
-    const { sessions } = this.session.connection;
-    const session = sessions.get(sessionId);
-    if (!session) {
-      throw new Error(`Session '${sessionId}' doesn't exists.`);
-    }
-    message = JSON.parse(message);
-    session.onMessage(message);
+    const { connection } = this.session;
+    connection.sendMessageToTarget(sessionId, message);
   }
 }

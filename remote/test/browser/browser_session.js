@@ -12,7 +12,7 @@ add_task(async function() {
   try {
     await client.send("Hoobaflooba");
   } catch (e) {
-    ok(e.message.match(/TypeError: Invalid method format/));
+    ok(e.message.match(/Invalid method format/));
   }
   try {
     await client.send("Hooba.flooba");
