@@ -62,8 +62,6 @@ pref("browser.cache.disk.max_priority_chunks_memory_usage", 40960);
 pref("browser.cache.disk_cache_ssl",        true);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);
-// Limit of recent metadata we keep in memory for faster access, in Kb
-pref("browser.cache.disk.metadata_memory_limit", 250); // 0.25 MB
 // The number of chunks we preload ahead of read.  One chunk has currently 256kB.
 pref("browser.cache.disk.preload_chunk_count", 4); // 1 MB of read ahead
 // The half life used to re-compute cache entries frecency in hours.
