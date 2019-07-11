@@ -22,7 +22,11 @@ import org.mozilla.fenix.ext.requireComponents
 class PairFragment : Fragment(), BackHandler {
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_pair, container, false)
     }
 
@@ -30,8 +34,12 @@ class PairFragment : Fragment(), BackHandler {
         super.onViewCreated(view, savedInstanceState)
 
         val instructionsText = view.findViewById(R.id.pair_instructions) as TextView
-        instructionsText.setText(HtmlCompat.fromHtml(getString(R.string.pair_instructions),
-            HtmlCompat.FROM_HTML_MODE_LEGACY))
+        instructionsText.setText(
+            HtmlCompat.fromHtml(
+                getString(R.string.pair_instructions),
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
+        )
 
         qrFeature.set(
             QrFeature(
@@ -59,7 +67,7 @@ class PairFragment : Fragment(), BackHandler {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_sync)
+        (activity as AppCompatActivity).title = getString(R.string.sync_scan_code)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
 
@@ -74,7 +82,11 @@ class PairFragment : Fragment(), BackHandler {
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)

@@ -5,25 +5,25 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.text.HtmlCompat
+import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment.findNavController
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
+import kotlinx.android.synthetic.main.fragment_turn_on_sync.view.*
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.support.ktx.android.content.hasCamera
-import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.isInExperiment
 
 @SuppressWarnings("TooManyFunctions")
-class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
+class TurnOnSyncFragment : Fragment(), AccountObserver {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireComponents.analytics.metrics.track(Event.SyncAuthOpened)
@@ -46,25 +46,19 @@ class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
         (activity as AppCompatActivity).supportActionBar?.show()
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.turn_on_sync_preferences, rootKey)
-
-        val preferenceSignIn =
-            findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_sign_in))
-        val preferencePairSignIn =
-            findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_pair))
-        preferenceSignIn?.onPreferenceClickListener = getClickListenerForSignIn()
-        preferencePairSignIn?.onPreferenceClickListener = getClickListenerForPairing()
-        preferencePairSignIn?.isVisible = context?.hasCamera() ?: true
-
-        // if FxA pairing has been turned off on the server
-        if (context?.isInExperiment(Experiments.asFeatureFxAPairingDisabled)!!) {
-            preferencePairSignIn?.isVisible = false
-        }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val view = inflater.inflate(R.layout.fragment_turn_on_sync, container, false)
+        view.sign_in_scan_button.setOnClickListener(getClickListenerForPairing())
+        view.sign_in_email_button.setOnClickListener(getClickListenerForSignIn())
+        view.sign_in_instructions.text = HtmlCompat.fromHtml(
+            getString(R.string.sign_in_instructions),
+            HtmlCompat.FROM_HTML_MODE_LEGACY
+        )
+        return view
     }
 
-    private fun getClickListenerForSignIn(): Preference.OnPreferenceClickListener {
-        return Preference.OnPreferenceClickListener {
+    private fun getClickListenerForSignIn(): View.OnClickListener {
+        return View.OnClickListener {
             requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
             // TODO The sign-in web content populates session history,
             // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
@@ -76,9 +70,9 @@ class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
         }
     }
 
-    private fun getClickListenerForPairing(): Preference.OnPreferenceClickListener {
-        return Preference.OnPreferenceClickListener {
-            val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairInstructionsFragment()
+    private fun getClickListenerForPairing(): View.OnClickListener {
+        return View.OnClickListener {
+            val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
             Navigation.findNavController(view!!).navigate(directions)
             requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
 
@@ -95,4 +89,5 @@ class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onAuthenticationProblems() {}
     override fun onError(error: Exception) {}
     override fun onLoggedOut() {}
-    override fun onProfileUpdated(profile: Profile) {} }
+    override fun onProfileUpdated(profile: Profile) {}
+}

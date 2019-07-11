@@ -81,7 +81,6 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
     items.addAll(when (onboardingState) {
         OnboardingState.SignedOut -> {
             listOf(
-                AdapterItem.OnboardingSectionHeader { it.getString(R.string.onboarding_fxa_section_header) },
                 AdapterItem.OnboardingFirefoxAccount(onboardingState)
             )
         }

@@ -335,20 +335,9 @@
             app:popUpTo="@+id/settingsFragment"
             app:popUpToInclusive="true" />
         <action
-            android:id="@+id/action_turnOnSyncFragment_to_pairInstructionsFragment"
-            app:destination="@id/pairInstructionsFragment" />
+            android:id="@+id/action_turnOnSyncFragment_to_pairFragment"
+            app:destination="@id/pairFragment" />
     </fragment>
-
-    <dialog
-        android:id="@+id/pairInstructionsFragment"
-        android:name="org.mozilla.fenix.settings.PairInstructionsFragment"
-        android:label="PairInstructionsFragment">
-        <action
-            android:id="@+id/action_pairInstructionsFragment_to_pairFragment"
-            app:destination="@id/pairFragment"
-            app:popUpTo="@+id/pairInstructionsFragment"
-            app:popUpToInclusive="true" />
-    </dialog>
 
     <fragment
         android:id="@+id/pairFragment"
