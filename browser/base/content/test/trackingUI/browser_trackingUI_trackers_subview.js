@@ -13,10 +13,6 @@ add_task(async function setup() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
 
-  // Avoid the content blocking tour interfering with our tests by popping up.
-  await SpecialPowers.pushPrefEnv({
-    set: [[ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS]],
-  });
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {

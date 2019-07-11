@@ -1186,7 +1186,6 @@ pref("services.sync.prefs.sync.app.shield.optoutstudies.enabled", true);
 // uncompromised Sync-connected devices.
 pref("services.sync.prefs.sync.browser.contentblocking.category", true);
 pref("services.sync.prefs.sync.browser.contentblocking.features.strict", true);
-pref("services.sync.prefs.sync.browser.contentblocking.introCount", true);
 pref("services.sync.prefs.sync.browser.crashReports.unsubmittedCheck.autoSubmit2", true);
 pref("services.sync.prefs.sync.browser.ctrlTab.recentlyUsedOrder", true);
 pref("services.sync.prefs.sync.browser.discovery.enabled", true);
@@ -1614,18 +1613,10 @@ pref("browser.contentblocking.rejecttrackers.reportBreakage.enabled", true);
 
 pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-issues.herokuapp.com/new");
 
-pref("browser.contentblocking.introCount", 0);
-
-pref("browser.contentblocking.maxIntroCount", 5);
-// 1800 = 30 min in seconds
-pref("browser.contentblocking.introDelaySeconds", 1800);
-
 // Enables the new Protections Panel.
 #ifdef NIGHTLY_BUILD
 pref("browser.protections_panel.enabled", true);
 #endif
-
-pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/content-blocking/start/");
 
 // Always enable newtab segregation using containers
 pref("privacy.usercontext.about_newtab_segregation.enabled", true);

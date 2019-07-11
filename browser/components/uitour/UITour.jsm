@@ -36,11 +36,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm"
 );
@@ -147,8 +142,6 @@ var UITour = {
     ],
     ["backForward", { query: "#back-button" }],
     ["bookmarks", { query: "#bookmarks-menu-button" }],
-    ["controlCenter-trackingUnblock", controlCenterTrackingToggleTarget(true)],
-    ["controlCenter-trackingBlock", controlCenterTrackingToggleTarget(false)],
     [
       "customize",
       {
@@ -243,24 +236,6 @@ var UITour = {
             return null;
           }
           return element;
-        },
-      },
-    ],
-    [
-      "trackingProtection",
-      {
-        query: aDocument => {
-          if (
-            Services.prefs.getBoolPref(
-              "toolkit.cosmeticAnimations.enabled",
-              false
-            )
-          ) {
-            return aDocument.getElementById(
-              "tracking-protection-icon-animatable-box"
-            );
-          }
-          return aDocument.getElementById("tracking-protection-icon");
         },
       },
     ],
@@ -928,14 +903,6 @@ var UITour = {
           ["ViewShowing", this.onPageActionPanelSubviewShowing],
         ],
       },
-      {
-        name: "controlCenter",
-        node: aWindow.gIdentityHandler._identityPopup,
-        events: [
-          ["popuphidden", this.onPanelHidden],
-          ["popuphiding", this.onControlCenterHiding],
-        ],
-      },
     ];
     for (let panel of panels) {
       // Ensure the menu panel is hidden and clean up panel listeners after calling hideMenu.
@@ -1536,31 +1503,6 @@ var UITour = {
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
       openMenuButton(menuBtn);
-    } else if (aMenuName == "controlCenter") {
-      let popup = aWindow.gIdentityHandler._identityPopup;
-
-      // Add the listener even if the panel is already open since it will still
-      // only get registered once even if it was UITour that opened it.
-      popup.addEventListener("popuphiding", this.onControlCenterHiding);
-      popup.addEventListener("popuphidden", this.onPanelHidden);
-
-      popup.setAttribute("noautohide", "true");
-      this.clearAvailableTargetsCache();
-
-      if (popup.state == "open") {
-        if (aOpenCallback) {
-          aOpenCallback();
-        }
-        return;
-      }
-
-      this.recreatePopup(popup);
-
-      // Open the control center
-      if (aOpenCallback) {
-        popup.addEventListener("popupshown", aOpenCallback, { once: true });
-      }
-      aWindow.document.getElementById("identity-box").click();
     } else if (aMenuName == "pocket") {
       let pageAction = PageActions.actionForID("pocket");
       if (!pageAction) {
@@ -1615,9 +1557,6 @@ var UITour = {
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
       closeMenuButton(menuBtn);
-    } else if (aMenuName == "controlCenter") {
-      let panel = aWindow.gIdentityHandler._identityPopup;
-      panel.hidePopup();
     } else if (aMenuName == "urlbar") {
       aWindow.gURLBar.view.close();
     } else if (aMenuName == "pageActionPanel") {
@@ -1701,12 +1640,6 @@ var UITour = {
       false,
       UITour.targetIsInPageActionPanel
     );
-  },
-
-  onControlCenterHiding(aEvent) {
-    UITour._hideAnnotationsForPanel(aEvent, true, aTarget => {
-      return aTarget.targetName.startsWith("controlCenter-");
-    });
   },
 
   onPanelHidden(aEvent) {
@@ -2021,30 +1954,6 @@ var UITour = {
     }
   },
 };
-
-function controlCenterTrackingToggleTarget(aUnblock) {
-  return {
-    infoPanelPosition: "rightcenter topleft",
-    query(aDocument) {
-      let popup = aDocument.defaultView.gIdentityHandler._identityPopup;
-      if (popup.state != "open") {
-        return null;
-      }
-      let buttonId = null;
-      if (aUnblock) {
-        if (PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView)) {
-          buttonId = "tracking-action-unblock-private";
-        } else {
-          buttonId = "tracking-action-unblock";
-        }
-      } else {
-        buttonId = "tracking-action-block";
-      }
-      let element = aDocument.getElementById(buttonId);
-      return UITour.isElementVisible(element) ? element : null;
-    },
-  };
-}
 
 this.UITour.init();
 
