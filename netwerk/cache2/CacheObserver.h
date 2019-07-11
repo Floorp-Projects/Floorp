@@ -72,7 +72,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
                      browser_cache_disk_max_priority_chunks_memory_usage()
                : StaticPrefs::browser_cache_disk_max_chunks_memory_usage();
   }
-  static uint32_t CompressionLevel() { return sCompressionLevel; }
   static uint32_t HalfLifeSeconds() { return sHalfLifeHours * 60.0F * 60.0F; }
   static bool ClearCacheOnShutdown() {
     return sSanitizeOnShutdown && sClearCacheOnShutdown;
@@ -111,7 +110,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
 
   static int32_t sAutoMemoryCacheCapacity;
   static Atomic<uint32_t, Relaxed> sDiskCacheCapacity;
-  static uint32_t sCompressionLevel;
   static float sHalfLifeHours;
   static bool sSanitizeOnShutdown;
   static bool sClearCacheOnShutdown;

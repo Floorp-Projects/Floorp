@@ -33,9 +33,6 @@ static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024;  // 250 MB
 Atomic<uint32_t, Relaxed> CacheObserver::sDiskCacheCapacity(
     kDefaultDiskCacheCapacity);
 
-static uint32_t const kDefaultCompressionLevel = 1;
-uint32_t CacheObserver::sCompressionLevel = kDefaultCompressionLevel;
-
 static bool kDefaultSanitizeOnShutdown = false;
 bool CacheObserver::sSanitizeOnShutdown = kDefaultSanitizeOnShutdown;
 
@@ -108,11 +105,6 @@ void CacheObserver::AttachToPreferences() {
   mozilla::Preferences::AddAtomicUintVarCache(&sDiskCacheCapacity,
                                               "browser.cache.disk.capacity",
                                               kDefaultDiskCacheCapacity);
-
-  // http://mxr.mozilla.org/mozilla-central/source/netwerk/cache/nsCacheEntryDescriptor.cpp#367
-  mozilla::Preferences::AddUintVarCache(&sCompressionLevel,
-                                        "browser.cache.compression_level",
-                                        kDefaultCompressionLevel);
 
   mozilla::Preferences::GetComplex(
       "browser.cache.disk.parent_directory", NS_GET_IID(nsIFile),
