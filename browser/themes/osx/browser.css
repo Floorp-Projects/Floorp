@@ -284,27 +284,6 @@ html|input.urlbar-input {
   }
 }
 
-#urlbar-search-footer {
-  border-top: 1px solid var(--panel-separator-color);
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#urlbar-search-settings {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  color: GrayText;
-  margin: 0;
-  padding: 8px 20px;
-}
-
-#urlbar-search-settings:hover {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#urlbar-search-settings:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
 #search-container {
   min-width: calc(54px + 11ch);
 }
@@ -324,8 +303,6 @@ html|input.urlbar-input {
   list-style-image: url("chrome://browser/skin/share.svg");
 }
 
-%include ../shared/urlbarSearchSuggestionsNotification.inc.css
-
 /* ----- AUTOCOMPLETE ----- */
 
 %include ../shared/autocomplete.inc.css
@@ -342,28 +319,12 @@ html|input.urlbar-input {
   border-style: none;
 }
 
-/* Give an extra margin top to align the top of the awesomebar with the
- * bottom of the nav bar, OSX calculates the panel position with an missing
- * 1px - https://bugzilla.mozilla.org/show_bug.cgi?id=1406353
- */
-#PopupAutoCompleteRichResult {
-  margin-top: 1px;
-}
-
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid #C7C7C7;
 }
 
-.ac-title,
 #urlbarView-results {
   font-size: 14px;
-}
-
-.ac-separator,
-.ac-url,
-.ac-action,
-.ac-tags {
-  font-size: 12px;
 }
 
 #BMB_bookmarksPopup[side="top"],
