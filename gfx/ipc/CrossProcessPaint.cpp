@@ -175,7 +175,7 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
   }
 
   RefPtr<CrossProcessPaint> resolver =
-      new CrossProcessPaint(aPromise, aScale, aBackgroundColor, aRoot);
+      new CrossProcessPaint(aPromise, aScale, aRoot);
 
   if (aRoot->IsInProcess()) {
     RefPtr<dom::WindowGlobalChild> childActor = aRoot->GetChildActor();
@@ -194,19 +194,14 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
     resolver->ReceiveFragment(
         aRoot, PaintFragment::Record(docShell, rect, aScale, aBackgroundColor));
   } else {
-    resolver->QueuePaint(aRoot, rect);
+    resolver->QueuePaint(aRoot, rect, aBackgroundColor);
   }
   return true;
 }
 
 CrossProcessPaint::CrossProcessPaint(dom::Promise* aPromise, float aScale,
-                                     nscolor aBackgroundColor,
                                      dom::WindowGlobalParent* aRoot)
-    : mPromise{aPromise},
-      mRoot{aRoot},
-      mScale{aScale},
-      mBackgroundColor{aBackgroundColor},
-      mPendingFragments{0} {}
+    : mPromise{aPromise}, mRoot{aRoot}, mScale{aScale}, mPendingFragments{0} {}
 
 CrossProcessPaint::~CrossProcessPaint() {}
 
@@ -274,13 +269,14 @@ void CrossProcessPaint::LostFragment(dom::WindowGlobalParent* aWGP) {
 }
 
 void CrossProcessPaint::QueuePaint(dom::WindowGlobalParent* aWGP,
-                                   const Maybe<IntRect>& aRect) {
+                                   const Maybe<IntRect>& aRect,
+                                   nscolor aBackgroundColor) {
   MOZ_ASSERT(!mReceivedFragments.GetValue(aWGP));
 
   CPP_LOG("Queueing paint for %p.\n", aWGP);
 
   // TODO - Don't apply the background color to all paints (Bug 1562722)
-  aWGP->DrawSnapshotInternal(this, aRect, mScale, mBackgroundColor);
+  aWGP->DrawSnapshotInternal(this, aRect, mScale, aBackgroundColor);
   mPendingFragments += 1;
 }
 
