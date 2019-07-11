@@ -76,7 +76,7 @@ talos:
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
     # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
 
-talos-ux:
+talos-ref-hw:
     - talos-g4
 
 raptor-firefox:

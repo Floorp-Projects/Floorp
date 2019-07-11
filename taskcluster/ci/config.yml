@@ -380,7 +380,7 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
-        t-win10-64(-hw|-ref-hw|-ux):
+        t-win10-64(-hw|-ref-hw):
             provisioner: releng-hardware
             implementation: generic-worker
             os: windows

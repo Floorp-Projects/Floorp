@@ -166,7 +166,6 @@ talos-g4:
         by-test-platform:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
-            windows10-64-ux/opt: ['try', 'mozilla-central']
             windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             windows10-aarch64/opt: ['mozilla-central', 'try']
