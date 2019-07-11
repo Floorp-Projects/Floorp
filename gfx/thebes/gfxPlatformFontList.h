@@ -200,7 +200,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   virtual void ClearLangGroupPrefFonts();
 
-  virtual void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily>>& aFamilyArray);
+  void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily>>& aFamilyArray);
 
   gfxFontEntry* SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
                                       Script aRunScript,
