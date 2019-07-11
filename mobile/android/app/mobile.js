@@ -67,8 +67,6 @@ pref("ui.scrollbarFadeDuration", 0);
 /* turn off the caret blink after 10 cycles */
 pref("ui.caretBlinkCount", 10);
 
-pref("browser.cache.memory.capacity", 1024); // kilobytes
-
 pref("browser.cache.memory_limit", 5120); // 5 MB
 
 /* image cache prefs */

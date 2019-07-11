@@ -742,6 +742,19 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.memory.capacity",
+   browser_cache_memory_capacity,
+  RelaxedAtomicInt32,
+#ifdef ANDROID
+  1024  // kilobytes
+#else
+  -1    // determine dynamically
+#endif
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
