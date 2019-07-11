@@ -44,6 +44,12 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
           "default": True,
           "help": "Run tests without multiple processes (e10s). (Desktop builds only)",
           }],
+        [["--setpref"],
+         {"action": "append",
+          "dest": "extra_prefs",
+          "default": [],
+          "help": "Extra user prefs.",
+          }],
         [["--single-stylo-traversal"],
          {"action": "store_true",
           "dest": "single_stylo_traversal",
@@ -225,6 +231,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
         cmd.append("--profile=%s" % (os.path.join(dirs['abs_work_dir'], 'profile')))
         if not self.config['e10s']:
             cmd.append('--disable-e10s')
+        cmd.extend(['--setpref={}'.format(p) for p in self.config['extra_prefs']])
         cmd.append('--gecko-log=%s' % os.path.join(dirs["abs_blob_upload_dir"],
                                                    'gecko.log'))
         # TestingMixin._download_and_extract_symbols() should set
@@ -243,7 +250,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
 
         cmd.append("--preferences=%s" % os.path.join(self.awsy_path, "conf", prefs_file))
         if dmd_enabled:
-            cmd.append("--pref=security.sandbox.content.level:0")
+            cmd.append("--setpref=security.sandbox.content.level=0")
         cmd.append(test_file)
 
         if self.config['enable_webrender']:
