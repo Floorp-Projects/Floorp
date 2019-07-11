@@ -793,6 +793,15 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 50 * 1024  // 50 MB
 )
 
+// Max-size (in KB) for entries in memory cache. Set to -1 for no limit.
+// (Note: entries bigger than than 90% of the mem-cache are never cached.)
+VARCACHE_PREF(
+  Live,
+  "browser.cache.memory.max_entry_size",
+   browser_cache_memory_max_entry_size,
+  RelaxedAtomicInt32, 5 * 1024
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
