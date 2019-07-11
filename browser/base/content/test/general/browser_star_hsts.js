@@ -14,7 +14,7 @@ add_task(async function test_star_redirect() {
     let sss = Cc["@mozilla.org/ssservice;1"].getService(
       Ci.nsISiteSecurityService
     );
-    sss.removeState(
+    sss.resetState(
       Ci.nsISiteSecurityService.HEADER_HSTS,
       NetUtil.newURI("http://example.com/"),
       0
