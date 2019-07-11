@@ -33,15 +33,6 @@ static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024;  // 250 MB
 Atomic<uint32_t, Relaxed> CacheObserver::sDiskCacheCapacity(
     kDefaultDiskCacheCapacity);
 
-static uint32_t const kDefaultMaxDiskChunksMemoryUsage = 40 * 1024;  // 40MB
-uint32_t CacheObserver::sMaxDiskChunksMemoryUsage =
-    kDefaultMaxDiskChunksMemoryUsage;
-
-static uint32_t const kDefaultMaxDiskPriorityChunksMemoryUsage =
-    40 * 1024;  // 40MB
-uint32_t CacheObserver::sMaxDiskPriorityChunksMemoryUsage =
-    kDefaultMaxDiskPriorityChunksMemoryUsage;
-
 static uint32_t const kDefaultCompressionLevel = 1;
 uint32_t CacheObserver::sCompressionLevel = kDefaultCompressionLevel;
 
@@ -117,14 +108,6 @@ void CacheObserver::AttachToPreferences() {
   mozilla::Preferences::AddAtomicUintVarCache(&sDiskCacheCapacity,
                                               "browser.cache.disk.capacity",
                                               kDefaultDiskCacheCapacity);
-
-  mozilla::Preferences::AddUintVarCache(
-      &sMaxDiskChunksMemoryUsage, "browser.cache.disk.max_chunks_memory_usage",
-      kDefaultMaxDiskChunksMemoryUsage);
-  mozilla::Preferences::AddUintVarCache(
-      &sMaxDiskPriorityChunksMemoryUsage,
-      "browser.cache.disk.max_priority_chunks_memory_usage",
-      kDefaultMaxDiskPriorityChunksMemoryUsage);
 
   // http://mxr.mozilla.org/mozilla-central/source/netwerk/cache/nsCacheEntryDescriptor.cpp#367
   mozilla::Preferences::AddUintVarCache(&sCompressionLevel,
