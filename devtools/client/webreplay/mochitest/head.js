@@ -95,7 +95,7 @@ async function checkEvaluateInTopFrameThrows(target, text) {
 
 // Return a pathname that can be used for a new recording file.
 function newRecordingFile() {
-  ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
   return OS.Path.join(
     OS.Constants.Path.tmpDir,
     "MochitestRecording" + Math.round(Math.random() * 1000000000)

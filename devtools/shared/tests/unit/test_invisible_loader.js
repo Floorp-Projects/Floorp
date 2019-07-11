@@ -34,7 +34,7 @@ function visible_loader() {
 
   // Check that for common loader used for tabs, promise modules is Promise.jsm
   // Which is required to support unhandled promises rejection in mochitests
-  const promise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {})
+  const promise = ChromeUtils.import("resource://gre/modules/Promise.jsm")
     .Promise;
   Assert.equal(loader.require("promise"), promise);
 }

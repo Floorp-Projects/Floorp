@@ -27,8 +27,7 @@ add_task(async function test() {
   // context they are debugging. `invisibleToDebugger` force loading modules in
   // a distinct compartments.
   const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm",
-    {}
+    "resource://devtools/shared/Loader.jsm"
   );
   const customLoader = new DevToolsLoader();
   customLoader.invisibleToDebugger = true;

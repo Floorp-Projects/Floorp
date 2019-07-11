@@ -5,8 +5,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
-
 add_task(async function() {
   const fileContent = await generateNetworkEventStubs();
   const filePath = OS.Path.join(`${BASE_PATH}/stubs/networkEvent.js`);

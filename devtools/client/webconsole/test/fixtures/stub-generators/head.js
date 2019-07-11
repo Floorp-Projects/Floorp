@@ -33,6 +33,8 @@ const BASE_PATH =
   env.get("MOZ_DEVELOPER_REPO_DIR") +
   "/devtools/client/webconsole/test/fixtures";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 const cachedPackets = {};
 
 /* eslint-disable complexity */

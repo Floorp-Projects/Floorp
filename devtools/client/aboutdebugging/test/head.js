@@ -17,8 +17,7 @@ const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
 const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
+  "resource://gre/modules/Extension.jsm"
 );
 const { ExtensionTestCommon } = ChromeUtils.import(
   "resource://testing-common/ExtensionTestCommon.jsm"
