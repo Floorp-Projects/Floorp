@@ -91,7 +91,9 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
 
   static bool EntryIsTooBig(int64_t aSize, bool aUsingDisk);
 
-  static uint32_t MaxShutdownIOLag() { return sMaxShutdownIOLag; }
+  static uint32_t MaxShutdownIOLag() {
+    return StaticPrefs::browser_cache_max_shutdown_io_lag();
+  }
   static bool IsPastShutdownIOLag();
 
   static bool ShuttingDown() {
@@ -115,7 +117,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static bool sClearCacheOnShutdown;
   static bool sCacheFSReported;
   static bool sHashStatsReported;
-  static Atomic<uint32_t, Relaxed> sMaxShutdownIOLag;
   static Atomic<PRIntervalTime> sShutdownDemandedTime;
   static Atomic<uint32_t, Relaxed> sTelemetryReportID;
   static Atomic<uint32_t, Relaxed> sCacheAmountWritten;

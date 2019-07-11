@@ -45,10 +45,6 @@ bool CacheObserver::sCacheFSReported = kDefaultCacheFSReported;
 static bool kDefaultHashStatsReported = false;
 bool CacheObserver::sHashStatsReported = kDefaultHashStatsReported;
 
-static uint32_t const kDefaultMaxShutdownIOLag = 2;  // seconds
-Atomic<uint32_t, Relaxed> CacheObserver::sMaxShutdownIOLag(
-    kDefaultMaxShutdownIOLag);
-
 Atomic<PRIntervalTime> CacheObserver::sShutdownDemandedTime(
     PR_INTERVAL_NO_TIMEOUT);
 
@@ -121,10 +117,6 @@ void CacheObserver::AttachToPreferences() {
   mozilla::Preferences::AddBoolVarCache(&sClearCacheOnShutdown,
                                         "privacy.clearOnShutdown.cache",
                                         kDefaultClearCacheOnShutdown);
-
-  mozilla::Preferences::AddAtomicUintVarCache(
-      &sMaxShutdownIOLag, "browser.cache.max_shutdown_io_lag",
-      kDefaultMaxShutdownIOLag);
 
   mozilla::Preferences::AddAtomicUintVarCache(
       &sTelemetryReportID, "browser.cache.disk.telemetry_report_ID",
@@ -375,12 +367,12 @@ bool CacheObserver::IsPastShutdownIOLag() {
 #endif
 
   if (sShutdownDemandedTime == PR_INTERVAL_NO_TIMEOUT ||
-      sMaxShutdownIOLag == UINT32_MAX) {
+      MaxShutdownIOLag() == UINT32_MAX) {
     return false;
   }
 
   static const PRIntervalTime kMaxShutdownIOLag =
-      PR_SecondsToInterval(sMaxShutdownIOLag);
+      PR_SecondsToInterval(MaxShutdownIOLag());
 
   if ((PR_IntervalNow() - sShutdownDemandedTime) > kMaxShutdownIOLag) {
     return true;
