@@ -676,8 +676,8 @@ struct DIGroup {
     RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
         gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
 
-    RefPtr<gfx::DrawTarget> dt =
-        gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, IntRect(IntPoint(0, 0), dtSize));
+    RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
+        recorder, dummyDt, IntRect(IntPoint(0, 0), dtSize));
     // Setup the gfxContext
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     GP("ctx-offset %f %f\n", bounds.x, bounds.y);
@@ -1342,11 +1342,11 @@ void Grouper::ConstructItemInsideInactive(
   // still
   aGroup->ComputeGeometryChange(aItem, data, mTransform, mDisplayListBuilder);
 
-  // Temporarily restrict the image bounds to the bounds of the container so that
-  // clipped children within the container know about the clip. This ensures
-  // that the bounds passed to FlushItem are contained in the bounds of the clip
-  // so that we don't include items in the recording without including their
-  // corresponding clipping items.
+  // Temporarily restrict the image bounds to the bounds of the container so
+  // that clipped children within the container know about the clip. This
+  // ensures that the bounds passed to FlushItem are contained in the bounds of
+  // the clip so that we don't include items in the recording without including
+  // their corresponding clipping items.
   IntRect oldClippedImageBounds = aGroup->mClippedImageBounds;
   aGroup->mClippedImageBounds =
       aGroup->mClippedImageBounds.Intersect(data->mRect);
@@ -1613,10 +1613,9 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       }
     }
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
-      mBuilderDumpIndex[aBuilder.GetRenderRoot()] =
-          aBuilder.Dump(mDumpIndent + 1,
-                        Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
-                        Nothing());
+      mBuilderDumpIndex[aBuilder.GetRenderRoot()] = aBuilder.Dump(
+          mDumpIndent + 1, Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
+          Nothing());
     }
     MOZ_ASSERT(mRootStackingContexts == nullptr);
     AutoRestore<wr::RenderRootArray<Maybe<StackingContextHelper>>*> rootScs(
@@ -1690,10 +1689,9 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
   if (dumpEnabled) {
     // If we're inside a nested display list, print the WR DL items from the
     // wrapper item before we start processing the nested items.
-    mBuilderDumpIndex[aBuilder.GetRenderRoot()] =
-        aBuilder.Dump(mDumpIndent + 1,
-                      Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
-                      Nothing());
+    mBuilderDumpIndex[aBuilder.GetRenderRoot()] = aBuilder.Dump(
+        mDumpIndent + 1, Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
+        Nothing());
   }
 
   mDumpIndent++;
@@ -1802,10 +1800,9 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       }
 
       if (dumpEnabled) {
-        mBuilderDumpIndex[aBuilder.GetRenderRoot()] =
-            aBuilder.Dump(mDumpIndent + 1,
-                          Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
-                          Nothing());
+        mBuilderDumpIndex[aBuilder.GetRenderRoot()] = aBuilder.Dump(
+            mDumpIndent + 1, Some(mBuilderDumpIndex[aBuilder.GetRenderRoot()]),
+            Nothing());
       }
     }
 
@@ -2501,8 +2498,8 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
 
     RefPtr<DrawTarget> dummyDt = Factory::CreateDrawTarget(
         BackendType::SKIA, IntSize(1, 1), SurfaceFormat::A8);
-    RefPtr<DrawTarget> dt =
-        Factory::CreateRecordingDrawTarget(recorder, dummyDt, IntRect(IntPoint(0, 0), size));
+    RefPtr<DrawTarget> dt = Factory::CreateRecordingDrawTarget(
+        recorder, dummyDt, IntRect(IntPoint(0, 0), size));
 
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(context);
