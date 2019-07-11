@@ -189,6 +189,17 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     }
 
     private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
+        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER_AND_LOAD) == true) {
+            this.intent.putExtra(OPEN_TO_BROWSER_AND_LOAD, false)
+            openToBrowserAndLoad(intent.getStringExtra(
+                IntentReceiverActivity.SPEECH_PROCESSING), true, BrowserDirection.FromGlobal, forceSearch = true)
+            return
+        } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
+            this.intent.putExtra(OPEN_TO_SEARCH, false)
+            navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null, true))
+            return
+        }
+
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) return
 
         this.intent.putExtra(OPEN_TO_BROWSER, false)
@@ -391,6 +402,8 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     companion object {
         const val OPEN_TO_BROWSER = "open_to_browser"
+        const val OPEN_TO_BROWSER_AND_LOAD = "open_to_browser_and_load"
+        const val OPEN_TO_SEARCH = "open_to_search"
     }
 }
 

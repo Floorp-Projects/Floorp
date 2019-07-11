@@ -30,6 +30,10 @@ class SearchInteractor(
     private val store: SearchStore
 ) : AwesomeBarInteractor, ToolbarInteractor {
 
+    data class UserTypingCheck(var ranOnTextChanged: Boolean, var userHasTyped: Boolean)
+
+    private val userTypingCheck = UserTypingCheck(false, !store.state.showShortcutEnginePicker)
+
     override fun onUrlCommitted(url: String) {
         if (url.isNotBlank()) {
             (context as HomeActivity).openToBrowserAndLoad(
@@ -55,6 +59,13 @@ class SearchInteractor(
 
     override fun onTextChanged(text: String) {
         store.dispatch(SearchAction.UpdateQuery(text))
+
+        if (userTypingCheck.ranOnTextChanged && !userTypingCheck.userHasTyped) {
+            store.dispatch(SearchAction.ShowSearchShortcutEnginePicker(false))
+            turnOnStartedTyping()
+        }
+
+        userTypingCheck.ranOnTextChanged = true
     }
 
     override fun onUrlTapped(url: String) {
@@ -88,6 +99,11 @@ class SearchInteractor(
     override fun onClickSearchEngineSettings() {
         val directions = SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
         navController.navigate(directions)
+    }
+
+    fun turnOnStartedTyping() {
+        userTypingCheck.ranOnTextChanged = true
+        userTypingCheck.userHasTyped = true
     }
 
     override fun onExistingSessionSelected(session: Session) {

@@ -38,6 +38,7 @@ class SearchInteractorTest {
         every { context.openToBrowserAndLoad(any(), any(), any(), any(), any(), any()) } just Runs
 
         every { store.state } returns state
+        every { state.showShortcutEnginePicker } returns true
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
 
@@ -58,7 +59,11 @@ class SearchInteractorTest {
     @Test
     fun onEditingCanceled() {
         val navController: NavController = mockk(relaxed = true)
-        val interactor = SearchInteractor(mockk(), navController, mockk())
+        val store: SearchStore = mockk()
+
+        every { store.state } returns mockk(relaxed = true)
+
+        val interactor = SearchInteractor(mockk(), navController, store)
 
         interactor.onEditingCanceled()
 
@@ -70,6 +75,9 @@ class SearchInteractorTest {
     @Test
     fun onTextChanged() {
         val store: SearchStore = mockk(relaxed = true)
+
+        every { store.state } returns mockk(relaxed = true)
+
         val interactor = SearchInteractor(mockk(), mockk(), store)
 
         interactor.onTextChanged("test")
@@ -88,6 +96,7 @@ class SearchInteractorTest {
 
         every { store.state } returns state
         every { state.session } returns null
+        every { state.showShortcutEnginePicker } returns true
 
         val interactor = SearchInteractor(context, mockk(), store)
 
@@ -117,6 +126,7 @@ class SearchInteractorTest {
         every { store.state } returns state
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
+        every { state.showShortcutEnginePicker } returns true
 
         val interactor = SearchInteractor(context, mockk(), store)
 
@@ -137,6 +147,10 @@ class SearchInteractorTest {
         every { context.metrics } returns mockk(relaxed = true)
 
         val store: SearchStore = mockk(relaxed = true)
+        val state: SearchState = mockk(relaxed = true)
+
+        every { store.state } returns state
+
         val interactor = SearchInteractor(context, mockk(), store)
         val searchEngine: SearchEngine = mockk(relaxed = true)
 
@@ -148,7 +162,11 @@ class SearchInteractorTest {
     @Test
     fun onClickSearchEngineSettings() {
         val navController: NavController = mockk()
-        val interactor = SearchInteractor(mockk(), navController, mockk())
+        val store: SearchStore = mockk()
+
+        every { store.state } returns mockk(relaxed = true)
+
+        val interactor = SearchInteractor(mockk(), navController, store)
 
         every { navController.navigate(any() as NavDirections) } just Runs
 
@@ -166,7 +184,9 @@ class SearchInteractorTest {
         val context: Context = mockk(relaxed = true)
         val applicationContext: FenixApplication = mockk(relaxed = true)
         every { context.applicationContext } returns applicationContext
-        val interactor = SearchInteractor(context, navController, mockk())
+        val store: SearchStore = mockk()
+        every { store.state } returns mockk(relaxed = true)
+        val interactor = SearchInteractor(context, navController, store)
         val session = Session("http://mozilla.org", false)
 
         interactor.onExistingSessionSelected(session)

@@ -209,4 +209,7 @@
     <color name="grey_button_color">#E0E0E6</color>
     <color name="destructive_button_text_color">#C50042</color>
     <color name="button_text_color">#312A65</color>
+
+    <!-- Search Widget -->
+    <color name="search_widget_text">#737373</color>
 </resources>

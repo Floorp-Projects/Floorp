@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.components.NotificationManager
@@ -17,9 +18,18 @@ import org.mozilla.fenix.utils.Settings
 
 class IntentReceiverActivity : Activity() {
 
+    // Holds the intent that initially started this activity
+    // so that it can persist through the speech activity.
+    private var previousIntent: Intent? = null
+
     @Suppress("ComplexMethod")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        previousIntent = savedInstanceState?.get(PREVIOUS_INTENT) as Intent?
+        if (previousIntent?.getBooleanExtra(SPEECH_PROCESSING, false) == true) {
+            return
+        }
 
         val isPrivate = Settings.getInstance(this).usePrivateMode
 
@@ -34,12 +44,17 @@ class IntentReceiverActivity : Activity() {
                 if (isPrivate) components.utils.privateIntentProcessor else components.utils.intentProcessor
             )
 
-            intentProcessors.any { it.process(intent) }
-            setIntentActivity(intent)
+            if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
+                previousIntent = intent
+                displaySpeechRecognizer()
+            } else {
+                intentProcessors.any { it.process(intent) }
+                setIntentActivity(intent)
 
-            startActivity(intent)
+                startActivity(intent)
 
-            finish()
+                finish()
+            }
         }
     }
 
@@ -77,5 +92,43 @@ class IntentReceiverActivity : Activity() {
         }
 
         intent.putExtra(HomeActivity.OPEN_TO_BROWSER, openToBrowser)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable(PREVIOUS_INTENT, previousIntent)
+    }
+
+    private fun displaySpeechRecognizer() {
+        val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        }
+
+        startActivityForResult(intentSpeech, SPEECH_REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
+            val spokenText: String? =
+                data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { results ->
+                    results[0]
+                }
+
+            previousIntent?.let {
+                it.putExtra(SPEECH_PROCESSING, spokenText)
+                it.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
+                startActivity(it)
+            }
+        }
+
+        finish()
+    }
+
+    companion object {
+        private const val SPEECH_REQUEST_CODE = 0
+        const val SPEECH_PROCESSING = "speech_processing"
+        const val PREVIOUS_INTENT = "previous_intent"
     }
 }
