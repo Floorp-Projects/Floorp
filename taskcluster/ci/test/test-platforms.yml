@@ -207,11 +207,11 @@ windows10-aarch64/opt:
         - windows-aarch64-tests
         - windows-talos
 
-windows10-64-ux/opt:
+windows10-64-ref-hw-2017/opt:
     build-platform: win64-shippable/opt
     test-sets:
         - raptor-firefox
-        - talos-ux
+        - talos-ref-hw
 
 windows10-64-shippable/opt:
     build-platform: win64-shippable/opt

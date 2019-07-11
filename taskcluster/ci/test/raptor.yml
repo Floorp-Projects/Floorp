@@ -6,7 +6,7 @@ job-defaults:
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2400
-            .*-ux/.*: 2400
+            .*-ref-hw-2017/.*: 2400
             default: 1800
     suite: raptor
     workdir:
@@ -15,8 +15,7 @@ job-defaults:
             default: /home/cltbld
     run-on-projects:
         by-test-platform:
-            # windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
-            windows10-64-ux/opt: ['try', 'mozilla-central']
+            windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
             windows10-aarch64/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             android-hw-.*-api-16/opt: ['try']
@@ -100,8 +99,7 @@ raptor-tp6-3-firefox:
     treeherder-symbol: Rap(tp6-3)
     run-on-projects:
         by-test-platform:
-            # windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
-            windows10-64-ux/opt: ['try', 'mozilla-central']
+            windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
             windows10-aarch64/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             android-hw-.*-api-16/opt: ['try']
@@ -2075,7 +2073,7 @@ raptor-assorted-dom-firefox:
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
-            .*-ux/.*: 2100
+            .*-ref-hw-2017/.*: 2100
             default: 1500
     mozharness:
         extra-options:
@@ -2107,7 +2105,7 @@ raptor-wasm-godot-firefox:
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
-            .*-ux/.*: 2100
+            .*-ref-hw-2017/.*: 2100
             default: 1500
     mozharness:
         extra-options:
@@ -2133,7 +2131,7 @@ raptor-wasm-godot-baseline-firefox:
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
-            .*-ux/.*: 2100
+            .*-ref-hw-2017/.*: 2100
             default: 1500
     mozharness:
         extra-options:
@@ -2160,7 +2158,7 @@ raptor-wasm-godot-cranelift-firefox:
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
-            .*-ux/.*: 2100
+            .*-ref-hw-2017/.*: 2100
             default: 1500
     mozharness:
         extra-options:
@@ -2185,7 +2183,7 @@ raptor-wasm-godot-ion-firefox:
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
-            .*-ux/.*: 2100
+            .*-ref-hw-2017/.*: 2100
             default: 1500
     mozharness:
         extra-options:
