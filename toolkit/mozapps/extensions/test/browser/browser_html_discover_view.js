@@ -289,8 +289,6 @@ add_task(async function setup() {
         "extensions.getAddons.discovery.api_url",
         `http://${AMO_TEST_HOST}/discoapi`,
       ],
-      // Enable HTML for all because some tests load non-discopane views.
-      ["extensions.htmlaboutaddons.enabled", true],
       ["extensions.htmlaboutaddons.discover.enabled", true],
       // Disable non-discopane recommendations to avoid unexpected discovery
       // API requests.

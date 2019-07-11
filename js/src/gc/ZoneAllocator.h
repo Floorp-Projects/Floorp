@@ -65,7 +65,9 @@ class ZoneAllocator : public JS::shadow::Zone,
 
   void updateAllGCMallocCountersOnGCStart();
   void updateAllGCMallocCountersOnGCEnd(const js::AutoLockGC& lock);
-  void updateAllGCThresholds(gc::GCRuntime& gc, const js::AutoLockGC& lock);
+  void updateAllGCThresholds(gc::GCRuntime& gc,
+                             JSGCInvocationKind invocationKind,
+                             const js::AutoLockGC& lock);
   js::gc::TriggerKind shouldTriggerGCForTooMuchMalloc();
 
   // Memory accounting APIs for malloc memory owned by GC cells.

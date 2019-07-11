@@ -25,6 +25,7 @@ const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const {
   webExtensionTargetSpec,
 } = require("devtools/shared/specs/targets/webextension");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(
   this,
@@ -318,11 +319,17 @@ webExtensionTargetPrototype.isExtensionWindowDescendent = function(window) {
 webExtensionTargetPrototype._allowSource = function(source) {
   // Use the source.element to detect the allowed source, if any.
   if (source.element) {
-    const domEl = unwrapDebuggerObjectGlobal(source.element);
-    return (
-      this.isExtensionWindow(domEl.ownerGlobal) ||
-      this.isExtensionWindowDescendent(domEl.ownerGlobal)
-    );
+    try {
+      const domEl = unwrapDebuggerObjectGlobal(source.element);
+      return (
+        this.isExtensionWindow(domEl.ownerGlobal) ||
+        this.isExtensionWindowDescendent(domEl.ownerGlobal)
+      );
+    } catch (e) {
+      // If the source's window is dead then the above will throw.
+      DevToolsUtils.reportException("WebExtensionTarget.allowSource", e);
+      return false;
+    }
   }
 
   // Fallback to check the uri if there is no source.element associated to the source.
