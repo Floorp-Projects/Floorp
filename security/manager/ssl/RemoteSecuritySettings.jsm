@@ -48,6 +48,17 @@ const PINNING_COLLECTION_PREF = "services.blocklist.pinning.collection";
 const PINNING_CHECKED_SECONDS_PREF = "services.blocklist.pinning.checked";
 const PINNING_SIGNER_PREF = "services.blocklist.pinning.signer";
 
+const CRLITE_FILTERS_BUCKET_PREF =
+  "security.remote_settings.crlite_filters.bucket";
+const CRLITE_FILTERS_CHECKED_SECONDS_PREF =
+  "security.remote_settings.crlite_filters.checked";
+const CRLITE_FILTERS_COLLECTION_PREF =
+  "security.remote_settings.crlite_filters.collection";
+const CRLITE_FILTERS_ENABLED_PREF =
+  "security.remote_settings.crlite_filters.enabled";
+const CRLITE_FILTERS_SIGNER_PREF =
+  "security.remote_settings.crlite_filters.signer";
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
@@ -359,14 +370,17 @@ var RemoteSecuritySettings = {
     PinningBlocklistClient.on("sync", updatePinningList);
 
     let IntermediatePreloadsClient;
+    let CRLiteFiltersClient;
     if (AppConstants.MOZ_NEW_CERT_STORAGE) {
       IntermediatePreloadsClient = new IntermediatePreloads();
+      CRLiteFiltersClient = new CRLiteFilters();
     }
 
     return {
       OneCRLBlocklistClient,
       PinningBlocklistClient,
       IntermediatePreloadsClient,
+      CRLiteFiltersClient,
     };
   },
 };
@@ -686,5 +700,103 @@ class IntermediatePreloads {
     if (result != Cr.NS_OK) {
       Cu.reportError(`Failed to remove some intermediate certificates`);
     }
+  }
+}
+
+// Helper function to compare filters. One filter is "less than" another filter (i.e. it sorts
+// earlier) if its date is older than the other. Non-incremental filters sort earlier than
+// incremental filters of the same date.
+function compareFilters(filterA, filterB) {
+  let timeA = new Date(filterA.details.name.replace(/-(full|diff)$/, ""));
+  let timeB = new Date(filterB.details.name.replace(/-(full|diff)$/, ""));
+  // If timeA is older (i.e. it is less than) timeB, it sorts earlier, so return a value less than
+  // 0.
+  if (timeA < timeB) {
+    return -1;
+  }
+  if (timeA == timeB) {
+    let incrementalA = filterA.details.name.includes("-diff");
+    let incrementalB = filterB.details.name.includes("-diff");
+    if (incrementalA == incrementalB) {
+      return 0;
+    }
+    // If filterA is non-incremental, it sorts earlier, so return a value less than 0.
+    if (!incrementalA) {
+      return -1;
+    }
+  }
+  // Otherwise, timeB is less recent or they have the same time but filterB is non-incremental while
+  // filterA is incremental, so B sorts earlier, so return a value greater than 1.
+  return 1;
+}
+
+class CRLiteFilters {
+  constructor() {
+    this.client = RemoteSettings(
+      Services.prefs.getCharPref(CRLITE_FILTERS_COLLECTION_PREF),
+      {
+        bucketNamePref: CRLITE_FILTERS_BUCKET_PREF,
+        lastCheckTimePref: CRLITE_FILTERS_CHECKED_SECONDS_PREF,
+        signerName: Services.prefs.getCharPref(CRLITE_FILTERS_SIGNER_PREF),
+      }
+    );
+
+    Services.obs.addObserver(
+      this.onObservePollEnd.bind(this),
+      "remote-settings:changes-poll-end"
+    );
+  }
+
+  async onObservePollEnd(subject, topic, data) {
+    if (!Services.prefs.getBoolPref(CRLITE_FILTERS_ENABLED_PREF, true)) {
+      log.debug("CRLite filter downloading is disabled");
+      Services.obs.notifyObservers(
+        null,
+        "remote-security-settings:crlite-filters-downloaded",
+        "disabled"
+      );
+      return;
+    }
+    let col = await this.client.openCollection();
+    let { data: current } = await col.list();
+    let fullFilters = current.filter(filter => !filter.incremental);
+    if (fullFilters.length < 1) {
+      log.debug("no full CRLite filters to download?");
+      Services.obs.notifyObservers(
+        null,
+        "remote-security-settings:crlite-filters-downloaded",
+        "unavailable"
+      );
+      return;
+    }
+    fullFilters.sort(compareFilters);
+    log.debug(fullFilters);
+    let fullFilter = fullFilters.pop(); // the most recent filter sorts last
+    let incrementalFilters = current.filter(
+      filter =>
+        // Return incremental filters that are more recent than (i.e. sort later than) the full
+        // filter.
+        filter.incremental && compareFilters(filter, fullFilter) > 0
+    );
+    incrementalFilters.sort(compareFilters);
+    let filtersDownloaded = [];
+    for (let filter of [fullFilter].concat(incrementalFilters)) {
+      try {
+        // If we've already downloaded this, the backend should just grab it from its cache.
+        let localURI = await this.client.attachments.download(filter);
+        let buffer = await (await fetch(localURI)).arrayBuffer();
+        let bytes = new Uint8Array(buffer);
+        log.debug(`Downloaded ${filter.details.name}: ${bytes.length} bytes`);
+        // In a future bug, this code will pass the downloaded filter on to nsICertStorage.
+        filtersDownloaded.push(filter.details.name);
+      } catch (e) {
+        Cu.reportError("failed to download CRLite filter", e);
+      }
+    }
+    Services.obs.notifyObservers(
+      null,
+      "remote-security-settings:crlite-filters-downloaded",
+      `finished;${filtersDownloaded.join(",")}`
+    );
   }
 }
