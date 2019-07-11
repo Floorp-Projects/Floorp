@@ -297,13 +297,15 @@ bool IpcResourceUpdateQueue::AddImage(ImageKey key,
 
 bool IpcResourceUpdateQueue::AddBlobImage(BlobImageKey key,
                                           const ImageDescriptor& aDescriptor,
-                                          Range<uint8_t> aBytes) {
+                                          Range<uint8_t> aBytes,
+                                          ImageIntRect aVisibleRect) {
   MOZ_RELEASE_ASSERT(aDescriptor.width > 0 && aDescriptor.height > 0);
   auto bytes = mWriter.Write(aBytes);
   if (!bytes.length()) {
     return false;
   }
-  mUpdates.AppendElement(layers::OpAddBlobImage(aDescriptor, bytes, 0, key));
+  mUpdates.AppendElement(
+      layers::OpAddBlobImage(aDescriptor, bytes, aVisibleRect, 0, key));
   return true;
 }
 
@@ -336,13 +338,14 @@ bool IpcResourceUpdateQueue::UpdateImageBuffer(
 bool IpcResourceUpdateQueue::UpdateBlobImage(BlobImageKey aKey,
                                              const ImageDescriptor& aDescriptor,
                                              Range<uint8_t> aBytes,
+                                             ImageIntRect aVisibleRect,
                                              ImageIntRect aDirtyRect) {
   auto bytes = mWriter.Write(aBytes);
   if (!bytes.length()) {
     return false;
   }
-  mUpdates.AppendElement(
-      layers::OpUpdateBlobImage(aDescriptor, bytes, aKey, aDirtyRect));
+  mUpdates.AppendElement(layers::OpUpdateBlobImage(aDescriptor, bytes, aKey,
+                                                   aVisibleRect, aDirtyRect));
   return true;
 }
 
@@ -355,7 +358,7 @@ void IpcResourceUpdateQueue::UpdateExternalImage(wr::ExternalImageId aExtId,
 
 void IpcResourceUpdateQueue::SetBlobImageVisibleArea(
     wr::BlobImageKey aKey, const ImageIntRect& aArea) {
-  mUpdates.AppendElement(layers::OpSetImageVisibleArea(aArea, aKey));
+  mUpdates.AppendElement(layers::OpSetBlobImageVisibleArea(aArea, aKey));
 }
 
 void IpcResourceUpdateQueue::DeleteImage(ImageKey aKey) {

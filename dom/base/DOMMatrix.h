@@ -203,7 +203,7 @@ class DOMMatrixReadOnly : public nsWrapperCache {
                       ErrorResult& aRv) const;
   void ToFloat64Array(JSContext* aCx, JS::MutableHandle<JSObject*> aResult,
                       ErrorResult& aRv) const;
-  void Stringify(nsAString& aResult);
+  void Stringify(nsAString& aResult, ErrorResult& aRv);
 
   bool WriteStructuredClone(JSContext* aCx,
                             JSStructuredCloneWriter* aWriter) const;

@@ -11,8 +11,8 @@
   --card-padding: 22px;
   --social-color: #AB71FF;
   --social-color-darker: #7F27FF;
-  --crossSite-color: #0090F4;
-  --crossSite-color-darker: #0073C3;
+  --cookie-color: #0090F4;
+  --cookie-color-darker: #0073C3;
   --tracker-color: #2AC3A2;
   --tracker-color-darker: #229C82;
   --fingerprinter-color: #FFBD4F;
@@ -32,8 +32,8 @@ body[focuseddatatype=social] {
   --tab-highlight: var(--social-color);
 }
 
-body[focuseddatatype=crossSite] {
-  --tab-highlight: var(--crossSite-color);
+body[focuseddatatype=cookie] {
+  --tab-highlight: var(--cookie-color);
 }
 
 body[focuseddatatype=tracker] {
@@ -172,12 +172,12 @@ body[focuseddatatype=cryptominer] {
   background-color: var(--social-color-darker);
 }
 
-.crossSite-bar {
-  background-color: var(--crossSite-color);
+.cookie-bar {
+  background-color: var(--cookie-color);
 }
 
-.hover-crossSite .crossSite-bar {
-  background-color: var(--crossSite-color-darker);
+.hover-cookie .cookie-bar {
+  background-color: var(--cookie-color-darker);
 }
 
 .tracker-bar {
@@ -232,10 +232,11 @@ label[data-type="social"] {
   color: var(--social-color);
 }
 
-label[data-type="crossSite"] {
+label[data-type="cookie"] {
+  color: var(--cookie-color);
   background-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
-  fill: var(--crossSite-color);
-  color: var(--crossSite-color);
+  fill: var(--cookie-color);
+  color: var(--cookie-color);
 }
 
 label[data-type="tracker"] {
@@ -257,7 +258,7 @@ label[data-type="cryptominer"] {
 }
 
 .hover-social label[for="tab-social"],
-.hover-crossSite label[for="tab-crossSite"],
+.hover-cookie label[for="tab-cookie"],
 .hover-tracker label[for="tab-tracker"],
 .hover-fingerprinter label[for="tab-fingerprinter"],
 .hover-cryptominer label[for="tab-cryptominer"],
@@ -290,7 +291,7 @@ label:hover {
 }
 
 #tab-social:checked ~ #social,
-#tab-crossSite:checked ~ #crossSite,
+#tab-cookie:checked ~ #cookie,
 #tab-tracker:checked ~ #tracker,
 #tab-fingerprinter:checked ~ #fingerprinter,
 #tab-cryptominer:checked ~ #cryptominer {

@@ -2414,11 +2414,13 @@ static uint32_t GetDisplayFlagsForFlexItem(nsIFrame* aFrame) {
 
 void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                             const nsDisplayListSet& aLists) {
-  DisplayBorderBackgroundOutline(aBuilder, aLists);
+  nsDisplayListCollection tempLists(aBuilder);
+
+  DisplayBorderBackgroundOutline(aBuilder, tempLists);
 
   // Our children are all block-level, so their borders/backgrounds all go on
   // the BlockBorderBackgrounds list.
-  nsDisplayListSet childLists(aLists, aLists.BlockBorderBackgrounds());
+  nsDisplayListSet childLists(tempLists, tempLists.BlockBorderBackgrounds());
 
   typedef CSSOrderAwareFrameIterator::OrderState OrderState;
   OrderState orderState =
@@ -2434,6 +2436,34 @@ void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     BuildDisplayListForChild(aBuilder, childFrame, childLists,
                              GetDisplayFlagsForFlexItem(childFrame));
   }
+
+  wr::RenderRoot renderRoot =
+      gfxUtils::GetRenderRootForFrame(this).valueOr(wr::RenderRoot::Default);
+  if (renderRoot == wr::RenderRoot::Default) {
+    tempLists.MoveTo(aLists);
+    return;
+  }
+
+  // This element switches to a new renderroot, so we need to wrap all the
+  // descendant display items into an nsDisplayRenderRoot.
+  // This is a bit of a hack. Collect up all descendant display items
+  // and merge them into a single Content() list. This can cause us
+  // to violate CSS stacking order, but renderRoots are kind of magic
+  // anyway.
+
+  MOZ_ASSERT(!XRE_IsContentProcess());
+  nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
+  nsDisplayList masterList;
+  masterList.AppendToTop(tempLists.BorderBackground());
+  masterList.AppendToTop(tempLists.BlockBorderBackgrounds());
+  masterList.AppendToTop(tempLists.Floats());
+  masterList.AppendToTop(tempLists.Content());
+  masterList.AppendToTop(tempLists.PositionedDescendants());
+  masterList.AppendToTop(tempLists.Outlines());
+  const ActiveScrolledRoot* ownLayerASR = contASRTracker.GetContainerASR();
+
+  aLists.Content()->AppendNewToTop<nsDisplayRenderRoot>(
+      aBuilder, this, &masterList, ownLayerASR, renderRoot);
 }
 
 void FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow,

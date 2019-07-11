@@ -19,7 +19,8 @@
 
 #include <math.h>
 
-#include "js/Equality.h"  // JS::SameValueZero
+#include "js/Conversions.h"  // JS::NumberToString
+#include "js/Equality.h"     // JS::SameValueZero
 
 namespace mozilla {
 namespace dom {
@@ -470,65 +471,47 @@ void DOMMatrixReadOnly::ToFloat64Array(JSContext* aCx,
   aResult.set(&value.toObject());
 }
 
-// Convenient way to append things as floats, not doubles.  We use this because
-// we only want to output about 6 digits of precision for our matrix()
-// functions, to preserve the behavior we used to have when we used
-// AppendPrintf.
-static void AppendFloat(nsAString& aStr, float f) { aStr.AppendFloat(f); }
-
-void DOMMatrixReadOnly::Stringify(nsAString& aResult) {
+void DOMMatrixReadOnly::Stringify(nsAString& aResult, ErrorResult& aRv) {
+  char cbuf[JS::MaximumNumberToStringLength];
   nsAutoString matrixStr;
+  auto AppendDouble = [&aRv, &cbuf, &matrixStr](double d,
+                                                bool isLastItem = false) {
+    if (!mozilla::IsFinite(d)) {
+      aRv.ThrowDOMException(
+          NS_ERROR_DOM_INVALID_STATE_ERR,
+          NS_LITERAL_CSTRING(
+              "Matrix with a non-finite element cannot be stringified."));
+      return false;
+    }
+    JS::NumberToString(d, cbuf);
+    matrixStr.AppendASCII(cbuf);
+    if (!isLastItem) {
+      matrixStr.AppendLiteral(", ");
+    }
+    return true;
+  };
+
   if (mMatrix3D) {
     // We can't use AppendPrintf here, because it does locale-specific
     // formatting of floating-point values.
     matrixStr.AssignLiteral("matrix3d(");
-    AppendFloat(matrixStr, M11());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M12());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M13());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M14());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M21());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M22());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M23());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M24());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M31());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M32());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M33());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M34());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M41());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M42());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M43());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, M44());
+    if (!AppendDouble(M11()) || !AppendDouble(M12()) || !AppendDouble(M13()) ||
+        !AppendDouble(M14()) || !AppendDouble(M21()) || !AppendDouble(M22()) ||
+        !AppendDouble(M23()) || !AppendDouble(M24()) || !AppendDouble(M31()) ||
+        !AppendDouble(M32()) || !AppendDouble(M33()) || !AppendDouble(M34()) ||
+        !AppendDouble(M41()) || !AppendDouble(M42()) || !AppendDouble(M43()) ||
+        !AppendDouble(M44(), true)) {
+      return;
+    }
     matrixStr.AppendLiteral(")");
   } else {
     // We can't use AppendPrintf here, because it does locale-specific
     // formatting of floating-point values.
     matrixStr.AssignLiteral("matrix(");
-    AppendFloat(matrixStr, A());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, B());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, C());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, D());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, E());
-    matrixStr.AppendLiteral(", ");
-    AppendFloat(matrixStr, F());
+    if (!AppendDouble(A()) || !AppendDouble(B()) || !AppendDouble(C()) ||
+        !AppendDouble(D()) || !AppendDouble(E()) || !AppendDouble(F(), true)) {
+      return;
+    }
     matrixStr.AppendLiteral(")");
   }
 

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch};
-use api::{FilterOp, TempFilterData, FilterData, ComponentTransferFuncType};
+use api::{FilterOp, TempFilterData, FilterData, FilterPrimitive, ComponentTransferFuncType};
 use api::{PipelineId, PropertyBinding, PropertyBindingId, ItemRange, MixBlendMode, StackingContext};
 use api::units::{LayoutSize, LayoutTransform};
 use crate::internal_types::{FastHashMap, Filter};
@@ -206,6 +206,10 @@ pub trait StackingContextHelpers {
         &self,
         input_filter_datas: &[TempFilterData],
     ) -> Vec<FilterData>;
+    fn filter_primitives_for_compositing(
+        &self,
+        input_filter_primitives: ItemRange<FilterPrimitive>,
+    ) -> Vec<FilterPrimitive>;
 }
 
 impl StackingContextHelpers for StackingContext {
@@ -253,5 +257,16 @@ impl StackingContextHelpers for StackingContext {
             });
         }
         filter_datas
+    }
+
+    fn filter_primitives_for_compositing(
+        &self,
+        input_filter_primitives: ItemRange<FilterPrimitive>,
+    ) -> Vec<FilterPrimitive> {
+        // Resolve these in the flattener?
+        // TODO(gw): Now that we resolve these later on,
+        //           we could probably make it a bit
+        //           more efficient than cloning these here.
+        input_filter_primitives.iter().map(|primitive| primitive.into()).collect()
     }
 }
