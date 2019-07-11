@@ -105,7 +105,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   void StoreCacheAmountWritten();
   void AttachToPreferences();
 
-  static int32_t sMemoryCacheCapacity;
   static int32_t sAutoMemoryCacheCapacity;
   static Atomic<uint32_t, Relaxed> sDiskCacheCapacity;
   static uint32_t sDiskFreeSpaceSoftLimit;

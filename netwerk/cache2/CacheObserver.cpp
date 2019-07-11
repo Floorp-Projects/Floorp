@@ -26,8 +26,6 @@ StaticRefPtr<CacheObserver> CacheObserver::sSelf;
 static float const kDefaultHalfLifeHours = 24.0F;  // 24 hours
 float CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
 
-static int32_t const kDefaultMemoryCacheCapacity = -1;  // autodetect
-int32_t CacheObserver::sMemoryCacheCapacity = kDefaultMemoryCacheCapacity;
 // Cache of the calculated memory capacity based on the system memory size in KB
 int32_t CacheObserver::sAutoMemoryCacheCapacity = -1;
 
@@ -136,9 +134,6 @@ void CacheObserver::AttachToPreferences() {
   mozilla::Preferences::AddAtomicUintVarCache(&sDiskCacheCapacity,
                                               "browser.cache.disk.capacity",
                                               kDefaultDiskCacheCapacity);
-  mozilla::Preferences::AddIntVarCache(&sMemoryCacheCapacity,
-                                       "browser.cache.memory.capacity",
-                                       kDefaultMemoryCacheCapacity);
 
   mozilla::Preferences::AddUintVarCache(
       &sDiskFreeSpaceSoftLimit, "browser.cache.disk.free_space_soft_limit",
@@ -202,7 +197,9 @@ void CacheObserver::AttachToPreferences() {
 
 // static
 uint32_t CacheObserver::MemoryCacheCapacity() {
-  if (sMemoryCacheCapacity >= 0) return sMemoryCacheCapacity;
+  if (StaticPrefs::browser_cache_memory_capacity() >= 0) {
+    return StaticPrefs::browser_cache_memory_capacity();
+  }
 
   if (sAutoMemoryCacheCapacity != -1) return sAutoMemoryCacheCapacity;
 
