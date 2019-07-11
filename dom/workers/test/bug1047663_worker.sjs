@@ -27,6 +27,7 @@ function handleRequest(request, response) {
 
   // This header is necessary for the cache to trigger.
   response.setHeader("Cache-control", "max-age=3600");
+  response.setHeader("Content-Type", "text/javascript", false);
 
   // If this is the first request, return the first source.
   if (count === "1") {
