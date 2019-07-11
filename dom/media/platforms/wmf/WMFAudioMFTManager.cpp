@@ -186,8 +186,7 @@ bool WMFAudioMFTManager::Init() {
 HRESULT
 WMFAudioMFTManager::Input(MediaRawData* aSample) {
   return mDecoder->Input(aSample->Data(), uint32_t(aSample->Size()),
-                         aSample->mTime.ToMicroseconds(),
-                         aSample->mDuration.ToMicroseconds());
+                         aSample->mTime.ToMicroseconds());
 }
 
 HRESULT
