@@ -4,8 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import gdb
+from __future__ import absolute_import
+
 from gdbpp import GeckoPrettyPrinter
+
 
 @GeckoPrettyPrinter('nsString', '^ns.*String$')
 class string_printer(object):
