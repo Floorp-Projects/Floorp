@@ -1044,7 +1044,8 @@ def ensure_spi_disabled_on_all_but_spi(config, tests):
         has_setpref = ('gtest' not in test['suite'] and
                        'cppunit' not in test['suite'] and
                        'jittest' not in test['suite'] and
-                       'junit' not in test['suite'])
+                       'junit' not in test['suite'] and
+                       'raptor' not in test['suite'])
 
         if has_setpref and variant != 'socketprocess':
             test['mozharness']['extra-options'].append(
