@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",
@@ -27,7 +29,13 @@ let idToTextMap = new Map([
 
 var AboutProtectionsHandler = {
   _inited: false,
-  _topics: ["OpenContentBlockingPreferences", "FetchContentBlockingEvents"],
+  _topics: [
+    "OpenAboutLogins",
+    "OpenContentBlockingPreferences",
+    "OpenSyncPreferences",
+    "FetchContentBlockingEvents",
+    "FetchUserLoginsData",
+  ],
 
   init() {
     this.receiveMessage = this.receiveMessage.bind(this);
@@ -48,13 +56,38 @@ var AboutProtectionsHandler = {
     this.pageListener.destroy();
   },
 
+  /**
+   * Retrieves login data for the user.
+   *
+   * @return {{ isLoggedIn: Boolean,
+   *            numberOfLogins: Number,
+   *            numberOfSyncedDevices: Number }}
+   *         The login data.
+   */
+  getLoginData() {
+    const logins = Services.logins.countLogins("", "", "");
+
+    const isLoggedIn = logins > 0;
+    return {
+      isLoggedIn,
+      numberOfLogins: logins,
+      numberOfSyncedDevices: 0,
+    };
+  },
+
   receiveMessage(aMessage) {
     let win = aMessage.target.browser.ownerGlobal;
     switch (aMessage.name) {
+      case "OpenAboutLogins":
+        win.openTrustedLinkIn("about:logins", "tab");
+        break;
       case "OpenContentBlockingPreferences":
         win.openPreferences("privacy-trackingprotection", {
           origin: "about-protections",
         });
+        break;
+      case "OpenSyncPreferences":
+        win.openTrustedLinkIn("about:preferences#sync", "tab");
         break;
       case "FetchContentBlockingEvents":
         TrackingDBService.getEventsByDateRange(
@@ -84,6 +117,12 @@ var AboutProtectionsHandler = {
             );
           }
         });
+        break;
+      case "FetchUserLoginsData":
+        aMessage.target.sendAsyncMessage(
+          "SendUserLoginsData",
+          this.getLoginData()
+        );
         break;
     }
   },
