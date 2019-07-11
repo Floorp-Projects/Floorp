@@ -11,6 +11,7 @@ import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.support.test.any
@@ -148,6 +149,7 @@ class GeckoEngineTest {
                 TrackingProtectionPolicy.SAFE_BROWSING_PHISHING
         ).categories, contentBlockingSettings.categories)
         assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.all())
+        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
 
         try {
             engine.settings.domStorageEnabled
@@ -209,11 +211,22 @@ class GeckoEngineTest {
             TrackingProtectionPolicy.SAFE_BROWSING_MALWARE,
             TrackingProtectionPolicy.SAFE_BROWSING_PHISHING
         ).categories, contentBlockingSettings.categories)
+
+        assertEquals(CookiePolicy.ACCEPT_NON_TRACKERS.id, contentBlockingSettings.cookieBehavior)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
         assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)
         assertFalse(engine.settings.allowAutoplayMedia)
         assertTrue(engine.settings.suspendMediaWhenInactive)
+
+        engine.settings.trackingProtectionPolicy =
+            TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY)
+
+        assertEquals(CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id, contentBlockingSettings.cookieBehavior)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
+
+        assertEquals(CookiePolicy.ACCEPT_ALL.id, contentBlockingSettings.cookieBehavior)
     }
 
     @Test

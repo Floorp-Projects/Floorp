@@ -161,6 +161,7 @@ class GeckoEngine(
             set(value) {
                 value?.let {
                     runtime.settings.contentBlocking.categories = it.categories
+                    runtime.settings.contentBlocking.cookieBehavior = it.cookiePolicy.id
                     defaultSettings?.trackingProtectionPolicy = value
                 }
             }

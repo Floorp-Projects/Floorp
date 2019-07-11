@@ -874,6 +874,17 @@ class GeckoEngineSessionTest {
 
         assertEquals(TrackingProtectionPolicy.all().categories, ContentBlocking.CB_STRICT)
         assertEquals(TrackingProtectionPolicy.recommended().categories, ContentBlocking.CB_DEFAULT)
+        assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL.id, ContentBlocking.COOKIE_ACCEPT_ALL)
+        assertEquals(
+            TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS.id,
+            ContentBlocking.COOKIE_ACCEPT_NON_TRACKERS
+        )
+        assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE.id, ContentBlocking.COOKIE_ACCEPT_NONE)
+        assertEquals(
+            TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id,
+            ContentBlocking.COOKIE_ACCEPT_FIRST_PARTY
+        )
+        assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_VISITED.id, ContentBlocking.COOKIE_ACCEPT_VISITED)
     }
 
     @Test
