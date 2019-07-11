@@ -54,7 +54,7 @@ function startTest() {
                        .getService(Ci.nsIIOService);
     for (let {url} of TEST_CASES) {
       let uri = gIOService.newURI(url);
-      gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
+      gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
     }
   });
 
