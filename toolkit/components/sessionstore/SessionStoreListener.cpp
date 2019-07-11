@@ -127,7 +127,8 @@ TabListener::TabListener(nsIDocShell* aDocShell, Element* aElement)
       mPrefObserverRegistered(false),
       mUpdatedTimer(nullptr),
       mTimeoutDisabled(false),
-      mUpdateInterval(15000) {
+      mUpdateInterval(15000),
+      mEpoch(0) {
   MOZ_ASSERT(mDocShell);
 }
 
@@ -475,7 +476,7 @@ bool TabListener::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
     mSessionStore->GetScrollPositions(positions, descendants);
     xulBrowserWindow->UpdateScrollPositions(positions, descendants);
   }
-  xulBrowserWindow->UpdateSessionStore(mOwnerContent, aFlushId, aIsFinal);
+  xulBrowserWindow->UpdateSessionStore(mOwnerContent, aFlushId, aIsFinal, mEpoch);
   StopTimerForUpdate();
   return true;
 }
