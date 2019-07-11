@@ -1197,13 +1197,29 @@ void js::Nursery::sweep(JSTracer* trc) {
 
 void js::Nursery::clear() {
 #if defined(JS_GC_ZEAL) || defined(JS_CRASH_DIAGNOSTICS)
-  /* Poison the nursery contents so touching a freed object will crash. */
-  for (unsigned i = currentStartChunk_; i < currentChunk_; ++i) {
+  // Poison the nursery contents so touching a freed object will crash.
+  unsigned firstClearChunk;
+  if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
+    // Poison all the chunks used in this cycle. The new start chunk is
+    // reposioned in Nursery::collect() but there's no point optimising that in
+    // this case.
+    firstClearChunk = currentStartChunk_;
+  } else {
+    // In normal mode we start at the second chunk, the first one will be used
+    // in the next cycle and poisoned in Nusery::collect();
+    MOZ_ASSERT(currentStartChunk_ == 0);
+    firstClearChunk = 1;
+  }
+  for (unsigned i = firstClearChunk; i < currentChunk_; ++i) {
     chunk(i).poisonAfterEvict();
   }
+  // Clear only the used part of the chunk because that's the part we touched,
+  // but only if it's not going to be re-used immediately (>= firstClearChunk).
+  if (currentChunk_ >= firstClearChunk) {
+    chunk(currentChunk_)
+        .poisonAfterEvict(position() - chunk(currentChunk_).start());
+  }
   MOZ_ASSERT(maxChunkCount() > 0);
-  chunk(currentChunk_)
-      .poisonAfterEvict(position() - chunk(currentChunk_).start());
 #endif
 
   /*
