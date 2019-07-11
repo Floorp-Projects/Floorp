@@ -80,9 +80,6 @@ pref("offline-apps.quota.warn", 1024); // kilobytes
 // Automatically shrink-to-fit image documents.
 pref("browser.enable_automatic_image_resizing", true);
 
-// cache compression turned off for now - see bug #715198
-pref("browser.cache.compression_level", 0);
-
 /* disable some protocol warnings */
 pref("network.protocol-handler.warn-external.tel", false);
 pref("network.protocol-handler.warn-external.sms", false);
