@@ -22,7 +22,7 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * Register the redirect target channel and obtain a unique ID for that
    * channel.
    *
-   * Primarily used in HttpChannelParentListener::AsyncOnChannelRedirect to get
+   * Primarily used in ParentChannelListener::AsyncOnChannelRedirect to get
    * a channel id sent to the HttpChannelChild being redirected.
    */
   uint32_t registerChannel(in nsIChannel channel);
@@ -54,7 +54,7 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * channel, all notification from the redirect target channel will be
    * forwarded to this stream listener.
    *
-   * Primarilly used in HttpChannelParentListener::OnRedirectResult callback
+   * Primarilly used in ParentChannelListener::OnRedirectResult callback
    * to grab the created parent side of the channel and forward notifications
    * to it.
    */
@@ -66,7 +66,7 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * self.  This releases both the real and parent channel registered under
    * the id.
    *
-   * Primarilly used in HttpChannelParentListener::OnRedirectResult callback.
+   * Primarilly used in ParentChannelListener::OnRedirectResult callback.
    */
   void deregisterChannels(in uint32_t id);
 };
