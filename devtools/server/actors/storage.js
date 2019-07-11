@@ -428,7 +428,7 @@ StorageActors.defaults = function(typeName, observationTopics) {
 
     getPrincipal(win) {
       if (win) {
-        return win.document.nodePrincipal;
+        return win.document.effectiveStoragePrincipal;
       }
       // We are running in the browser toolbox and viewing system DBs so we
       // need to use system principal.
@@ -599,7 +599,7 @@ StorageActors.createActor(
 
       const cookies = this.getCookiesFromHost(
         host,
-        doc.nodePrincipal.originAttributes
+        doc.effectiveStoragePrincipal.originAttributes
       );
 
       for (const cookie of cookies) {
@@ -723,7 +723,7 @@ StorageActors.createActor(
      */
     async editItem(data) {
       const doc = this.storageActor.document;
-      data.originAttributes = doc.nodePrincipal.originAttributes;
+      data.originAttributes = doc.effectiveStoragePrincipal.originAttributes;
       this.editCookie(data);
     },
 
@@ -737,12 +737,20 @@ StorageActors.createActor(
 
     async removeItem(host, name) {
       const doc = this.storageActor.document;
-      this.removeCookie(host, name, doc.nodePrincipal.originAttributes);
+      this.removeCookie(
+        host,
+        name,
+        doc.effectiveStoragePrincipal.originAttributes
+      );
     },
 
     async removeAll(host, domain) {
       const doc = this.storageActor.document;
-      this.removeAllCookies(host, domain, doc.nodePrincipal.originAttributes);
+      this.removeAllCookies(
+        host,
+        domain,
+        doc.effectiveStoragePrincipal.originAttributes
+      );
     },
 
     async removeAllSessionCookies(host, domain) {
@@ -750,7 +758,7 @@ StorageActors.createActor(
       this.removeAllSessionCookies(
         host,
         domain,
-        doc.nodePrincipal.originAttributes
+        doc.effectiveStoragePrincipal.originAttributes
       );
     },
 
@@ -1385,7 +1393,8 @@ StorageActors.createActor(
   {
     async getCachesForHost(host) {
       const uri = Services.io.newURI(host);
-      const attrs = this.storageActor.document.nodePrincipal.originAttributes;
+      const attrs = this.storageActor.document.effectiveStoragePrincipal
+        .originAttributes;
       const principal = Services.scriptSecurityManager.createContentPrincipal(
         uri,
         attrs
@@ -1736,7 +1745,7 @@ StorageActors.createActor(
         return { error: `Window for host ${host} not found` };
       }
 
-      const principal = win.document.nodePrincipal;
+      const principal = win.document.effectiveStoragePrincipal;
       return this.removeDB(host, principal, name);
     },
 
@@ -1748,7 +1757,7 @@ StorageActors.createActor(
         return;
       }
 
-      const principal = win.document.nodePrincipal;
+      const principal = win.document.effectiveStoragePrincipal;
       this.clearDBStore(host, principal, db, store);
     },
 
@@ -1760,7 +1769,7 @@ StorageActors.createActor(
         return;
       }
 
-      const principal = win.document.nodePrincipal;
+      const principal = win.document.effectiveStoragePrincipal;
       this.removeDBRecord(host, principal, db, store, id);
     },
 
