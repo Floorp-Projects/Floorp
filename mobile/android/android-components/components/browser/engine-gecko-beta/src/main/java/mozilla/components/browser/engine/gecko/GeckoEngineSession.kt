@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
@@ -19,6 +18,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.storage.VisitType
@@ -27,6 +27,7 @@ import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.utils.DownloadUtils
+import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
@@ -321,8 +322,9 @@ class GeckoEngineSession(
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
                 notifyObservers {
-                    // As the name LoadRequest.isRedirect may imply this flag is about http redirects. The flag
+                    // Unlike the name LoadRequest.isRedirect may imply this flag is not about http redirects. The flag
                     // is "True if and only if the request was triggered by an HTTP redirect."
+                    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1545170
                     onLoadRequest(
                         url = request.uri,
                         triggeredByRedirect = request.isRedirect,
@@ -450,12 +452,10 @@ class GeckoEngineSession(
                 return GeckoResult.fromValue(false)
             }
 
-            val result = GeckoResult<Boolean>()
-            launch {
+            return launchGeckoResult {
                 delegate.onVisited(url, visitType)
-                result.complete(true)
+                true
             }
-            return result
         }
 
         override fun getVisited(
@@ -468,12 +468,10 @@ class GeckoEngineSession(
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(null)
 
-            val result = GeckoResult<BooleanArray>()
-            launch {
-                val visits: List<Boolean>? = delegate.getVisited(urls.toList())
-                result.complete(visits?.toBooleanArray())
+            return launchGeckoResult {
+                val visits = delegate.getVisited(urls.toList())
+                visits.toBooleanArray()
             }
-            return result
         }
     }
 
@@ -534,6 +532,13 @@ class GeckoEngineSession(
         }
 
         override fun onFocusRequest(session: GeckoSession) = Unit
+
+        override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {
+            val parsed = WebAppManifestParser().parse(manifest)
+            if (parsed is WebAppManifestParser.Result.Success) {
+                notifyObservers { onWebAppManifestLoaded(parsed.manifest) }
+            }
+        }
     }
 
     private fun createContentBlockingDelegate() = object : ContentBlocking.Delegate {

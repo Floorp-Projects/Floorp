@@ -15,7 +15,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
@@ -96,8 +96,8 @@ class GeckoEngineViewTest {
 
         engineView.render(engineSession)
 
-        verify(geckoView, Mockito.never()).releaseSession()
-        verify(engineSession, Mockito.never()).unregister(any())
+        verify(geckoView, never()).releaseSession()
+        verify(engineSession, never()).unregister(any())
 
         engineView.release()
 

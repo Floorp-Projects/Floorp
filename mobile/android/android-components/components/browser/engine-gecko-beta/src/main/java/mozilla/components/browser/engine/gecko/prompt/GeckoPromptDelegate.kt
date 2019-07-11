@@ -132,6 +132,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         val isMultipleFilesSelection = selectionType == GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
 
+        val captureMode = PromptRequest.File.FacingMode.NONE
+
         val onSelectSingle: (Context, Uri) -> Unit = { context, uri ->
             callback.confirm(context, uri.toFileUri(context))
         }
@@ -145,6 +147,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 PromptRequest.File(
                     mimeTypes ?: emptyArray(),
                     isMultipleFilesSelection,
+                    captureMode,
                     onSelectSingle,
                     onSelectMultiple,
                     onDismiss

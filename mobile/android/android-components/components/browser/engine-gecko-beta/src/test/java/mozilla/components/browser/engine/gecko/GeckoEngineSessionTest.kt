@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.storage.VisitType
@@ -27,6 +28,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.test.ReflectionUtils
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -179,8 +181,8 @@ class GeckoEngineSessionTest {
                 geckoSessionProvider = geckoSessionProvider)
 
         var observedUrl = ""
-        var observedCanGoBack: Boolean = false
-        var observedCanGoForward: Boolean = false
+        var observedCanGoBack = false
+        var observedCanGoForward = false
         engineSession.register(object : EngineSession.Observer {
             override fun onLocationChange(url: String) { observedUrl = url }
             override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
@@ -229,12 +231,35 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun contentDelegateNotifiesObserverAboutWebAppManifest() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        val json = JSONObject().apply {
+            put("name", "Minimal")
+            put("start_url", "/")
+        }
+        val manifest = WebAppManifest(
+            name = "Minimal",
+            startUrl = "/"
+        )
+
+        captureDelegates()
+        contentDelegate.value.onWebAppManifest(mock(), json)
+
+        verify(observer).onWebAppManifestLoaded(manifest)
+    }
+
+    @Test
     fun permissionDelegateNotifiesObservers() {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
 
-        var observedContentPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
-        var observedAppPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
+        val observedContentPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
+        val observedAppPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
         engineSession.register(object : EngineSession.Observer {
             override fun onContentPermissionRequest(permissionRequest: PermissionRequest) {
                 observedContentPermissionRequests.add(permissionRequest)
@@ -540,7 +565,7 @@ class GeckoEngineSessionTest {
 
         // Nothing breaks if history delegate isn't configured.
         historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com", null, GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
-        engineSession.job.children.forEach { it.join() }
+            engineSession.job.children.forEach { it.join() }
 
         engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
 
@@ -1644,11 +1669,13 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
+        var observedUrl: String? = null
         var observedTriggeredByRedirect: Boolean? = null
 
         engineSession.register(object : EngineSession.Observer {
             override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
                 observedTriggeredByRedirect = triggeredByRedirect
+                observedUrl = url
             }
         })
 
@@ -1657,11 +1684,13 @@ class GeckoEngineSessionTest {
 
         assertNotNull(observedTriggeredByRedirect)
         assertTrue(observedTriggeredByRedirect!!)
+        assertEquals("sample:about", observedUrl)
 
         navigationDelegate.value.onLoadRequest(
             mock(), mockLoadRequest("sample:about", triggeredByRedirect = false))
 
         assertFalse(observedTriggeredByRedirect!!)
+        assertEquals("sample:about", observedUrl)
     }
 
     @Test
@@ -1758,10 +1787,11 @@ class GeckoEngineSessionTest {
         val observer: EngineSession.Observer = mock()
         engineSession.register(observer)
 
+        val fakeUri = "sample:about"
         navigationDelegate.value.onLoadRequest(
-            mock(), mockLoadRequest("sample:about", triggeredByRedirect = true))
+            mock(), mockLoadRequest(fakeUri, triggeredByRedirect = true))
 
-        verify(observer, never()).onLoadRequest(eq("sample:about"), anyBoolean(), anyBoolean())
+        verify(observer, never()).onLoadRequest(eq(fakeUri), anyBoolean(), anyBoolean())
     }
 
     @Test

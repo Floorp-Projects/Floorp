@@ -30,7 +30,8 @@ dependencies {
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
     implementation project(':support-ktx')
-    implementation project(path: ':support-utils')
+    implementation project(':support-utils')
+
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 

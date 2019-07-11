@@ -114,26 +114,17 @@ class GeckoPermissionRequestTest {
 
         val videoCamera = MockMediaSource("videoCamera", "videoCamera",
                 MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO)
-        val videoBrowser = MockMediaSource("videoBrowser", "videoBrowser",
-                MediaSource.SOURCE_BROWSER, MediaSource.TYPE_VIDEO)
-        val videoApplication = MockMediaSource("videoApplication", "videoApplication",
-                MediaSource.SOURCE_APPLICATION, MediaSource.TYPE_VIDEO)
         val videoScreen = MockMediaSource("videoScreen", "videoScreen",
                 MediaSource.SOURCE_SCREEN, MediaSource.TYPE_VIDEO)
-        val videoWindow = MockMediaSource("videoWindow", "videoWindow",
-                MediaSource.SOURCE_WINDOW, MediaSource.TYPE_VIDEO)
         val videoOther = MockMediaSource("videoOther", "videoOther",
                 MediaSource.SOURCE_OTHER, MediaSource.TYPE_VIDEO)
 
         val audioSources = listOf(audioCapture, audioMicrophone, audioOther)
-        val videoSources = listOf(videoApplication, videoBrowser, videoCamera, videoOther, videoScreen, videoWindow)
+        val videoSources = listOf(videoCamera, videoOther, videoScreen)
 
         val mappedPermissions = listOf(
                 Permission.ContentVideoCamera("videoCamera", "videoCamera"),
-                Permission.ContentVideoBrowser("videoBrowser", "videoBrowser"),
-                Permission.ContentVideoApplication("videoApplication", "videoApplication"),
                 Permission.ContentVideoScreen("videoScreen", "videoScreen"),
-                Permission.ContentVideoWindow("videoWindow", "videoWindow"),
                 Permission.ContentVideoOther("videoOther", "videoOther"),
                 Permission.ContentAudioMicrophone("audioMicrophone", "audioMicrophone"),
                 Permission.ContentAudioCapture("audioCapture", "audioCapture"),

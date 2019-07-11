@@ -408,7 +408,7 @@ class GeckoEngineTest {
 
         println(version)
 
-        assertTrue(version.major >= 68)
-        assertTrue(version.isAtLeast(68, 0, 0))
+        assertTrue(version.major >= 69)
+        assertTrue(version.isAtLeast(69, 0, 0))
     }
 }
