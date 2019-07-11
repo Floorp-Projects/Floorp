@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["MainProcessTarget"];
 const { Target } = ChromeUtils.import(
   "chrome://remote/content/targets/Target.jsm"
 );
-const { Session } = ChromeUtils.import(
-  "chrome://remote/content/sessions/Session.jsm"
+const { MainProcessSession } = ChromeUtils.import(
+  "chrome://remote/content/sessions/MainProcessSession.jsm"
 );
 const { RemoteAgent } = ChromeUtils.import(
   "chrome://remote/content/RemoteAgent.jsm"
@@ -31,7 +31,7 @@ class MainProcessTarget extends Target {
    * @param Targets targets
    */
   constructor(targets) {
-    super(targets, Session);
+    super(targets, MainProcessSession);
 
     this.type = "browser";
     this.id = UUIDGen.generateUUID()
