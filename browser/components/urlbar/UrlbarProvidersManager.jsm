@@ -357,6 +357,7 @@ class Query {
     // Filter out javascript results for safety. The provider is supposed to do
     // it, but we don't want to risk leaking these out.
     if (
+      match.type != UrlbarUtils.RESULT_TYPE.KEYWORD &&
       match.payload.url &&
       match.payload.url.startsWith("javascript:") &&
       !this.context.searchString.startsWith("javascript:") &&
