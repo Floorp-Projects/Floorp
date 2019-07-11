@@ -21,17 +21,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <ImageView
         android:id="@+id/sign_in_image"
         android:layout_width="320dp"
         android:layout_height="166dp"
         android:layout_marginTop="16dp"
         android:adjustViewBounds="true"
-        android:background="@drawable/ic_scan"
         android:importantForAccessibility="no"
+        android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_sign_in" />
+        app:layout_constraintTop_toBottomOf="@id/title_sign_in"
+        app:srcCompat="@drawable/ic_scan" />
 
     <TextView
         android:id="@+id/sign_in_instructions"
