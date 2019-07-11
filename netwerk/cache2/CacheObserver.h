@@ -9,6 +9,7 @@
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
+#include "mozilla/StaticPrefs.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -25,7 +26,9 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static CacheObserver* Self() { return sSelf; }
 
   // Access to preferences
-  static bool UseDiskCache() { return sUseDiskCache; }
+  static bool UseDiskCache() {
+    return StaticPrefs::browser_cache_disk_enable();
+  }
   static bool UseMemoryCache() { return sUseMemoryCache; }
   static uint32_t MetadataMemoryLimit()  // result in kilobytes.
   {
@@ -99,7 +102,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   void AttachToPreferences();
 
   static bool sUseMemoryCache;
-  static bool sUseDiskCache;
   static uint32_t sMetadataMemoryLimit;
   static int32_t sMemoryCacheCapacity;
   static int32_t sAutoMemoryCacheCapacity;
