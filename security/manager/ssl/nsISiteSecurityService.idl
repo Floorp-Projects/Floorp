@@ -160,10 +160,13 @@ interface nsISiteSecurityService : nsISupports
                        [optional] out uint32_t aFailureResult);
 
     /**
-     * Given a header type, removes state relating to that header of a host,
+     * Given a header type, resets state relating to that header of a host,
      * including the includeSubdomains state that would affect subdomains.
      * This essentially removes the state for the domain tree rooted at this
-     * host.
+     * host. If any preloaded information is present for that host, that
+     * information will then be used instead of any other previously existing
+     * state.
+     *
      * @param aType   the type of security state in question
      * @param aURI    the URI of the target host
      * @param aFlags  options for this request as defined in nsISocketProvider:
@@ -175,10 +178,10 @@ interface nsISiteSecurityService : nsISupports
      *                          happens).
      */
     [implicit_jscontext, optional_argc, must_use]
-    void removeState(in uint32_t aType,
-                     in nsIURI aURI,
-                     in uint32_t aFlags,
-                     [optional] in jsval aOriginAttributes);
+    void resetState(in uint32_t aType,
+                    in nsIURI aURI,
+                    in uint32_t aFlags,
+                    [optional] in jsval aOriginAttributes);
 
     /**
      * Checks whether or not the URI's hostname has a given security state set.

@@ -55,7 +55,7 @@ function checkPassValidPin(pinValue, settingPin, expectedMaxAge) {
   // setup preconditions for the test, if setting ensure there is no previous
   // state, if removing ensure there is a valid pin in place.
   if (settingPin) {
-    gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
+    gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
   } else {
     // add a known valid pin!
     let validPinValue = "max-age=5000;" + VALID_PIN1 + BACKUP_PIN1;

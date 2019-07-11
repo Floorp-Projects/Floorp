@@ -920,14 +920,14 @@ const SecuritySettingsCleaner = {
         Ci.nsISiteSecurityService.HEADER_HSTS,
         Ci.nsISiteSecurityService.HEADER_HPKP,
       ]) {
-        // Also remove HSTS/HPKP/OMS information for subdomains by enumerating
+        // Also remove HSTS/HPKP information for subdomains by enumerating
         // the information in the site security service.
         for (let entry of sss.enumerate(type)) {
           let hostname = entry.hostname;
           if (Services.eTLD.hasRootDomain(hostname, aHost)) {
-            // This uri is used as a key to remove the state.
+            // This uri is used as a key to reset the state.
             let uri = Services.io.newURI("https://" + hostname);
-            sss.removeState(type, uri, 0, entry.originAttributes);
+            sss.resetState(type, uri, 0, entry.originAttributes);
           }
         }
       }
