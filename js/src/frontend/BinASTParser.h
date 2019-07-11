@@ -104,11 +104,14 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   using Base::raiseMissingVariableInAssertedScope;
   using Base::raiseOOM;
 
-  using Base::addScopeName;
-  using Base::buildFunction;
   using Base::buildFunctionBox;
-  using Base::captureFunctionName;
+  using Base::finishEagerFunction;
+  using Base::finishLazyFunction;
   using Base::makeEmptyFunctionNode;
+  using Base::setFunctionParametersAndBody;
+
+  using Base::addScopeName;
+  using Base::captureFunctionName;
 
   using Base::checkBinding;
   using Base::checkPositionalParameterIndices;
