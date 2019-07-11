@@ -1132,6 +1132,17 @@ void AudioCallbackDriver::CompleteAudioContextOperations(
   }
 }
 
+TimeDuration AudioCallbackDriver::AudioOutputLatency() {
+  uint32_t latency_frames;
+  int rv = cubeb_stream_get_latency(mAudioStream, &latency_frames);
+  if (rv || mSampleRate == 0) {
+    return TimeDuration::FromSeconds(0.0);
+  }
+
+  return TimeDuration::FromSeconds(static_cast<double>(latency_frames) /
+                                   mSampleRate);
+}
+
 void AudioCallbackDriver::FallbackToSystemClockDriver() {
   MOZ_ASSERT(!ThreadRunning());
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();

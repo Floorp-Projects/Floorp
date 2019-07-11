@@ -453,6 +453,8 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
 
   uint32_t AudioOutputChannelCount() const { return mOutputChannels; }
 
+  double AudioOutputLatency();
+
   /**
    * The audio input channel count for a MediaStreamGraph is the max of all the
    * channel counts requested by the listeners. The max channel count is
@@ -950,6 +952,12 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    * Read by stable state runnable on main thread. Protected by mMonitor.
    */
   GraphTime mNextMainThreadGraphTime = 0;
+
+  /**
+   * Cached audio output latency, in seconds. Main thread only. This is reset
+   * whenever the audio device running this MediaStreamGraph changes.
+   */
+  double mAudioOutputLatency;
 };
 
 }  // namespace mozilla

@@ -433,6 +433,9 @@ class AudioCallbackDriver : public GraphDriver,
 
   void CompleteAudioContextOperations(AsyncCubebOperation aOperation);
 
+  // Returns the output latency for the current audio output stream.
+  TimeDuration AudioOutputLatency();
+
  private:
   /* Remove Mixer callbacks when switching */
   void RemoveMixerCallback();

@@ -523,6 +523,8 @@ AudioListener* AudioContext::Listener() {
   return mListener;
 }
 
+double AudioContext::OutputLatency() { return Graph()->AudioOutputLatency(); }
+
 Worklet* AudioContext::GetAudioWorklet(ErrorResult& aRv) {
   if (!mWorklet) {
     mWorklet = AudioWorkletImpl::CreateWorklet(this, aRv);

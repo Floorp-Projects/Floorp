@@ -18,8 +18,9 @@ dictionary AudioContextOptions {
  Constructor(optional AudioContextOptions contextOptions = {})]
 interface AudioContext : BaseAudioContext {
 
-    // Bug 1324545: readonly        attribute double outputLatency;
     // Bug 1324545: AudioTimestamp                  getOutputTimestamp ();
+    readonly        attribute double               baseLatency;
+    readonly        attribute double               outputLatency;
 
     [Throws]
     Promise<void> suspend();
