@@ -615,7 +615,7 @@ impl Wrench {
     }
 
     pub fn shut_down(self, rx: Receiver<NotifierEvent>) {
-        self.api.shut_down();
+        self.api.shut_down(true);
 
         loop {
             match rx.recv() {

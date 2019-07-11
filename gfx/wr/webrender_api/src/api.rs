@@ -347,7 +347,6 @@ impl Transaction {
         key: BlobImageKey,
         descriptor: ImageDescriptor,
         data: Arc<BlobImageData>,
-        visible_rect: DeviceIntRect,
         tiling: Option<TileSize>,
     ) {
         self.resource_updates.push(
@@ -355,7 +354,6 @@ impl Transaction {
                 key,
                 descriptor,
                 data,
-                visible_rect,
                 tiling,
             })
         );
@@ -366,7 +364,6 @@ impl Transaction {
         key: BlobImageKey,
         descriptor: ImageDescriptor,
         data: Arc<BlobImageData>,
-        visible_rect: DeviceIntRect,
         dirty_rect: &BlobDirtyRect,
     ) {
         self.resource_updates.push(
@@ -374,7 +371,6 @@ impl Transaction {
                 key,
                 descriptor,
                 data,
-                visible_rect,
                 dirty_rect: *dirty_rect,
             })
         );
@@ -527,7 +523,6 @@ pub struct AddBlobImage {
     pub descriptor: ImageDescriptor,
     //#[serde(with = "serde_image_data_raw")]
     pub data: Arc<BlobImageData>,
-    pub visible_rect: DeviceIntRect,
     pub tiling: Option<TileSize>,
 }
 
@@ -537,7 +532,6 @@ pub struct UpdateBlobImage {
     pub descriptor: ImageDescriptor,
     //#[serde(with = "serde_image_data_raw")]
     pub data: Arc<BlobImageData>,
-    pub visible_rect: DeviceIntRect,
     pub dirty_rect: BlobDirtyRect,
 }
 
@@ -763,7 +757,7 @@ pub enum ApiMsg {
     WakeUp,
     WakeSceneBuilder,
     FlushSceneBuilder(MsgSender<()>),
-    ShutDown,
+    ShutDown(Option<MsgSender<()>>),
 }
 
 impl fmt::Debug for ApiMsg {
@@ -782,7 +776,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
             ApiMsg::ReportMemory(..) => "ApiMsg::ReportMemory",
             ApiMsg::DebugCommand(..) => "ApiMsg::DebugCommand",
-            ApiMsg::ShutDown => "ApiMsg::ShutDown",
+            ApiMsg::ShutDown(..) => "ApiMsg::ShutDown",
             ApiMsg::WakeUp => "ApiMsg::WakeUp",
             ApiMsg::WakeSceneBuilder => "ApiMsg::WakeSceneBuilder",
             ApiMsg::FlushSceneBuilder(..) => "ApiMsg::FlushSceneBuilder",
@@ -1195,8 +1189,14 @@ impl RenderApi {
         self.api_sender.send(ApiMsg::DebugCommand(cmd)).unwrap();
     }
 
-    pub fn shut_down(&self) {
-        self.api_sender.send(ApiMsg::ShutDown).unwrap();
+    pub fn shut_down(&self, synchronously: bool) {
+        if synchronously {
+            let (tx, rx) = channel::msg_channel().unwrap();
+            self.api_sender.send(ApiMsg::ShutDown(Some(tx))).unwrap();
+            rx.recv().unwrap();
+        } else {
+            self.api_sender.send(ApiMsg::ShutDown(None)).unwrap();
+        }
     }
 
     /// Create a new unique key that can be used for

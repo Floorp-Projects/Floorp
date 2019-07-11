@@ -3878,7 +3878,9 @@ void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
     FreeOp* fop = TlsContext.get()->defaultFreeOp();
     for (Nursery::BufferSet::Range r = buffers.all(); !r.empty();
          r.popFront()) {
-      fop->free_(r.front());
+      // Malloc memory associated with nursery objects is not tracked as these
+      // are assumed to be short lived.
+      fop->freeUntracked(r.front());
     }
   } while (!lifoBlocksToFree.ref().isEmpty() ||
            !buffersToFreeAfterMinorGC.ref().empty());
@@ -3909,7 +3911,9 @@ void Realm::destroy(FreeOp* fop) {
   if (principals()) {
     JS_DropPrincipals(rt->mainContextFromOwnThread(), principals());
   }
-  fop->delete_(this);
+  // Bug 1560019: Malloc memory associated with a zone but not with a specific
+  // GC thing is not currently tracked.
+  fop->deleteUntracked(this);
 }
 
 void Compartment::destroy(FreeOp* fop) {
@@ -3917,13 +3921,17 @@ void Compartment::destroy(FreeOp* fop) {
   if (auto callback = rt->destroyCompartmentCallback) {
     callback(fop, this);
   }
-  fop->delete_(this);
+  // Bug 1560019: Malloc memory associated with a zone but not with a specific
+  // GC thing is not currently tracked.
+  fop->deleteUntracked(this);
   rt->gc.stats().sweptCompartment();
 }
 
 void Zone::destroy(FreeOp* fop) {
   MOZ_ASSERT(compartments().empty());
-  fop->delete_(this);
+  // Bug 1560019: Malloc memory associated with a zone but not with a specific
+  // GC thing is not currently tracked.
+  fop->deleteUntracked(this);
   fop->runtime()->gc.stats().sweptZone();
 }
 

@@ -7,7 +7,7 @@
 //! registering fonts found in the blob (see `prepare_request`).
 
 use webrender::api::*;
-use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation, DeviceIntRect};
+use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation};
 use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb, ArcVecU8, gecko_profiler_start_marker, gecko_profiler_end_marker};
 use rayon::ThreadPool;
 use rayon::prelude::*;
@@ -172,15 +172,7 @@ struct BlobReader<'a> {
     reader: BufReader<'a>,
     /// Where the buffer head is.
     begin: usize,
-    origin: IntPoint,
 }
-
-#[derive(PartialEq, Debug, Eq, Clone, Copy)]
-struct IntPoint {
-    x: i32,
-    y: i32
-}
-
 
 /// The metadata for each display item in a blob image (doesn't match the serialized layout).
 ///
@@ -200,12 +192,10 @@ impl<'a> BlobReader<'a> {
     /// Creates a new BlobReader for the given buffer.
     fn new(buf: &'a[u8]) -> BlobReader<'a> {
         // The offset of the index is at the end of the buffer.
-        let index_offset_pos = buf.len()-(mem::size_of::<usize>() + mem::size_of::<IntPoint>());
-        assert!(index_offset_pos < buf.len());
+        let index_offset_pos = buf.len()-mem::size_of::<usize>();
         let index_offset = unsafe { convert_from_bytes::<usize>(&buf[index_offset_pos..]) };
-        let origin = unsafe { convert_from_bytes(&buf[(index_offset_pos + mem::size_of::<usize>())..]) };
 
-        BlobReader { reader: BufReader::new(&buf[index_offset..index_offset_pos]), begin: 0, origin }
+        BlobReader { reader: BufReader::new(&buf[index_offset..index_offset_pos]), begin: 0 }
     }
 
     /// Reads the next display item's metadata.
@@ -251,13 +241,12 @@ impl BlobWriter {
     }
 
     /// Completes the blob image, producing a single buffer containing it.
-    fn finish(mut self, origin: IntPoint) -> Vec<u8> {
+    fn finish(mut self) -> Vec<u8> {
         // Append the index to the end of the buffer
         // and then append the offset to the beginning of the index.
         let index_begin = self.data.len();
         self.data.extend_from_slice(&self.index);
         self.data.extend_from_slice(convert_to_bytes(&index_begin));
-        self.data.extend_from_slice(convert_to_bytes(&origin));
         self.data
     }
 }
@@ -393,9 +382,6 @@ fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d) -> Vec<u
     let mut old_reader = CachedReader::new(old_buf);
     let mut new_reader = BlobReader::new(new_buf);
 
-    // we currently only support merging blobs that have the same origin
-    assert_eq!(old_reader.reader.origin, new_reader.origin);
-
     // Loop over both new and old entries merging them.
     // Both new and old must have the same number of entries that
     // overlap but are not contained by the dirty rect, and they
@@ -426,7 +412,7 @@ fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d) -> Vec<u
 
     assert!(old_reader.cache.is_empty());
 
-    let result = result.finish(new_reader.origin);
+    let result = result.finish();
     dump_index(&result);
     result
 }
@@ -445,9 +431,6 @@ struct BlobFont {
 struct BlobCommand {
     /// The blob.
     data: Arc<BlobImageData>,
-    /// What part of the blob should be rasterized (visible_rect's top-left corresponds to
-    /// (0,0) in the blob's rasterization)
-    visible_rect: DeviceIntRect,
     /// The size of the tiles to use in rasterization, if tiling should be used.
     tile_size: Option<TileSize>,
 }
@@ -457,7 +440,6 @@ struct BlobCommand {
     descriptor: BlobImageDescriptor,
     commands: Arc<BlobImageData>,
     dirty_rect: BlobDirtyRect,
-    visible_rect: DeviceIntRect,
     tile_size: Option<TileSize>,
 }
 
@@ -496,12 +478,10 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
             let command = &self.blob_commands[&params.request.key];
             let blob = Arc::clone(&command.data);
             assert!(params.descriptor.rect.size.width > 0 && params.descriptor.rect.size.height  > 0);
-
             Job {
                 request: params.request,
                 descriptor: params.descriptor,
                 commands: blob,
-                visible_rect: command.visible_rect,
                 dirty_rect: params.dirty_rect,
                 tile_size: command.tile_size,
             }
@@ -551,7 +531,6 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
             descriptor.rect.size.width,
             descriptor.rect.size.height,
             descriptor.format,
-            &job.visible_rect,
             job.tile_size.as_ref(),
             job.request.tile.as_ref(),
             dirty_rect.as_ref(),
@@ -576,15 +555,15 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
 }
 
 impl BlobImageHandler for Moz2dBlobImageHandler {
-    fn add(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, visible_rect: &DeviceIntRect, tile_size: Option<TileSize>) {
+    fn add(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, tile_size: Option<TileSize>) {
         {
             let index = BlobReader::new(&data);
             assert!(index.reader.has_more());
         }
-        self.blob_commands.insert(key, BlobCommand { data: Arc::clone(&data), visible_rect: *visible_rect, tile_size });
+        self.blob_commands.insert(key, BlobCommand { data: Arc::clone(&data), tile_size });
     }
 
-    fn update(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, visible_rect: &DeviceIntRect, dirty_rect: &BlobDirtyRect) {
+    fn update(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, dirty_rect: &BlobDirtyRect) {
         match self.blob_commands.entry(key) {
             hash_map::Entry::Occupied(mut e) => {
                 let command = e.get_mut();
@@ -604,8 +583,6 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
                     }
                 };
                 command.data = Arc::new(merge_blob_images(&command.data, &data, dirty_rect));
-                assert_eq!(command.visible_rect, *visible_rect);
-                command.visible_rect = *visible_rect;
             }
             _ => { panic!("missing image key"); }
         }
