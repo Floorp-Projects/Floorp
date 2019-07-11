@@ -297,9 +297,12 @@ class nsBlockFrame : public nsContainerFrame {
    * Compute the final block size of this frame.
    *
    * @param aReflowInput Data structure passed from parent during reflow.
-   * @param aReflowStatus A pointer to the reflow status for when we're finished
-   *        doing reflow. this will get set appropriately if the block-size
-   *        causes us to exceed the current available (page) block-size.
+   * @param aStatus [in/out] The reflow status for this reflow operation. When
+   *        this function is called, aStatus should represent what our status
+   *        would be as if we were shrinkwrapping our children's block-size.
+   *        This function will then adjust aStatus before returning, if our
+   *        status is different in light of our actual final block-size and
+   *        current page/column's available block-size.
    * @param aContentBSize The block-size of content, precomputed outside of this
    *        function. The final block-size that is used in aMetrics will be set
    *        to either this or the available block-size, whichever is larger, in

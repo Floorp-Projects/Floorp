@@ -7357,20 +7357,21 @@ nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
   NS_ASSERTION(!(IS_TRUE_OVERFLOW_CONTAINER(this) && computedBSizeLeftOver),
                "overflow container must not have computedBSizeLeftOver");
 
+  const nsReflowStatus statusFromChildren = aStatus;
   const nscoord availBSize = aReflowInput.AvailableBSize();
   nscoord finalBSize = NSCoordSaturatingAdd(
       NSCoordSaturatingAdd(aBorderPadding.BStart(wm), computedBSizeLeftOver),
       aBorderPadding.BEnd(wm));
 
-  if (aStatus.IsIncomplete() && finalBSize <= availBSize) {
+  if (statusFromChildren.IsIncomplete() && finalBSize <= availBSize) {
     // We used up all of our element's remaining computed block-size on this
-    // page/column, but we're incomplete. Set status to complete except for
-    // overflow.
+    // page/column, but our children are incomplete. Set aStatus to
+    // overflow-incomplete.
     aStatus.SetOverflowIncomplete();
     return finalBSize;
   }
 
-  if (aStatus.IsComplete()) {
+  if (statusFromChildren.IsComplete()) {
     if (computedBSizeLeftOver > 0 && NS_UNCONSTRAINEDSIZE != availBSize &&
         finalBSize > availBSize) {
       if (ShouldAvoidBreakInside(aReflowInput)) {
@@ -7390,7 +7391,7 @@ nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
 
   if (aStatus.IsIncomplete()) {
     MOZ_ASSERT(finalBSize > availBSize,
-               "We should be overflow incomplete and should've returned "
+               "We should be overflow-incomplete and should've returned "
                "in early if-branch!");
 
     // Use the current block-size; continuations will take up the rest.
