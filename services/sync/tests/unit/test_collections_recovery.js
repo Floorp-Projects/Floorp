@@ -46,6 +46,7 @@ add_task(async function test_missing_crypto_collection() {
   ];
   // Disable addon sync because AddonManager won't be initialized here.
   await Service.engineManager.unregister("addons");
+  await Service.engineManager.unregister("extension-storage");
 
   for (let coll of collections) {
     handlers["/1.1/johndoe/storage/" + coll] = johnU(
