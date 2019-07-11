@@ -82,7 +82,6 @@ UNIFIED_SOURCES += [
     'HttpBaseChannel.cpp',
     'HttpChannelChild.cpp',
     'HttpChannelParent.cpp',
-    'HttpChannelParentListener.cpp',
     'HttpInfo.cpp',
     'HttpTrafficAnalyzer.cpp',
     'InterceptedChannel.cpp',
@@ -107,6 +106,7 @@ UNIFIED_SOURCES += [
     'nsServerTiming.cpp',
     'NullHttpChannel.cpp',
     'NullHttpTransaction.cpp',
+    'ParentChannelListener.cpp',
     'TunnelUtils.cpp',
 ]
 

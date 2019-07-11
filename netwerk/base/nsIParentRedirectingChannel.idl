@@ -34,16 +34,13 @@ interface nsIParentRedirectingChannel : nsIParentChannel
    * URI.  The implementation is responsible for calling the redirect observers
    * on the child process and provide the decision result to the callback.
    *
-   * @param newChannelId
-   *    id of the redirect channel obtained from nsIRedirectChannelRegistrar.
    * @param newURI
    *    the URI we redirect to
    * @param callback
    *    redirect result callback, usage is compatible with how
    *    nsIChannelEventSink defines it
    */
-  void startRedirect(in uint32_t newChannelId,
-                     in nsIChannel newChannel,
+  void startRedirect(in nsIChannel newChannel,
                      in uint32_t redirectFlags,
                      in nsIAsyncVerifyRedirectCallback callback);
 
@@ -64,8 +61,8 @@ interface nsIParentRedirectingChannel : nsIParentChannel
    * that moment the nsIParentChannel implementation expects it will be
    * forwarded all notifications from the 'real' channel.
    *
-   * Primarilly used by HttpChannelParentListener::OnRedirectResult and kept
-   * as mActiveChannel and mRedirectChannel in that class.
+   * Primarilly used by ParentChannelListener::OnRedirectResult and kept as
+   * mActiveChannel and mRedirectChannel in that class.
    */
   void completeRedirect(in boolean succeeded);
 };

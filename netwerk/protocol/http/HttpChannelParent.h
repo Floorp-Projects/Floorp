@@ -17,6 +17,8 @@
 #include "nsIObserver.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
+#include "nsIChannelEventSink.h"
+#include "nsIRedirectResultListener.h"
 #include "nsHttpChannel.h"
 #include "nsIAuthPromptProvider.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -41,7 +43,7 @@ class PBrowserOrId;
 namespace net {
 
 class HttpBackgroundChannelParent;
-class HttpChannelParentListener;
+class ParentChannelListener;
 class ChannelEventQueue;
 
 // Note: nsIInterfaceRequestor must be the first base so that do_QueryObject()
@@ -56,7 +58,9 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
                                 public nsIAuthPromptProvider,
                                 public nsIDeprecationWarner,
                                 public HttpChannelSecurityWarningReporter,
-                                public nsIAsyncVerifyRedirectReadyCallback {
+                                public nsIAsyncVerifyRedirectReadyCallback,
+                                public nsIChannelEventSink,
+                                public nsIRedirectResultListener {
   virtual ~HttpChannelParent();
 
  public:
@@ -70,6 +74,8 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSIDEPRECATIONWARNER
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIREDIRECTRESULTLISTENER
 
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
@@ -129,7 +135,11 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // child channel.
   void CancelChildCrossProcessRedirect();
 
-  already_AddRefed<HttpChannelParentListener> GetParentListener();
+  already_AddRefed<ParentChannelListener> GetParentListener();
+
+  nsresult TriggerCrossProcessRedirect(nsIChannel* oldChannel,
+                                       nsILoadInfo* aLoadInfo,
+                                       uint64_t aIdentifier);
 
  protected:
   // used to connect redirected-to channel in parent with just created
@@ -218,7 +228,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // Asynchronously calls NotifyDiversionFailed.
   void FailDiversion(nsresult aErrorCode);
 
-  friend class HttpChannelParentListener;
+  friend class ParentChannelListener;
   RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
 
   MOZ_MUST_USE nsresult ReportSecurityMessage(
@@ -287,7 +297,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   nsCOMPtr<nsILoadContext> mLoadContext;
   RefPtr<nsHttpHandler> mHttpHandler;
 
-  RefPtr<HttpChannelParentListener> mParentListener;
+  RefPtr<ParentChannelListener> mParentListener;
   // The listener we are diverting to or will divert to if mPendingDiversion
   // is set.
   nsCOMPtr<nsIStreamListener> mDivertListener;
@@ -308,7 +318,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   // Corresponding redirect channel registrar Id. 0 means redirection is not
   // started.
-  uint32_t mRedirectRegistrarId = 0;
+  uint32_t mRedirectChannelId = 0;
 
   PBOverrideStatus mPBOverride;
 
