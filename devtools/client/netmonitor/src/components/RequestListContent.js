@@ -232,9 +232,9 @@ class RequestListContent extends Component {
     this.tooltip.hide();
   }
 
-  onMouseDown(evt, id) {
+  onMouseDown(evt, id, channelId) {
     if (evt.button === LEFT_MOUSE_BUTTON) {
-      this.props.selectRequest(id);
+      this.props.selectRequest(id, channelId);
     } else if (evt.button === RIGHT_MOUSE_BUTTON) {
       this.props.onItemRightMouseButtonDown(id);
     }
@@ -383,7 +383,8 @@ class RequestListContent extends Component {
               onContextMenu: this.onContextMenu,
               onFocusedNodeChange: this.onFocusedNodeChange,
               onDoubleClick: () => this.onDoubleClick(item),
-              onMouseDown: evt => this.onMouseDown(evt, item.id),
+              onMouseDown: evt =>
+                this.onMouseDown(evt, item.id, item.channelId),
               onCauseBadgeMouseDown: () => onCauseBadgeMouseDown(item.cause),
               onSecurityIconMouseDown: () =>
                 onSecurityIconMouseDown(item.securityState),
@@ -435,7 +436,8 @@ module.exports = connect(
         dispatch(Actions.selectDetailsPanelTab("stack-trace"));
       }
     },
-    selectRequest: id => dispatch(Actions.selectRequest(id)),
+    selectRequest: (id, channelId) =>
+      dispatch(Actions.selectRequest(id, channelId)),
     onItemRightMouseButtonDown: id => dispatch(Actions.rightClickRequest(id)),
     onItemMouseDown: id => dispatch(Actions.selectRequest(id)),
     /**
