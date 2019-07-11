@@ -84,7 +84,7 @@ class GeckoWebExtension(
         }
 
         val geckoSession = (session as GeckoEngineSession).geckoSession
-        geckoSession.setMessageDelegate(messageDelegate, name)
+        geckoSession.setMessageDelegate(nativeExtension, messageDelegate, name)
     }
 
     /**
@@ -92,7 +92,7 @@ class GeckoWebExtension(
      */
     override fun hasContentMessageHandler(session: EngineSession, name: String): Boolean {
         val geckoSession = (session as GeckoEngineSession).geckoSession
-        return geckoSession.getMessageDelegate(name) != null
+        return geckoSession.getMessageDelegate(nativeExtension, name) != null
     }
 }
 
