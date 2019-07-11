@@ -4,8 +4,6 @@
 
 /* eslint-env mozilla/frame-script */
 
-import LockwiseCard from "./lockwise-card.js";
-
 document.addEventListener("DOMContentLoaded", e => {
   let todayInMs = Date.now();
   let weekAgoInMs = todayInMs - 7 * 24 * 60 * 60 * 1000;
@@ -109,8 +107,4 @@ document.addEventListener("DOMContentLoaded", e => {
   RPMAddMessageListener("SendContentBlockingRecords", message => {
     createGraph(message.data);
   });
-
-  // Create the Lockwise card.
-  const lockwiseCard = new LockwiseCard(document);
-  lockwiseCard.init();
 });
