@@ -19,3 +19,4 @@ linux64-cctools-port:
         toolchain-artifact: public/build/cctools.tar.xz
     toolchains:
         - linux64-clang-8
+        - linux64-binutils
