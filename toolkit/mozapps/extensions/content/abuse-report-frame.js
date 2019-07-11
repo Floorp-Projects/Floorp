@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* globals MozXULElement, Services, useHtmlViews, getHtmlBrowser, htmlBrowserLoaded */
+/* globals MozXULElement, Services, getHtmlBrowser, htmlBrowserLoaded */
 
 {
   const ABUSE_REPORT_ENABLED = Services.prefs.getBoolPref(
@@ -270,7 +270,7 @@
   // If the html about:addons and the abuse report are both enabled, register
   // the custom XUL WebComponent and append it to the XUL stack element
   // (if not registered the element will be just a dummy hidden box)
-  if (useHtmlViews && ABUSE_REPORT_ENABLED) {
+  if (ABUSE_REPORT_ENABLED) {
     customElements.define(
       "addon-abuse-report-xulframe",
       AddonAbuseReportsXULFrame

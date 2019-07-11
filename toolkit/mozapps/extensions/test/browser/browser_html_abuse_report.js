@@ -270,7 +270,6 @@ add_task(async function setup() {
   // Enable html about:addons and the abuse reporting.
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["extensions.htmlaboutaddons.enabled", true],
       ["extensions.abuseReport.enabled", true],
       ["extensions.abuseReport.url", "http://test.addons.org/api/report/"],
     ],
