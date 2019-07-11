@@ -554,6 +554,8 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
       mIsPrivateBrowsing(aIsPrivateBrowsing) {}
 
 size_t MediaCacheStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+  AutoLock lock(mMediaCache->Monitor());
+
   // Looks like these are not owned:
   // - mClient
   size_t size = mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf);
