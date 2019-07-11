@@ -1485,14 +1485,19 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
     freeChunksFrom(newCount);
   }
 
+  size_t oldCapacity = capacity_;
   capacity_ = newCapacity;
   MOZ_ASSERT(capacity_ >= ArenaSize);
 
   setCurrentEnd();
 
   if (isSubChunkMode()) {
-    AutoLockHelperThreadState lock;
     MOZ_ASSERT(currentChunk_ == 0);
+    chunk(0).poisonRange(newCapacity,
+                         Min(oldCapacity, NurseryChunkUsableSize) - newCapacity,
+                         JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
+
+    AutoLockHelperThreadState lock;
     decommitTask.queueRange(capacity_, chunk(0), lock);
     decommitTask.startOrRunIfIdle(lock);
   }
