@@ -2,8 +2,8 @@
 
 # &lt;init&gt;
 
-`FxaAccountManager(context: <ERROR CLASS>, config: `[`Config`](../../mozilla.components.service.fxa/-config.md)`, applicationScopes: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, deviceTuple: `[`DeviceTuple`](../-device-tuple/index.md)`, syncManager: `[`SyncManager`](../../mozilla.components.concept.sync/-sync-manager/index.md)`? = null, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors
-            .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob())`
+`FxaAccountManager(context: <ERROR CLASS>, serverConfig: `[`ServerConfig`](../../mozilla.components.service.fxa/-server-config.md)`, deviceConfig: `[`DeviceConfig`](../../mozilla.components.service.fxa/-device-config/index.md)`, syncConfig: `[`SyncConfig`](../../mozilla.components.service.fxa/-sync-config/index.md)`?, applicationScopes: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`> = emptySet(), coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors
+        .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob())`
 
 An account manager which encapsulates various internal details of an account lifecycle and provides
 an observer interface along with a public API for interacting with an account.
@@ -16,8 +16,10 @@ Class is 'open' to facilitate testing.
 
 `context` - A [Context](#) instance that's used for internal messaging and interacting with local storage.
 
-`config` - A [Config](../../mozilla.components.service.fxa/-config.md) used for account initialization.
+`serverConfig` - A [ServerConfig](../../mozilla.components.service.fxa/-server-config.md) used for account initialization.
 
-`applicationScopes` - A list of scopes which will be requested during account authentication.
+`deviceConfig` - A description of the current device (name, type, capabilities).
 
-`deviceTuple` - A description of the current device (name, type, capabilities).
+`syncConfig` - Optional, initial sync behaviour configuration. Sync will be disabled if this is `null`.
+
+`applicationScopes` - A set of scopes which will be requested during account authentication.

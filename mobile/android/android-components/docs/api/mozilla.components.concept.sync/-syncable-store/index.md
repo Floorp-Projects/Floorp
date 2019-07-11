@@ -2,7 +2,7 @@
 
 # SyncableStore
 
-`interface SyncableStore` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L28)
+`interface SyncableStore` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L48)
 
 Describes a "sync" entry point for a storage layer.
 
@@ -10,7 +10,7 @@ Describes a "sync" entry point for a storage layer.
 
 | Name | Summary |
 |---|---|
-| [sync](sync.md) | `abstract suspend fun sync(authInfo: `[`AuthInfo`](../-auth-info/index.md)`): `[`SyncStatus`](../-sync-status/index.md)<br>Performs a sync. |
+| [sync](sync.md) | `abstract suspend fun sync(authInfo: `[`SyncAuthInfo`](../-sync-auth-info/index.md)`): `[`SyncStatus`](../-sync-status/index.md)<br>Performs a sync. |
 
 ### Inheritors
 

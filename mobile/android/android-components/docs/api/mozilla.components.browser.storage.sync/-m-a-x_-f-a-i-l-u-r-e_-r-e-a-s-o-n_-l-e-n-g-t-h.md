@@ -2,4 +2,4 @@
 
 # MAX_FAILURE_REASON_LENGTH
 
-`const val MAX_FAILURE_REASON_LENGTH: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/Connection.kt#L21)
+`const val MAX_FAILURE_REASON_LENGTH: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/Connection.kt#L22)

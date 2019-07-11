@@ -2,11 +2,11 @@
 
 # ensureCapabilitiesAsync
 
-`fun ensureCapabilitiesAsync(capabilities: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceCapability`](../../mozilla.components.concept.sync/-device-capability/index.md)`>): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L89)
+`fun ensureCapabilitiesAsync(capabilities: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`DeviceCapability`](../../mozilla.components.concept.sync/-device-capability/index.md)`>): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L89)
 
 Overrides [DeviceConstellation.ensureCapabilitiesAsync](../../mozilla.components.concept.sync/-device-constellation/ensure-capabilities-async.md)
 
-Ensure that all passed in [capabilities](../../mozilla.components.concept.sync/-device-constellation/ensure-capabilities-async.md#mozilla.components.concept.sync.DeviceConstellation$ensureCapabilitiesAsync(kotlin.collections.List((mozilla.components.concept.sync.DeviceCapability)))/capabilities) are configured.
+Ensure that all passed in [capabilities](../../mozilla.components.concept.sync/-device-constellation/ensure-capabilities-async.md#mozilla.components.concept.sync.DeviceConstellation$ensureCapabilitiesAsync(kotlin.collections.Set((mozilla.components.concept.sync.DeviceCapability)))/capabilities) are configured.
 This may involve backend service registration, or other work involving network/disc access.
 
 ### Parameters

@@ -2,9 +2,9 @@
 
 # &lt;init&gt;
 
-`FirefoxAccount(config: `[`Config`](../-config.md)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null)`
+`FirefoxAccount(config: `[`ServerConfig`](../-server-config.md)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null)`
 
-Construct a FirefoxAccount from a [Config](../-config.md), a clientId, and a redirectUri.
+Construct a FirefoxAccount from a [Config](#), a clientId, and a redirectUri.
 
 ### Parameters
 

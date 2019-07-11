@@ -9,7 +9,6 @@
 | [AccessTokenInfo](-access-token-info/index.md) | `data class AccessTokenInfo`<br>The result of authentication with FxA via an OAuth flow. |
 | [AccountObserver](-account-observer/index.md) | `interface AccountObserver`<br>Observer interface which lets its users monitor account state changes and major events. |
 | [AuthExceptionType](-auth-exception-type/index.md) | `enum class AuthExceptionType`<br>An auth-related exception type, for use with [AuthException](-auth-exception/index.md). |
-| [AuthInfo](-auth-info/index.md) | `data class AuthInfo`<br>A Firefox Sync friendly auth object which can be obtained from [OAuthAccount](-o-auth-account/index.md). |
 | [Avatar](-avatar/index.md) | `data class Avatar` |
 | [ConstellationState](-constellation-state/index.md) | `data class ConstellationState`<br>Describes current device and other devices in the constellation. |
 | [Device](-device/index.md) | `data class Device`<br>Describes a device in the [DeviceConstellation](-device-constellation/index.md). |
@@ -26,9 +25,8 @@
 | [Profile](-profile/index.md) | `data class Profile` |
 | [StatePersistenceCallback](-state-persistence-callback/index.md) | `interface StatePersistenceCallback`<br>Describes a delegate object that is used by [OAuthAccount](-o-auth-account/index.md) to persist its internal state as it changes. |
 | [StoreSyncStatus](-store-sync-status/index.md) | `data class StoreSyncStatus` |
-| [SyncManager](-sync-manager/index.md) | `interface SyncManager : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](-sync-status-observer/index.md)`>`<br>Describes a "sync" entry point for an application. |
+| [SyncAuthInfo](-sync-auth-info/index.md) | `data class SyncAuthInfo`<br>A Firefox Sync friendly auth object which can be obtained from [OAuthAccount](-o-auth-account/index.md). |
 | [SyncStatus](-sync-status/index.md) | `sealed class SyncStatus`<br>Results of running a sync via [SyncableStore.sync](-syncable-store/sync.md). |
-| [SyncStatusObserver](-sync-status-observer/index.md) | `interface SyncStatusObserver`<br>An interface for consumers that wish to observer "sync lifecycle" events. |
 | [SyncableStore](-syncable-store/index.md) | `interface SyncableStore`<br>Describes a "sync" entry point for a storage layer. |
 | [TabData](-tab-data/index.md) | `data class TabData` |
 

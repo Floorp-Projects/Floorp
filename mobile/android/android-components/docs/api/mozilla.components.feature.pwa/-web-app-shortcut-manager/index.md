@@ -8,7 +8,7 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebAppShortcutManager(storage: `[`ManifestStorage`](../-manifest-storage/index.md)`)` |
+| [&lt;init&gt;](-init-.md) | `WebAppShortcutManager(storage: `[`ManifestStorage`](../-manifest-storage/index.md)`, supportWebApps: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)` |
 
 ### Functions
 

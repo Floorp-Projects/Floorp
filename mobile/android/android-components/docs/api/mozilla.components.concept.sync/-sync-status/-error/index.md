@@ -2,7 +2,7 @@
 
 # Error
 
-`data class Error : `[`SyncStatus`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L22)
+`data class Error : `[`SyncStatus`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L19)
 
 Sync completed with an error.
 

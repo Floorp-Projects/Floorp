@@ -31,7 +31,7 @@ A base class for concrete implementations of PlacesStorages
 
 | Name | Summary |
 |---|---|
-| [sync](../../mozilla.components.concept.sync/-syncable-store/sync.md) | `abstract suspend fun sync(authInfo: `[`AuthInfo`](../../mozilla.components.concept.sync/-auth-info/index.md)`): `[`SyncStatus`](../../mozilla.components.concept.sync/-sync-status/index.md)<br>Performs a sync. |
+| [sync](../../mozilla.components.concept.sync/-syncable-store/sync.md) | `abstract suspend fun sync(authInfo: `[`SyncAuthInfo`](../../mozilla.components.concept.sync/-sync-auth-info/index.md)`): `[`SyncStatus`](../../mozilla.components.concept.sync/-sync-status/index.md)<br>Performs a sync. |
 
 ### Inheritors
 

@@ -2,7 +2,7 @@
 
 # FirefoxAccount
 
-`class FirefoxAccount : `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L29)
+`class FirefoxAccount : `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L28)
 
 FirefoxAccount represents the authentication state of a client.
 
@@ -10,7 +10,7 @@ FirefoxAccount represents the authentication state of a client.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FirefoxAccount(config: `[`Config`](../-config.md)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null)`<br>Construct a FirefoxAccount from a [Config](../-config.md), a clientId, and a redirectUri. |
+| [&lt;init&gt;](-init-.md) | `FirefoxAccount(config: `[`ServerConfig`](../-server-config.md)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null)`<br>Construct a FirefoxAccount from a [Config](#), a clientId, and a redirectUri. |
 
 ### Functions
 
@@ -28,12 +28,6 @@ FirefoxAccount represents the authentication state of a client.
 | [getTokenServerEndpointURL](get-token-server-endpoint-u-r-l.md) | `fun getTokenServerEndpointURL(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Fetches the token server endpoint, for authentication using the SAML bearer flow. |
 | [registerPersistenceCallback](register-persistence-callback.md) | `fun registerPersistenceCallback(callback: `[`StatePersistenceCallback`](../../mozilla.components.concept.sync/-state-persistence-callback/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [toJSONString](to-j-s-o-n-string.md) | `fun toJSONString(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Saves the current account's authentication state as a JSON string, for persistence in the Android KeyStore/shared preferences. The authentication state can be restored using [FirefoxAccount.fromJSONString](from-j-s-o-n-string.md). |
-
-### Inherited Functions
-
-| Name | Summary |
-|---|---|
-| [authInfo](../../mozilla.components.concept.sync/-o-auth-account/auth-info.md) | `open suspend fun authInfo(singleScope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`AuthInfo`](../../mozilla.components.concept.sync/-auth-info/index.md)<br>Returns an [AuthInfo](../../mozilla.components.concept.sync/-auth-info/index.md) instance which may be used for data synchronization. |
 
 ### Companion Object Functions
 

@@ -8,5 +8,5 @@ Produces a snapshot of this manager's state, suitable for restoring via [Session
 Only regular sessions are included in the snapshot. Private and Custom Tab sessions are omitted.
 
 **Return**
-[Snapshot](#) of the current session state.
+[SessionManager.Snapshot](../-session-manager/-snapshot/index.md) of the current session state.
 

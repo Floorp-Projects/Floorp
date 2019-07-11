@@ -2,7 +2,7 @@
 
 # Ok
 
-`object Ok : `[`SyncStatus`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L17)
+`object Ok : `[`SyncStatus`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L14)
 
 Sync succeeded successfully.
 

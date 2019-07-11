@@ -2,7 +2,7 @@
 
 # SyncStatus
 
-`sealed class SyncStatus` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L13)
+`sealed class SyncStatus` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L10)
 
 Results of running a sync via [SyncableStore.sync](../-syncable-store/sync.md).
 

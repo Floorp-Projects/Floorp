@@ -143,7 +143,6 @@ mozilla.components.feature.search
 mozilla.components.feature.session
 mozilla.components.feature.session.behavior
 mozilla.components.feature.sitepermissions
-mozilla.components.feature.sync
 mozilla.components.feature.tab.collections
 mozilla.components.feature.tabs
 mozilla.components.feature.tabs.tabstray
@@ -178,6 +177,7 @@ mozilla.components.service.fretboard.source.kinto
 mozilla.components.service.fretboard.storage.flatfile
 mozilla.components.service.fxa
 mozilla.components.service.fxa.manager
+mozilla.components.service.fxa.sync
 mozilla.components.service.glean
 mozilla.components.service.glean.config
 mozilla.components.service.glean.debug

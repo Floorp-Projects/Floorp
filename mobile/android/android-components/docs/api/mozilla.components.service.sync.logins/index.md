@@ -29,4 +29,4 @@
 
 | Name | Summary |
 |---|---|
-| [into](into.md) | `fun `[`AuthInfo`](../mozilla.components.concept.sync/-auth-info/index.md)`.into(): `[`SyncUnlockInfo`](-sync-unlock-info.md)<br>Conversion from a generic AuthInfo type into a type 'logins' lib uses at the interface boundary. |
+| [into](into.md) | `fun `[`SyncAuthInfo`](../mozilla.components.concept.sync/-sync-auth-info/index.md)`.into(): `[`SyncUnlockInfo`](-sync-unlock-info.md)<br>Conversion from a generic AuthInfo type into a type 'logins' lib uses at the interface boundary. |

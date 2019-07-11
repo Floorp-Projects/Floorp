@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`WebAppShortcutManager(storage: `[`ManifestStorage`](../-manifest-storage/index.md)`)`
+`WebAppShortcutManager(storage: `[`ManifestStorage`](../-manifest-storage/index.md)`, supportWebApps: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`
