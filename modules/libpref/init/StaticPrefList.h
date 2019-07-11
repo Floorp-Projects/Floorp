@@ -802,6 +802,27 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 5 * 1024
 )
 
+// Memory limit (in kB) for new cache data not yet written to disk. Writes to
+// the cache are buffered and written to disk on background with low priority.
+// With a slow persistent storage these buffers may grow when data is coming
+// fast from the network. When the amount of unwritten data is exceeded, new
+// writes will simply fail. We have two buckets, one for important data
+// (priority) like html, css, fonts and js, and one for other data like images,
+// video, etc.
+// Note: 0 means no limit.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.max_chunks_memory_usage",
+   browser_cache_disk_max_chunks_memory_usage,
+  RelaxedAtomicUint32, 40 * 1024
+)
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.max_priority_chunks_memory_usage",
+   browser_cache_disk_max_priority_chunks_memory_usage,
+  RelaxedAtomicUint32, 40 * 1024
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
