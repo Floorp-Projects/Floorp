@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorU, MixBlendMode,
+    ColorU, MixBlendMode, FilterPrimitiveInput, FilterPrimitiveKind, ColorSpace,
     PropertyBinding, PropertyBindingId,
 };
 use api::units::{Au, LayoutSize, LayoutVector2D};
-use crate::intern::ItemUid;
 use crate::display_list_flattener::IsVisible;
+use crate::filterdata::SFilterData;
+use crate::intern::ItemUid;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::{LayoutPrimitiveInfo, Filter};
 use crate::picture::PictureCompositeMode;
@@ -17,6 +18,20 @@ use crate::prim_store::{
     PrimitiveInstanceKind, PrimitiveSceneData, PrimitiveStore, VectorKey,
     InternablePrimitive,
 };
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, MallocSizeOf, PartialEq, Hash, Eq)]
+pub enum FilterPrimitiveKey {
+    Identity(ColorSpace, FilterPrimitiveInput),
+    Flood(ColorSpace, ColorU),
+    Blend(ColorSpace, MixBlendMode, FilterPrimitiveInput, FilterPrimitiveInput),
+    Blur(ColorSpace, Au, FilterPrimitiveInput),
+    Opacity(ColorSpace, Au, FilterPrimitiveInput),
+    ColorMatrix(ColorSpace, [Au; 20], FilterPrimitiveInput),
+    DropShadow(ColorSpace, (VectorKey, Au, ColorU), FilterPrimitiveInput),
+    ComponentTransfer(ColorSpace, FilterPrimitiveInput, Vec<SFilterData>),
+}
 
 /// Represents a hashable description of how a picture primitive
 /// will be composited into its parent.
@@ -44,6 +59,7 @@ pub enum PictureCompositeKey {
     LinearToSrgb,
     ComponentTransfer(ItemUid),
     Flood(ColorU),
+    SvgFilter(Vec<FilterPrimitiveKey>),
 
     // MixBlendMode
     Multiply,
@@ -129,6 +145,38 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
             }
             Some(PictureCompositeMode::ComponentTransferFilter(handle)) => {
                 PictureCompositeKey::ComponentTransfer(handle.uid())
+            }
+            Some(PictureCompositeMode::SvgFilter(filter_primitives, filter_data)) => {
+                PictureCompositeKey::SvgFilter(filter_primitives.into_iter().map(|primitive| {
+                    match primitive.kind {
+                        FilterPrimitiveKind::Identity(identity) => FilterPrimitiveKey::Identity(primitive.color_space, identity.input),
+                        FilterPrimitiveKind::Blend(blend) => FilterPrimitiveKey::Blend(primitive.color_space, blend.mode, blend.input1, blend.input2),
+                        FilterPrimitiveKind::Flood(flood) => FilterPrimitiveKey::Flood(primitive.color_space, flood.color.into()),
+                        FilterPrimitiveKind::Blur(blur) => FilterPrimitiveKey::Blur(primitive.color_space, Au::from_f32_px(blur.radius), blur.input),
+                        FilterPrimitiveKind::Opacity(opacity) =>
+                            FilterPrimitiveKey::Opacity(primitive.color_space, Au::from_f32_px(opacity.opacity), opacity.input),
+                        FilterPrimitiveKind::ColorMatrix(color_matrix) => {
+                            let mut quantized_values: [Au; 20] = [Au(0); 20];
+                            for (value, result) in color_matrix.matrix.iter().zip(quantized_values.iter_mut()) {
+                                *result = Au::from_f32_px(*value);
+                            }
+                            FilterPrimitiveKey::ColorMatrix(primitive.color_space, quantized_values, color_matrix.input)
+                        }
+                        FilterPrimitiveKind::DropShadow(drop_shadow) => {
+                            FilterPrimitiveKey::DropShadow(
+                                primitive.color_space,
+                                (
+                                    drop_shadow.shadow.offset.into(),
+                                    Au::from_f32_px(drop_shadow.shadow.blur_radius),
+                                    drop_shadow.shadow.color.into(),
+                                ),
+                                drop_shadow.input,
+                            )
+                        }
+                        FilterPrimitiveKind::ComponentTransfer(component_transfer) =>
+                            FilterPrimitiveKey::ComponentTransfer(primitive.color_space, component_transfer.input, filter_data.clone()),
+                    }
+                }).collect())
             }
             Some(PictureCompositeMode::Blit(_)) |
             Some(PictureCompositeMode::TileCache { .. }) |

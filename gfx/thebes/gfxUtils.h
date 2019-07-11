@@ -316,8 +316,6 @@ class gfxUtils {
 
   static mozilla::Maybe<mozilla::wr::RenderRoot> GetRenderRootForFrame(
       const nsIFrame* aFrame);
-  static mozilla::Maybe<mozilla::wr::RenderRoot> GetRenderRootForElement(
-      const mozilla::dom::Element* aElement);
   static mozilla::wr::RenderRoot RecursivelyGetRenderRootForFrame(
       const nsIFrame* aFrame);
 };

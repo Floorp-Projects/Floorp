@@ -100,6 +100,27 @@ impl BatchTextures {
             colors: [texture, texture, TextureSource::Invalid],
         }
     }
+
+    pub fn is_compatible_with(&self, other: &BatchTextures) -> bool {
+        self.colors.iter().zip(other.colors.iter()).all(|(t1, t2)| textures_compatible(*t1, *t2))
+    }
+
+    pub fn combine_textures(&self, other: BatchTextures) -> Option<BatchTextures> {
+        if !self.is_compatible_with(&other) {
+            return None;
+        }
+
+        let mut new_textures = BatchTextures::no_texture();
+        for (i, (color, other_color)) in self.colors.iter().zip(other.colors.iter()).enumerate() {
+            // If these textures are compatible, for each source either both sources are invalid or only one is not invalid.
+            new_textures.colors[i] = if *color == TextureSource::Invalid {
+                *other_color
+            } else {
+                *color
+            };
+        }
+        Some(new_textures)
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -121,10 +142,7 @@ impl BatchKey {
     }
 
     pub fn is_compatible_with(&self, other: &BatchKey) -> bool {
-        self.kind == other.kind && self.blend_mode == other.blend_mode &&
-            textures_compatible(self.textures.colors[0], other.textures.colors[0]) &&
-            textures_compatible(self.textures.colors[1], other.textures.colors[1]) &&
-            textures_compatible(self.textures.colors[2], other.textures.colors[2])
+        self.kind == other.kind && self.blend_mode == other.blend_mode && self.textures.is_compatible_with(&other.textures)
     }
 }
 
@@ -1638,6 +1656,40 @@ impl BatchBuilder {
                                     prim_info.clip_task_index,
                                     prim_vis_mask,
                                     ctx,
+                                );
+                            }
+                            PictureCompositeMode::SvgFilter(..) => {
+                                let kind = BatchKind::Brush(
+                                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
+                                );
+                                let (uv_rect_address, textures) = render_tasks.resolve_surface(
+                                    surface_task.expect("bug: surface must be allocated by now"),
+                                    gpu_cache,
+                                );
+                                let key = BatchKey::new(
+                                    kind,
+                                    non_segmented_blend_mode,
+                                    textures,
+                                );
+                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
+                                    ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
+                                    RasterizationSpace::Screen as i32,
+                                    get_shader_opacity(1.0),
+                                    0,
+                                ]);
+
+                                self.add_brush_instance_to_batches(
+                                    key,
+                                    batch_features,
+                                    bounding_rect,
+                                    z_id,
+                                    INVALID_SEGMENT_INDEX,
+                                    EdgeAaSegmentMask::empty(),
+                                    clip_task_address,
+                                    brush_flags,
+                                    prim_header_index,
+                                    uv_rect_address.as_int(),
+                                    prim_vis_mask,
                                 );
                             }
                         }

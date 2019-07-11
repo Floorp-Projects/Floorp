@@ -64,7 +64,6 @@ namespace StaticPrefs {
 
 // Enums for the update policy.
 enum class UpdatePolicy {
-  Skip,  // Set the value to default, skip any Preferences calls.
   Once,  // Evaluate the preference once, unchanged during the session.
   Live   // Evaluate the preference and set callback so it stays current/live.
 };

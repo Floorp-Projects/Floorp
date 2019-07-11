@@ -70,7 +70,9 @@ class CrashTest {
         Assume.assumeTrue(BuildConfig.MOZ_CRASHREPORTER)
 
         messenger.send(Message.obtain(null, RemoteGeckoService.CMD_CRASH_CONTENT_NATIVE))
+
+        // This test is really slow so we allow double the usual timeout
         assertCrashIntent(CrashTestHandler.queue.poll(
-                env.defaultTimeoutMillis, TimeUnit.MILLISECONDS), false)
+                env.defaultTimeoutMillis * 2, TimeUnit.MILLISECONDS), false)
     }
 }

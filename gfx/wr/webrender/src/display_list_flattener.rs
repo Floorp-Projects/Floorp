@@ -5,7 +5,7 @@
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter};
 use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, RasterSpace};
 use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId};
-use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, GradientStop};
+use api::{FilterOp, FilterPrimitive, FontInstanceKey, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
@@ -796,6 +796,7 @@ impl<'a> DisplayListFlattener<'a> {
         origin: LayoutPoint,
         filters: ItemRange<FilterOp>,
         filter_datas: &[TempFilterData],
+        filter_primitives: ItemRange<FilterPrimitive>,
         is_backface_visible: bool,
         apply_pipeline_clip: bool,
     ) {
@@ -809,6 +810,7 @@ impl<'a> DisplayListFlattener<'a> {
             CompositeOps::new(
                 stacking_context.filter_ops_for_compositing(filters),
                 stacking_context.filter_datas_for_compositing(filter_datas),
+                stacking_context.filter_primitives_for_compositing(filter_primitives),
                 stacking_context.mix_blend_mode_for_compositing(),
             )
         };
@@ -1180,6 +1182,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.origin,
                     item.filters(),
                     item.filter_datas(),
+                    item.filter_primitives(),
                     info.is_backface_visible,
                     apply_pipeline_clip,
                 );
@@ -1309,9 +1312,10 @@ impl<'a> DisplayListFlattener<'a> {
             }
 
             // Do nothing; these are dummy items for the display list parser
-            DisplayItem::SetGradientStops => {}
-            DisplayItem::SetFilterOps => {}
-            DisplayItem::SetFilterData => {}
+            DisplayItem::SetGradientStops |
+            DisplayItem::SetFilterOps |
+            DisplayItem::SetFilterData |
+            DisplayItem::SetFilterPrimitives => {}
 
             DisplayItem::PopReferenceFrame |
             DisplayItem::PopStackingContext => {
@@ -1970,6 +1974,71 @@ impl<'a> DisplayListFlattener<'a> {
 
             if cur_instance.is_chased() {
                 println!("\tis a composite picture for a stacking context with {:?}", filter);
+            }
+
+            // Run the optimize pass on this picture, to see if we can
+            // collapse opacity and avoid drawing to an off-screen surface.
+            self.prim_store.optimize_picture_if_possible(current_pic_index);
+        }
+
+        if !stacking_context.composite_ops.filter_primitives.is_empty() {
+            let filter_datas = stacking_context.composite_ops.filter_datas.iter()
+                .map(|filter_data| filter_data.sanitize())
+                .map(|filter_data| {
+                    SFilterData {
+                        r_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_r_type, &filter_data.r_values),
+                        g_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_g_type, &filter_data.g_values),
+                        b_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_b_type, &filter_data.b_values),
+                        a_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_a_type, &filter_data.a_values),
+                    }
+                })
+                .collect();
+
+            // Sanitize filter inputs
+            for primitive in &mut stacking_context.composite_ops.filter_primitives {
+                primitive.sanitize();
+            }
+
+            let composite_mode = PictureCompositeMode::SvgFilter(
+                stacking_context.composite_ops.filter_primitives,
+                filter_datas,
+            );
+
+            let filter_pic_index = PictureIndex(self.prim_store.pictures
+                .alloc()
+                .init(PicturePrimitive::new_image(
+                    Some(composite_mode.clone()),
+                    Picture3DContext::Out,
+                    None,
+                    true,
+                    stacking_context.is_backface_visible,
+                    stacking_context.requested_raster_space,
+                    PrimitiveList::new(
+                        vec![cur_instance.clone()],
+                        &self.interners,
+                    ),
+                    stacking_context.spatial_node_index,
+                    None,
+                    PictureOptions::default(),
+                ))
+            );
+
+            current_pic_index = filter_pic_index;
+            cur_instance = create_prim_instance(
+                current_pic_index,
+                Some(composite_mode).into(),
+                stacking_context.is_backface_visible,
+                ClipChainId::NONE,
+                stacking_context.spatial_node_index,
+                &mut self.interners,
+            );
+
+            if cur_instance.is_chased() {
+                println!("\tis a composite picture for a stacking context with an SVG filter");
             }
 
             // Run the optimize pass on this picture, to see if we can
@@ -3060,6 +3129,11 @@ impl FlattenedStackingContext {
 
         // If there are filters / mix-blend-mode
         if !self.composite_ops.filters.is_empty() {
+            return false;
+        }
+
+        // If there are svg filters
+        if !self.composite_ops.filter_primitives.is_empty() {
             return false;
         }
 

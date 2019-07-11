@@ -21,14 +21,9 @@ namespace mozilla {
 class RemoteSandboxBrokerProcessParent final
     : public mozilla::ipc::GeckoChildProcessHost {
  public:
-  using LaunchError = GeckoChildProcessHost::LaunchError;
-  using LaunchPromise = GeckoChildProcessHost::LaunchPromise<bool>;
-
   RemoteSandboxBrokerProcessParent();
 
-  using GeckoChildProcessHost::HandlePromise;
-
-  RefPtr<HandlePromise> AsyncLaunch();
+  RefPtr<ipc::ProcessHandlePromise> AsyncLaunch();
 
   bool CanShutdown() override { return true; }
 
