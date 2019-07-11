@@ -18,6 +18,17 @@ NS_IMETHODIMP RemoteWebProgressRequest::Init(nsIURI* aURI,
   return NS_OK;
 }
 
+NS_IMETHODIMP RemoteWebProgressRequest::GetElapsedLoadTimeMS(
+    uint64_t* aElapsedLoadTimeMS) {
+  NS_ENSURE_ARG_POINTER(aElapsedLoadTimeMS);
+  if (mMaybeElapsedLoadTimeMS) {
+    *aElapsedLoadTimeMS = *mMaybeElapsedLoadTimeMS;
+    return NS_OK;
+  }
+  *aElapsedLoadTimeMS = 0;
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 // nsIChannel methods
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetOriginalURI(nsIURI** aOriginalURI) {
