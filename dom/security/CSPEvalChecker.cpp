@@ -31,7 +31,7 @@ nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aAllowed);
 
-#if defined(DEBUG) && !defined(ANDROID)
+#if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(aSubjectPrincipal,
                                                               cx);
