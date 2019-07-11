@@ -6,8 +6,7 @@
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
+  "resource://gre/modules/Extension.jsm"
 );
 const {
   createFactory,

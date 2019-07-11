@@ -181,9 +181,9 @@ function defineLazyModuleGetter(
   }
 
   defineLazyGetter(object, name, function() {
-    const temp = {};
+    let temp = {};
     try {
-      ChromeUtils.import(resource, temp);
+      temp = ChromeUtils.import(resource);
 
       if (typeof postLambda === "function") {
         postLambda.apply(proxy);

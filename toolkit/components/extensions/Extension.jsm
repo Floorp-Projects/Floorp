@@ -5,7 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Dictionary", "Extension", "ExtensionData", "Langpack"];
+var EXPORTED_SYMBOLS = [
+  "Dictionary",
+  "Extension",
+  "ExtensionData",
+  "Langpack",
+  "Management",
+];
 
 /* exported Extension, ExtensionData */
 /* globals Extension ExtensionData */

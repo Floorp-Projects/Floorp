@@ -6,8 +6,7 @@
 // Tests for DevToolsUtils.saveFileStream file:
 
 const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm",
-  {}
+  "resource://gre/modules/FileUtils.jsm"
 );
 
 /**

@@ -53,7 +53,7 @@ const Services = require("Services");
 In the rare event where you don't have access to the DevTools' require method, you can use
 
 ```javascript
-const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
+const { Services } = Components.utils.import("resource://gre/modules/Services.jsm");
 ```
 
 ### Services.pref.get* and Services.pref.set*

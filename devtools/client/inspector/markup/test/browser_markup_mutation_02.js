@@ -8,10 +8,7 @@
 // corresponding DOM nodes mutate
 
 // Have to use the same timer functions used by the inspector.
-const { clearTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm",
-  {}
-);
+const { clearTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "Preferences",
