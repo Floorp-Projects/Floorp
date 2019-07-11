@@ -734,6 +734,14 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 250 // 0.25 MB
 )
 
+// Does the user want smart-sizing?
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.smart_size.enabled",
+   browser_cache_disk_smart_size_enabled,
+  RelaxedAtomicBool, true
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,

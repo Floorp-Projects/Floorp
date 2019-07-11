@@ -50,7 +50,9 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   {
     return sDiskFreeSpaceHardLimit;
   }
-  static bool SmartCacheSizeEnabled() { return sSmartCacheSizeEnabled; }
+  static bool SmartCacheSizeEnabled() {
+    return StaticPrefs::browser_cache_disk_smart_size_enabled();
+  }
   static uint32_t PreloadChunkCount() { return sPreloadChunkCount; }
   static uint32_t MaxMemoryEntrySize()  // result in kilobytes.
   {
@@ -108,7 +110,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static Atomic<uint32_t, Relaxed> sDiskCacheCapacity;
   static uint32_t sDiskFreeSpaceSoftLimit;
   static uint32_t sDiskFreeSpaceHardLimit;
-  static Atomic<bool, Relaxed> sSmartCacheSizeEnabled;
   static uint32_t sPreloadChunkCount;
   static int32_t sMaxMemoryEntrySize;
   static int32_t sMaxDiskEntrySize;
