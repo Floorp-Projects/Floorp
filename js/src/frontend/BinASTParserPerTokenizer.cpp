@@ -345,24 +345,6 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
 
   handler_.setFunctionFormalParametersAndBody(result, params);
 
-  if (funbox->needsDotGeneratorName()) {
-    BINJS_TRY(pc_->declareDotGeneratorName());
-
-    HandlePropertyName dotGenerator = cx_->names().dotGenerator;
-    BINJS_TRY(usedNames_.noteUse(cx_, dotGenerator, pc_->scriptId(),
-                                 pc_->innermostScope()->id()));
-
-    if (funbox->isGenerator()) {
-      BINJS_TRY_DECL(
-          dotGen, handler_.newName(dotGenerator,
-                                   tokenizer_->pos(tokenizer_->offset()), cx_));
-
-      ListNode* stmtList =
-          &body->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
-      BINJS_TRY(handler_.prependInitialYield(stmtList, dotGen));
-    }
-  }
-
   const bool canSkipLazyClosedOverBindings = false;
   BINJS_TRY(pc_->declareFunctionArgumentsObject(usedNames_,
                                                 canSkipLazyClosedOverBindings));
