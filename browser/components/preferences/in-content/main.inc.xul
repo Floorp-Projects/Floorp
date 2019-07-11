@@ -73,9 +73,7 @@
               oncommand="Services.prefs.clearUserPref('browser.ctrlTab.migrated');"/>
 
     <checkbox id="linkTargeting" data-l10n-id="open-new-link-as-tabs"
-              preference="browser.link.open_newwindow"
-              onsyncfrompreference="return gMainPane.readLinkTarget();"
-              onsynctopreference="return gMainPane.writeLinkTarget();"/>
+              preference="browser.link.open_newwindow"/>
 
     <checkbox id="warnCloseMultiple" data-l10n-id="warn-on-close-multiple-tabs"
               preference="browser.tabs.warnOnClose"/>
@@ -104,8 +102,7 @@
         <checkbox id="browserContainersCheckbox"
                   class="tail-with-learn-more"
                   data-l10n-id="browser-containers-enabled"
-                  preference="privacy.userContext.enabled"
-                  onsyncfrompreference="return gMainPane.readBrowserContainersCheckbox();"/>
+                  preference="privacy.userContext.enabled"/>
         <label id="browserContainersLearnMore" is="text-link" class="learnMore" data-l10n-id="browser-containers-learn-more"/>
         <spacer flex="1"/>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
@@ -139,7 +136,7 @@
       <label control="defaultFont" data-l10n-id="default-font"/>
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox flex="1">
-        <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+        <menulist id="defaultFont" flex="1" delayprefsave="true"/>
       </hbox>
       <label id="defaultFontSizeLabel" control="defaultFontSize" data-l10n-id="default-font-size"></label>
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
@@ -319,9 +316,7 @@
   <hbox id="translationBox" hidden="true">
     <hbox align="center" flex="1">
       <checkbox id="translate" preference="browser.translation.detectLanguage"
-                data-l10n-id="translate-web-pages"
-                onsyncfrompreference="return gMainPane.updateButtons('translateButton',
-                                              'browser.translation.detectLanguage');"/>
+                data-l10n-id="translate-web-pages"/>
       <hbox id="bingAttribution" hidden="true" align="center">
         <label data-l10n-id="translate-attribution">
           <html:img id="translationAttributionImage" aria-label="Microsoft Translator"
@@ -337,8 +332,6 @@
   </hbox>
   <checkbox id="checkSpelling"
           data-l10n-id="check-user-spelling"
-          onsyncfrompreference="return gMainPane.readCheckSpelling();"
-          onsynctopreference="return gMainPane.writeCheckSpelling();"
           preference="layout.spellcheckDefault"/>
 </groupbox>
 
@@ -355,8 +348,7 @@
   <label><html:h2 data-l10n-id="download-header"/></label>
 
   <radiogroup id="saveWhere"
-              preference="browser.download.useDownloadDir"
-              onsyncfrompreference="return gMainPane.readUseDownloadDir();">
+              preference="browser.download.useDownloadDir">
     <hbox>
       <radio id="saveTo"
              value="true"

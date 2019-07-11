@@ -9,13 +9,13 @@
         width="300" height="300"
         windowtype="test:preferences"
         buttons="accept,cancel"
-        onbeforeaccept="return beforeAccept();"
         onload="onDialogLoad();"
 >
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript">
   <![CDATA[
     function onDialogLoad() {
+      document.addEventListener("beforeaccept", beforeAccept);
       var pref = Preferences.get("tests.beforeaccept.dialogShown");
       pref.value = true;
 
@@ -23,12 +23,14 @@
       window.arguments[0]();
     }
 
-    function beforeAccept() {
+    function beforeAccept(event) {
       var beforeAcceptPref = Preferences.get("tests.beforeaccept.called");
       var oldValue = beforeAcceptPref.value;
       beforeAcceptPref.value = true;
 
-      return !!oldValue;
+      if (!oldValue) {
+        event.preventDefault();
+      }
     }
 
     Preferences.addAll([

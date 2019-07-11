@@ -27,6 +27,14 @@ var gLanguagesDialog = {
   _selectedItemID: null,
 
   onLoad() {
+    let spoofEnglishElement = document.getElementById("spoofEnglish");
+    Preferences.addSyncFromPrefListener(spoofEnglishElement, () =>
+      gLanguagesDialog.readSpoofEnglish()
+    );
+    Preferences.addSyncToPrefListener(spoofEnglishElement, () =>
+      gLanguagesDialog.writeSpoofEnglish()
+    );
+
     Preferences.get("intl.accept_languages").on("change", () =>
       this._readAcceptLanguages().catch(Cu.reportError)
     );

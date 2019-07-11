@@ -12,7 +12,8 @@
         class="prefwindow"
         title="preferences window"
         width="300" height="300"
-        windowtype="test:preferences">
+        windowtype="test:preferences"
+        onload="onLoad()">
 
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript">
@@ -22,21 +23,30 @@
       { id: "tests.onsyncfrompreference.pref2", type: "int" },
       { id: "tests.onsyncfrompreference.pref3", type: "int" },
     ]);
+
+    function onLoad() {
+      Preferences.addSyncFromPrefListener(document.getElementById("check1"),
+        () => window.arguments[0]());
+      Preferences.addSyncFromPrefListener(document.getElementById("check2"),
+        () => window.arguments[0]());
+      Preferences.addSyncFromPrefListener(document.getElementById("check3"),
+        () => window.arguments[0]());
+      Preferences.addSyncToPrefListener(document.getElementById("check1"),
+        () => 1);
+      Preferences.addSyncToPrefListener(document.getElementById("check2"),
+        () => 1);
+      Preferences.addSyncToPrefListener(document.getElementById("check3"),
+        () => 1);
+    }
   ]]>
   </script>
   <vbox id="sample_pane" class="prefpane" label="Sample Prefpane">
   </vbox>
   <label>Test Prefpane</label>
         <checkbox id="check1" label="Label1"
-                preference="tests.onsyncfrompreference.pref1"
-                onsyncfrompreference="return window.arguments[0]();"
-                onsynctopreference="return 1;"/>
+                preference="tests.onsyncfrompreference.pref1"/>
         <checkbox id="check2" label="Label2"
-                preference="tests.onsyncfrompreference.pref2"
-                onsyncfrompreference="return window.arguments[0]();"
-                onsynctopreference="return 1;"/>
+                preference="tests.onsyncfrompreference.pref2"/>
         <checkbox id="check3" label="Label3"
-                preference="tests.onsyncfrompreference.pref3"
-                onsyncfrompreference="return window.arguments[0]();"
-                onsynctopreference="return 1;"/>
+                preference="tests.onsyncfrompreference.pref3"/>
 </dialog>

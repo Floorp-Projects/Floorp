@@ -15,7 +15,6 @@
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
         role="dialog"
-        onbeforeaccept="return gConnectionsDialog.beforeAccept();"
         onload="gConnectionsDialog.checkForSystemProxy();"
         helpTopic="prefs-connection-settings">
 
@@ -47,8 +46,7 @@
   <groupbox>
     <label><html:h2 data-l10n-id="connection-proxy-configure"/></label>
 
-    <radiogroup id="networkProxyType" preference="network.proxy.type"
-                onsyncfrompreference="return gConnectionsDialog.readProxyType();">
+    <radiogroup id="networkProxyType" preference="network.proxy.type">
       <radio value="0" data-l10n-id="connection-proxy-option-no" />
       <radio value="4" data-l10n-id="connection-proxy-option-auto" />
       <radio value="5" data-l10n-id="connection-proxy-option-system" id="systemPref" hidden="true" />
@@ -65,18 +63,17 @@
             </hbox>
             <hbox align="center">
               <html:input id="networkProxyHTTP" type="text" style="-moz-box-flex: 1;"
-                          preference="network.proxy.http" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyServer();"/>
+                          preference="network.proxy.http"/>
               <label data-l10n-id="connection-proxy-http-port" control="networkProxyHTTP_Port" />
               <html:input id="networkProxyHTTP_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535"
-                          preference="network.proxy.http_port" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyPort();"/>
+                          preference="network.proxy.http_port"/>
             </hbox>
           </row>
           <row>
             <hbox/>
             <hbox>
               <checkbox id="shareAllProxies" data-l10n-id="connection-proxy-http-share"
-                        preference="network.proxy.share_proxy_settings"
-                        onsyncfrompreference="return gConnectionsDialog.updateProtocolPrefs();"/>
+                        preference="network.proxy.share_proxy_settings"/>
             </hbox>
           </row>
           <row align="center">
@@ -84,11 +81,10 @@
               <label data-l10n-id="connection-proxy-ssl" control="networkProxySSL"/>
             </hbox>
             <hbox align="center">
-              <html:input id="networkProxySSL" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ssl"
-                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', false);"/>
+              <html:input id="networkProxySSL" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ssl"/>
               <label data-l10n-id="connection-proxy-ssl-port" control="networkProxySSL_Port" />
               <html:input id="networkProxySSL_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
-                          preference="network.proxy.ssl_port" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', true);"/>
+                          preference="network.proxy.ssl_port"/>
             </hbox>
           </row>
           <row align="center">
@@ -96,11 +92,10 @@
               <label data-l10n-id="connection-proxy-ftp" control="networkProxyFTP"/>
             </hbox>
             <hbox align="center">
-              <html:input id="networkProxyFTP" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ftp"
-                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', false);"/>
+              <html:input id="networkProxyFTP" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ftp"/>
               <label data-l10n-id="connection-proxy-ftp-port" control="networkProxyFTP_Port"/>
               <html:input id="networkProxyFTP_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
-                          preference="network.proxy.ftp_port" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', true);"/>
+                          preference="network.proxy.ftp_port"/>
             </hbox>
           </row>
           <row align="center">
@@ -108,11 +103,10 @@
               <label data-l10n-id="connection-proxy-socks" control="networkProxySOCKS"/>
             </hbox>
             <hbox align="center">
-              <html:input id="networkProxySOCKS" type="text" style="-moz-box-flex: 1;" preference="network.proxy.socks"
-                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', false);"/>
+              <html:input id="networkProxySOCKS" type="text" style="-moz-box-flex: 1;" preference="network.proxy.socks"/>
               <label data-l10n-id="connection-proxy-socks-port" control="networkProxySOCKS_Port"/>
               <html:input id="networkProxySOCKS_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
-                          preference="network.proxy.socks_port" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', true);"/>
+                          preference="network.proxy.socks_port"/>
             </hbox>
           </row>
           <row>
@@ -154,9 +148,7 @@
   <groupbox>
     <checkbox id="networkDnsOverHttps"
             data-l10n-id="connection-dns-over-https"
-            preference="network.trr.mode"
-            onsyncfrompreference="return gConnectionsDialog.readDnsOverHttpsMode();"
-            onsynctopreference="return gConnectionsDialog.writeDnsOverHttpsMode();"/>
+            preference="network.trr.mode"/>
 
     <grid class="indent" flex="1">
       <columns>
