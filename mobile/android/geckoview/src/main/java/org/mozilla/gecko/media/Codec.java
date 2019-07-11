@@ -69,10 +69,10 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private Queue<Sample> mDequeuedSamples = new LinkedList<>();
         private Queue<Input> mInputSamples = new LinkedList<>();
         private boolean mStopped;
-        private long mSession;
 
         private synchronized Sample onAllocate(final int size) {
             Sample sample = mSamplePool.obtainInput(size);
+            sample.session = mSession;
             mDequeuedSamples.add(sample);
             return sample;
         }
@@ -213,7 +213,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             mDequeuedSamples.clear();
 
             mAvailableInputBuffers.clear();
-            mSession++;
         }
 
         private synchronized void start() {
@@ -247,7 +246,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private boolean mHasOutputCapacitySet;
         private Queue<Output> mSentOutputs = new LinkedList<>();
         private boolean mStopped;
-        private long mSession;
 
         private OutputProcessor(final boolean renderToSurface) {
             mRenderToSurface = renderToSurface;
@@ -341,7 +339,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
                 mSamplePool.recycleOutput(o.sample);
             }
             mSentOutputs.clear();
-            mSession++;
         }
 
         private synchronized void start() {
@@ -364,6 +361,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     private AsyncCodec mCodec;
     private InputProcessor mInputProcessor;
     private OutputProcessor mOutputProcessor;
+    private long mSession;
     private SamplePool mSamplePool;
     // Values will be updated after configure called.
     private volatile boolean mIsAdaptivePlaybackSupported = false;
@@ -572,6 +570,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             mInputProcessor.start();
             mOutputProcessor.start();
             mCodec.resumeReceivingInputs();
+            mSession++;
         } catch (Exception e) {
             reportError(Error.FATAL, e);
         }

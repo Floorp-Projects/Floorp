@@ -82,8 +82,8 @@ class RemoteDataDecoder : public MediaDataDecoder,
   // information. Contents must be changed only on mTaskQueue.
   java::sdk::BufferInfo::GlobalRef mInputBufferInfo;
 
-  // Session ID attached to samples. It's increased every time
-  // CodecProxy::Flush() is called. Accessed on mTaskqueue only.
+  // Session ID attached to samples. It is returned by CodecProxy::Input().
+  // Accessed on mTaskqueue only.
   int64_t mSession;
 
  private:

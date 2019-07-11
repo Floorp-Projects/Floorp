@@ -73,10 +73,9 @@ public final class Sample implements Parcelable {
                       mode);
     }
 
-    public Sample set(final BufferInfo info, final CryptoInfo cryptoInfo, final long session) {
+    public Sample set(final BufferInfo info, final CryptoInfo cryptoInfo) {
         setBufferInfo(info);
         setCryptoInfo(cryptoInfo);
-        this.session = session;
         return this;
     }
 
