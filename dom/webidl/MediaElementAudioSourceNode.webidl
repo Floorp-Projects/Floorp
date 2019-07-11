@@ -17,7 +17,7 @@ dictionary MediaElementAudioSourceOptions {
 [Pref="dom.webaudio.enabled",
  Constructor(AudioContext context, MediaElementAudioSourceOptions options)]
 interface MediaElementAudioSourceNode : AudioNode {
-
+  readonly attribute HTMLMediaElement mediaElement;
 };
 
 // Mozilla extensions
