@@ -8,14 +8,12 @@ import os
 import sys
 from functools import partial
 
+from mozbuild.base import MachCommandBase
 from mach.decorators import (
     Command,
     CommandArgument,
     CommandProvider,
 )
-
-import which
-from mozbuild.base import MachCommandBase
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -53,9 +51,10 @@ class Documentation(MachCommandBase):
                      help='Upload generated files to S3.')
     def build_docs(self, path=None, fmt='html', outdir=None, auto_open=True,
                    serve=True, http=None, archive=False, upload=False):
-        try:
-            which.which('jsdoc')
-        except which.WhichError:
+
+        from mozfile import which
+
+        if not which('jsdoc'):
             return die('jsdoc not found - please install from npm.')
 
         self.activate_pipenv(os.path.join(here, 'Pipfile'))

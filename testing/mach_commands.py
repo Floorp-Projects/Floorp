@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import errno
 import json
 import logging
 import os
@@ -667,9 +668,8 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument('--verbose', action='store_true',
                      help='Enable debug logging.')
     def test_info(self, **params):
-
-        import which
         from mozbuild.base import MozbuildObject
+        from mozfile import which
 
         self.branches = params['branches']
         self.start = params['start']
@@ -698,17 +698,15 @@ class TestInfoCommand(MachCommandBase):
 
         self._hg = None
         if conditions.is_hg(build_obj):
-            if self._is_windows():
-                self._hg = which.which('hg.exe')
-            else:
-                self._hg = which.which('hg')
+            self._hg = which('hg')
+            if not self._hg:
+                raise OSError(errno.ENOENT, "Could not find 'hg' on PATH.")
 
         self._git = None
         if conditions.is_git(build_obj):
-            if self._is_windows():
-                self._git = which.which('git.exe')
-            else:
-                self._git = which.which('git')
+            self._git = which('git')
+            if not self._git:
+                raise OSError(errno.ENOENT, "Could not find 'git' on PATH.")
 
         for test_name in params['test_names']:
             print("===== %s =====" % test_name)
