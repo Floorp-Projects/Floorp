@@ -2623,7 +2623,7 @@ void BrowserParent::ReconstructWebProgressAndRequest(
   if (aRequestData.requestURI()) {
     nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
         aRequestData.requestURI(), aRequestData.originalRequestURI(),
-        aRequestData.matchedList());
+        aRequestData.matchedList(), aRequestData.elapsedLoadTimeMS());
     request.forget(aOutRequest);
   } else {
     *aOutRequest = nullptr;
