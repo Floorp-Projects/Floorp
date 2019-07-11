@@ -7,7 +7,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 // This test ensures that we can create SourceActors and SourceFronts properly,
 // and that they can communicate over the protocol to fetch the source text for
@@ -31,9 +31,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-grips", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_source();
     });
   });
@@ -51,8 +51,8 @@ const SOURCE_CONTENT = `
 function test_source() {
   DebuggerServer.LONG_STRING_LENGTH = 200;
 
-  gThreadClient.once("paused", function(packet) {
-    gThreadClient.getSources().then(async function(response) {
+  gThreadFront.once("paused", function(packet) {
+    gThreadFront.getSources().then(async function(response) {
       Assert.ok(!!response);
       Assert.ok(!!response.sources);
 
@@ -62,7 +62,7 @@ function test_source() {
 
       Assert.ok(!!source);
 
-      const sourceFront = gThreadClient.source(source);
+      const sourceFront = gThreadFront.source(source);
       response = await sourceFront.getBreakpointPositions();
       Assert.ok(!!response);
       Assert.deepEqual(response, [
@@ -101,7 +101,7 @@ function test_source() {
         6: [0],
       });
 
-      await gThreadClient.resume();
+      await gThreadFront.resume();
       finishClient(gClient);
     });
   });

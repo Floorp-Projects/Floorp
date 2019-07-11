@@ -25,7 +25,7 @@ function sendPacket(dbg: any, packet: any) {
 
 function sendPacketToThread(dbg: Object, packet: any) {
   return sendPacket(dbg, {
-    to: dbg.connection.tabConnection.threadClient.actor,
+    to: dbg.connection.tabConnection.threadFront.actor,
     ...packet,
   });
 }

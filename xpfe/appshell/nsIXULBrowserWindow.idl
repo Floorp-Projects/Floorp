@@ -96,6 +96,6 @@ interface nsIXULBrowserWindow : nsISupports
   void updateDocShellCaps(in ACString aDisCaps);
   void updateIsPrivate(in boolean aIsPrivate);
   void updateScrollPositions(in Array<ACString> aPositions, in Array<long> aChildren);
-  void updateSessionStore(in Element aBrowser, in uint32_t aFlushId, in boolean aIsFinal);
+  void updateSessionStore(in Element aBrowser, in uint32_t aFlushId, in boolean aIsFinal, in uint32_t aEpoch);
 };
 

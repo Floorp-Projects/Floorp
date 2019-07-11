@@ -9,7 +9,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
@@ -25,9 +25,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_pause_frame();
     });
   });
@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const bindings = packet.frame.environment.bindings;
     const args = bindings.arguments;
     const vars = bindings.variables;
@@ -56,7 +56,7 @@ function test_pause_frame() {
     Assert.equal(vars.c.value.class, "Object");
     Assert.ok(!!vars.c.value.actor);
 
-    const objClient = gThreadClient.pauseGrip(vars.c.value);
+    const objClient = gThreadFront.pauseGrip(vars.c.value);
     objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.a.configurable, true);
       Assert.equal(response.ownProperties.a.enumerable, true);
@@ -69,7 +69,7 @@ function test_pause_frame() {
       Assert.equal(response.ownProperties.b.value.type, "undefined");
       Assert.equal(false, "class" in response.ownProperties.b.value);
 
-      gThreadClient.resume().then(function() {
+      gThreadFront.resume().then(function() {
         finishClient(gClient);
       });
     });

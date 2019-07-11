@@ -32,6 +32,10 @@ const BrowserStatusFilter = Components.Constructor(
   "addProgressListener"
 );
 
+const WINDOW_TYPE = Services.androidBridge.isFennec
+  ? "navigator:browser"
+  : "navigator:geckoview";
+
 let tabTracker;
 let windowTracker;
 
@@ -182,10 +186,12 @@ class WindowTracker extends WindowTrackerBase {
   }
 
   get topWindow() {
-    return (
-      Services.wm.getMostRecentWindow("navigator:browser") ||
-      Services.wm.getMostRecentWindow("navigator:geckoview")
-    );
+    return Services.wm.getMostRecentWindow(WINDOW_TYPE);
+  }
+
+  isBrowserWindow(window) {
+    let { documentElement } = window.document;
+    return documentElement.getAttribute("windowtype") === WINDOW_TYPE;
   }
 
   addProgressListener(window, listener) {

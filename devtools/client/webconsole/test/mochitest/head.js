@@ -733,7 +733,7 @@ async function openDebugger(options = {}) {
     await panel.panelWin.DebuggerController.waitForSourcesLoaded();
   } else {
     // New debugger
-    await toolbox.threadClient.getSources();
+    await toolbox.threadFront.getSources();
   }
   return { target, toolbox, panel };
 }

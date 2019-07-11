@@ -10,20 +10,20 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const [grip] = packet.frame.arguments;
 
         // Checks grip.preview properties.
         check_preview(grip);
 
-        const objClient = threadClient.pauseGrip(grip);
+        const objClient = threadFront.pauseGrip(grip);
         const response = await objClient.getPrototypeAndProperties();
         // Checks the result of getPrototypeAndProperties.
         check_prototype_and_properties(response);
 
-        await threadClient.resume();
+        await threadFront.resume();
         resolve();
       });
 

@@ -483,13 +483,6 @@ skip script test262/built-ins/Proxy/construct/return-not-object-throws-null-real
 skip script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 skip script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1560300
-skip script test262/built-ins/Promise/all/invoke-resolve-get-error-close.js
-skip script test262/built-ins/Promise/all/invoke-resolve-get-once-multiple-calls.js
-skip script test262/built-ins/Promise/race/invoke-resolve-get-once-no-calls.js
-skip script test262/built-ins/Promise/race/invoke-resolve-get-error-close.js
-skip script test262/built-ins/Promise/race/invoke-resolve-get-once-multiple-calls.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1560355
 skip script test262/intl402/DateTimeFormat/numbering-system-calendar-options.js
 skip script test262/intl402/NumberFormat/numbering-system-options.js
@@ -534,3 +527,7 @@ skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-au
 
 # Test requires minimumFractionDigits and maximumFractionDigits options not to exist.
 skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
+
+# https://github.com/tc39/test262/pull/2210
+skip script test262/built-ins/Promise/all/invoke-resolve-get-error-close.js
+skip script test262/built-ins/Promise/race/invoke-resolve-get-error-close.js

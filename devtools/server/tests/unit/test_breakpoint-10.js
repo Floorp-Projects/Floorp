@@ -10,11 +10,11 @@
  */
 
 add_task(
-  threadClientTest(({ threadClient, client, debuggee }) => {
+  threadFrontTest(({ threadFront, client, debuggee }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const source = await getSourceById(
-          threadClient,
+          threadFront,
           packet.frame.where.actor
         );
         const location = {
@@ -23,17 +23,17 @@ add_task(
           column: 5,
         };
 
-        threadClient.setBreakpoint(location, {});
+        threadFront.setBreakpoint(location, {});
         await client.waitForRequestsToSettle();
 
-        threadClient.once("paused", async function(packet) {
+        threadFront.once("paused", async function(packet) {
           // Check the return value.
           Assert.equal(packet.why.type, "breakpoint");
           // Check that the breakpoint worked.
           Assert.equal(debuggee.i, 0);
 
           // Remove the breakpoint.
-          threadClient.removeBreakpoint(location);
+          threadFront.removeBreakpoint(location);
           await client.waitForRequestsToSettle();
 
           const location2 = {
@@ -41,39 +41,39 @@ add_task(
             line: debuggee.line0 + 3,
             column: 12,
           };
-          threadClient.setBreakpoint(location2, {});
+          threadFront.setBreakpoint(location2, {});
           await client.waitForRequestsToSettle();
 
-          threadClient.once("paused", async function(packet) {
+          threadFront.once("paused", async function(packet) {
             // Check the return value.
             Assert.equal(packet.why.type, "breakpoint");
             // Check that the breakpoint worked.
             Assert.equal(debuggee.i, 1);
 
             // Remove the breakpoint.
-            threadClient.removeBreakpoint(location2);
+            threadFront.removeBreakpoint(location2);
             await client.waitForRequestsToSettle();
 
-            threadClient.resume().then(resolve);
+            threadFront.resume().then(resolve);
           });
 
           // Continue until the breakpoint is hit again.
-          await threadClient.resume();
+          await threadFront.resume();
         });
 
         // Continue until the breakpoint is hit.
-        await threadClient.resume();
+        await threadFront.resume();
       });
 
       /* eslint-disable */
-    Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
-                     "debugger;\n" +                      // line0 + 1
-                     "var a, i = 0;\n" +                  // line0 + 2
-                     "for (i = 1; i <= 2; i++) {\n" +     // line0 + 3
-                     "  a = i;\n" +                       // line0 + 4
-                     "}\n",                               // line0 + 5
-                     debuggee);
-    /* eslint-enable */
+      Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
+                       "debugger;\n" +                      // line0 + 1
+                       "var a, i = 0;\n" +                  // line0 + 2
+                       "for (i = 1; i <= 2; i++) {\n" +     // line0 + 3
+                       "  a = i;\n" +                       // line0 + 4
+                       "}\n",                               // line0 + 5
+                       debuggee);
+      /* eslint-enable */
     });
   })
 );

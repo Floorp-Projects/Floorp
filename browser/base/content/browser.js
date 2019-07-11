@@ -2751,29 +2751,17 @@ function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal, aCsp) {
 
 /**
  * Focuses the location bar input field and selects its contents.
- *
- * @param [optional] userInitiatedFocus
- *        Whether this focus is caused by an user interaction whose intention
- *        was to use the location bar. For example, using a shortcut to go to
- *        the location bar, or a contextual menu to search from it.
- *        The default is false and should be used in all those cases where the
- *        code focuses the location bar but that's not the primary user
- *        intention, like when opening a new tab.
  */
-function focusAndSelectUrlBar(userInitiatedFocus = false) {
+function focusAndSelectUrlBar() {
   // In customize mode, the url bar is disabled. If a new tab is opened or the
   // user switches to a different tab, this function gets called before we've
   // finished leaving customize mode, and the url bar will still be disabled.
   // We can't focus it when it's disabled, so we need to re-run ourselves when
   // we've finished leaving customize mode.
-  if (CustomizationHandler.isExitingCustomizeMode) {
-    gNavToolbox.addEventListener(
-      "aftercustomization",
-      function() {
-        focusAndSelectUrlBar(userInitiatedFocus);
-      },
-      { once: true }
-    );
+  if (CustomizationHandler.isCustomizing()) {
+    gNavToolbox.addEventListener("aftercustomization", focusAndSelectUrlBar, {
+      once: true,
+    });
     return;
   }
 
@@ -2781,14 +2769,12 @@ function focusAndSelectUrlBar(userInitiatedFocus = false) {
     FullScreen.showNavToolbox();
   }
 
-  gURLBar.userInitiatedFocus = userInitiatedFocus;
   gURLBar.select();
-  gURLBar.userInitiatedFocus = false;
 }
 
 function openLocation() {
   if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
-    focusAndSelectUrlBar(true);
+    focusAndSelectUrlBar();
     if (gURLBar.openViewOnFocus && !gURLBar.view.isOpen) {
       gURLBar.startQuery();
     }
@@ -5933,12 +5919,14 @@ var XULBrowserWindow = {
   updateSessionStore: function XWB_updateSessionStore(
     aBrowser,
     aFlushId,
-    aIsFinal
+    aIsFinal,
+    aEpoch
   ) {
     SessionStore.updateSessionStoreFromTablistener(aBrowser, {
       data: this._sessionData,
       flushID: aFlushId,
       isFinal: aIsFinal,
+      epoch: aEpoch,
     });
     this._sessionData = {};
   },

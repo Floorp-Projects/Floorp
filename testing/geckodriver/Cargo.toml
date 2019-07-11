@@ -15,6 +15,7 @@ clap = { version = "^2.19", default-features = false, features = ["suggestions",
 hyper = "0.12"
 lazy_static = "1.0"
 log = { version = "0.4", features = ["std"] }
+marionette = { path = "./marionette" }
 mozprofile = { path = "../mozbase/rust/mozprofile" }
 mozrunner = { path = "../mozbase/rust/mozrunner" }
 mozversion = { path = "../mozbase/rust/mozversion" }

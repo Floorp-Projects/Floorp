@@ -10,11 +10,11 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     await new Promise(function(resolve) {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const [grip] = packet.frame.arguments;
-        const objClient = threadClient.pauseGrip(grip);
+        const objClient = threadFront.pauseGrip(grip);
         const { iterator } = await objClient.enumSymbols();
         const { ownSymbols } = await iterator.slice(0, iterator.count);
 
@@ -32,7 +32,7 @@ add_task(
           "Got right property descriptor."
         );
 
-        await threadClient.resume();
+        await threadFront.resume();
         resolve();
       });
       debuggee.eval(

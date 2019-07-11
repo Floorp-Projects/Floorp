@@ -5,11 +5,7 @@ add_task(async function() {
 
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.trackingprotection.enabled", true],
-      // prevent the content blocking on-boarding UI to start mid-way through the test!
-      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
-    ],
+    set: [["privacy.trackingprotection.enabled", true]],
   });
 
   await UrlClassifierTestUtils.addTestTrackers();

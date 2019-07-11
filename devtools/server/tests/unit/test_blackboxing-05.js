@@ -10,7 +10,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -20,9 +20,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-black-box", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       // XXX: We have to do an executeSoon so that the error isn't caught and
       // reported by DebuggerClient.requester (because we are using the local
       // transport and share a stack) which causes the test to fail.
@@ -38,7 +38,7 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box() {
-  gThreadClient.once("paused", test_black_box_exception);
+  gThreadFront.once("paused", test_black_box_exception);
 
   /* eslint-disable no-multi-spaces, no-unreachable, no-undef */
   Cu.evalInSandbox(
@@ -77,15 +77,15 @@ function test_black_box() {
 }
 
 function test_black_box_exception() {
-  gThreadClient.getSources().then(async function({ error, sources }) {
+  gThreadFront.getSources().then(async function({ error, sources }) {
     Assert.ok(!error, "Should not get an error: " + error);
-    const sourceFront = await getSource(gThreadClient, BLACK_BOXED_URL);
+    const sourceFront = await getSource(gThreadFront, BLACK_BOXED_URL);
     await blackBox(sourceFront);
-    gThreadClient.pauseOnExceptions(true, false);
+    gThreadFront.pauseOnExceptions(true, false);
 
-    gThreadClient.once("paused", async function(packet) {
+    gThreadFront.once("paused", async function(packet) {
       const source = await getSourceById(
-        gThreadClient,
+        gThreadFront,
         packet.frame.where.actor
       );
 
@@ -94,10 +94,10 @@ function test_black_box_exception() {
         SOURCE_URL,
         "We shouldn't pause while in the black boxed source."
       );
-      await gThreadClient.resume();
+      await gThreadFront.resume();
       finishClient(gClient);
     });
 
-    gThreadClient.resume();
+    gThreadFront.resume();
   });
 }

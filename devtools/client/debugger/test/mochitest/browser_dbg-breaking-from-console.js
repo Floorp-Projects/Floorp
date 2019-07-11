@@ -19,7 +19,7 @@ add_task(async function() {
 
   // Wait for the debugger to be selected and make sure it's paused
   await waitOnToolbox(toolbox, "jsdebugger-selected");
-  is(toolbox.threadClient.state, "paused");
+  is(toolbox.threadFront.state, "paused");
 
   // Create a dbg context
   const dbg = createDebuggerContext(toolbox);

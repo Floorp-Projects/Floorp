@@ -15,14 +15,14 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_inspector_basic.html", {
     waitForRecording: true,
   });
-  const { threadClient, tab, toolbox } = dbg;
+  const { threadFront, tab, toolbox } = dbg;
 
-  await threadClient.interrupt();
-  await threadClient.resume();
+  await threadFront.interrupt();
+  await threadFront.resume();
 
-  await threadClient.interrupt();
-  const bp = await setBreakpoint(threadClient, "doc_inspector_basic.html", 9);
-  await rewindToLine(threadClient, 9);
+  await threadFront.interrupt();
+  const bp = await setBreakpoint(threadFront, "doc_inspector_basic.html", 9);
+  await rewindToLine(threadFront, 9);
 
   const { inspector, testActor } = await openInspector();
 
@@ -38,7 +38,7 @@ add_task(async function() {
   info("Performing checks");
   await testActor.isNodeCorrectlyHighlighted("#maindiv", is);
 
-  await threadClient.removeBreakpoint(bp);
+  await threadFront.removeBreakpoint(bp);
   await toolbox.closeToolbox();
   await gBrowser.removeTab(tab);
 

@@ -10,18 +10,18 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     debuggee.eval(
       function stopMe(arg1) {
         debugger;
       }.toString()
     );
 
-    await test_object_grip(debuggee, threadClient);
+    await test_object_grip(debuggee, threadFront);
   })
 );
 
-async function test_object_grip(debuggee, threadClient) {
+async function test_object_grip(debuggee, threadFront) {
   const code = `
     stopMe({
       method: {},
@@ -29,19 +29,19 @@ async function test_object_grip(debuggee, threadClient) {
   `;
   const obj = await eval_and_resume(
     debuggee,
-    threadClient,
+    threadFront,
     code,
     async frame => {
       const arg1 = frame.arguments[0];
       Assert.equal(arg1.class, "Object");
 
-      await threadClient.pauseGrip(arg1).threadGrip();
+      await threadFront.pauseGrip(arg1).threadGrip();
       return arg1;
     }
   );
-  const objClient = threadClient.pauseGrip(obj);
+  const objClient = threadFront.pauseGrip(obj);
 
-  const method = threadClient.pauseGrip(
+  const method = threadFront.pauseGrip(
     (await objClient.getPropertyValue("method", null)).value.return
   );
 
@@ -53,24 +53,24 @@ async function test_object_grip(debuggee, threadClient) {
   }
 }
 
-function eval_and_resume(debuggee, threadClient, code, callback) {
+function eval_and_resume(debuggee, threadFront, code, callback) {
   return new Promise((resolve, reject) => {
-    wait_for_pause(threadClient, callback).then(resolve, reject);
+    wait_for_pause(threadFront, callback).then(resolve, reject);
 
-    // This synchronously blocks until 'threadClient.resume()' above runs
+    // This synchronously blocks until 'threadFront.resume()' above runs
     // because the 'paused' event runs everthing in a new event loop.
     debuggee.eval(code);
   });
 }
 
-function wait_for_pause(threadClient, callback = () => {}) {
+function wait_for_pause(threadFront, callback = () => {}) {
   return new Promise((resolve, reject) => {
-    threadClient.once("paused", function(packet) {
+    threadFront.once("paused", function(packet) {
       (async () => {
         try {
           return await callback(packet.frame);
         } finally {
-          await threadClient.resume();
+          await threadFront.resume();
         }
       })().then(resolve, reject);
     });

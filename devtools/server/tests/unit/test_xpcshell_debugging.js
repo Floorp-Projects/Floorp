@@ -31,30 +31,30 @@ add_task(async function() {
 
   // Even though we have no tabs, getMainProcess gives us the chrome debugger.
   const front = await client.mainRoot.getMainProcess();
-  const [, threadClient] = await front.attachThread();
+  const [, threadFront] = await front.attachThread();
   const onResumed = new Promise(resolve => {
-    threadClient.once("paused", packet => {
+    threadFront.once("paused", packet => {
       equal(
         packet.why.type,
         "breakpoint",
         "yay - hit the breakpoint at the first line in our script"
       );
       // Resume again - next stop should be our "debugger" statement.
-      threadClient.once("paused", packet => {
+      threadFront.once("paused", packet => {
         equal(
           packet.why.type,
           "debuggerStatement",
           "yay - hit the 'debugger' statement in our script"
         );
-        threadClient.resume().then(resolve);
+        threadFront.resume().then(resolve);
       });
-      threadClient.resume();
+      threadFront.resume();
     });
   });
 
   // tell the thread to do the initial resume.  This would cause the
   // xpcshell test harness to resume and load the file under test.
-  threadClient.resume().then(() => {
+  threadFront.resume().then(() => {
     // should have been told to resume the test itself.
     ok(testResumed);
     // Now load our test script.

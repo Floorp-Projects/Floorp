@@ -9,22 +9,22 @@
  */
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     dumpn("Evaluating test code and waiting for first debugger statement");
     await executeOnNextTickAndWaitForPause(
       () => evaluateTestCode(debuggee),
-      threadClient
+      threadFront
     );
 
     dumpn("Step Over to f()");
-    const step1 = await stepOver(threadClient);
+    const step1 = await stepOver(threadFront);
     equal(step1.why.type, "resumeLimit");
     equal(step1.frame.where.line, 6);
     equal(debuggee.a, undefined);
     equal(debuggee.b, undefined);
 
     dumpn("Step Over f()");
-    const step2 = await stepOver(threadClient);
+    const step2 = await stepOver(threadFront);
     equal(step2.frame.where.line, 7);
     equal(step2.why.type, "resumeLimit");
     equal(debuggee.a, 1);

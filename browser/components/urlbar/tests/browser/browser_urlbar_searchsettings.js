@@ -4,37 +4,28 @@
 "use strict";
 
 add_task(async function() {
-  let button = document.getElementById("urlbar-search-settings");
-  if (!button) {
-    ok("Skipping test");
-    return;
-  }
-
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async function() {
-      let popupopened = BrowserTestUtils.waitForEvent(
-        gURLBar.popup,
-        "popupshown"
-      );
-
-      gURLBar.focus();
-      EventUtils.sendString("a");
-      await popupopened;
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus,
+        value: "a",
+      });
 
       // Since the current tab is blank the preferences pane will load there
       let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      let popupclosed = BrowserTestUtils.waitForEvent(
-        gURLBar.popup,
-        "popuphidden"
-      );
-      EventUtils.synthesizeMouseAtCenter(button, {});
+      await UrlbarTestUtils.promisePopupClose(window, () => {
+        let button = document.getElementById(
+          "urlbar-anon-search-settings-compact"
+        );
+        EventUtils.synthesizeMouseAtCenter(button, {});
+      });
       await loaded;
-      await popupclosed;
 
       is(
         gBrowser.selectedBrowser.currentURI.spec,
-        "about:preferences#general",
+        "about:preferences#search",
         "Should have loaded the right page"
       );
     }

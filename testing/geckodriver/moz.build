@@ -9,7 +9,8 @@ AllowCompilerWarnings()
 RUST_TESTS = [
     "geckodriver",
     "webdriver",
-
+    "marionette",
+    
     # TODO: Move to mozbase/rust/moz.build once those crates can be
     # tested separately.
     "mozprofile",
