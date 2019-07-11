@@ -726,6 +726,14 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Limit of recent metadata we keep in memory for faster access, in KB.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.metadata_memory_limit",
+   browser_cache_disk_metadata_memory_limit,
+  RelaxedAtomicUint32, 250 // 0.25 MB
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
