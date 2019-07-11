@@ -1,0 +1,15 @@
+<script>
+function go() {
+  document.body.offsetHeight;
+  b.insertAdjacentHTML("afterBegin", a.innerHTML)
+}
+</script>
+<body onload=go()>
+  <details id="b" open="true" style="column-count: 1">
+    A
+    <div id="a" style="column-span: all">
+      <!-- this comment is essential to trigger the assertion. -->
+    </div>
+    B
+  </details>
+</body>
