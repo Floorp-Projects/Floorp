@@ -714,6 +714,14 @@ nsresult Database::EnsureFaviconsDatabaseAttached(
         NS_LITERAL_CSTRING("PRAGMA auto_vacuum = INCREMENTAL"));
     NS_ENSURE_SUCCESS(rv, rv);
 
+#if !defined(HAVE_64BIT_BUILD)
+    // Ensure that temp tables are held in memory, not on disk, on 32 bit
+    // platforms.
+    rv = conn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("PRAGMA temp_store = MEMORY"));
+    NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
     int32_t defaultPageSize;
     rv = conn->GetDefaultPageSize(&defaultPageSize);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1019,10 +1027,13 @@ nsresult Database::SetupDatabaseConnection(
                    NS_ERROR_FILE_CORRUPTED);
   }
 
-  // Ensure that temp tables are held in memory, not on disk.
+#if !defined(HAVE_64BIT_BUILD)
+  // Ensure that temp tables are held in memory, not on disk, on 32 bit
+  // platforms.
   rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   rv = SetupDurability(mMainConn, mDBPageSize);
   NS_ENSURE_SUCCESS(rv, rv);
