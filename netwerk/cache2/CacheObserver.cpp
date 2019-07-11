@@ -26,9 +26,6 @@ StaticRefPtr<CacheObserver> CacheObserver::sSelf;
 static float const kDefaultHalfLifeHours = 24.0F;  // 24 hours
 float CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
 
-static bool const kDefaultUseMemoryCache = true;
-bool CacheObserver::sUseMemoryCache = kDefaultUseMemoryCache;
-
 static uint32_t const kDefaultMetadataMemoryLimit = 250;  // 0.25 MB
 uint32_t CacheObserver::sMetadataMemoryLimit = kDefaultMetadataMemoryLimit;
 
@@ -143,9 +140,6 @@ nsresult CacheObserver::Shutdown() {
 }
 
 void CacheObserver::AttachToPreferences() {
-  mozilla::Preferences::AddBoolVarCache(
-      &sUseMemoryCache, "browser.cache.memory.enable", kDefaultUseMemoryCache);
-
   mozilla::Preferences::AddUintVarCache(
       &sMetadataMemoryLimit, "browser.cache.disk.metadata_memory_limit",
       kDefaultMetadataMemoryLimit);
