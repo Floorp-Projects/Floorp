@@ -513,6 +513,7 @@ add_task(async function test_abusereport_panel_refresh() {
   const EXT_ID2 = "test-panel-refresh-2@mochi.test";
   let addon;
   let extension;
+  let reportPanel;
 
   async function getAbuseReportForManifest(addonId, manifest) {
     extension = await installTestExtension(addonId, "extension", manifest);
@@ -520,9 +521,30 @@ add_task(async function test_abusereport_panel_refresh() {
     addon = await AddonManager.getAddonByID(extension.id);
     ok(addon, "The test add-on has been found");
 
-    await addon.uninstall(true);
+    const el = getAbuseReportFrame();
 
-    return openAbuseReport(extension.id);
+    const onceUpdated = BrowserTestUtils.waitForEvent(
+      el,
+      "abuse-report:updated"
+    );
+    triggerNewAbuseReport(addon.id, REPORT_ENTRY_POINT);
+    const evt = await onceUpdated;
+    is(
+      evt.detail.addonId,
+      addonId,
+      `Abuse Report panel updated for ${addon.id}`
+    );
+
+    return el.promiseAbuseReport;
+  }
+
+  async function cancelAbuseReport() {
+    const onceFrameHidden = BrowserTestUtils.waitForEvent(
+      getAbuseReportFrame(),
+      "abuse-report:frame-hidden"
+    );
+    reportPanel._btnCancel.click();
+    await onceFrameHidden;
   }
 
   function assertExtensionMetadata(panel, expected) {
@@ -540,7 +562,9 @@ add_task(async function test_abusereport_panel_refresh() {
     );
   }
 
-  let reportPanel = await getAbuseReportForManifest(EXT_ID1);
+  await openAboutAddons();
+
+  reportPanel = await getAbuseReportForManifest(EXT_ID1);
   let { name, author, homepage_url } = BASE_TEST_MANIFEST;
 
   assertExtensionMetadata(reportPanel, {
@@ -550,9 +574,11 @@ add_task(async function test_abusereport_panel_refresh() {
     icon_url: addon.iconURL,
   });
 
-  await addon.cancelUninstall();
   await extension.unload();
-  await closeAboutAddons();
+
+  // Cancel the abuse report and then trigger it again on a second extension
+  // to verify that the reused abuse report panel is refreshed accordingly.
+  await cancelAbuseReport();
 
   const extData2 = {
     name: "Test extension 2",
@@ -561,7 +587,8 @@ add_task(async function test_abusereport_panel_refresh() {
       url: "http://the.extension.url",
     },
   };
-  reportPanel = await getAbuseReportForManifest(EXT_ID2, extData2);
+  const reportPanel2 = await getAbuseReportForManifest(EXT_ID2, extData2);
+  is(reportPanel2, reportPanel, "Expect the abuse report panel to be reused");
 
   assertExtensionMetadata(reportPanel, {
     name: extData2.name,
@@ -576,7 +603,6 @@ add_task(async function test_abusereport_panel_refresh() {
     "All the panel buttons have a data-l10n-id"
   );
 
-  await addon.cancelUninstall();
   await extension.unload();
   await closeAboutAddons();
 });
@@ -1259,9 +1285,15 @@ add_task(async function test_trigger_abusereport_from_aboutaddons_remove() {
 
 add_task(async function test_trigger_abusereport_from_browserAction_remove() {
   const EXT_ID = "test-report-from-browseraction-remove@mochi.test";
-  const extension = await installTestExtension(EXT_ID, "extension", {
-    browser_action: {},
+  const xpiFile = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      ...BASE_TEST_MANIFEST,
+      browser_action: {},
+      applications: { gecko: { id: EXT_ID } },
+    },
   });
+  const addon = await AddonManager.installTemporaryAddon(xpiFile);
+
   const buttonId = `${makeWidgetId(EXT_ID)}-browser-action`;
   async function reportFromContextMenuRemove() {
     const menu = document.getElementById("toolbar-context-menu");
@@ -1333,8 +1365,9 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
 
     await assertAbuseReportPanelOpen();
 
-    const addon = await AddonManager.getAddonByID(EXT_ID);
-    await addon.cancelUninstall();
+    let onceExtStarted = AddonTestUtils.promiseWebExtensionStartup(EXT_ID);
+    addon.cancelUninstall();
+    await onceExtStarted;
 
     // Reload the tab to verify Bug 1559124 didn't regressed.
     browser.contentWindow.location.reload();
@@ -1358,10 +1391,13 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
     await assertAbuseReportPanelOpen();
 
     menu.hidePopup();
-    await addon.cancelUninstall();
+
+    onceExtStarted = AddonTestUtils.promiseWebExtensionStartup(EXT_ID);
+    addon.cancelUninstall();
+    await onceExtStarted;
   });
 
-  await extension.unload();
+  await addon.uninstall();
 });
 
 // This test verify that the abuse report panel is opening the
