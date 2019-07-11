@@ -371,6 +371,7 @@ pref("media.peerconnection.ice.link_local", false); // Set only for testing IPV6
 pref("media.peerconnection.ice.force_interface", ""); // Limit to only a single interface
 pref("media.peerconnection.ice.relay_only", false); // Limit candidates to TURN
 pref("media.peerconnection.use_document_iceservers", true);
+
 pref("media.peerconnection.identity.timeout", 10000);
 pref("media.peerconnection.ice.stun_client_maximum_transmits", 7);
 pref("media.peerconnection.ice.trickle_grace_period", 5000);
@@ -1743,12 +1744,6 @@ pref("network.sts.max_time_for_pr_close_during_shutdown", 5000);
 // This timeout can be disabled by setting this pref to 0.
 // The value is expected in seconds.
 pref("network.sts.pollable_event_timeout", 6);
-
-// Start a separate socket process. Performing networking on the socket process
-// is control by a sepparate pref
-// ("network.http.network_access_on_socket_process.enabled").
-// Changing these prefs requires a restart.
-pref("network.process.enabled", false);
 
 // Enable/disable sni encryption.
 pref("network.security.esni.enabled", false);
