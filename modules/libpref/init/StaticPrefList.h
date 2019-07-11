@@ -768,6 +768,13 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 5 * 1024 // 5MB
 )
 
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.free_space_hard_limit",
+   browser_cache_disk_free_space_hard_limit,
+  RelaxedAtomicUint32, 1024  // 1MB
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
