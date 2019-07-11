@@ -17,7 +17,8 @@ dictionary MediaStreamAudioSourceOptions {
 [Pref="dom.webaudio.enabled",
  Constructor(AudioContext context, MediaStreamAudioSourceOptions options)]
 interface MediaStreamAudioSourceNode : AudioNode {
-
+  [BinaryName="GetMediaStream"]
+  readonly attribute MediaStream mediaStream;
 };
 
 // Mozilla extensions
