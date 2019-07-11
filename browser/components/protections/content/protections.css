@@ -15,12 +15,28 @@
   --cookie-color-darker: #0073C3;
   --tracker-color: #2AC3A2;
   --tracker-color-darker: #229C82;
-  --fingerprinter-color: #FFBD4F;
-  --fingerprinter-color-darker: #ffA40C;
-  --cryptominer-color: #AFAFBB;
-  --cryptominer-color-darker: #88889A;
+  --orange: #FFBD4F;
+  --dark-orange: #ffA40C;
+  --grey: #AFAFBB;
+  --dark-grey: #88889A;
   --tab-highlight: var(--social-color); /* start with social selected */
+  --blue-60: #0060DF;
+  --blue-70: #003eaa;
+  --blue-80: #002275;
 }
+
+ a {
+  color: var(--blue-60);
+  text-decoration: none;
+ }
+
+ a:active {
+  color: var(--blue-70);
+ }
+
+ a:hover, a:active {
+  text-decoration: underline;
+ }
 
 body {
   background-color: var(--report-background);
@@ -41,11 +57,11 @@ body[focuseddatatype=tracker] {
 }
 
 body[focuseddatatype=fingerprinter] {
-  --tab-highlight: var(--fingerprinter-color);
+  --tab-highlight: var(--orange);
 }
 
 body[focuseddatatype=cryptominer] {
-  --tab-highlight: var(--cryptominer-color);
+  --tab-highlight: var(--grey);
 }
 
 #report-title {
@@ -59,12 +75,44 @@ body[focuseddatatype=cryptominer] {
   margin: 0 auto;
 }
 
-.etp-card .icon {
+.card-header button {
+  font-size: 0.95rem;
+  background-color: var(--blue-60);
+  border-radius: 2px;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  margin-inline-end: 15px;
+  margin-inline-start: 15px;
+  padding: 10px;
+  align-self: center;
+}
+
+.card-header button:hover {
+  background-color: var(--blue-70);
+}
+
+.card-header button:active {
+  background-color: var(--blue-80);
+}
+
+.report-card.lockwise-card .card-header {
+  grid-template-columns: 2fr 6fr 7fr;
+}
+
+.icon {
   width: 60px;
   height: 60px;
-  background: url("chrome://browser/skin/controlcenter/tracking-protection.svg") no-repeat center/cover;
   grid-column: 1;
   margin: 0 auto;
+}
+
+.etp-card .icon {
+  background: url("chrome://browser/skin/controlcenter/tracking-protection.svg") no-repeat center/cover;
+}
+
+.lockwise-card .icon {
+  background: url("chrome://browser/content/logos/lockwise.svg") no-repeat center/cover;
 }
 
 .report-card {
@@ -74,6 +122,7 @@ body[focuseddatatype=cryptominer] {
   border-radius: 3px;
   background-color: var(--card-background);
   box-shadow: var(--card-box-shadow);
+  margin-bottom: 25px;
 }
 
 .report-card .card-header,
@@ -189,19 +238,19 @@ body[focuseddatatype=cryptominer] {
 }
 
 .fingerprinter-bar {
-  background-color: var(--fingerprinter-color);
+  background-color: var(--orange);
 }
 
 .hover-fingerprinter .fingerprinter-bar {
-  background-color: var(--fingerprinter-color-darker);
+  background-color: var(--dark-orange);
 }
 
 .cryptominer-bar {
-  background-color: var(--cryptominer-color);
+  background-color: var(--grey);
 }
 
 .hover-cryptominer .cryptominer-bar {
-  background-color: var(--cryptominer-color-darker);
+  background-color: var(--dark-grey);
 }
 
 .column-label {
@@ -247,14 +296,14 @@ label[data-type="tracker"] {
 
 label[data-type="fingerprinter"] {
   background-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
-  fill: var(--fingerprinter-color);
-  color: var(--fingerprinter-color);
+  fill: var(--orange);
+  color: var(--orange);
 }
 
 label[data-type="cryptominer"] {
   background-image: url(chrome://browser/skin/controlcenter/cryptominers.svg);
-  fill: var(--cryptominer-color);
-  color: var(--cryptominer-color);
+  fill: var(--grey);
+  color: var(--grey);
 }
 
 .hover-social label[for="tab-social"],
@@ -296,4 +345,77 @@ label:hover {
 #tab-fingerprinter:checked ~ #fingerprinter,
 #tab-cryptominer:checked ~ #cryptominer {
   display: block;
+}
+
+/* Lockwise Card */
+
+#lockwise-body-content > .no-logins,
+#lockwise-body-content > .has-logins {
+  display: grid;
+  font-size: 0.875rem;
+  align-items: center;
+}
+
+#lockwise-body-content > .no-logins {
+  grid: 1fr / 50px 275px;
+  grid-gap: 0;
+}
+
+#lockwise-body-content > .has-logins {
+  grid: 1fr 1fr / minmax(70px, auto) 1fr;
+  grid-gap: 10px;
+}
+
+a.hidden,
+#lockwise-body-content .has-logins.hidden,
+#lockwise-body-content .no-logins.hidden {
+  display: none;
+}
+
+.number-of-logins {
+  background-color: var(--dark-grey);
+}
+
+.number-of-synced-devices {
+  background-color: var(--orange);
+}
+
+.lockwise-text-icon {
+  background-size: 16px 16px;
+  background-repeat: no-repeat;
+  background-position-x: 3px;
+  background-position-y: 5px;
+  padding: 4px 4px 4px 24px;
+  display: inline;
+}
+
+.lockwise-mobile-app-icon {
+  background: url("chrome://browser/content/logos/lockwise-mobile-app.svg") no-repeat center/cover;
+  width: 38px;
+  height: 35px;
+}
+
+.passwords-stored-text {
+  background-image: url("chrome://browser/skin/login.svg");
+}
+
+.synced-devices-text {
+  background-image: url("chrome://browser/skin/sync.svg");
+}
+
+.non-logged-in-user-content {
+  grid-column: 2;
+}
+
+.block {
+  border-radius: 4px;
+  text-align: center;
+  font-size: 1.125rem;
+  color: var(--card-background);
+  padding: 7px;
+  line-height: 18px;
+}
+
+.has-logins a {
+  margin-inline-start: 10px;
 }
