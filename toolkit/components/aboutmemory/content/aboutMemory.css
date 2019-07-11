@@ -23,7 +23,7 @@ body {
 
 /* The comment at the top of aboutMemory.xhtml explains this font choice. */
 pre {
-  font-family: Fira Mono, DejaVu Sans Mono, Liberation Mono, monospace;
+  font-family: DejaVu Sans Mono, Liberation Mono, Fira Mono, monospace;
 }
 
 div.ancillary {
