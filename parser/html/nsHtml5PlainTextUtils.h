@@ -10,7 +10,6 @@
 class nsHtml5PlainTextUtils {
  public:
   static nsHtml5HtmlAttributes* NewLinkAttributes();
-  static nsHtml5HtmlAttributes* NewBodyAttributes();
 };
 
 #endif  // nsHtml5PlainTextUtils_h
