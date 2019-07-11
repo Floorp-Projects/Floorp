@@ -127,10 +127,8 @@ def docker_worker_debian_package(config, job, taskdesc):
     if 'patch' in run:
         # We don't use robustcheckout or run-task to get a checkout. So for
         # this one file we'd need from a checkout, download it.
-        env['PATCH_URL'] = '{head_repo}/raw-file/{head_rev}/build/debian-packages/{patch}'.format(
-            head_repo=config.params['head_repository'],
-            head_rev=config.params['head_rev'],
-            patch=run['patch'],
+        env["PATCH_URL"] = config.params.file_url(
+            "build/debian-packages/{patch}".format(patch=run["patch"]),
         )
         adjust += 'curl -sL $PATCH_URL | patch -p1 && '
     if 'pre-build-command' in run:

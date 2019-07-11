@@ -1785,7 +1785,7 @@ def build_task(config, tasks):
                 'description': task['description'],
                 'name': task['label'],
                 'owner': config.params['owner'],
-                'source': config.params.file_url(config.path),
+                'source': config.params.file_url(config.path, pretty=True),
             },
             'extra': extra,
             'tags': tags,
