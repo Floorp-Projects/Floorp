@@ -581,7 +581,7 @@ DebuggerClient.prototype = {
       return;
     }
 
-    // support older browsers for Fx69+ for using the old thread client
+    // support older browsers for Fx69+ for using the old thread front
     if (!this.traits.hasThreadFront && packet.from.includes("context")) {
       this.sendToDeprecatedThreadClient(packet);
       return;

@@ -11,7 +11,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -25,9 +25,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_pause_frame();
     });
   });
@@ -35,8 +35,8 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.once("paused", function(packet) {
-    gThreadClient.getFrames(0, null).then(function(frameResponse) {
+  gThreadFront.once("paused", function(packet) {
+    gThreadFront.getFrames(0, null).then(function(frameResponse) {
       Assert.equal(frameResponse.frames.length, 5);
       // Now wait for the next pause, after which the three
       // youngest actors should be popped..
@@ -45,16 +45,16 @@ function test_pause_frame() {
         .map(frame => frame.actor);
       expectPopped.sort();
 
-      gThreadClient.once("paused", function(pausePacket) {
+      gThreadFront.once("paused", function(pausePacket) {
         const popped = pausePacket.poppedFrames.sort();
         Assert.equal(popped.length, 3);
         for (let i = 0; i < 3; i++) {
           Assert.equal(expectPopped[i], popped[i]);
         }
 
-        gThreadClient.resume().then(() => finishClient(gClient));
+        gThreadFront.resume().then(() => finishClient(gClient));
       });
-      gThreadClient.resume();
+      gThreadFront.resume();
     });
   });
 

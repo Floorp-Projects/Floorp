@@ -2,7 +2,7 @@
 
 set -e
 
-BASE_URL=https://raw.githubusercontent.com/freebsd/freebsd/master/lib/msun/src
+BASE_URL=https://raw.githubusercontent.com/freebsd/freebsd/"${1}"/lib/msun/src
 
 download_source() {
     REMOTE_FILENAME=$1
@@ -105,7 +105,6 @@ download_source s_scalbn.c s_scalbn.cpp
 
 # These are not not used in Math.* functions, but used internally.
 download_source e_pow.c e_pow.cpp
-download_source e_sqrt.c e_sqrt.cpp
 
 download_source s_nearbyint.c s_nearbyint.cpp
 download_source s_rint.c s_rint.cpp

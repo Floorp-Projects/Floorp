@@ -15,5 +15,4 @@ DevToolsModules(
     'object-client.js',
     'property-iterator-client.js',
     'symbol-iterator-client.js',
-    'thread-client.js',
 )

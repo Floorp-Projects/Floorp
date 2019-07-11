@@ -10,21 +10,21 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     debuggee.eval(
       function stopMe(arg1) {
         debugger;
       }.toString()
     );
 
-    await test_object_grip(debuggee, threadClient);
+    await test_object_grip(debuggee, threadFront);
   })
 );
 
-async function test_object_grip(debuggee, threadClient) {
+async function test_object_grip(debuggee, threadFront) {
   await assert_object_argument(
     debuggee,
-    threadClient,
+    threadFront,
     `
       var obj = {
         stringProp: "a value",
@@ -111,33 +111,33 @@ async function test_object_grip(debuggee, threadClient) {
   );
 }
 
-function assert_object_argument(debuggee, threadClient, code, objectHandler) {
-  return eval_and_resume(debuggee, threadClient, code, async frame => {
+function assert_object_argument(debuggee, threadFront, code, objectHandler) {
+  return eval_and_resume(debuggee, threadFront, code, async frame => {
     const arg1 = frame.arguments[0];
     Assert.equal(arg1.class, "Object");
 
-    await objectHandler(threadClient.pauseGrip(arg1));
+    await objectHandler(threadFront.pauseGrip(arg1));
   });
 }
 
-function eval_and_resume(debuggee, threadClient, code, callback) {
+function eval_and_resume(debuggee, threadFront, code, callback) {
   return new Promise((resolve, reject) => {
-    wait_for_pause(threadClient, callback).then(resolve, reject);
+    wait_for_pause(threadFront, callback).then(resolve, reject);
 
-    // This synchronously blocks until 'threadClient.resume()' above runs
+    // This synchronously blocks until 'threadFront.resume()' above runs
     // because the 'paused' event runs everthing in a new event loop.
     debuggee.eval(code);
   });
 }
 
-function wait_for_pause(threadClient, callback = () => {}) {
+function wait_for_pause(threadFront, callback = () => {}) {
   return new Promise((resolve, reject) => {
-    threadClient.once("paused", function(packet) {
+    threadFront.once("paused", function(packet) {
       (async () => {
         try {
           return await callback(packet.frame);
         } finally {
-          await threadClient.resume();
+          await threadFront.resume();
         }
       })().then(resolve, reject);
     });

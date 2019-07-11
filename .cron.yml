@@ -69,19 +69,22 @@ jobs:
           - mozilla-central
       when: []  # never (hook only)
 
-    - name: nightly-geckoview
+    - name: ship-geckoview
       job:
           type: decision-task
-          treeherder-symbol: Ngv
-          target-tasks-method: nightly_geckoview
+          treeherder-symbol: ship_geckoview
+          target-tasks-method: ship_geckoview
           include-push-tasks: true
       run-on-projects:
           - mozilla-central
+          - mozilla-beta
+          - mozilla-release
       when:
           by-project:
-              # Match buildbot starts for now
               mozilla-central: [{hour: 10, minute: 0}]
-              # No default
+              mozilla-beta:
+                  - {weekday: 'Monday', hour: 10, minute: 0}
+                  - {weekday: 'Thursday', hour: 10, minute: 0}
 
     - name: tp6m-fennec-v64
       job:

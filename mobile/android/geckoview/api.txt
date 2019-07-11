@@ -56,6 +56,9 @@ import java.util.AbstractSequentialList;
 import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
@@ -79,6 +82,8 @@ import org.mozilla.geckoview.SessionFinder;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.StorageController;
 import org.mozilla.geckoview.WebExtension;
+import org.mozilla.geckoview.WebExtensionController;
+import org.mozilla.geckoview.WebExtensionEventDispatcher;
 import org.mozilla.geckoview.WebMessage;
 import org.mozilla.geckoview.WebRequest;
 import org.mozilla.geckoview.WebRequestError;
@@ -284,6 +289,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
     method @UiThread @NonNull public StorageController getStorageController();
     method @UiThread @NonNull public RuntimeTelemetry getTelemetry();
+    method @UiThread @NonNull public WebExtensionController getWebExtensionController();
     method @UiThread public void orientationChanged();
     method @UiThread public void orientationChanged(int);
     method @AnyThread public void readFromParcel(@NonNull Parcel);
@@ -1100,6 +1106,16 @@ package org.mozilla.geckoview {
   @UiThread public static interface WebExtension.PortDelegate {
     method @NonNull default public void onDisconnect(@NonNull WebExtension.Port);
     method default public void onPortMessage(@NonNull Object, @NonNull WebExtension.Port);
+  }
+
+  public class WebExtensionController implements BundleEventListener {
+    ctor protected WebExtensionController(GeckoRuntime, WebExtensionEventDispatcher);
+    method @UiThread @Nullable public WebExtensionController.TabDelegate getTabDelegate();
+    method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
+  }
+
+  public static interface WebExtensionController.TabDelegate {
+    method @UiThread @Nullable default public GeckoResult<GeckoSession> onNewTab(@Nullable WebExtension, @Nullable String);
   }
 
   @AnyThread public abstract class WebMessage {

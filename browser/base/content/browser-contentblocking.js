@@ -907,24 +907,15 @@ var ThirdPartyCookies = {
 };
 
 var ContentBlocking = {
-  // If the user ignores the doorhanger, we stop showing it after some time.
-  MAX_INTROS: Services.prefs.getIntPref(
-    "browser.contentblocking.maxIntroCount"
-  ),
   PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
   PREF_REPORT_BREAKAGE_ENABLED:
     "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
-  PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
   PREF_CB_CATEGORY: "browser.contentblocking.category",
   PREF_SHOW_ALLOWED_LABELS:
     "browser.contentblocking.control-center.ui.showAllowedLabels",
   PREF_SHOW_BLOCKED_LABELS:
     "browser.contentblocking.control-center.ui.showBlockedLabels",
-
-  get prefIntroCount() {
-    return this.PREF_INTRO_COUNT_CB;
-  },
 
   get content() {
     delete this.content;
@@ -1425,30 +1416,6 @@ var ContentBlocking = {
       // of the shield based on this onSecurityChange be determined afterwards).
     } else if (anyBlocking && !this.iconBox.hasAttribute("active")) {
       this.iconBox.setAttribute("animate", "true");
-
-      let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(
-        gBrowser.selectedBrowser
-      );
-      if (!isBrowserPrivate) {
-        let introCount = Services.prefs.getIntPref(this.prefIntroCount);
-        let installStamp = Services.prefs.getIntPref(
-          "browser.laterrun.bookkeeping.profileCreationTime",
-          Date.now() / 1000
-        );
-        let delayLength = Services.prefs.getIntPref(
-          "browser.contentblocking.introDelaySeconds"
-        );
-        let delayFulfilled = delayLength < Date.now() / 1000 - installStamp;
-        if (
-          introCount < this.MAX_INTROS &&
-          !this.anyOtherWindowHasTour() &&
-          delayFulfilled
-        ) {
-          Services.prefs.setIntPref(this.prefIntroCount, ++introCount);
-          Services.prefs.savePrefFile(null);
-          this.showIntroPanel();
-        }
-      }
     }
 
     // We consider the shield state "active" when some kind of blocking activity
@@ -1509,16 +1476,6 @@ var ContentBlocking = {
     }
   },
 
-  // Check if any existing window has a UItour initiated, both showing and hidden.
-  anyOtherWindowHasTour() {
-    for (let win of BrowserWindowTracker.orderedWindows) {
-      if (win != window && UITour.tourBrowsersByWindow.has(win)) {
-        return true;
-      }
-    }
-    return false;
-  },
-
   disableForCurrentPage() {
     ContentBlockingAllowList.add(gBrowser.selectedBrowser);
 
@@ -1529,84 +1486,5 @@ var ContentBlocking = {
     ContentBlockingAllowList.remove(gBrowser.selectedBrowser);
 
     this.hideIdentityPopupAndReload();
-  },
-
-  dontShowIntroPanelAgain() {
-    if (!PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser)) {
-      Services.prefs.setIntPref(this.prefIntroCount, this.MAX_INTROS);
-      Services.prefs.savePrefFile(null);
-    }
-  },
-
-  async showIntroPanel() {
-    let brandBundle = document.getElementById("bundle_brand");
-    let brandShortName = brandBundle.getString("brandShortName");
-
-    let introTitle = gNavigatorBundle.getFormattedString(
-      "contentBlocking.intro.title",
-      [brandShortName]
-    );
-    let introDescription;
-    // This will be sent to the onboarding website to let them know which
-    // UI variation we're showing.
-    let variation;
-    // We show a different UI tour variation for users that already have TP
-    // enabled globally.
-    if (TrackingProtection.enabledGlobally) {
-      introDescription = gNavigatorBundle.getString(
-        "contentBlocking.intro.v2.description"
-      );
-      variation = 2;
-    } else {
-      introDescription = gNavigatorBundle.getFormattedString(
-        "contentBlocking.intro.v1.description",
-        [brandShortName]
-      );
-      variation = 1;
-    }
-
-    let openStep2 = () => {
-      // When the user proceeds in the tour, adjust the counter to indicate that
-      // the user doesn't need to see the intro anymore.
-      this.dontShowIntroPanelAgain();
-
-      let nextURL =
-        Services.urlFormatter.formatURLPref(
-          "privacy.trackingprotection.introURL"
-        ) + `?step=2&newtab=true&variation=${variation}`;
-      switchToTabHavingURI(nextURL, true, {
-        // Ignore the fragment in case the intro is shown on the tour page
-        // (e.g. if the user manually visited the tour or clicked the link from
-        // about:privatebrowsing) so we can avoid a reload.
-        ignoreFragment: "whenComparingAndReplace",
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
-    };
-
-    let buttons = [
-      {
-        label: gNavigatorBundle.getString("trackingProtection.intro.step1of3"),
-        style: "text",
-      },
-      {
-        callback: openStep2,
-        label: gNavigatorBundle.getString(
-          "trackingProtection.intro.nextButton.label"
-        ),
-        style: "primary",
-      },
-    ];
-
-    let panelTarget = await UITour.getTarget(window, "trackingProtection");
-    UITour.initForBrowser(gBrowser.selectedBrowser, window);
-    UITour.showInfo(
-      window,
-      panelTarget,
-      introTitle,
-      introDescription,
-      undefined,
-      buttons,
-      { closeButtonCallback: () => this.dontShowIntroPanelAgain() }
-    );
   },
 };

@@ -9,17 +9,17 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     return new Promise(resolve => {
       const bigIntEnabled = Services.prefs.getBoolPref(
         "javascript.options.bigint"
       );
-      threadClient.once("paused", function(packet) {
+      threadFront.once("paused", function(packet) {
         const args = packet.frame.arguments;
 
         Assert.equal(args[0].class, "Object");
 
-        const objClient = threadClient.pauseGrip(args[0]);
+        const objClient = threadFront.pauseGrip(args[0]);
         objClient.getPrototypeAndProperties(function(response) {
           const { a, b, c, d } = response.ownProperties;
           testPropertyType(a, "Infinity");
@@ -34,7 +34,7 @@ add_task(
             testPropertyType(g, "BigInt");
           }
 
-          threadClient.resume().then(resolve);
+          threadFront.resume().then(resolve);
         });
       });
 

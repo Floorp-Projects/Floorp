@@ -1,0 +1,8 @@
+error: missing #[repr(...)] attribute
+ --> $DIR/missing_repr.rs:3:10
+  |
+3 | #[derive(Serialize_repr)]
+  |          ^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+

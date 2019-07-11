@@ -10,17 +10,17 @@
  */
 
 add_task(
-  threadClientTest(({ threadClient, debuggee }) => {
+  threadFrontTest(({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const line = debuggee.line0 + 3;
         const source = await getSourceById(
-          threadClient,
+          threadFront,
           packet.frame.where.actor
         );
 
         // this test has been disabled for a long time so the functionality doesn't work
-        const response = await threadClient.setBreakpoint(
+        const response = await threadFront.setBreakpoint(
           { sourceUrl: source.url, line: line },
           {}
         );
@@ -28,9 +28,8 @@ add_task(
         assert.equal(response.actuallocation.source.actor, source.actor);
         Assert.equal(response.actualLocation.line, location.line + 1);
 
-        threadClient.once("paused", function(packet) {
+        threadFront.once("paused", function(packet) {
           // Check the return value.
-          Assert.equal(packet.type, "paused");
           Assert.equal(packet.frame.where.actor, source.actor);
           Assert.equal(packet.frame.where.line, location.line + 1);
           Assert.equal(packet.why.type, "breakpoint");
@@ -41,32 +40,32 @@ add_task(
 
           // Remove the breakpoint.
           response.bpClient.remove(function(response) {
-            threadClient.resume().then(resolve);
+            threadFront.resume().then(resolve);
           });
         });
 
         // Continue until the breakpoint is hit.
-        threadClient.resume();
+        threadFront.resume();
       });
 
-    /* eslint-disable */
-    Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
-                     "function foo() {\n" + // line0 + 1
-                     "  this.a = 1;\n" +    // line0 + 2
-                     "  // A comment.\n" +  // line0 + 3
-                     "  this.b = 2;\n" +    // line0 + 4
-                     "}\n",                 // line0 + 5
-                     debuggee,
-                     "1.7",
-                     "script1.js");
+      /* eslint-disable */
+      Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
+                       "function foo() {\n" + // line0 + 1
+                       "  this.a = 1;\n" +    // line0 + 2
+                       "  // A comment.\n" +  // line0 + 3
+                       "  this.b = 2;\n" +    // line0 + 4
+                       "}\n",                 // line0 + 5
+                       debuggee,
+                       "1.7",
+                       "script1.js");
 
-    Cu.evalInSandbox("var line1 = Error().lineNumber;\n" +
-                     "debugger;\n" +        // line1 + 1
-                     "foo();\n",           // line1 + 2
-                     debuggee,
-                     "1.7",
-                     "script2.js");
-    /* eslint-enable */
+      Cu.evalInSandbox("var line1 = Error().lineNumber;\n" +
+                       "debugger;\n" +        // line1 + 1
+                       "foo();\n",           // line1 + 2
+                       debuggee,
+                       "1.7",
+                       "script2.js");
+      /* eslint-enable */
     });
   })
 );

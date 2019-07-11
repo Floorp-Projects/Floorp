@@ -12,24 +12,23 @@ get_commit() {
         | python -c 'import json, sys; print(json.loads(sys.stdin.read())[0]["sha"])'
 }
 get_date() {
-    curl -s "${API_BASE_URL}/commits?path=lib/msun/src&per_page=1" \
-        | python -c 'import json, sys; print(json.loads(sys.stdin.read())[0]["commit"]["committer"]["date"])'
+    curl -s "${API_BASE_URL}/commits/${COMMIT}" \
+        | python -c 'import json, sys; print(json.loads(sys.stdin.read())["commit"]["committer"]["date"])'
 }
 
 mv ./src/moz.build ./src_moz.build
 rm -rf src
-BEFORE_COMMIT=$(get_commit)
-sh ./import.sh
-mv ./src_moz.build ./src/moz.build
-COMMIT=$(get_commit)
-COMMITDATE=$(get_date)
-if [ ${BEFORE_COMMIT} != ${COMMIT} ]; then
-    echo "Latest commit is changed during import.  Please run again."
-    exit 1
+if [ "$#" -eq 0 ]; then
+    COMMIT=$(get_commit)
+else
+    COMMIT="$1"
 fi
+sh ./import.sh "${COMMIT}"
+mv ./src_moz.build ./src/moz.build
+COMMITDATE=$(get_date)
 for FILE in $(ls patches/*.patch | sort); do
     echo "Applying ${FILE} ..."
-    patch -p3 < ${FILE}
+    patch -p3 --no-backup-if-mismatch < ${FILE}
 done
 hg add src
 

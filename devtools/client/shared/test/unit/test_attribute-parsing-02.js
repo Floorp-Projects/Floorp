@@ -129,7 +129,8 @@ function run_test() {
       namespaceURI,
       tagName,
       attributes,
-      attributeName
+      attributeName,
+      attributeValue
     );
     if (!expected) {
       Assert.ok(!tokens);

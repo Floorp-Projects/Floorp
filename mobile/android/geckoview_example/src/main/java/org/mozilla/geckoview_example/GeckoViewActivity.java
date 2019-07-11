@@ -16,6 +16,8 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.WebExtension;
+import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebRequestError;
 
 import android.Manifest;
@@ -153,6 +155,15 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .crashHandler(ExampleCrashHandler.class);
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
+
+            sGeckoRuntime.getWebExtensionController().setTabDelegate(new WebExtensionController.TabDelegate() {
+                @Override
+                public GeckoResult<GeckoSession> onNewTab(WebExtension source, String uri) {
+                    final TabSession newSession = createSession();
+                    mToolbarView.updateTabCount();
+                    return GeckoResult.fromValue(newSession);
+                }
+            });
         }
 
         if(savedInstanceState == null) {

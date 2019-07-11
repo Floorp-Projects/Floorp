@@ -47,7 +47,6 @@ add_task(async function setup() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
       ["privacy.trackingprotection.fingerprinting.annotate.enabled", true],
       [
         "urlclassifier.features.fingerprinting.blacklistHosts",

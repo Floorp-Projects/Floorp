@@ -9,9 +9,11 @@ resources.
 
 The in-tree copy is updated by running
   sh update.sh
+or
+  sh update.sh <sha-commit>
 from within the modules/fdlibm directory.
 
 Current version: [commit b21ccf63f28a3a4692d8a31419e0a725a1b1a800 (2018-02-14T07:59:30Z)].
 
-patches 01-14 fixes files to be usable within mozilla-central tree.
+patches 01-18 fixes files to be usable within mozilla-central tree.
 See https://bugzilla.mozilla.org/show_bug.cgi?id=933257

@@ -4,13 +4,13 @@
 "use strict";
 
 /**
- * Check that sourceURL has the correct effect when using gThreadClient.eval.
+ * Check that sourceURL has the correct effect when using gThreadFront.eval.
  */
 
 var gDebuggee;
 var gClient;
 var gTargetFront;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -24,9 +24,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       gTargetFront = targetFront;
       test_simple_new_source();
     });
@@ -35,13 +35,13 @@ function run_test() {
 }
 
 function test_simple_new_source() {
-  gThreadClient.once("paused", function() {
-    gThreadClient.once("newSource", async function(packet2) {
+  gThreadFront.once("paused", function() {
+    gThreadFront.once("newSource", async function(packet2) {
       // The "stopMe" eval source is emitted first.
       Assert.ok(!!packet2.source);
       Assert.ok(packet2.source.introductionType, "eval");
 
-      gThreadClient.once("newSource", function(packet) {
+      gThreadFront.once("newSource", function(packet) {
         dump(JSON.stringify(packet, null, 2));
         Assert.ok(!!packet.source);
         Assert.ok(!!packet.source.url.match(/example\.com/));

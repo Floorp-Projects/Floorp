@@ -13,7 +13,7 @@ import {
 
 import { makeMockFrame } from "../../utils/test-mockup";
 
-const mockThreadClient = {
+const mockThreadFront = {
   evaluateInFrame: (script, { frameId }) =>
     new Promise((resolve, reject) => {
       if (!frameId) {
@@ -52,14 +52,14 @@ const mockThreadClient = {
 
 describe("expressions", () => {
   it("should add an expression", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadClient);
+    const { dispatch, getState, cx } = createStore(mockThreadFront);
 
     await dispatch(actions.addExpression(cx, "foo"));
     expect(selectors.getExpressions(getState())).toHaveLength(1);
   });
 
   it("should not add empty expressions", () => {
-    const { dispatch, getState, cx } = createStore(mockThreadClient);
+    const { dispatch, getState, cx } = createStore(mockThreadFront);
 
     dispatch(actions.addExpression(cx, (undefined: any)));
     dispatch(actions.addExpression(cx, ""));
@@ -67,7 +67,7 @@ describe("expressions", () => {
   });
 
   it("should not add invalid expressions", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadClient);
+    const { dispatch, getState, cx } = createStore(mockThreadFront);
     await dispatch(actions.addExpression(cx, "foo#"));
     const state = getState();
     expect(selectors.getExpressions(state)).toHaveLength(0);
@@ -75,7 +75,7 @@ describe("expressions", () => {
   });
 
   it("should update an expression", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadClient);
+    const { dispatch, getState, cx } = createStore(mockThreadFront);
 
     await dispatch(actions.addExpression(cx, "foo"));
     const expression = selectors.getExpression(getState(), "foo");
@@ -90,7 +90,7 @@ describe("expressions", () => {
   });
 
   it("should not update an expression w/ invalid code", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadClient);
+    const { dispatch, getState, cx } = createStore(mockThreadFront);
 
     await dispatch(actions.addExpression(cx, "foo"));
     const expression = selectors.getExpression(getState(), "foo");
@@ -102,7 +102,7 @@ describe("expressions", () => {
   });
 
   it("should delete an expression", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadClient);
+    const { dispatch, getState, cx } = createStore(mockThreadFront);
 
     await dispatch(actions.addExpression(cx, "foo"));
     await dispatch(actions.addExpression(cx, "bar"));
@@ -121,7 +121,7 @@ describe("expressions", () => {
   });
 
   it("should evaluate expressions global scope", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadClient);
+    const { dispatch, getState, cx } = createStore(mockThreadFront);
     await dispatch(actions.addExpression(cx, "foo"));
     await dispatch(actions.addExpression(cx, "bar"));
 
@@ -138,7 +138,7 @@ describe("expressions", () => {
   });
 
   it("should evaluate expressions in specific scope", async () => {
-    const { dispatch, getState } = createStore(mockThreadClient);
+    const { dispatch, getState } = createStore(mockThreadFront);
     await createFrames(getState, dispatch);
 
     const cx = selectors.getThreadContext(getState());
@@ -159,7 +159,7 @@ describe("expressions", () => {
   });
 
   it("should get the autocomplete matches for the input", async () => {
-    const { cx, dispatch, getState } = createStore(mockThreadClient);
+    const { cx, dispatch, getState } = createStore(mockThreadFront);
     await dispatch(actions.autocomplete(cx, "to", 2));
     expect(selectors.getAutocompleteMatchset(getState())).toMatchSnapshot();
   });

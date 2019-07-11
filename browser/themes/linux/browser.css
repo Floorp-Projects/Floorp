@@ -219,29 +219,6 @@ menuitem.bookmark-item {
   color: inherit;
 }
 
-#urlbar-search-footer {
-  border-top: 1px solid var(--panel-separator-color);
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#urlbar-search-settings {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  color: GrayText;
-  margin: 0;
-  border: 0;
-  padding: 8px 20px;
-  background: transparent;
-}
-
-#urlbar-search-settings:hover {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#urlbar-search-settings:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
 #urlbar-display-box {
   margin-top: -1px;
   margin-bottom: -1px;
@@ -253,8 +230,6 @@ menuitem.bookmark-item {
   margin-inline-start: 0;
   color: GrayText;
 }
-
-%include ../shared/urlbarSearchSuggestionsNotification.inc.css
 
 #search-container {
   min-width: calc(54px + 11ch);
@@ -355,16 +330,8 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   border-top: 1px solid ThreeDShadow;
 }
 
-.ac-title,
 #urlbarView-results {
   font-size: 1.05em;
-}
-
-.ac-separator,
-.ac-url,
-.ac-action,
-.ac-tags {
-  font-size: 0.9em;
 }
 
 /* Bookmarking panel */

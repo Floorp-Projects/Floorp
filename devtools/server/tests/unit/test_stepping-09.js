@@ -9,11 +9,11 @@
  */
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     dumpn("Evaluating test code and waiting for first debugger statement");
     const dbgStmt = await executeOnNextTickAndWaitForPause(
       () => evaluateTestCode(debuggee),
-      threadClient
+      threadFront
     );
     equal(
       dbgStmt.frame.where.line,
@@ -22,7 +22,7 @@ add_task(
     );
 
     dumpn("Step out of inner and into outer");
-    const step2 = await stepOut(threadClient);
+    const step2 = await stepOut(threadFront);
     // The bug was that we'd step right past the end of the function and never pause.
     equal(step2.frame.where.line, 2);
     deepEqual(step2.why.frameFinished.return, { type: "undefined" });

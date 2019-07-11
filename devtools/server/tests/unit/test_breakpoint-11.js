@@ -10,11 +10,11 @@
  */
 
 add_task(
-  threadClientTest(({ threadClient, debuggee }) => {
+  threadFrontTest(({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const source = await getSourceById(
-          threadClient,
+          threadFront,
           packet.frame.where.actor
         );
         const location = {
@@ -23,16 +23,16 @@ add_task(
           column: 8,
         };
 
-        threadClient.setBreakpoint(location, {});
+        threadFront.setBreakpoint(location, {});
 
-        threadClient.once("paused", function(packet) {
+        threadFront.once("paused", function(packet) {
           // Check the return value.
           Assert.equal(packet.why.type, "breakpoint");
           // Check that the breakpoint worked.
           Assert.equal(debuggee.a, undefined);
 
           // Remove the breakpoint.
-          threadClient.removeBreakpoint(location);
+          threadFront.removeBreakpoint(location);
 
           const location2 = {
             sourceUrl: source.url,
@@ -40,9 +40,9 @@ add_task(
             column: 32,
           };
 
-          threadClient.setBreakpoint(location2, {});
+          threadFront.setBreakpoint(location2, {});
 
-          threadClient.once("paused", function(packet) {
+          threadFront.once("paused", function(packet) {
             // Check the return value.
             Assert.equal(packet.why.type, "breakpoint");
             // Check that the breakpoint worked.
@@ -50,26 +50,26 @@ add_task(
             Assert.equal(debuggee.res, undefined);
 
             // Remove the breakpoint.
-            threadClient.removeBreakpoint(location2);
+            threadFront.removeBreakpoint(location2);
 
-            threadClient.resume().then(resolve);
+            threadFront.resume().then(resolve);
           });
 
           // Continue until the breakpoint is hit again.
-          threadClient.resume();
+          threadFront.resume();
         });
 
         // Continue until the breakpoint is hit.
-        threadClient.resume();
+        threadFront.resume();
       });
 
       /* eslint-disable */
-    Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
-                     "debugger;\n" +                      // line0 + 1
-                     "var a = { b: 1, f: function() { return 2; } };\n" + // line0+2
-                     "var res = a.f();\n",               // line0 + 3
-                     debuggee);
-    /* eslint-enable */
+      Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
+                       "debugger;\n" +                      // line0 + 1
+                       "var a = { b: 1, f: function() { return 2; } };\n" + // line0+2
+                       "var res = a.f();\n",               // line0 + 3
+                       debuggee);
+      /* eslint-enable */
     });
   })
 );

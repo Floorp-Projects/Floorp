@@ -1,0 +1,8 @@
+error: there must be at least one variant
+ --> $DIR/empty_enum.rs:3:10
+  |
+3 | #[derive(Serialize_repr)]
+  |          ^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+

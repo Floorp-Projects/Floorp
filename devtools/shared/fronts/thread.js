@@ -25,7 +25,7 @@ loader.lazyRequireGetter(
 );
 
 /**
- * Creates a thread client for the remote debugging protocol server. This client
+ * Creates a thread front for the remote debugging protocol server. This client
  * is a front to the thread actor created in the server side, hiding the
  * protocol details in a traditional JavaScript API.
  *
@@ -33,7 +33,7 @@ loader.lazyRequireGetter(
  * @param actor string
  *        The actor ID for this thread.
  */
-class ThreadClient extends FrontClassWithSpec(threadSpec) {
+class ThreadFront extends FrontClassWithSpec(threadSpec) {
   constructor(client) {
     super(client);
     this.client = client;
@@ -47,7 +47,7 @@ class ThreadClient extends FrontClassWithSpec(threadSpec) {
     this.before("resumed", this._beforeResumed);
     this.before("detached", this._beforeDetached);
     // Attribute name from which to retrieve the actorID out of the target actor's form
-    this.formAttributeName = "contextActor";
+    this.formAttributeName = "threadActor";
   }
 
   get state() {
@@ -345,5 +345,5 @@ class ThreadClient extends FrontClassWithSpec(threadSpec) {
   }
 }
 
-exports.ThreadClient = ThreadClient;
-registerFront(ThreadClient);
+exports.ThreadFront = ThreadFront;
+registerFront(ThreadFront);

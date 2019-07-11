@@ -9,7 +9,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -19,9 +19,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_simple_new_source();
     });
   });
@@ -29,7 +29,7 @@ function run_test() {
 }
 
 function test_simple_new_source() {
-  gThreadClient.once("newSource", function(packet) {
+  gThreadFront.once("newSource", function(packet) {
     Assert.ok(!!packet.source);
     Assert.ok(!!packet.source.url.match(/test_new_source-01.js$/));
 

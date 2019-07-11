@@ -9,14 +9,14 @@
  */
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     dumpn("Evaluating test code and waiting for first debugger statement");
     await executeOnNextTickAndWaitForPause(
       () => evaluateTestCode(debuggee),
-      threadClient
+      threadFront
     );
 
-    const step1 = await stepOut(threadClient);
+    const step1 = await stepOut(threadFront);
     equal(step1.frame.where.line, 8);
     equal(step1.why.type, "resumeLimit");
 

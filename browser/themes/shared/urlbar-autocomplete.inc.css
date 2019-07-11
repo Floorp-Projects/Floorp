@@ -191,98 +191,16 @@
   color: var(--autocomplete-popup-highlight-background);
 }
 
-/* legacy URL bar styles below */
+/* search bar popup */
 
-#PopupAutoCompleteRichResult,
 #PopupSearchAutoComplete {
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
   border-color: var(--arrowpanel-border-color);
 }
 
-#PopupAutoCompleteRichResult .autocomplete-richlistbox {
-  padding: 4px 3px;
-  background: transparent;
-  color: inherit;
-}
-
-#PopupAutoCompleteRichResult .autocomplete-richlistitem {
-  min-height: 30px;
-  font: message-box;
-  border-radius: 2px;
-  padding-inline-start: var(--item-padding-start);
-  /* For the space after the autocomplete text we have to use a transparent
-     border instead of padding, because the latter would considered part of the
-     scrollable area when generating the overflow events that we use to
-     constrain the autocomplete result item size. */
-  border-inline-end: var(--item-padding-end) solid transparent;
-}
-
-#PopupAutoCompleteRichResult .autocomplete-richlistitem[selected],
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
 }
 
-:root[uidensity=touch] #PopupAutoCompleteRichResult .autocomplete-richlistitem {
-  min-height: 40px;
-}
-
-/* Awesomebar popup items */
-
-.ac-separator:not([selected=true]) {
-  color: var(--panel-disabled-color);
-}
-
-.ac-url:not([selected=true]),
-.autocomplete-richlistitem.aliasOffer > .ac-action:not([selected=true]) {
-  color: var(--urlbar-popup-url-color);
-}
-
-.ac-action:not([selected=true]) {
-  color: var(--urlbar-popup-action-color);
-}
-
-html|span.ac-tag {
-  background-color: var(--arrowpanel-dimmed);
-  border-radius: 2px;
-  border: 1px solid var(--panel-separator-color);
-  padding: 0 1px;
-}
-
-.ac-tags-text[selected] > html|span.ac-tag {
-  background-color: var(--autocomplete-popup-highlight-color);
-  color: var(--autocomplete-popup-highlight-background);
-}
-
-html|span.ac-emphasize-text-title,
-html|span.ac-emphasize-text-tag,
-html|span.ac-emphasize-text-url {
-  font-weight: 600;
-}
-
-.ac-site-icon,
-.ac-type-icon {
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.6;
-}
-
-.ac-site-icon[selected],
-.ac-type-icon[selected] {
-  fill-opacity: 1;
-}
-
-.ac-type-icon[type=bookmark] {
-  list-style-image: url("chrome://browser/skin/bookmark.svg");
-}
-
-.ac-type-icon[type=keyword],
-.ac-site-icon[type=searchengine] {
-  list-style-image: url(chrome://browser/skin/search-glass.svg);
-}
-
-.ac-type-icon[type=switchtab],
-.ac-type-icon[type=remotetab] {
-  list-style-image: url("chrome://browser/skin/tab.svg");
-}

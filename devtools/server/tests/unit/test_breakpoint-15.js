@@ -9,7 +9,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -19,9 +19,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       testSameBreakpoint();
     });
   });
@@ -31,11 +31,8 @@ function run_test() {
 const SOURCE_URL = "http://example.com/source.js";
 
 const testSameBreakpoint = async function() {
-  const packet = await executeOnNextTickAndWaitForPause(
-    evalCode,
-    gThreadClient
-  );
-  const source = await getSourceById(gThreadClient, packet.frame.where.actor);
+  const packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadFront);
+  const source = await getSourceById(gThreadFront, packet.frame.where.actor);
 
   // Whole line
   const wholeLineLocation = {

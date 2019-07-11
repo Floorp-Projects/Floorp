@@ -11,32 +11,32 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_basic.html", {
     waitForRecording: true,
   });
-  const { threadClient, tab, toolbox, target } = dbg;
+  const { threadFront, tab, toolbox, target } = dbg;
 
-  const bp = await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
+  const bp = await setBreakpoint(threadFront, "doc_rr_basic.html", 21);
 
   // Visit a lot of breakpoints so that we are sure we have crossed major
   // checkpoint boundaries.
-  await rewindToLine(threadClient, 21);
+  await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 10);
-  await rewindToLine(threadClient, 21);
+  await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 9);
-  await rewindToLine(threadClient, 21);
+  await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 8);
-  await rewindToLine(threadClient, 21);
+  await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 7);
-  await rewindToLine(threadClient, 21);
+  await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 6);
-  await resumeToLine(threadClient, 21);
+  await resumeToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 7);
-  await resumeToLine(threadClient, 21);
+  await resumeToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 8);
-  await resumeToLine(threadClient, 21);
+  await resumeToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 9);
-  await resumeToLine(threadClient, 21);
+  await resumeToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 10);
 
-  await threadClient.removeBreakpoint(bp);
+  await threadFront.removeBreakpoint(bp);
   await toolbox.closeToolbox();
   await gBrowser.removeTab(tab);
 });

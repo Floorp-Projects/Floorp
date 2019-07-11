@@ -486,6 +486,19 @@ var gHomePane = {
       .getElementById("restoreDefaultHomePageBtn")
       .addEventListener("command", this.restoreDefaultPrefsForHome.bind(this));
 
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("homePrefHidden"),
+      () => this.syncFromHomePref()
+    );
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("newTabMode"),
+      () => this.syncFromNewTabPref()
+    );
+    Preferences.addSyncToPrefListener(
+      document.getElementById("newTabMode"),
+      element => this.syncToNewTabPref(element.value)
+    );
+
     this._updateUseCurrentButton();
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
 
