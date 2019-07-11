@@ -11,7 +11,7 @@ async function getTestPluginAddon() {
   return plugins.find(plugin => plugin.name === "Test Plug-in");
 }
 
-async function test_inline_plugin_prefs() {
+add_task(async function test_inline_plugin_prefs() {
   gManagerWindow = await open_manager("addons://list/plugin");
   let testPlugin = await getTestPluginAddon();
   ok(testPlugin, "Test Plug-in should exist");
@@ -35,26 +35,7 @@ async function test_inline_plugin_prefs() {
     }
   ).then(event => event.target);
 
-  if (gManagerWindow.useHtmlViews) {
-    pluginEl.querySelector("panel-item[action='preferences']").click();
-  } else {
-    pluginEl.parentNode.ensureElementIsVisible(pluginEl);
-
-    let button = gManagerWindow.document.getAnonymousElementByAttribute(
-      pluginEl,
-      "anonid",
-      "preferences-btn"
-    );
-    is_element_visible(button, "Preferences button should be visible");
-
-    EventUtils.synthesizeMouseAtCenter(
-      pluginEl,
-      { clickCount: 1 },
-      gManagerWindow
-    );
-
-    await TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
-  }
+  pluginEl.querySelector("panel-item[action='preferences']").click();
 
   info("Waiting for inline options page to be ready");
   let doc = (await optionsBrowserPromise).contentDocument;
@@ -82,20 +63,4 @@ async function test_inline_plugin_prefs() {
   );
 
   await close_manager(gManagerWindow);
-}
-
-add_task(async function test_inline_plugin_prefs_on_XUL_aboutaddons() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", false]],
-  });
-  await test_inline_plugin_prefs();
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function test_inline_plugin_prefs_on_HTML_aboutaddons() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-  await test_inline_plugin_prefs();
-  await SpecialPowers.popPrefEnv();
 });

@@ -8,10 +8,6 @@ function dateHoursAgo(hours) {
 }
 
 add_task(async function enableHtmlViews() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-
   gProvider = new MockProvider();
   gProvider.createAddons([
     {

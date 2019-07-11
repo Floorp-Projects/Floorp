@@ -48,7 +48,6 @@ add_task(async function setup() {
       ["extensions.getAddons.discovery.api_url", `${serverBaseUrl}discoapi`],
       ["app.support.baseURL", `${serverBaseUrl}sumo/`],
       ["extensions.htmlaboutaddons.discover.enabled", true],
-      ["extensions.htmlaboutaddons.enabled", true],
       // Discovery API requests can be triggered by the discopane and the
       // recommendations in the list view. To make sure that the every test
       // checks the behavior of the view they're testing, ensure that only one

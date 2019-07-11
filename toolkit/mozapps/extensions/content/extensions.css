@@ -18,123 +18,13 @@ xhtml|link {
   margin-bottom: 0;
 }
 
-.addon[status="installed"] {
-  -moz-box-orient: vertical;
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-generic");
-}
-
-.addon[status="installing"] {
-  -moz-box-orient: vertical;
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-installing");
-}
-
-.addon[pending="uninstall"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-uninstalled");
-}
-
-.creator {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#creator-link");
-}
-
-.meta-rating {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#rating");
-}
-
-.download-progress, .download-progress[mode="undetermined"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#download-progress");
-}
-
-.install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install-status");
-}
-
-.detail-row {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#detail-row");
-}
 
 .text-list {
   white-space: pre-line;
 }
 
-row[unsupported="true"] {
-  display: none;
-}
-
-#addonitem-popup > menuitem[disabled="true"] {
-  display: none;
-}
-
-#addonitem-popup[addontype="theme"] > #menuitem_enableItem,
-#addonitem-popup[addontype="theme"] > #menuitem_disableItem,
-#addonitem-popup:not([addontype="theme"]) > #menuitem_enableTheme,
-#addonitem-popup:not([addontype="theme"]) > #menuitem_disableTheme {
-  display: none;
-}
-
-#show-disabled-unsigned-extensions .button-text {
-  margin-inline-start: 3px !important;
-  margin-inline-end: 2px !important;
-}
-
 #header-searching:not([active]) {
   visibility: hidden;
-}
-
-#detail-view {
-  overflow: auto;
-}
-
-.addon:not([notification="warning"]) .warning,
-.addon:not([notification="error"]) .error,
-.addon:not([notification="info"]) .info,
-.addon:not([pending]) .pending,
-.addon:not([upgrade="true"]) .update-postfix,
-.addon[active="true"] .disabled-postfix,
-.addon[pending="install"] .update-postfix,
-.addon[pending="install"] .disabled-postfix,
-.addon[legacy="false"] .legacy-warning,
-#detail-view:not([notification="warning"]) .warning,
-#detail-view:not([notification="error"]) .error,
-#detail-view:not([notification="info"]) .info,
-#detail-view:not([pending]) .pending,
-#detail-view:not([upgrade="true"]) .update-postfix,
-#detail-view[active="true"] .disabled-postfix,
-#detail-view[legacy="false"] .legacy-warning,
-#detail-view[loading] .detail-view-container,
-#detail-view:not([loading]) .alert-container,
-.detail-row:not([value]),
-#legacy-list .addon .disabled-postfix {
-  display: none;
-}
-
-.addon .privateBrowsing-notice {
-  display: none;
-}
-.addon[privateBrowsing="true"] .privateBrowsing-notice-container {
-  /* 40px is width and margin of .icon-container */
-  margin-inline-start: 40px;
-}
-.addon[privateBrowsing="true"] .privateBrowsing-notice {
-  margin: 4px 0 0;
-  display: inline-block;
-}
-.addon[active="false"] .privateBrowsing-notice {
-  background-color: var(--purple-70-a40);
-}
-
-#addons-page:not([warning]) #list-view > .global-warning-container {
-  display: none;
-}
-#addon-list .date-updated,
-#legacy-list .date-updated {
-  display: none;
-}
-
-.view-pane:not(#updates-view) .addon .relnotes-toggle,
-.view-pane:not(#updates-view) .addon .include-update,
-#updates-view:not([updatetype="available"]) .addon .include-update,
-#updates-view[updatetype="available"] .addon .update-available-notice {
-  display: none;
 }
 
 #addons-page:not([warning]) .global-warning,
@@ -155,41 +45,12 @@ row[unsupported="true"] {
   display: none;
 }
 
-.list-view-notice {
-  margin-inline-start: 28px;
-  margin-bottom: 16px;
-}
-
-.list-view-notice > .message-bar {
-  width: 664px;
-}
-
 .html-alert-container > .message-bar {
   margin-bottom: 8px;
 }
 
 .html-global-warning-button {
   margin-inline: 0;
-}
-
-.addon .relnotes {
-  -moz-user-select: text;
-}
-#detail-name, #detail-desc, #detail-fulldesc {
-  -moz-user-select: text;
-  word-wrap: break-word;
-}
-
-#detail-name-container {
-  /* Set a max-width on this so the labels inside of this will wrap instead of
-     growing the card horizontally with long names. */
-  max-width: 580px;
-}
-
-/* Make sure we're not animating hidden images. See bug 623739. */
-#view-port:not([selectedIndex="0"]) #discover-view .loading,
-#discover-view:not([selectedIndex="0"]) .loading {
-  display: none;
 }
 
 /* Elements in unselected richlistitems cannot be focused */
@@ -199,14 +60,6 @@ richlistitem:not([selected]) * {
 
 #header-search {
   width: 22em;
-}
-
-.discover-button[disabled="true"] {
-  display: none;
-}
-
-.view-pane:not(#legacy-view) .addon-control.replacement {
-  display: none;
 }
 
 #pluginFlashBlockingCheckbox .checkbox-label-box {
