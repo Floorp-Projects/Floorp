@@ -26,9 +26,6 @@ StaticRefPtr<CacheObserver> CacheObserver::sSelf;
 static float const kDefaultHalfLifeHours = 24.0F;  // 24 hours
 float CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
 
-static bool const kDefaultUseDiskCache = true;
-bool CacheObserver::sUseDiskCache = kDefaultUseDiskCache;
-
 static bool const kDefaultUseMemoryCache = true;
 bool CacheObserver::sUseMemoryCache = kDefaultUseMemoryCache;
 
@@ -146,8 +143,6 @@ nsresult CacheObserver::Shutdown() {
 }
 
 void CacheObserver::AttachToPreferences() {
-  mozilla::Preferences::AddBoolVarCache(
-      &sUseDiskCache, "browser.cache.disk.enable", kDefaultUseDiskCache);
   mozilla::Preferences::AddBoolVarCache(
       &sUseMemoryCache, "browser.cache.memory.enable", kDefaultUseMemoryCache);
 

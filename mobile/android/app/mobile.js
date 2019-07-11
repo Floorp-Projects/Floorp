@@ -68,7 +68,6 @@ pref("ui.scrollbarFadeDuration", 0);
 pref("ui.caretBlinkCount", 10);
 
 /* cache prefs */
-pref("browser.cache.disk.enable", true);
 pref("browser.cache.disk.smart_size.enabled", true);
 
 pref("browser.cache.memory.enable", true);
