@@ -885,9 +885,7 @@ WebRenderThreadPool::WebRenderThreadPool() {
   mThreadPool = wr_thread_pool_new();
 }
 
-WebRenderThreadPool::~WebRenderThreadPool() {
-  Release();
-}
+WebRenderThreadPool::~WebRenderThreadPool() { Release(); }
 
 void WebRenderThreadPool::Release() {
   if (mThreadPool) {
@@ -895,7 +893,6 @@ void WebRenderThreadPool::Release() {
     mThreadPool = nullptr;
   }
 }
-
 
 WebRenderProgramCache::WebRenderProgramCache(wr::WrThreadPool* aThreadPool) {
   MOZ_ASSERT(aThreadPool);
