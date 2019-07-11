@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.history.viewholders.HistoryDeleteButtonViewHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryHeaderViewHolder
@@ -94,9 +93,8 @@ private class HistoryList(val history: List<HistoryItem>) {
     }
 }
 
-class HistoryAdapter(
-    private val actionEmitter: Observer<HistoryAction>
-) : AdapterWithJob<RecyclerView.ViewHolder>() {
+class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
+    AdapterWithJob<RecyclerView.ViewHolder>() {
     private var historyList: HistoryList = HistoryList(emptyList())
     private var mode: HistoryState.Mode = HistoryState.Mode.Normal
     var selected = listOf<HistoryItem>()
@@ -160,9 +158,16 @@ class HistoryAdapter(
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
-            HistoryDeleteButtonViewHolder.LAYOUT_ID -> HistoryDeleteButtonViewHolder(view, actionEmitter)
+            HistoryDeleteButtonViewHolder.LAYOUT_ID -> HistoryDeleteButtonViewHolder(
+                view,
+                historyInteractor
+            )
             HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
-            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, actionEmitter, adapterJob)
+            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(
+                view,
+                historyInteractor,
+                adapterJob
+            )
             else -> throw IllegalStateException()
         }
     }

@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.CompoundButton
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.history_list_item.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +18,7 @@ import mozilla.components.browser.menu.BrowserMenu
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.library.history.HistoryAction
+import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItem
 import org.mozilla.fenix.library.history.HistoryItemMenu
 import org.mozilla.fenix.library.history.HistoryState
@@ -27,7 +26,7 @@ import kotlin.coroutines.CoroutineContext
 
 class HistoryListItemViewHolder(
     view: View,
-    private val actionEmitter: Observer<HistoryAction>,
+    private val historyInteractor: HistoryInteractor,
     val job: Job
 ) : RecyclerView.ViewHolder(view), CoroutineScope {
 
@@ -48,13 +47,11 @@ class HistoryListItemViewHolder(
         }
 
         item?.apply {
-            val action = if (isChecked) {
-                HistoryAction.AddItemForRemoval(this)
+            if (isChecked) {
+                historyInteractor.onItemAddedForRemoval(this)
             } else {
-                HistoryAction.RemoveItemForRemoval(this)
+                historyInteractor.onItemRemovedForRemoval(this)
             }
-
-            actionEmitter.onNext(action)
         }
     }
 
@@ -63,7 +60,7 @@ class HistoryListItemViewHolder(
 
         view.setOnLongClickListener {
             item?.apply {
-                actionEmitter.onNext(HistoryAction.EnterEditMode(this))
+                historyInteractor.onEnterEditMode(this)
             }
 
             true
@@ -72,7 +69,8 @@ class HistoryListItemViewHolder(
         menuButton.setOnClickListener {
             historyMenu.menuBuilder.build(view.context).show(
                 anchor = it,
-                orientation = BrowserMenu.Orientation.DOWN)
+                orientation = BrowserMenu.Orientation.DOWN
+            )
         }
     }
 
@@ -97,7 +95,8 @@ class HistoryListItemViewHolder(
                 } else {
                     ThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
                 }
-            val backgroundTintList = ContextCompat.getColorStateList(itemView.context, backgroundTint)
+            val backgroundTintList =
+                ContextCompat.getColorStateList(itemView.context, backgroundTint)
             favicon.backgroundTintList = backgroundTintList
 
             if (selected) {
@@ -107,7 +106,8 @@ class HistoryListItemViewHolder(
             }
         } else {
             val backgroundTint = ThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
-            val backgroundTintList = ContextCompat.getColorStateList(itemView.context, backgroundTint)
+            val backgroundTintList =
+                ContextCompat.getColorStateList(itemView.context, backgroundTint)
             favicon.backgroundTintList = backgroundTintList
             updateFavIcon(item.url)
         }
@@ -117,7 +117,7 @@ class HistoryListItemViewHolder(
         this.historyMenu = HistoryItemMenu(itemView.context) {
             when (it) {
                 is HistoryItemMenu.Item.Delete -> {
-                    item?.apply { actionEmitter.onNext(HistoryAction.Delete.One(this)) }
+                    item?.apply { historyInteractor.onDeleteOne(this) }
                 }
             }
         }
@@ -139,11 +139,13 @@ class HistoryListItemViewHolder(
     ) {
         itemView.history_layout.setOnClickListener {
             if (mode == HistoryState.Mode.Normal) {
-                actionEmitter.onNext(HistoryAction.Open(item))
+                historyInteractor.onHistoryItemOpened(item)
             } else {
-                if (selected) actionEmitter.onNext(HistoryAction.RemoveItemForRemoval(item)) else actionEmitter.onNext(
-                    HistoryAction.AddItemForRemoval(item)
-                )
+                if (selected) {
+                    historyInteractor.onItemRemovedForRemoval(item)
+                } else {
+                    historyInteractor.onItemAddedForRemoval(item)
+                }
             }
         }
     }

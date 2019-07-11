@@ -6,15 +6,14 @@ package org.mozilla.fenix.library.history.viewholders
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.delete_history_button.view.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.library.history.HistoryAction
+import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryState
 
 class HistoryDeleteButtonViewHolder(
     view: View,
-    private val actionEmitter: Observer<HistoryAction>
+    historyInteractor: HistoryInteractor
 ) : RecyclerView.ViewHolder(view) {
     private var mode: HistoryState.Mode? = null
     private val buttonView = view.delete_history_button
@@ -22,13 +21,10 @@ class HistoryDeleteButtonViewHolder(
     init {
         buttonView.setOnClickListener {
             mode?.also {
-                val action = when (it) {
-                    is HistoryState.Mode.Normal -> HistoryAction.Delete.All
-                    is HistoryState.Mode.Editing -> HistoryAction.Delete.Some(it.selectedItems)
-                    is HistoryState.Mode.Deleting -> null
-                } ?: return@also
-
-                actionEmitter.onNext(action)
+                when (it) {
+                    is HistoryState.Mode.Normal -> historyInteractor.onDeleteAll()
+                    is HistoryState.Mode.Editing -> historyInteractor.onDeleteSome(it.selectedItems)
+                }
             }
         }
     }

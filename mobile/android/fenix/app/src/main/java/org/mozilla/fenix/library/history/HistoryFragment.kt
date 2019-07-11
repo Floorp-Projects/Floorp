@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.whenStarted
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_history.view.*
 import kotlinx.coroutines.Dispatchers
@@ -26,46 +27,56 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.lib.state.ext.observe
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
-import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getHostFromUrl
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.getAutoDisposeObservable
-import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.share.ShareTab
 import java.util.concurrent.TimeUnit
 
 @SuppressWarnings("TooManyFunctions")
 class HistoryFragment : Fragment(), BackHandler {
-
-    private lateinit var historyComponent: HistoryComponent
-    private val navigation by lazy { Navigation.findNavController(requireView()) }
+    private lateinit var historyStore: HistoryStore
+    private lateinit var historyView: HistoryView
+    private lateinit var historyInteractor: HistoryInteractor
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater
-        .inflate(R.layout.fragment_history, container, false).also { view ->
-            historyComponent = HistoryComponent(
-                view.history_layout,
-                ActionBusFactory.get(this),
-                FenixViewModelProvider.create(
-                    this,
-                    HistoryViewModel::class.java,
-                    HistoryViewModel.Companion::create
+    ): View? {
+        val view = inflater.inflate(R.layout.fragment_history, container, false)
+        historyStore = StoreProvider.get(
+            this,
+            HistoryStore(
+                HistoryState(
+                    items = listOf(), mode = HistoryState.Mode.Normal
                 )
             )
-        }
+        )
+        historyInteractor = HistoryInteractor(
+            historyStore,
+            ::openItem,
+            ::displayDeleteAllDialog,
+            ::invalidateOptionsMenu,
+            ::deleteHistoryItems
+        )
+        historyView = HistoryView(view.history_layout, historyInteractor)
+        return view
+    }
+
+    private fun invalidateOptionsMenu() {
+        activity?.invalidateOptionsMenu()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,16 +85,28 @@ class HistoryFragment : Fragment(), BackHandler {
         setHasOptionsMenu(true)
     }
 
+    fun deleteHistoryItems(items: List<HistoryItem>) {
+        lifecycleScope.launch {
+            val storage = context?.components?.core?.historyStorage
+            for (item in items) {
+                storage?.deleteVisit(item.url, item.visitedAt)
+            }
+            reloadData()
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        lifecycleScope.launch { reloadData() }
-    }
+        historyStore.observe(view) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                whenStarted {
+                    historyView.update(it)
+                }
+            }
+        }
 
-    override fun onStart() {
-        super.onStart()
-        getAutoDisposeObservable<HistoryAction>()
-            .subscribe(this::handleNewHistoryAction)
+        lifecycleScope.launch { reloadData() }
     }
 
     override fun onResume() {
@@ -95,7 +118,7 @@ class HistoryFragment : Fragment(), BackHandler {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        val mode = (historyComponent.uiView as HistoryUIView).mode
+        val mode = historyStore.state.mode
         when (mode) {
             HistoryState.Mode.Normal ->
                 R.menu.library_menu
@@ -117,7 +140,8 @@ class HistoryFragment : Fragment(), BackHandler {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.share_history_multi_select -> {
-            val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
+            val selectedHistory =
+                (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: listOf()
             when {
                 selectedHistory.size == 1 ->
                     share(selectedHistory.first().url)
@@ -135,7 +159,8 @@ class HistoryFragment : Fragment(), BackHandler {
         }
         R.id.delete_history_multi_select -> {
             val components = context?.applicationContext?.components!!
-            val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
+            val selectedHistory =
+                (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: listOf()
 
             lifecycleScope.launch(Main) {
                 deleteSelectedHistory(selectedHistory, components)
@@ -144,7 +169,8 @@ class HistoryFragment : Fragment(), BackHandler {
             true
         }
         R.id.open_history_in_new_tabs_multi_select -> {
-            val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
+            val selectedHistory =
+                (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: listOf()
             requireComponents.useCases.tabsUseCases.addTab.let { useCase ->
                 for (selectedItem in selectedHistory) {
                     useCase.invoke(selectedItem.url)
@@ -155,11 +181,15 @@ class HistoryFragment : Fragment(), BackHandler {
                 browsingModeManager.mode = BrowsingModeManager.Mode.Normal
                 supportActionBar?.hide()
             }
-            nav(R.id.historyFragment, HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
+            nav(
+                R.id.historyFragment,
+                HistoryFragmentDirections.actionHistoryFragmentToHomeFragment()
+            )
             true
         }
         R.id.open_history_in_private_tabs_multi_select -> {
-            val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
+            val selectedHistory =
+                (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: listOf()
             requireComponents.useCases.tabsUseCases.addPrivateTab.let { useCase ->
                 for (selectedItem in selectedHistory) {
                     useCase.invoke(selectedItem.url)
@@ -170,47 +200,18 @@ class HistoryFragment : Fragment(), BackHandler {
                 browsingModeManager.mode = BrowsingModeManager.Mode.Private
                 supportActionBar?.hide()
             }
-            nav(R.id.historyFragment, HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
+            nav(
+                R.id.historyFragment,
+                HistoryFragmentDirections.actionHistoryFragmentToHomeFragment()
+            )
             true
         }
         else -> super.onOptionsItemSelected(item)
     }
 
-    override fun onBackPressed(): Boolean = (historyComponent.uiView as HistoryUIView).onBackPressed()
+    override fun onBackPressed(): Boolean = historyView.onBackPressed()
 
-    private fun handleNewHistoryAction(action: HistoryAction) {
-        when (action) {
-            is HistoryAction.Open ->
-                openItem(action.item)
-            is HistoryAction.EnterEditMode ->
-                emitChange { HistoryChange.EnterEditMode(action.item) }
-            is HistoryAction.AddItemForRemoval ->
-                emitChange { HistoryChange.AddItemForRemoval(action.item) }
-            is HistoryAction.RemoveItemForRemoval ->
-                emitChange { HistoryChange.RemoveItemForRemoval(action.item) }
-            is HistoryAction.BackPressed ->
-                emitChange { HistoryChange.ExitEditMode }
-            is HistoryAction.Delete.All ->
-                displayDeleteAllDialog()
-            is HistoryAction.Delete.One -> lifecycleScope.launch {
-                requireComponents.core
-                    .historyStorage
-                    .deleteVisit(action.item.url, action.item.visitedAt)
-                reloadData()
-            }
-            is HistoryAction.Delete.Some -> lifecycleScope.launch {
-                val storage = requireComponents.core.historyStorage
-                for (item in action.items) {
-                    storage.deleteVisit(item.url, item.visitedAt)
-                }
-                reloadData()
-            }
-            is HistoryAction.SwitchMode ->
-                activity?.invalidateOptionsMenu()
-        }
-    }
-
-    private fun openItem(item: HistoryItem) {
+    fun openItem(item: HistoryItem) {
         requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = item.url,
@@ -219,7 +220,7 @@ class HistoryFragment : Fragment(), BackHandler {
         )
     }
 
-    private fun displayDeleteAllDialog() {
+    fun displayDeleteAllDialog() {
         activity?.let { activity ->
             AlertDialog.Builder(activity).apply {
                 setMessage(R.string.history_delete_all_dialog)
@@ -227,13 +228,13 @@ class HistoryFragment : Fragment(), BackHandler {
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
-                    emitChange { HistoryChange.EnterDeletionMode }
+                    historyStore.dispatch(HistoryAction.EnterDeletionMode)
                     lifecycleScope.launch {
                         requireComponents.analytics.metrics.track(Event.HistoryAllItemsRemoved)
                         requireComponents.core.historyStorage.deleteEverything()
                         reloadData()
                         launch(Dispatchers.Main) {
-                            emitChange { HistoryChange.ExitDeletionMode }
+                            historyStore.dispatch(HistoryAction.ExitDeletionMode)
                         }
                     }
 
@@ -275,7 +276,7 @@ class HistoryFragment : Fragment(), BackHandler {
             .toList()
 
         withContext(Main) {
-            emitChange { HistoryChange.Change(items) }
+            historyStore.dispatch(HistoryAction.Change(items))
         }
     }
 
@@ -298,10 +299,6 @@ class HistoryFragment : Fragment(), BackHandler {
                 tabs = tabs?.toTypedArray()
             )
         nav(R.id.historyFragment, directions)
-    }
-
-    private inline fun emitChange(producer: () -> HistoryChange) {
-        getManagedEmitter<HistoryChange>().onNext(producer())
     }
 
     companion object {
