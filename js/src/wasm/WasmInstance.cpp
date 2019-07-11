@@ -1983,6 +1983,17 @@ JSString* Instance::createDisplayURL(JSContext* cx) {
   return result.finishString();
 }
 
+WasmBreakpointSite* Instance::getOrCreateBreakpointSite(JSContext* cx,
+                                                        uint32_t offset) {
+  MOZ_ASSERT(debugEnabled());
+  return debug().getOrCreateBreakpointSite(cx, this, offset);
+}
+
+void Instance::destroyBreakpointSite(FreeOp* fop, uint32_t offset) {
+  MOZ_ASSERT(debugEnabled());
+  return debug().destroyBreakpointSite(fop, this, offset);
+}
+
 void Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                              Metadata::SeenSet* seenMetadata,
                              ShareableBytes::SeenSet* seenBytes,
