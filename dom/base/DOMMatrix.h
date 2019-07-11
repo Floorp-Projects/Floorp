@@ -29,6 +29,7 @@ class DOMPoint;
 class StringOrUnrestrictedDoubleSequence;
 struct DOMPointInit;
 struct DOMMatrixInit;
+struct DOMMatrix2DInit;
 
 class DOMMatrixReadOnly : public nsWrapperCache {
  public:
@@ -49,12 +50,21 @@ class DOMMatrixReadOnly : public nsWrapperCache {
     mMatrix3D = new gfx::Matrix4x4Double(aMatrix);
   }
 
+  DOMMatrixReadOnly(nsISupports* aParent, const gfx::Matrix& aMatrix)
+      : mParent(aParent) {
+    mMatrix2D = new gfx::MatrixDouble(aMatrix);
+  }
+
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMMatrixReadOnly)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMMatrixReadOnly)
 
   nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<DOMMatrixReadOnly> FromMatrix(
+      nsISupports* aParent, const DOMMatrix2DInit& aMatrixInit,
+      ErrorResult& aRv);
 
   static already_AddRefed<DOMMatrixReadOnly> FromMatrix(
       nsISupports* aParent, const DOMMatrixInit& aMatrixInit, ErrorResult& aRv);
@@ -207,6 +217,9 @@ class DOMMatrixReadOnly : public nsWrapperCache {
 
   bool WriteStructuredClone(JSContext* aCx,
                             JSStructuredCloneWriter* aWriter) const;
+  const gfx::MatrixDouble* GetInternal2D() const {
+    return Is2D() ? mMatrix2D : nullptr;
+  }
 
  protected:
   nsCOMPtr<nsISupports> mParent;
@@ -220,7 +233,8 @@ class DOMMatrixReadOnly : public nsWrapperCache {
    * where all of its members are properly defined.
    * The init dictionary's dimension must match the matrix one.
    */
-  void SetDataFromMatrixInit(DOMMatrixInit& aMatrixInit);
+  void SetDataFromMatrix2DInit(const DOMMatrix2DInit& aMatrixInit);
+  void SetDataFromMatrixInit(const DOMMatrixInit& aMatrixInit);
 
   DOMMatrixReadOnly* SetMatrixValue(const nsAString& aTransformList,
                                     ErrorResult& aRv);
@@ -251,6 +265,9 @@ class DOMMatrix : public DOMMatrixReadOnly {
       : DOMMatrixReadOnly(aParent, other) {}
 
   DOMMatrix(nsISupports* aParent, const gfx::Matrix4x4& aMatrix)
+      : DOMMatrixReadOnly(aParent, aMatrix) {}
+
+  DOMMatrix(nsISupports* aParent, const gfx::Matrix& aMatrix)
       : DOMMatrixReadOnly(aParent, aMatrix) {}
 
   static already_AddRefed<DOMMatrix> FromMatrix(
