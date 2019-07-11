@@ -306,9 +306,9 @@ class SystemEngineSessionTest {
         engineSession.settings.loadWithOverviewMode = true
         verify(webViewSettings).loadWithOverviewMode = true
 
-        assertFalse(engineSession.settings.useWideViewPort)
-        engineSession.settings.useWideViewPort = true
-        verify(webViewSettings).useWideViewPort = true
+        assertNull(engineSession.settings.useWideViewPort)
+        engineSession.settings.useWideViewPort = false
+        verify(webViewSettings).useWideViewPort = false
 
         assertTrue(engineSession.settings.allowContentAccess)
         engineSession.settings.allowContentAccess = false
@@ -372,6 +372,7 @@ class SystemEngineSessionTest {
                 javaScriptCanOpenWindowsAutomatically = true,
                 displayZoomControls = true,
                 loadWithOverviewMode = true,
+                useWideViewPort = true,
                 supportMultipleWindows = true)
         val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
 
@@ -390,6 +391,7 @@ class SystemEngineSessionTest {
         verify(webViewSettings).javaScriptCanOpenWindowsAutomatically = true
         verify(webViewSettings).displayZoomControls = true
         verify(webViewSettings).loadWithOverviewMode = true
+        verify(webViewSettings).useWideViewPort = true
         verify(webViewSettings).setSupportMultipleWindows(true)
         verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
         assertFalse(engineSession.webFontsEnabled)
@@ -637,8 +639,7 @@ class SystemEngineSessionTest {
     @Test
     fun desktopMode() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
-        val defaultSettings = DefaultSettings()
-        val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
+        val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
         val webViewSettings = mock<WebSettings>()
         var desktopMode = false
@@ -662,6 +663,22 @@ class SystemEngineSessionTest {
 
         engineSession.toggleDesktopMode(true, true)
         verify(webView).reload()
+    }
+
+    @Test
+    fun desktopModeWithProvidedWideViewPort() {
+        val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
+        val defaultSettings = DefaultSettings(useWideViewPort = true)
+        val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
+        val webView = mock<WebView>()
+        val webViewSettings = mock<WebSettings>()
+
+        engineSession.webView = webView
+        whenever(webView.settings).thenReturn(webViewSettings)
+        whenever(webViewSettings.userAgentString).thenReturn(userAgentMobile)
+
+        engineSession.toggleDesktopMode(false)
+        verify(webViewSettings).useWideViewPort = true
     }
 
     @Test

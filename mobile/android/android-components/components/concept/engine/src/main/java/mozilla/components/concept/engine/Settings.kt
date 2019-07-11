@@ -88,7 +88,7 @@ abstract class Settings {
      * should be used. If not null, this value overrides useWideViePort webSettings in
      * [EngineSession.toggleDesktopMode].
      */
-    open var useWideViewPort: Boolean by UnsupportedSetting()
+    open var useWideViewPort: Boolean? by UnsupportedSetting()
 
     /**
      * Setting to control whether or not file access is allowed.
@@ -182,7 +182,7 @@ data class DefaultSettings(
     override var javaScriptCanOpenWindowsAutomatically: Boolean = false,
     override var displayZoomControls: Boolean = true,
     override var loadWithOverviewMode: Boolean = false,
-    override var useWideViewPort: Boolean = false,
+    override var useWideViewPort: Boolean? = null,
     override var allowFileAccess: Boolean = true,
     override var allowFileAccessFromFileURLs: Boolean = false,
     override var allowUniversalAccessFromFileURLs: Boolean = false,

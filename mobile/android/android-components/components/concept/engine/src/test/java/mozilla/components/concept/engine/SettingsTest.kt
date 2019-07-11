@@ -50,7 +50,7 @@ class SettingsTest {
             { settings.loadWithOverviewMode },
             { settings.loadWithOverviewMode = false },
             { settings.useWideViewPort },
-            { settings.useWideViewPort = false },
+            { settings.useWideViewPort = null },
             { settings.allowFileAccess },
             { settings.allowFileAccess = false },
             { settings.allowContentAccess },
@@ -103,7 +103,7 @@ class SettingsTest {
         assertTrue(settings.automaticFontSizeAdjustment)
         assertTrue(settings.automaticLanguageAdjustment)
         assertFalse(settings.loadWithOverviewMode)
-        assertFalse(settings.useWideViewPort)
+        assertNull(settings.useWideViewPort)
         assertTrue(settings.allowContentAccess)
         assertTrue(settings.allowFileAccess)
         assertFalse(settings.allowFileAccessFromFileURLs)
@@ -165,7 +165,7 @@ class SettingsTest {
         assertTrue(defaultSettings.javaScriptCanOpenWindowsAutomatically)
         assertFalse(defaultSettings.displayZoomControls)
         assertTrue(defaultSettings.loadWithOverviewMode)
-        assertTrue(defaultSettings.useWideViewPort)
+        assertEquals(defaultSettings.useWideViewPort, true)
         assertFalse(defaultSettings.allowContentAccess)
         assertFalse(defaultSettings.allowFileAccess)
         assertTrue(defaultSettings.allowFileAccessFromFileURLs)
