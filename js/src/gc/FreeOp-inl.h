@@ -26,11 +26,11 @@ inline void FreeOp::freeLater(gc::Cell* cell, void* p, size_t nbytes,
                               MemoryUse use) {
   if (p) {
     RemoveCellMemory(cell, nbytes, use);
-    freeLater(p);
+    queueForFreeLater(p);
   }
 }
 
-inline void FreeOp::freeLater(void* p) {
+inline void FreeOp::queueForFreeLater(void* p) {
   // Default FreeOps are not constructed on the stack, and will hold onto the
   // pointers to free indefinitely.
   MOZ_ASSERT(!isDefaultFreeOp());
@@ -44,7 +44,8 @@ inline void FreeOp::freeLater(void* p) {
 }
 
 template <class T>
-inline void FreeOp::release(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use) {
+inline void FreeOp::release(gc::Cell* cell, T* p, size_t nbytes,
+                            MemoryUse use) {
   if (p) {
     RemoveCellMemory(cell, nbytes, use);
     p->Release();
