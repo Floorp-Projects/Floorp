@@ -470,11 +470,11 @@ class nsBlockFrame : public nsContainerFrame {
 
   void ComputeFinalSize(const ReflowInput& aReflowInput,
                         BlockReflowInput& aState, ReflowOutput& aMetrics,
-                        nscoord* aBottomEdgeOfChildren);
+                        nscoord* aBEndEdgeOfChildren);
 
   void ComputeOverflowAreas(const nsRect& aBounds,
                             const nsStyleDisplay* aDisplay,
-                            nscoord aBottomEdgeOfChildren,
+                            nscoord aBEndEdgeOfChildren,
                             nsOverflowAreas& aOverflowAreas);
 
   /**
