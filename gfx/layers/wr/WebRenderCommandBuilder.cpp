@@ -671,8 +671,7 @@ struct DIGroup {
                 aStream.write((const char*)&font, sizeof(font));
               }
               fonts = std::move(aScaledFonts);
-            },
-            IntPoint(0, 0));
+            });
 
     RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
         gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
@@ -1337,11 +1336,11 @@ void Grouper::ConstructItemInsideInactive(
   // still
   aGroup->ComputeGeometryChange(aItem, data, mTransform, mDisplayListBuilder);
 
-  // Temporarily restrict the image bounds to the bounds of the container so
-  // that clipped children within the container know about the clip. This
-  // ensures that the bounds passed to FlushItem are contained in the bounds of
-  // the clip so that we don't include items in the recording without including
-  // their corresponding clipping items.
+  // Temporarily restrict the image bounds to the bounds of the container so that
+  // clipped children within the container know about the clip. This ensures
+  // that the bounds passed to FlushItem are contained in the bounds of the clip
+  // so that we don't include items in the recording without including their
+  // corresponding clipping items.
   IntRect oldClippedImageBounds = aGroup->mClippedImageBounds;
   aGroup->mClippedImageBounds =
       aGroup->mClippedImageBounds.Intersect(data->mRect);
@@ -2270,8 +2269,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                   aStream.write((const char*)&font, sizeof(font));
                 }
                 fonts = std::move(aScaledFonts);
-              },
-              IntPoint(0, 0));
+              });
       RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
           gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
@@ -2490,8 +2488,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
               }
 
               fonts = std::move(aScaledFonts);
-            },
-            IntPoint(0, 0));
+            });
 
     RefPtr<DrawTarget> dummyDt = Factory::CreateDrawTarget(
         BackendType::SKIA, IntSize(1, 1), SurfaceFormat::A8);
