@@ -405,10 +405,7 @@ void HTMLFormElement::UnbindFromTree(bool aNullParent) {
 
 void HTMLFormElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.mWantsWillHandleEvent = true;
-  // According to the UI events spec section "Trusted events", we shouldn't
-  // trigger UA default action with an untrusted event except click.
-  if (aVisitor.mEvent->mOriginalTarget == static_cast<nsIContent*>(this) &&
-      aVisitor.mEvent->IsTrusted()) {
+  if (aVisitor.mEvent->mOriginalTarget == static_cast<nsIContent*>(this)) {
     uint32_t msg = aVisitor.mEvent->mMessage;
     if (msg == eFormSubmit) {
       if (mGeneratingSubmit) {
@@ -445,10 +442,7 @@ void HTMLFormElement::WillHandleEvent(EventChainPostVisitor& aVisitor) {
 }
 
 nsresult HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
-  // According to the UI events spec section "Trusted events", we shouldn't
-  // trigger UA default action with an untrusted event except click.
-  if (aVisitor.mEvent->mOriginalTarget == static_cast<nsIContent*>(this) &&
-      aVisitor.mEvent->IsTrusted()) {
+  if (aVisitor.mEvent->mOriginalTarget == static_cast<nsIContent*>(this)) {
     EventMessage msg = aVisitor.mEvent->mMessage;
     if (msg == eFormSubmit) {
       // let the form know not to defer subsequent submissions
