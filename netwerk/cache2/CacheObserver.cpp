@@ -33,12 +33,6 @@ static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024;  // 250 MB
 Atomic<uint32_t, Relaxed> CacheObserver::sDiskCacheCapacity(
     kDefaultDiskCacheCapacity);
 
-static bool kDefaultSanitizeOnShutdown = false;
-bool CacheObserver::sSanitizeOnShutdown = kDefaultSanitizeOnShutdown;
-
-static bool kDefaultClearCacheOnShutdown = false;
-bool CacheObserver::sClearCacheOnShutdown = kDefaultClearCacheOnShutdown;
-
 static bool kDefaultCacheFSReported = false;
 bool CacheObserver::sCacheFSReported = kDefaultCacheFSReported;
 
@@ -110,14 +104,6 @@ void CacheObserver::AttachToPreferences() {
       0.01F, std::min(1440.0F, mozilla::Preferences::GetFloat(
                                    "browser.cache.frecency_half_life_hours",
                                    kDefaultHalfLifeHours)));
-
-  mozilla::Preferences::AddBoolVarCache(&sSanitizeOnShutdown,
-                                        "privacy.sanitize.sanitizeOnShutdown",
-                                        kDefaultSanitizeOnShutdown);
-  mozilla::Preferences::AddBoolVarCache(&sClearCacheOnShutdown,
-                                        "privacy.clearOnShutdown.cache",
-                                        kDefaultClearCacheOnShutdown);
-
   mozilla::Preferences::AddAtomicUintVarCache(
       &sTelemetryReportID, "browser.cache.disk.telemetry_report_ID",
       kDefaultTelemetryReportID);
