@@ -7345,7 +7345,7 @@ nsBlockFrame* nsBlockFrame::GetNearestAncestorBlock(nsIFrame* aCandidate) {
 
 nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
                                         nsReflowStatus& aStatus,
-                                        nscoord aContentBSize,
+                                        nscoord aBEndEdgeOfChildren,
                                         const LogicalMargin& aBorderPadding,
                                         nscoord aConsumed) {
   WritingMode wm = aReflowInput.GetWritingMode();
@@ -7394,11 +7394,11 @@ nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
                "We should be overflow-incomplete and should've returned "
                "in early if-branch!");
 
-    // Use the current block-size; continuations will take up the rest.
-    // Do extend the block-size to at least consume the available block-size,
-    // otherwise our left/right borders (for example) won't extend all the way
-    // to the break.
-    finalBSize = std::max(availBSize, aContentBSize);
+    // Use the current block-end edge of our children as our block-size;
+    // continuations will take up the rest. Do extend the block-size to at least
+    // consume the available block-size, otherwise our left/right borders (for
+    // example) won't extend all the way to the break.
+    finalBSize = std::max(availBSize, aBEndEdgeOfChildren);
     // ... but don't take up more block size than is available
     finalBSize =
         std::min(finalBSize, aBorderPadding.BStart(wm) + computedBSizeLeftOver);
