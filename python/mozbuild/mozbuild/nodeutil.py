@@ -7,12 +7,12 @@ from __future__ import absolute_import, print_function
 import os
 import subprocess
 import platform
-from mozboot.util import get_state_dir
-import which
-
 from distutils.version import (
     StrictVersion,
 )
+
+from mozboot.util import get_state_dir
+from mozfile import which
 
 NODE_MIN_VERSION = StrictVersion("8.11.0")
 NPM_MIN_VERSION = StrictVersion("5.6.0")
@@ -66,21 +66,6 @@ def check_executable_version(exe, wrap_call_with_node=False):
     return StrictVersion(out)
 
 
-def simple_which(filename, path=None):
-    # Note: On windows, npm uses ".cmd"
-    exts = [".cmd", ".exe", ""] if platform.system() == "Windows" else [""]
-
-    for ext in exts:
-        try:
-            return which.which(filename + ext, path)
-        except which.WhichError:
-            pass
-
-    # If we got this far, we didn't find it with any of the extensions, so
-    # just return.
-    return None
-
-
 def find_node_executable(nodejs_exe=os.environ.get('NODEJS'), min_version=NODE_MIN_VERSION):
     """Find a Node executable from the mozbuild directory.
 
@@ -120,10 +105,7 @@ def find_executable(names, min_version, use_node_for_version_check=False):
 
     found_exe = None
     for name in names:
-        try:
-            exe = simple_which(name, paths)
-        except which.WhichError:
-            continue
+        exe = which(name, path=paths)
 
         if not exe:
             continue

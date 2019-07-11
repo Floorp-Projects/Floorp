@@ -1,9 +1,3 @@
-:host {
-  /* these variable values come from about:preferences */
-  --in-content-dialogtitle-background: #f1f1f1;
-  --in-content-dialogtitle-border: #c1c1c1;
-}
-
 .overlay {
   position: fixed;
   z-index: 1;
@@ -39,9 +33,9 @@
   position: relative;
   flex: 0 1 auto;
   text-align: center;
-  background-color: var(--in-content-dialogtitle-background);
+  background-color: var(--in-content-dialog-header-background);
   padding: 5px;
-  border-bottom: 1px solid var(--in-content-dialogtitle-border);
+  border-bottom: 1px solid var(--in-content-border-color);
 }
 
 .title {

@@ -121,6 +121,10 @@ class MessageBarElement extends HTMLElement {
     barcontent.append(document.createElement("slot"));
     container.append(barcontent);
 
+    const spacer = document.createElement("span");
+    spacer.classList.add("spacer");
+    container.append(spacer);
+
     const closeIcon = document.createElement("button");
     closeIcon.setAttribute("class", "close");
     container.append(closeIcon);

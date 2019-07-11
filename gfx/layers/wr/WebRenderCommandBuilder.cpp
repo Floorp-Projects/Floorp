@@ -720,10 +720,7 @@ struct DIGroup {
       GP("No previous key making new one %d\n", key._0.mHandle);
       wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), opacity);
       MOZ_RELEASE_ASSERT(bytes.length() > sizeof(size_t));
-      if (!aResources.AddBlobImage(
-              key, descriptor, bytes,
-              ViewAs<ImagePixel>(mPaintRect,
-                                 PixelCastJustification::LayerIsImage))) {
+      if (!aResources.AddBlobImage(key, descriptor, bytes)) {
         return;
       }
       mKey = Some(MakePair(aBuilder.GetRenderRoot(), key));
@@ -736,11 +733,8 @@ struct DIGroup {
                          bottomRight.y <= dtSize.height);
       GP("Update Blob %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
          mInvalidRect.width, mInvalidRect.height);
-      if (!aResources.UpdateBlobImage(
-              mKey.value().second(), descriptor, bytes,
-              ViewAs<ImagePixel>(mPaintRect,
-                                 PixelCastJustification::LayerIsImage),
-              ViewAs<ImagePixel>(mInvalidRect))) {
+      if (!aResources.UpdateBlobImage(mKey.value().second(), descriptor, bytes,
+                                      ViewAs<ImagePixel>(mInvalidRect))) {
         return;
       }
     }
@@ -2307,10 +2301,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
             wr::BlobImageKey{mManager->WrBridge()->GetNextImageKey()};
         wr::ImageDescriptor descriptor(dtSize.ToUnknownSize(), 0,
                                        dt->GetFormat(), opacity);
-        if (!aResources.AddBlobImage(
-                key, descriptor, bytes,
-                ViewAs<ImagePixel>(visibleRect,
-                                   PixelCastJustification::LayerIsImage))) {
+        if (!aResources.AddBlobImage(key, descriptor, bytes)) {
           return nullptr;
         }
         TakeExternalSurfaces(
@@ -2325,11 +2316,11 @@ WebRenderCommandBuilder::GenerateFallbackData(
         if (!fallbackData->GetBlobImageKey().isSome()) {
           return nullptr;
         }
-        aResources.SetBlobImageVisibleArea(
-            fallbackData->GetBlobImageKey().value(),
-            ViewAs<ImagePixel>(visibleRect,
-                               PixelCastJustification::LayerIsImage));
       }
+      aResources.SetBlobImageVisibleArea(
+          fallbackData->GetBlobImageKey().value(),
+          ViewAs<ImagePixel>(visibleRect,
+                             PixelCastJustification::LayerIsImage));
     } else {
       WebRenderImageData* imageData = fallbackData->PaintIntoImage();
 
@@ -2529,8 +2520,9 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
         wr::BlobImageKey{mManager->WrBridge()->GetNextImageKey()};
     wr::ImageDescriptor descriptor(size, 0, dt->GetFormat(),
                                    wr::OpacityType::HasAlphaChannel);
-    if (!aResources.AddBlobImage(key, descriptor, bytes,
-                                 ImageIntRect(0, 0, size.width, size.height))) {
+    if (!aResources.AddBlobImage(key, descriptor,
+                                 bytes)) {  // visible area: ImageIntRect(0, 0,
+                                            // size.width, size.height)
       return Nothing();
     }
     maskData->ClearImageKey();

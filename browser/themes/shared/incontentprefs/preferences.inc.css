@@ -6,16 +6,12 @@
 @namespace html "http://www.w3.org/1999/xhtml";
 
 :root {
-  --in-content-dialogtitle-background: #f1f1f1;
-  --in-content-dialogtitle-border: #c1c1c1;
   --in-content-warning-container: var(--grey-20);
 }
 
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
 @media (prefers-color-scheme: dark) {
   :root {
-    --in-content-dialogtitle-background: rgba(249,249,250,0.05);
-    --in-content-dialogtitle-border: rgba(0,0,0,0.5);
     --in-content-warning-container: var(--grey-90-a30);
   }
 }
@@ -526,8 +522,8 @@ button > hbox > label {
 .dialogTitleBar {
   margin-top: 0;
   padding: 3.5px 0;
-  background-color: var(--in-content-dialogtitle-background);
-  border-bottom: 1px solid var(--in-content-dialogtitle-border);
+  background-color: var(--in-content-dialog-header-background);
+  border-bottom: 1px solid var(--in-content-border-color);
 }
 
 .dialogTitle {

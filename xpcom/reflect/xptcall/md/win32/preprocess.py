@@ -4,19 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import errno
 import sys
 import os
 import shlex
 import subprocess
 import tempfile
-import which
+
 import buildconfig
+from mozfile import which
 
 
 def preprocess(out, asm_file):
     cxx = shlex.split(buildconfig.substs['CXX'])
     if not os.path.exists(cxx[0]):
-        cxx[0] = which.which(cxx[0])
+        tool = cxx[0]
+        cxx[0] = which(tool)
+        if not cxx[0]:
+            raise OSError(errno.ENOENT, "Could not find {} on PATH.".format(tool))
+
     cppflags = buildconfig.substs['OS_CPPFLAGS']
 
     # subprocess.Popen(stdout=) only accepts actual file objects, which `out`,
