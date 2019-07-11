@@ -484,6 +484,11 @@ function setEmptyPrefWatchlist() {
 }
 
 if (runningInParent) {
+  // Turn off region updates and timeouts for search service
+  Services.prefs.setCharPref("browser.search.region", "US");
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+  Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
+
   // Set logging preferences for all the tests.
   Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
   // Telemetry archiving should be on.
