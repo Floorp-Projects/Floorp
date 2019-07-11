@@ -807,6 +807,38 @@ add_task(async function check_pinned_tabs() {
   );
 });
 
+add_task(async function check_hasAccessedFxAPanel() {
+  is(
+    await ASRouterTargeting.Environment.hasAccessedFxAPanel,
+    false,
+    "Not accessed yet"
+  );
+
+  await pushPrefs(["identity.fxaccounts.toolbar.accessed", true]);
+
+  is(
+    await ASRouterTargeting.Environment.hasAccessedFxAPanel,
+    true,
+    "Should detect panel access"
+  );
+});
+
+add_task(async function check_isWhatsNewPanelEnabled() {
+  is(
+    await ASRouterTargeting.Environment.isWhatsNewPanelEnabled,
+    false,
+    "Not enabled yet"
+  );
+
+  await pushPrefs(["browser.messaging-system.whatsNewPanel.enabled", true]);
+
+  is(
+    await ASRouterTargeting.Environment.isWhatsNewPanelEnabled,
+    true,
+    "Should update based on pref"
+  );
+});
+
 add_task(async function checkCFRPinnedTabsTargetting() {
   const now = Date.now();
   const timeMinutesAgo = numMinutes => now - numMinutes * 60 * 1000;
