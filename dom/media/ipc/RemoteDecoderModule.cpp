@@ -18,6 +18,7 @@
 #include "RemoteDecoderManagerChild.h"
 #include "RemoteMediaDataDecoder.h"
 #include "RemoteVideoDecoder.h"
+#include "OpusDecoder.h"
 #include "VorbisDecoder.h"
 #include "WAVDecoder.h"
 
@@ -45,6 +46,9 @@ bool RemoteDecoderModule::SupportsMimeType(
   }
   if (StaticPrefs::media_rdd_wav_enabled()) {
     supports |= WaveDataDecoder::IsWave(aMimeType);
+  }
+  if (StaticPrefs::media_rdd_opus_enabled()) {
+    supports |= OpusDataDecoder::IsOpus(aMimeType);
   }
 
   MOZ_LOG(
