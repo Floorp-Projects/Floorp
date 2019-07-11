@@ -252,7 +252,7 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
 
   setCurrentChunk(0);
   setStartPosition();
-  poisonAndInitCurrentChunk(true);
+  poisonAndInitCurrentChunk();
 
   char* env = getenv("JS_GC_PROFILE_NURSERY");
   if (env) {
@@ -306,7 +306,7 @@ void js::Nursery::enable() {
 
   setCurrentChunk(0);
   setStartPosition();
-  poisonAndInitCurrentChunk(true);
+  poisonAndInitCurrentChunk();
 #ifdef JS_GC_ZEAL
   if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
     enterZealMode();
@@ -362,6 +362,13 @@ bool js::Nursery::isEmpty() const {
 #ifdef JS_GC_ZEAL
 void js::Nursery::enterZealMode() {
   if (isEnabled()) {
+    if (isSubChunkMode()) {
+      // It'd be simplier to poison the whole chunk, but we can't do that
+      // because the nursery might be partily used.
+      chunk(0).poisonRange(capacity_, NurseryChunkUsableSize - capacity_,
+                           JS_FRESH_NURSERY_PATTERN,
+                           MemCheckKind::MakeUndefined);
+    }
     capacity_ = chunkCountLimit() * ChunkSize;
     setCurrentEnd();
   }
@@ -372,7 +379,7 @@ void js::Nursery::leaveZealMode() {
     MOZ_ASSERT(isEmpty());
     setCurrentChunk(0);
     setStartPosition();
-    poisonAndInitCurrentChunk(true);
+    poisonAndInitCurrentChunk();
   }
 }
 #endif  // JS_GC_ZEAL
@@ -1255,12 +1262,11 @@ MOZ_ALWAYS_INLINE void js::Nursery::setCurrentChunk(unsigned chunkno) {
   setCurrentEnd();
 }
 
-void js::Nursery::poisonAndInitCurrentChunk(bool fullPoison) {
-  if (fullPoison || runtime()->hasZealMode(ZealMode::GenerationalGC) ||
-      !isSubChunkMode()) {
+void js::Nursery::poisonAndInitCurrentChunk() {
+  if (runtime()->hasZealMode(ZealMode::GenerationalGC) || !isSubChunkMode()) {
     chunk(currentChunk_).poisonAndInit(runtime());
   } else {
-    MOZ_ASSERT(isSubChunkMode());
+    MOZ_ASSERT(capacity_ <= NurseryChunkUsableSize);
     chunk(currentChunk_).poisonAndInit(runtime(), capacity_);
   }
 }
