@@ -47,7 +47,7 @@ def find_python3_executable(min_version='3.5.0'):
     version tuple. Both tuple entries will be None if a Python executable
     could not be resolved.
     """
-    import which
+    from mozfile import which
 
     if not min_version.startswith('3.'):
         raise ValueError('min_version expected a 3.x string, got %s' %
@@ -80,9 +80,8 @@ def find_python3_executable(min_version='3.5.0'):
         names.append('python3.%d' % minor)
 
     for name in names:
-        try:
-            exe = which.which(name)
-        except which.WhichError:
+        exe = which(name)
+        if not exe:
             continue
 
         # We always verify we can invoke the executable and its version is

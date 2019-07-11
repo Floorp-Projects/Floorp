@@ -91,6 +91,7 @@ async function cleanAndGo(engine, server) {
 add_task(async function setup() {
   // Avoid addon manager complaining about not being initialized
   await Service.engineManager.unregister("addons");
+  await Service.engineManager.unregister("extension-storage");
 });
 
 add_task(async function test_basic() {

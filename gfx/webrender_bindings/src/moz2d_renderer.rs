@@ -7,7 +7,7 @@
 //! registering fonts found in the blob (see `prepare_request`).
 
 use webrender::api::*;
-use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation, DeviceIntRect};
+use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation};
 use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb, ArcVecU8, gecko_profiler_start_marker, gecko_profiler_end_marker};
 use rayon::ThreadPool;
 use rayon::prelude::*;
@@ -431,9 +431,6 @@ struct BlobFont {
 struct BlobCommand {
     /// The blob.
     data: Arc<BlobImageData>,
-    /// What part of the blob should be rasterized (visible_rect's top-left corresponds to
-    /// (0,0) in the blob's rasterization)
-    visible_rect: DeviceIntRect,
     /// The size of the tiles to use in rasterization, if tiling should be used.
     tile_size: Option<TileSize>,
 }
@@ -443,7 +440,6 @@ struct BlobCommand {
     descriptor: BlobImageDescriptor,
     commands: Arc<BlobImageData>,
     dirty_rect: BlobDirtyRect,
-    visible_rect: DeviceIntRect,
     tile_size: Option<TileSize>,
 }
 
@@ -482,12 +478,10 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
             let command = &self.blob_commands[&params.request.key];
             let blob = Arc::clone(&command.data);
             assert!(params.descriptor.rect.size.width > 0 && params.descriptor.rect.size.height  > 0);
-
             Job {
                 request: params.request,
                 descriptor: params.descriptor,
                 commands: blob,
-                visible_rect: command.visible_rect,
                 dirty_rect: params.dirty_rect,
                 tile_size: command.tile_size,
             }
@@ -537,7 +531,6 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
             descriptor.rect.size.width,
             descriptor.rect.size.height,
             descriptor.format,
-            &job.visible_rect,
             job.tile_size.as_ref(),
             job.request.tile.as_ref(),
             dirty_rect.as_ref(),
@@ -562,15 +555,15 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
 }
 
 impl BlobImageHandler for Moz2dBlobImageHandler {
-    fn add(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, visible_rect: &DeviceIntRect, tile_size: Option<TileSize>) {
+    fn add(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, tile_size: Option<TileSize>) {
         {
             let index = BlobReader::new(&data);
             assert!(index.reader.has_more());
         }
-        self.blob_commands.insert(key, BlobCommand { data: Arc::clone(&data), visible_rect: *visible_rect, tile_size });
+        self.blob_commands.insert(key, BlobCommand { data: Arc::clone(&data), tile_size });
     }
 
-    fn update(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, visible_rect: &DeviceIntRect, dirty_rect: &BlobDirtyRect) {
+    fn update(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, dirty_rect: &BlobDirtyRect) {
         match self.blob_commands.entry(key) {
             hash_map::Entry::Occupied(mut e) => {
                 let command = e.get_mut();
@@ -590,8 +583,6 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
                     }
                 };
                 command.data = Arc::new(merge_blob_images(&command.data, &data, dirty_rect));
-                assert_eq!(command.visible_rect, *visible_rect);
-                command.visible_rect = *visible_rect;
             }
             _ => { panic!("missing image key"); }
         }

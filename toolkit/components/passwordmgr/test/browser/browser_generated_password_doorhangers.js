@@ -13,20 +13,25 @@ const FORM_PAGE_PATH =
 const passwordInputSelector = "#form-basic-password";
 const usernameInputSelector = "#form-basic-username";
 
-let login1;
-async function addOneLogin() {
-  login1 = LoginTestUtils.testData.formLogin({
+async function addLogin({ username, password }) {
+  const login = LoginTestUtils.testData.formLogin({
     origin: "https://example.com",
     formActionOrigin: "https://example.com",
-    username: "username",
-    password: "pass1",
+    username,
+    password,
   });
   let storageChangedPromised = TestUtils.topicObserved(
     "passwordmgr-storage-changed",
     (_, data) => data == "addLogin"
   );
-  Services.logins.addLogin(login1);
+  Services.logins.addLogin(login);
   await storageChangedPromised;
+  return login;
+}
+
+let login1;
+function addOneLogin() {
+  login1 = addLogin({ username: "username", password: "pass1" });
 }
 
 function openACPopup(popup, browser, inputSelector) {
@@ -262,6 +267,48 @@ add_task(async function autocomplete_generated_password() {
         "Doorhanger password field has generated 15-char value"
       );
       is(usernameValue, "user1", "Doorhanger username field was popuplated");
+      notif.remove();
+    }
+  );
+});
+
+add_task(async function password_change_without_username() {
+  const CHANGE_FORM_PATH =
+    "/browser/toolkit/components/passwordmgr/test/browser/form_password_change.html";
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + CHANGE_FORM_PATH,
+    },
+    async function(browser) {
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
+      // Save 2nd login different from the 1st one
+      addLogin({
+        username: "username2",
+        password: "pass2",
+      });
+
+      // Make the 2nd field use a generated password
+      await doFillGeneratedPasswordContextMenuItem(browser, "#newpass");
+
+      // Submit the form
+      await ContentTask.spawn(browser, null, function() {
+        content.document.querySelector("#form").submit();
+      });
+
+      // Check a non-dismissed prompt was shown
+      let notif = getCaptureDoorhanger("password-save");
+      ok(notif && !notif.dismissed, "Non-dismissed notification was created");
+
+      let { passwordValue, usernameValue } = await checkPromptContents(
+        notif.anchorElement
+      );
+      is(
+        passwordValue.length,
+        15,
+        "Doorhanger password field has generated 15-char value"
+      );
+      is(usernameValue, "", "Doorhanger username field has no value");
       notif.remove();
     }
   );

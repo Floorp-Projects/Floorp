@@ -8,13 +8,16 @@
 
 from __future__ import absolute_import, print_function
 
-from six.moves import urllib
-from contextlib import contextmanager
 import errno
 import os
 import stat
+import sys
 import time
 import warnings
+from contextlib import contextmanager
+
+from six.moves import urllib
+
 
 __all__ = ['extract_tarball',
            'extract_zip',
@@ -25,6 +28,7 @@ __all__ = ['extract_tarball',
            'remove',
            'rmtree',
            'tree',
+           'which',
            'NamedTemporaryFile',
            'TemporaryDirectory']
 
@@ -308,6 +312,55 @@ def tree(directory, sort_key=lambda x: x.lower()):
                            for index, filename in enumerate(filenames)])
 
     return '\n'.join(retval)
+
+
+def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
+    """A wrapper around `shutil.which` to make the behavior on Windows
+    consistent with other platforms.
+
+    On non-Windows platforms, this is a direct call to `shutil.which`. On
+    Windows, this:
+
+    * Ensures that `cmd` without an extension will be found. Previously it was
+      only found if it had an extension in `PATHEXT`.
+    * Ensures the absolute path to the binary is returned. Previously if the
+      binary was found in `cwd`, a relative path was returned.
+
+    The arguments are the same as the ones in `shutil.which`. In addition there
+    is an `exts` argument that only has an effect on Windows. This is used to
+    set a custom value for PATHEXT and is formatted as a list of file
+    extensions.
+    """
+    try:
+        from shutil import which as shutil_which
+    except ImportError:
+        from shutil_which import which as shutil_which
+
+    if isinstance(path, (list, tuple)):
+        path = os.pathsep.join(path)
+
+    if sys.platform != "win32":
+        return shutil_which(cmd, mode=mode, path=path)
+
+    oldexts = os.environ.get("PATHEXT", "")
+    if not exts:
+        exts = oldexts.split(os.pathsep)
+
+    # This ensures that `cmd` without any extensions will be found.
+    # See: https://bugs.python.org/issue31405
+    if "." not in exts:
+        exts.append(".")
+
+    os.environ["PATHEXT"] = os.pathsep.join(exts)
+    try:
+        path = shutil_which(cmd, mode=mode, path=path)
+        return os.path.abspath(path.rstrip('.')) if path else None
+
+    finally:
+        if oldexts:
+            os.environ["PATHEXT"] = oldexts
+        else:
+            del os.environ["PATHEXT"]
 
 
 # utilities for temporary resources

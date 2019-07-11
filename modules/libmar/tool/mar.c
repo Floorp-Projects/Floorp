@@ -124,15 +124,16 @@ static int mar_test(const char* path) {
 }
 
 int main(int argc, char** argv) {
+  char* NSSConfigDir = NULL;
   const char* certNames[MAX_SIGNATURES];
   char* MARChannelID = MAR_CHANNEL_ID;
   char* productVersion = MOZ_APP_VERSION;
-  int rv = -1;
-#if !defined(NO_SIGN_VERIFY)
-  char* NSSConfigDir = NULL;
   uint32_t k;
+  int rv = -1;
   uint32_t certCount = 0;
   int32_t sigIndex = -1;
+
+#if !defined(NO_SIGN_VERIFY)
   uint32_t fileSizes[MAX_SIGNATURES];
   const uint8_t* certBuffers[MAX_SIGNATURES];
 #  if ((!defined(MAR_NSS) && defined(XP_WIN)) || defined(XP_MACOSX)) || \
@@ -180,8 +181,8 @@ int main(int argc, char** argv) {
       argv += 2;
       argc -= 2;
     }
-#if !defined(NO_SIGN_VERIFY)
-#if (!defined(MAR_NSS) && defined(XP_WIN)) || defined(XP_MACOSX)
+#if !defined(NO_SIGN_VERIFY) && \
+    ((!defined(MAR_NSS) && defined(XP_WIN)) || defined(XP_MACOSX))
     /* -D DERFilePath, also matches -D[index] DERFilePath
        We allow an index for verifying to be symmetric
        with the import and export command line arguments. */
@@ -222,9 +223,7 @@ int main(int argc, char** argv) {
         argv += 2;
         argc -= 2;
       }
-    }
-#endif
-    else if (argv[1][0] == '-' && argv[1][1] == 'H') {  // MAR channel ID
+    } else if (argv[1][0] == '-' && argv[1][1] == 'H') {  // MAR channel ID
       MARChannelID = argv[2];
       argv += 2;
       argc -= 2;
