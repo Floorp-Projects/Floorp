@@ -1807,4 +1807,68 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 #customizationui-widget-multiview #PanelUI-whatsNew-title {
   display: flex;
+  margin: 0 0 6px;
+}
+
+#PanelUI-whatsNew .whatsNew-message {
+  border-bottom: 1px solid var(--panel-separator-color);
+  cursor: pointer;
+  margin: 0 0 6px;
+  padding-bottom: 10px;
+}
+
+#PanelUI-whatsNew .whatsNew-message-date {
+  font-size: 11px;
+  margin: 0;
+  opacity: 0.6;
+  padding: 0 6px;
+}
+
+#PanelUI-whatsNew .whatsNew-message-body {
+  padding: 6px;
+}
+
+#PanelUI-whatsNew .whatsNew-message-body.has-icon {
+  padding-inline-end: 46px;
+  position: relative;
+}
+
+#PanelUI-whatsNew .whatsNew-message-icon {
+  inset-inline-end: 6px;
+  height: 32px;
+  position: absolute;
+  top: 10px;
+  width: 32px;
+}
+
+#PanelUI-whatsNew .whatsNew-message-title {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 24px;
+  margin: 2px 0;
+}
+
+#PanelUI-whatsNew  .whatsNew-message-body p {
+  font-size: 13px;
+  line-height: 18px;
+  margin: 0;
+}
+
+#PanelUI-whatsNew button {
+  background: none;
+  border: 0;
+  color: #45a1ff;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 16px;
+  padding: 0;
+}
+
+#PanelUI-whatsNew button:hover {
+  color: #0a84ff;
+  text-decoration: underline;
+}
+
+#PanelUI-whatsNew button:active {
+  color: #0060df;
 }
