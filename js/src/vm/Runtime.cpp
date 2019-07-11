@@ -573,7 +573,7 @@ FreeOp::FreeOp(JSRuntime* maybeRuntime, bool isDefault)
 
 FreeOp::~FreeOp() {
   for (size_t i = 0; i < freeLaterList.length(); i++) {
-    freeUntracked(freeLaterList[i]);
+    free_(freeLaterList[i]);
   }
 
   if (!jitPoisonRanges.empty()) {

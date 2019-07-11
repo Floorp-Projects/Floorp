@@ -48,9 +48,7 @@ class FreeOp : public JSFreeOp {
 
   bool isDefaultFreeOp() const { return isDefault; }
 
-  // Deprecated. Where possible, memory should be tracked against the owning GC
-  // thing by calling js::AddCellMemory and the memory freed with free_() below.
-  void freeUntracked(void* p) { js_free(p); }
+  void free_(void* p) { js_free(p); }
 
   // Free memory associated with a GC thing and update the memory accounting.
   //
@@ -59,13 +57,7 @@ class FreeOp : public JSFreeOp {
   // js::AddCellMemory.
   void free_(gc::Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
-  // Deprecated. Where possible, memory should be tracked against the owning GC
-  // thing by calling js::AddCellMemory and the memory freed with freeLater()
-  // below.
-  void freeUntrackedLater(void* p) { queueForFreeLater(p); }
-
-  // Queue memory that was associated with a GC thing using js::AddCellMemory to
-  // be freed when the FreeOp is destroyed.
+  // Queue an allocation to be freed when the FreeOp is destroyed.
   //
   // This should not be called on the default FreeOps returned by
   // JSRuntime/JSContext::defaultFreeOp() since these are not destroyed until
@@ -73,6 +65,9 @@ class FreeOp : public JSFreeOp {
   //
   // This is used to ensure that copy-on-write object elements are not freed
   // until all objects that refer to them have been finalized.
+  void freeLater(void* p);
+
+  // Free memory that was associated with a GC thing using js::AddCellMemory.
   void freeLater(gc::Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
   bool appendJitPoisonRange(const jit::JitPoisonRange& range) {
@@ -83,14 +78,11 @@ class FreeOp : public JSFreeOp {
     return jitPoisonRanges.append(range);
   }
 
-  // Deprecated. Where possible, memory should be tracked against the owning GC
-  // thing by calling js::AddCellMemory and the memory freed with delete_()
-  // below.
   template <class T>
-  void deleteUntracked(T* p) {
+  void delete_(T* p) {
     if (p) {
       p->~T();
-      js_free(p);
+      free_(p);
     }
   }
 
@@ -143,9 +135,6 @@ class FreeOp : public JSFreeOp {
   // js::AddCellMemory.
   template <class T>
   void release(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use);
-
- private:
-  void queueForFreeLater(void* p);
 };
 
 }  // namespace js

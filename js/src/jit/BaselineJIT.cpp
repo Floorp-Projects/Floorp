@@ -551,9 +551,7 @@ void BaselineScript::Trace(JSTracer* trc, BaselineScript* script) {
 void BaselineScript::Destroy(FreeOp* fop, BaselineScript* script) {
   MOZ_ASSERT(!script->hasPendingIonBuilder());
 
-  // This allocation is tracked by JSScript::setBaselineScript /
-  // clearBaselineScript.
-  fop->deleteUntracked(script);
+  fop->delete_(script);
 }
 
 void JS::DeletePolicy<js::jit::BaselineScript>::operator()(
