@@ -333,7 +333,14 @@ this.tabs = class extends ExtensionAPI {
 
           tabListener.initTabReady();
           options.triggeringPrincipal = principal;
-          let nativeTab = BrowserApp.addTab(url, options);
+
+          let nativeTab;
+          if (Services.androidBridge.isFennec) {
+            nativeTab = BrowserApp.addTab(url, options);
+          } else {
+            options.extensionId = context.extension.id;
+            nativeTab = await BrowserApp.createNewTab(url, options);
+          }
 
           if (createProperties.url) {
             tabListener.initializingTabs.add(nativeTab);
