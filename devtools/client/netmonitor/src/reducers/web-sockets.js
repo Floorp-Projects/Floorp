@@ -5,13 +5,9 @@
 "use strict";
 
 const {
-  SELECT_REQUEST,
   WS_ADD_FRAME,
   WS_SELECT_FRAME,
   WS_OPEN_FRAME_DETAILS,
-  WS_CLEAR_FRAMES,
-  WS_TOGGLE_FRAME_FILTER_TYPE,
-  WS_SET_REQUEST_FILTER_TEXT,
 } = require("../constants");
 
 /**
@@ -22,47 +18,26 @@ function WebSockets() {
   return {
     // Map with all requests (key = channelId, value = array of frame objects)
     frames: new Map(),
-    frameFilterText: "",
-    // Default filter type is "all",
-    frameFilterType: "all",
     selectedFrame: null,
     frameDetailsOpen: false,
-    currentChannelId: null,
   };
 }
 
-/**
- * When a network request is selected,
- * set the current channelId affiliated with the WebSocket connection.
- */
-function setChannelId(state, action) {
-  return {
-    ...state,
-    currentChannelId: action.httpChannelId,
-    // Default filter text is empty string for a new WebSocket connection
-    frameFilterText: "",
-  };
-}
-
-/**
- * Appending new frame into the map.
- */
+// Appending new frame into the map.
 function addFrame(state, action) {
-  const { httpChannelId } = action;
   const nextState = { ...state };
 
   const newFrame = {
-    httpChannelId,
+    httpChannelId: action.httpChannelId,
     ...action.data,
   };
 
-  nextState.frames = mapSet(nextState.frames, newFrame.httpChannelId, newFrame);
+  nextState.frames = mapSet(state.frames, newFrame.httpChannelId, newFrame);
+
   return nextState;
 }
 
-/**
- * Select specific frame.
- */
+// Select specific frame.
 function selectFrame(state, action) {
   return {
     ...state,
@@ -71,52 +46,10 @@ function selectFrame(state, action) {
   };
 }
 
-/**
- * Shows/Hides the FramePayload component.
- */
 function openFrameDetails(state, action) {
   return {
     ...state,
     frameDetailsOpen: action.open,
-  };
-}
-
-/**
- * Clear WS frames of the request from the state.
- */
-function clearFrames(state) {
-  const nextState = { ...state };
-  nextState.frames = new Map(nextState.frames);
-  nextState.frames.delete(nextState.currentChannelId);
-
-  return {
-    ...WebSockets(),
-    // Preserving the Map objects as they might contain state for other channelIds
-    frames: nextState.frames,
-    // Preserving the currentChannelId as there would not be another reset of channelId
-    currentChannelId: nextState.currentChannelId,
-    frameFilterType: nextState.frameFilterType,
-    frameFilterText: nextState.frameFilterText,
-  };
-}
-
-/**
- * Toggle the frame filter type of the WebSocket connection.
- */
-function toggleFrameFilterType(state, action) {
-  return {
-    ...state,
-    frameFilterType: action.filter,
-  };
-}
-
-/**
- * Set the filter text of the current channelId.
- */
-function setFrameFilterText(state, action) {
-  return {
-    ...state,
-    frameFilterText: action.text,
   };
 }
 
@@ -140,20 +73,12 @@ function mapSet(map, key, value) {
  */
 function webSockets(state = WebSockets(), action) {
   switch (action.type) {
-    case SELECT_REQUEST:
-      return setChannelId(state, action);
     case WS_ADD_FRAME:
       return addFrame(state, action);
     case WS_SELECT_FRAME:
       return selectFrame(state, action);
     case WS_OPEN_FRAME_DETAILS:
       return openFrameDetails(state, action);
-    case WS_CLEAR_FRAMES:
-      return clearFrames(state);
-    case WS_TOGGLE_FRAME_FILTER_TYPE:
-      return toggleFrameFilterType(state, action);
-    case WS_SET_REQUEST_FILTER_TEXT:
-      return setFrameFilterText(state, action);
     default:
       return state;
   }
