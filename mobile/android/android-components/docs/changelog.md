@@ -49,6 +49,26 @@ permalink: /changelog/
 * **feature-customtabs**
   * `CustomTabsToolbarFeature` now optionally takes `Window` as a parameter. It will update the status bar color to match the toolbar color.
 
+* **feature-sendtab**
+  * 🆕 New component for send tab use cases.
+
+  ```kotlin
+    val sendTabUseCases = SendTabUseCases(accountManager)
+
+    // Send to a particular device
+    sendTabUseCases.sendToDeviceAsync("1234", TabData("Mozilla", "https://mozilla.org"))
+
+    // Send to all devices
+    sendTabUseCases.sendToAllAsync(TabData("Mozilla", "https://mozilla.org"))
+
+    // Send multiple tabs to devices works too..
+    sendTabUseCases.sendToDeviceAsync("1234", listof(tab1, tab2))
+    sendTabUseCases.sendToAllAsync(listof(tab1, tab2))
+  ```
+
+* **support-ktx**
+  * Added `Collection.crossProduct` to retrieve the cartesian product of two `Collections`.
+
 # 5.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v5.0.0)
