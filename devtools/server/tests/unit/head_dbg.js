@@ -413,7 +413,7 @@ async function attachTestTab(client, title) {
 // thread.
 async function attachTestThread(client, title, callback = () => {}) {
   const targetFront = await attachTestTab(client, title);
-  const threadFront = await targetFront.getFront("context");
+  const threadFront = await targetFront.getFront("thread");
   const onPaused = threadFront.once("paused");
   await targetFront.attachThread({
     autoBlackBox: true,

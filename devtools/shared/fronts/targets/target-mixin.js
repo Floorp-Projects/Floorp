@@ -431,12 +431,12 @@ function TargetMixin(parentClass) {
         );
       }
       if (this.getTrait("hasThreadFront")) {
-        this.threadFront = await this.getFront("context");
+        this.threadFront = await this.getFront("thread");
       } else {
         // Backwards compat for Firefox 68
         // mimics behavior of a front
         this.threadFront = new ThreadClient(this._client, this._threadActor);
-        this.fronts.set("context", this.threadFront);
+        this.fronts.set("thread", this.threadFront);
         this.threadFront.actorID = this._threadActor;
         this.manage(this.threadFront);
       }
