@@ -7,12 +7,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import os
 import subprocess
-import which
 
-from mozbuild.base import (
-    MachCommandBase,
-)
-
+from mozbuild.base import MachCommandBase
+from mozfile import which
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -32,13 +29,10 @@ class MachCommands(MachCommandBase):
         elif ide == 'visualstudio':
             backend = 'VisualStudio'
 
-        if ide == 'eclipse':
-            try:
-                which.which('eclipse')
-            except which.WhichError:
-                print('Eclipse CDT 8.4 or later must be installed in your PATH.')
-                print('Download: http://www.eclipse.org/cdt/downloads.php')
-                return 1
+        if ide == 'eclipse' and not which('eclipse'):
+            print('Eclipse CDT 8.4 or later must be installed in your PATH.')
+            print('Download: http://www.eclipse.org/cdt/downloads.php')
+            return 1
 
         # Here we refresh the whole build. 'build export' is sufficient here and is probably more
         # correct but it's also nice having a single target to get a fully built and indexed

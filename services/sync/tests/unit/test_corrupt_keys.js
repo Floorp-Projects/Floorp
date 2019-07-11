@@ -40,7 +40,9 @@ add_task(async function test_locally_changed_keys() {
     Service.clusterURL = Service.identity._token.endpoint;
 
     await Service.engineManager.register(HistoryEngine);
+    // Disable addon sync because AddonManager won't be initialized here.
     await Service.engineManager.unregister("addons");
+    await Service.engineManager.unregister("extension-storage");
 
     async function corrupt_local_keys() {
       Service.collectionKeys._default.keyPair = [

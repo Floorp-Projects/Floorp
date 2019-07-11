@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import errno
 import sys
 
 from mach.decorators import (
@@ -67,23 +68,24 @@ class VersionControlCommands(object):
         and this command only ensures that remote repositories providing
         VCS extensions are up to date.
         """
-        import which
         import mozboot.bootstrap as bootstrap
         import mozversioncontrol
+        from mozfile import which
 
         repo = mozversioncontrol.get_repository_object(self._context.topdir)
-        vcs = 'hg'
+        tool = 'hg'
         if repo.name == 'git':
-            vcs = 'git'
+            tool = 'git'
 
-        # "hg" is an executable script with a shebang, which will be found
-        # by which.which. We need to pass a win32 executable to the function
-        # because we spawn a process
-        # from it.
+        # "hg" is an executable script with a shebang, which will be found by
+        # which. We need to pass a win32 executable to the function because we
+        # spawn a process from it.
         if sys.platform in ('win32', 'msys'):
-            vcs = which.which(vcs + '.exe')
-        else:
-            vcs = which.which(vcs)
+            tool += '.exe'
+
+        vcs = which(tool)
+        if not vcs:
+            raise OSError(errno.ENOENT, "Could not find {} on $PATH".format(tool))
 
         if update_only:
             if repo.name == 'git':

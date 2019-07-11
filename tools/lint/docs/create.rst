@@ -109,6 +109,11 @@ let's call the file ``flake8_lint.py``:
 
     from mozlint import result
 
+    try:
+        from shutil import which
+    except ImportError:
+        from shutil_which import which
+
 
     FLAKE8_NOT_FOUND = """
     Could not find flake8! Install flake8 and try again.
@@ -116,13 +121,10 @@ let's call the file ``flake8_lint.py``:
 
 
     def lint(files, config, **lintargs):
-        import which
-
         binary = os.environ.get('FLAKE8')
         if not binary:
-            try:
-                binary = which.which('flake8')
-            except which.WhichError:
+            binary = which('flake8')
+            if not binary:
                 print(FLAKE8_NOT_FOUND)
                 return 1
 
