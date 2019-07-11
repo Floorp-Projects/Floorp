@@ -243,6 +243,22 @@ TabSources.prototype = {
   },
 
   /**
+   * Return whether a source represents an inline script.
+   */
+  isInlineScript(source) {
+    // Assume the source is inline if the element that introduced it is a
+    // script element and does not have a src attribute.
+    try {
+      const e = source.element ? source.element.unsafeDereference() : null;
+      return e && e.tagName === "SCRIPT" && !e.hasAttribute("src");
+    } catch (e) {
+      // If we are debugging a dead window then the above can throw.
+      DevToolsUtils.reportException("TabSources.isInlineScript", e);
+      return false;
+    }
+  },
+
+  /**
    * Create a source actor representing this source.
    *
    * @param Debugger.Source source
@@ -266,14 +282,7 @@ TabSources.prototype = {
     // sources. Otherwise, use the `originalUrl` property to treat it
     // as an HTML source that manages multiple inline sources.
 
-    // Assume the source is inline if the element that introduced it is a
-    // script element and does not have a src attribute.
-    const element = source.element ? source.element.unsafeDereference() : null;
-    if (
-      element &&
-      element.tagName === "SCRIPT" &&
-      !element.hasAttribute("src")
-    ) {
+    if (this.isInlineScript(source)) {
       if (source.introductionScript) {
         // As for other evaluated sources, script elements which were
         // dynamically generated when another script ran should have
