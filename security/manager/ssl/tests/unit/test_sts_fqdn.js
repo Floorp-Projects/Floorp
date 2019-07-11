@@ -29,7 +29,7 @@ function run_test() {
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri1, 0));
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri2, 0));
 
-  SSService.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
+  SSService.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
   ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
   ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri1, 0));
   ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri2, 0));

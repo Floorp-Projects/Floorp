@@ -705,7 +705,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         let sss = Cc["@mozilla.org/ssservice;1"].getService(
           Ci.nsISiteSecurityService
         );
-        sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, flags);
+        sss.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, flags);
         return undefined;
       }
 

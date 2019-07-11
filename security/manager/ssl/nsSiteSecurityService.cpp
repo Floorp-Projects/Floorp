@@ -557,11 +557,12 @@ nsresult nsSiteSecurityService::SetHSTSState(
     SecurityPropertySource aSource, const OriginAttributes& aOriginAttributes) {
   nsAutoCString hostname(aHost);
   bool isPreload = (aSource == SourcePreload);
-  // If max-age is zero, that's an indication to immediately remove the
-  // security state, so here's a shortcut.
-  if (!maxage) {
-    return RemoveStateInternal(aType, hostname, flags, isPreload,
-                               aOriginAttributes);
+  // If max-age is zero, the host is no longer considered HSTS. If the host was
+  // preloaded, we store an entry indicating that this host is not HSTS, causing
+  // the preloaded information to be ignored.
+  if (maxage == 0) {
+    return MarkHostAsNotHSTS(aType, hostname, flags, isPreload,
+                             aOriginAttributes);
   }
 
   MOZ_ASSERT(
@@ -608,28 +609,17 @@ nsresult nsSiteSecurityService::SetHSTSState(
   return NS_OK;
 }
 
-nsresult nsSiteSecurityService::RemoveStateInternal(
-    uint32_t aType, nsIURI* aURI, uint32_t aFlags,
-    const OriginAttributes& aOriginAttributes) {
-  nsAutoCString hostname;
-  GetHost(aURI, hostname);
-  return RemoveStateInternal(aType, hostname, aFlags, false, aOriginAttributes);
-}
-
-nsresult nsSiteSecurityService::RemoveStateInternal(
+// Helper function to mark a host as not HSTS. In the general case, we can just
+// remove the HSTS state. However, for preloaded entries, we have to store an
+// entry that indicates this host is not HSTS to prevent the implementation
+// using the preloaded information.
+nsresult nsSiteSecurityService::MarkHostAsNotHSTS(
     uint32_t aType, const nsAutoCString& aHost, uint32_t aFlags,
     bool aIsPreload, const OriginAttributes& aOriginAttributes) {
-  // Child processes are not allowed direct access to this.
-  if (!XRE_IsParentProcess()) {
-    MOZ_CRASH(
-        "Child process: no direct access to "
-        "nsISiteSecurityService::RemoveStateInternal");
+  // This only applies to HSTS.
+  if (aType != nsISiteSecurityService::HEADER_HSTS) {
+    return NS_ERROR_INVALID_ARG;
   }
-
-  // Only HSTS is supported at the moment.
-  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS ||
-                     aType == nsISiteSecurityService::HEADER_HPKP,
-                 NS_ERROR_NOT_IMPLEMENTED);
   if (aIsPreload && aOriginAttributes != OriginAttributes()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -638,7 +628,6 @@ nsresult nsSiteSecurityService::RemoveStateInternal(
   mozilla::DataStorageType storageType = isPrivate
                                              ? mozilla::DataStorage_Private
                                              : mozilla::DataStorage_Persistent;
-  // If this host is in the preload list, we have to store a knockout entry.
   nsAutoCString storageKey;
   SetStorageKey(aHost, aType, aOriginAttributes, storageKey);
 
@@ -675,10 +664,18 @@ nsresult nsSiteSecurityService::RemoveStateInternal(
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::RemoveState(uint32_t aType, nsIURI* aURI,
-                                   uint32_t aFlags,
-                                   JS::HandleValue aOriginAttributes,
-                                   JSContext* aCx, uint8_t aArgc) {
+nsSiteSecurityService::ResetState(uint32_t aType, nsIURI* aURI, uint32_t aFlags,
+                                  JS::HandleValue aOriginAttributes,
+                                  JSContext* aCx, uint8_t aArgc) {
+  if (!XRE_IsParentProcess()) {
+    MOZ_CRASH(
+        "Child process: no direct access to "
+        "nsISiteSecurityService::ResetState");
+  }
+  if (!aURI) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   OriginAttributes originAttributes;
   if (aArgc > 0) {
     // OriginAttributes were passed in.
@@ -687,7 +684,39 @@ nsSiteSecurityService::RemoveState(uint32_t aType, nsIURI* aURI,
       return NS_ERROR_INVALID_ARG;
     }
   }
-  return RemoveStateInternal(aType, aURI, aFlags, originAttributes);
+
+  return ResetStateInternal(aType, aURI, aFlags, originAttributes);
+}
+
+// Helper function to reset stored state of the given type for the host
+// identified by the given URI. If there is preloaded information for the host,
+// that information will be used for future queries. C.f. MarkHostAsNotHSTS,
+// which will store a knockout entry for preloaded HSTS hosts that have sent a
+// header with max-age=0 (meaning preloaded information will then not be used
+// for that host).
+nsresult nsSiteSecurityService::ResetStateInternal(
+    uint32_t aType, nsIURI* aURI, uint32_t aFlags,
+    const OriginAttributes& aOriginAttributes) {
+  if (!aURI) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (aType != nsISiteSecurityService::HEADER_HSTS &&
+      aType != nsISiteSecurityService::HEADER_HPKP) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsAutoCString hostname;
+  nsresult rv = GetHost(aURI, hostname);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsAutoCString storageKey;
+  SetStorageKey(hostname, aType, aOriginAttributes, storageKey);
+  bool isPrivate = aFlags & nsISocketProvider::NO_PERMANENT_STORAGE;
+  mozilla::DataStorageType storageType = isPrivate
+                                             ? mozilla::DataStorage_Private
+                                             : mozilla::DataStorage_Persistent;
+  mSiteStateStorage->Remove(storageKey, storageType);
+  return NS_OK;
 }
 
 static bool HostIsIPAddress(const nsCString& hostname) {
@@ -1062,9 +1091,12 @@ nsresult nsSiteSecurityService::ProcessPKPHeader(
     return NS_ERROR_FAILURE;
   }
 
-  // if maxAge == 0 we must delete all state, for now no hole-punching
+  // If maxAge == 0, we remove dynamic HPKP state for this host. Due to
+  // architectural constraints, if this host was preloaded, any future lookups
+  // will use the preloaded state (i.e. we can't store a "this host is not HPKP"
+  // entry like we can for HSTS).
   if (maxAge == 0) {
-    return RemoveStateInternal(aType, aSourceURI, aFlags, aOriginAttributes);
+    return ResetStateInternal(aType, aSourceURI, aFlags, aOriginAttributes);
   }
 
   // clamp maxAge to the maximum set by pref
