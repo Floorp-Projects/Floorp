@@ -8,6 +8,7 @@ import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toCustomTabSessionState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -227,7 +228,10 @@ class SessionManager(
      * Informs this [SessionManager] that the OS is in low memory condition so it
      * can reduce its allocated objects.
      */
-    fun onLowMemory() = delegate.onLowMemory()
+    fun onLowMemory() {
+        delegate.onLowMemory()
+        store?.syncDispatch(SystemAction.LowMemoryAction)
+    }
 
     companion object {
         const val NO_SELECTION = -1

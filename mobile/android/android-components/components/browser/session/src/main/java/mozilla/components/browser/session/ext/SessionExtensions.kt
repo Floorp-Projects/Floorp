@@ -32,7 +32,8 @@ private fun Session.toContentState(): ContentState {
         progress,
         loading,
         searchTerms,
-        securityInfo.toSecurityInfoState()
+        securityInfo.toSecurityInfoState(),
+        thumbnail
     )
 }
 

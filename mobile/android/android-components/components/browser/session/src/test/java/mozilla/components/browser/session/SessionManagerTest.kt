@@ -668,7 +668,7 @@ class SessionManagerTest {
     }
 
     @Test
-    fun `all not selected sessions should be removed on Low Memory`() {
+    fun `thumbnails of all but selected session should be removed on low memory`() {
         val manager = SessionManager(mock())
 
         val emptyBitmap = spy(Bitmap::class.java)

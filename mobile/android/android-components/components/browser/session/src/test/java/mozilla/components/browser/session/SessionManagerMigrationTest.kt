@@ -451,4 +451,31 @@ class SessionManagerMigrationTest {
             }
         }
     }
+
+    @Test
+    fun `thumbnails of all but selected session should be removed on low memory`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val session1 = Session("https://www.mozilla.org")
+        val session2 = Session("https://getpocket.com")
+        val session3 = Session("https://www.firefox.com")
+
+        sessionManager.add(session1, false)
+        session1.thumbnail = mock()
+        sessionManager.add(session2, false)
+        session2.thumbnail = mock()
+        sessionManager.add(session3, true)
+        session3.thumbnail = mock()
+
+        val allSessionsMustHaveAThumbnail = store.state.tabs.all { it.content.thumbnail != null }
+        assertTrue(allSessionsMustHaveAThumbnail)
+
+        sessionManager.onLowMemory()
+
+        assertNull(store.state.tabs[0].content.thumbnail)
+        assertNull(store.state.tabs[1].content.thumbnail)
+        // Thumbnail of selected session should not have been removed
+        assertNotNull(store.state.tabs[2].content.thumbnail)
+    }
 }

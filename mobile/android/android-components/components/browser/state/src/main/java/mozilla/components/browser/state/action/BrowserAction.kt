@@ -19,6 +19,17 @@ import mozilla.components.lib.state.Action
 sealed class BrowserAction : Action
 
 /**
+ * [BrowserAction] implementations to react to system events.
+ */
+sealed class SystemAction : BrowserAction() {
+    /**
+     * Optimizes the [BrowserState] by removing unneeded and optional
+     * resources if the system is in a low memory condition.
+     */
+    object LowMemoryAction : SystemAction()
+}
+
+/**
  * [BrowserAction] implementations related to updating the list of [TabSessionState] inside [BrowserState].
  */
 sealed class TabListAction : BrowserAction() {
