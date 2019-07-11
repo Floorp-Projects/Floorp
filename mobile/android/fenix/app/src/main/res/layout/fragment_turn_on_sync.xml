@@ -2,76 +2,85 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_margin="24dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/title_sign_in"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/sign_in_with_camera"
-        android:textAppearance="@style/Header16TextStyle"
-        android:textColor="?primaryText"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/sign_in_image"
-        android:layout_width="320dp"
-        android:layout_height="166dp"
-        android:layout_marginTop="16dp"
-        android:adjustViewBounds="true"
-        android:importantForAccessibility="no"
-        android:scaleType="fitXY"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_sign_in"
-        app:srcCompat="@drawable/ic_scan" />
-
-    <TextView
-        android:id="@+id/sign_in_instructions"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:text="@string/sign_in_instructions"
-        android:textColor="?primaryText"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sign_in_image" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/sign_in_scan_button"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:letterSpacing="0"
-        android:text="@string/sign_in_ready_for_scan"
-        android:textAllCaps="false"
-        android:textColor="?contrastText"
-        android:textStyle="bold"
-        app:backgroundTint="?accent"
-        app:icon="@drawable/ic_qr"
-        app:iconGravity="textStart"
-        app:iconPadding="8dp"
-        app:iconTint="?contrastText"
-        app:layout_constraintTop_toBottomOf="@id/sign_in_instructions" />
+        android:layout_margin="24dp">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/sign_in_email_button"
-        style="@style/ThemeIndependentMaterialGreyButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/sign_in_with_email"
-        app:layout_constraintTop_toBottomOf="@id/sign_in_scan_button" />
+        <TextView
+            android:id="@+id/title_sign_in"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/sign_in_with_camera"
+            android:textAppearance="@style/Header16TextStyle"
+            android:textColor="?primaryText"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <ImageView
+            android:id="@+id/sign_in_image"
+            android:layout_width="320dp"
+            android:layout_height="166dp"
+            android:layout_marginTop="16dp"
+            android:adjustViewBounds="true"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title_sign_in"
+            app:srcCompat="@drawable/ic_scan" />
+
+        <TextView
+            android:id="@+id/sign_in_instructions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="@string/sign_in_instructions"
+            android:textColor="?primaryText"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/sign_in_image" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sign_in_scan_button"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:letterSpacing="0"
+            android:text="@string/sign_in_ready_for_scan"
+            android:textAllCaps="false"
+            android:textColor="?contrastText"
+            android:textStyle="bold"
+            app:backgroundTint="?accent"
+            app:icon="@drawable/ic_qr"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconTint="?contrastText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sign_in_instructions" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sign_in_email_button"
+            style="@style/ThemeIndependentMaterialGreyButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/sign_in_with_email"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sign_in_scan_button" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
