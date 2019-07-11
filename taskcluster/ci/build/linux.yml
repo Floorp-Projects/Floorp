@@ -764,6 +764,8 @@ linux64-asan-reporter-nightly/opt:
         mozconfig-variant: nightly-asan-reporter
         tooltool-downloads: public
         need-xvfb: true
+        mar-channel-id:
+            firefox-mozilla-central-asan
     toolchains:
         - linux64-binutils
         - linux64-clang
