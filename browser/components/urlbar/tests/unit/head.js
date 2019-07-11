@@ -35,6 +35,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
+// Turn off region updates and timeouts for search service
+Services.prefs.setCharPref("browser.search.region", "US");
+Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
+
 /**
  * @param {string} searchString The search string to insert into the context.
  * @param {object} properties Overrides for the default values.
@@ -194,6 +199,9 @@ async function addTestEngine(basename, httpServer = undefined) {
 }
 
 /**
+ * WARNING: use of this function may result in intermittent failures when tests
+ * run in parallel due to reliance on port 9000.  Duplicated in/from unifiedcomplete.
+ *
  * Sets up a search engine that provides some suggestions by appending strings
  * onto the search query.
  *
