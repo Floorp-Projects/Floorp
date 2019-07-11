@@ -6,6 +6,7 @@
 #define BasicRenderingContext2D_h
 
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/dom/DOMMatrix.h"
 
 namespace mozilla {
 namespace dom {
@@ -36,8 +37,11 @@ class BasicRenderingContext2D {
   virtual void Transform(double aM11, double aM12, double aM21, double aM22,
                          double aDx, double aDy,
                          mozilla::ErrorResult& aError) = 0;
+  virtual already_AddRefed<DOMMatrix> GetTransform(mozilla::ErrorResult& aError) = 0;
   virtual void SetTransform(double aM11, double aM12, double aM21, double aM22,
                             double aDx, double aDy,
+                            mozilla::ErrorResult& aError) = 0;
+  virtual void SetTransform(const DOMMatrix2DInit& aInit,
                             mozilla::ErrorResult& aError) = 0;
   virtual void ResetTransform(mozilla::ErrorResult& aError) = 0;
 

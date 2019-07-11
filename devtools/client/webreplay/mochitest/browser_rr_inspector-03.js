@@ -32,23 +32,23 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_inspector_styles.html", {
     waitForRecording: true,
   });
-  const { threadClient, tab, toolbox } = dbg;
+  const { threadFront, tab, toolbox } = dbg;
 
-  await threadClient.interrupt();
-  await threadClient.resume();
+  await threadFront.interrupt();
+  await threadFront.resume();
 
-  await threadClient.interrupt();
+  await threadFront.interrupt();
 
   const { inspector, view } = await openComputedView();
   await checkBackgroundColor("body", "rgb(0, 128, 0)");
   await checkBackgroundColor("#maindiv", "rgb(0, 0, 255)");
 
-  const bp = await setBreakpoint(threadClient, "doc_inspector_styles.html", 11);
+  const bp = await setBreakpoint(threadFront, "doc_inspector_styles.html", 11);
 
-  await rewindToLine(threadClient, 11);
+  await rewindToLine(threadFront, 11);
   await checkBackgroundColor("#maindiv", "rgb(255, 0, 0)");
 
-  await threadClient.removeBreakpoint(bp);
+  await threadFront.removeBreakpoint(bp);
   await toolbox.closeToolbox();
   await gBrowser.removeTab(tab);
 

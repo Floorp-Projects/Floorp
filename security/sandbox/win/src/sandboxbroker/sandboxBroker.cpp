@@ -502,6 +502,13 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       sandbox::SBOX_ALL_OK == result,
       "SetDelayedIntegrityLevel should never fail, what happened?");
 
+  // SetLockdownDefaultDacl causes audio to fail for Windows 8.1 and earlier.
+  // Bug 1564842 tracks removing the Win10 or later restriction, once we can
+  // work around that problem.
+  if (aSandboxLevel > 5 && IsWin10OrLater()) {
+    mPolicy->SetLockdownDefaultDacl();
+  }
+
   sandbox::MitigationFlags mitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |

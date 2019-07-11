@@ -49,10 +49,10 @@ async function testPrincipal(options, globalPrincipal, debuggeeHasXrays) {
   }
 }
 
-function test({ threadClient, debuggee }, testOptions) {
+function test({ threadFront, debuggee }, testOptions) {
   const { global } = testOptions;
   return new Promise(function(resolve) {
-    threadClient.once("paused", async function(packet) {
+    threadFront.once("paused", async function(packet) {
       // Get the grips.
       const [
         proxyGrip,
@@ -64,7 +64,7 @@ function test({ threadClient, debuggee }, testOptions) {
       check_proxy_grip(debuggee, testOptions, proxyGrip);
 
       // Check the target and handler slots of the proxy object.
-      const proxyClient = threadClient.pauseGrip(proxyGrip);
+      const proxyClient = threadFront.pauseGrip(proxyGrip);
       const proxySlots = await proxyClient.getProxySlots();
       check_proxy_slots(debuggee, testOptions, proxyGrip, proxySlots);
 
@@ -80,7 +80,7 @@ function test({ threadClient, debuggee }, testOptions) {
       );
 
       // Check the prototype and properties of the object which inherits from the proxy.
-      const inheritsProxyClient = threadClient.pauseGrip(inheritsProxyGrip);
+      const inheritsProxyClient = threadFront.pauseGrip(inheritsProxyGrip);
       const inheritsProxyResponse = await inheritsProxyClient.getPrototypeAndProperties();
       check_properties(
         testOptions,
@@ -98,7 +98,7 @@ function test({ threadClient, debuggee }, testOptions) {
 
       // The prototype chain was not iterated if the object was inaccessible, so now check
       // another object which inherits from the proxy, but was created in the debuggee.
-      const inheritsProxy2Client = threadClient.pauseGrip(inheritsProxy2Grip);
+      const inheritsProxy2Client = threadFront.pauseGrip(inheritsProxy2Grip);
       const inheritsProxy2Response = await inheritsProxy2Client.getPrototypeAndProperties();
       check_properties(
         testOptions,
@@ -118,7 +118,7 @@ function test({ threadClient, debuggee }, testOptions) {
       strictEqual(global.trapDidRun, false, "No proxy trap did run.");
 
       // Resume the debugger and finish the current test.
-      await threadClient.resume();
+      await threadFront.resume();
       resolve();
     });
 
@@ -309,9 +309,9 @@ async function run_tests_in_principal(
   }
 }
 
-// threadClientTest uses systemPrincipal by default, but let's be explicit here.
+// threadFrontTest uses systemPrincipal by default, but let's be explicit here.
 add_task(
-  threadClientTest(
+  threadFrontTest(
     options => {
       return run_tests_in_principal(options, systemPrincipal, true);
     },
@@ -319,7 +319,7 @@ add_task(
   )
 );
 add_task(
-  threadClientTest(
+  threadFrontTest(
     options => {
       return run_tests_in_principal(options, systemPrincipal, false);
     },
@@ -331,7 +331,7 @@ const nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(
   Ci.nsIPrincipal
 );
 add_task(
-  threadClientTest(
+  threadFrontTest(
     options => {
       return run_tests_in_principal(options, nullPrincipal, true);
     },
@@ -339,7 +339,7 @@ add_task(
   )
 );
 add_task(
-  threadClientTest(
+  threadFrontTest(
     options => {
       return run_tests_in_principal(options, nullPrincipal, false);
     },

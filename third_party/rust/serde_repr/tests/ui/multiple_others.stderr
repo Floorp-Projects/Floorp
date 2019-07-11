@@ -1,0 +1,8 @@
+error: only one variant can be #[serde(other)]
+ --> $DIR/multiple_others.rs:3:10
+  |
+3 | #[derive(Deserialize_repr)]
+  |          ^^^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+

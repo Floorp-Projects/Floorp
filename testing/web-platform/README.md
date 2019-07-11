@@ -206,6 +206,32 @@ create an ini file
 
     disabled: @False
 
+Setting Metadata for Release Branches
+-------------------------------------
+
+Run info properties can be used to set metadata for release branches
+that differs from nightly (e.g. for when a feature depends on prefs
+that are only set on nightly), for example:
+
+    [filename.html]
+      expected:
+        if release_or_beta: FAIL
+
+Note that in general the automatic metadata update will work better if
+the nonstandard configuration is used explictly in the conditional,
+and placed at the top of the set of conditions, i.e. the following
+would cause problems later:
+
+    [filename.html]
+      expected:
+        if nightly_build: PASS
+        FAIL
+
+This is because on import the automatic metadata updates are run
+against the results of nightly builds, and we remove any existing
+conditions that match that configuration to avoid building up stale
+configuration options.
+
 Test Format
 -----------
 

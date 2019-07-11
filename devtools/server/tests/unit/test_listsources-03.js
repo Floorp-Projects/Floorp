@@ -9,7 +9,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -23,9 +23,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-sources", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_simple_listsources();
     });
   });
@@ -33,8 +33,8 @@ function run_test() {
 }
 
 function test_simple_listsources() {
-  gThreadClient.once("paused", function(packet) {
-    gThreadClient.getSources().then(function(response) {
+  gThreadFront.once("paused", function(packet) {
+    gThreadFront.getSources().then(function(response) {
       Assert.ok(
         !response.error,
         "There shouldn't be an error fetching large amounts of sources."
@@ -46,7 +46,7 @@ function test_simple_listsources() {
         })
       );
 
-      gThreadClient.resume().then(function() {
+      gThreadFront.resume().then(function() {
         finishClient(gClient);
       });
     });

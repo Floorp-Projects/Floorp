@@ -212,7 +212,7 @@ function descriptor(descr) {
 }
 
 async function test_unsafe_grips(
-  { threadClient, debuggee, client },
+  { threadFront, debuggee, client },
   tests,
   principal
 ) {
@@ -223,7 +223,7 @@ async function test_unsafe_grips(
   );
   for (let data of tests) {
     await new Promise(function(resolve) {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const [objGrip, inheritsGrip] = packet.frame.arguments;
         for (const grip of [objGrip, inheritsGrip]) {
           const isUnsafe = grip === objGrip;
@@ -235,7 +235,7 @@ async function test_unsafe_grips(
 
           check_grip(grip, data, isUnsafe);
 
-          let objClient = threadClient.pauseGrip(grip);
+          let objClient = threadFront.pauseGrip(grip);
           let response, slice;
 
           response = await objClient.getPrototypeAndProperties();
@@ -280,7 +280,7 @@ async function test_unsafe_grips(
             // class because the object is callable (despite not being a Function object).
             // So the grip class is changed in order to test the object.js method.
             grip.class = "Function";
-            objClient = threadClient.pauseGrip(grip);
+            objClient = threadFront.pauseGrip(grip);
             try {
               response = await objClient.getParameterNames();
               ok(
@@ -298,7 +298,7 @@ async function test_unsafe_grips(
           }
         }
 
-        await threadClient.resume();
+        await threadFront.resume();
         resolve();
       });
 
@@ -408,9 +408,9 @@ function check_display_string(str, data, isUnsafe) {
   }
 }
 
-// threadClientTest uses systemPrincipal by default, but let's be explicit here.
+// threadFrontTest uses systemPrincipal by default, but let's be explicit here.
 add_task(
-  threadClientTest(
+  threadFrontTest(
     options => {
       return test_unsafe_grips(options, systemPrincipalTests, "system");
     },
@@ -422,7 +422,7 @@ const nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(
   Ci.nsIPrincipal
 );
 add_task(
-  threadClientTest(
+  threadFrontTest(
     options => {
       return test_unsafe_grips(options, nullPrincipalTests, "null");
     },

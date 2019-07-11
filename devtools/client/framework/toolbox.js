@@ -445,8 +445,8 @@ Toolbox.prototype = {
     return this._target;
   },
 
-  get threadClient() {
-    return this._threadClient;
+  get threadFront() {
+    return this._threadFront;
   },
 
   /**
@@ -563,14 +563,14 @@ Toolbox.prototype = {
     this.unhighlightTool("jsdebugger");
   },
 
-  _startThreadClientListeners: function() {
-    this.threadClient.on("paused", this._onPausedState);
-    this.threadClient.on("resumed", this._onResumedState);
+  _startThreadFrontListeners: function() {
+    this.threadFront.on("paused", this._onPausedState);
+    this.threadFront.on("resumed", this._onResumedState);
   },
 
-  _stopThreadClientListeners: function() {
-    this.threadClient.off("paused", this._onPausedState);
-    this.threadClient.off("resumed", this._onResumedState);
+  _stopThreadFrontListeners: function() {
+    this.threadFront.off("paused", this._onPausedState);
+    this.threadFront.off("resumed", this._onResumedState);
   },
 
   _attachAndResumeThread: async function() {
@@ -587,10 +587,10 @@ Toolbox.prototype = {
         "devtools.debugger.features.overlay-step-buttons"
       ),
     };
-    const [, threadClient] = await this._target.attachThread(threadOptions);
+    const [, threadFront] = await this._target.attachThread(threadOptions);
 
     try {
-      await threadClient.resume();
+      await threadFront.resume();
     } catch (ex) {
       // Interpret a possible error thrown by ThreadActor.resume
       if (ex.error === "wrongOrder") {
@@ -606,7 +606,7 @@ Toolbox.prototype = {
       }
     }
 
-    return threadClient;
+    return threadFront;
   },
 
   /**
@@ -646,8 +646,8 @@ Toolbox.prototype = {
         await this._target.activeConsole.startListeners(["NetworkActivity"]);
       }
 
-      this._threadClient = await this._attachAndResumeThread();
-      this._startThreadClientListeners();
+      this._threadFront = await this._attachAndResumeThread();
+      this._startThreadFrontListeners();
 
       await domReady;
 
@@ -1377,7 +1377,7 @@ Toolbox.prototype = {
       // If the debugger is paused, don't let the ESC key stop any pending navigation.
       // If the host is page, don't let the ESC stop the load of the webconsole frame.
       if (
-        this._threadClient.state == "paused" ||
+        this._threadFront.state == "paused" ||
         this.hostType === Toolbox.HostType.PAGE
       ) {
         e.preventDefault();
@@ -3539,8 +3539,8 @@ Toolbox.prototype = {
     outstanding.push(this.resetPreference());
 
     // Detach the thread
-    this._stopThreadClientListeners();
-    this._threadClient = null;
+    this._stopThreadFrontListeners();
+    this._threadFront = null;
 
     // Unregister buttons listeners
     this.toolbarButtons.forEach(button => {

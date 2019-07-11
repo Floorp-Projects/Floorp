@@ -913,6 +913,11 @@ var SessionStoreInternal = {
       return;
     }
 
+    // Ignore sessionStore update from previous epochs
+    if (!this.isCurrentEpoch(aBrowser, aData.epoch)) {
+      return;
+    }
+
     TabState.update(aBrowser, aData);
     let win = aBrowser.ownerGlobal;
     this.saveStateDelayed(win);
@@ -5833,6 +5838,10 @@ var SessionStoreInternal = {
       "SessionStore:restoreHistory",
       options
     );
+
+    if (browser && browser.frameLoader) {
+      browser.frameLoader.requestEpochUpdate(options.epoch);
+    }
   },
 };
 

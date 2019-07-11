@@ -21,7 +21,7 @@ types.addDictType("available-breakpoint-event", {
 });
 
 const threadSpec = generateActorSpec({
-  typeName: "context",
+  typeName: "thread",
 
   events: {
     paused: {

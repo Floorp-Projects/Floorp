@@ -197,6 +197,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   bool RequestTabStateFlush(uint32_t aFlushId, bool aIsFinal = false);
 
+  void RequestEpochUpdate(uint32_t aEpoch);
+
   void Print(uint64_t aOuterWindowID, nsIPrintSettings* aPrintSettings,
              nsIWebProgressListener* aProgressListener,
              mozilla::ErrorResult& aRv);

@@ -241,13 +241,13 @@ function setupThreadListeners(panel) {
     updateBadgeText(true);
   };
   const onResumed = updateBadgeText.bind(null, false);
-  const threadClient = gToolbox.target.threadClient;
-  threadClient.on("paused", onPaused);
-  threadClient.on("resumed", onResumed);
+  const threadFront = gToolbox.target.threadFront;
+  threadFront.on("paused", onPaused);
+  threadFront.on("resumed", onResumed);
 
   panel.once("destroyed", () => {
-    threadClient.off("paused", onPaused);
-    threadClient.off("resumed", onResumed);
+    threadFront.off("paused", onPaused);
+    threadFront.off("resumed", onResumed);
   });
 }
 

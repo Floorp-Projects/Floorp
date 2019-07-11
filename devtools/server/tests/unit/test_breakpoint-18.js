@@ -9,23 +9,23 @@
  */
 
 add_task(
-  threadClientTest(({ threadClient, debuggee, client }) => {
+  threadFrontTest(({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
       // Expose console as the test script uses it
       debuggee.console = { log: x => void x };
 
       // Inline all paused listeners as promises won't resolve when paused
-      threadClient.once("paused", async packet1 => {
-        await setBreakpoint(packet1, threadClient, client);
+      threadFront.once("paused", async packet1 => {
+        await setBreakpoint(packet1, threadFront, client);
 
-        threadClient.once("paused", ({ why }) => {
+        threadFront.once("paused", ({ why }) => {
           Assert.equal(why.type, "breakpoint");
 
-          threadClient.once("paused", packet3 => {
+          threadFront.once("paused", packet3 => {
             testDbgStatement(packet3);
             resolve();
           });
-          threadClient.resume();
+          threadFront.resume();
         });
         debuggee.test();
       });
@@ -45,14 +45,14 @@ add_task(
   })
 );
 
-function setBreakpoint(packet, threadClient, client) {
+function setBreakpoint(packet, threadFront, client) {
   return new Promise(async resolve => {
-    const source = await getSourceById(threadClient, packet.frame.where.actor);
-    threadClient.once("resumed", resolve);
+    const source = await getSourceById(threadFront, packet.frame.where.actor);
+    threadFront.once("resumed", resolve);
 
-    threadClient.setBreakpoint({ sourceUrl: source.url, line: 3 }, {});
+    threadFront.setBreakpoint({ sourceUrl: source.url, line: 3 }, {});
     await client.waitForRequestsToSettle();
-    await threadClient.resume();
+    await threadFront.resume();
   });
 }
 

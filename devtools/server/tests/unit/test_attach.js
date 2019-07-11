@@ -3,20 +3,20 @@
 
 "use strict";
 
-const { ThreadClient } = require("devtools/shared/client/thread-client");
+const { ThreadFront } = require("devtools/shared/fronts/thread");
 const {
   BrowsingContextTargetFront,
 } = require("devtools/shared/fronts/targets/browsing-context");
 
 /**
  * Very naive test that checks threadClearTest helper.
- * It ensures that the thread client is correctly attached.
+ * It ensures that the thread front is correctly attached.
  */
 add_task(
-  threadClientTest(({ threadClient, debuggee, client, targetFront }) => {
+  threadFrontTest(({ threadFront, debuggee, client, targetFront }) => {
     ok(true, "Thread actor was able to attach");
-    ok(threadClient instanceof ThreadClient, "Thread client is valid");
-    Assert.equal(threadClient.state, "attached", "Thread client is resumed");
+    ok(threadFront instanceof ThreadFront, "Thread Front is valid");
+    Assert.equal(threadFront.state, "attached", "Thread Front is resumed");
     Assert.equal(
       String(debuggee),
       "[object Sandbox]",

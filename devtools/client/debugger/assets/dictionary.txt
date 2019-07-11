@@ -129,7 +129,7 @@ Greenkeeper
 headlessly
 natively
 outputed
-threadClient
+threadFront
 tabTarget
 bpClients
 originalToGeneratedId

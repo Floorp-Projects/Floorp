@@ -21,7 +21,7 @@ const sourceTexts = {
   "scopes.js": readFixture("scopes.js"),
 };
 
-const threadClient = {
+const threadFront = {
   sourceContents: async ({ source }) => ({
     source: sourceTexts[source],
     contentType: "text/javascript",
@@ -34,7 +34,7 @@ const threadClient = {
 
 describe("getInScopeLine", () => {
   it("with selected line", async () => {
-    const store = createStore(threadClient);
+    const store = createStore(threadFront);
     const { dispatch, getState } = store;
     const source = makeMockSource("scopes.js", "scopes.js");
 

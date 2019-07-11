@@ -559,7 +559,9 @@ interface nsIHttpChannel : nsIChannel
        */
       CLASSIFIED_SOCIALTRACKING = 0x0100,
       CLASSIFIED_SOCIALTRACKING_FACEBOOK = 0x0200,
-      CLASSIFIED_SOCIALTRACKING_TWITTER = 0x0400,
+      CLASSIFIED_SOCIALTRACKING_LINKEDIN = 0x0400,
+      CLASSIFIED_SOCIALTRACKING_TWITTER = 0x0800,
+      CLASSIFIED_SOCIALTRACKING_YOUTUBE = 0x1000,
 
       /**
        * This is exposed to help to identify tracking classification using the

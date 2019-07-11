@@ -609,71 +609,6 @@ html|input.urlbar-input {
   }
 }
 
-/* Always show URLs LTR. */
-.ac-url-text:-moz-locale-dir(rtl),
-.ac-title-text[lookslikeurl]:-moz-locale-dir(rtl) {
-  direction: ltr !important;
-}
-
-/* Never show a scrollbar for the Location Bar popup.  This overrides the
-   richlistbox inline overflow: auto style.*/
-#PopupAutoCompleteRichResult > richlistbox {
-  overflow: hidden !important;
-}
-
-/* For non-action items, hide the action text; for action items, hide the URL
-   text. Don't show the separator for keyword results. */
-#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-type-icon,
-#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-site-icon,
-#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-tags:not([empty]),
-#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-separator:not([type=keyword]),
-#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-url:not([actiontype]),
-#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-action[actiontype],
-#PopupAutoCompleteRichResult > richlistbox > richlistitem[selected] > .ac-url[actiontype=remotetab],
-#PopupAutoCompleteRichResult > richlistbox > richlistitem:hover > .ac-url[actiontype=remotetab]
-{
-  display: -moz-box;
-}
-
-#PopupAutoCompleteRichResult > richlistbox > richlistitem[selected] > .ac-action[actiontype=remotetab],
-#PopupAutoCompleteRichResult > richlistbox > richlistitem:hover > .ac-action[actiontype=remotetab] {
-  display: none;
-}
-
-/* Normally we want to show the "Search with Engine" label only on hover or
-   selection, but we also want to show it for "alias offer" results -- that is,
-   non-heuristic search engine results that have an alias and empty query.
-   These results tell the user that they can be used to search. */
-#PopupAutoCompleteRichResult > richlistbox > richlistitem:not([selected]):not(:hover):not(.aliasOffer) > .ac-action[actiontype=searchengine],
-#PopupAutoCompleteRichResult > richlistbox > richlistitem:not([selected]):not(:hover):not(.aliasOffer) > .ac-separator[actiontype=searchengine] {
-  display: none;
-}
-
-/* Hide the em-dash separator between the search query description (.ac-title)
-   and the "Search with Foo" description (.ac-url) if the search query is the
-   empty string.  Also hide .ac-title itself because it has a margin-inline-end;
-   alternatively we would need to remove that margin in this case. */
-#PopupAutoCompleteRichResult > richlistbox > richlistitem.emptySearchQuery > .ac-separator,
-#PopupAutoCompleteRichResult > richlistbox > richlistitem.emptySearchQuery > .ac-title {
-  display: none;
-}
-
-#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-site-icon {
-  margin-inline-start: 0;
-}
-
-/* For action items in a noactions popup, show the URL text and hide the action
-   text and type icon. */
-#PopupAutoCompleteRichResult[noactions] > richlistbox > richlistitem.overridable-action > .ac-url {
-  display: -moz-box;
-}
-#PopupAutoCompleteRichResult[noactions] > richlistbox > richlistitem.overridable-action > .ac-action {
-  display: none;
-}
-#PopupAutoCompleteRichResult[noactions] > richlistbox > richlistitem.overridable-action > .ac-type-icon {
-  list-style-image: none;
-}
-
 #urlbar[actionoverride] > #urlbar-display-box,
 #urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-display-box,
 #urlbar:not([actiontype="switchtab"]) > #urlbar-display-box > #switchtab,
@@ -716,31 +651,6 @@ html|input.urlbar-input {
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title > label {
   margin-inline-start: 0;
-}
-
-#PopupAutoCompleteRichResult {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
-}
-
-#PopupAutoCompleteRichResult.showSearchSuggestionsNotification {
-  transition: height 100ms;
-}
-
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] {
-  display: none;
-  transition: margin-top 100ms;
-}
-
-#PopupAutoCompleteRichResult.showSearchSuggestionsNotification > deck[anonid="search-suggestions-notification"] {
-  display: -moz-deck;
-}
-
-#PopupAutoCompleteRichResult > richlistbox {
-  transition: height 100ms;
-}
-
-#PopupAutoCompleteRichResult.showSearchSuggestionsNotification > richlistbox {
-  transition: none;
 }
 
 #urlbar[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,

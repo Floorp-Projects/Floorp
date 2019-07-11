@@ -18,9 +18,9 @@ function run_test() {
     attachTestTabAndResume(client, "test-symbols", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      add_task(testSymbols.bind(null, client, threadClient, debuggee));
+      add_task(testSymbols.bind(null, client, threadFront, debuggee));
       run_next_test();
     });
   });
@@ -28,7 +28,7 @@ function run_test() {
   do_test_pending();
 }
 
-async function testSymbols(client, threadClient, debuggee) {
+async function testSymbols(client, threadFront, debuggee) {
   const evalCode = () => {
     /* eslint-disable */
     Cu.evalInSandbox(
@@ -47,7 +47,7 @@ async function testSymbols(client, threadClient, debuggee) {
     /* eslint-enable */
   };
 
-  const packet = await executeOnNextTickAndWaitForPause(evalCode, threadClient);
+  const packet = await executeOnNextTickAndWaitForPause(evalCode, threadFront);
   const { sym } = packet.frame.environment.bindings.variables;
 
   equal(sym.value.type, "symbol");

@@ -10,7 +10,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -24,9 +24,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_pause_frame();
     });
   });
@@ -34,16 +34,16 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.once("paused", function(packet1) {
-    gThreadClient.once("paused", function(packet2) {
+  gThreadFront.once("paused", function(packet1) {
+    gThreadFront.once("paused", function(packet2) {
       const poppedFrames = packet2.poppedFrames;
       Assert.equal(typeof poppedFrames, typeof []);
       Assert.ok(poppedFrames.includes(packet1.frame.actor));
-      gThreadClient.resume().then(function() {
+      gThreadFront.resume().then(function() {
         finishClient(gClient);
       });
     });
-    gThreadClient.resume();
+    gThreadFront.resume();
   });
 
   gDebuggee.eval(

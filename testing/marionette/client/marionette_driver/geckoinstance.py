@@ -527,10 +527,6 @@ class DesktopInstance(GeckoInstance):
         # when this Firefox version is no longer supported by the client !!!
         "app.update.auto": False,
 
-        # Don't show the content blocking introduction panel
-        # We use a larger number than the default 22 to have some buffer
-        "browser.contentblocking.introCount": 99,
-
         # Enable output for dump() and chrome console API
         "browser.dom.window.dump.enabled": True,
         "devtools.console.stdout.chrome": True,

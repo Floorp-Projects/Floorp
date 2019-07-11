@@ -108,6 +108,11 @@ interface FrameLoader {
   boolean requestTabStateFlush(unsigned long aFlushId);
 
   /**
+   * Force Epoch update in native sessionStoreListeners.
+   */
+  void requestEpochUpdate(unsigned long aEpoch);
+
+  /**
    * Print the current document.
    *
    * @param aOuterWindowID the ID of the outer window to print

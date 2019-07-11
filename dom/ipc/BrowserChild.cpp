@@ -1930,6 +1930,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvFlushTabState(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserChild::RecvUpdateEpoch(const uint32_t& aEpoch) {
+  mSessionStoreListener->SetEpoch(aEpoch);
+  return IPC_OK();
+}
+
 // In case handling repeated keys takes much time, we skip firing new ones.
 bool BrowserChild::SkipRepeatedKeyEvent(const WidgetKeyboardEvent& aEvent) {
   if (mRepeatedKeyEventTime.IsNull() || !aEvent.CanSkipInRemoteProcess() ||
@@ -3816,7 +3821,8 @@ bool BrowserChild::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
   }
 
   Unused << SendSessionStoreUpdate(docShellCaps, privatedMode, positions,
-                                   positionDescendants, aFlushId, aIsFinal);
+                                   positionDescendants, aFlushId, aIsFinal,
+                                   mSessionStoreListener->GetEpoch());
   return true;
 }
 

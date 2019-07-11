@@ -2634,7 +2634,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
     const nsTArray<nsCString>& aPositions,
     const nsTArray<int32_t>& aPositionDescendants, const uint32_t& aFlushId,
-    const bool& aIsFinal) {
+    const bool& aIsFinal, const uint32_t& aEpoch) {
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
   if (!xulBrowserWindow) {
     return IPC_OK();
@@ -2652,7 +2652,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     xulBrowserWindow->UpdateScrollPositions(aPositions, aPositionDescendants);
   }
 
-  xulBrowserWindow->UpdateSessionStore(mFrameElement, aFlushId, aIsFinal);
+  xulBrowserWindow->UpdateSessionStore(mFrameElement, aFlushId, aIsFinal, aEpoch);
   return IPC_OK();
 }
 
