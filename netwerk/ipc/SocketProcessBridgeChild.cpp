@@ -6,6 +6,7 @@
 #include "SocketProcessBridgeChild.h"
 #include "SocketProcessLogging.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
@@ -13,6 +14,9 @@
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
+
+using dom::ContentChild;
+
 namespace net {
 
 StaticRefPtr<SocketProcessBridgeChild>
@@ -77,10 +81,20 @@ SocketProcessBridgeChild::GetSocketProcessBridge() {
     return GetPromise::CreateAndResolve(sSocketProcessBridgeChild, __func__);
   }
 
+  ContentChild* content = ContentChild::GetSingleton();
+  if (!content || content->IsShuttingDown()) {
+    return nullptr;
+  }
+
   return gNeckoChild->SendInitSocketProcessBridge()->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [](NeckoChild::InitSocketProcessBridgePromise::ResolveOrRejectValue&&
              aResult) {
+        ContentChild* content = ContentChild::GetSingleton();
+        if (!content || content->IsShuttingDown()) {
+          return GetPromise::CreateAndReject(
+              nsCString("ContentChild is shutting down."), __func__);
+        }
         if (!sSocketProcessBridgeChild) {
           if (aResult.IsReject()) {
             return GetPromise::CreateAndReject(
