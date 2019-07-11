@@ -156,7 +156,67 @@ add_task(function test() {
       lowerCaseValue: t.toLocaleLowerCase(),
     }));
     Assert.deepEqual(
-      UrlbarUtils.getTokenMatches(tokens, phrase),
+      UrlbarUtils.getTokenMatches(tokens, phrase, UrlbarUtils.HIGHLIGHT.TYPED),
+      expected,
+      `Match "${tokens.map(t => t.value).join(", ")}" on "${phrase}"`
+    );
+  }
+});
+
+add_task(function testReverse() {
+  const tests = [
+    {
+      tokens: ["mozilla", "is", "i"],
+      phrase: "mozilla is for the Open Web",
+      expected: [[7, 1], [10, 17]],
+    },
+    {
+      tokens: ["\u9996"],
+      phrase: "Test \u9996\u9875 Test",
+      expected: [[0, 5], [6, 6]],
+    },
+    {
+      tokens: ["mo", "zilla"],
+      phrase: "mOzIlLa",
+      expected: [],
+    },
+    {
+      tokens: ["MO", "ZILLA"],
+      phrase: "mozilla",
+      expected: [],
+    },
+    {
+      tokens: [""], // Should never happen in practice.
+      phrase: "mozilla",
+      expected: [[0, 7]],
+    },
+    {
+      tokens: ["mo", "om"],
+      phrase: "mozilla mozzarella momo",
+      expected: [[2, 6], [10, 9]],
+    },
+    {
+      tokens: ["mo", "om"],
+      phrase: "MOZILLA MOZZARELLA MOMO",
+      expected: [[2, 6], [10, 9]],
+    },
+    {
+      tokens: ["MO", "OM"],
+      phrase: "mozilla mozzarella momo",
+      expected: [[2, 6], [10, 9]],
+    },
+  ];
+  for (let { tokens, phrase, expected } of tests) {
+    tokens = tokens.map(t => ({
+      value: t,
+      lowerCaseValue: t.toLocaleLowerCase(),
+    }));
+    Assert.deepEqual(
+      UrlbarUtils.getTokenMatches(
+        tokens,
+        phrase,
+        UrlbarUtils.HIGHLIGHT.SUGGESTED
+      ),
       expected,
       `Match "${tokens.map(t => t.value).join(", ")}" on "${phrase}"`
     );
