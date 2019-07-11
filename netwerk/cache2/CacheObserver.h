@@ -29,7 +29,9 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static bool UseDiskCache() {
     return StaticPrefs::browser_cache_disk_enable();
   }
-  static bool UseMemoryCache() { return sUseMemoryCache; }
+  static bool UseMemoryCache() {
+    return StaticPrefs::browser_cache_memory_enable();
+  }
   static uint32_t MetadataMemoryLimit()  // result in kilobytes.
   {
     return sMetadataMemoryLimit;
@@ -101,7 +103,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   void StoreCacheAmountWritten();
   void AttachToPreferences();
 
-  static bool sUseMemoryCache;
   static uint32_t sMetadataMemoryLimit;
   static int32_t sMemoryCacheCapacity;
   static int32_t sAutoMemoryCacheCapacity;
