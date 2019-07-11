@@ -42,11 +42,8 @@ class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  HTMLMediaElement* MediaElement();
-
  private:
-  explicit MediaElementAudioSourceNode(AudioContext* aContext,
-                                       HTMLMediaElement* aElement);
+  explicit MediaElementAudioSourceNode(AudioContext* aContext);
 
   void Destroy() override;
 
@@ -55,8 +52,6 @@ class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
   void ListenForAllowedToPlay(const MediaElementAudioSourceOptions& aOptions);
 
   MozPromiseRequestHolder<GenericNonExclusivePromise> mAllowedToPlayRequest;
-
-  RefPtr<HTMLMediaElement> mElement;
 };
 
 }  // namespace dom
