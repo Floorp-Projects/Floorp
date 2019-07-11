@@ -325,11 +325,6 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
 }
 
 bool RenderCompositorANGLE::BeginFrame() {
-  if (mDevice->GetDeviceRemovedReason() != S_OK) {
-    RenderThread::Get()->HandleDeviceReset("BeginFrame", /* aNotify */ true);
-    return false;
-  }
-
   mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
 
   if (!ResizeBufferIfNeeded()) {
@@ -361,7 +356,7 @@ void RenderCompositorANGLE::EndFrame() {
   }
 }
 
-void RenderCompositorANGLE::WaitForGPU() {
+bool RenderCompositorANGLE::WaitForGPU() {
   // Note: this waits on the query we inserted in the previous frame,
   // not the one we just inserted now. Example:
   //   Insert query #1
@@ -375,7 +370,7 @@ void RenderCompositorANGLE::WaitForGPU() {
   //   Wait for query #2.
   //
   // This ensures we're done reading textures before swapping buffers.
-  WaitForPreviousPresentQuery();
+  return WaitForPreviousPresentQuery();
 }
 
 bool RenderCompositorANGLE::ResizeBufferIfNeeded() {
@@ -516,18 +511,31 @@ void RenderCompositorANGLE::InsertPresentWaitQuery() {
   mWaitForPresentQueries.emplace(query);
 }
 
-void RenderCompositorANGLE::WaitForPreviousPresentQuery() {
+bool RenderCompositorANGLE::WaitForPreviousPresentQuery() {
   size_t waitLatency = mUseTripleBuffering ? 3 : 2;
 
   while (mWaitForPresentQueries.size() >= waitLatency) {
     RefPtr<ID3D11Query>& query = mWaitForPresentQueries.front();
     BOOL result;
-    layers::WaitForFrameGPUQuery(mDevice, mCtx, query, &result);
+    bool ret = layers::WaitForFrameGPUQuery(mDevice, mCtx, query, &result);
 
     // Recycle query for later use.
     mRecycledQuery = query;
     mWaitForPresentQueries.pop();
+    if (!ret) {
+      return false;
+    }
   }
+  return true;
+}
+
+bool RenderCompositorANGLE::IsContextLost() {
+  // XXX glGetGraphicsResetStatus sometimes did not work for detecting TDR.
+  // Then this function just uses GetDeviceRemovedReason().
+  if (mDevice->GetDeviceRemovedReason() != S_OK) {
+    return true;
+  }
+  return false;
 }
 
 }  // namespace wr

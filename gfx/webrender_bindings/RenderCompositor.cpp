@@ -55,5 +55,11 @@ RenderCompositor::~RenderCompositor() {}
 
 bool RenderCompositor::MakeCurrent() { return gl()->MakeCurrent(); }
 
+bool RenderCompositor::IsContextLost() {
+  // XXX Add glGetGraphicsResetStatus handling for checking rendering context
+  // has not been lost
+  return false;
+}
+
 }  // namespace wr
 }  // namespace mozilla
