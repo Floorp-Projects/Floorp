@@ -161,12 +161,6 @@ public final class GeckoRuntime implements Parcelable {
     private RuntimeTelemetry mTelemetry;
     private WebExtensionEventDispatcher mWebExtensionDispatcher;
     private StorageController mStorageController;
-    private WebExtensionController mWebExtensionController;
-
-    public GeckoRuntime() {
-        mWebExtensionDispatcher = new WebExtensionEventDispatcher();
-        mWebExtensionController = new WebExtensionController(this, mWebExtensionDispatcher);
-    }
 
     /**
      * Attach the runtime to the given context.
@@ -259,6 +253,8 @@ public final class GeckoRuntime implements Parcelable {
         GeckoAppShell.setCrashHandlerService(settings.getCrashHandler());
         GeckoFontScaleListener.getInstance().attachToContext(context, settings);
 
+        mWebExtensionDispatcher = new WebExtensionEventDispatcher();
+
         final GeckoThread.InitInfo info = new GeckoThread.InitInfo();
         info.args = settings.getArguments();
         info.extras = settings.getExtras();
@@ -331,16 +327,6 @@ public final class GeckoRuntime implements Parcelable {
     public static @NonNull GeckoRuntime create(final @NonNull Context context) {
         ThreadUtils.assertOnUiThread();
         return create(context, new GeckoRuntimeSettings());
-    }
-
-    /**
-     * Returns a WebExtensionController for this GeckoRuntime.
-     *
-     * @return an instance of {@link WebExtensionController}.
-     */
-    @UiThread
-    public @NonNull WebExtensionController getWebExtensionController() {
-        return mWebExtensionController;
     }
 
     /**
