@@ -594,7 +594,11 @@ class Nursery {
    * the current chunk.
    */
   void setCurrentChunk(unsigned chunkno);
-  void poisonAndInitCurrentChunk(bool fullPoison = false);
+
+  // extent is advisory, it will be ignored in sub-chunk and generational zeal
+  // modes. It will be clamped to Min(NurseryChunkUsableSize, capacity_).
+  void poisonAndInitCurrentChunk(size_t extent = NurseryChunkUsableSize);
+
   void setCurrentEnd();
   void setStartPosition();
 

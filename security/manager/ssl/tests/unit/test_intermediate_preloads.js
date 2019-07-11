@@ -124,7 +124,7 @@ async function syncAndDownload(filenames, options = {}) {
 }
 
 /**
- * Return the list of records whose attachmnet was downloaded.
+ * Return the list of records whose attachment was downloaded.
  */
 async function locallyDownloaded() {
   return IntermediatePreloadsClient.client.get({

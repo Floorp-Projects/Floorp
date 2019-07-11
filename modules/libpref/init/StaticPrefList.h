@@ -49,8 +49,8 @@
 // pref hash table lookup functions, but it also has:
 //
 // - an associated global variable (the VarCache) that mirrors the pref value
-//   in the prefs hash table (unless the update policy is `Skip` or `Once`, see
-//   below); and
+//   in the prefs hash table (unless the update policy is `Once`, see below);
+//   and
 //
 // - a getter function that reads that global variable.
 //
@@ -78,9 +78,6 @@
 //   * Live: Evaluate the pref and set callback so it stays current/live. This
 //     is the normal policy.
 //
-//   * Skip: Set the value to <default-value>, skip any Preferences calls. This
-//     policy should be rarely used and its use is discouraged.
-//
 //   * Once: Set the value once at startup, and then leave it unchanged after
 //     that. (The exact point at which all Once pref values is set is when the
 //     first Once getter is called.) This is useful for graphics prefs where we
@@ -104,7 +101,7 @@
 //   of one of those. The C++ preprocessor doesn't like template syntax in a
 //   macro argument, so use the typedefs defines in StaticPrefs.h; for example,
 //   use `ReleaseAcquireAtomicBool` instead of `Atomic<bool, ReleaseAcquire>`.
-//   A pref with a Skip or Once policy can be non-atomic as it is only ever
+//   A pref with a `Once` policy should be non-atomic as it is only ever
 //   written to once during the parent process startup. A pref with a Live
 //   policy must be made Atomic if ever accessed outside the main thread;
 //   assertions are in place to ensure this.
@@ -2969,22 +2966,13 @@ VARCACHE_PREF(
   bool, false
 )
 
-#if defined(RELEASE_OR_BETA)
-// "Skip" means this is locked to the default value in beta and release.
-VARCACHE_PREF(
-  Skip,
-  "gfx.blocklist.all",
-   gfx_blocklist_all,
-  int32_t, 0
-)
-#else
+// Nb: we ignore this pref on release and beta.
 VARCACHE_PREF(
   Once,
   "gfx.blocklist.all",
    gfx_blocklist_all,
   int32_t, 0
 )
-#endif
 
 // 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
 VARCACHE_PREF(
@@ -4018,25 +4006,21 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-// If MOZ_GFX_OPTIMIZE_MOBILE is defined, we force component alpha off
-// and ignore the preference.
-VARCACHE_PREF(
-  Skip,
-  "layers.componentalpha.enabled",
-   layers_componentalpha_enabled,
-  bool, false
-)
-#else
-// If MOZ_GFX_OPTIMIZE_MOBILE is not defined, we actually take the
-// preference value, defaulting to true.
 VARCACHE_PREF(
   Once,
   "layers.componentalpha.enabled",
-   layers_componentalpha_enabled,
-  bool, true
-)
+   layers_componentalpha_enabled_do_not_use_directly,
+  bool,
+  // Nb: we ignore this pref if MOZ_GFX_OPTIMIZE_MOBILE is defined, as if this
+  // pref was always false. But we go to the effort of setting it to false so
+  // that telemetry's reporting of the pref value is more likely to reflect
+  // what the code is doing.
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  false
+#else
+  true
 #endif
+)
 
 VARCACHE_PREF(
   Once,

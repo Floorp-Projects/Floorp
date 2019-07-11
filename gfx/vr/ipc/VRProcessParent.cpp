@@ -159,7 +159,8 @@ void VRProcessParent::InitAfterConnect(bool aSucceeded) {
 
     // Make vr-gpu process connection
     GPUChild* gpuChild = GPUProcessManager::Get()->GetGPUChild();
-    MOZ_ASSERT(gpuChild);
+    // Add logs for Bug 1565000 to figure out why gpuChild can't be access.
+    MOZ_RELEASE_ASSERT(gpuChild, "gpuChild is null.");
 
     Endpoint<PVRGPUChild> vrGPUBridge;
     VRProcessManager* vpm = VRProcessManager::Get();

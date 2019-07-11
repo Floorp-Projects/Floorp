@@ -2052,8 +2052,8 @@ void ContentParent::LaunchSubprocessInternal(
     if (isSync) {
       *aRetval.as<bool*>() = false;
     } else {
-      *aRetval.as<RefPtr<LaunchPromise>*>() = LaunchPromise::CreateAndReject(
-          GeckoChildProcessHost::LaunchError(), __func__);
+      *aRetval.as<RefPtr<LaunchPromise>*>() =
+          LaunchPromise::CreateAndReject(LaunchError(), __func__);
     }
   };
 
@@ -2119,7 +2119,7 @@ void ContentParent::LaunchSubprocessInternal(
 
   RefPtr<ContentParent> self(this);
 
-  auto reject = [self, this](GeckoChildProcessHost::LaunchError err) {
+  auto reject = [self, this](LaunchError err) {
     NS_ERROR("failed to launch child in the parent");
     MarkAsDead();
     return LaunchPromise::CreateAndReject(err, __func__);
@@ -2160,7 +2160,13 @@ void ContentParent::LaunchSubprocessInternal(
 #endif
 
     mLifecycleState = LifecycleState::ALIVE;
-    InitInternal(aInitialPriority);
+    if (!InitInternal(aInitialPriority)) {
+      NS_ERROR("failed to initialize child in the parent");
+      // We've already called Open() by this point, so we need to close the
+      // channel to avoid leaking the process.
+      ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
+      return LaunchPromise::CreateAndReject(LaunchError{}, __func__);
+    }
 
     ContentProcessManager::GetSingleton()->AddContentProcess(this);
 
@@ -2201,19 +2207,19 @@ void ContentParent::LaunchSubprocessInternal(
     if (ok) {
       Unused << resolve(mSubprocess->GetChildProcessHandle());
     } else {
-      Unused << reject(GeckoChildProcessHost::LaunchError{});
+      Unused << reject(LaunchError{});
     }
     *aRetval.as<bool*>() = ok;
   } else {
     auto* retptr = aRetval.as<RefPtr<LaunchPromise>*>();
     if (mSubprocess->AsyncLaunch(std::move(extraArgs))) {
-      RefPtr<GeckoChildProcessHost::HandlePromise> ready =
+      RefPtr<ProcessHandlePromise> ready =
           mSubprocess->WhenProcessHandleReady();
       mLaunchYieldTS = TimeStamp::Now();
       *retptr = ready->Then(GetCurrentThreadSerialEventTarget(), __func__,
                             std::move(resolve), std::move(reject));
     } else {
-      *retptr = reject(GeckoChildProcessHost::LaunchError{});
+      *retptr = reject(LaunchError{});
     }
   }
 }
@@ -2326,7 +2332,7 @@ ContentParent::~ContentParent() {
   }
 }
 
-void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
+bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   XPCOMInitData xpcomInit;
 
   nsCOMPtr<nsIIOService> io(do_GetIOService());
@@ -2526,10 +2532,12 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   Endpoint<PRemoteDecoderManagerChild> videoManager;
   AutoTArray<uint32_t, 3> namespaces;
 
-  DebugOnly<bool> opened =
-      gpm->CreateContentBridges(OtherPid(), &compositor, &imageBridge,
-                                &vrBridge, &videoManager, &namespaces);
-  MOZ_ASSERT(opened);
+  if (!gpm->CreateContentBridges(OtherPid(), &compositor, &imageBridge,
+                                 &vrBridge, &videoManager, &namespaces)) {
+    // This can fail if we've already started shutting down the compositor
+    // thread. See Bug 1562763 comment 8.
+    return false;
+  }
 
   Unused << SendInitRendering(std::move(compositor), std::move(imageBridge),
                               std::move(vrBridge), std::move(videoManager),
@@ -2601,7 +2609,7 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
           SandboxBroker::Create(std::move(policy), Pid(), brokerFd.ref());
       if (!mSandboxBroker) {
         KillHard("SandboxBroker::Create failed");
-        return;
+        return false;
       }
       MOZ_ASSERT(brokerFd.ref().IsValid());
     }
@@ -2657,6 +2665,8 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   pluginHost->SendPluginsToContent();
   MaybeEnableRemoteInputEventQueue();
+
+  return true;
 }
 
 bool ContentParent::IsAlive() const {
@@ -3187,7 +3197,7 @@ ContentParent::GetInterface(const nsIID& aIID, void** aResult) {
 mozilla::ipc::IPCResult ContentParent::RecvInitBackground(
     Endpoint<PBackgroundParent>&& aEndpoint) {
   if (!BackgroundParent::Alloc(this, std::move(aEndpoint))) {
-    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
+    NS_WARNING("BackgroundParent::Alloc failed");
   }
 
   return IPC_OK();

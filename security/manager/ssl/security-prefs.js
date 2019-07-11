@@ -175,3 +175,13 @@ pref("security.remote_settings.intermediates.checked", 0);
 pref("security.remote_settings.intermediates.downloads_per_poll", 100);
 pref("security.remote_settings.intermediates.parallel_downloads", 8);
 pref("security.remote_settings.intermediates.signer", "onecrl.content-signature.mozilla.org");
+
+#if defined(RELEASE_OR_BETA) || defined(MOZ_WIDGET_ANDROID)
+pref("security.remote_settings.crlite_filters.enabled", false);
+#else
+pref("security.remote_settings.crlite_filters.enabled", true);
+#endif
+pref("security.remote_settings.crlite_filters.bucket", "security-state");
+pref("security.remote_settings.crlite_filters.collection", "cert-revocations");
+pref("security.remote_settings.crlite_filters.checked", 0);
+pref("security.remote_settings.crlite_filters.signer", "onecrl.content-signature.mozilla.org");

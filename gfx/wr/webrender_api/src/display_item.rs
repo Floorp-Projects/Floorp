@@ -121,6 +121,7 @@ pub enum DisplayItem {
     SetGradientStops,
     SetFilterOps,
     SetFilterData,
+    SetFilterPrimitives,
 
     // These marker items terminate a scope introduced by a previous item.
     PopReferenceFrame,
@@ -159,6 +160,7 @@ pub enum DebugDisplayItem {
     SetGradientStops(Vec<GradientStop>),
     SetFilterOps(Vec<FilterOp>),
     SetFilterData(FilterData),
+    SetFilterPrimitives(Vec<FilterPrimitive>),
 
     PopReferenceFrame,
     PopStackingContext,
@@ -638,7 +640,7 @@ pub struct StackingContext {
     pub raster_space: RasterSpace,
     /// True if picture caching should be used on this stacking context.
     pub cache_tiles: bool,
-} // IMPLICIT: filters: Vec<FilterOp>, filter_datas: Vec<FilterData>
+} // IMPLICIT: filters: Vec<FilterOp>, filter_datas: Vec<FilterData>, filter_primitives: Vec<FilterPrimitive>
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -677,7 +679,7 @@ impl RasterSpace {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
 pub enum MixBlendMode {
     Normal = 0,
     Multiply = 1,
@@ -697,6 +699,172 @@ pub enum MixBlendMode {
     Luminosity = 15,
 }
 
+/// An input to a SVG filter primitive.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+pub enum ColorSpace {
+    Srgb,
+    LinearRgb,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+pub enum FilterPrimitiveInput {
+    /// The input is the original graphic that the filter is being applied to.
+    Original,
+    /// The input is the output of the previous filter primitive in the filter primitive chain.
+    Previous,
+    /// The input is the output of the filter primitive at the given index in the filter primitive chain.
+    OutputOfPrimitiveIndex(usize),
+}
+
+impl FilterPrimitiveInput {
+    /// Gets the index of the input.
+    /// Returns `None` if the source graphic is the input.
+    pub fn to_index(self, cur_index: usize) -> Option<usize> {
+        match self {
+            FilterPrimitiveInput::Previous if cur_index > 0 => Some(cur_index - 1),
+            FilterPrimitiveInput::OutputOfPrimitiveIndex(index) => Some(index),
+            _ => None,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BlendPrimitive {
+    pub input1: FilterPrimitiveInput,
+    pub input2: FilterPrimitiveInput,
+    pub mode: MixBlendMode,
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct FloodPrimitive {
+    pub color: ColorF,
+}
+
+impl FloodPrimitive {
+    pub fn sanitize(&mut self) {
+        self.color.r = self.color.r.min(1.0).max(0.0);
+        self.color.g = self.color.g.min(1.0).max(0.0);
+        self.color.b = self.color.b.min(1.0).max(0.0);
+        self.color.a = self.color.a.min(1.0).max(0.0);
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BlurPrimitive {
+    pub input: FilterPrimitiveInput,
+    pub radius: f32,
+}
+
+impl BlurPrimitive {
+    pub fn sanitize(&mut self) {
+        self.radius = self.radius.min(MAX_BLUR_RADIUS);
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct OpacityPrimitive {
+    pub input: FilterPrimitiveInput,
+    pub opacity: f32,
+}
+
+impl OpacityPrimitive {
+    pub fn sanitize(&mut self) {
+        self.opacity = self.opacity.min(1.0).max(0.0);
+    }
+}
+
+/// cbindgen:derive-eq=false
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ColorMatrixPrimitive {
+    pub input: FilterPrimitiveInput,
+    pub matrix: [f32; 20],
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct DropShadowPrimitive {
+    pub input: FilterPrimitiveInput,
+    pub shadow: Shadow,
+}
+
+impl DropShadowPrimitive {
+    pub fn sanitize(&mut self) {
+        self.shadow.blur_radius = self.shadow.blur_radius.min(MAX_BLUR_RADIUS);
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ComponentTransferPrimitive {
+    pub input: FilterPrimitiveInput,
+    // Component transfer data is stored in FilterData.
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct IdentityPrimitive {
+    pub input: FilterPrimitiveInput,
+}
+
+/// See: https://github.com/eqrion/cbindgen/issues/9
+/// cbindgen:derive-eq=false
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub enum FilterPrimitiveKind {
+    Identity(IdentityPrimitive),
+    Blend(BlendPrimitive),
+    Flood(FloodPrimitive),
+    Blur(BlurPrimitive),
+    // TODO: Support animated opacity?
+    Opacity(OpacityPrimitive),
+    /// cbindgen:derive-eq=false
+    ColorMatrix(ColorMatrixPrimitive),
+    DropShadow(DropShadowPrimitive),
+    ComponentTransfer(ComponentTransferPrimitive),
+}
+
+impl FilterPrimitiveKind {
+    pub fn sanitize(&mut self) {
+        match self {
+            FilterPrimitiveKind::Flood(flood) => flood.sanitize(),
+            FilterPrimitiveKind::Blur(blur) => blur.sanitize(),
+            FilterPrimitiveKind::Opacity(opacity) => opacity.sanitize(),
+            FilterPrimitiveKind::DropShadow(drop_shadow) => drop_shadow.sanitize(),
+
+            // No sanitization needed.
+            FilterPrimitiveKind::Identity(..) |
+            FilterPrimitiveKind::Blend(..) |
+            FilterPrimitiveKind::ColorMatrix(..) |
+            // Component transfer's filter data is sanitized separately.
+            FilterPrimitiveKind::ComponentTransfer(..) => {}
+        }
+    }
+}
+
+/// SVG Filter Primitive.
+/// See: https://github.com/eqrion/cbindgen/issues/9
+/// cbindgen:derive-eq=false
+#[repr(C)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct FilterPrimitive {
+    pub kind: FilterPrimitiveKind,
+    pub color_space: ColorSpace,
+}
+
+impl FilterPrimitive {
+    pub fn sanitize(&mut self) {
+        self.kind.sanitize();
+    }
+}
+
+/// CSS filter.
 #[repr(C)]
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum FilterOp {
@@ -1162,6 +1330,7 @@ impl DisplayItem {
             DisplayItem::PushStackingContext(..) => "push_stacking_context",
             DisplayItem::SetFilterOps => "set_filter_ops",
             DisplayItem::SetFilterData => "set_filter_data",
+            DisplayItem::SetFilterPrimitives => "set_filter_primitives",
             DisplayItem::RadialGradient(..) => "radial_gradient",
             DisplayItem::Rectangle(..) => "rectangle",
             DisplayItem::ScrollFrame(..) => "scroll_frame",
