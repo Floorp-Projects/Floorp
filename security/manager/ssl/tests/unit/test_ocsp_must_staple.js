@@ -69,7 +69,7 @@ function add_tests() {
     );
 
     // Clear accumulated state.
-    ssservice.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
+    ssservice.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
     Services.prefs.clearUserPref(
       "security.cert_pinning.process_headers_from_non_builtin_roots"
     );

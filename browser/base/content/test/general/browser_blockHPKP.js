@@ -43,7 +43,7 @@ function test() {
     Services.prefs.clearUserPref(kpkpEnforcementPref);
     Services.prefs.clearUserPref(khpkpPinninEnablePref);
     let uri = Services.io.newURI("https://" + kPinningDomain);
-    gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
+    gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
   });
   whenNewTabLoaded(window, loadPinningPage);
 }
