@@ -84,11 +84,6 @@
 using mozilla::MonitorAutoLock;
 using mozilla::Preferences;
 using mozilla::StaticMutexAutoLock;
-using mozilla::ipc::GeckoChildProcessHost;
-using mozilla::ipc::LaunchError;
-using mozilla::ipc::LaunchResults;
-using mozilla::ipc::ProcessHandlePromise;
-using mozilla::ipc::ProcessLaunchPromise;
 
 namespace mozilla {
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc,
@@ -111,10 +106,10 @@ static bool ShouldHaveDirectoryService() {
 namespace mozilla {
 namespace ipc {
 
-class ProcessLauncher {
+class BaseProcessLauncher {
  public:
-  ProcessLauncher(GeckoChildProcessHost* aHost,
-                  std::vector<std::string>&& aExtraOpts)
+  BaseProcessLauncher(GeckoChildProcessHost* aHost,
+                      std::vector<std::string>&& aExtraOpts)
       : mProcessType(aHost->mProcessType),
         mLaunchOptions(std::move(aHost->mLaunchOptions)),
         mExtraOpts(std::move(aExtraOpts)),
@@ -130,12 +125,12 @@ class ProcessLauncher {
         mTmpDirName(aHost->mTmpDirName) {
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProcessLauncher);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BaseProcessLauncher);
 
   RefPtr<ProcessLaunchPromise> Launch(GeckoChildProcessHost*);
 
- private:
-  ~ProcessLauncher() {}
+ protected:
+  virtual ~BaseProcessLauncher() = default;
 
   RefPtr<ProcessLaunchPromise> PerformAsyncLaunch();
 
@@ -163,13 +158,62 @@ class ProcessLauncher {
   nsCString mTmpDirName;
 
   // Set during launch.
-  IPC::Channel* mChannel;
+  IPC::Channel* mChannel = nullptr;
   std::wstring mChannelId;
 };
 
-}  // namespace ipc
-}  // namespace mozilla
+#ifdef XP_WIN
+class WindowsProcessLauncher : public BaseProcessLauncher {
+ public:
+  WindowsProcessLauncher(GeckoChildProcessHost* aHost,
+                         std::vector<std::string>&& aExtraOpts)
+      : BaseProcessLauncher(aHost, std::move(aExtraOpts)) {}
+};
+typedef WindowsProcessLauncher ProcessLauncher;
+#endif  // XP_WIN
 
+#ifdef OS_POSIX
+class PosixProcessLauncher : public BaseProcessLauncher {
+ public:
+  PosixProcessLauncher(GeckoChildProcessHost* aHost,
+                       std::vector<std::string>&& aExtraOpts)
+      : BaseProcessLauncher(aHost, std::move(aExtraOpts)) {}
+};
+
+#  if defined(XP_MACOSX)
+class MacProcessLauncher : public PosixProcessLauncher {
+ public:
+  MacProcessLauncher(GeckoChildProcessHost* aHost,
+                     std::vector<std::string>&& aExtraOpts)
+      : PosixProcessLauncher(aHost, std::move(aExtraOpts)) {}
+};
+typedef MacProcessLauncher ProcessLauncher;
+#  elif defined(MOZ_WIDGET_ANDROID)
+class AndroidProcessLauncher : public PosixProcessLauncher {
+ public:
+  AndroidProcessLauncher(GeckoChildProcessHost* aHost,
+                         std::vector<std::string>&& aExtraOpts)
+      : PosixProcessLauncher(aHost, std::move(aExtraOpts)) {}
+};
+typedef AndroidProcessLauncher ProcessLauncher;
+// NB: Technically Android is linux (i.e. XP_LINUX is defined), but we want
+// orthogonal IPC machinery there. Conversely, there are tier-3 non-Linux
+// platforms (BSD and Solaris) where we want the "linux" IPC machinery. So
+// we use MOZ_WIDGET_* to choose the platform backend.
+#  elif defined(MOZ_WIDGET_GTK)
+class LinuxProcessLauncher : public PosixProcessLauncher {
+ public:
+  LinuxProcessLauncher(GeckoChildProcessHost* aHost,
+                       std::vector<std::string>&& aExtraOpts)
+      : PosixProcessLauncher(aHost, std::move(aExtraOpts)) {}
+};
+typedef LinuxProcessLauncher ProcessLauncher;
+#  elif
+#    error "Unknown platform"
+#  endif
+#endif  // OS_POSIX
+
+using mozilla::ipc::BaseProcessLauncher;
 using mozilla::ipc::ProcessLauncher;
 
 mozilla::StaticAutoPtr<mozilla::LinkedList<GeckoChildProcessHost>>
@@ -275,7 +319,7 @@ void GeckoChildProcessHost::Destroy() {
 }
 
 // static
-mozilla::BinPathType ProcessLauncher::GetPathToBinary(
+mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
     FilePath& exePath, GeckoProcessType processType) {
   BinPathType pathType = XRE_GetChildProcBinPathType(processType);
 
@@ -471,7 +515,7 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
   }
 #endif
 
-  RefPtr<ProcessLauncher> launcher =
+  RefPtr<BaseProcessLauncher> launcher =
       new ProcessLauncher(this, std::move(aExtraOpts));
 
   // Note: Destroy() waits on mHandlePromise to delete |this|. As such, we want
@@ -483,7 +527,7 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
   mHandlePromise = p;
 
   mozilla::InvokeAsync<GeckoChildProcessHost*>(
-      IOThread(), launcher.get(), __func__, &ProcessLauncher::Launch, this)
+      IOThread(), launcher.get(), __func__, &BaseProcessLauncher::Launch, this)
       ->Then(
           IOThread(), __func__,
           [this, p](const LaunchResults aResults) {
@@ -793,9 +837,9 @@ static bool Contains(const std::vector<std::string>& aExtraOpts,
 }
 #endif  // defined(XP_WIN) && (defined(MOZ_SANDBOX) || defined(_ARM64_))
 
-RefPtr<ProcessLaunchPromise> ProcessLauncher::PerformAsyncLaunch() {
+RefPtr<ProcessLaunchPromise> BaseProcessLauncher::PerformAsyncLaunch() {
 #ifdef MOZ_GECKO_PROFILER
-  RefPtr<ProcessLauncher> self = this;
+  RefPtr<BaseProcessLauncher> self = this;
   GetProfilerEnvVarsForChildProcess([self](const char* key, const char* value) {
     self->mLaunchOptions->env_map[ENVIRONMENT_STRING(key)] =
         ENVIRONMENT_STRING(value);
@@ -1403,7 +1447,7 @@ void GeckoChildProcessHost::GetQueuedMessages(std::queue<IPC::Message>& queue) {
 }
 
 #ifdef MOZ_WIDGET_ANDROID
-void ProcessLauncher::LaunchAndroidService(
+void BaseProcessLauncher::LaunchAndroidService(
     const char* type, const std::vector<std::string>& argv,
     const base::file_handle_mapping_vector& fds_to_remap,
     base::ProcessHandle* process_handle) {
@@ -1518,7 +1562,7 @@ void GeckoChildProcessHost::GetAll(const GeckoProcessCallback& aCallback) {
   }
 }
 
-RefPtr<ProcessLaunchPromise> ProcessLauncher::Launch(
+RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
     GeckoChildProcessHost* aHost) {
   AssertIOThread();
 
@@ -1553,5 +1597,8 @@ RefPtr<ProcessLaunchPromise> ProcessLauncher::Launch(
   }
 
   return InvokeAsync(launchThread, this, __func__,
-                     &ProcessLauncher::PerformAsyncLaunch);
+                     &BaseProcessLauncher::PerformAsyncLaunch);
 }
+
+}  // namespace ipc
+}  // namespace mozilla
