@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const FIREFOX_VERSION = parseInt(Services.appinfo.version.match(/\d+/), 10);
+
 const MESSAGES = () => [
   {
     id: "SIMPLE_FXA_BOOKMARK_TEST_FLUENT",
@@ -45,6 +49,82 @@ const MESSAGES = () => [
       },
     },
     trigger: { id: "bookmark-panel" },
+  },
+  {
+    id: "FXA_ACCOUNTS_BADGE",
+    template: "toolbar_badge",
+    content: {
+      target: "fxa-toolbar-menu-button",
+    },
+    // Never accessed the FxA panel && doesn't use Firefox sync & has FxA enabled
+    targeting: `!hasAccessedFxAPanel && !usesFirefoxSync && isFxAEnabled == true`,
+    trigger: { id: "toolbarBadgeUpdate" },
+  },
+  {
+    id: `WHATS_NEW_BADGE_${FIREFOX_VERSION}`,
+    template: "toolbar_badge",
+    content: {
+      // delay: 5 * 3600 * 1000,
+      delay: 5000,
+      target: "whats-new-menu-button",
+      action: { id: "show-whatsnew-button" },
+    },
+    priority: 1,
+    trigger: { id: "toolbarBadgeUpdate" },
+    frequency: {
+      // Makes it so that we track impressions for this message while at the
+      // same time it can have unlimited impressions
+      lifetime: Infinity,
+    },
+    // Never saw this message or saw it in the past 4 days or more recent
+    targeting: `isWhatsNewPanelEnabled &&
+      (earliestFirefoxVersion && firefoxVersion > earliestFirefoxVersion) &&
+        messageImpressions[.id == 'WHATS_NEW_BADGE_${FIREFOX_VERSION}']|length == 0 ||
+      (messageImpressions[.id == 'WHATS_NEW_BADGE_${FIREFOX_VERSION}']|length >= 1 &&
+        currentDate|date - messageImpressions[.id == 'WHATS_NEW_BADGE_${FIREFOX_VERSION}'][0] <= 4 * 24 * 3600 * 1000)`,
+  },
+  {
+    id: "WHATS_NEW_70_1",
+    template: "whatsnew_panel_message",
+    content: {
+      published_date: 1560969794394,
+      title: "Protection Is Our Focus",
+      icon_url:
+        "resource://activity-stream/data/content/assets/whatsnew-send-icon.png",
+      body:
+        "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
+      cta_url: "https://blog.mozilla.org/",
+    },
+    targeting: `firefoxVersion > 69`,
+    trigger: { id: "whatsNewPanelOpened" },
+  },
+  {
+    id: "WHATS_NEW_70_2",
+    template: "whatsnew_panel_message",
+    content: {
+      published_date: 1560969794394,
+      title: "Another thing new in Firefox 70",
+      body:
+        "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
+      link_text: "Learn more on our blog",
+      cta_url: "https://blog.mozilla.org/",
+    },
+    targeting: `firefoxVersion > 69`,
+    trigger: { id: "whatsNewPanelOpened" },
+  },
+  {
+    id: "WHATS_NEW_69_1",
+    template: "whatsnew_panel_message",
+    content: {
+      published_date: 1557346235089,
+      title: "Something new in Firefox 69",
+      body:
+        "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
+      link_text: "Learn more on our blog",
+      cta_url: "https://blog.mozilla.org/",
+    },
+    targeting: `firefoxVersion > 68`,
+    trigger: { id: "whatsNewPanelOpened" },
   },
 ];
 
