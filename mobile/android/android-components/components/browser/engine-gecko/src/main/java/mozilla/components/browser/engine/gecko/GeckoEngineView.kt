@@ -8,9 +8,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.AttributeSet
 import android.widget.FrameLayout
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.permission.PermissionRequest
 import org.mozilla.geckoview.GeckoResult
 
 /**
@@ -21,6 +23,7 @@ class GeckoEngineView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var currentGeckoView = object : NestedGeckoView(context) {
         override fun onDetachedFromWindow() {
             // We are releasing the session before GeckoView gets detached from the window. Otherwise
@@ -33,8 +36,24 @@ class GeckoEngineView @JvmOverloads constructor(
         // Explicitly mark this view as important for autofill. The default "auto" doesn't seem to trigger any
         // autofill behavior for us here.
         @Suppress("WrongConstant")
-        ViewCompat.setImportantForAutofill(this, 0x1 /* View.IMPORTANT_FOR_AUTOFILL_YES */)
+        ViewCompat.setImportantForAutofill(this, ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES)
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val observer = object : EngineSession.Observer {
+        override fun onCrashStateChange(crashed: Boolean) {
+            if (crashed) {
+                // When crashing the previous GeckoSession is no longer usable. Internally GeckoEngineSession will
+                // create a new instance. This means we will need to tell GeckoView about this new GeckoSession:
+                currentSession?.let { currentGeckoView.setSession(it.geckoSession) }
+            }
+        }
+        override fun onAppPermissionRequest(permissionRequest: PermissionRequest) = Unit
+        override fun onContentPermissionRequest(permissionRequest: PermissionRequest) = Unit
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var currentSession: GeckoEngineSession? = null
 
     init {
         // Currently this is just a FrameLayout with a single GeckoView instance. Eventually this
@@ -45,8 +64,15 @@ class GeckoEngineView @JvmOverloads constructor(
     /**
      * Render the content of the given session.
      */
+    @Synchronized
     override fun render(session: EngineSession) {
         val internalSession = session as GeckoEngineSession
+
+        currentSession?.apply { unregister(observer) }
+
+        currentSession = session.apply {
+            register(observer)
+        }
 
         if (currentGeckoView.session != internalSession.geckoSession) {
             currentGeckoView.session?.let {
@@ -61,10 +87,26 @@ class GeckoEngineView @JvmOverloads constructor(
 
     @Synchronized
     override fun release() {
+        currentSession?.apply { unregister(observer) }
+
+        currentSession = null
+
         currentGeckoView.releaseSession()
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+
+        release()
+    }
+
+    override fun canScrollVerticallyUp() = currentSession?.let { it.scrollY > 0 } != false
+
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
+
+    override fun setVerticalClipping(clippingHeight: Int) {
+        currentGeckoView.setVerticalClipping(clippingHeight)
+    }
 
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         val geckoResult = currentGeckoView.capturePixels()
@@ -75,9 +117,5 @@ class GeckoEngineView @JvmOverloads constructor(
             onFinish(null)
             GeckoResult<Void>()
         })
-    }
-
-    override fun setVerticalClipping(clippingHeight: Int) {
-        // no-op: requires GeckoView 68.0
     }
 }

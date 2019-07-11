@@ -26,7 +26,10 @@ class GeckoEngineSessionState internal constructor(
     companion object {
         fun fromJSON(json: JSONObject): GeckoEngineSessionState = try {
             val state = json.getString(GECKO_STATE_KEY)
-            GeckoEngineSessionState(GeckoSession.SessionState(state))
+
+            GeckoEngineSessionState(
+                GeckoSession.SessionState.fromString(state)
+            )
         } catch (e: JSONException) {
             GeckoEngineSessionState(null)
         }

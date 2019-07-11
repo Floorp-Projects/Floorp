@@ -24,13 +24,13 @@ import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.Robolectric
+import org.robolectric.Robolectric.buildActivity
 
 @RunWith(AndroidJUnit4::class)
 class NestedGeckoViewTest {
 
     private val context: Context
-        get() = Robolectric.buildActivity(Activity::class.java).get()
+        get() = buildActivity(Activity::class.java).get()
 
     @Test
     fun `NestedGeckoView must delegate NestedScrollingChild implementation to childHelper`() {

@@ -5,19 +5,25 @@
 package mozilla.components.browser.engine.gecko
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mozilla.geckoview.GeckoSession
 
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineSessionStateTest {
+
     @Test
     fun toJSON() {
-        val state = GeckoEngineSessionState(GeckoSession.SessionState("<state>"))
+        val geckoState: GeckoSession.SessionState = mock()
+        doReturn("<state>").`when`(geckoState).toString()
+
+        val state = GeckoEngineSessionState(geckoState)
 
         val json = state.toJSON()
 
@@ -29,12 +35,12 @@ class GeckoEngineSessionStateTest {
     @Test
     fun fromJSON() {
         val json = JSONObject().apply {
-            put("GECKO_STATE", "<state>")
+            put("GECKO_STATE", "{ 'foo': 'bar' }")
         }
 
         val state = GeckoEngineSessionState.fromJSON(json)
 
-        assertEquals("<state>", state.actualState.toString())
+        assertEquals("""{"foo":"bar"}""", state.actualState.toString())
     }
 
     @Test
