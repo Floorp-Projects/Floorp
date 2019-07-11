@@ -9,7 +9,8 @@
     try {
       worker = new SharedWorker(
           'file_testserver.sjs?file='+
-                escape("tests/dom/security/test/csp/file_child-src_shared_worker.js"),
+                escape("tests/dom/security/test/csp/file_child-src_shared_worker.js") +
+                "&type=text/javascript",
           page_id);
       worker.port.start();
 
