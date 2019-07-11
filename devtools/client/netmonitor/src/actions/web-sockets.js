@@ -8,8 +8,14 @@ const {
   WS_ADD_FRAME,
   WS_SELECT_FRAME,
   WS_OPEN_FRAME_DETAILS,
+  WS_CLEAR_FRAMES,
+  WS_TOGGLE_FRAME_FILTER_TYPE,
+  WS_SET_REQUEST_FILTER_TEXT,
 } = require("../constants");
 
+/**
+ * Add frame into state.
+ */
 function addFrame(httpChannelId, data) {
   return {
     type: WS_ADD_FRAME,
@@ -41,8 +47,43 @@ function openFrameDetails(open) {
   };
 }
 
+/**
+ * Clear all frames from the FrameListContent
+ * component belonging to the current channelId
+ */
+function clearFrames() {
+  return {
+    type: WS_CLEAR_FRAMES,
+  };
+}
+
+/**
+ * Show filtered frames from the FrameListContent
+ * component belonging to the current channelId
+ */
+function toggleFrameFilterType(filter) {
+  return {
+    type: WS_TOGGLE_FRAME_FILTER_TYPE,
+    filter,
+  };
+}
+
+/**
+ * Set filter text in toolbar.
+ *
+ */
+function setFrameFilterText(text) {
+  return {
+    type: WS_SET_REQUEST_FILTER_TEXT,
+    text,
+  };
+}
+
 module.exports = {
   addFrame,
   selectFrame,
   openFrameDetails,
+  clearFrames,
+  toggleFrameFilterType,
+  setFrameFilterText,
 };
