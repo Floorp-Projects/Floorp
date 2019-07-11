@@ -408,6 +408,13 @@ class PropertyUpdate(object):
                     msg += ": %s" % serialize(e.cond).strip()
                 print(msg)
 
+        # If all the values match remove all conditionals
+        # This handles the case where we update a number of existing conditions and they
+        # all end up looking like the post-update default.
+        new_default = conditions[-1][1] if conditions[-1][0] is None else self.default_value
+        if all(condition[1] == new_default for condition in conditions):
+            conditions = [(None, new_default)]
+
         # Don't set the default to the class default
         if (conditions and
             conditions[-1][0] is None and
@@ -428,7 +435,8 @@ class PropertyUpdate(object):
         # The complexity arises from the fact that there are two ways of running
         # the tool, with a full set of runs (full_update=True) or with partial metadata
         # (full_update=False). In the case of a full update things are relatively simple:
-        # * All existing conditionals are ignored
+        # * All existing conditionals are ignored, with the exception of conditionals that
+        #   depend on variables not used by the updater, which are retained as-is
         # * All created conditionals are independent of each other (i.e. order isn't
         #   important in the created conditionals)
         # In the case where we don't have a full set of runs, the expected behaviour
@@ -451,8 +459,6 @@ class PropertyUpdate(object):
         # * Otherwise add conditionals for the run_info that doesn't match any
         #   remaining conditions
         prev_default = None
-        if full_update:
-            return self._update_conditions_full(property_tree)
 
         current_conditions = self.node.get_conditions(self.property_name)
 
@@ -483,6 +489,23 @@ class PropertyUpdate(object):
                                                            current_conditions)
 
         run_info_with_condition = set()
+
+        if full_update:
+            # Even for a full update we need to keep hand-written conditions not
+            # using the properties we've specified and not matching any run_info
+            top_level_props, dependent_props = self.node.root.run_info_properties
+            update_properties = set(top_level_props)
+            for item in dependent_props.itervalues():
+                update_properties |= set(dependent_props)
+            for condition in current_conditions:
+                if (not condition.variables.issubset(update_properties) and
+                    not run_info_by_condition[condition]):
+                    conditions.append((condition.condition_node,
+                                       self.from_ini_value(condition.value)))
+            new_conditions, errors = self._update_conditions_full(property_tree,
+                                                                  prev_default=prev_default)
+            conditions.extend(new_conditions)
+            return conditions, errors
 
         # Retain existing conditions if they match the updated values
         for condition in current_conditions:

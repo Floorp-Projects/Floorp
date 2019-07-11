@@ -1,6 +1,6 @@
 import operator
 
-from ..node import NodeVisitor, DataNode, ConditionalNode, KeyValueNode, ListNode, ValueNode, BinaryExpressionNode
+from ..node import NodeVisitor, DataNode, ConditionalNode, KeyValueNode, ListNode, ValueNode, BinaryExpressionNode, VariableNode
 from ..parser import parse
 
 
@@ -60,6 +60,20 @@ class ConditionalValue(object):
         if len(self.node.parent.children) == 1:
             self.node.parent.remove()
         self.node.remove()
+
+    @property
+    def variables(self):
+        rv = set()
+        if self.condition_node is None:
+            return rv
+        stack = [self.condition_node]
+        while stack:
+            node = stack.pop()
+            if isinstance(node, VariableNode):
+                rv.add(node.data)
+            for child in reversed(node.children):
+                stack.append(child)
+        return rv
 
 
 class Compiler(NodeVisitor):
