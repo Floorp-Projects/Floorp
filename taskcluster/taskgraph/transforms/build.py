@@ -71,17 +71,33 @@ def resolve_shipping_product(config, jobs):
 
 @transforms.add
 def update_channel(config, jobs):
+    keys = [
+        'run.update-channel',
+        'run.mar-channel-id',
+        'run.accepted-mar-channel-ids',
+    ]
     for job in jobs:
-        resolve_keyed_by(
-            job, 'run.update-channel', item_name=job['name'],
-            **{
-                'release-type': config.params['release_type'],
-            }
-        )
+        job['worker'].setdefault('env', {})
+        for key in keys:
+            resolve_keyed_by(
+                job, key, item_name=job['name'],
+                **{
+                    'release-type': config.params['release_type'],
+                }
+            )
         update_channel = job['run'].pop('update-channel', None)
         if update_channel:
             job['run'].setdefault('extra-config', {})['update_channel'] = update_channel
             job['attributes']['update-channel'] = update_channel
+        mar_channel_id = job['run'].pop('mar-channel-id', None)
+        if mar_channel_id:
+            job['attributes']['mar-channel-id'] = mar_channel_id
+            job['worker']['env']['MAR_CHANNEL_ID'] = mar_channel_id
+        accepted_mar_channel_ids = job['run'].pop('accepted-mar-channel-ids', None)
+        if accepted_mar_channel_ids:
+            job['attributes']['accepted-mar-channel-ids'] = accepted_mar_channel_ids
+            job['worker']['env']['ACCEPTED_MAR_CHANNEL_IDS'] = accepted_mar_channel_ids
+
         yield job
 
 
