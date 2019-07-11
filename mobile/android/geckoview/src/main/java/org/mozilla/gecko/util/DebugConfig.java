@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -24,6 +25,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// Raptor writes a *-config.yaml file to specify Gecko runtime settings (e.g.
+// the profile dir). This file gets deserialized into a DebugConfig object.
+// Yaml uses reflection to create this class so we have to tell PG to keep it.
+@ReflectionTarget
 public class DebugConfig {
     private static final String LOGTAG = "GeckoDebugConfig";
 
