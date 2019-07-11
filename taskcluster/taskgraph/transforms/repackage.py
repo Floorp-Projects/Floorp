@@ -84,6 +84,7 @@ PACKAGE_FORMATS = {
         'args': [
             'mar',
             '--arch', '{architecture}',
+            '--mar-channel-id', '{mar-channel-id}',
         ],
         'inputs': {
             'input': 'target{archive_format}',
@@ -95,6 +96,7 @@ PACKAGE_FORMATS = {
         'args': [
             'mar', "--format", "bz2",
             '--arch', '{architecture}',
+            '--mar-channel-id', '{mar-channel-id}',
         ],
         'inputs': {
             'input': 'target{archive_format}',
@@ -269,6 +271,7 @@ def make_job_description(config, jobs):
                 '_locale': _fetch_subst_locale,
                 'architecture': architecture(build_platform),
                 'version_display': config.params['version'],
+                'mar-channel-id': attributes['mar-channel-id'],
             }
             # Allow us to replace args a well, but specifying things expanded in mozharness
             # Without breaking .format and without allowing unknown through

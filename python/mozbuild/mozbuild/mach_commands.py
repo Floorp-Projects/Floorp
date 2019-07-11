@@ -1292,9 +1292,19 @@ class Repackage(MachCommandBase):
                      help='Mar format')
     @CommandArgument('--arch', type=str, required=True,
                      help='The archtecture you are building.')
-    def repackage_mar(self, input, mar, output, format, arch):
+    @CommandArgument('--mar-channel-id', type=str,
+                     help='Mar channel id')
+    def repackage_mar(self, input, mar, output, format, arch, mar_channel_id):
         from mozbuild.repackaging.mar import repackage_mar
-        repackage_mar(self.topsrcdir, input, mar, output, format, arch=arch)
+        repackage_mar(
+            self.topsrcdir,
+            input,
+            mar,
+            output,
+            format,
+            arch=arch,
+            mar_channel_id=mar_channel_id,
+        )
 
 
 @CommandProvider
