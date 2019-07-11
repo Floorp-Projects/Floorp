@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1562061250280" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1562673628501" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2716,10 +2716,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="9fde5729-9be6-4955-9627-67742c5ed62a" id="sourcegraph-for-firefox@sourcegraph.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="19.4.2.1038" severity="1"/>
-    </emItem>
     <emItem blockID="a1c376fe-20c5-4da3-9126-3fe95b874dce" id="/^((\{00b4b65b-79d9-4e92-bc1e-2b926918b91c\})|(\{0cb66591-e935-47e4-95c2-3063786f6555\})|(\{6cf25884-f86d-4a4e-a924-d95282ce5b71\})|(\{22cce9c6-a1de-457f-8938-c981b976b6f4\})|(\{89d99d4c-e7c4-4601-91a8-216e597a826b\})|(\{998d3ac7-b475-410e-ad3d-2eeb526c1853\})|(\{9423e8df-6200-45c0-877a-479c46e91b30\})|(\{64937e0b-6e00-4d5f-bf19-190d6614aae2\})|(\{91507dc4-c005-4534-80af-d8fbdeac29ed\})|(\{a2247e60-7b89-4857-a2fa-0eaee1cad460\})|(\{c9c28751-5865-449f-8e45-b3363edf9fb7\})|(\{cdfd004f-cddc-4ad7-8e2d-a58457e42b1f\})|(\{d3e7f35d-7d9f-4d38-9a2b-1581f6b3e870\})|(\{df574ffe-cce0-42db-857b-627cb164a4d4\})|(\{e06afe6e-ed52-40f8-82bf-d070a37387fb\})|(\{e7e7fb96-cfab-4a5b-85fe-20f621e1bc2e\})|(\{e12e5afd-bd1e-43c6-9288-321dc485cb1c\})|(\{e92d8545-0396-4808-96de-830c61c0d1b3\})|(\{e883b012-1987-4f37-8053-02e59e20c242\})|(\{ed3386c6-76c6-4786-a37b-9816d5f2a260\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -3282,6 +3278,26 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="432368eb-333d-4280-846d-e9508ac0a8c4" id="/^((\{a3250b1a-de19-432b-829f-3d4c18ff4549\})|(\{b315912c-03f9-4ca8-a9fd-9410786d242a\})|(\{d1e4d5e2-9c6d-4e1d-9638-d329d64e5484\})|(\{898e64b3-38b0-4748-93a2-7e68874a73c9\})|(\{062f9d2e-1e5d-47e1-a9e6-0a4eb1e8182c\})|(\{434cedce-3d36-4ec1-b99d-e2b5ec929e8f\})|(\{b429f2f0-62de-4c72-9722-9ccbcc43500c\})|(\{7405ed28-67e9-4836-9c38-26bb7175da3b\})|(\{ebb5fe5c-5561-47e8-8240-bae4ba4b0389\})|(\{a9a5ac46-ade8-4927-85db-5c36bb26fd2c\})|(\{34d93cc4-a468-4ddd-98a4-31d1237b9986\})|(\{394a7da5-0f59-425c-ae83-49ad47c30a51\})|(\{15532ccb-c575-4b8b-9a62-ca2e4b9cbd7d\})|(\{d0579f20-4e35-4d7e-be6a-3da1b7660ce7\})|(\{f39c789b-9a2f-477e-885e-675f499e8307\})|(\{7adb91a0-6c6b-4fc6-911c-63a0c10bb363\})|(\{8b51d36c-f5d2-4c9d-b431-2c5011168470\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="7f55f27d-37e5-4c3e-bd9d-02924496ba3d" id="/^((\{fc2dbae0-1ab3-40fe-9a38-cbee911b903e\})|(\{82e3e07c-0cf3-4b9f-a625-65d378698af3\})|(\{2904a7ee-0b54-4adb-a500-b932b77b6936\})|(\{f6932562-1f6d-4779-b5a4-f4c4654980dd\})|(\{97f0cc0f-69cf-4e5a-af68-f404aa3f1ce5\})|(\{c346f3ce-08bc-44b7-9410-bd8ad65f32d5\})|(\{f68f3bd2-ece8-4a85-b071-cea253cd78ac\})|(\{d9b6a925-e00c-4e36-a282-e6b76833e5b5\})|(\{e8a67ebd-655e-48f9-99e7-619c850f6bcc\})|(\{15942451-8c62-457f-8ff1-8525ce647c0d\})|(\{8fcdb966-eec2-4cd0-865e-1d105e9b59e2\})|(\{6ae58312-7d81-4d39-84f1-454ae6ace826\})|(\{023cd859-1b7c-4384-80e5-eca82c68a21c\})|(\{694e912f-011f-4be4-add9-25c85af8014d\})|(\{b889539e-4b8c-4e52-a605-a0b33532fd05\})|(\{596c6d7c-49ab-440e-a50d-220e5db393f7\})|(\{f0fd5c9c-1fcd-4085-ac41-47c379517420\})|(\{545dbede-b51c-477b-b23b-936dd5e7a428\})|(\{c3f9f4e6-b5ed-49fb-82c6-313b9617cddb\})|(\{309908bd-c2fe-4066-82c5-0631571e77fc\})|(\{75f93037-6366-4f88-b92b-c3174d68a836\})|(\{36e57809-88bb-47ef-9b6c-90170bb753d5\})|(\{da83ef9e-f36a-4416-a4ab-29a09c981690\})|(\{09e50933-f19f-435a-8e6a-7663715ea3fc\})|(\{7f35f6f3-714d-4c0d-befa-5a6843c62b6f\})|(\{b3b3f9c6-6b64-47d0-bf5a-f9796d1d7cfc\})|(\{116c6521-bda8-469c-9ca6-0702860aca67\})|(\{98566ed5-4c57-4da4-946f-03beeaa6145b\})|(\{8fc257d4-612c-4196-9688-dd7de0979c44\})|(\{9b7f873c-cf3f-4d8d-9cd2-3c68ce0f831f\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="f8e35175-572a-4b00-b5d3-9c8df255f1ec" id="/^((\{6d0887bd-1f51-4852-9307-cf2a223c3a9a\})|(\{4cb2b177-e2a2-4ae1-b759-03606a85df61\})|(\{df28b68e-ad39-4300-add2-b2dc8bf54f71\})|(\{eff0a5d5-3f53-4b75-b451-5acffd5bb61d\})|(\{7561d328-6b59-449a-bf7a-46fea5027be4\})|(\{854246c0-f678-44ff-85f3-f340f33c5da9\})|(\{9e976e36-9eb7-44bd-97a3-4901ab3e1021\})|(\{2e9a0a60-8423-4ffc-89ef-74a02ca8c5e8\})|(\{a5e298c3-2d74-4268-8d13-e0efcb77d896\})|(\{39838189-7836-432f-9a34-a009886a61f8\})|(\{a3f781a4-adc7-4a12-9812-20da06e7b6d9\})|(\{365b3845-1e12-4096-80f1-8be24456d741\})|(\{701511ef-2e5a-458f-b735-c789b7ae6feb\})|(\{888807df-4517-4b97-ac73-e4294865e375\})|(\{ea7c7094-9d83-416d-bd13-e85fcef481a5\})|(\{1f67e4bd-6eb6-4fd7-a694-b8b360494cc3\})|(\{4f9520a5-caa6-4832-9582-2b26b8739305\})|(\{06f5112b-da03-481b-bef1-bf752ddbe7a2\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="04c27082-2b78-4005-a6c5-8e0a13f83288" id="/^((\{0b47ef96-f7c9-4017-97b6-51c1280eaf6e\})|(\{2c65ed54-5215-4f10-a7bd-39445a6450fd\})|(\{80dbc30a-168b-4a18-bd5b-51f9b1807d7f\})|(\{93a106e3-e70b-48af-9282-30e3d6c87af9\})|(\{2120dc72-6040-45ed-9655-aaabed57fc93\})|(\{c3c9f1ee-4192-4d5a-b753-a62c19b16c98\})|(\{d0fc8cf9-66aa-4f08-8c96-3f882c2e9c9b\})|(\{da69b9e2-c2d1-4b90-93be-4cc3976e452d\})|(\{eb70585e-76bb-4eae-9f06-7fc5efbc877e\})|(fairshare-unlock@burstworks-test\.com)|(fairshare-unlock@burstworks\.com)|(freevideodownloader-hosted@funnerapps\.com)|(freevideodownloader-test-hosted@funnerapps\.com)|(gmo-panel@ddmr\.com)|(helper-sig@savefrom\.net)|(ihmgiclibbndffejedjimfjmfoabpcke@chrome-store-foxified-\d+)|(ihmgiclibbndffejedjimfjmfoabpcke@chromeStoreFoxified-\d+)|(panel-branded@ddmr\.com)|(panel-canadaTalkNow@ddmr\.com)|(panel-community@ddmr\.com)|(panel-digaYgane@ddmr\.com)|(panel-ecglobal@ddmr\.com)|(panel-fusionCash@ddmr\.com)|(panel-grindaBuck@ddmr\.com)|(panel-measurement@ddmr\.com)|(panel-mysoapbox@ddmr\.com)|(panel-ofernation@ddmr\.com)|(panel-rewarding@ddmr\.com)|(panel-superpay@ddmr\.com)|(panel-zippy@ddmr\.com)|(test_fairshare-unlock@burstworks\.com)|(test-fairshare-unlock@burstworks\.com)|(vindale@ddmr\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="9fde5729-9be6-4955-9627-67742c5ed62a" id="sourcegraph-for-firefox@sourcegraph.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="d38035ff-7945-49cc-88fb-6de9f8a13658" id="/^((langpacasdjasdk-de@firefox\.mozilla\.org)|(langpack-de-7@niklasb)|(langpack-de-8@niklasb)|(langpack-de-9@niklasb)|(langpack-de-10@niklasb)|(langpack-de-nightly-1@firefox\.mozilla\.org))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
