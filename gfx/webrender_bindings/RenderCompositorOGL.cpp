@@ -45,8 +45,6 @@ bool RenderCompositorOGL::BeginFrame() {
 
 void RenderCompositorOGL::EndFrame() { mGL->SwapBuffers(); }
 
-void RenderCompositorOGL::WaitForGPU() {}
-
 void RenderCompositorOGL::Pause() {}
 
 bool RenderCompositorOGL::Resume() { return true; }
