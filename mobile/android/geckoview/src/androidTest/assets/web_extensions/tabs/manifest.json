@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+  "name": "messaging",
+  "version": "1.0",
+  "description": "Test browser tabs api",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "tabs"
+  ]
+}
