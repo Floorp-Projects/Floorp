@@ -280,11 +280,6 @@ add_task(async function() {
     "de-DE"
   );
 
-  // Turn off region updates and timeouts for search service
-  Services.prefs.setCharPref("browser.search.region", "DE");
-  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
-  Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
-
   await Services.search.init();
   var engine = Services.search.getEngineByName("Google");
   Assert.equal(engine.description, "override-de-DE");
