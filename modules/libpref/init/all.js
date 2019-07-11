@@ -55,13 +55,6 @@ pref("browser.cache.offline.capacity",         512000);
 // (in kilobytes)
 pref("offline-apps.quota.warn",        51200);
 
-// zlib compression level used for cache compression:
-// 0 => disable compression
-// 1 => best speed
-// 9 => best compression
-// cache compression turned off for now - see bug #715198
-pref("browser.cache.compression_level", 0);
-
 // Don't show "Open with" option on download dialog if true.
 pref("browser.download.forbid_open_with", false);
 
