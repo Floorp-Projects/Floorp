@@ -18,8 +18,8 @@ loader.lazyGetter(this, "FrameListColumnType", function() {
 loader.lazyGetter(this, "FrameListColumnSize", function() {
   return createFactory(require("./FrameListColumnSize"));
 });
-loader.lazyGetter(this, "FrameListColumnPayload", function() {
-  return createFactory(require("./FrameListColumnPayload"));
+loader.lazyGetter(this, "FrameListColumnData", function() {
+  return createFactory(require("./FrameListColumnData"));
 });
 loader.lazyGetter(this, "FrameListColumnOpCode", function() {
   return createFactory(require("./FrameListColumnOpCode"));
@@ -37,7 +37,7 @@ loader.lazyGetter(this, "FrameListColumnTime", function() {
 const COLUMN_COMPONENTS = [
   { column: "type", ColumnComponent: FrameListColumnType },
   { column: "size", ColumnComponent: FrameListColumnSize },
-  { column: "payload", ColumnComponent: FrameListColumnPayload },
+  { column: "data", ColumnComponent: FrameListColumnData },
   { column: "opCode", ColumnComponent: FrameListColumnOpCode },
   { column: "maskBit", ColumnComponent: FrameListColumnMaskBit },
   { column: "finBit", ColumnComponent: FrameListColumnFinBit },

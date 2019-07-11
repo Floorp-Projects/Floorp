@@ -15,10 +15,11 @@ const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 /**
  * Select request with a given id.
  */
-function selectRequest(id) {
+function selectRequest(id, httpChannelId) {
   return {
     type: SELECT_REQUEST,
     id,
+    httpChannelId,
   };
 }
 
