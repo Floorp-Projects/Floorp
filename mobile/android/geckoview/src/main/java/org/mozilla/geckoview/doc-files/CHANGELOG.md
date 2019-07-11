@@ -15,6 +15,14 @@ exclude: true
 [69.1]: ./GeckoRuntimeSettings.html#setAutomaticFontSizeAdjustment-boolean-
 [69.2]: ./GeckoRuntimeSettings.html#setFontInflationEnabled-boolean-
 
+- [`GeckoSession.setMessageDelegate`][69.2] callers must now specify the
+  [`WebExtension`][69.3] that the [`MessageDelegate`][69.4] will receive
+  messages from.
+
+[69.2]: ../GeckoSession.html#setMessageDelegate-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String-
+[69.3]: ../WebExtension.html
+[69.4]: ../WebExtension.MessageDelegate.html
+
 ## v68
 - Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
   configuration has changed.
@@ -327,4 +335,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 29ff764a2ca4aaa16dbe79a269d6c1c8a166775e
+[api-version]: d143ce8f7ed19ff68f5d48243e34aed609767c5a
