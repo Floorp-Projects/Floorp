@@ -775,6 +775,15 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 1024  // 1MB
 )
 
+// The number of chunks we preload ahead of read. One chunk currently has
+// 256kB.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.preload_chunk_count",
+   browser_cache_disk_preload_chunk_count,
+  RelaxedAtomicUint32, 4  // 1 MB of read ahead
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
