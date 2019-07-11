@@ -49,7 +49,8 @@ static bool SocketProcessEnabled() {
   static bool sInited = false;
   static bool sSocketProcessEnabled = false;
   if (!sInited) {
-    sSocketProcessEnabled = Preferences::GetBool("network.process.enabled");
+    sSocketProcessEnabled = Preferences::GetBool("network.process.enabled") &&
+                            XRE_IsContentProcess();
     sInited = true;
   }
 
