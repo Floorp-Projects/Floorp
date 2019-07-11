@@ -1,6 +1,5 @@
 package org.mozilla.geckoview;
 
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -50,10 +49,6 @@ import java.util.Map;
                 it.remove();
             }
         }
-    }
-
-    public @Nullable WebExtension getWebExtension(final String id) {
-        return mExtensions.get(id);
     }
 
     @Override
