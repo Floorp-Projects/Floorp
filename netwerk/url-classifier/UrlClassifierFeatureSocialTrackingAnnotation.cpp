@@ -140,13 +140,18 @@ UrlClassifierFeatureSocialTrackingAnnotation::ProcessChannel(
 
   static std::vector<UrlClassifierCommon::ClassificationData>
       sClassificationData = {
-          {NS_LITERAL_CSTRING("facebook-socialtracking-track-"),
+          {NS_LITERAL_CSTRING("social-tracking-protection-facebook-"),
            nsIHttpChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_FACEBOOK},
-          {NS_LITERAL_CSTRING("twitter-socialtracking-track-"),
+          {NS_LITERAL_CSTRING("social-tracking-protection-linkedin-"),
+           nsIHttpChannel::ClassificationFlags::
+               CLASSIFIED_SOCIALTRACKING_LINKEDIN},
+          {NS_LITERAL_CSTRING("social-tracking-protection-twitter-"),
            nsIHttpChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_TWITTER},
-          // TODO: fix this list of tables and flags
+          {NS_LITERAL_CSTRING("social-tracking-protection-youtube-"),
+           nsIHttpChannel::ClassificationFlags::
+               CLASSIFIED_SOCIALTRACKING_YOUTUBE},
       };
 
   uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
