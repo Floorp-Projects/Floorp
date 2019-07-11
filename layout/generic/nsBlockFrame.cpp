@@ -1781,9 +1781,10 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
       (!GetParent()->IsColumnSetFrame() ||
        aReflowInput.mParentReflowInput->AvailableBSize() ==
            NS_UNCONSTRAINEDSIZE)) {
-    ComputeFinalBSize(aReflowInput, &aState.mReflowStatus,
-                      aState.mBCoord + nonCarriedOutBDirMargin, borderPadding,
-                      finalSize, aState.ConsumedBSize());
+    finalSize.BSize(wm) =
+        ComputeFinalBSize(aReflowInput, &aState.mReflowStatus,
+                          aState.mBCoord + nonCarriedOutBDirMargin,
+                          borderPadding, aState.ConsumedBSize());
 
     // Don't carry out a block-end margin when our BSize is fixed.
     aMetrics.mCarriedOutBEndMargin.Zero();
@@ -7342,13 +7343,13 @@ nsBlockFrame* nsBlockFrame::GetNearestAncestorBlock(nsIFrame* aCandidate) {
   return nullptr;
 }
 
-void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
-                                     nsReflowStatus* aStatus,
-                                     nscoord aContentBSize,
-                                     const LogicalMargin& aBorderPadding,
-                                     LogicalSize& aFinalSize,
-                                     nscoord aConsumed) {
+nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
+                                        nsReflowStatus* aStatus,
+                                        nscoord aContentBSize,
+                                        const LogicalMargin& aBorderPadding,
+                                        nscoord aConsumed) {
   WritingMode wm = aReflowInput.GetWritingMode();
+
   // Figure out how much of the computed block-size should be
   // applied to this frame.
   const nscoord computedBSizeLeftOver =
@@ -7356,26 +7357,25 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
   NS_ASSERTION(!(IS_TRUE_OVERFLOW_CONTAINER(this) && computedBSizeLeftOver),
                "overflow container must not have computedBSizeLeftOver");
 
-  aFinalSize.BSize(wm) = NSCoordSaturatingAdd(
+  const nscoord availBSize = aReflowInput.AvailableBSize();
+  nscoord finalBSize = NSCoordSaturatingAdd(
       NSCoordSaturatingAdd(aBorderPadding.BStart(wm), computedBSizeLeftOver),
       aBorderPadding.BEnd(wm));
 
-  if (aStatus->IsIncomplete() &&
-      aFinalSize.BSize(wm) <= aReflowInput.AvailableBSize()) {
+  if (aStatus->IsIncomplete() && finalBSize <= availBSize) {
     // We used up all of our element's remaining computed block-size on this
     // page/column, but we're incomplete. Set status to complete except for
     // overflow.
     aStatus->SetOverflowIncomplete();
-    return;
+    return finalBSize;
   }
 
   if (aStatus->IsComplete()) {
-    if (computedBSizeLeftOver > 0 &&
-        NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableBSize() &&
-        aFinalSize.BSize(wm) > aReflowInput.AvailableBSize()) {
+    if (computedBSizeLeftOver > 0 && NS_UNCONSTRAINEDSIZE != availBSize &&
+        finalBSize > availBSize) {
       if (ShouldAvoidBreakInside(aReflowInput)) {
         aStatus->SetInlineLineBreakBeforeAndReset();
-        return;
+        return finalBSize;
       }
 
       // Our leftover block-size does not fit into the available block-size.
@@ -7389,7 +7389,7 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
   }
 
   if (aStatus->IsIncomplete()) {
-    MOZ_ASSERT(aFinalSize.BSize(wm) > aReflowInput.AvailableBSize(),
+    MOZ_ASSERT(finalBSize > availBSize,
                "We should be overflow incomplete and should've returned "
                "in early if-branch!");
 
@@ -7397,12 +7397,10 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
     // Do extend the block-size to at least consume the available block-size,
     // otherwise our left/right borders (for example) won't extend all the way
     // to the break.
-    aFinalSize.BSize(wm) =
-        std::max(aReflowInput.AvailableBSize(), aContentBSize);
+    finalBSize = std::max(availBSize, aContentBSize);
     // ... but don't take up more block size than is available
-    aFinalSize.BSize(wm) =
-        std::min(aFinalSize.BSize(wm),
-                 aBorderPadding.BStart(wm) + computedBSizeLeftOver);
+    finalBSize =
+        std::min(finalBSize, aBorderPadding.BStart(wm) + computedBSizeLeftOver);
     // XXX It's pretty wrong that our bottom border still gets drawn on
     // on its own on the last-in-flow, even if we ran out of height
     // here. We need GetSkipSides to check whether we ran out of content
@@ -7411,6 +7409,8 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
     // XXX aBorderPadding.BEnd(wm) is not considered here, so
     // "box-decoration-break: clone" may not render correctly.
   }
+
+  return finalBSize;
 }
 
 nsresult nsBlockFrame::ResolveBidi() {
