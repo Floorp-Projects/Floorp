@@ -9,6 +9,7 @@
 
 #include "AudioParamDescriptorMap.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
+#include "mozilla/dom/AudioContextBinding.h"
 #include "MediaBufferDecoder.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -199,6 +200,8 @@ class AudioContext final : public DOMEventTargetHelper,
   }
 
   double OutputLatency();
+
+  void GetOutputTimestamp(AudioTimestamp& aTimeStamp);
 
   Worklet* GetAudioWorklet(ErrorResult& aRv);
 
