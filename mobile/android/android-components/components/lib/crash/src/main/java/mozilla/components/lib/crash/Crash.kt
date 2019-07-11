@@ -87,7 +87,7 @@ sealed class Crash {
 
     companion object {
         fun fromIntent(intent: Intent): Crash {
-            val bundle = intent.getBundleExtra(INTENT_CRASH)
+            val bundle = intent.getBundleExtra(INTENT_CRASH)!!
 
             return if (bundle.containsKey(INTENT_MINIDUMP_PATH)) {
                 NativeCodeCrash.fromBundle(bundle)

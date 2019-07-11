@@ -395,7 +395,7 @@ open class FxaAccountManager(
     private fun processQueueAsync(event: Event): Deferred<Unit> = CoroutineScope(coroutineContext).async {
         eventQueue.add(event)
         do {
-            val toProcess = eventQueue.poll()
+            val toProcess: Event = eventQueue.poll()!!
             val transitionInto = nextState(state, toProcess)
 
             if (transitionInto == null) {

@@ -179,11 +179,10 @@ class QrFragment : Fragment() {
                 val availableImage = image
                 if (availableImage != null) {
                     val buffer = availableImage.planes[0].buffer
-                    data = ByteArray(buffer.remaining())
-                    buffer.get(data)
+                    data = ByteArray(buffer.remaining()).also { buffer.get(it) }
                     val width = availableImage.width
                     val height = availableImage.height
-                    val source = PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false)
+                    val source = PlanarYUVLuminanceSource(data!!, width, height, 0, 0, width, height, false)
                     val bitmap = BinaryBitmap(HybridBinarizer(source))
                     if (qrState == STATE_FIND_QRCODE) {
                         qrState = STATE_DECODE_PROGRESS

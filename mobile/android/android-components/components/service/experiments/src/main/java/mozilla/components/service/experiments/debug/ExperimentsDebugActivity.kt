@@ -80,8 +80,10 @@ class ExperimentsDebugActivity : Activity() {
             intent.hasExtra(OVERRIDE_BRANCH_EXTRA_KEY)) {
             val experiment = intent.getStringExtra(OVERRIDE_EXPERIMENT_EXTRA_KEY)
             val branch = intent.getStringExtra(OVERRIDE_BRANCH_EXTRA_KEY)
-            logger.info("Override to the following experiment/branch:$experiment/$branch")
-            Experiments.setOverride(applicationContext, experiment, true, branch)
+            if (experiment != null && branch != null) {
+                logger.info("Override to the following experiment/branch:$experiment/$branch")
+                Experiments.setOverride(applicationContext, experiment, true, branch)
+            }
         }
 
         val intent = packageManager.getLaunchIntentForPackage(packageName)
