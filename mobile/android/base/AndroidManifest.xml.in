@@ -546,6 +546,14 @@
         </service>
 
         <service
+            android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$socket"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":socket"
+            android:isolatedProcess="false">
+        </service>
+
+        <service
             android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
             android:enabled="true"
             android:exported="false"

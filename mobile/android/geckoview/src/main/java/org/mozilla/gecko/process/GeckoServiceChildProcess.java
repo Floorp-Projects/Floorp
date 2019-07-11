@@ -141,4 +141,6 @@ public class GeckoServiceChildProcess extends Service {
     public static final class gmplugin extends GeckoServiceChildProcess {}
 
     public static final class tab extends GeckoServiceChildProcess {}
+
+    public static final class socket extends GeckoServiceChildProcess {}
 }
