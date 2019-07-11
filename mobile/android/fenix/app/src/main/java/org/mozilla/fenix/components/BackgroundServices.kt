@@ -52,34 +52,24 @@ class BackgroundServices(
     historyStorage: PlacesHistoryStorage,
     bookmarkStorage: PlacesBookmarksStorage
 ) {
-    companion object {
-        const val CLIENT_ID = "a2270f727f45f648"
-
-        fun redirectUrl(context: Context) = if (context.isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
-            "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
-        } else {
-            "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
-        }
-    }
-
     // // A malformed string is causing crashes.
     // This will be removed when the string is fixed. See #5552
     fun defaultDeviceName(context: Context): String = try {
-            context.getString(
-                R.string.default_device_name,
-                context.getString(R.string.app_name),
-                Build.MANUFACTURER,
-                Build.MODEL
-            )
-        } catch (ex: FormatFlagsConversionMismatchException) {
-            "%s on %s %s".format(
-                context.getString(R.string.app_name),
-                Build.MANUFACTURER,
-                Build.MODEL
-            )
-        }
+        context.getString(
+            R.string.default_device_name,
+            context.getString(R.string.app_name),
+            Build.MANUFACTURER,
+            Build.MODEL
+        )
+    } catch (ex: FormatFlagsConversionMismatchException) {
+        "%s on %s %s".format(
+            context.getString(R.string.app_name),
+            Build.MANUFACTURER,
+            Build.MODEL
+        )
+    }
 
-    private val serverConfig = ServerConfig.release(CLIENT_ID, redirectUrl(context))
+    private val serverConfig = FxaServer.config(context)
     private val deviceConfig = DeviceConfig(
         name = defaultDeviceName(context),
         type = DeviceType.MOBILE,
