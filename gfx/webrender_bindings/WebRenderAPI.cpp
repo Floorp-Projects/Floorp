@@ -622,10 +622,8 @@ void TransactionBuilder::AddImage(ImageKey key,
 
 void TransactionBuilder::AddBlobImage(BlobImageKey key,
                                       const ImageDescriptor& aDescriptor,
-                                      wr::Vec<uint8_t>& aBytes,
-                                      const wr::DeviceIntRect& aVisibleRect) {
-  wr_resource_updates_add_blob_image(mTxn, key, &aDescriptor, &aBytes.inner,
-                                     aVisibleRect);
+                                      wr::Vec<uint8_t>& aBytes) {
+  wr_resource_updates_add_blob_image(mTxn, key, &aDescriptor, &aBytes.inner);
 }
 
 void TransactionBuilder::AddExternalImage(ImageKey key,
@@ -654,10 +652,9 @@ void TransactionBuilder::UpdateImageBuffer(ImageKey aKey,
 void TransactionBuilder::UpdateBlobImage(BlobImageKey aKey,
                                          const ImageDescriptor& aDescriptor,
                                          wr::Vec<uint8_t>& aBytes,
-                                         const wr::DeviceIntRect& aVisibleRect,
                                          const wr::LayoutIntRect& aDirtyRect) {
   wr_resource_updates_update_blob_image(mTxn, aKey, &aDescriptor, &aBytes.inner,
-                                        aVisibleRect, aDirtyRect);
+                                        aDirtyRect);
 }
 
 void TransactionBuilder::UpdateExternalImage(ImageKey aKey,
@@ -677,8 +674,8 @@ void TransactionBuilder::UpdateExternalImageWithDirtyRect(
       mTxn, aKey, &aDescriptor, aExtID, &aImageType, aChannelIndex, aDirtyRect);
 }
 
-void TransactionBuilder::SetBlobImageVisibleArea(
-    BlobImageKey aKey, const wr::DeviceIntRect& aArea) {
+void TransactionBuilder::SetImageVisibleArea(BlobImageKey aKey,
+                                             const wr::DeviceIntRect& aArea) {
   wr_resource_updates_set_blob_image_visible_area(mTxn, aKey, &aArea);
 }
 
