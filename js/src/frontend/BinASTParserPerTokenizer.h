@@ -138,18 +138,23 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
 
   // Build a function object for a function-producing production. Called AFTER
   // creating the scope.
-  JS::Result<FunctionNode*> makeEmptyFunctionNode(const size_t start,
-                                                  const BinASTKind kind,
-                                                  FunctionBox* funbox);
-
-  JS::Result<FunctionNode*> buildFunction(const size_t start,
-                                          const BinASTKind kind,
-                                          ParseNode* name, ListNode* params,
-                                          ParseNode* body);
   JS::Result<FunctionBox*> buildFunctionBox(GeneratorKind generatorKind,
                                             FunctionAsyncKind functionAsyncKind,
                                             FunctionSyntaxKind syntax,
                                             ParseNode* name);
+
+  JS::Result<FunctionNode*> makeEmptyFunctionNode(const size_t start,
+                                                  const BinASTKind kind,
+                                                  FunctionBox* funbox);
+  MOZ_MUST_USE JS::Result<Ok> setFunctionParametersAndBody(FunctionNode* fun,
+                                                           ListNode* params,
+                                                           ParseNode* body);
+
+  MOZ_MUST_USE JS::Result<Ok> finishEagerFunction(FunctionBox* funbox,
+                                                  uint32_t nargs);
+  MOZ_MUST_USE JS::Result<Ok> finishLazyFunction(FunctionBox* funbox,
+                                                 uint32_t nargs, size_t start,
+                                                 size_t end);
 
   // Add name to a given scope.
   MOZ_MUST_USE JS::Result<Ok> addScopeName(
