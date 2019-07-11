@@ -351,9 +351,9 @@ if [[ -n $MOZ_PRODUCT_VERSION ]]
 then
   mar_command="$mar_command -V $MOZ_PRODUCT_VERSION"
 fi
-if [[ -n $MOZ_CHANNEL_ID ]]
+if [[ -n $MAR_CHANNEL_ID ]]
 then
-  mar_command="$mar_command -H $MOZ_CHANNEL_ID"
+  mar_command="$mar_command -H $MAR_CHANNEL_ID"
 fi
 mar_command="$mar_command -C \"$workdir\" -c output.mar"
 eval "$mar_command $archivefiles"
