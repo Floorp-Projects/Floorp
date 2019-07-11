@@ -224,10 +224,9 @@ impl Builder {
         output_vector.push(self.options.rust_target.into());
 
         if self.options.default_enum_style != Default::default() {
-            output_vector.push("--default-enum-style=".into());
+            output_vector.push("--default-enum-variant=".into());
             output_vector.push(match self.options.default_enum_style {
-                codegen::EnumVariation::Rust { non_exhaustive: false } => "rust",
-                codegen::EnumVariation::Rust { non_exhaustive: true } => "rust_non_exhaustive",
+                codegen::EnumVariation::Rust => "rust",
                 codegen::EnumVariation::Bitfield => "bitfield",
                 codegen::EnumVariation::Consts => "consts",
                 codegen::EnumVariation::ModuleConsts => "moduleconsts",
@@ -250,16 +249,6 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--rustified-enum".into());
-                output_vector.push(item.to_owned());
-            })
-            .count();
-
-        self.options
-            .rustified_non_exhaustive_enums
-            .get_items()
-            .iter()
-            .map(|item| {
-                output_vector.push("--rustified-enum-non-exhaustive".into());
                 output_vector.push(item.to_owned());
             })
             .count();
@@ -821,21 +810,12 @@ impl Builder {
     /// This makes bindgen generate enums instead of constants. Regular
     /// expressions are supported.
     ///
-    /// **Use this with caution,** you probably want to use the non_exhaustive
-    /// flavor of rust enums instead of this one. Take a look at
-    /// https://github.com/rust-lang/rust/issues/36927 for more information.
+    /// **Use this with caution.** You should not be using Rust enums unless
+    /// you have complete control of the C/C++ code that you're binding to.
+    /// Take a look at https://github.com/rust-lang/rust/issues/36927 for
+    /// more information.
     pub fn rustified_enum<T: AsRef<str>>(mut self, arg: T) -> Builder {
         self.options.rustified_enums.insert(arg);
-        self
-    }
-
-    /// Mark the given enum (or set of enums, if using a pattern) as a Rust
-    /// enum with the #[non_exhaustive] attribute.
-    ///
-    /// This makes bindgen generate enums instead of constants. Regular
-    /// expressions are supported.
-    pub fn rustified_non_exhaustive_enum<T: AsRef<str>>(mut self, arg: T) -> Builder {
-        self.options.rustified_non_exhaustive_enums.insert(arg);
         self
     }
 
@@ -1387,8 +1367,6 @@ struct BindgenOptions {
     /// The enum patterns to mark an enum as a Rust enum.
     rustified_enums: RegexSet,
 
-    rustified_non_exhaustive_enums: RegexSet,
-
     /// The enum patterns to mark an enum as a module of constants.
     constified_enum_modules: RegexSet,
 
@@ -1642,7 +1620,6 @@ impl Default for BindgenOptions {
             default_enum_style: Default::default(),
             bitfield_enums: Default::default(),
             rustified_enums: Default::default(),
-            rustified_non_exhaustive_enums: Default::default(),
             constified_enums: Default::default(),
             constified_enum_modules: Default::default(),
             builtins: false,

@@ -594,6 +594,51 @@ def test_update_full():
 
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
+def test_update_full_unknown():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
+  [test1]
+    expected:
+      if release_or_beta: ERROR
+      if not debug and os == "osx": NOTRUN
+""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})],
+                      run_info={"debug": False, "release_or_beta": False})
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})],
+                      run_info={"debug": True, "release_or_beta": False})
+
+    updated = update(tests, log_0, log_1, full_update=True)
+    new_manifest = updated[0][1]
+
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"release_or_beta": False})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"release_or_beta": True})
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", run_info_1) == "FAIL"
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", run_info_2) == "ERROR"
+
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
 def test_update_default():
     test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]

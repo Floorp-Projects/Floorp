@@ -14,7 +14,7 @@ add_task(async function() {
   await once(Services.ppmm, "RecordingFinished");
 
   const { target, toolbox } = await attachDebugger(tab);
-  const client = toolbox.threadClient;
+  const client = toolbox.threadFront;
   await client.interrupt();
   const bp = await setBreakpoint(client, "doc_rr_basic.html", 21);
   await rewindToLine(client, 21);

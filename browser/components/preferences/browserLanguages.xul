@@ -16,7 +16,6 @@
         persist="screenX screenY"
         role="dialog"
         onload="gBrowserLanguagesDialog.onLoad();"
-        onbeforeaccept="return gBrowserLanguagesDialog.beforeAccept();"
         helpTopic="change-language">
 
   <linkset>

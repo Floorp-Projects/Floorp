@@ -116,9 +116,9 @@ class WebReplayPlayer extends Component {
 
   componentDidMount() {
     this.overlayWidth = this.updateOverlayWidth();
-    this.threadClient.on("paused", this.onPaused.bind(this));
-    this.threadClient.on("resumed", this.onResumed.bind(this));
-    this.threadClient.on("progress", this.onProgress.bind(this));
+    this.threadFront.on("paused", this.onPaused.bind(this));
+    this.threadFront.on("resumed", this.onResumed.bind(this));
+    this.threadFront.on("progress", this.onProgress.bind(this));
 
     this.toolbox.getPanelWhenReady("webconsole").then(panel => {
       const consoleFrame = panel.hud.ui;
@@ -143,8 +143,8 @@ class WebReplayPlayer extends Component {
     return this.toolbox.getPanel("webconsole");
   }
 
-  get threadClient() {
-    return this.toolbox.threadClient;
+  get threadFront() {
+    return this.toolbox.threadFront;
   }
 
   isRecording() {
@@ -296,7 +296,7 @@ class WebReplayPlayer extends Component {
 
     // set seeking to the current execution point to avoid a progress bar jump
     this.setState({ seeking: true });
-    return this.threadClient.timeWarp(executionPoint);
+    return this.threadFront.timeWarp(executionPoint);
   }
 
   next() {
@@ -319,7 +319,7 @@ class WebReplayPlayer extends Component {
 
   async previous() {
     if (this.isRecording()) {
-      await this.threadClient.interrupt();
+      await this.threadFront.interrupt();
     }
 
     if (!this.isPaused()) {
@@ -341,19 +341,19 @@ class WebReplayPlayer extends Component {
       return null;
     }
 
-    return this.threadClient.resume();
+    return this.threadFront.resume();
   }
 
   async rewind() {
     if (this.isRecording()) {
-      await this.threadClient.interrupt();
+      await this.threadFront.interrupt();
     }
 
     if (!this.isPaused()) {
       return null;
     }
 
-    return this.threadClient.rewind();
+    return this.threadFront.rewind();
   }
 
   pause() {
@@ -361,7 +361,7 @@ class WebReplayPlayer extends Component {
       return null;
     }
 
-    return this.threadClient.interrupt();
+    return this.threadFront.interrupt();
   }
 
   renderCommands() {

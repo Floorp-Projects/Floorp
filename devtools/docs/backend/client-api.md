@@ -113,18 +113,18 @@ Once the application is attached to a tab, it can attach to its thread in order 
 // Assuming the application is already attached to the tab, and response is the first
 // argument of the attachTarget callback.
 
-client.attachThread(response.threadActor).then(function([response, threadClient]) {
-  if (!threadClient) {
+client.attachThread(response.threadActor).then(function([response, threadFront]) {
+  if (!threadFront) {
     return;
   }
 
   // Attach listeners for thread events.
-  threadClient.on("paused", onPause);
-  threadClient.on("resumed", fooListener);
-  threadClient.on("detached", fooListener);
+  threadFront.on("paused", onPause);
+  threadFront.on("resumed", fooListener);
+  threadFront.on("detached", fooListener);
 
   // Resume the thread.
-  threadClient.resume();
+  threadFront.resume();
 
   // Debugger is now ready and debuggee is running.
 });
@@ -144,7 +144,7 @@ Components.utils.import("resource://gre/modules/devtools/dbg-server.jsm");
 Components.utils.import("resource://gre/modules/devtools/dbg-client.jsm");
 
 let client;
-let threadClient;
+let threadFront;
 
 function startDebugger() {
   // Start the server.
@@ -180,14 +180,14 @@ function debugTab() {
     // Attach to the tab.
     targetFront.attach().then(() => {
       // Attach to the thread (context).
-      targetFront.attachThread().then(([response, threadClient]) => {
+      targetFront.attachThread().then(([response, threadFront]) => {
         // Attach listeners for thread events.
-        threadClient.on("paused", onPause);
-        threadClient.on("resumed", fooListener);
-        threadClient.on("detached", fooListener);
+        threadFront.on("paused", onPause);
+        threadFront.on("resumed", fooListener);
+        threadFront.on("detached", fooListener);
 
         // Resume the thread.
-        threadClient.resume();
+        threadFront.resume();
         // Debugger is now ready and debuggee is running.
       });
     });

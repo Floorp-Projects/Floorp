@@ -9,7 +9,7 @@
  * when encountering debugger statements and brakpoints
  */
 add_task(
-  threadClientTest(async props => {
+  threadFrontTest(async props => {
     await testDebuggerStatements(props);
     await testBreakpoints(props);
     await testBreakpointsAndDebuggerStatements(props);
@@ -19,7 +19,7 @@ add_task(
 
 // Ensure that we advance to the next line when we
 // step to a debugger statement and resume.
-async function testDebuggerStatements({ threadClient, targetFront }) {
+async function testDebuggerStatements({ threadFront, targetFront }) {
   const consoleFront = await targetFront.getFront("console");
   consoleFront.evaluateJSAsync(
     `function foo(stop) {
@@ -31,7 +31,7 @@ async function testDebuggerStatements({ threadClient, targetFront }) {
     //# sourceURL=http://example.com/code.js`
   );
 
-  await performActions(threadClient, [
+  await performActions(threadFront, [
     [
       "paused at first debugger statement",
       { line: 2, type: "debuggerStatement" },
@@ -53,7 +53,7 @@ async function testDebuggerStatements({ threadClient, targetFront }) {
 // Ensure that we advance to the next line when we hit a breakpoint
 // on a line with a debugger statement and resume.
 async function testBreakpointsAndDebuggerStatements({
-  threadClient,
+  threadFront,
   targetFront,
 }) {
   const consoleFront = await targetFront.getFront("console");
@@ -67,7 +67,7 @@ async function testBreakpointsAndDebuggerStatements({
     //# sourceURL=http://example.com/testBreakpointsAndDebuggerStatements.js`
   );
 
-  threadClient.setBreakpoint(
+  threadFront.setBreakpoint(
     {
       sourceUrl: "http://example.com/testBreakpointsAndDebuggerStatements.js",
       line: 3,
@@ -75,7 +75,7 @@ async function testBreakpointsAndDebuggerStatements({
     {}
   );
 
-  await performActions(threadClient, [
+  await performActions(threadFront, [
     [
       "paused at first debugger statement",
       { line: 2, type: "debuggerStatement" },
@@ -96,7 +96,7 @@ async function testBreakpointsAndDebuggerStatements({
 
 // Ensure that we advance to the next line when we step to
 // a line with a breakpoint and resume.
-async function testBreakpoints({ threadClient, targetFront }) {
+async function testBreakpoints({ threadFront, targetFront }) {
   const consoleFront = await targetFront.getFront("console");
   consoleFront.evaluateJSAsync(
     `function foo(stop) {
@@ -109,12 +109,12 @@ async function testBreakpoints({ threadClient, targetFront }) {
     //# sourceURL=http://example.com/testBreakpoints.js`
   );
 
-  threadClient.setBreakpoint(
+  threadFront.setBreakpoint(
     { sourceUrl: "http://example.com/testBreakpoints.js", line: 3 },
     {}
   );
 
-  await performActions(threadClient, [
+  await performActions(threadFront, [
     [
       "paused at first debugger statement",
       { line: 2, type: "debuggerStatement" },
@@ -131,7 +131,7 @@ async function testBreakpoints({ threadClient, targetFront }) {
 
 // Ensure that we advance to the next line when we step to
 // a line with a breakpoint and resume.
-async function testLoops({ threadClient, targetFront }) {
+async function testLoops({ threadFront, targetFront }) {
   const consoleFront = await targetFront.getFront("console");
   consoleFront.evaluateJSAsync(
     `function foo(stop) {
@@ -146,7 +146,7 @@ async function testLoops({ threadClient, targetFront }) {
     //# sourceURL=http://example.com/testLoops.js`
   );
 
-  await performActions(threadClient, [
+  await performActions(threadFront, [
     [
       "paused at first debugger statement",
       { line: 3, type: "debuggerStatement" },
@@ -170,16 +170,16 @@ async function testLoops({ threadClient, targetFront }) {
   ]);
 }
 
-async function performActions(threadClient, actions) {
+async function performActions(threadFront, actions) {
   for (const action of actions) {
-    await performAction(threadClient, action);
+    await performAction(threadFront, action);
   }
 }
 
-async function performAction(threadClient, [description, result, action]) {
+async function performAction(threadFront, [description, result, action]) {
   info(description);
-  const packet = await waitForEvent(threadClient, "paused");
+  const packet = await waitForEvent(threadFront, "paused");
   Assert.equal(packet.frame.where.line, result.line);
   Assert.equal(packet.why.type, result.type);
-  await threadClient[action]();
+  await threadFront[action]();
 }

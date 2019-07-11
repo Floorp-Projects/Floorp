@@ -24,7 +24,7 @@ function run_test() {
 const testBreakpoint = async function(
   threadResponse,
   targetFront,
-  threadClient,
+  threadFront,
   tabResponse
 ) {
   evalSetupCode();
@@ -40,10 +40,10 @@ const testBreakpoint = async function(
 
   // Set a breakpoint in the test source.
 
-  const source = await getSource(threadClient, "test.js");
-  setBreakpoint(threadClient, { sourceUrl: source.url, line: 3 });
+  const source = await getSource(threadFront, "test.js");
+  setBreakpoint(threadFront, { sourceUrl: source.url, line: 3 });
 
-  await resume(threadClient);
+  await resume(threadFront);
 
   // Load the test source again.
 
@@ -59,7 +59,7 @@ const testBreakpoint = async function(
 
   const bpPause1 = await executeOnNextTickAndWaitForPause(
     gDebuggee.functions[0],
-    threadClient
+    threadFront
   );
   equal(
     bpPause1.why.type,
@@ -67,22 +67,22 @@ const testBreakpoint = async function(
     "Should pause because of hitting our breakpoint (not debugger statement)."
   );
   const dbgStmtPause1 = await executeOnNextTickAndWaitForPause(
-    () => resume(threadClient),
-    threadClient
+    () => resume(threadFront),
+    threadFront
   );
   equal(
     dbgStmtPause1.why.type,
     "debuggerStatement",
     "And we should hit the debugger statement after the pause."
   );
-  await resume(threadClient);
+  await resume(threadFront);
 
   // Should also hit our breakpoint in a script defined by the second instance
   // of the test source.
 
   const bpPause2 = await executeOnNextTickAndWaitForPause(
     gDebuggee.functions[1],
-    threadClient
+    threadFront
   );
   equal(
     bpPause2.why.type,
@@ -90,8 +90,8 @@ const testBreakpoint = async function(
     "Should pause because of hitting our breakpoint (not debugger statement)."
   );
   const dbgStmtPause2 = await executeOnNextTickAndWaitForPause(
-    () => resume(threadClient),
-    threadClient
+    () => resume(threadFront),
+    threadFront
   );
   equal(
     dbgStmtPause2.why.type,

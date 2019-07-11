@@ -12,7 +12,6 @@ const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
 const urlbar = document.getElementById("urlbar");
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const urlbarPopup = document.getElementById("PopupAutoCompleteRichResult");
 const searchOneOff = searchPopup.oneOffButtons;
 const urlBarOneOff = UrlbarTestUtils.getOneOffSearchButtons(window);
 
@@ -88,7 +87,7 @@ add_task(async function test_urlBarChangeEngine() {
 
   let oneOffButton = await openPopupAndGetEngineButton(
     false,
-    urlbarPopup,
+    null,
     urlBarOneOff,
     URLBAR_BASE_ID
   );
@@ -126,7 +125,7 @@ add_task(async function test_urlBarChangeEngine() {
   await UrlbarTestUtils.promisePopupClose(window);
 
   // Move the cursor out of the panel area to avoid messing with other tests.
-  await EventUtils.synthesizeNativeMouseMove(urlbarPopup);
+  await EventUtils.synthesizeNativeMouseMove(urlbar);
 });
 
 /**

@@ -6,7 +6,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
@@ -25,9 +25,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-closures", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_object_grip();
     });
   });
@@ -35,12 +35,12 @@ function run_test() {
 }
 
 function test_object_grip() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const person = packet.frame.environment.bindings.variables.person;
 
     Assert.equal(person.value.class, "Object");
 
-    const personClient = gThreadClient.pauseGrip(person.value);
+    const personClient = gThreadFront.pauseGrip(person.value);
     personClient.getPrototypeAndProperties(response => {
       Assert.equal(response.ownProperties.getName.value.class, "Function");
 
@@ -48,13 +48,13 @@ function test_object_grip() {
 
       Assert.equal(response.ownProperties.getFoo.value.class, "Function");
 
-      const getNameClient = gThreadClient.pauseGrip(
+      const getNameClient = gThreadFront.pauseGrip(
         response.ownProperties.getName.value
       );
-      const getAgeClient = gThreadClient.pauseGrip(
+      const getAgeClient = gThreadFront.pauseGrip(
         response.ownProperties.getAge.value
       );
-      const getFooClient = gThreadClient.pauseGrip(
+      const getFooClient = gThreadFront.pauseGrip(
         response.ownProperties.getFoo.value
       );
       getNameClient.getScope(response => {
@@ -66,7 +66,7 @@ function test_object_grip() {
           getFooClient.getScope(response => {
             Assert.equal(response.scope.bindings.variables.foo.value, 10);
 
-            gThreadClient.resume().then(() => finishClient(gClient));
+            gThreadFront.resume().then(() => finishClient(gClient));
           });
         });
       });

@@ -3,19 +3,19 @@
 const SOURCE_URL = getFileUrl("setBreakpoint-on-line-with-multiple-offsets.js");
 
 add_task(
-  threadClientTest(
-    async ({ threadClient, debuggee }) => {
-      const promise = waitForNewSource(threadClient, SOURCE_URL);
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
+      const promise = waitForNewSource(threadFront, SOURCE_URL);
       loadSubScript(SOURCE_URL, debuggee);
       const { source } = await promise;
-      const sourceFront = threadClient.source(source);
+      const sourceFront = threadFront.source(source);
 
       const location = { sourceUrl: sourceFront.url, line: 4 };
-      setBreakpoint(threadClient, location);
+      setBreakpoint(threadFront, location);
 
       let packet = await executeOnNextTickAndWaitForPause(function() {
         Cu.evalInSandbox("f()", debuggee);
-      }, threadClient);
+      }, threadFront);
       let why = packet.why;
       Assert.equal(why.type, "breakpoint");
       Assert.equal(why.actors.length, 1);
@@ -27,11 +27,11 @@ add_task(
       Assert.equal(variables.i.value.type, "undefined");
 
       const location2 = { sourceUrl: sourceFront.url, line: 7 };
-      setBreakpoint(threadClient, location2);
+      setBreakpoint(threadFront, location2);
 
       packet = await executeOnNextTickAndWaitForPause(
-        () => resume(threadClient),
-        threadClient
+        () => resume(threadFront),
+        threadFront
       );
       why = packet.why;
       Assert.equal(why.type, "breakpoint");
@@ -43,7 +43,7 @@ add_task(
       variables = frame.environment.bindings.variables;
       Assert.equal(variables.i.value, 1);
 
-      await resume(threadClient);
+      await resume(threadFront);
     },
     { doNotRunWorker: true }
   )

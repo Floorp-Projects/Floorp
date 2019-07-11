@@ -36,8 +36,7 @@
     </hbox>
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
-      <menulist id="selectLangs" preference="font.language.group"
-                onsyncfrompreference="return gFontsDialog.readFontLanguageGroup();">
+      <menulist id="selectLangs" preference="font.language.group">
         <menupopup>
           <menuitem value="ar"              data-l10n-id="fonts-langgroup-arabic"/>
           <menuitem value="x-armn"          data-l10n-id="fonts-langgroup-armenian"/>
@@ -139,8 +138,7 @@
             <label data-l10n-id="fonts-serif" control="serif"/>
           </hbox>
           <hbox>
-            <menulist id="serif" flex="1" style="width: 0px;" delayprefsave="true"
-                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+            <menulist id="serif" flex="1" style="width: 0px;" delayprefsave="true"/>
           </hbox>
           <spacer/>
         </row>
@@ -149,8 +147,7 @@
             <label data-l10n-id="fonts-sans-serif" control="sans-serif"/>
           </hbox>
           <hbox>
-            <menulist id="sans-serif" flex="1" style="width: 0px;" delayprefsave="true"
-                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+            <menulist id="sans-serif" flex="1" style="width: 0px;" delayprefsave="true"/>
           </hbox>
           <spacer/>
         </row>
@@ -159,8 +156,7 @@
             <label data-l10n-id="fonts-monospace" control="monospace"/>
           </hbox>
           <hbox>
-            <menulist id="monospace" flex="1" style="width: 0px;" crop="right" delayprefsave="true"
-                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+            <menulist id="monospace" flex="1" style="width: 0px;" crop="right" delayprefsave="true"/>
           </hbox>
           <hbox align="center" pack="end">
             <label data-l10n-id="fonts-monospace-size" control="sizeMono"/>
@@ -243,9 +239,7 @@
     <hbox>
       <checkbox id="useDocumentFonts"
                 data-l10n-id="fonts-allow-own"
-                preference="browser.display.use_document_fonts"
-                onsyncfrompreference="return gFontsDialog.readUseDocumentFonts();"
-                onsynctopreference="return gFontsDialog.writeUseDocumentFonts();"/>
+                preference="browser.display.use_document_fonts"/>
     </hbox>
   </groupbox>
 

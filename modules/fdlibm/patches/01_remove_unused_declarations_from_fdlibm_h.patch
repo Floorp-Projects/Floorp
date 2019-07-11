@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 --- a/modules/fdlibm/src/fdlibm.h
 +++ b/modules/fdlibm/src/fdlibm.h
-@@ -12,499 +12,50 @@
+@@ -12,499 +12,49 @@
  /*
   * from: @(#)fdlibm.h 5.1 93/09/24
   * $FreeBSD$
@@ -242,7 +242,7 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -double	modf(double, double *);	/* fundamentally !__pure2 */
  
  double	pow(double, double);
- double	sqrt(double);
+-double	sqrt(double);
 +double	fabs(double);
  
 -double	ceil(double);

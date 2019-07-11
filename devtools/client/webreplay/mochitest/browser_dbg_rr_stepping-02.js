@@ -14,24 +14,24 @@ add_task(async function() {
   await once(Services.ppmm, "RecordingFinished");
 
   const { toolbox } = await attachDebugger(tab),
-    client = toolbox.threadClient;
+    front = toolbox.threadFront;
   await client.interrupt();
-  const bp = await setBreakpoint(client, "doc_rr_basic.html", 22);
-  await rewindToLine(client, 22);
-  await stepInToLine(client, 25);
-  await stepOverToLine(client, 26);
-  await stepOverToLine(client, 27);
-  await reverseStepOverToLine(client, 26);
-  await stepInToLine(client, 30);
-  await stepOverToLine(client, 31);
-  await stepOverToLine(client, 32);
-  await stepOverToLine(client, 33);
-  await reverseStepOverToLine(client, 32);
-  await stepOutToLine(client, 27);
-  await reverseStepOverToLine(client, 26);
-  await reverseStepOverToLine(client, 25);
+  const bp = await setBreakpoint(front, "doc_rr_basic.html", 22);
+  await rewindToLine(front, 22);
+  await stepInToLine(front, 25);
+  await stepOverToLine(front, 26);
+  await stepOverToLine(front, 27);
+  await reverseStepOverToLine(front, 26);
+  await stepInToLine(front, 30);
+  await stepOverToLine(front, 31);
+  await stepOverToLine(front, 32);
+  await stepOverToLine(front, 33);
+  await reverseStepOverToLine(front, 32);
+  await stepOutToLine(front, 27);
+  await reverseStepOverToLine(front, 26);
+  await reverseStepOverToLine(front, 25);
 
-  await client.removeBreakpoint(bp);
+  await front.removeBreakpoint(bp);
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
 });

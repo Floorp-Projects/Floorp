@@ -7,7 +7,7 @@
  * Tests that chrome debugging works.
  */
 
-var gClient, gThreadClient;
+var gClient, gThreadFront;
 var gNewChromeSource = promise.defer();
 
 var { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
@@ -28,19 +28,19 @@ function initDebuggerClient() {
 function onNewSource(packet) {
   if (packet.source.url.startsWith("chrome:")) {
     ok(true, "Received a new chrome source: " + packet.source.url);
-    gThreadClient.off("newSource", onNewSource);
+    gThreadFront.off("newSource", onNewSource);
     gNewChromeSource.resolve();
   }
 }
 
 async function resumeAndCloseConnection() {
-  await gThreadClient.resume();
+  await gThreadFront.resume();
   return gClient.close();
 }
 
 registerCleanupFunction(function() {
   gClient = null;
-  gThreadClient = null;
+  gThreadFront = null;
   gNewChromeSource = null;
 
   customLoader = null;
@@ -55,12 +55,12 @@ add_task(async function() {
 
   const front = await gClient.mainRoot.getMainProcess();
   await front.attach();
-  const [, threadClient] = await front.attachThread();
-  gThreadClient = threadClient;
+  const [, threadFront] = await front.attachThread();
+  gThreadFront = threadFront;
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
 
   // listen for a new source and global
-  gThreadClient.on("newSource", onNewSource);
+  gThreadFront.on("newSource", onNewSource);
   await gNewChromeSource.promise;
 
   await resumeAndCloseConnection();

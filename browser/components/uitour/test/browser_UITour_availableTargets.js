@@ -30,7 +30,6 @@ function getExpectedTargets() {
     ...(hasQuit ? ["quit"] : []),
     "readerMode-urlBar",
     "screenshots",
-    "trackingProtection",
     "urlbar",
   ];
 }

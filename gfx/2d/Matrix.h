@@ -48,6 +48,15 @@ class BaseMatrix {
     T components[6];
   };
 
+  template <class T2>
+  explicit BaseMatrix(const BaseMatrix<T2>& aOther)
+      : _11(aOther._11),
+        _12(aOther._12),
+        _21(aOther._21),
+        _22(aOther._22),
+        _31(aOther._31),
+        _32(aOther._32) {}
+
   MOZ_ALWAYS_INLINE BaseMatrix Copy() const { return BaseMatrix<T>(*this); }
 
   friend std::ostream& operator<<(std::ostream& aStream,

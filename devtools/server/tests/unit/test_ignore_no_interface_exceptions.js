@@ -9,16 +9,16 @@
  */
 
 add_task(
-  threadClientTest(
-    async ({ threadClient, debuggee }) => {
-      await threadClient.pauseOnExceptions(true, false);
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
+      await threadFront.pauseOnExceptions(true, false);
       const paused = await executeOnNextTickAndWaitForPause(
         () => evaluateTestCode(debuggee),
-        threadClient
+        threadFront
       );
       equal(paused.frame.where.line, 6, "paused at throw");
 
-      await resume(threadClient);
+      await resume(threadFront);
     },
     {
       // Bug 1508289, exception tests fails in worker scope

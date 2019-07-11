@@ -2297,7 +2297,7 @@ enum class IterationMode {
   Race
 };
 
-// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 //
 // Unified implementation of
 // 25.6.4.1 Promise.all ( iterable )
@@ -2311,7 +2311,7 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
                                              IterationMode mode) {
   HandleValue iterable = args.get(0);
 
-  // Step 2 (reordered).
+  // Step 2 (moved from NewPromiseCapability, step 1).
   HandleValue CVal = args.thisv();
   if (!CVal.isObject()) {
     const char* message;
@@ -2336,13 +2336,13 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
   // Step 1.
   RootedObject C(cx, &CVal.toObject());
 
-  // Step 3.
+  // Step 2.
   Rooted<PromiseCapability> promiseCapability(cx);
   if (!NewPromiseCapability(cx, C, &promiseCapability, false)) {
     return false;
   }
 
-  // Steps 4-5.
+  // Steps 3-4.
   PromiseForOfIterator iter(cx);
   if (!iter.init(iterable, JS::ForOfIterator::AllowNonIterable)) {
     return AbruptRejectPromise(cx, args, promiseCapability);
@@ -2368,9 +2368,7 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
     return AbruptRejectPromise(cx, args, promiseCapability);
   }
 
-  // Step 6 (implicit).
-
-  // Step 7.
+  // Step 5.
   bool done, result;
   switch (mode) {
     case IterationMode::All:
@@ -2386,23 +2384,23 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
       break;
   }
 
-  // Step 8.
+  // Step 6.
   if (!result) {
-    // Step 8.a.
+    // Step 6.a.
     if (!done) {
       iter.closeThrow();
     }
 
-    // Step 8.b.
+    // Step 6.b.
     return AbruptRejectPromise(cx, args, promiseCapability);
   }
 
-  // Step 9.
+  // Step 7.
   args.rval().setObject(*promiseCapability.promise());
   return true;
 }
 
-// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.1 Promise.all ( iterable )
 static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2619,13 +2617,13 @@ static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
 
 static bool IsPromiseSpecies(JSContext* cx, JSFunction* species);
 
-// ES2019 draft rev dd269df67d37409a6f2099a842b8f5c75ee6fc24
-// 25.6.4.1.1 Runtime Semantics: PerformPromiseAll, step 6.
-// 25.6.4.3.1 Runtime Semantics: PerformPromiseRace, step 3.
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// 25.6.4.1.1 Runtime Semantics: PerformPromiseAll, steps 5-6 and step 8.
+// 25.6.4.3.1 Runtime Semantics: PerformPromiseRace, steps 3-5.
 //
 // Promise.allSettled (Stage 3 proposal)
 // https://tc39.github.io/proposal-promise-allSettled/
-// Runtime Semantics: PerformPromiseAllSettled, step 6.
+// Runtime Semantics: PerformPromiseAllSettled, steps 5-6 and step 8.
 template <typename T>
 static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
@@ -2641,13 +2639,30 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
   // during the iteration.
   bool iterationMayHaveSideEffects = !iterator.isOptimizedDenseArrayIteration();
 
-  // Try to optimize when the Promise object is in its default state, seeded
-  // with |C == promiseCtor| because we can only perform this optimization
-  // for the builtin Promise constructor.
-  bool isDefaultPromiseState = C == promiseCtor;
-  bool validatePromiseState = true;
-
   PromiseLookup& promiseLookup = cx->realm()->promiseLookup;
+
+  // Try to optimize when the Promise object is in its default state, guarded
+  // by |C == promiseCtor| because we can only perform this optimization
+  // for the builtin Promise constructor.
+  bool isDefaultPromiseState =
+      C == promiseCtor && promiseLookup.isDefaultPromiseState(cx);
+  bool validatePromiseState = iterationMayHaveSideEffects;
+
+  RootedValue promiseResolve(cx, UndefinedValue());
+  if (!isDefaultPromiseState) {
+    // 25.6.4.1.1, step 5.
+    // 25.6.4.3.1, step 3.
+    if (!GetProperty(cx, C, C, cx->names().resolve, &promiseResolve)) {
+      return false;
+    }
+
+    // 25.6.4.1.1, step 6.
+    // 25.6.4.3.1, step 4.
+    if (!IsCallable(promiseResolve)) {
+      ReportIsNotFunction(cx, promiseResolve);
+      return false;
+    }
+  }
 
   RootedValue CVal(cx, ObjectValue(*C));
   RootedValue resolveFunVal(cx);
@@ -2658,7 +2673,7 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
   // which are reused include "Or" in their name.
   RootedValue nextValueOrNextPromise(cx);
   RootedObject nextPromiseObj(cx);
-  RootedValue resolveOrThen(cx);
+  RootedValue thenVal(cx);
   RootedObject thenSpeciesOrBlockedPromise(cx);
   Rooted<PromiseCapability> thenCapability(cx);
 
@@ -2702,8 +2717,8 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
         // side-effects.
         validatePromiseState = iterationMayHaveSideEffects;
 
-        // 25.6.4.1.1, step 6.i.
-        // 25.6.4.3.1, step 3.h.
+        // 25.6.4.1.1, step 8.i.
+        // 25.6.4.3.1, step 5.h.
         // Promise.resolve is a no-op for the default case.
         MOZ_ASSERT(&nextPromise.toObject() == nextValuePromise);
 
@@ -2714,8 +2729,8 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
         // because CommonStaticResolveRejectImpl may have modified it.
         validatePromiseState = true;
 
-        // 25.6.4.1.1, step 6.i.
-        // 25.6.4.3.1, step 3.h.
+        // 25.6.4.1.1, step 8.i.
+        // 25.6.4.3.1, step 5.h.
         // Inline the call to Promise.resolve.
         JSObject* res =
             CommonStaticResolveRejectImpl(cx, CVal, nextValue, ResolveMode);
@@ -2725,23 +2740,31 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
 
         nextPromise.setObject(*res);
       }
-    } else {
-      // 25.6.4.1.1, step 6.i.
-      // 25.6.4.3.1, step 3.h.
-      // Sadly, because someone could have overridden
-      // "resolve" on the canonical Promise constructor.
-      RootedValue& staticResolve = resolveOrThen;
-      if (!GetProperty(cx, C, CVal, cx->names().resolve, &staticResolve)) {
+    } else if (promiseResolve.isUndefined()) {
+      // |promiseResolve| is undefined when the Promise constructor was
+      // initially in its default state, i.e. if it had been retrieved, it would
+      // have been set to |Promise.resolve|.
+
+      // 25.6.4.1.1, step 8.i.
+      // 25.6.4.3.1, step 5.h.
+      // Inline the call to Promise.resolve.
+      JSObject* res =
+          CommonStaticResolveRejectImpl(cx, CVal, nextValue, ResolveMode);
+      if (!res) {
         return false;
       }
 
-      if (!Call(cx, staticResolve, CVal, nextValue, &nextPromise)) {
+      nextPromise.setObject(*res);
+    } else {
+      // 25.6.4.1.1, step 8.i.
+      // 25.6.4.3.1, step 5.h.
+      if (!Call(cx, promiseResolve, CVal, nextValue, &nextPromise)) {
         return false;
       }
     }
 
     // Get the resolving functions for this iteration.
-    // 25.6.4.1.1, steps 6.j-q.
+    // 25.6.4.1.1, steps 8.j-q.
     if (!getResolveAndReject(&resolveFunVal, &rejectFunVal)) {
       return false;
     }
@@ -2755,14 +2778,13 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
     // call to |nextPromise.then| and thus creating a new promise that
     // would not be observable by content.
 
-    // 25.6.4.1.1, step 6.r.
-    // 25.6.4.3.1, step 3.i.
+    // 25.6.4.1.1, step 8.r.
+    // 25.6.4.3.1, step 5.i.
     nextPromiseObj = ToObject(cx, nextPromise);
     if (!nextPromiseObj) {
       return false;
     }
 
-    RootedValue& thenVal = resolveOrThen;
     bool isBuiltinThen;
     if (getThen) {
       // We don't use the Promise lookup cache here, because this code
@@ -2901,7 +2923,7 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
   }
 }
 
-// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.1.1 PerformPromiseAll (iteratorRecord, constructor, resultCapability)
 static MOZ_MUST_USE bool PerformPromiseAll(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
@@ -2974,13 +2996,13 @@ static MOZ_MUST_USE bool PerformPromiseAll(
     return false;
   }
 
-  // Step 5.
+  // Step 7.
   uint32_t index = 0;
 
   auto getResolveAndReject = [cx, &resultCapability, &valuesArray, &dataHolder,
                               &index](MutableHandleValue resolveFunVal,
                                       MutableHandleValue rejectFunVal) {
-    // Step 6.h.
+    // Step 8.h.
     {  // Scope for the AutoRealm we need to work with valuesArray.  We
       // mostly do this for performance; we could go ahead and do the define via
       // a cross-compartment proxy instead...
@@ -2991,7 +3013,7 @@ static MOZ_MUST_USE bool PerformPromiseAll(
       }
     }
 
-    // Steps 6.j-k.
+    // Steps 8.j-k.
     JSFunction* resolveFunc =
         NewNativeFunction(cx, PromiseAllResolveElementFunction, 1, nullptr,
                           gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
@@ -2999,18 +3021,18 @@ static MOZ_MUST_USE bool PerformPromiseAll(
       return false;
     }
 
-    // Steps 6.l, 6.n-p.
+    // Steps 8.l, 8.n-p.
     resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data,
                                  ObjectValue(*dataHolder));
 
-    // Step 6.m.
+    // Step 8.m.
     resolveFunc->setExtendedSlot(
         PromiseAllResolveElementFunctionSlot_ElementIndex, Int32Value(index));
 
-    // Step 6.q.
+    // Step 8.q.
     dataHolder->increaseRemainingCount();
 
-    // Step 6.s.
+    // Step 8.s.
     index++;
     MOZ_ASSERT(index > 0);
 
@@ -3019,16 +3041,16 @@ static MOZ_MUST_USE bool PerformPromiseAll(
     return true;
   };
 
-  // Step 6.
+  // Steps 5-6 and 8.
   if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability.promise(),
                                    done, true, getResolveAndReject)) {
     return false;
   }
 
-  // Step 6.d.ii.
+  // Step 8.d.ii.
   int32_t remainingCount = dataHolder->decreaseRemainingCount();
 
-  // Steps 6.d.iii-iv.
+  // Steps 8.d.iii-iv.
   if (remainingCount == 0) {
     return RunResolutionFunction(cx, resultCapability.resolve(), valuesArrayVal,
                                  ResolveMode, resultCapability.promise());
@@ -3121,14 +3143,14 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
   return true;
 }
 
-// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.3 Promise.race ( iterable )
 static bool Promise_static_race(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CommonStaticAllRace(cx, args, IterationMode::Race);
 }
 
-// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.3.1 PerformPromiseRace (iteratorRecord, constructor, resultCapability)
 static MOZ_MUST_USE bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
@@ -3154,7 +3176,7 @@ static MOZ_MUST_USE bool PerformPromiseRace(
     return true;
   };
 
-  // Step 3.
+  // Steps 3-5.
   return CommonPerformPromiseAllRace(cx, iterator, C,
                                      resultCapability.promise(), done,
                                      isDefaultResolveFn, getResolveAndReject);
@@ -3239,13 +3261,13 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
     return false;
   }
 
-  // Step 5.
+  // Step 7.
   uint32_t index = 0;
 
   auto getResolveAndReject = [cx, &valuesArray, &dataHolder, &index](
                                  MutableHandleValue resolveFunVal,
                                  MutableHandleValue rejectFunVal) {
-    // Step 6.h.
+    // Step 8.h.
     {  // Scope for the AutoRealm we need to work with valuesArray.  We
       // mostly do this for performance; we could go ahead and do the define via
       // a cross-compartment proxy instead...
@@ -3263,7 +3285,7 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
         PromiseAllSettledElementFunction<
             PromiseAllSettledElementFunctionKind::Reject>;
 
-    // Steps 6.j-m.
+    // Steps 8.j-m.
     JSFunction* resolveFunc = NewNativeFunction(
         cx, PromiseAllSettledResolveElementFunction, 1, nullptr,
         gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
@@ -3272,15 +3294,15 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
     }
     resolveFunVal.setObject(*resolveFunc);
 
-    // Steps 6.o-q.
+    // Steps 8.o-q.
     resolveFunc->setExtendedSlot(PromiseAllSettledElementFunctionSlot_Data,
                                  ObjectValue(*dataHolder));
 
-    // Step 6.n.
+    // Step 8.n.
     resolveFunc->setExtendedSlot(
         PromiseAllSettledElementFunctionSlot_ElementIndex, Int32Value(index));
 
-    // Steps 6.r-t.
+    // Steps 8.r-t.
     JSFunction* rejectFunc = NewNativeFunction(
         cx, PromiseAllSettledRejectElementFunction, 1, nullptr,
         gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
@@ -3289,34 +3311,34 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
     }
     rejectFunVal.setObject(*rejectFunc);
 
-    // Steps 6.v-x.
+    // Steps 8.v-x.
     rejectFunc->setExtendedSlot(PromiseAllSettledElementFunctionSlot_Data,
                                 ObjectValue(*dataHolder));
 
-    // Step 6.u.
+    // Step 8.u.
     rejectFunc->setExtendedSlot(
         PromiseAllSettledElementFunctionSlot_ElementIndex, Int32Value(index));
 
-    // Step 6.y.
+    // Step 8.y.
     dataHolder->increaseRemainingCount();
 
-    // Step 6.aa.
+    // Step 8.aa.
     index++;
     MOZ_ASSERT(index > 0);
 
     return true;
   };
 
-  // Step 6.
+  // Steps 5-6 and 8.
   if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability.promise(),
                                    done, true, getResolveAndReject)) {
     return false;
   }
 
-  // Step 6.d.ii.
+  // Step 8.d.ii.
   int32_t remainingCount = dataHolder->decreaseRemainingCount();
 
-  // Steps 6.d.iii-iv.
+  // Steps 8.d.iii-iv.
   if (remainingCount == 0) {
     return RunResolutionFunction(cx, resultCapability.resolve(), valuesArrayVal,
                                  ResolveMode, resultCapability.promise());

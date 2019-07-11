@@ -39,6 +39,7 @@ DevToolsModules(
     'string.js',
     'styles.js',
     'stylesheets.js',
+    'thread.js',
     'webconsole.js',
     'websocket.js',
 )

@@ -8,7 +8,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -25,9 +25,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-grips", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       add_pause_listener();
     });
   });
@@ -35,10 +35,10 @@ function run_test() {
 }
 
 function add_pause_listener() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const [funcGrip, objGrip] = packet.frame.arguments;
-    const func = gThreadClient.pauseGrip(funcGrip);
-    const obj = gThreadClient.pauseGrip(objGrip);
+    const func = gThreadFront.pauseGrip(funcGrip);
+    const obj = gThreadFront.pauseGrip(objGrip);
     test_definition_site(func, obj);
   });
 
@@ -71,6 +71,6 @@ function test_bad_definition_site(obj) {
   try {
     obj._client.request("definitionSite", () => Assert.ok(false));
   } catch (e) {
-    gThreadClient.resume().then(() => finishClient(gClient));
+    gThreadFront.resume().then(() => finishClient(gClient));
   }
 }

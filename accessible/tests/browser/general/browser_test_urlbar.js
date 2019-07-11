@@ -14,9 +14,7 @@ add_task(async function testAutocompleteRichResult() {
   let tab = await openNewTab("data:text/html;charset=utf-8,");
   let accService = await initAccessibilityService();
 
-  info(
-    "Opening the URL bar and entering a key to show the PopupAutoCompleteRichResult panel"
-  );
+  info("Opening the URL bar and entering a key to show the urlbar panel");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     waitForFocus,

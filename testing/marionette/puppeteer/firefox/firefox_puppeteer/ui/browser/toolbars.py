@@ -82,19 +82,6 @@ class LocationBar(UIBaseLib):
         self._autocomplete_results = None
         self._identity_popup = None
 
-    @property
-    def autocomplete_results(self):
-        """Provides access to and methods for the location bar
-        autocomplete results.
-
-        See the :class:`AutocompleteResults` reference."""
-        if not self._autocomplete_results:
-            popup = self.marionette.find_element(By.ID, 'PopupAutoCompleteRichResult')
-            self._autocomplete_results = AutocompleteResults(self.marionette,
-                                                             self.window, popup)
-
-        return self._autocomplete_results
-
     def clear(self):
         """Clears the contents of the url bar (via the DELETE shortcut)."""
         self.focus('shortcut')

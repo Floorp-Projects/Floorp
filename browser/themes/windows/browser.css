@@ -584,29 +584,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
   color: inherit;
 }
 
-#urlbar-search-footer {
-  border-top: 1px solid var(--panel-separator-color);
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#urlbar-search-settings {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  color: GrayText;
-  margin: 0;
-  border: 0;
-  padding: 8px 20px;
-  background: transparent;
-}
-
-#urlbar-search-settings:hover {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#urlbar-search-settings:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
 .urlbar-display {
   margin-top: 0;
   margin-bottom: 0;
@@ -618,8 +595,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 #pageAction-panel-shareURL {
   list-style-image: url("chrome://browser/skin/share.svg");
 }
-
-%include ../shared/urlbarSearchSuggestionsNotification.inc.css
 
 #search-container {
   min-width: calc(54px + 11ch);
@@ -640,20 +615,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid ThreeDShadow;
-}
-
-.ac-title {
-  font-size: 14px;
-}
-
-.ac-tags {
-  font-size: 12px;
-}
-
-.ac-separator,
-.ac-url,
-.ac-action {
-  font-size: 12px;
 }
 
 @media (-moz-windows-default-theme) {

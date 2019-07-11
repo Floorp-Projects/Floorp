@@ -260,9 +260,9 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/shared/fronts/targets/worker",
   },
   {
-    types: ["context"],
+    types: ["thread"],
     spec: "devtools/shared/specs/thread",
-    front: "devtools/shared/client/thread-client",
+    front: "devtools/shared/fronts/thread",
   },
   {
     types: ["console"],
