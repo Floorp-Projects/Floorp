@@ -1,0 +1,62 @@
+{
+  "title": "WhatsNewMessage",
+  "description": "A template for the messages that appear in the What's New panel.",
+  "version": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "localizableText": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The string to be rendered."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string"
+            }
+          },
+          "required": ["string_id"],
+          "description": "Id of localized string to be rendered."
+        }
+      ]
+    }
+  },
+  "properties": {
+    "published_date": {
+      "type": "integer",
+      "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
+    },
+    "title": {
+      "allOf": [
+        {"$ref": "#/definitions/localizableText"},
+        {"description": "Id of localized string or message override of What's New message title"}
+      ]
+    },
+    "body": {
+      "allOf": [
+        {"$ref": "#/definitions/localizableText"},
+        {"description": "Id of localized string or message override of What's New message body"}
+      ]
+    },
+    "link_text": {
+      "allOf": [
+        {"$ref": "#/definitions/localizableText"},
+        {"description": "(optional) Id of localized string or message override of What's New message link text"}
+      ]
+    },
+    "cta_url": {
+      "description": "Target URL for the What's New message.",
+      "type": "string",
+      "format": "uri"
+    },
+    "icon_url": {
+      "description": "(optional) URL for the What's New message icon.",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": false,
+  "required": ["published_date", "title", "body", "cta_url"]
+}
