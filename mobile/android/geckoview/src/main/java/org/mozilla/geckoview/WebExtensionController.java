@@ -29,7 +29,7 @@ public class WebExtensionController implements BundleEventListener {
     private WebExtensionEventDispatcher mDispatcher;
     private TabDelegate mTabDelegate;
 
-    protected WebExtensionController(GeckoRuntime runtime, WebExtensionEventDispatcher dispatcher) {
+    protected WebExtensionController(final GeckoRuntime runtime, final WebExtensionEventDispatcher dispatcher) {
         mRuntime = runtime;
         mDispatcher = dispatcher;
     }
