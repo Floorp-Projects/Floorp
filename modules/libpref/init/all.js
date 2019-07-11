@@ -30,7 +30,6 @@ pref("browser.bookmarks.max_backups",       5);
 
 // Size (in KB) explicitly set by the user. Used when smart_size.enabled == false
 pref("browser.cache.disk.capacity",         256000);
-pref("browser.cache.disk.free_space_hard_limit", 1024); // 1MB
 // Max-size (in KB) for entries in disk cache. Set to -1 for no limit.
 // (Note: entries bigger than 1/8 of disk-cache are never cached)
 pref("browser.cache.disk.max_entry_size",    51200);  // 50 MB

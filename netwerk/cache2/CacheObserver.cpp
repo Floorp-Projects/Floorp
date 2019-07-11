@@ -33,10 +33,6 @@ static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024;  // 250 MB
 Atomic<uint32_t, Relaxed> CacheObserver::sDiskCacheCapacity(
     kDefaultDiskCacheCapacity);
 
-static uint32_t const kDefaultDiskFreeSpaceHardLimit = 1024;  // 1MB
-uint32_t CacheObserver::sDiskFreeSpaceHardLimit =
-    kDefaultDiskFreeSpaceHardLimit;
-
 static uint32_t const kDefaultPreloadChunkCount = 4;
 uint32_t CacheObserver::sPreloadChunkCount = kDefaultPreloadChunkCount;
 
@@ -130,10 +126,6 @@ void CacheObserver::AttachToPreferences() {
   mozilla::Preferences::AddAtomicUintVarCache(&sDiskCacheCapacity,
                                               "browser.cache.disk.capacity",
                                               kDefaultDiskCacheCapacity);
-
-  mozilla::Preferences::AddUintVarCache(
-      &sDiskFreeSpaceHardLimit, "browser.cache.disk.free_space_hard_limit",
-      kDefaultDiskFreeSpaceHardLimit);
 
   mozilla::Preferences::AddUintVarCache(
       &sPreloadChunkCount, "browser.cache.disk.preload_chunk_count",
