@@ -16,10 +16,7 @@ add_task(async function testBackgroundTabs() {
   );
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
-      [TP_PREF, true],
-    ],
+    set: [[TP_PREF, true]],
   });
   await UrlClassifierTestUtils.addTestTrackers();
 

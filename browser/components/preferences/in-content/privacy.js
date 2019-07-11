@@ -709,17 +709,6 @@ var gPrivacyPane = {
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "content-blocking";
     link.setAttribute("href", contentBlockingUrl);
-
-    let contentBlockingTour =
-      Services.urlFormatter.formatURLPref(
-        "privacy.trackingprotection.introURL"
-      ) + `?step=3&newtab=true`;
-    let warningLinks = document.getElementsByClassName(
-      "content-blocking-warning-learn-how"
-    );
-    for (let warningLink of warningLinks) {
-      warningLink.setAttribute("href", contentBlockingTour);
-    }
   },
 
   populateCategoryContents() {
