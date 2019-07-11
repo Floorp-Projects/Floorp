@@ -16,9 +16,6 @@ onmessage = async function(e) {
     let i = win.document.createElement("iframe");
     i.src = "about:blank";
     win.document.body.appendChild(i);
-    await new Promise(resolve => {
-      i.onload = resolve;
-    });
     // override win to make it point to the initial about:blank window
     win = i.contentWindow;
   }
