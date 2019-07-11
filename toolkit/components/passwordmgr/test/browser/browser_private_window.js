@@ -146,7 +146,7 @@ let login = new nsLoginInfo(
   "pass"
 );
 const form1Url = `https://example.com/${DIRECTORY_PATH}subtst_privbrowsing_1.html`;
-const form2Url = `https://example.com/${DIRECTORY_PATH}subtst_privbrowsing_2.html`;
+const form2Url = `https://example.com/${DIRECTORY_PATH}form_password_change.html`;
 const authUrl = `https://example.com/${DIRECTORY_PATH}authenticate.sjs`;
 
 let normalWin;

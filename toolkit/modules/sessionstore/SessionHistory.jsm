@@ -246,6 +246,12 @@ var SessionHistoryInternal = {
       );
     }
 
+    if (shEntry.storagePrincipalToInherit) {
+      entry.storagePrincipalToInherit_base64 = E10SUtils.serializePrincipal(
+        shEntry.storagePrincipalToInherit
+      );
+    }
+
     if (shEntry.triggeringPrincipal) {
       entry.triggeringPrincipal_base64 = E10SUtils.serializePrincipal(
         shEntry.triggeringPrincipal
@@ -519,6 +525,11 @@ var SessionHistoryInternal = {
           );
           return Services.scriptSecurityManager.createNullPrincipal({});
         }
+      );
+    }
+    if (entry.storagePrincipalToInherit_base64) {
+      shEntry.storagePrincipalToInherit = E10SUtils.deserializePrincipal(
+        entry.storagePrincipalToInherit_base64
       );
     }
     if (entry.principalToInherit_base64) {

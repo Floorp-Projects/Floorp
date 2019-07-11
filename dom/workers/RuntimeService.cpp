@@ -1439,11 +1439,7 @@ bool RuntimeService::ScheduleWorker(WorkerPrivate* aWorkerPrivate) {
     }
   }
 
-  int32_t priority = aWorkerPrivate->IsChromeWorker()
-                         ? nsISupportsPriority::PRIORITY_NORMAL
-                         : nsISupportsPriority::PRIORITY_LOW;
-
-  if (NS_FAILED(thread->SetPriority(priority))) {
+  if (NS_FAILED(thread->SetPriority(nsISupportsPriority::PRIORITY_NORMAL))) {
     NS_WARNING("Could not set the thread's priority!");
   }
 

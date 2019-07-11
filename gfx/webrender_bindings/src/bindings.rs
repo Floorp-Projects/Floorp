@@ -1602,13 +1602,11 @@ pub extern "C" fn wr_resource_updates_add_blob_image(
     image_key: BlobImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
-    visible_rect: DeviceIntRect,
 ) {
     txn.add_blob_image(
         image_key,
         descriptor.into(),
         Arc::new(bytes.flush_into_vec()),
-        visible_rect,
         if descriptor.format == ImageFormat::BGRA8 { Some(256) } else { None }
     );
 }
@@ -1713,14 +1711,12 @@ pub extern "C" fn wr_resource_updates_update_blob_image(
     image_key: BlobImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
-    visible_rect: DeviceIntRect,
     dirty_rect: LayoutIntRect,
 ) {
     txn.update_blob_image(
         image_key,
         descriptor.into(),
         Arc::new(bytes.flush_into_vec()),
-        visible_rect,
         &DirtyRect::Partial(dirty_rect)
     );
 }
@@ -3164,7 +3160,6 @@ extern "C" {
                                width: i32,
                                height: i32,
                                format: ImageFormat,
-                               visible_rect: &DeviceIntRect,
                                tile_size: Option<&u16>,
                                tile_offset: Option<&TileOffset>,
                                dirty_rect: Option<&LayoutIntRect>,

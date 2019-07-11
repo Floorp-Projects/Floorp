@@ -26,7 +26,9 @@ async function cleanup(engine, server) {
 }
 
 add_task(async function setup() {
-  await Service.engineManager.unregister("addons"); // To silence errors.
+  // Disable addon sync because AddonManager won't be initialized here.
+  await Service.engineManager.unregister("addons");
+  await Service.engineManager.unregister("extension-storage");
 });
 
 add_task(async function test_ignored_fields() {
