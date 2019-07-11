@@ -104,6 +104,15 @@ linux64-tup:
     toolchains:
         - linux64-gcc-6
 
+linux64-upx:
+    description: "UPX build"
+    treeherder:
+        symbol: TL(upx)
+        tier: 1
+    run:
+        script: build-upx.sh
+        toolchain-artifact: public/build/upx.tar.xz
+
 linux64-custom-v8:
     description: "Custom v8 build"
     treeherder:
