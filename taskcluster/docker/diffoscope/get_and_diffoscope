@@ -36,7 +36,7 @@ case "$ORIG_URL" in
 		curl -L $queue_base/task/${t#*@}/artifacts/${t%@*} | tar -Jxf -
 	done
 	for tool in lipo otool; do
-		ln -s /builds/worker/cctools/bin/x86_64-darwin*-$tool bin/$tool
+		ln -s /builds/worker/cctools/bin/x86_64-apple-darwin*-$tool bin/$tool
 	done
 	export PATH=$PATH:/builds/worker/bin
 	curl -L "$ORIG_URL" > a.dmg
