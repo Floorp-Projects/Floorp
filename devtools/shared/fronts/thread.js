@@ -47,7 +47,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     this.before("resumed", this._beforeResumed);
     this.before("detached", this._beforeDetached);
     // Attribute name from which to retrieve the actorID out of the target actor's form
-    this.formAttributeName = "contextActor";
+    this.formAttributeName = "threadActor";
   }
 
   get state() {
