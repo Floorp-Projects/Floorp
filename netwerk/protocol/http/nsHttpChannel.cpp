@@ -109,7 +109,7 @@
 #include "nsMixedContentBlocker.h"
 #include "CacheStorageService.h"
 #include "HttpChannelParent.h"
-#include "HttpChannelParentListener.h"
+#include "ParentChannelListener.h"
 #include "InterceptedHttpChannel.h"
 #include "nsIBufferedStreams.h"
 #include "nsIFileStreams.h"
@@ -7343,27 +7343,18 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
   rv = CheckRedirectLimit(nsIChannelEventSink::REDIRECT_INTERNAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We can't do QueryObject mCallbacks into HttpChannelParentListener, because
-  // the notification callbacks can be replaced with another object.
-  // Rather we do GetInterface for HttpChannelParent, which should always be
-  // there if the new callbacks properly forward to the original channel's
-  // callbacks, and get the listener from there using QueryObject.
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
   RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
   MOZ_ASSERT(httpParent);
   NS_ENSURE_TRUE(httpParent, NS_ERROR_UNEXPECTED);
 
-  RefPtr<HttpChannelParentListener> listener = httpParent->GetParentListener();
-  MOZ_ASSERT(listener);
-  NS_ENSURE_TRUE(listener, NS_ERROR_UNEXPECTED);
-
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
       CloneLoadInfoForRedirect(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
   redirectLoadInfo->SetResultPrincipalURI(mURI);
 
-  listener->TriggerCrossProcessRedirect(this, redirectLoadInfo,
-                                        mCrossProcessRedirectIdentifier);
+  httpParent->TriggerCrossProcessRedirect(this, redirectLoadInfo,
+                                          mCrossProcessRedirectIdentifier);
 
   // This will suspend the channel
   rv = WaitForRedirectCallback();

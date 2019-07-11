@@ -490,8 +490,8 @@ FTPChannelParent::OnDataAvailable(nsIRequest* aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-FTPChannelParent::SetParentListener(HttpChannelParentListener* aListener) {
-  // Do not need ptr to HttpChannelParentListener.
+FTPChannelParent::SetParentListener(ParentChannelListener* aListener) {
+  // Do not need ptr to ParentChannelListener.
   return NS_OK;
 }
 
