@@ -109,10 +109,6 @@ namespace ipc {
 
 static Atomic<int32_t> gChildCounter;
 
-static inline nsISerialEventTarget* IOThread() {
-  return XRE_GetIOMessageLoop()->SerialEventTarget();
-}
-
 class BaseProcessLauncher {
  public:
   BaseProcessLauncher(GeckoChildProcessHost* aHost,
@@ -132,16 +128,6 @@ class BaseProcessLauncher {
         mTmpDirName(aHost->mTmpDirName),
         mChildId(++gChildCounter) {
     SprintfLiteral(mPidString, "%d", base::GetCurrentProcId());
-
-    // Compute the serial event target we'll use for launching.
-    if (mozilla::recordreplay::IsMiddleman()) {
-      // During Web Replay, the middleman process launches the actual content
-      // processes, and doesn't initialize enough of XPCOM to use thread pools.
-      mLaunchThread = IOThread();
-    } else {
-      nsCOMPtr<nsIEventTarget> threadOrPool = GetIPCLauncher();
-      mLaunchThread = new TaskQueue(threadOrPool.forget());
-    }
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BaseProcessLauncher);
@@ -157,7 +143,7 @@ class BaseProcessLauncher {
   // Overrideable hooks. If superclass behavior is invoked, it's always at the
   // top of the override.
   virtual bool DoSetup();
-  virtual RefPtr<ProcessHandlePromise> DoLaunch() = 0;
+  virtual bool DoLaunch() = 0;
   virtual bool DoFinishLaunch() { return true; };
 
   void MapChildLogging();
@@ -170,9 +156,6 @@ class BaseProcessLauncher {
     return XRE_ChildProcessTypeToString(mProcessType);
   }
 
-  nsCOMPtr<nsIEventTarget> GetIPCLauncher();
-
-  nsCOMPtr<nsISerialEventTarget> mLaunchThread;
   GeckoProcessType mProcessType;
   UniquePtr<base::LaunchOptions> mLaunchOptions;
   std::vector<std::string> mExtraOpts;
@@ -207,7 +190,7 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
 
  protected:
   virtual bool DoSetup() override;
-  virtual RefPtr<ProcessHandlePromise> DoLaunch() override;
+  virtual bool DoLaunch() override;
   virtual bool DoFinishLaunch() override;
 
   mozilla::Maybe<CommandLine> mCmdLine;
@@ -225,7 +208,7 @@ class PosixProcessLauncher : public BaseProcessLauncher {
 
  protected:
   virtual bool DoSetup() override;
-  virtual RefPtr<ProcessHandlePromise> DoLaunch() override;
+  virtual bool DoLaunch() override;
   virtual bool DoFinishLaunch() override;
 
   std::vector<std::string> mChildArgv;
@@ -264,7 +247,7 @@ class AndroidProcessLauncher : public PosixProcessLauncher {
       : PosixProcessLauncher(aHost, std::move(aExtraOpts)) {}
 
  protected:
-  virtual RefPtr<ProcessHandlePromise> DoLaunch() override;
+  virtual bool DoLaunch() override;
   void LaunchAndroidService(
       const char* type, const std::vector<std::string>& argv,
       const base::file_handle_mapping_vector& fds_to_remap,
@@ -291,7 +274,6 @@ typedef LinuxProcessLauncher ProcessLauncher;
 #  endif
 #endif  // OS_POSIX
 
-using base::ProcessHandle;
 using mozilla::ipc::BaseProcessLauncher;
 using mozilla::ipc::ProcessLauncher;
 
@@ -581,6 +563,10 @@ bool GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts,
   return WaitUntilConnected(aTimeoutMs);
 }
 
+static inline nsISerialEventTarget* IOThread() {
+  return XRE_GetIOMessageLoop()->SerialEventTarget();
+}
+
 bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
   PrepareLaunch();
 
@@ -771,6 +757,7 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
   buffer.AppendInt(gChildCounter);
 }
 
+namespace {
 // Windows needs a single dedicated thread for process launching,
 // because of thread-safety restrictions/assertions in the sandbox
 // code.  (This implementation isn't itself Windows-specific, so
@@ -805,7 +792,7 @@ IPCLaunchThreadObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return rv;
 }
 
-nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
+static nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   StaticMutexAutoLock lock(gIPCLaunchThreadMutex);
   if (!gIPCLaunchThread) {
     nsCOMPtr<nsIThread> thread;
@@ -832,7 +819,7 @@ nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
 
 // Non-Windows platforms can use an on-demand thread pool.
 
-nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
+static nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   nsCOMPtr<nsIEventTarget> pool =
       mozilla::SharedThreadPool::Get(NS_LITERAL_CSTRING("IPC Launch"));
   MOZ_DIAGNOSTIC_ASSERT(pool);
@@ -840,6 +827,7 @@ nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
 }
 
 #endif  // XP_WIN
+}  // anonymous namespace
 
 void
 #if defined(XP_WIN)
@@ -913,16 +901,11 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::PerformAsyncLaunch() {
   if (!DoSetup()) {
     return ProcessLaunchPromise::CreateAndReject(LaunchError{}, __func__);
   }
-  RefPtr<BaseProcessLauncher> self = this;
-  return DoLaunch()->Then(
-      mLaunchThread, __func__,
-      [self](base::ProcessHandle aHandle) {
-        self->mResults.mHandle = aHandle;
-        return self->FinishLaunch();
-      },
-      [](LaunchError aError) {
-        return ProcessLaunchPromise::CreateAndReject(aError, __func__);
-      });
+  if (!DoLaunch()) {
+    return ProcessLaunchPromise::CreateAndReject(LaunchError{}, __func__);
+  }
+
+  return FinishLaunch();
 }
 
 bool BaseProcessLauncher::DoSetup() {
@@ -1133,23 +1116,16 @@ bool PosixProcessLauncher::DoSetup() {
 #endif  // OS_POSIX
 
 #if defined(MOZ_WIDGET_ANDROID)
-RefPtr<ProcessHandlePromise> AndroidProcessLauncher::DoLaunch() {
-  ProcessHandle handle = 0;
+bool AndroidProcessLauncher::DoLaunch() {
   LaunchAndroidService(ChildProcessType(), mChildArgv,
                        mLaunchOptions->fds_to_remap, &mResults.mHandle);
-  return handle != 0
-             ? ProcessHandlePromise::CreateAndResolve(handle, __func__)
-             : ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
+  return mResults.mHandle != 0;
 }
 #endif  // MOZ_WIDGET_ANDROID
 
 #ifdef OS_POSIX
-RefPtr<ProcessHandlePromise> PosixProcessLauncher::DoLaunch() {
-  ProcessHandle handle = 0;
-  if (!base::LaunchApp(mChildArgv, *mLaunchOptions, &handle)) {
-    return ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
-  }
-  return ProcessHandlePromise::CreateAndResolve(handle, __func__);
+bool PosixProcessLauncher::DoLaunch() {
+  return base::LaunchApp(mChildArgv, *mLaunchOptions, &mResults.mHandle);
 }
 
 bool PosixProcessLauncher::DoFinishLaunch() {
@@ -1434,28 +1410,24 @@ bool WindowsProcessLauncher::DoSetup() {
   return true;
 }
 
-RefPtr<ProcessHandlePromise> WindowsProcessLauncher::DoLaunch() {
-  ProcessHandle handle = 0;
+bool WindowsProcessLauncher::DoLaunch() {
 #  ifdef MOZ_SANDBOX
   if (mUseSandbox) {
     if (mResults.mSandboxBroker->LaunchApp(
             mCmdLine->program().c_str(),
             mCmdLine->command_line_string().c_str(), mLaunchOptions->env_map,
-            mProcessType, mEnableSandboxLogging, &handle)) {
+            mProcessType, mEnableSandboxLogging, &mResults.mHandle)) {
       EnvironmentLog("MOZ_PROCESS_LOG")
           .print("==> process %d launched child process %d (%S)\n",
-                 base::GetCurrentProcId(), base::GetProcId(handle),
+                 base::GetCurrentProcId(), base::GetProcId(mResults.mHandle),
                  mCmdLine->command_line_string().c_str());
-      return ProcessHandlePromise::CreateAndResolve(handle, __func__);
+      return true;
     }
-    ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
+    return false;
   }
 #  endif  // defined(MOZ_SANDBOX)
 
-  if (!base::LaunchApp(mCmdLine.ref(), *mLaunchOptions, &handle)) {
-    return ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
-  }
-  return ProcessHandlePromise::CreateAndResolve(handle, __func__);
+  return base::LaunchApp(mCmdLine.ref(), *mLaunchOptions, &mResults.mHandle);
 }
 
 bool WindowsProcessLauncher::DoFinishLaunch() {
@@ -1690,7 +1662,17 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
   }
   mChannelId = aHost->GetChannelId();
 
-  return InvokeAsync(mLaunchThread, this, __func__,
+  nsCOMPtr<nsISerialEventTarget> launchThread;
+  if (mozilla::recordreplay::IsMiddleman()) {
+    // During Web Replay, the middleman process launches the actual content
+    // processes, and doesn't initialize enough of XPCOM to use thread pools.
+    launchThread = IOThread();
+  } else {
+    nsCOMPtr<nsIEventTarget> threadOrPool = GetIPCLauncher();
+    launchThread = new TaskQueue(threadOrPool.forget());
+  }
+
+  return InvokeAsync(launchThread, this, __func__,
                      &BaseProcessLauncher::PerformAsyncLaunch);
 }
 
