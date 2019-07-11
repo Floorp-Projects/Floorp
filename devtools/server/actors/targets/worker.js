@@ -39,7 +39,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
     const form = {
       actor: this.actorID,
       consoleActor: this._consoleActor,
-      contextActor: this._threadActor,
+      threadActor: this._threadActor,
       id: this._dbg.id,
       url: this._dbg.url,
       type: this._dbg.type,

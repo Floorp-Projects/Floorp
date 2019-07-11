@@ -712,6 +712,127 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.enable",
+   browser_cache_disk_enable,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "browser.cache.memory.enable",
+   browser_cache_memory_enable,
+  RelaxedAtomicBool, true
+)
+
+// Limit of recent metadata we keep in memory for faster access, in KB.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.metadata_memory_limit",
+   browser_cache_disk_metadata_memory_limit,
+  RelaxedAtomicUint32, 250 // 0.25 MB
+)
+
+// Does the user want smart-sizing?
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.smart_size.enabled",
+   browser_cache_disk_smart_size_enabled,
+  RelaxedAtomicBool, true
+)
+
+// -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.memory.capacity",
+   browser_cache_memory_capacity,
+  RelaxedAtomicInt32,
+#ifdef ANDROID
+  1024  // kilobytes
+#else
+  -1    // determine dynamically
+#endif
+)
+
+// When smartsizing is disabled we could potentially fill all disk space by
+// cache data when the disk capacity is not set correctly. To avoid that we
+// check the free space every time we write some data to the cache. The free
+// space is checked against two limits. Once the soft limit is reached we start
+// evicting the least useful entries, when we reach the hard limit writing to
+// the entry fails.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.free_space_soft_limit",
+   browser_cache_disk_free_space_soft_limit,
+  RelaxedAtomicUint32, 5 * 1024 // 5MB
+)
+
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.free_space_hard_limit",
+   browser_cache_disk_free_space_hard_limit,
+  RelaxedAtomicUint32, 1024  // 1MB
+)
+
+// The number of chunks we preload ahead of read. One chunk currently has
+// 256kB.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.preload_chunk_count",
+   browser_cache_disk_preload_chunk_count,
+  RelaxedAtomicUint32, 4  // 1 MB of read ahead
+)
+
+// Max-size (in KB) for entries in disk cache. Set to -1 for no limit.
+// (Note: entries bigger than 1/8 of disk-cache are never cached)
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.max_entry_size",
+   browser_cache_disk_max_entry_size,
+  RelaxedAtomicUint32, 50 * 1024  // 50 MB
+)
+
+// Max-size (in KB) for entries in memory cache. Set to -1 for no limit.
+// (Note: entries bigger than than 90% of the mem-cache are never cached.)
+VARCACHE_PREF(
+  Live,
+  "browser.cache.memory.max_entry_size",
+   browser_cache_memory_max_entry_size,
+  RelaxedAtomicInt32, 5 * 1024
+)
+
+// Memory limit (in kB) for new cache data not yet written to disk. Writes to
+// the cache are buffered and written to disk on background with low priority.
+// With a slow persistent storage these buffers may grow when data is coming
+// fast from the network. When the amount of unwritten data is exceeded, new
+// writes will simply fail. We have two buckets, one for important data
+// (priority) like html, css, fonts and js, and one for other data like images,
+// video, etc.
+// Note: 0 means no limit.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.max_chunks_memory_usage",
+   browser_cache_disk_max_chunks_memory_usage,
+  RelaxedAtomicUint32, 40 * 1024
+)
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.max_priority_chunks_memory_usage",
+   browser_cache_disk_max_priority_chunks_memory_usage,
+  RelaxedAtomicUint32, 40 * 1024
+)
+
+// Number of seconds the cache spends writing pending data and closing files
+// after shutdown has been signalled. Past that time data is not written and
+// files are left open for the OS to clean up.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.max_shutdown_io_lag",
+   browser_cache_max_shutdown_io_lag,
+  RelaxedAtomicUint32, 2
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
@@ -7129,6 +7250,20 @@ VARCACHE_PREF(
   "privacy.window.maxInnerHeight",
   privacy_window_maxInnerHeight,
   int32_t, 1000
+)
+
+VARCACHE_PREF(
+  Live,
+  "privacy.sanitize.sanitizeOnShutdown",
+   privacy_sanitize_sanitizeOnShutdown,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "privacy.clearOnShutdown.cache",
+   privacy_clearOnShutdown_cache,
+  RelaxedAtomicBool, false
 )
 
 //---------------------------------------------------------------------------

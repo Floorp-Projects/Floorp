@@ -329,8 +329,6 @@ Implements an input box *View*, owns an *UrlbarView*.
     view;
     // Whether the current value was typed by the user.
     valueIsTyped;
-    // Whether the input box has been focused by a user action.
-    userInitiatedFocus;
     // Whether the context is in Private Browsing mode.
     isPrivate;
     // Whether the input box is focused.

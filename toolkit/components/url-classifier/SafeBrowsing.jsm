@@ -243,6 +243,44 @@ const FEATURES = [
       );
     },
   },
+  {
+    name: "socialtracking-annotation",
+    list: [
+      "urlclassifier.features.socialtracking.annotate.blacklistTables",
+      "urlclassifier.features.socialtracking.annotate.whitelistTables",
+    ],
+    enabled() {
+      return Services.prefs.getBoolPref(
+        "privacy.trackingprotection.socialtracking.annotate.enabled",
+        false
+      );
+    },
+    update() {
+      return Services.prefs.getBoolPref(
+        "browser.safebrowsing.features.socialtracking.annotate.update",
+        this.enabled()
+      );
+    },
+  },
+  {
+    name: "socialtracking-protection",
+    list: [
+      "urlclassifier.features.socialtracking.blacklistTables",
+      "urlclassifier.features.socialtracking.whitelistTables",
+    ],
+    enabled() {
+      return Services.prefs.getBoolPref(
+        "privacy.trackingprotection.socialtracking.enabled",
+        false
+      );
+    },
+    update() {
+      return Services.prefs.getBoolPref(
+        "browser.safebrowsing.features.socialtracking.update",
+        this.enabled()
+      );
+    },
+  },
 ];
 
 var SafeBrowsing = {

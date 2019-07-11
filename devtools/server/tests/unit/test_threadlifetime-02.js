@@ -10,7 +10,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -24,9 +24,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-grips", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_thread_lifetime();
     });
   });
@@ -34,7 +34,7 @@ function run_test() {
 }
 
 function test_thread_lifetime() {
-  gThreadClient.once("paused", async function(packet) {
+  gThreadFront.once("paused", async function(packet) {
     const pauseGrip = packet.frame.arguments[0];
 
     // Create a thread-lifetime actor for this object.
@@ -44,7 +44,7 @@ function test_thread_lifetime() {
     });
     // Successful promotion won't return an error.
     Assert.equal(response.error, undefined);
-    gThreadClient.once("paused", function(packet) {
+    gThreadFront.once("paused", function(packet) {
       // Verify that the promoted actor is returned again.
       Assert.equal(pauseGrip.actor, packet.frame.arguments[0].actor);
       // Now that we've resumed, release the thread-lifetime grip.
@@ -54,7 +54,7 @@ function test_thread_lifetime() {
             { to: pauseGrip.actor, type: "bogusRequest" },
             function(response) {
               Assert.equal(response.error, "noSuchActor");
-              gThreadClient.resume().then(function() {
+              gThreadFront.resume().then(function() {
                 finishClient(gClient);
               });
             }
@@ -65,7 +65,7 @@ function test_thread_lifetime() {
         }
       });
     });
-    gThreadClient.resume();
+    gThreadFront.resume();
   });
 
   gDebuggee.eval(

@@ -9,8 +9,8 @@
  * scripts that contain a source url pragma.
  */
 add_task(
-  threadClientTest(async ({ threadClient, targetFront }) => {
-    await threadClient.setBreakpoint(
+  threadFrontTest(async ({ threadFront, targetFront }) => {
+    await threadFront.setBreakpoint(
       { sourceUrl: "http://example.com/code.js", line: 2, column: 1 },
       {}
     );
@@ -23,16 +23,16 @@ add_task(
     );
     await onEvaluationResult;
 
-    const sourcePacket = await waitForEvent(threadClient, "newSource");
+    const sourcePacket = await waitForEvent(threadFront, "newSource");
     equal(sourcePacket.source.url, "http://example.com/code.js");
 
     info("Evaluate f() and pause at line 2");
     onEvaluationResult = consoleFront.once("evaluationResult");
     consoleFront.evaluateJSAsync("f()");
-    const pausedPacket = await waitForPause(threadClient);
+    const pausedPacket = await waitForPause(threadFront);
     equal(pausedPacket.why.type, "breakpoint");
     equal(pausedPacket.frame.where.line, 2);
-    resume(threadClient);
+    resume(threadFront);
     await onEvaluationResult;
   })
 );

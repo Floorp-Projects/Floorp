@@ -22,6 +22,7 @@ document.documentElement.addEventListener(
   "dialoghelp",
   window.top.openPrefsHelp
 );
+window.addEventListener("load", () => gFontsDialog.onLoad());
 
 Preferences.addAll([
   { id: "font.language.group", type: "wstring" },
@@ -31,6 +32,27 @@ Preferences.addAll([
 
 var gFontsDialog = {
   _selectLanguageGroupPromise: Promise.resolve(),
+
+  onLoad() {
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("selectLangs"),
+      () => this.readFontLanguageGroup()
+    );
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("useDocumentFonts"),
+      () => this.readUseDocumentFonts()
+    );
+    Preferences.addSyncToPrefListener(
+      document.getElementById("useDocumentFonts"),
+      () => this.writeUseDocumentFonts()
+    );
+    for (let id of ["serif", "sans-serif", "monospace"]) {
+      let el = document.getElementById(id);
+      Preferences.addSyncFromPrefListener(el, () =>
+        FontBuilder.readFontSelection(el)
+      );
+    }
+  },
 
   _selectLanguageGroup(aLanguageGroup) {
     this._selectLanguageGroupPromise = (async () => {

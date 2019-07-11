@@ -84,12 +84,16 @@ window.addEventListener(
       );
     gConnectionsDialog.updateProxySettingsUI();
     initializeProxyUI(gConnectionsDialog);
+    gConnectionsDialog.registerSyncPrefListeners();
+    document.documentElement.addEventListener("beforeaccept", e =>
+      gConnectionsDialog.beforeAccept(e)
+    );
   },
   { once: true, capture: true }
 );
 
 var gConnectionsDialog = {
-  beforeAccept() {
+  beforeAccept(event) {
     let dnsOverHttpsResolverChoice = document.getElementById(
       "networkDnsOverHttpsResolverChoices"
     ).value;
@@ -112,11 +116,11 @@ var gConnectionsDialog = {
     var proxyTypePref = Preferences.get("network.proxy.type");
     if (proxyTypePref.value == 2) {
       this.doAutoconfigURLFixup();
-      return true;
+      return;
     }
 
     if (proxyTypePref.value != 1) {
-      return true;
+      return;
     }
 
     var httpProxyURLPref = Preferences.get("network.proxy.http");
@@ -141,7 +145,8 @@ var gConnectionsDialog = {
         document
           .getElementById("networkProxy" + prefName.toUpperCase() + "_Port")
           .focus();
-        return false;
+        event.preventDefault();
+        return;
       }
     }
 
@@ -170,8 +175,6 @@ var gConnectionsDialog = {
     }
 
     this.sanitizeNoProxiesPref();
-
-    return true;
   },
 
   checkForSystemProxy() {
@@ -572,5 +575,54 @@ var gConnectionsDialog = {
       this.updateDnsOverHttpsUI();
       document.getElementById("networkDnsOverHttps").disabled = false;
     }
+  },
+
+  registerSyncPrefListeners() {
+    function setSyncFromPrefListener(element_id, callback) {
+      Preferences.addSyncFromPrefListener(
+        document.getElementById(element_id),
+        callback
+      );
+    }
+    function setSyncToPrefListener(element_id, callback) {
+      Preferences.addSyncToPrefListener(
+        document.getElementById(element_id),
+        callback
+      );
+    }
+    setSyncFromPrefListener("networkProxyType", () => this.readProxyType());
+    setSyncFromPrefListener("networkProxyHTTP", () =>
+      this.readHTTPProxyServer()
+    );
+    setSyncFromPrefListener("networkProxyHTTP_Port", () =>
+      this.readHTTPProxyPort()
+    );
+    setSyncFromPrefListener("shareAllProxies", () =>
+      this.updateProtocolPrefs()
+    );
+    setSyncFromPrefListener("networkProxySSL", () =>
+      this.readProxyProtocolPref("ssl", false)
+    );
+    setSyncFromPrefListener("networkProxySSL_Port", () =>
+      this.readProxyProtocolPref("ssl", true)
+    );
+    setSyncFromPrefListener("networkProxyFTP", () =>
+      this.readProxyProtocolPref("ftp", false)
+    );
+    setSyncFromPrefListener("networkProxyFTP_Port", () =>
+      this.readProxyProtocolPref("ftp", true)
+    );
+    setSyncFromPrefListener("networkProxySOCKS", () =>
+      this.readProxyProtocolPref("socks", false)
+    );
+    setSyncFromPrefListener("networkProxySOCKS_Port", () =>
+      this.readProxyProtocolPref("socks", true)
+    );
+    setSyncFromPrefListener("networkDnsOverHttps", () =>
+      this.readDnsOverHttpsMode()
+    );
+    setSyncToPrefListener("networkDnsOverHttps", () =>
+      this.writeDnsOverHttpsMode()
+    );
   },
 };

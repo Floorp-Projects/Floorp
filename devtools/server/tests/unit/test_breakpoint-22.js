@@ -9,15 +9,15 @@
  */
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     // Populate the `ScriptStore` so that we only test that the script
     // is added through `onNewScript`
-    await getSources(threadClient);
+    await getSources(threadFront);
 
     const packet = await executeOnNextTickAndWaitForPause(() => {
       evalCode(debuggee);
-    }, threadClient);
-    const source = await getSourceById(threadClient, packet.frame.where.actor);
+    }, threadFront);
+    const source = await getSourceById(threadFront, packet.frame.where.actor);
 
     const location = {
       line: debuggee.line0 + 2,
@@ -40,7 +40,7 @@ add_task(
       }
     );
 
-    await resume(threadClient);
+    await resume(threadFront);
   })
 );
 

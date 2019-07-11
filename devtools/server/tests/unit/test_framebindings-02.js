@@ -9,7 +9,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
@@ -25,9 +25,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_pause_frame();
     });
   });
@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     let parentEnv = packet.frame.environment.parent;
     const bindings = parentEnv.bindings;
     const args = bindings.arguments;
@@ -49,13 +49,13 @@ function test_pause_frame() {
     // Skip the global lexical scope.
     parentEnv = parentEnv.parent.parent;
     Assert.notEqual(parentEnv, undefined);
-    const objClient = gThreadClient.pauseGrip(parentEnv.object);
+    const objClient = gThreadFront.pauseGrip(parentEnv.object);
     objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.Object.value.type, "object");
       Assert.equal(response.ownProperties.Object.value.class, "Function");
       Assert.ok(!!response.ownProperties.Object.value.actor);
 
-      gThreadClient.resume().then(function() {
+      gThreadFront.resume().then(function() {
         finishClient(gClient);
       });
     });

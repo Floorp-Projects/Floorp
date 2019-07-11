@@ -14,14 +14,14 @@ import {
 } from "../../../utils/test-head";
 import {
   createSource,
-  sourceThreadClient,
-} from "../../tests/helpers/threadClient.js";
+  sourceThreadFront,
+} from "../../tests/helpers/threadFront.js";
 import { getBreakpointsList } from "../../../selectors";
 import { isFulfilled, isRejected } from "../../../utils/async-value";
 
 describe("loadSourceText", () => {
   it("should load source text", async () => {
-    const store = createStore(sourceThreadClient);
+    const store = createStore(sourceThreadFront);
     const { dispatch, getState, cx } = store;
 
     const foo1Source = await dispatch(
@@ -59,7 +59,7 @@ describe("loadSourceText", () => {
 
     const store = createStore(
       {
-        ...sourceThreadClient,
+        ...sourceThreadFront,
         sourceContents: async () => fooGenContent,
         getBreakpointPositions: async () => ({ "1": [0] }),
         getBreakableLines: async () => [],
@@ -223,7 +223,7 @@ describe("loadSourceText", () => {
   });
 
   it("should cache subsequent source text loads", async () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo1"))
@@ -238,7 +238,7 @@ describe("loadSourceText", () => {
   });
 
   it("should indicate a loading source", async () => {
-    const store = createStore(sourceThreadClient);
+    const store = createStore(sourceThreadFront);
     const { dispatch, cx } = store;
 
     const source = await dispatch(
@@ -255,7 +255,7 @@ describe("loadSourceText", () => {
   });
 
   it("should indicate an errored source text", async () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("bad-id"))

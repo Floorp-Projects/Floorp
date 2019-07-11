@@ -10,12 +10,12 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const [grip] = packet.frame.arguments;
 
-        const objClient = threadClient.pauseGrip(grip);
+        const objClient = threadFront.pauseGrip(grip);
 
         // Checks the result of enumProperties.
         let response = await objClient.enumProperties({});
@@ -25,7 +25,7 @@ add_task(
         response = await objClient.enumSymbols();
         await check_enum_symbols(response);
 
-        await threadClient.resume();
+        await threadFront.resume();
         resolve();
       });
 

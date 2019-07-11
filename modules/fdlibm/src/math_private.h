@@ -771,7 +771,6 @@ irintl(long double x)
 #define log fdlibm::log
 #define log10 fdlibm::log10
 #define pow fdlibm::pow
-#define sqrt fdlibm::sqrt
 #define ceil fdlibm::ceil
 #define ceilf fdlibm::ceilf
 #define fabs fdlibm::fabs

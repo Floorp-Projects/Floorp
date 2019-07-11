@@ -65,6 +65,8 @@ class TabListener : public nsIDOMEventListener,
   // the function is called only when TabListener is in parent process
   bool ForceFlushFromParent(uint32_t aFlushId, bool aIsFinal = false);
   void RemoveListeners();
+  void SetEpoch(uint32_t aEpoch) { mEpoch = aEpoch; }
+  uint32_t GetEpoch() { return mEpoch; }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TabListener, nsIDOMEventListener)
@@ -91,6 +93,7 @@ class TabListener : public nsIDOMEventListener,
   nsCOMPtr<nsITimer> mUpdatedTimer;
   bool mTimeoutDisabled;
   int32_t mUpdateInterval;
+  uint32_t mEpoch;
 };
 
 }  // namespace dom

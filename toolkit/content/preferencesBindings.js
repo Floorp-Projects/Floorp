@@ -250,22 +250,12 @@ const Preferences = (window.Preferences = (function() {
     },
 
     _fireEvent(aEventName, aTarget) {
-      // Panel loaded, synthesize a load event.
       try {
-        const event = document.createEvent("Events");
-        event.initEvent(aEventName, true, true);
-        let cancel = !aTarget.dispatchEvent(event);
-        if (aTarget.hasAttribute("on" + aEventName)) {
-          const fn = new Function(
-            "event",
-            aTarget.getAttribute("on" + aEventName)
-          );
-          const rv = fn.call(aTarget, event);
-          if (!rv) {
-            cancel = true;
-          }
-        }
-        return !cancel;
+        const event = new CustomEvent(aEventName, {
+          bubbles: true,
+          cancelable: true,
+        });
+        return aTarget.dispatchEvent(event);
       } catch (e) {
         Cu.reportError(e);
       }
@@ -304,6 +294,41 @@ const Preferences = (window.Preferences = (function() {
         default:
           return undefined;
       }
+    },
+
+    _syncFromPrefListeners: new WeakMap(),
+    _syncToPrefListeners: new WeakMap(),
+
+    addSyncFromPrefListener(aElement, callback) {
+      this._syncFromPrefListeners.set(aElement, callback);
+      // Make sure elements are updated correctly with the listener attached.
+      let elementPref = aElement.getAttribute("preference");
+      if (elementPref) {
+        let pref = this.get(elementPref);
+        if (pref) {
+          pref.updateElements();
+        }
+      }
+    },
+
+    addSyncToPrefListener(aElement, callback) {
+      this._syncToPrefListeners.set(aElement, callback);
+      // Make sure elements are updated correctly with the listener attached.
+      let elementPref = aElement.getAttribute("preference");
+      if (elementPref) {
+        let pref = this.get(elementPref);
+        if (pref) {
+          pref.updateElements();
+        }
+      }
+    },
+
+    removeSyncFromPrefListener(aElement) {
+      this._syncFromPrefListeners.delete(aElement);
+    },
+
+    removeSyncToPrefListener(aElement) {
+      this._syncToPrefListeners.delete(aElement);
     },
   };
 
@@ -383,19 +408,9 @@ const Preferences = (window.Preferences = (function() {
       }
 
       let rv = undefined;
-      if (aElement.hasAttribute("onsyncfrompreference")) {
-        // Value changed, synthesize an event
-        try {
-          const event = document.createEvent("Events");
-          event.initEvent("syncfrompreference", true, true);
-          const f = new Function(
-            "event",
-            aElement.getAttribute("onsyncfrompreference")
-          );
-          rv = f.call(aElement, event);
-        } catch (e) {
-          Cu.reportError(e);
-        }
+
+      if (Preferences._syncFromPrefListeners.has(aElement)) {
+        rv = Preferences._syncFromPrefListeners.get(aElement)(aElement);
       }
       let val = rv;
       if (val === undefined) {
@@ -446,16 +461,9 @@ const Preferences = (window.Preferences = (function() {
     }
 
     getElementValue(aElement) {
-      if (aElement.hasAttribute("onsynctopreference")) {
-        // Value changed, synthesize an event
+      if (Preferences._syncToPrefListeners.has(aElement)) {
         try {
-          const event = document.createEvent("Events");
-          event.initEvent("synctopreference", true, true);
-          const f = new Function(
-            "event",
-            aElement.getAttribute("onsynctopreference")
-          );
-          const rv = f.call(aElement, event);
+          const rv = Preferences._syncToPrefListeners.get(aElement)(aElement);
           if (rv !== undefined) {
             return rv;
           }

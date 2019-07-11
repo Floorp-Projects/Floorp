@@ -11,7 +11,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -21,9 +21,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-conditional-breakpoint", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_simple_breakpoint();
     });
   });
@@ -31,35 +31,35 @@ function run_test() {
 }
 
 function test_simple_breakpoint() {
-  gThreadClient.once("paused", async function(packet) {
-    const source = await getSourceById(gThreadClient, packet.frame.where.actor);
+  gThreadFront.once("paused", async function(packet) {
+    const source = await getSourceById(gThreadFront, packet.frame.where.actor);
 
-    gThreadClient.pauseOnExceptions(true, false);
+    gThreadFront.pauseOnExceptions(true, false);
     const location = { sourceUrl: source.url, line: 3 };
-    gThreadClient.setBreakpoint(location, { condition: "throw new Error()" });
-    gThreadClient.once("paused", async function(packet) {
+    gThreadFront.setBreakpoint(location, { condition: "throw new Error()" });
+    gThreadFront.once("paused", async function(packet) {
       // Check the return value.
       Assert.equal(packet.why.type, "exception");
       Assert.equal(packet.frame.where.line, 1);
 
       // Step over twice.
-      await stepOver(gThreadClient);
-      packet = await stepOver(gThreadClient);
+      await stepOver(gThreadFront);
+      packet = await stepOver(gThreadFront);
 
       // Check the return value.
       Assert.equal(packet.why.type, "breakpointConditionThrown");
       Assert.equal(packet.frame.where.line, 3);
 
       // Remove the breakpoint.
-      gThreadClient.removeBreakpoint(location);
+      gThreadFront.removeBreakpoint(location);
 
-      gThreadClient.resume().then(function() {
+      gThreadFront.resume().then(function() {
         finishClient(gClient);
       });
     });
 
     // Continue until the breakpoint is hit.
-    gThreadClient.resume();
+    gThreadFront.resume();
   });
 
   /* eslint-disable */

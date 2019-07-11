@@ -691,6 +691,43 @@ var gMainPane = {
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "main-pane-loaded");
 
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("defaultFont"),
+      element => FontBuilder.readFontSelection(element)
+    );
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("translate"),
+      () =>
+        this.updateButtons(
+          "translateButton",
+          "browser.translation.detectLanguage"
+        )
+    );
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("checkSpelling"),
+      () => this.readCheckSpelling()
+    );
+    Preferences.addSyncToPrefListener(
+      document.getElementById("checkSpelling"),
+      () => this.writeCheckSpelling()
+    );
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("saveWhere"),
+      () => this.readUseDownloadDir()
+    );
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("linkTargeting"),
+      () => this.readLinkTarget()
+    );
+    Preferences.addSyncToPrefListener(
+      document.getElementById("linkTargeting"),
+      () => this.writeLinkTarget()
+    );
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("browserContainersCheckbox"),
+      () => this.readBrowserContainersCheckbox()
+    );
+
     this.setInitialized();
   },
 

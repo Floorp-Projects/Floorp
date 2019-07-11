@@ -24,7 +24,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(NCB_PREF);
   Services.prefs.clearUserPref(DTSCBN_PREF);
-  Services.prefs.clearUserPref(ContentBlocking.prefIntroCount);
 });
 
 async function testTrackingProtectionAnimation(tabbrowser) {
@@ -195,10 +194,6 @@ add_task(async function testNormalBrowsing() {
     ThirdPartyCookies.enabled,
     "ThirdPartyCookies is enabled after setting the pref"
   );
-  Services.prefs.setIntPref(
-    ContentBlocking.prefIntroCount,
-    ContentBlocking.MAX_INTROS
-  );
 
   await testTrackingProtectionAnimation(gBrowser);
 });
@@ -225,10 +220,6 @@ add_task(async function testPrivateBrowsing() {
   ok(
     ThirdPartyCookies.enabled,
     "ThirdPartyCookies is enabled after setting the pref"
-  );
-  Services.prefs.setIntPref(
-    ContentBlocking.prefIntroCount,
-    ContentBlocking.MAX_INTROS
   );
 
   await testTrackingProtectionAnimation(tabbrowser);

@@ -3,19 +3,19 @@
 const SOURCE_URL = getFileUrl("setBreakpoint-on-line.js");
 
 add_task(
-  threadClientTest(
-    async ({ threadClient, debuggee }) => {
-      const promise = waitForNewSource(threadClient, SOURCE_URL);
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
+      const promise = waitForNewSource(threadFront, SOURCE_URL);
       loadSubScript(SOURCE_URL, debuggee);
       const { source } = await promise;
-      const sourceFront = threadClient.source(source);
+      const sourceFront = threadFront.source(source);
 
       const location = { sourceUrl: sourceFront.url, line: 5 };
-      setBreakpoint(threadClient, location);
+      setBreakpoint(threadFront, location);
 
       const packet = await executeOnNextTickAndWaitForPause(function() {
         Cu.evalInSandbox("f()", debuggee);
-      }, threadClient);
+      }, threadFront);
       const why = packet.why;
       Assert.equal(why.type, "breakpoint");
       Assert.equal(why.actors.length, 1);
@@ -28,7 +28,7 @@ add_task(
       Assert.equal(variables.b.value.type, "undefined");
       Assert.equal(variables.c.value.type, "undefined");
 
-      await resume(threadClient);
+      await resume(threadFront);
     },
     { doNotRunWorker: true }
   )

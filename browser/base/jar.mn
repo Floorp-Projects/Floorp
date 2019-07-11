@@ -93,7 +93,7 @@ browser.jar:
         content/browser/tabbrowser.js                 (content/tabbrowser.js)
         content/browser/tabbrowser-tab.js             (content/tabbrowser-tab.js)
         content/browser/tabbrowser-tabs.js            (content/tabbrowser-tabs.js)
-*       content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)
+        content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)
         content/browser/utilityOverlay.js             (content/utilityOverlay.js)
         content/browser/webext-panels.js              (content/webext-panels.js)
 *       content/browser/webext-panels.xul             (content/webext-panels.xul)

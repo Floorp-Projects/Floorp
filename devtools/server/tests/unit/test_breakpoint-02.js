@@ -9,24 +9,23 @@
  */
 
 add_task(
-  threadClientTest(({ threadClient, client, debuggee }) => {
+  threadFrontTest(({ threadFront, client, debuggee }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const source = await getSourceById(
-          threadClient,
+          threadFront,
           packet.frame.where.actor
         );
         const location = { sourceUrl: source.url, line: debuggee.line0 + 3 };
 
-        await threadClient.resume();
+        await threadFront.resume();
 
         // Setting the breakpoint later should interrupt the debuggee.
-        threadClient.once("paused", function(packet) {
-          Assert.equal(packet.type, "paused");
+        threadFront.once("paused", function(packet) {
           Assert.equal(packet.why.type, "interrupted");
         });
 
-        threadClient.setBreakpoint(location, {});
+        threadFront.setBreakpoint(location, {});
         await client.waitForRequestsToSettle();
         executeSoon(resolve);
       });
