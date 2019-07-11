@@ -44,7 +44,7 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static void SetDiskCacheCapacity(uint32_t);  // parameter in kilobytes.
   static uint32_t DiskFreeSpaceSoftLimit()     // result in kilobytes.
   {
-    return sDiskFreeSpaceSoftLimit;
+    return StaticPrefs::browser_cache_disk_free_space_soft_limit();
   }
   static uint32_t DiskFreeSpaceHardLimit()  // result in kilobytes.
   {
@@ -107,7 +107,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
 
   static int32_t sAutoMemoryCacheCapacity;
   static Atomic<uint32_t, Relaxed> sDiskCacheCapacity;
-  static uint32_t sDiskFreeSpaceSoftLimit;
   static uint32_t sDiskFreeSpaceHardLimit;
   static uint32_t sPreloadChunkCount;
   static int32_t sMaxMemoryEntrySize;

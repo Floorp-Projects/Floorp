@@ -755,6 +755,19 @@ VARCACHE_PREF(
 #endif
 )
 
+// When smartsizing is disabled we could potentially fill all disk space by
+// cache data when the disk capacity is not set correctly. To avoid that we
+// check the free space every time we write some data to the cache. The free
+// space is checked against two limits. Once the soft limit is reached we start
+// evicting the least useful entries, when we reach the hard limit writing to
+// the entry fails.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.free_space_soft_limit",
+   browser_cache_disk_free_space_soft_limit,
+  RelaxedAtomicUint32, 5 * 1024 // 5MB
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
