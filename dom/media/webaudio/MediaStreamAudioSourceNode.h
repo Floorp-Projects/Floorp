@@ -65,6 +65,8 @@ class MediaStreamAudioSourceNode
 
   uint16_t NumberOfInputs() const override { return 0; }
 
+  DOMMediaStream* GetMediaStream() { return mInputStream; }
+
   const char* NodeType() const override { return "MediaStreamAudioSourceNode"; }
 
   virtual const char* CrossOriginErrorString() const {

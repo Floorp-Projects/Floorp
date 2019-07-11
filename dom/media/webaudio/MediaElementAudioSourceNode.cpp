@@ -13,9 +13,12 @@
 namespace mozilla {
 namespace dom {
 
-MediaElementAudioSourceNode::MediaElementAudioSourceNode(AudioContext* aContext)
-    : MediaStreamAudioSourceNode(aContext, TrackChangeBehavior::FollowChanges) {
-}
+MediaElementAudioSourceNode::MediaElementAudioSourceNode(
+    AudioContext* aContext, HTMLMediaElement* aElement)
+    : MediaStreamAudioSourceNode(aContext, TrackChangeBehavior::FollowChanges),
+      mElement(aElement) {
+        MOZ_ASSERT(aElement);
+      }
 
 /* static */
 already_AddRefed<MediaElementAudioSourceNode>
@@ -28,7 +31,7 @@ MediaElementAudioSourceNode::Create(
   }
 
   RefPtr<MediaElementAudioSourceNode> node =
-      new MediaElementAudioSourceNode(&aAudioContext);
+      new MediaElementAudioSourceNode(&aAudioContext, aOptions.mMediaElement);
 
   RefPtr<DOMMediaStream> stream = aOptions.mMediaElement->CaptureAudio(
       aRv, aAudioContext.Destination()->Stream()->Graph());
@@ -69,6 +72,10 @@ void MediaElementAudioSourceNode::ListenForAllowedToPlay(
 void MediaElementAudioSourceNode::Destroy() {
   mAllowedToPlayRequest.DisconnectIfExists();
   MediaStreamAudioSourceNode::Destroy();
+}
+
+HTMLMediaElement* MediaElementAudioSourceNode::MediaElement() {
+  return mElement;
 }
 
 }  // namespace dom
