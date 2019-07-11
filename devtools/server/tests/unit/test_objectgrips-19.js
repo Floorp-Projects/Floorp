@@ -10,7 +10,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     debuggee.eval(
       function stopMe(arg1) {
         debugger;
@@ -37,11 +37,11 @@ add_task(
     ];
     for (const data of tests) {
       await new Promise(function(resolve) {
-        threadClient.once("paused", async function(packet) {
+        threadFront.once("paused", async function(packet) {
           const [grip] = packet.frame.arguments;
           check_wrapped_primitive_grip(grip, data);
 
-          await threadClient.resume();
+          await threadFront.resume();
           resolve();
         });
         debuggee.primitive = data.value;

@@ -1,0 +1,8 @@
+error: input must be an enum
+ --> $DIR/not_enum.rs:3:10
+  |
+3 | #[derive(Serialize_repr)]
+  |          ^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+

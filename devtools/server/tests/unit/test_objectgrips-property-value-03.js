@@ -10,18 +10,18 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     debuggee.eval(
       function stopMe() {
         debugger;
       }.toString()
     );
 
-    await test_object_grip(debuggee, threadClient);
+    await test_object_grip(debuggee, threadFront);
   })
 );
 
-async function test_object_grip(debuggee, threadClient) {
+async function test_object_grip(debuggee, threadFront) {
   const script = `
     var obj = {
       get getter() {
@@ -32,11 +32,11 @@ async function test_object_grip(debuggee, threadClient) {
     stopMe(...objects);
   `;
   return new Promise(resolve => {
-    threadClient.once("paused", async function(packet) {
+    threadFront.once("paused", async function(packet) {
       const { frame } = packet;
       try {
         const grips = frame.arguments;
-        const objClient = threadClient.pauseGrip(grips[0]);
+        const objClient = threadFront.pauseGrip(grips[0]);
         const classes = [
           "Object",
           "Object",
@@ -52,7 +52,7 @@ async function test_object_grip(debuggee, threadClient) {
         await check_getter(objClient, null, 0);
         await check_getter(objClient, "invalid receiver actorId", 0);
       } finally {
-        await threadClient.resume();
+        await threadFront.resume();
         resolve();
       }
     });

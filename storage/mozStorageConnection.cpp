@@ -590,6 +590,8 @@ nsIEventTarget* Connection::getAsyncExecutionTarget() {
       NS_WARNING("Failed to create async thread.");
       return nullptr;
     }
+    mAsyncExecutionThread->SetNameForWakeupTelemetry(
+        NS_LITERAL_CSTRING("mozStorage (all)"));
   }
 
   return mAsyncExecutionThread;

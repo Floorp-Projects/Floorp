@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { getSourceHash, getRuleHash } = require("../utils/changes-utils");
-
 const { RESET_CHANGES, TRACK_CHANGE } = require("../actions/index");
 
 /**
@@ -80,9 +78,7 @@ function createRule(ruleData, rules) {
           ];
         }
 
-        // Bug 1525326: Remove getRuleHash() in Firefox 70. Until then, we fallback
-        // to the custom hashing method if the server did not provide a rule with an id.
-        return rule.id || getRuleHash(rule);
+        return rule.id;
       })
       // Then, create new entries in the rules collection and assign dependencies.
       .map((ruleId, index, array) => {
@@ -216,11 +212,8 @@ const reducers = {
     state = cloneState(state);
 
     const { selector, ancestors, ruleIndex } = change;
-    // Bug 1525326: remove getSourceHash() and getRuleHash() in Firefox 70 after we no
-    // longer support old servers which do not implement the id for the rule and source.
-    const sourceId = change.source.id || getSourceHash(change.source);
-    const ruleId =
-      change.id || getRuleHash({ selectors: [selector], ancestors, ruleIndex });
+    const sourceId = change.source.id;
+    const ruleId = change.id;
 
     // Copy or create object identifying the source (styelsheet/element) for this change.
     const source = Object.assign({}, state[sourceId], change.source);

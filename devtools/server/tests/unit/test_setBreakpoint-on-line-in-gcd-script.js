@@ -3,9 +3,9 @@
 const SOURCE_URL = getFileUrl("setBreakpoint-on-line-in-gcd-script.js");
 
 add_task(
-  threadClientTest(
-    async ({ threadClient, debuggee, targetFront }) => {
-      const promise = waitForNewSource(threadClient, SOURCE_URL);
+  threadFrontTest(
+    async ({ threadFront, debuggee, targetFront }) => {
+      const promise = waitForNewSource(threadFront, SOURCE_URL);
       loadSubScriptWithOptions(SOURCE_URL, {
         target: debuggee,
         ignoreCache: true,
@@ -17,7 +17,7 @@ add_task(
       const { source } = await promise;
 
       const location = { sourceUrl: source.url, line: 7 };
-      setBreakpoint(threadClient, location);
+      setBreakpoint(threadFront, location);
 
       const packet = await executeOnNextTickAndWaitForPause(function() {
         reload(targetFront).then(function() {
@@ -26,7 +26,7 @@ add_task(
             ignoreCache: true,
           });
         });
-      }, threadClient);
+      }, threadFront);
       const why = packet.why;
       Assert.equal(why.type, "breakpoint");
       Assert.equal(why.actors.length, 1);
@@ -37,7 +37,7 @@ add_task(
       Assert.equal(variables.a.value, 1);
       Assert.equal(variables.b.value.type, "undefined");
       Assert.equal(variables.c.value.type, "undefined");
-      await resume(threadClient);
+      await resume(threadFront);
     },
     { doNotRunWorker: true }
   )

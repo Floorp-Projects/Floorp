@@ -14,7 +14,7 @@ export function supportsWorkers(tabTarget: TabTarget) {
 export async function updateWorkerClients({
   tabTarget,
   debuggerClient,
-  threadClient,
+  threadFront,
   workerClients,
   options,
 }: Object) {

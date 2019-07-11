@@ -915,7 +915,6 @@ content-blocking-fingerprinters = Fingerprinters
 
 content-blocking-warning-title = Heads up!
 content-blocking-warning-description = Blocking content can cause some websites to break. It’s easy to disable blocking for sites you trust.
-content-blocking-learn-how = Learn how
 
 content-blocking-reload-description = You will need to reload your tabs to apply these changes.
 content-blocking-reload-tabs-button =

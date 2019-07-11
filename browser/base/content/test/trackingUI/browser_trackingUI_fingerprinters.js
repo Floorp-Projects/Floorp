@@ -14,7 +14,6 @@ let fpHistogram;
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
       [
         "urlclassifier.features.fingerprinting.blacklistHosts",
         "fingerprinting.example.com",

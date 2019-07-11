@@ -67,13 +67,6 @@ pref("ui.scrollbarFadeDuration", 0);
 /* turn off the caret blink after 10 cycles */
 pref("ui.caretBlinkCount", 10);
 
-/* cache prefs */
-pref("browser.cache.disk.enable", true);
-pref("browser.cache.disk.smart_size.enabled", true);
-
-pref("browser.cache.memory.enable", true);
-pref("browser.cache.memory.capacity", 1024); // kilobytes
-
 pref("browser.cache.memory_limit", 5120); // 5 MB
 
 /* image cache prefs */
@@ -86,9 +79,6 @@ pref("offline-apps.quota.warn", 1024); // kilobytes
 
 // Automatically shrink-to-fit image documents.
 pref("browser.enable_automatic_image_resizing", true);
-
-// cache compression turned off for now - see bug #715198
-pref("browser.cache.compression_level", 0);
 
 /* disable some protocol warnings */
 pref("network.protocol-handler.warn-external.tel", false);

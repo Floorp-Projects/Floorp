@@ -208,7 +208,6 @@
                     </hbox>
                     <description class="indent">
                       <html:span class="tail-with-learn-more" data-l10n-id="content-blocking-warning-description"></html:span>
-                      <label class="content-blocking-warning-learn-how" data-l10n-id="content-blocking-learn-how" is="text-link"/>
                     </description>
                   </vbox>
                 </vbox>
@@ -261,16 +260,12 @@
                             class="content-blocking-checkbox" flex="1"
                             data-l10n-id="content-blocking-cookies-label"
                             aria-describedby="contentBlockingCustomDesc"
-                            preference="network.cookie.cookieBehavior"
-                            onsyncfrompreference="return gPrivacyPane.readBlockCookies();"
-                            onsynctopreference="return gPrivacyPane.writeBlockCookies();"/>
+                            preference="network.cookie.cookieBehavior"/>
                   <vbox>
                     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
                     <hbox>
                       <menulist id="blockCookiesMenu"
-                                preference="network.cookie.cookieBehavior"
-                                onsyncfrompreference="return gPrivacyPane.readBlockCookiesFrom();"
-                                onsynctopreference="return gPrivacyPane.writeBlockCookiesFrom();">
+                                preference="network.cookie.cookieBehavior">
                         <menupopup>
                           <menuitem data-l10n-id="sitedata-option-block-trackers" value="trackers"/>
                           <menuitem data-l10n-id="sitedata-option-block-unvisited" value="unvisited"/>
@@ -327,7 +322,6 @@
                   </hbox>
                   <description class="indent">
                     <html:span class="tail-with-learn-more" data-l10n-id="content-blocking-warning-description"></html:span>
-                    <label class="content-blocking-warning-learn-how" data-l10n-id="content-blocking-learn-how" is="text-link"/>
                   </description>
                 </vbox>
               </vbox>
@@ -367,8 +361,6 @@
         <checkbox id="deleteOnClose"
                   data-l10n-id="sitedata-delete-on-close"
                   preference="network.cookie.lifetimePolicy"
-                  onsyncfrompreference="return gPrivacyPane.readDeleteOnClose();"
-                  onsynctopreference="return gPrivacyPane.writeDeleteOnClose();"
                   flex="1" />
       </hbox>
     </vbox>
@@ -428,7 +420,6 @@
           <checkbox id="savePasswords"
                     data-l10n-id="forms-ask-to-save-logins"
                     preference="signon.rememberSignons"
-                    onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
                     flex="1" />
         </hbox>
         <hbox class="indent" id="generatePasswordsBox" flex="1">
@@ -542,17 +533,14 @@
           <vbox class="indent">
             <checkbox id="rememberHistory"
                       data-l10n-id="history-remember-browser-option"
-                      onsyncfrompreference="return gPrivacyPane.ensurePrivacyMicroControlUncheckedWhenDisabled(this)"
                       preference="places.history.enabled"/>
             <checkbox id="rememberForms"
                       data-l10n-id="history-remember-search-option"
-                      onsyncfrompreference="return gPrivacyPane.ensurePrivacyMicroControlUncheckedWhenDisabled(this)"
                       preference="browser.formfill.enable"/>
             <hbox id="clearDataBox"
                   align="center">
               <checkbox id="alwaysClear"
                         preference="privacy.sanitize.sanitizeOnShutdown"
-                        onsyncfrompreference="return gPrivacyPane.ensurePrivacyMicroControlUncheckedWhenDisabled(this)"
                         data-l10n-id="history-clear-on-close-option"
                         flex="1" />
             </hbox>
@@ -753,8 +741,6 @@
   <hbox data-subcategory="permissions-block-popups">
     <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
               data-l10n-id="permissions-block-popups"
-              onsyncfrompreference="return gPrivacyPane.updateButtons('popupPolicyButton',
-                                         'dom.disable_open_during_load');"
               flex="1" />
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
@@ -776,7 +762,6 @@
     <checkbox id="warnAddonInstall"
               data-l10n-id="permissions-addon-install-warning"
               preference="xpinstall.whitelist.required"
-              onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"
               flex="1" />
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
@@ -925,8 +910,6 @@
   <hbox align="start">
     <checkbox id="enableOCSP"
               data-l10n-id="certs-enable-ocsp"
-              onsyncfrompreference="return gPrivacyPane.readEnableOCSP();"
-              onsynctopreference="return gPrivacyPane.writeEnableOCSP();"
               preference="security.OCSP.enabled"
               flex="1" />
     <vbox>

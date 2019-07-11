@@ -57,8 +57,6 @@ add_task(async function() {
       ["privacy.trackingprotection.pbmode.enabled", false],
       // tracking annotations aren't needed in this test, only TP is needed
       ["privacy.trackingprotection.annotate_channels", false],
-      // prevent the content blocking on-boarding UI to start mid-way through the test!
-      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
       [
         "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
         "tracking.example.com,tracking.example.org",

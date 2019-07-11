@@ -359,6 +359,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvFlushTabState(const uint32_t& aFlushId,
                                             const bool& aIsFinal);
 
+  mozilla::ipc::IPCResult RecvUpdateEpoch(const uint32_t& aEpoch);
+
   mozilla::ipc::IPCResult RecvNativeSynthesisResponse(
       const uint64_t& aObserverId, const nsCString& aResponse);
 

@@ -270,7 +270,7 @@ class WebConsole {
    *
    * @return object|null
    *         An object which holds:
-   *         - frames: the active ThreadClient.cachedFrames array.
+   *         - frames: the active ThreadFront.cachedFrames array.
    *         - selected: depth/index of the selected stackframe in the debugger
    *         UI.
    *         If the debugger is not open or if it's not paused, then |null| is

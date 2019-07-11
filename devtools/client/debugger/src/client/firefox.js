@@ -16,12 +16,12 @@ function createObjectClient(grip: Grip) {
 
 export async function onConnect(connection: any, actions: Object) {
   const {
-    tabConnection: { tabTarget, threadClient, debuggerClient },
+    tabConnection: { tabTarget, threadFront, debuggerClient },
   } = connection;
 
   DebuggerClient = debuggerClient;
 
-  if (!tabTarget || !threadClient || !debuggerClient) {
+  if (!tabTarget || !threadFront || !debuggerClient) {
     return;
   }
 
@@ -29,18 +29,18 @@ export async function onConnect(connection: any, actions: Object) {
     features.wasm && !!debuggerClient.mainRoot.traits.wasmBinarySource;
 
   setupCommands({
-    threadClient,
+    threadFront,
     tabTarget,
     debuggerClient,
     supportsWasm,
   });
 
-  setupEvents({ threadClient, tabTarget, actions, supportsWasm });
+  setupEvents({ threadFront, tabTarget, actions, supportsWasm });
 
   tabTarget.on("will-navigate", actions.willNavigate);
   tabTarget.on("navigate", actions.navigated);
 
-  await threadClient.reconfigure({
+  await threadFront.reconfigure({
     observeAsmJS: true,
     pauseWorkersUntilAttach: true,
     wasmBinarySource: supportsWasm,
@@ -63,7 +63,7 @@ export async function onConnect(connection: any, actions: Object) {
   const traits = tabTarget.traits;
   await actions.connect(
     tabTarget.url,
-    threadClient.actor,
+    threadFront.actor,
     traits && traits.canRewind,
     tabTarget.isWebExtension
   );
@@ -72,11 +72,11 @@ export async function onConnect(connection: any, actions: Object) {
     .fetchSources()
     .then(sources => actions.newGeneratedSources(sources));
 
-  // If the threadClient is already paused, make sure to show a
+  // If the threadFront is already paused, make sure to show a
   // paused state.
-  const pausedPacket = threadClient.getLastPausePacket();
+  const pausedPacket = threadFront.getLastPausePacket();
   if (pausedPacket) {
-    clientEvents.paused(threadClient, pausedPacket);
+    clientEvents.paused(threadFront, pausedPacket);
   }
 
   return fetched;

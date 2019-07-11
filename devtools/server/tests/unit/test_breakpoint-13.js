@@ -10,16 +10,16 @@
  */
 
 add_task(
-  threadClientTest(({ threadClient, debuggee }) => {
+  threadFrontTest(({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const source = await getSourceById(
-          threadClient,
+          threadFront,
           packet.frame.where.actor
         );
         const location = { sourceUrl: source.url, line: debuggee.line0 + 2 };
 
-        threadClient.setBreakpoint(location, {});
+        threadFront.setBreakpoint(location, {});
 
         const testCallbacks = [
           function(packet) {
@@ -59,32 +59,32 @@ add_task(
         ];
 
         for (const callback of testCallbacks) {
-          const waiter = waitForPause(threadClient);
-          threadClient.stepIn();
+          const waiter = waitForPause(threadFront);
+          threadFront.stepIn();
           const packet = await waiter;
           callback(packet);
         }
 
         // Remove the breakpoint and finish.
-        const waiter = waitForPause(threadClient);
-        threadClient.stepIn();
+        const waiter = waitForPause(threadFront);
+        threadFront.stepIn();
         await waiter;
-        threadClient.removeBreakpoint(location);
+        threadFront.removeBreakpoint(location);
 
-        threadClient.resume().then(resolve);
+        threadFront.resume().then(resolve);
       });
 
       /* eslint-disable */
-    Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
-                     "function foo() {\n" + // line0 + 1
-                     "  this.a = 1;\n" +    // line0 + 2 <-- Breakpoint is set here.
-                     "}\n" +                // line0 + 3
-                     "debugger;\n" +        // line0 + 4
-                     "foo();\n" +           // line0 + 5
-                     "debugger;\n" +        // line0 + 6
-                     "var b = 2;\n",        // line0 + 7
-                     debuggee);
-    /* eslint-enable */
+      Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
+                       "function foo() {\n" + // line0 + 1
+                       "  this.a = 1;\n" +    // line0 + 2 <-- Breakpoint is set here.
+                       "}\n" +                // line0 + 3
+                       "debugger;\n" +        // line0 + 4
+                       "foo();\n" +           // line0 + 5
+                       "debugger;\n" +        // line0 + 6
+                       "var b = 2;\n",        // line0 + 7
+                       debuggee);
+      /* eslint-enable */
     });
   })
 );

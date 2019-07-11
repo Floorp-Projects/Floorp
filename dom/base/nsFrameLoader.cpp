@@ -3171,6 +3171,18 @@ bool nsFrameLoader::RequestTabStateFlush(uint32_t aFlushId, bool aIsFinal) {
   return false;
 }
 
+void nsFrameLoader::RequestEpochUpdate(uint32_t aEpoch) {
+  if (mSessionStoreListener) {
+    mSessionStoreListener->SetEpoch(aEpoch);
+    return;
+  }
+
+  // If remote browsing (e10s), handle this with the BrowserParent.
+  if (auto* browserParent = GetBrowserParent()) {
+    Unused << browserParent->SendUpdateEpoch(aEpoch);
+  }
+}
+
 void nsFrameLoader::Print(uint64_t aOuterWindowID,
                           nsIPrintSettings* aPrintSettings,
                           nsIWebProgressListener* aProgressListener,

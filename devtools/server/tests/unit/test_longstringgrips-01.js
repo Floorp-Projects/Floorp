@@ -5,7 +5,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
@@ -27,9 +27,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-grips", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_longstring_grip();
     });
   });
@@ -51,7 +51,7 @@ function test_longstring_grip() {
 
   DebuggerServer.LONG_STRING_LENGTH = 200;
 
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const args = packet.frame.arguments;
     Assert.equal(args.length, 1);
     const grip = args[0];
@@ -69,13 +69,13 @@ function test_longstring_grip() {
         try {
           Assert.equal(response, "monkey");
         } finally {
-          gThreadClient.resume().then(function() {
+          gThreadFront.resume().then(function() {
             finishClient(gClient);
           });
         }
       });
     } catch (error) {
-      gThreadClient.resume().then(function() {
+      gThreadFront.resume().then(function() {
         finishClient(gClient);
         do_throw(error);
       });

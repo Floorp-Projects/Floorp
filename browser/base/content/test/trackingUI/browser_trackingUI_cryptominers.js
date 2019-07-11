@@ -14,7 +14,6 @@ let cmHistogram;
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
       [
         "urlclassifier.features.cryptomining.blacklistHosts",
         "cryptomining.example.com",

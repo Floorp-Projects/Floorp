@@ -10,7 +10,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -24,9 +24,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_pause_frame();
     });
   });
@@ -34,13 +34,13 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.once("paused", async function(packet) {
+  gThreadFront.once("paused", async function(packet) {
     const args = packet.frame.arguments;
     const objActor = args[0].actor;
     Assert.equal(args[0].class, "Object");
     Assert.ok(!!objActor);
 
-    const objClient = gThreadClient.pauseGrip(args[0]);
+    const objClient = gThreadFront.pauseGrip(args[0]);
     Assert.ok(objClient.valid);
 
     // Make a bogus request to the grip actor.  Should get
@@ -54,7 +54,7 @@ function test_pause_frame() {
     }
     Assert.ok(objClient.valid);
 
-    gThreadClient.resume().then(async function() {
+    gThreadFront.resume().then(async function() {
       // Now that we've resumed, should get no-such-actor for the
       // same request.
       try {

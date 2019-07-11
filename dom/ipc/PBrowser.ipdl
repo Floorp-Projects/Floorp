@@ -608,16 +608,14 @@ parent:
 
     async NavigationFinished();
 
-    async SessionStoreUpdate(nsCString? aDocShellCaps,
-                             bool? aPrivatedMode,
-                             nsCString[] aPositions,
-                             int32_t[] aPositionDescendants,
-                             uint32_t aFlushId,
-                             bool aIsFinal);
+    async SessionStoreUpdate(nsCString? aDocShellCaps, bool? aPrivatedMode,
+                             nsCString[] aPositions, int32_t[] aPositionDescendants,
+                             uint32_t aFlushId, bool aIsFinal, uint32_t aEpoch);
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
     async FlushTabState(uint32_t aFlushId, bool aIsFinal);
+    async UpdateEpoch(uint32_t aEpoch);
 
 parent:
 

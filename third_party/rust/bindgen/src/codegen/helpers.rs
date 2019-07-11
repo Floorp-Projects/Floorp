@@ -42,12 +42,6 @@ pub mod attributes {
         }
     }
 
-    pub fn non_exhaustive() -> TokenStream {
-        quote! {
-            #[non_exhaustive]
-        }
-    }
-
     pub fn doc(comment: String) -> TokenStream {
         // NOTE(emilio): By this point comments are already preprocessed and in
         // `///` form. Quote turns them into `#[doc]` comments, but oh well.

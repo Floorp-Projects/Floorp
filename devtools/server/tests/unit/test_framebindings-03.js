@@ -10,7 +10,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
@@ -26,9 +26,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_pause_frame();
     });
   });
@@ -36,7 +36,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const env = packet.frame.environment;
     Assert.notEqual(env, undefined);
 
@@ -53,14 +53,14 @@ function test_pause_frame() {
     Assert.equal(vars.arguments.value.class, "Arguments");
     Assert.ok(!!vars.arguments.value.actor);
 
-    const objClient = gThreadClient.pauseGrip(env.object);
+    const objClient = gThreadFront.pauseGrip(env.object);
     objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.PI.value, Math.PI);
       Assert.equal(response.ownProperties.cos.value.type, "object");
       Assert.equal(response.ownProperties.cos.value.class, "Function");
       Assert.ok(!!response.ownProperties.cos.value.actor);
 
-      gThreadClient.resume().then(function() {
+      gThreadFront.resume().then(function() {
         finishClient(gClient);
       });
     });

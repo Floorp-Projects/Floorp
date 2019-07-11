@@ -381,10 +381,12 @@ var gBrowserLanguagesDialog = {
   beforeAccept() {
     this.selected = this.getSelectedLocales();
     this.accepted = true;
-    return true;
   },
 
   async onLoad() {
+    document.documentElement.addEventListener("beforeaccept", () =>
+      this.beforeAccept()
+    );
     // Maintain the previously selected locales even if we cancel out.
     let { telemetryId, selected, search } = window.arguments[0];
     this.telemetryId = telemetryId;

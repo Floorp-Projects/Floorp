@@ -37,9 +37,7 @@
   <description data-l10n-id="languages-description"/>
   <checkbox id="spoofEnglish"
             data-l10n-id="languages-customize-spoof-english"
-            preference="privacy.spoof_english"
-            onsyncfrompreference="return gLanguagesDialog.readSpoofEnglish();"
-            onsynctopreference="return gLanguagesDialog.writeSpoofEnglish();"/>
+            preference="privacy.spoof_english"/>
   <grid flex="1">
     <columns>
       <column flex="1"/>

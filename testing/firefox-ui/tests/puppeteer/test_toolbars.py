@@ -5,7 +5,6 @@
 from __future__ import absolute_import
 from firefox_puppeteer import PuppeteerMixin
 from marionette_driver import expected, By, Wait
-from marionette_driver.errors import NoSuchElementException
 from marionette_harness import MarionetteTestCase
 
 
@@ -132,73 +131,6 @@ class TestLocationBar(PuppeteerMixin, MarionetteTestCase):
 
         with self.marionette.using_context('content'):
             Wait(self.marionette).until(lambda mn: mn.get_url() == data_uri)
-
-
-class TestAutoCompleteResults(PuppeteerMixin, MarionetteTestCase):
-
-    def setUp(self):
-        super(TestAutoCompleteResults, self).setUp()
-
-        self.browser.navbar.locationbar.clear()
-
-        self.autocomplete_results = self.browser.navbar.locationbar.autocomplete_results
-
-    def tearDown(self):
-        try:
-            self.autocomplete_results.close(force=True)
-        except NoSuchElementException:
-            # TODO: A NoSuchElementException is thrown here when tests accessing the
-            # autocomplete_results element are skipped.
-            pass
-        finally:
-            super(TestAutoCompleteResults, self).tearDown()
-
-    def test_popup_elements(self):
-        self.assertFalse(self.autocomplete_results.is_open)
-        self.browser.navbar.locationbar.urlbar.send_keys('.')
-        Wait(self.marionette).until(lambda _: self.autocomplete_results.is_complete)
-        count_visible_results = len(self.autocomplete_results.visible_results)
-        self.assertTrue(count_visible_results > 0)
-        self.assertLessEqual(count_visible_results,
-                             self.autocomplete_results.element.get_property('maxResults'))
-
-    def test_close(self):
-        self.browser.navbar.locationbar.urlbar.send_keys('a')
-        Wait(self.marionette).until(lambda _: self.autocomplete_results.is_open)
-        # The Wait in the library implementation will fail this if this doesn't
-        # end up closing.
-        self.autocomplete_results.close()
-
-    def test_force_close(self):
-        self.browser.navbar.locationbar.urlbar.send_keys('a')
-        Wait(self.marionette).until(lambda _: self.autocomplete_results.is_open)
-        # The Wait in the library implementation will fail this if this doesn't
-        # end up closing.
-        self.autocomplete_results.close(force=True)
-
-    def test_matching_text(self):
-        # The default profile always has existing bookmarks. So no sites have to
-        # be visited and bookmarked.
-        for input_text in ('about', 'zilla'):
-            self.browser.navbar.locationbar.urlbar.clear()
-            self.browser.navbar.locationbar.urlbar.send_keys(input_text)
-            Wait(self.marionette).until(lambda _: self.autocomplete_results.is_open)
-            Wait(self.marionette).until(lambda _: self.autocomplete_results.is_complete)
-            visible_results = self.autocomplete_results.visible_results
-            self.assertTrue(len(visible_results) > 0)
-
-            for result in visible_results:
-                # check matching text only for results of type bookmark
-                if result.get_attribute('type') != 'bookmark':
-                    continue
-                title_matches = self.autocomplete_results.get_matching_text(result, "title")
-                url_matches = self.autocomplete_results.get_matching_text(result, "url")
-                all_matches = title_matches + url_matches
-                self.assertTrue(len(all_matches) > 0)
-                for match_fragment in all_matches:
-                    self.assertIn(match_fragment.lower(), input_text)
-
-            self.autocomplete_results.close()
 
 
 class TestIdentityPopup(PuppeteerMixin, MarionetteTestCase):

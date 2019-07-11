@@ -309,7 +309,7 @@ test(function() {
   m1 = m1.inverse();
 
   var m2 = new DOMMatrix(new Array(16).fill(NaN));
-  assert_true(CompareMatrix(m1, m2), "Inverting an invertible matrix should set all attributes to NaN.")
+  assert_true(CompareMatrix(m1, m2), "Inverting a non-invertible matrix should set all attributes to NaN.")
 }, "Test that inverting an invertible matrix throws.");
 
 test(function() {

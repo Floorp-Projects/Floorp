@@ -10,7 +10,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
@@ -26,9 +26,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_pause_frame();
     });
   });
@@ -36,11 +36,11 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.pauseOnExceptions(true, false).then(function() {
-    gThreadClient.once("paused", function(packet) {
+  gThreadFront.pauseOnExceptions(true, false).then(function() {
+    gThreadFront.once("paused", function(packet) {
       Assert.equal(packet.why.type, "exception");
       Assert.equal(packet.why.exception, 42);
-      gThreadClient.resume().then(() => finishClient(gClient));
+      gThreadFront.resume().then(() => finishClient(gClient));
     });
 
     /* eslint-disable */

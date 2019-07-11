@@ -9,12 +9,12 @@
  */
 
 add_task(
-  threadClientTest(({ threadClient, debuggee, client }) => {
+  threadFrontTest(({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
       // Debugger statement
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const source = await getSourceById(
-          threadClient,
+          threadFront,
           packet.frame.where.actor
         );
         const location = {
@@ -24,9 +24,9 @@ add_task(
         };
         let timesBreakpointHit = 0;
 
-        threadClient.setBreakpoint(location, {});
+        threadFront.setBreakpoint(location, {});
 
-        threadClient.on("paused", function onPaused(packet) {
+        threadFront.on("paused", function onPaused(packet) {
           Assert.equal(packet.why.type, "breakpoint");
           Assert.equal(packet.frame.where.actor, source.actor);
           Assert.equal(packet.frame.where.line, location.line);
@@ -39,25 +39,25 @@ add_task(
           );
 
           if (++timesBreakpointHit === 3) {
-            threadClient.off("paused", onPaused);
-            threadClient.removeBreakpoint(location);
-            threadClient.resume().then(resolve);
+            threadFront.off("paused", onPaused);
+            threadFront.removeBreakpoint(location);
+            threadFront.resume().then(resolve);
           } else {
-            threadClient.resume();
+            threadFront.resume();
           }
         });
 
         // Continue until the breakpoint is hit.
-        threadClient.resume();
+        threadFront.resume();
       });
 
       /* eslint-disable */
-    Cu.evalInSandbox(
-      "var line0 = Error().lineNumber;\n" +
-      "(function () { debugger; this.acc = 0; for (var i = 0; i < 3; i++) this.acc++; }());",
-      debuggee
-    );
-    /* eslint-enable */
+      Cu.evalInSandbox(
+        "var line0 = Error().lineNumber;\n" +
+        "(function () { debugger; this.acc = 0; for (var i = 0; i < 3; i++) this.acc++; }());",
+        debuggee
+      );
+      /* eslint-enable */
     });
   })
 );
