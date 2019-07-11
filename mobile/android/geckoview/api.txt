@@ -393,7 +393,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public SessionFinder getFinder();
     method @AnyThread @Nullable public GeckoSession.HistoryDelegate getHistoryDelegate();
     method @AnyThread @Nullable public GeckoSession.MediaDelegate getMediaDelegate();
-    method @AnyThread @Nullable public WebExtension.MessageDelegate getMessageDelegate(@NonNull String);
+    method @AnyThread @Nullable public WebExtension.MessageDelegate getMessageDelegate(@NonNull WebExtension, @NonNull String);
     method @UiThread @Nullable public GeckoSession.NavigationDelegate getNavigationDelegate();
     method @UiThread @NonNull public OverscrollEdgeEffect getOverscrollEdgeEffect();
     method @UiThread public void getPageToScreenMatrix(@NonNull Matrix);
@@ -431,7 +431,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void setFocused(boolean);
     method @AnyThread public void setHistoryDelegate(@Nullable GeckoSession.HistoryDelegate);
     method @AnyThread public void setMediaDelegate(@Nullable GeckoSession.MediaDelegate);
-    method @AnyThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
+    method @AnyThread public void setMessageDelegate(@NonNull WebExtension, @Nullable WebExtension.MessageDelegate, @NonNull String);
     method @UiThread public void setNavigationDelegate(@Nullable GeckoSession.NavigationDelegate);
     method @UiThread public void setPermissionDelegate(@Nullable GeckoSession.PermissionDelegate);
     method @UiThread public void setProgressDelegate(@Nullable GeckoSession.ProgressDelegate);

@@ -148,7 +148,7 @@ import java.util.Map;
         WebExtension.MessageDelegate delegate = null;
 
         if (sender.session != null) {
-            delegate = sender.session.getMessageDelegate(nativeApp);
+            delegate = sender.session.getMessageDelegate(sender.webExtension, nativeApp);
         } else if (sender.environmentType == WebExtension.MessageSender.ENV_TYPE_EXTENSION) {
             delegate = sender.webExtension.messageDelegates.get(nativeApp);
         }
