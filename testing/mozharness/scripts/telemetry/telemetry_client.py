@@ -51,6 +51,12 @@ telemetry_tests_config_options = [
         'default': True,
         'help': 'Disable multi-process (e10s) mode when running tests.',
     }],
+    [["--setpref"], {
+        'dest': 'extra_prefs',
+        'action': 'append',
+        'default': [],
+        'help': 'Extra user prefs.',
+    }],
     [['--symbols-path=SYMBOLS_PATH'], {
         'dest': 'symbols_path',
         'help': 'absolute path to directory containing breakpad '
@@ -164,6 +170,11 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         if self.config['enable_webrender']:
             cmd.extend(['--enable-webrender'])
+
+        cmd.extend(['--setpref={}'.format(p) for p in self.config['extra_prefs']])
+
+        if not self.config["e10s"]:
+            cmd.append("--disable-e10s")
 
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,

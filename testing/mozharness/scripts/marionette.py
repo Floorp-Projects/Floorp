@@ -91,6 +91,14 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
          "help": "Run tests without multiple processes (e10s). (Desktop builds only)",
          }
     ], [
+        ["--setpref"],
+        {"action": "append",
+         "metavar": "PREF=VALUE",
+         "dest": "extra_prefs",
+         "default": [],
+         "help": "Extra user prefs.",
+         }
+    ], [
         ["--headless"],
         {"action": "store_true",
          "dest": "headless",
@@ -308,6 +316,8 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
 
         if self.config['enable_webrender']:
             cmd.append('--enable-webrender')
+
+        cmd.extend(['--setpref={}'.format(p) for p in self.config['extra_prefs']])
 
         cmd.append('--gecko-log=-')
 

@@ -103,6 +103,14 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
          "help": "Repeat the tests the given number of times. Supported "
                  "by mochitest, reftest, crashtest, ignored otherwise."
          }
+    ], [
+        ['--setpref'],
+        {"action": "append",
+         "metavar": "PREF=VALUE",
+         "dest": "extra_prefs",
+         "default": [],
+         "help": "Extra user prefs.",
+         }
     ]] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -151,6 +159,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             # AndroidMixin uses this when launching the emulator. We only want
             # GLES3 if we're running WebRender
             self.use_gles3 = True
+        self.extra_prefs = c.get('extra_prefs')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -285,6 +294,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 cmd.extend(["--repeat=%s" % c.get('repeat')])
             else:
                 self.log("--repeat not supported in {}".format(category), level=WARNING)
+
+        cmd.extend(['--setpref={}'.format(p) for p in self.extra_prefs])
 
         if not (self.verify_enabled or self.per_test_coverage):
             if user_paths:
