@@ -34,8 +34,6 @@
 --ion-regalloc=testbed
 --ion-scalar-replacement=off
 --ion-scalar-replacement=on
---ion-sincos=off
---ion-sincos=on
 --ion-warmup-threshold=0
 --ion-warmup-threshold=10
 --ion-warmup-threshold=100
