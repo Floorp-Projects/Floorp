@@ -20,7 +20,7 @@ const L10N = new LocalizationHelper(STRINGS_URI);
  * The toolbar is used to display the reason for the pause in script execution as well as
  * buttons to resume or step through the program.
  */
-function PausedDebuggerOverlay(highlighterEnv, options) {
+function PausedDebuggerOverlay(highlighterEnv, options = {}) {
   this.env = highlighterEnv;
   this.showOverlayStepButtons = options.showOverlayStepButtons;
   this.resume = options.resume;
@@ -127,7 +127,6 @@ PausedDebuggerOverlay.prototype = {
   handleEvent(e) {
     switch (e.type) {
       case "click":
-      case "mouseup":
         this.onClick(e.target);
         break;
       case "DOMMouseScroll":
@@ -138,7 +137,6 @@ PausedDebuggerOverlay.prototype = {
         e.preventDefault();
         break;
       case "mouseover":
-        console.log(`> mouse over ${e.target.id}`);
         break;
     }
   },
