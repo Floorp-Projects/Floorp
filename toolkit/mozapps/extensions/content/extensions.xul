@@ -36,32 +36,6 @@
   <script src="chrome://mozapps/content/extensions/abuse-report-frame.js"/>
 
   <popupset>
-    <!-- menu for an addon item -->
-    <menupopup id="addonitem-popup">
-      <menuitem id="menuitem_showDetails" command="cmd_showItemDetails"
-                default="true" data-l10n-id="cmd-show-details"/>
-      <menuitem id="menuitem_enableItem" command="cmd_enableItem"
-                label="&cmd.enableAddon.label;"
-                accesskey="&cmd.enableAddon.accesskey;"/>
-      <menuitem id="menuitem_disableItem" command="cmd_disableItem"
-                label="&cmd.disableAddon.label;"
-                accesskey="&cmd.disableAddon.accesskey;"/>
-      <menuitem id="menuitem_enableTheme" command="cmd_enableItem"
-                data-l10n-id="cmd-enable-theme"/>
-      <menuitem id="menuitem_disableTheme" command="cmd_disableItem"
-                data-l10n-id="cmd-disable-theme"/>
-      <menuitem id="menuitem_installItem" command="cmd_installItem"
-                data-l10n-id="cmd-install-addon"/>
-      <menuitem id="menuitem_uninstallItem" command="cmd_uninstallItem"
-                label="&cmd.uninstallAddon.label;"
-                accesskey="&cmd.uninstallAddon.accesskey;"/>
-      <menuseparator id="addonitem-menuseparator" />
-      <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
-                data-l10n-id="cmd-preferences"/>
-      <menuitem id="menuitem_findUpdates" command="cmd_findItemUpdates"
-                data-l10n-id="cmd-find-updates"/>
-    </menupopup>
-
     <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
       <menupopup rolluponmousewheel="true"
                  activateontab="true" position="after_start"
@@ -80,8 +54,6 @@
            norolluponanchor="true"
            nomaxresults="true" />
 
-    <tooltip id="addonitem-tooltip"/>
-
     <menupopup id="contentAreaContextMenu"
                onpopupshowing="Cu.reportError('This dummy menupopup is not supposed to be shown');
                                return false">
@@ -96,7 +68,6 @@
     <!-- XXXsw remove useless oncommand attribute once bug 371900 is fixed -->
     <command id="cmd_focusSearch" oncommand=";"/>
     <command id="cmd_findAllUpdates"/>
-    <command id="cmd_restartApp"/>
     <command id="cmd_goToDiscoverPane"/>
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
@@ -108,27 +79,7 @@
     <command id="cmd_enableUpdateSecurity"/>
     <command id="cmd_toggleAutoUpdateDefault"/>
     <command id="cmd_resetAddonAutoUpdate"/>
-    <command id="cmd_showUnsignedExtensions"/>
-    <command id="cmd_showAllExtensions"/>
     <command id="cmd_showShortcuts"/>
-  </commandset>
-
-  <!-- view commands - these act on the selected addon -->
-  <commandset id="viewCommandSet"
-              events="richlistbox-select" commandupdater="true">
-    <command id="cmd_showItemDetails"/>
-    <command id="cmd_findItemUpdates"/>
-    <command id="cmd_showItemPreferences"/>
-    <command id="cmd_enableItem"/>
-    <command id="cmd_disableItem"/>
-    <command id="cmd_installItem"/>
-    <command id="cmd_uninstallItem"/>
-    <command id="cmd_cancelUninstallItem"/>
-    <command id="cmd_cancelOperation"/>
-    <command id="cmd_contribute"/>
-    <command id="cmd_askToActivateItem"/>
-    <command id="cmd_alwaysActivateItem"/>
-    <command id="cmd_neverActivateItem"/>
   </commandset>
 
   <keyset>
@@ -146,9 +97,6 @@
                       data-l10n-id="extensions-view-discopane"
                       data-l10n-attrs="name"
                       priority="1000"/>
-        <richlistitem id="category-legacy" value="addons://legacy/"
-                      class="category" priority="20000"
-                      hidden="true"/>
         <richlistitem id="category-availableUpdates" value="addons://updates/available"
                       class="category"
                       data-l10n-id="extensions-view-available-updates"
@@ -221,14 +169,7 @@
         <vbox id="headered-views" flex="1">
           <!-- main header -->
           <hbox id="header">
-            <hbox id="header-inner" align="center">
-              <button id="show-all-extensions" hidden="true"
-                      data-l10n-id="show-all-extensions-button"
-                      command="cmd_showAllExtensions"/>
-              <spacer flex="1"/>
-              <button id="show-disabled-unsigned-extensions" hidden="true"
-                      class="warning" data-l10n-id="show-unsigned-extensions-button"
-                      command="cmd_showUnsignedExtensions"/>
+            <hbox id="header-inner" align="center" pack="end">
               <label id="search-label" control="header-search"/>
               <textbox id="header-search" is="search-textbox" searchbutton="true"
                        data-l10n-id="search-header"
@@ -258,9 +199,6 @@
                        data-l10n-id="extensions-updates-installed"/>
                 <label id="updates-downloaded" hidden="true"
                        data-l10n-id="extensions-updates-downloaded"/>
-                <button id="updates-restart-btn" class="button-link" hidden="true"
-                        data-l10n-id="extensions-updates-restart"
-                        command="cmd_restartApp"/>
               </hbox>
 
               <button id="header-utils-btn" type="menu" data-l10n-id="tools-menu">
@@ -299,378 +237,8 @@
           </hbox>
 
           <deck id="headered-views-content" flex="1" selectedIndex="0">
-            <!-- list view -->
-            <vbox id="list-view" flex="1" class="view-pane" align="stretch">
-              <!-- info UI for add-ons that have been disabled for being unsigned -->
-              <vbox id="disabled-unsigned-addons-info" class="alert-container" hidden="true">
-                <label id="disabled-unsigned-addons-heading" data-l10n-id="disabled-unsigned-heading"/>
-                <description data-l10n-id="disabled-unsigned-description">
-                  <label class="plain" id="find-alternative-addons" data-l10n-name="find-addons" is="text-link"/>
-                </description>
-                <hbox pack="start"><label id="signing-learn-more" data-l10n-id="disabled-unsigned-learn-more" is="text-link"></label></hbox>
-                <description id="signing-dev-info" data-l10n-id="disabled-unsigned-devinfo">
-                  <label class="plain" id="signing-dev-manual-link" data-l10n-name="learn-more" is="text-link"/>
-                </description>
-              </vbox>
-              <vbox id="legacy-extensions-notice" class="alert-container" hidden="true">
-                <vbox class="alert">
-                  <description id="legacy-extensions-description">
-                    <label class="plain" id="legacy-extensions-learnmore-link" data-l10n-id="legacy-warning-show-legacy" is="text-link"/>
-                  </description>
-                </vbox>
-              </vbox>
-              <vbox id="private-browsing-notice" class="alert-container" hidden="true" align="start">
-                <hbox class="message-bar" align="start">
-                  <image class="message-bar-icon"/>
-                  <vbox class="message-container">
-                    <description class="message-bar-description" data-l10n-id="private-browsing-description2">
-                      <label class="plain" id="private-browsing-learnmore-link" data-l10n-name="private-browsing-learn-more" is="text-link"/>
-                    </description>
-                  </vbox>
-                </hbox>
-              </vbox>
-              <vbox id="plugindeprecation-notice" class="list-view-notice" align="start">
-                <hbox class="message-bar">
-                  <image class="message-bar-icon"/>
-                  <description class="message-bar-description" data-l10n-id="plugin-deprecation-description">
-                    <label class="plain" id="plugindeprecation-learnmore-link" data-l10n-name="learn-more" is="text-link"></label>
-                  </description>
-                </hbox>
-              </vbox>
-              <hbox class="view-header global-warning-container">
-                <!-- global warnings -->
-                <hbox class="global-warning" flex="1">
-                  <hbox class="global-warning-safemode" flex="1" align="center"
-                        data-l10n-id="extensions-warning-safe-mode-container">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                           data-l10n-id="extensions-warning-safe-mode-label"/>
-                  </hbox>
-                  <hbox class="global-warning-checkcompatibility" flex="1" align="center"
-                        data-l10n-id="extensions-warning-check-compatibility-container">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                           data-l10n-id="extensions-warning-check-compatibility-label"/>
-                  </hbox>
-                  <button class="button-link global-warning-checkcompatibility"
-                          data-l10n-id="extensions-warning-check-compatibility-enable"
-                          command="cmd_enableCheckCompatibility"/>
-                  <hbox class="global-warning-updatesecurity" flex="1" align="center"
-                        data-l10n-id="extensions-warning-update-security-container">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                          data-l10n-id="extensions-warning-update-security-label"/>
-                  </hbox>
-                  <button class="button-link global-warning-updatesecurity"
-                          data-l10n-id="extensions-warning-update-security-enable"
-                          command="cmd_enableUpdateSecurity"/>
-                  <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
-                </hbox>
-              </hbox>
-              <vbox id="addon-list-empty" class="alert-container"
-                    flex="1" hidden="true">
-                <spacer class="alert-spacer-before"/>
-                <vbox class="alert">
-                  <label data-l10n-id="list-empty-installed"/>
-                  <button class="discover-button"
-                          id="discover-button-install"
-                          data-l10n-id="list-empty-button"
-                          command="cmd_goToDiscoverPane"/>
-                </vbox>
-                <spacer class="alert-spacer-after"/>
-              </vbox>
-              <richlistbox id="addon-list" class="list" flex="1"/>
-            </vbox>
-
             <!-- extension shortcuts view -->
             <browser id="shortcuts-view" type="content" flex="1" disablehistory="true"/>
-
-            <!-- legacy extensions view -->
-            <vbox id="legacy-view" flex="1" class="view-pane" align="stretch">
-              <vbox id="legacy-extensions-info">
-                <label id="legacy-extensions-heading" data-l10n-id="legacy-extensions"/>
-                <description data-l10n-id="legacy-extensions-description">
-                  <label class="plain" id="legacy-learnmore" data-l10n-name="legacy-learn-more" is="text-link"></label>
-                </description>
-              </vbox>
-              <richlistbox id="legacy-list" class="list" flex="1"/>
-            </vbox>
-
-            <!-- updates view -->
-            <vbox id="updates-view" flex="1" class="view-pane">
-              <hbox class="view-header global-warning-container" align="center">
-                <!-- global warnings -->
-                <hbox class="global-warning" flex="1">
-                  <hbox class="global-warning-safemode" flex="1" align="center"
-                        data-l10n-id="extensions-warning-safe-mode-container">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                           data-l10n-id="extensions-warning-safe-mode-label"/>
-                  </hbox>
-                  <hbox class="global-warning-checkcompatibility" flex="1" align="center"
-                        data-l10n-id="extensions-warning-check-compatibility-label">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                           data-l10n-id="extensions-warning-check-compatibility-label"/>
-                  </hbox>
-                  <button class="button-link global-warning-checkcompatibility"
-                          data-l10n-id="extensions-warning-check-compatibility-enable"
-                          command="cmd_enableCheckCompatibility"/>
-                  <hbox class="global-warning-updatesecurity" flex="1" align="center"
-                        data-l10n-id="extensions-warning-update-security-label">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                           data-l10n-id="extensions-warning-update-security-label"/>
-                  </hbox>
-                  <button class="button-link global-warning-updatesecurity"
-                          data-l10n-id="extensions-warning-update-security-enable"
-                          command="cmd_enableUpdateSecurity"/>
-                  <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
-                </hbox>
-              </hbox>
-              <vbox id="updates-list-empty" class="alert-container"
-                    flex="1" hidden="true">
-                <spacer class="alert-spacer-before"/>
-                <vbox class="alert">
-                  <label id="empty-availableUpdates-msg" data-l10n-id="list-empty-available-updates"/>
-                  <label id="empty-recentUpdates-msg" data-l10n-id="list-empty-recent-updates"/>
-                  <button data-l10n-id="list-empty-find-updates"
-                          command="cmd_findAllUpdates"/>
-                </vbox>
-                <spacer class="alert-spacer-after"/>
-              </vbox>
-              <hbox id="update-actions" pack="center">
-                <button id="update-selected-btn" hidden="true"
-                        data-l10n-id="extensions-updates-update-selected"/>
-              </hbox>
-              <richlistbox id="updates-list" class="list" flex="1"/>
-            </vbox>
-
-            <!-- detail view -->
-            <scrollbox id="detail-view" class="view-pane addon-view" orient="vertical" tabindex="0"
-                       role="document">
-              <!-- global warnings -->
-              <hbox class="global-warning-container global-warning">
-                <hbox class="global-warning-safemode" flex="1" align="center"
-                        data-l10n-id="extensions-warning-safe-mode-container">
-                  <image class="warning-icon"/>
-                  <label class="global-warning-text" flex="1" crop="end"
-                        data-l10n-id="extensions-warning-safe-mode-label"/>
-                </hbox>
-                <hbox class="global-warning-checkcompatibility" flex="1" align="center"
-                      data-l10n-id="extensions-warning-check-compatibility-container">
-                  <image class="warning-icon"/>
-                  <label class="global-warning-text" flex="1" crop="end"
-                         data-l10n-id="extensions-warning-check-compatibility-label"/>
-                </hbox>
-                <button class="button-link global-warning-checkcompatibility"
-                        data-l10n-id="extensions-warning-check-compatibility-enable"
-                        command="cmd_enableCheckCompatibility"/>
-                <hbox class="global-warning-updatesecurity" flex="1" align="center"
-                      data-l10n-id="extensions-warning-update-security-container">
-                  <image class="warning-icon"/>
-                  <label class="global-warning-text" flex="1" crop="end"
-                         data-l10n-id="extensions-warning-update-security-label"/>
-                </hbox>
-                <button class="button-link global-warning-updatesecurity"
-                        data-l10n-id="extensions-warning-update-security-label"
-                        command="cmd_enableUpdateSecurity"/>
-                <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
-              </hbox>
-              <hbox class="detail-view-wrapper">
-                <!-- "loading" splash screen -->
-                <vbox class="alert-container">
-                  <spacer class="alert-spacer-before"/>
-                  <hbox class="alert loading">
-                    <image/>
-                    <label data-l10n-id="loading-label"/>
-                  </hbox>
-                  <spacer class="alert-spacer-after"/>
-                </vbox>
-                <!-- actual detail view -->
-                <vbox class="detail-view-container" contextmenu="addonitem-popup">
-                  <vbox id="detail-notifications">
-                    <hbox id="warning-container" align="center" class="warning">
-                      <image class="warning-icon"/>
-                      <label id="detail-warning" flex="1"/>
-                      <label id="detail-warning-link" is="text-link"/>
-                      <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
-                    </hbox>
-                    <hbox id="error-container" align="center" class="error">
-                      <image class="error-icon"/>
-                      <label id="detail-error" flex="1"/>
-                      <label id="detail-error-link" is="text-link"/>
-                      <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
-                    </hbox>
-                    <hbox id="pending-container" align="center" class="pending">
-                      <image class="pending-icon"/>
-                      <label id="detail-pending" flex="1"/>
-                      <button id="detail-restart-btn" class="button-link"
-                              data-l10n-id="addon-restart-now"
-                              command="cmd_restartApp"/>
-                      <button id="detail-undo-btn" class="button-link"
-                              label="&addon.undoAction.label;"
-                              tooltipText="&addon.undoAction.tooltip;"
-                              command="cmd_cancelOperation"/>
-                      <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
-                    </hbox>
-                  </vbox>
-                  <hbox class="card addon-detail" align="start">
-                    <vbox flex="1">
-                      <image class="card-heading-image theme-screenshot"/>
-                      <hbox align="start">
-                        <vbox id="detail-icon-container" align="end">
-                          <image id="detail-icon" class="icon"/>
-                        </vbox>
-                        <vbox id="detail-summary">
-                          <hbox id="detail-name-container" class="name-container"
-                                align="start">
-                            <label id="detail-name" flex="1"/>
-                            <label id="detail-legacy-warning" class="legacy-warning" value="&addon.legacy.label;" is="text-link"/>
-                            <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
-                            <label class="update-postfix" value="&addon.update.postfix;"/>
-                            <spacer flex="5000"/> <!-- Necessary to allow the name to wrap -->
-                          </hbox>
-                          <label id="detail-creator" class="creator"/>
-                        </vbox>
-                      </hbox>
-                      <vbox id="detail-desc-container" align="start" flex="1">
-                        <description id="detail-desc"/>
-                        <description id="detail-fulldesc"/>
-                      </vbox>
-                      <vbox id="detail-contributions">
-                        <description id="detail-contrib-description" data-l10n-id="detail-contributions-description"/>
-                        <hbox align="center">
-                          <spacer flex="1"/>
-                          <button id="detail-contrib-btn"
-                                  data-l10n-id="cmd-contribute"
-                                  command="cmd_contribute"/>
-                        </hbox>
-                      </vbox>
-                      <grid id="detail-grid">
-                        <columns>
-                           <column flex="1"/>
-                           <column flex="2"/>
-                        </columns>
-                        <rows id="detail-rows">
-                          <row class="detail-row-complex detail-privateBrowsing" id="detail-privateBrowsing-row">
-                            <label class="detail-row-label" data-l10n-id="detail-private-browsing-label"/>
-                            <hbox align="center">
-                              <radiogroup id="detail-privateBrowsing" orient="horizontal">
-                                <radio data-l10n-id="detail-private-browsing-on"
-                                       value="1"/>
-                                <radio data-l10n-id="detail-private-browsing-off"
-                                       value="0"/>
-                              </radiogroup>
-                            </hbox>
-                          </row>
-                          <hbox class="detail-row-footer detail-privateBrowsing" id="detail-privateBrowsing-row-footer">
-                            <description class="indent preferences-description" data-l10n-id="detail-private-browsing-description2">
-                              <label class="learnMore private-learnmore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
-                            </description>
-                          </hbox>
-                          <row class="detail-row-complex detail-privateBrowsing" id="detail-privateBrowsing-required">
-                            <label class="detail-row-label" data-l10n-id="detail-private-required-label"/>
-                          </row>
-                          <hbox class="detail-row-footer detail-privateBrowsing" id="detail-privateBrowsing-required-footer">
-                            <description class="indent preferences-description" data-l10n-id="detail-private-required-description">
-                              <label class="learnMore private-learnmore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
-                            </description>
-                          </hbox>
-                          <row class="detail-row-complex detail-privateBrowsing" id="detail-privateBrowsing-disallowed">
-                            <label class="detail-row-label" data-l10n-id="detail-private-disallowed-label"/>
-                          </row>
-                          <hbox class="detail-row-footer detail-privateBrowsing" id="detail-privateBrowsing-disallowed-footer">
-                            <description class="indent preferences-description" data-l10n-id="detail-private-disallowed-description">
-                              <label class="learnMore private-learnmore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
-                            </description>
-                          </hbox>
-                          <row class="detail-row-complex" id="detail-updates-row">
-                            <label class="detail-row-label" data-l10n-id="detail-update-type"/>
-                            <hbox align="center">
-                              <radiogroup id="detail-autoUpdate" orient="horizontal">
-                                <!-- The values here need to match the values of
-                                     AddonManager.AUTOUPDATE_* -->
-                                <radio data-l10n-id="detail-update-default"
-                                       value="1"/>
-                                <radio data-l10n-id="detail-update-automatic"
-                                       value="2"/>
-                                <radio data-l10n-id="detail-update-manual"
-                                       value="0"/>
-                              </radiogroup>
-                              <button id="detail-findUpdates-btn" class="button-link"
-                                      data-l10n-id="detail-check-for-updates"
-                                      command="cmd_findItemUpdates"/>
-                            </hbox>
-                          </row>
-                          <row class="detail-row" id="detail-version" data-l10n-id="detail-version"/>
-                          <row class="detail-row" id="detail-dateUpdated" data-l10n-id="detail-last-updated"/>
-                          <row class="detail-row-complex" id="detail-homepage-row" data-l10n-id="detail-home">
-                            <label class="detail-row-label" data-l10n-id="detail-home-value"/>
-                            <label id="detail-homepage" class="detail-row-value" crop="end" is="text-link"/>
-                          </row>
-                          <row class="detail-row-complex" id="detail-repository-row" data-l10n-id="detail-repository">
-                            <label class="detail-row-label" data-l10n-id="detail-repository-value"/>
-                            <label id="detail-repository" class="detail-row-value" is="text-link"/>
-                          </row>
-                          <row class="detail-row-complex" id="detail-rating-row">
-                            <label class="detail-row-label" data-l10n-id="detail-rating"/>
-                            <hbox>
-                              <label id="detail-rating" class="meta-value meta-rating"
-                                     showrating="average"/>
-                              <label id="detail-reviews" is="text-link"/>
-                            </hbox>
-                          </row>
-                        </rows>
-                      </grid>
-                      <hbox id="detail-controls">
-                        <button id="detail-prefs-btn" class="addon-control preferences"
-                                data-l10n-id="detail-show-preferences"
-                                command="cmd_showItemPreferences"/>
-                        <spacer flex="1"/>
-                        <button id="detail-enable-btn" class="addon-control enable"
-                                label="&cmd.enableAddon.label;"
-                                accesskey="&cmd.enableAddon.accesskey;"
-                                command="cmd_enableItem"/>
-                        <button id="detail-disable-btn" class="addon-control disable"
-                                label="&cmd.disableAddon.label;"
-                                accesskey="&cmd.disableAddon.accesskey;"
-                                command="cmd_disableItem"/>
-                        <button id="detail-uninstall-btn" class="addon-control remove"
-                                label="&cmd.uninstallAddon.label;"
-                                accesskey="&cmd.uninstallAddon.accesskey;"
-                                command="cmd_uninstallItem"/>
-                        <button id="detail-install-btn" class="addon-control install"
-                                data-l10n-id="cmd-install-addon"
-                                command="cmd_installItem"/>
-                        <menulist id="detail-state-menulist"
-                                  crop="none" sizetopopup="always"
-                                  tooltiptext="&cmd.stateMenu.tooltip;">
-                          <menupopup>
-                            <menuitem id="detail-ask-to-activate-menuitem"
-                                      class="addon-control"
-                                      label="&cmd.askToActivate.label;"
-                                      tooltiptext="&cmd.askToActivate.tooltip;"
-                                      command="cmd_askToActivateItem"/>
-                            <menuitem id="detail-always-activate-menuitem"
-                                      class="addon-control"
-                                      label="&cmd.alwaysActivate.label;"
-                                      tooltiptext="&cmd.alwaysActivate.tooltip;"
-                                      command="cmd_alwaysActivateItem"/>
-                            <menuitem id="detail-never-activate-menuitem"
-                                      class="addon-control"
-                                      label="&cmd.neverActivate.label;"
-                                      tooltiptext="&cmd.neverActivate.tooltip;"
-                                      command="cmd_neverActivateItem"/>
-                          </menupopup>
-                        </menulist>
-                      </hbox>
-                    </vbox>
-                  </hbox>
-                </vbox>
-                <spacer flex="1"/>
-              </hbox>
-            </scrollbox>
 
             <vbox id="html-view" flex="1">
               <vbox class="alert-container html-alert-container" align="start">
