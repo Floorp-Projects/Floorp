@@ -56,3 +56,10 @@ path:.cron.yml
 
 # for the wrench-deps toolchain task
 path:gfx/wr/Cargo.lock
+
+# for the mar-tools toolchain task
+path:mfbt/
+path:modules/libmar/
+path:other-licenses/bsdiff/
+path:other-licenses/nsis/Contrib/CityHash/cityhash/
+path:toolkit/mozapps/update/updater
