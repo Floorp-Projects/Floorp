@@ -184,6 +184,14 @@ function setEventListener(aId, aEventType, aCallback) {
     .addEventListener(aEventType, aCallback.bind(gPrivacyPane));
 }
 
+function setSyncFromPrefListener(aId, aCallback) {
+  Preferences.addSyncFromPrefListener(document.getElementById(aId), aCallback);
+}
+
+function setSyncToPrefListener(aId, aCallback) {
+  Preferences.addSyncToPrefListener(document.getElementById(aId), aCallback);
+}
+
 function dataCollectionCheckboxHandler({
   checkbox,
   pref,
@@ -499,6 +507,37 @@ var gPrivacyPane = {
       "command",
       gPrivacyPane.toggleDoNotDisturbNotifications
     );
+
+    setSyncFromPrefListener("contentBlockingBlockCookiesCheckbox", () =>
+      this.readBlockCookies()
+    );
+    setSyncToPrefListener("contentBlockingBlockCookiesCheckbox", () =>
+      this.writeBlockCookies()
+    );
+    setSyncFromPrefListener("blockCookiesMenu", () =>
+      this.readBlockCookiesFrom()
+    );
+    setSyncToPrefListener("blockCookiesMenu", () =>
+      this.writeBlockCookiesFrom()
+    );
+    setSyncFromPrefListener("deleteOnClose", () => this.readDeleteOnClose());
+    setSyncToPrefListener("deleteOnClose", () => this.writeDeleteOnClose());
+    setSyncFromPrefListener("savePasswords", () => this.readSavePasswords());
+
+    let microControlHandler = el =>
+      this.ensurePrivacyMicroControlUncheckedWhenDisabled(el);
+    setSyncFromPrefListener("rememberHistory", microControlHandler);
+    setSyncFromPrefListener("rememberForms", microControlHandler);
+    setSyncFromPrefListener("alwaysClear", microControlHandler);
+
+    setSyncFromPrefListener("popupPolicy", () =>
+      this.updateButtons("popupPolicyButton", "dom.disable_open_during_load")
+    );
+    setSyncFromPrefListener("warnAddonInstall", () =>
+      this.readWarnAddonInstall()
+    );
+    setSyncFromPrefListener("enableOCSP", () => this.readEnableOCSP());
+    setSyncToPrefListener("enableOCSP", () => this.writeEnableOCSP());
 
     if (AlertsServiceDND) {
       let notificationsDoNotDisturbBox = document.getElementById(
