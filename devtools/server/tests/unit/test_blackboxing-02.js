@@ -13,7 +13,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -23,9 +23,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-black-box", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_black_box();
     });
   });
@@ -36,9 +36,9 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box() {
-  gThreadClient.once("paused", async function(packet) {
-    gThreadClient.setBreakpoint({ sourceUrl: BLACK_BOXED_URL, line: 2 }, {});
-    gThreadClient.resume().then(test_black_box_breakpoint);
+  gThreadFront.once("paused", async function(packet) {
+    gThreadFront.setBreakpoint({ sourceUrl: BLACK_BOXED_URL, line: 2 }, {});
+    gThreadFront.resume().then(test_black_box_breakpoint);
   });
 
   /* eslint-disable no-undef */
@@ -72,21 +72,21 @@ function test_black_box() {
 }
 
 function test_black_box_breakpoint() {
-  gThreadClient.getSources().then(async function({ error, sources }) {
+  gThreadFront.getSources().then(async function({ error, sources }) {
     Assert.ok(!error, "Should not get an error: " + error);
-    const sourceFront = gThreadClient.source(
+    const sourceFront = gThreadFront.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
     await blackBox(sourceFront);
 
-    gThreadClient.once("paused", function(packet) {
+    gThreadFront.once("paused", function(packet) {
       Assert.equal(
         packet.why.type,
         "debuggerStatement",
         "We should pass over the breakpoint since the source is black boxed."
       );
-      gThreadClient
+      gThreadFront
         .resume()
         .then(test_unblack_box_breakpoint.bind(null, sourceFront));
     });
@@ -96,7 +96,7 @@ function test_black_box_breakpoint() {
 
 async function test_unblack_box_breakpoint(sourceFront) {
   await unBlackBox(sourceFront);
-  gThreadClient.once("paused", async function(packet) {
+  gThreadFront.once("paused", async function(packet) {
     Assert.equal(
       packet.why.type,
       "breakpoint",
@@ -105,11 +105,11 @@ async function test_unblack_box_breakpoint(sourceFront) {
 
     // We will hit the debugger statement on resume, so do this
     // nastiness to skip over it.
-    gThreadClient.once("paused", async () => {
-      await gThreadClient.resume();
+    gThreadFront.once("paused", async () => {
+      await gThreadFront.resume();
       finishClient(gClient);
     });
-    await gThreadClient.resume();
+    await gThreadFront.resume();
   });
   gDebuggee.runTest();
 }

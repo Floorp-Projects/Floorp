@@ -9,11 +9,11 @@
  */
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     dumpn("Evaluating test code and waiting for first debugger statement");
     const dbgStmt = await executeOnNextTickAndWaitForPause(
       () => evaluateTestCode(debuggee),
-      threadClient
+      threadFront
     );
     equal(
       dbgStmt.frame.where.line,
@@ -22,12 +22,12 @@ add_task(
     );
 
     dumpn("Step out of inner and into var statement IIFE");
-    const step2 = await stepOut(threadClient);
+    const step2 = await stepOut(threadFront);
     equal(step2.frame.where.line, 4);
     deepEqual(step2.why.frameFinished.return, { type: "undefined" });
 
     dumpn("Step out of vars and into script body");
-    const step3 = await stepOut(threadClient);
+    const step3 = await stepOut(threadFront);
     equal(step3.frame.where.line, 9);
     deepEqual(step3.why.frameFinished.return, { type: "undefined" });
   })

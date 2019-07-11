@@ -28,7 +28,7 @@ function onConnect(connection) {
     },
 
     createObjectClient: function(grip) {
-      return connection.tabConnection.threadClient.pauseGrip(grip);
+      return connection.tabConnection.threadFront.pauseGrip(grip);
     },
     createLongStringClient: function(grip) {
       return connection.tabConnection.tabTarget.activeConsole.longString(grip);

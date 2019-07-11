@@ -9,7 +9,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 var gNumTimesSourcesSent = 0;
 
@@ -29,9 +29,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_simple_listsources();
     });
   });
@@ -39,8 +39,8 @@ function run_test() {
 }
 
 function test_simple_listsources() {
-  gThreadClient.once("paused", function(packet) {
-    gThreadClient.getSources().then(function(response) {
+  gThreadFront.once("paused", function(packet) {
+    gThreadFront.getSources().then(function(response) {
       Assert.ok(
         response.sources.some(function(s) {
           return s.url && s.url.match(/test_listsources-01.js/);
@@ -53,7 +53,7 @@ function test_simple_listsources() {
           " might have had to send one to determine feature support."
       );
 
-      gThreadClient.resume().then(function() {
+      gThreadFront.resume().then(function() {
         finishClient(gClient);
       });
     });

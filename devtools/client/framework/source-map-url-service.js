@@ -71,7 +71,7 @@ SourceMapURLService.prototype._getLoadingPromise = function() {
         );
 
       // Start fetching the sources now.
-      const loadingPromise = this._toolbox.threadClient.getSources().then(
+      const loadingPromise = this._toolbox.threadFront.getSources().then(
         ({ sources }) => {
           // Ignore errors.  Register the sources we got; we can't rely on
           // an event to arrive if the source actor already existed.

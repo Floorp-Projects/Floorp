@@ -16,7 +16,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     debuggee.eval(
       function stopMe(arg1) {
         debugger;
@@ -189,15 +189,15 @@ add_task(
     ];
 
     for (const test of testCases) {
-      await test_object_grip(debuggee, client, threadClient, test);
+      await test_object_grip(debuggee, client, threadFront, test);
     }
   })
 );
 
 // These tests are not yet supported in workers.
 add_task(
-  threadClientTest(
-    async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(
+    async ({ threadFront, debuggee, client }) => {
       debuggee.eval(
         function stopMe(arg1) {
           debugger;
@@ -231,7 +231,7 @@ add_task(
       ];
 
       for (const test of testCases) {
-        await test_object_grip(debuggee, client, threadClient, test);
+        await test_object_grip(debuggee, client, threadFront, test);
       }
     },
     { doNotRunWorker: true }
@@ -241,7 +241,7 @@ add_task(
 async function test_object_grip(
   debuggee,
   dbgClient,
-  threadClient,
+  threadFront,
   testData = {}
 ) {
   const {
@@ -251,10 +251,10 @@ async function test_object_grip(
   } = testData;
 
   return new Promise((resolve, reject) => {
-    threadClient.once("paused", async function(packet) {
+    threadFront.once("paused", async function(packet) {
       const [grip] = packet.frame.arguments;
 
-      const objClient = threadClient.pauseGrip(grip);
+      const objClient = threadFront.pauseGrip(grip);
 
       info(`
         Check enumProperties response for
@@ -276,7 +276,7 @@ async function test_object_grip(
       });
       await check_enum_properties(response, expectedNonIndexedProperties);
 
-      await threadClient.resume();
+      await threadFront.resume();
       resolve();
     });
 

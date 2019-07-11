@@ -30,7 +30,7 @@ DebuggerPanel.prototype = {
       selectors,
       client,
     } = await this.panelWin.Debugger.bootstrap({
-      threadClient: this.toolbox.threadClient,
+      threadFront: this.toolbox.threadFront,
       tabTarget: this.toolbox.target,
       debuggerClient: this.toolbox.target.client,
       workers: {

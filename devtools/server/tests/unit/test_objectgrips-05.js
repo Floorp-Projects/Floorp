@@ -14,22 +14,22 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", function(packet) {
+      threadFront.once("paused", function(packet) {
         const obj1 = packet.frame.arguments[0];
         Assert.ok(obj1.frozen);
 
-        const obj1Client = threadClient.pauseGrip(obj1);
+        const obj1Client = threadFront.pauseGrip(obj1);
         Assert.ok(obj1Client.isFrozen);
 
         const obj2 = packet.frame.arguments[1];
         Assert.ok(!obj2.frozen);
 
-        const obj2Client = threadClient.pauseGrip(obj2);
+        const obj2Client = threadFront.pauseGrip(obj2);
         Assert.ok(!obj2Client.isFrozen);
 
-        threadClient.resume().then(resolve);
+        threadFront.resume().then(resolve);
       });
 
       debuggee.eval(

@@ -23,7 +23,7 @@ function waitForPreview(store, expression) {
   });
 }
 
-function mockThreadClient(overrides) {
+function mockThreadFront(overrides) {
   return {
     evaluateInFrame: async () => ({ result: {} }),
     getFrameScopes: async () => {},
@@ -76,7 +76,7 @@ async function pause({ dispatch, cx }) {
 
 describe("preview", () => {
   it("should generate previews", async () => {
-    const store = createStore(mockThreadClient());
+    const store = createStore(mockThreadFront());
     const { dispatch, getState, cx } = store;
     const base = await dispatch(
       actions.newGeneratedSource(makeSource("base.js"))
@@ -112,7 +112,7 @@ describe("preview", () => {
     const promises = [firstSetPreview, secondSetPreview];
 
     const store = createStore(
-      mockThreadClient({
+      mockThreadFront({
         loadObjectProperties: () => promises.shift().promise,
       })
     );
@@ -156,7 +156,7 @@ describe("preview", () => {
     const promises = [firstSetPreview, secondSetPreview];
 
     const store = createStore(
-      mockThreadClient({
+      mockThreadFront({
         loadObjectProperties: () => promises.shift().promise,
       })
     );

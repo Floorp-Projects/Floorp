@@ -8,7 +8,7 @@
  */
 
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 var gNumTimesSourcesSent = 0;
 
@@ -28,9 +28,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-stack", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_listing_zero_sources();
     });
   });
@@ -38,7 +38,7 @@ function run_test() {
 }
 
 function test_listing_zero_sources() {
-  gThreadClient.getSources().then(function(packet) {
+  gThreadFront.getSources().then(function(packet) {
     Assert.ok(!packet.error);
     Assert.ok(!!packet.sources);
     Assert.equal(packet.sources.length, 0);
