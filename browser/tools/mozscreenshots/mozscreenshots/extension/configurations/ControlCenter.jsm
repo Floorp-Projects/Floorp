@@ -35,10 +35,7 @@ const MIXED_PASSIVE_CONTENT_URL = `https://example.com/${RESOURCE_PATH}/mixed_pa
 const TRACKING_PAGE = `http://tracking.example.org/${RESOURCE_PATH}/tracking.html`;
 
 var ControlCenter = {
-  init(libDir) {
-    // Disable the FTU tours.
-    Services.prefs.setIntPref("browser.contentblocking.introCount", 5);
-  },
+  init(libDir) {},
 
   configurations: {
     about: {
