@@ -630,15 +630,17 @@ ElementEditor.prototype = {
     // it (make sure to pass a complete list of existing attributes to the
     // parseAttribute function, by concatenating attribute, because this could
     // be a newly added attribute not yet on this.node).
-    const attributes = this.node.attributes.filter(existingAttribute => {
-      return existingAttribute.name !== attribute.name;
-    });
+    const attributes = this.node.attributes.filter(
+      existingAttribute => existingAttribute.name !== attribute.name
+    );
+
     attributes.push(attribute);
     const parsedLinksData = parseAttribute(
       this.node.namespaceURI,
       this.node.tagName,
       attributes,
-      attribute.name
+      attribute.name,
+      attribute.value
     );
 
     // Create links in the attribute value, and collapse long attributes if
