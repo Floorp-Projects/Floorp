@@ -6544,23 +6544,9 @@ void nsCSSFrameConstructor::IssueSingleInsertNofications(
 }
 
 bool nsCSSFrameConstructor::InsertionPoint::IsMultiple() const {
-  if (!mParentFrame) {
-    return false;
-  }
-
   // Fieldset frames have multiple normal flow child frame lists so handle it
   // the same as if it had multiple content insertion points.
-  if (mParentFrame->IsFieldSetFrame()) {
-    return true;
-  }
-
-  // A details frame moves the first summary frame to be its first child, so we
-  // treat it as if it has multiple content insertion points.
-  if (mParentFrame->IsDetailsFrame()) {
-    return true;
-  }
-
-  return false;
+  return mParentFrame && mParentFrame->IsFieldSetFrame();
 }
 
 nsCSSFrameConstructor::InsertionPoint
@@ -6784,10 +6770,10 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   }
 #endif
 
-  // We should never get here with fieldsets or details, since they have
+  // We should never get here with fieldsets, since they have
   // multiple insertion points.
-  MOZ_ASSERT(!parentFrame->IsFieldSetFrame() && !parentFrame->IsDetailsFrame(),
-             "Parent frame should not be fieldset or details!");
+  MOZ_ASSERT(!parentFrame->IsFieldSetFrame(),
+             "Parent frame should not be fieldset!");
 
   nsIFrame* nextSibling = FindNextSiblingForAppend(insertion);
   if (nextSibling) {
@@ -7156,21 +7142,6 @@ void nsCSSFrameConstructor::ContentRangeInserted(
     // has a legend which occurs earlier in its child list than this node,
     // and if so, proceed. But we'd have to extend nsFieldSetFrame
     // to locate this legend in the inserted frames and extract it.
-    LAYOUT_PHASE_TEMP_EXIT();
-    RecreateFramesForContent(insertion.mParentFrame->GetContent(),
-                             InsertionKind::Async);
-    LAYOUT_PHASE_TEMP_REENTER();
-    return;
-  }
-
-  // We should only get here with details when doing a single insertion because
-  // we treat details frame as if it has multiple insertion points.
-  MOZ_ASSERT(isSingleInsert || frameType != LayoutFrameType::Details);
-  if (frameType == LayoutFrameType::Details) {
-    // When inserting an element into <details>, just reframe the details frame
-    // and let it figure out where the element should be laid out. It might seem
-    // expensive to recreate the entire details frame, but it's the simplest way
-    // to handle the insertion.
     LAYOUT_PHASE_TEMP_EXIT();
     RecreateFramesForContent(insertion.mParentFrame->GetContent(),
                              InsertionKind::Async);
@@ -11586,7 +11557,17 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
     }
   }
 
-  // Situation #6 is a column hierarchy that's getting new children.
+  // Situation #6 is a <details> that's getting new children. When inserting
+  // elements into <details>, we reframe the <details> and let frame constructor
+  // move the main <summary> to the front when constructing the frame
+  // construction items.
+  if (aFrame->IsDetailsFrame()) {
+    TRACE("Details / Summary");
+    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
+    return true;
+  }
+
+  // Situation #7 is a column hierarchy that's getting new children.
   if (aFrame->IsColumnSetWrapperFrame()) {
     // Reframe the multi-column container whenever elements insert/append
     // into it.
@@ -11596,6 +11577,9 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
   }
 
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
+    MOZ_ASSERT(!aFrame->IsDetailsFrame(),
+               "Inserting elements into <details> should have been reframed!");
+
     bool anyColumnSpanItems = false;
     for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
       if (iter.item().mComputedStyle->StyleColumn()->IsColumnSpanStyle()) {
