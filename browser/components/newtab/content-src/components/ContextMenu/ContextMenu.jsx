@@ -72,18 +72,11 @@ export class ContextMenuItem extends React.PureComponent {
     super(props);
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
-    this.focusFirst = this.focusFirst.bind(this);
   }
 
   onClick() {
     this.props.hideContext();
     this.props.option.onClick();
-  }
-
-  focusFirst(button) {
-    if (button) {
-      button.focus();
-    }
   }
 
   // This selects the correct node based on the key pressed
@@ -141,7 +134,6 @@ export class ContextMenuItem extends React.PureComponent {
           tabIndex="0"
           onClick={this.onClick}
           onKeyDown={this.onKeyDown}
-          ref={option.first ? this.focusFirst : null}
         >
           {option.icon && (
             <span className={`icon icon-spacer icon-${option.icon}`} />

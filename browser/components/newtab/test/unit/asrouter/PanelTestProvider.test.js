@@ -4,7 +4,7 @@ const messages = PanelTestProvider.getMessages();
 
 describe("PanelTestProvider", () => {
   it("should have a message", () => {
-    assert.lengthOf(messages, 2);
+    assert.lengthOf(messages, 7);
   });
   it("should be a valid message", () => {
     assert.jsonSchema(messages[0].content, schema);

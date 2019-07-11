@@ -3513,7 +3513,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   background-repeat: no-repeat;
   display: inline-block;
   vertical-align: middle; }
-  @media (max-width: 850px) {
+  @media (max-width: 865px) {
     .onboardingMessageImage {
       height: 75px;
       min-width: 80px;
@@ -4050,7 +4050,8 @@ a.firstrun-link {
   margin: 0;
   opacity: 0;
   transition: opacity 0.4s;
-  transition-delay: 0.1s; }
+  transition-delay: 0.1s;
+  grid-auto-rows: 1fr; }
   .trailheadCardGrid.show {
     opacity: 1; }
   @media (min-width: 610px) {
