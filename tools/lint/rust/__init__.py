@@ -7,10 +7,10 @@ from collections import namedtuple
 
 import os
 import signal
-import which
 import re
 import subprocess
 
+from mozfile import which
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
 from mozprocess import ProcessHandler
@@ -105,10 +105,7 @@ def get_rustfmt_binary():
     if binary:
         return binary
 
-    try:
-        return which.which("rustfmt")
-    except which.WhichError:
-        return None
+    return which("rustfmt")
 
 
 def is_old_rustfmt(binary):
