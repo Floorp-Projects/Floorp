@@ -72,6 +72,10 @@ projects:
     path: components/feature/search
     description: 'Feature implementation connecting an engine implementation with the search module.'
     publish: true
+  feature-sendtab:
+    path: components/feature/sendtab
+    description: 'Feature of use cases for sending tabs between devices in an FxA Account.'
+    publish: true
   feature-session:
     path: components/feature/session
     description: 'Feature implementation connecting an engine implementation with the session module.'
