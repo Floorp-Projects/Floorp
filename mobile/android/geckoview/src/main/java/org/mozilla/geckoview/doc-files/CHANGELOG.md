@@ -30,6 +30,11 @@ exclude: true
 [69.3]: ../WebExtension.html
 [69.4]: ../WebExtension.MessageDelegate.html
 
+- Added `WebExtensionController` and `TabDelegate` to handle
+  [`browser.tabs.create`][69.6] calls by WebExtensions.
+
+[69.6]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/create
+
 ## v68
 - Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
   configuration has changed.
@@ -342,4 +347,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 95d443eb3946aeb5b278a258ab5a527d3281edda
+[api-version]: 3d726407275d906a54c1fc86eb92f2c3bfaaa3d0

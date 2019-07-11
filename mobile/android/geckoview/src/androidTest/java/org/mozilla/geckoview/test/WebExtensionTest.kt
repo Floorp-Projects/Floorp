@@ -29,6 +29,7 @@ import java.util.UUID
 class WebExtensionTest : BaseSessionTest() {
     companion object {
         val TEST_ENDPOINT: String = "http://localhost:4243"
+        val TABS_BACKGROUND: String = "resource://android/assets/web_extensions/tabs/"
         val MESSAGING_BACKGROUND: String = "resource://android/assets/web_extensions/messaging/"
         val MESSAGING_CONTENT: String = "resource://android/assets/web_extensions/messaging-content/"
     }
@@ -114,6 +115,31 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForResult(messageResult)
 
         sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(messaging))
+    }
+
+    // This test
+    // - Listen for a new tab request from a web extension
+    // - Registers a web extension
+    @Test
+    fun testBrowserTabsCreate() {
+        val tabsCreateResult = GeckoResult<Void>()
+        var tabsExtension : WebExtension? = null
+
+        val tabDelegate = object : WebExtensionController.TabDelegate {
+            override fun onNewTab(source: WebExtension?, uri: String?): GeckoResult<GeckoSession> {
+                Assert.assertEquals(uri, "https://www.mozilla.org/en-US/")
+                Assert.assertEquals(tabsExtension, source)
+                tabsCreateResult.complete(null)
+                return GeckoResult.fromValue(GeckoSession(sessionRule.session.settings))
+            }
+        }
+        sessionRule.runtime.webExtensionController.tabDelegate = tabDelegate
+        tabsExtension = WebExtension(TABS_BACKGROUND)
+
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
+        sessionRule.waitForResult(tabsCreateResult)
+
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(tabsExtension))
     }
 
     private fun createWebExtension(background: Boolean,
