@@ -10,7 +10,8 @@
     <link rel="stylesheet" type="text/css"
           href="chrome://browser/content/protections.css">
     <link rel="icon" href="chrome://global/skin/icons/warning.svg">
-    <script type="text/javascript" src="chrome://browser/content/protections.js"></script>
+    <script type="module" src="chrome://browser/content/protections.js"></script>
+    <script type="module" src="chrome://browser/content/lockwise-card.js"></script>
     <title>Protection Report</title>
   </head>
 
@@ -83,6 +84,51 @@
           </div>
         </div>
       </div>
+      <!-- Markup for Lockwise card. -->
+      <section class="report-card lockwise-card">
+        <div class="card-header">
+          <div class="icon"></div>
+          <div class="wrapper">
+            <h3 id="lockwise-title" class="card-title">
+              <!-- Insert Lockwise card title here. -->
+            </h3>
+            <p id="lockwise-header-content" class="content">
+              <!-- Insert Lockwise header content here. -->
+            </p>
+          </div>
+          <button id="open-about-logins-button">Open in Firefox</button>
+        </div>
+        <div class="card-body">
+          <div id="lockwise-body-content" class="body-wrapper">
+            <div class="no-logins hidden">
+                <div class="lockwise-mobile-app-icon"></div>
+                <span>
+                  Get the <a target="_blank" href="https://lockwise.firefox.com/">Firefox Lockwise</a>
+                  app to take your passwords everywhere.
+                </span>
+            </div>
+            <div class="has-logins hidden">
+              <span class="number-of-logins block">
+                <!-- Display number of stored logins here. -->
+              </span>
+              <span class="lockwise-text-icon passwords-stored-text">
+                Passwords stored securely.
+                <a href="">How it works</a>
+              </span>
+              <span class="number-of-synced-devices block">
+                <!-- Display number of synced devices here. -->
+              </span>
+              <span class="lockwise-text-icon synced-devices-text">
+                <span>
+                  <!-- Display message for status of synced devices here. -->
+                </span>
+                <a class="hidden" href="" title="Go to sync preferences">Turn on sync…</a>
+              </span>
+            </div>
+           </div>
+          </div>
+        </div>
+      </section>
     </div>
   </body>
 </html>
