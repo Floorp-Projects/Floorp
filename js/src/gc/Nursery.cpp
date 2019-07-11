@@ -913,8 +913,19 @@ void js::Nursery::collect(JS::GCReason reason) {
 
   // Resize the nursery.
   maybeResizeNursery(reason);
+
+  // Poison/initialise the first chunk.
   if (isEnabled() && previousGC.nurseryUsedBytes) {
-    poisonAndInitCurrentChunk();
+    // In most cases Nursery::clear() has not poisoned this chunk or marked it
+    // as NoAccess; so we only need to poison the region used during the last
+    // cycle.  Also, if the heap was recently expanded we don't want to
+    // re-poison the new memory.  In both cases we only need to poison until
+    // previousGC.nurseryUsedBytes.
+    //
+    // In cases where this is not true, like generational zeal mode or subchunk
+    // mode, poisonAndInitCurrentChunk() will ignore its parameter.  It will
+    // also clamp the parameter.
+    poisonAndInitCurrentChunk(previousGC.nurseryUsedBytes);
   }
 
   const float promotionRate = doPretenuring(rt, reason, tenureCounts);
@@ -1278,12 +1289,13 @@ MOZ_ALWAYS_INLINE void js::Nursery::setCurrentChunk(unsigned chunkno) {
   setCurrentEnd();
 }
 
-void js::Nursery::poisonAndInitCurrentChunk() {
+void js::Nursery::poisonAndInitCurrentChunk(size_t extent) {
   if (runtime()->hasZealMode(ZealMode::GenerationalGC) || !isSubChunkMode()) {
     chunk(currentChunk_).poisonAndInit(runtime());
   } else {
-    MOZ_ASSERT(capacity_ <= NurseryChunkUsableSize);
-    chunk(currentChunk_).poisonAndInit(runtime(), capacity_);
+    extent = Min(capacity_, extent);
+    MOZ_ASSERT(extent <= NurseryChunkUsableSize);
+    chunk(currentChunk_).poisonAndInit(runtime(), extent);
   }
 }
 
@@ -1454,10 +1466,21 @@ size_t js::Nursery::roundSize(size_t size) const {
 void js::Nursery::growAllocableSpace(size_t newCapacity) {
   MOZ_ASSERT_IF(!isSubChunkMode(), newCapacity > currentChunk_ * ChunkSize);
   MOZ_ASSERT(newCapacity <= chunkCountLimit_ * ChunkSize);
+  MOZ_ASSERT(newCapacity > capacity());
 
-  if (isSubChunkMode() && CanUseExtraThreads()) {
+  if (isSubChunkMode()) {
     // Avoid growing into an area that's about to be decommitted.
     decommitTask.join();
+
+    // The capacity has changed and since we were in sub-chunk mode we need to
+    // update the poison values / asan infomation for the now-valid region of
+    // this chunk.
+    size_t poisonSize = Min(newCapacity, NurseryChunkUsableSize) - capacity();
+    // Don't poison the trailer.
+    MOZ_ASSERT(capacity() + poisonSize <= NurseryChunkUsableSize);
+    MOZ_ASSERT(currentChunk_ == 0);
+    chunk(0).poisonRange(capacity(), poisonSize, JS_FRESH_NURSERY_PATTERN,
+                         MemCheckKind::MakeUndefined);
   }
 
   capacity_ = newCapacity;
