@@ -4,18 +4,20 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from distutils.version import LooseVersion
+import errno
 import hashlib
 import logging
-from mozbuild.base import (
-    BuildEnvironmentNotFoundException,
-    MozbuildObject,
-)
-import mozpack.path as mozpath
 import os
 import re
 import subprocess
 import sys
+from distutils.version import LooseVersion
+
+import mozpack.path as mozpath
+from mozbuild.base import (
+    BuildEnvironmentNotFoundException,
+    MozbuildObject,
+)
 
 
 class VendorRust(MozbuildObject):
@@ -24,8 +26,11 @@ class VendorRust(MozbuildObject):
             return self.substs['CARGO']
         except (BuildEnvironmentNotFoundException, KeyError):
             # Default if this tree isn't configured.
-            import which
-            return which.which('cargo')
+            from mozfile import which
+            cargo = which('cargo')
+            if not cargo:
+                raise OSError(errno.ENOENT, "Could not find 'cargo' on your $PATH.")
+            return cargo
 
     def check_cargo_version(self, cargo):
         '''
