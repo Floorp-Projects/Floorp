@@ -1049,7 +1049,7 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   nsresult rv =
       GetIndicesForInterval(aRange->GetStartContainer(), aRange->StartOffset(),
                             aRange->GetEndContainer(), aRange->EndOffset(),
-                            false, &startIndex, &endIndex);
+                            false, startIndex, endIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (endIndex == -1) {
@@ -1248,7 +1248,7 @@ nsresult Selection::GetRangesForIntervalArray(
   int32_t startIndex, endIndex;
   nsresult res =
       GetIndicesForInterval(aBeginNode, aBeginOffset, aEndNode, aEndOffset,
-                            aAllowAdjacent, &startIndex, &endIndex);
+                            aAllowAdjacent, startIndex, endIndex);
   NS_ENSURE_SUCCESS(res, res);
 
   if (startIndex == -1 || endIndex == -1) return NS_OK;
@@ -1263,20 +1263,14 @@ nsresult Selection::GetRangesForIntervalArray(
 
 nsresult Selection::GetIndicesForInterval(
     const nsINode* aBeginNode, int32_t aBeginOffset, const nsINode* aEndNode,
-    int32_t aEndOffset, bool aAllowAdjacent, int32_t* aStartIndex,
-    int32_t* aEndIndex) const {
-  int32_t startIndex;
-  int32_t endIndex;
-
-  if (!aStartIndex) aStartIndex = &startIndex;
-  if (!aEndIndex) aEndIndex = &endIndex;
-
-  *aStartIndex = -1;
-  *aEndIndex = -1;
+    int32_t aEndOffset, bool aAllowAdjacent, int32_t& aStartIndex,
+    int32_t& aEndIndex) const {
+  aStartIndex = -1;
+  aEndIndex = -1;
 
   if (mRanges.Length() == 0) return NS_OK;
 
-  bool intervalIsCollapsed =
+  const bool intervalIsCollapsed =
       aBeginNode == aEndNode && aBeginOffset == aEndOffset;
 
   // Ranges that end before the given interval and begin after the given
@@ -1302,7 +1296,7 @@ nsresult Selection::GetIndicesForInterval(
     if (!aAllowAdjacent && !(endRange->Collapsed() && intervalIsCollapsed))
       return NS_OK;
   }
-  *aEndIndex = endsBeforeIndex;
+  aEndIndex = endsBeforeIndex;
 
   int32_t beginsAfterIndex;
   if (NS_FAILED(FindInsertionPoint(&mRanges, aBeginNode, aBeginOffset,
@@ -1372,8 +1366,8 @@ nsresult Selection::GetIndicesForInterval(
   NS_ASSERTION(beginsAfterIndex <= endsBeforeIndex, "Is mRanges not ordered?");
   NS_ENSURE_STATE(beginsAfterIndex <= endsBeforeIndex);
 
-  *aStartIndex = beginsAfterIndex;
-  *aEndIndex = endsBeforeIndex;
+  aStartIndex = beginsAfterIndex;
+  aEndIndex = endsBeforeIndex;
   return NS_OK;
 }
 

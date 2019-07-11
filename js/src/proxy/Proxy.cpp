@@ -724,7 +724,9 @@ static void proxy_Finalize(FreeOp* fop, JSObject* obj) {
   obj->as<ProxyObject>().handler()->finalize(fop, obj);
 
   if (!obj->as<ProxyObject>().usingInlineValueArray()) {
-    fop->free_(js::detail::GetProxyDataLayout(obj)->values());
+    // Bug 1560019: This allocation is not tracked, but is only present when
+    // objects are swapped which is assumed to be relatively rare.
+    fop->freeUntracked(js::detail::GetProxyDataLayout(obj)->values());
   }
 }
 
