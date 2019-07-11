@@ -14,14 +14,19 @@ class InfoItem extends HTMLElement {
     this.attachShadow({ mode: "open" }).appendChild(
       infoItemTemplate.content.cloneNode(true)
     );
+
+    document.l10n.translateFragment(this.shadowRoot);
+    document.l10n.connectRoot(this.shadowRoot);
+
     this.render();
   }
 
   render() {
     let label = this.shadowRoot.querySelector("label");
-    let info = this.shadowRoot.querySelector(".info");
+    let labelText = this.item.label.replace(/\s+/g, "-").toLowerCase();
+    label.setAttribute("data-l10n-id", labelText);
 
-    label.textContent = this.item.label;
+    let info = this.shadowRoot.querySelector(".info");
     info.textContent = this.item.info;
 
     // TODO: Use Fluent-friendly condition.
