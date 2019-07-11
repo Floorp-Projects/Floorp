@@ -7,17 +7,17 @@ from __future__ import absolute_import, print_function
 import os
 import json
 import signal
-import which
 
-# Py3/Py2 compatibility.
+# py2-compat
 try:
     from json.decoder import JSONDecodeError
 except ImportError:
     JSONDecodeError = ValueError
 
 import mozpack.path as mozpath
-from mozpack.files import FileFinder
+from mozfile import which
 from mozlint import result
+from mozpack.files import FileFinder
 from mozprocess import ProcessHandlerMixin
 
 
@@ -135,10 +135,7 @@ def get_shellcheck_binary():
     if binary:
         return binary
 
-    try:
-        return which.which('shellcheck')
-    except which.WhichError:
-        return None
+    return which('shellcheck')
 
 
 def lint(paths, config, **lintargs):
