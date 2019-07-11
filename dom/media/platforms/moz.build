@@ -11,6 +11,7 @@ EXPORTS += [
     'agnostic/TheoraDecoder.h',
     'agnostic/VorbisDecoder.h',
     'agnostic/VPXDecoder.h',
+    'agnostic/WAVDecoder.h',
     'AllocationPolicy.h',
     'MediaTelemetryConstants.h',
     'PDMFactory.h',
