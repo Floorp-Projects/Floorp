@@ -457,8 +457,7 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
   uint64_t highestDstOffset = uint64_t(dstByteOffset) + uint64_t(len - 1);
   uint64_t highestSrcOffset = uint64_t(srcByteOffset) + uint64_t(len - 1);
 
-  bool copyDown =
-      srcByteOffset < dstByteOffset && dstByteOffset < highestSrcOffset;
+  bool copyDown = srcByteOffset < dstByteOffset;
 
   if (highestDstOffset >= memLen || highestSrcOffset >= memLen) {
     // We would read past the end of the source or write past the end of the
@@ -675,7 +674,7 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
   uint64_t highestDstOffset = uint64_t(dstOffset) + (len - 1);
   uint64_t highestSrcOffset = uint64_t(srcOffset) + (len - 1);
 
-  bool copyDown = srcOffset < dstOffset && dstOffset < highestSrcOffset;
+  bool copyDown = srcOffset < dstOffset;
 
   if (highestDstOffset >= dstTableLen || highestSrcOffset >= srcTableLen) {
     // We would read past the end of the source or write past the end of the
