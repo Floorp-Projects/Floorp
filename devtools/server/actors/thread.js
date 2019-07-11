@@ -52,7 +52,6 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
-
 loader.lazyRequireGetter(
   this,
   "HighlighterEnvironment",
