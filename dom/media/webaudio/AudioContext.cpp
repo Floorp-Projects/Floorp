@@ -36,7 +36,6 @@
 #include "mozilla/dom/OscillatorNodeBinding.h"
 #include "mozilla/dom/PannerNodeBinding.h"
 #include "mozilla/dom/PeriodicWaveBinding.h"
-#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StereoPannerNodeBinding.h"
 #include "mozilla/dom/WaveShaperNodeBinding.h"
@@ -522,30 +521,6 @@ AudioListener* AudioContext::Listener() {
     mListener = new AudioListener(this);
   }
   return mListener;
-}
-
-double AudioContext::OutputLatency() { return Graph()->AudioOutputLatency(); }
-
-void AudioContext::GetOutputTimestamp(AudioTimestamp& aTimeStamp) {
-  if (!Destination()) {
-    aTimeStamp.mContextTime.Construct(0.0);
-    aTimeStamp.mPerformanceTime.Construct(0.0);
-    return;
-  }
-
-  // The currentTime currently being output is the currentTime minus the audio
-  // output latency.
-  aTimeStamp.mContextTime.Construct(
-      std::max(0.0, CurrentTime() - OutputLatency()));
-  nsPIDOMWindowInner* parent = GetParentObject();
-  Performance* perf = parent ? parent->GetPerformance() : nullptr;
-  if (perf) {
-    // Convert to milliseconds.
-    aTimeStamp.mPerformanceTime.Construct(
-        std::max(0., perf->Now() - (OutputLatency() * 1000.)));
-  } else {
-    aTimeStamp.mPerformanceTime.Construct(0.0);
-  }
 }
 
 Worklet* AudioContext::GetAudioWorklet(ErrorResult& aRv) {
