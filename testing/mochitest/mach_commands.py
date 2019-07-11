@@ -498,7 +498,11 @@ class GeckoviewJunitCommands(MachCommandBase):
              conditions=[conditions.is_android],
              description='Run remote geckoview junit tests.',
              parser=setup_junit_argument_parser)
-    def run_junit(self, **kwargs):
+    @CommandArgument('--no-install', help='Do not try to install application on device before ' +
+                     'running (default: False)',
+                     action='store_true',
+                     default=False)
+    def run_junit(self, no_install, **kwargs):
         self._ensure_state_subdir_exists('.')
 
         from mozrunner.devices.android_device import (grant_runtime_permissions,
@@ -507,7 +511,7 @@ class GeckoviewJunitCommands(MachCommandBase):
         # verify installation
         app = kwargs.get('app')
         device_serial = kwargs.get('deviceSerial')
-        verify_android_device(self, install=True, xre=False, app=app,
+        verify_android_device(self, install=not no_install, xre=False, app=app,
                               device_serial=device_serial)
         grant_runtime_permissions(self, app, device_serial=device_serial)
 
