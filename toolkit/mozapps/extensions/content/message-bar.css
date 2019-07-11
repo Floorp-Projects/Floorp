@@ -5,6 +5,7 @@
   --error-icon-url: url("chrome://global/skin/icons/error.svg");
   --close-icon-url: url("chrome://global/skin/icons/close.svg");
   --icon-size: 16px;
+  --close-icon-size: 32px;
 }
 
 /* MessageBar colors by message type */
@@ -58,24 +59,21 @@
   display: block;
 }
 
-.container {
-  background: inherit;
-  color: inherit;
+::slotted(button) {
+  /* Enforce micro-button width. */
+  min-width: -moz-fit-content !important;
 }
 
 /* MessageBar Grid Layout */
 
 .container {
-  padding-top: 2px;
-  padding-bottom: 2px;
+  background: inherit;
+  color: inherit;
 
-  padding-inline-start: 4px;
+  padding: 8px;
 
   min-height: 32px;
   border-radius: 4px;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.4;
 
   display: flex;
   /* Ensure that the message bar shadow dom elements are vertically aligned. */
@@ -86,31 +84,13 @@
   justify-content: center;
 }
 
-:host([dismissable]) .container {
-  /* Add padding on the end of the container when the bar is dismissable. */
-  padding-inline-end: 4px;
-}
-
-.icon {
-  flex-shrink: 0;
-}
-
 .content {
-  margin-inline-end: 4px;
+  margin: 0 4px;
   display: flex;
   /* Ensure that the message bar content is vertically aligned. */
   align-items: center;
   /* Ensure that the message bar content is wrapped. */
   word-break: break-word;
-}
-
-button.close {
-  flex-shrink: 0;
-}
-
-::slotted(button) {
-  /* Enforce micro-button width. */
-  min-width: -moz-fit-content !important;
 }
 
 /* MessageBar icon style */
@@ -119,48 +99,42 @@ button.close {
   padding: 4px;
   width: var(--icon-size);
   height: var(--icon-size);
+  flex-shrink: 0;
 }
 
 .icon::after {
   -moz-appearance: none;
   -moz-context-properties: fill, stroke;
-  color: inherit !important;
   fill: currentColor;
   stroke: currentColor;
   content: var(--message-bar-icon-url);
 }
 
+/* Use a spacer to position the close button at the end, but also support
+ * centering if required. */
+.spacer {
+  flex-grow: 1;
+}
+
 /* Close icon styles */
 
-:host(:not([dismissable])) button.close {
+:host(:not([dismissable])) .close {
   display: none;
 }
 
-button.close {
-  padding: 4px;
-  width: var(--icon-size);
-  height: var(--icon-size);
-  min-width: -moz-fit-content;
-}
-
-button.close {
-  background: var(--close-icon-url) no-repeat center center;
+.close {
+  background-image: var(--close-icon-url);
+  background-repeat: no-repeat;
+  background-position: center center;
   -moz-context-properties: fill, fill-opacity;
-  color: inherit !important;
   fill: currentColor;
   fill-opacity: 0;
   min-width: auto;
   min-height: auto;
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: var(--close-icon-size);
+  height: var(--close-icon-size);
   margin: 0;
+  margin-inline-end: 4px;
   padding: 0;
-}
-
-button.close:hover {
-  fill-opacity: 0.1;
-}
-
-button.close:hover:active {
-  fill-opacity: 0.2;
+  flex-shrink: 0;
 }

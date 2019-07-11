@@ -236,6 +236,7 @@ recommended-addon-card .addon-description:not(:empty) {
 
 .discopane-notice-content > span {
   flex-grow: 1;
+  margin-inline-end: 4px;
 }
 
 .discopane-notice-content > button {
