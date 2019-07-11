@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_WorkerCSPEventListener_h
 #define mozilla_dom_WorkerCSPEventListener_h
 
-#include "WorkerCSPEventListener.h"
 #include "mozilla/Mutex.h"
 #include "nsIContentSecurityPolicy.h"
 
