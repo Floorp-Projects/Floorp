@@ -205,7 +205,6 @@ def old_configure_options(*options):
     '--enable-pref-extensions',
     '--enable-readline',
     '--enable-sandbox',
-    '--enable-signmar',
     '--enable-startup-notification',
     '--enable-startupcache',
     '--enable-strip',
