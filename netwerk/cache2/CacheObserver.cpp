@@ -33,10 +33,6 @@ static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024;  // 250 MB
 Atomic<uint32_t, Relaxed> CacheObserver::sDiskCacheCapacity(
     kDefaultDiskCacheCapacity);
 
-static uint32_t const kDefaultDiskFreeSpaceSoftLimit = 5 * 1024;  // 5MB
-uint32_t CacheObserver::sDiskFreeSpaceSoftLimit =
-    kDefaultDiskFreeSpaceSoftLimit;
-
 static uint32_t const kDefaultDiskFreeSpaceHardLimit = 1024;  // 1MB
 uint32_t CacheObserver::sDiskFreeSpaceHardLimit =
     kDefaultDiskFreeSpaceHardLimit;
@@ -135,9 +131,6 @@ void CacheObserver::AttachToPreferences() {
                                               "browser.cache.disk.capacity",
                                               kDefaultDiskCacheCapacity);
 
-  mozilla::Preferences::AddUintVarCache(
-      &sDiskFreeSpaceSoftLimit, "browser.cache.disk.free_space_soft_limit",
-      kDefaultDiskFreeSpaceSoftLimit);
   mozilla::Preferences::AddUintVarCache(
       &sDiskFreeSpaceHardLimit, "browser.cache.disk.free_space_hard_limit",
       kDefaultDiskFreeSpaceHardLimit);
