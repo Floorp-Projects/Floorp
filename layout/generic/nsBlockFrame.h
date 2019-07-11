@@ -307,13 +307,13 @@ class nsBlockFrame : public nsContainerFrame {
    *        overflow that available block-size.
    * @param aBorderPadding The margins representing the border padding for block
    *        frames. Can be 0.
-   * @param aFinalSize Out parameter for final block-size.
    * @param aConsumed The block-size already consumed by our previous-in-flows.
+   * @return our final block-size with respect to aReflowInput's writing-mode.
    */
-  void ComputeFinalBSize(const ReflowInput& aReflowInput,
-                         nsReflowStatus* aStatus, nscoord aContentBSize,
-                         const mozilla::LogicalMargin& aBorderPadding,
-                         mozilla::LogicalSize& aFinalSize, nscoord aConsumed);
+  nscoord ComputeFinalBSize(const ReflowInput& aReflowInput,
+                            nsReflowStatus* aStatus, nscoord aContentBSize,
+                            const mozilla::LogicalMargin& aBorderPadding,
+                            nscoord aConsumed);
 
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
