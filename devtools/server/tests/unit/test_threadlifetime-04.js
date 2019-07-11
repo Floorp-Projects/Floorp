@@ -11,7 +11,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -25,9 +25,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-grips", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_thread_lifetime();
     });
   });
@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function test_thread_lifetime() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const pauseGrip = packet.frame.arguments[0];
 
     gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(
@@ -50,7 +50,7 @@ function test_thread_lifetime() {
         response
       ) {
         Assert.equal(threadGrip1, response.from);
-        gThreadClient.resume().then(function() {
+        gThreadFront.resume().then(function() {
           finishClient(gClient);
         });
       });

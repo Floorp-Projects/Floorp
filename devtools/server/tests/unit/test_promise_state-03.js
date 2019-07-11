@@ -17,12 +17,12 @@ function run_test() {
     attachTestTabAndResume(client, "test-promise-state", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
       (async function() {
         const packet = await executeOnNextTickAndWaitForPause(
           () => evalCode(debuggee),
-          threadClient
+          threadFront
         );
 
         const grip = packet.frame.environment.bindings.variables.p;

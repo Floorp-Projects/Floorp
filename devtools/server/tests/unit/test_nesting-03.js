@@ -7,7 +7,7 @@
 
 // Test that we can detect nested event loops in tabs with the same URL.
 
-var gClient1, gClient2, gThreadClient1, gThreadClient2;
+var gClient1, gClient2, gThreadFront1, gThreadFront2;
 
 function run_test() {
   initTestDebuggerServer();
@@ -19,9 +19,9 @@ function run_test() {
     attachTestThread(gClient1, "test-nesting1", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient1 = threadClient;
+      gThreadFront1 = threadFront;
       start_second_connection();
     });
   });
@@ -34,9 +34,9 @@ function start_second_connection() {
     attachTestThread(gClient2, "test-nesting1", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient2 = threadClient;
+      gThreadFront2 = threadFront;
       test_nesting();
     });
   });
@@ -45,16 +45,16 @@ function start_second_connection() {
 async function test_nesting() {
   let result;
   try {
-    result = await gThreadClient1.resume();
+    result = await gThreadFront1.resume();
   } catch (e) {
     Assert.ok(e.includes("wrongOrder"), "rejects with the wrong order");
   }
   Assert.ok(!result, "no response");
 
-  result = await gThreadClient2.resume();
+  result = await gThreadFront2.resume();
   Assert.ok(true, "resumed as expected");
 
-  gThreadClient1.resume().then(response => {
+  gThreadFront1.resume().then(response => {
     Assert.ok(true, "resumed as expected");
 
     gClient1.close(() => finishClient(gClient2));

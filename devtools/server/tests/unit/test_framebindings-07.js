@@ -6,7 +6,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 const EnvironmentClient = require("devtools/shared/client/environment-client");
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -25,9 +25,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-bindings", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_banana_environment();
     });
   });
@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function test_banana_environment() {
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const environment = packet.frame.environment;
     Assert.equal(environment.type, "function");
 
@@ -59,7 +59,7 @@ function test_banana_environment() {
         const grandpaClient = new EnvironmentClient(gClient, grandpa);
         grandpaClient.getBindings(response => {
           Assert.equal(response.bindings.arguments[0].y.value, "y");
-          gThreadClient.resume().then(() => finishClient(gClient));
+          gThreadFront.resume().then(() => finishClient(gClient));
         });
       });
     });

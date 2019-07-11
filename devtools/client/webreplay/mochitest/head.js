@@ -40,27 +40,27 @@ async function attachRecordingDebugger(
   }
   const { target, toolbox } = await attachDebugger(tab);
   const dbg = createDebuggerContext(toolbox);
-  const threadClient = dbg.toolbox.threadClient;
+  const threadFront = dbg.toolbox.threadFront;
 
-  await threadClient.interrupt();
-  return { ...dbg, tab, threadClient, target };
+  await threadFront.interrupt();
+  return { ...dbg, tab, threadFront, target };
 }
 
 // Return a promise that resolves when a breakpoint has been set.
-async function setBreakpoint(threadClient, expectedFile, lineno, options = {}) {
-  const { sources } = await threadClient.getSources();
+async function setBreakpoint(threadFront, expectedFile, lineno, options = {}) {
+  const { sources } = await threadFront.getSources();
   ok(sources.length == 1, "Got one source");
   ok(RegExp(expectedFile).test(sources[0].url), "Source is " + expectedFile);
   const location = { sourceUrl: sources[0].url, line: lineno };
-  await threadClient.setBreakpoint(location, options);
+  await threadFront.setBreakpoint(location, options);
   return location;
 }
 
 function resumeThenPauseAtLineFunctionFactory(method) {
-  return async function(threadClient, lineno) {
-    threadClient[method]();
-    await threadClient.once("paused", async function(packet) {
-      const { frames } = await threadClient.getFrames(0, 1);
+  return async function(threadFront, lineno) {
+    threadFront[method]();
+    await threadFront.once("paused", async function(packet) {
+      const { frames } = await threadFront.getFrames(0, 1);
       const frameLine = frames[0] ? frames[0].where.line : undefined;
       ok(
         frameLine == lineno,
@@ -84,11 +84,11 @@ var stepOutToLine = resumeThenPauseAtLineFunctionFactory("stepOut");
 // Return a promise that resolves when a thread evaluates a string in the
 // topmost frame, with the result throwing an exception.
 async function checkEvaluateInTopFrameThrows(target, text) {
-  const threadClient = target.threadClient;
+  const threadFront = target.threadFront;
   const consoleFront = await target.getFront("console");
-  const { frames } = await threadClient.getFrames(0, 1);
+  const { frames } = await threadFront.getFrames(0, 1);
   ok(frames.length == 1, "Got one frame");
-  const options = { thread: threadClient.actor, frameActor: frames[0].actor };
+  const options = { thread: threadFront.actor, frameActor: frames[0].actor };
   const response = await consoleFront.evaluateJS(text, options);
   ok(response.exception, "Eval threw an exception");
 }

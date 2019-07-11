@@ -3,12 +3,12 @@
 const SOURCE_URL = getFileUrl("setBreakpoint-on-line-with-no-offsets.js");
 
 add_task(
-  threadClientTest(
-    async ({ threadClient, debuggee }) => {
-      const promise = waitForNewSource(threadClient, SOURCE_URL);
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
+      const promise = waitForNewSource(threadFront, SOURCE_URL);
       loadSubScript(SOURCE_URL, debuggee);
       const { source } = await promise;
-      const sourceFront = threadClient.source(source);
+      const sourceFront = threadFront.source(source);
 
       const location = { line: 5 };
       let [packet, breakpointClient] = await setBreakpoint(
@@ -22,7 +22,7 @@ add_task(
 
       packet = await executeOnNextTickAndWaitForPause(function() {
         Cu.evalInSandbox("f()", debuggee);
-      }, threadClient);
+      }, threadFront);
       Assert.equal(packet.type, "paused");
       const why = packet.why;
       Assert.equal(why.type, "breakpoint");
@@ -36,7 +36,7 @@ add_task(
       Assert.equal(variables.a.value, 1);
       Assert.equal(variables.c.value.type, "undefined");
 
-      await resume(threadClient);
+      await resume(threadFront);
     },
     { doNotRunWorker: true }
   )

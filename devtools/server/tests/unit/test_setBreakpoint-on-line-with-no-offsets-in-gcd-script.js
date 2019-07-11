@@ -5,9 +5,9 @@ const SOURCE_URL = getFileUrl(
 );
 
 add_task(
-  threadClientTest(
-    async ({ threadClient, debuggee, targetFront }) => {
-      const promise = waitForNewSource(threadClient, SOURCE_URL);
+  threadFrontTest(
+    async ({ threadFront, debuggee, targetFront }) => {
+      const promise = waitForNewSource(threadFront, SOURCE_URL);
       loadSubScriptWithOptions(SOURCE_URL, {
         target: debuggee,
         ignoreCache: true,
@@ -17,7 +17,7 @@ add_task(
       Cu.forceGC();
 
       const { source } = await promise;
-      const sourceFront = threadClient.source(source);
+      const sourceFront = threadFront.source(source);
 
       const location = { line: 7 };
       let [packet, breakpointClient] = await setBreakpoint(
@@ -34,7 +34,7 @@ add_task(
             ignoreCache: true,
           });
         });
-      }, threadClient);
+      }, threadFront);
       Assert.equal(packet.type, "paused");
       const why = packet.why;
       Assert.equal(why.type, "breakpoint");
@@ -48,7 +48,7 @@ add_task(
       Assert.equal(variables.a.value, 1);
       Assert.equal(variables.c.value.type, "undefined");
 
-      await resume(threadClient);
+      await resume(threadFront);
     },
     { doNotRunWorker: true }
   )
