@@ -105,8 +105,8 @@ already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
 
   RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
       gfx::BackendType::SKIA, gfx::IntSize(1, 1), aFormat);
-  RefPtr<gfx::DrawTarget> dt =
-      MakeAndAddRef<gfx::DrawTargetRecording>(mRecorder, dummyDt, gfx::IntRect(gfx::IntPoint(0, 0), aSize));
+  RefPtr<gfx::DrawTarget> dt = MakeAndAddRef<gfx::DrawTargetRecording>(
+      mRecorder, dummyDt, gfx::IntRect(gfx::IntPoint(0, 0), aSize));
   return dt.forget();
 }
 
