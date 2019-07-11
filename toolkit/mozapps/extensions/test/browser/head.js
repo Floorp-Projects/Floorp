@@ -248,63 +248,23 @@ function run_next_test() {
 }
 
 var get_tooltip_info = async function(addonEl, managerWindow) {
-  if (managerWindow && managerWindow.useHtmlViews) {
-    // Extract from title attribute.
-    const { addon } = addonEl;
-    const name = addon.name;
-    const nameEl = addonEl.querySelector(".addon-name");
+  // Extract from title attribute.
+  const { addon } = addonEl;
+  const name = addon.name;
+  const nameEl = addonEl.querySelector(".addon-name");
 
-    let nameWithVersion = nameEl.title;
-    if (addonEl.addon.userDisabled) {
-      // TODO - Bug 1558077: Currently Fluent is clearing the addon title
-      // when the addon is disabled, fixing it requires changes to the
-      // HTML about:addons localized strings, and then remove this
-      // workaround.
-      nameWithVersion = `${name} ${addon.version}`;
-    }
-
-    return {
-      name,
-      version: nameWithVersion.substring(name.length + 1),
-    };
+  let nameWithVersion = nameEl.title;
+  if (addonEl.addon.userDisabled) {
+    // TODO - Bug 1558077: Currently Fluent is clearing the addon title
+    // when the addon is disabled, fixing it requires changes to the
+    // HTML about:addons localized strings, and then remove this
+    // workaround.
+    nameWithVersion = `${name} ${addon.version}`;
   }
 
-  // Retrieve the tooltip from the XUL about:addons view,
-  // the popup code uses a triggering event's target to set the
-  // document.tooltipNode property.
-  let doc = addonEl.ownerDocument;
-  let nameNode = doc.getAnonymousElementByAttribute(addonEl, "anonid", "name");
-  let event = new doc.ownerGlobal.CustomEvent("TriggerEvent");
-  nameNode.dispatchEvent(event);
-
-  let tooltip = doc.getElementById("addonitem-tooltip");
-
-  let promise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
-  tooltip.openPopup(nameNode, "after_start", 0, 0, false, false, event);
-  await promise;
-
-  let tiptext = tooltip.label;
-
-  promise = BrowserTestUtils.waitForEvent(tooltip, "popuphidden");
-  tooltip.hidePopup();
-  await promise;
-
-  let expectedName = addonEl.getAttribute("name");
-  is(
-    tiptext.substring(0, expectedName.length),
-    expectedName,
-    "Tooltip should always start with the expected name"
-  );
-
-  if (expectedName.length == tiptext.length) {
-    return {
-      name: tiptext,
-      version: undefined,
-    };
-  }
   return {
-    name: tiptext.substring(0, expectedName.length),
-    version: tiptext.substring(expectedName.length + 1),
+    name,
+    version: nameWithVersion.substring(name.length + 1),
   };
 };
 
@@ -371,28 +331,8 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
 }
 
 function get_addon_element(aManager, aId) {
-  if (aManager.useHtmlViews) {
-    const doc = aManager.getHtmlBrowser().contentDocument;
-    return doc.querySelector(`addon-card[addon-id="${aId}"]`);
-  }
-
-  const doc = aManager.document;
-  const view = get_current_view(aManager);
-  let listid = "addon-list";
-  if (view.id == "updates-view") {
-    listid = "updates-list";
-  }
-  const list = doc.getElementById(listid);
-
-  let node = list.firstChild;
-  while (node) {
-    if (node.value == aId) {
-      return node;
-    }
-    node = node.nextSibling;
-  }
-
-  return null;
+  const doc = aManager.getHtmlBrowser().contentDocument;
+  return doc.querySelector(`addon-card[addon-id="${aId}"]`);
 }
 
 function wait_for_view_load(
