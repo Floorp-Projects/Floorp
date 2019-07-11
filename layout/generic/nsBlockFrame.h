@@ -311,7 +311,7 @@ class nsBlockFrame : public nsContainerFrame {
    * @return our final block-size with respect to aReflowInput's writing-mode.
    */
   nscoord ComputeFinalBSize(const ReflowInput& aReflowInput,
-                            nsReflowStatus* aStatus, nscoord aContentBSize,
+                            nsReflowStatus& aStatus, nscoord aContentBSize,
                             const mozilla::LogicalMargin& aBorderPadding,
                             nscoord aConsumed);
 

@@ -1782,7 +1782,7 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
        aReflowInput.mParentReflowInput->AvailableBSize() ==
            NS_UNCONSTRAINEDSIZE)) {
     finalSize.BSize(wm) =
-        ComputeFinalBSize(aReflowInput, &aState.mReflowStatus,
+        ComputeFinalBSize(aReflowInput, aState.mReflowStatus,
                           aState.mBCoord + nonCarriedOutBDirMargin,
                           borderPadding, aState.ConsumedBSize());
 
@@ -7344,7 +7344,7 @@ nsBlockFrame* nsBlockFrame::GetNearestAncestorBlock(nsIFrame* aCandidate) {
 }
 
 nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
-                                        nsReflowStatus* aStatus,
+                                        nsReflowStatus& aStatus,
                                         nscoord aContentBSize,
                                         const LogicalMargin& aBorderPadding,
                                         nscoord aConsumed) {
@@ -7362,33 +7362,33 @@ nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
       NSCoordSaturatingAdd(aBorderPadding.BStart(wm), computedBSizeLeftOver),
       aBorderPadding.BEnd(wm));
 
-  if (aStatus->IsIncomplete() && finalBSize <= availBSize) {
+  if (aStatus.IsIncomplete() && finalBSize <= availBSize) {
     // We used up all of our element's remaining computed block-size on this
     // page/column, but we're incomplete. Set status to complete except for
     // overflow.
-    aStatus->SetOverflowIncomplete();
+    aStatus.SetOverflowIncomplete();
     return finalBSize;
   }
 
-  if (aStatus->IsComplete()) {
+  if (aStatus.IsComplete()) {
     if (computedBSizeLeftOver > 0 && NS_UNCONSTRAINEDSIZE != availBSize &&
         finalBSize > availBSize) {
       if (ShouldAvoidBreakInside(aReflowInput)) {
-        aStatus->SetInlineLineBreakBeforeAndReset();
+        aStatus.SetInlineLineBreakBeforeAndReset();
         return finalBSize;
       }
 
       // Our leftover block-size does not fit into the available block-size.
       // Change aStatus to incomplete to let the logic at the end of this method
       // calculate the correct block-size.
-      aStatus->SetIncomplete();
+      aStatus.SetIncomplete();
       if (!GetNextInFlow()) {
-        aStatus->SetNextInFlowNeedsReflow();
+        aStatus.SetNextInFlowNeedsReflow();
       }
     }
   }
 
-  if (aStatus->IsIncomplete()) {
+  if (aStatus.IsIncomplete()) {
     MOZ_ASSERT(finalBSize > availBSize,
                "We should be overflow incomplete and should've returned "
                "in early if-branch!");
