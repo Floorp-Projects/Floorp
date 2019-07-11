@@ -115,5 +115,17 @@ describe("PersistentCache", () => {
         { tmpPath: `${filename}.tmp` }
       );
     });
+    it("throws when failing the file", async () => {
+      sandbox.stub(OS.Path, "join").throws("bad file");
+
+      let rejected = false;
+      try {
+        await cache.set("key", "val");
+      } catch (error) {
+        rejected = true;
+      }
+
+      assert(rejected);
+    });
   });
 });

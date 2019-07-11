@@ -34,6 +34,9 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isFxAEnabled](#isFxAEnabled)
 * [xpinstallEnabled](#xpinstallEnabled)
 * [hasPinnedTabs](#haspinnedtabs)
+* [hasAccessedFxAPanel](#hasaccessedfxapanel)
+* [isWhatsNewPanelEnabled](#iswhatsnewpanelenabled)
+* [earliestFirefoxVersion](#earliestfirefoxversion)
 
 ## Detailed usage
 
@@ -473,4 +476,34 @@ Does the user have any pinned tabs in any windows.
 
 ```ts
 declare const hasPinnedTabs: boolean;
+```
+
+### `hasAccessedFxAPanel`
+
+Boolean pref that gets set the first time the user opens the FxA toolbar panel
+
+#### Definition
+
+```ts
+declare const hasAccessedFxAPanel: boolean;
+```
+
+### `isWhatsNewPanelEnabled`
+
+Boolean pref that controls if the What's New panel feature is enabled
+
+#### Definition
+
+```ts
+declare const isWhatsNewPanelEnabled: boolean;
+```
+
+### `earliestFirefoxVersion`
+
+Integer value of the first Firefox version the profile ran on
+
+#### Definition
+
+```ts
+declare const earliestFirefoxVersion: boolean;
 ```

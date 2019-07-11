@@ -38,7 +38,12 @@ function templateHTML(options) {
     .map(script => `    <script src="${script}"></script>`)
     .join("\n")}`;
 
-  return `<!doctype html>
+  return `
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -58,7 +63,7 @@ function templateHTML(options) {
     }
   </body>
 </html>
-`;
+`.trimStart();
 }
 
 /**
