@@ -37,6 +37,8 @@ const TYPE_CSS_RESOURCE_URI = "cssresource";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+const WILDCARD = Symbol();
+
 const ATTRIBUTE_TYPES = new Map([
   ["action", [{ namespaceURI: HTML_NS, tagName: "form", type: TYPE_URI }]],
   ["background", [{ namespaceURI: HTML_NS, tagName: "body", type: TYPE_URI }]],
@@ -64,7 +66,10 @@ const ATTRIBUTE_TYPES = new Map([
       { namespaceURI: XUL_NS, tagName: "key", type: TYPE_IDREF },
     ],
   ],
-  ["contextmenu", [{ namespaceURI: "*", tagName: "*", type: TYPE_IDREF }]],
+  [
+    "contextmenu",
+    [{ namespaceURI: WILDCARD, tagName: WILDCARD, type: TYPE_IDREF }],
+  ],
   ["data", [{ namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI }]],
   [
     "for",
@@ -107,14 +112,14 @@ const ATTRIBUTE_TYPES = new Map([
       { namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI },
       { namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI },
       {
-        namespaceURI: "*",
+        namespaceURI: WILDCARD,
         tagName: "link",
         type: TYPE_CSS_RESOURCE_URI,
         isValid: (namespaceURI, tagName, attributes) => {
           return getAttribute(attributes, "rel") === "stylesheet";
         },
       },
-      { namespaceURI: "*", tagName: "link", type: TYPE_URI },
+      { namespaceURI: WILDCARD, tagName: "link", type: TYPE_URI },
       { namespaceURI: HTML_NS, tagName: "base", type: TYPE_URI },
     ],
   ],
@@ -133,7 +138,7 @@ const ATTRIBUTE_TYPES = new Map([
     "menu",
     [
       { namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF },
-      { namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF },
+      { namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF },
     ],
   ],
   [
@@ -148,7 +153,7 @@ const ATTRIBUTE_TYPES = new Map([
   [
     "src",
     [
-      { namespaceURI: "*", tagName: "script", type: TYPE_JS_RESOURCE_URI },
+      { namespaceURI: WILDCARD, tagName: "script", type: TYPE_JS_RESOURCE_URI },
       { namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI },
       { namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI },
       { namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI },
@@ -169,39 +174,51 @@ const ATTRIBUTE_TYPES = new Map([
       { namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI },
     ],
   ],
-  ["xmlns", [{ namespaceURI: "*", tagName: "*", type: TYPE_URI }]],
-  ["containment", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI }]],
-  ["context", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  ["xmlns", [{ namespaceURI: WILDCARD, tagName: WILDCARD, type: TYPE_URI }]],
+  [
+    "containment",
+    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_URI }],
+  ],
+  ["context", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
   [
     "datasources",
-    [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI_LIST }],
+    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_URI_LIST }],
   ],
-  ["insertafter", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
-  ["insertbefore", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
-  ["observes", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
-  ["popup", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
-  ["ref", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI }]],
-  ["removeelement", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
-  ["template", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
-  ["tooltip", [{ namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF }]],
+  [
+    "insertafter",
+    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }],
+  ],
+  [
+    "insertbefore",
+    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }],
+  ],
+  ["observes", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
+  ["popup", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
+  ["ref", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_URI }]],
+  [
+    "removeelement",
+    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }],
+  ],
+  ["template", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
+  ["tooltip", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
   // SVG links aren't handled yet, see bug 1158831.
   // ["fill", [
-  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
   // ]],
   // ["stroke", [
-  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
   // ]],
   // ["markerstart", [
-  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
   // ]],
   // ["markermid", [
-  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
   // ]],
   // ["markerend", [
-  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
   // ]],
   // ["xlink:href", [
-  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
   // ]],
 ]);
 
@@ -266,6 +283,7 @@ var parsers = {
  * @param {Array} attributes The list of all attributes of the node. This should
  * be an array of {name, value} objects.
  * @param {String} attributeName The name of the attribute to parse.
+ * @param {String} attributeValue The value of the attribute to parse.
  * @return {Array} An array of tokens that represents the value. Each token is
  * an object {type: [string|uri|jsresource|cssresource|idref], value}.
  * For instance parsing the ping attribute in <a ping="uri1 uri2"> returns:
@@ -275,24 +293,24 @@ var parsers = {
  *   {type: "uri", value: "uri1"}
  * ]
  */
-function parseAttribute(namespaceURI, tagName, attributes, attributeName) {
-  if (!hasAttribute(attributes, attributeName)) {
-    throw new Error(
-      `Attribute ${attributeName} isn't part of the ` + "provided attributes"
-    );
-  }
-
+function parseAttribute(
+  namespaceURI,
+  tagName,
+  attributes,
+  attributeName,
+  attributeValue
+) {
   const type = getType(namespaceURI, tagName, attributes, attributeName);
   if (!type) {
     return [
       {
         type: TYPE_STRING,
-        value: getAttribute(attributes, attributeName),
+        value: attributeValue,
       },
     ];
   }
 
-  return parsers[type](getAttribute(attributes, attributeName));
+  return parsers[type](attributeValue);
 }
 
 /**
@@ -306,15 +324,18 @@ function parseAttribute(namespaceURI, tagName, attributes, attributeName) {
  * type object otherwise.
  */
 function getType(namespaceURI, tagName, attributes, attributeName) {
-  if (!ATTRIBUTE_TYPES.get(attributeName)) {
+  const attributeType = ATTRIBUTE_TYPES.get(attributeName);
+  if (!attributeType) {
     return null;
   }
 
-  for (const typeData of ATTRIBUTE_TYPES.get(attributeName)) {
+  const lcTagName = tagName.toLowerCase();
+  for (const typeData of attributeType) {
     const hasNamespace =
-      namespaceURI === typeData.namespaceURI || typeData.namespaceURI === "*";
+      typeData.namespaceURI === WILDCARD ||
+      typeData.namespaceURI === namespaceURI;
     const hasTagName =
-      tagName.toLowerCase() === typeData.tagName || typeData.tagName === "*";
+      typeData.tagName === WILDCARD || typeData.tagName === lcTagName;
     const isValid = typeData.isValid
       ? typeData.isValid(namespaceURI, tagName, attributes, attributeName)
       : true;
@@ -328,21 +349,8 @@ function getType(namespaceURI, tagName, attributes, attributeName) {
 }
 
 function getAttribute(attributes, attributeName) {
-  for (const { name, value } of attributes) {
-    if (name === attributeName) {
-      return value;
-    }
-  }
-  return null;
-}
-
-function hasAttribute(attributes, attributeName) {
-  for (const { name } of attributes) {
-    if (name === attributeName) {
-      return true;
-    }
-  }
-  return false;
+  const attribute = attributes.find(x => x.name === attributeName);
+  return attribute ? attribute.value : null;
 }
 
 /**
