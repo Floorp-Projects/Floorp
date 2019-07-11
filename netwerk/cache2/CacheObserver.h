@@ -74,7 +74,8 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   }
   static uint32_t HalfLifeSeconds() { return sHalfLifeHours * 60.0F * 60.0F; }
   static bool ClearCacheOnShutdown() {
-    return sSanitizeOnShutdown && sClearCacheOnShutdown;
+    return StaticPrefs::privacy_sanitize_sanitizeOnShutdown() &&
+           StaticPrefs::privacy_clearOnShutdown_cache();
   }
   static bool CacheFSReported() { return sCacheFSReported; }
   static void SetCacheFSReported();
@@ -113,8 +114,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static int32_t sAutoMemoryCacheCapacity;
   static Atomic<uint32_t, Relaxed> sDiskCacheCapacity;
   static float sHalfLifeHours;
-  static bool sSanitizeOnShutdown;
-  static bool sClearCacheOnShutdown;
   static bool sCacheFSReported;
   static bool sHashStatsReported;
   static Atomic<PRIntervalTime> sShutdownDemandedTime;
