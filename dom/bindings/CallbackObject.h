@@ -162,6 +162,13 @@ class CallbackObject : public nsISupports {
     eRethrowExceptions
   };
 
+  // Append a UTF-8 string to aOutString that describes the callback function,
+  // for use in logging or profiler markers.
+  // The string contains the function name and its source location, if
+  // available, in the following format:
+  // "<functionName> (<sourceURL>:<lineNumber>)"
+  void GetDescription(nsACString& aOutString);
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this);
   }
