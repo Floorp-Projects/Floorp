@@ -5919,12 +5919,14 @@ var XULBrowserWindow = {
   updateSessionStore: function XWB_updateSessionStore(
     aBrowser,
     aFlushId,
-    aIsFinal
+    aIsFinal,
+    aEpoch
   ) {
     SessionStore.updateSessionStoreFromTablistener(aBrowser, {
       data: this._sessionData,
       flushID: aFlushId,
       isFinal: aIsFinal,
+      epoch: aEpoch,
     });
     this._sessionData = {};
   },
