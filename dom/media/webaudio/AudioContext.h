@@ -192,6 +192,14 @@ class AudioContext final : public DOMEventTargetHelper,
 
   AudioContextState State() const { return mAudioContextState; }
 
+  double BaseLatency() const {
+    // Gecko does not do any buffering between rendering the audio and sending
+    // it to the audio subsystem.
+    return 0.0;
+  }
+
+  double OutputLatency();
+
   Worklet* GetAudioWorklet(ErrorResult& aRv);
 
   bool IsRunning() const;
