@@ -525,6 +525,22 @@ bool BreakpointSite::hasBreakpoint(Breakpoint* toFind) {
   return false;
 }
 
+inline gc::Cell* BreakpointSite::owningCellUnbarriered() {
+  if (type() == Type::JS) {
+    return asJS()->script;
+  }
+
+  return asWasm()->instance->objectUnbarriered();
+}
+
+inline size_t BreakpointSite::allocSize() {
+  if (type() == Type::JS) {
+    return sizeof(Breakpoint);
+  }
+
+  return sizeof(WasmBreakpoint);
+}
+
 Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site,
                        JSObject* handler)
     : debugger(debugger), site(site), handler(handler) {
@@ -540,10 +556,12 @@ void Breakpoint::destroy(FreeOp* fop,
   }
   debugger->breakpoints.remove(this);
   site->breakpoints.remove(this);
+  gc::Cell* cell = site->owningCellUnbarriered();
+  size_t size = site->allocSize();
   if (mayDestroySite == MayDestroySite::True) {
     site->destroyIfEmpty(fop);
   }
-  fop->delete_(this);
+  fop->delete_(cell, this, size, MemoryUse::Breakpoint);
 }
 
 Breakpoint* Breakpoint::nextInDebugger() { return debuggerLink.mNext; }
@@ -567,19 +585,20 @@ void JSBreakpointSite::destroyIfEmpty(FreeOp* fop) {
   }
 }
 
-WasmBreakpointSite::WasmBreakpointSite(wasm::DebugState* debug_,
+WasmBreakpointSite::WasmBreakpointSite(wasm::Instance* instance_,
                                        uint32_t offset_)
-    : BreakpointSite(Type::Wasm), debug(debug_), offset(offset_) {
-  MOZ_ASSERT(debug_);
+    : BreakpointSite(Type::Wasm), instance(instance_), offset(offset_) {
+  MOZ_ASSERT(instance);
+  MOZ_ASSERT(instance->debugEnabled());
 }
 
 void WasmBreakpointSite::recompile(FreeOp* fop) {
-  debug->toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
+  instance->debug().toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
 }
 
 void WasmBreakpointSite::destroyIfEmpty(FreeOp* fop) {
   if (isEmpty()) {
-    debug->destroyBreakpointSite(fop, offset);
+    instance->destroyBreakpointSite(fop, offset);
   }
 }
 
@@ -2418,8 +2437,7 @@ ResumeMode Debugger::onTrap(JSContext* cx, MutableHandleValue vp) {
     isJS = false;
     pc = nullptr;
     bytecodeOffset = iter.wasmBytecodeOffset();
-    site = iter.wasmInstance()->debug().getOrCreateBreakpointSite(
-        cx, bytecodeOffset);
+    site = iter.wasmInstance()->debug().getBreakpointSite(cx, bytecodeOffset);
   }
 
   // Build list of breakpoint handlers.
@@ -2488,7 +2506,7 @@ ResumeMode Debugger::onTrap(JSContext* cx, MutableHandleValue vp) {
         if (isJS) {
           site = iter.script()->getBreakpointSite(pc);
         } else {
-          site = iter.wasmInstance()->debug().getOrCreateBreakpointSite(cx,
+          site = iter.wasmInstance()->debug().getBreakpointSite(cx,
                                                                 bytecodeOffset);
         }
       }
@@ -8076,6 +8094,7 @@ struct DebuggerScriptSetBreakpointMatcher {
     }
     site->inc(cx_->runtime()->defaultFreeOp());
     if (cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
+      AddCellMemory(script, sizeof(Breakpoint), MemoryUse::Breakpoint);
       return true;
     }
     site->dec(cx_->runtime()->defaultFreeOp());
@@ -8097,14 +8116,15 @@ struct DebuggerScriptSetBreakpointMatcher {
                                 JSMSG_DEBUG_BAD_OFFSET);
       return false;
     }
-    WasmBreakpointSite* site =
-        instance.debug().getOrCreateBreakpointSite(cx_, offset_);
+    WasmBreakpointSite* site = instance.getOrCreateBreakpointSite(cx_, offset_);
     if (!site) {
       return false;
     }
     site->inc(cx_->runtime()->defaultFreeOp());
     if (cx_->zone()->new_<WasmBreakpoint>(dbg_, site, handler_,
                                           instance.object())) {
+      AddCellMemory(wasmInstance, sizeof(WasmBreakpoint),
+                    MemoryUse::Breakpoint);
       return true;
     }
     site->dec(cx_->runtime()->defaultFreeOp());
