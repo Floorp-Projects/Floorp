@@ -7,7 +7,6 @@ package org.mozilla.fenix.components
 import android.content.Context
 import android.os.Build
 import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.work.WorkManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,11 +16,11 @@ import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.feature.sync.BackgroundSyncManager
-import mozilla.components.feature.sync.GlobalSyncableStoreProvider
-import mozilla.components.service.fxa.Config
-import mozilla.components.service.fxa.manager.DeviceTuple
+import mozilla.components.service.fxa.DeviceConfig
+import mozilla.components.service.fxa.ServerConfig
+import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Experiments
@@ -44,28 +43,31 @@ class BackgroundServices(
         const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
     }
 
-    // This is slightly messy - here we need to know the union of all "scopes"
-    // needed by components which rely on FxA integration. If this list
-    // grows too far we probably want to find a way to determine the set
-    // at runtime.
-    private val scopes: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
-    private val config = Config.release(CLIENT_ID, REDIRECT_URL)
+    private val serverConfig = ServerConfig.release(CLIENT_ID, REDIRECT_URL)
+    private val deviceConfig = DeviceConfig(
+        name = Build.MANUFACTURER + " " + Build.MODEL,
+        type = DeviceType.MOBILE,
+
+        // NB: flipping this flag back and worth is currently not well supported and may need hand-holding.
+        // Consult with the android-components peers before changing.
+        // See https://github.com/mozilla/application-services/issues/1308
+        capabilities = if (BuildConfig.SEND_TAB_ENABLED) {
+            setOf(DeviceCapability.SEND_TAB)
+        } else {
+            emptySet()
+        }
+    )
+    // If sync has been turned off on the server then disable syncing.
+    private val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
+        null
+    } else {
+        SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 240L) // four hours
+    }
 
     init {
         // Make the "history" and "bookmark" stores accessible to workers spawned by the sync manager.
         GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
         GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarkStorage)
-    }
-
-    // if sync has been turned off on the server then make `syncManager` null
-    val syncManager = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
-        WorkManager.getInstance().cancelUniqueWork("Periodic")
-        null
-    } else {
-        BackgroundSyncManager("https://identity.mozilla.com/apps/oldsync").also {
-            it.addStore("history")
-            it.addStore("bookmarks")
-        }
     }
 
     private val deviceEventObserver = object : DeviceEventsObserver {
@@ -78,23 +80,17 @@ class BackgroundServices(
         }
     }
 
-    // NB: flipping this flag back and worth is currently not well supported and may need hand-holding.
-    // Consult with the android-components peers before changing.
-    // See https://github.com/mozilla/application-services/issues/1308
-    private val deviceCapabilities = if (BuildConfig.SEND_TAB_ENABLED) {
-        listOf(DeviceCapability.SEND_TAB)
-    } else {
-        emptyList()
-    }
-
-    private val defaultDeviceName = Build.MANUFACTURER + " " + Build.MODEL
-
     val accountManager = FxaAccountManager(
         context,
-        config,
-        scopes,
-        DeviceTuple(defaultDeviceName, DeviceType.MOBILE, deviceCapabilities),
-        syncManager
+        serverConfig,
+        deviceConfig,
+        syncConfig,
+        // We don't need to specify this explicitly, but `syncConfig` may be disabled due to an 'experiments'
+        // flag. In that case, sync scope necessary for syncing won't be acquired during authentication
+        // unless we explicitly specify it below.
+        // This is a good example of an information leak at the API level.
+        // See https://github.com/mozilla-mobile/android-components/issues/3732
+        setOf("https://identity.mozilla.com/apps/oldsync")
     ).also {
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), true)
         CoroutineScope(Dispatchers.Main).launch { it.initAsync().await() }

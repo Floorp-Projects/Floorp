@@ -745,10 +745,6 @@ class HomeFragment : Fragment(), AccountObserver {
         emitAccountChanges()
     }
 
-    override fun onError(error: Exception) {
-        emitAccountChanges()
-    }
-
     override fun onLoggedOut() {
         emitAccountChanges()
     }

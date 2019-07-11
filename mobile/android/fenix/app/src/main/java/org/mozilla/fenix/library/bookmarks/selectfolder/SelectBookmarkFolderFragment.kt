@@ -154,9 +154,6 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
         getManagedEmitter<SignInChange>().onNext(SignInChange.SignedIn)
     }
 
-    override fun onError(error: Exception) {
-    }
-
     override fun onLoggedOut() {
         getManagedEmitter<SignInChange>().onNext(SignInChange.SignedOut)
     }

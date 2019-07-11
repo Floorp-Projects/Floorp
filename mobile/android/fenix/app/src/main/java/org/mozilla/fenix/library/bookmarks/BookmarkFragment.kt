@@ -414,9 +414,6 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
         }
     }
 
-    override fun onError(error: Exception) {
-    }
-
     override fun onLoggedOut() {
         getManagedEmitter<SignInChange>().onNext(SignInChange.SignedOut)
     }

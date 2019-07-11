@@ -24,11 +24,11 @@ import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.concept.sync.SyncStatusObserver
-import mozilla.components.feature.sync.getLastSynced
 import mozilla.components.service.fxa.FxaException
 import mozilla.components.service.fxa.FxaPanicException
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.sync.SyncStatusObserver
+import mozilla.components.service.fxa.sync.getLastSynced
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
@@ -48,8 +48,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 findNavController().popBackStack()
             }
         }
-
-        override fun onError(error: Exception) {}
 
         override fun onLoggedOut() {
             lifecycleScope.launch {
@@ -97,18 +95,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         val syncNow = context!!.getPreferenceKey(R.string.pref_key_sync_now)
         val preferenceSyncNow = findPreference<Preference>(syncNow)
         preferenceSyncNow?.let {
-            preferenceSyncNow.onPreferenceClickListener = getClickListenerForSyncNow()
-
-            // Current sync state
-            updateLastSyncedTimePref(context!!, preferenceSyncNow)
-            requireComponents.backgroundServices.syncManager?.let {
-                if (it.isSyncRunning()) {
-                    preferenceSyncNow.title = getString(R.string.sync_syncing_in_progress)
-                    preferenceSyncNow.isEnabled = false
-                } else {
-                    preferenceSyncNow.isEnabled = true
-                }
-            }
+            it.onPreferenceClickListener = getClickListenerForSyncNow()
+            updateLastSyncedTimePref(context!!, it)
         }
 
         // Device Name
@@ -129,7 +117,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         // NB: ObserverRegistry will take care of cleaning up internal references to 'observer' and
         // 'owner' when appropriate.
-        requireComponents.backgroundServices.syncManager?.register(syncStatusObserver, owner = this, autoPause = true)
+        requireComponents.backgroundServices.accountManager.registerForSyncEvents(
+            syncStatusObserver, owner = this, autoPause = true
+        )
     }
 
     private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
@@ -144,11 +134,11 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     private fun getClickListenerForSyncNow(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
-            // Trigger a sync.
-            requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
-            requireComponents.backgroundServices.syncManager?.syncNow()
-            // Poll for device events.
             lifecycleScope.launch {
+                requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
+                // Trigger a sync.
+                requireComponents.backgroundServices.accountManager.syncNowAsync().await()
+                // Poll for device events.
                 accountManager.authenticatedAccount()
                     ?.deviceConstellation()
                     ?.refreshDeviceStateAsync()
@@ -175,9 +165,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             // This may fail, and we'll have a disparity in the UI until `updateDeviceName` is called.
             lifecycleScope.launch(IO) {
                 try {
-                    accountManager.authenticatedAccount()?.let {
-                        it.deviceConstellation().setDeviceNameAsync(newValue)
-                    }
+                    accountManager.authenticatedAccount()
+                        ?.deviceConstellation()
+                        ?.setDeviceNameAsync(newValue)
+                        ?.await()
                 } catch (e: FxaPanicException) {
                     throw e
                 } catch (e: FxaException) {

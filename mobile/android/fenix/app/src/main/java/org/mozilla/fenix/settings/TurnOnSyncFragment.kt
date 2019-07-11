@@ -87,7 +87,6 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     }
 
     override fun onAuthenticationProblems() {}
-    override fun onError(error: Exception) {}
     override fun onLoggedOut() {}
     override fun onProfileUpdated(profile: Profile) {}
 }

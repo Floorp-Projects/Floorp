@@ -84,8 +84,6 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
 
     override fun onAuthenticationProblems() {}
 
-    override fun onError(error: Exception) {}
-
     // We're told there are no more auth problems since there is no more account; close this fragment.
     override fun onLoggedOut() {
         lifecycleScope.launch {

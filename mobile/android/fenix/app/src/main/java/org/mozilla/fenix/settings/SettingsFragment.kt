@@ -350,8 +350,6 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
     }
 
-    override fun onError(error: Exception) {}
-
     override fun onLoggedOut() {
         lifecycleScope.launch {
             context?.let {

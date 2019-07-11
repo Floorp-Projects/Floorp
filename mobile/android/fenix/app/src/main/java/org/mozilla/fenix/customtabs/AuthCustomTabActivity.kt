@@ -21,8 +21,6 @@ class AuthCustomTabActivity : CustomTabActivity() {
 
         override fun onAuthenticationProblems() {}
 
-        override fun onError(error: Exception) {}
-
         override fun onLoggedOut() {}
 
         override fun onProfileUpdated(profile: Profile) {}
