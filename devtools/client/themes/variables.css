@@ -105,6 +105,9 @@
   --theme-toolbarbutton-checked-hover-color: var(--grey-90);
   --theme-toolbarbutton-active-background: var(--grey-90-a20);
   --theme-toolbarbutton-active-color: var(--grey-90);
+
+  /* Element Flash background color */
+  --theme-bg-yellow: #FFF697;
 }
 
 /*
@@ -208,6 +211,9 @@
   --theme-toolbarbutton-checked-hover-color: var(--grey-30);
   --theme-toolbarbutton-active-background: var(--grey-10-a30);
   --theme-toolbarbutton-active-color: var(--grey-30);
+
+  /* Element Flash background color */
+  --theme-bg-yellow: #605913;
 }
 
 :root {
