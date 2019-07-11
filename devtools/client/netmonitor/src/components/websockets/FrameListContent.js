@@ -12,7 +12,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
-const { getDisplayedFrames } = require("../../selectors/index");
+const { getFramesByChannelId } = require("../../selectors/index");
 
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { table, tbody, div } = dom;
@@ -38,6 +38,7 @@ const LEFT_MOUSE_BUTTON = 0;
 class FrameListContent extends Component {
   static get propTypes() {
     return {
+      channelId: PropTypes.number,
       connector: PropTypes.object.isRequired,
       frames: PropTypes.array,
       selectedFrame: PropTypes.object,
@@ -58,7 +59,7 @@ class FrameListContent extends Component {
   render() {
     const { frames, selectedFrame, connector } = this.props;
 
-    if (frames.length === 0) {
+    if (!frames) {
       return div(
         { className: "empty-notice ws-frame-list-empty-notice" },
         FRAMES_EMPTY_TEXT
@@ -88,9 +89,9 @@ class FrameListContent extends Component {
 }
 
 module.exports = connect(
-  state => ({
+  (state, props) => ({
     selectedFrame: getSelectedFrame(state),
-    frames: getDisplayedFrames(state),
+    frames: getFramesByChannelId(state, props.channelId),
   }),
   dispatch => ({
     selectFrame: item => dispatch(Actions.selectFrame(item)),
