@@ -391,8 +391,8 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         'format': 'zip'
     }]
     if is_bitbar:
-        a_url = '{}/raw-file/{}/taskcluster/scripts/tester/{}'.format(
-            config.params['head_repository'], config.params['head_rev'], bitbar_script
+        a_url = config.params.file_url(
+            'taskcluster/scripts/tester/{}'.format(bitbar_script),
         )
         worker['mounts'] = [{
             'file': bitbar_script,
@@ -473,8 +473,8 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
     env['EXTRA_MOZHARNESS_CONFIG'] = {'task-reference': json.dumps(extra_config)}
 
     script = 'test-linux.sh'
-    worker['context'] = '{}/raw-file/{}/taskcluster/scripts/tester/{}'.format(
-        config.params['head_repository'], config.params['head_rev'], script
+    worker['context'] = config.params.file_url(
+        'taskcluster/scripts/tester/{}'.format(script),
     )
 
     command = worker['command'] = ["./{}".format(script)]
