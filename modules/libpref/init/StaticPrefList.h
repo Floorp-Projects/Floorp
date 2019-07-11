@@ -784,6 +784,15 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 4  // 1 MB of read ahead
 )
 
+// Max-size (in KB) for entries in disk cache. Set to -1 for no limit.
+// (Note: entries bigger than 1/8 of disk-cache are never cached)
+VARCACHE_PREF(
+  Live,
+  "browser.cache.disk.max_entry_size",
+   browser_cache_disk_max_entry_size,
+  RelaxedAtomicUint32, 50 * 1024  // 50 MB
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,

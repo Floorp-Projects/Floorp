@@ -62,7 +62,7 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   }
   static uint32_t MaxDiskEntrySize()  // result in kilobytes.
   {
-    return sMaxDiskEntrySize;
+    return StaticPrefs::browser_cache_disk_max_entry_size();
   }
   static uint32_t MaxDiskChunksMemoryUsage(
       bool aPriority)  // result in kilobytes.
@@ -110,7 +110,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static int32_t sAutoMemoryCacheCapacity;
   static Atomic<uint32_t, Relaxed> sDiskCacheCapacity;
   static int32_t sMaxMemoryEntrySize;
-  static int32_t sMaxDiskEntrySize;
   static uint32_t sMaxDiskChunksMemoryUsage;
   static uint32_t sMaxDiskPriorityChunksMemoryUsage;
   static uint32_t sCompressionLevel;
