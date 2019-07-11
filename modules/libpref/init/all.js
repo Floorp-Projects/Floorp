@@ -37,11 +37,6 @@ pref("browser.cache.check_doc_frequency",   3);
 // The half life used to re-compute cache entries frecency in hours.
 pref("browser.cache.frecency_half_life_hours", 6);
 
-// Number of seconds the cache spends writting pending data and closing files
-// after the shutdown has been signalled.  Past that time data are never written
-// and files are left open given up to the OS to do the cleanup.
-pref("browser.cache.max_shutdown_io_lag", 2);
-
 // AppCache over insecure connection is disabled by default
 pref("browser.cache.offline.insecure.enable",  false);
 

@@ -823,6 +823,16 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 40 * 1024
 )
 
+// Number of seconds the cache spends writing pending data and closing files
+// after shutdown has been signalled. Past that time data is not written and
+// files are left open for the OS to clean up.
+VARCACHE_PREF(
+  Live,
+  "browser.cache.max_shutdown_io_lag",
+   browser_cache_max_shutdown_io_lag,
+  RelaxedAtomicUint32, 2
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
