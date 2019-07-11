@@ -35,18 +35,20 @@ RELEASE_PROMOTION_PROJECTS = {
 } | RELEASE_PROJECTS
 
 _OPTIONAL_ATTRIBUTES = (
+    'accepted-mar-channel-ids',
     'artifact_map',
     'artifact_prefix',
     'l10n_chunk',
     'locale',
+    'mar-channel-id',
     'nightly',
     'required_signoffs',
-    'signed',
+    'shippable',
     'shipping_phase',
     'shipping_product',
+    'signed',
     'stub-installer',
     'update-channel',
-    'shippable',
 )
 
 

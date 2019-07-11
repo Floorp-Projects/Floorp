@@ -236,7 +236,7 @@ async def generate_partial(work_env, from_dir, to_dir, dest_mar, mar_data,
     log.info("Generating partial %s", dest_mar)
     env = work_env.env
     env["MOZ_PRODUCT_VERSION"] = mar_data['version']
-    env["MOZ_CHANNEL_ID"] = mar_data["ACCEPTED_MAR_CHANNEL_IDS"]
+    env["MAR_CHANNEL_ID"] = mar_data["ACCEPTED_MAR_CHANNEL_IDS"]
     env['BRANCH'] = mar_data['branch']
     env['PLATFORM'] = mar_data['platform']
     if use_old_format:
