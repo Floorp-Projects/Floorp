@@ -307,7 +307,6 @@ static RefPtr<ScaledFont> GetScaledFont(Translator* aTranslator,
 
 static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                const mozilla::wr::DeviceIntRect* aVisibleRect,
                                 const uint16_t* aTileSize,
                                 const mozilla::wr::TileOffset* aTileOffset,
                                 const mozilla::wr::LayoutIntRect* aDirtyRect,
@@ -333,6 +332,24 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
   if (!dt) {
     return false;
+  }
+
+  auto origin = gfx::IntPoint(0, 0);
+  if (aTileOffset) {
+    origin =
+        gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
+    dt = gfx::Factory::CreateOffsetDrawTarget(dt, origin);
+  }
+
+  auto bounds = gfx::IntRect(origin, aSize);
+
+  if (aDirtyRect) {
+    Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y,
+               aDirtyRect->size.width, aDirtyRect->size.height);
+    dt->PushClipRect(dirty);
+    bounds = bounds.Intersect(
+        IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,
+                aDirtyRect->size.width, aDirtyRect->size.height));
   }
 
   struct Reader {
@@ -379,35 +396,11 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
   // We try hard to not have empty blobs but we can end up with
   // them because of CompositorHitTestInfo and merging.
-  size_t footerSize = sizeof(size_t) + sizeof(IntPoint);
-  MOZ_RELEASE_ASSERT(aBlob.length() >= footerSize);
-  size_t indexOffset = *(size_t*)(aBlob.end().get() - footerSize);
-  IntPoint recordingOrigin =
-      *(IntPoint*)(aBlob.end().get() - footerSize + sizeof(size_t));
-  // Apply the visibleRect's offset to make (0, 0) in the DT correspond to (0,
-  // 0) in the texture
-
-  MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - footerSize);
+  MOZ_RELEASE_ASSERT(aBlob.length() >= sizeof(size_t));
+  size_t indexOffset = *(size_t*)(aBlob.end().get() - sizeof(size_t));
+  MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - sizeof(size_t));
   Reader reader(aBlob.begin().get() + indexOffset,
-                aBlob.length() - footerSize - indexOffset);
-
-  IntPoint origin;
-  if (aTileOffset) {
-    origin +=
-        gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
-  }
-  dt = gfx::Factory::CreateOffsetDrawTarget(dt, recordingOrigin + origin);
-
-  auto bounds = gfx::IntRect(origin, aSize);
-
-  if (aDirtyRect) {
-    Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y,
-               aDirtyRect->size.width, aDirtyRect->size.height);
-    dt->PushClipRect(dirty);
-    bounds = bounds.Intersect(
-        IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,
-                aDirtyRect->size.width, aDirtyRect->size.height));
-  }
+                aBlob.length() - sizeof(size_t) - indexOffset);
 
   bool ret = true;
   size_t offset = 0;
@@ -474,15 +467,14 @@ extern "C" {
 
 bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob, int32_t width,
                         int32_t height, mozilla::wr::ImageFormat aFormat,
-                        const mozilla::wr::DeviceIntRect* aVisibleRect,
                         const uint16_t* aTileSize,
                         const mozilla::wr::TileOffset* aTileOffset,
                         const mozilla::wr::LayoutIntRect* aDirtyRect,
                         mozilla::wr::MutByteSlice output) {
   return mozilla::wr::Moz2DRenderCallback(
       mozilla::wr::ByteSliceToRange(blob), mozilla::gfx::IntSize(width, height),
-      mozilla::wr::ImageFormatToSurfaceFormat(aFormat), aVisibleRect, aTileSize,
-      aTileOffset, aDirtyRect, mozilla::wr::MutByteSliceToRange(output));
+      mozilla::wr::ImageFormatToSurfaceFormat(aFormat), aTileSize, aTileOffset,
+      aDirtyRect, mozilla::wr::MutByteSliceToRange(output));
 }
 
 }  // extern
