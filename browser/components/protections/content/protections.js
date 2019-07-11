@@ -5,114 +5,74 @@
 /* eslint-env mozilla/frame-script */
 
 document.addEventListener("DOMContentLoaded", e => {
+  let todayInMs = Date.now();
+  let weekAgoInMs = todayInMs - 7 * 24 * 60 * 60 * 1000;
+  RPMSendAsyncMessage("FetchContentBlockingEvents", {
+    from: weekAgoInMs,
+    to: todayInMs,
+  });
+
   let dataTypes = [
     "cryptominer",
     "fingerprinter",
     "tracker",
-    "crossSite",
+    "cookie",
     "social",
   ];
   let weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  let today = new Date().getDay();
 
   let protectionDetails = document.getElementById("protection-details");
   protectionDetails.addEventListener("click", () => {
-    RPMSendAsyncMessage("openContentBlockingPreferences");
+    RPMSendAsyncMessage("OpenContentBlockingPreferences");
   });
 
-  let data = [
-    {
-      total: 41,
-      cryptominer: 1,
-      fingerprinter: 10,
-      tracker: 15,
-      crossSite: 12,
-      social: 3,
-    },
-    {
-      total: 246,
-      cryptominer: 5,
-      fingerprinter: 8,
-      tracker: 110,
-      crossSite: 103,
-      social: 20,
-    },
-    {
-      total: 59,
-      cryptominer: 0,
-      fingerprinter: 1,
-      tracker: 25,
-      crossSite: 25,
-      social: 8,
-    },
-    {
-      total: 177,
-      cryptominer: 0,
-      fingerprinter: 4,
-      tracker: 24,
-      crossSite: 136,
-      social: 13,
-    },
-    {
-      total: 16,
-      cryptominer: 1,
-      fingerprinter: 3,
-      tracker: 0,
-      crossSite: 7,
-      social: 5,
-    },
-    {
-      total: 232,
-      cryptominer: 0,
-      fingerprinter: 30,
-      tracker: 84,
-      crossSite: 86,
-      social: 32,
-    },
-    {
-      total: 153,
-      cryptominer: 0,
-      fingerprinter: 10,
-      tracker: 35,
-      crossSite: 95,
-      social: 13,
-    },
-  ];
-
-  // Use this to populate the graph with real data in the future.
-  let createGraph = () => {
-    let largest = 10;
-    for (let day of data) {
-      if (largest < day.total) {
-        largest = day.total;
-      }
+  let createGraph = data => {
+    // Set a default top size for the height of the graph bars so that small
+    // numbers don't fill the whole graph.
+    let largest = 100;
+    if (largest < data.largest) {
+      largest = data.largest;
     }
 
     let graph = document.getElementById("graph");
-    for (let i = 0; i < weekdays.length; i++) {
+    for (let i = weekdays.length - 1; i >= 0; i--) {
+      // Start 7 days ago and count down to today.
+      let date = new Date();
+      date.setDate(date.getDate() - i);
+      let dateString = date.toISOString().split("T")[0];
       let bar = document.createElement("div");
       bar.className = "graph-bar";
-      let barHeight = (data[i].total / largest) * 100;
-      bar.style.height = `${barHeight}%`;
-      for (let type of dataTypes) {
-        let dataHeight = (data[i][type] / data[i].total) * 100;
-        let div = document.createElement("div");
-        div.className = `${type}-bar`;
-        div.setAttribute("data-type", type);
-        div.style.height = `${dataHeight}%`;
-        bar.appendChild(div);
+      if (data[dateString]) {
+        let content = data[dateString];
+        let barHeight = (content.total / largest) * 100;
+        bar.style.height = `${barHeight}%`;
+        for (let type of dataTypes) {
+          if (content[type]) {
+            let dataHeight = (content[type] / content.total) * 100;
+            let div = document.createElement("div");
+            div.className = `${type}-bar`;
+            div.setAttribute("data-type", type);
+            div.style.height = `${dataHeight}%`;
+            bar.appendChild(div);
+          }
+        }
+      } else {
+        // There were no content blocking events on this day.
+        bar.style.height = `0`;
       }
       graph.appendChild(bar);
 
       let label = document.createElement("span");
       label.className = "column-label";
       if (i == 6) {
-        label.innerText = "Today";
+        label.textContent = "Today";
       } else {
-        label.innerText = weekdays[(i + today) % 7];
+        label.textContent = weekdays[(i + 1 + new Date().getDay()) % 7];
       }
-      graph.appendChild(label);
+      graph.prepend(label);
     }
+
+    addListeners();
   };
 
   let addListeners = () => {
@@ -130,7 +90,7 @@ document.addEventListener("DOMContentLoaded", e => {
     });
 
     wrapper.addEventListener("click", ev => {
-      if (ev.originalTarget.dataset) {
+      if (ev.originalTarget.dataset.type) {
         document.getElementById(`tab-${ev.target.dataset.type}`).click();
       }
     });
@@ -143,6 +103,8 @@ document.addEventListener("DOMContentLoaded", e => {
       });
     }
   };
-  createGraph();
-  addListeners();
+
+  RPMAddMessageListener("SendContentBlockingRecords", message => {
+    createGraph(message.data);
+  });
 });
