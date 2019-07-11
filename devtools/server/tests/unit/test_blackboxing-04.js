@@ -10,7 +10,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -20,9 +20,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-black-box", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_black_box();
     });
   });
@@ -33,8 +33,8 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box() {
-  gThreadClient.once("paused", function(packet) {
-    gThreadClient.setBreakpoint({ sourceUrl: BLACK_BOXED_URL, line: 2 }, {});
+  gThreadFront.once("paused", function(packet) {
+    gThreadFront.setBreakpoint({ sourceUrl: BLACK_BOXED_URL, line: 2 }, {});
     test_black_box_paused();
   });
 
@@ -74,9 +74,9 @@ function test_black_box() {
 }
 
 function test_black_box_paused() {
-  gThreadClient.getSources().then(async function({ error, sources }) {
+  gThreadFront.getSources().then(async function({ error, sources }) {
     Assert.ok(!error, "Should not get an error: " + error);
-    const sourceFront = gThreadClient.source(
+    const sourceFront = gThreadFront.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
@@ -85,7 +85,7 @@ function test_black_box_paused() {
       pausedInSource,
       "We should be notified that we are currently paused in this source"
     );
-    await gThreadClient.resume();
+    await gThreadFront.resume();
     finishClient(gClient);
   });
 }

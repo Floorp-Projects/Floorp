@@ -302,8 +302,8 @@ function createContextMenu(
         label: l10n.getStr("webconsole.menu.timeWarp.label"),
         disabled: false,
         click: () => {
-          const threadClient = toolbox.threadClient;
-          threadClient.timeWarp(executionPoint);
+          const threadFront = toolbox.threadFront;
+          threadFront.timeWarp(executionPoint);
         },
       })
     );

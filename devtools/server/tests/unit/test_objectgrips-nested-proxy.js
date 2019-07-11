@@ -10,11 +10,11 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     await new Promise(function(resolve) {
-      threadClient.once("paused", async function(packet) {
+      threadFront.once("paused", async function(packet) {
         const [grip] = packet.frame.arguments;
-        const objClient = threadClient.pauseGrip(grip);
+        const objClient = threadFront.pauseGrip(grip);
         const { proxyTarget, proxyHandler } = await objClient.getProxySlots();
 
         strictEqual(grip.class, "Proxy", "Its a proxy grip.");
@@ -25,7 +25,7 @@ add_task(
           "The handler is also a proxy."
         );
 
-        await threadClient.resume();
+        await threadFront.resume();
         resolve();
       });
       debuggee.eval(

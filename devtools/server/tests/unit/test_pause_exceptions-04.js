@@ -10,17 +10,17 @@
  */
 
 add_task(
-  threadClientTest(
-    async ({ threadClient, client, debuggee }) => {
+  threadFrontTest(
+    async ({ threadFront, client, debuggee }) => {
       let onResume = null;
       let packet = null;
 
-      threadClient.once("paused", function(pkt) {
+      threadFront.once("paused", function(pkt) {
         packet = pkt;
-        onResume = threadClient.resume();
+        onResume = threadFront.resume();
       });
 
-      await threadClient.pauseOnExceptions(true, true);
+      await threadFront.pauseOnExceptions(true, true);
       try {
         /* eslint-disable */
     Cu.evalInSandbox(
@@ -45,12 +45,12 @@ add_task(
       Assert.equal(packet.why.exception, "42");
       packet = null;
 
-      threadClient.once("paused", function(pkt) {
+      threadFront.once("paused", function(pkt) {
         packet = pkt;
-        onResume = threadClient.resume();
+        onResume = threadFront.resume();
       });
 
-      await threadClient.pauseOnExceptions(false, true);
+      await threadFront.pauseOnExceptions(false, true);
       try {
         /* eslint-disable */
     Cu.evalInSandbox(
@@ -72,7 +72,7 @@ add_task(
       // on the thrown error from dontStopMe()
       Assert.equal(!!packet, false);
 
-      await threadClient.pauseOnExceptions(true, true);
+      await threadFront.pauseOnExceptions(true, true);
       try {
         /* eslint-disable */
     Cu.evalInSandbox(

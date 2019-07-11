@@ -13,7 +13,7 @@ const tabTarget = {
   },
 };
 
-const threadClient = {
+const threadFront = {
   on: () => {},
   reconfigure: () => {},
   getSources: () => {
@@ -59,7 +59,7 @@ describe("firefox onConnect", () => {
       {
         tabConnection: {
           tabTarget,
-          threadClient,
+          threadFront,
           debuggerClient,
         },
       },

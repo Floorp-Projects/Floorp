@@ -208,8 +208,8 @@ Inspector.prototype = {
       }
       this._replayResumed = !dbg.isPaused();
 
-      this._target.threadClient.on("paused", this.handleThreadPaused);
-      this._target.threadClient.on("resumed", this.handleThreadResumed);
+      this._target.threadFront.on("paused", this.handleThreadPaused);
+      this._target.threadFront.on("resumed", this.handleThreadResumed);
     }
 
     await Promise.all([
@@ -1567,8 +1567,8 @@ Inspector.prototype = {
       return this._panelDestroyer;
     }
 
-    this._target.threadClient.off("paused", this.handleThreadPaused);
-    this._target.threadClient.off("resumed", this.handleThreadResumed);
+    this._target.threadFront.off("paused", this.handleThreadPaused);
+    this._target.threadFront.off("resumed", this.handleThreadResumed);
 
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);

@@ -22,7 +22,7 @@ const {
   getFileSearchResults,
 } = selectors;
 
-const threadClient = {
+const threadFront = {
   sourceContents: async () => ({
     source: "function foo1() {\n  const foo = 5; return foo;\n}",
     contentType: "text/javascript",
@@ -45,7 +45,7 @@ describe("navigation", () => {
   });
 
   it("navigation closes project-search", async () => {
-    const { dispatch, getState, cx } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadFront);
     const mockQuery = "foo";
 
     await dispatch(actions.newGeneratedSource(makeSource("foo1")));
@@ -65,7 +65,7 @@ describe("navigation", () => {
   });
 
   it("navigation removes activeSearch 'project' value", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState } = createStore(threadFront);
     dispatch(actions.setActiveSearch("project"));
     expect(getActiveSearch(getState())).toBe("project");
 
@@ -74,7 +74,7 @@ describe("navigation", () => {
   });
 
   it("navigation clears the file-search query", async () => {
-    const { dispatch, getState, cx } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadFront);
 
     dispatch(actions.setFileSearchQuery(cx, "foobar"));
     expect(getFileSearchQuery(getState())).toBe("foobar");
@@ -85,7 +85,7 @@ describe("navigation", () => {
   });
 
   it("navigation clears the file-search results", async () => {
-    const { dispatch, getState, cx } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadFront);
 
     const searchResults = [{ line: 1, ch: 3 }, { line: 3, ch: 2 }];
     dispatch(actions.updateSearchResults(cx, 2, 3, searchResults));
@@ -107,7 +107,7 @@ describe("navigation", () => {
   });
 
   it("navigation removes activeSearch 'file' value", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState } = createStore(threadFront);
     dispatch(actions.setActiveSearch("file"));
     expect(getActiveSearch(getState())).toBe("file");
 

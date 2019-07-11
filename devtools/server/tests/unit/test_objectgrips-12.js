@@ -10,7 +10,7 @@ ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
@@ -32,9 +32,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-grips", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       test_display_string();
     });
   });
@@ -158,17 +158,17 @@ function test_display_string() {
 
   PromiseTestUtils.expectUncaughtRejection(/Error/);
 
-  gThreadClient.once("paused", function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const args = packet.frame.arguments;
 
     (function loop() {
-      const objClient = gThreadClient.pauseGrip(args.pop());
+      const objClient = gThreadFront.pauseGrip(args.pop());
       objClient.getDisplayString(function({ displayString }) {
         Assert.equal(displayString, testCases.pop().output);
         if (args.length) {
           loop();
         } else {
-          gThreadClient.resume().then(function() {
+          gThreadFront.resume().then(function() {
             finishClient(gClient);
           });
         }

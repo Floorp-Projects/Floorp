@@ -9,21 +9,21 @@
 // Test some issues when stepping around after hitting a breakpoint while recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
-  const { threadClient, tab, toolbox } = dbg;
+  const { threadFront, tab, toolbox } = dbg;
 
-  await threadClient.interrupt();
-  const bp1 = await setBreakpoint(threadClient, "doc_rr_continuous.html", 19);
-  await resumeToLine(threadClient, 19);
-  await reverseStepOverToLine(threadClient, 18);
-  await stepInToLine(threadClient, 22);
-  const bp2 = await setBreakpoint(threadClient, "doc_rr_continuous.html", 24);
-  await resumeToLine(threadClient, 24);
-  const bp3 = await setBreakpoint(threadClient, "doc_rr_continuous.html", 22);
-  await rewindToLine(threadClient, 22);
+  await threadFront.interrupt();
+  const bp1 = await setBreakpoint(threadFront, "doc_rr_continuous.html", 19);
+  await resumeToLine(threadFront, 19);
+  await reverseStepOverToLine(threadFront, 18);
+  await stepInToLine(threadFront, 22);
+  const bp2 = await setBreakpoint(threadFront, "doc_rr_continuous.html", 24);
+  await resumeToLine(threadFront, 24);
+  const bp3 = await setBreakpoint(threadFront, "doc_rr_continuous.html", 22);
+  await rewindToLine(threadFront, 22);
 
-  await threadClient.removeBreakpoint(bp1);
-  await threadClient.removeBreakpoint(bp2);
-  await threadClient.removeBreakpoint(bp3);
+  await threadFront.removeBreakpoint(bp1);
+  await threadFront.removeBreakpoint(bp2);
+  await threadFront.removeBreakpoint(bp3);
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
 });

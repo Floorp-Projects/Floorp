@@ -36,7 +36,7 @@ const sources = [
   "jquery.js",
 ];
 
-export const simpleMockThreadClient = {
+export const simpleMockThreadFront = {
   getBreakpointByLocation: (jest.fn(): any),
   setBreakpoint: (location: SourceActorLocation, _condition: string) =>
     Promise.resolve({ id: "hi", actualLocation: location }),
@@ -62,7 +62,7 @@ export const simpleMockThreadClient = {
 };
 
 // sources and tabs
-export const sourceThreadClient = {
+export const sourceThreadFront = {
   sourceContents: function({
     source,
   }: SourceActor): Promise<{| source: any, contentType: ?string |}> {
@@ -75,7 +75,7 @@ export const sourceThreadClient = {
     });
   },
   setBreakpoint: async () => {},
-  threadClient: async () => {},
+  threadFront: async () => {},
   getFrameScopes: async () => {},
   evaluateExpressions: async () => {},
   getBreakpointPositions: async () => ({}),

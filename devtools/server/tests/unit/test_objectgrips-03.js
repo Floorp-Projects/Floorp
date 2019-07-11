@@ -10,14 +10,14 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadClientTest(async ({ threadClient, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
-      threadClient.once("paused", function(packet) {
+      threadFront.once("paused", function(packet) {
         const args = packet.frame.arguments;
 
         Assert.equal(args[0].class, "Object");
 
-        const objClient = threadClient.pauseGrip(args[0]);
+        const objClient = threadFront.pauseGrip(args[0]);
         objClient.getProperty("x", function(response) {
           Assert.equal(response.descriptor.configurable, true);
           Assert.equal(response.descriptor.enumerable, true);
@@ -37,7 +37,7 @@ add_task(
               Assert.equal(response.descriptor.get.class, "Function");
               Assert.equal(response.descriptor.set.type, "undefined");
 
-              threadClient.resume().then(resolve);
+              threadFront.resume().then(resolve);
             });
           });
         });

@@ -32,12 +32,12 @@ const secondLocation = {
 };
 
 add_task(
-  threadClientTest(({ threadClient, debuggee }) => {
+  threadFrontTest(({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadClient.on("paused", async packet => {
-        const [first, second] = await set_breakpoints(packet, threadClient);
+      threadFront.on("paused", async packet => {
+        const [first, second] = await set_breakpoints(packet, threadFront);
         test_different_actors(first, second);
-        await test_remove_one(first, second, threadClient, debuggee);
+        await test_remove_one(first, second, threadFront, debuggee);
         resolve();
       });
 
@@ -46,10 +46,10 @@ add_task(
   })
 );
 
-function set_breakpoints(packet, threadClient) {
+function set_breakpoints(packet, threadFront) {
   return new Promise(async resolve => {
     let first, second;
-    const source = await getSourceById(threadClient, packet.frame.where.actor);
+    const source = await getSourceById(threadFront, packet.frame.where.actor);
 
     source
       .setBreakpoint(firstLocation)
@@ -77,13 +77,13 @@ function test_different_actors(first, second) {
   );
 }
 
-function test_remove_one(first, second, threadClient, debuggee) {
+function test_remove_one(first, second, threadFront, debuggee) {
   return new Promise(resolve => {
     first.remove(function({ error }) {
       Assert.ok(!error, "Should not get an error removing a breakpoint");
 
       let hitSecond;
-      threadClient.on("paused", function _onPaused({ why, frame }) {
+      threadFront.on("paused", function _onPaused({ why, frame }) {
         if (why.type == "breakpoint") {
           hitSecond = true;
           Assert.equal(
@@ -106,12 +106,12 @@ function test_remove_one(first, second, threadClient, debuggee) {
             secondLocation.column,
             "Should be at the right column"
           );
-          threadClient.resume();
+          threadFront.resume();
           return;
         }
 
         if (why.type == "debuggerStatement") {
-          threadClient.off("paused", _onPaused);
+          threadFront.off("paused", _onPaused);
           Assert.ok(
             hitSecond,
             "We should still hit `second`, but not `first`."
@@ -124,7 +124,7 @@ function test_remove_one(first, second, threadClient, debuggee) {
         Assert.ok(false, "Should never get here");
       });
 
-      threadClient.resume().then(() => debuggee.foo());
+      threadFront.resume().then(() => debuggee.foo());
     });
   });
 }

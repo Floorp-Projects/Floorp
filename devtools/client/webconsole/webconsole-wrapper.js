@@ -311,8 +311,8 @@ class WebConsoleWrapper {
       };
 
       if (this.toolbox) {
-        this.toolbox.threadClient.on("paused", this.dispatchPaused);
-        this.toolbox.threadClient.on("progress", this.dispatchProgress);
+        this.toolbox.threadFront.on("paused", this.dispatchPaused);
+        this.toolbox.threadFront.on("progress", this.dispatchProgress);
 
         const { highlight, unhighlight } = this.toolbox.getHighlighter(true);
 
@@ -392,7 +392,7 @@ class WebConsoleWrapper {
             return Promise.all([onNodeFrontSet, onInspectorUpdated]);
           },
           jumpToExecutionPoint: executionPoint =>
-            this.toolbox.threadClient.timeWarp(executionPoint),
+            this.toolbox.threadFront.timeWarp(executionPoint),
 
           onMessageHover: (type, messageId) => {
             const message = getMessage(store.getState(), messageId);

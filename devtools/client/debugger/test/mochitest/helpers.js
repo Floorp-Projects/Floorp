@@ -27,7 +27,7 @@ function log(msg, data) {
 }
 
 function logThreadEvents(dbg, event) {
-  const thread = dbg.toolbox.threadClient;
+  const thread = dbg.toolbox.threadFront;
 
   thread.on(event, function onEvent(...args) {
     info(`Thread event '${event}' fired.`);
@@ -1727,11 +1727,11 @@ function hideConsoleContextMenu(hud) {
 // Return a promise that resolves with the result of a thread evaluating a
 // string in the topmost frame.
 async function evaluateInTopFrame(target, text) {
-  const threadClient = target.threadClient;
+  const threadFront = target.threadFront;
   const consoleFront = await target.getFront("console");
-  const { frames } = await threadClient.getFrames(0, 1);
+  const { frames } = await threadFront.getFrames(0, 1);
   ok(frames.length == 1, "Got one frame");
-  const options = { thread: threadClient.actor, frameActor: frames[0].actor };
+  const options = { thread: threadFront.actor, frameActor: frames[0].actor };
   const response = await consoleFront.evaluateJS(text, options);
   return response.result.type == "undefined" ? undefined : response.result;
 }

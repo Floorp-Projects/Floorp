@@ -9,7 +9,7 @@
 
 var gDebuggee;
 var gClient;
-var gThreadClient;
+var gThreadFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -19,9 +19,9 @@ function run_test() {
     attachTestTabAndResume(gClient, "test-object-grip", function(
       response,
       targetFront,
-      threadClient
+      threadFront
     ) {
-      gThreadClient = threadClient;
+      gThreadFront = threadFront;
       testObjectGroup();
     });
   });
@@ -45,20 +45,20 @@ function evalCode() {
 }
 
 const testObjectGroup = async function() {
-  let packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadClient);
+  let packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadFront);
 
   const ugh = packet.frame.environment.parent.bindings.variables.ugh;
-  const ughClient = await gThreadClient.pauseGrip(ugh.value);
+  const ughClient = await gThreadFront.pauseGrip(ugh.value);
 
   packet = await getPrototypeAndProperties(ughClient);
 
-  packet = await resumeAndWaitForPause(gThreadClient);
+  packet = await resumeAndWaitForPause(gThreadFront);
   const ugh2 = packet.frame.environment.parent.bindings.variables.ugh;
-  const ugh2Client = gThreadClient.pauseGrip(ugh2.value);
+  const ugh2Client = gThreadFront.pauseGrip(ugh2.value);
 
   packet = await getPrototypeAndProperties(ugh2Client);
   Assert.equal(packet.ownProperties.length.value, 2);
 
-  await resume(gThreadClient);
+  await resume(gThreadFront);
   finishClient(gClient);
 };
