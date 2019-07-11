@@ -118,7 +118,6 @@ enum class ZealMode {
   _(ObjectGroupAddendum)                   \
   _(ScriptDebugScript)                     \
   _(BreakpointSite)                        \
-  _(Breakpoint)                            \
   _(ForOfPIC)                              \
   _(ForOfPICStub)                          \
   _(WasmInstanceExports)                   \

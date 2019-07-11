@@ -89,12 +89,9 @@ class DebugState {
 
   bool hasBreakpointTrapAtOffset(uint32_t offset);
   void toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled);
-  WasmBreakpointSite* getBreakpointSite(JSContext* cx, uint32_t offset) const;
-  WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx,
-                                                Instance* instance,
-                                                uint32_t offset);
+  WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx, uint32_t offset);
   bool hasBreakpointSite(uint32_t offset);
-  void destroyBreakpointSite(FreeOp* fop, Instance* instance, uint32_t offset);
+  void destroyBreakpointSite(FreeOp* fop, uint32_t offset);
   void clearBreakpointsIn(FreeOp* fp, WasmInstanceObject* instance,
                           js::Debugger* dbg, JSObject* handler);
   void clearAllBreakpoints(FreeOp* fp, WasmInstanceObject* instance);

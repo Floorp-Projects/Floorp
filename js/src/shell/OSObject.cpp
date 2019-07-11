@@ -435,7 +435,7 @@ class FileObject : public NativeObject {
     RCFile* file = fileObj->rcFile();
     RemoveCellMemory(obj, sizeof(*file), MemoryUse::FileObjectFile);
     if (file->release()) {
-      fop->deleteUntracked(file);
+      fop->delete_(file);
     }
   }
 
