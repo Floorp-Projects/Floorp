@@ -248,7 +248,7 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
   }
   capacity_ = roundSize(tunables().gcMinNurseryBytes());
   MOZ_ASSERT(capacity_ >= ArenaSize);
-  // After this point the Nursery has been enabled
+  // After this point the Nursery has been enabled.
 
   setCurrentChunk(0);
   setStartPosition();
@@ -326,7 +326,7 @@ void js::Nursery::disable() {
   capacity_ = 0;
 
   // We must reset currentEnd_ so that there is no space for anything in the
-  // nursery.  JIT'd code uses this even if the nursery is disabled.
+  // nursery. JIT'd code uses this even if the nursery is disabled.
   currentEnd_ = 0;
   currentStringEnd_ = 0;
   position_ = 0;
@@ -683,7 +683,7 @@ inline float js::Nursery::calcPromotionRate(bool* validForTenuring) const {
   if (previousGC.nurseryUsedBytes > 0) {
     if (validForTenuring) {
       // We can only use promotion rates if they're likely to be valid,
-      // they're only valid if the nursury was at least 90% full.
+      // they're only valid if the nursery was at least 90% full.
       *validForTenuring = used > capacity * 0.9f;
     }
     rate = tenured / used;
@@ -830,14 +830,14 @@ bool js::Nursery::shouldCollect() const {
   // and belowFractionThreshold when it's small.
   //
   // When the nursery is small then belowBytesThreshold is a lower threshold
-  // (triggered earlier) than belowFractionThreshold.  So if the fraction
-  // threshold is true, the bytes one will be true also.  The opposite is true
+  // (triggered earlier) than belowFractionThreshold. So if the fraction
+  // threshold is true, the bytes one will be true also. The opposite is true
   // when the nursery is large.
   //
   // Therefore, by the time we cross the threshold we care about, we've already
   // crossed the other one, and we can boolean AND to use either condition
-  // without encoding any "is the nursery big/small" test/threshold.  The point
-  // at which they cross is when the nursery is:  BytesThreshold /
+  // without encoding any "is the nursery big/small" test/threshold. The point
+  // at which they cross is when the nursery is: BytesThreshold /
   // FractionThreshold large.
   //
   // With defaults that's:
@@ -1360,7 +1360,7 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   MOZ_ASSERT(minNurseryBytes >= ArenaSize);
 
   // If one of these conditions is true then we always shrink or grow the
-  // nursery.  This way the thresholds still have an effect even if the goal
+  // nursery. This way the thresholds still have an effect even if the goal
   // seeking says the current size is ideal.
   size_t lowLimit = Max(minNurseryBytes, capacity() / 2);
   size_t highLimit =
@@ -1416,9 +1416,9 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   }
   if (newMaxNurseryChunks != chunkCountLimit_) {
     chunkCountLimit_ = newMaxNurseryChunks;
-    // The configured maximum nursery size is changing
+    // The configured maximum nursery size is changing.
     if (JS_HOWMANY(capacity_, gc::ChunkSize) > newMaxNurseryChunks) {
-      // We need to shrink the nursery
+      // We need to shrink the nursery.
       static_assert(NurseryChunkUsableSize < ChunkSize,
                     "Usable size must be smaller than total size or this "
                     "calculation might overflow");
@@ -1431,8 +1431,7 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   MOZ_ASSERT(minNurseryBytes >= ArenaSize);
 
   if (minNurseryBytes > capacity()) {
-    // the configured minimum nursery size is changing and we need to grow the
-    // nursery
+    // the configured minimum nursery size is changing, so grow the nursery.
     MOZ_ASSERT(minNurseryBytes <= roundSize(tunables().gcMaxNurseryBytes()));
     growAllocableSpace(minNurseryBytes);
     return true;
