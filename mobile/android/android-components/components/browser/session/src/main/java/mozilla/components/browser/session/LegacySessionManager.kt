@@ -197,6 +197,31 @@ class LegacySessionManager(
     }
 
     /**
+     * Adds multiple sessions.
+     *
+     * Note that for performance reasons this method will invoke
+     * [SessionManager.Observer.onSessionsRestored] and not [SessionManager.Observer.onSessionAdded]
+     * for every added [Session].
+     */
+    fun add(sessions: List<Session>) = synchronized(values) {
+        if (sessions.isEmpty()) {
+            return
+        }
+
+        sessions.forEach {
+            addInternal(
+                session = it,
+                viaRestore = true
+            )
+        }
+
+        if (selectedIndex == NO_SELECTION) {
+            // If there is no selection yet then select first non-private session
+            sessions.find { !it.private }?.let { select(it) }
+        }
+    }
+
+    /**
      * Restores sessions from the provided [Snapshot].
      *
      * Notification behaviour is as follows:
