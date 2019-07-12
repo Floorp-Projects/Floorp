@@ -52,8 +52,13 @@ interface nsILoginManagerPrompter : nsISupports {
    * @param dismissed
    *        A boolean value indicating whether the save logins doorhanger should
    *        be dismissed automatically when shown.
+   * @param notifySaved
+   *        A boolean value indicating whether the notification should indicate that
+   *        a login has been saved
    */
-  void promptToSavePassword(in nsILoginInfo aLogin, in boolean dismissed);
+  void promptToSavePassword(in nsILoginInfo aLogin,
+                            [optional] in boolean dismissed,
+                            [optional] in boolean notifySaved);
 
   /**
    * Ask the user if they want to change a login's password or username.
