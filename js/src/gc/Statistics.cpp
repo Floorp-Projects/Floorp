@@ -25,6 +25,8 @@
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 
+#include "gc/PrivateIterators-inl.h"
+
 using namespace js;
 using namespace js::gc;
 using namespace js::gcstats;
@@ -335,7 +337,7 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
                  zoneStats.collectedZoneCount, zoneStats.zoneCount,
                  zoneStats.sweptZoneCount, zoneStats.collectedCompartmentCount,
                  zoneStats.compartmentCount, zoneStats.sweptCompartmentCount,
-                 double(preHeapSize) / bytesPerMiB,
+                 double(preTotalHeapBytes) / bytesPerMiB,
                  counts[COUNT_NEW_CHUNK] - counts[COUNT_DESTROY_CHUNK],
                  counts[COUNT_NEW_CHUNK] + counts[COUNT_DESTROY_CHUNK]);
   if (!fragments.append(DuplicateString(buffer))) {
@@ -457,7 +459,7 @@ UniqueChars Statistics::formatDetailedDescription() const {
       zoneStats.compartmentCount, zoneStats.sweptCompartmentCount,
       getCount(COUNT_MINOR_GC), getCount(COUNT_STOREBUFFER_OVERFLOW),
       mmu20 * 100., mmu50 * 100., t(sccTotal), t(sccLongest),
-      double(preHeapSize) / bytesPerMiB,
+      double(preTotalHeapBytes) / bytesPerMiB,
       getCount(COUNT_NEW_CHUNK) - getCount(COUNT_DESTROY_CHUNK),
       getCount(COUNT_NEW_CHUNK) + getCount(COUNT_DESTROY_CHUNK),
       double(ArenaSize * getCount(COUNT_ARENA_RELOCATED)) / bytesPerMiB,
@@ -684,9 +686,9 @@ void Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json,
     json.property("nonincremental_reason",
                   ExplainAbortReason(nonincrementalReason_));  // #16
   }
-  json.property("allocated_bytes", preHeapSize);  // #17
+  json.property("allocated_bytes", preTotalHeapBytes);  // #17
   if (use == Statistics::JSONUse::PROFILER) {
-    json.property("post_heap_size", postHeapSize);
+    json.property("post_heap_size", postTotalHeapBytes);
   }
 
   uint32_t addedChunks = getCount(COUNT_NEW_CHUNK);
@@ -754,8 +756,10 @@ Statistics::Statistics(JSRuntime* rt)
       gcDebugFile(nullptr),
       nonincrementalReason_(gc::AbortReason::None),
       allocsSinceMinorGC({0, 0}),
-      preHeapSize(0),
-      postHeapSize(0),
+      preTotalHeapBytes(0),
+      postTotalHeapBytes(0),
+      preCollectedHeapBytes(0),
+      heapBytesFreed(0),
       thresholdTriggered(false),
       triggerAmount(0.0),
       triggerThreshold(0.0),
@@ -987,19 +991,42 @@ void Statistics::beginGC(JSGCInvocationKind kind,
   nonincrementalReason_ = gc::AbortReason::None;
 
   GCRuntime& gc = runtime->gc;
-  preHeapSize = gc.heapSize.gcBytes();
+  preTotalHeapBytes = gc.heapSize.gcBytes();
+
+  preCollectedHeapBytes = 0;
+  heapBytesFreed = 0;
+
   startingMajorGCNumber = gc.majorGCCount();
   startingSliceNumber = gc.gcNumber();
+
   if (gc.lastGCTime()) {
     timeSinceLastGC = currentTime - gc.lastGCTime();
   }
 }
 
-void Statistics::endGC() {
-  TimeDuration sccTotal, sccLongest;
-  sccDurations(&sccTotal, &sccLongest);
-  postHeapSize = runtime->gc.heapSize.gcBytes();
+void Statistics::measureInitialHeapSize() {
+  MOZ_ASSERT(preCollectedHeapBytes == 0);
+  for (GCZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
+    preCollectedHeapBytes += zone->zoneSize.gcBytes();
+  }
+}
 
+void Statistics::adoptHeapSizeDuringIncrementalGC(Zone* mergedZone) {
+  // A zone is being merged into a zone that's currently being collected so we
+  // need to adjust our record of the total size of heap for collected zones.
+  MOZ_ASSERT(runtime->gc.isIncrementalGCInProgress());
+  preCollectedHeapBytes += mergedZone->zoneSize.gcBytes();
+}
+
+void Statistics::endGC() {
+  postTotalHeapBytes = runtime->gc.heapSize.gcBytes();
+
+  sendGCTelemetry();
+
+  thresholdTriggered = false;
+}
+
+void Statistics::sendGCTelemetry() {
   runtime->addTelemetry(JS_TELEMETRY_GC_IS_ZONE_GC,
                         !zoneStats.isFullCollection());
   TimeDuration markTotal = SumPhase(PhaseKind::MARK, phaseTimes);
@@ -1038,6 +1065,9 @@ void Statistics::endGC() {
 
   runtime->addTelemetry(JS_TELEMETRY_GC_INCREMENTAL_DISABLED,
                         !runtime->gc.isIncrementalGCAllowed());
+
+  TimeDuration sccTotal, sccLongest;
+  sccDurations(&sccTotal, &sccLongest);
   runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
   runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS, t(sccLongest));
 
@@ -1060,7 +1090,12 @@ void Statistics::endGC() {
     }
   }
 
-  thresholdTriggered = false;
+  MOZ_ASSERT(preCollectedHeapBytes >= heapBytesFreed);
+  size_t bytesSurvived = preCollectedHeapBytes - heapBytesFreed;
+  double survialRate =
+      100.0 * double(bytesSurvived) / double(preCollectedHeapBytes);
+  runtime->addTelemetry(JS_TELEMETRY_GC_TENURED_SURVIVAL_RATE,
+                        uint32_t(survialRate));
 }
 
 void Statistics::beginNurseryCollection(JS::GCReason reason) {
@@ -1138,39 +1173,8 @@ void Statistics::endSlice() {
     slice.finalState = runtime->gc.state();
 
     writeLogMessage("end slice");
-    TimeDuration sliceTime = slice.end - slice.start;
-    runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
 
-    if (slice.budget.isTimeBudget()) {
-      int64_t budget_ms = slice.budget.timeBudget.budget;
-      runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS, budget_ms);
-      if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
-        runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
-      }
-
-      // Record any phase that goes 1.5 times or 5ms over its budget.
-      double longSliceThreshold = std::min(1.5 * budget_ms, budget_ms + 5.0);
-      if (sliceTime.ToMilliseconds() > longSliceThreshold) {
-        PhaseKind longest = LongestPhaseSelfTimeInMajorGC(slice.phaseTimes);
-        reportLongestPhaseInMajorGC(longest, JS_TELEMETRY_GC_SLOW_PHASE);
-
-        // If the longest phase was waiting for parallel tasks then
-        // record the longest task.
-        if (longest == PhaseKind::JOIN_PARALLEL_TASKS) {
-          PhaseKind longestParallel =
-              LongestPhaseSelfTimeInMajorGC(slice.parallelTimes);
-          reportLongestPhaseInMajorGC(longestParallel,
-                                      JS_TELEMETRY_GC_SLOW_TASK);
-        }
-      }
-
-      // Record how long we went over budget.
-      int64_t overrun = sliceTime.ToMicroseconds() - (1000 * budget_ms);
-      if (overrun > 0) {
-        runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_OVERRUN,
-                              uint32_t(overrun));
-      }
-    }
+    sendSliceTelemetry(slice);
 
     sliceCount_++;
   }
@@ -1234,6 +1238,40 @@ void Statistics::endSlice() {
   }
 
   aborted = false;
+}
+
+void Statistics::sendSliceTelemetry(const SliceData& slice) {
+  TimeDuration sliceTime = slice.end - slice.start;
+  runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
+
+  if (slice.budget.isTimeBudget()) {
+    int64_t budget_ms = slice.budget.timeBudget.budget;
+    runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS, budget_ms);
+    if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
+      runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
+    }
+
+    // Record any phase that goes 1.5 times or 5ms over its budget.
+    double longSliceThreshold = std::min(1.5 * budget_ms, budget_ms + 5.0);
+    if (sliceTime.ToMilliseconds() > longSliceThreshold) {
+      PhaseKind longest = LongestPhaseSelfTimeInMajorGC(slice.phaseTimes);
+      reportLongestPhaseInMajorGC(longest, JS_TELEMETRY_GC_SLOW_PHASE);
+
+      // If the longest phase was waiting for parallel tasks then
+      // record the longest task.
+      if (longest == PhaseKind::JOIN_PARALLEL_TASKS) {
+        PhaseKind longestParallel =
+            LongestPhaseSelfTimeInMajorGC(slice.parallelTimes);
+        reportLongestPhaseInMajorGC(longestParallel, JS_TELEMETRY_GC_SLOW_TASK);
+      }
+    }
+
+    // Record how long we went over budget.
+    int64_t overrun = int64_t(sliceTime.ToMicroseconds()) - (1000 * budget_ms);
+    if (overrun > 0) {
+      runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_OVERRUN, uint32_t(overrun));
+    }
+  }
 }
 
 void Statistics::reportLongestPhaseInMajorGC(PhaseKind longest,

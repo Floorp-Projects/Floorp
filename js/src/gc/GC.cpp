@@ -974,6 +974,9 @@ void Chunk::updateChunkListAfterFree(JSRuntime* rt, const AutoLockGC& lock) {
 
 void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
   arena->zone->zoneSize.removeGCArena();
+  if (arena->zone->wasGCStarted()) {
+    stats().recordFreedArena();
+  }
   arena->chunk()->releaseArena(rt, arena, lock);
 }
 
@@ -4559,6 +4562,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
   }
 
   updateMallocCountersOnGCStart();
+  stats().measureInitialHeapSize();
 
   /*
    * Process any queued source compressions during the start of a major
@@ -8326,6 +8330,9 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
                                      targetZoneIsCollecting);
   target->zone()->addTenuredAllocsSinceMinorGC(
       source->zone()->getAndResetTenuredAllocsSinceMinorGC());
+  if (targetZoneIsCollecting) {
+    stats().adoptHeapSizeDuringIncrementalGC(source->zone());
+  }
   target->zone()->zoneSize.adopt(source->zone()->zoneSize);
   target->zone()->adoptUniqueIds(source->zone());
   target->zone()->adoptMallocBytes(source->zone());
