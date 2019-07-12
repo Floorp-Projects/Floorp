@@ -529,8 +529,8 @@ void BaselineInterpreterCodeGen::emitInitializeLocals() {
   Register scratch = R0.scratchReg();
   loadScript(scratch);
   masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
-  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfSSD()), scratch);
-  masm.load32(Address(scratch, SharedScriptData::offsetOfNfixed()), scratch);
+  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfISD()), scratch);
+  masm.load32(Address(scratch, ImmutableScriptData::offsetOfNfixed()), scratch);
 
   Label top, done;
   masm.bind(&top);
@@ -873,8 +873,8 @@ void BaselineInterpreterCodeGen::subtractScriptSlotsSize(Register reg,
   MOZ_ASSERT(reg != scratch);
   loadScript(scratch);
   masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
-  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfSSD()), scratch);
-  masm.load32(Address(scratch, SharedScriptData::offsetOfNslots()), scratch);
+  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfISD()), scratch);
+  masm.load32(Address(scratch, ImmutableScriptData::offsetOfNslots()), scratch);
   static_assert(sizeof(Value) == 8,
                 "shift by 3 below assumes Value is 8 bytes");
   masm.lshiftPtr(Imm32(3), scratch);
@@ -1197,8 +1197,8 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
 
   // Initialize interpreter pc.
   masm.loadPtr(Address(scratch1, JSScript::offsetOfScriptData()), scratch1);
-  masm.loadPtr(Address(scratch1, RuntimeScriptData::offsetOfSSD()), scratch1);
-  masm.addPtr(Imm32(SharedScriptData::offsetOfCode()), scratch1);
+  masm.loadPtr(Address(scratch1, RuntimeScriptData::offsetOfISD()), scratch1);
+  masm.addPtr(Imm32(ImmutableScriptData::offsetOfCode()), scratch1);
 
   if (HasInterpreterPCReg()) {
     MOZ_ASSERT(scratch1 == InterpreterPCReg,
@@ -4835,20 +4835,21 @@ template <typename Handler>
 void BaselineCodeGen<Handler>::emitInterpJumpToResumeEntry(Register script,
                                                            Register resumeIndex,
                                                            Register scratch) {
-  // Load JSScript::sharedScriptData() into |script|.
+  // Load JSScript::immutableScriptData() into |script|.
   masm.loadPtr(Address(script, JSScript::offsetOfScriptData()), script);
-  masm.loadPtr(Address(script, RuntimeScriptData::offsetOfSSD()), script);
+  masm.loadPtr(Address(script, RuntimeScriptData::offsetOfISD()), script);
 
   // Load the resume pcOffset in |resumeIndex|.
-  masm.load32(Address(script, SharedScriptData::offsetOfResumeOffsetsOffset()),
-              scratch);
+  masm.load32(
+      Address(script, ImmutableScriptData::offsetOfResumeOffsetsOffset()),
+      scratch);
   masm.computeEffectiveAddress(BaseIndex(scratch, resumeIndex, TimesFour),
                                scratch);
   masm.load32(BaseIndex(script, scratch, TimesOne), resumeIndex);
 
   // Add resume offset to PC, jump to it.
   masm.computeEffectiveAddress(BaseIndex(script, resumeIndex, TimesOne,
-                                         SharedScriptData::offsetOfCode()),
+                                         ImmutableScriptData::offsetOfCode()),
                                script);
   Address pcAddr(BaselineFrameReg,
                  BaselineFrame::reverseOffsetOfInterpreterPC());
