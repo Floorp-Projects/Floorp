@@ -4,6 +4,10 @@
  * Test searching for the selected text using the context menu
  */
 
+const { SearchExtensionLoader } = ChromeUtils.import(
+  "resource://gre/modules/SearchUtils.jsm"
+);
+
 const ENGINE_NAME = "mozSearch";
 const ENGINE_ID = "mozsearch-engine@search.mozilla.org";
 
@@ -28,7 +32,7 @@ add_task(async function() {
     Services.io.newURI("file://" + searchExtensions.path)
   );
 
-  await Services.search.ensureBuiltinExtension(ENGINE_ID);
+  await SearchExtensionLoader.installAddons([ENGINE_ID]);
 
   let engine = await Services.search.getEngineByName(ENGINE_NAME);
   ok(engine, "Got a search engine");

@@ -6,6 +6,10 @@
 "use strict";
 
 add_task(async function setup() {
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+  Services.prefs.setCharPref("browser.search.geoip.url", "");
+  Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
+
   await AddonTestUtils.promiseStartupManager();
 });
 
@@ -18,7 +22,7 @@ add_task(async function test_searchOrderJSON() {
     .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-extensions", Services.io.newURI(url));
 
-  await asyncReInit();
+  await Services.search.init();
 
   Assert.ok(Services.search.isInitialized, "search initialized");
   Assert.equal(
