@@ -7,7 +7,9 @@
   <script type="text/javascript">
     page_id = window.location.hash.substring(1);
     try {
-      worker = new Worker('file_testserver.sjs?file='+escape("tests/dom/security/test/csp/file_child-src_worker.js"));
+      worker = new Worker('file_testserver.sjs?file='+
+          escape("tests/dom/security/test/csp/file_child-src_worker.js")
+          +"&type=text/javascript");
 
       worker.onerror = function(e) {
         window.parent.postMessage({id:page_id, message:"blocked"}, 'http://mochi.test:8888');

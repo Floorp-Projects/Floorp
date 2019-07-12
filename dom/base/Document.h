@@ -3516,10 +3516,11 @@ class Document : public nsINode,
         this, MatchNameAttribute, nullptr, UseExistingNameString, aName);
   }
   Document* Open(const mozilla::dom::Optional<nsAString>& /* unused */,
-                 const nsAString& /* unused */, mozilla::ErrorResult& aError);
+                 const mozilla::dom::Optional<nsAString>& /* unused */,
+                 mozilla::ErrorResult& aError);
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Open(
       const nsAString& aURL, const nsAString& aName, const nsAString& aFeatures,
-      bool aReplace, mozilla::ErrorResult& rv);
+      mozilla::ErrorResult& rv);
   void Close(mozilla::ErrorResult& rv);
   void Write(const mozilla::dom::Sequence<nsString>& aText,
              mozilla::ErrorResult& rv);

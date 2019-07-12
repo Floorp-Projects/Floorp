@@ -42,6 +42,7 @@ const ABUSE_REASONS = (window.ABUSE_REPORT_REASONS = {
     hasSuggestions: true,
     isExampleHidden: hideOnThemeType,
     isReasonHidden: showOnAnyType,
+    requiresSupportURL: true,
   },
   policy: {
     hasSuggestions: true,
@@ -68,17 +69,24 @@ function getReasonL10nId(reason, addonType) {
   return l10nId;
 }
 
-function getSuggestionsTemplate(reason, addonType) {
+function getSuggestionsTemplate({ addonType, reason, supportURL }) {
   const reasonInfo = ABUSE_REASONS[reason];
-  if (!reasonInfo.hasSuggestions) {
+
+  if (
+    !addonType ||
+    !reasonInfo.hasSuggestions ||
+    (reasonInfo.requiresSupportURL && !supportURL)
+  ) {
     return null;
   }
+
   let templateId = `tmpl-suggestions-${reason}`;
   // Special case reasons that have a addonType-specific
   // suggestion template.
   if (reasonInfo.hasAddonTypeSuggestionTemplate) {
     templateId += `-${addonType}`;
   }
+
   return document.getElementById(templateId);
 }
 
@@ -308,13 +316,14 @@ class AbuseReasonSuggestions extends HTMLElement {
   update() {
     const { addonType, extensionSupportURL, reason } = this;
 
-    if (!addonType) {
-      return;
-    }
-
     this.textContent = "";
 
-    let template = getSuggestionsTemplate(reason, addonType);
+    let template = getSuggestionsTemplate({
+      addonType,
+      reason,
+      supportURL: extensionSupportURL,
+    });
+
     if (template) {
       let content = document.importNode(template.content, true);
 
@@ -401,6 +410,7 @@ class AbuseReport extends HTMLElement {
       _btnCancel: "button.abuse-report-cancel",
       _btnGoBack: "button.abuse-report-goback",
       _btnSubmit: "button.abuse-report-submit",
+      _addonAuthorContainer: ".abuse-report-header .addon-author-box",
       _addonIconElement: ".abuse-report-header img.addon-icon",
       _addonNameElement: ".abuse-report-header .addon-name",
       _linkAddonAuthor: ".abuse-report-header .addon-author-box a.author",
@@ -527,6 +537,7 @@ class AbuseReport extends HTMLElement {
 
     const {
       addonId,
+      _addonAuthorContainer,
       _addonIconElement,
       _addonNameElement,
       _linkAddonAuthor,
@@ -546,13 +557,18 @@ class AbuseReport extends HTMLElement {
 
     _addonNameElement.textContent = this.addonName;
 
-    _linkAddonAuthor.href = this.authorURL || this.homepageURL;
-    _linkAddonAuthor.textContent = this.authorName;
-    document.l10n.setAttributes(
-      _linkAddonAuthor.parentNode,
-      "abuse-report-addon-authored-by",
-      { "author-name": this.authorName }
-    );
+    if (this.authorName) {
+      _linkAddonAuthor.href = this.authorURL || this.homepageURL;
+      _linkAddonAuthor.textContent = this.authorName;
+      document.l10n.setAttributes(
+        _linkAddonAuthor.parentNode,
+        "abuse-report-addon-authored-by",
+        { "author-name": this.authorName }
+      );
+      _addonAuthorContainer.hidden = false;
+    } else {
+      _addonAuthorContainer.hidden = true;
+    }
 
     _addonIconElement.setAttribute("src", this.iconURL);
 

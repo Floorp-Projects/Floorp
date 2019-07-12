@@ -32,9 +32,6 @@ with Files('enum34/**'):
 with Files('futures/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files('gdbpp/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
-
 with Files('jsmin/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 

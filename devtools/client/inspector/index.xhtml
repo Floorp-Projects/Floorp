@@ -32,8 +32,8 @@
     var isInChrome = window.location.href.includes("chrome:");
     if (isInChrome) {
       var exports = {};
-      var { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-      var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+      var { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm");
+      var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js");
     }
   </script>
 

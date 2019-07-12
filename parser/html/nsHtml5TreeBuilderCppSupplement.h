@@ -1276,6 +1276,9 @@ void nsHtml5TreeBuilder::StartPlainText() {
   startTag(nsHtml5ElementName::ELT_LINK,
            nsHtml5PlainTextUtils::NewLinkAttributes(), false);
 
+  startTag(nsHtml5ElementName::ELT_BODY,
+           nsHtml5PlainTextUtils::NewBodyAttributes(), false);
+
   StartPlainTextBody();
 }
 

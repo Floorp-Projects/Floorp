@@ -24,7 +24,7 @@ add_task(async function() {
   // Test both CJS and JSM versions
 
   await testWorker("JSM", () =>
-    ChromeUtils.import("resource://devtools/shared/worker/worker.js", null)
+    ChromeUtils.import("resource://devtools/shared/worker/worker.js")
   );
   await testWorker("CommonJS", () => require("devtools/shared/worker/worker"));
   await testTransfer();
@@ -53,8 +53,7 @@ async function testWorker(context, workerFactory) {
 
 async function testTransfer() {
   const { workerify } = ChromeUtils.import(
-    "resource://devtools/shared/worker/worker.js",
-    null
+    "resource://devtools/shared/worker/worker.js"
   );
   const workerFn = workerify(({ buf }) => buf.byteLength);
   const buf = new ArrayBuffer(BUFFER_SIZE);

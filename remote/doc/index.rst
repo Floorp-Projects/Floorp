@@ -35,6 +35,7 @@ Developers
   Building.md
   Debugging.md
   Testing.md
+  Architecture.md
   Prefs.md
   CodeStyle.md
 

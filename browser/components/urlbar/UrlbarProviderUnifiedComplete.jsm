@@ -271,16 +271,21 @@ function makeUrlbarResult(tokens, info) {
           UrlbarUtils.RESULT_TYPE.SEARCH,
           UrlbarUtils.RESULT_SOURCE.SEARCH,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            engine: [action.params.engineName, true],
-            suggestion: [action.params.searchSuggestion, true],
-            keyword: [action.params.alias, true],
-            query: [action.params.searchQuery.trim(), true],
-            icon: [info.icon, false],
+            engine: [action.params.engineName, UrlbarUtils.HIGHLIGHT.TYPED],
+            suggestion: [
+              action.params.searchSuggestion,
+              UrlbarUtils.HIGHLIGHT.SUGGESTED,
+            ],
+            keyword: [action.params.alias, UrlbarUtils.HIGHLIGHT.TYPED],
+            query: [
+              action.params.searchQuery.trim(),
+              UrlbarUtils.HIGHLIGHT.TYPED,
+            ],
+            icon: [info.icon],
             isKeywordOffer: [
               action.params.alias &&
                 !action.params.searchQuery.trim() &&
                 action.params.alias.startsWith("@"),
-              false,
             ],
           })
         );
@@ -306,12 +311,12 @@ function makeUrlbarResult(tokens, info) {
           UrlbarUtils.RESULT_TYPE.KEYWORD,
           UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            title: [title, true],
-            url: [action.params.url, true],
-            keyword: [info.firstToken.value, true],
-            input: [action.params.input, false],
-            postData: [action.params.postData, false],
-            icon: [info.icon, false],
+            title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
+            url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
+            keyword: [info.firstToken.value, UrlbarUtils.HIGHLIGHT.TYPED],
+            input: [action.params.input],
+            postData: [action.params.postData],
+            icon: [info.icon],
           })
         );
       }
@@ -320,10 +325,10 @@ function makeUrlbarResult(tokens, info) {
           UrlbarUtils.RESULT_TYPE.OMNIBOX,
           UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            title: [info.comment, true],
-            content: [action.params.content, true],
-            keyword: [action.params.keyword, true],
-            icon: [info.icon, false],
+            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
+            content: [action.params.content, UrlbarUtils.HIGHLIGHT.TYPED],
+            keyword: [action.params.keyword, UrlbarUtils.HIGHLIGHT.TYPED],
+            icon: [info.icon],
           })
         );
       case "remotetab":
@@ -331,10 +336,10 @@ function makeUrlbarResult(tokens, info) {
           UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
           UrlbarUtils.RESULT_SOURCE.TABS,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            url: [action.params.url, true],
-            title: [info.comment, true],
-            device: [action.params.deviceName, true],
-            icon: [info.icon, false],
+            url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
+            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
+            device: [action.params.deviceName, UrlbarUtils.HIGHLIGHT.TYPED],
+            icon: [info.icon],
           })
         );
       case "switchtab":
@@ -342,10 +347,10 @@ function makeUrlbarResult(tokens, info) {
           UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
           UrlbarUtils.RESULT_SOURCE.TABS,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            url: [action.params.url, true],
-            title: [info.comment, true],
-            device: [action.params.deviceName, true],
-            icon: [info.icon, false],
+            url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
+            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
+            device: [action.params.deviceName, UrlbarUtils.HIGHLIGHT.TYPED],
+            icon: [info.icon],
           })
         );
       case "visiturl":
@@ -353,9 +358,9 @@ function makeUrlbarResult(tokens, info) {
           UrlbarUtils.RESULT_TYPE.URL,
           UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            title: [info.comment, true],
-            url: [action.params.url, true],
-            icon: [info.icon, false],
+            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
+            url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
+            icon: [info.icon],
           })
         );
       default:
@@ -369,8 +374,8 @@ function makeUrlbarResult(tokens, info) {
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-        engine: [info.comment, true],
-        icon: [info.icon, false],
+        engine: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
+        icon: [info.icon],
       })
     );
   }
@@ -409,10 +414,10 @@ function makeUrlbarResult(tokens, info) {
     UrlbarUtils.RESULT_TYPE.URL,
     source,
     ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-      url: [info.url, true],
-      icon: [info.icon, false],
-      title: [comment, true],
-      tags: [tags, true],
+      url: [info.url, UrlbarUtils.HIGHLIGHT.TYPED],
+      icon: [info.icon],
+      title: [comment, UrlbarUtils.HIGHLIGHT.TYPED],
+      tags: [tags, UrlbarUtils.HIGHLIGHT.TYPED],
     })
   );
 }

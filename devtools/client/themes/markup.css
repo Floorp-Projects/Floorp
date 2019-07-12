@@ -9,6 +9,7 @@
   --markup-pseudoclass-disk-color: var(--yellow-60);
   --markup-hidden-tag-color: var(--grey-50);
   --markup-outline: var(--theme-splitter-color);
+  --markup-text-color-contrast: black;
 }
 
 .theme-dark:root {
@@ -17,6 +18,7 @@
   --markup-hidden-punctuation-color: #787878;
   --markup-hidden-tag-color: var(--grey-45);
   --markup-outline: var(--theme-selection-background);
+  --markup-text-color-contrast: var(--theme-selection-color);
 }
 
 * {
@@ -289,7 +291,7 @@ ul.children + .tag-line::before {
 }
 
 .flash-out {
-  transition: background .5s;
+  transition: background,color .5s;
 }
 
 .editor {
@@ -402,6 +404,14 @@ ul.children + .tag-line::before {
 .theme-selected ~ .editor .theme-fg-color2,
 .theme-selected ~ .editor .theme-fg-color3 {
   color: var(--theme-selection-color);
+}
+
+/* Selected nodes being flashed in the tree should have dark selected text. Here we target
+   nodes with theme-selected text colors and apply a dark, accessible text color for when
+   the yellow flashing background is applied. */
+.theme-selected.theme-bg-yellow-contrast ~ .editor,
+.theme-selected ~ .editor [class*="theme-fg-color"].theme-fg-contrast {
+  color: var(--markup-text-color-contrast);
 }
 
 /* Applicable to the DOCTYPE */

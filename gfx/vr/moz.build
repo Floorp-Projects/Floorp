@@ -51,6 +51,7 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
+    'nsFxrCommandLineHandler.cpp',
     'VRManager.cpp',
     'VRPuppetCommandBuffer.cpp',
     'VRShMem.cpp'
@@ -78,6 +79,10 @@ IPDL_SOURCES = [
     'ipc/PVRGPU.ipdl',
     'ipc/PVRLayer.ipdl',
     'ipc/PVRManager.ipdl',
+]
+
+XPCOM_MANIFESTS += [
+  'components.conf',
 ]
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']

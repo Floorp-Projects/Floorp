@@ -784,8 +784,8 @@ video > .caption-box {
   white-space: pre-line;
   background-color: rgba(0, 0, 0, 0.8);
   font: var(--cue-font-size) sans-serif;
-  writing-mode: var(--cue-writing-mode, inherit) !important;
-  overflow-wrap: break-word !important;
+  writing-mode: var(--cue-writing-mode, inherit);
+  overflow-wrap: break-word;
   /* TODO : enable unicode-bidi, right now enable it would cause incorrect
             display direction, maybe related with bug 1558431. */
 }

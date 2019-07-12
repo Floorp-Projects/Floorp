@@ -54,6 +54,39 @@ function openACPopup(popup, browser, inputSelector) {
   });
 }
 
+async function fillGeneratedPasswordFromACPopup(
+  browser,
+  passwordInputSelector
+) {
+  let popup = document.getElementById("PopupAutoComplete");
+  ok(popup, "Got popup");
+  await openACPopup(popup, browser, passwordInputSelector);
+
+  let item = popup.querySelector(`[originaltype="generatedPassword"]`);
+  ok(item, "Got generated password richlistitem");
+
+  await TestUtils.waitForCondition(() => {
+    return !EventUtils.isHidden(item);
+  }, "Waiting for item to become visible");
+
+  let inputEventPromise = ContentTask.spawn(
+    browser,
+    [passwordInputSelector],
+    async function waitForInput(inputSelector) {
+      let passwordInput = content.document.querySelector(inputSelector);
+      await ContentTaskUtils.waitForEvent(
+        passwordInput,
+        "input",
+        "Password input value changed"
+      );
+    }
+  );
+  info("Clicking the generated password AC item");
+  EventUtils.synthesizeMouseAtCenter(item, {});
+  info("Waiting for the content input value to change");
+  await inputEventPromise;
+}
+
 async function checkPromptContents(anchorElement, browser) {
   let { panel } = PopupNotifications;
   let promiseShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
@@ -82,8 +115,82 @@ add_task(async function setup() {
   // assert that there are no logins
   let logins = Services.logins.getAllLogins();
   is(logins.length, 0, "There are no logins");
+});
 
-  // use a single matching login for the following tests
+add_task(async function autocomplete_generated_password_auto_saved() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + FORM_PAGE_PATH,
+    },
+    async function(browser) {
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector, usernameInputSelector],
+        function prepareAndCheckForm([passwordSelector, usernameSelector]) {
+          let passwordInput = content.document.querySelector(passwordSelector);
+          // We'll reuse the form_basic.html, but ensure we'll get the generated password autocomplete option
+          passwordInput.setAttribute("autocomplete", "new-password");
+          passwordInput.value = "";
+          let usernameInput = content.document.querySelector(usernameSelector);
+          usernameInput.setUserInput("user1");
+        }
+      );
+      await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function checkFinalFieldValue(inputSelector) {
+          let passwordInput = content.document.querySelector(inputSelector);
+          is(
+            passwordInput.value.length,
+            15,
+            "Password field was filled with generated password"
+          );
+        }
+      );
+
+      // check a dismissed prompt was shown with extraAttr attribute
+      let notif = getCaptureDoorhanger("password-save");
+      ok(notif && notif.dismissed, "Dismissed notification was created");
+      is(
+        notif.anchorElement.getAttribute("extraAttr"),
+        "attention",
+        "Check if icon has the extraAttr attribute"
+      );
+
+      let { passwordValue, usernameValue } = await checkPromptContents(
+        notif.anchorElement,
+        browser
+      );
+      is(
+        passwordValue.length,
+        15,
+        "Doorhanger password field has generated 15-char value"
+      );
+      is(usernameValue, "user1", "Doorhanger username field was popuplated");
+
+      info("Hiding popup.");
+      let { panel } = PopupNotifications;
+      let promiseHidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+      panel.hidePopup();
+      await promiseHidden;
+
+      // confirm the extraAttr attribute is removed after opening & dismissing the doorhanger
+      ok(
+        !notif.anchorElement.hasAttribute("extraAttr"),
+        "Check if the extraAttr attribute was removed"
+      );
+      notif.remove();
+    }
+  );
+});
+
+add_task(async function setup_logins() {
+  // Reset all passwords
+  Services.logins.removeAllLogins();
+  // ..and use a single matching login for the following tests
   await addOneLogin();
 });
 
@@ -134,6 +241,10 @@ add_task(async function contextfill_generated_password_with_matching_logins() {
         passwordValue.length,
         15,
         "Doorhanger password field has generated 15-char value"
+      );
+      ok(
+        !notif.anchorElement.hasAttribute("extraAttr"),
+        "Check if icon has the extraAttr attribute"
       );
       notif.remove();
     }
@@ -186,6 +297,10 @@ add_task(async function contextfill_generated_password_with_username() {
         "user1",
         "Doorhanger username field has the username field value"
       );
+      ok(
+        !notif.anchorElement.hasAttribute("extraAttr"),
+        "Check if icon has the extraAttr attribute"
+      );
       notif.remove();
     }
   );
@@ -211,35 +326,7 @@ add_task(async function autocomplete_generated_password() {
           usernameInput.setUserInput("user1");
         }
       );
-
-      let popup = document.getElementById("PopupAutoComplete");
-      ok(popup, "Got popup");
-      await openACPopup(popup, browser, passwordInputSelector);
-
-      let item = popup.querySelector(`[originaltype="generatedPassword"]`);
-      ok(item, "Got generated password richlistitem");
-
-      await TestUtils.waitForCondition(() => {
-        return !EventUtils.isHidden(item);
-      }, "Waiting for item to become visible");
-
-      let inputEventPromise = ContentTask.spawn(
-        browser,
-        [passwordInputSelector],
-        async function waitForInput(inputSelector) {
-          let passwordInput = content.document.querySelector(inputSelector);
-          await ContentTaskUtils.waitForEvent(
-            passwordInput,
-            "input",
-            "Password input value changed"
-          );
-        }
-      );
-      info("Clicking the generated password AC item");
-      EventUtils.synthesizeMouseAtCenter(item, {});
-      info("Waiting for the content input value to change");
-      await inputEventPromise;
-
+      await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
       await ContentTask.spawn(
         browser,
         [passwordInputSelector],
@@ -256,6 +343,10 @@ add_task(async function autocomplete_generated_password() {
       // check a dismissed prompt was shown
       let notif = getCaptureDoorhanger("password-save");
       ok(notif && notif.dismissed, "Dismissed notification was created");
+      ok(
+        !notif.anchorElement.hasAttribute("extraAttr"),
+        "Check if icon has the extraAttr attribute"
+      );
 
       let { passwordValue, usernameValue } = await checkPromptContents(
         notif.anchorElement,

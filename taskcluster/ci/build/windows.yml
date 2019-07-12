@@ -777,6 +777,8 @@ win64-asan-reporter-nightly/opt:
         extra-config:
             stage_platform: win64-asan-reporter
         mozconfig-variant: nightly-asan-reporter
+        mar-channel-id:
+            firefox-mozilla-central-asan
     run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl

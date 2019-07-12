@@ -16,7 +16,9 @@ const ObjectClient = require("devtools/shared/client/object-client");
 // The code in the document above leaves an uncaught rejection. This is only
 // reported to the testing framework if the code is loaded in the main process.
 if (!gMultiProcessBrowser) {
-  ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+  const { PromiseTestUtils } = ChromeUtils.import(
+    "resource://testing-common/PromiseTestUtils.jsm"
+  );
   PromiseTestUtils.expectUncaughtRejection(/hello/);
 }
 

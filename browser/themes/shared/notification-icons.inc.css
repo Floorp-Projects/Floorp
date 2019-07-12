@@ -118,6 +118,11 @@
   list-style-image: url(chrome://browser/skin/login.svg);
 }
 
+.login-icon[extraAttr="attention"] {
+  fill: var(--toolbarbutton-icon-fill-attention);
+  fill-opacity: 1;
+}
+
 .camera-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
 }

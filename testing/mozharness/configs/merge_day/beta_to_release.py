@@ -12,12 +12,6 @@ config = {
     ],
     "replacements": [
         # File, from, to
-        ("browser/confvars.sh",
-         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release",
-         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release"),
-        ("browser/confvars.sh",
-         "MAR_CHANNEL_ID=firefox-mozilla-beta",
-         "MAR_CHANNEL_ID=firefox-mozilla-release"),
     ],
 
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),

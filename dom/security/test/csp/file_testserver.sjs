@@ -50,7 +50,12 @@ function handleRequest(request, response) {
   }
 
   // Send HTML to test allowed/blocked behaviors
-  response.setHeader("Content-Type", "text/html", false);
+  let type = "text/html";
+  if (query.has("type")) {
+    type = query.get("type");
+  }
+
+  response.setHeader("Content-Type", type, false);
   if(query.has("file")){
     response.write(loadHTMLFromFile(query.get("file")));
   }

@@ -236,7 +236,7 @@ async def generate_partial(work_env, from_dir, to_dir, dest_mar, mar_data,
     log.info("Generating partial %s", dest_mar)
     env = work_env.env
     env["MOZ_PRODUCT_VERSION"] = mar_data['version']
-    env["MOZ_CHANNEL_ID"] = mar_data["ACCEPTED_MAR_CHANNEL_IDS"]
+    env["MAR_CHANNEL_ID"] = mar_data["MAR_CHANNEL_ID"]
     env['BRANCH'] = mar_data['branch']
     env['PLATFORM'] = mar_data['platform']
     if use_old_format:
@@ -248,7 +248,7 @@ async def generate_partial(work_env, from_dir, to_dir, dest_mar, mar_data,
     cmd = " ".join([make_incremental_update, dest_mar, from_dir, to_dir])
 
     await run_command(cmd, cwd=work_env.workdir, env=env, label=dest_mar.split('/')[-1])
-    validate_mar_channel_id(dest_mar, mar_data["ACCEPTED_MAR_CHANNEL_IDS"])
+    validate_mar_channel_id(dest_mar, mar_data["MAR_CHANNEL_ID"])
 
 
 def get_hash(path, hash_type="sha512"):
@@ -368,9 +368,7 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
     from_path = os.path.join(work_env.workdir, "from")
 
     mar_data = {
-        "ACCEPTED_MAR_CHANNEL_IDS": get_option(
-            to_path, filename="update-settings.ini", section="Settings",
-            option="ACCEPTED_MAR_CHANNEL_IDS"),
+        "MAR_CHANNEL_ID": os.environ["MAR_CHANNEL_ID"],
         "version": get_option(to_path, filename="application.ini",
                               section="App", option="Version"),
         "to_buildid": get_option(to_path, filename="application.ini",
@@ -389,12 +387,9 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
         "platform": partial_def["platform"],
         "locale": partial_def["locale"],
     }
-    # Override ACCEPTED_MAR_CHANNEL_IDS if needed
-    if "ACCEPTED_MAR_CHANNEL_IDS" in os.environ:
-        mar_data["ACCEPTED_MAR_CHANNEL_IDS"] = os.environ["ACCEPTED_MAR_CHANNEL_IDS"]
 
     for filename in check_channels_in_files:
-        validate_mar_channel_id(filename, mar_data["ACCEPTED_MAR_CHANNEL_IDS"])
+        validate_mar_channel_id(filename, mar_data["MAR_CHANNEL_ID"])
 
     for field in ("update_number", "previousVersion", "previousBuildNumber",
                   "toVersion", "toBuildNumber"):

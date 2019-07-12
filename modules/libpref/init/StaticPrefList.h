@@ -5880,6 +5880,23 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+#if defined(XP_LINUX) && !defined(ANDROID)
+# define PREF_VALUE true
+#elif defined(XP_WIN) && !defined(_ARM64_)
+# define PREF_VALUE false
+#elif defined(XP_MACOSX)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  Live,
+  "media.rdd-wav.enabled",
+   media_rdd_wav_enabled,
+  RelaxedAtomicBool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 #ifdef ANDROID
 
 // Enable the MediaCodec PlatformDecoderModule by default.
@@ -6976,6 +6993,18 @@ VARCACHE_PREF(
   "nglayout.debug.widget_update_flashing",
    nglayout_debug_widget_update_flashing,
   RelaxedAtomicBool, false
+)
+
+//---------------------------------------------------------------------------
+// Prefs starting with "plain_text."
+//---------------------------------------------------------------------------
+
+// When false, text in plaintext documents does not wrap long lines.
+VARCACHE_PREF(
+  Live,
+  "plain_text.wrap_long_lines",
+  plain_text_wrap_long_lines,
+  bool, true
 )
 
 //---------------------------------------------------------------------------

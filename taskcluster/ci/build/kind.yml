@@ -48,3 +48,27 @@ job-defaults:
                 release.*: release
                 esr.*: esr
                 default: null
+        # ACCEPTED_MAR_CHANNEL_IDS should usually be the same as the value MAR_CHANNEL_ID.
+        # If more than one ID is needed, then you should use a comma separated list
+        # of values.
+        # The MAR_CHANNEL_ID must not contain the following 3 characters: ",\t "
+        mar-channel-id:
+            by-release-type:
+                nightly.*: firefox-mozilla-central
+                beta:
+                    by-shipping-product:
+                        devedition: firefox-mozilla-aurora
+                        default: firefox-mozilla-beta
+                release.*: firefox-mozilla-release
+                esr.*: firefox-mozilla-esr
+                default: firefox-mozilla-central
+        accepted-mar-channel-ids:
+            by-release-type:
+                nightly.*: firefox-mozilla-central
+                beta:
+                    by-shipping-product:
+                        devedition: firefox-mozilla-aurora
+                        default: firefox-mozilla-beta,firefox-mozilla-release
+                release.*: firefox-mozilla-release
+                esr.*: firefox-mozilla-esr
+                default: firefox-mozilla-central
