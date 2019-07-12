@@ -8,7 +8,7 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
-public class WebExtensionController implements BundleEventListener {
+public class WebExtensionController {
     public interface TabDelegate {
         /**
          * Called when tabs.create is invoked, this method returns a *newly-created* session
@@ -28,10 +28,23 @@ public class WebExtensionController implements BundleEventListener {
     private GeckoRuntime mRuntime;
     private WebExtensionEventDispatcher mDispatcher;
     private TabDelegate mTabDelegate;
+    private final EventListener mEventListener;
 
     protected WebExtensionController(final GeckoRuntime runtime, final WebExtensionEventDispatcher dispatcher) {
         mRuntime = runtime;
         mDispatcher = dispatcher;
+        mEventListener = new EventListener();
+    }
+
+    private class EventListener implements BundleEventListener {
+        @Override
+        public void handleMessage(final String event, final GeckoBundle message,
+                                  final EventCallback callback) {
+            if ("GeckoView:WebExtension:NewTab".equals(event)) {
+                newTab(message, callback);
+                return;
+            }
+        }
     }
 
     @UiThread
@@ -39,14 +52,14 @@ public class WebExtensionController implements BundleEventListener {
         if (delegate == null) {
             if (mTabDelegate != null) {
                 EventDispatcher.getInstance().unregisterUiThreadListener(
-                        this,
+                        mEventListener,
                         "GeckoView:WebExtension:NewTab"
                 );
             }
         } else {
             if (mTabDelegate == null) {
                 EventDispatcher.getInstance().registerUiThreadListener(
-                        this,
+                        mEventListener,
                         "GeckoView:WebExtension:NewTab"
                 );
             }
@@ -88,14 +101,5 @@ public class WebExtensionController implements BundleEventListener {
 
             callback.sendSuccess(session.getId());
         });
-    }
-
-    @Override
-    public void handleMessage(final String event, final GeckoBundle message,
-                              final EventCallback callback) {
-        if ("GeckoView:WebExtension:NewTab".equals(event)) {
-            newTab(message, callback);
-            return;
-        }
     }
 }
