@@ -5,6 +5,7 @@
 package mozilla.components.feature.tab.collections.adapter
 
 import android.content.Context
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.readSnapshotItem
 import mozilla.components.concept.engine.Engine
@@ -31,9 +32,10 @@ internal class TabAdapter(
         engine: Engine,
         tab: Tab,
         restoreSessionId: Boolean
-    ): SessionManager.Snapshot {
-        val item = entity.getStateFile(context.filesDir).readSnapshotItem(engine, restoreSessionId)
-        return SessionManager.Snapshot(if (item == null) emptyList() else listOf(item), SessionManager.NO_SELECTION)
+    ): Session? {
+        return entity.getStateFile(context.filesDir)
+            .readSnapshotItem(engine, restoreSessionId)
+            ?.session
     }
 
     override fun equals(other: Any?): Boolean {

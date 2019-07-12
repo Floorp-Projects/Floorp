@@ -45,8 +45,8 @@ class TabCollectionDaoTest {
 
     @Test
     fun testInsertingAndReadingCollections() {
-        val collection1 = TabCollectionEntity(title = "Collection One", createdAt = 10)
-        val collection2 = TabCollectionEntity(title = "Collection Two", createdAt = 50)
+        val collection1 = TabCollectionEntity(title = "Collection One", updatedAt = 10)
+        val collection2 = TabCollectionEntity(title = "Collection Two", updatedAt = 50)
 
         tabCollectionDao.insertTabCollection(collection1)
         tabCollectionDao.insertTabCollection(collection2)
@@ -94,9 +94,9 @@ class TabCollectionDaoTest {
 
     @Test
     fun testRemovingCollections() {
-        val collection1 = TabCollectionEntity(title = "Collection One", createdAt = 10)
-        val collection2 = TabCollectionEntity(title = "Collection Two", createdAt = 50)
-        val collection3 = TabCollectionEntity(title = "Collection Three", createdAt = 75)
+        val collection1 = TabCollectionEntity(title = "Collection One", updatedAt = 10)
+        val collection2 = TabCollectionEntity(title = "Collection Two", updatedAt = 50)
+        val collection3 = TabCollectionEntity(title = "Collection Three", updatedAt = 75)
 
         collection1.id = tabCollectionDao.insertTabCollection(collection1)
         collection2.id = tabCollectionDao.insertTabCollection(collection2)
@@ -120,8 +120,8 @@ class TabCollectionDaoTest {
 
     @Test
     fun testGettingCollectionsWithLimit() {
-        val collection1 = TabCollectionEntity(title = "Collection One", createdAt = 10)
-        val collection2 = TabCollectionEntity(title = "Collection Two", createdAt = 50)
+        val collection1 = TabCollectionEntity(title = "Collection One", updatedAt = 10)
+        val collection2 = TabCollectionEntity(title = "Collection Two", updatedAt = 50)
 
         collection1.id = tabCollectionDao.insertTabCollection(collection1)
         collection2.id = tabCollectionDao.insertTabCollection(collection2)

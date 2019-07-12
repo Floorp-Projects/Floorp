@@ -184,15 +184,15 @@ class TabCollectionStorageTest {
 
             val collection = collections[0]
 
-            val snapshot = collection.restore(context, FakeEngine(), restoreSessionId = true)
-            assertEquals(2, snapshot.sessions.size)
+            val sessions = collection.restore(context, FakeEngine(), restoreSessionId = true)
+            assertEquals(2, sessions.size)
 
             // We restored the same sessions
-            assertEquals(session1, snapshot.sessions[0].session)
-            assertEquals(session2, snapshot.sessions[1].session)
+            assertEquals(session1, sessions[0])
+            assertEquals(session2, sessions[1])
 
-            assertEquals(session1.id, snapshot.sessions[0].session.id)
-            assertEquals(session2.id, snapshot.sessions[1].session.id)
+            assertEquals(session1.id, sessions[0].id)
+            assertEquals(session2.id, sessions[1].id)
         }
 
         getAllCollections().let { collections ->
@@ -200,21 +200,21 @@ class TabCollectionStorageTest {
 
             val collection = collections[0]
 
-            val snapshot = collection.restore(context, FakeEngine(), restoreSessionId = false)
-            assertEquals(2, snapshot.sessions.size)
+            val sessions = collection.restore(context, FakeEngine(), restoreSessionId = false)
+            assertEquals(2, sessions.size)
 
             // The sessions are not the same but contain the same data
-            assertNotEquals(session1, snapshot.sessions[0].session)
-            assertNotEquals(session2, snapshot.sessions[1].session)
+            assertNotEquals(session1, sessions[0])
+            assertNotEquals(session2, sessions[1])
 
-            assertNotEquals(session1.id, snapshot.sessions[0].session.id)
-            assertNotEquals(session2.id, snapshot.sessions[1].session.id)
+            assertNotEquals(session1.id, sessions[0].id)
+            assertNotEquals(session2.id, sessions[1].id)
 
-            assertEquals(session1.url, snapshot.sessions[0].session.url)
-            assertEquals(session2.url, snapshot.sessions[1].session.url)
+            assertEquals(session1.url, sessions[0].url)
+            assertEquals(session2.url, sessions[1].url)
 
-            assertEquals(session1.title, snapshot.sessions[0].session.title)
-            assertEquals(session2.title, snapshot.sessions[1].session.title)
+            assertEquals(session1.title, sessions[0].title)
+            assertEquals(session2.title, sessions[1].title)
         }
     }
 

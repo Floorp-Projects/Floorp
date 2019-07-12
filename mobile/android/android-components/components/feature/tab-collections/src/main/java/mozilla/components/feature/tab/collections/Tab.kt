@@ -5,7 +5,6 @@
 package mozilla.components.feature.tab.collections
 
 import android.content.Context
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.Engine
 
@@ -29,7 +28,7 @@ interface Tab {
     val url: String
 
     /**
-     * Restores a single tab from this collection and returns a matching [SessionManager.Snapshot].
+     * Restores a single tab from this collection and returns a matching [Session].
      *
      * @param restoreSessionId If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID
      * will be generated. An app may prefer to use a new ID if it expects sessions to get restored multiple times -
@@ -40,5 +39,5 @@ interface Tab {
         engine: Engine,
         tab: Tab,
         restoreSessionId: Boolean = false
-    ): SessionManager.Snapshot
+    ): Session?
 }
