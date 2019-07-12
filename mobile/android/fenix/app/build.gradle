@@ -307,7 +307,7 @@ dependencies {
     implementation Deps.mozilla_browser_domains
     implementation Deps.mozilla_browser_icons
     implementation Deps.mozilla_browser_menu
-    implementation Deps.mozilla_browser_engine_gecko_beta
+    implementation Deps.mozilla_browser_engine_gecko_release
     implementation Deps.mozilla_browser_search
     implementation Deps.mozilla_browser_session
     implementation Deps.mozilla_browser_storage_sync
@@ -350,10 +350,10 @@ dependencies {
 
     implementation Deps.mozilla_lib_fetch_httpurlconnection
 
-    armImplementation Gecko.geckoview_beta_arm
-    aarch64Implementation Gecko.geckoview_beta_aarch64
-    x86Implementation Gecko.geckoview_beta_x86
-    x86_64Implementation Gecko.geckoview_beta_x86_64
+    armImplementation Gecko.geckoview_release_arm
+    aarch64Implementation Gecko.geckoview_release_aarch64
+    x86Implementation Gecko.geckoview_release_x86
+    x86_64Implementation Gecko.geckoview_release_x86_64
 
     implementation Deps.androidx_legacy
     implementation Deps.androidx_paging
