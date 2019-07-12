@@ -6,7 +6,6 @@
 use ::*;
 use ffi;
 use std::ffi::CStr;
-use std::mem::{forget, MaybeUninit};
 use std::os::raw::{c_int, c_void};
 use std::ptr;
 use util::UnwrapCStr;
@@ -96,15 +95,15 @@ impl Context {
     pub fn set_state_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Context, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, userdata: *mut c_void)
             where F: Fn(&Context, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, userdata);
+            let result = uninitialized::<F>()(&ctx, userdata);
             forget(ctx);
 
             result
@@ -147,15 +146,15 @@ impl Context {
     pub fn drain<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, userdata: *mut c_void)
             where F: Fn(&Context, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, userdata);
+            let result = uninitialized::<F>()(&ctx, userdata);
             forget(ctx);
 
             result
@@ -168,7 +167,7 @@ impl Context {
     pub fn rttime_new<CB>(&self, usec: USec, _: CB, userdata: *mut c_void) -> *mut ffi::pa_time_event
         where CB: Fn(&MainloopApi, *mut ffi::pa_time_event, &TimeVal, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(a: *mut ffi::pa_mainloop_api,
@@ -177,10 +176,10 @@ impl Context {
                                         userdata: *mut c_void)
             where F: Fn(&MainloopApi, *mut ffi::pa_time_event, &TimeVal, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let api = mainloop_api::from_raw_ptr(a);
             let timeval = &*tv;
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&api, e, timeval, userdata);
+            let result = uninitialized::<F>()(&api, e, timeval, userdata);
             forget(api);
 
             result
@@ -192,20 +191,20 @@ impl Context {
     pub fn get_server_info<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, Option<&ServerInfo>, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, i: *const ffi::pa_server_info, userdata: *mut c_void)
             where F: Fn(&Context, Option<&ServerInfo>, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let info = if i.is_null() {
                 None
             } else {
                 Some(&*i)
             };
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, info, userdata);
+            let result = uninitialized::<F>()(&ctx, info, userdata);
             forget(ctx);
 
             result
@@ -220,7 +219,7 @@ impl Context {
         CB: Fn(&Context, *const SinkInfo, i32, *mut c_void),
         CS: Into<Option<&'str CStr>>,
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -229,9 +228,9 @@ impl Context {
                                         userdata: *mut c_void)
             where F: Fn(&Context, *const SinkInfo, i32, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, info, eol, userdata);
+            let result = uninitialized::<F>()(&ctx, info, eol, userdata);
             forget(ctx);
 
             result
@@ -247,7 +246,7 @@ impl Context {
     pub fn get_sink_info_list<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, *const SinkInfo, i32, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -256,9 +255,9 @@ impl Context {
                                         userdata: *mut c_void)
             where F: Fn(&Context, *const SinkInfo, i32, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, info, eol, userdata);
+            let result = uninitialized::<F>()(&ctx, info, eol, userdata);
             forget(ctx);
 
             result
@@ -271,7 +270,7 @@ impl Context {
     pub fn get_sink_input_info<CB>(&self, idx: u32, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, *const SinkInputInfo, i32, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -280,9 +279,9 @@ impl Context {
                                         userdata: *mut c_void)
             where F: Fn(&Context, *const SinkInputInfo, i32, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, info, eol, userdata);
+            let result = uninitialized::<F>()(&ctx, info, eol, userdata);
             forget(ctx);
 
             result
@@ -295,7 +294,7 @@ impl Context {
     pub fn get_source_info_list<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, *const SourceInfo, i32, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -304,9 +303,9 @@ impl Context {
                                         userdata: *mut c_void)
             where F: Fn(&Context, *const SourceInfo, i32, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, info, eol, userdata);
+            let result = uninitialized::<F>()(&ctx, info, eol, userdata);
             forget(ctx);
 
             result
@@ -324,15 +323,15 @@ impl Context {
                                      -> Result<Operation>
         where CB: Fn(&Context, i32, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, success: c_int, userdata: *mut c_void)
             where F: Fn(&Context, i32, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, success, userdata);
+            let result = uninitialized::<F>()(&ctx, success, userdata);
             forget(ctx);
 
             result
@@ -345,15 +344,15 @@ impl Context {
     pub fn subscribe<CB>(&self, m: SubscriptionMask, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, i32, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, success: c_int, userdata: *mut c_void)
             where F: Fn(&Context, i32, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, success, userdata);
+            let result = uninitialized::<F>()(&ctx, success, userdata);
             forget(ctx);
 
             result
@@ -372,7 +371,7 @@ impl Context {
     pub fn set_subscribe_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Context, SubscriptionEvent, u32, *mut c_void)
     {
-        assert_eq!(::std::mem::size_of::<CB>(), 0);
+        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -381,11 +380,11 @@ impl Context {
                                         userdata: *mut c_void)
             where F: Fn(&Context, SubscriptionEvent, u32, *mut c_void)
         {
+            use std::mem::{forget, uninitialized};
             let ctx = context::from_raw_ptr(c);
             let event = SubscriptionEvent::try_from(t)
             .expect("pa_context_subscribe_cb_t passed invalid pa_subscription_event_type_t");
-            let cb = MaybeUninit::<F>::uninit();
-            let result = (*cb.as_ptr())(&ctx, event, idx, userdata);
+            let result = uninitialized::<F>()(&ctx, event, idx, userdata);
             forget(ctx);
 
             result
