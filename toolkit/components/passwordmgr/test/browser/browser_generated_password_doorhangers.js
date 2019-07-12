@@ -137,12 +137,6 @@ add_task(async function autocomplete_generated_password_auto_saved() {
           usernameInput.setUserInput("user1");
         }
       );
-
-      let confirmationHint = document.getElementById("confirmation-hint");
-      let hintPromiseShown = BrowserTestUtils.waitForEvent(
-        confirmationHint,
-        "popupshown",
-      );
       await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
       await ContentTask.spawn(
         browser,
@@ -156,21 +150,6 @@ add_task(async function autocomplete_generated_password_auto_saved() {
           );
         }
       );
-
-      // Make sure confirmation hint was shown
-      await hintPromiseShown;
-
-      Assert.equal(
-        confirmationHint.anchorNode.id,
-        "password-notification-icon",
-        "Hint should be anchored on the password notification icon"
-      );
-
-      let hintPromiseHidden = BrowserTestUtils.waitForEvent(
-        confirmationHint,
-        "popuphidden",
-      );
-      await hintPromiseHidden;
 
       // check a dismissed prompt was shown with extraAttr attribute
       let notif = getCaptureDoorhanger("password-save");
