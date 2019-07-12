@@ -131,7 +131,9 @@ async function checkInput(inputStr) {
   );
   Assert.equal(
     result.displayed.action,
-    UrlbarUtils.strings.GetStringFromName("visit"),
+    Services.strings
+      .createBundle("chrome://global/locale/autocomplete.properties")
+      .GetStringFromName("visit"),
     "Should be displaying the correct action text"
   );
 }

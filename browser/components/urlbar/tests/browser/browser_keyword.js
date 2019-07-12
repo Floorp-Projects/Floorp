@@ -87,7 +87,9 @@ add_task(async function test_display_keyword_without_query() {
   );
   Assert.equal(
     result.displayed.action,
-    UrlbarUtils.strings.GetStringFromName("visit"),
+    Services.strings
+      .createBundle("chrome://global/locale/autocomplete.properties")
+      .GetStringFromName("visit"),
     "Should have visit indicated"
   );
 });

@@ -10,10 +10,17 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "bundle", function() {
+  return Services.strings.createBundle(
+    "chrome://global/locale/autocomplete.properties"
+  );
 });
 
 /**
@@ -624,7 +631,7 @@ class UrlbarView {
     let setURL = false;
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-        action = UrlbarUtils.strings.GetStringFromName("switchToTab2");
+        action = bundle.GetStringFromName("switchToTab2");
         setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
@@ -632,10 +639,9 @@ class UrlbarView {
         setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
-        action = UrlbarUtils.strings.formatStringFromName(
-          "searchWithEngine",
-          [result.payload.engine]
-        );
+        action = bundle.formatStringFromName("searchWithEngine", [
+          result.payload.engine,
+        ]);
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
         isVisitAction = result.payload.input.trim() == result.payload.keyword;
@@ -669,7 +675,7 @@ class UrlbarView {
     }
 
     if (isVisitAction) {
-      action = UrlbarUtils.strings.GetStringFromName("visit");
+      action = bundle.GetStringFromName("visit");
       title.setAttribute("isurl", "true");
     } else {
       title.removeAttribute("isurl");
@@ -849,10 +855,9 @@ class UrlbarView {
       }
       let item = this._rows.children[i];
       let action = item.querySelector(".urlbarView-action");
-      action.textContent = UrlbarUtils.strings.formatStringFromName(
-        "searchWithEngine",
-        [(engine && engine.name) || result.payload.engine]
-      );
+      action.textContent = bundle.formatStringFromName("searchWithEngine", [
+        (engine && engine.name) || result.payload.engine,
+      ]);
       // If we just changed the engine from the original engine and it had an
       // icon, then make sure the result now uses the new engine's icon or
       // failing that the default icon.  If we changed it back to the original
