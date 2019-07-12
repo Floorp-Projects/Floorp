@@ -673,7 +673,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   unsigned numOptionalArrays = unsigned(numResumeOffsets > 0) +
                                unsigned(numScopeNotes > 0) +
                                unsigned(numTryNotes > 0);
-  size += numOptionalArrays * sizeof(uint32_t);
+  size += numOptionalArrays * sizeof(Offset);
 
   size += numResumeOffsets * sizeof(uint32_t);
   size += numScopeNotes * sizeof(ScopeNote);
@@ -709,10 +709,10 @@ void SharedScriptData::initOptionalArrays(size_t* pcursor,
                                unsigned(numTryNotes > 0);
 
   // Default-initialize the optional-offsets.
-  static_assert(alignof(SharedScriptData) >= alignof(uint32_t),
+  static_assert(alignof(SharedScriptData) >= alignof(Offset),
                 "Incompatible alignment");
-  initElements<uint32_t>(cursor, numOptionalArrays);
-  cursor += numOptionalArrays * sizeof(uint32_t);
+  initElements<Offset>(cursor, numOptionalArrays);
+  cursor += numOptionalArrays * sizeof(Offset);
 
   // Offset between optional-offsets table and the optional arrays. This is
   // later used to access the optional-offsets table as well as first optional
@@ -727,7 +727,7 @@ void SharedScriptData::initOptionalArrays(size_t* pcursor,
   // Default-initialize optional 'resumeOffsets'.
   MOZ_ASSERT(resumeOffsetsOffset() == cursor);
   if (numResumeOffsets > 0) {
-    static_assert(sizeof(uint32_t) >= alignof(uint32_t),
+    static_assert(sizeof(Offset) >= alignof(uint32_t),
                   "Incompatible alignment");
     initElements<uint32_t>(cursor, numResumeOffsets);
     cursor += numResumeOffsets * sizeof(uint32_t);

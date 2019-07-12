@@ -1533,7 +1533,6 @@ class alignas(uintptr_t) PrivateScriptData final {
 //   <SharedScriptData itself>
 // ----
 //   (REQUIRED) Flags structure
-//  codeOffset:
 //   (REQUIRED) Array of jsbytecode constituting code()
 //   (REQUIRED) Array of jssrcnote constituting notes()
 // ----
@@ -1552,28 +1551,33 @@ class alignas(uintptr_t) PrivateScriptData final {
 // NOTE: The notes() array must have been null-padded such that
 //       flags/code/notes together have uint32_t alignment.
 //
-// The 'codeOffset' and 'optArrayOffset' labels shown have their byte-offset
-// relative to 'this' stored as fields in SharedScriptData. They form the basis
-// of the indexing system.
+// The labels shown are recorded as byte-offsets relative to 'this'. This is to
+// reduce memory as well as make SharedScriptData easier to share across
+// processes.
 //
 // The L0/L1/L2/L3 labels indicate the start and end of the optional arrays.
 // Some of these labels may refer to the same location if the array between
 // them is empty. Each unique label position has an offset stored in the
 // optional-offsets table. Note that we also avoid entries for labels that
-// match 'optArrayOffset'. This is done to save memory when arrays are empty.
+// match 'optArrayOffset'. This saves memory when arrays are empty.
 //
 // The flags() data indicates (for each optional array) which entry from the
 // optional-offsets table marks the *end* of array. The array starts where the
-// previous array ends and the first array begins at 'optArrayOffset'. The
-// optional-offset table is addressed at negative indices from
+// previous array ends (with the first array beginning at 'optArrayOffset').
+// The optional-offset table is addressed at negative indices from
 // 'optArrayOffset'.
 //
 // In general, the length of each array is computed from subtracting the start
 // offset of the array from the start offset of the subsequent array. The
 // notable exception is that bytecode length is stored explicitly.
 class alignas(uint32_t) SharedScriptData final {
+  // Offsets are measured in bytes relative to 'this'.
+  using Offset = uint32_t;
+
+  Offset optArrayOffset_ = 0;
+
+  // Length of bytecode
   uint32_t codeLength_ = 0;
-  uint32_t optArrayOffset_ = 0;  // Byte-offset from 'this'
 
   // Offset of main entry point from code, after predef'ing prologue.
   uint32_t mainOffset = 0;
@@ -1631,7 +1635,7 @@ class alignas(uint32_t) SharedScriptData final {
     MOZ_ASSERT(numOffsets >= flags().scopeNotesEndIndex);
     MOZ_ASSERT(numOffsets >= flags().resumeOffsetsEndIndex);
 
-    return optArrayOffset_ - (numOffsets * sizeof(uint32_t));
+    return optArrayOffset_ - (numOffsets * sizeof(Offset));
   }
   size_t resumeOffsetsOffset() const { return optArrayOffset_; }
   size_t scopeNotesOffset() const {
@@ -1668,19 +1672,19 @@ class alignas(uint32_t) SharedScriptData final {
                    uint32_t numResumeOffsets, uint32_t numScopeNotes,
                    uint32_t numTryNotes);
 
-  void setOptionalOffset(int index, uint32_t offset) {
-    MOZ_ASSERT((index > 0) && (offset != optArrayOffset_),
-               "Implicit offset should not be stored");
-    offsetToPointer<uint32_t>(optArrayOffset_)[-index] = offset;
+  void setOptionalOffset(int index, Offset offset) {
+    MOZ_ASSERT(index > 0);
+    MOZ_ASSERT(offset != optArrayOffset_, "Do not store implicit offset");
+    offsetToPointer<Offset>(optArrayOffset_)[-index] = offset;
   }
-  uint32_t getOptionalOffset(int index) const {
+  Offset getOptionalOffset(int index) const {
     // The index 0 represents (implicitly) the offset 'optArrayOffset_'.
     if (index == 0) {
       return optArrayOffset_;
     }
 
     SharedScriptData* this_ = const_cast<SharedScriptData*>(this);
-    return this_->offsetToPointer<uint32_t>(optArrayOffset_)[-index];
+    return this_->offsetToPointer<Offset>(optArrayOffset_)[-index];
   }
 
  public:
