@@ -11,10 +11,6 @@ use internals::ast::{Container, Data, Field, Style, Variant};
 use internals::{attr, Ctxt, Derive};
 use pretend;
 
-#[cfg(feature = "deserialize_in_place")]
-use internals::ast::Repr;
-
-
 use std::collections::BTreeSet;
 
 pub fn expand_derive_deserialize(input: &syn::DeriveInput) -> Result<TokenStream, Vec<syn::Error>> {
@@ -99,7 +95,6 @@ fn precondition_no_de_lifetime(cx: &Ctxt, cont: &Container) {
     }
 }
 
-#[derive(Clone)]
 struct Parameters {
     /// Name of the type the `derive` is on.
     local: syn::Ident,
@@ -214,7 +209,6 @@ fn requires_default(field: &attr::Field, _variant: Option<&attr::Variant>) -> bo
     }
 }
 
-#[derive(Clone)]
 enum BorrowedLifetimes {
     Borrowed(BTreeSet<syn::Lifetime>),
     Static,
@@ -271,7 +265,7 @@ fn deserialize_body(cont: &Container, params: &Parameters) -> Fragment {
         deserialize_from(type_from)
     } else if let attr::Identifier::No = cont.attrs.identifier() {
         match cont.data {
-            Data::Enum(_, ref variants) => deserialize_enum(params, variants, &cont.attrs),
+            Data::Enum(ref variants) => deserialize_enum(params, variants, &cont.attrs),
             Data::Struct(Style::Struct, ref fields) => {
                 deserialize_struct(None, params, fields, &cont.attrs, None, &Untagged::No)
             }
@@ -282,7 +276,7 @@ fn deserialize_body(cont: &Container, params: &Parameters) -> Fragment {
         }
     } else {
         match cont.data {
-            Data::Enum(_, ref variants) => {
+            Data::Enum(ref variants) => {
                 deserialize_custom_identifier(params, variants, &cont.attrs)
             }
             Data::Struct(_, _) => unreachable!("checked in serde_derive_internals"),
@@ -319,14 +313,7 @@ fn deserialize_in_place_body(cont: &Container, params: &Parameters) -> Option<St
         Data::Struct(Style::Tuple, ref fields) | Data::Struct(Style::Newtype, ref fields) => {
             deserialize_tuple_in_place(None, params, fields, &cont.attrs, None)
         }
-        Data::Enum(ref repr, ref variants) => {
-            if let Some(x) = deserialize_enum_in_place(params, repr, variants, &cont.attrs) {
-                x
-            } else {
-                return None;
-            }
-        }
-        Data::Struct(Style::Unit, _) => {
+        Data::Enum(_) | Data::Struct(Style::Unit, _) => {
             return None;
         }
     };
@@ -354,7 +341,7 @@ fn deserialize_in_place_body(_cont: &Container, _params: &Parameters) -> Option<
 fn deserialize_transparent(cont: &Container, params: &Parameters) -> Fragment {
     let fields = match cont.data {
         Data::Struct(_, ref fields) => fields,
-        Data::Enum(_, _) => unreachable!(),
+        Data::Enum(_) => unreachable!(),
     };
 
     let this = &params.this;
@@ -554,28 +541,19 @@ fn deserialize_tuple_in_place(
         None
     };
 
-    let visit_seq = Stmts(deserialize_seq_in_place(params, fields, is_enum, cattrs, &expecting));
+    let visit_seq = Stmts(deserialize_seq_in_place(params, fields, cattrs, &expecting));
 
-    let visitor_expr = if is_enum {
-        quote! {
-            __Visitor {
-                place: this,
-                lifetime: _serde::export::PhantomData,
-            }
-        }
-    } else {
-        quote! {
-            __Visitor {
-                place: __place,
-                lifetime: _serde::export::PhantomData,
-            }
+    let visitor_expr = quote! {
+        __Visitor {
+            place: __place,
+            lifetime: _serde::export::PhantomData,
         }
     };
 
     let dispatch = if let Some(deserializer) = deserializer {
         quote!(_serde::Deserializer::deserialize_tuple(#deserializer, #nfields, #visitor_expr))
     } else if is_enum {
-        quote!(try!(_serde::de::VariantAccess::tuple_variant(__variant, #nfields, #visitor_expr)))
+        quote!(_serde::de::VariantAccess::tuple_variant(__variant, #nfields, #visitor_expr))
     } else if nfields == 1 {
         let type_name = cattrs.name().deserialize_name();
         quote!(_serde::Deserializer::deserialize_newtype_struct(__deserializer, #type_name, #visitor_expr))
@@ -732,11 +710,9 @@ fn deserialize_seq(
 fn deserialize_seq_in_place(
     params: &Parameters,
     fields: &[Field],
-    _increment_fields: bool,  // FIXME: Not needed anymore?
     cattrs: &attr::Container,
     expecting: &str,
 ) -> Fragment {
-    // For enums there's a secret `tag` field at the start which we shouldn't touch,
     let deserialized_count = fields
         .iter()
         .filter(|field| !field.attrs.skip_deserializing())
@@ -1063,7 +1039,7 @@ fn deserialize_struct_in_place(
         None => format!("struct {}", params.type_name()),
     };
 
-    let visit_seq = Stmts(deserialize_seq_in_place(params, fields, false, cattrs, &expecting));
+    let visit_seq = Stmts(deserialize_seq_in_place(params, fields, cattrs, &expecting));
 
     let (field_visitor, fields_stmt, visit_map) =
         deserialize_struct_as_struct_in_place_visitor(params, fields, cattrs);
@@ -1161,19 +1137,6 @@ fn deserialize_enum(
             ref content,
         } => deserialize_adjacently_tagged_enum(params, variants, cattrs, tag, content),
         attr::TagType::None => deserialize_untagged_enum(params, variants, cattrs),
-    }
-}
-
-#[cfg(feature = "deserialize_in_place")]
-fn deserialize_enum_in_place(
-    params: &Parameters,
-    repr: &Repr,
-    variants: &[Variant],
-    cattrs: &attr::Container,
-) -> Option<Fragment> {
-    match *cattrs.tag() {
-        attr::TagType::External => deserialize_externally_tagged_enum_in_place(params, repr, variants, cattrs),
-        _ => None,
     }
 }
 
@@ -1306,259 +1269,6 @@ fn deserialize_externally_tagged_enum(
     }
 }
 
-#[cfg(feature = "deserialize_in_place")]
-fn deserialize_externally_tagged_enum_in_place(
-    params: &Parameters,
-    repr: &Repr,
-    variants: &[Variant],
-    cattrs: &attr::Container,
-) -> Option<Fragment> {
-    let int_repr = repr.get_stable_rust_enum_layout().map(|int_repr| {
-        let int_repr = Ident::new(int_repr, Span::call_site());
-        quote!(#[repr(#int_repr)])
-    });
-
-    let unit_variant = variants.iter().position(|variant| is_unit(variant));
-    let non_unit_variant = variants.iter().enumerate().find(|&(_, variant)| !is_unit(variant));
-
-    // We need an int_repr, unit variant, and a non-unit variant to proceed
-    if int_repr.is_none() || unit_variant.is_none() || non_unit_variant.is_none() {
-        return None;
-    }
-
-    let unit_index = unit_variant.unwrap();
-    let (non_unit_index, non_unit_variant) = non_unit_variant.unwrap();
-    let int_repr = int_repr.unwrap();
-
-    let this = &params.this;
-    let (de_impl_generics, de_ty_generics, ty_generics, where_clause) = split_with_de_lifetime(params,);
-    let delife = params.borrowed.de_lifetime();
-
-    let type_name = cattrs.name().deserialize_name();
-
-    let expecting = format!("enum {}", params.type_name());
-
-    let variant_names_idents: Vec<_> = variants
-        .iter()
-        .enumerate()
-        .filter(|&(_, variant)| !variant.attrs.skip_deserializing())
-        .map(|(i, variant)| {
-            (
-                variant.attrs.name().deserialize_name(),
-                field_i(i),
-                variant.attrs.aliases(),
-            )
-        })
-        .collect();
-
-    let variants_stmt = {
-        let variant_names = variant_names_idents.iter().map(|&(ref name, _, _)| name);
-        quote! {
-            const VARIANTS: &'static [&'static str] = &[ #(#variant_names),* ];
-        }
-    };
-
-    let variant_visitor = Stmts(deserialize_generated_identifier(&variant_names_idents, cattrs, true, None),);
-
-    let non_unit_field = field_i(non_unit_index);
-    let tag_access = match non_unit_variant.style {
-        Style::Struct => {
-            quote!(repr.#non_unit_field.tag)
-        }
-        Style::Tuple | Style::Newtype => {
-            quote!(repr.#non_unit_field.0)
-        }
-        _ => unreachable!()
-    };
-
-    let mut sub_params = params.clone();
-    let variant_arms_from = variants
-        .iter()
-        .enumerate()
-        .filter(|&(_, variant)| !variant.attrs.skip_deserializing())
-        .map(
-            |(i, variant)| {
-                let variant_name = field_i(i);
-                sub_params.this = syn::Path::from(variant_name.clone());
-
-                let this_decl = if is_unit(variant) {
-                    None
-                } else {
-                    Some(quote!(let this = &mut repr.#variant_name;))
-                };
-                let block = Stmts(deserialize_externally_tagged_variant_in_place(&sub_params, variant, cattrs));
-                quote! {
-                    (__Field::#variant_name, __variant) => {
-                        {
-                            #this_decl
-                            #block;
-                        }
-                        #tag_access = __Tag::#variant_name;
-                        _serde::export::Result::Ok(())
-                    }
-                }
-            },
-        );
-
-    let all_skipped = variants
-        .iter()
-        .all(|variant| variant.attrs.skip_deserializing());
-
-    let match_variant_from = if all_skipped {
-        // This is an empty enum like `enum Impossible {}` or an enum in which
-        // all variants have `#[serde(skip_deserializing)]`.
-        quote! {
-            // FIXME: Once we drop support for Rust 1.15:
-            // let _serde::export::Err(__err) = _serde::de::EnumAccess::variant::<__Field>(__data);
-            // _serde::export::Err(__err)
-            _serde::export::Result::map(
-                _serde::de::EnumAccess::variant::<__Field>(__data),
-                |(__impossible, _)| match __impossible {})
-        }
-    } else {
-        let unit_field = field_i(unit_index);
-
-        quote! {
-            unsafe {
-                let repr = ::std::mem::transmute::<&mut #this #ty_generics, &mut __EnumRepr>(self.place);
-                #tag_access = __Tag::#unit_field;
-                match try!(_serde::de::EnumAccess::variant(__data)) {
-                    #(#variant_arms_from)*
-                }
-            }
-        }
-    };
-
-    let repr_cases = variants
-        .iter()
-        .enumerate()
-        .filter_map(
-            |(i, variant)| {
-                if is_unit(&variant) {
-                    None
-                } else {
-                    let variant_name = field_i(i);
-                    Some(quote!(#variant_name: #variant_name))
-                }
-            }
-        );
-
-    let tag_cases = variants
-        .iter()
-        .enumerate()
-        .map(
-            |(i, _variant)| {
-                let variant_name = field_i(i);
-
-                quote!(#variant_name)
-            }
-        );
-
-
-    let repr_payloads = variants
-        .iter()
-        .enumerate()
-        .filter_map(
-            |(i, variant)| {
-                let variant_name = field_i(i);
-                match variant.style {
-                    Style::Struct => {
-                        let fields = variant.fields.iter().enumerate().map(|(j, field)| {
-                            let field_name = field_i(j);
-                            let field_ty = field.ty;
-                            quote!(#field_name: #field_ty)
-                        });
-
-                        let payload = quote! {
-                            #[repr(C)]
-                            #[derive(Copy, Clone)]
-                            #[allow(non_camel_case_types)]
-                            struct #variant_name #ty_generics {
-                                tag: __Tag,
-                                #(#fields),*
-                            }
-                        };
-                        Some(payload)
-                    }
-                    Style::Tuple | Style::Newtype => {
-                        let fields = variant.fields.iter().map(|field| {
-                            let field_ty = field.ty;
-                            quote!(#field_ty)
-                        });
-
-                        let payload = quote! {
-                            #[repr(C)]
-                            #[derive(Copy, Clone)]
-                            #[allow(non_camel_case_types)]
-                            struct #variant_name #ty_generics (
-                                __Tag,
-                                #(#fields),*
-
-                            );
-                        };
-                        Some(payload)
-                    }
-                    Style::Unit => None,
-                }
-
-            }
-        );
-
-    let raw_repr = quote! {
-        #[repr(C)]
-        #[allow(non_camel_case_types)]
-        union __EnumRepr #ty_generics {
-            #(#repr_cases),*
-        }
-
-        #int_repr
-        #[derive(Copy, Clone)]
-        #[allow(non_camel_case_types)]
-        enum __Tag {
-            #(#tag_cases),*
-        }
-
-        #(#repr_payloads)*
-    };
-
-    let de_from_impl_generics = de_impl_generics.in_place();
-    let de_from_ty_generics = de_ty_generics.in_place();
-    let dest_life = place_lifetime();
-
-    Some(quote_block! {
-        #variant_visitor
-
-        struct __Visitor #de_from_impl_generics #where_clause {
-            place: &#dest_life mut #this #ty_generics,
-            lifetime: _serde::export::PhantomData<&#delife ()>,
-        }
-
-        impl #de_from_impl_generics _serde::de::Visitor<#delife> for __Visitor #de_from_ty_generics #where_clause {
-            type Value = ();
-
-            fn expecting(&self, formatter: &mut _serde::export::Formatter) -> _serde::export::fmt::Result {
-                _serde::export::Formatter::write_str(formatter, #expecting)
-            }
-
-            fn visit_enum<__A>(self, __data: __A) -> _serde::export::Result<Self::Value, __A::Error>
-                where __A: _serde::de::EnumAccess<#delife>
-            {
-                #raw_repr
-
-                #match_variant_from
-            }
-        }
-
-        #variants_stmt
-
-        _serde::Deserializer::deserialize_enum(__deserializer, #type_name, VARIANTS,
-                                               __Visitor {
-                                                   place: __place,
-                                                   lifetime: _serde::export::PhantomData,
-                                               })
-    })
-}
-
 fn deserialize_internally_tagged_enum(
     params: &Parameters,
     variants: &[Variant],
@@ -1656,6 +1366,13 @@ fn deserialize_adjacently_tagged_enum(
             content: #content,
         }
     };
+
+    fn is_unit(variant: &Variant) -> bool {
+        match variant.style {
+            Style::Unit => true,
+            Style::Struct | Style::Tuple | Style::Newtype => false,
+        }
+    }
 
     let mut missing_content = quote! {
         _serde::export::Err(<__A::Error as _serde::de::Error>::missing_field(#content))
@@ -1971,46 +1688,6 @@ fn deserialize_externally_tagged_variant(
     }
 }
 
-#[cfg(feature = "deserialize_in_place")]
-fn deserialize_externally_tagged_variant_in_place(
-    params: &Parameters,
-    variant: &Variant,
-    cattrs: &attr::Container,
-) -> Fragment {
-    if let Some(_path) = variant.attrs.deserialize_with() {
-        unimplemented!()
-        /*
-        let (wrapper, wrapper_ty, unwrap_fn) =
-            wrap_deserialize_variant_with(params, &variant, path);
-        return quote_block! {
-            #wrapper
-            _serde::export::Result::map(
-                _serde::de::VariantAccess::newtype_variant::<#wrapper_ty>(__variant), #unwrap_fn)
-        };
-        */
-    }
-
-    let variant_ident = &variant.ident;
-
-    match variant.style {
-        Style::Unit => {
-            quote_block! {
-                try!(_serde::de::VariantAccess::unit_variant(__variant));
-            }
-        }
-        Style::Newtype => {
-            deserialize_externally_tagged_newtype_variant_in_place(variant_ident, params, &variant.fields[0])
-        }
-        Style::Tuple => {
-            deserialize_tuple_in_place(Some(variant_ident.clone()), params, &variant.fields, cattrs, None)
-        }
-        Style::Struct => {
-            unimplemented!()
-            // deserialize_struct(None, params, &variant.fields, cattrs, None, Untagged::No).0
-        }
-    }
-}
-
 fn deserialize_internally_tagged_variant(
     params: &Parameters,
     variant: &Variant,
@@ -2131,34 +1808,6 @@ fn deserialize_externally_tagged_newtype_variant(
                     _serde::de::VariantAccess::newtype_variant::<#wrapper_ty>(__variant),
                     |__wrapper| #this::#variant_ident(__wrapper.value))
             }
-        }
-    }
-}
-
-#[cfg(feature = "deserialize_in_place")]
-fn deserialize_externally_tagged_newtype_variant_in_place(
-    _variant_ident: &syn::Ident,
-    params: &Parameters,
-    field: &Field,
-) -> Fragment {
-    let _this = &params.this;
-    match field.attrs.deserialize_with() {
-        None => {
-            quote_expr! {
-                try!(_serde::de::VariantAccess::newtype_variant_seed(__variant, _serde::private::de::InPlaceSeed(&mut this.1)));
-            }
-        }
-        Some(_path) => {
-            unimplemented!();
-            /*
-            let (wrapper, wrapper_ty) = wrap_deserialize_field_with(params, field.ty, path);
-            quote_block! {
-                #wrapper
-                _serde::export::Result::map(
-                    _serde::de::VariantAccess::newtype_variant::<#wrapper_ty>(__variant),
-                    |__wrapper| #this::#variant_ident(__wrapper.value))
-            }
-            */
         }
     }
 }
@@ -3351,11 +3000,4 @@ fn split_with_de_lifetime(
     let de_ty_generics = DeTypeGenerics(params);
     let (_, ty_generics, where_clause) = params.generics.split_for_impl();
     (de_impl_generics, de_ty_generics, ty_generics, where_clause)
-}
-
-fn is_unit(variant: &Variant) -> bool {
-    match variant.style {
-        Style::Unit => true,
-        Style::Struct | Style::Tuple | Style::Newtype => false,
-    }
 }
