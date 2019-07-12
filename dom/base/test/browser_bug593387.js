@@ -12,10 +12,10 @@ add_task(async function test() {
   await SpecialPowers.pushPrefEnv({ set: [["security.csp.enable", false]] });
 
   await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "about:plugins" },
+    { gBrowser, url: "chrome://global/content/mozilla.xhtml" },
     async function(newBrowser) {
-      // Note: We load the about: page in the parent process, so this will work.
-      await ContentTask.spawn(newBrowser, null, testXFOFrameInChrome);
+      // NB: We load the chrome:// page in the parent process.
+      await testXFOFrameInChrome(newBrowser);
 
       // Run next test (try the same with a content top-level context)
       await BrowserTestUtils.loadURI(newBrowser, "http://example.com/");
@@ -26,7 +26,7 @@ add_task(async function test() {
   );
 });
 
-function testXFOFrameInChrome() {
+function testXFOFrameInChrome(newBrowser) {
   // Insert an iframe that specifies "X-Frame-Options: DENY" and verify
   // that it loads, since the top context is chrome
   var deferred = {};
@@ -34,7 +34,7 @@ function testXFOFrameInChrome() {
     deferred.resolve = resolve;
   });
 
-  var frame = content.document.createElement("iframe");
+  var frame = newBrowser.contentDocument.createElement("iframe");
   frame.src =
     "http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
   frame.addEventListener(
@@ -49,11 +49,11 @@ function testXFOFrameInChrome() {
     { capture: true, once: true }
   );
 
-  content.document.body.appendChild(frame);
+  newBrowser.contentDocument.body.appendChild(frame);
   return deferred.promise;
 }
 
-function testXFOFrameInContent() {
+function testXFOFrameInContent(newBrowser) {
   // Insert an iframe that specifies "X-Frame-Options: DENY" and verify that it
   // is blocked from loading since the top browsing context is another site
   var deferred = {};
