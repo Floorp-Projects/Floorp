@@ -2705,9 +2705,9 @@ bool CacheIRCompiler::emitLoadFunctionLengthResult() {
   // Load the length from the function's script.
   masm.loadPtr(Address(obj, JSFunction::offsetOfScript()), scratch);
   masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
-  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfSSD()), scratch);
-  masm.load16ZeroExtend(Address(scratch, SharedScriptData::offsetOfFunLength()),
-                        scratch);
+  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfISD()), scratch);
+  masm.load16ZeroExtend(
+      Address(scratch, ImmutableScriptData::offsetOfFunLength()), scratch);
 
   masm.bind(&done);
   EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
