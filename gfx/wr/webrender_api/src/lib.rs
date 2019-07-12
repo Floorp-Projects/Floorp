@@ -15,7 +15,6 @@
 #![cfg_attr(feature = "cargo-clippy", allow(float_cmp, too_many_arguments, unreadable_literal))]
 
 extern crate app_units;
-extern crate bincode;
 #[macro_use]
 extern crate bitflags;
 extern crate byteorder;
