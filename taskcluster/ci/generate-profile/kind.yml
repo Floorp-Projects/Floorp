@@ -20,7 +20,7 @@ transforms:
 job-defaults:
     treeherder:
         symbol: Bpgo(run)
-        kind: test
+        kind: build
         tier: 1
 
 jobs:
