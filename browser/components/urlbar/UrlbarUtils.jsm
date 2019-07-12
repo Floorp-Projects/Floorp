@@ -432,6 +432,12 @@ XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {
   return PlacesUtils.favicons.defaultFavicon.spec;
 });
 
+XPCOMUtils.defineLazyGetter(UrlbarUtils, "strings", () => {
+  return Services.strings.createBundle(
+    "chrome://global/locale/autocomplete.properties"
+  );
+});
+
 /**
  * UrlbarQueryContext defines a user's autocomplete input from within the urlbar.
  * It supplements it with details of how the search results should be obtained
