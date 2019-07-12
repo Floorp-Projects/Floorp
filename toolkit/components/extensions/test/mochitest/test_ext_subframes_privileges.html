@@ -227,6 +227,10 @@ add_task(async function test_webext_background_remote_subframe_privileges() {
       "background-subframe.js": backgroundSubframeScript,
     },
   };
+  // Need remote webextensions to be able to load remote content from a background page.
+  if (!SpecialPowers.getBoolPref("extensions.webextensions.remote", true)) {
+    return;
+  }
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
   await extension.startup();

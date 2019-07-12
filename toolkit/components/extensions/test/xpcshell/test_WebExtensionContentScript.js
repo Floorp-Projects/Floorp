@@ -106,6 +106,11 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     // infra.
     return;
   }
+  Services.prefs.setBoolPref(
+    "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+    true
+  );
+  Services.prefs.setBoolPref("security.allow_unsafe_parent_loads", true);
 
   let baseURL = `http://localhost:${server.identity.primaryPort}/data`;
   let urls = {

@@ -54,6 +54,12 @@ add_task(async function testPageActionPopup() {
       });
     });
 
+  if (!Services.prefs.getBoolPref("extensions.webextensions.remote", true)) {
+    SpecialPowers.pushPrefEnv({
+      set: [["security.allow_unsafe_parent_loads", true]],
+    });
+  }
+
   await extension.startup();
   await extension.awaitMessage("ready");
 
