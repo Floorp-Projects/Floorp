@@ -5,8 +5,7 @@
 
 const { utils: Cu } = Components;
 const { BrowserLoader } = Cu.import(
-  "resource://devtools/client/shared/browser-loader.js",
-  {}
+  "resource://devtools/client/shared/browser-loader.js"
 );
 
 // Module Loader

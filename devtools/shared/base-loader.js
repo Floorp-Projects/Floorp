@@ -406,7 +406,7 @@ function Require(loader, requirer) {
       module = modules[uri];
     } else if (isJSMURI(uri)) {
       module = modules[uri] = Module(requirement, uri);
-      module.exports = ChromeUtils.import(uri, {});
+      module.exports = ChromeUtils.import(uri);
     } else if (isJSONURI(uri)) {
       let data;
 

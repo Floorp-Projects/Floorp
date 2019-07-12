@@ -240,10 +240,14 @@ ElementEditor.prototype = {
       clearTimeout(this.animationTimers[attrName]);
     }
 
-    flashElementOn(this.getAttributeElement(attrName));
+    flashElementOn(this.getAttributeElement(attrName), {
+      backgroundClass: "theme-bg-yellow-contrast",
+    });
 
     this.animationTimers[attrName] = setTimeout(() => {
-      flashElementOff(this.getAttributeElement(attrName));
+      flashElementOff(this.getAttributeElement(attrName), {
+        backgroundClass: "theme-bg-yellow-contrast",
+      });
     }, this.markup.CONTAINER_FLASHING_DURATION);
   },
 

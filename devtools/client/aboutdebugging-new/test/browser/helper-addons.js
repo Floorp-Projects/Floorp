@@ -51,8 +51,7 @@ function installRegularExtension(pathOrFile) {
  */
 async function installTemporaryExtension(pathOrFile, name, document) {
   const { Management } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm",
-    null
+    "resource://gre/modules/Extension.jsm"
   );
 
   info("Install temporary extension named " + name);
@@ -80,8 +79,7 @@ async function installTemporaryExtension(pathOrFile, name, document) {
 
 function createTemporaryXPI(xpiData) {
   const { ExtensionTestCommon } = ChromeUtils.import(
-    "resource://testing-common/ExtensionTestCommon.jsm",
-    {}
+    "resource://testing-common/ExtensionTestCommon.jsm"
   );
 
   const { background, files, id, name, extraProperties } = xpiData;

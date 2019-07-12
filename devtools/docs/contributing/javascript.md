@@ -33,7 +33,7 @@ For quick reference, here are some of the main code style rules:
   * getters / setters require { },
 * only import specific, explicitly-declared symbols into your namespace:
   * `const { foo, bar } = require("foo/bar");`,
-  * `const { foo, bar } = Cu.import("...", {});`,
+  * `const { foo, bar } = ChromeUtils.import("...");`,
 * use Maps, Sets, WeakMaps when possible,
 * use [template strings](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) whenever possible to avoid concatenation, allow multi-line strings, and interpolation.
 

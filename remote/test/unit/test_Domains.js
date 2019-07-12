@@ -125,23 +125,3 @@ add_test(function test_Domains_clear() {
 
   run_next_test();
 });
-
-add_test(function test_Domains_splitMethod() {
-  for (const t of [42, null, true, {}, [], undefined]) {
-    Assert.throws(
-      () => Domains.splitMethod(t),
-      /TypeError/,
-      `${typeof t} throws`
-    );
-  }
-  for (const s of ["", ".", "foo.", ".bar", "foo.bar.baz"]) {
-    Assert.throws(
-      () => Domains.splitMethod(s),
-      /Invalid method format: ".*"/,
-      `"${s}" throws`
-    );
-  }
-  deepEqual(Domains.splitMethod("foo.bar"), { domain: "foo", command: "bar" });
-
-  run_next_test();
-});

@@ -37,7 +37,9 @@ class RenderCompositor {
 
   virtual bool BeginFrame() = 0;
   virtual void EndFrame() = 0;
-  virtual void WaitForGPU() = 0;
+  // Returns false when waiting gpu tasks is failed.
+  // It might happen when rendering context is lost.
+  virtual bool WaitForGPU() { return true; }
   virtual void Pause() = 0;
   virtual bool Resume() = 0;
 
@@ -56,6 +58,8 @@ class RenderCompositor {
   widget::CompositorWidget* GetWidget() const { return mWidget; }
 
   layers::SyncObjectHost* GetSyncObject() const { return mSyncObject.get(); }
+
+  virtual bool IsContextLost();
 
  protected:
   RefPtr<widget::CompositorWidget> mWidget;

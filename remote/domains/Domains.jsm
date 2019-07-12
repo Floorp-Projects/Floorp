@@ -86,27 +86,25 @@ class Domains {
     return this.instances.size;
   }
 
+  /**
+   * Execute the given command (function) of a given domain with the given parameters.
+   * If the command doesn't exists, it will throw.
+   * It returns the returned value of the command, which is most likely a promise.
+   */
+  execute(domain, command, params) {
+    if (!this.domainSupportsMethod(domain, command)) {
+      throw new UnknownMethodError(domain, command);
+    }
+    const inst = this.get(domain);
+    return inst[command](params);
+  }
+
   /** Calls destructor on each domain and clears the cache. */
   clear() {
     for (const inst of this.instances.values()) {
       inst.destructor();
     }
     this.instances.clear();
-  }
-
-  /**
-   * Splits a method, e.g. "Browser.getVersion",
-   * into domain ("Browser") and command ("getVersion") components.
-   */
-  static splitMethod(s) {
-    const ss = s.split(".");
-    if (ss.length != 2 || ss[0].length == 0 || ss[1].length == 0) {
-      throw new TypeError(`Invalid method format: "${s}"`);
-    }
-    return {
-      domain: ss[0],
-      command: ss[1],
-    };
   }
 }
 

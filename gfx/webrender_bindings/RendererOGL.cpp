@@ -110,6 +110,9 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 
   if (!mCompositor->BeginFrame()) {
+    if (mCompositor->IsContextLost()) {
+      RenderThread::Get()->HandleDeviceReset("BeginFrame", /* aNotify */ true);
+    }
     return false;
   }
 
@@ -172,7 +175,13 @@ void RendererOGL::CheckGraphicsResetStatus() {
   }
 }
 
-void RendererOGL::WaitForGPU() { mCompositor->WaitForGPU(); }
+void RendererOGL::WaitForGPU() {
+  if (!mCompositor->WaitForGPU()) {
+    if (mCompositor->IsContextLost()) {
+      RenderThread::Get()->HandleDeviceReset("WaitForGPU", /* aNotify */ true);
+    }
+  }
+}
 
 void RendererOGL::Pause() { mCompositor->Pause(); }
 

@@ -4,9 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import gdb
-import itertools
 from gdbpp import GeckoPrettyPrinter
+
 
 def walk_template_to_given_base(value, desired_tag_prefix):
     '''Given a value of some template subclass, walk up its ancestry until we
@@ -37,6 +39,7 @@ def walk_template_to_given_base(value, desired_tag_prefix):
             return fv
         return walk_template_to_given_base(fv, desired_tag_prefix)
     return None
+
 
 # The templates and their inheritance hierarchy form an onion of types around
 # the nsTHashtable core at the center.  All we care about is that nsTHashtable,

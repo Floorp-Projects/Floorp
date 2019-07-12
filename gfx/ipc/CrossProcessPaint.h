@@ -121,10 +121,11 @@ class CrossProcessPaint final {
       ReceivedFragmentMap;
 
   CrossProcessPaint(dom::Promise* aPromise, float aScale,
-                    nscolor aBackgroundColor, dom::WindowGlobalParent* aRoot);
+                    dom::WindowGlobalParent* aRoot);
   ~CrossProcessPaint();
 
-  void QueuePaint(dom::WindowGlobalParent* aWGP, const Maybe<IntRect>& aRect);
+  void QueuePaint(dom::WindowGlobalParent* aWGP, const Maybe<IntRect>& aRect,
+                  nscolor aBackgroundColor = NS_RGBA(0, 0, 0, 0));
 
   /// Clear the state of this paint so that it cannot be resolved or receive
   /// any paint fragments.
@@ -142,7 +143,6 @@ class CrossProcessPaint final {
   RefPtr<dom::Promise> mPromise;
   RefPtr<dom::WindowGlobalParent> mRoot;
   float mScale;
-  nscolor mBackgroundColor;
   uint32_t mPendingFragments;
   ReceivedFragmentMap mReceivedFragments;
 };

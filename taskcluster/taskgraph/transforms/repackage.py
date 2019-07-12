@@ -17,10 +17,10 @@ from taskgraph.util.schema import (
     resolve_keyed_by,
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
-from taskgraph.util.platforms import archive_format, executable_extension, architecture
+from taskgraph.util.platforms import archive_format, architecture
 from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.job import job_description_schema
-from voluptuous import Required, Optional
+from voluptuous import Required, Optional, Extra
 
 
 packaging_description_schema = schema.extend({
@@ -29,6 +29,9 @@ packaging_description_schema = schema.extend({
 
     # unique label to describe this repackaging task
     Optional('label'): basestring,
+
+    Optional('worker-type'): basestring,
+    Optional('worker'): object,
 
     # treeherder is allowed here to override any defaults we use for repackaging.  See
     # taskcluster/taskgraph/transforms/task.py for the schema details, and the
@@ -56,6 +59,7 @@ packaging_description_schema = schema.extend({
 
     # All l10n jobs use mozharness
     Required('mozharness'): {
+        Extra: object,
         # Config files passed to the mozharness script
         Required('config'): optionally_keyed_by('build-platform', [basestring]),
 
@@ -76,7 +80,7 @@ packaging_description_schema = schema.extend({
 #    from mozharness.
 # - `inputs` are passed as long-options, with the filename prefixed by
 #   `MOZ_FETCH_DIR`. The filename is interpolated by taskgraph
-#   (`{archive_format}`, `{executable_extension}`).
+#   (`{archive_format}`).
 # - `output` is passed to `--output`, with the filename prefixed by the output
 #   directory.
 PACKAGE_FORMATS = {
@@ -84,10 +88,11 @@ PACKAGE_FORMATS = {
         'args': [
             'mar',
             '--arch', '{architecture}',
+            '--mar-channel-id', '{mar-channel-id}',
         ],
         'inputs': {
             'input': 'target{archive_format}',
-            'mar': 'mar{executable_extension}',
+            'mar': 'mar-tools/mar',
         },
         'output': "target.complete.mar",
     },
@@ -95,10 +100,11 @@ PACKAGE_FORMATS = {
         'args': [
             'mar', "--format", "bz2",
             '--arch', '{architecture}',
+            '--mar-channel-id', '{mar-channel-id}',
         ],
         'inputs': {
             'input': 'target{archive_format}',
-            'mar': 'mar{executable_extension}',
+            'mar': 'mar',
         },
         'output': "target.bz2.complete.mar",
     },
@@ -205,10 +211,6 @@ def make_job_description(config, jobs):
             # repackage-signing can end up with multiple deps...
             raise NotImplementedError(
                 "Can't repackage a signing task with multiple dependencies")
-        signing_dependencies = dep_job.dependencies
-        # This is so we get the build task in our dependencies to
-        # have better beetmover support.
-        dependencies.update(signing_dependencies)
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes['repackage_type'] = 'repackage'
@@ -230,7 +232,6 @@ def make_job_description(config, jobs):
         if config.kind == 'repackage-msi':
             treeherder['symbol'] = 'MSI({})'.format(locale or 'N')
 
-        build_task = None
         signing_task = None
         repackage_signing_task = None
         for dependency in dependencies.keys():
@@ -238,20 +239,12 @@ def make_job_description(config, jobs):
                 repackage_signing_task = dependency
             elif 'signing' in dependency:
                 signing_task = dependency
-            else:
-                build_task = dependency
 
         _fetch_subst_locale = 'en-US'
         if locale:
-            # XXXCallek: todo: rewrite dependency finding
-            # Use string splice to strip out 'nightly-l10n-' .. '-<chunk>/opt'
-            # We need this additional dependency to support finding the mar binary
-            # Which is needed in order to generate a new complete.mar
-            dependencies['build'] = "build-{}/opt".format(
-                dependencies[build_task][13:dependencies[build_task].rfind('-')])
-            build_task = 'build'
             _fetch_subst_locale = locale
 
+        worker_type = job['worker-type']
         build_platform = attributes['build_platform']
 
         use_stub = attributes.get('stub-installer')
@@ -265,10 +258,10 @@ def make_job_description(config, jobs):
             command = copy.deepcopy(PACKAGE_FORMATS[format])
             substs = {
                 'archive_format': archive_format(build_platform),
-                'executable_extension': executable_extension(build_platform),
                 '_locale': _fetch_subst_locale,
                 'architecture': architecture(build_platform),
                 'version_display': config.params['version'],
+                'mar-channel-id': attributes['mar-channel-id'],
             }
             # Allow us to replace args a well, but specifying things expanded in mozharness
             # Without breaking .format and without allowing unknown through
@@ -297,31 +290,17 @@ def make_job_description(config, jobs):
             },
         })
 
-        worker = {
+        worker = job.get('worker', {})
+        worker.update({
             'chain-of-trust': True,
             'max-run-time': 7200 if build_platform.startswith('win') else 3600,
             # Don't add generic artifact directory.
             'skip-artifacts': True,
-        }
+        })
 
         if locale:
             # Make sure we specify the locale-specific upload dir
             worker.setdefault('env', {}).update(LOCALE=locale)
-
-        if build_platform.startswith('win'):
-            worker_type = 'b-win2012'
-            run['use-magic-mh-args'] = False
-            run['use-caches'] = False
-        else:
-            if build_platform.startswith(('linux', 'macosx')):
-                worker_type = 'b-linux'
-            else:
-                raise NotImplementedError(
-                    'Unsupported build_platform: "{}"'.format(build_platform)
-                )
-
-            run['tooltool-downloads'] = 'internal'
-            worker['docker-image'] = {"in-tree": "debian7-amd64-build"}
 
         worker['artifacts'] = _generate_task_output_files(
             dep_job, worker_type_implementation(config.graph_config, worker_type),
@@ -350,7 +329,7 @@ def make_job_description(config, jobs):
             'extra': job.get('extra', {}),
             'worker': worker,
             'run': run,
-            'fetches': _generate_download_config(dep_job, build_platform, build_task,
+            'fetches': _generate_download_config(dep_job, build_platform,
                                                  signing_task, repackage_signing_task,
                                                  locale=locale,
                                                  project=config.params["project"],
@@ -367,7 +346,7 @@ def make_job_description(config, jobs):
         yield task
 
 
-def _generate_download_config(task, build_platform, build_task, signing_task,
+def _generate_download_config(task, build_platform, signing_task,
                               repackage_signing_task, locale=None, project=None,
                               existing_fetch=None):
     locale_path = '{}/'.format(locale) if locale else ''
@@ -389,9 +368,6 @@ def _generate_download_config(task, build_platform, build_task, signing_task,
                     'extract': False,
                 },
             ],
-            build_task: [
-                'host/bin/mar',
-            ],
         })
     elif build_platform.startswith('win'):
         fetch.update({
@@ -401,9 +377,6 @@ def _generate_download_config(task, build_platform, build_task, signing_task,
                     'extract': False,
                 },
                 '{}setup.exe'.format(locale_path),
-            ],
-            build_task: [
-                'host/bin/mar.exe',
             ],
         })
 

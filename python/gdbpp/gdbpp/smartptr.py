@@ -4,8 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import gdb
+from __future__ import absolute_import
+
 from gdbpp import GeckoPrettyPrinter
+
 
 @GeckoPrettyPrinter('nsWeakPtr', '^nsCOMPtr<nsIWeakReference>$')
 class weak_ptr_printer(object):
@@ -24,6 +26,7 @@ class weak_ptr_printer(object):
 
         return '[(%s) %s]' % (weak_ptr.dynamic_type, weak_ptr)
 
+
 @GeckoPrettyPrinter('mozilla::StaticAutoPtr', '^mozilla::StaticAutoPtr<.*>$')
 @GeckoPrettyPrinter('mozilla::StaticRefPtr', '^mozilla::StaticRefPtr<.*>$')
 @GeckoPrettyPrinter('nsAutoPtr', '^nsAutoPtr<.*>$')
@@ -40,6 +43,7 @@ class smartptr_printer(object):
             type_name = str(self.value.dereference().dynamic_type.pointer())
 
         return '[(%s) %s]' % (type_name, str(self.value))
+
 
 @GeckoPrettyPrinter('UniquePtr', '^mozilla::UniquePtr<.*>$')
 class uniqueptr_printer(object):

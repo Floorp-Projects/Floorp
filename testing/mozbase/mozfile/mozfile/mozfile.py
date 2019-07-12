@@ -97,10 +97,10 @@ def extract(src, dest=None):
         os.makedirs(dest)
     assert not os.path.isfile(dest), "dest cannot be a file"
 
-    if zipfile.is_zipfile(src):
-        namelist = extract_zip(src, dest)
-    elif tarfile.is_tarfile(src):
+    if tarfile.is_tarfile(src):
         namelist = extract_tarball(src, dest)
+    elif zipfile.is_zipfile(src):
+        namelist = extract_zip(src, dest)
     else:
         raise Exception("mozfile.extract: no archive format found for '%s'" %
                         src)

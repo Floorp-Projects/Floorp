@@ -8,7 +8,6 @@
   background: url('#{$image-path}trailhead/accounts-form-bg.jpg') bottom / cover;
   color: $white;
   height: auto;
-  top: 100px;
 
   a {
     color: $white;
@@ -264,7 +263,6 @@
 
 .trailheadCards {
   background: var(--trailhead-cards-background-color);
-  max-height: 1000px;
   overflow: hidden;
   text-align: center;
   transition: max-height 0.5s $photon-easing;
@@ -321,6 +319,7 @@
   opacity: 0;
   transition: opacity 0.4s;
   transition-delay: 0.1s;
+  grid-auto-rows: 1fr;
 
   &.show {
     opacity: 1;

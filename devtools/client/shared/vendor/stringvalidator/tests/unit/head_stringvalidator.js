@@ -1,6 +1,6 @@
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 this.validator = require("devtools/client/shared/vendor/stringvalidator/validator");
 

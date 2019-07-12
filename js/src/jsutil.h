@@ -324,9 +324,7 @@ static MOZ_ALWAYS_INLINE void SetMemCheckKind(void* ptr, size_t bytes,
 
 namespace js {
 
-// Unconditionally poison a region on memory.
-static inline void AlwaysPoison(void* ptr, uint8_t value, size_t num,
-                                MemCheckKind kind) {
+static inline void PoisonImpl(void* ptr, uint8_t value, size_t num) {
   // Without a valid Value tag, a poisoned Value may look like a valid
   // floating point number. To ensure that we crash more readily when
   // observing a poisoned Value, we make the poison an invalid ObjectValue.
@@ -351,7 +349,12 @@ static inline void AlwaysPoison(void* ptr, uint8_t value, size_t num,
 #else   // !DEBUG
   memset(ptr, value, num);
 #endif  // !DEBUG
+}
 
+// Unconditionally poison a region on memory.
+static inline void AlwaysPoison(void* ptr, uint8_t value, size_t num,
+                                MemCheckKind kind) {
+  PoisonImpl(ptr, value, num);
   SetMemCheckKind(ptr, num, kind);
 }
 
@@ -363,11 +366,12 @@ extern bool gDisablePoisoning;
 // environment variable.
 static inline void Poison(void* ptr, uint8_t value, size_t num,
                           MemCheckKind kind) {
-#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
+#if defined(JS_GC_POISONING)
   if (!js::gDisablePoisoning) {
-    AlwaysPoison(ptr, value, num, kind);
+    PoisonImpl(ptr, value, num);
   }
 #endif
+  SetMemCheckKind(ptr, num, kind);
 }
 
 // Poison a region of memory in debug builds. Can be disabled by setting the
@@ -376,6 +380,8 @@ static inline void DebugOnlyPoison(void* ptr, uint8_t value, size_t num,
                                    MemCheckKind kind) {
 #if defined(DEBUG)
   Poison(ptr, value, num, kind);
+#else
+  SetMemCheckKind(ptr, num, kind);
 #endif
 }
 

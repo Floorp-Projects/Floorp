@@ -4,9 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import gdb
-import itertools
+from __future__ import absolute_import
+
 from gdbpp import GeckoPrettyPrinter
+
 
 # mfbt's LinkedList<T> is a doubly-linked list where the items in the list store
 # the next/prev pointers as part of themselves rather than the list structure be

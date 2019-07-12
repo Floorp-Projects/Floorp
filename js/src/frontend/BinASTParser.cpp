@@ -2796,11 +2796,14 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
       Context(FieldContext(
           BinASTInterfaceAndField::EagerFunctionDeclaration__Contents))));
   MOZ_TRY(prependDirectivesToBody(body, directives));
+  uint32_t nargs = params->count();
+
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
-  BINJS_MOZ_TRY_DECL(result,
-                     buildFunction(start, kind, name, params, bodyScope));
+  BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
+  MOZ_TRY(setFunctionParametersAndBody(result, params, bodyScope));
+  MOZ_TRY(finishEagerFunction(funbox, nargs));
   return result;
 }
 
@@ -2876,11 +2879,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
       Context(FieldContext(
           BinASTInterfaceAndField::EagerFunctionExpression__Contents))));
   MOZ_TRY(prependDirectivesToBody(body, directives));
+  uint32_t nargs = params->count();
+
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
-  BINJS_MOZ_TRY_DECL(result,
-                     buildFunction(start, kind, name, params, bodyScope));
+  BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
+  MOZ_TRY(setFunctionParametersAndBody(result, params, bodyScope));
+  MOZ_TRY(finishEagerFunction(funbox, nargs));
   return result;
 }
 
@@ -2937,13 +2943,16 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
       length, &params, &body,
       Context(FieldContext(BinASTInterfaceAndField::EagerGetter__Contents))));
   MOZ_TRY(prependDirectivesToBody(body, directives));
+  uint32_t nargs = params->count();
+
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
-  BINJS_MOZ_TRY_DECL(method,
-                     buildFunction(start, kind, name, params, bodyScope));
+  BINJS_MOZ_TRY_DECL(method, makeEmptyFunctionNode(start, kind, funbox));
+  MOZ_TRY(setFunctionParametersAndBody(method, params, bodyScope));
   BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
+  MOZ_TRY(finishEagerFunction(funbox, nargs));
   return result;
 }
 
@@ -3015,13 +3024,16 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
       length, &params, &body,
       Context(FieldContext(BinASTInterfaceAndField::EagerMethod__Contents))));
   MOZ_TRY(prependDirectivesToBody(body, directives));
+  uint32_t nargs = params->count();
+
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
-  BINJS_MOZ_TRY_DECL(method,
-                     buildFunction(start, kind, name, params, bodyScope));
+  BINJS_MOZ_TRY_DECL(method, makeEmptyFunctionNode(start, kind, funbox));
+  MOZ_TRY(setFunctionParametersAndBody(method, params, bodyScope));
   BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
+  MOZ_TRY(finishEagerFunction(funbox, nargs));
   return result;
 }
 
@@ -3082,13 +3094,16 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
       length, &params, &body,
       Context(FieldContext(BinASTInterfaceAndField::EagerSetter__Contents))));
   MOZ_TRY(prependDirectivesToBody(body, directives));
+  uint32_t nargs = params->count();
+
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
-  BINJS_MOZ_TRY_DECL(method,
-                     buildFunction(start, kind, name, params, bodyScope));
+  BINJS_MOZ_TRY_DECL(method, makeEmptyFunctionNode(start, kind, funbox));
+  MOZ_TRY(setFunctionParametersAndBody(method, params, bodyScope));
   BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
+  MOZ_TRY(finishEagerFunction(funbox, nargs));
   return result;
 }
 
@@ -3728,6 +3743,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(
           BinASTInterfaceAndField::LazyFunctionDeclaration__ContentsSkip))));
   // Don't parse the contents until we delazify.
 
+  // TODO: This will become incorrect in the face of ES6 features.
+  uint32_t nargs = length;
+
   BINJS_MOZ_TRY_DECL(funbox,
                      buildFunctionBox(isGenerator ? GeneratorKind::Generator
                                                   : GeneratorKind::NotGenerator,
@@ -3737,26 +3755,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(
 
   forceStrictIfNecessary(funbox, directives);
 
-  RootedFunction fun(cx_, funbox->function());
-
-  // TODO: This will become incorrect in the face of ES6 features.
-  fun->setArgCount(length);
+  BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
 
   auto skipStart = contentsSkip.startOffset();
-  BINJS_TRY_DECL(
-      lazy, LazyScript::Create(cx_, fun, sourceObject_,
-                               pc_->closedOverBindingsForLazy(),
-                               pc_->innerFunctionsForLazy, skipStart,
-                               skipStart + contentsSkip.length(), skipStart, 0,
-                               skipStart, ParseGoal::Script));
-
-  if (funbox->strict()) {
-    lazy->setStrict();
-  }
-  lazy->setIsBinAST();
-  funbox->function()->initLazyScript(lazy);
-
-  BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
+  auto skipEnd = skipStart + contentsSkip.length();
+  MOZ_TRY(finishLazyFunction(funbox, nargs, skipStart, skipEnd));
   return result;
 }
 
@@ -3809,6 +3812,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(
           BinASTInterfaceAndField::LazyFunctionExpression__ContentsSkip))));
   // Don't parse the contents until we delazify.
 
+  // TODO: This will become incorrect in the face of ES6 features.
+  uint32_t nargs = length;
+
   BINJS_MOZ_TRY_DECL(funbox,
                      buildFunctionBox(isGenerator ? GeneratorKind::Generator
                                                   : GeneratorKind::NotGenerator,
@@ -3818,26 +3824,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(
 
   forceStrictIfNecessary(funbox, directives);
 
-  RootedFunction fun(cx_, funbox->function());
-
-  // TODO: This will become incorrect in the face of ES6 features.
-  fun->setArgCount(length);
+  BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
 
   auto skipStart = contentsSkip.startOffset();
-  BINJS_TRY_DECL(
-      lazy, LazyScript::Create(cx_, fun, sourceObject_,
-                               pc_->closedOverBindingsForLazy(),
-                               pc_->innerFunctionsForLazy, skipStart,
-                               skipStart + contentsSkip.length(), skipStart, 0,
-                               skipStart, ParseGoal::Script));
-
-  if (funbox->strict()) {
-    lazy->setStrict();
-  }
-  lazy->setIsBinAST();
-  funbox->function()->initLazyScript(lazy);
-
-  BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
+  auto skipEnd = skipStart + contentsSkip.length();
+  MOZ_TRY(finishLazyFunction(funbox, nargs, skipStart, skipEnd));
   return result;
 }
 

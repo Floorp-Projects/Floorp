@@ -109,8 +109,6 @@ void RenderCompositorEGL::EndFrame() {
   }
 }
 
-void RenderCompositorEGL::WaitForGPU() {}
-
 void RenderCompositorEGL::Pause() {
 #ifdef MOZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
