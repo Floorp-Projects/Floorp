@@ -37,6 +37,9 @@ const actionTypes = {
   WS_ADD_FRAME: "WS_ADD_FRAME",
   WS_SELECT_FRAME: "WS_SELECT_FRAME",
   WS_OPEN_FRAME_DETAILS: "WS_OPEN_FRAME_DETAILS",
+  WS_CLEAR_FRAMES: "WS_CLEAR_FRAMES",
+  WS_TOGGLE_FRAME_FILTER_TYPE: "WS_TOGGLE_FRAME_FILTER_TYPE",
+  WS_SET_REQUEST_FILTER_TEXT: "WS_SET_REQUEST_FILTER_TEXT",
 };
 
 // Descriptions for what this frontend is currently doing.
@@ -163,7 +166,7 @@ const UPDATE_PROPS = [
 const PANELS = {
   COOKIES: "cookies",
   HEADERS: "headers",
-  WEBSOCKETS: "webSockets",
+  MESSAGES: "messages",
   PARAMS: "params",
   RESPONSE: "response",
   CACHE: "cache",
@@ -325,7 +328,7 @@ const WS_FRAMES_HEADERS = [
     name: "size",
   },
   {
-    name: "payload",
+    name: "data",
   },
   {
     name: "opCode",
