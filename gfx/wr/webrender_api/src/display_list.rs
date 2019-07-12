@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use bincode;
 use euclid::SideOffsets2D;
 use peek_poke::{ensure_red_zone, peek_from_slice, poke_extend_vec};
 use peek_poke::{poke_inplace_slice, poke_into_vec, Poke};
@@ -11,10 +10,10 @@ use serde::de::Deserializer;
 #[cfg(feature = "serialize")]
 use serde::ser::{Serializer, SerializeSeq};
 use serde::{Deserialize, Serialize};
-use std::io::{Read, stdout, Write};
+use std::io::{stdout, Write};
 use std::marker::PhantomData;
 use std::ops::Range;
-use std::{io, mem, ptr, slice};
+use std::mem;
 use std::collections::HashMap;
 use time::precise_time_ns;
 
@@ -751,149 +750,6 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 total_spatial_nodes,
             },
         })
-    }
-}
-
-// This is a replacement for bincode::serialize_into(&vec)
-// The default implementation Write for Vec will basically
-// call extend_from_slice(). Serde ends up calling that for every
-// field of a struct that we're serializing. extend_from_slice()
-// does not get inlined and thus we end up calling a generic memcpy()
-// implementation. If we instead reserve enough room for the serialized
-// struct in the Vec ahead of time we can rely on that and use
-// the following UnsafeVecWriter to write into the vec without
-// any checks. This writer assumes that size returned by the
-// serialize function will not change between calls to serialize_into:
-//
-// For example, the following struct will cause memory unsafety when
-// used with UnsafeVecWriter.
-//
-// struct S {
-//    first: Cell<bool>,
-// }
-//
-// impl Serialize for S {
-//    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//        where S: Serializer
-//    {
-//        if self.first.get() {
-//            self.first.set(false);
-//            ().serialize(serializer)
-//        } else {
-//            0.serialize(serializer)
-//        }
-//    }
-// }
-//
-
-struct UnsafeVecWriter(*mut u8);
-
-impl Write for UnsafeVecWriter {
-    #[inline(always)]
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        unsafe {
-            ptr::copy_nonoverlapping(buf.as_ptr(), self.0, buf.len());
-            self.0 = self.0.add(buf.len());
-        }
-        Ok(buf.len())
-    }
-
-    #[inline(always)]
-    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
-        unsafe {
-            ptr::copy_nonoverlapping(buf.as_ptr(), self.0, buf.len());
-            self.0 = self.0.add(buf.len());
-        }
-        Ok(())
-    }
-
-    #[inline(always)]
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
-}
-
-struct SizeCounter(usize);
-
-impl<'a> Write for SizeCounter {
-    #[inline(always)]
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.0 += buf.len();
-        Ok(buf.len())
-    }
-
-    #[inline(always)]
-    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
-        self.0 += buf.len();
-        Ok(())
-    }
-
-    #[inline(always)]
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
-}
-
-// This uses a (start, end) representation instead of (start, len) so that
-// only need to update a single field as we read through it. This
-// makes it easier for llvm to understand what's going on. (https://github.com/rust-lang/rust/issues/45068)
-// We update the slice only once we're done reading
-struct UnsafeReader<'a: 'b, 'b> {
-    start: *const u8,
-    end: *const u8,
-    slice: &'b mut &'a [u8],
-}
-
-impl<'a, 'b> UnsafeReader<'a, 'b> {
-    #[inline(always)]
-    fn new(buf: &'b mut &'a [u8]) -> UnsafeReader<'a, 'b> {
-        unsafe {
-            let end = buf.as_ptr().add(buf.len());
-            let start = buf.as_ptr();
-            UnsafeReader { start, end, slice: buf }
-        }
-    }
-
-    // This read implementation is significantly faster than the standard &[u8] one.
-    //
-    // First, it only supports reading exactly buf.len() bytes. This ensures that
-    // the argument to memcpy is always buf.len() and will allow a constant buf.len()
-    // to be propagated through to memcpy which LLVM will turn into explicit loads and
-    // stores. The standard implementation does a len = min(slice.len(), buf.len())
-    //
-    // Second, we only need to adjust 'start' after reading and it's only adjusted by a
-    // constant. This allows LLVM to avoid adjusting the length field after ever read
-    // and lets it be aggregated into a single adjustment.
-    #[inline(always)]
-    fn read_internal(&mut self, buf: &mut [u8]) {
-        // this is safe because we panic if start + buf.len() > end
-        unsafe {
-            assert!(self.start.add(buf.len()) <= self.end, "UnsafeReader: read past end of target");
-            ptr::copy_nonoverlapping(self.start, buf.as_mut_ptr(), buf.len());
-            self.start = self.start.add(buf.len());
-        }
-    }
-}
-
-impl<'a, 'b> Drop for UnsafeReader<'a, 'b> {
-    // this adjusts input slice so that it properly represents the amount that's left.
-    #[inline(always)]
-    fn drop(&mut self) {
-        // this is safe because we know that start and end are contained inside the original slice
-        unsafe {
-            *self.slice = slice::from_raw_parts(self.start, (self.end as usize) - (self.start as usize));
-        }
-    }
-}
-
-impl<'a, 'b> Read for UnsafeReader<'a, 'b> {
-    // These methods were not being inlined and we need them to be so that the memcpy
-    // is for a constant size
-    #[inline(always)]
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.read_internal(buf);
-        Ok(buf.len())
-    }
-    #[inline(always)]
-    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
-        self.read_internal(buf);
-        Ok(())
     }
 }
 
