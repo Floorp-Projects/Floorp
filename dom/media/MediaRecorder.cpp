@@ -201,10 +201,10 @@ NS_IMPL_RELEASE_INHERITED(MediaRecorder, DOMEventTargetHelper)
  *    Therefore, the reference dependency in gecko is:
  *    ShutdownBlocker -> Session <-> MediaRecorder, note that there is a cycle
  *    reference between Session and MediaRecorder.
- * 2) A Session is destroyed in DestroyRunnable after MediaRecorder::Stop being
- * called _and_ all encoded media data been passed to OnDataAvailable handler.
- * 3) MediaRecorder::Stop is called by user or the document is going to
- *    inactive or invisible.
+ * 2) A Session is destroyed after MediaRecorder::Stop has been called _and_ all
+ * encoded media data has been passed to OnDataAvailable handler. 3)
+ * MediaRecorder::Stop is called by user or the document is going to inactive or
+ * invisible.
  */
 class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                                public DOMMediaStream::TrackListener {
@@ -242,31 +242,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
   };
 
-  // Notify encoder error, run in main thread task. (Bug 1095381)
-  class EncoderErrorNotifierRunnable : public Runnable {
-   public:
-    explicit EncoderErrorNotifierRunnable(Session* aSession)
-        : Runnable("dom::MediaRecorder::Session::EncoderErrorNotifierRunnable"),
-          mSession(aSession) {}
-
-    NS_IMETHOD Run() override {
-      LOG(LogLevel::Debug,
-          ("Session.ErrorNotifyRunnable s=(%p)", mSession.get()));
-      MOZ_ASSERT(NS_IsMainThread());
-
-      RefPtr<MediaRecorder> recorder = mSession->mRecorder;
-      if (!recorder) {
-        return NS_OK;
-      }
-
-      recorder->NotifyError(NS_ERROR_UNEXPECTED);
-      return NS_OK;
-    }
-
-   private:
-    RefPtr<Session> mSession;
-  };
-
   // Fire a named event, run in main thread task.
   class DispatchEventRunnable : public Runnable {
    public:
@@ -291,75 +266,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
    private:
     RefPtr<Session> mSession;
     nsString mEventName;
-  };
-
-  // Main thread task.
-  // To delete RecordingSession object.
-  class DestroyRunnable : public Runnable {
-   public:
-    explicit DestroyRunnable(Session* aSession)
-        : Runnable("dom::MediaRecorder::Session::DestroyRunnable"),
-          mSession(aSession) {}
-
-    explicit DestroyRunnable(already_AddRefed<Session> aSession)
-        : Runnable("dom::MediaRecorder::Session::DestroyRunnable"),
-          mSession(aSession) {}
-
-    NS_IMETHOD Run() override {
-      LOG(LogLevel::Debug,
-          ("Session.DestroyRunnable session refcnt = (%d) s=(%p)",
-           static_cast<int>(mSession->mRefCnt), mSession.get()));
-      MOZ_ASSERT(NS_IsMainThread() && mSession);
-      RefPtr<MediaRecorder> recorder = mSession->mRecorder;
-      if (!recorder) {
-        return NS_OK;
-      }
-      // SourceMediaStream is ended, and send out TRACK_EVENT_END notification.
-      // Read Thread will be terminate soon.
-      // We need to switch MediaRecorder to "Stop" state first to make sure
-      // MediaRecorder is not associated with this Session anymore, then, it's
-      // safe to delete this Session.
-      // Also avoid to run if this session already call stop before
-      if (mSession->mRunningState.isOk() &&
-          mSession->mRunningState.unwrap() != RunningState::Stopping &&
-          mSession->mRunningState.unwrap() != RunningState::Stopped) {
-        recorder->StopForSessionDestruction();
-        if (NS_FAILED(NS_DispatchToMainThread(
-                new DestroyRunnable(mSession.forget())))) {
-          MOZ_ASSERT(false, "NS_DispatchToMainThread failed");
-        }
-        return NS_OK;
-      }
-
-      if (mSession->mRunningState.isOk()) {
-        mSession->mRunningState = RunningState::Stopped;
-      }
-
-      // Dispatch stop event and clear MIME type.
-      mSession->mMimeType = NS_LITERAL_STRING("");
-      recorder->SetMimeType(mSession->mMimeType);
-      recorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
-
-      RefPtr<Session> session = mSession.forget();
-      session->Shutdown()->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [session]() {
-            gSessions.RemoveEntry(session);
-            if (gSessions.Count() == 0 && gMediaRecorderShutdownBlocker) {
-              // All sessions finished before shutdown, no need to keep the
-              // blocker.
-              RefPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-              barrier->RemoveBlocker(gMediaRecorderShutdownBlocker);
-              gMediaRecorderShutdownBlocker = nullptr;
-            }
-          },
-          []() { MOZ_CRASH("Not reached"); });
-      return NS_OK;
-    }
-
-   private:
-    // Call mSession::Release automatically while DestroyRunnable be destroy.
-    RefPtr<Session> mSession;
   };
 
   class EncoderListener : public MediaEncoderListener {
@@ -405,22 +311,21 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     RefPtr<Session> mSession;
   };
 
-  friend class EncoderErrorNotifierRunnable;
-  friend class DestroyRunnable;
-
  public:
   Session(MediaRecorder* aRecorder, uint32_t aTimeSlice)
       : mRecorder(aRecorder),
         mMediaStreamReady(false),
         mMainThread(mRecorder->GetOwner()->EventTargetFor(TaskCategory::Other)),
         mTimeSlice(aTimeSlice),
+        mStartTime(TimeStamp::Now()),
         mRunningState(RunningState::Idling) {
     MOZ_ASSERT(NS_IsMainThread());
 
     aRecorder->GetMimeType(mMimeType);
     mMaxMemory = Preferences::GetUint("media.recorder.max_memory",
                                       MAX_ALLOW_MEMORY_BUFFER);
-    mLastBlobTimeStamp = TimeStamp::Now();
+    mLastBlobTimeStamp = mStartTime;
+    Telemetry::ScalarAdd(Telemetry::ScalarID::MEDIARECORDER_RECORDING_COUNT, 1);
   }
 
   void PrincipalChanged(MediaStreamTrack* aTrack) override {
@@ -532,7 +437,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     if (mRunningState.isOk() &&
         mRunningState.unwrap() == RunningState::Idling) {
       LOG(LogLevel::Debug, ("Session.Stop Explicit end task %p", this));
-      // End the Session directly if there is no ExtractRunnable.
+      // End the Session directly if there is no encoder.
       DoSessionEndTask(NS_OK);
     } else if (mRunningState.isOk() &&
                (mRunningState.unwrap() == RunningState::Starting ||
@@ -577,11 +482,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
         mMainThread, __func__,
         [this, self = RefPtr<Session>(this)](
             const BlobPromise::ResolveOrRejectValue& aResult) {
-          RefPtr<MediaRecorder> recorder = mRecorder;
-          if (!recorder) {
-            return;
-          }
-
           if (aResult.IsReject()) {
             LOG(LogLevel::Warning, ("GatherBlob failed for RequestData()"));
             DoSessionEndTask(aResult.RejectValue());
@@ -589,7 +489,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           }
 
           nsresult rv =
-              recorder->CreateAndDispatchBlobEvent(aResult.ResolveValue());
+              mRecorder->CreateAndDispatchBlobEvent(aResult.ResolveValue());
           if (NS_FAILED(rv)) {
             DoSessionEndTask(NS_OK);
           }
@@ -663,7 +563,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   }
 
  private:
-  // Only DestroyRunnable is allowed to delete Session object on main thread.
   virtual ~Session() {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mShutdownPromise);
@@ -671,10 +570,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   }
 
   // Pull encoded media data from MediaEncoder and put into MutableBlobStorage.
-  // Destroy this session object in the end of this function.
   // If the bool aForceFlush is true, we will force a dispatch of a blob to
   // main thread.
-  void Extract(bool aForceFlush, Runnable* aDestroyRunnable) {
+  void Extract(bool aForceFlush) {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
     LOG(LogLevel::Debug, ("Session.Extract %p", this));
@@ -707,11 +605,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           ->Then(mMainThread, __func__,
                  [this, self = RefPtr<Session>(this)](
                      const BlobPromise::ResolveOrRejectValue& aResult) {
-                   RefPtr<MediaRecorder> recorder = mRecorder;
-                   if (!recorder) {
-                     return;
-                   }
-
                    if (aResult.IsReject()) {
                      LOG(LogLevel::Warning,
                          ("GatherBlob failed for pushing blob"));
@@ -719,16 +612,12 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                      return;
                    }
 
-                   nsresult rv = recorder->CreateAndDispatchBlobEvent(
+                   nsresult rv = mRecorder->CreateAndDispatchBlobEvent(
                        aResult.ResolveValue());
                    if (NS_FAILED(rv)) {
                      DoSessionEndTask(NS_OK);
                    }
                  });
-    } else if (aDestroyRunnable) {
-      if (NS_FAILED(NS_DispatchToMainThread(aDestroyRunnable))) {
-        MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
-      }
     }
   }
 
@@ -985,12 +874,18 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     // appropriate video keyframe interval defined in milliseconds.
     mEncoder->SetVideoKeyFrameInterval(mTimeSlice);
 
-    // Set mRunningState to Running so that ExtractRunnable/DestroyRunnable will
+    // Set mRunningState to Running so that DoSessionEndTask will
     // take the responsibility to end the session.
     mRunningState = RunningState::Starting;
   }
 
-  // application should get blob and onstop event
+  // This is the task that will stop recording per spec:
+  // - Stop gathering data (this is inherently async)
+  // - Set state to "inactive"
+  // - Fire an error event, if NS_FAILED(rv)
+  // - Discard blob data if rv is NS_ERROR_DOM_SECURITY_ERR
+  // - Fire a Blob event
+  // - Fire an event named stop
   void DoSessionEndTask(nsresult rv) {
     MOZ_ASSERT(NS_IsMainThread());
     if (mRunningState.isErr()) {
@@ -1004,11 +899,11 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       return;
     }
 
+    bool needsStartEvent = false;
     if (mRunningState.isOk() &&
         (mRunningState.unwrap() == RunningState::Idling ||
          mRunningState.unwrap() == RunningState::Starting)) {
-      NS_DispatchToMainThread(
-          new DispatchEventRunnable(this, NS_LITERAL_STRING("start")));
+      needsStartEvent = true;
     }
 
     if (rv == NS_OK) {
@@ -1017,33 +912,73 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       mRunningState = Err(rv);
     }
 
-    if (NS_FAILED(rv)) {
-      mRecorder->ForceInactive();
-      NS_DispatchToMainThread(NewRunnableMethod<nsresult>(
-          "dom::MediaRecorder::NotifyError", mRecorder,
-          &MediaRecorder::NotifyError, rv));
-    }
+    GatherBlob()
+        ->Then(mMainThread, __func__,
+               [this, self = RefPtr<Session>(this), rv, needsStartEvent](
+                   const BlobPromise::ResolveOrRejectValue& aResult) {
+                 if (mRecorder->mSessions.LastElement() == this) {
+                   // Set state to inactive, but only if the recorder is not
+                   // controlled by another session already.
+                   mRecorder->ForceInactive();
+                 }
 
-    RefPtr<Runnable> destroyRunnable = new DestroyRunnable(this);
+                 if (needsStartEvent) {
+                   mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("start"));
+                 }
 
-    if (rv == NS_ERROR_DOM_SECURITY_ERR) {
-      // Don't push a blob if there was a security error.
-      DebugOnly<nsresult> rv = NS_DispatchToMainThread(destroyRunnable);
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                            "NS_DispatchToMainThread DestroyRunnable failed");
-    } else {
-      DebugOnly<nsresult> rv = mEncoderThread->Dispatch(
-          NewRunnableMethod<bool, StoreRefPtrPassByPtr<Runnable>>(
-              "mozilla::MediaRecorder::Session::Extract", this,
-              &Session::Extract, true, std::move(destroyRunnable)));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    }
+                 // If there was an error, Fire the appropriate one
+                 if (NS_FAILED(rv)) {
+                   mRecorder->NotifyError(rv);
+                 }
+
+                 // Fire a blob event named dataavailable
+                 RefPtr<Blob> blob;
+                 if (rv == NS_ERROR_DOM_SECURITY_ERR || aResult.IsReject()) {
+                   // In case of SecurityError, the blob data must be discarded.
+                   // We create a new empty one and throw the blob with its data
+                   // away.
+                   // In case we failed to gather blob data, we create an empty
+                   // memory blob instead.
+                   blob = Blob::CreateEmptyBlob(mRecorder->GetParentObject(),
+                                                mMimeType);
+                 } else {
+                   blob = aResult.ResolveValue();
+                 }
+                 if (NS_FAILED(mRecorder->CreateAndDispatchBlobEvent(blob))) {
+                   // Failed to dispatch blob event. That's unexpected. It's
+                   // probably all right to fire an error event if we haven't
+                   // already.
+                   if (NS_SUCCEEDED(rv)) {
+                     mRecorder->NotifyError(NS_ERROR_FAILURE);
+                   }
+                 }
+
+                 // Dispatch stop event and clear MIME type.
+                 mMimeType = NS_LITERAL_STRING("");
+                 mRecorder->SetMimeType(mMimeType);
+
+                 // Fire an event named stop
+                 mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
+
+                 // And finally, Shutdown and destroy the Session
+                 return Shutdown();
+               })
+        ->Then(mMainThread, __func__, [this, self = RefPtr<Session>(this)] {
+          gSessions.RemoveEntry(this);
+          if (gSessions.Count() == 0 && gMediaRecorderShutdownBlocker) {
+            // All sessions finished before shutdown, no need to keep the
+            // blocker.
+            RefPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+            barrier->RemoveBlocker(gMediaRecorderShutdownBlocker);
+            gMediaRecorderShutdownBlocker = nullptr;
+          }
+        });
   }
 
   void MediaEncoderInitialized() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
-    Extract(false, nullptr);
+    Extract(false);
 
     NS_DispatchToMainThread(NewRunnableFrom([self = RefPtr<Session>(this), this,
                                              mime = mEncoder->MimeType()]() {
@@ -1054,10 +989,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       mRecorder->SetMimeType(mime);
       auto state = mRunningState.unwrap();
       if (state == RunningState::Starting || state == RunningState::Stopping) {
-        if (!self->mRecorder) {
-          MOZ_ASSERT_UNREACHABLE("Recorder should be live");
-          return NS_OK;
-        }
         if (state == RunningState::Starting) {
           // We set it to Running in the runnable since we can only assign
           // mRunningState on main thread. We set it before running the start
@@ -1074,7 +1005,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   void MediaEncoderDataAvailable() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
-    Extract(false, nullptr);
+    Extract(false);
   }
 
   void MediaEncoderError() {
@@ -1088,12 +1019,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
     MOZ_ASSERT(mEncoder->IsShutdown());
 
-    // For the stop event. Let's the creation of the blob to dispatch this
-    // runnable.
-    RefPtr<Runnable> destroyRunnable = new DestroyRunnable(this);
-
-    // Forces the last blob even if it's not time for it yet.
-    Extract(true, destroyRunnable);
+    mMainThread->Dispatch(NewRunnableMethod<nsresult>(
+        "MediaRecorder::Session::MediaEncoderShutdown->DoSessionEndTask", this,
+        &Session::DoSessionEndTask, NS_OK));
 
     // Clean up.
     mEncoderListener->Forget();
@@ -1109,6 +1037,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     if (mShutdownPromise) {
       return mShutdownPromise;
     }
+
+    // This is a coarse calculation and does not reflect the duration of the
+    // final recording for reasons such as pauses. However it allows us an
+    // idea of how long people are running their recorders for.
+    TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
+    Telemetry::Accumulate(Telemetry::MEDIA_RECORDER_RECORDING_DURATION,
+                          timeDelta.ToSeconds());
 
     mShutdownPromise = ShutdownPromise::CreateAndResolve(true, __func__);
     RefPtr<Session> self = this;
@@ -1146,19 +1081,16 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     // Break the cycle reference between Session and MediaRecorder.
-    if (mRecorder) {
-      mShutdownPromise = mShutdownPromise->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [self]() {
-            self->mRecorder->RemoveSession(self);
-            self->mRecorder = nullptr;
-            return ShutdownPromise::CreateAndResolve(true, __func__);
-          },
-          []() {
-            MOZ_ASSERT_UNREACHABLE("Unexpected reject");
-            return ShutdownPromise::CreateAndReject(false, __func__);
-          });
-    }
+    mShutdownPromise = mShutdownPromise->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [self]() {
+          self->mRecorder->RemoveSession(self);
+          return ShutdownPromise::CreateAndResolve(true, __func__);
+        },
+        []() {
+          MOZ_ASSERT_UNREACHABLE("Unexpected reject");
+          return ShutdownPromise::CreateAndReject(false, __func__);
+        });
 
     if (mEncoderThread) {
       RefPtr<TaskQueue>& encoderThread = mEncoderThread;
@@ -1183,9 +1115,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     Stopped,   // Session has stopped without any error
   };
 
-  // Hold reference to MediaRecorder that ensure MediaRecorder is alive
-  // if there is an active session. Access ONLY on main thread.
-  RefPtr<MediaRecorder> mRecorder;
+  // Our associated MediaRecorder.
+  const RefPtr<MediaRecorder> mRecorder;
 
   // Stream currently recorded.
   RefPtr<DOMMediaStream> mMediaStream;
@@ -1218,8 +1149,10 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // The interval of passing encoded data from MutableBlobStorage to
   // onDataAvailable handler.
   const uint32_t mTimeSlice;
-  // The session's current main thread state. The error type gets setwhen ending
-  // a recording with an error. An NS_OK error is invalid.
+  // The time this session started, for telemetry.
+  const TimeStamp mStartTime;
+  // The session's current main thread state. The error type gets set when
+  // ending a recording with an error. An NS_OK error is invalid.
   // Main thread only.
   Result<RunningState, nsresult> mRunningState;
 };
@@ -1318,8 +1251,6 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeSlice,
   mSessions.AppendElement();
   mSessions.LastElement() = new Session(this, timeSlice);
   mSessions.LastElement()->Start();
-  mStartTime = TimeStamp::Now();
-  Telemetry::ScalarAdd(Telemetry::ScalarID::MEDIARECORDER_RECORDING_COUNT, 1);
 }
 
 void MediaRecorder::Stop(ErrorResult& aResult) {
@@ -1668,22 +1599,6 @@ void MediaRecorder::NotifyOwnerDocumentActivityChanged() {
 void MediaRecorder::ForceInactive() {
   LOG(LogLevel::Debug, ("MediaRecorder.ForceInactive %p", this));
   mState = RecordingState::Inactive;
-}
-
-void MediaRecorder::StopForSessionDestruction() {
-  LOG(LogLevel::Debug, ("MediaRecorder.StopForSessionDestruction %p", this));
-  MediaRecorderReporter::RemoveMediaRecorder(this);
-  // We do not perform a mState != RecordingState::Recording) check here as
-  // we may already be inactive due to ForceInactive().
-  mState = RecordingState::Inactive;
-  MOZ_ASSERT(mSessions.Length() > 0);
-  mSessions.LastElement()->Stop();
-  // This is a coarse calculation and does not reflect the duration of the
-  // final recording for reasons such as pauses. However it allows us an idea
-  // of how long people are running their recorders for.
-  TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
-  Telemetry::Accumulate(Telemetry::MEDIA_RECORDER_RECORDING_DURATION,
-                        timeDelta.ToSeconds());
 }
 
 void MediaRecorder::InitializeDomExceptions() {
