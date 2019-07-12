@@ -63,6 +63,11 @@ where
     pub fn to_array(&self) -> [T; 2] {
         [self.x, self.y]
     }
+
+    #[inline]
+    pub fn to_tuple(&self) -> (T, T) {
+        (self.x, self.y)
+    }
 }
 
 impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst>
@@ -263,6 +268,11 @@ where
     #[inline]
     pub fn to_array(&self) -> [T; 3] {
         [self.x, self.y, self.z]
+    }
+
+    #[inline]
+    pub fn to_tuple(&self) -> (T, T, T) {
+        (self.x, self.y, self.z)
     }
 }
 

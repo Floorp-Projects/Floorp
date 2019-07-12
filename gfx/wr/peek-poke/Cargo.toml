@@ -1,0 +1,15 @@
+[package]
+name = "peek-poke"
+version = "0.2.0"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+euclid = { version = "0.19", optional = true }
+peek-poke-derive = { version = "0.2", path = "./peek-poke-derive", optional = true }
+
+[features]
+default = ["derive"]
+derive = ["peek-poke-derive"]
+extras = ["derive", "euclid"]
