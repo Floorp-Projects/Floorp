@@ -1,0 +1,206 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+  <!-- Basic tests for the GridElementWidthResizer component. -->
+  <head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <link href="chrome://mochikit/content/tests/SimpleTest/test.css" rel="stylesheet" type="text/css"/>
+    <link href="resource://devtools/client/themes/splitters.css" rel="stylesheet" type="text/css"/>
+    <link href="resource://devtools/client/shared/components/splitter/GridElementResizer.css" rel="stylesheet" type="text/css"/>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        --theme-splitter-color: red;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-template-rows: 20px 20px 20px;
+        grid-gap: 10px;
+      }
+
+      .a,
+      .b,
+      .c,
+      .d {
+        border: 1px solid green;
+      }
+
+      header {
+        grid-column: 1 / -1;
+      }
+      .a {
+        grid-column: 1 / 2;
+        grid-row: 2 / -1;
+        min-width: 100px;
+      }
+      .b {
+        grid-column: 2 / 3;
+        grid-row: 2 / -1;
+      }
+
+      .c {
+        grid-column: 3 / 4;
+        grid-row: 2 / 3;
+      }
+
+      .d {
+        grid-column: 3 / 4;
+        grid-row: 3 / 4;
+        min-width: 150px;
+      }
+
+      .resizer-a {
+        grid-column: 1 / 2;
+        grid-row: 2 / -1;
+      }
+
+      .resizer-d {
+        grid-column: 3 / 4;
+        grid-row: 2 / -1;
+      }
+    </style>
+  </head>
+  <body>
+    <main></main>
+    <pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+const FUDGE_FACTOR = .5;
+function aboutEq(a, b) {
+  dumpn(`Checking ${a} ~= ${b}`);
+  return Math.abs(a - b) < FUDGE_FACTOR;
+}
+
+window.onload = async function () {
+  try {
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const dom = require("devtools/client/shared/vendor/react-dom-factories");
+
+    let GridElementWidthResizer = React.createFactory(browserRequire("devtools/client/shared/components/splitter/GridElementWidthResizer"));
+    ok(GridElementWidthResizer, "Should get GridElementWidthResizer");
+
+    const resizedA = [];
+    const resizedD = [];
+
+    const scene = ReactDOM.render([
+      dom.header({}, "header"),
+      dom.aside({className: "a"}, "A"),
+      GridElementWidthResizer({
+        getControlledElementNode: () => a,
+        enabled: true,
+        position: "end",
+        className: "resizer-a",
+        onResizeEnd: width => resizedA.push(width),
+      }),
+      dom.section({className: "b"}, "B"),
+      GridElementWidthResizer({
+        getControlledElementNode: () => window.document.querySelector(".b"),
+        enabled: false,
+        position: "start",
+        className: "resizer-disabled",
+      }),
+      dom.aside({className: "c"}, "C"),
+      dom.aside({className: "d"}, "D"),
+      GridElementWidthResizer({
+        getControlledElementNode: () => d,
+        enabled: true,
+        position: "start",
+        className: "resizer-d",
+        onResizeEnd: width => resizedD.push(width),
+      }),
+    ], window.document.querySelector("main"));
+
+    // wait for a bit as we may not have everything setup yet.
+    await new Promise(res => setTimeout(res, 10));
+
+    const a = window.document.querySelector(".a");
+    const d = window.document.querySelector(".d");
+
+    // Test that we properly rendered our two resizers, and not the disabled one.
+    const resizers = window.document.querySelectorAll(".grid-element-width-resizer");
+    is(resizers.length, 2, "The 2 enabled resizers are rendered");
+
+    const [resizerA, resizerD] = resizers;
+
+    ok(resizerA.classList.contains("resizer-a")
+      && resizerA.classList.contains("end"), "resizerA has expected classes");
+    ok(resizerD.classList.contains("resizer-d")
+      && resizerD.classList.contains("start"), "resizerD has expected classes");
+
+    const aBoundingRect = a.getBoundingClientRect();
+    let aOriginalWidth = aBoundingRect.width;
+
+    info("Resize element A");
+    await resize(resizerA, aBoundingRect.right + 20);
+
+    is(resizedA.length, 1, "onResizeEnd was called once");
+    is(resizedD.length, 0, "resizerD was not impacted");
+    let aWidth = a.getBoundingClientRect().width;
+    is(resizedA[0], aWidth, "onResizeEnd gives the width of the controlled element");
+    ok(aboutEq(aWidth, aOriginalWidth + 20),
+      "controlled element was resized to the expected size");
+
+    info("Resize element A below its min width");
+    await resize(resizerA, [aBoundingRect.left + 10]);
+    aWidth = a.getBoundingClientRect().width;
+    ok(aboutEq(aWidth, 100), "controlled element was resized to its min width");
+
+    info("Resize element D below its min width");
+    const dBoundingRect = d.getBoundingClientRect();
+    let dOriginalWidth = dBoundingRect.width;
+
+    await resize(resizerD, dBoundingRect.left + 100);
+    is(resizedD.length, 1, "onResizeEnd was called once for d");
+    is(resizedA.length, 2, "onResizeEnd wasn't called for a");
+    let dWidth = d.getBoundingClientRect().width;
+    is(resizedD[0], dWidth, "onResizeEnd gives the width of the controlled element");
+    ok(aboutEq(dWidth, 150), "controlled element wasn't resized below its min-width");
+
+    info("Resize element D");
+    await resize(resizerD, dBoundingRect.left - 15);
+    dWidth = d.getBoundingClientRect().width;
+    is(resizedD[1], dWidth, "onResizeEnd gives the width of the controlled element");
+    ok(aboutEq(dWidth, dOriginalWidth + 15), "element was resized");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  async function resize(resizer, clientX) {
+    info("Mouse down to start dragging");
+    synthesizeMouseAtCenter(resizer, { button: 0, type: "mousedown" }, window);
+    await SimpleTest.promiseWaitForCondition(
+      () => document.firstElementChild.classList.contains("dragging"),
+      "dragging class is never set on the root element"
+    );
+    ok(true, "The dragging class is set on the root element");
+
+    const event = new MouseEvent("mousemove", { clientX });
+    resizer.ownerDocument.dispatchEvent(event);
+
+    info("Mouse up to stop resizing");
+    synthesizeMouseAtCenter(document.body, { button: 0, type: "mouseup" }, window);
+
+    await SimpleTest.promiseWaitForCondition(
+      () => !document.firstElementChild.classList.contains("dragging"),
+      "dragging class is never removed from the root element"
+    );
+    ok(true, "The dragging class is removed from the root element");
+  }
+};
+</script>
+</pre>
+  </body>
+</html>
