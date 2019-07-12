@@ -1328,6 +1328,11 @@ void FetchBody<Derived>::GetBody(JSContext* aCx,
 
   MOZ_ASSERT(body);
 
+  // We must break the cycle between the body and the stream in case we do an
+  // early return.
+  auto raii =
+      mozilla::MakeScopeExit([&] { JS::ReadableStreamReleaseCCObject(body); });
+
   // If the body has been already consumed, we lock the stream.
   bool bodyUsed = GetBodyUsed(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -1351,6 +1356,8 @@ void FetchBody<Derived>::GetBody(JSContext* aCx,
       Follow(signalImpl);
     }
   }
+
+  raii.release();
 
   mReadableStreamBody = body;
   aBodyOut.set(mReadableStreamBody);
