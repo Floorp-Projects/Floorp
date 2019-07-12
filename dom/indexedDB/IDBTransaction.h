@@ -46,9 +46,6 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   friend class indexedDB::BackgroundCursorChild;
   friend class indexedDB::BackgroundRequestChild;
 
-  class WorkerHolder;
-  friend class WorkerHolder;
-
  public:
   enum Mode {
     READ_ONLY = 0,
