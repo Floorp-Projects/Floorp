@@ -225,28 +225,28 @@ var ControlCenter = {
     },
 
     trackingProtectionNoElements: {
-      selectors: ["#navigator-toolbox", "#identity-popup"],
+      selectors: ["#navigator-toolbox", "#protections-popup"],
       async applyConfig() {
         Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
 
         await loadPage(HTTP_PAGE);
-        await openIdentityPopup();
+        await openProtectionsPopup();
       },
     },
 
     trackingProtectionEnabled: {
-      selectors: ["#navigator-toolbox", "#identity-popup"],
+      selectors: ["#navigator-toolbox", "#protections-popup"],
       async applyConfig() {
         Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
         await UrlClassifierTestUtils.addTestTrackers();
 
         await loadPage(TRACKING_PAGE);
-        await openIdentityPopup();
+        await openProtectionsPopup();
       },
     },
 
     trackingProtectionDisabled: {
-      selectors: ["#navigator-toolbox", "#identity-popup"],
+      selectors: ["#navigator-toolbox", "#protections-popup"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow(
           "navigator:browser"
@@ -256,17 +256,16 @@ var ControlCenter = {
         await UrlClassifierTestUtils.addTestTrackers();
 
         await loadPage(TRACKING_PAGE);
-        await openIdentityPopup();
+
         // unblock the page
-        gBrowser.ownerGlobal.document
-          .querySelector("#tracking-action-unblock")
-          .click();
-        await BrowserTestUtils.browserLoaded(
+        let loaded = BrowserTestUtils.browserLoaded(
           gBrowser.selectedBrowser,
           false,
           TRACKING_PAGE
         );
-        await openIdentityPopup();
+        gBrowser.ownerGlobal.gProtectionsHandler.disableForCurrentPage();
+        await loaded;
+        await openProtectionsPopup();
       },
     },
   },
@@ -296,4 +295,16 @@ async function openIdentityPopup(expand) {
       .querySelector("#identity-popup-security-expander")
       .click();
   }
+}
+
+async function openProtectionsPopup() {
+  let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+  let gBrowser = browserWindow.gBrowser;
+  let { gProtectionsHandler } = gBrowser.ownerGlobal;
+  gProtectionsHandler._protectionsPopup.hidePopup();
+  // Disable the popup shadow on OSX until we have figured out bug 1425253.
+  if (AppConstants.platform == "macosx") {
+    gProtectionsHandler._protectionsPopup.classList.add("no-shadow");
+  }
+  gProtectionsHandler.showProtectionsPopup();
 }
