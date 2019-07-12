@@ -18,6 +18,9 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 69.0
     * `browser-engine-gecko-nightly`: GeckoView 70.0
 
+* **browser-engine-gecko-beta**
+  * Like with the nightly flavor previously (0.55.0) this component now has a hard dependency on the new [universal GeckoView build](https://bugzilla.mozilla.org/show_bug.cgi?id=1508976) that is no longer architecture specific (ARM, x86, ..). With that apps no longer need to specify the GeckoView dependency themselves and synchronize the used version with Android Components. Additionally apps can now make use of [APK splits](https://developer.android.com/studio/build/configure-apk-splits) or [Android App Bundles (AAB)](https://developer.android.com/guide/app-bundle).
+
 * **feature-media**
   * Added `MediaNotificationFeature` - a feature implementation to show an ongoing notification (keeping the app process alive) while web content is playing media.
 

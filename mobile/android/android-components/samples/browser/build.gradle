@@ -77,13 +77,18 @@ android {
             setIgnore(true)
         }
 
-        // Only allow "universal" flavors of "system" and "geckoviewNightly" engines
-        if (flavors.contains("universal") && !(flavors.contains("system") || flavors.contains("geckonightly"))) {
+        // Only allow "universal" flavors of "system", "geckoviewNightly" and "geckoBeta" engines
+        if (flavors.contains("universal") && !(flavors.contains("system") || flavors.contains("geckonightly") || flavors.contains("geckobeta"))) {
             setIgnore(true)
         }
 
         // Ignore all non-universal GeckoView Nightly builds
         if (!flavors.contains("universal") && flavors.contains("geckonightly")) {
+            setIgnore(true)
+        }
+
+        // Ignore all non-universal GeckoView Beta builds
+        if (!flavors.contains("universal") && flavors.contains("geckobeta")) {
             setIgnore(true)
         }
 
@@ -94,10 +99,6 @@ android {
 }
 
 configurations {
-    geckoBetaArmImplementation {}
-    geckoBetaX86Implementation {}
-    geckoBetaAarch64Implementation {}
-
     geckoReleaseArmImplementation {}
     geckoReleaseX86Implementation {}
     geckoReleaseAarch64Implementation {}
@@ -155,12 +156,8 @@ dependencies {
     servoArmImplementation Dependencies.mozilla_servo_arm
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
-    geckoNightlyImplementation Gecko.geckoview_nightly
 
     geckoBetaImplementation project(':browser-engine-gecko-beta')
-    geckoBetaArmImplementation Gecko.geckoview_beta_arm
-    geckoBetaX86Implementation Gecko.geckoview_beta_x86
-    geckoBetaAarch64Implementation Gecko.geckoview_beta_aarch64
 
     geckoReleaseImplementation project(':browser-engine-gecko')
     geckoReleaseArmImplementation Gecko.geckoview_release_arm

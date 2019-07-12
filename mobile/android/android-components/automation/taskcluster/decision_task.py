@@ -92,12 +92,12 @@ def create_module_tasks(module):
             "assembleOnly/Test": (
                 ["ServoArm", "ServoX86", "SystemUniversal"],
                 [
-                    "GeckoBetaAarch64", "GeckoBetaArm", "GeckoBetaX86",
+                    "GeckoBetaUniversal",
                     "GeckoNightlyUniversal",
                     "GeckoReleaseAarch64", "GeckoReleaseArm", "GeckoReleaseX86"
                 ]
             ),
-            "lintTask": "lintGeckoBetaArmDebug"
+            "lintTask": "lintGeckoNightlyUniversal"
         },
         ":support-test": {
             "lintTask": "lint"
