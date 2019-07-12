@@ -1886,5 +1886,5 @@ nsresult OggDemuxer::SeekBisection(TrackInfo::TrackType aType, int64_t aTarget,
 }
 
 #undef OGG_DEBUG
-#undef SEEK_DEBUG
+#undef SEEK_LOG
 }  // namespace mozilla
