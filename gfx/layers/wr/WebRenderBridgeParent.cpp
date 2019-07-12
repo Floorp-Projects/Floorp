@@ -1104,6 +1104,72 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   return IPC_OK();
 }
 
+bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
+    RenderRootUpdates& aUpdates, uint32_t aPaintSequenceNumber,
+    bool* aScheduleComposite) {
+  *aScheduleComposite = false;
+  wr::TransactionBuilder txn;
+  txn.SetLowPriority(!IsRootWebRenderBridgeParent());
+
+  MOZ_ASSERT(aUpdates.mRenderRoot == wr::RenderRoot::Default ||
+             IsRootWebRenderBridgeParent());
+
+  if (!aUpdates.mScrollUpdates.empty()) {
+    UpdateAPZScrollOffsets(std::move(aUpdates.mScrollUpdates),
+                           aPaintSequenceNumber, aUpdates.mRenderRoot);
+  }
+
+  // Update WrEpoch for UpdateResources() and ProcessWebRenderParentCommands().
+  // WrEpoch is used to manage ExternalImages lifetimes in
+  // AsyncImagePipelineManager.
+  Unused << GetNextWrEpoch();
+
+  if (!UpdateResources(aUpdates.mResourceUpdates, aUpdates.mSmallShmems,
+                       aUpdates.mLargeShmems, txn)) {
+    return false;
+  }
+
+  if (!aUpdates.mCommands.IsEmpty()) {
+    mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
+    if (!ProcessWebRenderParentCommands(aUpdates.mCommands, txn,
+                                        aUpdates.mRenderRoot)) {
+      return false;
+    }
+  }
+
+  if (ShouldParentObserveEpoch()) {
+    txn.Notify(
+        wr::Checkpoint::SceneBuilt,
+        MakeUnique<ScheduleObserveLayersUpdate>(
+            mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch, true));
+  }
+
+  // Even when txn.IsResourceUpdatesEmpty() is true, there could be resource
+  // updates. It is handled by WebRenderTextureHostWrapper. In this case
+  // txn.IsRenderedFrameInvalidated() becomes true.
+  if (!txn.IsResourceUpdatesEmpty() || txn.IsRenderedFrameInvalidated()) {
+    // There are resource updates, then we update Epoch of transaction.
+    txn.UpdateEpoch(mPipelineId, mWrEpoch);
+    *aScheduleComposite = true;
+  } else {
+    // If TransactionBuilder does not have resource updates nor display list,
+    // ScheduleGenerateFrame is not triggered via SceneBuilder and there is no
+    // need to update WrEpoch.
+    // Then we want to rollback WrEpoch. See Bug 1490117.
+    RollbackWrEpoch();
+  }
+
+  if (!txn.IsEmpty()) {
+    Api(aUpdates.mRenderRoot)->SendTransaction(txn);
+  }
+
+  if (*aScheduleComposite) {
+    mAsyncImageManager->SetWillGenerateFrame(aUpdates.mRenderRoot);
+  }
+
+  return true;
+}
+
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     const FocusTarget& aFocusTarget, const uint32_t& aPaintSequenceNumber,
     nsTArray<RenderRootUpdates>&& aRenderRootUpdates,
@@ -1137,89 +1203,19 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(
       this, &aToDestroy);
 
-  wr::RenderRootArray<bool> scheduleComposite;
-
   UpdateAPZFocusState(aFocusTarget);
 
-  wr::RenderRootArray<Maybe<wr::TransactionBuilder>> txns;
+  bool scheduleAnyComposite = false;
   for (auto& update : aRenderRootUpdates) {
     MOZ_ASSERT(update.mRenderRoot == wr::RenderRoot::Default ||
                IsRootWebRenderBridgeParent());
 
-    if (!update.mScrollUpdates.empty()) {
-      UpdateAPZScrollOffsets(std::move(update.mScrollUpdates),
-                             aPaintSequenceNumber, update.mRenderRoot);
+    bool scheduleComposite = false;
+    if (!ProcessEmptyTransactionUpdates(update, aPaintSequenceNumber,
+                                        &scheduleComposite)) {
+      return IPC_FAIL(this, "Failed to process empty transaction update.");
     }
-
-    txns[update.mRenderRoot].emplace();
-    txns[update.mRenderRoot]->SetLowPriority(!IsRootWebRenderBridgeParent());
-  }
-
-  // Update WrEpoch for UpdateResources() and ProcessWebRenderParentCommands().
-  // WrEpoch is used to manage ExternalImages lifetimes in
-  // AsyncImagePipelineManager.
-  Unused << GetNextWrEpoch();
-
-  for (auto& update : aRenderRootUpdates) {
-    if (!UpdateResources(update.mResourceUpdates, update.mSmallShmems,
-                         update.mLargeShmems, *txns[update.mRenderRoot])) {
-      return IPC_FAIL(this, "Failed to deserialize resource updates");
-    }
-  }
-
-  bool compositionTimeSet = false;
-  for (auto& update : aRenderRootUpdates) {
-    if (!update.mCommands.IsEmpty()) {
-      if (!compositionTimeSet) {
-        mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-        compositionTimeSet = true;
-      }
-      if (!ProcessWebRenderParentCommands(update.mCommands,
-                                          *txns[update.mRenderRoot],
-                                          update.mRenderRoot)) {
-        return IPC_FAIL(this, "Invalid parent command found");
-      }
-    }
-
-    if (ShouldParentObserveEpoch()) {
-      txns[update.mRenderRoot]->Notify(wr::Checkpoint::SceneBuilt,
-                                       MakeUnique<ScheduleObserveLayersUpdate>(
-                                           mCompositorBridge, GetLayersId(),
-                                           mChildLayersObserverEpoch, true));
-    }
-  }
-
-  bool rollbackEpoch = true;
-  for (auto& update : aRenderRootUpdates) {
-    auto& txn = *txns[update.mRenderRoot];
-
-    // Even when txn.IsResourceUpdatesEmpty() is true, there could be resource
-    // updates. It is handled by WebRenderTextureHostWrapper. In this case
-    // txn.IsRenderedFrameInvalidated() becomes true.
-    if (!txn.IsResourceUpdatesEmpty() || txn.IsRenderedFrameInvalidated()) {
-      // There are resource updates, then we update Epoch of transaction.
-      txn.UpdateEpoch(mPipelineId, mWrEpoch);
-      scheduleComposite[update.mRenderRoot] = true;
-      rollbackEpoch = false;
-    }
-  }
-  if (rollbackEpoch) {
-    // If TransactionBuilder does not have resource updates nor display list,
-    // ScheduleGenerateFrame is not triggered via SceneBuilder and there is no
-    // need to update WrEpoch.
-    // Then we want to rollback WrEpoch. See Bug 1490117.
-    RollbackWrEpoch();
-  }
-
-  bool scheduleAnyComposite = false;
-
-  for (auto renderRoot : wr::kRenderRoots) {
-    if (txns[renderRoot] && !txns[renderRoot]->IsEmpty()) {
-      Api(renderRoot)->SendTransaction(*txns[renderRoot]);
-    }
-    if (scheduleComposite[renderRoot]) {
-      scheduleAnyComposite = true;
-    }
+    scheduleAnyComposite = scheduleAnyComposite || scheduleComposite;
   }
 
   // If we are going to kick off a new composite as a result of this
@@ -1239,12 +1235,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
                            aTxnURL, aFwdTime,
                            /* aIsFirstPaint */ false, std::move(aPayloads),
                            /* aUseForTelemetry */ scheduleAnyComposite);
-
-  for (auto renderRoot : wr::kRenderRoots) {
-    if (scheduleComposite[renderRoot]) {
-      mAsyncImageManager->SetWillGenerateFrame(renderRoot);
-    }
-  }
 
   if (scheduleAnyComposite) {
     ScheduleGenerateFrame(Nothing());

@@ -20,6 +20,7 @@
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/layers/WebRenderCompositionRecorder.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -305,6 +306,10 @@ class WebRenderBridgeParent final
       return mRenderRoot;
     }
   }
+
+  bool ProcessEmptyTransactionUpdates(RenderRootUpdates& aUpdates,
+                                      uint32_t aPaintSequenceNumber,
+                                      bool* aScheduleComposite);
 
   bool SetDisplayList(wr::RenderRoot aRenderRoot, const LayoutDeviceRect& aRect,
                       const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
