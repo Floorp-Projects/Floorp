@@ -110,14 +110,14 @@ const SPECIAL_VALUES = new Set(["none", "unset", "initial", "inherit"]);
  *        The widget container.
  * @param {String} value
  *        CSS filter value
- * @param {Function} cssIsValid
- *        Test whether css name / value is valid.
  */
-function CSSFilterEditorWidget(el, value = "", cssIsValid) {
+function CSSFilterEditorWidget(el, value = "") {
   this.doc = el.ownerDocument;
   this.win = this.doc.defaultView;
   this.el = el;
-  this._cssIsValid = cssIsValid;
+  this._cssIsValid = (name, val) => {
+    return this.win.CSS.supports(name, val);
+  };
 
   this._addButtonClick = this._addButtonClick.bind(this);
   this._removeButtonClick = this._removeButtonClick.bind(this);
