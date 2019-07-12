@@ -15,8 +15,7 @@ class TestEnginesOnRestart(MarionetteTestCase):
         super(TestEnginesOnRestart, self).setUp()
         self.marionette.enforce_gecko_prefs({
             'browser.search.log': True,
-            'browser.search.geoSpecificDefaults': False,
-            'browser.search.addonLoadTimeout': 0
+            'browser.search.geoSpecificDefaults': False
         })
 
     def get_default_search_engine(self):
