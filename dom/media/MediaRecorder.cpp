@@ -40,10 +40,6 @@
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
 
-#ifdef LOG
-#  undef LOG
-#endif
-
 mozilla::LazyLogModule gMediaRecorderLog("MediaRecorder");
 #define LOG(type, msg) MOZ_LOG(gMediaRecorderLog, type, msg)
 
@@ -1639,3 +1635,5 @@ StaticRefPtr<MediaRecorderReporter> MediaRecorderReporter::sUniqueInstance;
 
 }  // namespace dom
 }  // namespace mozilla
+
+#undef LOG
