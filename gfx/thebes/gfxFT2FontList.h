@@ -87,6 +87,8 @@ class FT2FontEntry : public gfxFontEntry {
 
   FT_MM_Var* GetMMVar() override;
 
+  void AppendToFaceList(nsCString& aFaceList, nsACString& aFamilyName);
+
   void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontListSizes* aSizes) const override;
   void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -161,8 +163,9 @@ class gfxFT2FontList : public gfxPlatformFontList {
                                    const nsCString& aEntryName,
                                    FontNameCache* aCache, bool aJarChanged);
 
-  // the defaults here are suitable for reading bundled fonts from omnijar
-  void AppendFacesFromCachedFaceList(const nsCString& aFileName,
+  // Returns true if it is able to read at least one face entry; false if no
+  // usable face entry was found.
+  bool AppendFacesFromCachedFaceList(const nsCString& aFileName,
                                      const nsCString& aFaceList,
                                      StandardFile aStdFile = kStandard);
 
