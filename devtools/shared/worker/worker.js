@@ -37,7 +37,7 @@
       ChromeWorker,
       null
     );
-    this.EXPORTED_SYMBOLS = ["DevToolsWorker"];
+    this.EXPORTED_SYMBOLS = ["DevToolsWorker", "workerify"];
   }
 }.call(this, function(
   require,

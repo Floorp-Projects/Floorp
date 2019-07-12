@@ -19,6 +19,7 @@
 #include "RemoteMediaDataDecoder.h"
 #include "RemoteVideoDecoder.h"
 #include "VorbisDecoder.h"
+#include "WAVDecoder.h"
 
 namespace mozilla {
 
@@ -41,6 +42,9 @@ bool RemoteDecoderModule::SupportsMimeType(
 #endif
   if (StaticPrefs::media_rdd_vorbis_enabled()) {
     supports |= VorbisDataDecoder::IsVorbis(aMimeType);
+  }
+  if (StaticPrefs::media_rdd_wav_enabled()) {
+    supports |= WaveDataDecoder::IsWave(aMimeType);
   }
 
   MOZ_LOG(

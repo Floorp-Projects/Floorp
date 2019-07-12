@@ -1817,7 +1817,7 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                 // H264
                 "PROFILE-LEVEL-ID" => {
                     parameters.profile_level_id = match u32::from_str_radix(parameter_val, 16)? {
-                        x @ 0...0x00ff_ffff => x,
+                        x @ 0..=0x00ff_ffff => x,
                         _ => return Err(SdpParserInternalError::Generic(
                             "The fmtp parameter 'profile-level-id' must be in range [0,0xffffff]"
                                 .to_string(),
@@ -1826,7 +1826,7 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                 }
                 "PACKETIZATION-MODE" => {
                     parameters.packetization_mode = match parameter_val.parse::<u32>()? {
-                        x @ 0...2 => x,
+                        x @ 0..=2 => x,
                         _ => {
                             return Err(SdpParserInternalError::Generic(
                                 "The fmtp parameter 'packetization-mode' must be 0,1 or 2"
@@ -1864,7 +1864,7 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
 
         for encoding in encodings {
             match encoding.parse::<u8>()? {
-                x @ 0...128 => parameters.encodings.push(x),
+                x @ 0..=128 => parameters.encodings.push(x),
                 _ => {
                     return Err(SdpParserInternalError::Generic(
                         "Red codec must be in range [0,128]".to_string(),
@@ -1881,7 +1881,7 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
         let validate_digits = |digit_option: Option<u8>| -> Option<u8> {
             match digit_option {
                 Some(x) => match x {
-                    0...100 => Some(x),
+                    0..=100 => Some(x),
                     _ => None,
                 },
                 None => None,

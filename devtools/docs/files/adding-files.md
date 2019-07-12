@@ -36,11 +36,11 @@ Example:
   * `loader.lazyRequireGetter(this, "layout", "devtools/server/actors/layout")`
   * `require("devtools/server/actors/layout")`
 
-### `Cu.import()`
+### `ChromeUtils.import()`
 
 Some older DevTools JS modules use the Gecko [JavaScript code module](https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Using) format with the file extension `.jsm`. We are trying to move away from this format, so it's unlikely you would add a new one, but you might need to import an existing one in your code.
 
-These modules are loaded using `Cu.import()`. To `import()` a file, you provide a `resource://` URL, which is exactly the source tree path.
+These modules are loaded using `ChromeUtils.import()`. To `import()` a file, you provide a `resource://` URL, which is exactly the source tree path.
 
 In more detail:
 
@@ -52,14 +52,14 @@ Example:
 
 * File: `/devtools/shared/Loader.jsm`
 * Usage:
-  * `Cu.import("resource://devtools/shared/Loader.jsm")`
+  * `const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm")`
 
 Example:
 
 * File: `/devtools/client/framework/gDevTools.jsm`
 * Usage (prefer lazy in most cases):
   * `loader.lazyImporter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm")`
-  * `Cu.import("resource://devtools/client/framework/gDevTools.jsm")`
+  * `const { gDevTools } = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm")`
 
 ## Chrome Content
 

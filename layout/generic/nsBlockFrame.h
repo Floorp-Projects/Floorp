@@ -297,23 +297,26 @@ class nsBlockFrame : public nsContainerFrame {
    * Compute the final block size of this frame.
    *
    * @param aReflowInput Data structure passed from parent during reflow.
-   * @param aReflowStatus A pointer to the reflow status for when we're finished
-   *        doing reflow. this will get set appropriately if the block-size
-   *        causes us to exceed the current available (page) block-size.
-   * @param aContentBSize The block-size of content, precomputed outside of this
-   *        function. The final block-size that is used in aMetrics will be set
-   *        to either this or the available block-size, whichever is larger, in
-   *        the case where our available block-size is constrained, and we
-   *        overflow that available block-size.
+   * @param aStatus [in/out] The reflow status for this reflow operation. When
+   *        this function is called, aStatus should represent what our status
+   *        would be as if we were shrinkwrapping our children's block-size.
+   *        This function will then adjust aStatus before returning, if our
+   *        status is different in light of our actual final block-size and
+   *        current page/column's available block-size.
+   * @param aBEndEdgeOfChildren The distance between this frame's block-start
+   *        border-edge and the block-end edge of our last child's border-box.
+   *        This is effectively our block-start border-padding plus the
+   *        block-size of our children, precomputed outside of this function.
    * @param aBorderPadding The margins representing the border padding for block
    *        frames. Can be 0.
-   * @param aFinalSize Out parameter for final block-size.
    * @param aConsumed The block-size already consumed by our previous-in-flows.
+   * @return our final block-size with respect to aReflowInput's writing-mode.
    */
-  void ComputeFinalBSize(const ReflowInput& aReflowInput,
-                         nsReflowStatus* aStatus, nscoord aContentBSize,
-                         const mozilla::LogicalMargin& aBorderPadding,
-                         mozilla::LogicalSize& aFinalSize, nscoord aConsumed);
+  nscoord ComputeFinalBSize(const ReflowInput& aReflowInput,
+                            nsReflowStatus& aStatus,
+                            nscoord aBEndEdgeOfChildren,
+                            const mozilla::LogicalMargin& aBorderPadding,
+                            nscoord aConsumed);
 
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
@@ -467,11 +470,11 @@ class nsBlockFrame : public nsContainerFrame {
 
   void ComputeFinalSize(const ReflowInput& aReflowInput,
                         BlockReflowInput& aState, ReflowOutput& aMetrics,
-                        nscoord* aBottomEdgeOfChildren);
+                        nscoord* aBEndEdgeOfChildren);
 
   void ComputeOverflowAreas(const nsRect& aBounds,
                             const nsStyleDisplay* aDisplay,
-                            nscoord aBottomEdgeOfChildren,
+                            nscoord aBEndEdgeOfChildren,
                             nsOverflowAreas& aOverflowAreas);
 
   /**

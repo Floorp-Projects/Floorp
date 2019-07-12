@@ -6,7 +6,9 @@
 
 // Test getDisplayString.
 
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 
 var gDebuggee;
 var gClient;

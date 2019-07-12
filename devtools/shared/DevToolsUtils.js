@@ -464,8 +464,7 @@ Object.defineProperty(exports, "assert", {
  */
 exports.defineLazyModuleGetter = function(object, name, resource, symbol) {
   this.defineLazyGetter(object, name, function() {
-    const temp = {};
-    ChromeUtils.import(resource, temp);
+    const temp = ChromeUtils.import(resource);
     return temp[symbol || name];
   });
 };

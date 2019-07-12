@@ -8,9 +8,8 @@ var CC = Components.Constructor;
 
 // Populate AppInfo before anything (like the shared loader) accesses
 // System.appinfo, which is a lazy getter.
-const _appInfo = {};
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", _appInfo);
-_appInfo.updateAppInfo({
+const appInfo = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+appInfo.updateAppInfo({
   ID: "devtools@tests.mozilla.org",
   name: "devtools-tests",
   version: "1",

@@ -1568,14 +1568,6 @@ gfxFontEntry* gfxFT2FontList::MakePlatformFont(const nsACString& aFontName,
                                        aFontData, aLength);
 }
 
-void gfxFT2FontList::GetFontFamilyList(
-    nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray) {
-  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<gfxFontFamily>& family = iter.Data();
-    aFamilyArray.AppendElement(family);
-  }
-}
-
 gfxFontFamily* gfxFT2FontList::CreateFontFamily(const nsACString& aName) const {
   return new FT2FontFamily(aName);
 }

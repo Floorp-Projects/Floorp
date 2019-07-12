@@ -200,13 +200,20 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
   MOZ_TRY(
       (asFinalParser()->*parseFunc)(func->nargs(), &params, &tmpBody, context));
 
+  uint32_t nargs = params->count();
+
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(body, handler_.newLexicalScope(*lexicalScopeData, tmpBody));
 
   auto binASTKind = isExpr ? BinASTKind::LazyFunctionExpression
                            : BinASTKind::LazyFunctionDeclaration;
-  return buildFunction(firstOffset, binASTKind, nullptr, params, body);
+
+  BINJS_MOZ_TRY_DECL(result,
+                     makeEmptyFunctionNode(firstOffset, binASTKind, funbox));
+  MOZ_TRY(setFunctionParametersAndBody(result, params, body));
+  MOZ_TRY(finishEagerFunction(funbox, nargs));
+  return result;
 }
 
 template <typename Tok>
@@ -326,41 +333,23 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
 }
 
 template <typename Tok>
-JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
-    const size_t start, const BinASTKind kind, ParseNode* name,
-    ListNode* params, ParseNode* body) {
-  FunctionBox* funbox = pc_->functionBox();
+JS::Result<Ok> BinASTParserPerTokenizer<Tok>::setFunctionParametersAndBody(
+    FunctionNode* fun, ListNode* params, ParseNode* body) {
+  params->appendWithoutOrderAssumption(body);
+  handler_.setFunctionFormalParametersAndBody(fun, params);
+  return Ok();
+}
 
-  // Set the argument count for building argument packets. Function.length is
-  // handled by setting the appropriate funbox field during argument parsing.
+template <typename Tok>
+JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishEagerFunction(
+    FunctionBox* funbox, uint32_t nargs) {
+  // If this is delazification of a canonical function, the JSFunction object
+  // already has correct `nargs_`.
   if (!lazyScript_ ||
       lazyScript_->functionNonDelazifying() != funbox->function()) {
-    funbox->function()->setArgCount(params ? uint16_t(params->count()) : 0);
-  }
-
-  // ParseNode represents the body as concatenated after the params.
-  params->appendWithoutOrderAssumption(body);
-
-  BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
-
-  handler_.setFunctionFormalParametersAndBody(result, params);
-
-  if (funbox->needsDotGeneratorName()) {
-    BINJS_TRY(pc_->declareDotGeneratorName());
-
-    HandlePropertyName dotGenerator = cx_->names().dotGenerator;
-    BINJS_TRY(usedNames_.noteUse(cx_, dotGenerator, pc_->scriptId(),
-                                 pc_->innermostScope()->id()));
-
-    if (funbox->isGenerator()) {
-      BINJS_TRY_DECL(
-          dotGen, handler_.newName(dotGenerator,
-                                   tokenizer_->pos(tokenizer_->offset()), cx_));
-
-      ListNode* stmtList =
-          &body->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
-      BINJS_TRY(handler_.prependInitialYield(stmtList, dotGen));
-    }
+    funbox->function()->setArgCount(nargs);
+  } else {
+    MOZ_ASSERT(funbox->function()->nargs() == nargs);
   }
 
   const bool canSkipLazyClosedOverBindings = false;
@@ -387,7 +376,29 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
     funbox->namedLambdaBindings().set(*recursiveBinding);
   }
 
-  return result;
+  return Ok();
+}
+
+template <typename Tok>
+JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
+    FunctionBox* funbox, uint32_t nargs, size_t start, size_t end) {
+  RootedFunction fun(cx_, funbox->function());
+
+  fun->setArgCount(nargs);
+
+  BINJS_TRY_DECL(
+      lazy, LazyScript::Create(cx_, fun, sourceObject_,
+                               pc_->closedOverBindingsForLazy(),
+                               pc_->innerFunctionsForLazy, start, end, start, 0,
+                               start, ParseGoal::Script));
+
+  if (funbox->strict()) {
+    lazy->setStrict();
+  }
+  lazy->setIsBinAST();
+  fun->initLazyScript(lazy);
+
+  return Ok();
 }
 
 template <typename Tok>

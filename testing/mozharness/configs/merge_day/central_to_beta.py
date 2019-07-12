@@ -21,14 +21,6 @@ config = {
                   "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
     ] + [
         # File, from, to
-        ("browser/confvars.sh",
-         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-central",
-         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release"),
-        ("browser/confvars.sh",
-         "MAR_CHANNEL_ID=firefox-mozilla-central",
-         "MAR_CHANNEL_ID=firefox-mozilla-beta"),
-    ] + [
-        # File, from, to
         ("build/mozconfig.common",
          "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}",
          "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}"),

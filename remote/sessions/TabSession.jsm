@@ -6,9 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["TabSession"];
 
-const { Domains } = ChromeUtils.import(
-  "chrome://remote/content/domains/Domains.jsm"
-);
 const { Session } = ChromeUtils.import(
   "chrome://remote/content/sessions/Session.jsm"
 );
@@ -27,14 +24,16 @@ class TabSession extends Session {
    *        connected to, the session requires an id to distinguish it from the default
    *        one. This id is used to filter our request, responses and events between
    *        all active sessions.
-   * @param Session parentSession (optional)
-   *        If this isn't the default session, optional hand over a session to which
-   *        we will forward all request responses and events via
-   *        `Target.receivedMessageFromTarget` events.
+   *        For now, this is only passed by `Target.attachToTarget()`.
+   *        Otherwise it will be undefined when you are connecting directly to
+   *        a given Tab. i.e. connect directly to the WebSocket URL provided by
+   *        /json/list HTTP endpoint.
    */
-  constructor(connection, target, id, parentSession) {
+  constructor(connection, target, id) {
     super(connection, target, id);
-    this.parentSession = parentSession;
+
+    // Request id => { resolve, reject }
+    this.requestPromises = new Map();
 
     this.mm.addMessageListener("remote:event", this);
     this.mm.addMessageListener("remote:result", this);
@@ -49,6 +48,8 @@ class TabSession extends Session {
   destructor() {
     super.destructor();
 
+    this.requestPromises.clear();
+
     this.mm.sendAsyncMessage("remote:destroy", {
       browsingContextId: this.browsingContext.id,
     });
@@ -58,60 +59,27 @@ class TabSession extends Session {
     this.mm.removeMessageListener("remote:error", this);
   }
 
-  async onMessage({ id, method, params }) {
-    try {
-      if (typeof id == "undefined") {
-        throw new TypeError("Message missing 'id' field");
-      }
-      if (typeof method == "undefined") {
-        throw new TypeError("Message missing 'method' field");
-      }
-
-      const { domain, command } = Domains.splitMethod(method);
-      if (this.domains.domainSupportsMethod(domain, command)) {
-        await this.execute(id, domain, command, params);
-      } else {
-        this.executeInChild(id, domain, command, params);
-      }
-    } catch (e) {
-      this.onError(id, e);
+  execute(id, domain, command, params) {
+    // Check if the domain and command is implemented in the parent
+    // and execute it there. Otherwise forward the command to the content process
+    // in order to try to execute it in the content process.
+    if (this.domains.domainSupportsMethod(domain, command)) {
+      return super.execute(id, domain, command, params);
     }
+    return this.executeInChild(id, domain, command, params);
   }
 
   executeInChild(id, domain, command, params) {
-    this.mm.sendAsyncMessage("remote:request", {
-      browsingContextId: this.browsingContext.id,
-      request: { id, domain, command, params },
+    return new Promise((resolve, reject) => {
+      // Save the promise's resolution and rejection handler in order to later
+      // resolve this promise once we receive the reply back from the content process.
+      this.requestPromises.set(id, { resolve, reject });
+
+      this.mm.sendAsyncMessage("remote:request", {
+        browsingContextId: this.browsingContext.id,
+        request: { id, domain, command, params },
+      });
     });
-  }
-
-  onResult(id, result) {
-    super.onResult(id, result);
-
-    // When `Target.sendMessageToTarget` is used, we should forward the responses
-    // to the parent session from which we called `sendMessageToTarget`.
-    if (this.parentSession) {
-      this.parentSession.onEvent("Target.receivedMessageFromTarget", {
-        sessionId: this.id,
-        message: JSON.stringify({ id, result }),
-      });
-    }
-  }
-
-  onEvent(eventName, params) {
-    super.onEvent(eventName, params);
-
-    // When `Target.sendMessageToTarget` is used, we should forward the responses
-    // to the parent session from which we called `sendMessageToTarget`.
-    if (this.parentSession) {
-      this.parentSession.onEvent("Target.receivedMessageFromTarget", {
-        sessionId: this.id,
-        message: JSON.stringify({
-          method: eventName,
-          params,
-        }),
-      });
-    }
   }
 
   get mm() {
@@ -129,15 +97,19 @@ class TabSession extends Session {
 
     switch (name) {
       case "remote:result":
-        this.onResult(id, result);
+        const { resolve } = this.requestPromises.get(id);
+        resolve(result);
+        this.requestPromises.delete(id);
         break;
 
       case "remote:event":
-        this.onEvent(event.eventName, event.params);
+        this.connection.onEvent(event.eventName, event.params, this.id);
         break;
 
       case "remote:error":
-        this.onError(id, error);
+        const { reject } = this.requestPromises.get(id);
+        reject(error);
+        this.requestPromises.delete(id);
         break;
     }
   }

@@ -33,6 +33,10 @@ body {
   background: var(--theme-contrast-background);
 }
 
+.theme-bg-yellow-contrast {
+  background: var(--theme-bg-yellow);
+}
+
 .theme-link,
 .cm-s-mozilla .cm-link,
 .CodeMirror-Tern-type {

@@ -111,7 +111,7 @@ input {
 
 input > .anonymous-div,
 input::placeholder {
-  word-wrap: normal !important;
+  word-wrap: normal;
   /* Make the line-height equal to the available height */
   line-height: -moz-block-height;
 }
@@ -155,8 +155,8 @@ textarea::placeholder,
 input > .preview-div
 textarea > .preview-div {
   overflow: auto;
-  border: 0px !important;
-  padding: inherit !important;
+  border: 0px;
+  padding: inherit;
   margin: 0px;
   text-decoration: inherit;
   display: inline-block;
@@ -189,20 +189,20 @@ textarea > .preview-div {
   /*
    * Changing display to inline can leads to broken behaviour and will assert.
    */
-  display: inline-block !important;
+  display: inline-block;
 
   /*
    * Changing resize would display a broken behaviour and will assert.
    */
-  resize: none !important;
+  resize: none;
 
-  overflow: hidden !important;
+  overflow: hidden;
 
   /*
    * The placeholder or preview should be ignored by pointer otherwise, we might have some
    * unexpected behavior like the resize handle not being selectable.
    */
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
 input::placeholder,

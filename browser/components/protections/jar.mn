@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+    content/browser/lockwise-card.js                      (content/lockwise-card.js)
     content/browser/protections.css                       (content/protections.css)
     content/browser/protections.html                      (content/protections.html)
     content/browser/protections.js                        (content/protections.js)
