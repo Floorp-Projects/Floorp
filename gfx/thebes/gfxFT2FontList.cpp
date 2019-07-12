@@ -1249,29 +1249,7 @@ static void FinalizeFamilyMemberList(nsCStringHashKey::KeyType aKey,
 }
 
 void gfxFT2FontList::FindFonts() {
-  if (!XRE_IsParentProcess()) {
-    // Content process: ask the Chrome process to give us the list
-    nsTArray<FontListEntry> fonts;
-    mozilla::dom::ContentChild::GetSingleton()->SendReadFontList(&fonts);
-    for (uint32_t i = 0, n = fonts.Length(); i < n; ++i) {
-      // We don't need to identify "standard" font files here,
-      // as the faces are already sorted.
-      AppendFaceFromFontListEntry(fonts[i], kUnknown);
-    }
-    // Passing null for userdata tells Finalize that it does not need
-    // to sort faces (because they were already sorted by chrome,
-    // so we just maintain the existing order)
-    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
-      nsCStringHashKey::KeyType key = iter.Key();
-      RefPtr<gfxFontFamily>& family = iter.Data();
-      FinalizeFamilyMemberList(key, family, /* aSortFaces */ false);
-    }
-
-    LOG(("got font list from chrome process: %" PRIdPTR " faces in %" PRIu32
-         " families",
-         fonts.Length(), mFontFamilies.Count()));
-    return;
-  }
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   // Chrome process: get the cached list (if any)
   if (!mFontNameCache) {
@@ -1462,8 +1440,31 @@ static void LoadSkipSpaceLookupCheck(
 nsresult gfxFT2FontList::InitFontListForPlatform() {
   LoadSkipSpaceLookupCheck(mSkipSpaceLookupCheckFamilies);
 
-  FindFonts();
+  if (XRE_IsParentProcess()) {
+    FindFonts();
+    return NS_OK;
+  }
 
+  // Content process: ask the Chrome process to give us the list
+  nsTArray<FontListEntry> fonts;
+  mozilla::dom::ContentChild::GetSingleton()->SendReadFontList(&fonts); // sync
+  for (uint32_t i = 0, n = fonts.Length(); i < n; ++i) {
+    // We don't need to identify "standard" font files here,
+    // as the faces are already sorted.
+    AppendFaceFromFontListEntry(fonts[i], kUnknown);
+  }
+  // Passing null for userdata tells Finalize that it does not need
+  // to sort faces (because they were already sorted by chrome,
+  // so we just maintain the existing order)
+  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+    nsCStringHashKey::KeyType key = iter.Key();
+    RefPtr<gfxFontFamily>& family = iter.Data();
+    FinalizeFamilyMemberList(key, family, /* aSortFaces */ false);
+  }
+
+  LOG(("got font list from chrome process: %" PRIdPTR " faces in %" PRIu32
+       " families",
+       fonts.Length(), mFontFamilies.Count()));
   return NS_OK;
 }
 
