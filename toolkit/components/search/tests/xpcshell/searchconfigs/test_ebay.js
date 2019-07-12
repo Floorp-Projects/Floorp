@@ -104,7 +104,7 @@ const test = new SearchConfigTest({
           locales: { matches: ["en-US"] },
         },
       ],
-      excluded: [{ regions: ["au"] }],
+      excluded: [{ regions: ["au", "be", "ca", "ch", "gb", "ie", "nl"] }],
       searchUrlEnd: "711-53200-19255-0/1",
     },
     {
