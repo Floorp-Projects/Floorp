@@ -74,9 +74,9 @@ class TestWebMWriter : public WebMWriter {
     RefPtr<EncodedFrame> videoData = new EncodedFrame();
     // Create dummy frame data.
     frameData.SetLength(FIXED_FRAMESIZE);
-    videoData->SetFrameType(aFrameType);
-    videoData->SetTimeStamp(mTimestamp);
-    videoData->SetDuration(aDuration);
+    videoData->mFrameType = aFrameType;
+    videoData->mTime = mTimestamp;
+    videoData->mDuration = aDuration;
     videoData->SwapInFrameData(frameData);
     encodedVideoData.AppendElement(videoData);
     WriteEncodedTrack(encodedVideoData, 0);
