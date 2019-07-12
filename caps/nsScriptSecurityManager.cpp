@@ -400,7 +400,7 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     JSContext* cx, JS::HandleValue aValue) {
   MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
-#if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
+#if defined(DEBUG) && !defined(ANDROID)
   nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
   nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(subjectPrincipal,
                                                               cx);
