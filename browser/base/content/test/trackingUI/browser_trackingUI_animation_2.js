@@ -34,10 +34,13 @@ async function testTrackingProtectionAnimation(tabbrowser) {
     tabbrowser,
     BENIGN_PAGE
   );
-  let ContentBlocking = tabbrowser.ownerGlobal.ContentBlocking;
+  let gProtectionsHandler = tabbrowser.ownerGlobal.gProtectionsHandler;
 
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "iconBox not active");
-  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+  ok(!gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox not active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("animate"),
+    "iconBox not animating"
+  );
 
   info("Load a test page containing tracking elements");
   let trackingTab = await BrowserTestUtils.openNewForegroundTab(
@@ -45,10 +48,10 @@ async function testTrackingProtectionAnimation(tabbrowser) {
     TRACKING_PAGE
   );
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(gProtectionsHandler.iconBox.hasAttribute("animate"), "iconBox animating");
   await BrowserTestUtils.waitForEvent(
-    ContentBlocking.animatedIcon,
+    gProtectionsHandler.animatedIcon,
     "animationend"
   );
 
@@ -58,10 +61,10 @@ async function testTrackingProtectionAnimation(tabbrowser) {
     COOKIE_PAGE
   );
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(gProtectionsHandler.iconBox.hasAttribute("animate"), "iconBox animating");
   await BrowserTestUtils.waitForEvent(
-    ContentBlocking.animatedIcon,
+    gProtectionsHandler.animatedIcon,
     "animationend"
   );
 
@@ -70,24 +73,33 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   tabbrowser.selectedTab = benignTab;
   await securityChanged;
 
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "iconBox not active");
-  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+  ok(!gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox not active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("animate"),
+    "iconBox not animating"
+  );
 
   info("Switch from benign -> tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   tabbrowser.selectedTab = trackingTab;
   await securityChanged;
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("animate"),
+    "iconBox not animating"
+  );
 
   info("Switch from tracking -> tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   tabbrowser.selectedTab = trackingCookiesTab;
   await securityChanged;
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("animate"),
+    "iconBox not animating"
+  );
 
   info("Reload tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -98,10 +110,10 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   tabbrowser.reload();
   await Promise.all([securityChanged, contentBlockingEvent]);
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(gProtectionsHandler.iconBox.hasAttribute("animate"), "iconBox animating");
   await BrowserTestUtils.waitForEvent(
-    ContentBlocking.animatedIcon,
+    gProtectionsHandler.animatedIcon,
     "animationend"
   );
 
@@ -112,10 +124,10 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   tabbrowser.reload();
   await Promise.all([securityChanged, contentBlockingEvent]);
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(gProtectionsHandler.iconBox.hasAttribute("animate"), "iconBox animating");
   await BrowserTestUtils.waitForEvent(
-    ContentBlocking.animatedIcon,
+    gProtectionsHandler.animatedIcon,
     "animationend"
   );
 
@@ -128,8 +140,11 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   let result = await Promise.race([securityChanged, timeoutPromise]);
   is(result, undefined, "No securityChange events should be received");
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("animate"),
+    "iconBox not animating"
+  );
 
   info("Inject tracking element inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -140,8 +155,11 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   result = await Promise.race([securityChanged, timeoutPromise]);
   is(result, undefined, "No securityChange events should be received");
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("animate"),
+    "iconBox not animating"
+  );
 
   tabbrowser.selectedTab = trackingCookiesTab;
 
@@ -154,8 +172,11 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   result = await Promise.race([securityChanged, timeoutPromise]);
   is(result, undefined, "No securityChange events should be received");
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("animate"),
+    "iconBox not animating"
+  );
 
   info("Inject tracking element inside tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -166,8 +187,11 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   result = await Promise.race([securityChanged, timeoutPromise]);
   is(result, undefined, "No securityChange events should be received");
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
-  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("animate"),
+    "iconBox not animating"
+  );
 
   while (tabbrowser.tabs.length > 1) {
     tabbrowser.removeCurrentTab();
@@ -177,8 +201,11 @@ async function testTrackingProtectionAnimation(tabbrowser) {
 add_task(async function testNormalBrowsing() {
   await UrlClassifierTestUtils.addTestTrackers();
 
-  let ContentBlocking = gBrowser.ownerGlobal.ContentBlocking;
-  ok(ContentBlocking, "CB is attached to the browser window");
+  let gProtectionsHandler = gBrowser.ownerGlobal.gProtectionsHandler;
+  ok(
+    gProtectionsHandler,
+    "gProtectionsHandler is attached to the browser window"
+  );
   let TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
   let ThirdPartyCookies = gBrowser.ownerGlobal.ThirdPartyCookies;
@@ -204,8 +231,11 @@ add_task(async function testPrivateBrowsing() {
   });
   let tabbrowser = privateWin.gBrowser;
 
-  let ContentBlocking = tabbrowser.ownerGlobal.ContentBlocking;
-  ok(ContentBlocking, "CB is attached to the private window");
+  let gProtectionsHandler = tabbrowser.ownerGlobal.gProtectionsHandler;
+  ok(
+    gProtectionsHandler,
+    "gProtectionsHandler is attached to the private window"
+  );
   let TrackingProtection = tabbrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the private window");
   let ThirdPartyCookies = tabbrowser.ownerGlobal.ThirdPartyCookies;
