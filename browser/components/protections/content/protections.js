@@ -46,10 +46,6 @@ document.addEventListener("DOMContentLoaded", e => {
       bar.className = "graph-bar";
       if (data[dateString]) {
         let content = data[dateString];
-        let count = document.createElement("div");
-        count.className = "bar-count";
-        count.textContent = content.total;
-        bar.appendChild(count);
         let barHeight = (content.total / largest) * 100;
         bar.style.height = `${barHeight}%`;
         for (let type of dataTypes) {
@@ -64,7 +60,7 @@ document.addEventListener("DOMContentLoaded", e => {
         }
       } else {
         // There were no content blocking events on this day.
-        bar.classList.add("empty");
+        bar.style.height = `0`;
       }
       graph.appendChild(bar);
 
