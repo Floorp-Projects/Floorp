@@ -7497,6 +7497,7 @@ nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
 
   result.mHasSize = true;
   result.mSize = size;
+  result.mIntrinsicSize = size;
   result.mIsWriteOnly = aOffscreenCanvas->IsWriteOnly();
 
   return result;
@@ -7577,6 +7578,7 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     if (NS_FAILED(rv) || NS_FAILED(rv2)) return result;
   }
   result.mSize = IntSize(imgWidth, imgHeight);
+  result.mIntrinsicSize = IntSize(imgWidth, imgHeight);
 
   if (!noRasterize || imgContainer->GetType() == imgIContainer::TYPE_RASTER) {
     if (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) {
@@ -7674,6 +7676,7 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
 
   result.mHasSize = true;
   result.mSize = size;
+  result.mIntrinsicSize = size;
   result.mPrincipal = aElement->NodePrincipal();
   result.mHadCrossOriginRedirects = false;
   result.mIsWriteOnly = aElement->IsWriteOnly();
@@ -7721,6 +7724,8 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   result.mCORSUsed = aElement->GetCORSMode() != CORS_NONE;
   result.mHasSize = true;
   result.mSize = result.mLayersImage->GetSize();
+  result.mIntrinsicSize =
+      gfx::IntSize(aElement->VideoWidth(), aElement->VideoHeight());
   result.mPrincipal = principal.forget();
   result.mHadCrossOriginRedirects = aElement->HadCrossOriginRedirects();
   result.mIsWriteOnly = CanvasUtils::CheckWriteOnlySecurity(
