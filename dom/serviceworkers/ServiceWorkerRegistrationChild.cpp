@@ -14,10 +14,7 @@ namespace dom {
 using mozilla::ipc::IPCResult;
 
 void ServiceWorkerRegistrationChild::ActorDestroy(ActorDestroyReason aReason) {
-  if (mWorkerHolderToken) {
-    mWorkerHolderToken->RemoveListener(this);
-    mWorkerHolderToken = nullptr;
-  }
+  mIPCWorkerRef = nullptr;
 
   if (mOwner) {
     mOwner->RevokeActor(this);
@@ -40,19 +37,32 @@ IPCResult ServiceWorkerRegistrationChild::RecvFireUpdateFound() {
   return IPC_OK();
 }
 
-void ServiceWorkerRegistrationChild::WorkerShuttingDown() {
-  MaybeStartTeardown();
+// static
+ServiceWorkerRegistrationChild* ServiceWorkerRegistrationChild::Create() {
+  ServiceWorkerRegistrationChild* actor = new ServiceWorkerRegistrationChild();
+
+  if (!NS_IsMainThread()) {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
+
+    RefPtr<IPCWorkerRefHelper<ServiceWorkerRegistrationChild>> helper =
+        new IPCWorkerRefHelper<ServiceWorkerRegistrationChild>(actor);
+
+    actor->mIPCWorkerRef = IPCWorkerRef::Create(
+        workerPrivate, "ServiceWorkerRegistrationChild",
+        [helper] { helper->Actor()->MaybeStartTeardown(); });
+
+    if (NS_WARN_IF(!actor->mIPCWorkerRef)) {
+      delete actor;
+      return nullptr;
+    }
+  }
+
+  return actor;
 }
 
-ServiceWorkerRegistrationChild::ServiceWorkerRegistrationChild(
-    WorkerHolderToken* aWorkerHolderToken)
-    : mWorkerHolderToken(aWorkerHolderToken),
-      mOwner(nullptr),
-      mTeardownStarted(false) {
-  if (mWorkerHolderToken) {
-    mWorkerHolderToken->AddListener(this);
-  }
-}
+ServiceWorkerRegistrationChild::ServiceWorkerRegistrationChild()
+    : mOwner(nullptr), mTeardownStarted(false) {}
 
 void ServiceWorkerRegistrationChild::SetOwner(
     RemoteServiceWorkerRegistrationImpl* aOwner) {

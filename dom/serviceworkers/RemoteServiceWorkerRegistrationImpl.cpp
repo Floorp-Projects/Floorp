@@ -114,22 +114,13 @@ RemoteServiceWorkerRegistrationImpl::RemoteServiceWorkerRegistrationImpl(
     return;
   }
 
-  RefPtr<WorkerHolderToken> workerHolderToken;
-  if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
-
-    workerHolderToken = WorkerHolderToken::Create(
-        workerPrivate, Canceling, WorkerHolderToken::AllowIdleShutdownStart);
-
-    if (NS_WARN_IF(!workerHolderToken)) {
-      Shutdown();
-      return;
-    }
+  ServiceWorkerRegistrationChild* actor =
+      ServiceWorkerRegistrationChild::Create();
+  if (NS_WARN_IF(!actor)) {
+    Shutdown();
+    return;
   }
 
-  ServiceWorkerRegistrationChild* actor =
-      new ServiceWorkerRegistrationChild(workerHolderToken);
   PServiceWorkerRegistrationChild* sentActor =
       parentActor->SendPServiceWorkerRegistrationConstructor(
           actor, aDescriptor.ToIPC());

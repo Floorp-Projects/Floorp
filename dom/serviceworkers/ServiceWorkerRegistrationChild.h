@@ -8,19 +8,20 @@
 #define mozilla_dom_serviceworkerregistrationchild_h__
 
 #include "mozilla/dom/PServiceWorkerRegistrationChild.h"
-#include "mozilla/dom/WorkerHolderToken.h"
 
 namespace mozilla {
 namespace dom {
 
+class IPCWorkerRef;
 class RemoteServiceWorkerRegistrationImpl;
 
 class ServiceWorkerRegistrationChild final
-    : public PServiceWorkerRegistrationChild,
-      public WorkerHolderToken::Listener {
-  RefPtr<WorkerHolderToken> mWorkerHolderToken;
+    : public PServiceWorkerRegistrationChild {
+  RefPtr<IPCWorkerRef> mIPCWorkerRef;
   RemoteServiceWorkerRegistrationImpl* mOwner;
   bool mTeardownStarted;
+
+  ServiceWorkerRegistrationChild();
 
   // PServiceWorkerRegistrationChild
   void ActorDestroy(ActorDestroyReason aReason) override;
@@ -30,12 +31,9 @@ class ServiceWorkerRegistrationChild final
 
   mozilla::ipc::IPCResult RecvFireUpdateFound() override;
 
-  // WorkerHolderToken::Listener
-  void WorkerShuttingDown() override;
-
  public:
-  explicit ServiceWorkerRegistrationChild(
-      WorkerHolderToken* aWorkerHolderToken);
+  static ServiceWorkerRegistrationChild* Create();
+
   ~ServiceWorkerRegistrationChild() = default;
 
   void SetOwner(RemoteServiceWorkerRegistrationImpl* aOwner);
