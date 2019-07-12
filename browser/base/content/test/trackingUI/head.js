@@ -2,6 +2,12 @@ var { UrlClassifierTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlClassifierTestUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentBlockingAllowList",
+  "resource://gre/modules/ContentBlockingAllowList.jsm"
+);
+
 /**
  * Waits for a load (or custom) event to finish in a given tab. If provided
  * load an uri into the tab.
@@ -40,6 +46,14 @@ function openIdentityPopup() {
   let mainView = document.getElementById("identity-popup-mainView");
   let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
   gIdentityHandler._identityBox.click();
+  return viewShown;
+}
+
+function openProtectionsPopup() {
+  let mainView = document.getElementById("protections-popup-mainView");
+  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
+  // TODO: This should click on the icon once we have it.
+  gProtectionsHandler.showProtectionsPopup();
   return viewShown;
 }
 
