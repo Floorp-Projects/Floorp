@@ -313,7 +313,7 @@ macosx1014-64-tests:
     - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
-    # - gtest
+    - gtest
     - jittest
     - jsreftest
     - marionette
@@ -345,7 +345,6 @@ macosx1014-64-qr-tests:
     - reftest
 
 macosx64-tests:
-    - gtest
     - mochitest-browser-chrome
     # - mochitest-webgl2-ext test timeouts
 
