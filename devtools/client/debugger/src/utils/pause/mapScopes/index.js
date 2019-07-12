@@ -301,6 +301,7 @@ function generateClientScope(
         parent: acc,
         actor: `originalActor${i}`,
         type: orig.type,
+        scopeKind: orig.scopeKind,
         bindings: {
           arguments: [],
           variables,
