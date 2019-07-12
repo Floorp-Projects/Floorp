@@ -15,6 +15,7 @@ import os
 import re
 import time
 from copy import deepcopy
+from six import text_type
 
 import attr
 
@@ -39,6 +40,7 @@ from taskgraph.util.scriptworker import (
     add_scope_prefix,
 )
 from taskgraph.util.signed_artifacts import get_signed_artifacts
+from taskgraph.util.workertypes import worker_type_implementation
 from voluptuous import Any, Required, Optional, Extra, Match
 from taskgraph import GECKO, MAX_DEPENDENCIES
 from ..util import docker as dockerutil
@@ -336,7 +338,7 @@ class PayloadBuilder(object):
 
 
 def payload_builder(name, schema):
-    schema = Schema({Required('implementation'): name}).extend(schema)
+    schema = Schema({Required('implementation'): name, Optional('os'): text_type}).extend(schema)
 
     def wrap(func):
         payload_builders[name] = PayloadBuilder(schema, func)
@@ -1336,6 +1338,30 @@ def build_script_engine_autophone_payload(config, task, task_def):
 
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def set_implementation(config, tasks):
+    """
+    Set the worker implementation based on the worker-type alias.
+    """
+    for task in tasks:
+        if 'implementation' in task['worker']:
+            yield task
+            continue
+
+        impl, os = worker_type_implementation(config.graph_config, task['worker-type'])
+
+        tags = task.setdefault('tags', {})
+        tags['worker-implementation'] = impl
+        if os:
+            task['tags']['os'] = os
+        worker = task.setdefault('worker', {})
+        worker['implementation'] = impl
+        if os:
+            worker['os'] = os
+
+        yield task
 
 
 @transforms.add
