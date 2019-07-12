@@ -43,9 +43,10 @@ def inherit_treeherder_from_dep(job, dep_job):
 
     dep_th_platform = dep_job.task.get('extra', {}).get(
         'treeherder', {}).get('machine', {}).get('platform', '')
-    # XXX Doesn't yet support non-opt
+    dep_th_collection = dep_job.task.get('extra', {}).get(
+        'treeherder', {}).get('collection', {}).keys()[0]
     treeherder.setdefault('platform',
-                          "{}/opt".format(dep_th_platform))
+                          "{}/{}".format(dep_th_platform, dep_th_collection))
     treeherder.setdefault(
         'tier',
         dep_job.task.get('extra', {}).get('treeherder', {}).get('tier', 1)
