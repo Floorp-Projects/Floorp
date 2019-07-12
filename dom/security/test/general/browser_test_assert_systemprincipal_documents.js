@@ -10,7 +10,10 @@ add_task(async function setup() {
   SimpleTest.expectAssertions(1);
 
   await SpecialPowers.pushPrefEnv({
-    set: [["security.disallow_non_local_systemprincipal_in_tests", true]],
+    set: [
+      ["security.disallow_non_local_systemprincipal_in_tests", true],
+      ["security.allow_unsafe_parent_loads", true],
+    ],
   });
 });
 
