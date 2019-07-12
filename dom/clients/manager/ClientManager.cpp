@@ -11,7 +11,6 @@
 #include "ClientManagerOpChild.h"
 #include "ClientPrefs.h"
 #include "ClientSource.h"
-#include "mozilla/dom/WorkerHolderToken.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -54,27 +53,12 @@ ClientManager::ClientManager() {
     return;
   }
 
-  RefPtr<WorkerHolderToken> workerHolderToken;
-  if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
-
-    // Note, it would be nice to replace this with a WorkerRef, but
-    // currently there is no WorkerRef option that matches what we
-    // need here.  We need something like a StrongWorkerRef that will
-    // let us keep the worker alive until our actor is destroyed, but
-    // we also need to use AllowIdleShutdownStart like WeakWorkerRef.
-    // We need AllowIdleShutdownStart since every worker thread will
-    // have a ClientManager to support creating its ClientSource.
-    workerHolderToken = WorkerHolderToken::Create(
-        workerPrivate, Canceling, WorkerHolderToken::AllowIdleShutdownStart);
-    if (NS_WARN_IF(!workerHolderToken)) {
-      Shutdown();
-      return;
-    }
+  ClientManagerChild* actor = ClientManagerChild::Create();
+  if (NS_WARN_IF(!actor)) {
+    Shutdown();
+    return;
   }
 
-  ClientManagerChild* actor = new ClientManagerChild(workerHolderToken);
   PClientManagerChild* sentActor =
       parentActor->SendPClientManagerConstructor(actor);
   if (NS_WARN_IF(!sentActor)) {
