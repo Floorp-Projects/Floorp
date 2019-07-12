@@ -30,3 +30,8 @@ class BrowserRobot {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     }
 }
+
+fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+    BrowserRobot().interact()
+    return BrowserRobot.Transition()
+}

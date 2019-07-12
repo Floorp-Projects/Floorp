@@ -6,11 +6,8 @@
 
 package org.mozilla.fenix.ui.robots
 
-import android.net.Uri
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
@@ -18,12 +15,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiScrollable
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
-import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -46,7 +44,6 @@ class HomeScreenRobot {
 
     // First Run elements
     fun verifyWelcomeHeader() = assertWelcomeHeader()
-    fun verifyAlreadyHaveAnAccountHeader() = assertAlreadyHaveAnAccountHeader()
     fun verifyGetTheMostHeader() = assertGetTheMostHeader()
     fun verifyAccountsSignInButton() = assertAccountsSignInButton()
     fun verifyGetToKnowHeader() = assertGetToKnowHeader()
@@ -69,8 +66,19 @@ class HomeScreenRobot {
     fun verifyPrivacyNoticeButton() = assertPrivacyNoticeButton()
     fun verifyStartBrowsingButton() = assertStartBrowsingButton()
 
-    class Transition {
+    private fun scrollToElementByText(text: String): UiScrollable {
+        mDevice.wait(Until.findObject(By.text(text)), waitingTime)
+        val matchedScrollableElement = mDevice.findObject(UiSelector().text(text))
+        val appView = UiScrollable(UiSelector().scrollable(true))
+        appView.scrollIntoView(matchedScrollableElement)
+        return appView
+    }
 
+    fun swipeUpToDismissFirstRun() {
+        scrollToElementByText("Start browsing")
+    }
+
+    class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openThreeDotMenu(interact: ThreeDotMenuRobot.() -> Unit): ThreeDotMenuRobot.Transition {
@@ -82,21 +90,8 @@ class HomeScreenRobot {
             return ThreeDotMenuRobot.Transition()
         }
 
-        fun completeFirstRun(url: Uri, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-
-            mDevice.wait(Until.findObject(By.text("Search or enter address")), waitingTime)
-            navigationToolbar().perform(click())
-
-            browserToolbarEditView().perform(
-                typeText(url.toString()),
-                ViewActions.pressImeActionButton())
-
-            tabCounterText().click()
-            mDevice.wait(Until.findObject(By.res("close_tab_button")), waitingTime)
-            closeTabButton().click()
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+        fun dismissOnboarding() {
+            openThreeDotMenu { }.openSettings { }.goBack { }
         }
     }
 }
@@ -108,14 +103,7 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 
 val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-private fun navigationToolbar() = onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
-
-private fun browserToolbarEditView() = onView(allOf(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view)))
-private fun closeTabButton() = onView(allOf(ViewMatchers.withId(R.id.close_tab_button)))
-
 private fun assertNavigationToolbar() = onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun tabCounterText() = onView(allOf(ViewMatchers.withId(R.id.counter_text)))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertHomeScreen() = onView(ViewMatchers.withResourceName("homeLayout"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -155,10 +143,6 @@ private fun threeDotButton() = onView(allOf(ViewMatchers.withId(R.id.menuButton)
 // First Run elements
 private fun assertWelcomeHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("Welcome to Firefox Preview!")))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertAlreadyHaveAnAccountHeader() {
-    onView(CoreMatchers.allOf(ViewMatchers.withText("Already have an account?")))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
 private fun assertGetTheMostHeader() {
     mDevice.wait(Until.findObject(By.res("Get the most out of Firefox Preview")), waitingTime)
 }
@@ -166,11 +150,13 @@ private fun assertAccountsSignInButton() = onView(ViewMatchers.withResourceName(
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertGetToKnowHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("Get to know Firefox Preview")))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertChooseThemeHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("Choose your theme")))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertChooseThemeText() {
-    mDevice.wait(Until.findObject(By.res("Try dark theme: easier on your battery and eyes")), waitingTime)
+private fun assertChooseThemeHeader() {
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Choose your theme")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+private fun assertChooseThemeText() =
+    mDevice.wait(Until.findObject(By.res("Try dark theme: easier on your battery and eyes")), waitingTime)
+
 private fun assertLightThemeToggle() = onView(ViewMatchers.withResourceName("theme_light_radio_button"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertLightThemeDescription() = onView(CoreMatchers.allOf(ViewMatchers.withText("Light theme")))
@@ -200,7 +186,7 @@ private fun assertBrowsePrivatelyText() {
     mDevice.wait(Until.findObject(By.text("private browsing is just a tap away.")), waitingTime)
 }
 private fun assertYourPrivacyHeader() {
-    mDevice.wait(Until.findObject(By.text("your privacy")), waitingTime)
+    mDevice.wait(Until.findObject(By.text("Your privacy")), waitingTime)
 }
 private fun assertYourPrivacyText() {
     val privacyText = "We've designed Firefox Preview to give you control"
