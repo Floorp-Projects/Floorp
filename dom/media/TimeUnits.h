@@ -178,11 +178,11 @@ class TimeUnit final {
     return TimeUnit::FromSeconds(ToSeconds() * aVal);
   }
   friend TimeUnit operator/(const TimeUnit& aUnit, int64_t aVal) {
-    MOZ_DIAGNOSTIC_ASSERT(INT32_MIN <= aVal && aVal <= INT32_MAX);
+    MOZ_DIAGNOSTIC_ASSERT(0 <= aVal && aVal <= UINT32_MAX);
     return TimeUnit(aUnit.mValue / aVal);
   }
   friend TimeUnit operator%(const TimeUnit& aUnit, int64_t aVal) {
-    MOZ_DIAGNOSTIC_ASSERT(INT32_MIN <= aVal && aVal <= INT32_MAX);
+    MOZ_DIAGNOSTIC_ASSERT(0 <= aVal && aVal <= UINT32_MAX);
     return TimeUnit(aUnit.mValue % aVal);
   }
 
