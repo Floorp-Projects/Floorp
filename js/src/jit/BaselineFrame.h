@@ -51,14 +51,9 @@ class BaselineFrame {
     // of invariants of debuggee compartments, scripts, and frames.
     DEBUGGEE = 1 << 6,
 
-    // (1 << 7 and 1 << 8 are unused)
-
-    // Frame has over-recursed on an early check.
-    OVER_RECURSED = 1 << 9,
-
     // Frame has a BaselineRecompileInfo stashed in the scratch value
     // slot. See PatchBaselineFramesForDebugMode.
-    HAS_DEBUG_MODE_OSR_INFO = 1 << 10,
+    HAS_DEBUG_MODE_OSR_INFO = 1 << 7,
 
     // This flag is intended for use whenever the frame is settled on a
     // native code address without a corresponding RetAddrEntry. In this
@@ -72,12 +67,12 @@ class BaselineFrame {
     // This flag should never be set on the top frame while we're
     // executing JIT code. In debug builds, it is checked before and
     // after VM calls.
-    HAS_OVERRIDE_PC = 1 << 11,
+    HAS_OVERRIDE_PC = 1 << 8,
 
     // If set, we're handling an exception for this frame. This is set for
     // debug mode OSR sanity checking when it handles corner cases which
     // only arise during exception handling.
-    HANDLING_EXCEPTION = 1 << 12,
+    HANDLING_EXCEPTION = 1 << 9,
   };
 
  protected:  // Silence Clang warning about unused private fields.
@@ -314,10 +309,6 @@ class BaselineFrame {
   bool isHandlingException() const { return flags_ & HANDLING_EXCEPTION; }
   void setIsHandlingException() { flags_ |= HANDLING_EXCEPTION; }
   void unsetIsHandlingException() { flags_ &= ~HANDLING_EXCEPTION; }
-
-  bool overRecursed() const { return flags_ & OVER_RECURSED; }
-
-  void setOverRecursed() { flags_ |= OVER_RECURSED; }
 
   BaselineDebugModeOSRInfo* debugModeOSRInfo() {
     MOZ_ASSERT(flags_ & HAS_DEBUG_MODE_OSR_INFO);
