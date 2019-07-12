@@ -59,26 +59,6 @@ class PerformanceEntryAdder final : public WorkerControlRunnable {
   UniquePtr<PerformanceProxyData> mData;
 };
 
-class PerformanceStorageWorkerHolder final : public WorkerHolder {
-  RefPtr<PerformanceStorageWorker> mStorage;
-
- public:
-  explicit PerformanceStorageWorkerHolder(PerformanceStorageWorker* aStorage)
-      : WorkerHolder("PerformanceStorageWorkerHolder",
-                     WorkerHolder::AllowIdleShutdownStart),
-        mStorage(aStorage) {}
-
-  bool Notify(WorkerStatus aStatus) override {
-    if (mStorage) {
-      RefPtr<PerformanceStorageWorker> storage;
-      storage.swap(mStorage);
-      storage->ShutdownOnWorker();
-    }
-
-    return true;
-  }
-};
-
 }  // namespace
 
 /* static */
