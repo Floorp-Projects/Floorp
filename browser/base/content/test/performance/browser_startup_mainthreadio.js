@@ -587,7 +587,7 @@ const startupPhases = {
       // bug 1543090
       path: "XCurProcD:omni.ja",
       condition: WIN,
-      stat: 3,
+      stat: 2,
     },
   ],
 
