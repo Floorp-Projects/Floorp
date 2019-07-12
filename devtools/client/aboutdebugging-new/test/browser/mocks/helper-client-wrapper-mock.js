@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
+"use strict"; // defined in head.js
+
+/* global CHROME_URL_ROOT */
 
 // This head file contains helpers to create mock versions of the ClientWrapper class
 // defined at devtools/client/aboutdebugging-new/src/modules/client-wrapper.js .
@@ -91,8 +93,7 @@ function createClientMock() {
     setPreference: function(prefName, value) {
       this._preferences[prefName] = value;
     },
-    getPerformancePanelUrl: () =>
-      "data:text/html;charset=UTF-8,fake_profiler_page",
+    getPerformancePanelUrl: () => CHROME_URL_ROOT + "empty.html",
     loadPerformanceProfiler: () => {},
     // Valid compatibility report
     checkVersionCompatibility: () => {
