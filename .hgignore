@@ -198,3 +198,7 @@ tps_result\.json
 
 # Ignore the build directories of WebRender standalone builds.
 gfx/wr/target/
+
+# Ignore this files in certviewer
+toolkit/components/certviewer/content/node_modules/
+toolkit/components/certviewer/content/package-lock.json
