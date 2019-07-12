@@ -48,6 +48,8 @@ const char* FeatureStatusToString(FeatureStatus aStatus) {
       return "blocked-release-channel-intel";
     case FeatureStatus::BlockedReleaseChannelAMD:
       return "blocked-release-channel-amd";
+    case FeatureStatus::BlockedReleaseChannelNvidia:
+      return "blocked-release-channel-nvidia";
     case FeatureStatus::BlockedReleaseChannelBattery:
       return "blocked-release-channel-battery";
     case FeatureStatus::Blacklisted:
