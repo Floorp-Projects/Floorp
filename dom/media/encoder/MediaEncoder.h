@@ -8,6 +8,7 @@
 
 #include "ContainerWriter.h"
 #include "CubebUtils.h"
+#include "MediaQueue.h"
 #include "MediaStreamGraph.h"
 #include "MediaStreamListener.h"
 #include "mozilla/DebugOnly.h"
@@ -288,9 +289,9 @@ class MediaEncoder {
   RefPtr<dom::VideoStreamTrack> mVideoTrack;
 
   // Audio frames that have been encoded and are pending write to the muxer
-  nsTArray<RefPtr<EncodedFrame>> mEncodedAudioFrames;
+  MediaQueue<EncodedFrame> mEncodedAudioFrames;
   // Video frames that have been encoded and are pending write to the muxer
-  nsTArray<RefPtr<EncodedFrame>> mEncodedVideoFrames;
+  MediaQueue<EncodedFrame> mEncodedVideoFrames;
 
   // How much each audio time stamp should be delayed in microseconds. Used to
   // adjust for opus codec delay.
