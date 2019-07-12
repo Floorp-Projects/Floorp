@@ -38,6 +38,7 @@ extern crate serde_derive;
 extern crate time;
 
 extern crate malloc_size_of;
+extern crate peek_poke;
 
 mod api;
 pub mod channel;

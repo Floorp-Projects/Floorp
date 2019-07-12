@@ -11,7 +11,7 @@ use super::UnknownUnit;
 use approxeq::ApproxEq;
 use length::Length;
 use scale::TypedScale;
-use size::TypedSize2D;
+use size::{TypedSize2D, TypedSize3D};
 #[cfg(feature = "mint")]
 use mint;
 use num::*;
@@ -66,6 +66,12 @@ impl<T: fmt::Debug, U> fmt::Debug for TypedPoint2D<T, U> {
 impl<T: fmt::Display, U> fmt::Display for TypedPoint2D<T, U> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "({},{})", self.x, self.y)
+    }
+}
+
+impl<T: Default, U> Default for TypedPoint2D<T, U> {
+    fn default() -> Self {
+        TypedPoint2D::new(Default::default(), Default::default())
     }
 }
 
@@ -135,6 +141,11 @@ impl<T: Copy, U> TypedPoint2D<T, U> {
     #[inline]
     pub fn to_array(&self) -> [T; 2] {
         [self.x, self.y]
+    }
+
+    #[inline]
+    pub fn to_tuple(&self) -> (T, T) {
+        (self.x, self.y)
     }
 }
 
@@ -411,6 +422,18 @@ impl<T: Copy, U> From<[T; 2]> for TypedPoint2D<T, U> {
     }
 }
 
+impl<T: Copy, U> Into<(T, T)> for TypedPoint2D<T, U> {
+    fn into(self) -> (T, T) {
+        self.to_tuple()
+    }
+}
+
+impl<T: Copy, U> From<(T, T)> for TypedPoint2D<T, U> {
+    fn from(tuple: (T, T)) -> Self {
+        point2(tuple.0, tuple.1)
+    }
+}
+
 /// A 3d Point tagged with a unit.
 #[derive(EuclidMatrix)]
 #[repr(C)]
@@ -435,12 +458,22 @@ impl<T: Copy + Zero, U> TypedPoint3D<T, U> {
     pub fn origin() -> Self {
         point3(Zero::zero(), Zero::zero(), Zero::zero())
     }
+
+    #[inline]
+    pub fn zero() -> Self {
+        Self::origin()
+    }
 }
 
 impl<T: Copy + One, U> TypedPoint3D<T, U> {
     #[inline]
     pub fn to_array_4d(&self) -> [T; 4] {
         [self.x, self.y, self.z, One::one()]
+    }
+
+    #[inline]
+    pub fn to_tuple_4d(&self) -> (T, T, T, T) {
+        (self.x, self.y, self.z, One::one())
     }
 }
 
@@ -471,6 +504,12 @@ impl<T: fmt::Debug, U> fmt::Debug for TypedPoint3D<T, U> {
 impl<T: fmt::Display, U> fmt::Display for TypedPoint3D<T, U> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({},{},{})", self.x, self.y, self.z)
+    }
+}
+
+impl<T: Copy + Default, U> Default for TypedPoint3D<T, U> {
+    fn default() -> Self {
+        TypedPoint3D::new(Default::default(), Default::default(), Default::default())
     }
 }
 
@@ -541,6 +580,11 @@ impl<T: Copy, U> TypedPoint3D<T, U> {
         [self.x, self.y, self.z]
     }
 
+    #[inline]
+    pub fn to_tuple(&self) -> (T, T, T) {
+        (self.x, self.y, self.z)
+    }
+
     /// Drop the units, preserving only the numeric value.
     #[inline]
     pub fn to_untyped(&self) -> Point3D<T> {
@@ -557,6 +601,13 @@ impl<T: Copy, U> TypedPoint3D<T, U> {
     #[inline]
     pub fn to_2d(&self) -> TypedPoint2D<T, U> {
         self.xy()
+    }
+}
+
+impl<T: Copy + Add<T, Output = T>, U> TypedPoint3D<T, U> {
+    #[inline]
+    pub fn add_size(&self, other: &TypedSize3D<T, U>) -> Self {
+        point3(self.x + other.width, self.y + other.height, self.z + other.depth)
     }
 }
 
@@ -606,11 +657,27 @@ impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for TypedPoint3D<T, U> {
     }
 }
 
+impl<T: Copy + Mul<T, Output = T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedPoint3D<T, U1> {
+    type Output = TypedPoint3D<T, U2>;
+    #[inline]
+    fn mul(self, scale: TypedScale<T, U1, U2>) -> TypedPoint3D<T, U2> {
+        point3(self.x * scale.get(), self.y * scale.get(), self.z * scale.get())
+    }
+}
+
 impl<T: Copy + Div<T, Output = T>, U> Div<T> for TypedPoint3D<T, U> {
     type Output = Self;
     #[inline]
     fn div(self, scale: T) -> Self {
         point3(self.x / scale, self.y / scale, self.z / scale)
+    }
+}
+
+impl<T: Copy + Div<T, Output = T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedPoint3D<T, U2> {
+    type Output = TypedPoint3D<T, U1>;
+    #[inline]
+    fn div(self, scale: TypedScale<T, U1, U2>) -> TypedPoint3D<T, U1> {
+        point3(self.x / scale.get(), self.y / scale.get(), self.z / scale.get())
     }
 }
 
@@ -786,6 +853,18 @@ impl<T: Copy, U> Into<[T; 3]> for TypedPoint3D<T, U> {
 impl<T: Copy, U> From<[T; 3]> for TypedPoint3D<T, U> {
     fn from(array: [T; 3]) -> Self {
         point3(array[0], array[1], array[2])
+    }
+}
+
+impl<T: Copy, U> Into<(T, T, T)> for TypedPoint3D<T, U> {
+    fn into(self) -> (T, T, T) {
+        self.to_tuple()
+    }
+}
+
+impl<T: Copy, U> From<(T, T, T)> for TypedPoint3D<T, U> {
+    fn from(tuple: (T, T, T)) -> Self {
+        point3(tuple.0, tuple.1, tuple.2)
     }
 }
 
