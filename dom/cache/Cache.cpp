@@ -15,7 +15,7 @@
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/CacheChild.h"
-#include "mozilla/dom/cache/CacheWorkerHolder.h"
+#include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
@@ -96,19 +96,19 @@ static bool IsValidPutResponseStatus(Response& aResponse,
 }  // namespace
 
 // Helper class to wait for Add()/AddAll() fetch requests to complete and
-// then perform a PutAll() with the responses.  This class holds a WorkerHolder
+// then perform a PutAll() with the responses.  This class holds a WorkerRef
 // to keep the Worker thread alive.  This is mainly to ensure that Add/AddAll
 // act the same as other Cache operations that directly create a CacheOpChild
 // actor.
 class Cache::FetchHandler final : public PromiseNativeHandler {
  public:
-  FetchHandler(CacheWorkerHolder* aWorkerHolder, Cache* aCache,
+  FetchHandler(CacheWorkerRef* aWorkerRef, Cache* aCache,
                nsTArray<RefPtr<Request>>&& aRequestList, Promise* aPromise)
-      : mWorkerHolder(aWorkerHolder),
+      : mWorkerRef(aWorkerRef),
         mCache(aCache),
         mRequestList(std::move(aRequestList)),
         mPromise(aPromise) {
-    MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerHolder);
+    MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerRef);
     MOZ_DIAGNOSTIC_ASSERT(mCache);
     MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
@@ -118,8 +118,8 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     NS_ASSERT_OWNINGTHREAD(FetchHandler);
 
     // Stop holding the worker alive when we leave this method.
-    RefPtr<CacheWorkerHolder> workerHolder;
-    workerHolder.swap(mWorkerHolder);
+    RefPtr<CacheWorkerRef> workerRef;
+    workerRef.swap(mWorkerRef);
 
     // Promise::All() passed an array of fetch() Promises should give us
     // an Array of Response objects.  The following code unwraps these
@@ -220,7 +220,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     mPromise->MaybeReject(rv);
   }
 
-  RefPtr<CacheWorkerHolder> mWorkerHolder;
+  RefPtr<CacheWorkerRef> mWorkerRef;
   RefPtr<Cache> mCache;
   nsTArray<RefPtr<Request>> mRequestList;
   RefPtr<Promise> mPromise;
@@ -576,7 +576,7 @@ already_AddRefed<Promise> Cache::AddAll(
   }
 
   RefPtr<FetchHandler> handler = new FetchHandler(
-      mActor->GetWorkerHolder(), this, std::move(aRequestList), promise);
+      mActor->GetWorkerRef(), this, std::move(aRequestList), promise);
 
   RefPtr<Promise> fetchPromise =
       Promise::All(aGlobal.Context(), fetchList, aRv);
