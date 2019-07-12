@@ -196,8 +196,12 @@ var SearchUtils = {
  */
 const SearchExtensionLoader = {
   _promises: new Map(),
-  // strict is used in tests.
+  // strict is used in tests, causes load errors to reject.
   _strict: false,
+  // chaos mode is used in search config tests.  It bypasses
+  // reloading extensions, otherwise over the course of these
+  // tests we do over 700K reloads of extensions.
+  _chaosMode: false,
 
   /**
    * Creates a deferred promise for an extension install.
@@ -281,6 +285,15 @@ const SearchExtensionLoader = {
       SearchUtils.log(
         `SearchExtensionLoader.installAddons: installing ${id} at ${path}`
       );
+      if (this._chaosMode) {
+        // If the extension is already loaded, we do not reload the extension.  Instead
+        // we call back to search service directly.
+        let policy = WebExtensionPolicy.getByID(id);
+        if (policy) {
+          Services.search.addEnginesFromExtension(policy.extension);
+          continue;
+        }
+      }
       // The AddonManager will install the engine asynchronously
       AddonManager.installBuiltinAddon(path).catch(error => {
         // Catch any install errors and propogate.
