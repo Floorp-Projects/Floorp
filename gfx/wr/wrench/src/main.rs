@@ -577,6 +577,7 @@ fn main() {
 
     if let Some(subargs) = args.subcommand_matches("show") {
         let no_block = args.is_present("no_block");
+        let no_batch = args.is_present("no_batch");
         render(
             &mut wrench,
             &mut window,
@@ -584,6 +585,7 @@ fn main() {
             &mut events_loop,
             subargs,
             no_block,
+            no_batch,
         );
     } else if let Some(subargs) = args.subcommand_matches("png") {
         let surface = match subargs.value_of("surface") {
@@ -628,6 +630,7 @@ fn render<'a>(
     events_loop: &mut Option<winit::EventsLoop>,
     subargs: &clap::ArgMatches<'a>,
     no_block: bool,
+    no_batch: bool,
 ) {
     let input_path = subargs.value_of("INPUT").map(PathBuf::from).unwrap();
 
@@ -665,6 +668,7 @@ fn render<'a>(
     thing.do_frame(wrench);
 
     let mut debug_flags = DebugFlags::empty();
+    debug_flags.set(DebugFlags::DISABLE_BATCHING, no_batch);
 
     // Default the profile overlay on for android.
     if cfg!(target_os = "android") {
