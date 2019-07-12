@@ -7,6 +7,7 @@ package org.mozilla.gecko.util;
 
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -52,7 +53,28 @@ public class WindowUtils {
             }
 
             return Math.max(tempWidth, tempHeight);
+        }
+    }
 
+    public static int getScreenWidth(@NonNull final Context context) {
+        final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+        if (Build.VERSION.SDK_INT >= 17) {
+            final DisplayMetrics realMetrics = new DisplayMetrics();
+            display.getRealMetrics(realMetrics);
+            return realMetrics.widthPixels;
+        } else {
+            int tempWidth;
+            try {
+                final Method getRawW = Display.class.getMethod("getRawWidth");
+                tempWidth = (Integer) getRawW.invoke(display);
+            } catch (Exception e) {
+                // This is the best we can do.
+                tempWidth = display.getWidth();
+                Log.w(LOGTAG, "Couldn't use reflection to get the real display metrics.");
+            }
+
+            return tempWidth;
         }
     }
 }
