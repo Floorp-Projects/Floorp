@@ -13,6 +13,7 @@ ID
 .DS_Store*
 *.pdb
 *.egg-info
+.eslintcache
 # Filesystem temporaries
 .fuse_hidden*
 

@@ -1,3 +1,4 @@
+browser/components/newtab/node_modules/
 browser/components/newtab/vendor/
 browser/components/translation/cld2/
 browser/extensions/screenshots/build/raven.js
