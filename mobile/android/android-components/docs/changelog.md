@@ -45,6 +45,13 @@ permalink: /changelog/
 * **concept-engine**, **browser-engine-system**
   * Added `useWideViewPort` in `Settings` to support the viewport HTML meta tag or if a wide viewport should be used. (Only affects `SystemEngineSession`)
 
+* **browser-session**
+  * Added `SessionManager.add(List<Session>)` to add a list of `Session`s to the `SessionManager`.
+
+* **feature-tab-collections**
+  * `Tab.restore()` now returns a `Session` instead of a `SessionManager.Snapshot`
+  * `TabCollection.restore()` and `TabCollection.restoreSubset()` now return a `List<Session>` instead of a `SessionManager.Snapshot`
+
 # 3.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v2.0.0...v3.0.0)
