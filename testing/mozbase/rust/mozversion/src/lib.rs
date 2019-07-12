@@ -263,7 +263,7 @@ impl error::Error for Error {
         }
     }
 
-    fn cause(&self) -> Option<&error::Error> {
+    fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
             Error::SemVerError(ref e) => Some(e),
             Error::VersionError(_) | Error::MetadataError(_) => None,
