@@ -25,7 +25,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
-#include "Muxer.h"
 #include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
 #include "nsThreadUtils.h"
@@ -37,6 +36,10 @@
 #ifdef MOZ_WEBM_ENCODER
 #  include "VP8TrackEncoder.h"
 #  include "WebMWriter.h"
+#endif
+
+#ifdef LOG
+#  undef LOG
 #endif
 
 mozilla::LazyLogModule gMediaEncoderLog("MediaEncoder");
@@ -395,13 +398,14 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
                            VideoTrackEncoder* aVideoEncoder,
                            TrackRate aTrackRate, const nsAString& aMIMEType)
     : mEncoderThread(aEncoderThread),
-      mMuxer(MakeUnique<Muxer>(std::move(aWriter))),
+      mWriter(std::move(aWriter)),
       mAudioEncoder(aAudioEncoder),
       mVideoEncoder(aVideoEncoder),
       mEncoderListener(MakeAndAddRef<EncoderListener>(mEncoderThread, this)),
       mStartTime(TimeStamp::Now()),
       mMIMEType(aMIMEType),
       mInitialized(false),
+      mMetadataEncoded(false),
       mCompleted(false),
       mError(false),
       mCanceled(false),
@@ -647,7 +651,7 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
             driftCompensator, aTrackRate, FrameDroppingMode::DISALLOW);
       }
     }
-    writer = MakeUnique<WebMWriter>();
+    writer = MakeUnique<WebMWriter>(aTrackTypes);
     mimeType = NS_LITERAL_STRING(VIDEO_WEBM);
   } else if (MediaEncoder::IsWebMEncoderEnabled() &&
              aMIMEType.EqualsLiteral(AUDIO_WEBM) &&
@@ -668,7 +672,7 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
     } else {
       mimeType = NS_LITERAL_STRING(AUDIO_WEBM);
     }
-    writer = MakeUnique<WebMWriter>();
+    writer = MakeUnique<WebMWriter>(aTrackTypes);
   }
 #endif  // MOZ_WEBM_ENCODER
   else if (MediaDecoder::IsOggEnabled() && MediaDecoder::IsOpusEnabled() &&
@@ -695,7 +699,7 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
             driftCompensator, aTrackRate, FrameDroppingMode::DISALLOW);
       }
     }
-    writer = MakeUnique<WebMWriter>();
+    writer = MakeUnique<WebMWriter>(aTrackTypes);
     mimeType = NS_LITERAL_STRING(VIDEO_WEBM);
   }
 #endif  // MOZ_WEBM_ENCODER
@@ -733,78 +737,122 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
       audioEncoder, videoEncoder, aTrackRate, mimeType);
 }
 
+nsresult MediaEncoder::GetEncodedMetadata(
+    nsTArray<nsTArray<uint8_t>>* aOutputBufs, nsAString& aMIMEType) {
+  AUTO_PROFILER_LABEL("MediaEncoder::GetEncodedMetadata", OTHER);
+
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+
+  if (mShutdown) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!mInitialized) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mMetadataEncoded) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  aMIMEType = mMIMEType;
+
+  LOG(LogLevel::Verbose,
+      ("GetEncodedMetadata TimeStamp = %f", GetEncodeTimeStamp()));
+
+  nsresult rv;
+
+  if (mAudioEncoder) {
+    if (!mAudioEncoder->IsInitialized()) {
+      LOG(LogLevel::Error,
+          ("GetEncodedMetadata Audio encoder not initialized"));
+      MOZ_ASSERT(false);
+      return NS_ERROR_FAILURE;
+    }
+    rv = CopyMetadataToMuxer(mAudioEncoder);
+    if (NS_FAILED(rv)) {
+      LOG(LogLevel::Error, ("Failed to Set Audio Metadata"));
+      SetError();
+      return rv;
+    }
+  }
+  if (mVideoEncoder) {
+    if (!mVideoEncoder->IsInitialized()) {
+      LOG(LogLevel::Error,
+          ("GetEncodedMetadata Video encoder not initialized"));
+      MOZ_ASSERT(false);
+      return NS_ERROR_FAILURE;
+    }
+    rv = CopyMetadataToMuxer(mVideoEncoder.get());
+    if (NS_FAILED(rv)) {
+      LOG(LogLevel::Error, ("Failed to Set Video Metadata"));
+      SetError();
+      return rv;
+    }
+  }
+
+  rv = mWriter->GetContainerData(aOutputBufs, ContainerWriter::GET_HEADER);
+  if (NS_FAILED(rv)) {
+    LOG(LogLevel::Error, ("Writer fail to generate header!"));
+    SetError();
+    return rv;
+  }
+  LOG(LogLevel::Verbose,
+      ("Finish GetEncodedMetadata TimeStamp = %f", GetEncodeTimeStamp()));
+  mMetadataEncoded = true;
+
+  return NS_OK;
+}
+
 nsresult MediaEncoder::GetEncodedData(
     nsTArray<nsTArray<uint8_t>>* aOutputBufs) {
   AUTO_PROFILER_LABEL("MediaEncoder::GetEncodedData", OTHER);
 
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT_IF(mAudioEncoder, mAudioEncoder->IsInitialized());
-  MOZ_ASSERT_IF(mVideoEncoder, mVideoEncoder->IsInitialized());
+
+  if (!mMetadataEncoded) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv;
   LOG(LogLevel::Verbose,
       ("GetEncodedData TimeStamp = %f", GetEncodeTimeStamp()));
+  EncodedFrameContainer encodedData;
 
-  if (mMuxer->NeedsMetadata()) {
-    nsTArray<RefPtr<TrackMetadataBase>> meta;
-    if (mAudioEncoder && !*meta.AppendElement(mAudioEncoder->GetMetadata())) {
-      LOG(LogLevel::Error, ("Audio metadata is null"));
-      SetError();
-      return NS_ERROR_ABORT;
-    }
-    if (mVideoEncoder && !*meta.AppendElement(mVideoEncoder->GetMetadata())) {
-      LOG(LogLevel::Error, ("Video metadata is null"));
-      SetError();
-      return NS_ERROR_ABORT;
-    }
-
-    rv = mMuxer->SetMetadata(meta);
+  if (mVideoEncoder) {
+    // We're most likely to actually wait for a video frame, so do that first
+    // to minimize capture offset/lipsync issues.
+    rv = WriteEncodedDataToMuxer(mVideoEncoder);
+    LOG(LogLevel::Verbose,
+        ("Video encoded TimeStamp = %f", GetEncodeTimeStamp()));
     if (NS_FAILED(rv)) {
-      LOG(LogLevel::Error, ("SetMetadata failed"));
-      SetError();
+      LOG(LogLevel::Warning, ("Failed to write encoded video data to muxer"));
       return rv;
     }
   }
 
-  // First, feed encoded data from encoders to muxer.
-
-  if (mVideoEncoder && !mVideoEncoder->IsEncodingComplete()) {
-    nsTArray<RefPtr<EncodedFrame>> videoFrames;
-    rv = mVideoEncoder->GetEncodedTrack(videoFrames);
+  if (mAudioEncoder) {
+    rv = WriteEncodedDataToMuxer(mAudioEncoder);
+    LOG(LogLevel::Verbose,
+        ("Audio encoded TimeStamp = %f", GetEncodeTimeStamp()));
     if (NS_FAILED(rv)) {
-      // Encoding might be canceled.
-      LOG(LogLevel::Error, ("Failed to get encoded data from video encoder."));
+      LOG(LogLevel::Warning, ("Failed to write encoded audio data to muxer"));
       return rv;
-    }
-    for (RefPtr<EncodedFrame>& frame : videoFrames) {
-      mMuxer->AddEncodedVideoFrame(std::move(frame));
-    }
-    if (mVideoEncoder->IsEncodingComplete()) {
-      mMuxer->VideoEndOfStream();
     }
   }
 
-  if (mAudioEncoder && !mAudioEncoder->IsEncodingComplete()) {
-    nsTArray<RefPtr<EncodedFrame>> audioFrames;
-    rv = mAudioEncoder->GetEncodedTrack(audioFrames);
-    if (NS_FAILED(rv)) {
-      // Encoding might be canceled.
-      LOG(LogLevel::Error, ("Failed to get encoded data from audio encoder."));
-      return rv;
-    }
-    for (RefPtr<EncodedFrame>& frame : audioFrames) {
-      mMuxer->AddEncodedAudioFrame(std::move(frame));
-    }
-    if (mAudioEncoder->IsEncodingComplete()) {
-      mMuxer->AudioEndOfStream();
-    }
-  }
-
-  // Second, get data from muxer. This will do the actual muxing.
-
-  rv = mMuxer->GetData(aOutputBufs);
-  if (mMuxer->IsFinished()) {
+  // In audio only or video only case, let unavailable track's flag to be
+  // true.
+  bool isAudioCompleted = !mAudioEncoder || mAudioEncoder->IsEncodingComplete();
+  bool isVideoCompleted = !mVideoEncoder || mVideoEncoder->IsEncodingComplete();
+  rv = mWriter->GetContainerData(
+      aOutputBufs,
+      isAudioCompleted && isVideoCompleted ? ContainerWriter::FLUSH_NEEDED : 0);
+  if (mWriter->IsWritingComplete()) {
     mCompleted = true;
     Shutdown();
   }
@@ -812,9 +860,7 @@ nsresult MediaEncoder::GetEncodedData(
   LOG(LogLevel::Verbose,
       ("END GetEncodedData TimeStamp=%f "
        "mCompleted=%d, aComplete=%d, vComplete=%d",
-       GetEncodeTimeStamp(), mCompleted,
-       !mAudioEncoder || mAudioEncoder->IsEncodingComplete(),
-       !mVideoEncoder || mVideoEncoder->IsEncodingComplete()));
+       GetEncodeTimeStamp(), mCompleted, isAudioCompleted, isVideoCompleted));
 
   return rv;
 }
@@ -856,6 +902,64 @@ void MediaEncoder::Shutdown() {
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   }
+}
+
+nsresult MediaEncoder::WriteEncodedDataToMuxer(TrackEncoder* aTrackEncoder) {
+  AUTO_PROFILER_LABEL("MediaEncoder::WriteEncodedDataToMuxer", OTHER);
+
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+
+  if (!aTrackEncoder) {
+    NS_ERROR("No track encoder to get data from");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aTrackEncoder->IsEncodingComplete()) {
+    return NS_OK;
+  }
+
+  EncodedFrameContainer encodedData;
+  nsresult rv = aTrackEncoder->GetEncodedTrack(encodedData);
+  if (NS_FAILED(rv)) {
+    // Encoding might be canceled.
+    LOG(LogLevel::Error, ("Failed to get encoded data from encoder."));
+    SetError();
+    return rv;
+  }
+  rv = mWriter->WriteEncodedTrack(
+      encodedData,
+      aTrackEncoder->IsEncodingComplete() ? ContainerWriter::END_OF_STREAM : 0);
+  if (NS_FAILED(rv)) {
+    LOG(LogLevel::Error,
+        ("Failed to write encoded track to the media container."));
+    SetError();
+  }
+  return rv;
+}
+
+nsresult MediaEncoder::CopyMetadataToMuxer(TrackEncoder* aTrackEncoder) {
+  AUTO_PROFILER_LABEL("MediaEncoder::CopyMetadataToMuxer", OTHER);
+
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+
+  if (!aTrackEncoder) {
+    NS_ERROR("No track encoder to get metadata from");
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<TrackMetadataBase> meta = aTrackEncoder->GetMetadata();
+  if (meta == nullptr) {
+    LOG(LogLevel::Error, ("metadata == null"));
+    SetError();
+    return NS_ERROR_ABORT;
+  }
+
+  nsresult rv = mWriter->SetMetadata(meta);
+  if (NS_FAILED(rv)) {
+    LOG(LogLevel::Error, ("SetMetadata failed"));
+    SetError();
+  }
+  return rv;
 }
 
 bool MediaEncoder::IsShutdown() {
@@ -935,11 +1039,6 @@ bool MediaEncoder::IsWebMEncoderEnabled() {
   return StaticPrefs::media_encoder_webm_enabled();
 }
 #endif
-
-const nsString& MediaEncoder::MimeType() const {
-  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-  return mMIMEType;
-}
 
 void MediaEncoder::NotifyInitialized() {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
@@ -1021,5 +1120,3 @@ void MediaEncoder::SetVideoKeyFrameInterval(int32_t aVideoKeyFrameInterval) {
 }
 
 }  // namespace mozilla
-
-#undef LOG
