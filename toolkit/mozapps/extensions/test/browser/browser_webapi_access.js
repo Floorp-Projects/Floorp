@@ -140,6 +140,10 @@ add_task(async function test_navigated_window() {
 // Check that if a page is embedded in a chrome content UI that it can still
 // access the API.
 add_task(async function test_chrome_frame() {
+  SpecialPowers.pushPrefEnv({
+    set: [["security.allow_unsafe_parent_loads", true]],
+  });
+
   await BrowserTestUtils.withNewTab(
     `${CHROMEROOT}webapi_checkchromeframe.xul`,
     async function test_available(browser) {
