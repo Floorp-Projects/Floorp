@@ -343,20 +343,10 @@ var gIdentityHandler = {
   },
 
   recordClick(object) {
-    let extra = {};
-    for (let blocker of ContentBlocking.blockers) {
-      if (blocker.telemetryIdentifier) {
-        extra[blocker.telemetryIdentifier] = blocker.activated
-          ? "true"
-          : "false";
-      }
-    }
     Services.telemetry.recordEvent(
       "security.ui.identitypopup",
       "click",
-      object,
-      null,
-      extra
+      object
     );
   },
 
@@ -1101,24 +1091,10 @@ var gIdentityHandler = {
       window.addEventListener("focus", this, true);
     }
 
-    let extra = {};
-    for (let blocker of ContentBlocking.blockers) {
-      if (blocker.telemetryIdentifier) {
-        extra[blocker.telemetryIdentifier] = blocker.activated
-          ? "true"
-          : "false";
-      }
-    }
-
-    let shieldStatus = ContentBlocking.iconBox.hasAttribute("active")
-      ? "shield-showing"
-      : "shield-hidden";
     Services.telemetry.recordEvent(
       "security.ui.identitypopup",
       "open",
-      "identity_popup",
-      shieldStatus,
-      extra
+      "identity_popup"
     );
   },
 
