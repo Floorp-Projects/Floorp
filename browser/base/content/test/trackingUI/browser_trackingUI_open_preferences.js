@@ -69,23 +69,9 @@ add_task(async function testOpenPreferencesFromCBPrefsButton() {
       "The preferences button is shown."
     );
 
-    Services.telemetry.clearEvents();
-
     let shown = waitAndAssertPreferencesShown("trackingprotection");
     preferencesButton.click();
     await shown;
-
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).parent;
-    let clickEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "cb_prefs_button"
-    );
-    is(clickEvents.length, 1, "recorded telemetry for the click");
   });
 });
 
@@ -165,23 +151,9 @@ add_task(async function testOpenPreferencesFromTrackersSubview() {
       "The preferences button is shown."
     );
 
-    Services.telemetry.clearEvents();
-
     let shown = waitAndAssertPreferencesShown("trackingprotection");
     preferencesButton.click();
     await shown;
-
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).parent;
-    let clickEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "trackers_prefs_btn"
-    );
-    is(clickEvents.length, 1, "recorded telemetry for the click");
   });
 
   Services.prefs.clearUserPref(TP_PREF);
@@ -226,23 +198,9 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
       "The preferences button is shown."
     );
 
-    Services.telemetry.clearEvents();
-
     let shown = waitAndAssertPreferencesShown("trackingprotection");
     preferencesButton.click();
     await shown;
-
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).parent;
-    let clickEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "cookies_prefs_btn"
-    );
-    is(clickEvents.length, 1, "recorded telemetry for the click");
   });
 
   Services.prefs.clearUserPref(TPC_PREF);
