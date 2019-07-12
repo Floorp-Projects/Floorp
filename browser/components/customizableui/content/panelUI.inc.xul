@@ -257,7 +257,7 @@
         <toolbaritem>
           <toolbarbutton id="appMenu-tp-button"
                class="subviewbutton subviewbutton-iconic"
-               oncommand="ContentBlocking.openPreferences('appMenu-trackingprotection');">
+               oncommand="gProtectionsHandler.openPreferences('appMenu-trackingprotection');">
             <image id="appMenu-tp-icon" class="toolbarbutton-icon"/>
             <label id="appMenu-tp-label" class="toolbarbutton-text"/>
             <label id="appMenu-tp-category"/>
