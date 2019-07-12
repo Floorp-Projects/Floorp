@@ -4,6 +4,8 @@
 
 use bincode;
 use euclid::SideOffsets2D;
+use peek_poke::{ensure_red_zone, peek_from_slice, poke_extend_vec};
+use peek_poke::{poke_inplace_slice, poke_into_vec, Poke};
 #[cfg(feature = "deserialize")]
 use serde::de::Deserializer;
 #[cfg(feature = "serialize")]
@@ -67,18 +69,15 @@ impl<'a, T> ItemRange<'a, T> {
     }
 }
 
-impl<'a, T> ItemRange<'a, T>
-where
-    for<'de> T: Deserialize<'de>,
-{
+impl<'a, T: Default> ItemRange<'a, T> {
     pub fn iter(&self) -> AuxIter<'a, T> {
-        AuxIter::new(self.bytes)
+        AuxIter::new(T::default(), self.bytes)
     }
 }
 
 impl<'a, T> IntoIterator for ItemRange<'a, T>
 where
-    for<'de> T: Deserialize<'de>,
+    T: Copy + Default + peek_poke::Peek,
 {
     type Item = T;
     type IntoIter = AuxIter<'a, T>;
@@ -176,7 +175,7 @@ impl DebugStats {
 
     /// Logs the stats for the given serialized slice
     #[cfg(feature = "display_list_stats")]
-    fn log_slice<T: for<'de> Deserialize<'de>>(
+    fn log_slice<T: Peek>(
         &mut self,
         slice_name: &'static str,
         range: &ItemRange<T>,
@@ -186,7 +185,7 @@ impl DebugStats {
         // processed, and the `range` has everything we need.
         self.last_addr = range.bytes.as_ptr() as usize + range.bytes.len();
 
-        self._update_entry(slice_name, range.iter().size_hint().0, range.bytes.len());
+        self._update_entry(slice_name, range.iter().len(), range.bytes.len());
     }
 
     #[cfg(not(feature = "display_list_stats"))]
@@ -217,9 +216,10 @@ enum Peek {
 
 #[derive(Clone)]
 pub struct AuxIter<'a, T> {
+    item: T,
     data: &'a [u8],
     size: usize,
-    _boo: PhantomData<T>,
+//    _boo: PhantomData<T>,
 }
 
 impl BuiltDisplayListDescriptor {}
@@ -268,11 +268,10 @@ impl BuiltDisplayList {
     }
 }
 
-/// Returns the byte-range the slice occupied, and the number of elements
-/// in the slice.
-fn skip_slice<'a, T: for<'de> Deserialize<'de>>(mut data: &mut &'a [u8]) -> ItemRange<'a, T> {
-    let skip_offset: usize = bincode::deserialize_from(&mut data).expect("MEH: malicious input?");
-
+/// Returns the byte-range the slice occupied.
+fn skip_slice<'a, T: peek_poke::Peek>(data: &mut &'a [u8]) -> ItemRange<'a, T> {
+    let mut skip_offset = 0usize;
+    *data = peek_from_slice(data, &mut skip_offset);
     let (skip, rest) = data.split_at(skip_offset);
 
     // Adjust data pointer to skip read values
@@ -357,16 +356,14 @@ impl<'a> BuiltDisplayListIter<'a> {
     pub fn next_raw<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
         use crate::DisplayItem::*;
 
-        if self.data.is_empty() {
+        // A "red zone" of DisplayItem::max_size() bytes has been added to the
+        // end of the serialized display list. If this amount, or less, is
+        // remaining then we've reached the end of the display list.
+        if self.data.len() <= di::DisplayItem::max_size() {
             return None;
         }
 
-        {
-            let reader = bincode::IoReader::new(UnsafeReader::new(&mut self.data));
-            bincode::deserialize_in_place(reader, &mut self.cur_item)
-                .expect("MEH: malicious process?");
-        }
-
+        self.data = peek_from_slice(self.data, &mut self.cur_item);
         self.log_item_stats();
 
         match self.cur_item {
@@ -527,34 +524,32 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
     }
 }
 
-impl<'de, 'a, T: Deserialize<'de>> AuxIter<'a, T> {
-    pub fn new(mut data: &'a [u8]) -> Self {
-        let size: usize = if data.is_empty() {
-            0 // Accept empty ItemRanges pointing anywhere
-        } else {
-            bincode::deserialize_from(&mut UnsafeReader::new(&mut data)).expect("MEH: malicious input?")
+impl<'a, T> AuxIter<'a, T> {
+    pub fn new(item: T, mut data: &'a [u8]) -> Self {
+        let mut size = 0usize;
+        if !data.is_empty() {
+            data = peek_from_slice(data, &mut size);
         };
 
         AuxIter {
+            item,
             data,
             size,
-            _boo: PhantomData,
+//            _boo: PhantomData,
         }
     }
 }
 
-impl<'a, T: for<'de> Deserialize<'de>> Iterator for AuxIter<'a, T> {
+impl<'a, T: Copy + peek_poke::Peek> Iterator for AuxIter<'a, T> {
     type Item = T;
 
-    fn next(&mut self) -> Option<T> {
+    fn next(&mut self) -> Option<Self::Item> {
         if self.size == 0 {
             None
         } else {
             self.size -= 1;
-            Some(
-                bincode::deserialize_from(&mut UnsafeReader::new(&mut self.data))
-                    .expect("MEH: malicious input?"),
-            )
+            self.data = peek_from_slice(self.data, &mut self.item);
+            Some(self.item)
         }
     }
 
@@ -563,7 +558,7 @@ impl<'a, T: for<'de> Deserialize<'de>> Iterator for AuxIter<'a, T> {
     }
 }
 
-impl<'a, T: for<'de> Deserialize<'de>> ::std::iter::ExactSizeIterator for AuxIter<'a, T> {}
+impl<'a, T: Copy + peek_poke::Peek> ::std::iter::ExactSizeIterator for AuxIter<'a, T> {}
 
 
 #[cfg(feature = "serialize")]
@@ -740,7 +735,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 Debug::PopReferenceFrame => Real::PopReferenceFrame,
                 Debug::PopAllShadows => Real::PopAllShadows,
             };
-            serialize_fast(&mut data, &item);
+            poke_into_vec(&item, &mut data);
             // the aux data is serialized after the item, hence the temporary
             data.extend(temp.drain(..));
         }
@@ -832,78 +827,6 @@ impl<'a> Write for SizeCounter {
 
     #[inline(always)]
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
-}
-
-/// Serializes a value assuming the Serialize impl has a stable size across two
-/// invocations.
-///
-/// If this assumption is incorrect, the result will be Undefined Behaviour. This
-/// assumption should hold for all derived Serialize impls, which is all we currently
-/// use.
-fn serialize_fast<T: Serialize>(vec: &mut Vec<u8>, e: T) {
-    // manually counting the size is faster than vec.reserve(bincode::serialized_size(&e) as usize) for some reason
-    let mut size = SizeCounter(0);
-    bincode::serialize_into(&mut size, &e).unwrap();
-    vec.reserve(size.0);
-
-    let old_len = vec.len();
-    let ptr = unsafe { vec.as_mut_ptr().add(old_len) };
-    let mut w = UnsafeVecWriter(ptr);
-    bincode::serialize_into(&mut w, &e).unwrap();
-
-    // fix up the length
-    unsafe { vec.set_len(old_len + size.0); }
-
-    // make sure we wrote the right amount
-    debug_assert_eq!(((w.0 as usize) - (vec.as_ptr() as usize)), vec.len());
-}
-
-/// Serializes an iterator, assuming:
-///
-/// * The Clone impl is trivial (e.g. we're just memcopying a slice iterator)
-/// * The ExactSizeIterator impl is stable and correct across a Clone
-/// * The Serialize impl has a stable size across two invocations
-///
-/// If the first is incorrect, WebRender will be very slow. If the other two are
-/// incorrect, the result will be Undefined Behaviour! The ExactSizeIterator
-/// bound would ideally be replaced with a TrustedLen bound to protect us a bit
-/// better, but that trait isn't stable (and won't be for a good while, if ever).
-///
-/// Debug asserts are included that should catch all Undefined Behaviour, but
-/// we can't afford to include these in release builds.
-fn serialize_iter_fast<I>(vec: &mut Vec<u8>, iter: I) -> usize
-where I: ExactSizeIterator + Clone,
-      I::Item: Serialize,
-{
-    // manually counting the size is faster than vec.reserve(bincode::serialized_size(&e) as usize) for some reason
-    let mut size = SizeCounter(0);
-    let mut count1 = 0;
-
-    for e in iter.clone() {
-        bincode::serialize_into(&mut size, &e).unwrap();
-        count1 += 1;
-    }
-
-    vec.reserve(size.0);
-
-    let old_len = vec.len();
-    let ptr = unsafe { vec.as_mut_ptr().add(old_len) };
-    let mut w = UnsafeVecWriter(ptr);
-    let mut count2 = 0;
-
-    for e in iter {
-        bincode::serialize_into(&mut w, &e).unwrap();
-        count2 += 1;
-    }
-
-    // fix up the length
-    unsafe { vec.set_len(old_len + size.0); }
-
-    // make sure we wrote the right amount
-    debug_assert_eq!(((w.0 as usize) - (vec.as_ptr() as usize)), vec.len());
-    debug_assert_eq!(count1, count2);
-
-    count1
 }
 
 // This uses a (start, end) representation instead of (start, len) so that
@@ -1108,38 +1031,39 @@ impl DisplayListBuilder {
     /// result in WebRender panicking or behaving in unexpected ways.
     #[inline]
     pub fn push_item(&mut self, item: &di::DisplayItem) {
-        serialize_fast(&mut self.data, item);
+        poke_into_vec(item, &mut self.data);
     }
 
     fn push_iter_impl<I>(data: &mut Vec<u8>, iter_source: I)
     where
         I: IntoIterator,
-        I::IntoIter: ExactSizeIterator + Clone,
-        I::Item: Serialize,
+        I::IntoIter: ExactSizeIterator,
+        I::Item: Poke,
     {
         let iter = iter_source.into_iter();
         let len = iter.len();
         // Format:
         // payload_byte_size: usize, item_count: usize, [I; item_count]
 
-        // We write a dummy value so there's room for later
+        // Track the the location of where to write byte size with offsets
+        // instead of pointers because data may be moved in memory during
+        // `serialize_iter_fast`.
         let byte_size_offset = data.len();
-        serialize_fast(data, &0usize);
-        let payload_offset = data.len();
-        serialize_fast(data, &len);
-        let count = serialize_iter_fast(data, iter);
+
+        // We write a dummy value so there's room for later
+        poke_into_vec(&0usize, data);
+        poke_into_vec(&len, data);
+        let count = poke_extend_vec(iter, data);
+        debug_assert_eq!(len, count);
+
+        // Add red zone
+        ensure_red_zone::<I::Item>(data);
 
         // Now write the actual byte_size
         let final_offset = data.len();
-        let byte_size = final_offset - payload_offset;
-
-        // Note we don't use serialize_fast because we don't want to change the Vec's len
-        bincode::serialize_into(
-            &mut &mut data[byte_size_offset..],
-            &byte_size,
-        ).unwrap();
-
-        debug_assert_eq!(len, count);
+        debug_assert!(final_offset >= (byte_size_offset + mem::size_of::<usize>()));
+        let byte_size = final_offset - byte_size_offset - mem::size_of::<usize>();
+        poke_inplace_slice(&byte_size, &mut data[byte_size_offset..]);
     }
 
     /// Push items from an iterator to the display list.
@@ -1149,8 +1073,8 @@ impl DisplayListBuilder {
     pub fn push_iter<I>(&mut self, iter: I)
     where
         I: IntoIterator,
-        I::IntoIter: ExactSizeIterator + Clone,
-        I::Item: Serialize,
+        I::IntoIter: ExactSizeIterator,
+        I::Item: Poke,
     {
         Self::push_iter_impl(&mut self.data, iter);
     }
@@ -1684,8 +1608,13 @@ impl DisplayListBuilder {
         self.push_item(&di::DisplayItem::PopAllShadows);
     }
 
-    pub fn finalize(self) -> (PipelineId, LayoutSize, BuiltDisplayList) {
+    pub fn finalize(mut self) -> (PipelineId, LayoutSize, BuiltDisplayList) {
         assert!(self.save_state.is_none(), "Finalized DisplayListBuilder with a pending save");
+
+        // Add `DisplayItem::max_size` zone of zeroes to the end of display list
+        // so there is at least this amount available in the display list during
+        // serialization.
+        ensure_red_zone::<di::DisplayItem>(&mut self.data);
 
         let end_time = precise_time_ns();
 

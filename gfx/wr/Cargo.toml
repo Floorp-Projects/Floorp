@@ -15,4 +15,4 @@ panic = "abort"
 panic = "abort"
 
 [patch.crates-io]
-serde_derive = { git = "https://github.com/servo/serde", branch = "deserialize_from_enums10" }
+serde_derive = { git = "https://github.com/servo/serde", branch = "deserialize_from_enums10", feature="deserialize_in_place" }
