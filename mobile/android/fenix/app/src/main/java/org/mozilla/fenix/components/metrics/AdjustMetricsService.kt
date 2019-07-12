@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.components.metrics
 
 import android.app.Activity
@@ -12,8 +13,6 @@ import com.adjust.sdk.AdjustConfig
 import com.adjust.sdk.LogLevel
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
-
-import java.lang.IllegalStateException
 
 class AdjustMetricsService(private val application: Application) : MetricsService {
     override fun start() {

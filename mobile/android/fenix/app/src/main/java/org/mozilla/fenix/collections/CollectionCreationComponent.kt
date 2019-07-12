@@ -1,22 +1,22 @@
-package org.mozilla.fenix.collections
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
-   License, v. 2.0. If a copy of the MPL was not distributed with this
-   file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.fenix.collections
 
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
-import org.mozilla.fenix.mvi.ViewState
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.UIComponentViewModelBase
 import org.mozilla.fenix.mvi.UIComponentViewModelProvider
+import org.mozilla.fenix.mvi.ViewState
 
 sealed class SaveCollectionStep {
     object SelectTabs : SaveCollectionStep()
