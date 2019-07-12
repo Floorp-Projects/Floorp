@@ -813,8 +813,6 @@ void DisplayListBuilder::Finalize(
                           &aOutTransaction.mDLDesc, &dl.inner);
   aOutTransaction.mDL.emplace(dl.inner.data, dl.inner.length,
                               dl.inner.capacity);
-  aOutTransaction.mRemotePipelineIds =
-      std::move(SubBuilder(aOutTransaction.mRenderRoot).mRemotePipelineIds);
   dl.inner.capacity = 0;
   dl.inner.data = nullptr;
 }
@@ -1103,7 +1101,6 @@ void DisplayListBuilder::PushIFrame(const wr::LayoutRect& aBounds,
                                     bool aIsBackfaceVisible,
                                     PipelineId aPipeline,
                                     bool aIgnoreMissingPipeline) {
-  mRemotePipelineIds.AppendElement(aPipeline);
   wr_dp_push_iframe(mWrState, aBounds, MergeClipLeaf(aBounds),
                     aIsBackfaceVisible, &mCurrentSpaceAndClipChain, aPipeline,
                     aIgnoreMissingPipeline);

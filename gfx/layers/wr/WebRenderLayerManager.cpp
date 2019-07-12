@@ -255,7 +255,6 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
         WrBridge()->HasWebRenderParentCommands(renderRoot)) {
       auto updates = renderRootUpdates.AppendElement();
       updates->mRenderRoot = renderRoot;
-      updates->mPaintSequenceNumber = mPaintSequenceNumber;
       if (stateManager.mAsyncResourceUpdates) {
         stateManager.mAsyncResourceUpdates->Flush(updates->mResourceUpdates,
                                                   updates->mSmallShmems,
@@ -270,7 +269,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   Maybe<wr::IpcResourceUpdateQueue> nothing;
   WrBridge()->EndEmptyTransaction(mFocusTarget, renderRootUpdates,
-                                  mLatestTransactionId,
+                                  mPaintSequenceNumber, mLatestTransactionId,
                                   mTransactionIdAllocator->GetVsyncId(),
                                   mTransactionIdAllocator->GetVsyncStart(),
                                   refreshStart, mTransactionStart, mURL);
