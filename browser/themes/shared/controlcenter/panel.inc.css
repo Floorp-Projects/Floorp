@@ -589,8 +589,8 @@ description#identity-popup-content-verifier,
 }
 
 /* Show the "detected"/"not detected" message depending on the content state. */
-#protections-popup:not([detected]) #identity-popup-content-blocking-detected,
-#protections-popup[detected] #identity-popup-content-blocking-not-detected {
+#identity-popup-content-blocking-content:not([detected]) > #identity-popup-content-blocking-detected,
+#identity-popup-content-blocking-content[detected] > #identity-popup-content-blocking-not-detected {
   display: none;
 }
 
@@ -637,6 +637,28 @@ description#identity-popup-content-verifier,
   box-shadow: var(--focus-ring-box-shadow);
 }
 
+#tracking-action-block {
+  background-color: #0060df;
+  color: #fff !important;
+}
+
+#tracking-action-block:hover {
+  background-color: #003eaa;
+}
+
+#tracking-action-block:hover:active {
+  background-color: #002275;
+}
+
+#tracking-action-block .button-icon {
+  fill-opacity: 1;
+}
+
+#tracking-action-unblock,
+#tracking-action-unblock-private {
+  list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
+}
+
 #identity-popup-content-blocking-report-breakage {
   margin-top: 6px;
 }
@@ -644,8 +666,18 @@ description#identity-popup-content-verifier,
 /* Hide the "report breakage" button if we have not detected any trackers
  * (except if the user added an exception, in which case they might still
  * (especially!) want to report the breakage). */
-#protections-popup:not([blocking]):not([hasException]) #protections-popup-tp-switch-breakage-link {
+#identity-popup-content-blocking-content:not([blocking]):not([hasException]) #identity-popup-content-blocking-report-breakage {
   display: none;
+}
+
+/* Show the right action buttons depending on content state */
+/* Offer to temporarily add an exception in private mode. */
+:root:not([privatebrowsingmode]) #identity-popup-content-blocking-content[blocking]:not([hasException]) > #tracking-action-unblock,
+/* Offer to permanently add an exception in normal mode. */
+:root[privatebrowsingmode] #identity-popup-content-blocking-content[blocking]:not([hasException]) > #tracking-action-unblock-private,
+/* If there's an exception just offer to remove the exception again. */
+#identity-popup-content-blocking-content[hasException] > #tracking-action-block {
+  display: -moz-box;
 }
 
 /* PERMISSIONS */
@@ -740,7 +772,7 @@ description#identity-popup-content-verifier,
   text-align: end;
 }
 
-#protections-popup[hasException] .identity-popup-content-blocking-category-state-label {
+#identity-popup-content-blocking-content[hasException] .identity-popup-content-blocking-category-state-label {
   visibility: hidden;
 }
 

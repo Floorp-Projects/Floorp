@@ -46,10 +46,7 @@ add_task(async function testBackgroundTabs() {
     "Foreground tab has the correct content blocking event."
   );
 
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("active"),
-    "shield is not active"
-  );
+  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
 
   await BrowserTestUtils.switchTab(gBrowser, backgroundTab);
 
@@ -65,7 +62,7 @@ add_task(async function testBackgroundTabs() {
     "Foreground tab still has the correct content blocking event."
   );
 
-  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "shield is active");
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
 
   gBrowser.removeTab(backgroundTab);
   gBrowser.removeTab(tab);
