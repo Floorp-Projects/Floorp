@@ -13,26 +13,26 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-class CacheWorkerHolder;
+class CacheWorkerRef;
 
 class ActorChild {
  public:
   virtual void StartDestroy() = 0;
 
-  void SetWorkerHolder(CacheWorkerHolder* aWorkerHolder);
+  void SetWorkerRef(CacheWorkerRef* aWorkerRef);
 
-  void RemoveWorkerHolder();
+  void RemoveWorkerRef();
 
-  CacheWorkerHolder* GetWorkerHolder() const;
+  CacheWorkerRef* GetWorkerRef() const;
 
-  bool WorkerHolderNotified() const;
+  bool WorkerRefNotified() const;
 
  protected:
   ActorChild();
   ~ActorChild();
 
  private:
-  RefPtr<CacheWorkerHolder> mWorkerHolder;
+  RefPtr<CacheWorkerRef> mWorkerRef;
 };
 
 }  // namespace cache

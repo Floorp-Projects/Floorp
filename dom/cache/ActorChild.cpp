@@ -6,45 +6,45 @@
 
 #include "mozilla/dom/cache/ActorChild.h"
 
-#include "mozilla/dom/cache/CacheWorkerHolder.h"
+#include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
 namespace cache {
 
-void ActorChild::SetWorkerHolder(CacheWorkerHolder* aWorkerHolder) {
+void ActorChild::SetWorkerRef(CacheWorkerRef* aWorkerRef) {
   // Some of the Cache actors can have multiple DOM objects associated with
-  // them.  In this case the workerHolder will be added multiple times.  This is
-  // permitted, but the workerHolder should be the same each time.
-  if (mWorkerHolder) {
-    MOZ_DIAGNOSTIC_ASSERT(mWorkerHolder == aWorkerHolder);
+  // them.  In this case the workerRef will be added multiple times.  This is
+  // permitted, but the workerRef should be the same each time.
+  if (mWorkerRef) {
+    MOZ_DIAGNOSTIC_ASSERT(mWorkerRef == aWorkerRef);
     return;
   }
 
-  mWorkerHolder = aWorkerHolder;
-  if (mWorkerHolder) {
-    mWorkerHolder->AddActor(this);
+  mWorkerRef = aWorkerRef;
+  if (mWorkerRef) {
+    mWorkerRef->AddActor(this);
   }
 }
 
-void ActorChild::RemoveWorkerHolder() {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerHolder);
-  if (mWorkerHolder) {
-    mWorkerHolder->RemoveActor(this);
-    mWorkerHolder = nullptr;
+void ActorChild::RemoveWorkerRef() {
+  MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerRef);
+  if (mWorkerRef) {
+    mWorkerRef->RemoveActor(this);
+    mWorkerRef = nullptr;
   }
 }
 
-CacheWorkerHolder* ActorChild::GetWorkerHolder() const { return mWorkerHolder; }
+CacheWorkerRef* ActorChild::GetWorkerRef() const { return mWorkerRef; }
 
-bool ActorChild::WorkerHolderNotified() const {
-  return mWorkerHolder && mWorkerHolder->Notified();
+bool ActorChild::WorkerRefNotified() const {
+  return mWorkerRef && mWorkerRef->Notified();
 }
 
 ActorChild::ActorChild() {}
 
-ActorChild::~ActorChild() { MOZ_DIAGNOSTIC_ASSERT(!mWorkerHolder); }
+ActorChild::~ActorChild() { MOZ_DIAGNOSTIC_ASSERT(!mWorkerRef); }
 
 }  // namespace cache
 }  // namespace dom

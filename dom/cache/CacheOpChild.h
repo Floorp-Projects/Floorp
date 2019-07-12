@@ -31,7 +31,7 @@ class CacheOpChild final : public PCacheOpChild,
  private:
   // This class must be constructed by CacheChild or CacheStorageChild using
   // their ExecuteOp() factory method.
-  CacheOpChild(CacheWorkerHolder* aWorkerHolder, nsIGlobalObject* aGlobal,
+  CacheOpChild(CacheWorkerRef* aWorkerRef, nsIGlobalObject* aGlobal,
                nsISupports* aParent, Promise* aPromise);
   ~CacheOpChild();
 
