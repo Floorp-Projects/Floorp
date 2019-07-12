@@ -51,11 +51,12 @@ add_task(async function() {
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH);
   Assert.equal(result.displayed.title, "foobar");
 
+  let bundle = Services.strings.createBundle(
+    "chrome://global/locale/autocomplete.properties"
+  );
   Assert.equal(
     result.displayed.action,
-    UrlbarUtils.strings.formatStringFromName("searchWithEngine", [
-      "SearchEngine",
-    ]),
+    bundle.formatStringFromName("searchWithEngine", ["SearchEngine"]),
     "Should have the correct action text"
   );
 
