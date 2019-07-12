@@ -13,6 +13,9 @@ const TEST_URI =
 const { TreeWidget } = require("devtools/client/shared/widgets/TreeWidget");
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.allow_unsafe_parent_loads", true]],
+  });
   await addTab("about:blank");
   const [host, win, doc] = await createHost("bottom", TEST_URI);
 

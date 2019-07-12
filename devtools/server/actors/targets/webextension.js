@@ -32,8 +32,8 @@ loader.lazyRequireGetter(
   "devtools/server/actors/thread",
   true
 );
-const FALLBACK_DOC_MESSAGE =
-  "Your addon does not have any document opened yet.";
+const FALLBACK_DOC_URL =
+  "chrome://devtools/content/shared/webextension-fallback.html";
 
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype
@@ -176,12 +176,12 @@ webExtensionTargetPrototype._searchFallbackWindow = function() {
     return this.fallbackWindow;
   }
 
-  // Set and initialized the fallbackWindow (which initially is a empty
+  // Set and initialize the fallbackWindow (which initially is a empty
   // about:blank browser), this window is related to a XUL browser element
   // specifically created for the devtools server and it is never used
   // or navigated anywhere else.
   this.fallbackWindow = this.chromeGlobal.content;
-  this.fallbackWindow.location = "data:text/html,<h1>" + FALLBACK_DOC_MESSAGE;
+  this.fallbackWindow.document.location.href = FALLBACK_DOC_URL;
 
   return this.fallbackWindow;
 };
