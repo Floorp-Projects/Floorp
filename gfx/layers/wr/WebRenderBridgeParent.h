@@ -19,6 +19,7 @@
 #include "mozilla/layers/PWebRenderBridgeParent.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/layers/WebRenderCompositionRecorder.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
@@ -123,20 +124,19 @@ class WebRenderBridgeParent final
   mozilla::ipc::IPCResult RecvSetDisplayList(
       nsTArray<RenderRootDisplayListData>&& aDisplayLists,
       nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
-      const TransactionId& aTransactionId, const wr::IdNamespace& aIdNamespace,
-      const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
-      const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
-      const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-      const TimeStamp& aFwdTime,
-      nsTArray<CompositionPayload>&& aPayloads) override;
-  mozilla::ipc::IPCResult RecvEmptyTransaction(
-      const FocusTarget& aFocusTarget, const uint32_t& aPaintSequenceNumber,
-      nsTArray<RenderRootUpdates>&& aRenderRootUpdates,
-      nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
-      const TransactionId& aTransactionId, const wr::IdNamespace& aIdNamespace,
+      const TransactionId& aTransactionId, const bool& aContainsSVGGroup,
       const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
       const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
       const nsCString& aTxnURL, const TimeStamp& aFwdTime,
+      nsTArray<CompositionPayload>&& aPayloads) override;
+  mozilla::ipc::IPCResult RecvEmptyTransaction(
+      const FocusTarget& aFocusTarget,
+      nsTArray<RenderRootUpdates>&& aRenderRootUpdates,
+      nsTArray<OpDestroy>&& aToDestroy, const uint64_t& aFwdTransactionId,
+      const TransactionId& aTransactionId, const VsyncId& aVsyncId,
+      const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
+      const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+      const TimeStamp& aFwdTime,
       nsTArray<CompositionPayload>&& aPayloads) override;
   mozilla::ipc::IPCResult RecvSetFocusTarget(
       const FocusTarget& aFocusTarget) override;
@@ -270,6 +270,29 @@ class WebRenderBridgeParent final
    */
   void ForceIsFirstPaint() { mIsFirstPaint = true; }
 
+  void PushDeferredPipelineData(RenderRootDeferredData&& aDeferredData);
+
+  /**
+   * If we attempt to process information for a particular pipeline before we
+   * can determine what RenderRoot it belongs to, then we defer that data until
+   * we can. This handles processing that deferred data.
+   */
+  bool MaybeHandleDeferredPipelineData(
+      wr::RenderRoot aRenderRoot, const nsTArray<wr::PipelineId>& aPipelineIds,
+      const TimeStamp& aTxnStartTime);
+
+  /**
+   * See MaybeHandleDeferredPipelineData - this is the implementation of that for
+   * a single pipeline.
+   */
+  bool MaybeHandleDeferredPipelineDataForPipeline(
+      wr::RenderRoot aRenderRoot, wr::PipelineId aPipelineId,
+      const TimeStamp& aTxnStartTime);
+
+  bool HandleDeferredPipelineData(
+      nsTArray<RenderRootDeferredData>& aDeferredData,
+      const TimeStamp& aTxnStartTime);
+
   bool IsRootWebRenderBridgeParent() const;
   LayersId GetLayersId() const;
   WRRootId GetWRRootId() const;
@@ -281,14 +304,14 @@ class WebRenderBridgeParent final
   class ScheduleSharedSurfaceRelease;
 
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
-  virtual ~WebRenderBridgeParent() = default;
+  virtual ~WebRenderBridgeParent();
 
   wr::WebRenderAPI* Api(wr::RenderRoot aRenderRoot) {
     if (IsRootWebRenderBridgeParent()) {
       return mApis[aRenderRoot];
     } else {
       MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default);
-      return mApis[mRenderRoot];
+      return mApis[*mRenderRoot];
     }
   }
 
@@ -303,13 +326,24 @@ class WebRenderBridgeParent final
       return aRenderRoot;
     } else {
       MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default);
-      return mRenderRoot;
+      return *mRenderRoot;
     }
   }
 
+  // Returns whether a given render root is valid for this WRBP to receive as
+  // input from the WRBC.
+  bool RenderRootIsValid(wr::RenderRoot aRenderRoot);
+
+  void RemoveDeferredPipeline(wr::PipelineId aPipelineId);
+
   bool ProcessEmptyTransactionUpdates(RenderRootUpdates& aUpdates,
-                                      uint32_t aPaintSequenceNumber,
                                       bool* aScheduleComposite);
+
+  bool ProcessRenderRootDisplayListData(RenderRootDisplayListData& aDisplayList,
+                                        wr::Epoch aWrEpoch,
+                                        const TimeStamp& aTxnStartTime,
+                                        bool aValidTransaction,
+                                        bool aObserveLayersUpdate);
 
   bool SetDisplayList(wr::RenderRoot aRenderRoot, const LayoutDeviceRect& aRect,
                       const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
@@ -462,6 +496,24 @@ class WebRenderBridgeParent final
   // need to be able to null these out in a thread-safe way from
   // ClearResources, and there's no way to do that with an nsTArray.
   wr::RenderRootArray<RefPtr<wr::WebRenderAPI>> mApis;
+  // This is a map from pipeline id to render root, that tracks the render
+  // roots of all subpipelines (including nested subpipelines, e.g. in the
+  // Fission case) attached to this WebRenderBridgeParent. This is only
+  // populated on the root WRBP. It is used to resolve the render root for the
+  // subpipelines, since they may not know where they are attached in the
+  // parent display list and therefore may not know their render root.
+  HashMap<uint64_t, wr::RenderRoot> mPipelineRenderRoots;
+  // This is a hashset of child pipelines for this WRBP. This allows us to
+  // iterate through all the children of a non-root WRBP and add them to
+  // the root's mPipelineRenderRoots, and potentially resolve any of their
+  // deferred updates.
+  HashSet<uint64_t> mChildPipelines;
+  // This is a map from pipeline id to a list of deferred data. This is only
+  // populated on the root WRBP. The data contained within is deferred because
+  // the sub-WRBP that received it did not know which renderroot it belonged
+  // to. Once that is resolved by the root WRBP getting the right display list
+  // update, the deferred data is processed.
+  HashMap<uint64_t, nsTArray<RenderRootDeferredData>> mPipelineDeferredUpdates;
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   RefPtr<CompositorAnimationStorage> mAnimStorage;
@@ -496,7 +548,7 @@ class WebRenderBridgeParent final
   Mutex mRenderRootRectMutex;
   wr::NonDefaultRenderRootArray<ScreenRect> mRenderRootRects;
 
-  wr::RenderRoot mRenderRoot;
+  Maybe<wr::RenderRoot> mRenderRoot;
   bool mPaused;
   bool mDestroyed;
   bool mReceivedDisplayList;
