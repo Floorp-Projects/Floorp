@@ -75,8 +75,7 @@ class APZTestData {
   }
   void RecordHitResult(const ScreenPoint& aPoint,
                        const mozilla::gfx::CompositorHitTestInfo& aResult,
-                       const LayersId& aLayersId,
-                       const ViewID& aScrollId) {
+                       const LayersId& aLayersId, const ViewID& aScrollId) {
     mHitResults.AppendElement(HitResult{aPoint, aResult, aLayersId, aScrollId});
   }
   void RecordAdditionalData(const std::string& aKey,

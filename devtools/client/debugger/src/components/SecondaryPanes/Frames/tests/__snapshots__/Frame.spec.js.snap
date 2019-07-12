@@ -34,6 +34,7 @@ exports[`Frame getFrameTitle 1`] = `
           "function": null,
           "object": null,
           "parent": null,
+          "scopeKind": "",
           "type": "block",
         },
         "source": Object {
@@ -86,6 +87,7 @@ exports[`Frame getFrameTitle 1`] = `
           "function": null,
           "object": null,
           "parent": null,
+          "scopeKind": "",
           "type": "block",
         },
         "source": Object {
@@ -145,6 +147,7 @@ exports[`Frame library frame 1`] = `
           "function": null,
           "object": null,
           "parent": null,
+          "scopeKind": "",
           "type": "block",
         },
         "source": Object {
@@ -198,6 +201,7 @@ exports[`Frame library frame 1`] = `
           "function": null,
           "object": null,
           "parent": null,
+          "scopeKind": "",
           "type": "block",
         },
         "source": Object {
@@ -256,6 +260,7 @@ exports[`Frame user frame (not selected) 1`] = `
           "function": null,
           "object": null,
           "parent": null,
+          "scopeKind": "",
           "type": "block",
         },
         "source": Object {
@@ -308,6 +313,7 @@ exports[`Frame user frame (not selected) 1`] = `
           "function": null,
           "object": null,
           "parent": null,
+          "scopeKind": "",
           "type": "block",
         },
         "source": Object {
@@ -366,6 +372,7 @@ exports[`Frame user frame 1`] = `
           "function": null,
           "object": null,
           "parent": null,
+          "scopeKind": "",
           "type": "block",
         },
         "source": Object {
@@ -418,6 +425,7 @@ exports[`Frame user frame 1`] = `
           "function": null,
           "object": null,
           "parent": null,
+          "scopeKind": "",
           "type": "block",
         },
         "source": Object {

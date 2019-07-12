@@ -38,6 +38,7 @@ exports[`Group displays a group 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -110,6 +111,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -181,6 +183,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -227,6 +230,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -286,6 +290,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -332,6 +337,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -391,6 +397,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -437,6 +444,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -501,6 +509,7 @@ exports[`Group renders group with anonymous functions 1`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -573,6 +582,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -644,6 +654,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -689,6 +700,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -748,6 +760,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -793,6 +806,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -852,6 +866,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {
@@ -897,6 +912,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "function": null,
             "object": null,
             "parent": null,
+            "scopeKind": "",
             "type": "block",
           },
           "source": Object {

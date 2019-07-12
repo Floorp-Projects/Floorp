@@ -213,6 +213,7 @@ NameLocation EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope,
       case ScopeKind::StrictNamedLambda:
       case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
+      case ScopeKind::FunctionLexical:
         if (hasEnv) {
           for (BindingIter bi(si.scope()); bi; bi++) {
             if (bi.name() != name) {
@@ -1014,6 +1015,7 @@ bool EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal) {
     case ScopeKind::Lexical:
     case ScopeKind::SimpleCatch:
     case ScopeKind::Catch:
+    case ScopeKind::FunctionLexical:
       if (!bce->emit1(hasEnvironment() ? JSOP_POPLEXICALENV
                                        : JSOP_DEBUGLEAVELEXICALENV)) {
         return false;

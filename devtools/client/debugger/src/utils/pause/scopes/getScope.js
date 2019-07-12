@@ -15,6 +15,7 @@ import type { NamedValue } from "./types";
 
 export type RenderableScope = {
   type: $ElementType<Scope, "type">,
+  scopeKind: $ElementType<Scope, "scopeKind">,
   actor: $ElementType<Scope, "actor">,
   bindings: $ElementType<Scope, "bindings">,
   parent: ?RenderableScope,
@@ -108,4 +109,23 @@ export function getScope(
   }
 
   return null;
+}
+
+export function mergeScopes(
+  scope: RenderableScope,
+  parentScope: RenderableScope,
+  item: NamedValue,
+  parentItem: NamedValue
+) {
+  if (scope.scopeKind == "function lexical" && parentScope.type == "function") {
+    const contents = (item.contents: any).concat(parentItem.contents);
+    contents.sort((a, b) => a.name.localeCompare(b.name));
+
+    return {
+      name: parentItem.name,
+      path: parentItem.path,
+      contents,
+      type: NODE_TYPES.BLOCK,
+    };
+  }
 }

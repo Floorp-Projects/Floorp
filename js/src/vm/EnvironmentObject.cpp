@@ -1806,6 +1806,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     return nullptr;
   }
 
+  friend Scope* js::GetEnvironmentScope(const JSObject& env);
+
   /*
    * In theory, every non-arrow function scope contains an 'arguments'
    * bindings.  However, the engine only adds a binding if 'arguments' is
@@ -2379,6 +2381,10 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 };
 
 } /* anonymous namespace */
+
+Scope* js::GetEnvironmentScope(const JSObject& env) {
+  return DebugEnvironmentProxyHandler::getEnvironmentScope(env);
+}
 
 template <>
 bool JSObject::is<js::DebugEnvironmentProxy>() const {
