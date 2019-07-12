@@ -11,7 +11,7 @@
 }
 
 .deleteOptions {
-  border: thin solid lightgray;
+  border: 1px solid var(--in-content-box-border-color);
   padding: 1em;
 }
 
@@ -20,7 +20,7 @@
 }
 
 .deleteData {
-  color: gray;
+  color: var(--in-content-deemphasized-text);
 }
 
 .disconnectThrobber {
