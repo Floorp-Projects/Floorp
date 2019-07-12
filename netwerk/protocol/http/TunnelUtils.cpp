@@ -132,6 +132,20 @@ void TLSFilterTransaction::Close(nsresult aReason) {
   mTransaction->Close(aReason);
   mTransaction = nullptr;
 
+  if (!gHttpHandler->Bug1563695()) {
+    RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+    SpdyConnectTransaction* trans =
+        baseTrans ? baseTrans->QuerySpdyConnectTransaction() : nullptr;
+
+    LOG(("TLSFilterTransaction::Close %p aReason=%" PRIx32 " trans=%p\n", this,
+         static_cast<uint32_t>(aReason), trans));
+
+    if (trans) {
+      trans->Close(aReason);
+      trans = nullptr;
+    }
+  }
+
   if (gHttpHandler->Bug1563538()) {
     if (NS_FAILED(aReason)) {
       mCloseReason = aReason;
@@ -369,8 +383,28 @@ nsresult TLSFilterTransaction::WriteSegmentsAgain(nsAHttpSegmentWriter* aWriter,
   bool againBeforeWriteSegmentsCall = *again;
 
   mSegmentWriter = aWriter;
+
+  /*
+   * Bug 1562315 replaced TLSFilterTransaction::WriteSegments with
+   * WriteSegmentsAgain and the call of WriteSegments on the associated
+   * transaction was replaced with WriteSegmentsAgain call.
+   *
+   * When TLSFilterTransaction::WriteSegmentsAgain was called from outside, it
+   * internally called WriteSegments (nsAHttpTransaction default impl) and did
+   * not modify the 'again' out flag.
+   *
+   * So, to disable the bug fix, we only need two things:
+   * - call mTransaction->WriteSegments
+   * - don't modify 'again' (which is an automatic outcome of step 1, this
+   * method doesn't touch it itself)
+   */
+
   nsresult rv =
-      mTransaction->WriteSegmentsAgain(this, aCount, outCountWritten, again);
+      gHttpHandler->Bug1562315()
+          ? mTransaction->WriteSegmentsAgain(this, aCount, outCountWritten,
+                                             again)
+          : mTransaction->WriteSegments(this, aCount, outCountWritten);
+
   if (NS_SUCCEEDED(rv) && !(*outCountWritten)) {
     if (NS_FAILED(mFilterReadCode)) {
       // nsPipe turns failures into silent OK.. undo that!
@@ -380,6 +414,7 @@ nsresult TLSFilterTransaction::WriteSegmentsAgain(nsAHttpSegmentWriter* aWriter,
       }
     }
     if (againBeforeWriteSegmentsCall && !*again) {
+      // This code can never be reached if bug1562315 pref is off.
       LOG(
           ("TLSFilterTransaction %p called trans->WriteSegments which dropped "
            "the 'again' flag",
