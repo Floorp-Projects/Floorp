@@ -436,12 +436,12 @@ class Nursery {
   unsigned currentChunk_;
 
   // The current nursery capacity measured in bytes. It may grow up to this
-  // value without a collection, allocating chunks on demand.  This limit may be
-  // changed by maybeResizeNursery() each collection.  It does not include chunk
+  // value without a collection, allocating chunks on demand. This limit may be
+  // changed by maybeResizeNursery() each collection. It does not include chunk
   // trailers.
   size_t capacity_;
 
-  // This limit is fixed by configuration.  It represents the maximum size
+  // This limit is fixed by configuration. It represents the maximum size
   // the nursery is permitted to tune itself to in maybeResizeNursery();
   unsigned chunkCountLimit_;
 
