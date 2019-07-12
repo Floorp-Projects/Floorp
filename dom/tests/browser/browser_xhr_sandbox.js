@@ -23,6 +23,10 @@ var sandboxCode =
   }.toSource() + "();";
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.allow_unsafe_parent_loads", true]],
+  });
+
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
 
   let frame = newWin.document.createXULElement("iframe");
