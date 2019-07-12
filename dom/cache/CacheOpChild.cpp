@@ -12,7 +12,7 @@
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
-#include "mozilla/dom/cache/CacheWorkerHolder.h"
+#include "mozilla/dom/cache/CacheWorkerRef.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,54 +22,53 @@ using mozilla::ipc::PBackgroundChild;
 
 namespace {
 
-void AddWorkerHolderToStreamChild(const CacheReadStream& aReadStream,
-                                  CacheWorkerHolder* aWorkerHolder) {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
+void AddWorkerRefToStreamChild(const CacheReadStream& aReadStream,
+                               CacheWorkerRef* aWorkerRef) {
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
   CacheStreamControlChild* cacheControl =
       static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
   if (cacheControl) {
-    cacheControl->SetWorkerHolder(aWorkerHolder);
+    cacheControl->SetWorkerRef(aWorkerRef);
   }
 }
 
-void AddWorkerHolderToStreamChild(const CacheResponse& aResponse,
-                                  CacheWorkerHolder* aWorkerHolder) {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
+void AddWorkerRefToStreamChild(const CacheResponse& aResponse,
+                               CacheWorkerRef* aWorkerRef) {
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
 
   if (aResponse.body().isNothing()) {
     return;
   }
 
-  AddWorkerHolderToStreamChild(aResponse.body().ref(), aWorkerHolder);
+  AddWorkerRefToStreamChild(aResponse.body().ref(), aWorkerRef);
 }
 
-void AddWorkerHolderToStreamChild(const CacheRequest& aRequest,
-                                  CacheWorkerHolder* aWorkerHolder) {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
+void AddWorkerRefToStreamChild(const CacheRequest& aRequest,
+                               CacheWorkerRef* aWorkerRef) {
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
 
   if (aRequest.body().isNothing()) {
     return;
   }
 
-  AddWorkerHolderToStreamChild(aRequest.body().ref(), aWorkerHolder);
+  AddWorkerRefToStreamChild(aRequest.body().ref(), aWorkerRef);
 }
 
 }  // namespace
 
-CacheOpChild::CacheOpChild(CacheWorkerHolder* aWorkerHolder,
-                           nsIGlobalObject* aGlobal, nsISupports* aParent,
-                           Promise* aPromise)
+CacheOpChild::CacheOpChild(CacheWorkerRef* aWorkerRef, nsIGlobalObject* aGlobal,
+                           nsISupports* aParent, Promise* aPromise)
     : mGlobal(aGlobal), mParent(aParent), mPromise(aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mParent);
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
 
-  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
 
-  RefPtr<CacheWorkerHolder> workerHolder = CacheWorkerHolder::PreferBehavior(
-      aWorkerHolder, CacheWorkerHolder::PreventIdleShutdownStart);
+  RefPtr<CacheWorkerRef> workerRef = CacheWorkerRef::PreferBehavior(
+      aWorkerRef, CacheWorkerRef::eStrongWorkerRef);
 
-  SetWorkerHolder(workerHolder);
+  SetWorkerRef(workerRef);
 }
 
 CacheOpChild::~CacheOpChild() {
@@ -87,7 +86,7 @@ void CacheOpChild::ActorDestroy(ActorDestroyReason aReason) {
     mPromise = nullptr;
   }
 
-  RemoveWorkerHolder();
+  RemoveWorkerRef();
 }
 
 mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
@@ -147,11 +146,10 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
         break;
       }
 
-      RefPtr<CacheWorkerHolder> workerHolder =
-          CacheWorkerHolder::PreferBehavior(
-              GetWorkerHolder(), CacheWorkerHolder::AllowIdleShutdownStart);
+      RefPtr<CacheWorkerRef> workerRef = CacheWorkerRef::PreferBehavior(
+          GetWorkerRef(), CacheWorkerRef::eIPCWorkerRef);
 
-      actor->SetWorkerHolder(workerHolder);
+      actor->SetWorkerRef(workerRef);
       RefPtr<Cache> cache = new Cache(mGlobal, actor, result.ns());
       mPromise->MaybeResolve(cache);
       break;
@@ -176,7 +174,7 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
 void CacheOpChild::StartDestroy() {
   NS_ASSERT_OWNINGTHREAD(CacheOpChild);
 
-  // Do not cancel on-going operations when WorkerHolder calls this.  Instead,
+  // Do not cancel on-going operations when WorkerRef calls this.  Instead,
   // keep the Worker alive until we are done.
 }
 
@@ -200,7 +198,7 @@ void CacheOpChild::HandleResponse(const Maybe<CacheResponse>& aMaybeResponse) {
 
   const CacheResponse& cacheResponse = aMaybeResponse.ref();
 
-  AddWorkerHolderToStreamChild(cacheResponse, GetWorkerHolder());
+  AddWorkerRefToStreamChild(cacheResponse, GetWorkerRef());
   RefPtr<Response> response = ToResponse(cacheResponse);
 
   mPromise->MaybeResolve(response);
@@ -212,7 +210,7 @@ void CacheOpChild::HandleResponseList(
   responses.SetCapacity(aResponseList.Length());
 
   for (uint32_t i = 0; i < aResponseList.Length(); ++i) {
-    AddWorkerHolderToStreamChild(aResponseList[i], GetWorkerHolder());
+    AddWorkerRefToStreamChild(aResponseList[i], GetWorkerRef());
     responses.AppendElement(ToResponse(aResponseList[i]));
   }
 
@@ -225,7 +223,7 @@ void CacheOpChild::HandleRequestList(
   requests.SetCapacity(aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
-    AddWorkerHolderToStreamChild(aRequestList[i], GetWorkerHolder());
+    AddWorkerRefToStreamChild(aRequestList[i], GetWorkerRef());
     requests.AppendElement(ToRequest(aRequestList[i]));
   }
 

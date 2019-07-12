@@ -34,7 +34,7 @@ class WorkerPrivate;
 namespace cache {
 
 class CacheStorageChild;
-class CacheWorkerHolder;
+class CacheWorkerRef;
 
 class CacheStorage final : public nsISupports,
                            public nsWrapperCache,
@@ -86,7 +86,7 @@ class CacheStorage final : public nsISupports,
  private:
   CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
                const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-               CacheWorkerHolder* aWorkerHolder);
+               CacheWorkerRef* aWorkerRef);
   explicit CacheStorage(nsresult aFailureResult);
   ~CacheStorage();
 

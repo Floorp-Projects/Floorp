@@ -122,6 +122,7 @@ testing/web-platform/tests/tools/third_party/
 testing/xpcshell/node-ip/
 testing/xpcshell/dns-packet/
 third_party/
+toolkit/components/certviewer/content/vendor/
 toolkit/components/jsoncpp/
 toolkit/components/normandy/vendor/
 toolkit/components/protobuf/

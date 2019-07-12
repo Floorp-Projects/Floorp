@@ -8,19 +8,20 @@
 
 #include "ClientThing.h"
 #include "mozilla/dom/PClientManagerChild.h"
-#include "mozilla/dom/WorkerHolderToken.h"
 
 namespace mozilla {
 namespace dom {
 
+class IPCWorkerRef;
 class WorkerPrivate;
 
-class ClientManagerChild final : public PClientManagerChild,
-                                 public WorkerHolderToken::Listener {
+class ClientManagerChild final : public PClientManagerChild {
   ClientThing<ClientManagerChild>* mManager;
 
-  RefPtr<WorkerHolderToken> mWorkerHolderToken;
+  RefPtr<IPCWorkerRef> mIPCWorkerRef;
   bool mTeardownStarted;
+
+  ClientManagerChild();
 
   // PClientManagerChild interface
   void ActorDestroy(ActorDestroyReason aReason) override;
@@ -49,11 +50,8 @@ class ClientManagerChild final : public PClientManagerChild,
 
   bool DeallocPClientSourceChild(PClientSourceChild* aActor) override;
 
-  // WorkerHolderToken::Listener interface
-  void WorkerShuttingDown() override;
-
  public:
-  explicit ClientManagerChild(WorkerHolderToken* aWorkerHolderToken);
+  static ClientManagerChild* Create();
 
   void SetOwner(ClientThing<ClientManagerChild>* aThing);
 

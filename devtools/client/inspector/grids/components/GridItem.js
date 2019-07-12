@@ -83,22 +83,8 @@ class GridItem extends PureComponent {
     this.props.onSetGridOverlayColor(this.props.grid.nodeFront, color);
   }
 
-  onGridCheckboxClick(e) {
-    // If the click was on the svg icon to select the node in the inspector, bail out.
-    const originalTarget =
-      e.nativeEvent && e.nativeEvent.explicitOriginalTarget;
-    if (
-      originalTarget &&
-      originalTarget.namespaceURI === "http://www.w3.org/2000/svg"
-    ) {
-      // We should be able to cancel the click event propagation after the following reps
-      // issue is implemented : https://github.com/firefox-devtools/reps/issues/95 .
-      e.preventDefault();
-      return;
-    }
-
+  onGridCheckboxClick() {
     const { grid, onToggleGridHighlighter } = this.props;
-
     onToggleGridHighlighter(grid.nodeFront);
   }
 
@@ -164,8 +150,11 @@ class GridItem extends PureComponent {
             onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
             onDOMNodeMouseOver: () =>
               onShowBoxModelHighlighterForNode(grid.nodeFront),
-            onInspectIconClick: () =>
-              this.onGridInspectIconClick(grid.nodeFront),
+            onInspectIconClick: (_, e) => {
+              // Stoping click propagation to avoid firing onGridCheckboxClick()
+              e.stopPropagation();
+              this.onGridInspectIconClick(grid.nodeFront);
+            },
           })
         ),
         dom.div({

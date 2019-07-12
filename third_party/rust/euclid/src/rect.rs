@@ -11,10 +11,12 @@ use super::UnknownUnit;
 use length::Length;
 use scale::TypedScale;
 use num::*;
+use box2d::TypedBox2D;
 use point::TypedPoint2D;
 use vector::TypedVector2D;
 use side_offsets::TypedSideOffsets2D;
 use size::TypedSize2D;
+use approxord::{min, max};
 
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
@@ -90,6 +92,12 @@ impl<T: fmt::Debug, U> fmt::Debug for TypedRect<T, U> {
 impl<T: fmt::Display, U> fmt::Display for TypedRect<T, U> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "Rect({} at {})", self.size, self.origin)
+    }
+}
+
+impl<T: Default, U> Default for TypedRect<T, U> {
+    fn default() -> Self {
+        TypedRect::new(Default::default(), Default::default())
     }
 }
 
@@ -254,6 +262,14 @@ where
     #[inline]
     pub fn bottom_right(&self) -> TypedPoint2D<T, U> {
         TypedPoint2D::new(self.max_x(), self.max_y())
+    }
+
+    #[inline]
+    pub fn to_box2d(&self) -> TypedBox2D<T, U> {
+        TypedBox2D {
+            min: self.origin,
+            max: self.bottom_right(),
+        }
     }
 
     #[inline]
@@ -425,22 +441,6 @@ impl<T: Copy + PartialEq + Zero, U> TypedRect<T, U> {
     /// Returns true if the size is zero, regardless of the origin's value.
     pub fn is_empty(&self) -> bool {
         self.size.width == Zero::zero() || self.size.height == Zero::zero()
-    }
-}
-
-pub fn min<T: Clone + PartialOrd>(x: T, y: T) -> T {
-    if x <= y {
-        x
-    } else {
-        y
-    }
-}
-
-pub fn max<T: Clone + PartialOrd>(x: T, y: T) -> T {
-    if x >= y {
-        x
-    } else {
-        y
     }
 }
 
@@ -622,15 +622,6 @@ mod tests {
     use side_offsets::SideOffsets2D;
     use size::Size2D;
     use super::*;
-
-    #[test]
-    fn test_min_max() {
-        assert!(min(0u32, 1u32) == 0u32);
-        assert!(min(-1.0f32, 0.0f32) == -1.0f32);
-
-        assert!(max(0u32, 1u32) == 1u32);
-        assert!(max(-1.0f32, 0.0f32) == 0.0f32);
-    }
 
     #[test]
     fn test_translate() {

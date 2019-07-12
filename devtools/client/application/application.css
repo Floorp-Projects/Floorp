@@ -2,11 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ /*
+* Global styles
+*/
+@import "resource://devtools/client/application/src/base.css";
+
+/*
+* Components
+*/
 @import "resource://devtools/client/application/src/components/App.css";
 @import "resource://devtools/client/application/src/components/Worker.css";
 @import "resource://devtools/client/application/src/components/WorkerList.css";
 @import "resource://devtools/client/application/src/components/WorkerListEmpty.css";
 
+
+/*
+* Reset
+*/
 * {
   box-sizing: border-box;
 }

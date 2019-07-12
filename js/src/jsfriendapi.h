@@ -1059,6 +1059,18 @@ MOZ_ALWAYS_INLINE bool CheckRecursionLimitWithStackPointer(JSContext* cx,
   return true;
 }
 
+MOZ_ALWAYS_INLINE bool CheckRecursionLimitWithExtra(JSContext* cx,
+                                                    size_t extra) {
+  char stackDummy;
+  char* sp = &stackDummy;
+#if JS_STACK_GROWTH_DIRECTION > 0
+  sp += extra;
+#else
+  sp -= extra;
+#endif
+  return CheckRecursionLimitWithStackPointer(cx, sp);
+}
+
 MOZ_ALWAYS_INLINE bool CheckSystemRecursionLimit(JSContext* cx) {
   return CheckRecursionLimit(cx,
                              GetNativeStackLimit(cx, JS::StackForSystemCode));

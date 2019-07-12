@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_workerprivate_h__
 
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerStatus.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -20,7 +21,6 @@
 
 #include "js/ContextOptions.h"
 #include "mozilla/dom/Worker.h"
-#include "mozilla/dom/WorkerHolder.h"
 #include "mozilla/dom/WorkerLoadInfo.h"
 #include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/dom/workerinternals/Queue.h"
@@ -52,6 +52,7 @@ class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
 class WorkerEventTarget;
 class WorkerGlobalScope;
+class WorkerRef;
 class WorkerRunnable;
 class WorkerDebuggeeRunnable;
 class WorkerThread;
@@ -922,7 +923,7 @@ class WorkerPrivate : public RelativeTimeline {
   void WaitForWorkerEvents();
 
   // If the worker shutdown status is equal or greater then aFailStatus, this
-  // operation will fail and nullptr will be returned. See WorkerHolder.h for
+  // operation will fail and nullptr will be returned. See WorkerStatus.h for
   // more information about the correct value to use.
   already_AddRefed<nsIEventTarget> CreateNewSyncLoop(WorkerStatus aFailStatus);
 
@@ -938,16 +939,18 @@ class WorkerPrivate : public RelativeTimeline {
 
   void ShutdownGCTimers();
 
-  bool AddHolder(WorkerHolder* aHolder, WorkerStatus aFailStatus);
+  friend class WorkerRef;
 
-  void RemoveHolder(WorkerHolder* aHolder);
+  bool AddWorkerRef(WorkerRef* aWorkerRefer, WorkerStatus aFailStatus);
 
-  void NotifyHolders(WorkerStatus aStatus);
+  void RemoveWorkerRef(WorkerRef* aWorkerRef);
 
-  bool HasActiveHolders() {
+  void NotifyWorkerRefs(WorkerStatus aStatus);
+
+  bool HasActiveWorkerRefs() {
     MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
     return !(data->mChildWorkers.IsEmpty() && data->mTimeouts.IsEmpty() &&
-             data->mHolders.IsEmpty());
+             data->mWorkerRefs.IsEmpty());
   }
 
   // Internal logic to dispatch a runnable. This is separate from Dispatch()
@@ -965,7 +968,6 @@ class WorkerPrivate : public RelativeTimeline {
 
   class EventTarget;
   friend class EventTarget;
-  friend class mozilla::dom::WorkerHolder;
   friend class AutoSyncLoopHolder;
 
   struct TimeoutInfo;
@@ -1084,7 +1086,7 @@ class WorkerPrivate : public RelativeTimeline {
     RefPtr<WorkerGlobalScope> mScope;
     RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
     nsTArray<WorkerPrivate*> mChildWorkers;
-    nsTObserverArray<WorkerHolder*> mHolders;
+    nsTObserverArray<WorkerRef*> mWorkerRefs;
     nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
 
     nsCOMPtr<nsITimer> mTimer;
@@ -1096,7 +1098,7 @@ class WorkerPrivate : public RelativeTimeline {
 
     UniquePtr<ClientSource> mClientSource;
 
-    uint32_t mNumHoldersPreventingShutdownStart;
+    uint32_t mNumWorkerRefsPreventingShutdownStart;
     uint32_t mDebuggerEventLoopLevel;
 
     uint32_t mErrorHandlerRecursionCount;

@@ -2026,25 +2026,26 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
   js_free(bailoutInfo);
   bailoutInfo = nullptr;
 
-  if (topFrame->environmentChain()) {
-    // Ensure the frame has a call object if it needs one. If the env chain
-    // is nullptr, we will enter baseline code at the prologue so no need to do
-    // anything in that case.
-    if (!EnsureHasEnvironmentObjects(cx, topFrame)) {
-      return false;
-    }
+  // If the frame has no environment chain, this must be a prologue bailout and
+  // we have to initialize with the function's initial environment to match
+  // emitInitFrameFields.
+  if (!topFrame->environmentChain()) {
+    topFrame->setEnvironmentChain(topFrame->callee()->environment());
+  }
 
-    // If we bailed out before Ion could do the global declaration
-    // conflicts check, because we resume in the body instead of the
-    // prologue for global frames.
-    if (checkGlobalDeclarationConflicts) {
-      Rooted<LexicalEnvironmentObject*> lexicalEnv(
-          cx, &cx->global()->lexicalEnvironment());
-      RootedScript script(cx, topFrame->script());
-      if (!CheckGlobalDeclarationConflicts(cx, script, lexicalEnv,
-                                           cx->global())) {
-        return false;
-      }
+  // Ensure the frame has a call object if it needs one.
+  if (!EnsureHasEnvironmentObjects(cx, topFrame)) {
+    return false;
+  }
+
+  // Check for global declaration conflicts if necessary.
+  if (checkGlobalDeclarationConflicts) {
+    Rooted<LexicalEnvironmentObject*> lexicalEnv(
+        cx, &cx->global()->lexicalEnvironment());
+    RootedScript script(cx, topFrame->script());
+    if (!CheckGlobalDeclarationConflicts(cx, script, lexicalEnv,
+                                         cx->global())) {
+      return false;
     }
   }
 
@@ -2111,14 +2112,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
     ++iter;
   }
 
-  // If the frame has no environment chain, this must be a prologue bailout and
-  // we have to initialize with the function's initial environment to match
-  // emitInitFrameFields. This has to happen last because the earlier bailout
-  // code uses |envChain == nullptr| to indicate a prologue bailout.
-  if (!topFrame->environmentChain()) {
-    topFrame->setEnvironmentChain(topFrame->callee()->environment());
-  }
-
   MOZ_ASSERT(innerScript);
   MOZ_ASSERT(outerScript);
   MOZ_ASSERT(outerFp);
@@ -2160,6 +2153,14 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
   if (cx->isExceptionPending() && faultPC) {
     EnvironmentIter ei(cx, topFrame, faultPC);
     UnwindEnvironment(cx, ei, tryPC);
+  }
+
+  // Check for interrupts now because we might miss an interrupt check in JIT
+  // code when resuming in the prologue, after the stack/interrupt check.
+  if (!cx->isExceptionPending()) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
   }
 
   JitSpew(JitSpew_BaselineBailouts,

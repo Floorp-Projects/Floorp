@@ -4288,7 +4288,7 @@ CanvasRenderingContext2D::CachedSurfaceFromElement(Element* aElement) {
     res.mCORSUsed = corsmode != imgIRequest::CORS_NONE;
   }
 
-  res.mSize = res.mSourceSurface->GetSize();
+  res.mSize = res.mIntrinsicSize = res.mSourceSurface->GetSize();
   res.mPrincipal = principal.forget();
   res.mImageRequest = imgRequest.forget();
   res.mIsWriteOnly = CheckWriteOnlySecurity(res.mCORSUsed, res.mPrincipal,
@@ -4331,6 +4331,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
   RefPtr<SourceSurface> srcSurf;
   gfx::IntSize imgSize;
+  gfx::IntSize intrinsicImgSize;
 
   Element* element = nullptr;
 
@@ -4363,7 +4364,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       SetWriteOnly();
     }
 
-    imgSize = gfx::IntSize(imageBitmap.Width(), imageBitmap.Height());
+    imgSize = intrinsicImgSize =
+        gfx::IntSize(imageBitmap.Width(), imageBitmap.Height());
   } else {
     if (aImage.IsHTMLImageElement()) {
       HTMLImageElement* img = &aImage.GetAsHTMLImageElement();
@@ -4378,7 +4380,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       element = video;
     }
 
-    srcSurf = CanvasImageCache::LookupCanvas(element, mCanvasElement, &imgSize);
+    srcSurf = CanvasImageCache::LookupCanvas(element, mCanvasElement, &imgSize,
+                                             &intrinsicImgSize);
   }
 
   nsLayoutUtils::DirectDrawInfo drawInfo;
@@ -4408,18 +4411,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     }
 
     imgSize = res.mSize;
-
-    // Scale sw/sh based on aspect ratio
-    if (aImage.IsHTMLVideoElement()) {
-      HTMLVideoElement* video = &aImage.GetAsHTMLVideoElement();
-      int32_t displayWidth = video->VideoWidth();
-      int32_t displayHeight = video->VideoHeight();
-      if (displayWidth == 0 || displayHeight == 0) {
-        return;
-      }
-      aSw *= (double)imgSize.width / (double)displayWidth;
-      aSh *= (double)imgSize.height / (double)displayHeight;
-    }
+    intrinsicImgSize = res.mIntrinsicSize;
 
     if (mCanvasElement) {
       CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, res.mPrincipal,
@@ -4429,7 +4421,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     if (res.mSourceSurface) {
       if (res.mImageRequest) {
         CanvasImageCache::NotifyDrawImage(element, mCanvasElement,
-                                          res.mSourceSurface, imgSize);
+                                          res.mSourceSurface, imgSize,
+                                          intrinsicImgSize);
       }
       srcSurf = res.mSourceSurface;
     } else {
@@ -4439,8 +4432,10 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
   if (aOptional_argc == 0) {
     aSx = aSy = 0.0;
-    aDw = aSw = (double)imgSize.width;
-    aDh = aSh = (double)imgSize.height;
+    aSw = (double)imgSize.width;
+    aSh = (double)imgSize.height;
+    aDw = (double)intrinsicImgSize.width;
+    aDh = (double)intrinsicImgSize.height;
   } else if (aOptional_argc == 2) {
     aSx = aSy = 0.0;
     aSw = (double)imgSize.width;

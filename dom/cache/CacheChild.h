@@ -58,7 +58,7 @@ class CacheChild final : public PCacheChild, public ActorChild {
  private:
   // ActorChild methods
 
-  // WorkerHolder is trying to destroy due to worker shutdown.
+  // WorkerRef is trying to destroy due to worker shutdown.
   virtual void StartDestroy() override;
 
   // PCacheChild methods

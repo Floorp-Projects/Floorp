@@ -302,7 +302,6 @@ with Files("tests/fullscreen/**"):
 with Files("tests/gamepad/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
-# Bug 1359076 - Deleting this feature due to security
 with Files("tests/geolocation-API/**"):
     BUG_COMPONENT = ("Core", "Geolocation")
 

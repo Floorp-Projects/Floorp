@@ -2,26 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const handshakeArray = [
-  {
-    label: "Protocol",
-    info: "TLS 1.2",
-  },
-  {
-    label: "Cipher Suite",
-    info: "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-  },
-  {
-    label: "Key Exchange Group",
-    info: "P256",
-  },
-  {
-    label: "Signature Scheme",
-    info: "RSA-PKCS1-SHA512",
-  },
-];
-
-const certArray = [
+export const certArray = [
   [
     {
       sectionTitle: "Subject Name",

@@ -1,0 +1,61 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  /* Typography from Photon */
+  /* See https://firefox-dev.tools/photon/visuals/typography.html */
+  --body-10-font-size: 13px;
+  --body-10-font-weight: 400;
+  --body-20-font-size: 15px;
+  --body-20-font-weight: 400;
+  --body-20-font-weight-bold: 700;
+  --title-20-font-size: 17px;
+  --title-20-font-weight: 600;
+  --title-30-font-size: 22px;
+  --title-30-font-weight: 300;
+
+  /* Global styles */
+  --base-font-size: var(--body-10-font-size);
+  --base-font-weight: var(--body-10-font-weight);
+  --base-line-height: 1.8;
+  --list-line-height: 1.25;
+
+ /* Global colours */
+  --bg-color: var(--grey-10);
+  --text-color: var(--grey-90);
+
+  /* Global layout vars */
+  --base-unit: 4px;
+}
+
+/*
+* Reset some tags
+*/
+
+body {
+  margin: 0;
+  padding: 0;
+  line-height: var(--base-line-height);
+}
+
+ul {
+  line-height: var(--list-line-height);
+}
+
+a {
+  color: var(--theme-highlight-blue);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+h1,
+.application--title {
+  font-size: var(--title-30-font-size);
+  font-weight: var(--title-30-font-weight);
+  line-height: var(--base-line-height);
+}
+
+p {
+  margin: 0;
+}

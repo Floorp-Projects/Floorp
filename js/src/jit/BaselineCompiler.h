@@ -363,14 +363,14 @@ class BaselineCodeGen {
                                        const Address& frameSizeAddr,
                                        Register scratch1, Register scratch2);
 
-  enum CallVMPhase { POST_INITIALIZE, CHECK_OVER_RECURSED };
+  enum class CallVMPhase { BeforePushingLocals, AfterPushingLocals };
   bool callVMInternal(VMFunctionId id, CallVMPhase phase);
 
   template <typename Fn, Fn fn>
-  bool callVM(CallVMPhase phase = POST_INITIALIZE);
+  bool callVM(CallVMPhase phase = CallVMPhase::AfterPushingLocals);
 
   template <typename Fn, Fn fn>
-  bool callVMNonOp(CallVMPhase phase = POST_INITIALIZE) {
+  bool callVMNonOp(CallVMPhase phase = CallVMPhase::AfterPushingLocals) {
     if (!callVM<Fn, fn>(phase)) {
       return false;
     }
@@ -597,11 +597,11 @@ class BaselineCompilerHandler {
     retAddrEntries_.back().setKind(kind);
   }
 
-  // If a script has more |nslots| than this, then emit code to do an
-  // early stack check.
-  bool needsEarlyStackCheck() const {
-    static const unsigned EARLY_STACK_CHECK_SLOT_COUNT = 128;
-    return script()->nslots() > EARLY_STACK_CHECK_SLOT_COUNT;
+  // If a script has more |nslots| than this the stack check must account
+  // for these slots explicitly.
+  bool mustIncludeSlotsInStackCheck() const {
+    static constexpr size_t NumSlotsLimit = 128;
+    return script()->nslots() > NumSlotsLimit;
   }
 
   JSObject* maybeNoCloneSingletonObject();
@@ -725,9 +725,9 @@ class BaselineInterpreterHandler {
 
   bool maybeIonCompileable() const { return true; }
 
-  // The interpreter always does the early stack check because we don't know the
-  // frame size statically.
-  bool needsEarlyStackCheck() const { return true; }
+  // The interpreter doesn't know the number of slots statically so we always
+  // include them.
+  bool mustIncludeSlotsInStackCheck() const { return true; }
 
   JSObject* maybeNoCloneSingletonObject() { return nullptr; }
 };

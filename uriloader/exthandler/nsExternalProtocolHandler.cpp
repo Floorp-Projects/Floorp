@@ -372,7 +372,7 @@ NS_IMETHODIMP nsExtProtocolChannel::CompleteRedirectSetup(
 //////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsExtProtocolChannel::SetParentListener(
-    mozilla::net::HttpChannelParentListener* aListener) {
+    mozilla::net::ParentChannelListener* aListener) {
   // This is called as part of the connect parent operation from
   // ContentParent::RecvExtProtocolChannelConnectParent.  Setting
   // this flag tells this channel to not proceed and makes AsyncOpen

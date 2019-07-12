@@ -13,8 +13,31 @@
 namespace mozilla {
 namespace dom {
 
-MediaElementAudioSourceNode::MediaElementAudioSourceNode(AudioContext* aContext)
-    : MediaStreamAudioSourceNode(aContext, TrackChangeBehavior::FollowChanges) {
+NS_IMPL_CYCLE_COLLECTION_CLASS(MediaElementAudioSourceNode)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaElementAudioSourceNode)
+  tmp->Destroy();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaElementAudioSourceNode,
+                                                  MediaStreamAudioSourceNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaElementAudioSourceNode)
+NS_INTERFACE_MAP_END_INHERITING(MediaStreamAudioSourceNode)
+
+NS_IMPL_ADDREF_INHERITED(MediaElementAudioSourceNode,
+                         MediaStreamAudioSourceNode)
+NS_IMPL_RELEASE_INHERITED(MediaElementAudioSourceNode,
+                          MediaStreamAudioSourceNode)
+
+MediaElementAudioSourceNode::MediaElementAudioSourceNode(
+    AudioContext* aContext, HTMLMediaElement* aElement)
+    : MediaStreamAudioSourceNode(aContext, TrackChangeBehavior::FollowChanges),
+      mElement(aElement) {
+  MOZ_ASSERT(aElement);
 }
 
 /* static */
@@ -28,7 +51,7 @@ MediaElementAudioSourceNode::Create(
   }
 
   RefPtr<MediaElementAudioSourceNode> node =
-      new MediaElementAudioSourceNode(&aAudioContext);
+      new MediaElementAudioSourceNode(&aAudioContext, aOptions.mMediaElement);
 
   RefPtr<DOMMediaStream> stream = aOptions.mMediaElement->CaptureAudio(
       aRv, aAudioContext.Destination()->Stream()->Graph());
@@ -69,6 +92,10 @@ void MediaElementAudioSourceNode::ListenForAllowedToPlay(
 void MediaElementAudioSourceNode::Destroy() {
   mAllowedToPlayRequest.DisconnectIfExists();
   MediaStreamAudioSourceNode::Destroy();
+}
+
+HTMLMediaElement* MediaElementAudioSourceNode::MediaElement() {
+  return mElement;
 }
 
 }  // namespace dom
