@@ -7,15 +7,20 @@
  */
 
 add_task(async function test() {
-  // We have to disable CSP for this test otherwise the CSP of about:mozilla will
+  // We have to disable CSP for this test otherwise the CSP of about:plugins will
   // block the dynamic frame creation.
-  await SpecialPowers.pushPrefEnv({ set: [["security.csp.enable", false]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.csp.enable", false],
+      ["csp.skip_about_page_has_csp_assert", true],
+    ],
+  });
 
   await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "chrome://global/content/mozilla.xhtml" },
+    { gBrowser, url: "about:plugins" },
     async function(newBrowser) {
-      // NB: We load the chrome:// page in the parent process.
-      await testXFOFrameInChrome(newBrowser);
+      // Note: We load the about: page in the parent process, so this will work.
+      await ContentTask.spawn(newBrowser, null, testXFOFrameInChrome);
 
       // Run next test (try the same with a content top-level context)
       await BrowserTestUtils.loadURI(newBrowser, "http://example.com/");
@@ -26,7 +31,7 @@ add_task(async function test() {
   );
 });
 
-function testXFOFrameInChrome(newBrowser) {
+function testXFOFrameInChrome() {
   // Insert an iframe that specifies "X-Frame-Options: DENY" and verify
   // that it loads, since the top context is chrome
   var deferred = {};
@@ -34,9 +39,9 @@ function testXFOFrameInChrome(newBrowser) {
     deferred.resolve = resolve;
   });
 
-  var frame = newBrowser.contentDocument.createElement("iframe");
+  var frame = content.document.createElement("iframe");
   frame.src =
-    "http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
+    "http://mochi.test:8888/browser/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
   frame.addEventListener(
     "load",
     function() {
@@ -49,11 +54,11 @@ function testXFOFrameInChrome(newBrowser) {
     { capture: true, once: true }
   );
 
-  newBrowser.contentDocument.body.appendChild(frame);
+  content.document.body.appendChild(frame);
   return deferred.promise;
 }
 
-function testXFOFrameInContent(newBrowser) {
+function testXFOFrameInContent() {
   // Insert an iframe that specifies "X-Frame-Options: DENY" and verify that it
   // is blocked from loading since the top browsing context is another site
   var deferred = {};
@@ -63,7 +68,7 @@ function testXFOFrameInContent(newBrowser) {
 
   var frame = content.document.createElement("iframe");
   frame.src =
-    "http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
+    "http://mochi.test:8888/browser/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
   frame.addEventListener(
     "load",
     function() {
