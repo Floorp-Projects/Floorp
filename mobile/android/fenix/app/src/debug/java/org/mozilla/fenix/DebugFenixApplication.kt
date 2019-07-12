@@ -26,7 +26,6 @@ import java.io.File
 class DebugFenixApplication : FenixApplication() {
 
     override fun onCreate() {
-        super.onCreate()
         SoLoader.init(this, false)
 
         if (FlipperUtils.shouldEnableFlipper(this)) {
@@ -39,6 +38,8 @@ class DebugFenixApplication : FenixApplication() {
                 start()
             }
         }
+
+        super.onCreate()
     }
 
     private var heapDumper: ToggleableHeapDumper? = null

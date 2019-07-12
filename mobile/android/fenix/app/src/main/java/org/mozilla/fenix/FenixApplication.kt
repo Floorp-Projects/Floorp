@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
+import android.os.StrictMode
 import androidx.appcompat.app.AppCompatDelegate
 import io.reactivex.plugins.RxJavaPlugins
 import kotlinx.coroutines.Deferred
@@ -55,6 +56,7 @@ open class FenixApplication : Application() {
         setupLogging(megazordEnabled)
         registerRxExceptionHandling()
         setupCrashReporting()
+        enableStrictMode()
 
         if (!isMainProcess()) {
             // If this is not the main process then do not continue with the initialization here. Everything that
@@ -235,6 +237,27 @@ open class FenixApplication : Application() {
                     settings.setLightTheme(true)
                 }
             }
+        }
+    }
+
+    private fun enableStrictMode() {
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build()
+            )
+            var builder = StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .detectLeakedRegistrationObjects()
+                .detectActivityLeaks()
+                .detectFileUriExposure()
+                .penaltyLog()
+            if (SDK_INT >= Build.VERSION_CODES.O) builder = builder.detectContentUriWithoutPermission()
+            if (SDK_INT >= Build.VERSION_CODES.P) builder = builder.detectNonSdkApiUsage()
+            StrictMode.setVmPolicy(builder.build())
         }
     }
 }
