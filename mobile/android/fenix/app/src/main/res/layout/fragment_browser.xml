@@ -15,7 +15,7 @@
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="@dimen/browser_toolbar_height">
+        android:layout_marginBottom="@dimen/toolbar_and_qab_height">
 
         <mozilla.components.concept.engine.EngineView
             android:id="@+id/engineView"
@@ -27,7 +27,6 @@
         android:id="@+id/nestedScrollQuickAction"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
         app:behavior_hideable="true"
         app:behavior_peekHeight="12dp"
         app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior" />
