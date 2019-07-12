@@ -10,7 +10,6 @@ import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Bundle
 import android.os.Parcelable
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,7 +40,11 @@ class ShareFragment : AppCompatDialogFragment() {
         setStyle(STYLE_NO_TITLE, R.style.ShareDialogStyle)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val view = inflater.inflate(R.layout.fragment_share, container, false)
         val args = ShareFragmentArgs.fromBundle(arguments!!)
         if (args.url == null && args.tabs.isNullOrEmpty()) {
@@ -77,31 +80,31 @@ class ShareFragment : AppCompatDialogFragment() {
                     dismiss()
                 }
                 ShareAction.SignInClicked -> {
-                    val directions = ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()
+                    val directions =
+                        ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()
                     nav(R.id.shareFragment, directions)
                     dismiss()
                 }
                 ShareAction.AddNewDeviceClicked -> {
-                    AlertDialog.Builder(
-                        ContextThemeWrapper(
-                            context,
-                            R.style.DialogStyle
-                        )
-                    ).apply {
-                        setMessage(R.string.sync_connect_device_dialog)
-                        setPositiveButton(R.string.sync_confirmation_button) { dialog, _ -> dialog.cancel() }
-                        create()
-                    }.show()
+                    context?.let {
+                        AlertDialog.Builder(it).apply {
+                            setMessage(R.string.sync_connect_device_dialog)
+                            setPositiveButton(R.string.sync_confirmation_button) { dialog, _ -> dialog.cancel() }
+                            create()
+                        }.show()
+                    }
                 }
                 is ShareAction.ShareDeviceClicked -> {
-                    val authAccount = requireComponents.backgroundServices.accountManager.authenticatedAccount()
+                    val authAccount =
+                        requireComponents.backgroundServices.accountManager.authenticatedAccount()
                     authAccount?.run {
                         sendSendTab(this, it.device.id, tabs)
                     }
                     dismiss()
                 }
                 is ShareAction.SendAllClicked -> {
-                    val authAccount = requireComponents.backgroundServices.accountManager.authenticatedAccount()
+                    val authAccount =
+                        requireComponents.backgroundServices.accountManager.authenticatedAccount()
                     authAccount?.run {
                         it.devices.forEach { device ->
                             sendSendTab(this, device.id, tabs)

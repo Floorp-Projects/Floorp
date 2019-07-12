@@ -53,19 +53,19 @@
 
     <style name="NormalTheme" parent="NormalThemeBase" />
 
-    <style name="DialogStyle" parent="Theme.MaterialComponents.Dialog.Alert">
+    <style name="BaseDialogStyle" parent="Theme.MaterialComponents.Dialog.Alert">
         <item name="dialogCornerRadius">@dimen/tab_corner_radius</item>
         <item name="android:colorBackground">?above</item>
         <item name="colorAccent">?accent</item>
         <item name="android:textColorPrimary">?primaryText</item>
     </style>
 
-    <style name="DialogStyleLight" parent="DialogStyle">
+    <style name="DialogStyleLight" parent="BaseDialogStyle">
         <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyleLight</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyleLight</item>
     </style>
 
-    <style name="DialogStyleDark" parent="DialogStyle">
+    <style name="DialogStyleDark" parent="BaseDialogStyle">
         <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyleDark</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyleDark</item>
     </style>
