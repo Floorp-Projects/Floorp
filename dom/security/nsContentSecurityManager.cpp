@@ -173,7 +173,6 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
 
   static StaticAutoPtr<nsTArray<nsCString>> sUrisAllowEval;
   JS::AutoFilename scriptFilename;
-  nsAutoCString fileName;
   if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
     if (!sUrisAllowEval) {
       sUrisAllowEval = new nsTArray<nsCString>();
@@ -186,6 +185,7 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
       ClearOnShutdown(&sUrisAllowEval);
     }
 
+    nsAutoCString fileName;
     fileName = nsAutoCString(scriptFilename.get());
     // Extract file name alone if scriptFilename contains line number
     // separated by multiple space delimiters in few cases.
@@ -202,8 +202,7 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
     }
   }
 
-  MOZ_CRASH_UNSAFE_PRINTF("do not use eval with system privileges: %s",
-                          fileName.get());
+  MOZ_ASSERT(false, "do not use eval with system privileges");
 }
 
 /* static */
