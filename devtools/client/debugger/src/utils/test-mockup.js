@@ -125,6 +125,7 @@ function makeMockScope(
     object: null,
     function: null,
     type,
+    scopeKind: "",
   };
 }
 

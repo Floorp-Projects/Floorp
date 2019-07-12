@@ -44,11 +44,6 @@ add_task(async function() {
   const dbg = await initDebugger("doc-windowless-workers.html");
   const mainThread = dbg.toolbox.threadFront.actor;
 
-  // NOTE: by default we do not wait on worker
-  // commands to complete because the thread could be
-  // shutting down.
-  dbg.client.waitForWorkers(true);
-
   const workers = await getWorkers(dbg);
   ok(workers.length == 2, "Got two workers");
   const thread1 = workers[0].actor;

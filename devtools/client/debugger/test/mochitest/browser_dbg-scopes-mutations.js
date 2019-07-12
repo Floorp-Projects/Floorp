@@ -33,41 +33,41 @@ add_task(async function() {
     'The second element in the scope panel is "<this>"'
   );
   is(
-    getScopeNodeLabel(dbg, 3),
+    getScopeNodeLabel(dbg, 4),
     "phonebook",
-    'The third element in the scope panel is "phonebook"'
+    'The fourth element in the scope panel is "phonebook"'
   );
 
   info("Expand `phonebook`");
-  await expandNode(dbg, 3);
-  is(
-    getScopeNodeLabel(dbg, 4),
-    "S",
-    'The fourth element in the scope panel is "S"'
-  );
-
-  info("Expand `S`");
   await expandNode(dbg, 4);
   is(
     getScopeNodeLabel(dbg, 5),
-    "sarah",
-    'The fifth element in the scope panel is "sarah"'
-  );
-  is(
-    getScopeNodeLabel(dbg, 6),
-    "serena",
-    'The sixth element in the scope panel is "serena"'
+    "S",
+    'The fifth element in the scope panel is "S"'
   );
 
-  info("Expand `sarah`");
+  info("Expand `S`");
   await expandNode(dbg, 5);
   is(
     getScopeNodeLabel(dbg, 6),
-    "lastName",
-    'The sixth element in the scope panel is now "lastName"'
+    "sarah",
+    'The sixth element in the scope panel is "sarah"'
   );
   is(
-    getScopeNodeValue(dbg, 6),
+    getScopeNodeLabel(dbg, 7),
+    "serena",
+    'The seventh element in the scope panel is "serena"'
+  );
+
+  info("Expand `sarah`");
+  await expandNode(dbg, 6);
+  is(
+    getScopeNodeLabel(dbg, 7),
+    "lastName",
+    'The seventh element in the scope panel is now "lastName"'
+  );
+  is(
+    getScopeNodeValue(dbg, 7),
     '"Doe"',
     'The "lastName" element has the expected "Doe" value'
   );
@@ -81,8 +81,8 @@ add_task(async function() {
     'The second element in the scope panel is "<this>"'
   );
   is(
-    getScopeNodeLabel(dbg, 3),
+    getScopeNodeLabel(dbg, 4),
     "phonebook",
-    'The third element in the scope panel is "phonebook"'
+    'The fourth element in the scope panel is "phonebook"'
   );
 });

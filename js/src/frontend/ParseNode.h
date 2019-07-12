@@ -1544,12 +1544,15 @@ class BigIntLiteral : public ParseNode {
 class LexicalScopeNode : public ParseNode {
   LexicalScope::Data* bindings;
   ParseNode* body;
+  ScopeKind kind_;
 
  public:
-  LexicalScopeNode(LexicalScope::Data* bindings, ParseNode* body)
+  LexicalScopeNode(LexicalScope::Data* bindings, ParseNode* body,
+                   ScopeKind kind = ScopeKind::Lexical)
       : ParseNode(ParseNodeKind::LexicalScope, body->pn_pos),
         bindings(bindings),
-        body(body) {}
+        body(body),
+        kind_(kind) {}
 
   static bool test(const ParseNode& node) {
     return node.isKind(ParseNodeKind::LexicalScope);
@@ -1580,6 +1583,8 @@ class LexicalScopeNode : public ParseNode {
   void setScopeBody(ParseNode* body) { this->body = body; }
 
   bool isEmptyScope() const { return !bindings; }
+
+  ScopeKind kind() const { return kind_; }
 };
 
 class LabeledStatement : public NameNode {

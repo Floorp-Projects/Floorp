@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.224';
-const pdfjsBuild = 'a98ce9cb';
+const pdfjsVersion = '2.3.13';
+const pdfjsBuild = '28326165';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -240,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.224';
+    let workerVersion = '2.3.13';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3176,22 +3176,9 @@ exports.Page = Page;
 const FINGERPRINT_FIRST_BYTES = 1024;
 const EMPTY_FINGERPRINT = '\x00\x00\x00\x00\x00\x00\x00' + '\x00\x00\x00\x00\x00\x00\x00\x00\x00';
 
-function find(stream, needle, limit, backwards) {
-  const pos = stream.pos;
-  const end = stream.end;
-
-  if (pos + limit > end) {
-    limit = end - pos;
-  }
-
-  const strBuf = [];
-
-  for (let i = 0; i < limit; ++i) {
-    strBuf.push(String.fromCharCode(stream.getByte()));
-  }
-
-  const str = strBuf.join('');
-  stream.pos = pos;
+function find(stream, needle, limit, backwards = false) {
+  (0, _util.assert)(limit > 0, 'The "limit" must be a positive integer.');
+  const str = (0, _util.bytesToString)(stream.peekBytes(limit));
   const index = backwards ? str.lastIndexOf(needle) : str.indexOf(needle);
 
   if (index === -1) {

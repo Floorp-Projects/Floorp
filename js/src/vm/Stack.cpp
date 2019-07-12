@@ -122,6 +122,7 @@ static inline void AssertScopeMatchesEnvironment(Scope* scope,
         case ScopeKind::Catch:
         case ScopeKind::NamedLambda:
         case ScopeKind::StrictNamedLambda:
+        case ScopeKind::FunctionLexical:
           MOZ_ASSERT(&env->as<LexicalEnvironmentObject>().scope() ==
                      si.scope());
           env = &env->as<LexicalEnvironmentObject>().enclosingEnvironment();

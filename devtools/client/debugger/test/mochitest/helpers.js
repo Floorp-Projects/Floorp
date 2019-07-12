@@ -531,7 +531,6 @@ async function initDebugger(url, ...sources) {
   await clearDebuggerPreferences();
   const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
   const dbg = createDebuggerContext(toolbox);
-  dbg.client.waitForWorkers(false);
 
   await waitForSources(dbg, ...sources);
   return dbg;

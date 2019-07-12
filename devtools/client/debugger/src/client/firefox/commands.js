@@ -49,8 +49,6 @@ let breakpoints: { [string]: Object };
 let eventBreakpoints: ?EventListenerActiveList;
 let supportsWasm: boolean;
 
-let shouldWaitForWorkers = false;
-
 type Dependencies = {
   threadFront: ThreadFront,
   tabTarget: TabTarget,
@@ -121,15 +119,23 @@ function listWorkerThreadFronts() {
   return (Object.values(workerClients): any).map(({ thread }) => thread);
 }
 
-function forEachWorkerThread(iteratee) {
-  const promises = listWorkerThreadFronts().map(thread => iteratee(thread));
-
-  // Do not return promises for the caller to wait on unless a flag is set.
-  // Currently, worker threads are not guaranteed to respond to all requests,
-  // if we send a request while they are shutting down. See bug 1529163.
-  if (shouldWaitForWorkers) {
-    return Promise.all(promises);
-  }
+function forEachThread(iteratee) {
+  // We have to be careful here to atomically initiate the operation on every
+  // thread, with no intervening await. Otherwise, other code could run and
+  // trigger additional thread operations. Requests on server threads will
+  // resolve in FIFO order, and this could result in client and server state
+  // going out of sync.
+  const mainThreadPromise = iteratee(threadFront);
+  const workerPromises = listWorkerThreadFronts().map(t => {
+    try {
+      iteratee(t);
+    } catch (e) {
+      // If a worker thread shuts down while sending the message then it will
+      // throw. Ignore these errors.
+      console.error(e);
+    }
+  });
+  return Promise.all([mainThreadPromise, ...workerPromises]);
 }
 
 function resume(thread: string): Promise<*> {
@@ -186,10 +192,6 @@ function locationKey(location: BreakpointLocation) {
   return `${(sourceUrl: any)}:${(sourceId: any)}:${line}:${(column: any)}`;
 }
 
-function waitForWorkers(shouldWait: boolean) {
-  shouldWaitForWorkers = shouldWait;
-}
-
 function detachWorkers() {
   for (const thread of listWorkerThreadFronts()) {
     thread.detach();
@@ -217,7 +219,7 @@ function hasBreakpoint(location: BreakpointLocation) {
   return !!breakpoints[locationKey(location)];
 }
 
-async function setBreakpoint(
+function setBreakpoint(
   location: BreakpointLocation,
   options: BreakpointOptions
 ) {
@@ -225,27 +227,14 @@ async function setBreakpoint(
   options = maybeGenerateLogGroupId(options);
   breakpoints[locationKey(location)] = { location, options };
 
-  // We have to be careful here to atomically initiate the setBreakpoint() call
-  // on every thread, with no intervening await. Otherwise, other code could run
-  // and change or remove the breakpoint before we finish calling setBreakpoint
-  // on all threads. Requests on server threads will resolve in FIFO order, and
-  // this could result in the breakpoint state here being out of sync with the
-  // breakpoints that are installed in the server.
-  const mainThreadPromise = threadFront.setBreakpoint(location, options);
-
-  await forEachWorkerThread(thread => thread.setBreakpoint(location, options));
-  await mainThreadPromise;
+  return forEachThread(thread => thread.setBreakpoint(location, options));
 }
 
-async function removeBreakpoint(location: PendingLocation) {
+function removeBreakpoint(location: PendingLocation) {
   maybeClearLogpoint((location: any));
   delete breakpoints[locationKey((location: any))];
 
-  // Delay waiting on this promise, for the same reason as in setBreakpoint.
-  const mainThreadPromise = threadFront.removeBreakpoint(location);
-
-  await forEachWorkerThread(thread => thread.removeBreakpoint(location));
-  await mainThreadPromise;
+  return forEachThread(thread => thread.removeBreakpoint(location));
 }
 
 async function evaluateInFrame(script: Script, options: EvaluateParam) {
@@ -325,20 +314,15 @@ async function getFrameScopes(frame: Frame): Promise<*> {
   return sourceThreadFront.getEnvironment(frame.id);
 }
 
-async function pauseOnExceptions(
+function pauseOnExceptions(
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean
 ): Promise<*> {
-  await threadFront.pauseOnExceptions(
-    shouldPauseOnExceptions,
-    // Providing opposite value because server
-    // uses "shouldIgnoreCaughtExceptions"
-    !shouldPauseOnCaughtExceptions
-  );
-
-  await forEachWorkerThread(thread =>
+  return forEachThread(thread =>
     thread.pauseOnExceptions(
       shouldPauseOnExceptions,
+      // Providing opposite value because server
+      // uses "shouldIgnoreCaughtExceptions"
       !shouldPauseOnCaughtExceptions
     )
   );
@@ -357,20 +341,18 @@ async function blackBox(
   }
 }
 
-async function setSkipPausing(shouldSkip: boolean) {
-  await threadFront.skipBreakpoints(shouldSkip);
-  await forEachWorkerThread(thread => thread.skipBreakpoints(shouldSkip));
+function setSkipPausing(shouldSkip: boolean) {
+  return forEachThread(thread => thread.skipBreakpoints(shouldSkip));
 }
 
 function interrupt(thread: string): Promise<*> {
   return lookupThreadFront(thread).interrupt();
 }
 
-async function setEventListenerBreakpoints(ids: string[]) {
+function setEventListenerBreakpoints(ids: string[]) {
   eventBreakpoints = ids;
 
-  await threadFront.setActiveEventBreakpoints(ids);
-  await forEachWorkerThread(thread => thread.setActiveEventBreakpoints(ids));
+  return forEachThread(thread => thread.setActiveEventBreakpoints(ids));
 }
 
 // eslint-disable-next-line
@@ -563,7 +545,6 @@ const clientCommands = {
   setSkipPausing,
   setEventListenerBreakpoints,
   getEventListenerBreakpointTypes,
-  waitForWorkers,
   detachWorkers,
   hasWasmSupport,
   lookupConsoleClient,
