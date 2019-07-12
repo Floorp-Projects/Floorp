@@ -36,6 +36,12 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.repository.getLogger("Urlbar.Provider.UnifiedComplete")
 );
 
+XPCOMUtils.defineLazyGetter(this, "bundle", () =>
+  Services.strings.createBundle(
+    "chrome://global/locale/autocomplete.properties"
+  )
+);
+
 // See UnifiedComplete.
 const TITLE_TAGS_SEPARATOR = " \u2013 ";
 
@@ -293,16 +299,13 @@ function makeUrlbarResult(tokens, info) {
             action.params.url
           );
         } else if (tokens && tokens.length > 1) {
-          title = UrlbarUtils.strings.formatStringFromName(
-            "bookmarkKeywordSearch",
-            [
-              info.comment,
-              tokens
-                .slice(1)
-                .map(t => t.value)
-                .join(" "),
-            ]
-          );
+          title = bundle.formatStringFromName("bookmarkKeywordSearch", [
+            info.comment,
+            tokens
+              .slice(1)
+              .map(t => t.value)
+              .join(" "),
+          ]);
         }
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.KEYWORD,
