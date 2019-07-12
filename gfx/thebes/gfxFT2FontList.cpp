@@ -1249,14 +1249,6 @@ static void FinalizeFamilyMemberList(nsCStringHashKey::KeyType aKey,
 }
 
 void gfxFT2FontList::FindFonts() {
-  gfxFontCache* fc = gfxFontCache::GetCache();
-  if (fc) fc->AgeAllGenerations();
-  ClearLangGroupPrefFonts();
-  mCodepointsWithNoFonts.reset();
-
-  mCodepointsWithNoFonts.SetRange(0, 0x1f);     // C0 controls
-  mCodepointsWithNoFonts.SetRange(0x7f, 0x9f);  // C1 controls
-
   if (!XRE_IsParentProcess()) {
     // Content process: ask the Chrome process to give us the list
     nsTArray<FontListEntry> fonts;
