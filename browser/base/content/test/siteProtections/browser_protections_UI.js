@@ -3,6 +3,12 @@
 
 /* Basic UI tests for the protections panel */
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentBlockingAllowList",
+  "resource://gre/modules/ContentBlockingAllowList.jsm"
+);
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -54,43 +60,7 @@ add_task(async function testToggleSwitch() {
     !gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"),
     "TP Switch should be disabled"
   );
-  Services.perms.remove(
-    ContentBlocking._baseURIForChannelClassifier,
-    "trackingprotection"
-  );
-  BrowserTestUtils.removeTab(tab);
-});
-
-add_task(async function testSiteNotWorking() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "https://example.com"
-  );
-  await openProtectionsPanel();
-  let viewShownPromise = BrowserTestUtils.waitForEvent(
-    gProtectionsHandler._protectionsPopupMultiView,
-    "ViewShown"
-  );
-  document.getElementById("protections-popup-tp-switch-breakage-link").click();
-  let event = await viewShownPromise;
-  is(
-    event.originalTarget.id,
-    "protections-popup-siteNotWorkingView",
-    "Site Not Working? view should be shown"
-  );
-  viewShownPromise = BrowserTestUtils.waitForEvent(
-    gProtectionsHandler._protectionsPopupMultiView,
-    "ViewShown"
-  );
-  document
-    .getElementById("protections-popup-siteNotWorkingView-sendReport")
-    .click();
-  event = await viewShownPromise;
-  is(
-    event.originalTarget.id,
-    "protections-popup-sendReportView",
-    "Send Report view should be shown"
-  );
+  ContentBlockingAllowList.remove(tab.linkedBrowser);
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -284,9 +254,6 @@ add_task(async function testToggleSwitchFlow() {
   await popuphiddenPromise;
 
   // Clean up the TP state.
-  Services.perms.remove(
-    ContentBlocking._baseURIForChannelClassifier,
-    "trackingprotection"
-  );
+  ContentBlockingAllowList.remove(tab.linkedBrowser);
   BrowserTestUtils.removeTab(tab);
 });

@@ -44,7 +44,7 @@ async function assertSitesListed(
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(count)]);
   let browser = tab.linkedBrowser;
 
-  await openIdentityPopup();
+  await openProtectionsPopup();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cookies"
@@ -112,7 +112,7 @@ async function assertSitesListed(
     );
   }
 
-  let mainView = document.getElementById("identity-popup-mainView");
+  let mainView = document.getElementById("protections-popup-mainView");
   viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
   let backButton = cookiesView.querySelector(".subviewbutton-back");
   backButton.click();
@@ -284,7 +284,7 @@ add_task(async function testCookiesSubViewAllowed() {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(3)]);
 
-  await openIdentityPopup();
+  await openProtectionsPopup();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cookies"
@@ -400,7 +400,7 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
   await new Promise(resolve => waitForFocus(resolve, popup));
   await new Promise(resolve => waitForFocus(resolve, window));
 
-  await openIdentityPopup();
+  await openProtectionsPopup();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cookies"
@@ -483,7 +483,7 @@ add_task(async function testCookiesSubViewBlockedDoublyNested() {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(3)]);
 
-  await openIdentityPopup();
+  await openProtectionsPopup();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cookies"
