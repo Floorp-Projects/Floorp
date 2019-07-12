@@ -1,0 +1,35 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.grid-element-width-resizer {
+  border-inline-style: solid;
+  border-inline-color: var(--theme-splitter-color);
+  border-inline-width: 0;
+  width: 10px;
+  z-index: 1;
+}
+
+.grid-element-width-resizer.start {
+  justify-self: start;
+  border-inline-start-width: 1px;
+}
+
+.grid-element-width-resizer.end {
+  justify-self: end;
+  border-inline-end-width: 1px;
+}
+
+.dragging,
+.dragging * {
+  /* When resizing, we keep the "resize" cursor on every element we might hover  */
+  cursor: ew-resize !important;
+  /* This prevents to trigger some :hover style and is better for performance
+   * when resizing */
+  pointer-events: none !important;
+}
+
+.grid-element-width-resizer {
+  cursor: ew-resize;
+}
