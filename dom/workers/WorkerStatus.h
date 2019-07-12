@@ -4,15 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_WorkerHolder_h
-#define mozilla_dom_workers_WorkerHolder_h
-
-#include "mozilla/dom/WorkerCommon.h"
+#ifndef mozilla_dom_workers_WorkerStatus_h
+#define mozilla_dom_workers_WorkerStatus_h
 
 namespace mozilla {
 namespace dom {
-
-class WorkerPrivate;
 
 /**
  * Use this chart to help figure out behavior during each of the closing
@@ -40,9 +36,9 @@ enum WorkerStatus {
 
   // Inner script called close() on the worker global scope. Setting this
   // status causes the worker to clear its queue of events but does not abort
-  // the currently running script. WorkerHolder/WorkerRef objects are not going
-  // to be notified because the behavior of APIs/Components should not change
-  // during this status yet.
+  // the currently running script. WorkerRef objects are not going to be
+  // notified because the behavior of APIs/Components should not change during
+  // this status yet.
   Closing,
 
   // Either the user navigated away from the owning page or the owning page fell
@@ -58,42 +54,7 @@ enum WorkerStatus {
   Dead
 };
 
-class WorkerHolder {
- public:
-  enum Behavior {
-    AllowIdleShutdownStart,
-    PreventIdleShutdownStart,
-  };
-
-  explicit WorkerHolder(const char* aName,
-                        Behavior aBehavior = PreventIdleShutdownStart);
-  virtual ~WorkerHolder();
-
-  bool HoldWorker(WorkerPrivate* aWorkerPrivate, WorkerStatus aFailStatus);
-  void ReleaseWorker();
-
-  virtual bool Notify(WorkerStatus aStatus) = 0;
-
-  Behavior GetBehavior() const;
-
-  const char* Name() const { return mName; }
-
- protected:
-  void ReleaseWorkerInternal();
-
-  WorkerPrivate* MOZ_NON_OWNING_REF mWorkerPrivate;
-
- private:
-  void AssertIsOwningThread() const;
-
-  const Behavior mBehavior;
-
-  // For debugging only.
-  void* mThread;
-  const char* mName;
-};
-
 }  // namespace dom
 }  // namespace mozilla
 
-#endif /* mozilla_dom_workers_WorkerHolder_h */
+#endif /* mozilla_dom_workers_WorkerStatus_h */

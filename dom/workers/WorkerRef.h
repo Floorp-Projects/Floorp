@@ -8,7 +8,7 @@
 #define mozilla_dom_workers_WorkerRef_h
 
 #include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerStatus.h"
 #include "mozilla/UniquePtr.h"
 #include <functional>
 
@@ -30,7 +30,7 @@ namespace dom {
  * d. Firefox is shutting down.
  *
  * When a DOM Worker goes away, it does several steps. See more in
- * WorkerHolder.h. The DOM Worker thread will basically stop scheduling
+ * WorkerStatus.h. The DOM Worker thread will basically stop scheduling
  * WorkerRunnables, and eventually WorkerControlRunnables. But if there is
  * something preventing the shutting down, it will always possible to dispatch
  * WorkerControlRunnables.  Of course, at some point, the worker _must_ be
@@ -103,22 +103,33 @@ class StrongWorkerRef;
 class ThreadSafeWorkerRef;
 
 class WorkerRef {
+  friend class WorkerPrivate;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(WorkerRef)
 
  protected:
-  class Holder;
-  friend class Holder;
-
-  explicit WorkerRef(WorkerPrivate* aWorkerPrivate);
+  WorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName,
+            bool aIsPreventingShutdown);
   virtual ~WorkerRef();
 
   virtual void Notify();
 
+  bool HoldWorker(WorkerStatus aStatus);
+  void ReleaseWorker();
+
+  bool IsPreventingShutdown() const { return mIsPreventingShutdown; }
+
+  const char* Name() const { return mName; }
+
   WorkerPrivate* mWorkerPrivate;
-  UniquePtr<WorkerHolder> mHolder;
 
   std::function<void()> mCallback;
+  const char* const mName;
+  const bool mIsPreventingShutdown;
+
+  // True if this WorkerRef has been added to a WorkerPrivate.
+  bool mHolding;
 };
 
 class WeakWorkerRef final : public WorkerRef {
@@ -171,7 +182,7 @@ class StrongWorkerRef final : public WorkerRef {
       WorkerPrivate* aWorkerPrivate, const char* aName,
       WorkerStatus aFailStatus);
 
-  explicit StrongWorkerRef(WorkerPrivate* aWorkerPrivate);
+  StrongWorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName);
   ~StrongWorkerRef();
 };
 
@@ -200,7 +211,7 @@ class IPCWorkerRef final : public WorkerRef {
   WorkerPrivate* Private() const;
 
  private:
-  explicit IPCWorkerRef(WorkerPrivate* aWorkerPrivate);
+  IPCWorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName);
   ~IPCWorkerRef();
 };
 

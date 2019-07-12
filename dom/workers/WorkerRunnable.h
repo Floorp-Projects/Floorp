@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/WorkerStatus.h"
 
 #include "nsICancelableRunnable.h"
 
