@@ -75,6 +75,20 @@ properties from its prototype:
     * "with", indicating that the environment was introduced by a `with`
       statement.
 
+`scopeKind`
+:   If this is a declarative environment, a string describing the kind of scope
+    which this environment is associated with, or `null` for other types of
+    environments.  There is an assortment of possible scope kinds which can be
+    generated, with a selection of possible values below.  Unlike the type
+    accessor, the categorization this performs is specific to SpiderMonkey's
+    implementation, and not derived from distinctions made in the ECMAScript
+    language specification.
+
+    * "function", indicating the top level body scope of a function for
+    arguments and 'var' variables.
+
+    * "function lexical", indicating the top level lexical scope in a function.
+
 `parent`
 :   The environment that encloses this one (the "outer" environment, in
     ECMAScript terminology), or `null` if this is the outermost environment.

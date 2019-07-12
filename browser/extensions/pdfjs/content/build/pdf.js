@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.224';
-var pdfjsBuild = 'a98ce9cb';
+var pdfjsVersion = '2.3.13';
+var pdfjsBuild = '28326165';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1304,7 +1304,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.224',
+    apiVersion: '2.3.13',
     source: {
       data: source.data,
       url: source.url,
@@ -1633,7 +1633,6 @@ class PDFPageProxy {
     const intentState = this.intentStates[renderingIntent];
 
     if (!intentState.displayReadyCapability) {
-      intentState.receivingOperatorList = true;
       intentState.displayReadyCapability = (0, _util.createPromiseCapability)();
       intentState.operatorList = {
         fnArray: [],
@@ -1734,7 +1733,6 @@ class PDFPageProxy {
     if (!intentState.opListReadCapability) {
       opListTask = {};
       opListTask.operatorListChanged = operatorListChanged;
-      intentState.receivingOperatorList = true;
       intentState.opListReadCapability = (0, _util.createPromiseCapability)();
       intentState.renderTasks = [];
       intentState.renderTasks.push(opListTask);
@@ -1833,7 +1831,7 @@ class PDFPageProxy {
   _tryCleanup(resetStats = false) {
     if (!this.pendingCleanup || Object.keys(this.intentStates).some(function (intent) {
       const intentState = this.intentStates[intent];
-      return intentState.renderTasks.length !== 0 || intentState.receivingOperatorList;
+      return intentState.renderTasks.length !== 0 || !intentState.operatorList.lastChunk;
     }, this)) {
       return;
     }
@@ -1874,8 +1872,6 @@ class PDFPageProxy {
     }
 
     if (operatorListChunk.lastChunk) {
-      intentState.receivingOperatorList = false;
-
       this._tryCleanup();
     }
   }
@@ -2612,18 +2608,20 @@ class WorkerTransport {
       const page = this.pageCache[data.pageIndex];
       const intentState = page.intentStates[data.intent];
 
-      if (intentState.displayReadyCapability) {
-        intentState.displayReadyCapability.reject(new Error(data.error));
-      } else {
-        throw new Error(data.error);
-      }
-
       if (intentState.operatorList) {
         intentState.operatorList.lastChunk = true;
 
         for (let i = 0; i < intentState.renderTasks.length; i++) {
           intentState.renderTasks[i].operatorListChanged();
         }
+
+        page._tryCleanup();
+      }
+
+      if (intentState.displayReadyCapability) {
+        intentState.displayReadyCapability.reject(new Error(data.error));
+      } else {
+        throw new Error(data.error);
       }
     }, this);
     messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature, this);
@@ -3100,9 +3098,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.224';
+const version = '2.3.13';
 exports.version = version;
-const build = 'a98ce9cb';
+const build = '28326165';
 exports.build = build;
 
 /***/ }),
@@ -8642,7 +8640,7 @@ var renderTextLayer = function renderTextLayerClosure() {
         this._layoutTextCtx.canvas.height = 0;
         this._layoutTextCtx = null;
       }
-    });
+    }).catch(() => {});
   }
 
   TextLayerRenderTask.prototype = {
