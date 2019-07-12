@@ -9328,8 +9328,7 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
       do {
         if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
           nsCOMPtr<nsINode> node = win->GetFrameElementInternal();
-          if (node &&
-              nsContentUtils::ContentIsDescendantOf(node, adoptedNode)) {
+          if (node && node->IsInclusiveDescendantOf(adoptedNode)) {
             rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
             return nullptr;
           }

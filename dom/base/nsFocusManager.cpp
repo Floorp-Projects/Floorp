@@ -2713,11 +2713,11 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
       // The common case here is the urlbar where focus is on the anonymous
       // input inside the textbox, but the retargetdocumentfocus attribute
       // refers to the textbox. The Contains check will return false and the
-      // ContentIsDescendantOf check will return true in this case.
-      if (retargetElement && (retargetElement == startContent ||
-                              (!retargetElement->Contains(startContent) &&
-                               nsContentUtils::ContentIsDescendantOf(
-                                   startContent, retargetElement)))) {
+      // IsInclusiveDescendantOf check will return true in this case.
+      if (retargetElement &&
+          (retargetElement == startContent ||
+           (!retargetElement->Contains(startContent) &&
+            startContent->IsInclusiveDescendantOf(retargetElement)))) {
         startContent = rootContent;
       }
     }
