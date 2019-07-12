@@ -997,7 +997,7 @@ Notification::~Notification() {
   mData.setUndefined();
   mozilla::DropJSObjects(this);
   AssertIsOnTargetThread();
-  MOZ_ASSERT(!mWorkerHolder);
+  MOZ_ASSERT(!mWorkerRef);
   MOZ_ASSERT(!mTempRef);
 }
 
@@ -2054,10 +2054,10 @@ void Notification::InitFromBase64(const nsAString& aData, ErrorResult& aRv) {
 
 bool Notification::AddRefObject() {
   AssertIsOnTargetThread();
-  MOZ_ASSERT_IF(mWorkerPrivate && !mWorkerHolder, mTaskCount == 0);
-  MOZ_ASSERT_IF(mWorkerPrivate && mWorkerHolder, mTaskCount > 0);
-  if (mWorkerPrivate && !mWorkerHolder) {
-    if (!RegisterWorkerHolder()) {
+  MOZ_ASSERT_IF(mWorkerPrivate && !mWorkerRef, mTaskCount == 0);
+  MOZ_ASSERT_IF(mWorkerPrivate && mWorkerRef, mTaskCount > 0);
+  if (mWorkerPrivate && !mWorkerRef) {
+    if (!CreateWorkerRef()) {
       return false;
     }
   }
@@ -2069,19 +2069,14 @@ bool Notification::AddRefObject() {
 void Notification::ReleaseObject() {
   AssertIsOnTargetThread();
   MOZ_ASSERT(mTaskCount > 0);
-  MOZ_ASSERT_IF(mWorkerPrivate, mWorkerHolder);
+  MOZ_ASSERT_IF(mWorkerPrivate, mWorkerRef);
 
   --mTaskCount;
   if (mWorkerPrivate && mTaskCount == 0) {
-    UnregisterWorkerHolder();
+    MOZ_ASSERT(mWorkerRef);
+    mWorkerRef = nullptr;
   }
   Release();
-}
-
-NotificationWorkerHolder::NotificationWorkerHolder(Notification* aNotification)
-    : WorkerHolder("NotificationWorkerHolder"), mNotification(aNotification) {
-  MOZ_ASSERT(mNotification->mWorkerPrivate);
-  mNotification->mWorkerPrivate->AssertIsOnWorkerThread();
 }
 
 /*
@@ -2116,64 +2111,55 @@ class CloseNotificationRunnable final : public WorkerMainThreadRunnable {
   bool HadObserver() { return mHadObserver; }
 };
 
-bool NotificationWorkerHolder::Notify(WorkerStatus aStatus) {
-  if (aStatus >= Canceling) {
-    // CloseNotificationRunnable blocks the worker by pushing a sync event loop
-    // on the stack. Meanwhile, WorkerControlRunnables dispatched to the worker
-    // can still continue running. One of these is
-    // ReleaseNotificationControlRunnable that releases the notification,
-    // invalidating the notification and this feature. We hold this reference to
-    // keep the notification valid until we are done with it.
-    //
-    // An example of when the control runnable could get dispatched to the
-    // worker is if a Notification is created and the worker is immediately
-    // closed, but there is no permission to show it so that the main thread
-    // immediately drops the NotificationRef. In this case, this function blocks
-    // on the main thread, but the main thread dispatches the control runnable,
-    // invalidating mNotification.
-    RefPtr<Notification> kungFuDeathGrip = mNotification;
-
-    // Dispatched to main thread, blocks on closing the Notification.
-    RefPtr<CloseNotificationRunnable> r =
-        new CloseNotificationRunnable(kungFuDeathGrip);
-    ErrorResult rv;
-    r->Dispatch(Killing, rv);
-    // XXXbz I'm told throwing and returning false from here is pointless (and
-    // also that doing sync stuff from here is really weird), so I guess we just
-    // suppress the exception on rv, if any.
-    rv.SuppressException();
-
-    // Only call ReleaseObject() to match the observer's NotificationRef
-    // ownership (since CloseNotificationRunnable asked the observer to drop the
-    // reference to the notification).
-    if (r->HadObserver()) {
-      kungFuDeathGrip->ReleaseObject();
-    }
-
-    // From this point we cannot touch properties of this feature because
-    // ReleaseObject() may have led to the notification going away and the
-    // notification owns this feature!
-  }
-  return true;
-}
-
-bool Notification::RegisterWorkerHolder() {
+bool Notification::CreateWorkerRef() {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(!mWorkerHolder);
-  mWorkerHolder = MakeUnique<NotificationWorkerHolder>(this);
-  if (NS_WARN_IF(!mWorkerHolder->HoldWorker(mWorkerPrivate, Canceling))) {
+  MOZ_ASSERT(!mWorkerRef);
+
+  RefPtr<Notification> self = this;
+  mWorkerRef =
+      StrongWorkerRef::Create(mWorkerPrivate, "Notification", [self]() {
+        // CloseNotificationRunnable blocks the worker by pushing a sync event
+        // loop on the stack. Meanwhile, WorkerControlRunnables dispatched to
+        // the worker can still continue running. One of these is
+        // ReleaseNotificationControlRunnable that releases the notification,
+        // invalidating the notification and this feature. We hold this
+        // reference to keep the notification valid until we are done with it.
+        //
+        // An example of when the control runnable could get dispatched to the
+        // worker is if a Notification is created and the worker is immediately
+        // closed, but there is no permission to show it so that the main thread
+        // immediately drops the NotificationRef. In this case, this function
+        // blocks on the main thread, but the main thread dispatches the control
+        // runnable, invalidating mNotification.
+
+        // Dispatched to main thread, blocks on closing the Notification.
+        RefPtr<CloseNotificationRunnable> r =
+            new CloseNotificationRunnable(self);
+        ErrorResult rv;
+        r->Dispatch(Killing, rv);
+        // XXXbz I'm told throwing and returning false from here is pointless
+        // (and also that doing sync stuff from here is really weird), so I
+        // guess we just suppress the exception on rv, if any.
+        rv.SuppressException();
+
+        // Only call ReleaseObject() to match the observer's NotificationRef
+        // ownership (since CloseNotificationRunnable asked the observer to drop
+        // the reference to the notification).
+        if (r->HadObserver()) {
+          self->ReleaseObject();
+        }
+
+        // From this point we cannot touch properties of this feature because
+        // ReleaseObject() may have led to the notification going away and the
+        // notification owns this feature!
+      });
+
+  if (NS_WARN_IF(!mWorkerRef)) {
     return false;
   }
 
   return true;
-}
-
-void Notification::UnregisterWorkerHolder() {
-  MOZ_ASSERT(mWorkerPrivate);
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerHolder);
-  mWorkerHolder = nullptr;
 }
 
 /*
