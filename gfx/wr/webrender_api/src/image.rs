@@ -5,6 +5,7 @@
 #![deny(missing_docs)]
 
 use euclid::{size2, TypedRect, num::Zero};
+use peek_poke::PeekPoke;
 use std::ops::{Add, Sub};
 use std::sync::Arc;
 // local imports
@@ -16,8 +17,14 @@ use crate::units::*;
 /// This is used as a handle to reference images, and is used as the
 /// hash map key for the actual image storage in the `ResourceCache`.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
 pub struct ImageKey(pub IdNamespace, pub u32);
+
+impl Default for ImageKey {
+    fn default() -> Self {
+        ImageKey::DUMMY
+    }
+}
 
 impl ImageKey {
     /// Placeholder Image key, used to represent None.
@@ -142,7 +149,7 @@ impl ImageFormat {
 
 /// Specifies the color depth of an image. Currently only used for YUV images.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
 pub enum ColorDepth {
     /// 8 bits image (most common)
     Color8,
@@ -152,6 +159,12 @@ pub enum ColorDepth {
     Color12,
     /// 16 bits image
     Color16,
+}
+
+impl Default for ColorDepth {
+    fn default() -> Self {
+        ColorDepth::Color8
+    }
 }
 
 impl ColorDepth {
