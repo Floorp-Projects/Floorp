@@ -635,7 +635,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     RefPtr<BlobStorer> storer = MakeAndAddRef<BlobStorer>();
     MaybeCreateMutableBlobStorage();
     mMutableBlobStorage->GetBlobWhenReady(
-        mRecorder->GetParentObject(), NS_ConvertUTF16toUTF8(mMimeType), storer);
+        mRecorder->GetOwner(), NS_ConvertUTF16toUTF8(mMimeType), storer);
     mMutableBlobStorage = nullptr;
 
     return storer->Promise();
@@ -782,7 +782,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       // When MediaRecorder supports multiple tracks, we should set up a single
       // MediaInputPort from the input stream, and let main thread check
       // track principals async later.
-      nsPIDOMWindowInner* window = mRecorder->GetParentObject();
+      nsPIDOMWindowInner* window = mRecorder->GetOwner();
       Document* document = window ? window->GetExtantDoc() : nullptr;
       nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                       NS_LITERAL_CSTRING("Media"), document,
