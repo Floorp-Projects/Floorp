@@ -292,6 +292,10 @@ class MediaEncoder {
   // Video frames that have been encoded and are pending write to the muxer
   nsTArray<RefPtr<EncodedFrame>> mEncodedVideoFrames;
 
+  // How much each audio time stamp should be delayed in microseconds. Used to
+  // adjust for opus codec delay.
+  uint64_t mAudioCodecDelay = 0;
+
   TimeStamp mStartTime;
   nsString mMIMEType;
   bool mInitialized;
