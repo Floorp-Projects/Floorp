@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import time
+import yaml
 
 from logger.logger import RaptorLogger
 
@@ -102,3 +103,14 @@ def view_gecko_profile(ffox_bin):
         LOG_GECKO.info("view-gecko-profile successfully started as pid %d" % view_profile.pid)
     else:
         LOG_GECKO.error('view-gecko-profile process failed to start, poll returned: %s' % ret)
+
+
+def write_yml_file(yml_file, yml_data):
+    # write provided data to specified local yaml file
+    LOG.info("writing %s to %s" % (yml_data, yml_file))
+
+    try:
+        with open(yml_file, 'w') as outfile:
+            yaml.dump(yml_data, outfile, default_flow_style=False)
+    except Exception as e:
+        LOG.critical("failed to write yaml file, exeption: %s" % e)
