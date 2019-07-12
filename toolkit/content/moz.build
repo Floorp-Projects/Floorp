@@ -260,9 +260,6 @@ with Files('contentAreaUtils.js'):
 with Files('*picker*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
 
-with Files('direction*'):
-    BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
-
 with Files('edit*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
 
