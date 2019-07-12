@@ -18,7 +18,14 @@ function importJSM(jsm) {
   return SpecialPowers.wrap(obj);
 }
 
-let CC = (typeof Components === "object"
+// When running in release builds, we get a fake Components object in
+// web contexts, so we need to check that the Components object is sane,
+// too, not just that it exists.
+let haveComponents =
+  typeof Components === "object" &&
+  typeof Components.Constructor === "function";
+
+let CC = (haveComponents
             ? Components
             : SpecialPowers.wrap(SpecialPowers.Components)).Constructor;
 
