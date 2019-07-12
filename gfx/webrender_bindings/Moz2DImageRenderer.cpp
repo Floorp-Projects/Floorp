@@ -305,8 +305,8 @@ static RefPtr<ScaledFont> GetScaledFont(Translator* aTranslator,
   return data.mScaledFont;
 }
 
-template<typename T>
-T ConvertFromBytes(const uint8_t *bytes) {
+template <typename T>
+T ConvertFromBytes(const uint8_t* bytes) {
   T t;
   memcpy(&t, bytes, sizeof(T));
   return t;
@@ -319,28 +319,20 @@ struct Reader {
 
   Reader(const uint8_t* buf, size_t len) : buf(buf), len(len), pos(0) {}
 
-  template<typename T>
-    T Read() {
-      MOZ_RELEASE_ASSERT(pos + sizeof(T) <= len);
-      T ret = ConvertFromBytes<T>(buf + pos);
-      pos += sizeof(ret);
-      return ret;
-    }
+  template <typename T>
+  T Read() {
+    MOZ_RELEASE_ASSERT(pos + sizeof(T) <= len);
+    T ret = ConvertFromBytes<T>(buf + pos);
+    pos += sizeof(T);
+    return ret;
+  }
 
-    size_t ReadSize() {
-      return Read<size_t>();
-    }
-    int ReadInt() {
-      return Read<int>();
-    }
+  size_t ReadSize() { return Read<size_t>(); }
+  int ReadInt() { return Read<int>(); }
 
-    IntRectAbsolute ReadBounds() {
-      return Read<IntRectAbsolute>();
-    }
+  IntRectAbsolute ReadBounds() { return Read<IntRectAbsolute>(); }
 
-    layers::BlobFont ReadBlobFont() {
-      return Read<layers::BlobFont>();
-    }
+  layers::BlobFont ReadBlobFont() { return Read<layers::BlobFont>(); }
 };
 
 static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
@@ -393,7 +385,8 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   // We try hard to not have empty blobs but we can end up with
   // them because of CompositorHitTestInfo and merging.
   MOZ_RELEASE_ASSERT(aBlob.length() >= sizeof(size_t));
-  size_t indexOffset = ConvertFromBytes<size_t>(aBlob.end().get() - sizeof(size_t));
+  size_t indexOffset =
+      ConvertFromBytes<size_t>(aBlob.end().get() - sizeof(size_t));
   MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - sizeof(size_t));
   Reader reader(aBlob.begin().get() + indexOffset,
                 aBlob.length() - sizeof(size_t) - indexOffset);
