@@ -140,14 +140,15 @@ class LegacySessionManager(
         addInternal(session, selected, engineSession, parent = parent, viaRestore = false)
     }
 
-    @Suppress("LongParameterList", "ComplexMethod")
+    @Suppress("LongParameterList", "ComplexMethod", "LongMethod")
     private fun addInternal(
         session: Session,
         selected: Boolean = false,
         engineSession: EngineSession? = null,
         engineSessionState: EngineSessionState? = null,
         parent: Session? = null,
-        viaRestore: Boolean = false
+        viaRestore: Boolean = false,
+        notifyObservers: Boolean = true
     ) = synchronized(values) {
         if (values.find { it.id == session.id } != null) {
             throw IllegalArgumentException("Session with same ID already exists")
@@ -184,7 +185,7 @@ class LegacySessionManager(
 
         // If session is being added via restore, skip notification and auto-selection.
         // Restore will handle these actions as appropriate.
-        if (viaRestore) {
+        if (viaRestore || !notifyObservers) {
             return@synchronized
         }
 
@@ -209,16 +210,18 @@ class LegacySessionManager(
         }
 
         sessions.forEach {
-            addInternal(
-                session = it,
-                viaRestore = true
-            )
+            addInternal(session = it, notifyObservers = false)
         }
 
         if (selectedIndex == NO_SELECTION) {
             // If there is no selection yet then select first non-private session
             sessions.find { !it.private }?.let { select(it) }
         }
+
+        // This is a performance hack to not call `onSessionAdded` for every added session. Normally
+        // we'd add a new observer method for that. But since we are trying to migrate away from
+        // browser-session, we should not add a new one and force the apps to use it.
+        notifyObservers { onSessionsRestored() }
     }
 
     /**

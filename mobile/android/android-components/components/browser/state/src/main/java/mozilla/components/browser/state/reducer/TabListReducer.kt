@@ -44,6 +44,23 @@ internal object TabListReducer {
                 )
             }
 
+            is TabListAction.AddMultipleTabsAction -> {
+                action.tabs.forEach { requireUniqueTab(state, it) }
+
+                action.tabs.find { tab -> tab.parentId != null }?.let {
+                    throw IllegalArgumentException("Adding multiple tabs with a parent id is not supported")
+                }
+
+                state.copy(
+                    tabs = state.tabs + action.tabs,
+                    selectedTabId = if (state.selectedTabId == null) {
+                        action.tabs.find { tab -> !tab.content.private }?.id
+                    } else {
+                        state.selectedTabId
+                    }
+                )
+            }
+
             is TabListAction.SelectTabAction -> {
                 state.copy(selectedTabId = action.tabId)
             }

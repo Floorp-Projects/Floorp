@@ -126,7 +126,7 @@ class SessionManager(
         }
 
         sessions.find { it.parentId != null }?.let {
-            throw IllegalArgumentException("Bulk adding of ")
+            throw IllegalArgumentException("Bulk adding of sessions with a parent is not supported. ")
         }
 
         // Add store to each Session so that it can dispatch actions whenever it changes.

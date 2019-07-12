@@ -1225,4 +1225,23 @@ class SessionManagerTest {
         assertEquals(4, manager.sessions.size)
         assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
     }
+
+    @Test
+    fun `WHEN adding multiple sessions THEN observer is notified`() {
+        val manager = SessionManager(engine = mock())
+
+        val observer: SessionManager.Observer = mock()
+        manager.register(observer)
+
+        val sessions = listOf(
+            Session("htttps://getpocket.com"),
+            Session("https://www.firefox.com", private = true)
+        )
+
+        verify(observer, never()).onSessionsRestored()
+
+        manager.add(sessions)
+
+        verify(observer).onSessionsRestored()
+    }
 }

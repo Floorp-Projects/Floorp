@@ -34,12 +34,17 @@ sealed class SystemAction : BrowserAction() {
  */
 sealed class TabListAction : BrowserAction() {
     /**
-     * Adds a new [TabSessionState] to the list.
+     * Adds a new [TabSessionState] to the [BrowserState.tabs] list.
      *
      * @property tab the [TabSessionState] to add
      * @property select whether or not to the tab should be selected.
      */
     data class AddTabAction(val tab: TabSessionState, val select: Boolean = false) : TabListAction()
+
+    /**
+     * Adds multiple [TabSessionState] objects to the [BrowserState.tabs] list.
+     */
+    data class AddMultipleTabsAction(val tabs: List<TabSessionState>) : TabListAction()
 
     /**
      * Marks the [TabSessionState] with the given [tabId] as selected tab.

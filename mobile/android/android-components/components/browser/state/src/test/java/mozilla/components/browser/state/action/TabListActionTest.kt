@@ -11,6 +11,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -647,5 +648,97 @@ class TabListActionTest {
 
         assertEquals(1, store.state.customTabs.size)
         assertEquals("a1", store.state.customTabs.last().id)
+    }
+
+    @Test
+    fun `AddMultipleTabsAction - Adds multiple tabs and updates selection`() {
+        val store = BrowserStore()
+
+        assertEquals(0, store.state.tabs.size)
+        assertNull(store.state.selectedTabId)
+
+        store.dispatch(TabListAction.AddMultipleTabsAction(
+            tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                    createTab(id = "b", url = "https://www.firefox.com", private = true)
+            ))
+        ).joinBlocking()
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("https://www.firefox.com", store.state.tabs[1].content.url)
+        assertNotNull(store.state.selectedTabId)
+        assertEquals("a", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `AddMultipleTabsAction - Adds multiple tabs and does not update selection if one exists already`() {
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(createTab(id = "z", url = "https://getpocket.com")),
+            selectedTabId = "z"
+        ))
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("z", store.state.selectedTabId)
+
+        store.dispatch(TabListAction.AddMultipleTabsAction(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                createTab(id = "b", url = "https://www.firefox.com", private = true)
+            ))
+        ).joinBlocking()
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://getpocket.com", store.state.tabs[0].content.url)
+        assertEquals("https://www.mozilla.org", store.state.tabs[1].content.url)
+        assertEquals("https://www.firefox.com", store.state.tabs[2].content.url)
+        assertEquals("z", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `AddMultipleTabsAction - Non private tab will be selected`() {
+        val store = BrowserStore()
+
+        assertEquals(0, store.state.tabs.size)
+        assertNull(store.state.selectedTabId)
+
+        store.dispatch(TabListAction.AddMultipleTabsAction(
+                tabs = listOf(
+                        createTab(id = "a", url = "https://www.mozilla.org", private = true),
+                        createTab(id = "b", url = "https://www.example.org", private = true),
+                        createTab(id = "c", url = "https://www.firefox.com", private = false),
+                        createTab(id = "d", url = "https://getpocket.com", private = true)
+                ))
+        ).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("https://www.example.org", store.state.tabs[1].content.url)
+        assertEquals("https://www.firefox.com", store.state.tabs[2].content.url)
+        assertEquals("https://getpocket.com", store.state.tabs[3].content.url)
+        assertNotNull(store.state.selectedTabId)
+        assertEquals("c", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `AddMultipleTabsAction - No tab will be selected if only private tabs are added`() {
+        val store = BrowserStore()
+
+        assertEquals(0, store.state.tabs.size)
+        assertNull(store.state.selectedTabId)
+
+        store.dispatch(TabListAction.AddMultipleTabsAction(
+                tabs = listOf(
+                        createTab(id = "a", url = "https://www.mozilla.org", private = true),
+                        createTab(id = "b", url = "https://www.example.org", private = true),
+                        createTab(id = "c", url = "https://getpocket.com", private = true)
+                ))
+        ).joinBlocking()
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("https://www.example.org", store.state.tabs[1].content.url)
+        assertEquals("https://getpocket.com", store.state.tabs[2].content.url)
+        assertNull(store.state.selectedTabId)
     }
 }
