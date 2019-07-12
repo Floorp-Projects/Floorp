@@ -33,7 +33,7 @@ class OpusTrackEncoder : public AudioTrackEncoder {
 
   already_AddRefed<TrackMetadataBase> GetMetadata() override;
 
-  nsresult GetEncodedTrack(EncodedFrameContainer& aData) override;
+  nsresult GetEncodedTrack(nsTArray<RefPtr<EncodedFrame>>& aData) override;
 
  protected:
   int GetPacketDuration() override;

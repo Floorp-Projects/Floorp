@@ -220,7 +220,8 @@ already_AddRefed<TrackMetadataBase> VP8TrackEncoder::GetMetadata() {
   return meta.forget();
 }
 
-nsresult VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData) {
+nsresult VP8TrackEncoder::GetEncodedPartitions(
+    nsTArray<RefPtr<EncodedFrame>>& aData) {
   vpx_codec_iter_t iter = nullptr;
   EncodedFrame::FrameType frameType = EncodedFrame::VP8_P_FRAME;
   nsTArray<uint8_t> frameData;
@@ -286,7 +287,7 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData) {
            ", FrameType %d",
            videoData->GetTimeStamp(), videoData->GetDuration(),
            videoData->GetFrameType());
-    aData.AppendEncodedFrame(videoData);
+    aData.AppendElement(videoData);
   }
 
   return pkt ? NS_OK : NS_ERROR_NOT_AVAILABLE;
@@ -441,7 +442,8 @@ VP8TrackEncoder::EncodeOperation VP8TrackEncoder::GetNextEncodeOperation(
  *      encode it.
  * 4. Remove the encoded chunks in mSourceSegment after for-loop.
  */
-nsresult VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData) {
+nsresult VP8TrackEncoder::GetEncodedTrack(
+    nsTArray<RefPtr<EncodedFrame>>& aData) {
   AUTO_PROFILER_LABEL("VP8TrackEncoder::GetEncodedTrack", OTHER);
 
   MOZ_ASSERT(mInitialized || mCanceled);
@@ -509,7 +511,7 @@ nsresult VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData) {
       // because this frame will be skipped.
       VP8LOG(LogLevel::Warning,
              "MediaRecorder lagging behind. Skipping a frame.");
-      RefPtr<EncodedFrame> last = aData.GetEncodedFrames().LastElement();
+      RefPtr<EncodedFrame> last = aData.LastElement();
       if (last) {
         mExtractedDuration += chunk.mDuration;
         if (!mExtractedDuration.isValid()) {
