@@ -39,10 +39,6 @@
 #  include "WebMWriter.h"
 #endif
 
-#ifdef LOG
-#  undef LOG
-#endif
-
 mozilla::LazyLogModule gMediaEncoderLog("MediaEncoder");
 #define LOG(type, msg) MOZ_LOG(gMediaEncoderLog, type, msg)
 
@@ -1025,3 +1021,5 @@ void MediaEncoder::SetVideoKeyFrameInterval(int32_t aVideoKeyFrameInterval) {
 }
 
 }  // namespace mozilla
+
+#undef LOG
