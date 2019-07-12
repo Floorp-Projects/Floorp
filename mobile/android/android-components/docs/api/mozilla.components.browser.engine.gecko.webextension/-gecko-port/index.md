@@ -10,7 +10,7 @@ Gecko-based implementation of [Port](../../mozilla.components.concept.engine.web
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `GeckoPort(nativePort: <ERROR CLASS>, engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`? = null)`<br>Gecko-based implementation of [Port](../../mozilla.components.concept.engine.webextension/-port/index.md), wrapping the native port provided by GeckoView. |
+| [&lt;init&gt;](-init-.md) | `GeckoPort(nativePort: `[`Port`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension/Port.html)`, engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`? = null)`<br>Gecko-based implementation of [Port](../../mozilla.components.concept.engine.webextension/-port/index.md), wrapping the native port provided by GeckoView. |
 
 ### Inherited Properties
 
