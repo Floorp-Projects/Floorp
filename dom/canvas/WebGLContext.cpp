@@ -455,7 +455,7 @@ bool WebGLContext::CreateAndInitGL(
   }
 
   // WebGL2 is separately blocked:
-  if (IsWebGL2()) {
+  if (IsWebGL2() && !forceEnabled) {
     const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
     const auto feature = nsIGfxInfo::FEATURE_WEBGL2;
 
