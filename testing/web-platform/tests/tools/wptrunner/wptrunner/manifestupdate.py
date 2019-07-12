@@ -411,7 +411,9 @@ class PropertyUpdate(object):
         # If all the values match remove all conditionals
         # This handles the case where we update a number of existing conditions and they
         # all end up looking like the post-update default.
-        new_default = conditions[-1][1] if conditions[-1][0] is None else self.default_value
+        new_default = self.default_value
+        if conditions and conditions[-1][0] is None:
+            new_default = conditions[-1][1]
         if all(condition[1] == new_default for condition in conditions):
             conditions = [(None, new_default)]
 
