@@ -520,6 +520,9 @@ PopupNotifications.prototype = {
    *                     Esc key is pressed. This should be set to the name of the
    *                     command to run. If not provided, "secondarybuttoncommand"
    *                     will be used.
+   *        extraAttr:
+   *                     An optional string value which will be given to the
+   *                     extraAttr attribute on the notification's anchorElement
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(
