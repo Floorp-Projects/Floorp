@@ -666,12 +666,19 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun desktopModeWithProvidedWideViewPort() {
+    fun desktopModeWithProvidedTrueWideViewPort() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
         val defaultSettings = DefaultSettings(useWideViewPort = true)
         val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
         val webView = mock<WebView>()
         val webViewSettings = mock<WebSettings>()
+        var desktopMode = false
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onDesktopModeChange(enabled: Boolean) {
+                desktopMode = enabled
+            }
+        })
 
         engineSession.webView = webView
         whenever(webView.settings).thenReturn(webViewSettings)
@@ -679,6 +686,37 @@ class SystemEngineSessionTest {
 
         engineSession.toggleDesktopMode(false)
         verify(webViewSettings).useWideViewPort = true
+        verify(engineSession).toggleDesktopUA(userAgentMobile, false)
+        assertFalse(desktopMode)
+    }
+
+    @Test
+    fun desktopModeWithProvidedFalseWideViewPort() {
+        val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
+        val defaultSettings = DefaultSettings(useWideViewPort = false)
+        val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
+        val webView = mock<WebView>()
+        val webViewSettings = mock<WebSettings>()
+        var desktopMode = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onDesktopModeChange(enabled: Boolean) {
+                desktopMode = enabled
+            }
+        })
+
+        engineSession.webView = webView
+        whenever(webView.settings).thenReturn(webViewSettings)
+        whenever(webViewSettings.userAgentString).thenReturn(userAgentMobile)
+
+        engineSession.toggleDesktopMode(true)
+        verify(webViewSettings).useWideViewPort = true
+        verify(engineSession).toggleDesktopUA(userAgentMobile, true)
+        assertTrue(desktopMode)
+
+        engineSession.toggleDesktopMode(false)
+        verify(webViewSettings).useWideViewPort = false
+        verify(engineSession).toggleDesktopUA(userAgentMobile, false)
+        assertFalse(desktopMode)
     }
 
     @Test
