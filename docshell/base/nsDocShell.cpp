@@ -1571,8 +1571,8 @@ nsDocShell::SetRemoteSubframes(bool aUseRemoteSubframes) {
 
   if (aUseRemoteSubframes && !annotated) {
     annotated = true;
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::DOMFissionEnabled,
-                                       true);
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::DOMFissionEnabled, true);
   }
 
   // Don't allow non-remote tabs with remote subframes.
@@ -9545,6 +9545,86 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     if (NS_SUCCEEDED(rv) && !shouldLoad) {
       return NS_OK;
     }
+  }
+
+  // In e10s, in the parent process, we refuse to load anything other than
+  // "safe" resources that we ship or trust enough to give "special" URLs.
+  if (XRE_IsE10sParentProcess()) {
+    nsCOMPtr<nsIURI> uri = aLoadState->URI();
+    do {
+      bool canLoadInParent = false;
+      if (NS_SUCCEEDED(NS_URIChainHasFlags(
+              uri, nsIProtocolHandler::URI_IS_UI_RESOURCE, &canLoadInParent)) &&
+          canLoadInParent) {
+        // We allow UI resources.
+        break;
+      }
+      // For about: and extension-based URIs, which don't get
+      // URI_IS_UI_RESOURCE, first remove layers of view-source:, if present.
+      while (uri && uri->SchemeIs("view-source")) {
+        nsCOMPtr<nsINestedURI> nested = do_QueryInterface(uri);
+        if (nested) {
+          nested->GetInnerURI(getter_AddRefs(uri));
+        } else {
+          break;
+        }
+      }
+      // Allow about: URIs, and allow moz-extension ones if we're running
+      // extension content in the parent process.
+      if (!uri || uri->SchemeIs("about") ||
+          (!StaticPrefs::extensions_webextensions_remote() &&
+           uri->SchemeIs("moz-extension"))) {
+        break;
+      }
+      nsAutoCString scheme;
+      uri->GetScheme(scheme);
+      // Allow ext+foo URIs (extension-registered custom protocols). See
+      // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/protocol_handlers
+      if (StringBeginsWith(scheme, NS_LITERAL_CSTRING("ext+")) &&
+          !StaticPrefs::extensions_webextensions_remote()) {
+        break;
+      }
+      // This next bit is... awful. Basically, about:addons used to load the
+      // discovery pane remotely. Allow for that, if that's actually the state
+      // we're in (which is no longer the default at time of writing, but still
+      // tested). https://bugzilla.mozilla.org/show_bug.cgi?id=1565606 covers
+      // removing this atrocity.
+      nsCOMPtr<nsIWebNavigation> parent(do_QueryInterface(mParent));
+      if (parent) {
+        nsCOMPtr<nsIURI> parentURL;
+        parent->GetCurrentURI(getter_AddRefs(parentURL));
+        if (parentURL &&
+            parentURL->GetSpecOrDefault().EqualsLiteral("about:addons") &&
+            (!Preferences::GetBool("extensions.htmlaboutaddons.enabled",
+                                   true) ||
+             !Preferences::GetBool(
+                 "extensions.htmlaboutaddons.discover.enabled", true))) {
+          nsCString discoveryURLString;
+          Preferences::GetCString("extensions.webservice.discoverURL",
+                                  discoveryURLString);
+          nsCOMPtr<nsIURI> discoveryURL;
+          NS_NewURI(getter_AddRefs(discoveryURL), discoveryURLString);
+
+          nsAutoCString discoveryPrePath;
+          if (discoveryURL) {
+            discoveryURL->GetPrePath(discoveryPrePath);
+          }
+
+          nsAutoCString requestedPrePath;
+          uri->GetPrePath(requestedPrePath);
+          // So allow the discovery path to load inside about:addons.
+          if (discoveryPrePath.Equals(requestedPrePath)) {
+            break;
+          }
+        }
+      }
+      // Final exception for some legacy automated tests:
+      if (xpc::IsInAutomation() &&
+          Preferences::GetBool("security.allow_unsafe_parent_loads", false)) {
+        break;
+      }
+      return NS_ERROR_FAILURE;
+    } while (0);
   }
 
   // Whenever a top-level browsing context is navigated, the user agent MUST
