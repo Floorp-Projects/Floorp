@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -49,22 +50,22 @@ async function testIdentityState(hasException) {
       false,
       TRACKING_PAGE
     );
-    gProtectionsHandler.disableForCurrentPage();
+    ContentBlocking.disableForCurrentPage();
     await loaded;
   }
 
   ok(
-    !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
+    !ContentBlocking.content.hasAttribute("detected"),
     "cryptominers are not detected"
   );
   if (hasException) {
     ok(
-      BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
+      !BrowserTestUtils.is_hidden(ContentBlocking.iconBox),
       "icon box is visible to indicate the exception"
     );
   } else {
     ok(
-      BrowserTestUtils.is_hidden(gProtectionsHandler.iconBox),
+      BrowserTestUtils.is_hidden(ContentBlocking.iconBox),
       "icon box is not visible"
     );
   }
@@ -77,16 +78,13 @@ async function testIdentityState(hasException) {
 
   await promise;
 
+  ok(ContentBlocking.content.hasAttribute("detected"), "trackers are detected");
   ok(
-    gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
-    "trackers are detected"
-  );
-  ok(
-    BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
+    BrowserTestUtils.is_visible(ContentBlocking.iconBox),
     "icon box is visible"
   );
   is(
-    gProtectionsHandler.iconBox.hasAttribute("hasException"),
+    ContentBlocking.iconBox.hasAttribute("hasException"),
     hasException,
     "Shows an exception when appropriate"
   );
@@ -97,7 +95,7 @@ async function testIdentityState(hasException) {
       false,
       TRACKING_PAGE
     );
-    gProtectionsHandler.enableForCurrentPage();
+    ContentBlocking.enableForCurrentPage();
     await loaded;
   }
 
@@ -121,7 +119,7 @@ async function testSubview(hasException) {
       false,
       TRACKING_PAGE
     );
-    gProtectionsHandler.disableForCurrentPage();
+    ContentBlocking.disableForCurrentPage();
     await loaded;
   }
 
@@ -131,7 +129,7 @@ async function testSubview(hasException) {
   });
   await promise;
 
-  await openProtectionsPopup();
+  await openIdentityPopup();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cryptominers"
@@ -159,7 +157,7 @@ async function testSubview(hasException) {
     "Indicates the miner was blocked or allowed"
   );
 
-  let mainView = document.getElementById("protections-popup-mainView");
+  let mainView = document.getElementById("identity-popup-mainView");
   viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
   let backButton = subview.querySelector(".subviewbutton-back");
   backButton.click();
@@ -173,7 +171,7 @@ async function testSubview(hasException) {
       false,
       TRACKING_PAGE
     );
-    gProtectionsHandler.enableForCurrentPage();
+    ContentBlocking.enableForCurrentPage();
     await loaded;
   }
 

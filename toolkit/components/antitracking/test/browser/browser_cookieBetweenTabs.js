@@ -22,7 +22,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Disabling content blocking for this page");
-  gProtectionsHandler.disableForCurrentPage();
+  ContentBlocking.disableForCurrentPage();
 
   await BrowserTestUtils.browserLoaded(browser);
 
