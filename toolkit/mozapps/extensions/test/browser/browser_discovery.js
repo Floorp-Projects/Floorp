@@ -216,7 +216,7 @@ function clickLink(aId, aCallback) {
     EventUtils.sendMouseEvent({ type: "click" }, link);
 
     executeSoon(function() {
-      ok(isLoading(), "Clicking a link should show the loading pane");
+      ok(isLoading(), "Clicking link " + aId + " should show the loading pane");
     });
   });
   if (aCallback) {
@@ -354,63 +354,6 @@ add_test(async function() {
   close_manager(gManagerWindow, run_next_test);
 });
 
-// Tests that navigating to an insecure page fails
-add_test(async function() {
-  let aWindow = await open_manager("addons://discover/");
-  gManagerWindow = aWindow;
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-
-  var browser = gManagerWindow.document.getElementById("discover-browser");
-  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-  await clickLink("link-http");
-  ok(isError(), "Should have shown the error page");
-
-  await gCategoryUtilities.openType("extension");
-  await gCategoryUtilities.openType("discover");
-  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-  close_manager(gManagerWindow, run_next_test);
-});
-
-// Tests that navigating to a different domain fails
-add_test(async function() {
-  let aWindow = await open_manager("addons://discover/");
-  gManagerWindow = aWindow;
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-
-  var browser = gManagerWindow.document.getElementById("discover-browser");
-  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-  await clickLink("link-domain");
-  ok(isError(), "Should have shown the error page");
-
-  await gCategoryUtilities.openType("extension");
-  await gCategoryUtilities.openType("discover");
-  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-  close_manager(gManagerWindow, run_next_test);
-});
-
-// Tests that navigating to a missing page fails
-add_test(async function() {
-  let aWindow = await open_manager("addons://discover/");
-  gManagerWindow = aWindow;
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-
-  var browser = gManagerWindow.document.getElementById("discover-browser");
-  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-  await clickLink("link-bad");
-  ok(isError(), "Should have shown the error page");
-
-  await gCategoryUtilities.openType("extension");
-  await gCategoryUtilities.openType("discover");
-  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-  close_manager(gManagerWindow, run_next_test);
-});
-
 // Tests that navigating to a page on the same domain works
 add_test(async function() {
   let aWindow = await open_manager("addons://discover/");
@@ -434,39 +377,6 @@ add_test(async function() {
   close_manager(gManagerWindow, run_next_test);
 });
 
-// Tests repeated navigation to the same page followed by a navigation to a
-// different domain
-add_test(async function() {
-  let aWindow = await open_manager("addons://discover/");
-  gManagerWindow = aWindow;
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-
-  var browser = gManagerWindow.document.getElementById("discover-browser");
-  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-  var count = 10;
-  function clickAgain(aCallback) {
-    if (count-- == 0) {
-      aCallback();
-    } else {
-      clickLink("link-normal", clickAgain.bind(null, aCallback));
-    }
-  }
-
-  clickAgain(async function() {
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-    await clickLink("link-domain");
-    ok(isError(), "Should have shown the error page");
-
-    await gCategoryUtilities.openType("extension");
-    await gCategoryUtilities.openType("discover");
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-    close_manager(gManagerWindow, run_next_test);
-  });
-});
-
 // Loading an insecure main page should work if that is what the prefs say, should
 // also be able to navigate to a https page and back again
 add_test(async function() {
@@ -477,16 +387,6 @@ add_test(async function() {
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
   var browser = gManagerWindow.document.getElementById("discover-browser");
-  is(
-    getURL(browser),
-    TESTROOT + "discovery.html",
-    "Should have loaded the right url"
-  );
-
-  await clickLink("link-normal");
-  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-  await clickLink("link-http");
   is(
     getURL(browser),
     TESTROOT + "discovery.html",
