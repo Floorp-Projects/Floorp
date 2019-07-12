@@ -1,0 +1,17 @@
+[package]
+name = "peek-poke-derive"
+version = "0.2.0"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[lib]
+doctest = false
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "0.4"
+quote = "0.6"
+syn = "0.15"
+synstructure = "0.10"
+unicode-xid = "0.1"
