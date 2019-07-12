@@ -660,6 +660,11 @@ add_task(async function test_connect_native_from_content_script() {
 
   await extension.startup();
 
+  Services.prefs.setBoolPref(
+    "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+    true
+  );
+  Services.prefs.setBoolPref("security.allow_unsafe_parent_loads", true);
   await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
 
   let result = await extension.awaitMessage("result");
