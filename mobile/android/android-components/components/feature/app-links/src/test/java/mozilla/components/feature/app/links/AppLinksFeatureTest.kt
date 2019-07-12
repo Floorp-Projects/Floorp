@@ -72,9 +72,10 @@ class AppLinksFeatureTest {
         )
     }
 
-    private fun createSession(isPrivate: Boolean): Session {
+    private fun createSession(isPrivate: Boolean, url: String = "https://mozilla.com"): Session {
         val session = mock<Session>()
         `when`(session.private).thenReturn(isPrivate)
+        `when`(session.url).thenReturn(url)
         return session
     }
 
@@ -238,6 +239,34 @@ class AppLinksFeatureTest {
         feature.observer.onLoadRequest(
             createSession(true),
             webUrl,
+            triggeredByRedirect = false,
+            triggeredByWebContent = false
+        )
+
+        verifyNoMoreInteractions(mockDialog)
+        verifyNoMoreInteractions(mockOpenRedirect)
+    }
+
+    @Test
+    fun `an external app is not opened if the current session is already on the same host`() {
+        val mockDialog = spy(RedirectDialogFragment::class.java)
+
+        `when`(mockFragmentManager.beginTransaction()).thenReturn(mock())
+
+        val feature =
+            AppLinksFeature(
+                context = mockContext,
+                sessionManager = mockSessionManager,
+                useCases = mockUseCases,
+                fragmentManager = mockFragmentManager,
+                dialog = mockDialog
+            )
+
+        feature.start()
+
+        this.feature.observer.onLoadRequest(
+            createSession(true, webUrl),
+            "$webUrl/backButton",
             triggeredByRedirect = false,
             triggeredByWebContent = false
         )

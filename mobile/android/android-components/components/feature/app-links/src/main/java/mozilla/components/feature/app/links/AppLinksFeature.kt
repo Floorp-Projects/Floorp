@@ -9,6 +9,8 @@ package mozilla.components.feature.app.links
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.webkit.URLUtil
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.SelectionAwareSessionObserver
@@ -17,6 +19,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.feature.app.links.RedirectDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 
 /**
  * This feature implements use cases for detecting and handling redirects to external apps. The user
@@ -83,6 +86,12 @@ class AppLinksFeature(
             return
         }
 
+        // If we're already on the site, and we're clicking around then
+        // let's not go to an external app.
+        if (url.hostname() == session.url.hostname()) {
+            return
+        }
+
         val redirect = useCases.interceptedAppLinkRedirect(url)
 
         if (redirect.isRedirect()) {
@@ -141,4 +150,11 @@ class AppLinksFeature(
     private fun findPreviousDialogFragment(): RedirectDialogFragment? {
         return fragmentManager?.findFragmentByTag(FRAGMENT_TAG) as? RedirectDialogFragment
     }
+
+    private fun String.hostname() =
+        if (URLUtil.isValidUrl(this)) {
+            Uri.parse(this).hostWithoutCommonPrefixes
+        } else {
+            null
+        }
 }
