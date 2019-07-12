@@ -13,9 +13,13 @@ const CONTAINER_PAGE =
 const TPC_PREF = "network.cookie.cookieBehavior";
 
 add_task(async function setup() {
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {
+    Services.telemetry.canRecordExtended = oldCanRecord;
     UrlClassifierTestUtils.cleanupTestTrackers();
   });
 });
@@ -44,7 +48,9 @@ async function assertSitesListed(
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(count)]);
   let browser = tab.linkedBrowser;
 
-  await openProtectionsPopup();
+  await openIdentityPopup();
+
+  Services.telemetry.clearEvents();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cookies"
@@ -56,6 +62,17 @@ async function assertSitesListed(
   await viewShown;
 
   ok(true, "Cookies view was shown");
+
+  let events = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+  ).parent;
+  let buttonEvents = events.filter(
+    e =>
+      e[1] == "security.ui.identitypopup" &&
+      e[2] == "click" &&
+      e[3] == "cookies_subview_btn"
+  );
+  is(buttonEvents.length, 1, "recorded telemetry for the button click");
 
   let listHeaders = cookiesView.querySelectorAll(
     ".identity-popup-cookiesView-list-header"
@@ -112,7 +129,7 @@ async function assertSitesListed(
     );
   }
 
-  let mainView = document.getElementById("protections-popup-mainView");
+  let mainView = document.getElementById("identity-popup-mainView");
   viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
   let backButton = cookiesView.querySelector(".subviewbutton-back");
   backButton.click();
@@ -284,7 +301,7 @@ add_task(async function testCookiesSubViewAllowed() {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(3)]);
 
-  await openProtectionsPopup();
+  await openIdentityPopup();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cookies"
@@ -400,7 +417,7 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
   await new Promise(resolve => waitForFocus(resolve, popup));
   await new Promise(resolve => waitForFocus(resolve, window));
 
-  await openProtectionsPopup();
+  await openIdentityPopup();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cookies"
@@ -483,7 +500,7 @@ add_task(async function testCookiesSubViewBlockedDoublyNested() {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(3)]);
 
-  await openProtectionsPopup();
+  await openIdentityPopup();
 
   let categoryItem = document.getElementById(
     "identity-popup-content-blocking-category-cookies"

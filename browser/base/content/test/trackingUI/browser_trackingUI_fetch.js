@@ -18,19 +18,16 @@ add_task(async function test_fetch() {
     });
     await contentBlockingEvent;
 
-    let gProtectionsHandler = newTabBrowser.ownerGlobal.gProtectionsHandler;
-    ok(gProtectionsHandler, "got CB object");
+    let ContentBlocking = newTabBrowser.ownerGlobal.ContentBlocking;
+    ok(ContentBlocking, "got CB object");
 
     ok(
-      gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
+      ContentBlocking.content.hasAttribute("detected"),
       "has detected content blocking"
     );
-    ok(
-      gProtectionsHandler.iconBox.hasAttribute("active"),
-      "icon box is active"
-    );
+    ok(ContentBlocking.iconBox.hasAttribute("active"), "icon box is active");
     is(
-      gProtectionsHandler.iconBox.getAttribute("tooltiptext"),
+      ContentBlocking.iconBox.getAttribute("tooltiptext"),
       gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"),
       "correct tooltip"
     );

@@ -28,7 +28,12 @@ let { Preferences } = ChromeUtils.import(
 add_task(async function setup() {
   await UrlClassifierTestUtils.addTestTrackers();
 
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+
   registerCleanupFunction(() => {
+    Services.telemetry.canRecordExtended = oldCanRecord;
+
     // Clear prefs that are touched in this test again for sanity.
     Services.prefs.clearUserPref(TP_PREF);
     Services.prefs.clearUserPref(CB_PREF);
@@ -127,10 +132,10 @@ add_task(async function testReportBreakageVisibility() {
     }
 
     await BrowserTestUtils.withNewTab(scenario.url, async function() {
-      await openProtectionsPopup();
+      await openIdentityPopup();
 
       let reportBreakageButton = document.getElementById(
-        "protections-popup-tp-switch-breakage-link"
+        "identity-popup-content-blocking-report-breakage"
       );
       await TestUtils.waitForCondition(
         () =>
@@ -153,40 +158,44 @@ add_task(async function testReportBreakageCancel() {
   Services.prefs.setBoolPref(PREF_REPORT_BREAKAGE_ENABLED, true);
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
-    await openProtectionsPopup();
+    await openIdentityPopup();
 
-    let siteNotWorkingButton = document.getElementById(
-      "protections-popup-tp-switch-breakage-link"
+    Services.telemetry.clearEvents();
+
+    let reportBreakageButton = document.getElementById(
+      "identity-popup-content-blocking-report-breakage"
     );
     ok(
-      BrowserTestUtils.is_visible(siteNotWorkingButton),
-      "site not working button is visible"
+      BrowserTestUtils.is_visible(reportBreakageButton),
+      "report breakage button is visible"
     );
-    let siteNotWorkingView = document.getElementById(
-      "protections-popup-siteNotWorkingView"
+    let reportBreakageView = document.getElementById(
+      "identity-popup-breakageReportView"
     );
     let viewShown = BrowserTestUtils.waitForEvent(
-      siteNotWorkingView,
+      reportBreakageView,
       "ViewShown"
     );
-    siteNotWorkingButton.click();
+    reportBreakageButton.click();
     await viewShown;
 
-    let sendReportButton = document.getElementById(
-      "protections-popup-siteNotWorkingView-sendReport"
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+    ).parent;
+    let clickEvents = events.filter(
+      e =>
+        e[1] == "security.ui.identitypopup" &&
+        e[2] == "click" &&
+        e[3] == "report_breakage"
     );
-    let sendReportView = document.getElementById(
-      "protections-popup-sendReportView"
-    );
-    viewShown = BrowserTestUtils.waitForEvent(sendReportView, "ViewShown");
-    sendReportButton.click();
-    await viewShown;
+    is(clickEvents.length, 1, "recorded telemetry for the click");
 
     ok(true, "Report breakage view was shown");
 
-    viewShown = BrowserTestUtils.waitForEvent(siteNotWorkingView, "ViewShown");
+    let mainView = document.getElementById("identity-popup-mainView");
+    viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
     let cancelButton = document.getElementById(
-      "protections-popup-sendReportView-cancel"
+      "identity-popup-breakageReportView-cancel"
     );
     cancelButton.click();
     await viewShown;
@@ -268,54 +277,42 @@ async function testReportBreakage(url, tags) {
   Services.prefs.setBoolPref(PREF_REPORT_BREAKAGE_ENABLED, true);
   Services.prefs.setStringPref(PREF_REPORT_BREAKAGE_URL, path);
 
-  await openProtectionsPopup();
-
-  let siteNotWorkingButton = document.getElementById(
-    "protections-popup-tp-switch-breakage-link"
-  );
-  await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(siteNotWorkingButton),
-    "site not working button is visible"
-  );
-  let siteNotWorkingView = document.getElementById(
-    "protections-popup-siteNotWorkingView"
-  );
-  let viewShown = BrowserTestUtils.waitForEvent(
-    siteNotWorkingView,
-    "ViewShown"
-  );
-  siteNotWorkingButton.click();
-  await viewShown;
-
-  let sendReportButton = document.getElementById(
-    "protections-popup-siteNotWorkingView-sendReport"
-  );
-  let sendReportView = document.getElementById(
-    "protections-popup-sendReportView"
-  );
-  viewShown = BrowserTestUtils.waitForEvent(sendReportView, "ViewShown");
-  sendReportButton.click();
-  await viewShown;
-
-  ok(true, "Report breakage view was shown");
+  await openIdentityPopup();
 
   let comments = document.getElementById(
-    "protections-popup-sendReportView-collection-comments"
+    "identity-popup-breakageReportView-collection-comments"
   );
   is(comments.value, "", "Comments textarea should initially be empty");
 
+  let reportBreakageButton = document.getElementById(
+    "identity-popup-content-blocking-report-breakage"
+  );
+  await TestUtils.waitForCondition(
+    () => BrowserTestUtils.is_visible(reportBreakageButton),
+    "report breakage button is visible"
+  );
+  let reportBreakageView = document.getElementById(
+    "identity-popup-breakageReportView"
+  );
+  let viewShown = BrowserTestUtils.waitForEvent(
+    reportBreakageView,
+    "ViewShown"
+  );
+  reportBreakageButton.click();
+  await viewShown;
+
   let submitButton = document.getElementById(
-    "protections-popup-sendReportView-submit"
+    "identity-popup-breakageReportView-submit"
   );
   let reportURL = document.getElementById(
-    "protections-popup-sendReportView-collection-url"
+    "identity-popup-breakageReportView-collection-url"
   ).value;
 
   is(reportURL, url, "Shows the correct URL in the report UI.");
 
   // Make sure that sending the report closes the identity popup.
   let popuphidden = BrowserTestUtils.waitForEvent(
-    gProtectionsHandler._protectionsPopup,
+    gIdentityHandler._identityPopup,
     "popuphidden"
   );
 
