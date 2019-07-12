@@ -57,7 +57,7 @@ from manifest import get_raptor_test_list
 from memory import generate_android_memory_profile
 from power import init_android_power_test, finish_android_power_test
 from results import RaptorResultsHandler
-from utils import view_gecko_profile
+from utils import view_gecko_profile, write_yml_file
 from cpu import generate_android_cpu_profile
 
 LOG = RaptorLogger(component='raptor-main')
@@ -755,6 +755,7 @@ class RaptorAndroid(Raptor):
         self.device.chmod(self.remote_test_root, recursive=True, root=True)
 
         self.clear_app_data()
+        self.set_debug_app_flag()
 
     def tune_performance(self):
         """Set various performance-oriented parameters, to reduce jitter.
@@ -939,6 +940,11 @@ class RaptorAndroid(Raptor):
         LOG.info("clearing %s app data" % self.config['binary'])
         self.device.shell("pm clear %s" % self.config['binary'])
 
+    def set_debug_app_flag(self):
+        # required so release apks will read the android config.yml file
+        LOG.info("setting debug-app flag for %s" % self.config['binary'])
+        self.device.shell("am set-debug-app --persistent %s" % self.config['binary'])
+
     def copy_profile_to_device(self):
         """Copy the profile to the device, and update permissions of all files."""
         if not self.device.is_app_installed(self.config['binary']):
@@ -976,6 +982,41 @@ class RaptorAndroid(Raptor):
         LOG.info("(thermal_zone0) device temperature: %.3f zone type: %s"
                  % (thermal_zone0 / 1000, zone_type))
 
+    def write_android_app_config(self):
+        # geckoview supports having a local on-device config file; use this file
+        # to tell the app to use the specified browser profile, as well as other opts
+        # on-device: /data/local/tmp/com.yourcompany.yourapp-geckoview-config.yaml
+        # https://mozilla.github.io/geckoview/tutorials/automation.html#configuration-file-format
+
+        # only supported for geckoview apps
+        if self.config['app'] == "fennec":
+            return
+        LOG.info("creating android app config.yml")
+
+        yml_config_data = dict(
+            args=['--profile', self.remote_profile, 'use_multiprocess', self.config['e10s']],
+            env=dict(
+                LOG_VERBOSE=1,
+                R_LOG_LEVEL=6,
+                MOZ_WEBRENDER=int(self.config['enable_webrender']),
+            )
+        )
+
+        yml_name = '%s-geckoview-config.yaml' % self.config['binary']
+        yml_on_host = os.path.join(tempfile.mkdtemp(), yml_name)
+        write_yml_file(yml_on_host, yml_config_data)
+        yml_on_device = os.path.join('/data', 'local', 'tmp', yml_name)
+
+        try:
+            LOG.info("copying %s to device: %s" % (yml_on_host, yml_on_device))
+            self.device.rm(yml_on_device, force=True, recursive=True)
+            self.device.push(yml_on_host, yml_on_device)
+            self.device.chmod(yml_on_device, recursive=True, root=True)
+
+        except Exception:
+            LOG.critical("failed to push %s to device!" % yml_on_device)
+            raise
+
     def launch_firefox_android_app(self, test_name):
         LOG.info("starting %s" % self.config['app'])
 
@@ -995,19 +1036,13 @@ class RaptorAndroid(Raptor):
                                           fail_if_running=False)
             else:
 
-                # Additional command line arguments that the app will read and use (e.g.
-                # with a custom profile)
-                extras = {}
-                if extra_args:
-                    extras['args'] = " ".join(extra_args)
-
-                # add e10s=True
-                extras['use_multiprocess'] = self.config['e10s']
+                # command line 'extra' args not used with geckoview apps; instead we use
+                # an on-device config.yml file (see write_android_app_config)
 
                 self.device.launch_application(self.config['binary'],
                                                self.config['activity'],
                                                self.config['intent'],
-                                               extras=extras,
+                                               extras=None,
                                                url='about:blank',
                                                fail_if_running=False)
 
@@ -1118,8 +1153,8 @@ class RaptorAndroid(Raptor):
 
             self.run_test_setup(test)
 
-            # clear the android app data before the next app startup
             self.clear_app_data()
+            self.set_debug_app_flag()
 
             if test['browser_cycle'] == 1:
                 if test.get('playback') is not None:
@@ -1155,6 +1190,9 @@ class RaptorAndroid(Raptor):
 
             self.copy_profile_to_device()
             self.log_android_device_temperature()
+
+            # write android app config.yml
+            self.write_android_app_config()
 
             # now start the browser/app under test
             self.launch_firefox_android_app(test['name'])
@@ -1193,8 +1231,12 @@ class RaptorAndroid(Raptor):
             self.turn_on_android_app_proxy()
 
         self.clear_app_data()
+        self.set_debug_app_flag()
         self.copy_profile_to_device()
         self.log_android_device_temperature()
+
+        # write android app config.yml
+        self.write_android_app_config()
 
         # now start the browser/app under test
         self.launch_firefox_android_app(test['name'])
