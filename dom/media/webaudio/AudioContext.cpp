@@ -524,7 +524,25 @@ AudioListener* AudioContext::Listener() {
   return mListener;
 }
 
-double AudioContext::OutputLatency() { return Graph()->AudioOutputLatency(); }
+double AudioContext::OutputLatency() {
+  // When reduceFingerprinting is enabled, return a latency figure that is
+  // fixed, but plausible for the platform.
+  double latency_s = 0.0;
+  if (nsRFPService::IsResistFingerprintingEnabled()) {
+#ifdef XP_MACOSX
+    latency_s = 512. / mSampleRate;
+#elif MOZ_WIDGET_ANDROID
+    latency_s = 0.020;
+#elif XP_WIN
+    latency_s = 0.04;
+#else  // Catchall for other OSes, including Linux.
+    latency_s = 0.025;
+#endif
+  } else {
+    return Graph()->AudioOutputLatency();
+  }
+  return latency_s;
+}
 
 void AudioContext::GetOutputTimestamp(AudioTimestamp& aTimeStamp) {
   if (!Destination()) {
@@ -534,13 +552,13 @@ void AudioContext::GetOutputTimestamp(AudioTimestamp& aTimeStamp) {
   }
 
   // The currentTime currently being output is the currentTime minus the audio
-  // output latency.
+  // output latency. The resolution of CurrentTime() is already reduced.
   aTimeStamp.mContextTime.Construct(
       std::max(0.0, CurrentTime() - OutputLatency()));
   nsPIDOMWindowInner* parent = GetParentObject();
   Performance* perf = parent ? parent->GetPerformance() : nullptr;
   if (perf) {
-    // Convert to milliseconds.
+    // perf->Now() already has reduced resolution here, no need to do it again.
     aTimeStamp.mPerformanceTime.Construct(
         std::max(0., perf->Now() - (OutputLatency() * 1000.)));
   } else {
@@ -555,7 +573,6 @@ Worklet* AudioContext::GetAudioWorklet(ErrorResult& aRv) {
 
   return mWorklet;
 }
-
 bool AudioContext::IsRunning() const {
   return mAudioContextState == AudioContextState::Running;
 }
