@@ -8,7 +8,6 @@
 
 #include "ContainerWriter.h"
 #include "CubebUtils.h"
-#include "MediaQueue.h"
 #include "MediaStreamGraph.h"
 #include "MediaStreamListener.h"
 #include "mozilla/DebugOnly.h"
@@ -20,7 +19,6 @@
 namespace mozilla {
 
 class DriftCompensator;
-class Muxer;
 class Runnable;
 class TaskQueue;
 
@@ -78,21 +76,29 @@ class MediaEncoderListener {
  *    been initialized and when there's data available.
  *    => encoder->RegisterListener(listener);
  *
- * 3) When the MediaEncoderListener is notified that the MediaEncoder has
- *    data available, we can encode data. This also encodes metadata on its
- *    first invocation.
+ * 3) Connect the MediaStreamTracks to be recorded.
+ *    => encoder->ConnectMediaStreamTrack(track);
+ *    This creates the corresponding TrackEncoder and connects the track and
+ *    the TrackEncoder through a track listener. This also starts encoding.
+ *
+ * 4) When the MediaEncoderListener is notified that the MediaEncoder is
+ *    initialized, we can encode metadata.
+ *    => encoder->GetEncodedMetadata(...);
+ *
+ * 5) When the MediaEncoderListener is notified that the MediaEncoder has
+ *    data available, we can encode data.
  *    => encoder->GetEncodedData(...);
  *
- * 4) To stop encoding, there are multiple options:
+ * 6) To stop encoding, there are multiple options:
  *
- *    4.1) Stop() for a graceful stop.
+ *    6.1) Stop() for a graceful stop.
  *         => encoder->Stop();
  *
- *    4.2) Cancel() for an immediate stop, if you don't need the data currently
+ *    6.2) Cancel() for an immediate stop, if you don't need the data currently
  *         buffered.
  *         => encoder->Cancel();
  *
- *    4.3) When all input tracks end, the MediaEncoder will automatically stop
+ *    6.3) When all input tracks end, the MediaEncoder will automatically stop
  *         and shut down.
  */
 class MediaEncoder {
@@ -152,11 +158,23 @@ class MediaEncoder {
       TrackRate aTrackRate);
 
   /**
+   * Encodes raw metadata for all tracks to aOutputBufs. aMIMEType is the valid
+   * mime-type for the returned container data. The buffer of container data is
+   * allocated in ContainerWriter::GetContainerData().
+   *
+   * Should there be insufficient input data for either track encoder to infer
+   * the metadata, or if metadata has already been encoded, we return an error
+   * and the output arguments are undefined. Otherwise we return NS_OK.
+   */
+  nsresult GetEncodedMetadata(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
+                              nsAString& aMIMEType);
+  /**
    * Encodes raw data for all tracks to aOutputBufs. The buffer of container
    * data is allocated in ContainerWriter::GetContainerData().
    *
-   * On its first call, metadata is also encoded. TrackEncoders must have been
-   * initialized before this is called.
+   * This implies that metadata has already been encoded and that all track
+   * encoders are still active. Should either implication break, we return an
+   * error and the output argument is undefined. Otherwise we return NS_OK.
    */
   nsresult GetEncodedData(nsTArray<nsTArray<uint8_t>>* aOutputBufs);
 
@@ -177,8 +195,6 @@ class MediaEncoder {
 #ifdef MOZ_WEBM_ENCODER
   static bool IsWebMEncoderEnabled();
 #endif
-
-  const nsString& MimeType() const;
 
   /**
    * Notifies listeners that this MediaEncoder has been initialized.
@@ -237,10 +253,15 @@ class MediaEncoder {
    */
   void SetError();
 
+  // Get encoded data from trackEncoder and write to muxer
+  nsresult WriteEncodedDataToMuxer(TrackEncoder* aTrackEncoder);
+  // Get metadata from trackEncoder and copy to muxer
+  nsresult CopyMetadataToMuxer(TrackEncoder* aTrackEncoder);
+
   const RefPtr<TaskQueue> mEncoderThread;
   const RefPtr<DriftCompensator> mDriftCompensator;
 
-  UniquePtr<Muxer> mMuxer;
+  UniquePtr<ContainerWriter> mWriter;
   RefPtr<AudioTrackEncoder> mAudioEncoder;
   RefPtr<AudioTrackListener> mAudioListener;
   RefPtr<VideoTrackEncoder> mVideoEncoder;
@@ -263,10 +284,10 @@ class MediaEncoder {
   // A video track that we are encoding. Will be null if the input stream
   // doesn't contain video on start() or if the input is an AudioNode.
   RefPtr<dom::VideoStreamTrack> mVideoTrack;
-
   TimeStamp mStartTime;
-  const nsString mMIMEType;
+  nsString mMIMEType;
   bool mInitialized;
+  bool mMetadataEncoded;
   bool mCompleted;
   bool mError;
   bool mCanceled;
