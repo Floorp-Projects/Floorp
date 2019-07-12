@@ -9,3 +9,4 @@ fuzzy-if(Android,0-2,0-2) fuzzy-if(OSX,0-34,0-134) fails-if(webrender&&!(cocoaWi
 == label-min-inline-size.html label-min-inline-size-ref.html
 == css-overflow.html css-overflow-ref.html
 == css-display.html css-display-ref.html
+== button-height.html button-height-ref.html
