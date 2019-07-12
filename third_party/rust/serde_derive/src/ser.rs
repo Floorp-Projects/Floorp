@@ -159,7 +159,7 @@ fn serialize_body(cont: &Container, params: &Parameters) -> Fragment {
         serialize_into(params, type_into)
     } else {
         match cont.data {
-            Data::Enum(_, ref variants) => serialize_enum(params, variants, &cont.attrs),
+            Data::Enum(ref variants) => serialize_enum(params, variants, &cont.attrs),
             Data::Struct(Style::Struct, ref fields) => {
                 serialize_struct(params, fields, &cont.attrs)
             }
@@ -177,7 +177,7 @@ fn serialize_body(cont: &Container, params: &Parameters) -> Fragment {
 fn serialize_transparent(cont: &Container, params: &Parameters) -> Fragment {
     let fields = match cont.data {
         Data::Struct(_, ref fields) => fields,
-        Data::Enum(_, _) => unreachable!(),
+        Data::Enum(_) => unreachable!(),
     };
 
     let self_var = &params.self_var;
