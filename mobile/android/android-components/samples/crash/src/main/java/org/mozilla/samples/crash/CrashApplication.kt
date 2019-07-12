@@ -12,11 +12,13 @@ import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
-import mozilla.components.support.base.log.Log
-import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.lib.crash.service.GleanCrashReporterService
+import mozilla.components.service.glean.Glean
 
 class CrashApplication : Application() {
     internal lateinit var crashReporter: CrashReporter
@@ -24,10 +26,16 @@ class CrashApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // We want the log messages of all builds to go to Android logcat
         Log.addSink(AndroidLogSink())
 
+        // Make sure to initialize Glean before instantiating and registering the service with
+        // the CrashReporter
+        Glean.setUploadEnabled(true)
+        Glean.initialize(applicationContext)
+
         crashReporter = CrashReporter(
-            services = listOf(createDummyCrashService(this)),
+            services = listOf(createDummyCrashService(this), GleanCrashReporterService(applicationContext)),
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             promptConfiguration = CrashReporter.PromptConfiguration(
                 appName = "Sample App",
