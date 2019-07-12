@@ -59,7 +59,7 @@ add_task(async function testShieldHistogram() {
 
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
-  document.querySelector("#tracking-action-unblock").doCommand();
+  gProtectionsHandler.disableForCurrentPage();
   await tabReloadPromise;
   is(getShieldCounts()[0], 3, "Adds one more page load");
   is(
@@ -70,7 +70,7 @@ add_task(async function testShieldHistogram() {
 
   info("Re-enable TP for the page (which reloads the page)");
   tabReloadPromise = promiseTabLoadEvent(tab);
-  document.querySelector("#tracking-action-block").doCommand();
+  gProtectionsHandler.enableForCurrentPage();
   await tabReloadPromise;
   is(getShieldCounts()[0], 4, "Adds one more page load");
   is(
