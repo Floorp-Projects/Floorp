@@ -79,6 +79,23 @@ namespace dom {
  * ThreadSafeWorkerRef can be destroyed in any thread. Internally it keeps a
  * reference to its StrongWorkerRef creator and this ref will be dropped on the
  * correct thread when the ThreadSafeWorkerRef is deleted.
+ *
+ * IPC WorkerRef
+ * ~~~~~~~~~~~~~
+ *
+ * IPDL protocols require a correct shutdown sequence. Because of this, they
+ * need a special configuration:
+ * 1. they need to be informed when the Worker starts the shutting down
+ * 2. they don't want to prevent the shutdown
+ * 3. but at the same time, they need to block the shutdown until the WorkerRef
+ *    is not longer alive.
+ *
+ * Point 1 is a standard feature of WorkerRef; point 2 is similar to
+ * WeakWorkerRef; point 3 is similar to StrongWorkerRef.
+ *
+ * You can create a special IPC WorkerRef using this static method:
+ * mozilla::dom::IPCWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
+ *                                    const char* * aName);
  */
 
 class WorkerPrivate;
@@ -172,6 +189,37 @@ class ThreadSafeWorkerRef final {
   ~ThreadSafeWorkerRef();
 
   RefPtr<StrongWorkerRef> mRef;
+};
+
+class IPCWorkerRef final : public WorkerRef {
+ public:
+  static already_AddRefed<IPCWorkerRef> Create(
+      WorkerPrivate* aWorkerPrivate, const char* aName,
+      std::function<void()>&& aCallback = nullptr);
+
+  WorkerPrivate* Private() const;
+
+ private:
+  explicit IPCWorkerRef(WorkerPrivate* aWorkerPrivate);
+  ~IPCWorkerRef();
+};
+
+// Template class to keep an Actor pointer, as a raw pointer, in a ref-counted
+// way when passed to lambdas.
+template <class ActorPtr>
+class IPCWorkerRefHelper final {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(IPCWorkerRefHelper);
+
+  explicit IPCWorkerRefHelper(ActorPtr* aActor) : mActor(aActor) {}
+
+  ActorPtr* Actor() const { return mActor; }
+
+ private:
+  ~IPCWorkerRefHelper() = default;
+
+  // Raw pointer
+  ActorPtr* mActor;
 };
 
 }  // namespace dom
