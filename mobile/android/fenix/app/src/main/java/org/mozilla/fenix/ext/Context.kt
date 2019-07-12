@@ -17,11 +17,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentActivity
+import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.Log.Priority.WARN
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.metrics.MetricController
 
 /**
  * Get the BrowserApplication object from a context.
@@ -34,6 +36,18 @@ val Context.application: FenixApplication
  */
 val Context.components: Components
     get() = application.components
+
+/**
+ * Helper function to get the MetricController off of context.
+ */
+val Context.metrics: MetricController
+    get() = this.components.analytics.metrics
+
+/**
+ * Helper function to get the SearchEngineManager off of context.
+ */
+val Context.searchEngineManager: SearchEngineManager
+    get() = this.components.search.searchEngineManager
 
 fun Context.asActivity() = (this as? ContextThemeWrapper)?.baseContext as? Activity
     ?: this as? Activity

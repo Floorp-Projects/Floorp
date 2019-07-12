@@ -46,7 +46,7 @@ private object Versions {
     const val installreferrer = "1.0"
 
     const val junit = "4.12"
-    const val mockito = "2.23.0"
+    const val mockito = "2.24.5"
     const val mockk = "1.9.kotlin12"
     const val glide = "4.9.0"
     const val flipper = "0.21.0"
