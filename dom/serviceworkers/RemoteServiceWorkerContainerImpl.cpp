@@ -199,22 +199,12 @@ RemoteServiceWorkerContainerImpl::RemoteServiceWorkerContainerImpl()
     return;
   }
 
-  RefPtr<WorkerHolderToken> workerHolderToken;
-  if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
-
-    workerHolderToken = WorkerHolderToken::Create(
-        workerPrivate, Canceling, WorkerHolderToken::AllowIdleShutdownStart);
-
-    if (NS_WARN_IF(!workerHolderToken)) {
-      Shutdown();
-      return;
-    }
+  ServiceWorkerContainerChild* actor = ServiceWorkerContainerChild::Create();
+  if (NS_WARN_IF(!actor)) {
+    Shutdown();
+    return;
   }
 
-  ServiceWorkerContainerChild* actor =
-      new ServiceWorkerContainerChild(workerHolderToken);
   PServiceWorkerContainerChild* sentActor =
       parentActor->SendPServiceWorkerContainerConstructor(actor);
   if (NS_WARN_IF(!sentActor)) {
