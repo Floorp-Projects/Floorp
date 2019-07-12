@@ -61,6 +61,8 @@ const char* js::ScopeKindString(ScopeKind kind) {
       return "named lambda";
     case ScopeKind::StrictNamedLambda:
       return "strict named lambda";
+    case ScopeKind::FunctionLexical:
+      return "function lexical";
     case ScopeKind::With:
       return "with";
     case ScopeKind::Eval:
@@ -417,7 +419,8 @@ Scope* Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing) {
     case ScopeKind::SimpleCatch:
     case ScopeKind::Catch:
     case ScopeKind::NamedLambda:
-    case ScopeKind::StrictNamedLambda: {
+    case ScopeKind::StrictNamedLambda:
+    case ScopeKind::FunctionLexical: {
       Rooted<UniquePtr<LexicalScope::Data>> dataClone(cx);
       dataClone =
           CopyScopeData<LexicalScope>(cx, &scope->as<LexicalScope>().data());
@@ -490,6 +493,7 @@ uint32_t LexicalScope::firstFrameSlot() const {
     case ScopeKind::Lexical:
     case ScopeKind::SimpleCatch:
     case ScopeKind::Catch:
+    case ScopeKind::FunctionLexical:
       // For intra-frame scopes, find the enclosing scope's next frame slot.
       return nextFrameSlot(enclosing());
     case ScopeKind::NamedLambda:
@@ -515,6 +519,7 @@ uint32_t LexicalScope::nextFrameSlot(Scope* scope) {
       case ScopeKind::Lexical:
       case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
+      case ScopeKind::FunctionLexical:
         return si.scope()->as<LexicalScope>().nextFrameSlot();
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
@@ -1416,6 +1421,7 @@ BindingIter::BindingIter(Scope* scope) {
     case ScopeKind::Lexical:
     case ScopeKind::SimpleCatch:
     case ScopeKind::Catch:
+    case ScopeKind::FunctionLexical:
       init(scope->as<LexicalScope>().data(),
            scope->as<LexicalScope>().firstFrameSlot(), 0);
       break;
