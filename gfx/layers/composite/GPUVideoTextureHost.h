@@ -65,9 +65,13 @@ class GPUVideoTextureHost : public TextureHost {
   bool SupportsWrNativeTexture() override;
 
  protected:
-  GPUVideoTextureHost(TextureFlags aFlags, TextureHost* aWrappedTextureHost);
+  GPUVideoTextureHost(TextureFlags aFlags,
+                      const SurfaceDescriptorGPUVideo& aDescriptor);
+
+  TextureHost* EnsureWrappedTextureHost();
 
   RefPtr<TextureHost> mWrappedTextureHost;
+  SurfaceDescriptorGPUVideo mDescriptor;
 };
 
 }  // namespace layers
