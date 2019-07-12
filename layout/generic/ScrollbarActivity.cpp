@@ -144,8 +144,7 @@ void ScrollbarActivity::HandleEventForScrollbar(const nsAString& aType,
                                                 nsIContent* aTarget,
                                                 Element* aScrollbar,
                                                 bool* aStoredHoverState) {
-  if (!aTarget || !aScrollbar ||
-      !nsContentUtils::ContentIsDescendantOf(aTarget, aScrollbar))
+  if (!aTarget || !aScrollbar || !aTarget->IsInclusiveDescendantOf(aScrollbar))
     return;
 
   if (aType.EqualsLiteral("mousedown")) {

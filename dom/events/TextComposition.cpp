@@ -930,7 +930,7 @@ TextComposition* TextCompositionArray::GetCompositionInContent(
   // There should be only one composition per content object.
   for (index_type i = Length(); i > 0; --i) {
     nsINode* node = ElementAt(i - 1)->GetEventTargetNode();
-    if (node && nsContentUtils::ContentIsDescendantOf(node, aContent)) {
+    if (node && node->IsInclusiveDescendantOf(aContent)) {
       return ElementAt(i - 1);
     }
   }
