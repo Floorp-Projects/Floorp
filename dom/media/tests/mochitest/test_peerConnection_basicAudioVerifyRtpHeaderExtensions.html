@@ -33,14 +33,16 @@
       );
     }
 
+    const pc = SpecialPowers.wrap(test.pcRemote._pc);
+    const haveFirstPacket = getRtpPacket(pc);
+
     test.chain.insertBefore('PC_REMOTE_WAIT_FOR_MEDIA_FLOW', [
       async function PC_REMOTE_CHECK_RTP_HEADER_EXTS_AGAINST_SDP() {
 
         const sdpExtmapIds = sdputils.findExtmapIds(test.originalAnswer.sdp);
 
-        let pc = SpecialPowers.wrap(test.pcRemote._pc);
-        let [level, type, sending, data] =  await getRtpPacket(pc);
-        let extensions = ParseRtpPacket(data).header.extensions;
+        const [level, type, sending, data] = await haveFirstPacket;
+        const extensions = ParseRtpPacket(data).header.extensions;
 
         // make sure we got the same number of rtp header extensions in
         // the received packet as were negotiated in the sdp.  Then
