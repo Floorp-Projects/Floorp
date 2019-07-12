@@ -101,14 +101,9 @@ add_task(async function click() {
   });
   await promise;
 
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
-    url: "about:blank",
-  });
   promise = waitForLoad(gBrowser.selectedBrowser, EXAMPLE_PAGE);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[2], {});
   await promise;
-  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function middleclick() {

@@ -17,10 +17,6 @@ add_task(async function() {
 });
 
 async function performTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["security.allow_unsafe_parent_loads", true]],
-  });
-
   const OutputParser = require("devtools/client/shared/output-parser");
 
   const [host, , doc] = await createHost(
