@@ -77,11 +77,10 @@ pub struct Moz2dBlobImageHandler {
 
 /// Transmute some bytes into a value.
 ///
-/// Wow this is dangerous if non-POD values are read!
 /// FIXME: kill this with fire and/or do a super robust security audit
-unsafe fn convert_from_bytes<T>(slice: &[u8]) -> T {
+unsafe fn convert_from_bytes<T: Copy>(slice: &[u8]) -> T {
     assert!(mem::size_of::<T>() <= slice.len());
-    ptr::read(slice.as_ptr() as *const T)
+    ptr::read_unaligned(slice.as_ptr() as *const T)
 }
 
 /// Transmute a value into some bytes.
@@ -113,7 +112,7 @@ impl<'a> BufReader<'a> {
     ///
     /// To limit the scope of this unsafety, please don't call this directly.
     /// Make a helper method for each whitelisted type.
-    unsafe fn read<T>(&mut self) -> T {
+    unsafe fn read<T: Copy>(&mut self) -> T {
         let ret = convert_from_bytes(&self.buf[self.pos..]);
         self.pos += mem::size_of::<T>();
         ret
@@ -419,6 +418,7 @@ fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d) -> Vec<u
 
 /// A font used by a blob image.
 #[repr(C)]
+#[derive(Copy, Clone)]
 struct BlobFont {
     /// The font key.
     font_instance_key: FontInstanceKey,
