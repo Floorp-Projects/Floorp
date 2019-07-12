@@ -2783,14 +2783,14 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
-  "abc.def",
-  abc_def,
+  "dom.webidl.test1",
+  dom_webidl_test1,
   bool, true
 )
 VARCACHE_PREF(
   Live,
-  "ghi.jkl",
-  ghi_jkl,
+  "dom.webidl.test2",
+  dom_webidl_test2,
   bool, true
 )
 

@@ -705,39 +705,39 @@ interface TestExampleInterface {
   void passVariadicThirdArg(DOMString arg1, long arg2, TestInterface... arg3);
 
   // Conditionally exposed methods/attributes
-  [Pref="abc.def"]
+  [Pref="dom.webidl.test1"]
   readonly attribute boolean prefable1;
-  [Pref="abc.def"]
+  [Pref="dom.webidl.test1"]
   readonly attribute boolean prefable2;
-  [Pref="ghi.jkl"]
+  [Pref="dom.webidl.test2"]
   readonly attribute boolean prefable3;
-  [Pref="ghi.jkl"]
+  [Pref="dom.webidl.test2"]
   readonly attribute boolean prefable4;
-  [Pref="abc.def"]
+  [Pref="dom.webidl.test1"]
   readonly attribute boolean prefable5;
-  [Pref="abc.def", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
+  [Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   readonly attribute boolean prefable6;
-  [Pref="abc.def", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
+  [Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   readonly attribute boolean prefable7;
-  [Pref="ghi.jkl", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
+  [Pref="dom.webidl.test2", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   readonly attribute boolean prefable8;
-  [Pref="abc.def", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
+  [Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   readonly attribute boolean prefable9;
-  [Pref="abc.def"]
+  [Pref="dom.webidl.test1"]
   void prefable10();
-  [Pref="abc.def", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
+  [Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   void prefable11();
-  [Pref="abc.def", Func="TestFuncControlledMember"]
+  [Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   readonly attribute boolean prefable12;
-  [Pref="abc.def", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
+  [Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   void prefable13();
-  [Pref="abc.def", Func="TestFuncControlledMember"]
+  [Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   readonly attribute boolean prefable14;
   [Func="TestFuncControlledMember"]
   readonly attribute boolean prefable15;
   [Func="TestFuncControlledMember"]
   readonly attribute boolean prefable16;
-  [Pref="abc.def", Func="TestFuncControlledMember"]
+  [Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   void prefable17();
   [Func="TestFuncControlledMember"]
   void prefable18();
@@ -747,19 +747,19 @@ interface TestExampleInterface {
   // Conditionally exposed methods/attributes involving [SecureContext]
   [SecureContext]
   readonly attribute boolean conditionalOnSecureContext1;
-  [SecureContext, Pref="abc.def"]
+  [SecureContext, Pref="dom.webidl.test1"]
   readonly attribute boolean conditionalOnSecureContext2;
-  [SecureContext, Pref="abc.def", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
+  [SecureContext, Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   readonly attribute boolean conditionalOnSecureContext3;
-  [SecureContext, Pref="abc.def", Func="TestFuncControlledMember"]
+  [SecureContext, Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   readonly attribute boolean conditionalOnSecureContext4;
   [SecureContext]
   void conditionalOnSecureContext5();
-  [SecureContext, Pref="abc.def"]
+  [SecureContext, Pref="dom.webidl.test1"]
   void conditionalOnSecureContext6();
-  [SecureContext, Pref="abc.def", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
+  [SecureContext, Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   void conditionalOnSecureContext7();
-  [SecureContext, Pref="abc.def", Func="TestFuncControlledMember"]
+  [SecureContext, Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   void conditionalOnSecureContext8();
 
   // Miscellania
