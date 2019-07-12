@@ -1287,7 +1287,13 @@ class MOZ_STACK_CLASS HeapSnapshotHandler {
     if (!first) return true;
 
     CoreDumpWriter::EdgePolicy policy;
-    if (!ShouldIncludeEdge(compartments, origin, edge, &policy)) return true;
+    if (!ShouldIncludeEdge(compartments, origin, edge, &policy)) {
+      // Because ShouldIncludeEdge considers the |origin| node as well, we don't
+      // want to consider this node 'visited' until we write it to the core
+      // dump.
+      traversal.doNotMarkReferentAsVisited();
+      return true;
+    }
 
     nodeCount++;
 

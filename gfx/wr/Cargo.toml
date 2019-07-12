@@ -13,6 +13,3 @@ panic = "abort"
 
 [profile.dev]
 panic = "abort"
-
-[patch.crates-io]
-serde_derive = { git = "https://github.com/servo/serde", branch = "deserialize_from_enums10" }

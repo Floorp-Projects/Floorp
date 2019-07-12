@@ -29,6 +29,7 @@ class FrameListColumnTime extends Component {
 
     // Convert microseconds (DOMHighResTimeStamp) to milliseconds
     const time = timeStamp / 1000;
+    const microseconds = (timeStamp % 1000).toString().padStart(3, "0");
 
     return dom.td(
       {
@@ -36,7 +37,9 @@ class FrameListColumnTime extends Component {
         className: "ws-frames-list-column ws-frames-list-time",
         title: timeStamp,
       },
-      new Date(time).toLocaleTimeString()
+      new Date(time).toLocaleTimeString(undefined, { hour12: false }) +
+        "." +
+        microseconds
     );
   }
 }

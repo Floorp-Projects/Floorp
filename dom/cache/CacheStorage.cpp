@@ -16,7 +16,7 @@
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheStorageChild.h"
-#include "mozilla/dom/cache/CacheWorkerHolder.h"
+#include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "mozilla/dom/cache/PCacheChild.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/TypeUtils.h"
@@ -189,9 +189,9 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
     return ref.forget();
   }
 
-  RefPtr<CacheWorkerHolder> workerHolder = CacheWorkerHolder::Create(
-      aWorkerPrivate, CacheWorkerHolder::AllowIdleShutdownStart);
-  if (!workerHolder) {
+  RefPtr<CacheWorkerRef> workerRef =
+      CacheWorkerRef::Create(aWorkerPrivate, CacheWorkerRef::eIPCWorkerRef);
+  if (!workerRef) {
     NS_WARNING("Worker thread is shutting down.");
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -230,7 +230,7 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
   }
 
   RefPtr<CacheStorage> ref =
-      new CacheStorage(aNamespace, aGlobal, principalInfo, workerHolder);
+      new CacheStorage(aNamespace, aGlobal, principalInfo, workerRef);
   return ref.forget();
 }
 
@@ -268,7 +268,7 @@ bool CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal) {
 
 CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
                            const PrincipalInfo& aPrincipalInfo,
-                           CacheWorkerHolder* aWorkerHolder)
+                           CacheWorkerRef* aWorkerRef)
     : mNamespace(aNamespace),
       mGlobal(aGlobal),
       mPrincipalInfo(MakeUnique<PrincipalInfo>(aPrincipalInfo)),
@@ -284,10 +284,10 @@ CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
     return;
   }
 
-  // WorkerHolder ownership is passed to the CacheStorageChild actor and any
-  // actors it may create.  The WorkerHolder will keep the worker thread alive
+  // WorkerRef ownership is passed to the CacheStorageChild actor and any
+  // actors it may create.  The WorkerRef will keep the worker thread alive
   // until the actors can gracefully shutdown.
-  CacheStorageChild* newActor = new CacheStorageChild(this, aWorkerHolder);
+  CacheStorageChild* newActor = new CacheStorageChild(this, aWorkerRef);
   PCacheStorageChild* constructedActor = actor->SendPCacheStorageConstructor(
       newActor, mNamespace, *mPrincipalInfo);
 

@@ -15,6 +15,8 @@ use mint;
 use point::{TypedPoint2D, TypedPoint3D, point2, point3};
 use size::{TypedSize2D, size2};
 use scale::TypedScale;
+use transform2d::TypedTransform2D;
+use transform3d::TypedTransform3D;
 use trig::Trig;
 use Angle;
 use num::*;
@@ -63,6 +65,12 @@ impl<T: fmt::Debug, U> fmt::Debug for TypedVector2D<T, U> {
 impl<T: fmt::Display, U> fmt::Display for TypedVector2D<T, U> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "({},{})", self.x, self.y)
+    }
+}
+
+impl<T: Default, U> Default for TypedVector2D<T, U> {
+    fn default() -> Self {
+        TypedVector2D::new(Default::default(), Default::default())
     }
 }
 
@@ -135,9 +143,38 @@ impl<T: Copy, U> TypedVector2D<T, U> {
         vec2(p.x, p.y)
     }
 
+    /// Cast the unit
+    #[inline]
+    pub fn cast_unit<V>(&self) -> TypedVector2D<T, V> {
+        vec2(self.x, self.y)
+    }
+
     #[inline]
     pub fn to_array(&self) -> [T; 2] {
         [self.x, self.y]
+    }
+
+    #[inline]
+    pub fn to_tuple(&self) -> (T, T) {
+        (self.x, self.y)
+    }
+}
+
+impl<T, U> TypedVector2D<T, U>
+where
+    T: Copy
+        + Clone
+        + Add<T, Output = T>
+        + Mul<T, Output = T>
+        + Div<T, Output = T>
+        + Sub<T, Output = T>
+        + Trig
+        + PartialOrd
+        + One
+        + Zero {
+    #[inline]
+    pub fn to_transform(&self) -> TypedTransform2D<T, U, U> {
+        TypedTransform2D::create_translation(self.x, self.y)
     }
 }
 
@@ -462,6 +499,18 @@ impl<T: Copy, U> From<[T; 2]> for TypedVector2D<T, U> {
     }
 }
 
+impl<T: Copy, U> Into<(T, T)> for TypedVector2D<T, U> {
+    fn into(self) -> (T, T) {
+        self.to_tuple()
+    }
+}
+
+impl<T: Copy, U> From<(T, T)> for TypedVector2D<T, U> {
+    fn from(tuple: (T, T)) -> Self {
+        vec2(tuple.0, tuple.1)
+    }
+}
+
 impl<T, U> TypedVector2D<T, U>
 where
     T: Signed,
@@ -500,6 +549,11 @@ impl<T: Copy + Zero, U> TypedVector3D<T, U> {
     pub fn to_array_4d(&self) -> [T; 4] {
         [self.x, self.y, self.z, Zero::zero()]
     }
+
+    #[inline]
+    pub fn to_tuple_4d(&self) -> (T, T, T, T) {
+        (self.x, self.y, self.z, Zero::zero())
+    }
 }
 
 impl<T: fmt::Debug, U> fmt::Debug for TypedVector3D<T, U> {
@@ -511,6 +565,12 @@ impl<T: fmt::Debug, U> fmt::Debug for TypedVector3D<T, U> {
 impl<T: fmt::Display, U> fmt::Display for TypedVector3D<T, U> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({},{},{})", self.x, self.y, self.z)
+    }
+}
+
+impl<T: Default, U> Default for TypedVector3D<T, U> {
+    fn default() -> Self {
+        TypedVector3D::new(Default::default(), Default::default(), Default::default())
     }
 }
 
@@ -583,6 +643,11 @@ impl<T: Copy, U> TypedVector3D<T, U> {
         [self.x, self.y, self.z]
     }
 
+    #[inline]
+    pub fn to_tuple(&self) -> (T, T, T) {
+        (self.x, self.y, self.z)
+    }
+
     /// Drop the units, preserving only the numeric value.
     #[inline]
     pub fn to_untyped(&self) -> Vector3D<T> {
@@ -599,6 +664,25 @@ impl<T: Copy, U> TypedVector3D<T, U> {
     #[inline]
     pub fn to_2d(&self) -> TypedVector2D<T, U> {
         self.xy()
+    }
+}
+
+impl<T, U> TypedVector3D<T, U>
+where
+    T: Copy
+        + Clone
+        + Add<T, Output = T>
+        + Mul<T, Output = T>
+        + Div<T, Output = T>
+        + Sub<T, Output = T>
+        + Trig
+        + PartialOrd
+        + One
+        + Zero
+        + Neg<Output = T> {
+    #[inline]
+    pub fn to_transform(&self) -> TypedTransform3D<T, U, U> {
+        TypedTransform3D::create_translation(self.x, self.y, self.z)
     }
 }
 
@@ -927,6 +1011,18 @@ impl<T: Copy, U> Into<[T; 3]> for TypedVector3D<T, U> {
 impl<T: Copy, U> From<[T; 3]> for TypedVector3D<T, U> {
     fn from(array: [T; 3]) -> Self {
         vec3(array[0], array[1], array[2])
+    }
+}
+
+impl<T: Copy, U> Into<(T, T, T)> for TypedVector3D<T, U> {
+    fn into(self) -> (T, T, T) {
+        self.to_tuple()
+    }
+}
+
+impl<T: Copy, U> From<(T, T, T)> for TypedVector3D<T, U> {
+    fn from(tuple: (T, T, T)) -> Self {
+        vec3(tuple.0, tuple.1, tuple.2)
     }
 }
 

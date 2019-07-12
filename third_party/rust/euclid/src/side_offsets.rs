@@ -17,7 +17,7 @@ use core::fmt;
 use core::ops::Add;
 use core::marker::PhantomData;
 
-/// A group of side offsets, which correspond to top/left/bottom/right for borders, padding,
+/// A group of 2D side offsets, which correspond to top/left/bottom/right for borders, padding,
 /// and margins in CSS, optionally tagged with a unit.
 #[derive(EuclidMatrix)]
 #[repr(C)]
@@ -40,7 +40,19 @@ impl<T: fmt::Debug, U> fmt::Debug for TypedSideOffsets2D<T, U> {
     }
 }
 
-/// The default side offset type with no unit.
+impl<T: Default, U> Default for TypedSideOffsets2D<T, U> {
+    fn default() -> Self {
+        TypedSideOffsets2D {
+            top: Default::default(),
+            right: Default::default(),
+            bottom: Default::default(),
+            left: Default::default(),
+            _unit: PhantomData,
+        }
+    }
+}
+
+/// The default 2D side offset type with no unit.
 pub type SideOffsets2D<T> = TypedSideOffsets2D<T, UnknownUnit>;
 
 impl<T: Copy, U> TypedSideOffsets2D<T, U> {

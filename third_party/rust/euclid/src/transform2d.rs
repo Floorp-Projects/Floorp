@@ -35,6 +35,10 @@ use num_traits::NumCast;
 /// A pre-transformation corresponds to adding an operation that is applied before
 /// the rest of the transformation, while a post-transformation adds an operation
 /// that is applied after.
+///
+/// These transforms are for working with _row vectors_, so the matrix math for transforming
+/// a vector is `v * T`. If your library is using column vectors, use `row_major` functions when you
+/// are asked for `column_major` representations and vice versa.
 #[repr(C)]
 #[derive(EuclidMatrix)]
 pub struct TypedTransform2D<T, Src, Dst> {
@@ -50,6 +54,10 @@ pub type Transform2D<T> = TypedTransform2D<T, UnknownUnit, UnknownUnit>;
 
 impl<T: Copy, Src, Dst> TypedTransform2D<T, Src, Dst> {
     /// Create a transform specifying its matrix elements in row-major order.
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `column_major`
     pub fn row_major(m11: T, m12: T, m21: T, m22: T, m31: T, m32: T) -> Self {
         TypedTransform2D {
             m11, m12,
@@ -60,6 +68,10 @@ impl<T: Copy, Src, Dst> TypedTransform2D<T, Src, Dst> {
     }
 
     /// Create a transform specifying its matrix elements in column-major order.
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `row_major`
     pub fn column_major(m11: T, m21: T, m31: T, m12: T, m22: T, m32: T) -> Self {
         TypedTransform2D {
             m11, m12,
@@ -71,6 +83,10 @@ impl<T: Copy, Src, Dst> TypedTransform2D<T, Src, Dst> {
 
     /// Returns an array containing this transform's terms in row-major order (the order
     /// in which the transform is actually laid out in memory).
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `to_column_major_array`
     pub fn to_row_major_array(&self) -> [T; 6] {
         [
             self.m11, self.m12,
@@ -80,6 +96,10 @@ impl<T: Copy, Src, Dst> TypedTransform2D<T, Src, Dst> {
     }
 
     /// Returns an array containing this transform's terms in column-major order.
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `to_row_major_array`
     pub fn to_column_major_array(&self) -> [T; 6] {
         [
             self.m11, self.m21, self.m31,
@@ -91,6 +111,10 @@ impl<T: Copy, Src, Dst> TypedTransform2D<T, Src, Dst> {
     /// as arrays.
     ///
     /// This is a convenience method to interface with other libraries like glium.
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), this will return column major arrays.
     pub fn to_row_arrays(&self) -> [[T; 2]; 3] {
         [
             [self.m11, self.m12],
@@ -100,6 +124,10 @@ impl<T: Copy, Src, Dst> TypedTransform2D<T, Src, Dst> {
     }
 
     /// Creates a transform from an array of 6 elements in row-major order.
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), please provide a column major array.
     pub fn from_row_major_array(array: [T; 6]) -> Self {
         Self::row_major(
             array[0], array[1],
@@ -109,6 +137,10 @@ impl<T: Copy, Src, Dst> TypedTransform2D<T, Src, Dst> {
     }
 
     /// Creates a transform from 3 rows of 2 elements (row-major order).
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), please provide a column major array.
     pub fn from_row_arrays(array: [[T; 2]; 3]) -> Self {
         Self::row_major(
             array[0][0], array[0][1],
@@ -194,6 +226,8 @@ where T: Copy + Clone +
 
     /// Returns the multiplication of the two matrices such that mat's transformation
     /// applies after self's transformation.
+    ///
+    /// Assuming row vectors, this is equivalent to self * mat
     #[cfg_attr(feature = "unstable", must_use)]
     pub fn post_mul<NewDst>(&self, mat: &TypedTransform2D<T, Dst, NewDst>) -> TypedTransform2D<T, Src, NewDst> {
         TypedTransform2D::row_major(
@@ -208,6 +242,8 @@ where T: Copy + Clone +
 
     /// Returns the multiplication of the two matrices such that mat's transformation
     /// applies before self's transformation.
+    ///
+    /// Assuming row vectors, this is equivalent to mat * self
     #[cfg_attr(feature = "unstable", must_use)]
     pub fn pre_mul<NewSrc>(&self, mat: &TypedTransform2D<T, NewSrc, Src>) -> TypedTransform2D<T, NewSrc, Dst> {
         mat.post_mul(self)
@@ -286,6 +322,8 @@ where T: Copy + Clone +
     }
 
     /// Returns the given point transformed by this transform.
+    ///
+    /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
     #[cfg_attr(feature = "unstable", must_use)]
     pub fn transform_point(&self, point: &TypedPoint2D<T, Src>) -> TypedPoint2D<T, Dst> {
@@ -294,6 +332,8 @@ where T: Copy + Clone +
     }
 
     /// Returns the given vector transformed by this matrix.
+    ///
+    /// Assuming row vectors, this is equivalent to `v * self`
     #[inline]
     #[cfg_attr(feature = "unstable", must_use)]
     pub fn transform_vector(&self, vec: &TypedVector2D<T, Src>) -> TypedVector2D<T, Dst> {

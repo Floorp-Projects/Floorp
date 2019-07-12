@@ -17,6 +17,9 @@ struct MediaElementAudioSourceOptions;
 
 class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
  public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaElementAudioSourceNode,
+                                           MediaStreamAudioSourceNode)
   static already_AddRefed<MediaElementAudioSourceNode> Create(
       AudioContext& aAudioContext,
       const MediaElementAudioSourceOptions& aOptions, ErrorResult& aRv);
@@ -42,8 +45,12 @@ class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
+  HTMLMediaElement* MediaElement();
+
  private:
-  explicit MediaElementAudioSourceNode(AudioContext* aContext);
+  explicit MediaElementAudioSourceNode(AudioContext* aContext,
+                                       HTMLMediaElement* aElement);
+  ~MediaElementAudioSourceNode() = default;
 
   void Destroy() override;
 
@@ -52,6 +59,8 @@ class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
   void ListenForAllowedToPlay(const MediaElementAudioSourceOptions& aOptions);
 
   MozPromiseRequestHolder<GenericNonExclusivePromise> mAllowedToPlayRequest;
+
+  RefPtr<HTMLMediaElement> mElement;
 };
 
 }  // namespace dom

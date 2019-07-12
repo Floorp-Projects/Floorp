@@ -2289,10 +2289,17 @@ static void ReduceConstraint(
   }
 
   // Keep mediaSource, ignore all other constraints.
-  auto& c = aConstraint.GetAsMediaTrackConstraints();
-  MOZ_DIAGNOSTIC_ASSERT(c.mMediaSource.WasPassed());
-  nsString mediaSource = c.mMediaSource.Value();
-  aConstraint.SetAsMediaTrackConstraints().mMediaSource.Construct(mediaSource);
+  Maybe<nsString> mediaSource;
+  if (aConstraint.GetAsMediaTrackConstraints().mMediaSource.WasPassed()) {
+    mediaSource =
+        Some(aConstraint.GetAsMediaTrackConstraints().mMediaSource.Value());
+  }
+  if (mediaSource) {
+    aConstraint.SetAsMediaTrackConstraints().mMediaSource.Value() =
+        *mediaSource;
+  } else {
+    aConstraint.SetAsMediaTrackConstraints();
+  }
 }
 
 /**

@@ -9153,7 +9153,7 @@ nsresult nsDocShell::MaybeHandleSameDocumentNavigation(
   } else {
     newURITriggeringPrincipal = aLoadState->TriggeringPrincipal();
     newURIPrincipalToInherit = doc->NodePrincipal();
-    newURIStoragePrincipalToInherit = doc->EffectiveStoragePrincipal();
+    newURIStoragePrincipalToInherit = doc->IntrinsicStoragePrincipal();
     newCsp = doc->GetCsp();
   }
   // Pass true for aCloneSHChildren, since we're not
@@ -9717,7 +9717,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   //-- Get the document's principal
   if (document) {
     nsIPrincipal* docPrincipal = aConsiderStoragePrincipal
-                                     ? document->EffectiveStoragePrincipal()
+                                     ? document->IntrinsicStoragePrincipal()
                                      : document->NodePrincipal();
 
     // Don't allow loads in typeContent docShells to inherit the system
