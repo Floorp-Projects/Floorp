@@ -55,17 +55,6 @@ function isCssVariable(input) {
   return !!input.match(IS_VARIABLE_TOKEN);
 }
 
-/**
- * Check that this is a valid identifier.
- *
- * @param {String} input
- * @return {Boolean}
- * @see https://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
- */
-function isIdentifier(input) {
-  return input === CSS.escape(input);
-}
-
 var cachedCssProperties = new WeakMap();
 
 /**
@@ -122,13 +111,9 @@ function CssProperties(db) {
   this.isKnown = this.isKnown.bind(this);
   this.isInherited = this.isInherited.bind(this);
   this.supportsType = this.supportsType.bind(this);
-  this.isValidOnClient = this.isValidOnClient.bind(this);
   this.supportsCssColor4ColorFunction = this.supportsCssColor4ColorFunction.bind(
     this
   );
-
-  // A weakly held dummy HTMLDivElement to test CSS properties on the client.
-  this._dummyElements = new WeakMap();
 }
 
 CssProperties.prototype = {
@@ -143,50 +128,6 @@ CssProperties.prototype = {
     // Custom Property Names (aka CSS Variables) are case-sensitive; do not lowercase.
     property = property.startsWith("--") ? property : property.toLowerCase();
     return !!this.properties[property] || isCssVariable(property);
-  },
-
-  /**
-   * Quickly check if a CSS name/value combo is valid on the client.
-   *
-   * @param {String} Property name.
-   * @param {String} Property value.
-   * @param {Document} The client's document object.
-   * @return {Boolean}
-   */
-  isValidOnClient(name, value, doc) {
-    // The property name should be an identifier.
-    if (!isIdentifier(name)) {
-      return false;
-    }
-
-    let dummyElement = this._dummyElements.get(doc);
-    if (!dummyElement) {
-      dummyElement = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
-      this._dummyElements.set(doc, dummyElement);
-    }
-
-    // `!important` is not a valid value when setting a style declaration in the
-    // CSS Object Model.
-    const sanitizedValue = ("" + value).replace(/!\s*important\s*$/, "");
-
-    // Test the style on the element.
-    dummyElement.style[name] = sanitizedValue;
-    const isValid = !!dummyElement.style[name];
-
-    // Reset the state of the dummy element;
-    dummyElement.style[name] = "";
-    return isValid;
-  },
-
-  /**
-   * Get a function that will check the validity of css name/values for a given document.
-   * Useful for injecting isValidOnClient into components when needed.
-   *
-   * @param {Document} The client's document object.
-   * @return {Function} this.isValidOnClient with the document pre-set.
-   */
-  getValidityChecker(doc) {
-    return (name, value) => this.isValidOnClient(name, value, doc);
   },
 
   /**

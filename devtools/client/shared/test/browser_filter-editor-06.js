@@ -8,9 +8,6 @@
 const {
   CSSFilterEditorWidget,
 } = require("devtools/client/shared/widgets/FilterWidget");
-const {
-  getClientCssProperties,
-} = require("devtools/shared/fronts/css-properties");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/client/locales/filterwidget.properties";
@@ -20,10 +17,9 @@ const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
   const [, , doc] = await createHost("bottom", TEST_URI);
-  const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
-  const widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
+  const widget = new CSSFilterEditorWidget(container, "none");
 
   const select = widget.el.querySelector("select"),
     add = widget.el.querySelector("#add-filter");

@@ -174,10 +174,7 @@ TooltipsOverlay.prototype = {
         break;
       case "filterEditor":
         const SwatchFilterTooltip = require("devtools/client/shared/widgets/tooltip/SwatchFilterTooltip");
-        tooltip = new SwatchFilterTooltip(
-          doc,
-          this._cssProperties.getValidityChecker(this.view.inspector.panelDoc)
-        );
+        tooltip = new SwatchFilterTooltip(doc);
         break;
       case "interactiveTooltip":
         tooltip = new HTMLTooltip(doc, {
