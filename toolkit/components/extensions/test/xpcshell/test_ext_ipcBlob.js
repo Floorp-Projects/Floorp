@@ -139,6 +139,11 @@ add_task(async function test_parent_to_child() {
 
   await extension.awaitMessage("bg-ready");
 
+  Services.prefs.setBoolPref(
+    "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+    true
+  );
+  Services.prefs.setBoolPref("security.allow_unsafe_parent_loads", true);
   let contentPage = await ExtensionTestUtils.loadContentPage(
     `${BASE_URL}/file_sample.html`
   );
