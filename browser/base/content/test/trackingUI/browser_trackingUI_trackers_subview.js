@@ -19,7 +19,7 @@ add_task(async function setup() {
 
 async function assertSitesListed(blocked) {
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function(browser) {
-    await openIdentityPopup();
+    await openProtectionsPopup();
 
     let categoryItem = document.getElementById(
       "identity-popup-content-blocking-category-tracking-protection"
@@ -49,7 +49,7 @@ async function assertSitesListed(blocked) {
       "Strict info is hidden if TP is enabled."
     );
 
-    let mainView = document.getElementById("identity-popup-mainView");
+    let mainView = document.getElementById("protections-popup-mainView");
     viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
     let backButton = trackersView.querySelector(".subviewbutton-back");
     backButton.click();

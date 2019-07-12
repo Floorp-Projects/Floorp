@@ -23,7 +23,10 @@ add_task(async function testResetOnLocationChange() {
     0,
     "Benign page has no content blocking event"
   );
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("active"),
+    "shield is not active"
+  );
 
   await Promise.all([
     promiseTabLoadEvent(tab, TRACKING_PAGE),
@@ -35,7 +38,7 @@ add_task(async function testResetOnLocationChange() {
     Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
     "Tracking page has a content blocking event"
   );
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "shield is active");
 
   await promiseTabLoadEvent(tab, BENIGN_PAGE);
 
@@ -44,7 +47,10 @@ add_task(async function testResetOnLocationChange() {
     0,
     "Benign page has no content blocking event"
   );
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("active"),
+    "shield is not active"
+  );
 
   let contentBlockingEvent = waitForContentBlockingEvent(3);
   let trackingTab = await BrowserTestUtils.openNewForegroundTab(
@@ -58,7 +64,7 @@ add_task(async function testResetOnLocationChange() {
     Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
     "Tracking page has a content blocking event"
   );
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "shield is active");
 
   gBrowser.selectedTab = tab;
   is(
@@ -66,7 +72,10 @@ add_task(async function testResetOnLocationChange() {
     0,
     "Benign page has no content blocking event"
   );
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("active"),
+    "shield is not active"
+  );
 
   gBrowser.removeTab(trackingTab);
   gBrowser.removeTab(tab);
@@ -80,16 +89,22 @@ add_task(async function testResetOnTabChange() {
   Services.prefs.setBoolPref(TP_PREF, true);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, ABOUT_PAGE);
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("active"),
+    "shield is not active"
+  );
 
   await Promise.all([
     promiseTabLoadEvent(tab, TRACKING_PAGE),
     waitForContentBlockingEvent(3),
   ]);
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "shield is active");
 
   await promiseTabLoadEvent(tab, ABOUT_PAGE);
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("active"),
+    "shield is not active"
+  );
 
   let contentBlockingEvent = waitForContentBlockingEvent(3);
   let trackingTab = await BrowserTestUtils.openNewForegroundTab(
@@ -97,10 +112,13 @@ add_task(async function testResetOnTabChange() {
     TRACKING_PAGE
   );
   await contentBlockingEvent;
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+  ok(gProtectionsHandler.iconBox.hasAttribute("active"), "shield is active");
 
   gBrowser.selectedTab = tab;
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+  ok(
+    !gProtectionsHandler.iconBox.hasAttribute("active"),
+    "shield is not active"
+  );
 
   gBrowser.removeTab(trackingTab);
   gBrowser.removeTab(tab);
