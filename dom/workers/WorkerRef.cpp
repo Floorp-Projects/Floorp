@@ -216,5 +216,41 @@ WorkerPrivate* ThreadSafeWorkerRef::Private() const {
   return mRef->mWorkerPrivate;
 }
 
+// ----------------------------------------------------------------------------
+// IPCWorkerRef
+
+/* static */
+already_AddRefed<IPCWorkerRef> IPCWorkerRef::Create(
+    WorkerPrivate* aWorkerPrivate, const char* aName,
+    std::function<void()>&& aCallback) {
+  MOZ_ASSERT(aWorkerPrivate);
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
+  RefPtr<IPCWorkerRef> ref = new IPCWorkerRef(aWorkerPrivate);
+
+  // This holder doesn't keep the worker alive.
+  UniquePtr<Holder> holder(
+      new Holder(aName, ref, WorkerHolder::AllowIdleShutdownStart));
+  if (NS_WARN_IF(!holder->HoldWorker(aWorkerPrivate, Canceling))) {
+    return nullptr;
+  }
+
+  ref->mHolder = std::move(holder);
+  ref->mCallback = std::move(aCallback);
+
+  return ref.forget();
+}
+
+IPCWorkerRef::IPCWorkerRef(WorkerPrivate* aWorkerPrivate)
+    : WorkerRef(aWorkerPrivate) {}
+
+IPCWorkerRef::~IPCWorkerRef() = default;
+
+WorkerPrivate* IPCWorkerRef::Private() const {
+  MOZ_ASSERT(mHolder);
+  NS_ASSERT_OWNINGTHREAD(IPCWorkerRef);
+  return mWorkerPrivate;
+}
+
 }  // namespace dom
 }  // namespace mozilla
