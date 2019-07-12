@@ -4,8 +4,7 @@ ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 const TEST_PAGE_URI = "data:text/html;charset=utf-8,The letter s.";
 // Using 'javascript' schema to bypass E10SUtils.canLoadURIInRemoteType, because
 // it does not allow 'data:' URI to be loaded in the parent process.
-const E10S_PARENT_TEST_PAGE_URI =
-  getRootDirectory(gTestPath) + "file_empty.html";
+const E10S_PARENT_TEST_PAGE_URI = "javascript:document.write('The letter s.');";
 
 /**
  * Makes sure that the findbar hotkeys (' and /) event listeners
@@ -173,16 +172,8 @@ add_task(async function test_reinitialization_at_remoteness_change() {
   // Moving browser into the parent process and reloading sample data.
   ok(browser.isRemoteBrowser, "Browser should be remote now.");
   await promiseRemotenessChange(tab, false);
-  let docLoaded = BrowserTestUtils.browserLoaded(
-    browser,
-    false,
-    E10S_PARENT_TEST_PAGE_URI
-  );
-  BrowserTestUtils.loadURI(browser, E10S_PARENT_TEST_PAGE_URI);
-  await docLoaded;
+  await BrowserTestUtils.loadURI(browser, E10S_PARENT_TEST_PAGE_URI);
   ok(!browser.isRemoteBrowser, "Browser should not be remote any more.");
-  browser.contentDocument.body.append("The letter s.");
-  browser.contentDocument.body.clientHeight; // Force flush.
 
   // Findbar should keep operating normally after remoteness change.
   await promiseFindFinished("z", false);

@@ -8,7 +8,6 @@ devtools.jar:
     content/shared/vendor/dagre-d3.js (shared/vendor/dagre-d3.js)
     content/shared/widgets/widgets.css (shared/widgets/widgets.css)
     content/shared/widgets/VariablesView.xul (shared/widgets/VariablesView.xul)
-    content/shared/webextension-fallback.html (shared/webextension-fallback.html)
     content/webconsole/index.html (webconsole/index.html)
 *   content/scratchpad/index.xul (scratchpad/index.xul)
     content/shared/splitview.css (shared/splitview.css)
