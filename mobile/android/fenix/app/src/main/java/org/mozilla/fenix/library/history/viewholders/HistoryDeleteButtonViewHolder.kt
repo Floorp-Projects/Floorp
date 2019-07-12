@@ -32,6 +32,7 @@ class HistoryDeleteButtonViewHolder(
             }
         }
     }
+
     fun bind(mode: HistoryState.Mode) {
         this.mode = mode
 

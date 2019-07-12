@@ -2,12 +2,16 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<com.google.android.material.button.MaterialButton xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/delete_history_button"
-    style="@style/ThemeIndependentMaterialGreyButtonDestructive"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="16dp"
-    android:text="@string/history_delete_all"
-    app:rippleColor="?secondaryText" />
+    android:layout_margin="16dp">
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/delete_history_button"
+        style="@style/ThemeIndependentMaterialGreyButtonDestructive"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/history_delete_all"
+        app:rippleColor="?secondaryText" />
+</FrameLayout>

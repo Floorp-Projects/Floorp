@@ -8,6 +8,7 @@ import android.content.Context
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import org.mozilla.fenix.R
@@ -101,11 +102,48 @@ class HistoryAdapter(
     var selected = listOf<HistoryItem>()
 
     fun updateData(items: List<HistoryItem>, mode: HistoryState.Mode) {
+        val diffUtil = DiffUtil.calculateDiff(
+            HistoryDiffUtil(
+                this.historyList,
+                HistoryList(items),
+                HistoryList(selected),
+                HistoryList((mode as? HistoryState.Mode.Editing)?.selectedItems ?: listOf()),
+                this.mode,
+                mode
+            )
+        )
+
         this.historyList = HistoryList(items)
         this.mode = mode
         this.selected = if (mode is HistoryState.Mode.Editing) mode.selectedItems else listOf()
 
-        notifyDataSetChanged()
+        diffUtil.dispatchUpdatesTo(this)
+    }
+
+    private class HistoryDiffUtil(
+        val old: HistoryList,
+        val new: HistoryList,
+        val oldSelected: HistoryList,
+        val newSelected: HistoryList,
+        val oldMode: HistoryState.Mode,
+        val newMode: HistoryState.Mode
+    ) : DiffUtil.Callback() {
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+            old.items[oldItemPosition] == new.items[newItemPosition]
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            val modesEqual = oldMode::class == newMode::class
+            val isStillSelected =
+                oldSelected.items.contains(old.items[oldItemPosition]) &&
+                        newSelected.items.contains(new.items[newItemPosition])
+            val isStillNotSelected =
+                !oldSelected.items.contains(old.items[oldItemPosition]) &&
+                        !newSelected.items.contains(new.items[newItemPosition])
+            return modesEqual && (isStillSelected || isStillNotSelected)
+        }
+
+        override fun getOldListSize(): Int = old.items.size
+        override fun getNewListSize(): Int = new.items.size
     }
 
     override fun getItemCount(): Int = historyList.items.size

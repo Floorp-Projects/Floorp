@@ -103,7 +103,7 @@ class HistoryListItemViewHolder(
             if (selected) {
                 favicon.setImageResource(R.drawable.mozac_ic_check)
             } else {
-                favicon.setImageResource(0)
+                updateFavIcon(item.url)
             }
         } else {
             val backgroundTint = ThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
