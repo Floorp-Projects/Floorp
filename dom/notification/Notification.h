@@ -10,7 +10,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/NotificationBinding.h"
-#include "mozilla/dom/WorkerHolder.h"
 
 #include "nsIObserver.h"
 #include "nsISupports.h"
@@ -32,19 +31,8 @@ namespace dom {
 class NotificationRef;
 class WorkerNotificationObserver;
 class Promise;
+class StrongWorkerRef;
 class WorkerPrivate;
-
-class Notification;
-class NotificationWorkerHolder final : public WorkerHolder {
-  // Since the feature is strongly held by a Notification, it is ok to hold
-  // a raw pointer here.
-  Notification* mNotification;
-
- public:
-  explicit NotificationWorkerHolder(Notification* aNotification);
-
-  bool Notify(WorkerStatus aStatus) override;
-};
 
 // Records telemetry probes at application startup, when a notification is
 // shown, and when the notification permission is revoked for a site.
@@ -385,13 +373,12 @@ class Notification : public DOMEventTargetHelper,
 
   bool IsTargetThread() const { return NS_IsMainThread() == !mWorkerPrivate; }
 
-  bool RegisterWorkerHolder();
-  void UnregisterWorkerHolder();
+  bool CreateWorkerRef();
 
   nsresult ResolveIconAndSoundURL(nsString&, nsString&);
 
   // Only used for Notifications on Workers, worker thread only.
-  UniquePtr<NotificationWorkerHolder> mWorkerHolder;
+  RefPtr<StrongWorkerRef> mWorkerRef;
   // Target thread only.
   uint32_t mTaskCount;
 };
