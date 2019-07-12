@@ -1272,6 +1272,8 @@ class MediaStreamGraph {
    */
   TrackRate GraphRate() const { return mSampleRate; }
 
+  double AudioOutputLatency();
+
   void RegisterCaptureStreamForWindow(uint64_t aWindowId,
                                       ProcessedMediaStream* aCaptureStream);
   void UnregisterCaptureStreamForWindow(uint64_t aWindowId);

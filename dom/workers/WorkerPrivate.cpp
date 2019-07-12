@@ -2047,7 +2047,7 @@ bool WorkerPrivate::PrincipalIsValid() const {
 
 WorkerPrivate::WorkerThreadAccessible::WorkerThreadAccessible(
     WorkerPrivate* const aParent)
-    : mNumHoldersPreventingShutdownStart(0),
+    : mNumWorkerRefsPreventingShutdownStart(0),
       mDebuggerEventLoopLevel(0),
       mErrorHandlerRecursionCount(0),
       mNextTimeoutId(1),
@@ -2706,7 +2706,7 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
       while (mControlQueue.IsEmpty() &&
              !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
              !(normalRunnablesPending = NS_HasPendingEvents(mThread)) &&
-             !(mStatus != Running && !HasActiveHolders())) {
+             !(mStatus != Running && !HasActiveWorkerRefs())) {
         WaitForWorkerEvents();
       }
 
@@ -2724,7 +2724,7 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
     }
 
     // if all holders are done then we can kill this thread.
-    if (currentStatus != Running && !HasActiveHolders()) {
+    if (currentStatus != Running && !HasActiveWorkerRefs()) {
       // Now we are ready to kill the worker thread.
       if (currentStatus == Canceling) {
         NotifyInternal(Killing);
@@ -3503,7 +3503,9 @@ void WorkerPrivate::RemoveChildWorker(WorkerPrivate* aChildWorker) {
   }
 }
 
-bool WorkerPrivate::AddHolder(WorkerHolder* aHolder, WorkerStatus aFailStatus) {
+bool WorkerPrivate::AddWorkerRef(WorkerRef* aWorkerRef,
+                                 WorkerStatus aFailStatus) {
+  MOZ_ASSERT(aWorkerRef);
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
 
   {
@@ -3514,46 +3516,46 @@ bool WorkerPrivate::AddHolder(WorkerHolder* aHolder, WorkerStatus aFailStatus) {
     }
   }
 
-  MOZ_ASSERT(!data->mHolders.Contains(aHolder), "Already know about this one!");
+  MOZ_ASSERT(!data->mWorkerRefs.Contains(aWorkerRef),
+             "Already know about this one!");
 
-  if (aHolder->GetBehavior() == WorkerHolder::PreventIdleShutdownStart) {
-    if (!data->mNumHoldersPreventingShutdownStart &&
+  if (aWorkerRef->IsPreventingShutdown()) {
+    if (!data->mNumWorkerRefsPreventingShutdownStart &&
         !ModifyBusyCountFromWorker(true)) {
       return false;
     }
-    data->mNumHoldersPreventingShutdownStart += 1;
+    data->mNumWorkerRefsPreventingShutdownStart += 1;
   }
 
-  data->mHolders.AppendElement(aHolder);
+  data->mWorkerRefs.AppendElement(aWorkerRef);
   return true;
 }
 
-void WorkerPrivate::RemoveHolder(WorkerHolder* aHolder) {
+void WorkerPrivate::RemoveWorkerRef(WorkerRef* aWorkerRef) {
+  MOZ_ASSERT(aWorkerRef);
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
 
-  MOZ_ASSERT(data->mHolders.Contains(aHolder), "Didn't know about this one!");
-  data->mHolders.RemoveElement(aHolder);
+  MOZ_ASSERT(data->mWorkerRefs.Contains(aWorkerRef),
+             "Didn't know about this one!");
+  data->mWorkerRefs.RemoveElement(aWorkerRef);
 
-  if (aHolder->GetBehavior() == WorkerHolder::PreventIdleShutdownStart) {
-    data->mNumHoldersPreventingShutdownStart -= 1;
-    if (!data->mNumHoldersPreventingShutdownStart &&
+  if (aWorkerRef->IsPreventingShutdown()) {
+    data->mNumWorkerRefsPreventingShutdownStart -= 1;
+    if (!data->mNumWorkerRefsPreventingShutdownStart &&
         !ModifyBusyCountFromWorker(false)) {
       NS_WARNING("Failed to modify busy count!");
     }
   }
 }
 
-void WorkerPrivate::NotifyHolders(WorkerStatus aStatus) {
+void WorkerPrivate::NotifyWorkerRefs(WorkerStatus aStatus) {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
 
   NS_ASSERTION(aStatus > Closing, "Bad status!");
 
-  nsTObserverArray<WorkerHolder*>::ForwardIterator iter(data->mHolders);
+  nsTObserverArray<WorkerRef*>::ForwardIterator iter(data->mWorkerRefs);
   while (iter.HasMore()) {
-    WorkerHolder* holder = iter.GetNext();
-    if (!holder->Notify(aStatus)) {
-      NS_WARNING("Failed to notify holder!");
-    }
+    iter.GetNext()->Notify();
   }
 
   AutoTArray<WorkerPrivate*, 10> children;
@@ -4060,7 +4062,7 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
 
   // Let all our holders know the new status.
   if (aStatus > Closing) {
-    NotifyHolders(aStatus);
+    NotifyWorkerRefs(aStatus);
   }
 
   // If this is the first time our status has changed then we need to clear the
@@ -4801,11 +4803,13 @@ void WorkerPrivate::AssertIsOnWorkerThread() const {
 void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
 
-  nsTObserverArray<WorkerHolder*>::ForwardIterator iter(data->mHolders);
+  nsTObserverArray<WorkerRef*>::ForwardIterator iter(data->mWorkerRefs);
   while (iter.HasMore()) {
-    WorkerHolder* holder = iter.GetNext();
-    aString.Append("|");
-    aString.Append(holder->Name());
+    WorkerRef* workerRef = iter.GetNext();
+    if (workerRef->IsPreventingShutdown()) {
+      aString.Append("|");
+      aString.Append(workerRef->Name());
+    }
   }
 }
 

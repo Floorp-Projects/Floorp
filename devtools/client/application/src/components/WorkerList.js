@@ -42,7 +42,12 @@ class WorkerList extends Component {
     return [
       article(
         { className: "workers-container" },
-        Localized({ id: "serviceworker-list-header" }, h1({})),
+        Localized(
+          { id: "serviceworker-list-header" },
+          h1({
+            className: "application--title",
+          })
+        ),
         ul(
           {},
           workers.map(worker =>
@@ -56,7 +61,7 @@ class WorkerList extends Component {
       ),
       Localized(
         {
-          id: "serviceworker-list-aboutdebugging2",
+          id: "serviceworker-list-aboutdebugging",
           a: a({
             className: "aboutdebugging-plug__link",
             onClick: () => openTrustedLink("about:debugging#workers"),

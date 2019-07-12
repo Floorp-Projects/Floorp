@@ -5,24 +5,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_HttpChannelCallbackWrapper_h
-#define mozilla_net_HttpChannelCallbackWrapper_h
+#ifndef mozilla_net_ParentChannelListener_h
+#define mozilla_net_ParentChannelListener_h
 
 #include "nsIInterfaceRequestor.h"
-#include "nsIChannelEventSink.h"
-#include "nsIRedirectResultListener.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIStreamListener.h"
 
 namespace mozilla {
 namespace net {
 
-class HttpChannelParent;
-
-#define HTTP_CHANNEL_PARENT_LISTENER_IID             \
+#define PARENT_CHANNEL_LISTENER                      \
   {                                                  \
-    0xe409da52, 0xda76, 0x4eb7, {                    \
-      0xa7, 0xf4, 0x03, 0x3d, 0x88, 0xac, 0x87, 0x6d \
+    0xa4e2c10c, 0xceba, 0x457f, {                    \
+      0xa8, 0x0d, 0x78, 0x2b, 0x23, 0xba, 0xbd, 0x16 \
     }                                                \
   }
 
@@ -30,23 +26,19 @@ class HttpChannelParent;
 // works correctly on this object, as it's needed to compute a void* pointing to
 // the beginning of this object.
 
-class HttpChannelParentListener final : public nsIInterfaceRequestor,
-                                        public nsIChannelEventSink,
-                                        public nsIRedirectResultListener,
-                                        public nsIStreamListener,
-                                        public nsINetworkInterceptController {
+class ParentChannelListener final : public nsIInterfaceRequestor,
+                                    public nsIStreamListener,
+                                    public nsINetworkInterceptController {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIREDIRECTRESULTLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_LISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(PARENT_CHANNEL_LISTENER)
 
-  explicit HttpChannelParentListener(HttpChannelParent* aInitialChannel);
+  explicit ParentChannelListener(nsIStreamListener* aListener);
 
   // For channel diversion from child to parent.
   MOZ_MUST_USE nsresult DivertTo(nsIStreamListener* aListener);
@@ -56,12 +48,11 @@ class HttpChannelParentListener final : public nsIInterfaceRequestor,
   void SetupInterceptionAfterRedirect(bool aShouldIntercept);
   void ClearInterceptedChannel(nsIStreamListener* aListener);
 
-  nsresult TriggerCrossProcessRedirect(nsIChannel* oldChannel,
-                                       nsILoadInfo* aLoadInfo,
-                                       uint64_t aIdentifier);
+  // Called to set a new listener which replaces the old one after a redirect.
+  void SetListenerAfterRedirect(nsIStreamListener* aListener);
 
  private:
-  virtual ~HttpChannelParentListener();
+  virtual ~ParentChannelListener();
 
   // Private partner function to SuspendForDiversion.
   MOZ_MUST_USE nsresult ResumeForDiversion();
@@ -71,7 +62,6 @@ class HttpChannelParentListener final : public nsIInterfaceRequestor,
   // or some other listener that we have been diverted to via
   // nsIDivertableChannel.
   nsCOMPtr<nsIStreamListener> mNextListener;
-  uint32_t mRedirectChannelId;
   // When set, no OnStart/OnData/OnStop calls should be received.
   bool mSuspendedForDiversion;
 
@@ -95,10 +85,9 @@ class HttpChannelParentListener final : public nsIInterfaceRequestor,
   nsCOMPtr<nsINetworkInterceptController> mInterceptController;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelParentListener,
-                              HTTP_CHANNEL_PARENT_LISTENER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(ParentChannelListener, PARENT_CHANNEL_LISTENER)
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_HttpChannelParent_h
+#endif  // mozilla_net_ParentChannelListener_h

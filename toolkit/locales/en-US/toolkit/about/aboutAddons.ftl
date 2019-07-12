@@ -383,7 +383,6 @@ report-addon-button = Report
 remove-addon-button = Remove
 disable-addon-button = Disable
 enable-addon-button = Enable
-expand-addon-button = More Options
 preferences-addon-button =
     { PLATFORM() ->
         [windows] Options

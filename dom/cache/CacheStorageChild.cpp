@@ -19,12 +19,12 @@ namespace cache {
 void DeallocPCacheStorageChild(PCacheStorageChild* aActor) { delete aActor; }
 
 CacheStorageChild::CacheStorageChild(CacheStorage* aListener,
-                                     CacheWorkerHolder* aWorkerHolder)
+                                     CacheWorkerRef* aWorkerRef)
     : mListener(aListener), mNumChildActors(0), mDelayedDestroy(false) {
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
   MOZ_DIAGNOSTIC_ASSERT(mListener);
 
-  SetWorkerHolder(aWorkerHolder);
+  SetWorkerRef(aWorkerRef);
 }
 
 CacheStorageChild::~CacheStorageChild() {
@@ -44,7 +44,7 @@ void CacheStorageChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
                                   const CacheOpArgs& aArgs) {
   mNumChildActors += 1;
   Unused << SendPCacheOpConstructor(
-      new CacheOpChild(GetWorkerHolder(), aGlobal, aParent, aPromise), aArgs);
+      new CacheOpChild(GetWorkerRef(), aGlobal, aParent, aPromise), aArgs);
 }
 
 void CacheStorageChild::StartDestroyFromListener() {
@@ -73,7 +73,7 @@ void CacheStorageChild::StartDestroy() {
   RefPtr<CacheStorage> listener = mListener;
 
   // StartDestroy() can get called from either CacheStorage or the
-  // CacheWorkerHolder.
+  // CacheWorkerRef.
   // Theoretically we can get double called if the right race happens.  Handle
   // that by just ignoring the second StartDestroy() call.
   if (!listener) {
@@ -98,7 +98,7 @@ void CacheStorageChild::ActorDestroy(ActorDestroyReason aReason) {
     MOZ_DIAGNOSTIC_ASSERT(!mListener);
   }
 
-  RemoveWorkerHolder();
+  RemoveWorkerRef();
 }
 
 PCacheOpChild* CacheStorageChild::AllocPCacheOpChild(

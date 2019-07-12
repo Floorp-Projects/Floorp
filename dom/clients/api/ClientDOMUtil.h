@@ -9,7 +9,6 @@
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
-#include "mozilla/dom/WorkerHolderToken.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
 class nsIGlobalObject;

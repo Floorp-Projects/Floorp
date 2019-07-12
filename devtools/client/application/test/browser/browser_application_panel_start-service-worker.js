@@ -29,10 +29,10 @@ add_task(async function() {
   info("Wait until the start link is displayed and enabled");
   const container = getWorkerContainers(doc)[0];
   await waitUntil(() =>
-    container.querySelector(".js-start-link:not(.disabled-link)")
+    container.querySelector(".js-link-start:not(.disabled-link)")
   );
   info("Click the link and wait for the worker to start");
-  const link = container.querySelector(".js-start-link");
+  const link = container.querySelector(".js-link-start");
   link.click();
   await waitUntil(
     () => container.querySelector(".js-worker-status").textContent === "Running"
@@ -61,9 +61,9 @@ add_task(async function() {
 
   info("Wait until the start link is displayed");
   const container = getWorkerContainers(doc)[0];
-  await waitUntil(() => container.querySelector(".js-start-link"));
+  await waitUntil(() => container.querySelector(".js-link-start"));
   ok(
-    container.querySelector(".js-start-link.disabled-link"),
+    container.querySelector(".js-link-start.disabled-link"),
     "Start link is disabled"
   );
 

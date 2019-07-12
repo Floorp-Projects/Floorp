@@ -73,7 +73,6 @@
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/UniquePtr.h"
 #include "Principal.h"
-#include "WorkerHolder.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"

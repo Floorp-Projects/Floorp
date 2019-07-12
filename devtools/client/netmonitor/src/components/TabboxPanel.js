@@ -34,7 +34,7 @@ const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
 const CACHE_TITLE = L10N.getStr("netmonitor.tab.cache");
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
-const WEBSOCKETS_TITLE = L10N.getStr("netmonitor.tab.webSockets");
+const MESSAGES_TITLE = L10N.getStr("netmonitor.tab.messages");
 const PARAMS_TITLE = L10N.getStr("netmonitor.tab.params");
 const RESPONSE_TITLE = L10N.getStr("netmonitor.tab.response");
 const SECURITY_TITLE = L10N.getStr("netmonitor.tab.security");
@@ -96,7 +96,6 @@ class TabboxPanel extends Component {
       return null;
     }
 
-    const channelId = request.channelId;
     const showWebSocketsPanel =
       request.cause.type === "websocket" &&
       Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets") &&
@@ -135,11 +134,10 @@ class TabboxPanel extends Component {
       showWebSocketsPanel &&
         TabPanel(
           {
-            id: PANELS.WEBSOCKETS,
-            title: WEBSOCKETS_TITLE,
+            id: PANELS.MESSAGES,
+            title: MESSAGES_TITLE,
           },
           WebSocketsPanel({
-            channelId,
             connector,
           })
         ),

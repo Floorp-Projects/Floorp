@@ -267,8 +267,7 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
                                        HandleScript script,
                                        HandleScope enclosingScope,
                                        MutableHandle<LazyScript*> lazy) {
-  MOZ_ASSERT_IF(mode == XDR_ENCODE, script->isRelazifiableIgnoringJitCode() &&
-                                        script->maybeLazyScript());
+  MOZ_ASSERT_IF(mode == XDR_ENCODE, script->maybeLazyScript());
   MOZ_ASSERT_IF(mode == XDR_ENCODE, !lazy->numInnerFunctions());
 
   JSContext* cx = xdr->cx();
@@ -1025,7 +1024,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     if (!sourceObjectArg) {
       xdrScriptFlags |= (1 << OwnSource);
     }
-    if (script->isRelazifiableIgnoringJitCode()) {
+    if (script->maybeLazyScript()) {
       xdrScriptFlags |= (1 << HasLazyScript);
     }
   }

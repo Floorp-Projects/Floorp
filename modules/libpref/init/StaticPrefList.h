@@ -2779,26 +2779,18 @@ VARCACHE_PREF(
   bool, false
 )
 
-// Is support for Navigator.geolocation enabled?
-VARCACHE_PREF(
-  Live,
-  "geo.enabled",
-  geo_enabled,
-  bool, true
-)
-
 // WebIDL test prefs
 
 VARCACHE_PREF(
   Live,
-  "abc.def",
-  abc_def,
+  "dom.webidl.test1",
+  dom_webidl_test1,
   bool, true
 )
 VARCACHE_PREF(
   Live,
-  "ghi.jkl",
-  ghi_jkl,
+  "dom.webidl.test2",
+  dom_webidl_test2,
   bool, true
 )
 
@@ -3060,6 +3052,18 @@ VARCACHE_PREF(
   "general.smoothScroll.msdPhysics.regularSpringConstant",
    general_smoothScroll_msdPhysics_regularSpringConstant,
   RelaxedAtomicInt32, 1000
+)
+
+//---------------------------------------------------------------------------
+// Prefs starting with "geo."
+//---------------------------------------------------------------------------
+
+// Is support for Navigator.geolocation enabled?
+VARCACHE_PREF(
+  Live,
+  "geo.enabled",
+  geo_enabled,
+  bool, true
 )
 
 //---------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 #define mozilla_dom_workers_WorkerRef_h
 
 #include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerStatus.h"
 #include "mozilla/UniquePtr.h"
 #include <functional>
 
@@ -30,7 +30,7 @@ namespace dom {
  * d. Firefox is shutting down.
  *
  * When a DOM Worker goes away, it does several steps. See more in
- * WorkerHolder.h. The DOM Worker thread will basically stop scheduling
+ * WorkerStatus.h. The DOM Worker thread will basically stop scheduling
  * WorkerRunnables, and eventually WorkerControlRunnables. But if there is
  * something preventing the shutting down, it will always possible to dispatch
  * WorkerControlRunnables.  Of course, at some point, the worker _must_ be
@@ -79,6 +79,23 @@ namespace dom {
  * ThreadSafeWorkerRef can be destroyed in any thread. Internally it keeps a
  * reference to its StrongWorkerRef creator and this ref will be dropped on the
  * correct thread when the ThreadSafeWorkerRef is deleted.
+ *
+ * IPC WorkerRef
+ * ~~~~~~~~~~~~~
+ *
+ * IPDL protocols require a correct shutdown sequence. Because of this, they
+ * need a special configuration:
+ * 1. they need to be informed when the Worker starts the shutting down
+ * 2. they don't want to prevent the shutdown
+ * 3. but at the same time, they need to block the shutdown until the WorkerRef
+ *    is not longer alive.
+ *
+ * Point 1 is a standard feature of WorkerRef; point 2 is similar to
+ * WeakWorkerRef; point 3 is similar to StrongWorkerRef.
+ *
+ * You can create a special IPC WorkerRef using this static method:
+ * mozilla::dom::IPCWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
+ *                                    const char* * aName);
  */
 
 class WorkerPrivate;
@@ -86,22 +103,33 @@ class StrongWorkerRef;
 class ThreadSafeWorkerRef;
 
 class WorkerRef {
+  friend class WorkerPrivate;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(WorkerRef)
 
  protected:
-  class Holder;
-  friend class Holder;
-
-  explicit WorkerRef(WorkerPrivate* aWorkerPrivate);
+  WorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName,
+            bool aIsPreventingShutdown);
   virtual ~WorkerRef();
 
   virtual void Notify();
 
+  bool HoldWorker(WorkerStatus aStatus);
+  void ReleaseWorker();
+
+  bool IsPreventingShutdown() const { return mIsPreventingShutdown; }
+
+  const char* Name() const { return mName; }
+
   WorkerPrivate* mWorkerPrivate;
-  UniquePtr<WorkerHolder> mHolder;
 
   std::function<void()> mCallback;
+  const char* const mName;
+  const bool mIsPreventingShutdown;
+
+  // True if this WorkerRef has been added to a WorkerPrivate.
+  bool mHolding;
 };
 
 class WeakWorkerRef final : public WorkerRef {
@@ -154,7 +182,7 @@ class StrongWorkerRef final : public WorkerRef {
       WorkerPrivate* aWorkerPrivate, const char* aName,
       WorkerStatus aFailStatus);
 
-  explicit StrongWorkerRef(WorkerPrivate* aWorkerPrivate);
+  StrongWorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName);
   ~StrongWorkerRef();
 };
 
@@ -172,6 +200,37 @@ class ThreadSafeWorkerRef final {
   ~ThreadSafeWorkerRef();
 
   RefPtr<StrongWorkerRef> mRef;
+};
+
+class IPCWorkerRef final : public WorkerRef {
+ public:
+  static already_AddRefed<IPCWorkerRef> Create(
+      WorkerPrivate* aWorkerPrivate, const char* aName,
+      std::function<void()>&& aCallback = nullptr);
+
+  WorkerPrivate* Private() const;
+
+ private:
+  IPCWorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName);
+  ~IPCWorkerRef();
+};
+
+// Template class to keep an Actor pointer, as a raw pointer, in a ref-counted
+// way when passed to lambdas.
+template <class ActorPtr>
+class IPCWorkerRefHelper final {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(IPCWorkerRefHelper);
+
+  explicit IPCWorkerRefHelper(ActorPtr* aActor) : mActor(aActor) {}
+
+  ActorPtr* Actor() const { return mActor; }
+
+ private:
+  ~IPCWorkerRefHelper() = default;
+
+  // Raw pointer
+  ActorPtr* mActor;
 };
 
 }  // namespace dom

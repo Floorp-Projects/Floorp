@@ -154,7 +154,7 @@ class Worker extends Component {
       },
       a({
         onClick: !shallDisableLink ? this.debug : null,
-        className: `${linkClass} worker__debug-link js-debug-link`,
+        className: `${linkClass} worker__link-debug js-link-debug`,
       })
     );
     return link;
@@ -174,7 +174,7 @@ class Worker extends Component {
       },
       a({
         onClick: this.start,
-        className: `worker__start-link js-start-link ${linkClass}`,
+        className: `worker__link-start js-link-start ${linkClass}`,
       })
     );
     return link;

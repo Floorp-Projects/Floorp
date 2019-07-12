@@ -2155,6 +2155,8 @@ class nsLayoutUtils {
 
     /* The size of the surface */
     mozilla::gfx::IntSize mSize;
+    /* The size the surface is intended to be rendered at */
+    mozilla::gfx::IntSize mIntrinsicSize;
     /* The principal associated with the element whose surface was returned.
        If there is a surface, this will never be null. */
     nsCOMPtr<nsIPrincipal> mPrincipal;

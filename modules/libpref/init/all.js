@@ -2131,6 +2131,9 @@ pref("network.http.tailing.total-max", 45000);
 
 // Enable or disable the whole fix from bug 1563538
 pref("network.http.spdy.bug1563538", true);
+pref("network.http.spdy.bug1563695", true);
+pref("network.http.spdy.bug1562315", true);
+pref("network.http.spdy.bug1556491", true);
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
@@ -2463,7 +2466,7 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 #if defined(DEBUG) && !defined(ANDROID)
-pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,config,debugging,downloads,home,newtab,plugins,preferences,sessionrestore,sync-log,welcomeback");
+pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,config,debugging,downloads,home,newtab,preferences,sessionrestore,sync-log,welcomeback");
 // the following prefs are for testing purposes only.
 pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);

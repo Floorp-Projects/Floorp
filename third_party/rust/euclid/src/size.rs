@@ -13,6 +13,7 @@ use mint;
 use length::Length;
 use scale::TypedScale;
 use vector::{TypedVector2D, vec2, BoolVector2D};
+use vector::{TypedVector3D, vec3, BoolVector3D};
 use num::*;
 
 use num_traits::{Float, NumCast, Signed};
@@ -44,6 +45,12 @@ impl<T: fmt::Debug, U> fmt::Debug for TypedSize2D<T, U> {
 impl<T: fmt::Display, U> fmt::Display for TypedSize2D<T, U> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "({}x{})", self.width, self.height)
+    }
+}
+
+impl<T: Default, U> Default for TypedSize2D<T, U> {
+    fn default() -> Self {
+        TypedSize2D::new(Default::default(), Default::default())
     }
 }
 
@@ -196,6 +203,11 @@ impl<T: Copy, U> TypedSize2D<T, U> {
     #[inline]
     pub fn to_array(&self) -> [T; 2] {
         [self.width, self.height]
+    }
+
+    #[inline]
+    pub fn to_tuple(&self) -> (T, T) {
+        (self.width, self.height)
     }
 
     #[inline]
@@ -380,6 +392,29 @@ impl<T, U> Into<mint::Vector2<T>> for TypedSize2D<T, U> {
     }
 }
 
+impl<T: Copy, U> Into<[T; 2]> for TypedSize2D<T, U> {
+    fn into(self) -> [T; 2] {
+        self.to_array()
+    }
+}
+
+impl<T: Copy, U> From<[T; 2]> for TypedSize2D<T, U> {
+    fn from(array: [T; 2]) -> Self {
+        size2(array[0], array[1])
+    }
+}
+
+impl<T: Copy, U> Into<(T, T)> for TypedSize2D<T, U> {
+    fn into(self) -> (T, T) {
+        self.to_tuple()
+    }
+}
+
+impl<T: Copy, U> From<(T, T)> for TypedSize2D<T, U> {
+    fn from(tuple: (T, T)) -> Self {
+        size2(tuple.0, tuple.1)
+    }
+}
 
 #[cfg(test)]
 mod size2d {
@@ -439,5 +474,388 @@ mod size2d {
         let s2 = Size2D::from(sm);
 
         assert_eq!(s1, s2);
+    }
+}
+
+/// A 3d size tagged with a unit.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedSize3D<T, U> {
+    pub width: T,
+    pub height: T,
+    pub depth: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<U>,
+}
+
+/// Default 3d size type with no unit.
+///
+/// `Size3D` provides the same methods as `TypedSize3D`.
+pub type Size3D<T> = TypedSize3D<T, UnknownUnit>;
+
+impl<T: fmt::Debug, U> fmt::Debug for TypedSize3D<T, U> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}×{:?}×{:?}", self.width, self.height, self.depth)
+    }
+}
+
+impl<T: fmt::Display, U> fmt::Display for TypedSize3D<T, U> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "({}x{}x{})", self.width, self.height, self.depth)
+    }
+}
+
+impl<T: Default, U> Default for TypedSize3D<T, U> {
+    fn default() -> Self {
+        TypedSize3D::new(Default::default(), Default::default(), Default::default())
+    }
+}
+
+impl<T, U> TypedSize3D<T, U> {
+    /// Constructor taking scalar values.
+    pub fn new(width: T, height: T, depth: T) -> Self {
+        TypedSize3D {
+            width,
+            height,
+            depth,
+            _unit: PhantomData,
+        }
+    }
+}
+
+impl<T: Clone, U> TypedSize3D<T, U> {
+    /// Constructor taking scalar strongly typed lengths.
+    pub fn from_lengths(width: Length<T, U>, height: Length<T, U>, depth: Length<T, U>) -> Self {
+        TypedSize3D::new(width.get(), height.get(), depth.get())
+    }
+}
+
+impl<T: Round, U> TypedSize3D<T, U> {
+    /// Rounds each component to the nearest integer value.
+    ///
+    /// This behavior is preserved for negative values (unlike the basic cast).
+    pub fn round(&self) -> Self {
+        TypedSize3D::new(self.width.round(), self.height.round(), self.depth.round())
+    }
+}
+
+impl<T: Ceil, U> TypedSize3D<T, U> {
+    /// Rounds each component to the smallest integer equal or greater than the original value.
+    ///
+    /// This behavior is preserved for negative values (unlike the basic cast).
+    pub fn ceil(&self) -> Self {
+        TypedSize3D::new(self.width.ceil(), self.height.ceil(), self.depth.ceil())
+    }
+}
+
+impl<T: Floor, U> TypedSize3D<T, U> {
+    /// Rounds each component to the biggest integer equal or lower than the original value.
+    ///
+    /// This behavior is preserved for negative values (unlike the basic cast).
+    pub fn floor(&self) -> Self {
+        TypedSize3D::new(self.width.floor(), self.height.floor(), self.depth.floor())
+    }
+}
+
+impl<T: Copy + Add<T, Output = T>, U> Add for TypedSize3D<T, U> {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        TypedSize3D::new(self.width + other.width, self.height + other.height, self.depth + other.depth)
+    }
+}
+
+impl<T: Copy + Sub<T, Output = T>, U> Sub for TypedSize3D<T, U> {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        TypedSize3D::new(self.width - other.width, self.height - other.height, self.depth - other.depth)
+    }
+}
+
+impl<T: Copy + Clone + Mul<T, Output=T>, U> TypedSize3D<T, U> {
+    pub fn volume(&self) -> T {
+        self.width * self.height * self.depth
+    }
+}
+
+impl<T, U> TypedSize3D<T, U>
+where
+    T: Copy + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
+{
+    /// Linearly interpolate between this size and another size.
+    ///
+    /// `t` is expected to be between zero and one.
+    #[inline]
+    pub fn lerp(&self, other: Self, t: T) -> Self {
+        let one_t = T::one() - t;
+        size3(
+            one_t * self.width + t * other.width,
+            one_t * self.height + t * other.height,
+            one_t * self.depth + t * other.depth,
+        )
+    }
+}
+
+impl<T: Zero + PartialOrd, U> TypedSize3D<T, U> {
+    pub fn is_empty_or_negative(&self) -> bool {
+        let zero = T::zero();
+        self.width <= zero || self.height <= zero || self.depth <= zero
+    }
+}
+
+impl<T: Zero, U> TypedSize3D<T, U> {
+    pub fn zero() -> Self {
+        TypedSize3D::new(Zero::zero(), Zero::zero(), Zero::zero())
+    }
+}
+
+impl<T: Zero, U> Zero for TypedSize3D<T, U> {
+    fn zero() -> Self {
+        TypedSize3D::new(Zero::zero(), Zero::zero(), Zero::zero())
+    }
+}
+
+impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for TypedSize3D<T, U> {
+    type Output = Self;
+    #[inline]
+    fn mul(self, scale: T) -> Self {
+        TypedSize3D::new(self.width * scale, self.height * scale, self.depth * scale)
+    }
+}
+
+impl<T: Copy + Div<T, Output = T>, U> Div<T> for TypedSize3D<T, U> {
+    type Output = Self;
+    #[inline]
+    fn div(self, scale: T) -> Self {
+        TypedSize3D::new(self.width / scale, self.height / scale, self.depth / scale)
+    }
+}
+
+impl<T: Copy + Mul<T, Output = T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedSize3D<T, U1> {
+    type Output = TypedSize3D<T, U2>;
+    #[inline]
+    fn mul(self, scale: TypedScale<T, U1, U2>) -> TypedSize3D<T, U2> {
+        TypedSize3D::new(self.width * scale.get(), self.height * scale.get(), self.depth * scale.get())
+    }
+}
+
+impl<T: Copy + Div<T, Output = T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedSize3D<T, U2> {
+    type Output = TypedSize3D<T, U1>;
+    #[inline]
+    fn div(self, scale: TypedScale<T, U1, U2>) -> TypedSize3D<T, U1> {
+        TypedSize3D::new(self.width / scale.get(), self.height / scale.get(), self.depth / scale.get())
+    }
+}
+
+impl<T: Copy, U> TypedSize3D<T, U> {
+    /// Returns self.width as a Length carrying the unit.
+    #[inline]
+    pub fn width_typed(&self) -> Length<T, U> {
+        Length::new(self.width)
+    }
+
+    /// Returns self.height as a Length carrying the unit.
+    #[inline]
+    pub fn height_typed(&self) -> Length<T, U> {
+        Length::new(self.height)
+    }
+
+    /// Returns self.depth as a Length carrying the unit.
+    #[inline]
+    pub fn depth_typed(&self) -> Length<T, U> {
+        Length::new(self.depth)
+    }
+
+    #[inline]
+    pub fn to_array(&self) -> [T; 3] {
+        [self.width, self.height, self.depth]
+    }
+
+    #[inline]
+    pub fn to_vector(&self) -> TypedVector3D<T, U> {
+        vec3(self.width, self.height, self.depth)
+    }
+
+    /// Drop the units, preserving only the numeric value.
+    pub fn to_untyped(&self) -> Size3D<T> {
+        TypedSize3D::new(self.width, self.height, self.depth)
+    }
+
+    /// Tag a unitless value with units.
+    pub fn from_untyped(p: &Size3D<T>) -> Self {
+        TypedSize3D::new(p.width, p.height, p.depth)
+    }
+}
+
+impl<T: NumCast + Copy, Unit> TypedSize3D<T, Unit> {
+    /// Cast from one numeric representation to another, preserving the units.
+    ///
+    /// When casting from floating point to integer coordinates, the decimals are truncated
+    /// as one would expect from a simple cast, but this behavior does not always make sense
+    /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
+    pub fn cast<NewT: NumCast + Copy>(&self) -> TypedSize3D<NewT, Unit> {
+        self.try_cast().unwrap()
+    }
+
+    /// Fallible cast from one numeric representation to another, preserving the units.
+    ///
+    /// When casting from floating point to integer coordinates, the decimals are truncated
+    /// as one would expect from a simple cast, but this behavior does not always make sense
+    /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
+    pub fn try_cast<NewT: NumCast + Copy>(&self) -> Option<TypedSize3D<NewT, Unit>> {
+        match (NumCast::from(self.width), NumCast::from(self.height), NumCast::from(self.depth)) {
+            (Some(w), Some(h), Some(d)) => Some(TypedSize3D::new(w, h, d)),
+            _ => None,
+        }
+    }
+
+    // Convenience functions for common casts
+
+    /// Cast into an `f32` size.
+    pub fn to_f32(&self) -> TypedSize3D<f32, Unit> {
+        self.cast()
+    }
+
+    /// Cast into an `f64` size.
+    pub fn to_f64(&self) -> TypedSize3D<f64, Unit> {
+        self.cast()
+    }
+
+    /// Cast into an `uint` size, truncating decimals if any.
+    ///
+    /// When casting from floating point sizes, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    pub fn to_usize(&self) -> TypedSize3D<usize, Unit> {
+        self.cast()
+    }
+
+    /// Cast into an `u32` size, truncating decimals if any.
+    ///
+    /// When casting from floating point sizes, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    pub fn to_u32(&self) -> TypedSize3D<u32, Unit> {
+        self.cast()
+    }
+
+    /// Cast into an `i32` size, truncating decimals if any.
+    ///
+    /// When casting from floating point sizes, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    pub fn to_i32(&self) -> TypedSize3D<i32, Unit> {
+        self.cast()
+    }
+
+    /// Cast into an `i64` size, truncating decimals if any.
+    ///
+    /// When casting from floating point sizes, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    pub fn to_i64(&self) -> TypedSize3D<i64, Unit> {
+        self.cast()
+    }
+}
+
+impl<T, U> TypedSize3D<T, U>
+where
+    T: Signed,
+{
+    pub fn abs(&self) -> Self {
+        size3(self.width.abs(), self.height.abs(), self.depth.abs())
+    }
+
+    pub fn is_positive(&self) -> bool {
+        self.width.is_positive() && self.height.is_positive() && self.depth.is_positive()
+    }
+}
+
+impl<T: PartialOrd, U> TypedSize3D<T, U> {
+    pub fn greater_than(&self, other: &Self) -> BoolVector3D {
+        BoolVector3D {
+            x: self.width > other.width,
+            y: self.height > other.height,
+            z: self.depth > other.depth,
+        }
+    }
+
+    pub fn lower_than(&self, other: &Self) -> BoolVector3D {
+        BoolVector3D {
+            x: self.width < other.width,
+            y: self.height < other.height,
+            z: self.depth < other.depth,
+        }
+    }
+}
+
+
+impl<T: PartialEq, U> TypedSize3D<T, U> {
+    pub fn equal(&self, other: &Self) -> BoolVector3D {
+        BoolVector3D {
+            x: self.width == other.width,
+            y: self.height == other.height,
+            z: self.depth == other.depth,
+        }
+    }
+
+    pub fn not_equal(&self, other: &Self) -> BoolVector3D {
+        BoolVector3D {
+            x: self.width != other.width,
+            y: self.height != other.height,
+            z: self.depth != other.depth,
+        }
+    }
+}
+
+impl<T: Float, U> TypedSize3D<T, U> {
+    #[inline]
+    pub fn min(self, other: Self) -> Self {
+        size3(
+            self.width.min(other.width),
+            self.height.min(other.height),
+            self.depth.min(other.depth),
+        )
+    }
+
+    #[inline]
+    pub fn max(self, other: Self) -> Self {
+        size3(
+            self.width.max(other.width),
+            self.height.max(other.height),
+            self.depth.max(other.depth),
+        )
+    }
+
+    #[inline]
+    pub fn clamp(&self, start: Self, end: Self) -> Self {
+        self.max(start).min(end)
+    }
+}
+
+
+/// Shorthand for `TypedSize3D::new(w, h, d)`.
+pub fn size3<T, U>(w: T, h: T, d: T) -> TypedSize3D<T, U> {
+    TypedSize3D::new(w, h, d)
+}
+
+#[cfg(feature = "mint")]
+impl<T, U> From<mint::Vector3<T>> for TypedSize3D<T, U> {
+    fn from(v: mint::Vector3<T>) -> Self {
+        TypedSize3D {
+            width: v.x,
+            height: v.y,
+            depth: v.z,
+            _unit: PhantomData,
+        }
+    }
+}
+#[cfg(feature = "mint")]
+impl<T, U> Into<mint::Vector3<T>> for TypedSize3D<T, U> {
+    fn into(self) -> mint::Vector3<T> {
+        mint::Vector3 {
+            x: self.width,
+            y: self.height,
+            z: self.depth,
+        }
     }
 }

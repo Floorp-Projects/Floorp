@@ -85,3 +85,11 @@ sm-all:
         - "!android !asan !shippable 'xpcshell"
         - "!android !asan !shippable 'jsreftest"
         - "!shippable !android 'jittest"  # macosx64 jittests
+
+webrender:
+    selector: fuzzy
+    description: >-
+        Runs the conformance tests relevant to WebRender.
+    query:
+        - "!talos !raptor !shippable !asan '-qr"
+        - "^webrender-"

@@ -8944,58 +8944,39 @@ var gPrivateBrowsingUI = {
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
 
-    if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
-      // Adjust the window's title
-      let docElement = document.documentElement;
-      if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
-        docElement.setAttribute(
-          "title",
-          docElement.getAttribute("title_privatebrowsing")
-        );
-        docElement.setAttribute(
-          "titlemodifier",
-          docElement.getAttribute("titlemodifier_privatebrowsing")
-        );
-      }
+    if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
+      return;
+    }
+
+    // Adjust the window's title
+    let docElement = document.documentElement;
+    if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
       docElement.setAttribute(
-        "privatebrowsingmode",
-        PrivateBrowsingUtils.permanentPrivateBrowsing
-          ? "permanent"
-          : "temporary"
+        "title",
+        docElement.getAttribute("title_privatebrowsing")
       );
-      gBrowser.updateTitlebar();
+      docElement.setAttribute(
+        "titlemodifier",
+        docElement.getAttribute("titlemodifier_privatebrowsing")
+      );
+    }
+    docElement.setAttribute(
+      "privatebrowsingmode",
+      PrivateBrowsingUtils.permanentPrivateBrowsing ? "permanent" : "temporary"
+    );
+    gBrowser.updateTitlebar();
 
-      if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
-        // Adjust the New Window menu entries
-        [
-          { normal: "menu_newNavigator", private: "menu_newPrivateWindow" },
-        ].forEach(function(menu) {
-          let newWindow = document.getElementById(menu.normal);
-          let newPrivateWindow = document.getElementById(menu.private);
-          if (newWindow && newPrivateWindow) {
-            newPrivateWindow.hidden = true;
-            newWindow.label = newPrivateWindow.label;
-            newWindow.accessKey = newPrivateWindow.accessKey;
-            newWindow.command = newPrivateWindow.command;
-          }
-        });
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      // Adjust the New Window menu entries
+      let newWindow = document.getElementById("menu_newNavigator");
+      let newPrivateWindow = document.getElementById("menu_newPrivateWindow");
+      if (newWindow && newPrivateWindow) {
+        newPrivateWindow.hidden = true;
+        newWindow.label = newPrivateWindow.label;
+        newWindow.accessKey = newPrivateWindow.accessKey;
+        newWindow.command = newPrivateWindow.command;
       }
     }
-
-    let urlBarSearchParam =
-      gURLBar.getAttribute("autocompletesearchparam") || "";
-    if (
-      !PrivateBrowsingUtils.permanentPrivateBrowsing &&
-      !urlBarSearchParam.includes("disable-private-actions")
-    ) {
-      // Disable switch to tab autocompletion for private windows.
-      // We leave it enabled for permanent private browsing mode though.
-      urlBarSearchParam += " disable-private-actions";
-    }
-    if (!urlBarSearchParam.includes("private-window")) {
-      urlBarSearchParam += " private-window";
-    }
-    gURLBar.setAttribute("autocompletesearchparam", urlBarSearchParam);
   },
 };
 
