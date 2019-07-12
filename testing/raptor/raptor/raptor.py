@@ -182,8 +182,11 @@ class Raptor(object):
     def run_tests(self, tests, test_names):
         try:
             for test in tests:
-                self.run_test(test, timeout=int(test.get('page_timeout')))
-
+                try:
+                    self.run_test(test, timeout=int(test.get('page_timeout')))
+                except RuntimeError as e:
+                    LOG.critical("Tests failed to finish! Application timed out.")
+                    LOG.error(e)
             return self.process_results(test_names)
         finally:
             self.clean_up()
@@ -230,9 +233,9 @@ class Raptor(object):
             if not self.debug_mode:
                 elapsed_time += 1
                 if elapsed_time > (timeout) - 5:  # stop 5 seconds early
-                    LOG.info("application timed out after {} seconds".format(timeout))
                     self.control_server.wait_for_quit()
-                    break
+                    raise RuntimeError("Test failed to finish. "
+                                       "Application timed out after {} seconds".format(timeout))
 
     def run_test_teardown(self):
         self.check_for_crashes()
