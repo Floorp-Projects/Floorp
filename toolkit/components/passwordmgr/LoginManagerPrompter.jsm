@@ -1210,9 +1210,11 @@ LoginManagerPrompter.prototype = {
       "togglePasswordAccessKey2"
     );
 
-    this._getPopupNote().show(
+    let popupNote = this._getPopupNote();
+    let notificationID = "password";
+    popupNote.show(
       browser,
-      "password",
+      notificationID,
       promptMsg,
       "password-notification-icon",
       mainAction,
@@ -1294,6 +1296,12 @@ LoginManagerPrompter.prototype = {
         options
       )
     );
+
+    if (options.notifySaved) {
+      let notification = popupNote.getNotification(notificationID);
+      let anchor = notification.anchorElement;
+      anchor.ownerGlobal.ConfirmationHint.show(anchor, "passwordSaved");
+    }
   },
 
   _removeLoginNotifications() {
