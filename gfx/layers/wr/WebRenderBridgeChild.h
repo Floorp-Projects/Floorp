@@ -82,7 +82,6 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
                       const nsCString& aTxtURL);
   void EndEmptyTransaction(const FocusTarget& aFocusTarget,
                            nsTArray<RenderRootUpdates>& aRenderRootUpdates,
-                           uint32_t aPaintSequenceNumber,
                            TransactionId aTransactionId,
                            const mozilla::VsyncId& aVsyncId,
                            const mozilla::TimeStamp& aVsyncStartTime,
