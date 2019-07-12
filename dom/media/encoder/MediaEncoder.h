@@ -20,6 +20,7 @@
 namespace mozilla {
 
 class DriftCompensator;
+class Muxer;
 class Runnable;
 class TaskQueue;
 
@@ -77,29 +78,21 @@ class MediaEncoderListener {
  *    been initialized and when there's data available.
  *    => encoder->RegisterListener(listener);
  *
- * 3) Connect the MediaStreamTracks to be recorded.
- *    => encoder->ConnectMediaStreamTrack(track);
- *    This creates the corresponding TrackEncoder and connects the track and
- *    the TrackEncoder through a track listener. This also starts encoding.
- *
- * 4) When the MediaEncoderListener is notified that the MediaEncoder is
- *    initialized, we can encode metadata.
- *    => encoder->GetEncodedMetadata(...);
- *
- * 5) When the MediaEncoderListener is notified that the MediaEncoder has
- *    data available, we can encode data.
+ * 3) When the MediaEncoderListener is notified that the MediaEncoder has
+ *    data available, we can encode data. This also encodes metadata on its
+ *    first invocation.
  *    => encoder->GetEncodedData(...);
  *
- * 6) To stop encoding, there are multiple options:
+ * 4) To stop encoding, there are multiple options:
  *
- *    6.1) Stop() for a graceful stop.
+ *    4.1) Stop() for a graceful stop.
  *         => encoder->Stop();
  *
- *    6.2) Cancel() for an immediate stop, if you don't need the data currently
+ *    4.2) Cancel() for an immediate stop, if you don't need the data currently
  *         buffered.
  *         => encoder->Cancel();
  *
- *    6.3) When all input tracks end, the MediaEncoder will automatically stop
+ *    4.3) When all input tracks end, the MediaEncoder will automatically stop
  *         and shut down.
  */
 class MediaEncoder {
@@ -159,23 +152,11 @@ class MediaEncoder {
       TrackRate aTrackRate);
 
   /**
-   * Encodes raw metadata for all tracks to aOutputBufs. aMIMEType is the valid
-   * mime-type for the returned container data. The buffer of container data is
-   * allocated in ContainerWriter::GetContainerData().
-   *
-   * Should there be insufficient input data for either track encoder to infer
-   * the metadata, or if metadata has already been encoded, we return an error
-   * and the output arguments are undefined. Otherwise we return NS_OK.
-   */
-  nsresult GetEncodedMetadata(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
-                              nsAString& aMIMEType);
-  /**
    * Encodes raw data for all tracks to aOutputBufs. The buffer of container
    * data is allocated in ContainerWriter::GetContainerData().
    *
-   * This implies that metadata has already been encoded and that all track
-   * encoders are still active. Should either implication break, we return an
-   * error and the output argument is undefined. Otherwise we return NS_OK.
+   * On its first call, metadata is also encoded. TrackEncoders must have been
+   * initialized before this is called.
    */
   nsresult GetEncodedData(nsTArray<nsTArray<uint8_t>>* aOutputBufs);
 
@@ -196,6 +177,8 @@ class MediaEncoder {
 #ifdef MOZ_WEBM_ENCODER
   static bool IsWebMEncoderEnabled();
 #endif
+
+  const nsString& MimeType() const;
 
   /**
    * Notifies listeners that this MediaEncoder has been initialized.
@@ -254,17 +237,10 @@ class MediaEncoder {
    */
   void SetError();
 
-  // Get metadata from trackEncoder and copy to muxer
-  nsresult CopyMetadataToMuxer(TrackEncoder* aTrackEncoder);
-  // Process data pending in encoder(s)
-  nsresult EncodeData();
-  // Write pending encoded data to muxer
-  nsresult WriteEncodedDataToMuxer();
-
   const RefPtr<TaskQueue> mEncoderThread;
   const RefPtr<DriftCompensator> mDriftCompensator;
 
-  UniquePtr<ContainerWriter> mWriter;
+  UniquePtr<Muxer> mMuxer;
   RefPtr<AudioTrackEncoder> mAudioEncoder;
   RefPtr<AudioTrackListener> mAudioListener;
   RefPtr<VideoTrackEncoder> mVideoEncoder;
@@ -288,19 +264,9 @@ class MediaEncoder {
   // doesn't contain video on start() or if the input is an AudioNode.
   RefPtr<dom::VideoStreamTrack> mVideoTrack;
 
-  // Audio frames that have been encoded and are pending write to the muxer
-  MediaQueue<EncodedFrame> mEncodedAudioFrames;
-  // Video frames that have been encoded and are pending write to the muxer
-  MediaQueue<EncodedFrame> mEncodedVideoFrames;
-
-  // How much each audio time stamp should be delayed in microseconds. Used to
-  // adjust for opus codec delay.
-  uint64_t mAudioCodecDelay = 0;
-
   TimeStamp mStartTime;
-  nsString mMIMEType;
+  const nsString mMIMEType;
   bool mInitialized;
-  bool mMetadataEncoded;
   bool mCompleted;
   bool mError;
   bool mCanceled;
