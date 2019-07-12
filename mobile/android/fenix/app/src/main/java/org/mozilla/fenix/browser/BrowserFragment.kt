@@ -769,14 +769,22 @@ class BrowserFragment : Fragment(), BackHandler {
             }
             ToolbarMenu.Item.SaveToCollection -> showSaveToCollection()
             ToolbarMenu.Item.OpenInFenix -> {
-                // To not get a "Display Already Acquired" error we need to force remove the engineView here
-                swipeRefresh?.removeView(engineView as View)
-                pendingOpenInBrowserIntent = Intent(context, IntentReceiverActivity::class.java)
-                pendingOpenInBrowserIntent?.action = Intent.ACTION_VIEW
-                getSessionById()?.customTabConfig = null
+                // Release the session from this view so that it can immediately be rendered by a different view
+                engineView.release()
+
+                // Strip the CustomTabConfig to turn this Session into a regular tab and then select it
                 getSessionById()?.let {
+                    it.customTabConfig = null
                     requireComponents.core.sessionManager.select(it)
                 }
+
+                // Switch to the actual browser which should now display our new selected session
+                pendingOpenInBrowserIntent = Intent(context, IntentReceiverActivity::class.java).also {
+                    it.action = Intent.ACTION_VIEW
+                    it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+
+                // Close this activity since it is no longer displaying any session
                 activity?.finish()
             }
         }
