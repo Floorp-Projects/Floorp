@@ -6,26 +6,10 @@
  * General styles
  */
 
-h1 {
-  font-size: 22px;
-  font-weight: normal;
-}
-
-a {
-  margin: 0 10px;
-}
-
-a,
-a:hover,
-a:visited {
-  color: var(--theme-highlight-blue) !important;
-  cursor: pointer;
-}
-
 a.disabled-link,
 a.disabled-link:hover,
 a.disabled-link:visited {
-  opacity: 0.5 !important;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

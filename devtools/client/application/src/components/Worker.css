@@ -22,9 +22,8 @@
   width: 100%;
   grid-column-gap: 0;
   padding: 1rem 0;
-
   line-height: 1.5;
-  font-size: 1.2rem;
+  font-size: var(--body-10-font-size);
 }
 
 .worker:first-child {
@@ -72,4 +71,9 @@
 
 .worker__data__updated {
   color: var(--theme-text-color-alt);
+}
+
+.worker__link-start,
+.worker__link-debug {
+  margin: 0 calc(var(--base-unit) * 2);
 }
