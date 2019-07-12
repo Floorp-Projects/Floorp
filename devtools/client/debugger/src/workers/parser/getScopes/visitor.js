@@ -118,6 +118,7 @@ export type ScopeBindingList = {
 
 export type SourceScope = {
   type: "object" | "function" | "block",
+  scopeKind: string,
   displayName: string,
   start: SourceLocation,
   end: SourceLocation,
@@ -222,6 +223,7 @@ function toParsedScopes(
         scope.type === "module" || scope.type === "function-body"
           ? "block"
           : scope.type,
+      scopeKind: "",
       displayName: scope.displayName,
       bindings: scope.bindings,
       children: toParsedScopes(scope.children, sourceId),

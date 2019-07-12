@@ -1312,7 +1312,7 @@ Maybe<LexicalScope::Data*> ParserBase::newLexicalScopeData(
 template <>
 SyntaxParseHandler::LexicalScopeNodeType
 PerHandlerParser<SyntaxParseHandler>::finishLexicalScope(
-    ParseContext::Scope& scope, Node body) {
+    ParseContext::Scope& scope, Node body, ScopeKind kind) {
   if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
     return null();
   }
@@ -1322,7 +1322,7 @@ PerHandlerParser<SyntaxParseHandler>::finishLexicalScope(
 
 template <>
 LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
-    ParseContext::Scope& scope, ParseNode* body) {
+    ParseContext::Scope& scope, ParseNode* body, ScopeKind kind) {
   if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
     return nullptr;
   }
@@ -1332,7 +1332,7 @@ LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
     return nullptr;
   }
 
-  return handler_.newLexicalScope(*bindings, body);
+  return handler_.newLexicalScope(*bindings, body, kind);
 }
 
 template <typename Unit>
@@ -1959,7 +1959,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     }
   }
 
-  return finishLexicalScope(pc_->varScope(), body);
+  return finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical);
 }
 
 JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
@@ -7320,7 +7320,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     handler_.addStatementToList(stmtList, exprStatement);
   }
 
-  auto initializerBody = finishLexicalScope(pc_->varScope(), stmtList);
+  auto initializerBody = finishLexicalScope(pc_->varScope(), stmtList,
+                                            ScopeKind::FunctionLexical);
   if (!initializerBody) {
     return null();
   }
@@ -7528,7 +7529,8 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
 
   // Set the function's body to the field assignment.
   LexicalScopeNodeType initializerBody =
-      finishLexicalScope(pc_->varScope(), statementList);
+      finishLexicalScope(pc_->varScope(), statementList,
+                         ScopeKind::FunctionLexical);
   if (!initializerBody) {
     return null();
   }
