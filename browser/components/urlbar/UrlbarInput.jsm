@@ -104,6 +104,7 @@ class UrlbarInput {
     this._textValueOnLastSearch = "";
     this._resultForCurrentValue = null;
     this._suppressStartQuery = false;
+    this._suppressPrimaryAdjustment = false;
     this._untrimmedValue = "";
 
     // This exists only for tests.
@@ -118,7 +119,6 @@ class UrlbarInput {
       "setAttribute",
       "removeAttribute",
       "toggleAttribute",
-      "select",
     ];
     const READ_ONLY_PROPERTIES = ["inputField", "editor"];
     const READ_WRITE_PROPERTIES = [
@@ -306,6 +306,14 @@ class UrlbarInput {
 
   blur() {
     this.inputField.blur();
+  }
+
+  select() {
+    // See _on_select().  HTMLInputElement.select() dispatches a "select"
+    // event but does not set the primary selection.
+    this._suppressPrimaryAdjustment = true;
+    this.inputField.select();
+    this._suppressPrimaryAdjustment = false;
   }
 
   /**
@@ -1551,7 +1559,22 @@ class UrlbarInput {
   }
 
   _on_select(event) {
+    // On certain user input, AutoCopyListener::OnSelectionChange() updates
+    // the primary selection with user-selected text (when supported).
+    // Selection::NotifySelectionListeners() then dispatches a "select" event
+    // under similar conditions via TextInputListener::OnSelectionChange().
+    // This event is received here in order to replace the primary selection
+    // from the editor with text having the adjustments of
+    // _getSelectedValueForClipboard(), such as adding the scheme for the url.
+    //
+    // Other "select" events are also received, however, and must be excluded.
     if (
+      // _suppressPrimaryAdjustment is set during select().  Don't update
+      // the primary selection because that is not the intent of user input,
+      // which may be new tab or urlbar focus.
+      this._suppressPrimaryAdjustment ||
+      // The check on isHandlingUserInput filters out async "select" events
+      // from setSelectionRange(), which occur when autofill text is selected.
       !this.window.windowUtils.isHandlingUserInput ||
       !Services.clipboard.supportsSelectionClipboard()
     ) {
