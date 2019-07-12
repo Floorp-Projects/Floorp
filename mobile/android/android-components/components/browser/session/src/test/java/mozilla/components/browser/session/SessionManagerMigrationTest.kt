@@ -478,4 +478,81 @@ class SessionManagerMigrationTest {
         // Thumbnail of selected session should not have been removed
         assertNotNull(store.state.tabs[2].content.thumbnail)
     }
+
+    @Test
+    fun `Adding multiple sessions into empty manager and store`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val sessions = listOf(
+            Session(id = "tab1", initialUrl = "https://www.mozilla.org", private = true),
+            Session(id = "tab2", initialUrl = "https://www.firefox.com"),
+            Session(id = "tab3", initialUrl = "https://wiki.mozilla.org"))
+
+        assertEquals(0, manager.sessions.size)
+        assertEquals(0, store.state.tabs.size)
+
+        manager.add(sessions)
+
+        assertEquals(3, manager.sessions.size)
+        assertEquals(3, store.state.tabs.size)
+
+        assertEquals("https://www.mozilla.org", manager.sessions[0].url)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+
+        assertEquals("https://www.firefox.com", manager.sessions[1].url)
+        assertEquals("https://www.firefox.com", store.state.tabs[1].content.url)
+
+        assertEquals("https://wiki.mozilla.org", manager.sessions[2].url)
+        assertEquals("https://wiki.mozilla.org", store.state.tabs[2].content.url)
+
+        assertEquals("https://www.firefox.com", manager.selectedSessionOrThrow.url)
+        assertEquals("https://www.firefox.com", store.state.selectedTab!!.content.url)
+    }
+
+    @Test
+    fun `Adding multiple sessions into manager and store with existing tabs`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        manager.add(Session(id = "init0", initialUrl = "https://getpocket.com"))
+        manager.add(Session(id = "init1", initialUrl = "https://www.google.com", private = true))
+
+        val sessions = listOf(
+                Session(id = "tab1", initialUrl = "https://www.mozilla.org", private = true),
+                Session(id = "tab2", initialUrl = "https://www.firefox.com"),
+                Session(id = "tab3", initialUrl = "https://wiki.mozilla.org"))
+
+        assertEquals(2, manager.sessions.size)
+        assertEquals(2, store.state.tabs.size)
+
+        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
+        assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
+
+        assertEquals(2, manager.sessions.size)
+        assertEquals(2, store.state.tabs.size)
+
+        manager.add(sessions)
+
+        assertEquals(5, manager.sessions.size)
+        assertEquals(5, store.state.tabs.size)
+
+        assertEquals("https://getpocket.com", manager.sessions[0].url)
+        assertEquals("https://getpocket.com", store.state.tabs[0].content.url)
+
+        assertEquals("https://www.google.com", manager.sessions[1].url)
+        assertEquals("https://www.google.com", store.state.tabs[1].content.url)
+
+        assertEquals("https://www.mozilla.org", manager.sessions[2].url)
+        assertEquals("https://www.mozilla.org", store.state.tabs[2].content.url)
+
+        assertEquals("https://www.firefox.com", manager.sessions[3].url)
+        assertEquals("https://www.firefox.com", store.state.tabs[3].content.url)
+
+        assertEquals("https://wiki.mozilla.org", manager.sessions[4].url)
+        assertEquals("https://wiki.mozilla.org", store.state.tabs[4].content.url)
+
+        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
+        assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
+    }
 }

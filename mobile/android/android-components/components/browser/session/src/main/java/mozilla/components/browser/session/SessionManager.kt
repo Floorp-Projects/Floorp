@@ -133,6 +133,10 @@ class SessionManager(
         sessions.forEach { it.store = store }
 
         delegate.add(sessions)
+
+        store?.syncDispatch(TabListAction.AddMultipleTabsAction(
+            tabs = sessions.map { it.toTabSessionState() }
+        ))
     }
 
     /**
