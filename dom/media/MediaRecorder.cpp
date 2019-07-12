@@ -1039,43 +1039,29 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   void MediaEncoderInitialized() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
-    // Pull encoded metadata from MediaEncoder
-    nsTArray<nsTArray<uint8_t>> encodedBuf;
-    nsString mime;
-    nsresult rv = mEncoder->GetEncodedMetadata(&encodedBuf, mime);
+    Extract(false, nullptr);
 
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false);
-      return;
-    }
-
-    // Append pulled data into cache buffer.
-    NS_DispatchToMainThread(
-        new StoreEncodedBufferRunnable(this, std::move(encodedBuf)));
-
-    RefPtr<Session> self = this;
-    NS_DispatchToMainThread(NewRunnableFrom([self, mime]() {
-      if (!self->mRecorder) {
-        MOZ_ASSERT_UNREACHABLE("Recorder should be live");
+    NS_DispatchToMainThread(NewRunnableFrom([self = RefPtr<Session>(this), this,
+                                             mime = mEncoder->MimeType()]() {
+      if (mRunningState.isErr()) {
         return NS_OK;
       }
-      if (self->mRunningState.isOk()) {
-        auto state = self->mRunningState.unwrap();
-        if (state == RunningState::Starting ||
-            state == RunningState::Stopping) {
-          if (state == RunningState::Starting) {
-            // We set it to Running in the runnable since we can only assign
-            // mRunningState on main thread. We set it before running the start
-            // event runnable since that dispatches synchronously (and may cause
-            // js calls to methods depending on mRunningState).
-            self->mRunningState = RunningState::Running;
-          }
-          self->mMimeType = mime;
-          self->mRecorder->SetMimeType(self->mMimeType);
-          auto startEvent = MakeRefPtr<DispatchEventRunnable>(
-              self, NS_LITERAL_STRING("start"));
-          startEvent->Run();
+      mMimeType = mime;
+      mRecorder->SetMimeType(mime);
+      auto state = mRunningState.unwrap();
+      if (state == RunningState::Starting || state == RunningState::Stopping) {
+        if (!self->mRecorder) {
+          MOZ_ASSERT_UNREACHABLE("Recorder should be live");
+          return NS_OK;
         }
+        if (state == RunningState::Starting) {
+          // We set it to Running in the runnable since we can only assign
+          // mRunningState on main thread. We set it before running the start
+          // event runnable since that dispatches synchronously (and may cause
+          // js calls to methods depending on mRunningState).
+          mRunningState = RunningState::Running;
+        }
+        mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("start"));
       }
       return NS_OK;
     }));
