@@ -27,7 +27,6 @@ interface BaseAudioContext : EventTarget {
     readonly        attribute AudioContextState    state;
     [Throws, SameObject, SecureContext, Pref="dom.audioworklet.enabled"]
     readonly        attribute AudioWorklet         audioWorklet;
-    // Bug 1324552: readonly        attribute double               baseLatency;
 
     [Throws]
     Promise<void> resume();
