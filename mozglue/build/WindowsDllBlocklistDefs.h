@@ -213,6 +213,9 @@ DLL_BLOCKLIST_ENTRY("wbload.dll", ALL_VERSIONS,
 DLL_BLOCKLIST_ENTRY("sxwmon.dll", ALL_VERSIONS)
 DLL_BLOCKLIST_ENTRY("sxwmon64.dll", ALL_VERSIONS)
 
+// 360 Safeguard/360 Total Security causes a11y crashes, bug 1536227.
+DLL_BLOCKLIST_ENTRY("safemon64.dll", ALL_VERSIONS)
+
 #ifdef ENABLE_TESTS
 
 // DLLs used by TestDllBlocklist* gTests
