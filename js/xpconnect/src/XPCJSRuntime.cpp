@@ -2751,6 +2751,9 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE:
       Telemetry::Accumulate(Telemetry::GC_NURSERY_PROMOTION_RATE, sample);
       break;
+    case JS_TELEMETRY_GC_TENURED_SURVIVAL_RATE:
+      Telemetry::Accumulate(Telemetry::GC_TENURED_SURVIVAL_RATE, sample);
+      break;
     case JS_TELEMETRY_GC_MARK_RATE:
       Telemetry::Accumulate(Telemetry::GC_MARK_RATE, sample);
       break;
