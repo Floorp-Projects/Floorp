@@ -298,9 +298,10 @@ dependencies {
     implementation Deps.leanplum
 
     implementation Deps.mozilla_concept_engine
+    implementation Deps.mozilla_concept_push
     implementation Deps.mozilla_concept_storage
-    implementation Deps.mozilla_concept_toolbar
     implementation Deps.mozilla_concept_sync
+    implementation Deps.mozilla_concept_toolbar
 
     implementation Deps.mozilla_browser_awesomebar
     implementation Deps.mozilla_feature_downloads
@@ -322,6 +323,7 @@ dependencies {
     implementation Deps.mozilla_feature_intent
     implementation Deps.mozilla_feature_media
     implementation Deps.mozilla_feature_prompts
+    implementation Deps.mozilla_feature_push
     implementation Deps.mozilla_feature_qr
     implementation Deps.mozilla_feature_search
     implementation Deps.mozilla_feature_session
@@ -345,6 +347,7 @@ dependencies {
     implementation Deps.mozilla_ui_publicsuffixlist
 
     implementation Deps.mozilla_lib_crash
+    implementation Deps.mozilla_lib_push_firebase
     debugImplementation Deps.leakcanary
     releaseImplementation Deps.leakcanary_noop
 

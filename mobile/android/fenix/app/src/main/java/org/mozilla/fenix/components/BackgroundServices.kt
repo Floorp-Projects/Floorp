@@ -12,18 +12,30 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.concept.push.Bus
+import mozilla.components.concept.push.PushProcessor
+import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
+import mozilla.components.feature.push.AutoPushFeature
+import mozilla.components.feature.push.AutoPushSubscription
+import mozilla.components.feature.push.PushConfig
+import mozilla.components.feature.push.PushSubscriptionObserver
+import mozilla.components.feature.push.PushType
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Experiments
+import org.mozilla.fenix.R
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.test.Mockable
 
@@ -64,10 +76,53 @@ class BackgroundServices(
         SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 240L) // four hours
     }
 
+    private val pushConfig by lazy {
+        val projectIdKey = context.getString(R.string.pref_key_push_project_id)
+        val resId = context.resources.getIdentifier(projectIdKey, "string", context.packageName)
+        if (resId == 0) {
+            return@lazy null
+        }
+        val projectId = context.resources.getString(resId)
+        PushConfig(projectId)
+    }
+
+    val pushService by lazy { FirebasePush() }
+
+    private val push by lazy {
+        AutoPushFeature(context = context, service = pushService, config = pushConfig!!).also {
+            // Notify observers for Services' messages.
+            it.registerForPushMessages(PushType.Services, object : Bus.Observer<PushType, String> {
+                override fun onEvent(type: PushType, message: String) {
+                    accountManager.authenticatedAccount()?.deviceConstellation()
+                        ?.processRawEventAsync(message)
+                }
+            }, ProcessLifecycleOwner.get(), false)
+
+            // Notify observers for subscription changes.
+            it.registerForSubscriptions(object : PushSubscriptionObserver {
+                override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
+                    accountManager.authenticatedAccount()?.deviceConstellation()
+                        ?.setDevicePushSubscriptionAsync(
+                            DevicePushSubscription(
+                                endpoint = subscription.endpoint,
+                                publicKey = subscription.publicKey,
+                                authKey = subscription.authKey
+                            )
+                        )
+                }
+            }, ProcessLifecycleOwner.get(), false)
+        }
+    }
+
     init {
         // Make the "history" and "bookmark" stores accessible to workers spawned by the sync manager.
         GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
         GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarkStorage)
+
+        // Sets the PushFeature as the singleton instance for push messages to go to.
+        if (BuildConfig.SEND_TAB_ENABLED && pushConfig != null) {
+            PushProcessor.install(push)
+        }
     }
 
     private val deviceEventObserver = object : DeviceEventsObserver {
@@ -77,6 +132,20 @@ class BackgroundServices(
             events.filter { it is DeviceEvent.TabReceived }.forEach {
                 notificationManager.showReceivedTabs(it as DeviceEvent.TabReceived)
             }
+        }
+    }
+
+    private val accountObserver = object : AccountObserver {
+        override fun onAuthenticationProblems() {}
+
+        override fun onProfileUpdated(profile: Profile) {}
+
+        override fun onLoggedOut() {
+            pushService.stop()
+        }
+
+        override fun onAuthenticated(account: OAuthAccount) {
+            pushService.start(context)
         }
     }
 
@@ -93,6 +162,10 @@ class BackgroundServices(
         setOf("https://identity.mozilla.com/apps/oldsync")
     ).also {
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), true)
+
+        if (BuildConfig.SEND_TAB_ENABLED && pushConfig != null) {
+            it.register(accountObserver)
+        }
         CoroutineScope(Dispatchers.Main).launch { it.initAsync().await() }
     }
 }
