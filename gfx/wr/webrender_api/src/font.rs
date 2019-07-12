@@ -7,7 +7,6 @@ use app_units::Au;
 use core_foundation::string::CFString;
 #[cfg(target_os = "macos")]
 use core_graphics::font::CGFont;
-use peek_poke::PeekPoke;
 #[cfg(target_os = "macos")]
 use serde::de::{self, Deserialize, Deserializer};
 #[cfg(target_os = "macos")]
@@ -98,17 +97,11 @@ pub enum FontTemplate {
 }
 
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, Hash, Eq, MallocSizeOf, PartialEq, Serialize, Deserialize, Ord, PartialOrd, PeekPoke)]
+#[derive(Debug, Copy, Clone, Hash, Eq, MallocSizeOf, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
 pub enum FontRenderMode {
     Mono = 0,
     Alpha,
     Subpixel,
-}
-
-impl Default for FontRenderMode {
-    fn default() -> Self {
-        FontRenderMode::Mono
-    }
 }
 
 impl FontRenderMode {
@@ -152,7 +145,7 @@ impl Hash for FontVariation {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize, PeekPoke)]
+#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct GlyphOptions {
     pub render_mode: FontRenderMode,
     pub flags: FontInstanceFlags,
@@ -169,7 +162,7 @@ impl Default for GlyphOptions {
 
 bitflags! {
     #[repr(C)]
-    #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+    #[derive(Deserialize, MallocSizeOf, Serialize)]
     pub struct FontInstanceFlags: u32 {
         // Common flags
         const SYNTHETIC_BOLD    = 1 << 1;
@@ -355,8 +348,7 @@ impl Default for FontInstancePlatformOptions {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Ord, PartialOrd, MallocSizeOf, PeekPoke)]
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize, Ord, PartialOrd, MallocSizeOf)]
 pub struct FontInstanceKey(pub IdNamespace, pub u32);
 
 impl FontInstanceKey {
@@ -381,19 +373,10 @@ pub struct FontInstanceData {
 pub type GlyphIndex = u32;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
+#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize)]
 pub struct GlyphInstance {
     pub index: GlyphIndex,
     pub point: LayoutPoint,
-}
-
-impl Default for GlyphInstance {
-    fn default() -> Self {
-        GlyphInstance {
-            index: 0,
-            point: LayoutPoint::zero(),
-        }
-    }
 }
 
 impl Eq for GlyphInstance {}
