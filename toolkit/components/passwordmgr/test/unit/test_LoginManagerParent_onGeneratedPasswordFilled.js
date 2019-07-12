@@ -111,11 +111,20 @@ add_task(async function test_onGeneratedPasswordFilled() {
   );
 
   ok(login.equals(expected), "Check added login");
-  ok(LMP._getPrompter.notCalled, "Checking _getPrompter was not called");
+  ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
   ok(
-    fakePromptToSavePassword.notCalled,
-    "Checking promptToSavePassword was not called"
+    fakePromptToSavePassword.calledOnce,
+    "Checking promptToSavePassword was called"
   );
+  ok(
+    fakePromptToSavePassword.getCall(0).args[1],
+    "promptToSavePassword had a truthy 'dismissed' argument"
+  );
+  ok(
+    fakePromptToSavePassword.getCall(0).args[2],
+    "promptToSavePassword had a truthy 'notifySaved' argument"
+  );
+
   LMP._getPrompter.resetHistory();
   fakePromptToSavePassword.resetHistory();
 
@@ -141,6 +150,10 @@ add_task(async function test_onGeneratedPasswordFilled() {
   ok(
     fakePromptToSavePassword.getCall(0).args[1],
     "promptToSavePassword had a truthy 'dismissed' argument"
+  );
+  ok(
+    !fakePromptToSavePassword.getCall(0).args[2],
+    "promptToSavePassword had a falsey 'notifySaved' argument"
   );
   LMP._getPrompter.resetHistory();
   fakePromptToSavePassword.resetHistory();
