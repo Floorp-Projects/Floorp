@@ -312,7 +312,7 @@ raptor-tp6m-1-fenix:
             - --test=raptor-tp6m-1
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-1-refbrow:
     description: "Raptor tp6m-1 on the reference browser"
@@ -354,7 +354,7 @@ raptor-tp6m-2-fenix:
             - --test=raptor-tp6m-2
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-2-geckoview:
     description: "Raptor tp6m-2 on Geckoview"
@@ -443,7 +443,7 @@ raptor-tp6m-3-fenix:
             - --test=raptor-tp6m-3
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-4-geckoview:
     description: "Raptor tp6m-4 on Geckoview"
@@ -498,7 +498,7 @@ raptor-tp6m-4-fenix:
             - --test=raptor-tp6m-4
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-5-geckoview:
     description: "Raptor tp6m-5 on Geckoview"
@@ -554,7 +554,7 @@ raptor-tp6m-5-fenix:
             - --test=raptor-tp6m-5
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-6-geckoview:
     description: "Raptor tp6m-6 on Geckoview"
@@ -609,7 +609,7 @@ raptor-tp6m-6-fenix:
             - --test=raptor-tp6m-6
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-7-geckoview:
     description: "Raptor tp6m-7 on Geckoview"
@@ -665,7 +665,7 @@ raptor-tp6m-7-fenix:
             - --test=raptor-tp6m-7
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-8-geckoview:
     description: "Raptor tp6m-8 on Geckoview"
@@ -720,7 +720,7 @@ raptor-tp6m-8-fenix:
             - --test=raptor-tp6m-8
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-9-geckoview:
     description: "Raptor tp6m-9 on Geckoview"
@@ -776,7 +776,7 @@ raptor-tp6m-9-fenix:
             - --test=raptor-tp6m-9
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-10-geckoview:
     description: "Raptor tp6m-10 on Geckoview"
@@ -832,7 +832,7 @@ raptor-tp6m-10-fenix:
             - --test=raptor-tp6m-10
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-1-fennec:
     description: "Raptor tp6m-1 on Fennec"
@@ -984,7 +984,7 @@ raptor-tp6m-1-fenix-cold:
             - --test=raptor-tp6m-cold-1
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-2-fenix-cold:
     description: "Raptor tp6m-2 cold page-load on Fenix"
@@ -1006,7 +1006,7 @@ raptor-tp6m-2-fenix-cold:
             - --test=raptor-tp6m-cold-2
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-3-fenix-cold:
     description: "Raptor tp6m-3 cold page-load on Fenix"
@@ -1028,7 +1028,7 @@ raptor-tp6m-3-fenix-cold:
             - --test=raptor-tp6m-cold-3
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-4-fenix-cold:
     description: "Raptor tp6m-4 cold page-load on Fenix"
@@ -1050,7 +1050,7 @@ raptor-tp6m-4-fenix-cold:
             - --test=raptor-tp6m-cold-4
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-5-fenix-cold:
     description: "Raptor tp6m-5 cold page-load on Fenix"
@@ -1072,7 +1072,7 @@ raptor-tp6m-5-fenix-cold:
             - --test=raptor-tp6m-cold-5
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-6-fenix-cold:
     description: "Raptor tp6m-6 cold page-load on Fenix"
@@ -1094,7 +1094,7 @@ raptor-tp6m-6-fenix-cold:
             - --test=raptor-tp6m-cold-6
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-7-fenix-cold:
     description: "Raptor tp6m-7 cold page-load on Fenix"
@@ -1116,7 +1116,7 @@ raptor-tp6m-7-fenix-cold:
             - --test=raptor-tp6m-cold-7
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-8-fenix-cold:
     description: "Raptor tp6m-8 cold page-load on Fenix"
@@ -1138,7 +1138,7 @@ raptor-tp6m-8-fenix-cold:
             - --test=raptor-tp6m-cold-8
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-9-fenix-cold:
     description: "Raptor tp6m-9 cold page-load on Fenix"
@@ -1160,7 +1160,7 @@ raptor-tp6m-9-fenix-cold:
             - --test=raptor-tp6m-cold-9
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-10-fenix-cold:
     description: "Raptor tp6m-10 cold page-load on Fenix"
@@ -1182,7 +1182,7 @@ raptor-tp6m-10-fenix-cold:
             - --test=raptor-tp6m-cold-10
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-11-fenix-cold:
     description: "Raptor tp6m-11 cold page-load on Fenix"
@@ -1204,7 +1204,7 @@ raptor-tp6m-11-fenix-cold:
             - --test=raptor-tp6m-cold-11
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-12-fenix-cold:
     description: "Raptor tp6m-12 cold page-load on Fenix"
@@ -1226,7 +1226,7 @@ raptor-tp6m-12-fenix-cold:
             - --test=raptor-tp6m-cold-12
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-13-fenix-cold:
     description: "Raptor tp6m-13 cold page-load on Fenix"
@@ -1248,7 +1248,7 @@ raptor-tp6m-13-fenix-cold:
             - --test=raptor-tp6m-cold-13
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-14-fenix-cold:
     description: "Raptor tp6m-14 cold page-load on Fenix"
@@ -1270,7 +1270,7 @@ raptor-tp6m-14-fenix-cold:
             - --test=raptor-tp6m-cold-14
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-15-fenix-cold:
     description: "Raptor tp6m-15 cold page-load on Fenix"
@@ -1292,7 +1292,7 @@ raptor-tp6m-15-fenix-cold:
             - --test=raptor-tp6m-cold-15
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-16-fenix-cold:
     description: "Raptor tp6m-16 cold page-load on Fenix"
@@ -1314,7 +1314,7 @@ raptor-tp6m-16-fenix-cold:
             - --test=raptor-tp6m-cold-16
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-17-fenix-cold:
     description: "Raptor tp6m-17 cold page-load on Fenix"
@@ -1336,7 +1336,7 @@ raptor-tp6m-17-fenix-cold:
             - --test=raptor-tp6m-cold-17
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-18-fenix-cold:
     description: "Raptor tp6m-18 cold page-load on Fenix"
@@ -1358,7 +1358,7 @@ raptor-tp6m-18-fenix-cold:
             - --test=raptor-tp6m-cold-18
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-19-fenix-cold:
     description: "Raptor tp6m-19 cold page-load on Fenix"
@@ -1380,7 +1380,7 @@ raptor-tp6m-19-fenix-cold:
             - --test=raptor-tp6m-cold-19
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-20-fenix-cold:
     description: "Raptor tp6m-20 cold page-load on Fenix"
@@ -1402,7 +1402,7 @@ raptor-tp6m-20-fenix-cold:
             - --test=raptor-tp6m-cold-20
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-21-fenix-cold:
     description: "Raptor tp6m-21 cold page-load on Fenix"
@@ -1424,7 +1424,7 @@ raptor-tp6m-21-fenix-cold:
             - --test=raptor-tp6m-cold-21
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-22-fenix-cold:
     description: "Raptor tp6m-22 cold page-load on Fenix"
@@ -1446,7 +1446,7 @@ raptor-tp6m-22-fenix-cold:
             - --test=raptor-tp6m-cold-22
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-23-fenix-cold:
     description: "Raptor tp6m-23 cold page-load on Fenix"
@@ -1468,7 +1468,7 @@ raptor-tp6m-23-fenix-cold:
             - --test=raptor-tp6m-cold-23
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-24-fenix-cold:
     description: "Raptor tp6m-24 cold page-load on Fenix"
@@ -1490,7 +1490,7 @@ raptor-tp6m-24-fenix-cold:
             - --test=raptor-tp6m-cold-24
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-25-fenix-cold:
     description: "Raptor tp6m-25 cold page-load on Fenix"
@@ -1512,7 +1512,7 @@ raptor-tp6m-25-fenix-cold:
             - --test=raptor-tp6m-cold-25
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6m-26-fenix-cold:
     description: "Raptor tp6m-26 cold page-load on Fenix"
@@ -1534,7 +1534,7 @@ raptor-tp6m-26-fenix-cold:
             - --test=raptor-tp6m-cold-26
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
@@ -1616,7 +1616,7 @@ raptor-scn-power-idle-fenix:
             - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
             - --host HOST_IP
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-power-idle-fennec:
     description: "Raptor idle-browser power-use measurement on Fennec"
@@ -1698,7 +1698,7 @@ raptor-scn-power-idle-bg-fenix:
             - --binary-path=org.mozilla.fenix.raptor
             - --power-test
             - --host HOST_IP
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-power-idle-bg-fennec:
     description: "Raptor idle-browser (backgrounded) power-use measurement on Fennec"
@@ -2257,7 +2257,7 @@ raptor-youtube-playback-fenix:
             - --test=raptor-youtube-playback
             - --app=fenix
             - --binary-path=org.mozilla.fenix.raptor
-            - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6-1-firefox-cold:
     description: "Raptor tp6-1 cold page-load on Firefox"

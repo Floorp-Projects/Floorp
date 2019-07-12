@@ -35,7 +35,7 @@ APPS = {
         "default_intent": "android.intent.action.MAIN"},
     FENIX: {
         "long_name": "Firefox Android Fenix Browser",
-        "default_activity": "org.mozilla.fenix.browser.BrowserPerformanceTestActivity",
+        "default_activity": "org.mozilla.fenix.IntentReceiverActivity",
         "default_intent": "android.intent.action.VIEW"}
 }
 INTEGRATED_APPS = list(APPS.keys())
