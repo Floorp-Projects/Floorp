@@ -31,13 +31,15 @@
       );
     }
 
+    const pc = SpecialPowers.wrap(test.pcRemote._pc);
+    const haveFirstPacket = getRtpPacket(pc);
+
     test.chain.insertBefore('PC_REMOTE_WAIT_FOR_MEDIA_FLOW', [
       async function PC_REMOTE_CHECK_RTP_HEADER_EXTS_AGAINST_SDP() {
 
         const sdpExtmapIds = sdputils.findExtmapIds(test.originalAnswer.sdp);
 
-        const pc = SpecialPowers.wrap(test.pcRemote._pc);
-        const [level, type, sending, data] =  await getRtpPacket(pc);
+        const [level, type, sending, data] = await haveFirstPacket;
         const packet = ParseRtpPacket(data);
         const extIds = packet.header.extensions.map(e => `${e.id}`);
         // make sure we got the same number of rtp header extensions in
