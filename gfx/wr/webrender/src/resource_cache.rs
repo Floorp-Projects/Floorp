@@ -891,7 +891,13 @@ impl ResourceCache {
                                 ) * tile_size as i32;
                                 rect.origin -= tile_offset.to_vector();
 
-                                rect
+                                let tile_rect = compute_tile_size(
+                                    &descriptor.size.into(),
+                                    tile_size,
+                                    tile,
+                                ).into();
+
+                                rect.intersection(&tile_rect).unwrap_or(DeviceIntRect::zero())
                             })
                         }
                         (None, Some(..)) => DirtyRect::All,
