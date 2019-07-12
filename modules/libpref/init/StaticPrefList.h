@@ -2649,6 +2649,15 @@ VARCACHE_PREF(
   bool, false
 )
 
+// This pref governs whether we run webextensions in a separate process (true)
+// or the parent/main process (false)
+VARCACHE_PREF(
+  Live,
+  "extensions.webextensions.remote",
+  extensions_webextensions_remote,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Prefs starting with "fission."
 //---------------------------------------------------------------------------
