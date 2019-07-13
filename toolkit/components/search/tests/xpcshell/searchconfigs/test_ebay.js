@@ -3,6 +3,8 @@
 
 "use strict";
 
+let availableRegions = Services.intl.getAvailableLocaleDisplayNames("region");
+
 const test = new SearchConfigTest({
   identifier: "ebay",
   aliases: ["@ebay"],
@@ -16,7 +18,16 @@ const test = new SearchConfigTest({
       //   "us", "gb", "ca", "ie", "fr", "it", "de", "at", "es", "nl", "ch", "au"
       // ],
       locales: {
-        matches: ["an", "en-US", "ast", "br", "ca", "cy", "de", "dsb", "en-CA", "en-GB", "es-ES", "eu", "fr", "fy-NL", "ga-IE", "gd", "gl", "hsb", "it", "lij", "nl", "rm", "wo"],
+        matches: ["an", "ast", "br", "ca", "cy", "de", "dsb", "en-CA", "en-GB", "es-ES", "eu", "fr", "fy-NL", "ga-IE", "gd", "gl", "hsb", "it", "lij", "nl", "rm", "wo"],
+      },
+    },
+    {
+      // For en-US ebay is currently included everywhere apart from these regions.
+      regions: availableRegions.filter(
+        region => !["by", "kz", "ru", "tr"].includes(region)
+      ),
+      locales: {
+        matches: ["en-US"],
       },
     }],
   },
