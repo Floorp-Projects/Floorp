@@ -8156,9 +8156,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: ["auto"],
     other_values: [
-      "use-script",
-      "no-change",
-      "reset-size",
       "ideographic",
       "alphabetic",
       "hanging",
