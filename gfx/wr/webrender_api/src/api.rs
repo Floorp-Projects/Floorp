@@ -348,6 +348,7 @@ impl Transaction {
         key: BlobImageKey,
         descriptor: ImageDescriptor,
         data: Arc<BlobImageData>,
+        visible_rect: DeviceIntRect,
         tiling: Option<TileSize>,
     ) {
         self.resource_updates.push(
@@ -355,6 +356,7 @@ impl Transaction {
                 key,
                 descriptor,
                 data,
+                visible_rect,
                 tiling,
             })
         );
@@ -365,6 +367,7 @@ impl Transaction {
         key: BlobImageKey,
         descriptor: ImageDescriptor,
         data: Arc<BlobImageData>,
+        visible_rect: DeviceIntRect,
         dirty_rect: &BlobDirtyRect,
     ) {
         self.resource_updates.push(
@@ -372,6 +375,7 @@ impl Transaction {
                 key,
                 descriptor,
                 data,
+                visible_rect,
                 dirty_rect: *dirty_rect,
             })
         );
@@ -524,6 +528,7 @@ pub struct AddBlobImage {
     pub descriptor: ImageDescriptor,
     //#[serde(with = "serde_image_data_raw")]
     pub data: Arc<BlobImageData>,
+    pub visible_rect: DeviceIntRect,
     pub tiling: Option<TileSize>,
 }
 
@@ -533,6 +538,7 @@ pub struct UpdateBlobImage {
     pub descriptor: ImageDescriptor,
     //#[serde(with = "serde_image_data_raw")]
     pub data: Arc<BlobImageData>,
+    pub visible_rect: DeviceIntRect,
     pub dirty_rect: BlobDirtyRect,
 }
 

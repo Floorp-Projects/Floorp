@@ -137,7 +137,7 @@ class IpcResourceUpdateQueue {
                 Range<uint8_t> aBytes);
 
   bool AddBlobImage(wr::BlobImageKey aKey, const ImageDescriptor& aDescriptor,
-                    Range<uint8_t> aBytes);
+                    Range<uint8_t> aBytes, ImageIntRect aVisibleRect);
 
   void AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey);
 
@@ -151,7 +151,8 @@ class IpcResourceUpdateQueue {
 
   bool UpdateBlobImage(wr::BlobImageKey aKey,
                        const ImageDescriptor& aDescriptor,
-                       Range<uint8_t> aBytes, ImageIntRect aDirtyRect);
+                       Range<uint8_t> aBytes, ImageIntRect aVisibleRect,
+                       ImageIntRect aDirtyRect);
 
   void UpdateExternalImage(ExternalImageId aExtID, ImageKey aKey,
                            ImageIntRect aDirtyRect);

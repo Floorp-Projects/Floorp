@@ -19,7 +19,7 @@ use std::sync::Arc;
 use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, Transaction};
 use webrender::api::{ColorF, CommonItemProperties, SpaceAndClipInfo};
 use webrender::api::units::*;
-use webrender::euclid::size2;
+use webrender::euclid::{size2, rect};
 
 // This example shows how to implement a very basic BlobImageHandler that can only render
 // a checkerboard pattern.
@@ -136,12 +136,14 @@ impl CheckerboardRenderer {
 }
 
 impl api::BlobImageHandler for CheckerboardRenderer {
-    fn add(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>, _: Option<api::TileSize>) {
+    fn add(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>,
+           _visible_rect: &DeviceIntRect, _: Option<api::TileSize>) {
         self.image_cmds
             .insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
-    fn update(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>, _dirty_rect: &BlobDirtyRect) {
+    fn update(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>,
+              _visible_rect: &DeviceIntRect, _dirty_rect: &BlobDirtyRect) {
         // Here, updating is just replacing the current version of the commands with
         // the new one (no incremental updates).
         self.image_cmds
@@ -209,6 +211,7 @@ impl Example for App {
             blob_img1,
             api::ImageDescriptor::new(500, 500, api::ImageFormat::BGRA8, true, false),
             serialize_blob(api::ColorU::new(50, 50, 150, 255)),
+            rect(0, 0, 500, 500),
             Some(128),
         );
 
@@ -217,6 +220,7 @@ impl Example for App {
             blob_img2,
             api::ImageDescriptor::new(200, 200, api::ImageFormat::BGRA8, true, false),
             serialize_blob(api::ColorU::new(50, 150, 50, 255)),
+            rect(0, 0, 200, 200),
             None,
         );
 
