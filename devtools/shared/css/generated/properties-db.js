@@ -5947,13 +5947,10 @@ exports.CSS_PROPERTIES = {
       "initial",
       "mathematical",
       "middle",
-      "no-change",
-      "reset-size",
       "revert",
       "text-after-edge",
       "text-before-edge",
-      "unset",
-      "use-script"
+      "unset"
     ]
   },
   "empty-cells": {
