@@ -47,7 +47,8 @@ static bool getTraceLoggerSupported() {
 
   if (strcmp(str, "true") == 0 || strcmp(str, "yes") == 0 ||
       strcmp(str, "1") == 0) {
-    return true;
+    fprintf(stderr, "Warning: TraceLogger disabled temporarily, bug 1565788\n");
+    return false;
   }
 
   fprintf(stderr, "Warning: I didn't understand JS_TRACE_LOGGING=\"%s\"\n",
