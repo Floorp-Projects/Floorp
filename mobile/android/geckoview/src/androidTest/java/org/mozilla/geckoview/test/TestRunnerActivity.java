@@ -38,34 +38,7 @@ public class TestRunnerActivity extends Activity {
     private GeckoView mView;
     private boolean mKillProcessOnDestroy;
 
-    private HashMap<GeckoSession, Display> mDisplays = new HashMap<>();
-
-    private static class Display {
-        public final SurfaceTexture texture;
-        public final Surface surface;
-
-        private final int width;
-        private final int height;
-        private GeckoDisplay sessionDisplay;
-
-        public Display(final int width, final int height) {
-            this.width = width;
-            this.height = height;
-            texture = new SurfaceTexture(0);
-            texture.setDefaultBufferSize(width, height);
-            surface = new Surface(texture);
-        }
-
-        public void attach(final GeckoSession session) {
-            sessionDisplay = session.acquireDisplay();
-            sessionDisplay.surfaceChanged(surface, width, height);
-        }
-
-        public void release(final GeckoSession session) {
-            sessionDisplay.surfaceDestroyed();
-            session.releaseDisplay(sessionDisplay);
-        }
-    }
+    private HashMap<GeckoSession, GeckoDisplay> mDisplays = new HashMap<>();
 
     private GeckoSession.NavigationDelegate mNavigationDelegate = new GeckoSession.NavigationDelegate() {
         @Override
@@ -167,17 +140,22 @@ public class TestRunnerActivity extends Activity {
     private GeckoSession createBackgroundSession(final GeckoSessionSettings settings) {
         final GeckoSession session = createSession(settings);
 
-        final Display display = new Display(mView.getWidth(), mView.getHeight());
-        display.attach(session);
+        final SurfaceTexture texture  = new SurfaceTexture(0);
+        final Surface surface = new Surface(texture);
 
+        final GeckoDisplay display = session.acquireDisplay();
+        display.surfaceChanged(surface, mView.getWidth(), mView.getHeight());
         mDisplays.put(session, display);
+
         return session;
     }
 
     private void closeSession(GeckoSession session) {
         if (mDisplays.containsKey(session)) {
-            final Display display = mDisplays.remove(session);
-            display.release(session);
+            final GeckoDisplay display = mDisplays.remove(session);
+            display.surfaceDestroyed();
+
+            session.releaseDisplay(display);
         }
         session.close();
     }
