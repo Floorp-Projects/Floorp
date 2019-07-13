@@ -16,15 +16,28 @@ const [ArrowUp, ArrowRight, ArrowDown, ArrowLeft] = ARROW_KEYS;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const COLOR_HEX_WHITE = "#ffffff";
 const SLIDER = {
-  MIN: "0",
-  MAX: "128",
-  STEP: "1",
+  hue: {
+    MIN: "0",
+    MAX: "128",
+    STEP: "1",
+  },
+  alpha: {
+    MIN: "0",
+    MAX: "1",
+    STEP: "0.01",
+  },
 };
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(
   this,
   "cssColors",
+  "devtools/shared/css/color-db",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "labColors",
   "devtools/shared/css/color-db",
   true
 );
@@ -75,10 +88,16 @@ function Spectrum(parentEl, rgb) {
   // eslint-disable-next-line no-unsanitized/property
   this.element.innerHTML = `
     <section class="spectrum-color-picker">
-      <div class="spectrum-color spectrum-box" tabindex="0">
+      <div
+        class="spectrum-color spectrum-box"
+        tabindex="0"
+        role="slider"
+        title="${L10N.getStr("colorPickerTooltip.spectrumDraggerTitle")}"
+        aria-describedby="spectrum-dragger"
+      >
         <div class="spectrum-sat">
           <div class="spectrum-val">
-            <div class="spectrum-dragger"></div>
+            <div class="spectrum-dragger" id="spectrum-dragger"></div>
           </div>
         </div>
       </div>
@@ -90,17 +109,13 @@ function Spectrum(parentEl, rgb) {
         <div class="spectrum-alpha spectrum-checker spectrum-box"></div>
       </div>
     </section>
-    <section
-      class="spectrum-color-contrast accessibility-color-contrast"
-      role="presentation"
-    >
-      <span class="contrast-ratio-label">
+    <section class="spectrum-color-contrast accessibility-color-contrast">
+      <span class="contrast-ratio-label" role="presentation">
         ${L10N.getStr("accessibility.contrast.ratio.label")}
       </span>
-      <span class="accessibility-contrast-value" role="presentation"></span>
+      <span class="accessibility-contrast-value"></span>
       <span
         class="accessibility-color-contrast-large-text"
-        role="presentation"
         title="${L10N.getStr("accessibility.contrast.large.title")}"
       >
         ${L10N.getStr("accessibility.contrast.large.text")}
@@ -131,10 +146,15 @@ function Spectrum(parentEl, rgb) {
   eyedropper.id = "eyedropper-button";
   eyedropper.className = "devtools-button";
   eyedropper.style.pointerEvents = "auto";
+  eyedropper.setAttribute(
+    "aria-label",
+    L10N.getStr("colorPickerTooltip.eyedropperTitle")
+  );
   this.controls.insertBefore(eyedropper, this.colorPreview);
 
   // Hue slider and alpha slider
   this.hueSlider = this.createSlider("hue", this.onHueSliderMove.bind(this));
+  this.hueSlider.setAttribute("aria-describedby", this.dragHelper.id);
   this.alphaSlider = this.createSlider(
     "alpha",
     this.onAlphaSliderMove.bind(this)
@@ -401,6 +421,28 @@ Spectrum.prototype = {
     ];
   },
 
+  /**
+   * Map current rgb to the closest color available in the database by
+   * calculating the delta-E between each available color and the current rgb
+   *
+   * @return {String}
+   *         Color name or closest color name
+   */
+  get colorName() {
+    const labColorEntries = Object.entries(labColors);
+
+    const deltaEs = labColorEntries.map(color =>
+      colorUtils.calculateDeltaE(color[1], colorUtils.rgbToLab(this.rgb))
+    );
+
+    // Get the color name for the one that has the lowest delta-E
+    const minDeltaE = Math.min(...deltaEs);
+    const colorName = labColorEntries[deltaEs.indexOf(minDeltaE)][0];
+    return minDeltaE === 0
+      ? colorName
+      : L10N.getFormatStr("colorPickerTooltip.colorNameTitle", colorName);
+  },
+
   get rgbNoSatVal() {
     const rgb = Spectrum.hsvToRgb(this.hsv[0], 1, 1);
     return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]), rgb[3]];
@@ -465,16 +507,18 @@ Spectrum.prototype = {
     const slider = this.document.createElementNS(XHTML_NS, "input");
     slider.className = `spectrum-${sliderType}-input`;
     slider.type = "range";
-    slider.min = SLIDER.MIN;
-    slider.max = SLIDER.MAX;
-    slider.step = SLIDER.STEP;
+    slider.min = SLIDER[sliderType].MIN;
+    slider.max = SLIDER[sliderType].MAX;
+    slider.step = SLIDER[sliderType].STEP;
+    slider.title = L10N.getStr(`colorPickerTooltip.${sliderType}SliderTitle`);
     slider.addEventListener("input", onSliderMove);
 
     container.appendChild(slider);
     return slider;
   },
 
-  updateAlphaSliderBackground: function() {
+  updateAlphaSlider: function() {
+    // Set alpha slider background
     const rgb = this.rgb;
 
     const rgbNoAlpha = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
@@ -493,9 +537,13 @@ Spectrum.prototype = {
     // tuple is great.
     const colorLuminance = colorUtils.calculateLuminance(this.rgb);
     this.colorPreview.classList.toggle("high-luminance", colorLuminance > 0.85);
+
+    // Set title on color preview for better UX
+    this.colorPreview.title = this.colorName;
   },
 
-  updateDraggerBackgroundColor: function() {
+  updateDragger: function() {
+    // Set dragger background color
     const flatColor =
       "rgb(" +
       this.rgbNoSatVal[0] +
@@ -505,6 +553,14 @@ Spectrum.prototype = {
       this.rgbNoSatVal[2] +
       ")";
     this.dragger.style.backgroundColor = flatColor;
+
+    // Set dragger aria attributes
+    this.dragger.setAttribute("aria-valuetext", this.rgbCssString);
+  },
+
+  updateHueSlider: function() {
+    // Set hue slider aria attributes
+    this.hueSlider.setAttribute("aria-valuetext", this.rgbCssString);
   },
 
   updateHelperLocations: function() {
@@ -592,8 +648,9 @@ Spectrum.prototype = {
     this.updateHelperLocations();
 
     this.updateColorPreview();
-    this.updateDraggerBackgroundColor();
-    this.updateAlphaSliderBackground();
+    this.updateDragger();
+    this.updateHueSlider();
+    this.updateAlphaSlider();
     this.updateContrast();
   },
 
