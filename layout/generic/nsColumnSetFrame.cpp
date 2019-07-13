@@ -555,9 +555,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   ColumnBalanceData colData;
   bool allFit = true;
   WritingMode wm = GetWritingMode();
-  bool isRTL = !wm.IsBidiLTR();
-  bool shrinkingBSize = mLastBalanceBSize > aConfig.mColMaxBSize;
-  bool changingBSize = mLastBalanceBSize != aConfig.mColMaxBSize;
+  const bool isRTL = !wm.IsBidiLTR();
+  const bool shrinkingBSize = mLastBalanceBSize > aConfig.mColMaxBSize;
+  const bool changingBSize = mLastBalanceBSize != aConfig.mColMaxBSize;
 
   COLUMN_SET_LOG(
       "%s: Doing column reflow pass: mLastBalanceBSize=%d,"
@@ -568,9 +568,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
   DrainOverflowColumns();
 
-  const bool colBSizeChanged = mLastBalanceBSize != aConfig.mColMaxBSize;
-
-  if (colBSizeChanged) {
+  if (changingBSize) {
     mLastBalanceBSize = aConfig.mColMaxBSize;
     // XXX Seems like this could fire if incremental reflow pushed the column
     // set down so we reflow incrementally with a different available height.
@@ -599,6 +597,11 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   // a containerSize.width of zero here). In that case, the column positions
   // will be adjusted later, after our correct contentSize is known.
   nsSize containerSize = aReflowInput.ComputedSizeAsContainerIfConstrained();
+
+  LogicalSize computedSize =
+      StaticPrefs::layout_css_column_span_enabled()
+          ? aReflowInput.mCBReflowInput->ComputedSize(wm)
+          : aReflowInput.ComputedSize(wm);
 
   // For RTL, since the columns might not fill the frame exactly, we
   // need to account for the slop. Otherwise we'll waste time moving the
@@ -643,8 +646,16 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
                            !NS_SUBTREE_DIRTY(child->GetNextSibling());
     // If column-fill is auto (not the default), then we might need to
     // move content between columns for any change in column block-size.
+    //
+    // The same is true if we have a non-'auto' computed block-size.
+    //
+    // FIXME: It's not clear to me why it's *ever* valid to have
+    // skipIncremental be true when changingBSize is true, since it
+    // seems like a child broken over multiple columns might need to
+    // change the size of the fragment in each column.
     if (skipIncremental && changingBSize &&
-        StyleColumn()->mColumnFill == StyleColumnFill::Auto) {
+        (StyleColumn()->mColumnFill == StyleColumnFill::Auto ||
+         computedSize.BSize(wm) != NS_UNCONSTRAINEDSIZE)) {
       skipIncremental = false;
     }
     // If we need to pull up content from the prev-in-flow then this is not just
@@ -708,11 +719,6 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
         availSize.BSize(wm) = GetAvailableContentBSize(aReflowInput);
       }
 
-      LogicalSize computedSize =
-          StaticPrefs::layout_css_column_span_enabled()
-              ? aReflowInput.mCBReflowInput->ComputedSize(wm)
-              : aReflowInput.ComputedSize(wm);
-
       if (reflowNext) {
         child->MarkSubtreeDirty();
       }
@@ -726,7 +732,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
       // We need to reflow any float placeholders, even if our column block-size
       // hasn't changed.
-      kidReflowInput.mFlags.mMustReflowPlaceholders = !colBSizeChanged;
+      kidReflowInput.mFlags.mMustReflowPlaceholders = !changingBSize;
 
       COLUMN_SET_LOG(
           "%s: Reflowing child #%d %p: availSize=(%d,%d), kidCBSize=(%d,%d)",

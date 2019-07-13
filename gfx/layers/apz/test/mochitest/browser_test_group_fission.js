@@ -14,12 +14,12 @@ add_task(async function test_main() {
   // is fission-enabled.
   var test_urls = [
     httpURL("helper_fission_basic.html"),
+    httpURL("helper_fission_transforms.html"),
+    httpURL("helper_fission_scroll_oopif.html"),
     // add additional tests here
   ];
   if (isWebRender) {
     test_urls = test_urls.concat([
-      httpURL("helper_fission_transforms.html"),
-      httpURL("helper_fission_scroll_oopif.html"),
       // add additional WebRender-specific tests here
     ]);
   }

@@ -85,10 +85,9 @@ worker_defaults = {
 
 
 def script_url(config, script):
-    return '{}/raw-file/{}/taskcluster/scripts/{}'.format(
-                config.params['head_repository'],
-                config.params['head_rev'],
-                script)
+    return config.params.file_url(
+        'taskcluster/scripts/{}'.format(script),
+    )
 
 
 @run_job_using("docker-worker", "run-task", schema=run_task_schema, defaults=worker_defaults)

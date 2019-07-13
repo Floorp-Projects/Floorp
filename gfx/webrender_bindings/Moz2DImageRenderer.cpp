@@ -305,6 +305,36 @@ static RefPtr<ScaledFont> GetScaledFont(Translator* aTranslator,
   return data.mScaledFont;
 }
 
+template <typename T>
+T ConvertFromBytes(const uint8_t* bytes) {
+  T t;
+  memcpy(&t, bytes, sizeof(T));
+  return t;
+}
+
+struct Reader {
+  const uint8_t* buf;
+  size_t len;
+  size_t pos;
+
+  Reader(const uint8_t* buf, size_t len) : buf(buf), len(len), pos(0) {}
+
+  template <typename T>
+  T Read() {
+    MOZ_RELEASE_ASSERT(pos + sizeof(T) <= len);
+    T ret = ConvertFromBytes<T>(buf + pos);
+    pos += sizeof(T);
+    return ret;
+  }
+
+  size_t ReadSize() { return Read<size_t>(); }
+  int ReadInt() { return Read<int>(); }
+
+  IntRectAbsolute ReadBounds() { return Read<IntRectAbsolute>(); }
+
+  layers::BlobFont ReadBlobFont() { return Read<layers::BlobFont>(); }
+};
+
 static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                 const uint16_t* aTileSize,
@@ -334,12 +364,27 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     return false;
   }
 
-  auto origin = gfx::IntPoint(0, 0);
+  // We try hard to not have empty blobs but we can end up with
+  // them because of CompositorHitTestInfo and merging.
+  size_t footerSize = sizeof(size_t) + sizeof(IntPoint);
+  MOZ_RELEASE_ASSERT(aBlob.length() >= footerSize);
+  size_t indexOffset =
+      ConvertFromBytes<size_t>(aBlob.end().get() - footerSize);
+  IntPoint recordingOrigin =
+      ConvertFromBytes<IntPoint>(aBlob.end().get() - footerSize + sizeof(size_t));
+  // Apply the visibleRect's offset to make (0, 0) in the DT correspond to (0,
+  // 0) in the texture
+
+  MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - footerSize);
+  Reader reader(aBlob.begin().get() + indexOffset,
+                aBlob.length() - footerSize - indexOffset);
+
+  IntPoint origin;
   if (aTileOffset) {
-    origin =
+    origin +=
         gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
-    dt = gfx::Factory::CreateOffsetDrawTarget(dt, origin);
   }
+  dt = gfx::Factory::CreateOffsetDrawTarget(dt, recordingOrigin + origin);
 
   auto bounds = gfx::IntRect(origin, aSize);
 
@@ -351,56 +396,6 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
         IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,
                 aDirtyRect->size.width, aDirtyRect->size.height));
   }
-
-  struct Reader {
-    const uint8_t* buf;
-    size_t len;
-    size_t pos;
-
-    Reader(const uint8_t* buf, size_t len) : buf(buf), len(len), pos(0) {}
-
-    size_t ReadSize() {
-      size_t ret;
-      MOZ_RELEASE_ASSERT(pos + sizeof(ret) <= len);
-      memcpy(&ret, buf + pos, sizeof(ret));
-      pos += sizeof(ret);
-      return ret;
-    }
-    int ReadInt() {
-      int ret;
-      MOZ_RELEASE_ASSERT(pos + sizeof(ret) <= len);
-      memcpy(&ret, buf + pos, sizeof(ret));
-      pos += sizeof(ret);
-      return ret;
-    }
-
-    IntRectAbsolute ReadBounds() {
-      MOZ_RELEASE_ASSERT(pos + sizeof(int32_t) * 4 <= len);
-      int32_t x1, y1, x2, y2;
-      memcpy(&x1, buf + pos + 0 * sizeof(int32_t), sizeof(x1));
-      memcpy(&y1, buf + pos + 1 * sizeof(int32_t), sizeof(y1));
-      memcpy(&x2, buf + pos + 2 * sizeof(int32_t), sizeof(x2));
-      memcpy(&y2, buf + pos + 3 * sizeof(int32_t), sizeof(y2));
-      pos += sizeof(int32_t) * 4;
-      return IntRectAbsolute(x1, y1, x2, y2);
-    }
-
-    layers::BlobFont ReadBlobFont() {
-      MOZ_RELEASE_ASSERT(pos + sizeof(layers::BlobFont) <= len);
-      layers::BlobFont ret;
-      memcpy(&ret, buf + pos, sizeof(ret));
-      pos += sizeof(ret);
-      return ret;
-    }
-  };
-
-  // We try hard to not have empty blobs but we can end up with
-  // them because of CompositorHitTestInfo and merging.
-  MOZ_RELEASE_ASSERT(aBlob.length() >= sizeof(size_t));
-  size_t indexOffset = *(size_t*)(aBlob.end().get() - sizeof(size_t));
-  MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - sizeof(size_t));
-  Reader reader(aBlob.begin().get() + indexOffset,
-                aBlob.length() - sizeof(size_t) - indexOffset);
 
   bool ret = true;
   size_t offset = 0;

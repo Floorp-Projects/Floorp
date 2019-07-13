@@ -8,6 +8,7 @@
 (^|/)\.DS_Store$
 \.pdb
 \.egg-info
+\.eslintcache
 \.gcda
 \.gcno
 \.gcov
@@ -40,9 +41,6 @@ compile_commands\.json
 ^gecko\.log
 
 # Ignore newtab component build assets
-^browser/components/newtab/bin/prerender.js
-^browser/components/newtab/bin/prerender.js.map
-^browser/components/newtab/data/locales.json
 ^browser/components/newtab/logs/
 
 # Build directories for js shell

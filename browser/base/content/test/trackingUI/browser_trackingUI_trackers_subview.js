@@ -10,22 +10,16 @@ const TRACKING_PAGE =
 const TP_PREF = "privacy.trackingprotection.enabled";
 
 add_task(async function setup() {
-  let oldCanRecord = Services.telemetry.canRecordExtended;
-  Services.telemetry.canRecordExtended = true;
-
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {
-    Services.telemetry.canRecordExtended = oldCanRecord;
     UrlClassifierTestUtils.cleanupTestTrackers();
   });
 });
 
 async function assertSitesListed(blocked) {
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function(browser) {
-    await openIdentityPopup();
-
-    Services.telemetry.clearEvents();
+    await openProtectionsPopup();
 
     let categoryItem = document.getElementById(
       "identity-popup-content-blocking-category-tracking-protection"
@@ -41,17 +35,6 @@ async function assertSitesListed(blocked) {
 
     ok(true, "Trackers view was shown");
 
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-    ).parent;
-    let buttonEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "trackers_subview_btn"
-    );
-    is(buttonEvents.length, 1, "recorded telemetry for the button click");
-
     let listItems = trackersView.querySelectorAll(
       ".identity-popup-content-blocking-list-item"
     );
@@ -66,7 +49,7 @@ async function assertSitesListed(blocked) {
       "Strict info is hidden if TP is enabled."
     );
 
-    let mainView = document.getElementById("identity-popup-mainView");
+    let mainView = document.getElementById("protections-popup-mainView");
     viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
     let backButton = trackersView.querySelector(".subviewbutton-back");
     backButton.click();

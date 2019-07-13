@@ -6,17 +6,35 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchUtils"];
+var EXPORTED_SYMBOLS = ["SearchUtils", "SearchExtensionLoader"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 const BROWSER_SEARCH_PREF = "browser.search.";
+
+const EXT_SEARCH_PREFIX = "resource://search-extensions/";
+const APP_SEARCH_PREFIX = "resource://search-plugins/";
+
+// By the time we start loading an extension, it should load much
+// faster than 1000ms.  This simply ensures we resolve all the
+// promises and let search init complete if something happens.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "ADDON_LOAD_TIMEOUT",
+  BROWSER_SEARCH_PREF + "addonLoadTimeout",
+  1000
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -26,9 +44,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 var SearchUtils = {
-  APP_SEARCH_PREFIX: "resource://search-plugins/",
+  APP_SEARCH_PREFIX,
 
   BROWSER_SEARCH_PREF,
+  EXT_SEARCH_PREFIX,
+  LIST_JSON_URL:
+    (AppConstants.platform == "android"
+      ? APP_SEARCH_PREFIX
+      : EXT_SEARCH_PREFIX) + "list.json",
 
   /**
    * Topic used for events involving the service itself.
@@ -95,7 +118,6 @@ var SearchUtils = {
    */
   log(text) {
     if (loggingEnabled) {
-      dump("*** Search: " + text + "\n");
       Services.console.logStringMessage(text);
     }
   },
@@ -149,5 +171,136 @@ var SearchUtils = {
     } catch (ex) {}
 
     return null;
+  },
+
+  makeExtensionId(name) {
+    return name + "@search.mozilla.org";
+  },
+
+  getExtensionUrl(id) {
+    return EXT_SEARCH_PREFIX + id.split("@")[0] + "/";
+  },
+};
+
+/**
+ * SearchExtensionLoader provides a simple install function that
+ * returns a set of promises.  The caller (SearchService) must resolve
+ * each extension id once it has handled the final part of the install
+ * (creating the SearchEngine).  Once they are resolved, the extensions
+ * are fully functional, in terms of the SearchService, and initialization
+ * can be completed.
+ *
+ * When an extension is installed (that has a search provider), the
+ * extension system will call ss.addEnginesFromExtension. When that is
+ * completed, SearchService calls back to resolve the promise.
+ */
+const SearchExtensionLoader = {
+  _promises: new Map(),
+  // strict is used in tests, causes load errors to reject.
+  _strict: false,
+  // chaos mode is used in search config tests.  It bypasses
+  // reloading extensions, otherwise over the course of these
+  // tests we do over 700K reloads of extensions.
+  _chaosMode: false,
+
+  /**
+   * Creates a deferred promise for an extension install.
+   * @param {string} id the extension id.
+   * @returns {Promise}
+   */
+  _addPromise(id) {
+    let deferred = PromiseUtils.defer();
+    // We never want to have some uncaught problem stop the SearchService
+    // init from completing, so timeout the promise.
+    if (ADDON_LOAD_TIMEOUT > 0) {
+      deferred.timeout = setTimeout(() => {
+        deferred.reject(id, new Error("addon install timed out."));
+        this._promises.delete(id);
+      }, ADDON_LOAD_TIMEOUT);
+    }
+    this._promises.set(id, deferred);
+    return deferred.promise;
+  },
+
+  /**
+   * @param {string} id the extension id to resolve.
+   */
+  resolve(id) {
+    if (this._promises.has(id)) {
+      let deferred = this._promises.get(id);
+      if (deferred.timeout) {
+        clearTimeout(deferred.timeout);
+      }
+      deferred.resolve();
+      this._promises.delete(id);
+    }
+  },
+
+  /**
+   * @param {string} id the extension id to reject.
+   * @param {object} error The error to log when rejecting.
+   */
+  reject(id, error) {
+    if (this._promises.has(id)) {
+      let deferred = this._promises.get(id);
+      if (deferred.timeout) {
+        clearTimeout(deferred.timeout);
+      }
+      // We don't want to reject here because that will reject the promise.all
+      // and stop the searchservice init.  Log the error, and resolve the promise.
+      // strict mode can be used by tests to force an exception to occur.
+      Cu.reportError(`Addon install for search engine ${id} failed: ${error}`);
+      if (this._strict) {
+        deferred.reject();
+      } else {
+        deferred.resolve();
+      }
+      this._promises.delete(id);
+    }
+  },
+
+  _reset() {
+    SearchUtils.log(`SearchExtensionLoader.reset`);
+    for (let id of this._promises.keys()) {
+      this.reject(id, new Error(`installAddons reset during install`));
+    }
+    this._promises = new Map();
+  },
+
+  /**
+   * Tell AOM to install a set of built-in extensions.  If the extension is
+   * already installed, it will be reinstalled.
+   *
+   * @param {Array} engineIDList is an array of extension IDs.
+   * @returns {Promise} resolved when all engines have finished installation.
+   */
+  async installAddons(engineIDList) {
+    SearchUtils.log(`SearchExtensionLoader.installAddons`);
+    // If SearchService calls us again, it is being re-inited.  reset ourselves.
+    this._reset();
+    let promises = [];
+    for (let id of engineIDList) {
+      promises.push(this._addPromise(id));
+      let path = SearchUtils.getExtensionUrl(id);
+      SearchUtils.log(
+        `SearchExtensionLoader.installAddons: installing ${id} at ${path}`
+      );
+      if (this._chaosMode) {
+        // If the extension is already loaded, we do not reload the extension.  Instead
+        // we call back to search service directly.
+        let policy = WebExtensionPolicy.getByID(id);
+        if (policy) {
+          Services.search.addEnginesFromExtension(policy.extension);
+          continue;
+        }
+      }
+      // The AddonManager will install the engine asynchronously
+      AddonManager.installBuiltinAddon(path).catch(error => {
+        // Catch any install errors and propogate.
+        this.reject(id, error);
+      });
+    }
+
+    return Promise.all(promises);
   },
 };

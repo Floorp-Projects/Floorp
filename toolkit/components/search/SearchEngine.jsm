@@ -48,6 +48,7 @@ const MOZSEARCH_NS_10 = "http://www.mozilla.org/2006/browser/search/";
 const MOZSEARCH_LOCALNAME = "SearchPlugin";
 
 const USER_DEFINED = "searchTerms";
+const SEARCH_TERM_PARAM = "{searchTerms}";
 
 // Custom search parameters
 const MOZ_PARAM_LOCALE = "moz:locale";
@@ -580,8 +581,18 @@ EngineURL.prototype = {
   },
 
   _getTermsParameterName() {
-    let queryParam = this.params.find(p => p.value == "{" + USER_DEFINED + "}");
-    return queryParam ? queryParam.name : "";
+    if (this.params.length > 0) {
+      let queryParam = this.params.find(p => p.value == SEARCH_TERM_PARAM);
+      return queryParam ? queryParam.name : "";
+    }
+    // If an engine only used template, then params is empty, fall back to checking the template.
+    let params = new URL(this.template).searchParams;
+    for (let [name, value] of params.entries()) {
+      if (value == SEARCH_TERM_PARAM) {
+        return name;
+      }
+    }
+    return "";
   },
 
   _hasRelation(rel) {
@@ -814,6 +825,8 @@ SearchEngine.prototype = {
   _iconUpdateURL: null,
   /* The extension ID if added by an extension. */
   _extensionID: null,
+  /* The extension version if added by an extension. */
+  _version: null,
   // Built in search engine extensions.
   _isBuiltin: false,
 
@@ -1403,6 +1416,7 @@ SearchEngine.prototype = {
    */
   _initFromMetadata(engineName, params) {
     this._extensionID = params.extensionID;
+    this._version = params.version;
     this._isBuiltin = !!params.isBuiltin;
 
     this._initEngineURLFromMetaData(SearchUtils.URL_TYPE.SEARCH, {
@@ -1684,6 +1698,9 @@ SearchEngine.prototype = {
     if (json.extensionID) {
       this._extensionID = json.extensionID;
     }
+    if (json.version) {
+      this._version = json.version;
+    }
     for (let i = 0; i < json._urls.length; ++i) {
       let url = json._urls[i];
       let engineURL = new EngineURL(
@@ -1741,6 +1758,9 @@ SearchEngine.prototype = {
     }
     if (this._extensionID) {
       json.extensionID = this._extensionID;
+    }
+    if (this._version) {
+      json.version = this._version;
     }
 
     return json;

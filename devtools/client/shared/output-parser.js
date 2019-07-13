@@ -62,36 +62,40 @@ const BACKDROP_FILTER_ENABLED = Services.prefs.getBoolPref(
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
- * This module is used to process text for output by developer tools. This means
- * linking JS files with the debugger, CSS files with the style editor, JS
- * functions with the debugger, placing color swatches next to colors and
- * adding doorhanger previews where possible (images, angles, lengths,
- * border radius, cubic-bezier etc.).
+ * This module is used to process CSS text declarations and output DOM fragments (to be
+ * appended to panels in DevTools) for CSS values decorated with additional UI and
+ * functionality.
+ *
+ * For example:
+ * - attaching swatches for values instrumented with specialized tools: colors, timing
+ * functions (cubic-bezier), filters, shapes, display values (flex/grid), etc.
+ * - adding previews where possible (images, fonts, CSS transforms).
+ * - converting between color types on Shift+click on their swatches.
  *
  * Usage:
  *   const OutputParser = require("devtools/client/shared/output-parser");
- *
- *   let parser = new OutputParser(document, supportsType);
- *
+ *   const parser = new OutputParser(document, cssProperties);
  *   parser.parseCssProperty("color", "red"); // Returns document fragment.
  *
- * @param {Document} document Used to create DOM nodes.
- * @param {Function} supportsTypes - A function that returns a boolean when asked if a css
- *                   property name supports a given css type.  The function is
- *                   executed like supportsType("color", "timing-function")
- * @param {Function} isValidOnClient - A function that checks if a css property
- *                   name/value combo is valid.
- * @param {Function} supportsCssColor4ColorFunction - A function for checking
- *                   the supporting of css-color-4 color function.
+ * @param {Document} document
+ *        Used to create DOM nodes.
+ * @param {Object} cssProperties
+ *        Instance of CssProperties, an object which provides an interface for
+ *        working with the database of supported CSS properties and values.
+ *        Two items are of interest from this object:
+ *        - supportsTypes - A function that returns a boolean when asked if a css
+ *          property name supports a given css type.  The function is
+ *          executed like supportsType("color", "timing-function")
+ *        - supportsCssColor4ColorFunction - A function for checking
+ *          the supporting of css-color-4 color function.
  */
 function OutputParser(
   document,
-  { supportsType, isValidOnClient, supportsCssColor4ColorFunction }
+  { supportsType, supportsCssColor4ColorFunction }
 ) {
   this.parsed = [];
   this.doc = document;
   this.supportsType = supportsType;
-  this.isValidOnClient = isValidOnClient;
   this.colorSwatches = new WeakMap();
   this.angleSwatches = new WeakMap();
   this._onColorSwatchMouseDown = this._onColorSwatchMouseDown.bind(this);
@@ -1444,7 +1448,9 @@ OutputParser.prototype = {
    *         CSS Property value to check
    */
   _cssPropertySupportsValue: function(name, value) {
-    return this.isValidOnClient(name, value, this.doc);
+    // Checking pair as a CSS declaration string to account for "!important" in value.
+    const declaration = `${name}:${value}`;
+    return this.doc.defaultView.CSS.supports(declaration);
   },
 
   /**

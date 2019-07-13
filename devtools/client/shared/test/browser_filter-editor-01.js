@@ -10,9 +10,6 @@ const {
 } = require("devtools/client/shared/widgets/FilterWidget");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
-const {
-  getClientCssProperties,
-} = require("devtools/shared/fronts/css-properties");
 const { getCSSLexer } = require("devtools/shared/css/lexer");
 
 // Verify that the given string consists of a valid CSS URL token.
@@ -30,10 +27,9 @@ function verifyURL(string) {
 
 add_task(async function() {
   const [, , doc] = await createHost("bottom", TEST_URI);
-  const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
-  const widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
+  const widget = new CSSFilterEditorWidget(container, "none");
 
   info("Test parsing of a valid CSS Filter value");
   widget.setCssValue("blur(2px) contrast(200%)");

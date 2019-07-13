@@ -659,12 +659,10 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   return Ok();
 }
 
-/* static */ size_t SharedScriptData::AllocationSize(uint32_t codeLength,
-                                                     uint32_t noteLength,
-                                                     uint32_t numResumeOffsets,
-                                                     uint32_t numScopeNotes,
-                                                     uint32_t numTryNotes) {
-  size_t size = sizeof(SharedScriptData);
+/* static */ size_t ImmutableScriptData::AllocationSize(
+    uint32_t codeLength, uint32_t noteLength, uint32_t numResumeOffsets,
+    uint32_t numScopeNotes, uint32_t numTryNotes) {
+  size_t size = sizeof(ImmutableScriptData);
 
   size += sizeof(Flags);
   size += codeLength * sizeof(jsbytecode);
@@ -673,7 +671,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   unsigned numOptionalArrays = unsigned(numResumeOffsets > 0) +
                                unsigned(numScopeNotes > 0) +
                                unsigned(numTryNotes > 0);
-  size += numOptionalArrays * sizeof(uint32_t);
+  size += numOptionalArrays * sizeof(Offset);
 
   size += numResumeOffsets * sizeof(uint32_t);
   size += numScopeNotes * sizeof(ScopeNote);
@@ -685,19 +683,19 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
 // Placement-new elements of an array. This should optimize away for types with
 // trivial default initiation.
 template <typename T>
-void SharedScriptData::initElements(size_t offset, size_t length) {
+void ImmutableScriptData::initElements(size_t offset, size_t length) {
   uintptr_t base = reinterpret_cast<uintptr_t>(this);
   DefaultInitializeElements<T>(reinterpret_cast<void*>(base + offset), length);
 }
 
 // Initialize the optional arrays in the trailing allocation. This is a set of
 // offsets that delimit each optional array followed by the arrays themselves.
-// See comment before 'SharedScriptData' for more details.
-void SharedScriptData::initOptionalArrays(size_t* pcursor,
-                                          SharedScriptData::Flags* flags,
-                                          uint32_t numResumeOffsets,
-                                          uint32_t numScopeNotes,
-                                          uint32_t numTryNotes) {
+// See comment before 'ImmutableScriptData' for more details.
+void ImmutableScriptData::initOptionalArrays(size_t* pcursor,
+                                             ImmutableScriptData::Flags* flags,
+                                             uint32_t numResumeOffsets,
+                                             uint32_t numScopeNotes,
+                                             uint32_t numTryNotes) {
   size_t cursor = (*pcursor);
 
   // The byte arrays must have already been padded.
@@ -709,10 +707,10 @@ void SharedScriptData::initOptionalArrays(size_t* pcursor,
                                unsigned(numTryNotes > 0);
 
   // Default-initialize the optional-offsets.
-  static_assert(alignof(SharedScriptData) >= alignof(uint32_t),
+  static_assert(alignof(ImmutableScriptData) >= alignof(Offset),
                 "Incompatible alignment");
-  initElements<uint32_t>(cursor, numOptionalArrays);
-  cursor += numOptionalArrays * sizeof(uint32_t);
+  initElements<Offset>(cursor, numOptionalArrays);
+  cursor += numOptionalArrays * sizeof(Offset);
 
   // Offset between optional-offsets table and the optional arrays. This is
   // later used to access the optional-offsets table as well as first optional
@@ -727,7 +725,7 @@ void SharedScriptData::initOptionalArrays(size_t* pcursor,
   // Default-initialize optional 'resumeOffsets'.
   MOZ_ASSERT(resumeOffsetsOffset() == cursor);
   if (numResumeOffsets > 0) {
-    static_assert(sizeof(uint32_t) >= alignof(uint32_t),
+    static_assert(sizeof(Offset) >= alignof(uint32_t),
                   "Incompatible alignment");
     initElements<uint32_t>(cursor, numResumeOffsets);
     cursor += numResumeOffsets * sizeof(uint32_t);
@@ -761,11 +759,13 @@ void SharedScriptData::initOptionalArrays(size_t* pcursor,
   (*pcursor) = cursor;
 }
 
-SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
-                                   uint32_t numResumeOffsets,
-                                   uint32_t numScopeNotes, uint32_t numTryNotes)
+ImmutableScriptData::ImmutableScriptData(uint32_t codeLength,
+                                         uint32_t noteLength,
+                                         uint32_t numResumeOffsets,
+                                         uint32_t numScopeNotes,
+                                         uint32_t numTryNotes)
     : codeLength_(codeLength) {
-  // Variable-length data begins immediately after SharedScriptData itself.
+  // Variable-length data begins immediately after ImmutableScriptData itself.
   size_t cursor = sizeof(*this);
 
   // The following arrays are byte-aligned with additional padding to ensure
@@ -806,7 +806,7 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
 
 template <XDRMode mode>
 /* static */
-XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
+XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   uint32_t codeLength = 0;
   uint32_t noteLength = 0;
   uint32_t numResumeOffsets = 0;
@@ -814,17 +814,17 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   uint32_t numTryNotes = 0;
 
   JSContext* cx = xdr->cx();
-  SharedScriptData* ssd = nullptr;
+  ImmutableScriptData* isd = nullptr;
 
   if (mode == XDR_ENCODE) {
-    ssd = script->sharedScriptData();
+    isd = script->immutableScriptData();
 
-    codeLength = ssd->codeLength();
-    noteLength = ssd->noteLength();
+    codeLength = isd->codeLength();
+    noteLength = isd->noteLength();
 
-    numResumeOffsets = ssd->resumeOffsets().size();
-    numScopeNotes = ssd->scopeNotes().size();
-    numTryNotes = ssd->tryNotes().size();
+    numResumeOffsets = isd->resumeOffsets().size();
+    numScopeNotes = isd->scopeNotes().size();
+    numTryNotes = isd->tryNotes().size();
   }
 
   MOZ_TRY(xdr->codeUint32(&codeLength));
@@ -834,40 +834,40 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   MOZ_TRY(xdr->codeUint32(&numTryNotes));
 
   if (mode == XDR_DECODE) {
-    if (!script->createSharedScriptData(cx, codeLength, noteLength,
-                                        numResumeOffsets, numScopeNotes,
-                                        numTryNotes)) {
+    if (!script->createImmutableScriptData(cx, codeLength, noteLength,
+                                           numResumeOffsets, numScopeNotes,
+                                           numTryNotes)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
 
-    ssd = script->sharedScriptData();
+    isd = script->immutableScriptData();
   }
 
-  MOZ_TRY(xdr->codeUint32(&ssd->mainOffset));
-  MOZ_TRY(xdr->codeUint32(&ssd->nfixed));
-  MOZ_TRY(xdr->codeUint32(&ssd->nslots));
-  MOZ_TRY(xdr->codeUint32(&ssd->bodyScopeIndex));
-  MOZ_TRY(xdr->codeUint32(&ssd->numICEntries));
-  MOZ_TRY(xdr->codeUint16(&ssd->funLength));
-  MOZ_TRY(xdr->codeUint16(&ssd->numBytecodeTypeSets));
+  MOZ_TRY(xdr->codeUint32(&isd->mainOffset));
+  MOZ_TRY(xdr->codeUint32(&isd->nfixed));
+  MOZ_TRY(xdr->codeUint32(&isd->nslots));
+  MOZ_TRY(xdr->codeUint32(&isd->bodyScopeIndex));
+  MOZ_TRY(xdr->codeUint32(&isd->numICEntries));
+  MOZ_TRY(xdr->codeUint16(&isd->funLength));
+  MOZ_TRY(xdr->codeUint16(&isd->numBytecodeTypeSets));
 
   JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
   JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
 
-  jsbytecode* code = ssd->code();
-  jssrcnote* notes = ssd->notes();
+  jsbytecode* code = isd->code();
+  jssrcnote* notes = isd->notes();
   MOZ_TRY(xdr->codeBytes(code, codeLength));
   MOZ_TRY(xdr->codeBytes(notes, noteLength));
 
-  for (uint32_t& elem : ssd->resumeOffsets()) {
+  for (uint32_t& elem : isd->resumeOffsets()) {
     MOZ_TRY(xdr->codeUint32(&elem));
   }
 
-  for (ScopeNote& elem : ssd->scopeNotes()) {
+  for (ScopeNote& elem : isd->scopeNotes()) {
     MOZ_TRY(elem.XDR(xdr));
   }
 
-  for (JSTryNote& elem : ssd->tryNotes()) {
+  for (JSTryNote& elem : isd->tryNotes()) {
     MOZ_TRY(elem.XDR(xdr));
   }
 
@@ -877,12 +877,12 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
 template
     /* static */
     XDRResult
-    SharedScriptData::XDR(XDRState<XDR_ENCODE>* xdr, HandleScript script);
+    ImmutableScriptData::XDR(XDRState<XDR_ENCODE>* xdr, HandleScript script);
 
 template
     /* static */
     XDRResult
-    SharedScriptData::XDR(XDRState<XDR_DECODE>* xdr, HandleScript script);
+    ImmutableScriptData::XDR(XDRState<XDR_DECODE>* xdr, HandleScript script);
 
 /* static */ size_t RuntimeScriptData::AllocationSize(uint32_t natoms) {
   size_t size = sizeof(RuntimeScriptData);
@@ -957,7 +957,7 @@ XDRResult RuntimeScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
     }
   }
 
-  MOZ_TRY(SharedScriptData::XDR<mode>(xdr, script));
+  MOZ_TRY(ImmutableScriptData::XDR<mode>(xdr, script));
 
   return Ok();
 }
@@ -3521,7 +3521,7 @@ bool ScriptSource::setSourceMapURL(JSContext* cx,
     ScriptSource::idCount_;
 
 /*
- * [SMDOC] JSScript data layout (shared)
+ * [SMDOC] JSScript data layout (immutable)
  *
  * Script data that shareable across processes. There are no pointers (GC or
  * otherwise) and the data is relocatable.
@@ -3535,26 +3535,24 @@ bool ScriptSource::setSourceMapURL(JSContext* cx,
  * JSTryNote        tryNotes()
  */
 
-SharedScriptData* js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,
-                                             uint32_t noteLength,
-                                             uint32_t numResumeOffsets,
-                                             uint32_t numScopeNotes,
-                                             uint32_t numTryNotes) {
+ImmutableScriptData* js::ImmutableScriptData::new_(
+    JSContext* cx, uint32_t codeLength, uint32_t noteLength,
+    uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
   // Compute size including trailing arrays
   size_t size = AllocationSize(codeLength, noteLength, numResumeOffsets,
                                numScopeNotes, numTryNotes);
 
   // Allocate contiguous raw buffer
   void* raw = cx->pod_malloc<uint8_t>(size);
-  MOZ_ASSERT(uintptr_t(raw) % alignof(SharedScriptData) == 0);
+  MOZ_ASSERT(uintptr_t(raw) % alignof(ImmutableScriptData) == 0);
   if (!raw) {
     return nullptr;
   }
 
-  // Constuct the SharedScriptData. Trailing arrays are uninitialized but
+  // Constuct the ImmutableScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw) SharedScriptData(codeLength, noteLength, numResumeOffsets,
-                                    numScopeNotes, numTryNotes);
+  return new (raw) ImmutableScriptData(codeLength, noteLength, numResumeOffsets,
+                                       numScopeNotes, numTryNotes);
 }
 
 RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx, uint32_t natoms) {
@@ -3585,30 +3583,30 @@ bool JSScript::createScriptData(JSContext* cx, uint32_t natoms) {
   return true;
 }
 
-bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
-                                      uint32_t noteLength,
-                                      uint32_t numResumeOffsets,
-                                      uint32_t numScopeNotes,
-                                      uint32_t numTryNotes) {
+bool JSScript::createImmutableScriptData(JSContext* cx, uint32_t codeLength,
+                                         uint32_t noteLength,
+                                         uint32_t numResumeOffsets,
+                                         uint32_t numScopeNotes,
+                                         uint32_t numTryNotes) {
 #ifdef DEBUG
   // The compact arrays need to maintain uint32_t alignment. This should have
   // been done by padding out source notes.
   size_t byteArrayLength =
-      sizeof(SharedScriptData::Flags) + codeLength + noteLength;
+      sizeof(ImmutableScriptData::Flags) + codeLength + noteLength;
   MOZ_ASSERT(byteArrayLength % sizeof(uint32_t) == 0,
              "Source notes should have been padded already");
 #endif
 
-  MOZ_ASSERT(!scriptData_->ssd_);
+  MOZ_ASSERT(!scriptData_->isd_);
 
-  js::UniquePtr<SharedScriptData> ssd(
-      SharedScriptData::new_(cx, codeLength, noteLength, numResumeOffsets,
-                             numScopeNotes, numTryNotes));
-  if (!ssd) {
+  js::UniquePtr<ImmutableScriptData> isd(
+      ImmutableScriptData::new_(cx, codeLength, noteLength, numResumeOffsets,
+                                numScopeNotes, numTryNotes));
+  if (!isd) {
     return false;
   }
 
-  scriptData_->ssd_ = std::move(ssd);
+  scriptData_->isd_ = std::move(isd);
   return true;
 }
 
@@ -3697,7 +3695,7 @@ void js::FreeScriptData(JSRuntime* rt) {
 
 #ifdef DEBUG
   if (numLive > 0) {
-    fprintf(stderr, "ERROR: GC found %zu live SharedScriptData at shutdown\n",
+    fprintf(stderr, "ERROR: GC found %zu live RuntimeScriptData at shutdown\n",
             numLive);
   }
 #endif
@@ -3976,16 +3974,16 @@ bool JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
   uint32_t numResumeOffsets = 0;
   uint32_t numScopeNotes = 0;
   uint32_t numTryNotes = 0;
-  if (!script->createSharedScriptData(cx, codeLength, noteLength,
-                                      numResumeOffsets, numScopeNotes,
-                                      numTryNotes)) {
+  if (!script->createImmutableScriptData(cx, codeLength, noteLength,
+                                         numResumeOffsets, numScopeNotes,
+                                         numTryNotes)) {
     return false;
   }
 
-  jsbytecode* code = script->sharedScriptData()->code();
+  jsbytecode* code = script->immutableScriptData()->code();
   code[0] = JSOP_RETRVAL;
 
-  jssrcnote* notes = script->sharedScriptData()->notes();
+  jssrcnote* notes = script->immutableScriptData()->notes();
   notes[0] = SRC_NULL;
   notes[1] = SRC_NULL;
   notes[2] = SRC_NULL;
@@ -4104,7 +4102,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
     return false;
   }
 
-  // Create and initialize RuntimeScriptData/SharedScriptData
+  // Create and initialize RuntimeScriptData/ImmutableScriptData
   if (!RuntimeScriptData::InitFromEmitter(cx, script, bce, nslots)) {
     return false;
   }
@@ -4703,7 +4701,7 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
     return nullptr;
   }
 
-  // The SharedScriptData can be reused by any zone in the Runtime as long as
+  // The RuntimeScriptData can be reused by any zone in the Runtime as long as
   // we make sure to mark first (to sync Atom pointers).
   if (cx->zone() != src->zoneFromAnyThread()) {
     src->scriptData()->markForCrossZone(cx);
@@ -5016,7 +5014,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   return site->enabledCount > 0;
 }
 
-/* static */ bool SharedScriptData::InitFromEmitter(
+/* static */ bool ImmutableScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce,
     uint32_t nslots) {
   size_t codeLength = bce->bytecodeSection().code().length();
@@ -5036,13 +5034,13 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   uint32_t numScopeNotes = bce->bytecodeSection().scopeNoteList().length();
   uint32_t numTryNotes = bce->bytecodeSection().tryNoteList().length();
 
-  // Allocate SharedScriptData
-  if (!script->createSharedScriptData(cx, codeLength, noteLength + nullLength,
-                                      numResumeOffsets, numScopeNotes,
-                                      numTryNotes)) {
+  // Allocate ImmutableScriptData
+  if (!script->createImmutableScriptData(
+          cx, codeLength, noteLength + nullLength, numResumeOffsets,
+          numScopeNotes, numTryNotes)) {
     return false;
   }
-  js::SharedScriptData* data = script->sharedScriptData();
+  js::ImmutableScriptData* data = script->immutableScriptData();
 
   // Initialize POD fields
   data->mainOffset = bce->mainOffset();
@@ -5085,7 +5083,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   // Initialize trailing arrays
   InitAtomMap(*bce->perScriptData().atomIndices(), data->atoms());
 
-  return SharedScriptData::InitFromEmitter(cx, script, bce, nslots);
+  return ImmutableScriptData::InitFromEmitter(cx, script, bce, nslots);
 }
 
 void RuntimeScriptData::traceChildren(JSTracer* trc) {

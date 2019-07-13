@@ -23,6 +23,7 @@
   --blue-60: #0060DF;
   --blue-70: #003eaa;
   --blue-80: #002275;
+  --column-width: 16px;
 }
 
  a {
@@ -189,13 +190,13 @@ body[focuseddatatype=cryptominer] {
 
 #graph-wrapper {
   width: 100%;
-  margin-top: 30px;
+  margin-top: 40px;
 }
 
 #graph {
   display: grid;
   grid: repeat(10, 1fr) max-content / repeat(7, 1fr);
-  height: 200px;
+  height: 175px;
   margin-bottom: 10px;
 }
 
@@ -204,13 +205,27 @@ body[focuseddatatype=cryptominer] {
   grid-row: 1 / -2;
   justify-self: center;
   align-self: flex-end;
-  width: 16px;
-  border-radius: 4px;
-  overflow: hidden;
+  width: var(--column-width);
+  position: relative;
+}
+
+.graph-bar div:nth-child(2){
+  border-radius: 2px 2px 0 0;
+}
+
+.graph-bar div:last-child{
+  border-radius: 0 0 2px 2px;
 }
 
 .graph-bar:hover {
   cursor: pointer;
+}
+
+.graph-bar.empty {
+  height: 0;
+  border: 1px rgba(12,12,13,0.2) solid;
+  border-radius: 4px;
+  cursor: default;
 }
 
 .social-bar {
@@ -257,6 +272,14 @@ body[focuseddatatype=cryptominer] {
   justify-self: center;
   margin-top: 5px;
   font-size: 0.9rem;
+  width: var(--column-width);
+}
+
+.bar-count {
+  position: absolute;
+  top: -25px;
+	color: #0C0C0D;
+  font-size: .8rem;
 }
 
 /* Legend */
@@ -289,7 +312,7 @@ label[data-type="cookie"] {
 }
 
 label[data-type="tracker"] {
-  background-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+  background-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
   fill: var(--tracker-color);
   color: var(--tracker-color);
 }

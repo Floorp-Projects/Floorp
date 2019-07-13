@@ -488,13 +488,13 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
   if (style.StyleDisplay()->IsContainSize()) {
     return AspectRatio();
   }
-  if (style.StylePosition()->mAspectRatio != 0.0f) {
-    return AspectRatio(style.StylePosition()->mAspectRatio);
-  }
   if (aImage) {
     if (Maybe<AspectRatio> fromImage = aImage->GetIntrinsicRatio()) {
       return *fromImage;
     }
+  }
+  if (style.StylePosition()->mAspectRatio != 0.0f) {
+    return AspectRatio(style.StylePosition()->mAspectRatio);
   }
   if (aFrame.ShouldShowBrokenImageIcon()) {
     return AspectRatio(1.0f);
