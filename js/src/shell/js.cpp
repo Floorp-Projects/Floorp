@@ -11057,9 +11057,9 @@ int main(int argc, char** argv, char** envp) {
           "Wait for COUNT calls or iterations before baseline-compiling "
           "(default: 10)",
           -1) ||
-      !op.addBoolOption('\0', "blinterp", "Enable Baseline Interpreter") ||
-      !op.addBoolOption('\0', "no-blinterp",
-                        "Disable Baseline Interpreter (default)") ||
+      !op.addBoolOption('\0', "blinterp",
+                        "Enable Baseline Interpreter (default)") ||
+      !op.addBoolOption('\0', "no-blinterp", "Disable Baseline Interpreter") ||
       !op.addBoolOption('\0', "blinterp-eager",
                         "Always Baseline-interpret scripts") ||
       !op.addIntOption(
