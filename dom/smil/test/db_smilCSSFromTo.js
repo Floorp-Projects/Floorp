@@ -295,13 +295,11 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("table-row", "none"),
   ]),
   new TestcaseBundle(gPropList.dominant_baseline, [
-    new AnimTestcaseFromTo("use-script", "no-change"),
-    new AnimTestcaseFromTo("reset-size", "ideographic"),
     new AnimTestcaseFromTo("alphabetic", "hanging"),
     new AnimTestcaseFromTo("mathematical", "central"),
     new AnimTestcaseFromTo("middle", "text-after-edge"),
     new AnimTestcaseFromTo("text-before-edge", "auto"),
-    new AnimTestcaseFromTo("use-script", "inherit", { toComp: "auto" }),
+    new AnimTestcaseFromTo("alphabetic", "inherit", { toComp: "auto" }),
   ]),
   // NOTE: Mozilla doesn't currently support "enable-background", but I'm
   // testing it here in case we ever add support for it, because it's
