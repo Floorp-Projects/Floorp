@@ -79,12 +79,14 @@ function CssColor(colorValue, supportsCssColor4ColorFunction = false) {
 module.exports.colorUtils = {
   CssColor: CssColor,
   rgbToHsl: rgbToHsl,
+  rgbToLab: rgbToLab,
   setAlpha: setAlpha,
   classifyColor: classifyColor,
   rgbToColorName: rgbToColorName,
   colorToRGBA: colorToRGBA,
   isValidCSSColor: isValidCSSColor,
   calculateContrastRatio: calculateContrastRatio,
+  calculateDeltaE: calculateDeltaE,
   calculateLuminance: calculateLuminance,
   blendColors: blendColors,
 };
@@ -557,6 +559,66 @@ function rgbToHsl([r, g, b]) {
   }
 
   return [roundTo(h, 1), roundTo(s * 100, 1), roundTo(l * 100, 1)];
+}
+
+/**
+ * Convert rgb value to CIE LAB colorspace (https://en.wikipedia.org/wiki/CIELAB_color_space).
+ * Formula from http://www.easyrgb.com/en/math.php.
+ *
+ * @param {array} rgb
+ *        Array of rgb values
+ * @return {array}
+ *         Array of lab values.
+ */
+function rgbToLab([r, g, b]) {
+  // Convert rgb values to xyz coordinates.
+  r = r / 255;
+  g = g / 255;
+  b = b / 255;
+
+  r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+  g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+  b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+
+  r = r * 100;
+  g = g * 100;
+  b = b * 100;
+
+  let [x, y, z] = [
+    r * 0.4124 + g * 0.3576 + b * 0.1805,
+    r * 0.2126 + g * 0.7152 + b * 0.0722,
+    r * 0.0193 + g * 0.1192 + b * 0.9505,
+  ];
+
+  // Convert xyz coordinates to lab values.
+  // Divisors used are X_10, Y_10, Z_10 (CIE 1964) reference values for D65
+  // illuminant (Daylight, sRGB, Adobe-RGB) taken from http://www.easyrgb.com/en/math.php
+  x = x / 94.811;
+  y = y / 100;
+  z = z / 107.304;
+
+  x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
+  y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
+  z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
+
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+
+/**
+ * Calculates the CIE Delta-E value for two lab values (http://www.colorwiki.com/wiki/Delta_E%3a_The_Color_Difference#Delta-E_1976).
+ * Formula from http://www.easyrgb.com/en/math.php.
+ *
+ * @param {array} lab1
+ *        Array of lab values for the first color
+ * @param {array} lab2
+ *        Array of lab values for the second color
+ * @return {Number}
+ *         DeltaE value between the two colors
+ */
+function calculateDeltaE([l1, a1, b1], [l2, a2, b2]) {
+  return Math.sqrt(
+    Math.pow(l1 - l2, 2) + Math.pow(a1 - a2, 2) + Math.pow(b1 - b2, 2)
+  );
 }
 
 function roundTo(number, digits) {
