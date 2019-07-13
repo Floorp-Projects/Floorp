@@ -105,14 +105,10 @@ class SwatchBasedEditorTooltip {
    *         immediately if there is no currently active swatch.
    */
   show() {
-    const tooltipAnchor = this.useInline
-      ? this.activeSwatch.closest(`.${INLINE_TOOLTIP_CLASS}`)
-      : this.activeSwatch;
-
-    if (tooltipAnchor) {
+    if (this.tooltipAnchor) {
       const onShown = this.tooltip.once("shown");
 
-      this.tooltip.show(tooltipAnchor);
+      this.tooltip.show(this.tooltipAnchor);
       this.tooltip.once("hidden", () => this.onTooltipHidden());
 
       return onShown;
@@ -235,6 +231,12 @@ class SwatchBasedEditorTooltip {
       const swatch = this.swatches.get(this.activeSwatch);
       swatch.callbacks.onCommit();
     }
+  }
+
+  get tooltipAnchor() {
+    return this.useInline
+      ? this.activeSwatch.closest(`.${INLINE_TOOLTIP_CLASS}`)
+      : this.activeSwatch;
   }
 
   destroy() {
