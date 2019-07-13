@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Tests that color pickers appear when clicking on color swatches.
+// Tests that color pickers appear when clicking or using keyboard on color swatches.
 
 const TEST_URI = `
   <style type="text/css">
@@ -26,13 +26,23 @@ add_task(async function() {
 
   for (const property of propertiesToTest) {
     info("Testing that the colorpicker appears on swatch click");
-    const value = getRuleViewProperty(view, "body", property).valueSpan;
-    const swatch = value.querySelector(".ruleview-colorswatch");
-    await testColorPickerAppearsOnColorSwatchClick(view, swatch);
+    await testColorPickerAppearsOnColorSwatchActivation(view, property);
+
+    info(
+      "Testing that swatch is focusable and colorpicker can be activated with a keyboard"
+    );
+    await testColorPickerAppearsOnColorSwatchActivation(view, property, true);
   }
 });
 
-async function testColorPickerAppearsOnColorSwatchClick(view, swatch) {
+async function testColorPickerAppearsOnColorSwatchActivation(
+  view,
+  property,
+  withKeyboard = false
+) {
+  const value = getRuleViewProperty(view, "body", property).valueSpan;
+  const swatch = value.querySelector(".ruleview-colorswatch");
+
   const cPicker = view.tooltips.getTooltip("colorPicker");
   ok(cPicker, "The rule-view has the expected colorPicker property");
 
@@ -40,7 +50,20 @@ async function testColorPickerAppearsOnColorSwatchClick(view, swatch) {
   ok(cPickerPanel, "The XUL panel for the color picker exists");
 
   const onColorPickerReady = cPicker.once("ready");
-  swatch.click();
+  if (withKeyboard) {
+    // Focus on the property value span
+    const doc = value.ownerDocument;
+    value.focus();
+
+    // Tab to focus on the color swatch
+    EventUtils.sendKey("Tab");
+    is(doc.activeElement, swatch, "Swatch successfully receives focus.");
+
+    // Press enter on the swatch to simulate click and open color picker
+    EventUtils.sendKey("Return");
+  } else {
+    swatch.click();
+  }
   await onColorPickerReady;
 
   ok(true, "The color picker was shown on click of the color swatch");

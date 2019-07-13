@@ -545,6 +545,11 @@
   z-index: -1;
 }
 
+.ruleview-swatch.ruleview-colorswatch {
+  border: none;
+  padding: 0;
+}
+
 .ruleview-bezierswatch {
   background-image: url("chrome://devtools/skin/images/cubic-bezier-swatch.svg");
 }

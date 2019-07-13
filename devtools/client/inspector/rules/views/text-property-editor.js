@@ -35,6 +35,12 @@ loader.lazyRequireGetter(
   "devtools/shared/css/parsing-utils",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "findCssSelector",
+  "devtools/shared/inspector/css-logic",
+  true
+);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -497,6 +503,12 @@ TextPropertyEditor.prototype = {
       };
     }
 
+    // Save focused element inside value span if one exists before wiping the innerHTML
+    let focusedElSelector = null;
+    if (this.valueSpan.contains(this.doc.activeElement)) {
+      focusedElSelector = findCssSelector(this.doc.activeElement);
+    }
+
     this.valueSpan.innerHTML = "";
     this.valueSpan.appendChild(frag);
 
@@ -681,6 +693,14 @@ TextPropertyEditor.prototype = {
 
     // Update the rule property highlight.
     this.ruleView._updatePropertyHighlight(this);
+
+    // Restore focus back to the element whose markup was recreated above.
+    if (focusedElSelector) {
+      const elementToFocus = this.doc.querySelector(focusedElSelector);
+      if (elementToFocus) {
+        elementToFocus.focus();
+      }
+    }
   },
   /* eslint-enable complexity */
 

@@ -11,8 +11,15 @@ const L10N = new MultiLocalizationHelper(
   "devtools/client/locales/en-US/accessibility.properties",
   "devtools/client/locales/en-US/inspector.properties"
 );
+const ARROW_KEYS = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"];
+const [ArrowUp, ArrowRight, ArrowDown, ArrowLeft] = ARROW_KEYS;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const COLOR_HEX_WHITE = "#ffffff";
+const SLIDER = {
+  MIN: "0",
+  MAX: "128",
+  STEP: "1",
+};
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(
@@ -68,7 +75,7 @@ function Spectrum(parentEl, rgb) {
   // eslint-disable-next-line no-unsanitized/property
   this.element.innerHTML = `
     <section class="spectrum-color-picker">
-      <div class="spectrum-color spectrum-box">
+      <div class="spectrum-color spectrum-box" tabindex="0">
         <div class="spectrum-sat">
           <div class="spectrum-val">
             <div class="spectrum-dragger"></div>
@@ -79,17 +86,9 @@ function Spectrum(parentEl, rgb) {
     <section class="spectrum-controls">
       <div class="spectrum-color-preview"></div>
       <div class="spectrum-slider-container">
-        <div class="spectrum-hue spectrum-box">
-          <div class="spectrum-hue-inner">
-            <div class="spectrum-hue-handle spectrum-slider-control"></div>
-          </div>
-        </div>
-        <div class="spectrum-alpha spectrum-checker spectrum-box">
-          <div class="spectrum-alpha-inner">
-            <div class="spectrum-alpha-handle spectrum-slider-control"></div>
-          </div>
-         </div>
-        </div>
+        <div class="spectrum-hue spectrum-box"></div>
+        <div class="spectrum-alpha spectrum-checker spectrum-box"></div>
+      </div>
     </section>
     <section
       class="spectrum-color-contrast accessibility-color-contrast"
@@ -117,7 +116,11 @@ function Spectrum(parentEl, rgb) {
   // Color spectrum dragger.
   this.dragger = this.element.querySelector(".spectrum-color");
   this.dragHelper = this.element.querySelector(".spectrum-dragger");
-  Spectrum.draggable(this.dragger, this.onDraggerMove.bind(this));
+  Spectrum.draggable(
+    this.dragger,
+    this.dragHelper,
+    this.onDraggerMove.bind(this)
+  );
 
   // Here we define the components for the "controls" section of the color picker.
   this.controls = this.element.querySelector(".spectrum-controls");
@@ -130,17 +133,12 @@ function Spectrum(parentEl, rgb) {
   eyedropper.style.pointerEvents = "auto";
   this.controls.insertBefore(eyedropper, this.colorPreview);
 
-  // Hue slider
-  this.hueSlider = this.element.querySelector(".spectrum-hue");
-  this.hueSliderInner = this.element.querySelector(".spectrum-hue-inner");
-  this.hueSliderHelper = this.element.querySelector(".spectrum-hue-handle");
-  Spectrum.draggable(this.hueSliderInner, this.onHueSliderMove.bind(this));
-
-  // Alpha slider
-  this.alphaSlider = this.element.querySelector(".spectrum-alpha");
-  this.alphaSliderInner = this.element.querySelector(".spectrum-alpha-inner");
-  this.alphaSliderHelper = this.element.querySelector(".spectrum-alpha-handle");
-  Spectrum.draggable(this.alphaSliderInner, this.onAlphaSliderMove.bind(this));
+  // Hue slider and alpha slider
+  this.hueSlider = this.createSlider("hue", this.onHueSliderMove.bind(this));
+  this.alphaSlider = this.createSlider(
+    "alpha",
+    this.onAlphaSliderMove.bind(this)
+  );
 
   // Color contrast
   this.spectrumContrast = this.element.querySelector(
@@ -243,16 +241,20 @@ Spectrum.rgbToHsv = function(r, g, b, a) {
   return [h, s, v, a];
 };
 
-Spectrum.draggable = function(element, onmove, onstart, onstop) {
+Spectrum.draggable = function(element, dragHelper, onmove) {
   onmove = onmove || function() {};
-  onstart = onstart || function() {};
-  onstop = onstop || function() {};
 
   const doc = element.ownerDocument;
   let dragging = false;
   let offset = {};
   let maxHeight = 0;
   let maxWidth = 0;
+
+  function setDraggerDimensionsAndOffset() {
+    maxHeight = element.offsetHeight;
+    maxWidth = element.offsetWidth;
+    offset = element.getBoundingClientRect();
+  }
 
   function prevent(e) {
     e.stopPropagation();
@@ -277,25 +279,20 @@ Spectrum.draggable = function(element, onmove, onstart, onstop) {
   }
 
   function start(e) {
-    const rightclick = e.which === 3;
+    const rightClick = e.which === 3;
 
-    if (!rightclick && !dragging) {
-      if (onstart.apply(element, arguments) !== false) {
-        dragging = true;
-        maxHeight = element.offsetHeight;
-        maxWidth = element.offsetWidth;
+    if (!rightClick && !dragging) {
+      dragging = true;
+      setDraggerDimensionsAndOffset();
 
-        offset = element.getBoundingClientRect();
+      move(e);
 
-        move(e);
+      doc.addEventListener("selectstart", prevent);
+      doc.addEventListener("dragstart", prevent);
+      doc.addEventListener("mousemove", move);
+      doc.addEventListener("mouseup", stop);
 
-        doc.addEventListener("selectstart", prevent);
-        doc.addEventListener("dragstart", prevent);
-        doc.addEventListener("mousemove", move);
-        doc.addEventListener("mouseup", stop);
-
-        prevent(e);
-      }
+      prevent(e);
     }
   }
 
@@ -305,12 +302,37 @@ Spectrum.draggable = function(element, onmove, onstart, onstop) {
       doc.removeEventListener("dragstart", prevent);
       doc.removeEventListener("mousemove", move);
       doc.removeEventListener("mouseup", stop);
-      onstop.apply(element, arguments);
     }
     dragging = false;
   }
 
+  function onKeydown(e) {
+    const { key } = e;
+
+    if (!ARROW_KEYS.includes(key)) {
+      return;
+    }
+
+    setDraggerDimensionsAndOffset();
+    const { offsetHeight, offsetTop, offsetLeft } = dragHelper;
+    let dragX = offsetLeft + offsetHeight / 2;
+    let dragY = offsetTop + offsetHeight / 2;
+
+    if (key === ArrowLeft && dragX > 0) {
+      dragX -= 1;
+    } else if (key === ArrowRight && dragX < maxWidth) {
+      dragX += 1;
+    } else if (key === ArrowUp && dragY > 0) {
+      dragY -= 1;
+    } else if (key === ArrowDown && dragY < maxHeight) {
+      dragY += 1;
+    }
+
+    onmove.apply(element, [dragX, dragY]);
+  }
+
   element.addEventListener("mousedown", start);
+  element.addEventListener("keydown", onKeydown);
 };
 
 /**
@@ -396,12 +418,6 @@ Spectrum.prototype = {
     this.dragHeight = this.dragger.offsetHeight;
     this.dragHelperHeight = this.dragHelper.offsetHeight;
 
-    this.alphaSliderWidth = this.alphaSliderInner.offsetWidth;
-    this.alphaSliderHelperWidth = this.alphaSliderHelper.offsetWidth;
-
-    this.hueSliderWidth = this.hueSliderInner.offsetWidth;
-    this.hueSliderHelperWidth = this.hueSliderHelper.offsetWidth;
-
     this.updateUI();
   },
 
@@ -409,8 +425,8 @@ Spectrum.prototype = {
     e.stopPropagation();
   },
 
-  onHueSliderMove: function(dragX, dragY) {
-    this.hsv[0] = dragX / this.hueSliderWidth;
+  onHueSliderMove: function() {
+    this.hsv[0] = this.hueSlider.value / this.hueSlider.max;
     this.updateUI();
     this.onChange();
   },
@@ -422,14 +438,40 @@ Spectrum.prototype = {
     this.onChange();
   },
 
-  onAlphaSliderMove: function(dragX, dragY) {
-    this.hsv[3] = dragX / this.alphaSliderWidth;
+  onAlphaSliderMove: function() {
+    this.hsv[3] = this.alphaSlider.value / this.alphaSlider.max;
     this.updateUI();
     this.onChange();
   },
 
   onChange: function() {
     this.emit("changed", this.rgb, this.rgbCssString);
+  },
+
+  /**
+   * Creates and initializes a slider element, attaches it to its parent container
+   * based on the slider type and returns it
+   *
+   * @param  {String} sliderType
+   *         The type of the slider (i.e. alpha or hue)
+   * @param  {Function} onSliderMove
+   *         The function to tie the slider to on input
+   * @return {DOMNode}
+   *         Newly created slider
+   */
+  createSlider: function(sliderType, onSliderMove) {
+    const container = this.element.querySelector(`.spectrum-${sliderType}`);
+
+    const slider = this.document.createElementNS(XHTML_NS, "input");
+    slider.className = `spectrum-${sliderType}-input`;
+    slider.type = "range";
+    slider.min = SLIDER.MIN;
+    slider.max = SLIDER.MAX;
+    slider.step = SLIDER.STEP;
+    slider.addEventListener("input", onSliderMove);
+
+    container.appendChild(slider);
+    return slider;
   },
 
   updateAlphaSliderBackground: function() {
@@ -439,7 +481,7 @@ Spectrum.prototype = {
     const rgbAlpha0 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ", 0)";
     const alphaGradient =
       "linear-gradient(to right, " + rgbAlpha0 + ", " + rgbNoAlpha + ")";
-    this.alphaSliderInner.style.background = alphaGradient;
+    this.alphaSlider.style.background = alphaGradient;
   },
 
   updateColorPreview: function() {
@@ -488,13 +530,10 @@ Spectrum.prototype = {
     this.dragHelper.style.left = dragX + "px";
 
     // Placing the hue slider
-    const hueSliderX = h * this.hueSliderWidth - this.hueSliderHelperWidth / 2;
-    this.hueSliderHelper.style.left = hueSliderX + "px";
+    this.hueSlider.value = h * this.hueSlider.max;
 
     // Placing the alpha slider
-    const alphaSliderX =
-      this.hsv[3] * this.alphaSliderWidth - this.alphaSliderHelperWidth / 2;
-    this.alphaSliderHelper.style.left = alphaSliderX + "px";
+    this.alphaSlider.value = this.hsv[3] * this.alphaSlider.max;
   },
 
   /* Calculates the contrast ratio for the currently selected
@@ -560,11 +599,14 @@ Spectrum.prototype = {
 
   destroy: function() {
     this.element.removeEventListener("click", this.onElementClick);
+    this.hueSlider.removeEventListener("input", this.onHueSliderMove);
+    this.alphaSlider.removeEventListener("input", this.onAlphaSliderMove);
 
     this.parentEl.removeChild(this.element);
 
-    this.dragger = null;
-    this.alphaSlider = this.alphaSliderInner = this.alphaSliderHelper = null;
+    this.dragger = this.dragHelper = null;
+    this.alphaSlider = null;
+    this.hueSlider = null;
     this.colorPreview = null;
     this.element = null;
     this.parentEl = null;
