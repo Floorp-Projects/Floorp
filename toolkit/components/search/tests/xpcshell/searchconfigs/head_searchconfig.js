@@ -168,7 +168,9 @@ class SearchConfigTest {
       return ["be", "en-US", "kk", "tr", "ru", "zh-CN"];
     }
     const data = await OS.File.read(do_get_file("all-locales").path, {encoding: "utf-8"});
-    return data.split("\n").filter(e => e != "");
+    // "en-US" is not in all-locales as it is the default locale
+    // add it manually to ensure it is tested.
+    return [...data.split("\n").filter(e => e != ""), "en-US"];
   }
 
   /**
