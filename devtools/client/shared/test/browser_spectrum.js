@@ -25,7 +25,7 @@ const REGULAR_TEXT_PROPS = {
   "font-size": { value: "11px" },
   "font-weight": { value: "bold" },
 };
-const ZERO_ALPHA_COLOR = [240, 32, 124, 0];
+const ZERO_ALPHA_COLOR = [0, 255, 255, 0];
 
 add_task(async function() {
   const [host, , doc] = await createHost("bottom", TEST_URI);
@@ -243,6 +243,32 @@ function setSpectrumProps(spectrum, props, updateUI = true) {
   }
 }
 
+function testAriaAttributesOnSpectrumElements(
+  spectrum,
+  colorName,
+  rgbString,
+  alpha
+) {
+  for (const slider of [spectrum.dragger, spectrum.hueSlider]) {
+    is(
+      slider.getAttribute("aria-describedby"),
+      "spectrum-dragger",
+      "Slider contains the correct describedby text."
+    );
+    is(
+      slider.getAttribute("aria-valuetext"),
+      rgbString,
+      "Slider contains the correct valuetext text."
+    );
+  }
+
+  is(
+    spectrum.colorPreview.title,
+    colorName,
+    "Spectrum element contains the correct title text."
+  );
+}
+
 function testSettingColorShoudUpdateTheUI(container) {
   const s = new Spectrum(container, cssColors.white);
   s.show();
@@ -265,6 +291,12 @@ function testSettingColorShoudUpdateTheUI(container) {
     "Drag helper has moved"
   );
   ok(s.hueSlider.value !== hueSliderOriginalVal, "Hue helper has moved");
+  testAriaAttributesOnSpectrumElements(
+    s,
+    "Closest to: aqua",
+    "rgba(50, 240, 234, 0.2)",
+    0.2
+  );
 
   hueSliderOriginalVal = s.hueSlider.value;
 
@@ -274,6 +306,7 @@ function testSettingColorShoudUpdateTheUI(container) {
     hueSliderOriginalVal !== s.hueSlider.value,
     "Hue slider should have move again"
   );
+  testAriaAttributesOnSpectrumElements(s, "aqua", "rgba(0, 255, 255, 0)", 0);
 
   s.destroy();
 }
