@@ -6,6 +6,7 @@ import sys
 import hashlib
 import re
 import os
+import functools
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import DefinesAction
 from mozpack.packager.unpack import UnpackFinder
@@ -43,17 +44,22 @@ def normalize_path(p):
 
 
 def find_dupes(source, allowed_dupes, bail=True):
+    md5_chunk_size = 1024*10
     allowed_dupes = set(allowed_dupes)
     md5s = OrderedDict()
     for p, f in UnpackFinder(source):
-        content = f.open().read()
-        m = hashlib.md5(content).digest()
+        md5 = hashlib.md5()
+        content_size = 0
+        for buf in iter(functools.partial(f.open().read, md5_chunk_size), b''):
+            md5.update(buf)
+            content_size += len(buf)
+        m = md5.digest()
         if m not in md5s:
             if isinstance(f, DeflatedFile):
                 compressed = f.file.compressed_size
             else:
-                compressed = len(content)
-            md5s[m] = (len(content), compressed, [])
+                compressed = content_size
+            md5s[m] = (content_size, compressed, [])
         md5s[m][2].append(p)
     total = 0
     total_compressed = 0
