@@ -134,6 +134,11 @@ class SwatchBasedEditorTooltip {
   }
 
   hide() {
+    if (this.swatchActivatedWithKeyboard) {
+      this.activeSwatch.focus();
+      this.swatchActivatedWithKeyboard = null;
+    }
+
     this.tooltip.hide();
   }
 
@@ -186,14 +191,22 @@ class SwatchBasedEditorTooltip {
   }
 
   _onSwatchClick(event) {
-    const swatch = this.swatches.get(event.target);
+    const { shiftKey, clientX, clientY, target } = event;
 
-    if (event.shiftKey) {
+    // If mouse coordinates are 0, the event listener could have been triggered
+    // by a keybaord
+    this.swatchActivatedWithKeyboard =
+      event.key && clientX === 0 && clientY === 0;
+
+    if (shiftKey) {
       event.stopPropagation();
       return;
     }
+
+    const swatch = this.swatches.get(target);
+
     if (swatch) {
-      this.activeSwatch = event.target;
+      this.activeSwatch = target;
       this.show();
       swatch.callbacks.onShow();
       event.stopPropagation();
