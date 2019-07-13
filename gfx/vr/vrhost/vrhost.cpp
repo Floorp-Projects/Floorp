@@ -50,7 +50,7 @@ void TestTheManager() {
   );
 
   printf("\n01 mgr: create mgr\n");
-  mozilla::gfx::VRShMem shmem(nullptr, true, true);
+  mozilla::gfx::VRShMem shmem(nullptr, false, false);
   shmem.CreateShMem();
 
   printf("02 mgr: wait for signal\n");
@@ -88,9 +88,6 @@ void TestTheManager() {
       state.controllerState[1].hand, state.sensorState.inputFrameID);
 
   shmem.CloseShMem();
-
-  printf("mgr complete");
-  fflush(nullptr);
 }
 
 // For testing VRShMem as the Service (i.e., the one who consumes the
@@ -103,7 +100,7 @@ void TestTheService() {
   );
 
   printf("\n03 svc: create svc\n");
-  mozilla::gfx::VRShMem shmem(nullptr, true, false);
+  mozilla::gfx::VRShMem shmem(nullptr, false, false);
   shmem.JoinShMem();
 
   printf("04 svc: send signal\n");
@@ -139,7 +136,4 @@ void TestTheService() {
   ::SetEvent(hEvent);
 
   shmem.LeaveShMem();
-
-  printf("svc complete");
-  fflush(nullptr);
 }
