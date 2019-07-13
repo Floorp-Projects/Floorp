@@ -25,14 +25,10 @@ class TelemetryTestRunner(BaseMarionetteTestRunner):
         # Set Firefox Client Telemetry specific preferences
         prefs.update(
             {
-                # Force search region to DE and disable geo lookups.
-                "browser.search.region": "DE",
-                "browser.search.geoSpecificDefaults": False,
-                # Turn off timeouts for loading search extensions
-                "browser.search.addonLoadTimeout": 0,
-                "browser.search.log": True,
-                # geoip is skipped if url is empty (bug 1545207)
-                "browser.search.geoip.url": "",
+                # Fake the geoip lookup to always return Germany to:
+                #   * avoid net access in tests
+                #   * stabilize browser.search.region to avoid an extra subsession (bug 1545207)
+                "browser.search.geoip.url": "data:application/json,{\"country_code\": \"DE\"}",
                 # Disable smart sizing because it changes prefs at startup. (bug 1547750)
                 "browser.cache.disk.smart_size.enabled": False,
                 "toolkit.telemetry.server": "{}/pings".format(SERVER_URL),
