@@ -27,7 +27,6 @@
 #include "builtin/Object.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"
-#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
@@ -58,6 +57,7 @@
 #include "vm/Xdr.h"
 #include "wasm/AsmJS.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
@@ -2323,7 +2323,7 @@ JSFunction* js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun,
   if (!clonedScript) {
     return nullptr;
   }
-  Debugger::onNewScript(cx, clonedScript);
+  DebugAPI::onNewScript(cx, clonedScript);
 
   return clone;
 }

@@ -32,7 +32,7 @@
 #include "wasm/WasmJS.h"
 #include "wasm/WasmSerialize.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSAtom-inl.h"
 

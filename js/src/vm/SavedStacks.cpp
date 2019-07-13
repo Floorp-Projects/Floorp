@@ -37,6 +37,7 @@
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -1868,7 +1869,7 @@ JSObject* SavedStacks::MetadataBuilder::build(
     oomUnsafe.crash("SavedStacksMetadataBuilder");
   }
 
-  if (!Debugger::onLogAllocationSite(cx, obj, frame,
+  if (!DebugAPI::onLogAllocationSite(cx, obj, frame,
                                      mozilla::TimeStamp::Now())) {
     oomUnsafe.crash("SavedStacksMetadataBuilder");
   }
