@@ -35,7 +35,7 @@ add_task(async function() {
   await testCreateAndDestroyShouldAppendAndRemoveElements(container);
   await testPassingAColorAtInitShouldSetThatColor(container);
   await testSettingAndGettingANewColor(container);
-  await testChangingColorShouldEmitEvents(container);
+  await testChangingColorShouldEmitEvents(container, doc);
   await testSettingColorShoudUpdateTheUI(container);
   await testChangingColorShouldUpdateColorPreview(container);
   await testNotSettingTextPropsShouldNotShowContrastSection(container);
@@ -144,26 +144,88 @@ function testSettingAndGettingANewColor(container) {
   s.destroy();
 }
 
-function testChangingColorShouldEmitEvents(container) {
-  return new Promise(resolve => {
-    const s = new Spectrum(container, cssColors.white);
-    s.show();
-
-    s.once("changed", (rgba, color) => {
-      ok(true, "Changed event was emitted on color change");
-      is(rgba[0], 128, "New color is correct");
-      is(rgba[1], 64, "New color is correct");
-      is(rgba[2], 64, "New color is correct");
-      is(rgba[3], 1, "New color is correct");
-      is(`rgba(${rgba.join(", ")})`, color, "RGBA and css color correspond");
-
-      s.destroy();
-      resolve();
-    });
-
-    // Simulate a drag move event by calling the handler directly.
-    s.onDraggerMove(s.dragger.offsetWidth / 2, s.dragger.offsetHeight / 2);
+async function testChangingColorShouldEmitEventsHelper(
+  spectrum,
+  moveFn,
+  expectedColor
+) {
+  const onChanged = spectrum.once("changed", (rgba, color) => {
+    is(rgba[0], expectedColor[0], "New color is correct");
+    is(rgba[1], expectedColor[1], "New color is correct");
+    is(rgba[2], expectedColor[2], "New color is correct");
+    is(rgba[3], expectedColor[3], "New color is correct");
+    is(`rgba(${rgba.join(", ")})`, color, "RGBA and css color correspond");
   });
+
+  moveFn();
+  await onChanged;
+  ok(true, "Changed event was emitted on color change");
+}
+
+function testChangingColorShouldEmitEvents(container, doc) {
+  const s = new Spectrum(container, cssColors.white);
+  s.show();
+
+  const sendUpKey = () => EventUtils.sendKey("Up");
+  const sendDownKey = () => EventUtils.sendKey("Down");
+  const sendLeftKey = () => EventUtils.sendKey("Left");
+  const sendRightKey = () => EventUtils.sendKey("Right");
+
+  info(
+    "Test that simulating a mouse drag move event emits color changed event"
+  );
+  const draggerMoveFn = () =>
+    s.onDraggerMove(s.dragger.offsetWidth / 2, s.dragger.offsetHeight / 2);
+  testChangingColorShouldEmitEventsHelper(s, draggerMoveFn, [128, 64, 64, 1]);
+
+  info(
+    "Test that moving the dragger with arrow keys emits color changed event."
+  );
+  // Focus on the spectrum dragger when spectrum is shown
+  s.dragger.focus();
+  is(
+    doc.activeElement.className,
+    "spectrum-color spectrum-box",
+    "Spectrum dragger has successfully received focus."
+  );
+  testChangingColorShouldEmitEventsHelper(s, sendDownKey, [125, 62, 62, 1]);
+  testChangingColorShouldEmitEventsHelper(s, sendLeftKey, [125, 63, 63, 1]);
+  testChangingColorShouldEmitEventsHelper(s, sendUpKey, [128, 64, 64, 1]);
+  testChangingColorShouldEmitEventsHelper(s, sendRightKey, [128, 63, 63, 1]);
+
+  info(
+    "Test that moving the hue slider with arrow keys emits color changed event."
+  );
+  // Tab twice to focus on hue slider
+  EventUtils.sendKey("Tab");
+  is(
+    doc.activeElement.className,
+    "devtools-button",
+    "Eyedropper has focus now."
+  );
+  EventUtils.sendKey("Tab");
+  is(
+    doc.activeElement.className,
+    "spectrum-hue-input",
+    "Hue slider has successfully received focus."
+  );
+  testChangingColorShouldEmitEventsHelper(s, sendRightKey, [128, 66, 63, 1]);
+  testChangingColorShouldEmitEventsHelper(s, sendLeftKey, [128, 63, 63, 1]);
+
+  info(
+    "Test that moving the hue slider with arrow keys emits color changed event."
+  );
+  // Tab to focus on alpha slider
+  EventUtils.sendKey("Tab");
+  is(
+    doc.activeElement.className,
+    "spectrum-alpha-input",
+    "Alpha slider has successfully received focus."
+  );
+  testChangingColorShouldEmitEventsHelper(s, sendLeftKey, [128, 63, 63, 0.99]);
+  testChangingColorShouldEmitEventsHelper(s, sendRightKey, [128, 63, 63, 1]);
+
+  s.destroy();
 }
 
 function setSpectrumProps(spectrum, props, updateUI = true) {
@@ -188,15 +250,12 @@ function testSettingColorShoudUpdateTheUI(container) {
     s.dragHelper.style.top,
     s.dragHelper.style.left,
   ];
-  const alphaHelperOriginalPos = s.alphaSliderHelper.style.left;
-  let hueHelperOriginalPos = s.hueSliderHelper.style.left;
+  const alphaSliderOriginalVal = s.alphaSlider.value;
+  let hueSliderOriginalVal = s.hueSlider.value;
 
   setSpectrumProps(s, { rgb: [50, 240, 234, 0.2] });
 
-  ok(
-    s.alphaSliderHelper.style.left != alphaHelperOriginalPos,
-    "Alpha helper has moved"
-  );
+  ok(s.alphaSlider.value != alphaSliderOriginalVal, "Alpha helper has moved");
   ok(
     s.dragHelper.style.top !== dragHelperOriginalPos[0],
     "Drag helper has moved"
@@ -205,22 +264,15 @@ function testSettingColorShoudUpdateTheUI(container) {
     s.dragHelper.style.left !== dragHelperOriginalPos[1],
     "Drag helper has moved"
   );
-  ok(
-    s.hueSliderHelper.style.left !== hueHelperOriginalPos,
-    "Hue helper has moved"
-  );
+  ok(s.hueSlider.value !== hueSliderOriginalVal, "Hue helper has moved");
 
-  hueHelperOriginalPos = s.hueSliderHelper.style.left;
+  hueSliderOriginalVal = s.hueSlider.value;
 
   setSpectrumProps(s, { rgb: ZERO_ALPHA_COLOR });
-  is(
-    s.alphaSliderHelper.style.left,
-    -(s.alphaSliderHelper.offsetWidth / 2) + "px",
-    "Alpha range UI has been updated again"
-  );
+  is(s.alphaSlider.value, 0, "Alpha range UI has been updated again");
   ok(
-    hueHelperOriginalPos !== s.hueSliderHelper.style.left,
-    "Hue Helper slider should have move again"
+    hueSliderOriginalVal !== s.hueSlider.value,
+    "Hue slider should have move again"
   );
 
   s.destroy();
