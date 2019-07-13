@@ -12,8 +12,7 @@ const test = new SearchConfigTest({
         regions: ["ru", "tr", "by", "kz"],
         locales: {
           matches: ["ru", "tr", "be", "kk"],
-          // We don't currently enforce this.
-          // startsWith: ["en"],
+          startsWith: ["en"],
         },
       },
     ],
@@ -23,6 +22,12 @@ const test = new SearchConfigTest({
       {
         locales: {
           matches: ["az", "ru", "be", "kk", "tr"],
+        },
+      },
+      {
+        regions: ["ru", "tr", "by", "kz"],
+        locales: {
+          startsWith: ["en"],
         },
       },
     ],
