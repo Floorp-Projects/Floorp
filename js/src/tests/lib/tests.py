@@ -18,7 +18,7 @@ JITFLAGS = {
          '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
         ['--baseline-eager'],
         ['--no-blinterp', '--no-baseline', '--no-ion', '--more-compartments'],
-        ['--blinterp', '--blinterp-eager'],
+        ['--blinterp-eager'],
     ],
     # Like 'all' above but for jstests. This has fewer jit-specific
     # configurations.
