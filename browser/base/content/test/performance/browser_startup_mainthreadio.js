@@ -587,7 +587,7 @@ const startupPhases = {
       // bug 1543090
       path: "XCurProcD:omni.ja",
       condition: WIN,
-      stat: 8, // search engine loading can cause extra stats on win
+      stat: 2,
     },
   ],
 
@@ -691,7 +691,6 @@ const startupPhases = {
     {
       // bug 1543090
       path: "XCurProcD:omni.ja",
-      ignoreIfUnused: true,
       condition: WIN,
       stat: 7,
     },

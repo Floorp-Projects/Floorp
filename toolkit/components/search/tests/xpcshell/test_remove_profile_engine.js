@@ -35,8 +35,7 @@ add_task(async function run_test() {
 
   await promiseSaveCacheData(data);
 
-  Services.search.reset();
-  await Services.search.init();
+  await asyncReInit();
 
   // test the engine is loaded ok.
   let engine = Services.search.getEngineByName("bug645970");
