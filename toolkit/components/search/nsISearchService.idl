@@ -221,6 +221,8 @@ interface nsISearchService : nsISupports
    */
   void reInit([optional] in boolean skipRegionCheck);
   void reset();
+  Promise ensureBuiltinExtension(in AString id,
+                                [optional] in jsval locales);
 
   /**
    * Determine whether initialization has been completed.

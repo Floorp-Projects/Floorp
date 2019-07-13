@@ -6,14 +6,12 @@ const { PlacesSearchAutocompleteProvider } = ChromeUtils.import(
   "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm"
 );
 
-add_task(async function setup() {
+add_task(async function() {
+  await Services.search.init();
   // Tell the search service we are running in the US.  This also has the
   // desired side-effect of preventing our geoip lookup.
   Services.prefs.setCharPref("browser.search.region", "US");
   Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
-  Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
-
-  await Services.search.init();
 
   Services.search.restoreDefaultEngines();
   Services.search.resetToOriginalDefaultEngine();
@@ -40,9 +38,9 @@ add_task(async function hide_search_engine_nomatch() {
   let engine = await Services.search.getDefault();
   let domain = engine.getResultDomain();
   let token = domain.substr(0, 1);
-  let promiseTopic = promiseSearchTopic("engine-removed");
+  let promiseTopic = promiseSearchTopic("engine-changed");
   await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
-  Assert.ok(engine.hidden, "engine was hidden rather than removed");
+  Assert.ok(engine.hidden);
   let matchedEngine = await PlacesSearchAutocompleteProvider.engineForDomainPrefix(
     token
   );
@@ -165,11 +163,7 @@ add_task(async function test_parseSubmissionURL_basic() {
   let result = PlacesSearchAutocompleteProvider.parseSubmissionURL(
     submissionURL
   );
-  Assert.equal(
-    result.engineName,
-    engine.name,
-    "parsed submissionURL has matching engine name"
-  );
+  Assert.equal(result.engineName, engine.name);
   Assert.equal(result.terms, "terms");
 
   result = PlacesSearchAutocompleteProvider.parseSubmissionURL(
@@ -180,8 +174,8 @@ add_task(async function test_parseSubmissionURL_basic() {
 
 add_task(async function test_builtin_aliased_search_engine_match() {
   let engine = await PlacesSearchAutocompleteProvider.engineForAlias("@google");
-  Assert.ok(engine, "matched an engine with an alias");
-  Assert.equal(engine.name, "Google", "correct engine for alias");
+  Assert.ok(engine);
+  Assert.equal(engine.name, "Google");
   let promiseTopic = promiseSearchTopic("engine-changed");
   await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
   let matchedEngine = await PlacesSearchAutocompleteProvider.engineForAlias(
@@ -193,7 +187,7 @@ add_task(async function test_builtin_aliased_search_engine_match() {
     PlacesSearchAutocompleteProvider.engineForAlias("@google")
   );
   engine = await PlacesSearchAutocompleteProvider.engineForAlias("@google");
-  Assert.ok(engine, "matched an engine with an alias");
+  Assert.ok(engine);
 });
 
 function promiseSearchTopic(expectedVerb) {
