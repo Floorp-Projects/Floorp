@@ -88,7 +88,7 @@ def add_entitlements_link(config, jobs):
         )
         if entitlements_path:
             job['entitlements-url'] = config.params.file_url(
-                entitlements_path, endpoint="raw-file"
+                entitlements_path,
             )
         yield job
 

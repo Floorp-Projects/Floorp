@@ -59,7 +59,7 @@ add_task(async function testShieldHistogram() {
 
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
-  document.querySelector("#tracking-action-unblock").doCommand();
+  gProtectionsHandler.disableForCurrentPage();
   await tabReloadPromise;
   is(getShieldCounts()[0], 3, "Adds one more page load");
   is(
@@ -70,7 +70,7 @@ add_task(async function testShieldHistogram() {
 
   info("Re-enable TP for the page (which reloads the page)");
   tabReloadPromise = promiseTabLoadEvent(tab);
-  document.querySelector("#tracking-action-block").doCommand();
+  gProtectionsHandler.enableForCurrentPage();
   await tabReloadPromise;
   is(getShieldCounts()[0], 4, "Adds one more page load");
   is(
@@ -83,79 +83,4 @@ add_task(async function testShieldHistogram() {
 
   // Reset these to make counting easier for the next test
   getShieldHistogram().clear();
-});
-
-add_task(async function testIdentityPopupEvents() {
-  Services.prefs.setBoolPref(PREF, true);
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-
-  await promiseTabLoadEvent(tab, BENIGN_PAGE);
-
-  Services.telemetry.clearEvents();
-
-  await openIdentityPopup();
-
-  let events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  ).parent;
-  let openEvents = events.filter(
-    e =>
-      e[1] == "security.ui.identitypopup" &&
-      e[2] == "open" &&
-      e[3] == "identity_popup"
-  );
-  is(openEvents.length, 1, "recorded telemetry for opening the identity popup");
-  is(openEvents[0][4], "shield-hidden", "recorded the shield as hidden");
-
-  await promiseTabLoadEvent(tab, TRACKING_PAGE);
-
-  await openIdentityPopup();
-
-  events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  ).parent;
-  openEvents = events.filter(
-    e =>
-      e[1] == "security.ui.identitypopup" &&
-      e[2] == "open" &&
-      e[3] == "identity_popup"
-  );
-  is(openEvents.length, 1, "recorded telemetry for opening the identity popup");
-  is(openEvents[0][4], "shield-showing", "recorded the shield as showing");
-
-  info("Disable TP for the page (which reloads the page)");
-  let tabReloadPromise = promiseTabLoadEvent(tab);
-  document.querySelector("#tracking-action-unblock").doCommand();
-  await tabReloadPromise;
-
-  events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  ).parent;
-  let clickEvents = events.filter(
-    e =>
-      e[1] == "security.ui.identitypopup" &&
-      e[2] == "click" &&
-      e[3] == "unblock"
-  );
-  is(clickEvents.length, 1, "recorded telemetry for the click");
-
-  info("Re-enable TP for the page (which reloads the page)");
-  tabReloadPromise = promiseTabLoadEvent(tab);
-  document.querySelector("#tracking-action-block").doCommand();
-  await tabReloadPromise;
-
-  events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  ).parent;
-  clickEvents = events.filter(
-    e =>
-      e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "block"
-  );
-  is(clickEvents.length, 1, "recorded telemetry for the click");
-
-  gBrowser.removeCurrentTab();
 });

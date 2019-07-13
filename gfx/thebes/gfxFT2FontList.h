@@ -84,8 +84,19 @@ class FT2FontEntry : public gfxFontEntry {
   // Check for various kinds of brokenness, and set flags on the entry
   // accordingly so that we avoid using bad font tables
   void CheckForBrokenFont(gfxFontFamily* aFamily);
+  void CheckForBrokenFont(const nsACString& aFamilyKey);
 
   FT_MM_Var* GetMMVar() override;
+
+  /**
+   * Append this face's metadata to aFaceList for storage in the FontNameCache
+   * (for faster startup).
+   * The aPSName and aFullName parameters here can in principle be empty,
+   * but if they are missing for a given face then src:local() lookups will
+   * not be able to find it when the shared font list is in use.
+   */
+  void AppendToFaceList(nsCString& aFaceList, const nsACString& aFamilyName,
+                        const nsACString& aPSName, const nsACString& aFullName);
 
   void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontListSizes* aSizes) const override;
@@ -119,6 +130,10 @@ class gfxFT2FontList : public gfxPlatformFontList {
  public:
   gfxFT2FontList();
   virtual ~gfxFT2FontList();
+
+  gfxFontEntry* CreateFontEntry(
+      mozilla::fontlist::Face* aFace,
+      const mozilla::fontlist::Family* aFamily) override;
 
   gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
                                 WeightRange aWeightForEntry,
@@ -161,10 +176,31 @@ class gfxFT2FontList : public gfxPlatformFontList {
                                    const nsCString& aEntryName,
                                    FontNameCache* aCache, bool aJarChanged);
 
-  // the defaults here are suitable for reading bundled fonts from omnijar
-  void AppendFacesFromCachedFaceList(const nsCString& aFileName,
+  void InitSharedFontListForPlatform() override;
+  void CollectInitData(const FontListEntry& aFLE, const nsCString& aPSName,
+                       const nsCString& aFullName, StandardFile aStdFile);
+
+  /**
+   * Callback passed to AppendFacesFromCachedFaceList to collect family/face
+   * information in either the unshared or shared list we're building.
+   */
+  typedef void (*CollectFunc)(const FontListEntry& aFLE,
+                              const nsCString& aPSName,
+                              const nsCString& aFullName,
+                              StandardFile aStdFile);
+
+  /**
+   * Append faces from the face-list record for a specific file.
+   * aCollectFace is a callback that will store the face(s) in either the
+   * unshared mFontFamilies list or the mFamilyInitData/mFaceInitData tables
+   * that will be used to initialize the shared list.
+   * Returns true if it is able to read at least one face entry; false if no
+   * usable face entry was found.
+   */
+  bool AppendFacesFromCachedFaceList(CollectFunc aCollectFace,
+                                     const nsCString& aFileName,
                                      const nsCString& aFaceList,
-                                     StandardFile aStdFile = kStandard);
+                                     StandardFile aStdFile);
 
   void AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
                      StandardFile aStdFile, FT_Face aFace,
@@ -184,6 +220,11 @@ class gfxFT2FontList : public gfxPlatformFontList {
   mozilla::UniquePtr<FontNameCache> mFontNameCache;
   int64_t mJarModifiedTime;
   RefPtr<WillShutdownObserver> mObserver;
+
+  nsTArray<mozilla::fontlist::Family::InitData> mFamilyInitData;
+  nsClassHashtable<nsCStringHashKey,
+                   nsTArray<mozilla::fontlist::Face::InitData>>
+      mFaceInitData;
 };
 
 #endif /* GFX_FT2FONTLIST_H */

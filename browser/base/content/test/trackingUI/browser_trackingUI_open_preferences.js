@@ -8,9 +8,11 @@ const TPC_PREF = "network.cookie.cookieBehavior";
 const TRACKING_PAGE =
   "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
-async function waitAndAssertPreferencesShown(_spotlight) {
+async function waitAndAssertPreferencesShown(_spotlight, identityPopup) {
   await BrowserTestUtils.waitForEvent(
-    gIdentityHandler._identityPopup,
+    identityPopup
+      ? gIdentityHandler._identityPopup
+      : gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   await TestUtils.waitForCondition(
@@ -49,16 +51,11 @@ add_task(async function setup() {
   });
 });
 
-// Tests that pressing the content blocking preferences icon in the identity popup
+// Tests that pressing the content blocking preferences icon in the protections popup
 // links to about:preferences
 add_task(async function testOpenPreferencesFromCBPrefsButton() {
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
-    let promisePanelOpen = BrowserTestUtils.waitForEvent(
-      gIdentityHandler._identityPopup,
-      "popupshown"
-    );
-    gIdentityHandler._identityBox.click();
-    await promisePanelOpen;
+    await openProtectionsPopup();
 
     let preferencesButton = document.getElementById(
       "tracking-protection-preferences-button"
@@ -69,23 +66,9 @@ add_task(async function testOpenPreferencesFromCBPrefsButton() {
       "The preferences button is shown."
     );
 
-    Services.telemetry.clearEvents();
-
     let shown = waitAndAssertPreferencesShown("trackingprotection");
     preferencesButton.click();
     await shown;
-
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).parent;
-    let clickEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "cb_prefs_button"
-    );
-    is(clickEvents.length, 1, "recorded telemetry for the click");
   });
 });
 
@@ -93,12 +76,7 @@ add_task(async function testOpenPreferencesFromCBPrefsButton() {
 // links to about:preferences
 add_task(async function testOpenPreferencesFromPermissionsPrefsButton() {
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
-    let promisePanelOpen = BrowserTestUtils.waitForEvent(
-      gIdentityHandler._identityPopup,
-      "popupshown"
-    );
-    gIdentityHandler._identityBox.click();
-    await promisePanelOpen;
+    await openIdentityPopup();
 
     let preferencesButton = document.getElementById(
       "identity-popup-permission-preferences-button"
@@ -111,7 +89,7 @@ add_task(async function testOpenPreferencesFromPermissionsPrefsButton() {
 
     Services.telemetry.clearEvents();
 
-    let shown = waitAndAssertPreferencesShown("permissions");
+    let shown = waitAndAssertPreferencesShown("permissions", true);
     preferencesButton.click();
     await shown;
 
@@ -135,12 +113,7 @@ add_task(async function testOpenPreferencesFromTrackersSubview() {
   Services.prefs.setBoolPref(TP_PREF, true);
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
-    let promisePanelOpen = BrowserTestUtils.waitForEvent(
-      gIdentityHandler._identityPopup,
-      "popupshown"
-    );
-    gIdentityHandler._identityBox.click();
-    await promisePanelOpen;
+    await openProtectionsPopup();
 
     let categoryItem = document.getElementById(
       "identity-popup-content-blocking-category-tracking-protection"
@@ -165,23 +138,9 @@ add_task(async function testOpenPreferencesFromTrackersSubview() {
       "The preferences button is shown."
     );
 
-    Services.telemetry.clearEvents();
-
     let shown = waitAndAssertPreferencesShown("trackingprotection");
     preferencesButton.click();
     await shown;
-
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).parent;
-    let clickEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "trackers_prefs_btn"
-    );
-    is(clickEvents.length, 1, "recorded telemetry for the click");
   });
 
   Services.prefs.clearUserPref(TP_PREF);
@@ -196,12 +155,7 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
   );
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
-    let promisePanelOpen = BrowserTestUtils.waitForEvent(
-      gIdentityHandler._identityPopup,
-      "popupshown"
-    );
-    gIdentityHandler._identityBox.click();
-    await promisePanelOpen;
+    await openProtectionsPopup();
 
     let categoryItem = document.getElementById(
       "identity-popup-content-blocking-category-cookies"
@@ -226,23 +180,9 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
       "The preferences button is shown."
     );
 
-    Services.telemetry.clearEvents();
-
     let shown = waitAndAssertPreferencesShown("trackingprotection");
     preferencesButton.click();
     await shown;
-
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).parent;
-    let clickEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "cookies_prefs_btn"
-    );
-    is(clickEvents.length, 1, "recorded telemetry for the click");
   });
 
   Services.prefs.clearUserPref(TPC_PREF);

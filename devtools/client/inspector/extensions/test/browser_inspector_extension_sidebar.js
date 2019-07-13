@@ -291,6 +291,10 @@ add_task(async function testSidebarSetExtensionPage() {
 
   info("Testing sidebar.setExtensionPage");
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.allow_unsafe_parent_loads", true]],
+  });
+
   const expectedURL =
     "data:text/html,<!DOCTYPE html><html><body><h1>Extension Page";
 
@@ -299,6 +303,7 @@ add_task(async function testSidebarSetExtensionPage() {
   await testSetExtensionPageSidebarPanel(sidebarPanelContent, expectedURL);
 
   inspectedWindowFront.destroy();
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function teardownExtensionSidebar() {

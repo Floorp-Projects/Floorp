@@ -1474,9 +1474,9 @@ bool nsLineLayout::TryToPlaceFloat(nsIFrame* aFloat) {
 bool nsLineLayout::NotifyOptionalBreakPosition(nsIFrame* aFrame,
                                                int32_t aOffset, bool aFits,
                                                gfxBreakPriority aPriority) {
-  MOZ_ASSERT(!aFits || !mNeedBackup,
-             "Shouldn't be updating the break position with a break that fits "
-             "after we've already flagged an overrun");
+  NS_ASSERTION(!aFits || !mNeedBackup,
+               "Shouldn't be updating the break position with a break that fits"
+               " after we've already flagged an overrun");
   MOZ_ASSERT(mCurrentSpan, "Should be doing line layout");
   if (mCurrentSpan->mNoWrap) {
     FlushNoWrapFloats();

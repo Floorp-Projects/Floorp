@@ -11,12 +11,17 @@ const { CSS_PROPERTIES_DB } = require("devtools/shared/css/properties-db");
 
 add_task(async function() {
   await pushPref("layout.css.backdrop-filter.enabled", true);
+  await pushPref("layout.css.individual-transform.enabled", true);
   await addTab("about:blank");
   await performTest();
   gBrowser.removeCurrentTab();
 });
 
 async function performTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.allow_unsafe_parent_loads", true]],
+  });
+
   const OutputParser = require("devtools/client/shared/output-parser");
 
   const [host, , doc] = await createHost(
