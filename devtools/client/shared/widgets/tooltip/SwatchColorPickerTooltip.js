@@ -11,6 +11,10 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
+const { openDocLink } = require("devtools/client/shared/link");
+const {
+  A11Y_CONTRAST_LEARN_MORE_LINK,
+} = require("devtools/client/accessibility/constants");
 
 const TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT =
   "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT";
@@ -44,6 +48,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     this.spectrum = this.setColorPickerContent([0, 0, 0, 1]);
     this._onSpectrumColorChange = this._onSpectrumColorChange.bind(this);
     this._openEyeDropper = this._openEyeDropper.bind(this);
+    this._openDocLink = this._openDocLink.bind(this);
     this.cssColor4 = supportsCssColor4ColorFunction();
   }
 
@@ -133,6 +138,13 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       eyeButton.title = L10N.getStr("eyedropper.disabled.title");
     }
 
+    const learnMoreButton = this.tooltip.container.querySelector(
+      "#learn-more-button"
+    );
+    if (learnMoreButton) {
+      learnMoreButton.addEventListener("click", this._openDocLink);
+    }
+
     // After spectrum properties are set, update the tooltip content size.
     // If contrast is enabled, the tooltip will have additional contrast content
     // and tooltip size needs to be updated to account for it.
@@ -204,6 +216,11 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     inspector.once("color-pick-canceled", () => {
       this._onEyeDropperDone();
     });
+  }
+
+  _openDocLink() {
+    openDocLink(A11Y_CONTRAST_LEARN_MORE_LINK);
+    this.hide();
   }
 
   _onEyeDropperDone() {
