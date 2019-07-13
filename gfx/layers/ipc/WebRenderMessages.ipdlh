@@ -107,6 +107,7 @@ struct OpAddImage {
 struct OpAddBlobImage {
   ImageDescriptor descriptor;
   OffsetRange bytes;
+  ImageIntRect visibleRect;
   uint16_t tiling;
   BlobImageKey key;
 };
@@ -121,10 +122,11 @@ struct OpUpdateBlobImage {
   ImageDescriptor descriptor;
   OffsetRange bytes;
   BlobImageKey key;
+  ImageIntRect visibleRect;
   ImageIntRect dirtyRect;
 };
 
-struct OpSetImageVisibleArea {
+struct OpSetBlobImageVisibleArea {
   ImageIntRect area;
   BlobImageKey key;
 };
@@ -177,7 +179,7 @@ union OpUpdateResource {
   OpAddBlobImage;
   OpUpdateImage;
   OpUpdateBlobImage;
-  OpSetImageVisibleArea;
+  OpSetBlobImageVisibleArea;
   OpDeleteImage;
   OpDeleteBlobImage;
   OpAddRawFont;
