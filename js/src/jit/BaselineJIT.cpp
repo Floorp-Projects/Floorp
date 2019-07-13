@@ -10,7 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
 #include "jit/BaselineCodeGen.h"
 #include "jit/BaselineIC.h"
@@ -259,7 +259,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   // code. This is incorrect as h's baseline script does not have debug
   // instrumentation.
   if (osrSourceFrame && osrSourceFrame.isDebuggee() &&
-      !Debugger::ensureExecutionObservabilityOfOsrFrame(cx, osrSourceFrame)) {
+      !DebugAPI::ensureExecutionObservabilityOfOsrFrame(cx, osrSourceFrame)) {
     return Method_Error;
   }
 

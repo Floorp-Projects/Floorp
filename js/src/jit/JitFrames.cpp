@@ -37,7 +37,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "gc/Nursery-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/JSScript-inl.h"
@@ -481,7 +481,7 @@ static void HandleExceptionBaseline(JSContext* cx, const JSJitFrameIter& frame,
 again:
   if (cx->isExceptionPending()) {
     if (!cx->isClosingGenerator()) {
-      switch (Debugger::onExceptionUnwind(cx, frame.baselineFrame())) {
+      switch (DebugAPI::onExceptionUnwind(cx, frame.baselineFrame())) {
         case ResumeMode::Terminate:
           // Uncatchable exception.
           MOZ_ASSERT(!cx->isExceptionPending());
@@ -518,7 +518,7 @@ again:
     }
 
     frameOk = HandleClosingGeneratorReturn(cx, frame.baselineFrame(), frameOk);
-    frameOk = Debugger::onLeaveFrame(cx, frame.baselineFrame(), pc, frameOk);
+    frameOk = DebugAPI::onLeaveFrame(cx, frame.baselineFrame(), pc, frameOk);
   } else if (hasTryNotes) {
     CloseLiveIteratorsBaselineForUncatchableException(cx, frame, pc);
   }

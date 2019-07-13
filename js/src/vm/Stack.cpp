@@ -8,7 +8,7 @@
 
 #include <utility>
 
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
@@ -1626,7 +1626,7 @@ void jit::JitActivation::removeRematerializedFramesFromDebugger(JSContext* cx,
   }
   if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top)) {
     for (uint32_t i = 0; i < p->value().length(); i++) {
-      Debugger::handleUnrecoverableIonBailoutError(cx, p->value()[i].get());
+      DebugAPI::handleUnrecoverableIonBailoutError(cx, p->value()[i].get());
     }
     rematerializedFrames_->remove(p);
   }

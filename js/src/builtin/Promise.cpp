@@ -15,7 +15,6 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
-#include "debugger/Debugger.h"
 #include "gc/Heap.h"
 #include "js/Debug.h"
 #include "js/ForOfIterator.h"  // JS::ForOfIterator
@@ -28,7 +27,7 @@
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -2061,7 +2060,7 @@ CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
 
   // Let the Debugger know about this Promise.
   if (informDebugger) {
-    Debugger::onNewPromise(cx, promiseRoot);
+    DebugAPI::onNewPromise(cx, promiseRoot);
   }
 
   return promiseRoot;
@@ -2252,7 +2251,7 @@ PromiseObject* PromiseObject::create(JSContext* cx, HandleObject executor,
   }
 
   // Let the Debugger know about this Promise.
-  Debugger::onNewPromise(cx, promise);
+  DebugAPI::onNewPromise(cx, promise);
 
   // Step 11.
   return promise;
@@ -5048,7 +5047,7 @@ void PromiseObject::onSettled(JSContext* cx, Handle<PromiseObject*> promise) {
     cx->runtime()->addUnhandledRejectedPromise(cx, promise);
   }
 
-  Debugger::onPromiseSettled(cx, promise);
+  DebugAPI::onPromiseSettled(cx, promise);
 }
 
 void PromiseObject::setRequiresUserInteractionHandling(bool state) {

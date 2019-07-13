@@ -12,7 +12,6 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "builtin/Promise.h"
-#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompilation.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
@@ -29,6 +28,7 @@
 #include "vm/Xdr.h"
 #include "wasm/WasmGenerator.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "gc/PrivateIterators-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
@@ -1846,7 +1846,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
   // The Debugger only needs to be told about the topmost script that was
   // compiled.
-  Debugger::onNewScript(cx, script);
+  DebugAPI::onNewScript(cx, script);
 
   return script;
 }
@@ -1888,7 +1888,7 @@ bool GlobalHelperThreadState::finishMultiParseTask(
     MOZ_ASSERT(script->isGlobalCode());
 
     rooted = script;
-    Debugger::onNewScript(cx, rooted);
+    DebugAPI::onNewScript(cx, rooted);
   }
 
   return true;

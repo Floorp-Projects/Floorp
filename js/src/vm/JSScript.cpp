@@ -65,6 +65,7 @@
 #include "vm/Xdr.h"
 #include "vtune/VTuneWrapper.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
@@ -1191,7 +1192,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   if (mode == XDR_DECODE) {
     /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
     if (!fun && !cx->isHelperThreadContext()) {
-      Debugger::onNewScript(cx, script);
+      DebugAPI::onNewScript(cx, script);
     }
   }
 

@@ -21,7 +21,7 @@
 #include "vm/Realm.h"
 #include "wasm/WasmInstance.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 
 using namespace js;
 using namespace wasm;
@@ -97,7 +97,7 @@ bool wasm::Realm::registerInstance(JSContext* cx,
   }
 
   // Notify the debugger after wasmInstances is unlocked.
-  Debugger::onNewWasmInstance(cx, instanceObj);
+  DebugAPI::onNewWasmInstance(cx, instanceObj);
   return true;
 }
 

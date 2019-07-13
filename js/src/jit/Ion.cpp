@@ -11,7 +11,6 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Unused.h"
 
-#include "debugger/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "jit/AliasAnalysis.h"
@@ -53,7 +52,7 @@
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "gc/PrivateIterators-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"

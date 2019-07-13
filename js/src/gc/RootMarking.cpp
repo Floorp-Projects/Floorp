@@ -11,7 +11,7 @@
 #include "jstypes.h"
 
 #include "builtin/MapObject.h"
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"

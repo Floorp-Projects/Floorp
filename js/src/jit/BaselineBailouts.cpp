@@ -8,7 +8,7 @@
 
 #include "jsutil.h"
 
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
@@ -1980,7 +1980,7 @@ static bool CopyFromRematerializedFrame(JSContext* cx, JitActivation* act,
   // in InitFromBailout.
   if (rematFrame->isDebuggee()) {
     frame->setIsDebuggee();
-    return Debugger::handleIonBailout(cx, rematFrame, frame);
+    return DebugAPI::handleIonBailout(cx, rematFrame, frame);
   }
 
   return true;

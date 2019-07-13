@@ -23,6 +23,7 @@
 #include "debugger/Debugger-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 

@@ -16,7 +16,7 @@
 #include "jsfriendapi.h"
 
 #include "builtin/ModuleObject.h"
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "gc/GCInternals.h"
 #include "gc/Policy.h"
 #include "jit/IonCode.h"
@@ -25,6 +25,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/BigIntType.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/GeneratorObject.h"
 #include "vm/RegExpShared.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
