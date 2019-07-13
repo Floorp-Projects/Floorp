@@ -17,7 +17,13 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "focusableSelector",
+  "wrapMoveFocus",
+  "devtools/client/shared/focus",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getFocusableElements",
   "devtools/client/shared/focus",
   true
 );
@@ -943,7 +949,7 @@ class TreeNodeClass extends Component {
     // Make sure that none of the focusable elements inside the tree node container are
     // tabbable if the tree node is not active. If the tree node is active and focus is
     // outside its container, focus on the first focusable element inside.
-    const elms = this.getFocusableElements();
+    const elms = getFocusableElements(this.refs.treenode);
     if (elms.length === 0) {
       return;
     }
@@ -958,43 +964,6 @@ class TreeNodeClass extends Component {
     }
   }
 
-  /**
-   * Get a list of all elements that are focusable with a keyboard inside the tree node.
-   */
-  getFocusableElements() {
-    return Array.from(this.refs.treenode.querySelectorAll(focusableSelector));
-  }
-
-  /**
-   * Wrap and move keyboard focus to first/last focusable element inside the tree node to
-   * prevent the focus from escaping the tree node boundaries.
-   * element).
-   *
-   * @param  {DOMNode} current  currently focused element
-   * @param  {Boolean} back     direction
-   * @return {Boolean}          true there is a newly focused element.
-   */
-  _wrapMoveFocus(current, back) {
-    const elms = this.getFocusableElements();
-    let next;
-
-    if (elms.length === 0) {
-      return false;
-    }
-
-    if (back) {
-      if (elms.indexOf(current) === 0) {
-        next = elms[elms.length - 1];
-        next.focus();
-      }
-    } else if (elms.indexOf(current) === elms.length - 1) {
-      next = elms[0];
-      next.focus();
-    }
-
-    return !!next;
-  }
-
   _onKeyDown(e) {
     const { target, key, shiftKey } = e;
 
@@ -1002,7 +971,11 @@ class TreeNodeClass extends Component {
       return;
     }
 
-    const focusMoved = this._wrapMoveFocus(target, shiftKey);
+    const focusMoved = !!wrapMoveFocus(
+      getFocusableElements(this.refs.treenode),
+      target,
+      shiftKey
+    );
     if (focusMoved) {
       // Focus was moved to the begining/end of the list, so we need to prevent the
       // default focus change that would happen here.
