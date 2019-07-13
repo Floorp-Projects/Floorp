@@ -18,7 +18,7 @@ add_task(async function test_parseSubmissionURL() {
     await Services.search.removeEngine(engine);
   }
 
-  let engines = await addTestEngines([
+  let [engine1, engine2, engine3, engine4] = await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
     { name: "Test search engine (fr)", xmlFileName: "engine-fr.xml" },
     {
@@ -52,132 +52,113 @@ add_task(async function test_parseSubmissionURL() {
     },
   ]);
 
-  engines[2].addParam("q", "{searchTerms}", null);
-  engines[3].addParam("q", "{searchTerms}", null);
-
-  function testParseSubmissionURL(url, engine, terms = "", offsetTerm) {
-    let result = Services.search.parseSubmissionURL(url);
-    Assert.equal(result.engine.name, engine.name, "engine matches");
-    Assert.equal(result.terms, terms, "term matches");
-    if (offsetTerm) {
-      Assert.ok(
-        url.slice(result.termsOffset).startsWith(offsetTerm),
-        "offset term matches"
-      );
-      Assert.equal(
-        result.termsLength,
-        offsetTerm.length,
-        "offset term length matches"
-      );
-    } else {
-      Assert.equal(result.termsOffset, url.length, "no term offset");
-    }
-  }
+  engine3.addParam("q", "{searchTerms}", null);
+  engine4.addParam("q", "{searchTerms}", null);
 
   // Test the first engine, whose URLs use UTF-8 encoding.
-  info("URLs use UTF-8 encoding");
-  testParseSubmissionURL(
-    "http://www.google.com/search?foo=bar&q=caff%C3%A8",
-    engines[0],
-    "caff\u00E8",
-    "caff%C3%A8"
-  );
+  let url = "http://www.google.com/search?foo=bar&q=caff%C3%A8";
+  let result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine1);
+  Assert.equal(result.terms, "caff\u00E8");
+  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
+  Assert.equal(result.termsLength, "caff%C3%A8".length);
 
   // The second engine uses a locale-specific domain that is an alternate domain
   // of the first one, but the second engine should get priority when matching.
   // The URL used with this engine uses ISO-8859-1 encoding instead.
-  info("URLs use alternate domain and ISO-8859-1 encoding");
-  testParseSubmissionURL(
-    "http://www.google.fr/search?q=caff%E8",
-    engines[1],
-    "caff\u00E8",
-    "caff%E8"
-  );
+  url = "http://www.google.fr/search?q=caff%E8";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine2);
+  Assert.equal(result.terms, "caff\u00E8");
+  Assert.ok(url.slice(result.termsOffset).startsWith("caff%E8"));
+  Assert.equal(result.termsLength, "caff%E8".length);
 
   // Test a domain that is an alternate domain of those defined.  In this case,
   // the first matching engine from the ordered list should be returned.
-  info("URLs use alternate domain");
-  testParseSubmissionURL(
-    "http://www.google.co.uk/search?q=caff%C3%A8",
-    engines[0],
-    "caff\u00E8",
-    "caff%C3%A8"
-  );
+  url = "http://www.google.co.uk/search?q=caff%C3%A8";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine1);
+  Assert.equal(result.terms, "caff\u00E8");
+  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
+  Assert.equal(result.termsLength, "caff%C3%A8".length);
 
   // We support parsing URLs from a dynamically added engine.  Those engines use
   // windows-1252 encoding by default.
-  info("URLs use windows-1252");
-  testParseSubmissionURL(
-    "http://www.bacon.test/find?q=caff%E8",
-    engines[2],
-    "caff\u00E8",
-    "caff%E8"
+  url = "http://www.bacon.test/find?q=caff%E8";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine3);
+  Assert.equal(result.terms, "caff\u00E8");
+  Assert.ok(url.slice(result.termsOffset).startsWith("caff%E8"));
+  Assert.equal(result.termsLength, "caff%E8".length);
+
+  // Test URLs with unescaped unicode characters.
+  url = "http://www.google.com/search?q=foo+b\u00E4r";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine1);
+  Assert.equal(result.terms, "foo b\u00E4r");
+  Assert.ok(url.slice(result.termsOffset).startsWith("foo+b\u00E4r"));
+  Assert.equal(result.termsLength, "foo+b\u00E4r".length);
+
+  // Test search engines with unescaped IDNs.
+  url = "http://www.b\u00FCcher.ch/search?q=foo+bar";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine4);
+  Assert.equal(result.terms, "foo bar");
+  Assert.ok(url.slice(result.termsOffset).startsWith("foo+bar"));
+  Assert.equal(result.termsLength, "foo+bar".length);
+
+  // Test search engines with escaped IDNs.
+  url = "http://www.xn--bcher-kva.ch/search?q=foo+bar";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine4);
+  Assert.equal(result.terms, "foo bar");
+  Assert.ok(url.slice(result.termsOffset).startsWith("foo+bar"));
+  Assert.equal(result.termsLength, "foo+bar".length);
+
+  // Parsing of parameters from an engine template URL is not supported.
+  Assert.equal(
+    Services.search.parseSubmissionURL("http://www.bacon.moz/search?q=").engine,
+    null
+  );
+  Assert.equal(
+    Services.search.parseSubmissionURL("https://duckduckgo.com?q=test").engine,
+    null
+  );
+  Assert.equal(
+    Services.search.parseSubmissionURL("https://duckduckgo.com/?q=test").engine,
+    null
   );
 
-  info("URLs with unescaped unicode characters");
-  testParseSubmissionURL(
-    "http://www.google.com/search?q=foo+b\u00E4r",
-    engines[0],
-    "foo b\u00E4r",
-    "foo+b\u00E4r"
+  // HTTP and HTTPS schemes are interchangeable.
+  url = "https://www.google.com/search?q=caff%C3%A8";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine1);
+  Assert.equal(result.terms, "caff\u00E8");
+  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
+
+  // Decoding search terms with multiple spaces should work.
+  result = Services.search.parseSubmissionURL(
+    "http://www.google.com/search?q=+with++spaces+"
   );
+  Assert.equal(result.engine, engine1);
+  Assert.equal(result.terms, " with  spaces ");
 
-  info("URLs with unescaped IDNs");
-  testParseSubmissionURL(
-    "http://www.b\u00FCcher.ch/search?q=foo+bar",
-    engines[3],
-    "foo bar",
-    "foo+bar"
-  );
+  // An empty query parameter should work the same.
+  url = "http://www.google.com/search?q=";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine, engine1);
+  Assert.equal(result.terms, "");
+  Assert.equal(result.termsOffset, url.length);
 
-  info("URLs with escaped IDNs");
-  testParseSubmissionURL(
-    "http://www.xn--bcher-kva.ch/search?q=foo+bar",
-    engines[3],
-    "foo bar",
-    "foo+bar"
-  );
-
-  info("URLs with engines using template params, no value");
-  testParseSubmissionURL("http://www.bacon.moz/search?q=", engines[5]);
-
-  info("URLs with engines using template params");
-  testParseSubmissionURL(
-    "https://duckduckgo.com?q=test",
-    engines[4],
-    "test",
-    "test"
-  );
-
-  info("HTTP and HTTPS schemes are interchangeable.");
-  testParseSubmissionURL(
-    "https://www.google.com/search?q=caff%C3%A8",
-    engines[0],
-    "caff\u00E8",
-    "caff%C3%A8"
-  );
-
-  info("Decoding search terms with multiple spaces should work.");
-  testParseSubmissionURL(
-    "http://www.google.com/search?q=+with++spaces+",
-    engines[0],
-    " with  spaces ",
-    "+with++spaces+"
-  );
-
-  info("An empty query parameter should work the same.");
-  testParseSubmissionURL("http://www.google.com/search?q=", engines[0]);
-
-  // These test slightly different so we don't use testParseSubmissionURL.
-  info("There should be no match when the path is different.");
-  let result = Services.search.parseSubmissionURL(
+  // There should be no match when the path is different.
+  result = Services.search.parseSubmissionURL(
     "http://www.google.com/search/?q=test"
   );
   Assert.equal(result.engine, null);
   Assert.equal(result.terms, "");
   Assert.equal(result.termsOffset, -1);
 
-  info("There should be no match when the argument is different.");
+  // There should be no match when the argument is different.
   result = Services.search.parseSubmissionURL(
     "http://www.google.com/search?q2=test"
   );
@@ -185,7 +166,7 @@ add_task(async function test_parseSubmissionURL() {
   Assert.equal(result.terms, "");
   Assert.equal(result.termsOffset, -1);
 
-  info("There should be no match for URIs that are not HTTP or HTTPS.");
+  // There should be no match for URIs that are not HTTP or HTTPS.
   result = Services.search.parseSubmissionURL("file://localhost/search?q=test");
   Assert.equal(result.engine, null);
   Assert.equal(result.terms, "");

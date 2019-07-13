@@ -24,10 +24,6 @@ user_pref("browser.pagethumbnails.capturing_disabled", true);
 user_pref("browser.search.region", "US");
 // This will prevent HTTP requests for region defaults.
 user_pref("browser.search.geoSpecificDefaults", false);
-// Debug builds will timeout on the failsafe timeout for search init,
-// we just turn off the load timeout for tests in general.
-user_pref("browser.search.addonLoadTimeout", 0);
-
 // Disable webapp updates.  Yes, it is supposed to be an integer.
 user_pref("browser.webapps.checkForUpdates", 0);
 // We do not wish to display datareporting policy notifications as it might

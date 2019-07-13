@@ -1,8 +1,5 @@
 // Test Engine list
 add_task(async function() {
-  // running stand-alone, be sure to wait for init
-  await Services.search.init();
-
   let prefs = await openPreferencesViaOpenPreferencesAPI("search", {
     leaveOpen: true,
   });
