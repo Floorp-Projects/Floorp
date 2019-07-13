@@ -20,12 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
-// For search related tests, reduce what is happening.  Search tests cover
-// these otherwise.
-Services.prefs.setCharPref("browser.search.region", "US");
-Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
-Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
-
 Services.prefs.setBoolPref("extensions.webextensions.remote", false);
 
 ExtensionTestUtils.init(this);

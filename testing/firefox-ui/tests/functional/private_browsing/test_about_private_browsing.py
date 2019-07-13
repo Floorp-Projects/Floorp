@@ -16,10 +16,6 @@ class TestAboutPrivateBrowsingWithSearch(PuppeteerMixin, MarionetteTestCase):
 
         # Use a fake local support URL
         support_url = 'about:blank?'
-        self.marionette.enforce_gecko_prefs({
-            'browser.search.geoSpecificDefaults': False,
-            'browser.search.addonLoadTimeout': 0
-        })
         self.marionette.set_pref('app.support.baseURL', support_url)
         self.pb_url = support_url + 'private-browsing-myths'
 
