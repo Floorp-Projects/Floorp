@@ -9924,13 +9924,6 @@ static StyleVerticalAlignKeyword ConvertSVGDominantBaselineToVerticalAlign(
     case NS_STYLE_DOMINANT_BASELINE_AUTO:
     case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
       return StyleVerticalAlignKeyword::Baseline;
-    case NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT:
-    case NS_STYLE_DOMINANT_BASELINE_NO_CHANGE:
-    case NS_STYLE_DOMINANT_BASELINE_RESET_SIZE:
-      // These three should not simply map to 'baseline', but we don't
-      // support the complex baseline model that SVG 1.1 has and which
-      // css3-linebox now defines.
-      return StyleVerticalAlignKeyword::Baseline;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected aDominantBaseline value");
       return StyleVerticalAlignKeyword::Baseline;
@@ -12358,17 +12351,17 @@ void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
 // End Display Reflow
 
 // Validation of SideIsVertical.
-#define CASE(side, result) \
-  static_assert(SideIsVertical(side) == result, "SideIsVertical is wrong")
+#  define CASE(side, result) \
+    static_assert(SideIsVertical(side) == result, "SideIsVertical is wrong")
 CASE(eSideTop, false);
 CASE(eSideRight, true);
 CASE(eSideBottom, false);
 CASE(eSideLeft, true);
-#undef CASE
+#  undef CASE
 
 // Validation of HalfCornerIsX.
-#define CASE(corner, result) \
-  static_assert(HalfCornerIsX(corner) == result, "HalfCornerIsX is wrong")
+#  define CASE(corner, result) \
+    static_assert(HalfCornerIsX(corner) == result, "HalfCornerIsX is wrong")
 CASE(eCornerTopLeftX, true);
 CASE(eCornerTopLeftY, false);
 CASE(eCornerTopRightX, true);
@@ -12377,13 +12370,13 @@ CASE(eCornerBottomRightX, true);
 CASE(eCornerBottomRightY, false);
 CASE(eCornerBottomLeftX, true);
 CASE(eCornerBottomLeftY, false);
-#undef CASE
+#  undef CASE
 
 // Validation of HalfToFullCorner.
-#define CASE(corner, result)                        \
-  static_assert(HalfToFullCorner(corner) == result, \
-                "HalfToFullCorner is "              \
-                "wrong")
+#  define CASE(corner, result)                        \
+    static_assert(HalfToFullCorner(corner) == result, \
+                  "HalfToFullCorner is "              \
+                  "wrong")
 CASE(eCornerTopLeftX, eCornerTopLeft);
 CASE(eCornerTopLeftY, eCornerTopLeft);
 CASE(eCornerTopRightX, eCornerTopRight);
@@ -12392,12 +12385,12 @@ CASE(eCornerBottomRightX, eCornerBottomRight);
 CASE(eCornerBottomRightY, eCornerBottomRight);
 CASE(eCornerBottomLeftX, eCornerBottomLeft);
 CASE(eCornerBottomLeftY, eCornerBottomLeft);
-#undef CASE
+#  undef CASE
 
 // Validation of FullToHalfCorner.
-#define CASE(corner, vert, result)                        \
-  static_assert(FullToHalfCorner(corner, vert) == result, \
-                "FullToHalfCorner is wrong")
+#  define CASE(corner, vert, result)                        \
+    static_assert(FullToHalfCorner(corner, vert) == result, \
+                  "FullToHalfCorner is wrong")
 CASE(eCornerTopLeft, false, eCornerTopLeftX);
 CASE(eCornerTopLeft, true, eCornerTopLeftY);
 CASE(eCornerTopRight, false, eCornerTopRightX);
@@ -12406,12 +12399,12 @@ CASE(eCornerBottomRight, false, eCornerBottomRightX);
 CASE(eCornerBottomRight, true, eCornerBottomRightY);
 CASE(eCornerBottomLeft, false, eCornerBottomLeftX);
 CASE(eCornerBottomLeft, true, eCornerBottomLeftY);
-#undef CASE
+#  undef CASE
 
 // Validation of SideToFullCorner.
-#define CASE(side, second, result)                        \
-  static_assert(SideToFullCorner(side, second) == result, \
-                "SideToFullCorner is wrong")
+#  define CASE(side, second, result)                        \
+    static_assert(SideToFullCorner(side, second) == result, \
+                  "SideToFullCorner is wrong")
 CASE(eSideTop, false, eCornerTopLeft);
 CASE(eSideTop, true, eCornerTopRight);
 
@@ -12423,12 +12416,12 @@ CASE(eSideBottom, true, eCornerBottomLeft);
 
 CASE(eSideLeft, false, eCornerBottomLeft);
 CASE(eSideLeft, true, eCornerTopLeft);
-#undef CASE
+#  undef CASE
 
 // Validation of SideToHalfCorner.
-#define CASE(side, second, parallel, result)                        \
-  static_assert(SideToHalfCorner(side, second, parallel) == result, \
-                "SideToHalfCorner is wrong")
+#  define CASE(side, second, parallel, result)                        \
+    static_assert(SideToHalfCorner(side, second, parallel) == result, \
+                  "SideToHalfCorner is wrong")
 CASE(eSideTop, false, true, eCornerTopLeftX);
 CASE(eSideTop, false, false, eCornerTopLeftY);
 CASE(eSideTop, true, true, eCornerTopRightX);
@@ -12448,6 +12441,6 @@ CASE(eSideLeft, false, false, eCornerBottomLeftX);
 CASE(eSideLeft, false, true, eCornerBottomLeftY);
 CASE(eSideLeft, true, false, eCornerTopLeftX);
 CASE(eSideLeft, true, true, eCornerTopLeftY);
-#undef CASE
+#  undef CASE
 
 #endif
