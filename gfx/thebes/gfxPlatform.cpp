@@ -2637,8 +2637,19 @@ static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
   // aOutGuardedByQualifiedPref as true unless the hardware is qualified
   // for users on the release channel.
 
+#if defined(XP_WIN)
   // Nvidia devices with device id >= 0x6c0 got WR in release Firefox 67.
   *aOutGuardedByQualifiedPref = false;
+#elif defined(NIGHTLY_BUILD)
+  // Qualify on Linux Nightly, but leave *aOutGuardedByQualifiedPref as true
+  // to indicate users on release don't have it yet, and it's still guarded
+  // by the qualified pref.
+#else
+  // Disqualify everywhere else
+  aFeature.Disable(
+      FeatureStatus::BlockedReleaseChannelNvidia, "Release channel and Nvidia",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_NVIDIA"));
+#endif
 }
 
 static void UpdateWRQualificationForAMD(FeatureState& aFeature,

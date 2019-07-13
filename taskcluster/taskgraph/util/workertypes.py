@@ -75,7 +75,7 @@ def worker_type_implementation(graph_config, worker_type):
     OS represents the host system, not the target OS, in the case of
     cross-compiles."""
     worker_config = _get(graph_config, worker_type, '1')
-    return worker_config['implementation'], worker_config['os']
+    return worker_config['implementation'], worker_config.get('os')
 
 
 @memoize

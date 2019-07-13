@@ -738,7 +738,7 @@ this.LoginManagerParent = {
     prompter.promptToSavePassword(
       formLogin,
       true, // dimissed prompt
-      shouldSaveLogin // attention
+      shouldSaveLogin // notifySaved
     );
   },
 

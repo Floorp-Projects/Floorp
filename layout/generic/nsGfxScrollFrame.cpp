@@ -3357,7 +3357,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (aBuilder->IsPaintingToWindow()) {
-    if (IsMaybeScrollingActive()) {
+    if (IsMaybeScrollingActive() && !gfxVars::UseWebRender()) {
       if (mScrollPosForLayerPixelAlignment == nsPoint(-1, -1)) {
         mScrollPosForLayerPixelAlignment = GetScrollPosition();
       }

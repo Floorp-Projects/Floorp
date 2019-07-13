@@ -74,7 +74,8 @@ interface nsILoginManagerPrompter : nsISupports {
    */
   void promptToChangePassword(in nsILoginInfo aOldLogin,
                               in nsILoginInfo aNewLogin,
-                              in boolean dismissed);
+                              [optional] in boolean dismissed,
+                              [optional] in boolean notifySaved);
 
   /**
    * Ask the user if they want to change the password for one of

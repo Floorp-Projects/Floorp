@@ -30,6 +30,7 @@ add_task(async function startup() {
   Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
   Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
   await AddonTestUtils.promiseStartupManager();
+  await Services.search.init(true);
 
   // Add a test engine and make it default so that when we do searches below,
   // Firefox doesn't try to include search suggestions from the actual default

@@ -218,6 +218,9 @@ add_task(async function test_text_input_disabled() {
 });
 
 add_task(async function test_password_input() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["signon.generation.enabled", false]],
+  });
   todo(
     false,
     "context-selectall is enabled on osx-e10s, and windows when" +
@@ -287,6 +290,7 @@ add_task(async function test_password_input() {
       },
     }
   );
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_tel_email_url_number_input() {

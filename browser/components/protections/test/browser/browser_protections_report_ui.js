@@ -170,7 +170,7 @@ add_task(async function test_graph_display() {
     // 5 days ago will have no social (when we add social)
     // 6 days ago will be empty
     is(
-      allBars[6].childNodes.length,
+      allBars[6].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length,
       "today has all of the data types shown"
     );
@@ -196,7 +196,7 @@ add_task(async function test_graph_display() {
     );
 
     is(
-      allBars[5].childNodes.length,
+      allBars[5].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "1 day ago is missing one type"
     );
@@ -206,7 +206,7 @@ add_task(async function test_graph_display() {
     );
 
     is(
-      allBars[4].childNodes.length,
+      allBars[4].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "2 days ago is missing one type"
     );
@@ -216,7 +216,7 @@ add_task(async function test_graph_display() {
     );
 
     is(
-      allBars[3].childNodes.length,
+      allBars[3].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "3 days ago is missing one type"
     );
@@ -226,7 +226,7 @@ add_task(async function test_graph_display() {
     );
 
     is(
-      allBars[2].childNodes.length,
+      allBars[2].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "4 days ago is missing one type"
     );
@@ -237,8 +237,12 @@ add_task(async function test_graph_display() {
 
     // TODO test for social missing
 
-    is(allBars[0].childNodes.length, 0, "6 days ago has no content");
-    is(allBars[0].style.height, "0px", "6 days ago has no height");
+    is(
+      allBars[0].querySelectorAll(".inner-bar").length,
+      0,
+      "6 days ago has no content"
+    );
+    ok(allBars[0].classList.contains("empty"), "6 days ago is an empty bar");
   });
 
   // Use the TrackingDBService API to delete the data.

@@ -74,7 +74,14 @@ AddonTestUtils.createAppInfo(
 );
 
 add_task(async function setup() {
+  // Tell the search service we are running in the US.  This also has the
+  // desired side-effect of preventing our geoip lookup.
+  Services.prefs.setCharPref("browser.search.region", "US");
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+  Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
+
   await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 });
 
 async function cleanup() {
@@ -560,6 +567,9 @@ function addTestEngine(basename, httpServer = undefined) {
 }
 
 /**
+ * WARNING: use of this function may result in intermittent failures when tests
+ * run in parallel due to reliance on port 9000.
+ *
  * Sets up a search engine that provides some suggestions by appending strings
  * onto the search query.
  *
@@ -606,6 +616,7 @@ add_task(async function ensure_search_engine() {
   await Services.search.addEngineWithDetails("MozSearch", {
     method: "GET",
     template: "http://s.example.com/search",
+    isBuiltin: true,
   });
   let engine = Services.search.getEngineByName("MozSearch");
   await Services.search.setDefault(engine);
