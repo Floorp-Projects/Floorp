@@ -65,7 +65,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
 
     const widget = new Spectrum(node, color);
     this.tooltip.panel.appendChild(container);
-    this.tooltip.setContentSize({ width: 215, height: 175 });
+    this.tooltip.setContentSize({ width: 215 });
 
     widget.inspector = this.inspector;
 
@@ -94,9 +94,16 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       );
     }
 
-    // only enable contrast if it is compatible and if the type of property is color.
+    // Only enable contrast and set spectrum text props if selected node is
+    // contrast compatible and if the type of property is color.
     this.spectrum.contrastEnabled =
       name === "color" && this.isContrastCompatible;
+    this.spectrum.textProps = this.spectrum.contrastEnabled
+      ? await this.inspector.pageStyle.getComputed(
+          this.inspector.selection.nodeFront,
+          { filterProperties: ["font-size", "font-weight"] }
+        )
+      : null;
 
     // Call then parent class' show function
     await super.show();
@@ -106,8 +113,8 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       this.currentSwatchColor = this.activeSwatch.nextSibling;
       this._originalColor = this.currentSwatchColor.textContent;
       const color = this.activeSwatch.style.backgroundColor;
-      this.spectrum.off("changed", this._onSpectrumColorChange);
 
+      this.spectrum.off("changed", this._onSpectrumColorChange);
       this.spectrum.rgb = this._colorToRgba(color);
       this.spectrum.on("changed", this._onSpectrumColorChange);
       this.spectrum.updateUI();
@@ -125,6 +132,12 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       eyeButton.disabled = true;
       eyeButton.title = L10N.getStr("eyedropper.disabled.title");
     }
+
+    // After spectrum properties are set, update the tooltip content size.
+    // If contrast is enabled, the tooltip will have additional contrast content
+    // and tooltip size needs to be updated to account for it.
+    this.tooltip.updateContainerBounds(super.tooltipAnchor);
+
     this.emit("ready");
   }
 

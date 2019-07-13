@@ -7,8 +7,25 @@
 // Tests that the spectrum color picker works correctly
 
 const { Spectrum } = require("devtools/client/shared/widgets/Spectrum");
+const {
+  accessibility: {
+    SCORES: { FAIL, AAA },
+  },
+} = require("devtools/shared/constants");
+
+loader.lazyRequireGetter(
+  this,
+  "cssColors",
+  "devtools/shared/css/color-db",
+  true
+);
 
 const TEST_URI = CHROME_URL_ROOT + "doc_spectrum.html";
+const REGULAR_TEXT_PROPS = {
+  "font-size": { value: "11px" },
+  "font-weight": { value: "bold" },
+};
+const ZERO_ALPHA_COLOR = [240, 32, 124, 0];
 
 add_task(async function() {
   const [host, , doc] = await createHost("bottom", TEST_URI);
@@ -21,6 +38,11 @@ add_task(async function() {
   await testChangingColorShouldEmitEvents(container);
   await testSettingColorShoudUpdateTheUI(container);
   await testChangingColorShouldUpdateColorPreview(container);
+  await testNotSettingTextPropsShouldNotShowContrastSection(container);
+  await testSettingTextPropsAndColorShouldUpdateContrastValue(container);
+  await testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
+    container
+  );
 
   host.destroy();
 });
@@ -82,7 +104,7 @@ function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
   ok(container, "We have the root node to append spectrum to");
   is(container.childElementCount, 0, "Root node is empty");
 
-  const s = new Spectrum(container, [255, 126, 255, 1]);
+  const s = new Spectrum(container, cssColors.white);
   s.show();
   ok(container.childElementCount > 0, "Spectrum has appended elements");
 
@@ -91,7 +113,7 @@ function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
 }
 
 function testPassingAColorAtInitShouldSetThatColor(container) {
-  const initRgba = [255, 126, 255, 1];
+  const initRgba = cssColors.white;
 
   const s = new Spectrum(container, initRgba);
   s.show();
@@ -107,10 +129,10 @@ function testPassingAColorAtInitShouldSetThatColor(container) {
 }
 
 function testSettingAndGettingANewColor(container) {
-  const s = new Spectrum(container, [0, 0, 0, 1]);
+  const s = new Spectrum(container, cssColors.black);
   s.show();
 
-  const colorToSet = [255, 255, 255, 1];
+  const colorToSet = cssColors.white;
   s.rgb = colorToSet;
   const newColor = s.rgb;
 
@@ -124,7 +146,7 @@ function testSettingAndGettingANewColor(container) {
 
 function testChangingColorShouldEmitEvents(container) {
   return new Promise(resolve => {
-    const s = new Spectrum(container, [255, 255, 255, 1]);
+    const s = new Spectrum(container, cssColors.white);
     s.show();
 
     s.once("changed", (rgba, color) => {
@@ -144,8 +166,23 @@ function testChangingColorShouldEmitEvents(container) {
   });
 }
 
+function setSpectrumProps(spectrum, props, updateUI = true) {
+  for (const prop in props) {
+    spectrum[prop] = props[prop];
+
+    // Setting textProps implies contrast should be enabled for spectrum
+    if (prop === "textProps") {
+      spectrum.contrastEnabled = true;
+    }
+  }
+
+  if (updateUI) {
+    spectrum.updateUI();
+  }
+}
+
 function testSettingColorShoudUpdateTheUI(container) {
-  const s = new Spectrum(container, [255, 255, 255, 1]);
+  const s = new Spectrum(container, cssColors.white);
   s.show();
   const dragHelperOriginalPos = [
     s.dragHelper.style.top,
@@ -154,8 +191,7 @@ function testSettingColorShoudUpdateTheUI(container) {
   const alphaHelperOriginalPos = s.alphaSliderHelper.style.left;
   let hueHelperOriginalPos = s.hueSliderHelper.style.left;
 
-  s.rgb = [50, 240, 234, 0.2];
-  s.updateUI();
+  setSpectrumProps(s, { rgb: [50, 240, 234, 0.2] });
 
   ok(
     s.alphaSliderHelper.style.left != alphaHelperOriginalPos,
@@ -176,8 +212,7 @@ function testSettingColorShoudUpdateTheUI(container) {
 
   hueHelperOriginalPos = s.hueSliderHelper.style.left;
 
-  s.rgb = [240, 32, 124, 0];
-  s.updateUI();
+  setSpectrumProps(s, { rgb: ZERO_ALPHA_COLOR });
   is(
     s.alphaSliderHelper.style.left,
     -(s.alphaSliderHelper.offsetWidth / 2) + "px",
@@ -207,8 +242,116 @@ function testChangingColorShouldUpdateColorPreview(container) {
   testColorPreviewDisplay(s, "rgb(255, 0, 0)", "transparent");
 
   info("Test that color preview is white and also has a light grey border.");
-  s.rgb = [255, 255, 255, 1];
+  s.rgb = cssColors.white;
   testColorPreviewDisplay(s, "rgb(255, 255, 255)", "rgb(204, 204, 204)");
+
+  s.destroy();
+}
+
+function testNotSettingTextPropsShouldNotShowContrastSection(container) {
+  const s = new Spectrum(container, cssColors.white);
+  s.show();
+
+  setSpectrumProps(s, { rgb: cssColors.black });
+  ok(
+    !s.spectrumContrast.classList.contains("visible"),
+    "Contrast section is not shown."
+  );
+
+  s.destroy();
+}
+
+function testSpectrumContrast(
+  spectrum,
+  rgb,
+  expectedValue,
+  expectedBadgeClass = "",
+  expectLargeTextIndicator = false
+) {
+  setSpectrumProps(spectrum, { rgb });
+
+  is(
+    spectrum.contrastValue.textContent,
+    expectedValue,
+    "Contrast value has the correct text."
+  );
+  is(
+    spectrum.contrastValue.className,
+    `accessibility-contrast-value${
+      expectedBadgeClass ? " " + expectedBadgeClass : ""
+    }`,
+    `Contrast value contains ${expectedBadgeClass || "base"} class.`
+  );
+  is(
+    spectrum.spectrumContrast.classList.contains("large-text"),
+    expectLargeTextIndicator,
+    `Large text indicator is ${expectLargeTextIndicator ? "" : "not"} shown.`
+  );
+}
+
+function testSettingTextPropsAndColorShouldUpdateContrastValue(container) {
+  const s = new Spectrum(container, cssColors.white);
+  s.show();
+
+  ok(
+    !s.spectrumContrast.classList.contains("visible"),
+    "Contrast value is not available yet."
+  );
+
+  info(
+    "Test that contrast ratio is calculated on setting 'textProps' and 'rgb'."
+  );
+  setSpectrumProps(s, { textProps: REGULAR_TEXT_PROPS }, false);
+  testSpectrumContrast(s, [50, 240, 234, 0.8], "1.35", FAIL);
+
+  info("Test that contrast ratio is updated when color is changed.");
+  testSpectrumContrast(s, cssColors.black, "21.00", AAA);
+
+  info("Test that contrast ratio cannot be calculated with zero alpha.");
+  testSpectrumContrast(s, ZERO_ALPHA_COLOR, "Unable to calculate");
+
+  s.destroy();
+}
+
+function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
+  container
+) {
+  let s = new Spectrum(container, cssColors.white);
+  s.show();
+
+  ok(
+    !s.spectrumContrast.classList.contains("large-text"),
+    "Large text indicator is initially hidden."
+  );
+
+  info(
+    "Test that selecting large text with non-zero alpha shows large text indicator."
+  );
+  setSpectrumProps(
+    s,
+    {
+      textProps: {
+        "font-size": { value: "24px" },
+        "font-weight": { value: "normal" },
+      },
+    },
+    false
+  );
+  testSpectrumContrast(s, cssColors.black, "21.00", AAA, true);
+
+  info(
+    "Test that selecting large text with zero alpha hides large text indicator."
+  );
+  testSpectrumContrast(s, ZERO_ALPHA_COLOR, "Unable to calculate");
+
+  // Spectrum should be closed and opened again to reflect changes in text size
+  s.destroy();
+  s = new Spectrum(container, cssColors.white);
+  s.show();
+
+  info("Test that selecting regular text does not show large text indicator.");
+  setSpectrumProps(s, { textProps: REGULAR_TEXT_PROPS }, false);
+  testSpectrumContrast(s, cssColors.black, "21.00", AAA);
 
   s.destroy();
 }
