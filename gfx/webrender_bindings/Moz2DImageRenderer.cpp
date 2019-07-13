@@ -337,6 +337,7 @@ struct Reader {
 
 static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                                const mozilla::wr::DeviceIntRect* aVisibleRect,
                                 const uint16_t* aTileSize,
                                 const mozilla::wr::TileOffset* aTileOffset,
                                 const mozilla::wr::LayoutIntRect* aDirtyRect,
@@ -462,14 +463,15 @@ extern "C" {
 
 bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob, int32_t width,
                         int32_t height, mozilla::wr::ImageFormat aFormat,
+                        const mozilla::wr::DeviceIntRect* aVisibleRect,
                         const uint16_t* aTileSize,
                         const mozilla::wr::TileOffset* aTileOffset,
                         const mozilla::wr::LayoutIntRect* aDirtyRect,
                         mozilla::wr::MutByteSlice output) {
   return mozilla::wr::Moz2DRenderCallback(
       mozilla::wr::ByteSliceToRange(blob), mozilla::gfx::IntSize(width, height),
-      mozilla::wr::ImageFormatToSurfaceFormat(aFormat), aTileSize, aTileOffset,
-      aDirtyRect, mozilla::wr::MutByteSliceToRange(output));
+      mozilla::wr::ImageFormatToSurfaceFormat(aFormat), aVisibleRect, aTileSize,
+      aTileOffset, aDirtyRect, mozilla::wr::MutByteSliceToRange(output));
 }
 
 }  // extern
