@@ -69,6 +69,7 @@ export default class LoginItem extends HTMLElement {
     this._editButton.addEventListener("click", this);
     this._openSiteButton.addEventListener("click", this);
     this._originInput.addEventListener("click", this);
+    this._revealCheckbox.addEventListener("click", this);
     this._saveChangesButton.addEventListener("click", this);
     window.addEventListener("AboutLoginsCreateLogin", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
