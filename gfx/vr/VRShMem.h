@@ -22,11 +22,12 @@ namespace mozilla {
 namespace gfx {
 class VRShMem final {
  public:
-  VRShMem(volatile VRExternalShmem* aShmem, bool aSameProcess,
+  VRShMem(volatile VRExternalShmem* aShmem, bool aVRProcessEnabled,
           bool aIsParentProcess);
   ~VRShMem() = default;
 
   void CreateShMem();
+  void ClearShMem();
   void CloseShMem();
 
   bool JoinShMem();
@@ -42,9 +43,14 @@ class VRShMem final {
       bool& aEnumerationCompleted,
       const std::function<bool()>& aWaitCondition = nullptr);
 
+  bool HasExternalShmem() const { return mExternalShmem != nullptr; }
+  volatile VRExternalShmem* GetExternalShmem() const;
+  bool IsDisplayStateShutdown() const;
+
  private:
   volatile VRExternalShmem* mExternalShmem = nullptr;
-  bool mSameProcess = false;
+  bool mVRProcessEnabled;
+
 #if defined(XP_WIN)
   bool mIsParentProcess = false;
 #endif
