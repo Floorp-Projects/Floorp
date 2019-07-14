@@ -26,15 +26,21 @@ h1 {
   border-radius: 0;
   padding: 12px;
   border: 1px solid var(--in-content-box-border-color);
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-text-color);
   flex: 1 1 auto;
   text-overflow: ellipsis;
   overflow: hidden;
   font-size: 1.363rem;
 }
 
+.tab:hover {
+  background-color: var(--in-content-box-background-hover);
+}
+
 .tab.selected {
-  border-bottom: 2px solid var(--in-content-border-highlight);
-  color: var(--in-content-item-selected);
+  border-bottom: 2px solid var(--in-content-link-color);
+  color: var(--in-content-link-color);
   text-overflow: unset;
   overflow: visible;
 }
