@@ -18,6 +18,7 @@ namespace mozilla {
 namespace gfx {
 
 class VRSession;
+class VRShMem;
 
 static const int kVRFrameTimingHistoryDepth = 100;
 
@@ -53,20 +54,16 @@ class VRService {
    * mBrowserState is memcpy'ed from the Shmem atomically
    */
   VRBrowserState mBrowserState;
-  int64_t mBrowserGeneration;
 
   UniquePtr<VRSession> mSession;
   base::Thread* mServiceThread;
   bool mShutdownRequested;
 
-  volatile VRExternalShmem* MOZ_OWNING_REF mAPIShmem;
-  base::ProcessHandle mTargetShmemFile;
+  // Note: mShmem doesn't support RefPtr; thus, do not share this private
+  // pointer so that its lifetime can still be controlled by VRService
+  VRShMem* mShmem;
   VRHapticState mLastHapticState[kVRHapticsMaxCount];
   TimeStamp mFrameStartTime[kVRFrameTimingHistoryDepth];
-#if defined(XP_WIN)
-  HANDLE mMutex;
-#endif
-  bool mVRProcessEnabled;
 
   bool IsInServiceThread();
   void UpdateHaptics();
