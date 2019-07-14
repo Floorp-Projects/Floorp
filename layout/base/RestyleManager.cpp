@@ -1276,6 +1276,10 @@ static void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint) {
     dirtyType = IntrinsicDirty::Resize;
   }
 
+  if (aHint & nsChangeHint_UpdateComputedBSize) {
+    aFrame->SetHasBSizeChange(true);
+  }
+
   nsFrameState dirtyBits;
   if (aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     dirtyBits = nsFrameState(0);

@@ -207,13 +207,26 @@ struct SizeComputationInput {
     // scrollbar
     bool mAssumingVScrollbar : 1;
 
-    // Is frame (a) not dirty and (b) a different inline-size than before?
+    // Is frame a different inline-size than before?
     bool mIsIResize : 1;
 
-    // Is frame (a) not dirty and (b) a different block-size than before or
-    // (potentially) in a context where percent block-sizes have a different
-    // basis?
+    // Is frame (potentially) a different block-size than before?
+    // This includes cases where the block-size is 'auto' and the
+    // contents or width have changed.
     bool mIsBResize : 1;
+
+    // Has this frame changed block-size in a way that affects
+    // block-size percentages on frames for which it is the containing
+    // block?  This includes a change between 'auto' and a length that
+    // doesn't actually change the frame's block-size.  It does not
+    // include cases where the block-size is 'auto' and the frame's
+    // contents have changed.
+    //
+    // In the current code, this is only true when mIsBResize is also
+    // true, although it doesn't necessarily need to be that way (e.g.,
+    // in the case of a frame changing from 'auto' to a length that
+    // produces the same height).
+    bool mIsBResizeForPercentages : 1;
 
     // tables are splittable, this should happen only inside a page and never
     // insider a column frame
@@ -683,6 +696,13 @@ struct ReflowInput : public SizeComputationInput {
   bool IsBResizeForWM(mozilla::WritingMode aWM) const {
     return aWM.IsOrthogonalTo(mWritingMode) ? mFlags.mIsIResize
                                             : mFlags.mIsBResize;
+  }
+  bool IsBResizeForPercentagesForWM(mozilla::WritingMode aWM) const {
+    // This uses the relatively-accurate mIsBResizeForPercentages flag
+    // when the writing modes are parallel, and is a bit more
+    // pessimistic when orthogonal.
+    return !aWM.IsOrthogonalTo(mWritingMode) ? mFlags.mIsBResizeForPercentages
+                                             : IsIResize();
   }
   void SetHResize(bool aValue) {
     if (mWritingMode.IsVertical()) {
