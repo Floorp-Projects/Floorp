@@ -127,13 +127,17 @@ add_task(async function test_edit_login_cancel() {
 add_task(async function test_reveal_password_change_selected_login() {
   gLoginItem.setLogin(TEST_LOGIN_1);
   let revealCheckbox = gLoginItem.shadowRoot.querySelector(".reveal-password-checkbox");
+  let passwordInput = gLoginItem.shadowRoot.querySelector("input[name='password']");
 
   ok(!revealCheckbox.checked, "reveal-checkbox should not be checked by default");
+  is(passwordInput.type, "password", "Password should be masked by default");
   revealCheckbox.click();
   ok(revealCheckbox.checked, "reveal-checkbox should be checked after clicking");
+  is(passwordInput.type, "text", "Password should be unmasked when checkbox is clicked");
 
   gLoginItem.setLogin(TEST_LOGIN_2);
   ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked when changing logins");
+  is(passwordInput.type, "password", "Password should be masked by default when switching logins");
 });
 
 add_task(async function test_set_login_empty() {
