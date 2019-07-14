@@ -20,6 +20,12 @@
   --accessibility-link-color: var(--blue-60);
   --accessibility-link-color-active: var(--blue-70);
   --accessibility-body-background-a90: rgba(255, 255, 255, 0.9);
+  --badge-active-background-color: var(--blue-50);
+  --badge-active-border-color: #FFFFFFB3;
+  --badge-interactive-background-color: var(--grey-20);
+  --accessible-label-background-color: white;
+  --accessible-label-border-color: #CACAD1;
+  --accessible-label-color: var(--grey-60);
   /* Similarly to webconsole, add more padding before the toolbar group. */
   --separator-inline-margin: 5px;
   --accessibility-code-background: var(--grey-20);
@@ -31,6 +37,12 @@
   --accessibility-link-color: var(--theme-highlight-blue);
   --accessibility-link-color-active: var(--blue-40);
   --accessibility-body-background-a90: rgba(42, 42, 46, 0.9);
+  --badge-active-background-color: var(--blue-60);
+  --badge-active-border-color: #FFF6;
+  --badge-interactive-background-color: var(--grey-70);
+  --accessible-label-background-color: var(--grey-80);
+  --accessible-label-border-color: var(--grey-50);
+  --accessible-label-color: var(--grey-40);
   --accessibility-code-background: var(--grey-70);
 }
 
@@ -370,9 +382,9 @@ body {
   border-radius: 3px;
   padding: 0px 3px;
   margin-inline-start: 5px;
-  color: var(--badge-color);
-  background-color: var(--badge-background-color);
-  border: 1px solid var(--badge-border-color);
+  color: var(--accessible-label-color);
+  background-color: var(--accessible-label-background-color);
+  border: 1px solid var(--accessible-label-border-color);
 }
 
 .badge.audit-badge::before {
@@ -415,7 +427,7 @@ body {
 }
 
 .treeTable:not(:focus):not(:focus-within) .treeRow.selected .badges .badge {
-  color: var(--badge-color);
+  color: var(--accessible-label-color);
 }
 
 .badge.toggle-button.checked {
@@ -568,9 +580,9 @@ body {
 }
 
 .accessible .tree .objectBox-accessible .accessible-role {
-  background-color: var(--badge-background-color);
-  color: var(--badge-color);
-  border: 1px solid var(--badge-border-color);
+  background-color: var(--accessible-label-background-color);
+  color: var(--accessible-label-color);
+  border: 1px solid var(--accessible-label-border-color);
   border-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 5px;
@@ -688,6 +700,10 @@ body {
   line-height: 20px;
 }
 
+.accessibility-color-contrast {
+  align-items: baseline;
+}
+
 .accessibility-check-header {
   margin: 0;
   font-weight: bold;
@@ -699,7 +715,7 @@ body {
   display: inline;
   margin: 0;
   white-space: normal;
-  color: var(--badge-color);
+  color: var(--accessible-label-color);
 }
 
 .accessibility-check-annotation .link {
@@ -724,6 +740,16 @@ body {
   text-decoration: underline;
 }
 
+.accessibility-color-contrast-large-text {
+  background-color: var(--accessible-label-background-color);
+  color: var(--accessible-label-color);
+  outline: 1px solid var(--accessible-label-border-color);
+  -moz-outline-radius: 3px;
+  padding: 0px 2px;
+  margin-inline-start: 6px;
+  line-height: initial;
+}
+
 .accessibility-color-contrast .accessibility-contrast-value:not(:empty) {
   margin-block-end: 4px;
 }
@@ -744,6 +770,28 @@ body {
 
 .accessibility-color-contrast .accessibility-contrast-value:not(:first-child):not(:empty):before {
   margin-inline-start: 4px;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty):after {
+  margin-inline-start: 4px;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).AA:after,
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).AAA:after {
+  color: var(--theme-highlight-green);
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).fail:after {
+  color: #E57180;
+  content: "⚠️";
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).AA:after {
+  content: "AA\2713";
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).AAA:after {
+  content: "AAA\2713";
 }
 
 .accessibility-color-contrast .accessibility-color-contrast-label:after {

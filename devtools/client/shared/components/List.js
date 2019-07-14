@@ -24,13 +24,7 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "wrapMoveFocus",
-  "devtools/client/shared/focus",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getFocusableElements",
+  "focusableSelector",
   "devtools/client/shared/focus",
   true
 );
@@ -56,6 +50,7 @@ class ListItemClass extends Component {
 
     this._setTabbableState = this._setTabbableState.bind(this);
     this._onKeyDown = this._onKeyDown.bind(this);
+    this._wrapMoveFocus = this._wrapMoveFocus.bind(this);
   }
 
   componentDidMount() {
@@ -66,6 +61,45 @@ class ListItemClass extends Component {
     this._setTabbableState();
   }
 
+  /**
+   * Get a list of all elements that are focusable with a keyboard inside the list item.
+   */
+  getFocusableElements() {
+    return Array.from(
+      this.contentRef.current.querySelectorAll(focusableSelector)
+    );
+  }
+
+  /**
+   * Wrap and move keyboard focus to first/last focusable element inside the list item to
+   * prevent the focus from escaping the list item container.
+   * element).
+   *
+   * @param  {DOMNode} current  currently focused element
+   * @param  {Boolean} back     direction
+   * @return {Boolean}          true there is a newly focused element.
+   */
+  _wrapMoveFocus(current, back) {
+    const elms = this.getFocusableElements();
+    let next;
+
+    if (elms.length === 0) {
+      return false;
+    }
+
+    if (back) {
+      if (elms.indexOf(current) === 0) {
+        next = elms[elms.length - 1];
+        next.focus();
+      }
+    } else if (elms.indexOf(current) === elms.length - 1) {
+      next = elms[0];
+      next.focus();
+    }
+
+    return !!next;
+  }
+
   _onKeyDown(event) {
     const { target, key, shiftKey } = event;
 
@@ -73,11 +107,7 @@ class ListItemClass extends Component {
       return;
     }
 
-    const focusMoved = !!wrapMoveFocus(
-      getFocusableElements(this.contentRef.current),
-      target,
-      shiftKey
-    );
+    const focusMoved = this._wrapMoveFocus(target, shiftKey);
     if (focusMoved) {
       // Focus was moved to the begining/end of the list, so we need to prevent the
       // default focus change that would happen here.
@@ -93,7 +123,7 @@ class ListItemClass extends Component {
    * outside its container, focus on the first focusable element inside.
    */
   _setTabbableState() {
-    const elms = getFocusableElements(this.contentRef.current);
+    const elms = this.getFocusableElements();
     if (elms.length === 0) {
       return;
     }

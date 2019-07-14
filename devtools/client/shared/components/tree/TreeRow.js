@@ -21,10 +21,7 @@ define(function(require, exports, module) {
   const TreeCell = createFactory(require("./TreeCell"));
   const LabelCell = createFactory(require("./LabelCell"));
 
-  const {
-    wrapMoveFocus,
-    getFocusableElements,
-  } = require("devtools/client/shared/focus");
+  const { focusableSelector } = require("devtools/client/shared/focus");
 
   const UPDATE_ON_PROPS = [
     "name",
@@ -136,7 +133,7 @@ define(function(require, exports, module) {
      * is outside its container, focus on the first focusable element inside.
      */
     _setTabbableState() {
-      const elms = getFocusableElements(this.treeRowRef.current);
+      const elms = this.getFocusableElements();
       if (elms.length === 0) {
         return;
       }
@@ -152,6 +149,46 @@ define(function(require, exports, module) {
       }
     }
 
+    /**
+     * Get a list of all elements that are focusable with a keyboard inside the
+     * tree node.
+     */
+    getFocusableElements() {
+      return Array.from(
+        this.treeRowRef.current.querySelectorAll(focusableSelector)
+      );
+    }
+
+    /**
+     * Wrap and move keyboard focus to first/last focusable element inside the
+     * tree node to prevent the focus from escaping the tree node boundaries.
+     * element).
+     *
+     * @param  {DOMNode} current  currently focused element
+     * @param  {Boolean} back     direction
+     * @return {Boolean}          true there is a newly focused element.
+     */
+    _wrapMoveFocus(current, back) {
+      const elms = this.getFocusableElements();
+      let next;
+
+      if (elms.length === 0) {
+        return false;
+      }
+
+      if (back) {
+        if (elms.indexOf(current) === 0) {
+          next = elms[elms.length - 1];
+          next.focus();
+        }
+      } else if (elms.indexOf(current) === elms.length - 1) {
+        next = elms[0];
+        next.focus();
+      }
+
+      return !!next;
+    }
+
     _onKeyDown(e) {
       const { target, key, shiftKey } = e;
 
@@ -159,11 +196,7 @@ define(function(require, exports, module) {
         return;
       }
 
-      const focusMoved = !!wrapMoveFocus(
-        getFocusableElements(this.treeRowRef.current),
-        target,
-        shiftKey
-      );
+      const focusMoved = this._wrapMoveFocus(target, shiftKey);
       if (focusMoved) {
         // Focus was moved to the begining/end of the list, so we need to
         // prevent the default focus change that would happen here.
