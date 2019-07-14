@@ -672,18 +672,16 @@ struct DIGroup {
               }
               fonts = std::move(aScaledFonts);
             },
-            IntPoint(0, 0));
+            mLayerBounds.ToUnknownRect().TopLeft());
 
     RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
         gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
 
     RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
-        recorder, dummyDt, IntRect(IntPoint(0, 0), dtSize));
+        recorder, dummyDt, mLayerBounds.ToUnknownRect());
     // Setup the gfxContext
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-    GP("ctx-offset %f %f\n", bounds.x, bounds.y);
-    context->SetMatrix(Matrix::Scaling(mScale.width, mScale.height)
-                           .PreTranslate(-bounds.x, -bounds.y));
+    context->SetMatrix(Matrix::Scaling(mScale.width, mScale.height).PostTranslate(mResidualOffset.x, mResidualOffset.y));
 
     GP("mInvalidRect: %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
        mInvalidRect.width, mInvalidRect.height);
@@ -967,7 +965,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
 
       aContext->GetDrawTarget()->PushLayer(false, opacityItem->GetOpacity(),
                                            nullptr, mozilla::gfx::Matrix(),
-                                           aItemBounds);
+                                           aItemBounds + aGroup->mLayerBounds.ToUnknownRect().TopLeft());
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
@@ -983,7 +981,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       auto blendItem = static_cast<nsDisplayBlendMode*>(aItem);
       auto blendMode = blendItem->BlendMode();
       aContext->GetDrawTarget()->PushLayerWithBlend(
-          false, 1.0, nullptr, mozilla::gfx::Matrix(), aItemBounds, false,
+          false, 1.0, nullptr, mozilla::gfx::Matrix(), aItemBounds + aGroup->mLayerBounds.ToUnknownRect().TopLeft(), false,
           blendMode);
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
@@ -998,7 +996,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
     }
     case DisplayItemType::TYPE_BLEND_CONTAINER: {
       aContext->GetDrawTarget()->PushLayer(false, 1.0, nullptr,
-                                           mozilla::gfx::Matrix(), aItemBounds);
+                                           mozilla::gfx::Matrix(), aItemBounds + aGroup->mLayerBounds.ToUnknownRect().TopLeft());
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
@@ -2274,17 +2272,17 @@ WebRenderCommandBuilder::GenerateFallbackData(
                 }
                 fonts = std::move(aScaledFonts);
               },
-              IntPoint(0, 0));
+              dtRect.ToUnknownRect().TopLeft());
       RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
           gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
-          recorder, dummyDt, IntRect(IntPoint(0, 0), dtSize.ToUnknownSize()));
+          recorder, dummyDt, dtRect.ToUnknownRect());
       if (!fallbackData->mBasicLayerManager) {
         fallbackData->mBasicLayerManager =
             new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
       }
       bool isInvalidated = PaintItemByDrawTarget(
-          aItem, dt, offset, aDisplayListBuilder,
+          aItem, dt, LayoutDevicePoint(0, 0), aDisplayListBuilder,
           fallbackData->mBasicLayerManager, scale, highlight);
       if (!isInvalidated) {
         if (!aItem->GetBuildingRect().IsEqualInterior(
