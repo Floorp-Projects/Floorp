@@ -24,7 +24,7 @@ class InfoItem extends HTMLElement {
   render() {
     let label = this.shadowRoot.querySelector("label");
     let labelText = this.item.label.replace(/\s+/g, "-").toLowerCase();
-    label.setAttribute("data-l10n-id", labelText);
+    label.setAttribute("data-l10n-id", "certificate-viewer-" + labelText);
 
     let info = this.shadowRoot.querySelector(".info");
     info.textContent = this.item.info;
