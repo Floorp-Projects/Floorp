@@ -494,6 +494,7 @@
 | [mozilla.components.service.fretboard.scheduler.workmanager.SyncWorker](../mozilla.components.service.fretboard.scheduler.workmanager/-sync-worker/index.md) |  |
 | [mozilla.components.service.sync.logins.SyncableLoginsStore](../mozilla.components.service.sync.logins/-syncable-logins-store/index.md) | Wraps [AsyncLoginsStorage](../mozilla.components.service.sync.logins/-async-logins-storage/index.md) instance along with a lazy encryption key. |
 | [mozilla.components.concept.sync.SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md) | Describes a "sync" entry point for a storage layer. |
+| [mozilla.components.browser.state.action.SystemAction](../mozilla.components.browser.state.action/-system-action/index.md) | [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) implementations to react to system events. |
 | [mozilla.components.feature.downloads.manager.SystemDownloadManager](../mozilla.components.feature.downloads.manager/-system-download-manager.md) |  |
 | [mozilla.components.browser.engine.system.SystemEngine](../mozilla.components.browser.engine.system/-system-engine/index.md) | WebView-based implementation of the Engine interface. |
 | [mozilla.components.browser.engine.system.SystemEngineSession](../mozilla.components.browser.engine.system/-system-engine-session/index.md) | WebView-based EngineSession implementation. |
