@@ -10,14 +10,8 @@ const {
   flashElementOff,
 } = require("devtools/client/inspector/markup/utils");
 
-loader.lazyRequireGetter(
-  this,
-  "wrapMoveFocus",
-  "devtools/client/shared/focus",
-  true
-);
-
 const DRAG_DROP_MIN_INITIAL_DISTANCE = 10;
+
 const TYPES = {
   TEXT_CONTAINER: "textcontainer",
   ELEMENT_CONTAINER: "elementcontainer",
@@ -478,6 +472,30 @@ MarkupContainer.prototype = {
     return false;
   },
 
+  /**
+   * Move keyboard focus to a next/previous focusable element inside container
+   * that is not part of its children (only if current focus is on first or last
+   * element).
+   *
+   * @param  {DOMNode} current  currently focused element
+   * @param  {Boolean} back     direction
+   * @return {DOMNode}          newly focused element if any
+   */
+  _wrapMoveFocus: function(current, back) {
+    const elms = this.focusableElms;
+    let next;
+    if (back) {
+      if (elms.indexOf(current) === 0) {
+        next = elms[elms.length - 1];
+        next.focus();
+      }
+    } else if (elms.indexOf(current) === elms.length - 1) {
+      next = elms[0];
+      next.focus();
+    }
+    return next;
+  },
+
   _onKeyDown: function(event) {
     const { target, keyCode, shiftKey } = event;
     const isInput = this.markup._isInputOrTextarea(target);
@@ -493,11 +511,7 @@ MarkupContainer.prototype = {
         // Only handle 'Tab' if tabbable element is on the edge (first or last).
         if (isInput) {
           // Corresponding tabbable element is editor's next sibling.
-          const next = wrapMoveFocus(
-            this.focusableElms,
-            target.nextSibling,
-            shiftKey
-          );
+          const next = this._wrapMoveFocus(target.nextSibling, shiftKey);
           if (next) {
             event.preventDefault();
             // Keep the editing state if possible.
@@ -508,7 +522,7 @@ MarkupContainer.prototype = {
             }
           }
         } else {
-          const next = wrapMoveFocus(this.focusableElms, target, shiftKey);
+          const next = this._wrapMoveFocus(target, shiftKey);
           if (next) {
             event.preventDefault();
           }

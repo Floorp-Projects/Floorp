@@ -2,14 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- :root {
-  --learn-more-underline: var(--grey-30);
-}
-
-.theme-dark:root {
-  --learn-more-underline: var(--grey-50);
-}
-
 #eyedropper-button {
   margin-inline-end: 5px;
   display: block;
@@ -27,6 +19,14 @@
     linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
   background-size: 12px 12px;
   background-position: 0 0, 6px 6px;
+}
+
+.spectrum-slider-control {
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0,0,0,.6);
+  background: #fff;
+  border-radius: 50%;
+  opacity: .9;
 }
 
 .spectrum-box {
@@ -49,9 +49,6 @@
   justify-content: space-between;
   margin-block-start: 10px;
   margin-inline-end: 5px;
-}
-
-.spectrum-controls {
   width: 200px;
 }
 
@@ -59,7 +56,6 @@
   display: flex;
   flex-direction: column;
   margin: -1px;
-  padding-block-end: 6px;
 }
 
 /**
@@ -117,47 +113,25 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   bottom: 0;
 }
 
-.spectrum-alpha {
-  margin-block-start: 3px;
-}
-
 .spectrum-alpha,
 .spectrum-hue {
   position: relative;
   height: 8px;
+  margin-block-start: 3px;
 }
 
-.spectrum-alpha-input,
-.spectrum-hue-input {
-  width: 100%;
-  margin: 0;
+.spectrum-alpha-inner,
+.spectrum-hue-inner {
+  height: 100%;
+}
+
+.spectrum-alpha-handle,
+.spectrum-hue-handle {
   position: absolute;
-  height: 8px;
-  border-radius: 2px;
-}
-
-/* Focus style already exists on input[type="range"]. Remove overlap */
-.spectrum-hue-input:focus,
-.spectrum-alpha-input:focus {
-  outline: none;
-}
-
-.spectrum-hue-input::-moz-range-thumb,
-.spectrum-alpha-input::-moz-range-thumb {
-  cursor: pointer;
+  top: -2px;
+  bottom: -2px;
   height: 12px;
   width: 12px;
-  box-shadow: 0 0 2px rgba(0,0,0,.6);
-  background: #fff;
-  border-radius: 50%;
-  opacity: .9;
-  border: none;
-}
-
-.spectrum-hue-input::-moz-range-track {
-  border-radius: 2px;
-  height: 8px;
-  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
 }
 
 .spectrum-sat {
@@ -166,6 +140,10 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 
 .spectrum-val {
   background-image: linear-gradient(to top, #000000, rgba(204, 154, 129, 0));
+}
+
+.spectrum-hue {
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
 }
 
 .spectrum-dragger {
@@ -181,66 +159,10 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   box-shadow: 0 0 2px rgba(0,0,0,.6);
 }
 
-.spectrum-color-contrast {
-  padding-block-start: 8px;
-  padding-inline-start: 3px;
-  align-items: stretch;
-  line-height: 1.2em;
-}
-
-.spectrum-color-contrast.visible.large-text .accessibility-color-contrast-large-text {
-  display: block;
-}
-
-.spectrum-color-contrast.visible {
-  display: flex;
-}
-
-.spectrum-color-contrast,
-.spectrum-color-contrast .accessibility-color-contrast-large-text {
-  display: none;
-}
-
-.contrast-ratio-label {
-  padding-inline-end: 4px;
-  padding-inline-start: 2px;
-  color: var(--theme-toolbar-color);
-}
-
-.spectrum-color-contrast .accessibility-color-contrast {
-  align-items: stretch;
-}
-
-.spectrum-color-contrast .accessibility-contrast-value {
-  color: var(--theme-body-color);
-  border-bottom: 1px solid var(--learn-more-underline);
-}
-
-.spectrum-color-contrast .accessibility-contrast-value:not(:empty)::before {
-  width: auto;
-  content: none;
-  padding-inline-start: 2px;
-}
-
-.learn-more {
-  background-size: auto;
-  background-repeat: no-repeat;
-  -moz-context-properties: fill;
-  background-image: url(chrome://devtools/skin/images/info-small.svg);
-  background-color: transparent;
-  fill: var(--theme-icon-dimmed-color);
-  border: none;
-  margin-left: auto;
-  margin-top: 2px;
-  margin-right: 1px;
-}
-
-.learn-more:hover, .learn-more:focus {
-  fill: var(--theme-icon-color);
-  cursor: pointer;
-  outline: none;
-}
-
-.learn-more::-moz-focus-inner {
-  border: none;
+.spectrum-slider {
+  position: absolute;
+  top: 0;
+  height: 5px;
+  left: -3px;
+  right: -3px;
 }
