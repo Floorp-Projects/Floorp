@@ -91,12 +91,32 @@ add_task(async function test_telemetry_events() {
   BrowserTestUtils.removeTab(newTab);
   await waitForTelemetryEventCount(4);
 
+  // Show the password
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    let loginItem = content.document.querySelector("login-item");
+    let revealCheckbox = loginItem.shadowRoot.querySelector(
+      ".reveal-password-checkbox"
+    );
+    revealCheckbox.click();
+  });
+  await waitForTelemetryEventCount(5);
+
+  // Hide the password
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    let loginItem = content.document.querySelector("login-item");
+    let revealCheckbox = loginItem.shadowRoot.querySelector(
+      ".reveal-password-checkbox"
+    );
+    revealCheckbox.click();
+  });
+  await waitForTelemetryEventCount(6);
+
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
     let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
   });
-  await waitForTelemetryEventCount(5);
+  await waitForTelemetryEventCount(7);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -108,7 +128,7 @@ add_task(async function test_telemetry_events() {
     let saveButton = loginItem.shadowRoot.querySelector(".save-changes-button");
     saveButton.click();
   });
-  await waitForTelemetryEventCount(6);
+  await waitForTelemetryEventCount(8);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let newLoginButton = content.document
@@ -116,14 +136,14 @@ add_task(async function test_telemetry_events() {
       .shadowRoot.querySelector(".create-login-button");
     newLoginButton.click();
   });
-  await waitForTelemetryEventCount(7);
+  await waitForTelemetryEventCount(9);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
     cancelButton.click();
   });
-  await waitForTelemetryEventCount(8);
+  await waitForTelemetryEventCount(10);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
@@ -132,7 +152,7 @@ add_task(async function test_telemetry_events() {
     );
     loginListItem.click();
   });
-  await waitForTelemetryEventCount(9);
+  await waitForTelemetryEventCount(11);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -146,20 +166,22 @@ add_task(async function test_telemetry_events() {
     );
     confirmDeleteButton.click();
   });
-  await waitForTelemetryEventCount(10);
+  await waitForTelemetryEventCount(12);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginFilter = content.document.querySelector("login-filter");
     let input = loginFilter.shadowRoot.querySelector("input");
     input.setUserInput("test");
   });
-  await waitForTelemetryEventCount(11);
+  await waitForTelemetryEventCount(13);
 
   let expectedEvents = [
     ["pwmgr", "select", "existing_login"],
     ["pwmgr", "copy", "username"],
     ["pwmgr", "copy", "password"],
     ["pwmgr", "open_site", "existing_login"],
+    ["pwmgr", "show", "password"],
+    ["pwmgr", "hide", "password"],
     ["pwmgr", "edit", "existing_login"],
     ["pwmgr", "save", "existing_login"],
     ["pwmgr", "new", "new_login"],
