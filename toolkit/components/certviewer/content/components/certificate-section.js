@@ -29,7 +29,10 @@ class CertificateSection extends HTMLElement {
     let certificateTabs = this.shadowRoot.querySelector(".certificate-tabs");
 
     let title = this.shadowRoot.querySelector(".title");
-    title.setAttribute("data-l10n-id", "certificate-section-title");
+    title.setAttribute(
+      "data-l10n-id",
+      "certificate-viewer-certificate-section-title"
+    );
 
     // TODO: Render based on certificate error.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1560513
