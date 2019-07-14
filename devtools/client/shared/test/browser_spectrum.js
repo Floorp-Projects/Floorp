@@ -7,25 +7,8 @@
 // Tests that the spectrum color picker works correctly
 
 const { Spectrum } = require("devtools/client/shared/widgets/Spectrum");
-const {
-  accessibility: {
-    SCORES: { FAIL, AAA },
-  },
-} = require("devtools/shared/constants");
-
-loader.lazyRequireGetter(
-  this,
-  "cssColors",
-  "devtools/shared/css/color-db",
-  true
-);
 
 const TEST_URI = CHROME_URL_ROOT + "doc_spectrum.html";
-const REGULAR_TEXT_PROPS = {
-  "font-size": { value: "11px" },
-  "font-weight": { value: "bold" },
-};
-const ZERO_ALPHA_COLOR = [0, 255, 255, 0];
 
 add_task(async function() {
   const [host, , doc] = await createHost("bottom", TEST_URI);
@@ -35,14 +18,9 @@ add_task(async function() {
   await testCreateAndDestroyShouldAppendAndRemoveElements(container);
   await testPassingAColorAtInitShouldSetThatColor(container);
   await testSettingAndGettingANewColor(container);
-  await testChangingColorShouldEmitEvents(container, doc);
+  await testChangingColorShouldEmitEvents(container);
   await testSettingColorShoudUpdateTheUI(container);
   await testChangingColorShouldUpdateColorPreview(container);
-  await testNotSettingTextPropsShouldNotShowContrastSection(container);
-  await testSettingTextPropsAndColorShouldUpdateContrastValue(container);
-  await testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
-    container
-  );
 
   host.destroy();
 });
@@ -104,7 +82,7 @@ function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
   ok(container, "We have the root node to append spectrum to");
   is(container.childElementCount, 0, "Root node is empty");
 
-  const s = new Spectrum(container, cssColors.white);
+  const s = new Spectrum(container, [255, 126, 255, 1]);
   s.show();
   ok(container.childElementCount > 0, "Spectrum has appended elements");
 
@@ -113,7 +91,7 @@ function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
 }
 
 function testPassingAColorAtInitShouldSetThatColor(container) {
-  const initRgba = cssColors.white;
+  const initRgba = [255, 126, 255, 1];
 
   const s = new Spectrum(container, initRgba);
   s.show();
@@ -129,10 +107,10 @@ function testPassingAColorAtInitShouldSetThatColor(container) {
 }
 
 function testSettingAndGettingANewColor(container) {
-  const s = new Spectrum(container, cssColors.black);
+  const s = new Spectrum(container, [0, 0, 0, 1]);
   s.show();
 
-  const colorToSet = cssColors.white;
+  const colorToSet = [255, 255, 255, 1];
   s.rgb = colorToSet;
   const newColor = s.rgb;
 
@@ -144,144 +122,45 @@ function testSettingAndGettingANewColor(container) {
   s.destroy();
 }
 
-async function testChangingColorShouldEmitEventsHelper(
-  spectrum,
-  moveFn,
-  expectedColor
-) {
-  const onChanged = spectrum.once("changed", (rgba, color) => {
-    is(rgba[0], expectedColor[0], "New color is correct");
-    is(rgba[1], expectedColor[1], "New color is correct");
-    is(rgba[2], expectedColor[2], "New color is correct");
-    is(rgba[3], expectedColor[3], "New color is correct");
-    is(`rgba(${rgba.join(", ")})`, color, "RGBA and css color correspond");
-  });
+function testChangingColorShouldEmitEvents(container) {
+  return new Promise(resolve => {
+    const s = new Spectrum(container, [255, 255, 255, 1]);
+    s.show();
 
-  moveFn();
-  await onChanged;
-  ok(true, "Changed event was emitted on color change");
-}
+    s.once("changed", (rgba, color) => {
+      ok(true, "Changed event was emitted on color change");
+      is(rgba[0], 128, "New color is correct");
+      is(rgba[1], 64, "New color is correct");
+      is(rgba[2], 64, "New color is correct");
+      is(rgba[3], 1, "New color is correct");
+      is(`rgba(${rgba.join(", ")})`, color, "RGBA and css color correspond");
 
-function testChangingColorShouldEmitEvents(container, doc) {
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
+      s.destroy();
+      resolve();
+    });
 
-  const sendUpKey = () => EventUtils.sendKey("Up");
-  const sendDownKey = () => EventUtils.sendKey("Down");
-  const sendLeftKey = () => EventUtils.sendKey("Left");
-  const sendRightKey = () => EventUtils.sendKey("Right");
-
-  info(
-    "Test that simulating a mouse drag move event emits color changed event"
-  );
-  const draggerMoveFn = () =>
+    // Simulate a drag move event by calling the handler directly.
     s.onDraggerMove(s.dragger.offsetWidth / 2, s.dragger.offsetHeight / 2);
-  testChangingColorShouldEmitEventsHelper(s, draggerMoveFn, [128, 64, 64, 1]);
-
-  info(
-    "Test that moving the dragger with arrow keys emits color changed event."
-  );
-  // Focus on the spectrum dragger when spectrum is shown
-  s.dragger.focus();
-  is(
-    doc.activeElement.className,
-    "spectrum-color spectrum-box",
-    "Spectrum dragger has successfully received focus."
-  );
-  testChangingColorShouldEmitEventsHelper(s, sendDownKey, [125, 62, 62, 1]);
-  testChangingColorShouldEmitEventsHelper(s, sendLeftKey, [125, 63, 63, 1]);
-  testChangingColorShouldEmitEventsHelper(s, sendUpKey, [128, 64, 64, 1]);
-  testChangingColorShouldEmitEventsHelper(s, sendRightKey, [128, 63, 63, 1]);
-
-  info(
-    "Test that moving the hue slider with arrow keys emits color changed event."
-  );
-  // Tab twice to focus on hue slider
-  EventUtils.sendKey("Tab");
-  is(
-    doc.activeElement.className,
-    "devtools-button",
-    "Eyedropper has focus now."
-  );
-  EventUtils.sendKey("Tab");
-  is(
-    doc.activeElement.className,
-    "spectrum-hue-input",
-    "Hue slider has successfully received focus."
-  );
-  testChangingColorShouldEmitEventsHelper(s, sendRightKey, [128, 66, 63, 1]);
-  testChangingColorShouldEmitEventsHelper(s, sendLeftKey, [128, 63, 63, 1]);
-
-  info(
-    "Test that moving the hue slider with arrow keys emits color changed event."
-  );
-  // Tab to focus on alpha slider
-  EventUtils.sendKey("Tab");
-  is(
-    doc.activeElement.className,
-    "spectrum-alpha-input",
-    "Alpha slider has successfully received focus."
-  );
-  testChangingColorShouldEmitEventsHelper(s, sendLeftKey, [128, 63, 63, 0.99]);
-  testChangingColorShouldEmitEventsHelper(s, sendRightKey, [128, 63, 63, 1]);
-
-  s.destroy();
-}
-
-function setSpectrumProps(spectrum, props, updateUI = true) {
-  for (const prop in props) {
-    spectrum[prop] = props[prop];
-
-    // Setting textProps implies contrast should be enabled for spectrum
-    if (prop === "textProps") {
-      spectrum.contrastEnabled = true;
-    }
-  }
-
-  if (updateUI) {
-    spectrum.updateUI();
-  }
-}
-
-function testAriaAttributesOnSpectrumElements(
-  spectrum,
-  colorName,
-  rgbString,
-  alpha
-) {
-  for (const slider of [spectrum.dragger, spectrum.hueSlider]) {
-    is(
-      slider.getAttribute("aria-describedby"),
-      "spectrum-dragger",
-      "Slider contains the correct describedby text."
-    );
-    is(
-      slider.getAttribute("aria-valuetext"),
-      rgbString,
-      "Slider contains the correct valuetext text."
-    );
-  }
-
-  is(
-    spectrum.colorPreview.title,
-    colorName,
-    "Spectrum element contains the correct title text."
-  );
+  });
 }
 
 function testSettingColorShoudUpdateTheUI(container) {
-  const s = new Spectrum(container, cssColors.white);
+  const s = new Spectrum(container, [255, 255, 255, 1]);
   s.show();
   const dragHelperOriginalPos = [
     s.dragHelper.style.top,
     s.dragHelper.style.left,
   ];
-  const alphaSliderOriginalVal = s.alphaSlider.value;
-  let hueSliderOriginalVal = s.hueSlider.value;
+  const alphaHelperOriginalPos = s.alphaSliderHelper.style.left;
+  let hueHelperOriginalPos = s.hueSliderHelper.style.left;
 
-  setSpectrumProps(s, { rgb: [50, 240, 234, 0.2] });
+  s.rgb = [50, 240, 234, 0.2];
+  s.updateUI();
 
-  ok(s.alphaSlider.value != alphaSliderOriginalVal, "Alpha helper has moved");
+  ok(
+    s.alphaSliderHelper.style.left != alphaHelperOriginalPos,
+    "Alpha helper has moved"
+  );
   ok(
     s.dragHelper.style.top !== dragHelperOriginalPos[0],
     "Drag helper has moved"
@@ -290,23 +169,24 @@ function testSettingColorShoudUpdateTheUI(container) {
     s.dragHelper.style.left !== dragHelperOriginalPos[1],
     "Drag helper has moved"
   );
-  ok(s.hueSlider.value !== hueSliderOriginalVal, "Hue helper has moved");
-  testAriaAttributesOnSpectrumElements(
-    s,
-    "Closest to: aqua",
-    "rgba(50, 240, 234, 0.2)",
-    0.2
-  );
-
-  hueSliderOriginalVal = s.hueSlider.value;
-
-  setSpectrumProps(s, { rgb: ZERO_ALPHA_COLOR });
-  is(s.alphaSlider.value, 0, "Alpha range UI has been updated again");
   ok(
-    hueSliderOriginalVal !== s.hueSlider.value,
-    "Hue slider should have move again"
+    s.hueSliderHelper.style.left !== hueHelperOriginalPos,
+    "Hue helper has moved"
   );
-  testAriaAttributesOnSpectrumElements(s, "aqua", "rgba(0, 255, 255, 0)", 0);
+
+  hueHelperOriginalPos = s.hueSliderHelper.style.left;
+
+  s.rgb = [240, 32, 124, 0];
+  s.updateUI();
+  is(
+    s.alphaSliderHelper.style.left,
+    -(s.alphaSliderHelper.offsetWidth / 2) + "px",
+    "Alpha range UI has been updated again"
+  );
+  ok(
+    hueHelperOriginalPos !== s.hueSliderHelper.style.left,
+    "Hue Helper slider should have move again"
+  );
 
   s.destroy();
 }
@@ -327,116 +207,8 @@ function testChangingColorShouldUpdateColorPreview(container) {
   testColorPreviewDisplay(s, "rgb(255, 0, 0)", "transparent");
 
   info("Test that color preview is white and also has a light grey border.");
-  s.rgb = cssColors.white;
+  s.rgb = [255, 255, 255, 1];
   testColorPreviewDisplay(s, "rgb(255, 255, 255)", "rgb(204, 204, 204)");
-
-  s.destroy();
-}
-
-function testNotSettingTextPropsShouldNotShowContrastSection(container) {
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
-
-  setSpectrumProps(s, { rgb: cssColors.black });
-  ok(
-    !s.spectrumContrast.classList.contains("visible"),
-    "Contrast section is not shown."
-  );
-
-  s.destroy();
-}
-
-function testSpectrumContrast(
-  spectrum,
-  rgb,
-  expectedValue,
-  expectedBadgeClass = "",
-  expectLargeTextIndicator = false
-) {
-  setSpectrumProps(spectrum, { rgb });
-
-  is(
-    spectrum.contrastValue.textContent,
-    expectedValue,
-    "Contrast value has the correct text."
-  );
-  is(
-    spectrum.contrastValue.className,
-    `accessibility-contrast-value${
-      expectedBadgeClass ? " " + expectedBadgeClass : ""
-    }`,
-    `Contrast value contains ${expectedBadgeClass || "base"} class.`
-  );
-  is(
-    spectrum.spectrumContrast.classList.contains("large-text"),
-    expectLargeTextIndicator,
-    `Large text indicator is ${expectLargeTextIndicator ? "" : "not"} shown.`
-  );
-}
-
-function testSettingTextPropsAndColorShouldUpdateContrastValue(container) {
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
-
-  ok(
-    !s.spectrumContrast.classList.contains("visible"),
-    "Contrast value is not available yet."
-  );
-
-  info(
-    "Test that contrast ratio is calculated on setting 'textProps' and 'rgb'."
-  );
-  setSpectrumProps(s, { textProps: REGULAR_TEXT_PROPS }, false);
-  testSpectrumContrast(s, [50, 240, 234, 0.8], "1.35", FAIL);
-
-  info("Test that contrast ratio is updated when color is changed.");
-  testSpectrumContrast(s, cssColors.black, "21.00", AAA);
-
-  info("Test that contrast ratio cannot be calculated with zero alpha.");
-  testSpectrumContrast(s, ZERO_ALPHA_COLOR, "Unable to calculate");
-
-  s.destroy();
-}
-
-function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
-  container
-) {
-  let s = new Spectrum(container, cssColors.white);
-  s.show();
-
-  ok(
-    !s.spectrumContrast.classList.contains("large-text"),
-    "Large text indicator is initially hidden."
-  );
-
-  info(
-    "Test that selecting large text with non-zero alpha shows large text indicator."
-  );
-  setSpectrumProps(
-    s,
-    {
-      textProps: {
-        "font-size": { value: "24px" },
-        "font-weight": { value: "normal" },
-      },
-    },
-    false
-  );
-  testSpectrumContrast(s, cssColors.black, "21.00", AAA, true);
-
-  info(
-    "Test that selecting large text with zero alpha hides large text indicator."
-  );
-  testSpectrumContrast(s, ZERO_ALPHA_COLOR, "Unable to calculate");
-
-  // Spectrum should be closed and opened again to reflect changes in text size
-  s.destroy();
-  s = new Spectrum(container, cssColors.white);
-  s.show();
-
-  info("Test that selecting regular text does not show large text indicator.");
-  setSpectrumProps(s, { textProps: REGULAR_TEXT_PROPS }, false);
-  testSpectrumContrast(s, cssColors.black, "21.00", AAA);
 
   s.destroy();
 }
