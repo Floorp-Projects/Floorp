@@ -15,7 +15,7 @@
   --cookie-color-darker: #0073C3;
   --tracker-color: #2AC3A2;
   --tracker-color-darker: #229C82;
-  --orange: #FFBD4F;
+  --orange: #FFA436;
   --dark-orange: #ffA40C;
   --grey: #AFAFBB;
   --dark-grey: #88889A;
@@ -390,6 +390,7 @@ label:hover {
 }
 
 a.hidden,
+.lockwise-card.hidden,
 #lockwise-body-content .has-logins.hidden,
 #lockwise-body-content .no-logins.hidden {
   display: none;
@@ -439,6 +440,6 @@ a.hidden,
   line-height: 18px;
 }
 
-.has-logins a {
+#lockwise-body-content .has-logins a {
   margin-inline-start: 10px;
 }
