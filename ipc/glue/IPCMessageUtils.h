@@ -16,7 +16,6 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EnumTypeTraits.h"
-#include "mozilla/HashTable.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/net/WebSocketFrame.h"
 #include "mozilla/TimeStamp.h"
@@ -520,48 +519,6 @@ struct ParamTraits<nsTHashtable<nsUint64HashKey>> {
         return false;
       }
       table.PutEntry(key);
-    }
-    *aResult = std::move(table);
-    return true;
-  }
-};
-
-template <typename K, typename V>
-struct ParamTraits<mozilla::HashMap<K, V>> {
-  typedef mozilla::HashMap<K, V> paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    uint32_t count = aParam.count();
-    WriteParam(aMsg, count);
-    for (auto it = aParam.iter(); !it.done(); it.next()) {
-      WriteParam(aMsg, it.get().key());
-      WriteParam(aMsg, it.get().value());
-    }
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    uint32_t count;
-    if (!ReadParam(aMsg, aIter, &count)) {
-      return false;
-    }
-    // It's ok that the writer can DoS us here, because that's not part of our
-    // IPC security model (there's plenty of ways to DoS with malicious IPC).
-    paramType table(count);
-    for (uint32_t i = 0; i < count; ++i) {
-      K key;
-      V value;
-      if (!ReadParam(aMsg, aIter, &key)) {
-        return false;
-      }
-      if (!ReadParam(aMsg, aIter, &value)) {
-        return false;
-      }
-      // Don't necessarily trust the writer, so don't putNew.
-      bool ok = table.put(key, value);
-      if (!ok) {
-        return false;
-      }
     }
     *aResult = std::move(table);
     return true;

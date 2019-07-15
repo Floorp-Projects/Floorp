@@ -14,13 +14,11 @@ namespace ipc {
 void IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Write(
     IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
   WriteIPDLParam(aMsg, aActor, aParam.mRenderRoot);
-  WriteIPDLParam(aMsg, aActor, aParam.mIdNamespace);
   WriteIPDLParam(aMsg, aActor, aParam.mRect);
   WriteIPDLParam(aMsg, aActor, aParam.mCommands);
   WriteIPDLParam(aMsg, aActor, aParam.mContentSize);
   WriteIPDLParam(aMsg, aActor, std::move(aParam.mDL));
   WriteIPDLParam(aMsg, aActor, aParam.mDLDesc);
-  WriteIPDLParam(aMsg, aActor, aParam.mRemotePipelineIds);
   WriteIPDLParam(aMsg, aActor, aParam.mResourceUpdates);
   WriteIPDLParam(aMsg, aActor, aParam.mSmallShmems);
   WriteIPDLParam(aMsg, aActor, std::move(aParam.mLargeShmems));
@@ -31,13 +29,11 @@ bool IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     paramType* aResult) {
   if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRenderRoot) &&
-    ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIdNamespace) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRect) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mContentSize) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDL) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDLDesc) &&
-      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRemotePipelineIds) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResourceUpdates) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSmallShmems) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLargeShmems) &&
@@ -55,7 +51,6 @@ void IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mSmallShmems);
   WriteIPDLParam(aMsg, aActor, std::move(aParam.mLargeShmems));
   WriteIPDLParam(aMsg, aActor, aParam.mScrollUpdates);
-  WriteIPDLParam(aMsg, aActor, aParam.mPaintSequenceNumber);
 }
 
 bool IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Read(
@@ -66,8 +61,7 @@ bool IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Read(
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResourceUpdates) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSmallShmems) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLargeShmems) &&
-      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollUpdates) &&
-      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mPaintSequenceNumber)) {
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollUpdates)) {
     return true;
   }
   return false;

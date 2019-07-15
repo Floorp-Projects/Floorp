@@ -638,7 +638,6 @@ class DisplayListBuilder final {
   wr::PipelineId mPipelineId;
   wr::LayoutSize mContentSize;
 
-  nsTArray<wr::PipelineId> mRemotePipelineIds;
   RenderRoot mRenderRoot;
   bool mSendSubBuilderDisplayList;
 
