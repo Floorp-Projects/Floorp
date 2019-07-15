@@ -3545,13 +3545,21 @@ var BrowserOnClick = {
       case "viewCertificate":
         securityInfo = getSecurityInfo(securityInfoAsString);
         cert = securityInfo.serverCert;
-        Services.ww.openWindow(
-          window,
-          "chrome://pippki/content/certViewer.xul",
-          "_blank",
-          "centerscreen,chrome",
-          cert
-        );
+        if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
+          let derb64 = encodeURIComponent(btoa(getDERString(cert)));
+          let url = `about:certificate?cert=${derb64}`;
+          openTrustedLinkIn(url, "tab", {
+            triggeringPrincipal: browser.contentPrincipal,
+          });
+        } else {
+          Services.ww.openWindow(
+            window,
+            "chrome://pippki/content/certViewer.xul",
+            "_blank",
+            "centerscreen,chrome",
+            cert
+          );
+        }
         break;
       case "exceptionDialogButton":
         securityInfo = getSecurityInfo(securityInfoAsString);
