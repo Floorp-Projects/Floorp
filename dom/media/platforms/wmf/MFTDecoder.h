@@ -55,11 +55,11 @@ class MFTDecoder final {
   //  - MF_E_NOTACCEPTING if the decoder can't accept input. The data
   //    must be resubmitted after Output() stops producing output.
   HRESULT Input(const uint8_t* aData, uint32_t aDataSize,
-                int64_t aTimestampUsecs, int64_t aDurationUsecs);
+                int64_t aTimestampUsecs);
   HRESULT Input(IMFSample* aSample);
 
   HRESULT CreateInputSample(const uint8_t* aData, uint32_t aDataSize,
-                            int64_t aTimestampUsecs, int64_t aDurationUsecs,
+                            int64_t aTimestampUsecs,
                             RefPtr<IMFSample>* aOutSample);
 
   // Retrieves output from the MFT. Call this once Input() returns
