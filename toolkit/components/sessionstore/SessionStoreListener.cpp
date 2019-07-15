@@ -5,18 +5,20 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SessionStoreListener.h"
+#include "mozilla/dom/SessionStoreUtilsBinding.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "nsIBrowser.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsImportModule.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsITimer.h"
-#include "nsIXULBrowserWindow.h"
 #include "nsIXULWindow.h"
 #include "nsIWebProgress.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
+#include "SessionStoreFunctions.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -458,25 +460,34 @@ bool TabListener::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
     return false;
   }
 
-  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
-  window->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
-  if (!xulBrowserWindow) {
-    return false;
-  }
-
+  UpdateSessionStoreData data;
   if (mSessionStore->IsDocCapChanged()) {
-    xulBrowserWindow->UpdateDocShellCaps(mSessionStore->GetDocShellCaps());
+    data.mDocShellCaps.Construct() = mSessionStore->GetDocShellCaps();
   }
   if (mSessionStore->IsPrivateChanged()) {
-    xulBrowserWindow->UpdateIsPrivate(mSessionStore->GetPrivateModeEnabled());
+    data.mIsPrivate.Construct() = mSessionStore->GetPrivateModeEnabled();
   }
   if (mSessionStore->IsScrollPositionChanged()) {
     nsTArray<nsCString> positions;
     nsTArray<int> descendants;
     mSessionStore->GetScrollPositions(positions, descendants);
-    xulBrowserWindow->UpdateScrollPositions(positions, descendants);
+    data.mPositions.Construct().Assign(std::move(positions));
+    data.mPositionDescendants.Construct().Assign(std::move(descendants));
   }
-  xulBrowserWindow->UpdateSessionStore(mOwnerContent, aFlushId, aIsFinal, mEpoch);
+
+  nsCOMPtr<nsISessionStoreFunctions> funcs =
+      do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
+  MOZ_ALWAYS_TRUE(funcs);
+  nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
+  AutoJSAPI jsapi;
+  MOZ_ALWAYS_TRUE(jsapi.Init(wrapped->GetJSObjectGlobal()));
+  JS::Rooted<JS::Value> dataVal(jsapi.cx());
+  bool ok = ToJSValue(jsapi.cx(), data, &dataVal);
+  NS_ENSURE_TRUE(ok, false);
+
+  nsresult rv = funcs->UpdateSessionStore(mOwnerContent, aFlushId, aIsFinal,
+                                          mEpoch, dataVal);
+  NS_ENSURE_SUCCESS(rv, false);
   StopTimerForUpdate();
   return true;
 }
