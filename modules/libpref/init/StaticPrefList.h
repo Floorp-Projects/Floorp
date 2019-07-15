@@ -6989,6 +6989,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  Live,
+  "network.delay.tracking.load",
+  network_delay_tracking_load,
+  uint32_t, 0
+)
+
 // Max time to shutdown the resolver threads
 VARCACHE_PREF(
   Live,
