@@ -486,26 +486,6 @@ bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
   return true;
 }
 
-bool BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(
-    JSContext* cx, HandleObject environment) {
-  RootedObject env(cx, environment);
-  while (env->is<EnvironmentObject>() || env->is<DebugEnvironmentProxy>()) {
-    if (env->is<CallObject>()) {
-      RootedFunction fun(cx, &env->as<CallObject>().callee());
-      RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-      if (!script) {
-        return false;
-      }
-      if (script->argumentsHasVarBinding()) {
-        JSScript::argumentsOptimizationFailed(cx, script);
-      }
-    }
-    env = env->enclosingEnvironment();
-  }
-
-  return true;
-}
-
 template <typename Unit>
 JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     BytecodeCompiler& info, HandleObject environment, SharedContext* sc) {
