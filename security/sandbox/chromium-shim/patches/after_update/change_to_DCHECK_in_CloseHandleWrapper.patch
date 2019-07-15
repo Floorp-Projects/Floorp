@@ -1,0 +1,38 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1563194469 -3600
+#      Mon Jul 15 13:41:09 2019 +0100
+# Node ID 6d4e1a08b36e4191bd5ba7a338965f42f09162a6
+# Parent  7d9b5d8c9b9b36b135237292785537fc13f40226
+Bug 1564899: Make CloseHandleWrapper CHECK a DCHECK on non-Nightly builds. r=handyman!
+
+This is because we are hitting it frequently during PolicyBase::OnJobEmpty and
+currently we can't work out how this can happen.
+
+diff --git a/security/sandbox/chromium/base/win/scoped_handle_verifier.cc b/security/sandbox/chromium/base/win/scoped_handle_verifier.cc
+--- a/security/sandbox/chromium/base/win/scoped_handle_verifier.cc
++++ b/security/sandbox/chromium/base/win/scoped_handle_verifier.cc
+@@ -65,17 +65,23 @@ ScopedHandleVerifier* ScopedHandleVerifi
+   if (!g_active_verifier)
+     ScopedHandleVerifier::InstallVerifier();
+ 
+   return g_active_verifier;
+ }
+ 
+ bool CloseHandleWrapper(HANDLE handle) {
+   if (!::CloseHandle(handle))
++    // Making this DCHECK on non-Nighly as we are hitting this frequently,
++    // looks like we are closing handles twice somehow. See bug 1564899.
++#if defined(NIGHTLY_BUILD)
+     CHECK(false);  // CloseHandle failed.
++#else
++    DCHECK(false);  // CloseHandle failed.
++#endif
+   return true;
+ }
+ 
+ // Assigns the g_active_verifier global within the GetLock() lock.
+ // If |existing_verifier| is non-null then |enabled| is ignored.
+ void ThreadSafeAssignOrCreateScopedHandleVerifier(
+     ScopedHandleVerifier* existing_verifier,
+     bool enabled) {
