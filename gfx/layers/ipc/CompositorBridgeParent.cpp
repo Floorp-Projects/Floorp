@@ -538,6 +538,11 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvResume() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvResumeAsync() {
+  ResumeComposition();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvMakeSnapshot(
     const SurfaceDescriptor& aInSnapshot, const gfx::IntRect& aRect) {
   RefPtr<DrawTarget> target =
