@@ -255,21 +255,22 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
         WrBridge()->HasWebRenderParentCommands(renderRoot)) {
       auto updates = renderRootUpdates.AppendElement();
       updates->mRenderRoot = renderRoot;
+      updates->mPaintSequenceNumber = mPaintSequenceNumber;
       if (stateManager.mAsyncResourceUpdates) {
         stateManager.mAsyncResourceUpdates->Flush(updates->mResourceUpdates,
                                                   updates->mSmallShmems,
                                                   updates->mLargeShmems);
       }
       updates->mScrollUpdates = std::move(mPendingScrollUpdates[renderRoot]);
-      for (const auto& entry : updates->mScrollUpdates) {
-        nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/entry.first);
+      for (auto it = updates->mScrollUpdates.iter(); !it.done(); it.next()) {
+        nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/it.get().key());
       }
     }
   }
 
   Maybe<wr::IpcResourceUpdateQueue> nothing;
   WrBridge()->EndEmptyTransaction(mFocusTarget, renderRootUpdates,
-                                  mPaintSequenceNumber, mLatestTransactionId,
+                                  mLatestTransactionId,
                                   mTransactionIdAllocator->GetVsyncId(),
                                   mTransactionIdAllocator->GetVsyncStart(),
                                   refreshStart, mTransactionStart, mURL);

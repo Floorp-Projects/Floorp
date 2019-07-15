@@ -11,6 +11,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
+#include "mozilla/Variant.h"
 
 namespace mozilla {
 
@@ -18,11 +19,13 @@ namespace layers {
 
 struct RenderRootDisplayListData {
   wr::RenderRoot mRenderRoot;
+  wr::IdNamespace mIdNamespace;
   LayoutDeviceRect mRect;
   nsTArray<WebRenderParentCommand> mCommands;
   wr::LayoutSize mContentSize;
   Maybe<mozilla::ipc::ByteBuf> mDL;
   wr::BuiltDisplayListDescriptor mDLDesc;
+  nsTArray<wr::PipelineId> mRemotePipelineIds;
   nsTArray<OpUpdateResource> mResourceUpdates;
   nsTArray<RefCountedShmem> mSmallShmems;
   nsTArray<mozilla::ipc::Shmem> mLargeShmems;
@@ -36,7 +39,18 @@ struct RenderRootUpdates {
   nsTArray<RefCountedShmem> mSmallShmems;
   nsTArray<mozilla::ipc::Shmem> mLargeShmems;
   ScrollUpdatesMap mScrollUpdates;
+  uint32_t mPaintSequenceNumber;
 };
+
+struct ResourceUpdates {
+  nsTArray<OpUpdateResource> mResourceUpdates;
+  nsTArray<RefCountedShmem> mSmallShmems;
+  nsTArray<mozilla::ipc::Shmem> mLargeShmems;
+};
+
+typedef Variant<RenderRootDisplayListData, RenderRootUpdates, ResourceUpdates,
+                FocusTarget>
+    RenderRootDeferredData;
 
 }  // namespace layers
 
