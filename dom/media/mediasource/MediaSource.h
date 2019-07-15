@@ -83,9 +83,6 @@ class MediaSource final : public DOMEventTargetHelper,
   static nsresult IsTypeSupported(const nsAString& aType,
                                   DecoderDoctorDiagnostics* aDiagnostics);
 
-  static bool Enabled(JSContext* cx, JSObject* aGlobal);
-  static bool ExperimentalEnabled(JSContext* cx, JSObject* aGlobal);
-
   IMPL_EVENT_HANDLER(sourceopen);
   IMPL_EVENT_HANDLER(sourceended);
   IMPL_EVENT_HANDLER(sourceclosed);
