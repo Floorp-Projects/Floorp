@@ -21,7 +21,7 @@ enum MediaSourceEndOfStreamError {
   "decode"
 };
 
-[Constructor, Func="mozilla::dom::MediaSource::Enabled"]
+[Constructor, Pref="media.mediasource.enabled"]
 interface MediaSource : EventTarget {
   readonly attribute SourceBufferList sourceBuffers;
   readonly attribute SourceBufferList activeSourceBuffers;

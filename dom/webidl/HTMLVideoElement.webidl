@@ -79,6 +79,6 @@ partial interface HTMLVideoElement {
 
 // https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html#idl-def-HTMLVideoElement
 partial interface HTMLVideoElement {
-  [Func="mozilla::dom::MediaSource::Enabled", NewObject]
+  [Pref="media.mediasource.enabled", NewObject]
   VideoPlaybackQuality getVideoPlaybackQuality();
 };
