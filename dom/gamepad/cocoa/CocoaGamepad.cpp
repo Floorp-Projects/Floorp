@@ -83,6 +83,7 @@ class Gamepad {
 
  public:
   Gamepad() : mDevice(nullptr), mSuperIndex(-1) {}
+
   bool operator==(IOHIDDeviceRef device) const { return mDevice == device; }
   bool empty() const { return mDevice == nullptr; }
   void clear() {
@@ -92,12 +93,11 @@ class Gamepad {
     mSuperIndex = -1;
   }
   void init(IOHIDDeviceRef device);
+  void ReportChanged(uint8_t* report, CFIndex report_length);
+  size_t WriteOutputReport(const std::vector<uint8_t>& aReport) const;
+
   size_t numButtons() { return buttons.Length(); }
   size_t numAxes() { return axes.Length(); }
-
-  // Index given by our superclass.
-  uint32_t mSuperIndex;
-  RefPtr<GamepadRemapper> mRemapper;
 
   Button* lookupButton(IOHIDElementRef element) {
     for (unsigned i = 0; i < buttons.Length(); i++) {
@@ -112,6 +112,11 @@ class Gamepad {
     }
     return nullptr;
   }
+
+  // Index given by our superclass.
+  uint32_t mSuperIndex;
+  RefPtr<GamepadRemapper> mRemapper;
+  std::vector<uint8_t> mInputReport;
 };
 
 void Gamepad::init(IOHIDDeviceRef device) {
@@ -192,8 +197,16 @@ class DarwinGamepadService {
  public:
   DarwinGamepadService();
   ~DarwinGamepadService();
+
+  static void ReportChangedCallback(void* context, IOReturn result,
+                                    void* sender, IOHIDReportType report_type,
+                                    uint32_t report_id, uint8_t* report,
+                                    CFIndex report_length);
+
   void Startup();
   void Shutdown();
+  void SetLightIndicatorColor(uint32_t aControllerIdx, uint32_t aLightIndex,
+                              uint8_t aRed, uint8_t aGreen, uint8_t aBlue);
   friend class DarwinGamepadServiceStartupRunnable;
   friend class DarwinGamepadServiceShutdownRunnable;
 };
@@ -284,13 +297,27 @@ void DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device) {
   remapper->SetButtonCount(mGamepads[slot].numButtons());
 
   uint32_t index = service->AddGamepad(
-      buffer, remapper->GetMappingType(),
-      mozilla::dom::GamepadHand::_empty, remapper->GetButtonCount(),
-      remapper->GetAxisCount(), 0, 0,
-      0);  // TODO: Bug 680289, implement gamepad haptics for cocoa.
-  // TODO: Bug 1523355, implement gamepad lighindicator and touch for cocoa.
+      buffer, remapper->GetMappingType(), mozilla::dom::GamepadHand::_empty,
+      remapper->GetButtonCount(), remapper->GetAxisCount(),
+      0,  // TODO: Bug 680289, implement gamepad haptics for cocoa.
+      remapper->GetLightIndicatorCount(), remapper->GetTouchEventCount());
+
+  nsTArray<GamepadLightIndicatorType> lightTypes;
+  remapper->GetLightIndicators(lightTypes);
+  for (uint32_t i = 0; i < lightTypes.Length(); ++i) {
+    if (lightTypes[i] != GamepadLightIndicator::DefaultType()) {
+      service->NewLightIndicatorTypeEvent(index, i, lightTypes[i]);
+    }
+  }
+
   mGamepads[slot].mSuperIndex = index;
+  mGamepads[slot].mInputReport.resize(remapper->GetMaxInputReportLength());
   mGamepads[slot].mRemapper = remapper.forget();
+
+  IOHIDDeviceRegisterInputReportCallback(
+      device, mGamepads[slot].mInputReport.data(),
+      mGamepads[slot].mInputReport.size(), ReportChangedCallback,
+      &mGamepads[slot]);
 }
 
 void DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device) {
@@ -306,6 +333,29 @@ void DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device) {
       return;
     }
   }
+}
+
+// Replace context to be Gamepad.
+void DarwinGamepadService::ReportChangedCallback(
+    void* context, IOReturn result, void* sender, IOHIDReportType report_type,
+    uint32_t report_id, uint8_t* report, CFIndex report_length) {
+  if (report_type == kIOHIDReportTypeInput) {
+    reinterpret_cast<Gamepad*>(context)->ReportChanged(report, report_length);
+  }
+}
+
+void Gamepad::ReportChanged(uint8_t* report, CFIndex report_len) {
+  MOZ_RELEASE_ASSERT(report_len <= mRemapper->GetMaxInputReportLength());
+  mRemapper->ProcessTouchData(mSuperIndex, report);
+}
+
+size_t Gamepad::WriteOutputReport(const std::vector<uint8_t>& aReport) const {
+  IOReturn success =
+      IOHIDDeviceSetReport(mDevice, kIOHIDReportTypeOutput, aReport[0],
+                           aReport.data(), aReport.size());
+
+  MOZ_ASSERT(success == kIOReturnSuccess);
+  return (success == kIOReturnSuccess) ? aReport.size() : 0;
 }
 
 void DarwinGamepadService::InputValueChanged(IOHIDValueRef value) {
@@ -507,6 +557,35 @@ void DarwinGamepadService::Shutdown() {
   mIsRunning = false;
 }
 
+void DarwinGamepadService::SetLightIndicatorColor(uint32_t aControllerIdx,
+                                                  uint32_t aLightColorIndex,
+                                                  uint8_t aRed, uint8_t aGreen,
+                                                  uint8_t aBlue) {
+  // We get aControllerIdx from GamepadPlatformService::AddGamepad(),
+  // It begins from 1 and is stored at Gamepad.id.
+  const Gamepad* gamepad = nullptr;
+  for (const auto& pad : mGamepads) {
+    if (pad.mSuperIndex == aControllerIdx) {
+      gamepad = &pad;
+      break;
+    }
+  }
+  if (!gamepad) {
+    MOZ_ASSERT(false);
+    return;
+  }
+
+  RefPtr<GamepadRemapper> remapper = gamepad->mRemapper;
+  if (!remapper || remapper->GetLightIndicatorCount() <= aLightColorIndex) {
+    MOZ_ASSERT(false);
+    return;
+  }
+
+  std::vector<uint8_t> report;
+  remapper->GetLightColorReport(aRed, aGreen, aBlue, report);
+  gamepad->WriteOutputReport(report);
+}
+
 }  // namespace
 
 namespace mozilla {
@@ -535,8 +614,12 @@ void StopGamepadMonitoring() {
 void SetGamepadLightIndicatorColor(uint32_t aControllerIdx,
                                    uint32_t aLightColorIndex, uint8_t aRed,
                                    uint8_t aGreen, uint8_t aBlue) {
-  // TODO: Bug 1523353.
-  NS_WARNING("Mac OS doesn't support gamepad light indicator.");
+  MOZ_ASSERT(gService);
+  if (!gService) {
+    return;
+  }
+  gService->SetLightIndicatorColor(aControllerIdx, aLightColorIndex, aRed,
+                                   aGreen, aBlue);
 }
 
 }  // namespace dom
