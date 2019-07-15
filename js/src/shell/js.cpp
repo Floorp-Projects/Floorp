@@ -3157,10 +3157,6 @@ static const char* TryNoteName(JSTryNoteKind kind) {
 
 static MOZ_MUST_USE bool TryNotes(JSContext* cx, HandleScript script,
                                   Sprinter* sp) {
-  if (!script->hasTrynotes()) {
-    return true;
-  }
-
   if (!sp->put(
           "\nException table:\nkind               stack    start      end\n")) {
     return false;
@@ -3178,10 +3174,6 @@ static MOZ_MUST_USE bool TryNotes(JSContext* cx, HandleScript script,
 
 static MOZ_MUST_USE bool ScopeNotes(JSContext* cx, HandleScript script,
                                     Sprinter* sp) {
-  if (!script->hasScopeNotes()) {
-    return true;
-  }
-
   if (!sp->put("\nScope notes:\n   index   parent    start      end\n")) {
     return false;
   }

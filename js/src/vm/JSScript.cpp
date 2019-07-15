@@ -4182,22 +4182,20 @@ void JSScript::assertValidJumpTargets() const {
   }
 
   // Check catch/finally blocks as jump targets.
-  if (hasTrynotes()) {
-    for (const JSTryNote& tn : trynotes()) {
-      jsbytecode* end = codeEnd();
-      jsbytecode* mainEntry = main();
+  for (const JSTryNote& tn : trynotes()) {
+    jsbytecode* end = codeEnd();
+    jsbytecode* mainEntry = main();
 
-      jsbytecode* tryStart = offsetToPC(tn.start);
-      jsbytecode* tryPc = tryStart - 1;
-      if (tn.kind != JSTRY_CATCH && tn.kind != JSTRY_FINALLY) {
-        continue;
-      }
-
-      MOZ_ASSERT(JSOp(*tryPc) == JSOP_TRY);
-      jsbytecode* tryTarget = tryStart + tn.length;
-      MOZ_ASSERT(mainEntry <= tryTarget && tryTarget < end);
-      MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*tryTarget)));
+    jsbytecode* tryStart = offsetToPC(tn.start);
+    jsbytecode* tryPc = tryStart - 1;
+    if (tn.kind != JSTRY_CATCH && tn.kind != JSTRY_FINALLY) {
+      continue;
     }
+
+    MOZ_ASSERT(JSOp(*tryPc) == JSOP_TRY);
+    jsbytecode* tryTarget = tryStart + tn.length;
+    MOZ_ASSERT(mainEntry <= tryTarget && tryTarget < end);
+    MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*tryTarget)));
   }
 }
 #endif
@@ -5179,10 +5177,6 @@ size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
 Scope* JSScript::lookupScope(jsbytecode* pc) {
   MOZ_ASSERT(containsPC(pc));
 
-  if (!hasScopeNotes()) {
-    return nullptr;
-  }
-
   size_t offset = pc - code();
 
   auto notes = scopeNotes();
@@ -5658,9 +5652,6 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
 }
 
 bool JSScript::hasLoops() {
-  if (!hasTrynotes()) {
-    return false;
-  }
   for (const JSTryNote& tn : trynotes()) {
     switch (tn.kind) {
       case JSTRY_FOR_IN:

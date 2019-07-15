@@ -8288,15 +8288,14 @@ class DebuggerScriptIsInCatchScopeMatcher {
       return false;
     }
 
-    if (script->hasTrynotes()) {
-      for (const JSTryNote& tn : script->trynotes()) {
-        if (tn.start <= offset_ && offset_ < tn.start + tn.length &&
-            tn.kind == JSTRY_CATCH) {
-          isInCatch_ = true;
-          return true;
-        }
+    for (const JSTryNote& tn : script->trynotes()) {
+      if (tn.start <= offset_ && offset_ < tn.start + tn.length &&
+          tn.kind == JSTRY_CATCH) {
+        isInCatch_ = true;
+        return true;
       }
     }
+
     isInCatch_ = false;
     return true;
   }
