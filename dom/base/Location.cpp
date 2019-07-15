@@ -810,7 +810,7 @@ void Location::Assign(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
   DoSetHref(aUrl, aSubjectPrincipal, false, aRv);
 }
 
-already_AddRefed<nsIURI> Location::GetSourceBaseURL() {
+nsIURI* Location::GetSourceBaseURL() {
   Document* doc = GetEntryDocument();
   // If there's no entry document, we either have no Script Entry Point or one
   // that isn't a DOM Window.  This doesn't generally happen with the DOM, but
