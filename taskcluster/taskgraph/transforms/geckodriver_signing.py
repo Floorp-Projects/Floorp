@@ -81,6 +81,15 @@ def make_repackage_signing_description(config, jobs):
             'treeherder': treeherder,
         }
 
+        if build_platform.startswith('macosx'):
+            assert task['worker-type'].startswith("linux-"), \
+                (
+                    "Make sure to adjust the below worker-type logic for "
+                    "mac if you change the signing workerType aliases!"
+                )
+            task['worker-type'] = task['worker-type'].replace("linux-", "mac-")
+            task['worker']['mac-behavior'] = 'mac_geckodriver'
+
         yield task
 
 
@@ -90,6 +99,9 @@ def _craft_upstream_artifacts(dependency_kind, build_platform):
         extension = 'zip'
     elif build_platform.startswith('linux'):
         signing_format = 'autograph_gpg'
+        extension = 'tar.gz'
+    elif build_platform.startswith('macosx'):
+        signing_format = 'mac_geckodriver'
         extension = 'tar.gz'
     else:
         raise ValueError('Unsupported build platform "{}"'.format(build_platform))
