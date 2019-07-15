@@ -11,8 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script>
-  const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
-
   var counter = 0;
   var settings = [ [true, true], [true, false], [false, true], [false, false] ];
 
@@ -42,13 +40,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     unsafe_about: false,
     data_protocol: false,
     javascript: false,
+    mailto: false,
+    wss: false,
   };
-
-  if (AppConstants.platform !== "android") {
-    // WebSocket tests are not supported on Android Yet. Bug 1566168.
-    testsToRun.wss = false;
-    testsToRun.mailto = false;
-  }
 
   function log(msg) {
     document.getElementById("log").textContent += "\n" + msg;
