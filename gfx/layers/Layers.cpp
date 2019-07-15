@@ -2240,7 +2240,8 @@ bool LayerManager::SetPendingScrollUpdateForNextTransaction(
   wr::RenderRoot renderRoot = (GetBackendType() == LayersBackend::LAYERS_WR)
                                   ? aRenderRoot
                                   : wr::RenderRoot::Default;
-  mPendingScrollUpdates[renderRoot][aScrollId] = aUpdateInfo;
+  bool ok = mPendingScrollUpdates[renderRoot].put(aScrollId, aUpdateInfo);
+  MOZ_RELEASE_ASSERT(ok);
   return true;
 }
 
@@ -2249,11 +2250,8 @@ Maybe<ScrollUpdateInfo> LayerManager::GetPendingScrollInfoUpdate(
   // This never gets called for WebRenderLayerManager, so we assume that all
   // pending scroll info updates are stored under the default RenderRoot.
   MOZ_ASSERT(GetBackendType() != LayersBackend::LAYERS_WR);
-  auto it = mPendingScrollUpdates[wr::RenderRoot::Default].find(aScrollId);
-  if (it != mPendingScrollUpdates[wr::RenderRoot::Default].end()) {
-    return Some(it->second);
-  }
-  return Nothing();
+  auto p = mPendingScrollUpdates[wr::RenderRoot::Default].lookup(aScrollId);
+  return p ? Some(p->value()) : Nothing();
 }
 
 std::unordered_set<ScrollableLayerGuid::ViewID>
@@ -2261,8 +2259,8 @@ LayerManager::ClearPendingScrollInfoUpdate() {
   std::unordered_set<ScrollableLayerGuid::ViewID> scrollIds;
   for (auto renderRoot : wr::kRenderRoots) {
     auto& updates = mPendingScrollUpdates[renderRoot];
-    for (const auto& update : updates) {
-      scrollIds.insert(update.first);
+    for (auto it = updates.iter(); !it.done(); it.next()) {
+      scrollIds.insert(it.get().key());
     }
     updates.clear();
   }

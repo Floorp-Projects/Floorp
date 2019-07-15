@@ -12,6 +12,7 @@
 #include "Units.h"                  // for CSSRect, CSSPixel, etc
 #include "mozilla/DefineEnum.h"     // for MOZ_DEFINE_ENUM
 #include "mozilla/HashFunctions.h"  // for HashGeneric
+#include "mozilla/HashTable.h"      // for HashMap
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/BasePoint.h"               // for BasePoint
 #include "mozilla/gfx/Rect.h"                    // for RoundedIn
@@ -1099,7 +1100,7 @@ struct ScrollMetadata {
   // Please add new fields above this comment.
 };
 
-typedef std::map<ScrollableLayerGuid::ViewID, ScrollUpdateInfo>
+typedef HashMap<ScrollableLayerGuid::ViewID, ScrollUpdateInfo>
     ScrollUpdatesMap;
 
 }  // namespace layers
