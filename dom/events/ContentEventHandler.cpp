@@ -1308,8 +1308,8 @@ nsresult ContentEventHandler::OnQuerySelectedText(
   nsINode* const endNode = mFirstSelectedRawRange.GetEndContainer();
 
   // Make sure the selection is within the root content range.
-  if (!nsContentUtils::ContentIsDescendantOf(startNode, mRootContent) ||
-      !nsContentUtils::ContentIsDescendantOf(endNode, mRootContent)) {
+  if (!startNode->IsInclusiveDescendantOf(mRootContent) ||
+      !endNode->IsInclusiveDescendantOf(mRootContent)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -2522,8 +2522,7 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
 
   nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
   if (!targetFrame || !targetFrame->GetContent() ||
-      !nsContentUtils::ContentIsDescendantOf(targetFrame->GetContent(),
-                                             mRootContent)) {
+      !targetFrame->GetContent()->IsInclusiveDescendantOf(mRootContent)) {
     // There is no character at the point.
     aEvent->mSucceeded = true;
     return NS_OK;
@@ -2536,8 +2535,7 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
   nsIFrame::ContentOffsets tentativeCaretOffsets =
       targetFrame->GetContentOffsetsFromPoint(ptInTarget);
   if (!tentativeCaretOffsets.content ||
-      !nsContentUtils::ContentIsDescendantOf(tentativeCaretOffsets.content,
-                                             mRootContent)) {
+      !tentativeCaretOffsets.content->IsInclusiveDescendantOf(mRootContent)) {
     // There is no character nor tentative caret point at the point.
     aEvent->mSucceeded = true;
     return NS_OK;
