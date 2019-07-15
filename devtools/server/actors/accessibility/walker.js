@@ -165,6 +165,10 @@ const NAME_FROM_SUBTREE_RULE_ROLES = new Set([
 
 const IS_OSX = Services.appinfo.OS === "Darwin";
 
+const {
+  SCORES: { BEST_PRACTICES, FAIL, WARNING },
+} = accessibility;
+
 /**
  * Helper function that determines if nsIAccessible object is in stale state. When an
  * object is stale it means its subtree is not up to date.
@@ -549,7 +553,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
           check =>
             check != null &&
             !check.error &&
-            check.score === accessibility.SCORES.FAIL
+            [BEST_PRACTICES, FAIL, WARNING].includes(check.score)
         )
       ) {
         ancestries.push(this.getAncestry(acc));
