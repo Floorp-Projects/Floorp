@@ -8,6 +8,11 @@
 
 certificate-viewer-certificate-section-title = Certificate
 
+## Error messages
+
+certificate-viewer-error-message = We were unable to find the certificate information, or the certificate is corrupted. Please try again.
+certificate-viewer-error-title = Something went wrong.
+
 ## Certificate information labels
 
 certificate-viewer-algorithm = Algorithm
