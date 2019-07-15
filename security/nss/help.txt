@@ -7,6 +7,7 @@ Usage: build.sh [-h] [-c|-cc] [-v] [-j <n>] [--gyp|-g] [--opt|-o]
                 [--nspr|--with-nspr=<include>:<lib>|--system-nspr]
                 [--system-sqlite] [--enable-fips] [--enable-libpkix]
                 [--mozpkix-only] [-D<gyp-option>]
+                [--rebuild]
 
 This script builds NSS with gyp and ninja.
 
@@ -54,3 +55,5 @@ NSS build tool options:
     --disable-keylog disable support for logging key data to a file specified
                      by the SSLKEYLOGFILE environment variable
     -D<gyp-option>   pass an option directly to gyp
+    --rebuild        build again using the last set of options provided
+                     (all other arguments are ignored if --rebuild is used)
