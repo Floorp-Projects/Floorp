@@ -11,7 +11,6 @@
 #include "mozilla/dom/URL.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -79,7 +78,7 @@ bool MerchantValidationEvent::init(
   nsresult rv;
   nsCOMPtr<nsIURI> validationUri;
   rv = NS_NewURI(getter_AddRefs(validationUri), aEventInitDict.mValidationURL,
-                 nullptr, baseURI, nsContentUtils::GetIOService());
+                 nullptr, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aEventInitDict.mValidationURL);
     return false;

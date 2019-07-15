@@ -1675,8 +1675,7 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   Unused << NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
 
   WorkerLoadInfo info;
-  nsresult rv = NS_NewURI(getter_AddRefs(info.mBaseURI), mInfo->ScriptSpec(),
-                          nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(info.mBaseURI), mInfo->ScriptSpec());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

@@ -230,7 +230,7 @@ nsresult nsAutoConfig::downloadAutoConfig() {
   nsCOMPtr<nsIURI> url;
   nsCOMPtr<nsIChannel> channel;
 
-  rv = NS_NewURI(getter_AddRefs(url), mConfigURL.get(), nullptr, nullptr);
+  rv = NS_NewURI(getter_AddRefs(url), mConfigURL);
   if (NS_FAILED(rv)) {
     MOZ_LOG(
         MCD, LogLevel::Debug,

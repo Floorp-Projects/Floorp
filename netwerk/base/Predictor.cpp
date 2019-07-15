@@ -108,14 +108,12 @@ static bool sEsniEnabled = false;
 
 // Get the full origin (scheme, host, port) out of a URI (maybe should be part
 // of nsIURI instead?)
-static nsresult ExtractOrigin(nsIURI* uri, nsIURI** originUri,
-                              nsIIOService* ioService) {
+static nsresult ExtractOrigin(nsIURI* uri, nsIURI** originUri) {
   nsAutoCString s;
-  s.Truncate();
   nsresult rv = nsContentUtils::GetASCIIOrigin(uri, s);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_NewURI(originUri, s, nullptr, nullptr, ioService);
+  return NS_NewURI(originUri, s);
 }
 
 // All URIs we get passed *must* be http or https if they're not null. This
@@ -420,14 +418,10 @@ nsresult Predictor::Init() {
       do_GetService("@mozilla.org/netwerk/cache-storage-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mIOService = do_GetService("@mozilla.org/network/io-service;1", &rv);
+  mSpeculativeService = do_GetService("@mozilla.org/network/io-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewURI(getter_AddRefs(mStartupURI), "predictor://startup", nullptr,
-                 mIOService);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mSpeculativeService = do_QueryInterface(mIOService, &rv);
+  rv = NS_NewURI(getter_AddRefs(mStartupURI), "predictor://startup");
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDnsService = do_GetService("@mozilla.org/network/dns-service;1", &rv);
@@ -762,7 +756,7 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
 
   // Now we do the origin-only (and therefore predictor-only) entry
   nsCOMPtr<nsIURI> targetOrigin;
-  rv = ExtractOrigin(uriKey, getter_AddRefs(targetOrigin), mIOService);
+  rv = ExtractOrigin(uriKey, getter_AddRefs(targetOrigin));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!originKey) {
     originKey = targetOrigin;
@@ -1206,24 +1200,21 @@ void Predictor::SetupPrediction(int32_t confidence, uint32_t flags,
 
   if (prefetchOk) {
     nsCOMPtr<nsIURI> prefetchURI;
-    rv = NS_NewURI(getter_AddRefs(prefetchURI), uri, nullptr, nullptr,
-                   mIOService);
+    rv = NS_NewURI(getter_AddRefs(prefetchURI), uri);
     if (NS_SUCCEEDED(rv)) {
       mPrefetches.AppendElement(prefetchURI);
     }
   } else if (confidence >=
              StaticPrefs::network_predictor_preconnect_min_confidence()) {
     nsCOMPtr<nsIURI> preconnectURI;
-    rv = NS_NewURI(getter_AddRefs(preconnectURI), uri, nullptr, nullptr,
-                   mIOService);
+    rv = NS_NewURI(getter_AddRefs(preconnectURI), uri);
     if (NS_SUCCEEDED(rv)) {
       mPreconnects.AppendElement(preconnectURI);
     }
   } else if (confidence >=
              StaticPrefs::network_predictor_preresolve_min_confidence()) {
     nsCOMPtr<nsIURI> preresolveURI;
-    rv = NS_NewURI(getter_AddRefs(preresolveURI), uri, nullptr, nullptr,
-                   mIOService);
+    rv = NS_NewURI(getter_AddRefs(preresolveURI), uri);
     if (NS_SUCCEEDED(rv)) {
       mPreresolves.AppendElement(preresolveURI);
     }
@@ -1465,7 +1456,7 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
         PREDICTOR_LOG(("    load toplevel invalid URI state"));
         return NS_ERROR_INVALID_ARG;
       }
-      rv = ExtractOrigin(targetURI, getter_AddRefs(targetOrigin), mIOService);
+      rv = ExtractOrigin(targetURI, getter_AddRefs(targetOrigin));
       NS_ENSURE_SUCCESS(rv, rv);
       uriKey = targetURI;
       originKey = targetOrigin;
@@ -1475,7 +1466,7 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
         PREDICTOR_LOG(("    startup invalid URI state"));
         return NS_ERROR_INVALID_ARG;
       }
-      rv = ExtractOrigin(targetURI, getter_AddRefs(targetOrigin), mIOService);
+      rv = ExtractOrigin(targetURI, getter_AddRefs(targetOrigin));
       NS_ENSURE_SUCCESS(rv, rv);
       uriKey = mStartupURI;
       originKey = mStartupURI;
@@ -1486,9 +1477,9 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
         PREDICTOR_LOG(("    redirect/subresource invalid URI state"));
         return NS_ERROR_INVALID_ARG;
       }
-      rv = ExtractOrigin(targetURI, getter_AddRefs(targetOrigin), mIOService);
+      rv = ExtractOrigin(targetURI, getter_AddRefs(targetOrigin));
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = ExtractOrigin(sourceURI, getter_AddRefs(sourceOrigin), mIOService);
+      rv = ExtractOrigin(sourceURI, getter_AddRefs(sourceOrigin));
       NS_ENSURE_SUCCESS(rv, rv);
       uriKey = sourceURI;
       originKey = sourceOrigin;

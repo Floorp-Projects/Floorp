@@ -540,7 +540,7 @@ void nsLayoutStylesheetCache::BuildPreferenceSheet(
   StyleSheet* sheet = *aSheet;
 
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);
+  NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet");
   MOZ_ASSERT(uri, "URI creation shouldn't fail");
 
   sheet->SetURIs(uri, uri, uri);
