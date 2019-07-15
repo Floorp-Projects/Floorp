@@ -58,6 +58,7 @@ const MAX_ATTRIBUTION_STRING_LENGTH = 100;
 const MAX_EXPERIMENT_ID_LENGTH = 100;
 const MAX_EXPERIMENT_BRANCH_LENGTH = 100;
 const MAX_EXPERIMENT_TYPE_LENGTH = 20;
+const MAX_EXPERIMENT_ENROLLMENT_ID_LENGTH = 40;
 
 /**
  * This is a policy object used to override behavior for testing.
@@ -125,6 +126,7 @@ var TelemetryEnvironment = {
    * @param {String} branch The experiment branch.
    * @param {Object} [options] Optional object with options.
    * @param {String} [options.type=false] The specific experiment type.
+   * @param {String} [options.enrollmentId=undefined] The id of the enrollment.
    */
   setExperimentActive(id, branch, options = {}) {
     if (gGlobalEnvironment) {
@@ -1177,12 +1179,29 @@ EnvironmentCache.prototype = {
       }
     }
 
+    // Truncate the enrollment id if present.
+    if (options.hasOwnProperty("enrollmentId")) {
+      let enrollmentId = limitStringToLength(
+        options.enrollmentId,
+        MAX_EXPERIMENT_ENROLLMENT_ID_LENGTH
+      );
+      if (enrollmentId.length != options.enrollmentId.length) {
+        options.enrollmentId = enrollmentId;
+        this._log.warn(
+          "setExperimentActive - the enrollment id was truncated."
+        );
+      }
+    }
+
     let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
     // Add the experiment annotation.
     let experiments = this._currentEnvironment.experiments || {};
     experiments[saneId] = { branch: saneBranch };
     if (options.hasOwnProperty("type")) {
       experiments[saneId].type = options.type;
+    }
+    if (options.hasOwnProperty("enrollmentId")) {
+      experiments[saneId].enrollmentId = options.enrollmentId;
     }
     this._currentEnvironment.experiments = experiments;
     // Notify of the change.
