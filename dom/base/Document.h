@@ -666,7 +666,9 @@ class Document : public nsINode,
   virtual void NotifyPossibleTitleChange(bool aBoundTitleElement);
 
   /**
-   * Return the URI for the document. May return null.
+   * Return the URI for the document. May return null.  If it ever stops being
+   * able to return null, we can make sure nsINode::GetBaseURI/GetBaseURIObject
+   * also never return null.
    *
    * The value returned corresponds to the "document's address" in
    * HTML5.  As such, it may change over the lifetime of the document, for
@@ -901,8 +903,7 @@ class Document : public nsINode,
     return GetFallbackBaseURI();
   }
 
-  already_AddRefed<nsIURI> GetBaseURI(
-      bool aTryUseXHRDocBaseURI = false) const final;
+  nsIURI* GetBaseURI(bool aTryUseXHRDocBaseURI = false) const final;
 
   void SetBaseURI(nsIURI* aURI);
 

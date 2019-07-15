@@ -3225,7 +3225,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::PrivateModeChanged(bool aEnabled) {
   return mInstance ? mInstance->PrivateModeStateChanged(aEnabled) : NS_OK;
 }
 
-already_AddRefed<nsIURI> nsPluginInstanceOwner::GetBaseURI() const {
+nsIURI* nsPluginInstanceOwner::GetBaseURI() const {
   nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
   if (!content) {
     return nullptr;
