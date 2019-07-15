@@ -67,10 +67,10 @@ export default class LoginItem extends HTMLElement {
     this._copyUsernameButton.addEventListener("click", this);
     this._deleteButton.addEventListener("click", this);
     this._editButton.addEventListener("click", this);
+    this._form.addEventListener("submit", this);
     this._openSiteButton.addEventListener("click", this);
     this._originInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
-    this._saveChangesButton.addEventListener("click", this);
     window.addEventListener("AboutLoginsCreateLogin", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
@@ -135,8 +135,6 @@ export default class LoginItem extends HTMLElement {
           return;
         }
 
-        // Prevent form submit behavior on the following buttons.
-        event.preventDefault();
         if (classList.contains("cancel-button")) {
           let wasExistingLogin = !!this._login.guid;
           if (wasExistingLogin) {
@@ -200,35 +198,36 @@ export default class LoginItem extends HTMLElement {
             object: "existing_login",
             method: "open_site",
           });
-          return;
-        }
-        if (classList.contains("save-changes-button")) {
-          if (!this._isFormValid({ reportErrors: true })) {
-            return;
-          }
-          let loginUpdates = this._loginFromForm();
-          if (this._login.guid) {
-            loginUpdates.guid = this._login.guid;
-            document.dispatchEvent(
-              new CustomEvent("AboutLoginsUpdateLogin", {
-                bubbles: true,
-                detail: loginUpdates,
-              })
-            );
-
-            recordTelemetryEvent({ object: "existing_login", method: "save" });
-          } else {
-            document.dispatchEvent(
-              new CustomEvent("AboutLoginsCreateLogin", {
-                bubbles: true,
-                detail: loginUpdates,
-              })
-            );
-
-            recordTelemetryEvent({ object: "new_login", method: "save" });
-          }
         }
         break;
+      }
+      case "submit": {
+        // Prevent page navigation form submit behavior.
+        event.preventDefault();
+        if (!this._isFormValid({ reportErrors: true })) {
+          return;
+        }
+        let loginUpdates = this._loginFromForm();
+        if (this._login.guid) {
+          loginUpdates.guid = this._login.guid;
+          document.dispatchEvent(
+            new CustomEvent("AboutLoginsUpdateLogin", {
+              bubbles: true,
+              detail: loginUpdates,
+            })
+          );
+
+          recordTelemetryEvent({ object: "existing_login", method: "save" });
+        } else {
+          document.dispatchEvent(
+            new CustomEvent("AboutLoginsCreateLogin", {
+              bubbles: true,
+              detail: loginUpdates,
+            })
+          );
+
+          recordTelemetryEvent({ object: "new_login", method: "save" });
+        }
       }
     }
   }
