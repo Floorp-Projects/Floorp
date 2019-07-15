@@ -6,8 +6,8 @@ package org.mozilla.fenix.exceptions
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
@@ -22,9 +22,9 @@ class ExceptionsUIView(
 ) :
     UIView<ExceptionsState, ExceptionsAction, ExceptionsChange>(container, actionEmitter, changesObservable) {
 
-    override val view: LinearLayout = LayoutInflater.from(container.context)
+    override val view: RecyclerView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_exceptions, container, true)
-        .findViewById(R.id.exceptions_wrapper)
+        .findViewById(R.id.exceptions_list)
 
     init {
         view.exceptions_list.apply {

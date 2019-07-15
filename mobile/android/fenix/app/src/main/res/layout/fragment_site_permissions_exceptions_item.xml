@@ -2,9 +2,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="@dimen/site_permissions_exceptions_item_height"
         android:background="?android:attr/selectableItemBackground"
@@ -27,7 +27,8 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:textSize="@dimen/site_permissions_exceptions_item_text_size"
-            android:textColor="?primaryText"/>
+            android:textColor="?primaryText"
+            tools:text="mozilla.com" />
 
 </LinearLayout>
 

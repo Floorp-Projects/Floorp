@@ -3,14 +3,15 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:background="@color/sync_error_background_color">
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="@color/sync_error_background_color"
+        android:baselineAligned="false">
 
     <FrameLayout
         android:id="@+id/icon_frame"
@@ -30,6 +31,7 @@
         android:layout_marginStart="15dp"
         android:layout_marginEnd="6dp"
         android:paddingStart="16dp"
+        android:paddingEnd="0dp"
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
         android:layout_weight="1">
@@ -46,14 +48,14 @@
             android:visibility="visible"/>
 
         <TextView
-            android:id="@+id/email"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/errorSummary"
-            android:layout_alignStart="@id/errorSummary"
-            android:textColor="@color/sync_error_text_color"
-            android:maxLines="4"
-            android:visibility="gone"/>
+                android:id="@+id/email"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/errorSummary"
+                android:layout_alignStart="@id/errorSummary"
+                android:textColor="@color/sync_error_text_color"
+                android:maxLines="4"
+                android:visibility="gone"/>
 
     </RelativeLayout>
 

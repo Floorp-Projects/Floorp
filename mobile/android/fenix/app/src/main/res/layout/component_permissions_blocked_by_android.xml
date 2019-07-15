@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceListItemSmall"
-            android:text="@string/phone_feature_blocked_by_android_explanation"/>
+            tools:text="@string/phone_feature_blocked_by_android_explanation"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/settings_button"

@@ -37,7 +37,7 @@
                 app:layout_constraintTop_toBottomOf="@id/wordmark"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                tools:text="1.0.x (Build #x 🦎 69.x-x)\nAC: 1.0.0"
+                tools:text="1.0.x (Build #x)\nGV: 69.x-x\nAC: 1.0.0"
                 android:textAlignment="center" />
 
         <TextView

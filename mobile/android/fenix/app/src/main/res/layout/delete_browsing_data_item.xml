@@ -19,6 +19,7 @@
         android:layout_marginBottom="@dimen/library_item_icon_margin_vertical"
         android:background="@drawable/library_icon_reading_list_circle_background"
         android:clickable="false"
+        android:importantForAccessibility="no"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
