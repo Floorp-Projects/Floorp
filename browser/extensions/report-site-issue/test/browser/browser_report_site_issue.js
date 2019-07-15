@@ -75,6 +75,8 @@ add_task(async function test_opened_page() {
     let doc = content.document;
     let urlParam = doc.getElementById("url").innerText;
     let preview = doc.getElementById("screenshot-preview");
+    const URL =
+      "http://example.com/browser/browser/extensions/report-site-issue/test/browser/test.html";
     is(
       urlParam,
       args.TEST_PAGE,
@@ -105,24 +107,66 @@ add_task(async function test_opened_page() {
       "Details param is a stringified JSON object."
     );
     ok(Array.isArray(details.consoleLog), "Details has a consoleLog array.");
-    ok(
-      details.consoleLog[0].match(
-        /console\.log\(null\)[\s\S]*test.html:\d+:\d+/m
-      ),
-      "Can handle degenerate console logs"
+
+    const log1 = details.consoleLog[0];
+    ok(log1.log[0] === null, "Can handle degenerate console logs");
+    ok(log1.level === "log", "Reports correct log level");
+    ok(log1.uri === URL, "Reports correct url");
+    ok(log1.pos === "7:13", "Reports correct line and column");
+
+    const log2 = details.consoleLog[1];
+    ok(log2.log[0] === "colored message", "Can handle fancy console logs");
+    ok(log2.level === "error", "Reports correct log level");
+    ok(log2.uri === URL, "Reports correct url");
+    ok(log2.pos === "8:13", "Reports correct line and column");
+
+    const log3 = details.consoleLog[2];
+    const loggedObject = log3.log[0];
+    is(loggedObject.testobj, "{...}", "Reports object inside object");
+    is(loggedObject.testnumber, 1, "Reports number inside object");
+    is(loggedObject.testArray, "(4)[...]", "Reports array inside object");
+    is(loggedObject.testUndf, "undefined", "Reports undefined inside object");
+    is(loggedObject.testNull, null, "Reports null inside object");
+    is(
+      loggedObject.testFunc,
+      undefined,
+      "Reports function inside object as undefined due to security reasons"
     );
-    ok(
-      details.consoleLog[1].match(
-        /console\.error\(colored message\)[\s\S]*test.html:\d+:\d+/m
-      ),
-      "Can handle fancy console logs"
+    is(loggedObject.testString, "string", "Reports string inside object");
+    is(loggedObject.c, "{...}", "Reports circular reference inside object");
+    is(
+      Object.keys(loggedObject).length,
+      10,
+      "Preview has 10 keys inside object"
     );
+    ok(log3.level === "log", "Reports correct log level");
+    ok(log3.uri === URL, "Reports correct url");
+    ok(log3.pos === "23:13", "Reports correct line and column");
+
+    const log4 = details.consoleLog[3];
+    const loggedArray = log4.log[0];
+    is(loggedArray[0], "string", "Reports string inside array");
+    is(loggedArray[1], "{...}", "Reports object inside array");
+    is(loggedArray[2], null, "Reports null inside array");
+    is(loggedArray[3], 90, "Reports number inside array");
+    is(loggedArray[4], "undefined", "Reports undefined inside array");
+    is(
+      loggedArray[5],
+      "undefined",
+      "Reports function inside array as undefined due to security reasons"
+    );
+    is(loggedArray[6], "(4)[...]", "Reports array inside array");
+    is(loggedArray[7], "(8)[...]", "Reports circular array inside array");
+
+    const log5 = details.consoleLog[4];
     ok(
-      details.consoleLog[2].match(
-        /document\.access is undefined[\s\S]*test.html:\d+:\d+/m
-      ),
+      log5.log[0] === "TypeError: document.access is undefined",
       "Script errors are logged"
     );
+    ok(log5.level === "error", "Reports correct log level");
+    ok(log5.uri === URL, "Reports correct url");
+    ok(log5.pos === "35:5", "Reports correct line and column");
+
     ok(typeof details.buildID == "string", "Details has a buildID string.");
     ok(typeof details.channel == "string", "Details has a channel string.");
     ok(
