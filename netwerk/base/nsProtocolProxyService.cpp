@@ -533,7 +533,6 @@ nsAsyncResolveRequest::AsyncApplyFilters::OnProxyFilterResult(
   }
 
   mFilterCalledBack = true;
-  mProxyInfo = aProxyInfo;
 
   if (mProcessingInLoop) {
     // No need to call/dispatch ProcessNextFilter(), we are in a control
@@ -547,6 +546,8 @@ nsAsyncResolveRequest::AsyncApplyFilters::OnProxyFilterResult(
     LOG(("  canceled"));
     return NS_OK;
   }
+
+  mProxyInfo = aProxyInfo;
 
   if (mNextFilterIndex == mFiltersCopy.Length()) {
     // We are done, all filters have been called on!
