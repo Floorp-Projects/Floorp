@@ -1,11 +1,10 @@
-use serde::de::{self, SeqAccess, Visitor};
+use serde::de::{self, SeqAccess, Unexpected, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use std::error::Error as StdError;
 use std::fmt;
 
-use crate::error::{Error, ErrorKind};
+use crate::error::MarionetteError;
 use crate::marionette;
 use crate::webdriver;
 
@@ -84,8 +83,14 @@ impl Serialize for Request {
 
 #[derive(Debug, PartialEq)]
 enum Response {
-    Result { id: MessageId, result: Payload },
-    Error { id: MessageId, error: Error },
+    Result {
+        id: MessageId,
+        result: Payload,
+    },
+    Error {
+        id: MessageId,
+        error: MarionetteError,
+    },
 }
 
 impl Serialize for Response {
@@ -98,7 +103,7 @@ impl Serialize for Response {
                 (MessageDirection::Outgoing, id, Value::Null, &result).serialize(serializer)
             }
             Response::Error { id, error } => {
-                (MessageDirection::Outgoing, id, &error.description(), &error).serialize(serializer)
+                (MessageDirection::Outgoing, id, &error, Value::Null).serialize(serializer)
             }
         }
     }
@@ -155,19 +160,16 @@ impl<'de> Visitor<'de> for MessageVisitor {
             }
 
             MessageDirection::Outgoing => {
-                let maybe_error: Option<ErrorKind> = seq
+                let maybe_error: Option<MarionetteError> = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
-                let response = if let Some(kind) = maybe_error {
-                    // intermediary transformation to Error by inserting {"error": <kind>}
-                    // so it can be treated as a MarionetteError
-                    let mut details: Map<String, Value> = seq
-                        .next_element()?
-                        .ok_or_else(|| de::Error::invalid_length(3, &self))?;
-                    details.insert("error".to_string(), serde_json::to_value(kind).unwrap());
-
-                    let error: Error = serde_json::from_value(Value::Object(details)).unwrap();
+                let response = if let Some(error) = maybe_error {
+                    let _ = seq
+                        .next_element::<Value>()?
+                        .ok_or_else(|| de::Error::invalid_length(3, &self))?
+                        .as_null()
+                        .ok_or_else(|| de::Error::invalid_type(Unexpected::Unit, &self))?;
                     Response::Error { id, error }
                 } else {
                     let result: Payload = seq
@@ -200,7 +202,7 @@ mod tests {
     use super::*;
 
     use crate::common::*;
-    use crate::error::MarionetteError;
+    use crate::error::{ErrorKind, MarionetteError};
     use crate::test::assert_ser_de;
 
     #[test]
@@ -277,13 +279,13 @@ mod tests {
 
     #[test]
     fn test_outgoing_error() {
-        let json = json!([1, 42, "no such element", {"message": "", "stacktrace": ""}]);
-        let error: Error = MarionetteError {
+        let json =
+            json!([1, 42, {"error": "no such element", "message": "", "stacktrace": ""}, null]);
+        let error = MarionetteError {
             kind: ErrorKind::NoSuchElement,
             message: "".into(),
             stack: "".into(),
-        }
-        .into();
+        };
         let msg = Message::Outgoing(Response::Error { id: 42, error });
 
         assert_ser_de(&msg, json);
