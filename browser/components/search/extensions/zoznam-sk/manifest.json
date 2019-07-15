@@ -2,7 +2,8 @@
   "name": "Zoznam",
   "description": "Zoznam slovenskeho internetu",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
+  "encoding": "WINDOWS-1250",
   "applications": {
     "gecko": {
       "id": "zoznam-sk@search.mozilla.org"
