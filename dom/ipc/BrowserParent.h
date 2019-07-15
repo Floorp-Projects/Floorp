@@ -321,8 +321,8 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-      const nsTArray<nsCString>& aPositions,
-      const nsTArray<int32_t>& aPositionDescendants, const uint32_t& aFlushId,
+      const nsTArray<nsCString>&& aPositions,
+      const nsTArray<int32_t>&& aPositionDescendants, const uint32_t& aFlushId,
       const bool& aIsFinal, const uint32_t& aEpoch);
 
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(

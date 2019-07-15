@@ -14,6 +14,16 @@ UNIFIED_SOURCES += [
     'SessionStoreUtils.cpp',
 ]
 
+EXTRA_JS_MODULES += [
+    'SessionStoreFunctions.jsm',
+]
+
+XPIDL_MODULE = 'sessionStore_funcs'
+
+XPIDL_SOURCES += [
+    'SessionStoreFunctions.idl',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
