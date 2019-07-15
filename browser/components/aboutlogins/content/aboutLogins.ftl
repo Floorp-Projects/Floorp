@@ -62,6 +62,7 @@ login-item-password-reveal-checkbox-hide =
 login-item-copied-password-button-text = ✔ Copied!
 login-item-copy-password-button-text = Copy
 login-item-save-changes-button = Save Changes
+login-item-save-new-button = Save
 login-item-cancel-button = Cancel
 login-item-time-changed = Last modified: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
 login-item-time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
