@@ -347,6 +347,11 @@ impl PrimitiveBatch {
             features: BatchFeatures::empty(),
         }
     }
+
+    fn merge(&mut self, other: PrimitiveBatch) {
+        self.instances.extend(other.instances);
+        self.features |= other.features;
+    }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -389,7 +394,7 @@ impl AlphaBatchContainer {
 
             match batch_index {
                 Some(batch_index) => {
-                    self.opaque_batches[batch_index].instances.extend(other_batch.instances);
+                    self.opaque_batches[batch_index].merge(other_batch);
                 }
                 None => {
                     self.opaque_batches.push(other_batch);
@@ -406,8 +411,7 @@ impl AlphaBatchContainer {
 
             match batch_index {
                 Some(batch_index) => {
-                    let batch_index = batch_index + min_batch_index;
-                    self.alpha_batches[batch_index].instances.extend(other_batch.instances);
+                    self.alpha_batches[batch_index + min_batch_index].merge(other_batch);
                     min_batch_index = batch_index;
                 }
                 None => {
