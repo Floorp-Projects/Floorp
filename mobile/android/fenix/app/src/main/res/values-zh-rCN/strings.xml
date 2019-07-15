@@ -104,8 +104,6 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">关于 %1$s</string>
-    <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_notice">隐私声明</string>
     <!-- Preference linking to the your rights SUMO page -->
     <string name="preferences_your_rights">您的权利</string>
     <!-- Preference for settings related to saved passwords -->
@@ -116,6 +114,8 @@
     <string name="preferences_set_as_default_browser">设为默认浏览器</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">高级</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">隐私</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">站点权限</string>
     <!-- Preference for accessibility -->
@@ -136,6 +136,10 @@
     <string name="preferences_language">语言</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">数据反馈</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">数据收集</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">隐私声明</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">开发者工具</string>
     <!-- Preference for developers -->
@@ -158,6 +162,8 @@
     <string name="preferences_sign_out">退出登录</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">设备名称</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">设备名不能为空。</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">正在同步…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
@@ -203,6 +209,10 @@
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">遥测技术</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">使用和技术数据</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">与 Mozilla 分享您使用浏览器的工作性能、使用方式、硬件设备和有关自定义的数据，帮助我们改进 %1$s，让它变得更好</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">崩溃报告器</string>
     <!-- Preference switch for Mozilla location service -->
@@ -217,8 +227,6 @@
     <string name="preferences_sync_pair">扫描桌面 Firefox 中的配对二维码</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">登录</string>
-    <!-- Preference for account creation -->
-    <string name="preferences_sync_create_account">创建账户</string>
 
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">登录以重新连接</string>
@@ -453,6 +461,8 @@
     <string name="bookmark_undo_deletion">撤销</string>
 
     <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">权限</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">转至设置</string>
 
@@ -697,4 +707,25 @@
     <string name="onboarding_theme_dark_title">深邃主题</string>
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">明亮主题</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">标签页已发送！</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">标签页已发送！</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">扫码</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[在计算机上使用 Firefox 打开 <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">扫描就绪</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">使用相机登录</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">改用电子邮件</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox 将停止与您的账号的同步，但不会删除此设备上的任何浏览数据。</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">断开连接</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">取消</string>
 </resources>
