@@ -20,6 +20,8 @@
       this.addEventListener("click", this);
       this.addEventListener("dblclick", this, true);
       this.addEventListener("animationend", this);
+      this.addEventListener("focus", this);
+      this.addEventListener("AriaFocus", this);
 
       this._selectedOnFirstMouseDown = false;
 
@@ -613,6 +615,27 @@
       }
 
       ContextualIdentityService.setTabStyle(this);
+    }
+
+    updateA11yDescription() {
+      let prevDescTab = gBrowser.tabContainer.querySelector(
+        "tab[aria-describedby]"
+      );
+      if (prevDescTab) {
+        // We can only have a description for the focused tab.
+        prevDescTab.removeAttribute("aria-describedby");
+      }
+      let desc = document.getElementById("tabbrowser-tab-a11y-desc");
+      desc.textContent = gBrowser.getTabTooltip(this, false);
+      this.setAttribute("aria-describedby", "tabbrowser-tab-a11y-desc");
+    }
+
+    on_focus(event) {
+      this.updateA11yDescription();
+    }
+
+    on_AriaFocus(event) {
+      this.updateA11yDescription();
     }
   }
 
