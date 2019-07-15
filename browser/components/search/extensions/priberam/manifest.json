@@ -2,7 +2,8 @@
   "name": "Priberam",
   "description": "Dicionário Priberam",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
+  "encoding": "ISO-8859-15",
   "applications": {
     "gecko": {
       "id": "priberam@search.mozilla.org"
