@@ -60,6 +60,10 @@ parent:
   /// Send down initial document bit to the parent.
   async SetIsInitialDocument(bool aIsInitialDocument);
 
+  /// Tell the parent if this WindowGlobal has any "beforeunload" event
+  /// listeners.
+  async SetHasBeforeUnload(bool aHasBeforeUnload);
+
   /// Notify the parent that this PWindowGlobal is now the current global.
   async BecomeCurrentWindowGlobal();
 
