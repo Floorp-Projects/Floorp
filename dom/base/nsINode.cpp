@@ -597,7 +597,7 @@ void nsINode::Normalize() {
 }
 
 nsresult nsINode::GetBaseURI(nsAString& aURI) const {
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  nsIURI* baseURI = GetBaseURI();
 
   nsAutoCString spec;
   if (baseURI) {
