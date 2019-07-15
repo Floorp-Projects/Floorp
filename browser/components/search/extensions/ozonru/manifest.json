@@ -2,7 +2,8 @@
   "name": "OZON.ru",
   "description": "OZON.ru provider",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
+  "encoding": "WINDOWS-1251",
   "applications": {
     "gecko": {
       "id": "ozonru@search.mozilla.org"
