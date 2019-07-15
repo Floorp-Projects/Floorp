@@ -24,6 +24,7 @@
 #include "mozilla/dom/GamepadTestChannelParent.h"
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
+#include "mozilla/dom/MediaTransportParent.h"
 #include "mozilla/dom/MessagePortParent.h"
 #include "mozilla/dom/PendingIPCBlobParent.h"
 #include "mozilla/dom/ServiceWorkerActors.h"
@@ -1295,6 +1296,22 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvRemoveEndpoint(
                              }));
 
   return IPC_OK();
+}
+
+dom::PMediaTransportParent* BackgroundParentImpl::AllocPMediaTransportParent() {
+#ifdef MOZ_WEBRTC
+  return new MediaTransportParent;
+#else
+  return nullptr;
+#endif
+}
+
+bool BackgroundParentImpl::DeallocPMediaTransportParent(
+    dom::PMediaTransportParent* aActor) {
+#ifdef MOZ_WEBRTC
+  delete aActor;
+#endif
+  return true;
 }
 
 }  // namespace ipc

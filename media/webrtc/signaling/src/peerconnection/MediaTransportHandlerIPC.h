@@ -76,7 +76,7 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
   friend class MediaTransportChild;
 
   // We do not own this; it will tell us when it is going away.
-  MediaTransportChild* mChild = nullptr;
+  dom::PMediaTransportChild* mChild = nullptr;
 
   // |mChild| can only be initted asynchronously, |mInitPromise| resolves
   // when that happens. The |Then| calls make it convenient to dispatch API

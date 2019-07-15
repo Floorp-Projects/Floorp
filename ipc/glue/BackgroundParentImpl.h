@@ -380,6 +380,10 @@ class BackgroundParentImpl : public PBackgroundParent {
   virtual mozilla::ipc::IPCResult RecvRemoveEndpoint(
       const nsString& aGroupName, const nsCString& aEndpointURL,
       const PrincipalInfo& aPrincipalInfo) override;
+
+  virtual dom::PMediaTransportParent* AllocPMediaTransportParent() override;
+  virtual bool DeallocPMediaTransportParent(
+      dom::PMediaTransportParent* aActor) override;
 };
 
 }  // namespace ipc
