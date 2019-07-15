@@ -3543,7 +3543,7 @@ bool EditorBase::IsDescendantOfRoot(nsINode* inNode) const {
     return false;
   }
 
-  return nsContentUtils::ContentIsDescendantOf(inNode, root);
+  return inNode->IsInclusiveDescendantOf(root);
 }
 
 bool EditorBase::IsDescendantOfEditorRoot(nsINode* aNode) const {
@@ -3555,7 +3555,7 @@ bool EditorBase::IsDescendantOfEditorRoot(nsINode* aNode) const {
     return false;
   }
 
-  return nsContentUtils::ContentIsDescendantOf(aNode, root);
+  return aNode->IsInclusiveDescendantOf(root);
 }
 
 bool EditorBase::IsContainer(nsINode* aNode) { return aNode ? true : false; }

@@ -9634,7 +9634,8 @@ class PDFPageView {
       this.eventBus.dispatch('pagerendered', {
         source: this,
         pageNumber: this.id,
-        cssTransform: true
+        cssTransform: true,
+        timestamp: performance.now()
       });
       return;
     }
@@ -9655,7 +9656,8 @@ class PDFPageView {
         this.eventBus.dispatch('pagerendered', {
           source: this,
           pageNumber: this.id,
-          cssTransform: true
+          cssTransform: true,
+          timestamp: performance.now()
         });
         return;
       }
@@ -9861,7 +9863,8 @@ class PDFPageView {
       this.eventBus.dispatch('pagerendered', {
         source: this,
         pageNumber: this.id,
-        cssTransform: false
+        cssTransform: false,
+        timestamp: performance.now()
       });
 
       if (error) {

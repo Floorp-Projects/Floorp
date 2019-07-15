@@ -199,7 +199,7 @@ void EditorEventListener::Disconnect() {
     nsIContent* focusedContent = fm->GetFocusedElement();
     mozilla::dom::Element* root = mEditorBase->GetRoot();
     if (focusedContent && root &&
-        nsContentUtils::ContentIsDescendantOf(focusedContent, root)) {
+        focusedContent->IsInclusiveDescendantOf(root)) {
       // Reset the Selection ancestor limiter and SelectionController state
       // that EditorBase::InitializeSelection set up.
       mEditorBase->FinalizeSelection();
@@ -1134,7 +1134,7 @@ bool EditorEventListener::ShouldHandleNativeKeyBindings(
     return false;
   }
 
-  return nsContentUtils::ContentIsDescendantOf(targetContent, editingHost);
+  return targetContent->IsInclusiveDescendantOf(editingHost);
 }
 
 }  // namespace mozilla

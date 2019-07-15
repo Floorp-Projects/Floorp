@@ -67,7 +67,7 @@ void NodeIterator::NodePointer::AdjustAfterRemoval(
   if (!mNode || mNode == aRoot) return;
 
   // check if ancestor was removed
-  if (!nsContentUtils::ContentIsDescendantOf(mNode, aChild)) return;
+  if (!mNode->IsInclusiveDescendantOf(aChild)) return;
 
   if (mBeforeNode) {
     // Try the next sibling

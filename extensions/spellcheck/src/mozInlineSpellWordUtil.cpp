@@ -757,7 +757,7 @@ void mozInlineSpellWordUtil::BuildSoftText() {
       break;
     }
     // GetPreviousContent below expects mRootNode to be an ancestor of node.
-    if (!nsContentUtils::ContentIsDescendantOf(node, mRootNode)) {
+    if (!node->IsInclusiveDescendantOf(mRootNode)) {
       break;
     }
     node = node->GetPreviousContent(mRootNode);

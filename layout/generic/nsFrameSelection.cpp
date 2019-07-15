@@ -179,7 +179,7 @@ bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode) {
   }
 
   limiter = aFrameSel->GetAncestorLimiter();
-  return !limiter || nsContentUtils::ContentIsDescendantOf(aNode, limiter);
+  return !limiter || aNode->IsInclusiveDescendantOf(limiter);
 }
 
 namespace mozilla {
@@ -1276,9 +1276,8 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
       if (htmlEditor) {
         nsINode* cellparent = GetCellParent(aNewFocus);
         nsCOMPtr<nsINode> editorHostNode = htmlEditor->GetActiveEditingHost();
-        editableCell =
-            cellparent && editorHostNode &&
-            nsContentUtils::ContentIsDescendantOf(cellparent, editorHostNode);
+        editableCell = cellparent && editorHostNode &&
+                       cellparent->IsInclusiveDescendantOf(editorHostNode);
         if (editableCell) {
           mCellParent = cellparent;
 #ifdef DEBUG_TABLE_SELECTION

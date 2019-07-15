@@ -273,7 +273,7 @@ bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode) {
   }
 
   limiter = aFrameSel->GetAncestorLimiter();
-  return !limiter || nsContentUtils::ContentIsDescendantOf(aNode, limiter);
+  return !limiter || aNode->IsInclusiveDescendantOf(limiter);
 }
 
 namespace mozilla {
@@ -3134,10 +3134,10 @@ Element* Selection::GetCommonEditingHostForAllRanges() {
     if (editingHost == foundEditingHost) {
       continue;
     }
-    if (nsContentUtils::ContentIsDescendantOf(foundEditingHost, editingHost)) {
+    if (foundEditingHost->IsInclusiveDescendantOf(editingHost)) {
       continue;
     }
-    if (nsContentUtils::ContentIsDescendantOf(editingHost, foundEditingHost)) {
+    if (editingHost->IsInclusiveDescendantOf(foundEditingHost)) {
       editingHost = foundEditingHost;
       continue;
     }

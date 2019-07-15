@@ -2874,7 +2874,7 @@ bool CanvasRenderingContext2D::DrawCustomFocusRing(
 
   HTMLCanvasElement* canvas = GetCanvas();
 
-  if (!canvas || !nsContentUtils::ContentIsDescendantOf(&aElement, canvas)) {
+  if (!canvas || !aElement.IsInclusiveDescendantOf(canvas)) {
     return false;
   }
 

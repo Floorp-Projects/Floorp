@@ -418,6 +418,13 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-descendant
+   *
+   * @param aNode must not be nullptr.
+   */
+  bool IsInclusiveDescendantOf(const nsINode* aNode) const;
+
+  /**
    * Return this node as a document fragment. Asserts IsDocumentFragment().
    *
    * This is defined inline in DocumentFragment.h.
@@ -1316,10 +1323,9 @@ class nsINode : public mozilla::dom::EventTarget {
 
   nsIContent* GetNextNodeImpl(const nsINode* aRoot,
                               const bool aSkipChildren) const {
-    // Can't use nsContentUtils::ContentIsDescendantOf here, since we
-    // can't include it here.
 #ifdef DEBUG
     if (aRoot) {
+      // TODO: perhaps nsINode::IsInclusiveDescendantOf could be used instead.
       const nsINode* cur = this;
       for (; cur; cur = cur->GetParentNode())
         if (cur == aRoot) break;
@@ -1359,10 +1365,9 @@ class nsINode : public mozilla::dom::EventTarget {
    * null if there are no more nsIContents to traverse.
    */
   nsIContent* GetPreviousContent(const nsINode* aRoot = nullptr) const {
-    // Can't use nsContentUtils::ContentIsDescendantOf here, since we
-    // can't include it here.
 #ifdef DEBUG
     if (aRoot) {
+      // TODO: perhaps nsINode::IsInclusiveDescendantOf could be used instead.
       const nsINode* cur = this;
       for (; cur; cur = cur->GetParentNode())
         if (cur == aRoot) break;

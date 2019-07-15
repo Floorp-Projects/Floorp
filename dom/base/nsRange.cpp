@@ -687,8 +687,7 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
       newStart.InvalidateOffset();
     }
   } else {
-    gravitateStart =
-        Some(nsContentUtils::ContentIsDescendantOf(mStart.Container(), aChild));
+    gravitateStart = Some(mStart.Container()->IsInclusiveDescendantOf(aChild));
     if (gravitateStart.value()) {
       newStart.SetAfterRef(container, aPreviousSibling);
     }
@@ -706,8 +705,7 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
     if (mStart.Container() == mEnd.Container() && gravitateStart.isSome()) {
       gravitateEnd = gravitateStart.value();
     } else {
-      gravitateEnd =
-          nsContentUtils::ContentIsDescendantOf(mEnd.Container(), aChild);
+      gravitateEnd = mEnd.Container()->IsInclusiveDescendantOf(aChild);
     }
     if (gravitateEnd) {
       newEnd.SetAfterRef(container, aPreviousSibling);
@@ -777,7 +775,7 @@ int16_t nsRange::ComparePoint(const RawRangeBoundary& aPoint,
     return 0;
   }
 
-  if (!nsContentUtils::ContentIsDescendantOf(aPoint.Container(), mRoot)) {
+  if (!aPoint.Container()->IsInclusiveDescendantOf(mRoot)) {
     aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
     return 0;
   }
@@ -872,10 +870,8 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
   MOZ_ASSERT(
       !aRootNode || (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()) ||
           aNotInsertedYet ||
-          (nsContentUtils::ContentIsDescendantOf(aStartBoundary.Container(),
-                                                 aRootNode) &&
-           nsContentUtils::ContentIsDescendantOf(aEndBoundary.Container(),
-                                                 aRootNode) &&
+          (aStartBoundary.Container()->IsInclusiveDescendantOf(aRootNode) &&
+           aEndBoundary.Container()->IsInclusiveDescendantOf(aRootNode) &&
            aRootNode ==
                RangeUtils::ComputeRootNode(aStartBoundary.Container()) &&
            aRootNode == RangeUtils::ComputeRootNode(aEndBoundary.Container())),
@@ -1663,7 +1659,7 @@ nsresult nsRange::CutContents(DocumentFragment** aFragment) {
 
     iter.Next();
     nsCOMPtr<nsINode> nextNode = iter.GetCurrentNode();
-    while (nextNode && nsContentUtils::ContentIsDescendantOf(nextNode, node)) {
+    while (nextNode && nextNode->IsInclusiveDescendantOf(node)) {
       iter.Next();
       nextNode = iter.GetCurrentNode();
     }

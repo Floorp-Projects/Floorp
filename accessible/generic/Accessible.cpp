@@ -2452,8 +2452,7 @@ Accessible* Accessible::CurrentItem() const {
     dom::Document* DOMDoc = mContent->OwnerDoc();
     dom::Element* activeDescendantElm = DOMDoc->GetElementById(id);
     if (activeDescendantElm) {
-      if (nsContentUtils::ContentIsDescendantOf(mContent,
-                                                activeDescendantElm)) {
+      if (mContent->IsInclusiveDescendantOf(activeDescendantElm)) {
         // Don't want a cyclical descendant relationship. That would be bad.
         return nullptr;
       }

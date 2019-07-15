@@ -4894,8 +4894,8 @@ nsIContent* HTMLEditor::GetFocusedContent() {
   }
 
   if (inDesignMode) {
-    return OurWindowHasFocus() && nsContentUtils::ContentIsDescendantOf(
-                                      focusedContent, document)
+    return OurWindowHasFocus() &&
+                   focusedContent->IsInclusiveDescendantOf(document)
                ? focusedContent.get()
                : nullptr;
   }
@@ -5019,7 +5019,7 @@ void HTMLEditor::NotifyEditingHostMaybeChanged() {
 
   // Update selection ancestor limit if current editing host includes the
   // previous editing host.
-  if (nsContentUtils::ContentIsDescendantOf(ancestorLimiter, editingHost)) {
+  if (ancestorLimiter->IsInclusiveDescendantOf(editingHost)) {
     // Note that don't call HTMLEditor::InitializeSelectionAncestorLimit() here
     // because it may collapse selection to the first editable node.
     EditorBase::InitializeSelectionAncestorLimit(*editingHost);
@@ -5187,7 +5187,7 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
     }
     // If the target element is neither the active editing host nor a descendant
     // of it, we may not be able to handle the event.
-    if (!nsContentUtils::ContentIsDescendantOf(targetContent, editingHost)) {
+    if (!targetContent->IsInclusiveDescendantOf(editingHost)) {
       return false;
     }
     // If the clicked element has an independent selection, we shouldn't

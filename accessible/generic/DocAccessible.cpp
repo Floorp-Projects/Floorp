@@ -1938,7 +1938,7 @@ void DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner) {
     // Make an attempt to create an accessible if it wasn't created yet.
     if (!child) {
       // An owned child cannot be an ancestor of the owner.
-      if (nsContentUtils::ContentIsDescendantOf(aOwner->Elm(), childEl)) {
+      if (aOwner->Elm()->IsInclusiveDescendantOf(childEl)) {
         continue;
       }
 

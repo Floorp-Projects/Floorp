@@ -336,26 +336,10 @@ class nsContentUtils {
   static nsINode* GetCrossDocParentNode(nsINode* aChild);
 
   /**
-   * Do not ever pass null pointers to this method.  If one of your
-   * nsIContents is null, you have to decide for yourself what
-   * "IsDescendantOf" really means.
-   *
-   * @param  aPossibleDescendant node to test for being a descendant of
-   *         aPossibleAncestor
-   * @param  aPossibleAncestor node to test for being an ancestor of
-   *         aPossibleDescendant
-   * @return true if aPossibleDescendant is a descendant of
-   *         aPossibleAncestor (or is aPossibleAncestor).  false
-   *         otherwise.
-   */
-  static bool ContentIsDescendantOf(const nsINode* aPossibleDescendant,
-                                    const nsINode* aPossibleAncestor);
-
-  /**
-   * Similar to ContentIsDescendantOf, except will treat an HTMLTemplateElement
-   * or ShadowRoot as an ancestor of things in the corresponding
-   * DocumentFragment. See the concept of "host-including inclusive ancestor" in
-   * the DOM specification.
+   * Similar to nsINode::IsInclusiveDescendantOf, except will treat an
+   * HTMLTemplateElement or ShadowRoot as an ancestor of things in the
+   * corresponding DocumentFragment. See the concept of "host-including
+   * inclusive ancestor" in the DOM specification.
    */
   static bool ContentIsHostIncludingDescendantOf(
       const nsINode* aPossibleDescendant, const nsINode* aPossibleAncestor);
@@ -368,9 +352,9 @@ class nsContentUtils {
       const nsINode* aPossibleDescendant, const nsINode* aPossibleAncestor);
 
   /**
-   * Similar to ContentIsDescendantOf except it crosses document boundaries,
-   * this function uses ancestor/descendant relations in the composed document
-   * (see shadow DOM spec).
+   * Similar to nsINode::IsInclusiveDescendantOf except it crosses document
+   * boundaries, this function uses ancestor/descendant relations in the
+   * composed document (see shadow DOM spec).
    */
   static bool ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
                                             nsINode* aPossibleAncestor);

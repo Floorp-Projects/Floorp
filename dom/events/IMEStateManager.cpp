@@ -390,7 +390,7 @@ nsresult IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
   }
 
   if (!sPresContext || !sContent ||
-      !nsContentUtils::ContentIsDescendantOf(sContent, aContent)) {
+      !sContent->IsInclusiveDescendantOf(aContent)) {
     return NS_OK;
   }
 
