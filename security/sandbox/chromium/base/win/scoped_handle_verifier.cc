@@ -70,7 +70,13 @@ ScopedHandleVerifier* ScopedHandleVerifier::Get() {
 
 bool CloseHandleWrapper(HANDLE handle) {
   if (!::CloseHandle(handle))
+    // Making this DCHECK on non-Nighly as we are hitting this frequently,
+    // looks like we are closing handles twice somehow. See bug 1564899.
+#if defined(NIGHTLY_BUILD)
     CHECK(false);  // CloseHandle failed.
+#else
+    DCHECK(false);  // CloseHandle failed.
+#endif
   return true;
 }
 
