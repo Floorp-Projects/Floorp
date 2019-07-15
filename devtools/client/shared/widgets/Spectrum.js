@@ -8,9 +8,11 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { MultiLocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new MultiLocalizationHelper(
   "devtools/shared/locales/en-US/accessibility.properties",
-  "devtools/client/locales/en-US/accessibility.properties"
+  "devtools/client/locales/en-US/accessibility.properties",
+  "devtools/client/locales/en-US/inspector.properties"
 );
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const COLOR_HEX_WHITE = "#ffffff";
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(
@@ -147,6 +149,13 @@ function Spectrum(parentEl, rgb) {
   this.contrastValue = this.element.querySelector(
     ".accessibility-contrast-value"
   );
+
+  // Create the learn more info button
+  const learnMore = this.document.createElementNS(XHTML_NS, "button");
+  learnMore.id = "learn-more-button";
+  learnMore.className = "learn-more";
+  learnMore.title = L10N.getStr("accessibility.learnMore");
+  this.spectrumContrast.appendChild(learnMore);
 
   if (rgb) {
     this.rgb = rgb;
@@ -495,9 +504,8 @@ Spectrum.prototype = {
    * Contrast ratio components include:
    *    - contrastLargeTextIndicator: Hidden by default, shown when text has large font
    *                                  size if there is no error in calculation.
-   *    - contrastValue:              Set to calculated value and score if no
-   *                                  error. Set to error text if there is an error in
-   *                                  calculation.
+   *    - contrastValue:              Set to calculated value and score. Set to error text
+   *                                  if there is an error in calculation.
    */
   updateContrast: function() {
     // Remove additional classes on spectrum contrast, leaving behind only base classes
@@ -522,12 +530,22 @@ Spectrum.prototype = {
       this.contrastValue.textContent = L10N.getStr(
         "accessibility.contrast.error"
       );
+      this.contrastValue.title = L10N.getStr(
+        "accessibility.contrast.annotation.transparent.error"
+      );
       this.spectrumContrast.classList.remove("large-text");
       return;
     }
 
     this.contrastValue.classList.toggle(score, true);
     this.contrastValue.textContent = value.toFixed(2);
+    this.contrastValue.title = L10N.getFormatStr(
+      `accessibility.contrast.annotation.${score}`,
+      L10N.getFormatStr(
+        "colorPickerTooltip.contrastAgainstBgTitle",
+        COLOR_HEX_WHITE
+      )
+    );
     this.spectrumContrast.classList.toggle("large-text", isLargeText);
   },
 

@@ -2,6 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ :root {
+  --learn-more-underline: var(--grey-30);
+}
+
+.theme-dark:root {
+  --learn-more-underline: var(--grey-50);
+}
+
 #eyedropper-button {
   margin-inline-end: 5px;
   display: block;
@@ -177,6 +185,8 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 .spectrum-color-contrast {
   padding-block-start: 8px;
   padding-inline-start: 3px;
+  align-items: stretch;
+  line-height: 1.2em;
 }
 
 .spectrum-color-contrast.visible.large-text .accessibility-color-contrast-large-text {
@@ -204,11 +214,29 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 
 .spectrum-color-contrast .accessibility-contrast-value {
   color: var(--theme-body-color);
-  line-height: 1em;
+  border-bottom: 1px solid var(--learn-more-underline);
 }
 
 .spectrum-color-contrast .accessibility-contrast-value:not(:empty)::before {
   width: auto;
   content: none;
   padding-inline-start: 2px;
+}
+
+.learn-more {
+  background-size: auto;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  background-image: url(chrome://devtools/skin/images/info-small.svg);
+  background-color: transparent;
+  fill: var(--theme-icon-dimmed-color);
+  border: none;
+  margin-left: auto;
+  margin-top: 2px;
+  margin-right: 1px;
+}
+
+.learn-more:hover {
+  fill: var(--theme-icon-color);
+  cursor: pointer;
 }
