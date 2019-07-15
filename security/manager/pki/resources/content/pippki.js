@@ -30,13 +30,22 @@ function viewCertHelper(parent, cert) {
     return;
   }
 
-  Services.ww.openWindow(
-    parent,
-    "chrome://pippki/content/certViewer.xul",
-    "_blank",
-    "centerscreen,chrome",
-    cert
-  );
+  if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
+    let ownerGlobal = window.docShell.chromeEventHandler.ownerGlobal;
+    let derb64 = encodeURIComponent(btoa(getDERString(cert)));
+    let url = `about:certificate?cert=${derb64}`;
+    ownerGlobal.openTrustedLinkIn(url, "tab", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+  } else {
+    Services.ww.openWindow(
+      parent,
+      "chrome://pippki/content/certViewer.xul",
+      "_blank",
+      "centerscreen,chrome",
+      cert
+    );
+  }
 }
 
 function getDERString(cert) {
