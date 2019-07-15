@@ -18,7 +18,7 @@
  */
 var EXPORTED_SYMBOLS = ["DOMRequestIpcHelper"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function DOMRequestIpcHelper() {
   // _listeners keeps a list of messages for which we added a listener and the
@@ -41,10 +41,12 @@ DOMRequestIpcHelper.prototype = {
    * An object which "inherits" from DOMRequestIpcHelper and declares its own
    * queryInterface method MUST implement Ci.nsISupportsWeakReference.
    */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference,
-                                          Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsISupportsWeakReference,
+    Ci.nsIObserver,
+  ]),
 
-   /**
+  /**
    *  'aMessages' is expected to be an array of either:
    *  - objects of this form:
    *    {
@@ -70,7 +72,7 @@ DOMRequestIpcHelper.prototype = {
       aMessages = [aMessages];
     }
 
-    aMessages.forEach((aMsg) => {
+    aMessages.forEach(aMsg => {
       let name = aMsg.name || aMsg;
       // If the listener is already set and it is of the same type we just
       // increase the count and bail out. If it is not of the same type,
@@ -84,11 +86,12 @@ DOMRequestIpcHelper.prototype = {
         }
       }
 
-      aMsg.weakRef ? Services.cpmm.addWeakMessageListener(name, this)
-                   : Services.cpmm.addMessageListener(name, this);
+      aMsg.weakRef
+        ? Services.cpmm.addWeakMessageListener(name, this)
+        : Services.cpmm.addMessageListener(name, this);
       this._listeners[name] = {
         weakRef: !!aMsg.weakRef,
-        count: 1
+        count: 1,
       };
     });
   },
@@ -106,7 +109,7 @@ DOMRequestIpcHelper.prototype = {
       aMessages = [aMessages];
     }
 
-    aMessages.forEach((aName) => {
+    aMessages.forEach(aName => {
       if (this._listeners[aName] == undefined) {
         return;
       }
@@ -114,8 +117,8 @@ DOMRequestIpcHelper.prototype = {
       // Only remove the listener really when we don't have anybody that could
       // be waiting on a message.
       if (!--this._listeners[aName].count) {
-        this._listeners[aName].weakRef ?
-            Services.cpmm.removeWeakMessageListener(aName, this)
+        this._listeners[aName].weakRef
+          ? Services.cpmm.removeWeakMessageListener(aName, this)
           : Services.cpmm.removeMessageListener(aName, this);
         delete this._listeners[aName];
       }
@@ -160,8 +163,11 @@ DOMRequestIpcHelper.prototype = {
 
     this._destroyed = false;
 
-    Services.obs.addObserver(this, "inner-window-destroyed",
-                             /* weak-ref */ true);
+    Services.obs.addObserver(
+      this,
+      "inner-window-destroyed",
+      /* weak-ref */ true
+    );
   },
 
   destroyDOMRequestHelper: function() {
@@ -174,9 +180,9 @@ DOMRequestIpcHelper.prototype = {
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
     if (this._listeners) {
-      Object.keys(this._listeners).forEach((aName) => {
-        this._listeners[aName].weakRef ?
-            Services.cpmm.removeWeakMessageListener(aName, this)
+      Object.keys(this._listeners).forEach(aName => {
+        this._listeners[aName].weakRef
+          ? Services.cpmm.removeWeakMessageListener(aName, this)
           : Services.cpmm.removeMessageListener(aName, this);
       });
     }
@@ -262,13 +268,17 @@ DOMRequestIpcHelper.prototype = {
 
   _getRandomId: function() {
     return Cc["@mozilla.org/uuid-generator;1"]
-             .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+      .getService(Ci.nsIUUIDGenerator)
+      .generateUUID()
+      .toString();
   },
 
   createRequest: function() {
     // If we don't have a valid window object, throw.
     if (!this._window) {
-      Cu.reportError("DOMRequestHelper trying to create a DOMRequest without a valid window, failing.");
+      Cu.reportError(
+        "DOMRequestHelper trying to create a DOMRequest without a valid window, failing."
+      );
       throw Cr.NS_ERROR_FAILURE;
     }
     return Services.DOMRequest.createRequest(this._window);
@@ -282,7 +292,9 @@ DOMRequestIpcHelper.prototype = {
   createPromise: function(aPromiseInit) {
     // If we don't have a valid window object, throw.
     if (!this._window) {
-      Cu.reportError("DOMRequestHelper trying to create a Promise without a valid window, failing.");
+      Cu.reportError(
+        "DOMRequestHelper trying to create a Promise without a valid window, failing."
+      );
       throw Cr.NS_ERROR_FAILURE;
     }
     return new this._window.Promise(aPromiseInit);
@@ -294,7 +306,10 @@ DOMRequestIpcHelper.prototype = {
    */
   createPromiseWithId: function(aCallback) {
     return this.createPromise((aResolve, aReject) => {
-      let resolverId = this.getPromiseResolverId({ resolve: aResolve, reject: aReject });
+      let resolverId = this.getPromiseResolverId({
+        resolve: aResolve,
+        reject: aReject,
+      });
       aCallback(resolverId);
     });
   },
@@ -304,7 +319,7 @@ DOMRequestIpcHelper.prototype = {
       return;
     }
 
-    Object.keys(this._requests).forEach((aKey) => {
+    Object.keys(this._requests).forEach(aKey => {
       if (this.getRequest(aKey) instanceof this._window.DOMRequest) {
         aCallback(aKey);
       }
@@ -316,11 +331,13 @@ DOMRequestIpcHelper.prototype = {
       return;
     }
 
-    Object.keys(this._requests).forEach((aKey) => {
-      if ("resolve" in this.getPromiseResolver(aKey) &&
-          "reject" in this.getPromiseResolver(aKey)) {
+    Object.keys(this._requests).forEach(aKey => {
+      if (
+        "resolve" in this.getPromiseResolver(aKey) &&
+        "reject" in this.getPromiseResolver(aKey)
+      ) {
         aCallback(aKey);
       }
     });
   },
-}
+};
