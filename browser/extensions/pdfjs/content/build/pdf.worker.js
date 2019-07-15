@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.13';
-const pdfjsBuild = '28326165';
+const pdfjsVersion = '2.3.27';
+const pdfjsBuild = '13ebfec9';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -240,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.3.13';
+    let workerVersion = '2.3.27';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -37943,6 +37943,14 @@ Shadings.RadialAxial = function RadialAxialClosure() {
     var cs = dict.get('ColorSpace', 'CS');
     cs = _colorspace.ColorSpace.parse(cs, xref, res, pdfFunctionFactory);
     this.cs = cs;
+    const bbox = dict.getArray('BBox');
+
+    if (Array.isArray(bbox) && bbox.length === 4) {
+      this.bbox = _util.Util.normalizeRect(bbox);
+    } else {
+      this.bbox = null;
+    }
+
     var t0 = 0.0,
         t1 = 1.0;
 
@@ -38058,7 +38066,7 @@ Shadings.RadialAxial = function RadialAxialClosure() {
         }
       }
 
-      return ['RadialAxial', type, this.colorStops, p0, p1, r0, r1];
+      return ['RadialAxial', type, this.bbox, this.colorStops, p0, p1, r0, r1];
     }
   };
   return RadialAxial;
@@ -38675,7 +38683,14 @@ Shadings.Mesh = function MeshClosure() {
     this.matrix = matrix;
     this.shadingType = dict.get('ShadingType');
     this.type = 'Pattern';
-    this.bbox = dict.getArray('BBox');
+    const bbox = dict.getArray('BBox');
+
+    if (Array.isArray(bbox) && bbox.length === 4) {
+      this.bbox = _util.Util.normalizeRect(bbox);
+    } else {
+      this.bbox = null;
+    }
+
     var cs = dict.get('ColorSpace', 'CS');
     cs = _colorspace.ColorSpace.parse(cs, xref, res, pdfFunctionFactory);
     this.cs = cs;
@@ -44571,16 +44586,12 @@ function makeReasonSerializable(reason) {
   return new _util.UnknownErrorException(reason.message, reason.toString());
 }
 
-function resolveOrReject(capability, success, reason) {
-  if (success) {
+function resolveOrReject(capability, data) {
+  if (data.success) {
     capability.resolve();
   } else {
-    capability.reject(reason);
+    capability.reject(wrapReason(data.reason));
   }
-}
-
-function finalize(promise) {
-  return Promise.resolve(promise).catch(() => {});
 }
 
 function MessageHandler(sourceName, targetName, comObj) {
@@ -44867,7 +44878,7 @@ MessageHandler.prototype = {
 
     let deleteStreamController = () => {
       Promise.all([this.streamControllers[data.streamId].startCall, this.streamControllers[data.streamId].pullCall, this.streamControllers[data.streamId].cancelCall].map(function (capability) {
-        return capability && finalize(capability.promise);
+        return capability && capability.promise.catch(function () {});
       })).then(() => {
         delete this.streamControllers[data.streamId];
       });
@@ -44875,11 +44886,11 @@ MessageHandler.prototype = {
 
     switch (data.stream) {
       case 'start_complete':
-        resolveOrReject(this.streamControllers[data.streamId].startCall, data.success, wrapReason(data.reason));
+        resolveOrReject(this.streamControllers[data.streamId].startCall, data);
         break;
 
       case 'pull_complete':
-        resolveOrReject(this.streamControllers[data.streamId].pullCall, data.success, wrapReason(data.reason));
+        resolveOrReject(this.streamControllers[data.streamId].pullCall, data);
         break;
 
       case 'pull':
@@ -44938,7 +44949,7 @@ MessageHandler.prototype = {
         break;
 
       case 'cancel_complete':
-        resolveOrReject(this.streamControllers[data.streamId].cancelCall, data.success, wrapReason(data.reason));
+        resolveOrReject(this.streamControllers[data.streamId].cancelCall, data);
         deleteStreamController();
         break;
 
