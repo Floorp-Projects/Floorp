@@ -21,14 +21,14 @@ def test_which(monkeypatch):
         bindir = os.path.join(cwd, "win")
         monkeypatch.setenv("PATH", bindir)
 
-        assert which("foo.exe").lower() == os.path.join(bindir, "foo.exe")
-        assert which("foo").lower() == os.path.join(bindir, "foo.exe")
-        assert which("foo", exts=[".FOO", ".BAR"]).lower() == os.path.join(bindir, "foo")
+        assert which("foo.exe").lower() == os.path.join(bindir, "foo.exe").lower()
+        assert which("foo").lower() == os.path.join(bindir, "foo.exe").lower()
+        assert which("foo", exts=[".FOO", ".BAR"]).lower() == os.path.join(bindir, "foo").lower()
         assert os.environ.get("PATHEXT") != [".FOO", ".BAR"]
         assert which("foo.txt") is None
 
-        assert which("bar").lower() == os.path.join(bindir, "bar")
-        assert which("baz").lower() == os.path.join(cwd, "baz.exe")
+        assert which("bar").lower() == os.path.join(bindir, "bar").lower()
+        assert which("baz").lower() == os.path.join(cwd, "baz.exe").lower()
 
     else:
         bindir = os.path.join(cwd, "unix")
