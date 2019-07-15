@@ -930,6 +930,45 @@ class FindEventManager {
   }
 }
 
+/**
+ * Forwards zoom events from the browser chrome to the currently active viewer.
+ */
+class ZoomEventManager {
+  constructor(contentWindow) {
+    this.contentWindow = contentWindow;
+    this.winmm = contentWindow.docShell.messageManager;
+  }
+
+  bind() {
+    this.contentWindow.addEventListener(
+      "unload",
+      evt => {
+        this.unbind();
+      },
+      { once: true }
+    );
+
+    this.winmm.addMessageListener("PDFJS:ZoomIn", this);
+    this.winmm.addMessageListener("PDFJS:ZoomOut", this);
+    this.winmm.addMessageListener("PDFJS:ZoomReset", this);
+  }
+
+  receiveMessage(msg) {
+    const type = msg.name.split("PDFJS:")[1].toLowerCase();
+    const contentWindow = this.contentWindow;
+
+    const forward = contentWindow.document.createEvent("CustomEvent");
+    forward.initCustomEvent(type, true, true, null);
+    contentWindow.dispatchEvent(forward);
+  }
+
+  unbind() {
+    this.winmm.removeMessageListener("PDFJS:ZoomIn", this);
+    this.winmm.removeMessageListener("PDFJS:ZoomOut", this);
+    this.winmm.removeMessageListener("PDFJS:ZoomReset", this);
+  }
+}
+
 function PdfStreamConverter() {}
 
 PdfStreamConverter.prototype = {
@@ -1109,6 +1148,9 @@ PdfStreamConverter.prototype = {
           var findEventManager = new FindEventManager(domWindow);
           findEventManager.bind();
         }
+        const zoomEventManager = new ZoomEventManager(domWindow);
+        zoomEventManager.bind();
+
         listener.onStopRequest(aRequest, statusCode);
 
         if (domWindow.frameElement) {
