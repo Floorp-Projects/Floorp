@@ -267,8 +267,6 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
-  size_t resumeEntries =
-      script->hasResumeOffsets() ? script->resumeOffsets().size() : 0;
   UniquePtr<BaselineScript> baselineScript(
       BaselineScript::New(script, bailoutPrologueOffset_.offset(),
                           warmUpCheckPrologueOffset_.offset(),
@@ -278,7 +276,8 @@ MethodStatus BaselineCompiler::compile() {
                           profilerExitFrameToggleOffset_.offset(),
                           handler.retAddrEntries().length(),
                           pcMappingIndexEntries.length(), pcEntries.length(),
-                          resumeEntries, traceLoggerToggleOffsets_.length()),
+                          script->resumeOffsets().size(),
+                          traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     ReportOutOfMemory(cx);

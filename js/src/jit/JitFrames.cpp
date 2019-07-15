@@ -195,9 +195,6 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
   }
 
   RootedScript script(cx, frame.script());
-  if (!script->hasTrynotes()) {
-    return;
-  }
 
   for (TryNoteIterIon tni(cx, frame); !tni.done(); ++tni) {
     const JSTryNote* tn = *tni;
@@ -479,6 +476,8 @@ static void HandleExceptionBaseline(JSContext* cx, const JSJitFrameIter& frame,
     return;
   }
 
+  bool hasTryNotes = !script->trynotes().empty();
+
 again:
   if (cx->isExceptionPending()) {
     if (!cx->isClosingGenerator()) {
@@ -494,7 +493,7 @@ again:
           break;
 
         case ResumeMode::Return:
-          if (script->hasTrynotes()) {
+          if (hasTryNotes) {
             CloseLiveIteratorsBaselineForUncatchableException(cx, frame, pc);
           }
           ForcedReturn(cx, frame, pc, rfe);
@@ -505,7 +504,7 @@ again:
       }
     }
 
-    if (script->hasTrynotes()) {
+    if (hasTryNotes) {
       EnvironmentIter ei(cx, frame.baselineFrame(), pc);
       if (!ProcessTryNotesBaseline(cx, frame, ei, rfe, &pc)) {
         goto again;
@@ -520,7 +519,7 @@ again:
 
     frameOk = HandleClosingGeneratorReturn(cx, frame.baselineFrame(), frameOk);
     frameOk = Debugger::onLeaveFrame(cx, frame.baselineFrame(), pc, frameOk);
-  } else if (script->hasTrynotes()) {
+  } else if (hasTryNotes) {
     CloseLiveIteratorsBaselineForUncatchableException(cx, frame, pc);
   }
 

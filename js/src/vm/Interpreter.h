@@ -431,15 +431,12 @@ class MOZ_STACK_CLASS TryNoteIter {
       : script_(cx, script),
         pcOffset_(script->pcToOffset(pc)),
         isTryNoteValid_(isTryNoteValid) {
-    if (script->hasTrynotes()) {
-      // NOTE: The Span is a temporary so we can't use begin()/end()
-      // here or the iterator will outlive the span.
-      auto trynotes = script->trynotes();
-      tn_ = trynotes.data();
-      tnEnd_ = tn_ + trynotes.size();
-    } else {
-      tn_ = tnEnd_ = nullptr;
-    }
+    // NOTE: The Span is a temporary so we can't use begin()/end()
+    // here or the iterator will outlive the span.
+    auto trynotes = script->trynotes();
+    tn_ = trynotes.data();
+    tnEnd_ = tn_ + trynotes.size();
+
     settle();
   }
 

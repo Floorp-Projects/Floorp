@@ -239,10 +239,6 @@ bool ObjectGroup::useSingletonForAllocationSite(JSScript* script,
 
   // All loops in the script will have a try note indicating their boundary.
 
-  if (!script->hasTrynotes()) {
-    return true;
-  }
-
   uint32_t offset = script->pcToOffset(pc);
 
   for (const JSTryNote& tn : script->trynotes()) {
