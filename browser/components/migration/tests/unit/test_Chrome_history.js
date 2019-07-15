@@ -107,7 +107,8 @@ function assertEntryMatches(entry, urlInfo, dateWasInFuture = false) {
       Assert.equal(
         entry.visits[index].date.getTime(),
         ChromeMigrationUtils.chromeTimeToDate(
-          urlInfo.visits[index].visit_time
+          urlInfo.visits[index].visit_time,
+          new Date()
         ).getTime(),
         "Should have the correct date"
       );
