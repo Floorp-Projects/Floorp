@@ -421,7 +421,7 @@ nsresult FetchDriver::HttpFetch(
   nsAutoCString url;
   mRequest->GetURL(url);
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, nullptr, ios);
+  rv = NS_NewURI(getter_AddRefs(uri), url);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (StaticPrefs::browser_tabs_remote_useCrossOriginPolicy()) {

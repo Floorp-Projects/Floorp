@@ -130,7 +130,7 @@ already_AddRefed<nsIURI> ParseURLFromChrome(const nsAString& aInput,
                                             ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIURI> uri;
-  aRv = NS_NewURI(getter_AddRefs(uri), aInput, nullptr, nullptr);
+  aRv = NS_NewURI(getter_AddRefs(uri), aInput);
   if (aRv.Failed()) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
   }

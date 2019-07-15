@@ -51,8 +51,7 @@ already_AddRefed<URL> URL::Constructor(nsISupports* aParent,
                                        const nsAString& aBase,
                                        ErrorResult& aRv) {
   nsCOMPtr<nsIURI> baseUri;
-  nsresult rv = NS_NewURI(getter_AddRefs(baseUri), aBase, nullptr, nullptr,
-                          nsContentUtils::GetIOService());
+  nsresult rv = NS_NewURI(getter_AddRefs(baseUri), aBase);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aBase);
     return nullptr;
@@ -66,8 +65,7 @@ already_AddRefed<URL> URL::Constructor(nsISupports* aParent,
                                        const nsAString& aURL, nsIURI* aBase,
                                        ErrorResult& aRv) {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, aBase,
-                          nsContentUtils::GetIOService());
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, aBase);
   if (NS_FAILED(rv)) {
     // No need to warn in this case. It's common to use the URL constructor
     // to determine if a URL is valid and an exception will be propagated.
@@ -158,8 +156,7 @@ void URL::GetHref(nsAString& aHref) const { URL_GETTER(aHref, GetSpec); }
 
 void URL::SetHref(const nsAString& aHref, ErrorResult& aRv) {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref, nullptr, nullptr,
-                          nsContentUtils::GetIOService());
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
   if (NS_FAILED(rv)) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aHref);
     return;

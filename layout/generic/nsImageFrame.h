@@ -10,7 +10,6 @@
 #define nsImageFrame_h___
 
 #include "nsAtomicContainerFrame.h"
-#include "nsIIOService.h"
 #include "nsIObserver.h"
 
 #include "imgINotificationObserver.h"
@@ -131,7 +130,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
       gIconLoad->Shutdown();
       gIconLoad = nullptr;
     }
-    NS_IF_RELEASE(sIOService);
   }
 
   virtual nsresult RestartAnimation();
@@ -290,8 +288,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
  private:
   // random helpers
-  inline void SpecToURI(const nsAString& aSpec, nsIIOService* aIOService,
-                        nsIURI** aURI);
+  inline void SpecToURI(const nsAString& aSpec, nsIURI** aURI);
 
   inline void GetLoadGroup(nsPresContext* aPresContext,
                            nsILoadGroup** aLoadGroup);
@@ -376,8 +373,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   bool mFirstFrameComplete;
   bool mReflowCallbackPosted;
   bool mForceSyncDecoding;
-
-  static nsIIOService* sIOService;
 
   /* loading / broken image icon support */
 

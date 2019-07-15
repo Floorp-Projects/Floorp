@@ -44,24 +44,20 @@ void nsChromeRegistryContent::RegisterRemoteChrome(
 }
 
 void nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage) {
-  nsCOMPtr<nsIIOService> io(do_GetIOService());
-  if (!io) return;
-
   nsCOMPtr<nsIURI> content, locale, skin;
 
   if (aPackage.contentBaseURI.spec.Length()) {
-    nsresult rv = NS_NewURI(getter_AddRefs(content),
-                            aPackage.contentBaseURI.spec, nullptr, nullptr, io);
+    nsresult rv =
+        NS_NewURI(getter_AddRefs(content), aPackage.contentBaseURI.spec);
     if (NS_FAILED(rv)) return;
   }
   if (aPackage.localeBaseURI.spec.Length()) {
-    nsresult rv = NS_NewURI(getter_AddRefs(locale), aPackage.localeBaseURI.spec,
-                            nullptr, nullptr, io);
+    nsresult rv =
+        NS_NewURI(getter_AddRefs(locale), aPackage.localeBaseURI.spec);
     if (NS_FAILED(rv)) return;
   }
   if (aPackage.skinBaseURI.spec.Length()) {
-    nsresult rv = NS_NewURI(getter_AddRefs(skin), aPackage.skinBaseURI.spec,
-                            nullptr, nullptr, io);
+    nsresult rv = NS_NewURI(getter_AddRefs(skin), aPackage.skinBaseURI.spec);
     if (NS_FAILED(rv)) return;
   }
 
@@ -89,8 +85,7 @@ void nsChromeRegistryContent::RegisterSubstitution(
 
   nsCOMPtr<nsIURI> resolvedURI;
   if (aSubstitution.resolvedURI.spec.Length()) {
-    rv = NS_NewURI(getter_AddRefs(resolvedURI), aSubstitution.resolvedURI.spec,
-                   nullptr, nullptr, io);
+    rv = NS_NewURI(getter_AddRefs(resolvedURI), aSubstitution.resolvedURI.spec);
     if (NS_FAILED(rv)) return;
   }
 
@@ -101,16 +96,12 @@ void nsChromeRegistryContent::RegisterSubstitution(
 
 void nsChromeRegistryContent::RegisterOverride(
     const OverrideMapping& aOverride) {
-  nsCOMPtr<nsIIOService> io(do_GetIOService());
-  if (!io) return;
-
   nsCOMPtr<nsIURI> chromeURI, overrideURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(chromeURI), aOverride.originalURI.spec,
-                          nullptr, nullptr, io);
+  nsresult rv =
+      NS_NewURI(getter_AddRefs(chromeURI), aOverride.originalURI.spec);
   if (NS_FAILED(rv)) return;
 
-  rv = NS_NewURI(getter_AddRefs(overrideURI), aOverride.overrideURI.spec,
-                 nullptr, nullptr, io);
+  rv = NS_NewURI(getter_AddRefs(overrideURI), aOverride.overrideURI.spec);
   if (NS_FAILED(rv)) return;
 
   mOverrideTable.Put(chromeURI, overrideURI);

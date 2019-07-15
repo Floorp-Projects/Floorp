@@ -741,15 +741,14 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::Register(
     const ClientInfo& aClientInfo, const nsACString& aScopeURL,
     const nsACString& aScriptURL, ServiceWorkerUpdateViaCache aUpdateViaCache) {
   nsCOMPtr<nsIURI> scopeURI;
-  nsresult rv =
-      NS_NewURI(getter_AddRefs(scopeURI), aScopeURL, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScopeURL);
   if (NS_FAILED(rv)) {
     return ServiceWorkerRegistrationPromise::CreateAndReject(
         CopyableErrorResult(rv), __func__);
   }
 
   nsCOMPtr<nsIURI> scriptURI;
-  rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, nullptr);
+  rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL);
   if (NS_FAILED(rv)) {
     return ServiceWorkerRegistrationPromise::CreateAndReject(
         CopyableErrorResult(rv), __func__);
@@ -851,8 +850,7 @@ class GetRegistrationsRunnable final : public Runnable {
       NS_ConvertUTF8toUTF16 scope(data->mOrderedScopes[i]);
 
       nsCOMPtr<nsIURI> scopeURI;
-      nsresult rv =
-          NS_NewURI(getter_AddRefs(scopeURI), scope, nullptr, nullptr);
+      nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), scope);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         break;
       }
@@ -914,7 +912,7 @@ class GetRegistrationRunnable final : public Runnable {
     }
 
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), mURL, nullptr, nullptr);
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), mURL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mPromise->Reject(rv, __func__);
       return NS_OK;
@@ -1133,8 +1131,7 @@ void ServiceWorkerManager::NoteInheritedController(
   NS_ENSURE_TRUE_VOID(principal);
 
   nsCOMPtr<nsIURI> scope;
-  nsresult rv =
-      NS_NewURI(getter_AddRefs(scope), aController.Scope(), nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(scope), aController.Scope());
   NS_ENSURE_SUCCESS_VOID(rv);
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
@@ -1151,7 +1148,7 @@ ServiceWorkerInfo* ServiceWorkerManager::GetActiveWorkerInfoForScope(
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIURI> scopeURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -1216,7 +1213,7 @@ ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
 // a correct URI, so this is wrapped in DEBUG
 #ifdef DEBUG
   nsCOMPtr<nsIURI> scopeURI;
-  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -1254,7 +1251,7 @@ nsresult ServiceWorkerManager::NotifyUnregister(nsIPrincipal* aPrincipal,
 // a correct URI, so this is wrapped in DEBUG
 #ifdef DEBUG
   nsCOMPtr<nsIURI> scopeURI;
-  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1500,8 +1497,7 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
   NS_ENSURE_TRUE(principal, nullptr);
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv =
-      NS_NewURI(getter_AddRefs(uri), aClientInfo.URL(), nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aClientInfo.URL());
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return GetServiceWorkerRegistrationInfo(principal, uri);
@@ -1755,8 +1751,7 @@ bool ServiceWorkerManager::StartControlling(
   NS_ENSURE_TRUE(principal, false);
 
   nsCOMPtr<nsIURI> scope;
-  nsresult rv = NS_NewURI(getter_AddRefs(scope), aServiceWorker.Scope(),
-                          nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(scope), aServiceWorker.Scope());
   NS_ENSURE_SUCCESS(rv, false);
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
@@ -1812,7 +1807,7 @@ ServiceWorkerManager::GetScopeForUrl(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aPrincipal);
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aUrl, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aUrl);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
@@ -2501,7 +2496,7 @@ ServiceWorkerManager::GetRegistrationByPrincipal(
   MOZ_ASSERT(aInfo);
 
   nsCOMPtr<nsIURI> scopeURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -2537,7 +2532,7 @@ ServiceWorkerManager::CreateNewRegistration(
 #ifdef DEBUG
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIURI> scopeURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   RefPtr<ServiceWorkerRegistrationInfo> tmp =
@@ -2655,8 +2650,7 @@ void ServiceWorkerManager::Remove(const nsACString& aHost) {
     for (auto it2 = data->mInfos.Iter(); !it2.Done(); it2.Next()) {
       ServiceWorkerRegistrationInfo* reg = it2.UserData();
       nsCOMPtr<nsIURI> scopeURI;
-      nsresult rv =
-          NS_NewURI(getter_AddRefs(scopeURI), it2.Key(), nullptr, nullptr);
+      nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), it2.Key());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         continue;
       }

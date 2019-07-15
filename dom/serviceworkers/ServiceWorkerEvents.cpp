@@ -373,7 +373,7 @@ class StartResponse final : public Runnable {
       // Synthetic response. The buck stops at the worker script.
       url = mScriptSpec;
     }
-    rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, nullptr);
+    rv = NS_NewURI(getter_AddRefs(uri), url);
     NS_ENSURE_SUCCESS(rv, false);
     int16_t decision = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(uri, aLoadInfo, EmptyCString(), &decision);

@@ -217,8 +217,7 @@ OCSPRequest::Run() {
   }
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv =
-      NS_NewURI(getter_AddRefs(uri), mAIALocation, nullptr, nullptr, ios);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), mAIALocation);
   if (NS_FAILED(rv)) {
     return NotifyDone(NS_ERROR_MALFORMED_URI, lock);
   }
