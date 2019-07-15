@@ -1,0 +1,15 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl Element;
+
+[scriptable, uuid(1A060FBA-A19D-11E9-B7EB-580D0EDD8E6F)]
+interface nsISessionStoreFunctions : nsISupports {
+  // update sessionStore from the tabListener implemented by C++
+  // aData is a UpdateSessionStoreData dictionary (From SessionStoreUtils.webidl)
+  void UpdateSessionStore(in Element aBrowser, in uint32_t aFlushId, in boolean aIsFinal, in uint32_t aEpoch, in jsval aData);
+};

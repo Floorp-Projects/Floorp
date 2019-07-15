@@ -159,3 +159,10 @@ dictionary CollectedData
   // mChildren contains CollectedData instances
   sequence<object?> children;
 };
+
+dictionary UpdateSessionStoreData {
+  ByteString docShellCaps;
+  boolean isPrivate;
+  sequence<ByteString> positions;
+  sequence<long> positionDescendants;
+};
