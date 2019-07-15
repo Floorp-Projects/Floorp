@@ -48,7 +48,7 @@ data class SearchState(
  */
 sealed class SearchAction : Action {
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchAction()
-    data class SearchShortcutEnginePicker(val show: Boolean) : SearchAction()
+    data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchAction()
     data class UpdateQuery(val query: String) : SearchAction()
 }
 
@@ -62,7 +62,7 @@ fun searchStateReducer(state: SearchState, action: SearchAction): SearchState {
                 searchEngineSource = SearchEngineSource.Shortcut(action.engine),
                 showShortcutEnginePicker = false
             )
-        is SearchAction.SearchShortcutEnginePicker ->
+        is SearchAction.ShowSearchShortcutEnginePicker ->
             state.copy(showShortcutEnginePicker = action.show)
         is SearchAction.UpdateQuery ->
             state.copy(query = action.query)

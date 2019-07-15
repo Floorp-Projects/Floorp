@@ -163,7 +163,7 @@ class SearchFragment : Fragment(), BackHandler {
 
         search_shortcuts_button.setOnClickListener {
             val isOpen = searchStore.state.showShortcutEnginePicker
-            searchStore.dispatch(SearchAction.SearchShortcutEnginePicker(!isOpen))
+            searchStore.dispatch(SearchAction.ShowSearchShortcutEnginePicker(!isOpen))
 
             if (isOpen) {
                 requireComponents.analytics.metrics.track(Event.SearchShortcutMenuClosed)
