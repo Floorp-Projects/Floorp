@@ -369,10 +369,9 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   // them because of CompositorHitTestInfo and merging.
   size_t footerSize = sizeof(size_t) + sizeof(IntPoint);
   MOZ_RELEASE_ASSERT(aBlob.length() >= footerSize);
-  size_t indexOffset =
-      ConvertFromBytes<size_t>(aBlob.end().get() - footerSize);
-  IntPoint recordingOrigin =
-      ConvertFromBytes<IntPoint>(aBlob.end().get() - footerSize + sizeof(size_t));
+  size_t indexOffset = ConvertFromBytes<size_t>(aBlob.end().get() - footerSize);
+  IntPoint origin = ConvertFromBytes<IntPoint>(aBlob.end().get() - footerSize +
+                                               sizeof(size_t));
   // Apply the visibleRect's offset to make (0, 0) in the DT correspond to (0,
   // 0) in the texture
 
@@ -380,20 +379,17 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   Reader reader(aBlob.begin().get() + indexOffset,
                 aBlob.length() - footerSize - indexOffset);
 
-  IntPoint origin;
   if (aTileOffset) {
     origin +=
         gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
   }
-  dt = gfx::Factory::CreateOffsetDrawTarget(dt, recordingOrigin + origin);
+  dt = gfx::Factory::CreateOffsetDrawTarget(dt, origin);
 
   auto bounds = gfx::IntRect(origin, aSize);
 
   if (aDirtyRect) {
-    Rect dirty(aDirtyRect->origin.x + recordingOrigin.x,
-               aDirtyRect->origin.y + recordingOrigin.y,
-               aDirtyRect->size.width,
-               aDirtyRect->size.height);
+    Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y,
+               aDirtyRect->size.width, aDirtyRect->size.height);
     dt->PushClipRect(dirty);
     bounds = bounds.Intersect(
         IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,
