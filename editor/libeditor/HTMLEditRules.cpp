@@ -7131,7 +7131,7 @@ void HTMLEditRules::PromoteRange(nsRange& aRange,
         return;
       }
       // Make sure we don't go higher than our root element in the content tree
-      if (!nsContentUtils::ContentIsDescendantOf(host, block)) {
+      if (!host->IsInclusiveDescendantOf(block)) {
         HTMLEditorRef().IsEmptyNode(block, &bIsEmptyNode, true, false);
       }
       if (bIsEmptyNode) {

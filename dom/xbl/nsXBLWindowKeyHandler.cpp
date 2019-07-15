@@ -399,8 +399,7 @@ bool nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused() {
     if (!activeEditingHost) {
       return false;
     }
-    return nsContentUtils::ContentIsDescendantOf(focusedNode,
-                                                 activeEditingHost);
+    return focusedNode->IsInclusiveDescendantOf(activeEditingHost);
   }
 
   return false;
