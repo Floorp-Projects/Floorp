@@ -94,10 +94,9 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
       return promise.forget();
     }
 
-    nsCOMPtr<nsIURI> baseURI = doc->GetBaseURI();
     nsCOMPtr<nsIURI> resolvedURI;
-    nsresult rv =
-        NS_NewURI(getter_AddRefs(resolvedURI), aModuleURL, nullptr, baseURI);
+    nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI), aModuleURL, nullptr,
+                            doc->GetBaseURI());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       promise->MaybeReject(rv);
       return promise.forget();
