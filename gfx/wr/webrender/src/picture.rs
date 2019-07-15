@@ -991,6 +991,11 @@ impl TileCacheInstance {
                 image_keys.extend_from_slice(&yuv_image_data.yuv_key);
                 false
             }
+            PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
+                let border_data = &data_stores.image_border[data_handle].kind;
+                image_keys.push(border_data.request.key);
+                false
+            }
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain => {
                 // Early exit to ensure this doesn't get added as a dependency on the tile.
@@ -1027,8 +1032,7 @@ impl TileCacheInstance {
             PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
-            PrimitiveInstanceKind::RadialGradient { .. } |
-            PrimitiveInstanceKind::ImageBorder { .. } => {
+            PrimitiveInstanceKind::RadialGradient { .. } => {
                 // These don't contribute dependencies
                 false
             }
