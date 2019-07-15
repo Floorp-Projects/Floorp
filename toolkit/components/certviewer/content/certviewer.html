@@ -16,8 +16,9 @@
     <script defer="defer" type="module" src="chrome://global/content/certviewer/certviewer.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/info-item.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/info-group.js"></script>
-    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/dummy-info.js"></script>
-    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/certificate-section.js"></script>
+    <script defer="defer" src="chrome://global/content/certviewer/components/dummy-info.js"></script>
+    <script defer="defer" src="chrome://global/content/certviewer/components/error-section.js"></script>
+    <script defer="defer" src="chrome://global/content/certviewer/components/certificate-section.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://global/content/certviewer/certviewer.css">
     <title>about:certificate</title>
@@ -43,6 +44,12 @@
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/info-group.css">
       <span class="info-group-title"></span>
       <span class="info-group-title-hr"></span>
+    </template>
+
+    <template id="error-section-template">
+      <link rel="stylesheet" href="chrome://global/content/certviewer/components/error-section.css">
+      <h1 class="title"></h1>
+      <span class="error"></span>
     </template>
   </body>
 </html>
