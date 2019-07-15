@@ -135,6 +135,17 @@ class BackgroundServices(
         }
     }
 
+    /**
+     * We add an observer to the AccountManager so that we can control when the Firebase service
+     * will start/stop. This is only needed when landing the push service to ensure Firebase works
+     * as expected without causing any (as many) side effects.
+     *
+     * In order to use Firebase with Leanplum and other marketing features, we need it always
+     * running so we cannot leave this code in place when we implement those features.
+     *
+     * We should have this removed when we are more confident
+     * of the send-tab/push feature: https://github.com/mozilla-mobile/fenix/issues/4063
+     */
     private val accountObserver = object : AccountObserver {
         override fun onAuthenticationProblems() {}
 
@@ -163,6 +174,7 @@ class BackgroundServices(
     ).also {
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), true)
 
+        // This should be removed in the future. See comment on `accountObserver`.
         if (BuildConfig.SEND_TAB_ENABLED && pushConfig != null) {
             it.register(accountObserver)
         }
