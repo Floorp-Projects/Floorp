@@ -48,7 +48,7 @@ impl error::Error for Error {
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct MarionetteError {
-    #[serde(rename = "error", skip_serializing)]
+    #[serde(rename = "error")]
     pub kind: ErrorKind,
     #[serde(default = "empty_string")]
     pub message: String,
@@ -162,16 +162,19 @@ impl fmt::Display for ErrorKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test::assert_ser;
+    use crate::test::assert_ser_de;
     use serde_json::json;
 
     #[test]
-    fn test_error_serialize() {
+    fn test_json_error() {
         let err = MarionetteError {
             kind: ErrorKind::Timeout,
             message: "".into(),
             stack: "".into(),
         };
-        assert_ser(&err, json!({"message": "", "stacktrace": ""}));
+        assert_ser_de(
+            &err,
+            json!({"error": "timeout", "message": "", "stacktrace": ""}),
+        );
     }
 }
