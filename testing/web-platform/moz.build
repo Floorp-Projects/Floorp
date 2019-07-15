@@ -476,6 +476,9 @@ with Files("tests/resource-timing/**"):
 with Files("tests/resources/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
+with Files("tests/screen-capture/**"):
+    BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
+
 with Files("tests/screen-orientation/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
