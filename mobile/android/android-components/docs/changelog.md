@@ -49,6 +49,7 @@ permalink: /changelog/
   * Added `SessionManager.add(List<Session>)` to add a list of `Session`s to the `SessionManager`.
 
 * **feature-tab-collections**
+  * ⚠️ **These are breaking changes below**:
   * `Tab.restore()` now returns a `Session` instead of a `SessionManager.Snapshot`
   * `TabCollection.restore()` and `TabCollection.restoreSubset()` now return a `List<Session>` instead of a `SessionManager.Snapshot`
 
