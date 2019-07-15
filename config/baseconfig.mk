@@ -42,7 +42,30 @@ endif # WINNT
 ifndef INCLUDED_AUTOCONF_MK
 default::
 else
-TIERS := $(if $(MOZ_ARTIFACT_BUILDS),artifact )$(if $(MOZ_EME_WIN32_ARTIFACT),win32-artifact )$(if $(MOZ_ANDROID_FAT_AAR_ARCHITECTURES),android-fat-aar-artifact )pre-export export $(if $(COMPILE_ENVIRONMENT),$(if $(MOZ_RUST_TIER),rust )compile )misc libs tools$(if $(filter check recurse_check,$(MAKECMDGOALS)), check)
+# All possible tiers
+ALL_TIERS := artifact win32-artifact android-fat-aar-artifact pre-export export rust compile misc libs tools check
+
+# All tiers that may be used manually via `mach build $tier`
+RUNNABLE_TIERS := $(ALL_TIERS)
+ifndef MOZ_ARTIFACT_BUILDS
+RUNNABLE_TIERS := $(filter-out artifact,$(RUNNABLE_TIERS))
+endif
+ifndef MOZ_EME_WIN32_ARTIFACT
+RUNNABLE_TIERS := $(filter-out win32-artifact,$(RUNNABLE_TIERS))
+endif
+ifndef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+RUNNABLE_TIERS := $(filter-out android-fat-aar-artifact,$(RUNNABLE_TIERS))
+endif
+
+# All tiers that run automatically on `mach build`
+TIERS := $(filter-out check,$(RUNNABLE_TIERS))
+ifndef COMPILE_ENVIRONMENT
+TIERS := $(filter-out rust compile,$(TIERS))
+endif
+ifndef MOZ_RUST_TIER
+TIERS := $(filter-out rust,$(TIERS))
+endif
+
 endif
 
 # These defines are used to support the twin-topsrcdir model for comm-central.
