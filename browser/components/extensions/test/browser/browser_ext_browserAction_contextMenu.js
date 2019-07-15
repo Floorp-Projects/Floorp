@@ -638,7 +638,12 @@ add_task(async function browseraction_contextmenu_report_extension() {
     // loaded in the existing blank tab.
     if (customizing) {
       info("Closing the about:addons tab");
-      BrowserTestUtils.removeTab(win.gBrowser.selectedTab);
+      let customizationReady = BrowserTestUtils.waitForEvent(
+        win.gNavToolbox,
+        "customizationready"
+      );
+      win.gBrowser.removeTab(win.gBrowser.selectedTab);
+      await customizationReady;
     } else {
       info("Navigate the about:addons tab to about:blank");
       await BrowserTestUtils.loadURI(browser, "about:blank");
