@@ -20,9 +20,9 @@
 }
 
 :host([data-editing]) .edit-button,
+:host([data-is-new-login]) .copy-button,
 :host([data-is-new-login]) .delete-button,
 :host([data-is-new-login]) .origin-saved-value,
-:host([data-is-new-login]) copy-to-clipboard-button,
 :host([data-is-new-login]) .open-site-button,
 :host([data-is-new-login]) .meta-info,
 :host([data-is-new-login]) .login-item-title,
