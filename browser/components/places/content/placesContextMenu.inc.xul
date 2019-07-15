@@ -16,7 +16,8 @@
             accesskey="&cmd.open.accesskey;"
             default="true"
             selectiontype="single"
-            selection="link"/>
+            selection="link"
+            forcehideintabbrowser="true"/>
   <menuitem id="placesContext_open:newtab"
             command="placesCmd_open:tab"
             label="&cmd.open_tab.label;"
