@@ -2415,7 +2415,7 @@ void nsImageFrame::GetDocumentCharacterSet(nsACString& aCharset) const {
 }
 
 void nsImageFrame::SpecToURI(const nsAString& aSpec, nsIURI** aURI) {
-  nsCOMPtr<nsIURI> baseURI;
+  nsIURI* baseURI = nullptr;
   if (mContent) {
     baseURI = mContent->GetBaseURI();
   }

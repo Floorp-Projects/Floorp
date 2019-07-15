@@ -356,9 +356,8 @@ bool SVGAnimationElement::IsEventAttributeNameInternal(nsAtom* aName) {
 
 void SVGAnimationElement::UpdateHrefTarget(const nsAString& aHrefStr) {
   nsCOMPtr<nsIURI> targetURI;
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), aHrefStr,
-                                            OwnerDoc(), baseURI);
+                                            OwnerDoc(), GetBaseURI());
   // Bug 1415044 to investigate which referrer we should use
   mHrefTarget.ResetToURIFragmentID(this, targetURI,
                                    OwnerDoc()->GetDocumentURI(),
