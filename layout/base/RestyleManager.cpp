@@ -2738,11 +2738,24 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
   // XXXbholley: We should teach the frame constructor how to clear the dirty
   // descendants bit to avoid the traversal here.
   if (changeHint & nsChangeHint_ReconstructFrame) {
-    if (wasRestyled && styleFrame &&
-        styleFrame->StyleDisplay()->IsAbsolutelyPositionedStyle() !=
-            upToDateStyleIfRestyled->StyleDisplay()
-                ->IsAbsolutelyPositionedStyle()) {
-      aRestyleState.AddPendingScrollAnchorSuppression(styleFrame);
+    if (wasRestyled && styleFrame) {
+      auto* oldDisp = styleFrame->StyleDisplay();
+      auto* newDisp = upToDateStyleIfRestyled->StyleDisplay();
+      // https://drafts.csswg.org/css-scroll-anchoring/#suppression-triggers
+      //
+      // We need to do the position check here rather than in
+      // DidSetComputedStyle because changing position reframes.
+      //
+      // Don't suppress adjustments when going back to display: none, regardless
+      // of whether we're abspos changes.
+      //
+      // TODO(emilio): I _think_ chrome won't suppress adjustments whenever
+      // `display` changes. But ICBW.
+      if (newDisp->mDisplay != StyleDisplay::None &&
+          oldDisp->IsAbsolutelyPositionedStyle() !=
+              newDisp->IsAbsolutelyPositionedStyle()) {
+        aRestyleState.AddPendingScrollAnchorSuppression(styleFrame);
+      }
     }
     ClearRestyleStateFromSubtree(aElement);
     return true;
