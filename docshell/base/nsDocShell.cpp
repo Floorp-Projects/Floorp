@@ -4663,7 +4663,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     // Do not inherit owner from document
     uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
     nsAutoString srcdoc;
-    nsCOMPtr<nsIURI> baseURI;
+    nsIURI* baseURI = nullptr;
     nsCOMPtr<nsIURI> originalURI;
     nsCOMPtr<nsIURI> resultPrincipalURI;
     bool loadReplace = false;

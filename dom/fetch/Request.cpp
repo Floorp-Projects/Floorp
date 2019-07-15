@@ -84,9 +84,9 @@ already_AddRefed<nsIURI> ParseURLFromDocument(Document* aDocument,
   MOZ_ASSERT(aDocument);
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIURI> baseURI = aDocument->GetBaseURI();
   nsCOMPtr<nsIURI> resolvedURI;
-  aRv = NS_NewURI(getter_AddRefs(resolvedURI), aInput, nullptr, baseURI);
+  aRv = NS_NewURI(getter_AddRefs(resolvedURI), aInput, nullptr,
+                  aDocument->GetBaseURI());
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
   }
