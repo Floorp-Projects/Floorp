@@ -199,7 +199,7 @@ windows10-64/opt:
         - marionette-media-tests
 
 windows10-aarch64/opt:
-    build-platform: win64-aarch64/opt
+    build-platform: win64-aarch64-shippable/opt
     test-sets:
         - awsy
         - marionette-gpu-tests
