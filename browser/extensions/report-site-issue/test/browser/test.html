@@ -1,12 +1,38 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <script>
-  /* eslint-disable no-console */
-  /* eslint-disable no-unused-expressions */
-  "use strict";
-  console.log(null);
-  console.error("%ccolored message", "background:green; color:white");
-  document.access.non.existent.property.to.trigger.error;
+    /* eslint-disable no-console */
+    /* eslint-disable no-unused-expressions */
+    "use strict";
+    console.log(null);
+    console.error("%ccolored message", "background:green; color:white");
+    const obj = {
+        testobj: {},
+        testnumber: 1,
+        testArray: [1, {}, 2, 555],
+        testUndf: undefined,
+        testNull: null,
+        testFunc() {},
+        testString: 'string',
+        prop1: 'prop1',
+        prop2: 'prop2'
+    };
+    obj.c = obj;
+    obj.prop3 = 'prop3';
+    obj.prop4 = 'prop4';
+    console.log(obj);
+    const arr = [
+        'string',
+        {test: 'obj'},
+        null,
+        90,
+        undefined,
+        function() {},
+        [1, {}, 2, 555]
+    ];
+    arr.push(arr);
+    console.log(arr);
+    document.access.non.existent.property.to.trigger.error;
 </script>
 <style>
   body {background: rgb(0, 128, 0);}
