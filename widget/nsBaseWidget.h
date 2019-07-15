@@ -470,6 +470,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return true;
   }
   virtual uint32_t GetGLFrameBufferFormat();
+  virtual bool CompositorInitiallyPaused() { return false; }
 
  protected:
   void ResolveIconName(const nsAString& aIconName, const nsAString& aIconSuffix,
