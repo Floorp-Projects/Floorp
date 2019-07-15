@@ -3626,19 +3626,6 @@ JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
   return DecodeBinAST(cx, options, fileContents.begin(), fileContents.length());
 }
 
-JS_PUBLIC_API bool JS::DecodeBinASTOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
-    size_t length, OffThreadCompileCallback callback, void* callbackData) {
-  return StartOffThreadDecodeBinAST(cx, options, buf, length, callback,
-                                    callbackData);
-}
-
-JS_PUBLIC_API JSScript* JS::FinishOffThreadBinASTDecode(
-    JSContext* cx, JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  return HelperThreadState().finishBinASTDecodeTask(cx, token);
-}
 #endif
 
 JS_PUBLIC_API JSObject* JS_GetGlobalFromScript(JSScript* script) {
