@@ -173,7 +173,7 @@ add_task(async function autocomplete_generated_password_auto_saved() {
       await hintPromiseHidden;
 
       // check a dismissed prompt was shown with extraAttr attribute
-      let notif = getCaptureDoorhanger("password-change");
+      let notif = getCaptureDoorhanger("password-save");
       ok(notif && notif.dismissed, "Dismissed notification was created");
       is(
         notif.anchorElement.getAttribute("extraAttr"),
