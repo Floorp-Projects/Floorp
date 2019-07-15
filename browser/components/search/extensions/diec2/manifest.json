@@ -2,7 +2,8 @@
   "name": "DIEC2",
   "description": "Diccionari de l'Institut d'Estudis Catalans",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
+  "encoding": "ISO-8859-1",
   "applications": {
     "gecko": {
       "id": "diec2@search.mozilla.org"
