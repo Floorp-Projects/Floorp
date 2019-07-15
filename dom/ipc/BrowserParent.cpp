@@ -216,7 +216,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mActiveInPriorityManager(false),
       mHasLayers(false),
       mHasPresented(false),
-      mHasBeforeUnload(false),
       mIsReadyToHandleInputEvents(false),
       mIsMouseEnterIntoWidgetEventSuppressed(false),
       mIsActiveRecordReplayTab(false) {
@@ -2376,12 +2375,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvAccessKeyNotHandled(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvSetHasBeforeUnload(
-    const bool& aHasBeforeUnload) {
-  mHasBeforeUnload = aHasBeforeUnload;
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvRegisterProtocolHandler(
     const nsString& aScheme, nsIURI* aHandlerURI, const nsString& aTitle,
     nsIURI* aDocURI) {
@@ -3238,8 +3231,6 @@ bool BrowserParent::GetHasContentOpener() { return mHasContentOpener; }
 void BrowserParent::SetHasContentOpener(bool aHasContentOpener) {
   mHasContentOpener = aHasContentOpener;
 }
-
-bool BrowserParent::GetHasBeforeUnload() { return mHasBeforeUnload; }
 
 bool BrowserParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
                                        nsViewID aScrollId,

@@ -355,7 +355,6 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mChromeFlags(aChromeFlags),
       mMaxTouchPoints(0),
       mLayersId{0},
-      mBeforeUnloadListeners(0),
       mEffectsInfo{EffectsInfo::FullyHidden()},
       mDidFakeShow(false),
       mNotified(false),
@@ -3433,26 +3432,6 @@ nsresult BrowserChild::CanCancelContentJS(
   }
 
   return NS_OK;
-}
-
-void BrowserChild::BeforeUnloadAdded() {
-  // Don't bother notifying the parent if we don't have an IPC link open.
-  if (mBeforeUnloadListeners == 0 && IPCOpen()) {
-    SendSetHasBeforeUnload(true);
-  }
-
-  mBeforeUnloadListeners++;
-  MOZ_ASSERT(mBeforeUnloadListeners >= 0);
-}
-
-void BrowserChild::BeforeUnloadRemoved() {
-  mBeforeUnloadListeners--;
-  MOZ_ASSERT(mBeforeUnloadListeners >= 0);
-
-  // Don't bother notifying the parent if we don't have an IPC link open.
-  if (mBeforeUnloadListeners == 0 && IPCOpen()) {
-    SendSetHasBeforeUnload(false);
-  }
 }
 
 NS_IMETHODIMP BrowserChild::BeginSendingWebProgressEventsToParent() {
