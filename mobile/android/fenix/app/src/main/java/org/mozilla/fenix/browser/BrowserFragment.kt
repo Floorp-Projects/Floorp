@@ -109,7 +109,6 @@ class BrowserFragment : Fragment(), BackHandler {
     private var tabCollectionObserver: Observer<List<TabCollection>>? = null
     private var sessionObserver: Session.Observer? = null
     private var sessionManagerObserver: SessionManager.Observer? = null
-    private var pendingOpenInBrowserIntent: Intent? = null
 
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
@@ -631,10 +630,6 @@ class BrowserFragment : Fragment(), BackHandler {
         sessionManagerObserver?.let {
             requireComponents.core.sessionManager.unregister(it)
         }
-        pendingOpenInBrowserIntent?.let {
-            startActivity(it)
-            pendingOpenInBrowserIntent = null
-        }
     }
 
     override fun onBackPressed(): Boolean {
@@ -743,7 +738,7 @@ class BrowserFragment : Fragment(), BackHandler {
                 (BottomSheetBehavior.from(nestedScrollQuickAction as View) as QuickActionSheetBehavior).apply {
                     state = BottomSheetBehavior.STATE_COLLAPSED
                 }
-                FindInPageIntegration.launch?.invoke()
+                findInPageIntegration.get()?.launch()
                 requireComponents.analytics.metrics.track(Event.FindInPageOpened)
             }
             ToolbarMenu.Item.ReportIssue -> getSessionById()?.let { session ->
@@ -779,10 +774,10 @@ class BrowserFragment : Fragment(), BackHandler {
                 }
 
                 // Switch to the actual browser which should now display our new selected session
-                pendingOpenInBrowserIntent = Intent(context, IntentReceiverActivity::class.java).also {
+                startActivity(Intent(context, IntentReceiverActivity::class.java).also {
                     it.action = Intent.ACTION_VIEW
                     it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
+                })
 
                 // Close this activity since it is no longer displaying any session
                 activity?.finish()
