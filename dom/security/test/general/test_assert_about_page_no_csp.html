@@ -12,8 +12,6 @@
   SimpleTest.waitForExplicitFinish();
   SimpleTest.expectAssertions(0, 1);
 
-  const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
-
   // Test Setup:
   // The test overrules the whitelist of about: pages that are allowed to load without a CSP
   // and makes sure to hit the assertion within AssertAboutPageHasCSP().
@@ -21,11 +19,7 @@
   // test loads a second dummy data: URI to reset the old cache and finally resets the pref
   // used for testing purposes.
 
-  let origWhiteList = "";
-  // Android doesn't have this pref
-  if (AppConstants.platform !== "android") {
-    origWhiteList = SpecialPowers.getCharPref("csp.about_uris_without_csp");
-  }
+  let origWhiteList = SpecialPowers.getCharPref("csp.about_uris_without_csp");
 
   SpecialPowers.setCharPref("csp.about_uris_without_csp", "");
   SpecialPowers.setBoolPref("csp.overrule_about_uris_without_csp_whitelist", true);
@@ -35,9 +29,7 @@
   myFrame.src = "about:blank";
   // booom :-)
 
-  if (origWhiteList !== "") {
-      SpecialPowers.setCharPref("csp.about_uris_without_csp", origWhiteList);
-  }
+  SpecialPowers.setCharPref("csp.about_uris_without_csp", origWhiteList);
   myFrame.src = "data:text/html,<body>just a dumy data: URI</body>";
 
   SpecialPowers.setBoolPref("csp.overrule_about_uris_without_csp_whitelist", false);
