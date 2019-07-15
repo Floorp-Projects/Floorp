@@ -4725,7 +4725,7 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
         break;
       }
 
-      ancestor = ancestor->GetParentOrHostNode();
+      ancestor = ancestor->GetParentOrShadowHostNode();
     }
 
     // use the nearest ancestor frame that includes all continuations as the

@@ -759,7 +759,7 @@ static nsINode* FindChromeAccessOnlySubtreeOwner(nsINode* aNode) {
     aNode = aNode->GetParentNode();
   }
 
-  return aNode ? aNode->GetParentOrHostNode() : nullptr;
+  return aNode ? aNode->GetParentOrShadowHostNode() : nullptr;
 }
 
 already_AddRefed<nsINode> FindChromeAccessOnlySubtreeOwner(

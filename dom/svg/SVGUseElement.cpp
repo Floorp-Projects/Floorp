@@ -244,8 +244,8 @@ bool SVGUseElement::IsCyclicReferenceTo(const Element& aTarget) const {
   if (mOriginal && mOriginal->IsCyclicReferenceTo(aTarget)) {
     return true;
   }
-  for (nsINode* parent = GetParentOrHostNode(); parent;
-       parent = parent->GetParentOrHostNode()) {
+  for (nsINode* parent = GetParentOrShadowHostNode(); parent;
+       parent = parent->GetParentOrShadowHostNode()) {
     if (parent == &aTarget) {
       return true;
     }
