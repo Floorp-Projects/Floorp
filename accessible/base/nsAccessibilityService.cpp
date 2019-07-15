@@ -1396,12 +1396,13 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
 
       if (table) {
         nsIContent* parentContent =
-            aContent->GetParentOrHostNode()->AsContent();
+            aContent->GetParentOrShadowHostNode()->AsContent();
         nsIFrame* parentFrame = nullptr;
         if (parentContent) {
           parentFrame = parentContent->GetPrimaryFrame();
           if (!parentFrame || !parentFrame->IsTableWrapperFrame()) {
-            parentContent = parentContent->GetParentOrHostNode()->AsContent();
+            parentContent =
+                parentContent->GetParentOrShadowHostNode()->AsContent();
             if (parentContent) {
               parentFrame = parentContent->GetPrimaryFrame();
             }
