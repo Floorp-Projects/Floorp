@@ -76,4 +76,13 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
         includeEmptyDirs = false
         destinationDir(file("${project.buildDir}"))
     }
+
+    task renameSnapshotArtifacts(type: Exec) {
+        dependsOn publish
+
+        def renameScript = "${rootDir}/automation/taskcluster/rename_snapshot_artifacts.py"
+        def mavenBuildDir = "${project.buildDir}/maven"
+
+        commandLine 'python', renameScript, '--path', mavenBuildDir, '--timestamp', timestamp
+    }
 }
