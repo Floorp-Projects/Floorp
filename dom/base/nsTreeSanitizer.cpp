@@ -1286,9 +1286,9 @@ bool nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   uint32_t flags = nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL;
 
-  nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURI();
   nsCOMPtr<nsIURI> attrURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(attrURI), v, nullptr, baseURI);
+  nsresult rv =
+      NS_NewURI(getter_AddRefs(attrURI), v, nullptr, aElement->GetBaseURI());
   if (NS_SUCCEEDED(rv)) {
     if (mCidEmbedsOnly && kNameSpaceID_None == aNamespace) {
       if (nsGkAtoms::src == aLocalName || nsGkAtoms::background == aLocalName) {
@@ -1383,9 +1383,8 @@ void nsTreeSanitizer::SanitizeChildren(nsINode* aRoot) {
         nsContentUtils::GetNodeTextContent(node, false, styleText);
 
         nsAutoString sanitizedStyle;
-        nsCOMPtr<nsIURI> baseURI = node->GetBaseURI();
         if (SanitizeStyleSheet(styleText, sanitizedStyle, aRoot->OwnerDoc(),
-                               baseURI)) {
+                               node->GetBaseURI())) {
           nsContentUtils::SetNodeTextContent(node, sanitizedStyle, true);
         } else {
           // If the node had non-text child nodes, this operation zaps those.

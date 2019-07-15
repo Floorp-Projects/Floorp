@@ -1007,7 +1007,7 @@ nsresult Loader::CreateSheet(nsIURI* aURI, nsIContent* aLinkingContent,
   if (!*aSheet) {
     aSheetState = eSheetNeedsParser;
     nsIURI* sheetURI;
-    nsCOMPtr<nsIURI> baseURI;
+    nsIURI* baseURI;
     nsIURI* originalURI;
     if (!aURI) {
       // Inline style.  Use the document's base URL so that @import in
