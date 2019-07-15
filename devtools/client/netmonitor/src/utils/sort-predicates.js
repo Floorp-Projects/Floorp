@@ -56,6 +56,13 @@ function file(first, second) {
   return result || waterfall(first, second);
 }
 
+function url(first, second) {
+  const firstUrl = first.url.toLowerCase();
+  const secondUrl = second.url.toLowerCase();
+  const result = compareValues(firstUrl, secondUrl);
+  return result || waterfall(first, second);
+}
+
 function protocol(first, second) {
   const result = compareValues(first.httpVersion, second.httpVersion);
   return result || waterfall(first, second);
@@ -198,5 +205,6 @@ const sorters = {
   duration,
   latency,
   waterfall,
+  url,
 };
 exports.Sorters = Object.assign(sorters, responseHeaders);
