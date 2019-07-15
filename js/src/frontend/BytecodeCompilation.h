@@ -106,9 +106,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   }
 
   bool canLazilyParse() const;
-
-  MOZ_MUST_USE bool deoptimizeArgumentsInEnclosingScripts(
-      JSContext* cx, JS::Handle<JSObject*> environment);
 };
 
 class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {
