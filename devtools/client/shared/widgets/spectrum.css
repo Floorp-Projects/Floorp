@@ -49,6 +49,9 @@
   justify-content: space-between;
   margin-block-start: 10px;
   margin-inline-end: 5px;
+}
+
+.spectrum-controls {
   width: 200px;
 }
 
@@ -56,6 +59,7 @@
   display: flex;
   flex-direction: column;
   margin: -1px;
+  padding-block-end: 6px;
 }
 
 /**
@@ -113,11 +117,14 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   bottom: 0;
 }
 
+.spectrum-alpha {
+  margin-block-start: 3px;
+}
+
 .spectrum-alpha,
 .spectrum-hue {
   position: relative;
   height: 8px;
-  margin-block-start: 3px;
 }
 
 .spectrum-alpha-inner,
@@ -165,4 +172,43 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   height: 5px;
   left: -3px;
   right: -3px;
+}
+
+.spectrum-color-contrast {
+  padding-block-start: 8px;
+  padding-inline-start: 3px;
+}
+
+.spectrum-color-contrast.visible.large-text .accessibility-color-contrast-large-text {
+  display: block;
+}
+
+.spectrum-color-contrast.visible {
+  display: flex;
+}
+
+.spectrum-color-contrast,
+.spectrum-color-contrast .accessibility-color-contrast-large-text {
+  display: none;
+}
+
+.contrast-ratio-label {
+  padding-inline-end: 4px;
+  padding-inline-start: 2px;
+  color: var(--theme-toolbar-color);
+}
+
+.spectrum-color-contrast .accessibility-color-contrast {
+  align-items: stretch;
+}
+
+.spectrum-color-contrast .accessibility-contrast-value {
+  color: var(--theme-body-color);
+  line-height: 1em;
+}
+
+.spectrum-color-contrast .accessibility-contrast-value:not(:empty)::before {
+  width: auto;
+  content: none;
+  padding-inline-start: 2px;
 }
