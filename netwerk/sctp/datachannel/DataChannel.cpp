@@ -699,7 +699,7 @@ void DataChannelConnection::SetSignals(const std::string& aTransportId) {
 
 void DataChannelConnection::TransportStateChange(
     const std::string& aTransportId, TransportLayer::State aState) {
-  if (aState == TransportLayer::TS_OPEN) {
+  if (aState == TransportLayer::TS_OPEN && aTransportId == mTransportId) {
     CompleteConnect();
   }
 }
