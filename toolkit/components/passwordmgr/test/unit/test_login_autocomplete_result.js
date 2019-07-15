@@ -899,7 +899,7 @@ add_task(async function test_all_patterns() {
       items: [
         {
           value: "9ljgfd4shyktb45",
-          label: "Use Generated Password",
+          label: "Use a Securely Generated Password",
           style: "generatedPassword",
           comment: "9ljgfd4shyktb45",
         },
