@@ -6,9 +6,11 @@ package mozilla.components.browser.state.store
 
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.reducer.BrowserStateReducer
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Store
+import java.lang.IllegalArgumentException
 
 /**
  * The [BrowserStore] holds the [BrowserState] (state tree).
@@ -20,4 +22,21 @@ class BrowserStore(
 ) : Store<BrowserState, BrowserAction>(
     initialState,
     BrowserStateReducer::reduce
-)
+) {
+    init {
+        initialState.selectedTabId?.let {
+            if (state.findTab(it) == null) {
+                throw IllegalArgumentException("Selected tab does not exist")
+            }
+        }
+
+        if (initialState.tabs
+            .groupingBy { it.id }
+            .eachCount()
+            .filter { it.value > 1 }
+            .isNotEmpty()
+        ) {
+            throw IllegalArgumentException("Duplicate tabs found")
+        }
+    }
+}
