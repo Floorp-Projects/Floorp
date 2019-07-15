@@ -300,7 +300,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
     return;
   }
 
-  RefPtr<BrowsingContext> kungFuDeathGrip(this);
+  RefPtr<BrowsingContext> self(this);
 
   if (!mGroup->EvictCachedContext(this)) {
     Children* children = nullptr;
@@ -313,15 +313,17 @@ void BrowsingContext::Detach(bool aFromIPC) {
     children->RemoveElement(this);
   }
 
-  // As our nsDocShell is going away, this should implicitly mark us as closed.
-  // We directly set our member, rather than using a transaction as we're going
-  // to send a `Detach` message to other processes either way.
   Unregister();
 
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendDetachBrowsingContext(this);
+    // Tell our parent that the BrowsingContext has been detached. A strong
+    // reference to this is held until the promise is resolved to ensure it
+    // doesn't die before the parent receives the message.
+    auto resolve = [self](bool) {};
+    auto reject = [self](mozilla::ipc::ResponseRejectReason) {};
+    cc->SendDetachBrowsingContext(Id(), resolve, reject);
   }
 }
 
