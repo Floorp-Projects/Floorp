@@ -302,6 +302,7 @@ async function GetHistoryResource(aProfileFolder) {
           query
         );
         let pageInfos = [];
+        let fallbackVisitDate = new Date();
         for (let row of rows) {
           try {
             // if having typed_count, we changes transition type to typed.
@@ -317,7 +318,8 @@ async function GetHistoryResource(aProfileFolder) {
                 {
                   transition,
                   date: ChromeMigrationUtils.chromeTimeToDate(
-                    row.getResultByName("last_visit_time")
+                    row.getResultByName("last_visit_time"),
+                    fallbackVisitDate
                   ),
                 },
               ],
@@ -390,6 +392,7 @@ async function GetCookiesResource(aProfileFolder) {
         return;
       }
 
+      let fallbackExpiryDate = 0;
       for (let row of rows) {
         let host_key = row.getResultByName("host_key");
         if (host_key.match(/^\./)) {
@@ -400,8 +403,13 @@ async function GetCookiesResource(aProfileFolder) {
         try {
           let expiresUtc =
             ChromeMigrationUtils.chromeTimeToDate(
-              row.getResultByName("expires_utc")
+              row.getResultByName("expires_utc"),
+              fallbackExpiryDate
             ) / 1000;
+          // No point adding cookies that don't have a valid expiry.
+          if (!expiresUtc) {
+            continue;
+          }
           Services.cookies.add(
             host_key,
             row.getResultByName("path"),
@@ -450,6 +458,7 @@ async function GetWindowsPasswordsResource(aProfileFolder) {
       }
       let crypto = new OSCrypto();
       let logins = [];
+      let fallbackCreationDate = new Date();
       for (let row of rows) {
         try {
           let origin_url = NetUtil.newURI(row.getResultByName("origin_url"));
@@ -471,7 +480,8 @@ async function GetWindowsPasswordsResource(aProfileFolder) {
             usernameElement: row.getResultByName("username_element"),
             passwordElement: row.getResultByName("password_element"),
             timeCreated: ChromeMigrationUtils.chromeTimeToDate(
-              row.getResultByName("date_created") + 0
+              row.getResultByName("date_created") + 0,
+              fallbackCreationDate
             ).getTime(),
             timesUsed: row.getResultByName("times_used") + 0,
           };
