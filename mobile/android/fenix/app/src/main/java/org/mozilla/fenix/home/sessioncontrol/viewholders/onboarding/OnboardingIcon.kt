@@ -7,6 +7,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
+import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelative
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.setBounds
 
@@ -18,5 +19,5 @@ fun TextView.setOnboardingIcon(@DrawableRes id: Int) {
     val size = context.resources.getDimensionPixelSize(R.dimen.onboarding_header_icon_height_width)
     icon?.setBounds(size)
 
-    setCompoundDrawablesRelative(icon, null, null, null)
+    putCompoundDrawablesRelative(start = icon)
 }

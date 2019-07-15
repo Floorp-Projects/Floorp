@@ -19,6 +19,7 @@
             android:drawableTint="?primaryText"
             android:drawablePadding="8dp"
             tools:text="@tools:sample/lorem"
+            tools:drawableEnd="@drawable/ic_tab_collection"
             android:textAppearance="@style/HeaderTextStyle"
             android:textSize="16sp" />
 
