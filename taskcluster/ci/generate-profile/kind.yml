@@ -156,6 +156,7 @@ jobs:
                   path: build/src/artifacts/profile-run-2.log
         run:
             using: run-task
+            sparse-profile: profile-generate
             command: mv fetches build/src && cd build/src && ./taskcluster/scripts/misc/run-profileserver.sh
 
     win64-shippable/opt:
@@ -184,4 +185,5 @@ jobs:
                   path: build/src/artifacts/profile-run-2.log
         run:
             using: run-task
+            sparse-profile: profile-generate
             command: mv fetches build/src && cd build/src && ./taskcluster/scripts/misc/run-profileserver.sh
