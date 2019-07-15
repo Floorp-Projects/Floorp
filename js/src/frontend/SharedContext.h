@@ -553,6 +553,15 @@ class FunctionBox : public ObjectBox, public SharedContext {
     return !strict() && hasSimpleParameterList();
   }
 
+  bool shouldSuppressRunOnce() const {
+    // These heuristics suppress the run-once optimization if we expect that
+    // script-cloning will have more impact than TI type-precision would gain.
+    //
+    // See also: Bug 864218
+    return explicitName() || argumentsHasLocalBinding() || isGenerator() ||
+           isAsync();
+  }
+
   // Return whether this or an enclosing function is being parsed and
   // validated as asm.js. Note: if asm.js validation fails, this will be false
   // while the function is being reparsed. This flag can be used to disable
