@@ -201,6 +201,10 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void ScrollSnap(const nsPoint& aDestination,
                   ScrollMode aMode = ScrollMode::SmoothMsd);
 
+  bool HasPendingScrollRestoration() const {
+    return mRestorePos != nsPoint(-1, -1);
+  }
+
  protected:
   nsRect GetVisualScrollRange() const;
 

@@ -307,10 +307,14 @@ void ScrollAnchorContainer::Destroy() {
 }
 
 void ScrollAnchorContainer::ApplyAdjustments() {
-  if (!mAnchorNode || mAnchorNodeIsDirty) {
+  if (!mAnchorNode || mAnchorNodeIsDirty ||
+      mScrollFrame->HasPendingScrollRestoration()) {
     mSuppressAnchorAdjustment = false;
-    ANCHOR_LOG("Ignoring post-reflow (anchor=%p, dirty=%d, container=%p).\n",
-               mAnchorNode, mAnchorNodeIsDirty, this);
+    ANCHOR_LOG(
+        "Ignoring post-reflow (anchor=%p, dirty=%d, pendingRestoration=%d, "
+        "container=%p).\n",
+        mAnchorNode, mAnchorNodeIsDirty,
+        mScrollFrame->HasPendingScrollRestoration(), this);
     return;
   }
 
