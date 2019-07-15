@@ -316,13 +316,13 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // Connections will only be established in this function.
   // (including DNS prefetch and speculative connection.)
-  nsresult MaybeResolveProxyAndBeginConnect();
+  nsresult BeginConnectActual();
   void MaybeStartDNSPrefetch();
 
-  // We might synchronously or asynchronously call BeginConnect,
+  // We might synchronously or asynchronously call BeginConnectActual,
   // which includes DNS prefetch and speculative connection, according to
   // whether an async tracker lookup is required. If the tracker lookup
-  // is required, this funciton will just return NS_OK and BeginConnect()
+  // is required, this funciton will just return NS_OK and BeginConnectActual()
   // will be called when callback. See Bug 1325054 for more information.
   nsresult BeginConnect();
   MOZ_MUST_USE nsresult ContinueBeginConnectWithResult();
@@ -587,7 +587,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   // nsChannelClassifier checks this channel's URI against
   // the URI classifier service.
   // nsChannelClassifier will be invoked twice in InitLocalBlockList() and
-  // BeginConnect(), so save the nsChannelClassifier here to keep the
+  // BeginConnectActual(), so save the nsChannelClassifier here to keep the
   // state of whether tracking protection is enabled or not.
   RefPtr<nsChannelClassifier> mChannelClassifier;
 

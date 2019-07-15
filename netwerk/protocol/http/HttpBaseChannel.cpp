@@ -1500,6 +1500,8 @@ HttpBaseChannel::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
 
 NS_IMETHODIMP
 HttpBaseChannel::GetClassificationFlags(uint32_t* aFlags) {
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
   if (mThirdPartyClassificationFlags) {
     *aFlags = mThirdPartyClassificationFlags;
   } else {
@@ -1510,12 +1512,16 @@ HttpBaseChannel::GetClassificationFlags(uint32_t* aFlags) {
 
 NS_IMETHODIMP
 HttpBaseChannel::GetFirstPartyClassificationFlags(uint32_t* aFlags) {
+  MOZ_ASSERT(
+      !(mFirstPartyClassificationFlags && mFirstPartyClassificationFlags));
   *aFlags = mFirstPartyClassificationFlags;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::GetThirdPartyClassificationFlags(uint32_t* aFlags) {
+  MOZ_ASSERT(
+      !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
   *aFlags = mThirdPartyClassificationFlags;
   return NS_OK;
 }
