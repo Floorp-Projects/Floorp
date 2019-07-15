@@ -102,6 +102,13 @@
     <color name="collection_icon_color_pink">@color/collection_icon_color_pink_light_theme</color>
     <color name="collection_icon_color_green">@color/collection_icon_color_green_light_theme</color>
     <color name="collection_icon_color_yellow">@color/collection_icon_color_yellow_light_theme</color>
+    <array name="collection_icon_colors">
+        <item>@color/collection_icon_color_violet</item>
+        <item>@color/collection_icon_color_blue</item>
+        <item>@color/collection_icon_color_pink</item>
+        <item>@color/collection_icon_color_green</item>
+        <item>@color/collection_icon_color_yellow</item>
+    </array>
 
     <!-- Library buttons -->
     <color name="library_sessions_icon_background">#B9F0FD</color>

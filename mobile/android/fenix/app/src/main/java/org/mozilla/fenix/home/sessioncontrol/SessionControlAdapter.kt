@@ -104,7 +104,7 @@ class SessionControlAdapter(
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, actionEmitter)
             NoContentMessageViewHolder.LAYOUT_ID -> NoContentMessageViewHolder(view)
             CollectionHeaderViewHolder.LAYOUT_ID -> CollectionHeaderViewHolder(view)
-            CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, actionEmitter, adapterJob)
+            CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, actionEmitter)
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, actionEmitter, adapterJob)
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
             OnboardingSectionHeaderViewHolder.LAYOUT_ID -> OnboardingSectionHeaderViewHolder(view)
