@@ -10048,7 +10048,7 @@ nsresult HTMLEditRules::ConfirmSelectionInBody() {
   // XXXsmaug this code is insane.
   nsINode* temp = selectionStartPoint.GetContainer();
   while (temp && !temp->IsHTMLElement(nsGkAtoms::body)) {
-    temp = temp->GetParentOrHostNode();
+    temp = temp->GetParentOrShadowHostNode();
   }
 
   // If we aren't in the <body> element, force the issue.
@@ -10074,7 +10074,7 @@ nsresult HTMLEditRules::ConfirmSelectionInBody() {
   // XXXsmaug this code is insane.
   temp = selectionEndPoint.GetContainer();
   while (temp && !temp->IsHTMLElement(nsGkAtoms::body)) {
-    temp = temp->GetParentOrHostNode();
+    temp = temp->GetParentOrShadowHostNode();
   }
 
   // If we aren't in the <body> element, force the issue.
