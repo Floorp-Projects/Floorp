@@ -578,8 +578,6 @@ parent:
 
     async AccessKeyNotHandled(WidgetKeyboardEvent event);
 
-    async SetHasBeforeUnload(bool aHasBeforeUnload);
-
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
                                   nsIURI documentURI);
 

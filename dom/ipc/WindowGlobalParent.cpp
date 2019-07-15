@@ -53,7 +53,8 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
       mOuterWindowId(aInit.outerWindowId()),
       mInProcess(aInProcess),
       mIPCClosed(true),  // Closed until WGP::Init
-      mIsInitialDocument(false) {
+      mIsInitialDocument(false),
+      mHasBeforeUnload(false) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "Parent process only");
   MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
 
@@ -181,6 +182,11 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   // XXX(nika): Assert that the URI change was one which makes sense (either
   // about:blank -> a real URI, or a legal push/popstate URI change?)
   mDocumentURI = aURI;
+  return IPC_OK();
+}
+
+IPCResult WindowGlobalParent::RecvSetHasBeforeUnload(bool aHasBeforeUnload) {
+  mHasBeforeUnload = aHasBeforeUnload;
   return IPC_OK();
 }
 
