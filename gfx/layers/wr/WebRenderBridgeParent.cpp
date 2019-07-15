@@ -1941,6 +1941,15 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   // This function should only get called in the root WRBP
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
 
+  if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
+    // Skip WR render during paused state.
+    if (cbp->IsPaused()) {
+      TimeStamp now = TimeStamp::Now();
+      cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, VsyncId(), now, now,
+                                  now);
+    }
+  }
+
   TimeStamp start = TimeStamp::Now();
   mAsyncImageManager->SetCompositionTime(start);
 
