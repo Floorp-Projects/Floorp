@@ -5817,14 +5817,21 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
-    BrowsingContext* aContext) {
-  if (!aContext) {
+    uint64_t aContextId, DetachBrowsingContextResolver&& aResolve) {
+  // NOTE: Immediately resolve the promise, as we've received the message. This
+  // will allow the content process to discard references to this BC.
+  aResolve(true);
+
+  // NOTE: It's OK if we don't have this context anymore. It was just already
+  // detached, return.
+  RefPtr<BrowsingContext> context = BrowsingContext::Get(aContextId);
+  if (!context) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to detach already detached"));
     return IPC_OK();
   }
 
-  if (!aContext->Canonical()->IsOwnedByProcess(ChildID())) {
+  if (!context->Canonical()->IsOwnedByProcess(ChildID())) {
     // We're trying to detach a child BrowsingContext in another child
     // process. This is illegal since the owner of the BrowsingContext
     // is the proccess with the in-process docshell, which is tracked
@@ -5833,14 +5840,18 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
 
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
             ("ParentIPC: Trying to detach out of process context 0x%08" PRIx64,
-             aContext->Id()));
+             context->Id()));
     return IPC_OK();
   }
 
-  aContext->Detach(/* aFromIPC */ true);
+  context->Detach(/* aFromIPC */ true);
 
-  aContext->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendDetachBrowsingContext(aContext);
+  context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
+    // Hold a reference to `context` until the response comes back to ensure it
+    // doesn't die while messages relating to this context are in-flight.
+    auto resolve = [context](bool) {};
+    auto reject = [context](ResponseRejectReason) {};
+    aParent->SendDetachBrowsingContext(context->Id(), resolve, reject);
   });
 
   return IPC_OK();
