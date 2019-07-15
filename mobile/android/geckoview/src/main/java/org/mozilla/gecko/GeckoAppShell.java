@@ -37,6 +37,7 @@ import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.StrictModeContext;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
+import org.mozilla.geckoview.R;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
@@ -52,7 +53,6 @@ import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -74,6 +74,7 @@ import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.util.SimpleArrayMap;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -1428,11 +1429,11 @@ public class GeckoAppShell {
             PackageManager pm = getApplicationContext().getPackageManager();
             Drawable icon = getDrawableForExtension(pm, resolvedExt);
             if (icon == null) {
-                // Use a generic icon
-                icon = pm.getDefaultActivityIcon();
+                // Use a generic icon.
+                icon = ResourcesCompat.getDrawable(getApplicationContext().getResources(), R.drawable.ic_generic_file, getApplicationContext().getTheme());
             }
 
-            Bitmap bitmap = ((BitmapDrawable)icon).getBitmap();
+            Bitmap bitmap = BitmapUtils.getBitmapFromDrawable(icon);
             if (bitmap.getWidth() != resolvedIconSize || bitmap.getHeight() != resolvedIconSize) {
                 bitmap = Bitmap.createScaledBitmap(bitmap, resolvedIconSize, resolvedIconSize, true);
             }
