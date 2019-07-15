@@ -621,6 +621,8 @@
         ariaFocusedItem.classList.remove("keyboard-focused-tab");
         ariaFocusedItem.id = "";
         this.selectedItem.removeAttribute("aria-activedescendant");
+        let evt = new CustomEvent("AriaFocus");
+        this.selectedItem.dispatchEvent(evt);
       }
 
       if (setNewItem) {
@@ -631,6 +633,8 @@
           "aria-activedescendant",
           this.ACTIVE_DESCENDANT_ID
         );
+        let evt = new CustomEvent("AriaFocus");
+        val.dispatchEvent(evt);
       }
 
       return val;
