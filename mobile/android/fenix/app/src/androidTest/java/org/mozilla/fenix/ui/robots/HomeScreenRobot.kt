@@ -82,12 +82,19 @@ class HomeScreenRobot {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openThreeDotMenu(interact: ThreeDotMenuRobot.() -> Unit): ThreeDotMenuRobot.Transition {
-
             mDevice.waitForIdle()
             threeDotButton().perform(click())
 
             ThreeDotMenuRobot().interact()
             return ThreeDotMenuRobot.Transition()
+        }
+
+        fun openSearch(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            mDevice.waitForIdle()
+            navigationToolbar().perform(click())
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
         }
 
         fun dismissOnboarding() {
@@ -102,6 +109,8 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 }
 
 val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+private fun navigationToolbar() = onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
 
 private fun assertNavigationToolbar() = onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
