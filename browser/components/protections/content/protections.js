@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", e => {
     RPMSendAsyncMessage("OpenContentBlockingPreferences");
   });
 
+  // Check to see if displaying the Lockwise card pref is enabled.
+  RPMSendAsyncMessage("GetEnabledLockwiseCard");
+
   let createGraph = data => {
     // Set a default top size for the height of the graph bars so that small
     // numbers don't fill the whole graph.
@@ -114,7 +117,15 @@ document.addEventListener("DOMContentLoaded", e => {
     createGraph(message.data);
   });
 
-  // Create the Lockwise card.
-  const lockwiseCard = new LockwiseCard(document);
-  lockwiseCard.init();
+  // Display Lockwise card
+  RPMAddMessageListener("SendEnabledLockWiseCardPref", message => {
+    if (message.data.isEnabled) {
+      const lockwiseCard = new LockwiseCard(document);
+      lockwiseCard.init();
+    }
+
+    // For tests
+    const lockwiseUI = document.querySelector(".lockwise-card");
+    lockwiseUI.dataset.enabled = message.data.isEnabled;
+  });
 });
