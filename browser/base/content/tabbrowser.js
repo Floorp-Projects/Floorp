@@ -4745,6 +4745,49 @@
       }
     },
 
+    getTabTooltip(tab, includeLabel = true) {
+      let label = "";
+      if (includeLabel) {
+        label = tab._fullLabel || tab.getAttribute("label");
+      }
+      if (AppConstants.NIGHTLY_BUILD) {
+        if (
+          tab.linkedBrowser &&
+          tab.linkedBrowser.isRemoteBrowser &&
+          tab.linkedBrowser.frameLoader
+        ) {
+          label +=
+            " (pid " + tab.linkedBrowser.frameLoader.remoteTab.osPid + ")";
+
+          // If we're running with fission enabled, try to include PID
+          // information for every remote subframe.
+          if (gFissionBrowser) {
+            let pids = new Set();
+            let stack = [tab.linkedBrowser.browsingContext];
+            while (stack.length) {
+              let bc = stack.pop();
+              stack.push(...bc.getChildren());
+              if (bc.currentWindowGlobal) {
+                pids.add(bc.currentWindowGlobal.osPid);
+              }
+            }
+
+            label += " [F " + Array.from(pids).join(", ") + "]";
+          }
+        }
+      }
+      if (tab.userContextId) {
+        label = gTabBrowserBundle.formatStringFromName(
+          "tabs.containers.tooltip",
+          [
+            label,
+            ContextualIdentityService.getUserContextLabel(tab.userContextId),
+          ]
+        );
+      }
+      return label;
+    },
+
     createTooltip(event) {
       event.stopPropagation();
       let tab = document.tooltipNode
@@ -4809,42 +4852,7 @@
           ).replace("#1", affectedTabsLength);
         }
       } else {
-        label = tab._fullLabel || tab.getAttribute("label");
-        if (AppConstants.NIGHTLY_BUILD) {
-          if (
-            tab.linkedBrowser &&
-            tab.linkedBrowser.isRemoteBrowser &&
-            tab.linkedBrowser.frameLoader
-          ) {
-            label +=
-              " (pid " + tab.linkedBrowser.frameLoader.remoteTab.osPid + ")";
-
-            // If we're running with fission enabled, try to include PID
-            // information for every remote subframe.
-            if (gFissionBrowser) {
-              let pids = new Set();
-              let stack = [tab.linkedBrowser.browsingContext];
-              while (stack.length) {
-                let bc = stack.pop();
-                stack.push(...bc.getChildren());
-                if (bc.currentWindowGlobal) {
-                  pids.add(bc.currentWindowGlobal.osPid);
-                }
-              }
-
-              label += " [F " + Array.from(pids).join(", ") + "]";
-            }
-          }
-        }
-        if (tab.userContextId) {
-          label = gTabBrowserBundle.formatStringFromName(
-            "tabs.containers.tooltip",
-            [
-              label,
-              ContextualIdentityService.getUserContextLabel(tab.userContextId),
-            ]
-          );
-        }
+        label = this.getTabTooltip(tab);
       }
 
       event.target.setAttribute("label", label);
