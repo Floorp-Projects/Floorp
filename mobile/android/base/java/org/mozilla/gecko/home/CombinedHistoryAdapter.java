@@ -350,7 +350,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
         sparseArray.clear();
 
-        if (c == null || !c.moveToFirst()) {
+        if (c == null || c.isClosed() || !c.moveToFirst()) {
             return;
         }
 
