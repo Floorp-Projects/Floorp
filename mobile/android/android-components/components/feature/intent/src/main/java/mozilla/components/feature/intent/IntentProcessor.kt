@@ -6,16 +6,12 @@ package mozilla.components.feature.intent
 
 import android.content.Context
 import android.content.Intent
-import android.text.TextUtils
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.Session.Source
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.tab.CustomTabConfig
-import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.browser.session.intent.EXTRA_SESSION_ID
+import mozilla.components.feature.customtabs.CustomTabIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.support.utils.SafeIntent
-import mozilla.components.support.utils.WebURLFinder
 
 typealias IntentHandler = (Intent) -> Boolean
 
@@ -30,6 +26,8 @@ typealias IntentHandler = (Intent) -> Boolean
  * @property openNewTab Whether a processed intent should open a new tab or
  * open URLs in the currently selected tab.
  * @property isPrivate Whether a processed intent should open a new tab as private
+ *
+ * @deprecated Use individual intent processors instead.
  */
 class IntentProcessor(
     private val sessionUseCases: SessionUseCases,
@@ -40,70 +38,29 @@ class IntentProcessor(
     private val openNewTab: Boolean = true,
     private val isPrivate: Boolean = false
 ) {
-    private val defaultActionViewHandler = { intent: Intent ->
-        val safeIntent = SafeIntent(intent)
-        val url = safeIntent.dataString ?: ""
 
-        when {
-            TextUtils.isEmpty(url) -> false
+    private val defaultHandlers by lazy {
+        val tabIntentProcessor = TabIntentProcessor(
+            sessionManager,
+            sessionUseCases.loadUrl,
+            if (isPrivate) searchUseCases.newPrivateTabSearch else searchUseCases.newTabSearch,
+            openNewTab,
+            isPrivate
+        )
+        val customTabIntentProcessor = CustomTabIntentProcessor(
+            sessionManager,
+            sessionUseCases.loadUrl,
+            context.resources.displayMetrics
+        )
+        val viewHandlers = listOf(customTabIntentProcessor, tabIntentProcessor)
 
-            CustomTabConfig.isCustomTabIntent(safeIntent) -> {
-                val session = Session(url, false, Source.CUSTOM_TAB).apply {
-                    val displayMetrics = context.resources.displayMetrics
-                    this.customTabConfig = CustomTabConfig.createFromIntent(safeIntent, displayMetrics)
-                }
-                sessionManager.add(session)
-                sessionUseCases.loadUrl(url, session, LoadUrlFlags.external())
-                intent.putExtra(ACTIVE_SESSION_ID, session.id)
-                true
+        mutableMapOf<String, IntentHandler>(
+            Intent.ACTION_VIEW to { intent ->
+                runBlocking { viewHandlers.any { it.process(intent) } }
+            },
+            Intent.ACTION_SEND to { intent ->
+                runBlocking { tabIntentProcessor.process(intent) }
             }
-
-            else -> {
-                val session = createSession(url, private = isPrivate, source = Source.ACTION_VIEW)
-                sessionUseCases.loadUrl(url, session, LoadUrlFlags.external())
-                true
-            }
-        }
-    }
-
-    private val defaultActionSendHandler = { intent: Intent ->
-        val safeIntent = SafeIntent(intent)
-        val extraText = safeIntent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
-
-        when {
-            TextUtils.isEmpty(extraText.trim()) -> false
-
-            else -> {
-                WebURLFinder(extraText).bestWebURL()?.let { url ->
-                    sessionUseCases.loadUrl(
-                        url,
-                        createSession(
-                            url,
-                            private = isPrivate,
-                            source = Source.ACTION_SEND
-                        ),
-                        LoadUrlFlags.external()
-                    )
-                } ?: run {
-                    searchUseCases.newTabSearch(extraText, Source.ACTION_SEND, openNewTab)
-                }
-                true
-            }
-        }
-    }
-
-    private fun createSession(url: String, private: Boolean = false, source: Source): Session {
-        return if (openNewTab) {
-            Session(url, private, source).also { sessionManager.add(it, selected = true) }
-        } else {
-            sessionManager.selectedSession ?: Session(url, private, source)
-        }
-    }
-
-    private val defaultHandlers: MutableMap<String, IntentHandler> by lazy {
-        mutableMapOf(
-            Intent.ACTION_VIEW to defaultActionViewHandler,
-            Intent.ACTION_SEND to defaultActionSendHandler
         )
     }
 
@@ -141,6 +98,6 @@ class IntentProcessor(
     }
 
     companion object {
-        const val ACTIVE_SESSION_ID = "activeSessionId"
+        const val ACTIVE_SESSION_ID = EXTRA_SESSION_ID
     }
 }

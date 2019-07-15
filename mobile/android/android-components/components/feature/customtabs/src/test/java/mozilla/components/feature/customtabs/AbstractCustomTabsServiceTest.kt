@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.session.tab
+package mozilla.components.feature.customtabs
 
 import android.net.Uri
 import android.os.Bundle
@@ -12,7 +12,6 @@ import android.support.customtabs.ICustomTabsService
 import androidx.browser.customtabs.CustomTabsService
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.Engine
-import mozilla.components.feature.customtabs.AbstractCustomTabsService
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

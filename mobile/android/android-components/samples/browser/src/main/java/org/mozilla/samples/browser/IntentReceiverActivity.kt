@@ -7,26 +7,31 @@ package org.mozilla.samples.browser
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import mozilla.components.browser.session.tab.CustomTabConfig
-import mozilla.components.support.utils.SafeIntent
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import org.mozilla.samples.browser.ext.components
 
 class IntentReceiverActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MainScope().launch {
+            val intent = intent?.let { Intent(it) } ?: Intent()
+            val intentProcessors = listOf(
+                components.customTabIntentProcessor,
+                components.tabIntentProcessor
+            )
 
-        val intent = intent?.let { Intent(it) } ?: Intent()
+            intentProcessors.any { it.process(intent) }
 
-        components.sessionIntentProcessor.process(intent)
+            if (components.customTabIntentProcessor.matches(intent)) {
+                intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
+            } else {
+                intent.setClassName(applicationContext, BrowserActivity::class.java.name)
+            }
 
-        if (CustomTabConfig.isCustomTabIntent(SafeIntent(intent))) {
-            intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
-        } else {
-            intent.setClassName(applicationContext, BrowserActivity::class.java.name)
+            startActivity(intent)
+            finish()
         }
-
-        startActivity(intent)
-        finish()
     }
 }
