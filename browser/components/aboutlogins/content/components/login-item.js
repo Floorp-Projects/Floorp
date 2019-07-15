@@ -91,6 +91,12 @@ export default class LoginItem extends HTMLElement {
     this._originInput.defaultValue = this._login.origin || "";
     this._usernameInput.defaultValue = this._login.username || "";
     this._passwordInput.defaultValue = this._login.password || "";
+    document.l10n.setAttributes(
+      this._saveChangesButton,
+      this.dataset.isNewLogin
+        ? "login-item-save-new-button"
+        : "login-item-save-changes-button"
+    );
     this._updatePasswordRevealState();
   }
 
