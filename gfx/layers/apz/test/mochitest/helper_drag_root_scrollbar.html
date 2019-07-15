@@ -18,7 +18,9 @@
 function* test(testDriver) {
   window.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
 
-  var dragFinisher = yield* dragVerticalScrollbar(window, testDriver);
+  // Do the scroll in one increment so that when the scroll event fires
+  // we're done all the scrolling we're going to do.
+  var dragFinisher = yield* dragVerticalScrollbar(window, testDriver, 20, 20);
   if (!dragFinisher) {
     ok(true, "No scrollbar, can't do this test");
     return;
