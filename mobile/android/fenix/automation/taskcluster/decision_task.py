@@ -109,7 +109,7 @@ def raptor(is_staging):
 def release(channel, is_staging, version_name):
     variants = get_variants_for_build_type(channel)
     architectures = [variant.abi for variant in variants]
-    apk_paths = ["public/target.{}.apk".format(arch) for arch in architectures]
+    apk_paths = ["public/build/{}/target.apk".format(arch) for arch in architectures]
 
     build_tasks = {}
     signing_tasks = {}
@@ -146,7 +146,7 @@ def nightly_to_production_app(is_staging, version_name):
     build_type = 'nightlyLegacy'
     variants = get_variants_for_build_type(build_type)
     architectures = [variant.abi for variant in variants]
-    apk_paths = ["public/target.{}.apk".format(arch) for arch in architectures]
+    apk_paths = ["public/build/{}/target.apk".format(arch) for arch in architectures]
 
     build_tasks = {}
     signing_tasks = {}

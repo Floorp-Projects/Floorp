@@ -42,7 +42,7 @@ class TaskBuilder(object):
 
     def craft_assemble_release_task(self, architectures, build_type, is_staging, version_name):
         artifacts = {
-            'public/target.{}.apk'.format(arch): {
+            'public/build/{}/target.apk'.format(arch): {
                 "type": 'file',
                 "path": '/opt/fenix/app/build/outputs/apk/'
                         '{arch}/{build_type}/app-{arch}-{build_type}-unsigned.apk'.format(arch=arch, build_type=build_type),
@@ -411,7 +411,7 @@ class TaskBuilder(object):
             description='Dep-signing variant {}'.format(variant.raw),
             signing_type="dep",
             assemble_task_id=assemble_task_id,
-            apk_paths=["public/target.apk"],
+            apk_paths=[DEFAULT_APK_ARTIFACT_LOCATION],
             routes=routes,
             treeherder={
                 'groupSymbol': variant.build_type,
