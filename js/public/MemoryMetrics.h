@@ -31,7 +31,7 @@ namespace JS {
 struct TabSizes {
   enum Kind { Objects, Strings, Private, Other };
 
-  TabSizes() : objects(0), strings(0), private_(0), other(0) {}
+  TabSizes() = default;
 
   void add(Kind kind, size_t n) {
     switch (kind) {
@@ -52,10 +52,10 @@ struct TabSizes {
     }
   }
 
-  size_t objects;
-  size_t strings;
-  size_t private_;
-  size_t other;
+  size_t objects = 0;
+  size_t strings = 0;
+  size_t private_ = 0;
+  size_t other = 0;
 };
 
 /** These are the measurements used by Servo. */
@@ -149,9 +149,7 @@ struct InefficientNonFlatteningStringHashPolicy {
 // In some classes, one or more of the macro arguments aren't used.  We use '_'
 // for those.
 //
-#define DECL_SIZE(tabKind, servoKind, mSize) size_t mSize;
-#define ZERO_SIZE(tabKind, servoKind, mSize) mSize(0),
-#define COPY_OTHER_SIZE(tabKind, servoKind, mSize) mSize(other.mSize),
+#define DECL_SIZE_ZERO(tabKind, servoKind, mSize) size_t mSize = 0;
 #define ADD_OTHER_SIZE(tabKind, servoKind, mSize) mSize += other.mSize;
 #define SUB_OTHER_SIZE(tabKind, servoKind, mSize) \
   MOZ_ASSERT(mSize >= other.mSize);               \
@@ -184,7 +182,7 @@ struct ClassInfo {
   MACRO(Objects, NonHeap, objectsNonHeapElementsWasm)         \
   MACRO(Objects, NonHeap, objectsNonHeapCodeWasm)
 
-  ClassInfo() : FOR_EACH_SIZE(ZERO_SIZE) wasmGuardPages(0) {}
+  ClassInfo() = default;
 
   void add(const ClassInfo& other) { FOR_EACH_SIZE(ADD_OTHER_SIZE); }
 
@@ -213,8 +211,9 @@ struct ClassInfo {
     FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
   }
 
-  FOR_EACH_SIZE(DECL_SIZE);
-  size_t wasmGuardPages;
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
+
+  size_t wasmGuardPages = 0;
 
 #undef FOR_EACH_SIZE
 };
@@ -228,7 +227,7 @@ struct ShapeInfo {
   MACRO(Other, MallocHeap, shapesMallocHeapDictTables) \
   MACRO(Other, MallocHeap, shapesMallocHeapTreeKids)
 
-  ShapeInfo() : FOR_EACH_SIZE(ZERO_SIZE) dummy() {}
+  ShapeInfo() = default;
 
   void add(const ShapeInfo& other) { FOR_EACH_SIZE(ADD_OTHER_SIZE); }
 
@@ -252,9 +251,7 @@ struct ShapeInfo {
     FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
   }
 
-  FOR_EACH_SIZE(DECL_SIZE);
-  int dummy;  // present just to absorb the trailing
-              // comma from FOR_EACH_SIZE(ZERO_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
 
 #undef FOR_EACH_SIZE
 };
@@ -290,15 +287,13 @@ struct CodeSizes {
   MACRO(_, NonHeap, other)    \
   MACRO(_, NonHeap, unused)
 
-  CodeSizes() : FOR_EACH_SIZE(ZERO_SIZE) dummy() {}
+  CodeSizes() = default;
 
   void addToServoSizes(ServoSizes* sizes) const {
     FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
   }
 
-  FOR_EACH_SIZE(DECL_SIZE);
-  int dummy;  // present just to absorb the trailing
-              // comma from FOR_EACH_SIZE(ZERO_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
 
 #undef FOR_EACH_SIZE
 };
@@ -317,15 +312,13 @@ struct GCSizes {
   MACRO(_, MallocHeap, storeBufferWholeCells)  \
   MACRO(_, MallocHeap, storeBufferGenerics)
 
-  GCSizes() : FOR_EACH_SIZE(ZERO_SIZE) dummy() {}
+  GCSizes() = default;
 
   void addToServoSizes(ServoSizes* sizes) const {
     FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
   }
 
-  FOR_EACH_SIZE(DECL_SIZE);
-  int dummy;  // present just to absorb the trailing
-              // comma from FOR_EACH_SIZE(ZERO_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
 
 #undef FOR_EACH_SIZE
 };
@@ -344,7 +337,7 @@ struct StringInfo {
   MACRO(Strings, MallocHeap, mallocHeapLatin1) \
   MACRO(Strings, MallocHeap, mallocHeapTwoByte)
 
-  StringInfo() : FOR_EACH_SIZE(ZERO_SIZE) numCopies(0) {}
+  StringInfo() = default;
 
   void add(const StringInfo& other) {
     FOR_EACH_SIZE(ADD_OTHER_SIZE);
@@ -375,8 +368,9 @@ struct StringInfo {
     FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
   }
 
-  FOR_EACH_SIZE(DECL_SIZE);
-  uint32_t numCopies;  // How many copies of the string have we seen?
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
+
+  uint32_t numCopies = 0;  // How many copies of the string have we seen?
 
 #undef FOR_EACH_SIZE
 };
@@ -412,7 +406,7 @@ struct NotableStringInfo : public StringInfo {
 struct ScriptSourceInfo {
 #define FOR_EACH_SIZE(MACRO) MACRO(_, MallocHeap, misc)
 
-  ScriptSourceInfo() : FOR_EACH_SIZE(ZERO_SIZE) numScripts(0) {}
+  ScriptSourceInfo() = default;
 
   void add(const ScriptSourceInfo& other) {
     FOR_EACH_SIZE(ADD_OTHER_SIZE);
@@ -435,10 +429,11 @@ struct ScriptSourceInfo {
     return n >= NotabilityThreshold;
   }
 
-  FOR_EACH_SIZE(DECL_SIZE);
-  uint32_t numScripts;  // How many ScriptSources come from this file? (It
-                        // can be more than one in XML files that have
-                        // multiple scripts in CDATA sections.)
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
+
+  uint32_t numScripts = 0;  // How many ScriptSources come from this file? (It
+                            // can be more than one in XML files that have
+                            // multiple scripts in CDATA sections.)
 #undef FOR_EACH_SIZE
 };
 
@@ -471,13 +466,12 @@ struct HelperThreadStats {
   MACRO(_, MallocHeap, ionBuilder) \
   MACRO(_, MallocHeap, wasmCompile)
 
-  explicit HelperThreadStats()
-      : FOR_EACH_SIZE(ZERO_SIZE) idleThreadCount(0), activeThreadCount(0) {}
+  HelperThreadStats() = default;
 
-  FOR_EACH_SIZE(DECL_SIZE);
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
 
-  unsigned idleThreadCount;
-  unsigned activeThreadCount;
+  unsigned idleThreadCount = 0;
+  unsigned activeThreadCount = 0;
 
 #undef FOR_EACH_SIZE
 };
@@ -489,9 +483,9 @@ struct GlobalStats {
 #define FOR_EACH_SIZE(MACRO) MACRO(_, MallocHeap, tracelogger)
 
   explicit GlobalStats(mozilla::MallocSizeOf mallocSizeOf)
-      : FOR_EACH_SIZE(ZERO_SIZE) mallocSizeOf_(mallocSizeOf) {}
+      : mallocSizeOf_(mallocSizeOf) {}
 
-  FOR_EACH_SIZE(DECL_SIZE);
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
 
   HelperThreadStats helperThread;
 
@@ -520,13 +514,7 @@ struct RuntimeSizes {
   MACRO(_, MallocHeap, wasmRuntime)                 \
   MACRO(_, MallocHeap, jitLazyLink)
 
-  RuntimeSizes()
-      : FOR_EACH_SIZE(ZERO_SIZE) scriptSourceInfo(),
-        code(),
-        gc(),
-        notableScriptSources() {
-    allScriptSources.emplace();
-  }
+  RuntimeSizes() { allScriptSources.emplace(); }
 
   void addToServoSizes(ServoSizes* sizes) const {
     FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
@@ -535,11 +523,12 @@ struct RuntimeSizes {
     gc.addToServoSizes(sizes);
   }
 
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
+
   // The script source measurements in |scriptSourceInfo| are initially for
   // all script sources.  At the end, if the measurement granularity is
   // FineGrained, we subtract the measurements of the notable script sources
   // and move them into |notableScriptSources|.
-  FOR_EACH_SIZE(DECL_SIZE);
   ScriptSourceInfo scriptSourceInfo;
   CodeSizes code;
   GCSizes gc;
@@ -574,10 +563,8 @@ struct UnusedGCThingSizes {
   MACRO(Other, GCHeapUnused, scope)       \
   MACRO(Other, GCHeapUnused, regExpShared)
 
-  UnusedGCThingSizes() : FOR_EACH_SIZE(ZERO_SIZE) dummy() {}
-
-  UnusedGCThingSizes(UnusedGCThingSizes&& other)
-      : FOR_EACH_SIZE(COPY_OTHER_SIZE) dummy() {}
+  UnusedGCThingSizes() = default;
+  UnusedGCThingSizes(UnusedGCThingSizes&& other) = default;
 
   void addToKind(JS::TraceKind kind, intptr_t n) {
     switch (kind) {
@@ -640,9 +627,7 @@ struct UnusedGCThingSizes {
     FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
   }
 
-  FOR_EACH_SIZE(DECL_SIZE);
-  int dummy;  // present just to absorb the trailing
-              // comma from FOR_EACH_SIZE(ZERO_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
 
 #undef FOR_EACH_SIZE
 };
@@ -673,25 +658,8 @@ struct ZoneStats {
   MACRO(Other, MallocHeap, crossCompartmentWrappersTables) \
   MACRO(Other, MallocHeap, compartmentsPrivateData)
 
-  ZoneStats()
-      : FOR_EACH_SIZE(ZERO_SIZE) unusedGCThings(),
-        stringInfo(),
-        shapeInfo(),
-        extra(),
-        notableStrings(),
-        isTotals(true) {}
-
-  ZoneStats(ZoneStats&& other)
-      : FOR_EACH_SIZE(COPY_OTHER_SIZE)
-            unusedGCThings(std::move(other.unusedGCThings)),
-        stringInfo(std::move(other.stringInfo)),
-        shapeInfo(std::move(other.shapeInfo)),
-        extra(other.extra),
-        allStrings(std::move(other.allStrings)),
-        notableStrings(std::move(other.notableStrings)),
-        isTotals(other.isTotals) {
-    MOZ_ASSERT(!other.isTotals);
-  }
+  ZoneStats() = default;
+  ZoneStats(ZoneStats&& other) = default;
 
   void initStrings();
 
@@ -728,15 +696,16 @@ struct ZoneStats {
     shapeInfo.addToServoSizes(sizes);
   }
 
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
+
   // These string measurements are initially for all strings.  At the end,
   // if the measurement granularity is FineGrained, we subtract the
   // measurements of the notable script sources and move them into
   // |notableStrings|.
-  FOR_EACH_SIZE(DECL_SIZE);
   UnusedGCThingSizes unusedGCThings;
   StringInfo stringInfo;
   ShapeInfo shapeInfo;
-  void* extra;  // This field can be used by embedders.
+  void* extra = nullptr;  // This field can be used by embedders.
 
   typedef js::HashMap<JSString*, StringInfo,
                       js::InefficientNonFlatteningStringHashPolicy,
@@ -749,7 +718,7 @@ struct ZoneStats {
   // discarded afterwards.
   mozilla::Maybe<StringsHashMap> allStrings;
   js::Vector<NotableStringInfo, 0, js::SystemAllocPolicy> notableStrings;
-  bool isTotals;
+  bool isTotals = true;
 
 #undef FOR_EACH_SIZE
 };
@@ -781,20 +750,8 @@ struct RealmStats {
   MACRO(Other, MallocHeap, jitRealm)                          \
   MACRO(Other, MallocHeap, scriptCountsMap)
 
-  RealmStats()
-      : FOR_EACH_SIZE(ZERO_SIZE) classInfo(),
-        extra(),
-        notableClasses(),
-        isTotals(true) {}
-
-  RealmStats(RealmStats&& other)
-      : FOR_EACH_SIZE(COPY_OTHER_SIZE) classInfo(std::move(other.classInfo)),
-        extra(other.extra),
-        allClasses(std::move(other.allClasses)),
-        notableClasses(std::move(other.notableClasses)),
-        isTotals(other.isTotals) {
-    MOZ_ASSERT(!other.isTotals);
-  }
+  RealmStats() = default;
+  RealmStats(RealmStats&& other) = default;
 
   RealmStats(const RealmStats&) = delete;  // disallow copying
 
@@ -826,12 +783,13 @@ struct RealmStats {
     classInfo.addToServoSizes(sizes);
   }
 
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
+
   // The class measurements in |classInfo| are initially for all classes.  At
   // the end, if the measurement granularity is FineGrained, we subtract the
   // measurements of the notable classes and move them into |notableClasses|.
-  FOR_EACH_SIZE(DECL_SIZE);
   ClassInfo classInfo;
-  void* extra;  // This field can be used by embedders.
+  void* extra = nullptr;  // This field can be used by embedders.
 
   typedef js::HashMap<const char*, ClassInfo, mozilla::CStringHasher,
                       js::SystemAllocPolicy>
@@ -840,7 +798,7 @@ struct RealmStats {
   // These are similar to |allStrings| and |notableStrings| in ZoneStats.
   mozilla::Maybe<ClassesHashMap> allClasses;
   js::Vector<NotableClassInfo, 0, js::SystemAllocPolicy> notableClasses;
-  bool isTotals;
+  bool isTotals = true;
 
 #undef FOR_EACH_SIZE
 };
@@ -863,13 +821,7 @@ struct RuntimeStats {
   MACRO(_, Ignore, gcHeapGCThings)
 
   explicit RuntimeStats(mozilla::MallocSizeOf mallocSizeOf)
-      : FOR_EACH_SIZE(ZERO_SIZE) runtime(),
-        realmTotals(),
-        zTotals(),
-        realmStatsVector(),
-        zoneStatsVector(),
-        currZoneStats(nullptr),
-        mallocSizeOf_(mallocSizeOf) {}
+      : mallocSizeOf_(mallocSizeOf) {}
 
   // Here's a useful breakdown of the GC heap.
   //
@@ -899,7 +851,7 @@ struct RuntimeStats {
     runtime.addToServoSizes(sizes);
   }
 
-  FOR_EACH_SIZE(DECL_SIZE);
+  FOR_EACH_SIZE(DECL_SIZE_ZERO);
 
   RuntimeSizes runtime;
 
@@ -909,7 +861,7 @@ struct RuntimeStats {
   RealmStatsVector realmStatsVector;
   ZoneStatsVector zoneStatsVector;
 
-  ZoneStats* currZoneStats;
+  ZoneStats* currZoneStats = nullptr;
 
   mozilla::MallocSizeOf mallocSizeOf_;
 
@@ -962,9 +914,7 @@ extern JS_PUBLIC_API bool AddServoSizeOf(JSContext* cx,
 
 }  // namespace JS
 
-#undef DECL_SIZE
-#undef ZERO_SIZE
-#undef COPY_OTHER_SIZE
+#undef DECL_SIZE_ZERO
 #undef ADD_OTHER_SIZE
 #undef SUB_OTHER_SIZE
 #undef ADD_SIZE_TO_N
