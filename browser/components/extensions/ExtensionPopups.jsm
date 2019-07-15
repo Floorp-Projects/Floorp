@@ -293,7 +293,6 @@ class BasePopup {
     if (this.extension.remote) {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
-      browser.setAttribute("renderroot", "content");
     }
 
     // We only need flex sizing for the sake of the slide-in sub-views of the
