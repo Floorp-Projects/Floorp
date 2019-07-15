@@ -14,7 +14,3 @@ kind-dependencies:
 
 job-template:
     shipping-phase: promote
-
-not-for-build-platforms:
-    # TODO: Allow mac signing once bug 1470607 is done
-    - macosx64-nightly/opt
