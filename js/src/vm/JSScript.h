@@ -2214,6 +2214,9 @@ class JSScript : public js::gc::TenuredCell {
                           uint32_t sourceStart, uint32_t sourceEnd,
                           uint32_t toStringStart, uint32_t toStringEnd);
 
+  static JSScript* CreateFromLazy(JSContext* cx,
+                                  js::Handle<js::LazyScript*> lazy);
+
   // NOTE: If you use createPrivateScriptData directly instead of via
   // fullyInitFromEmitter, you are responsible for notifying the debugger
   // after successfully creating the script.
