@@ -14,7 +14,7 @@ interface nsIMacAttributionService : nsISupports
    * @param aFilePath A path to the file to get the quarantine data from.
    * @returns referrerUrl
    */
-  AString getReferrerUrl(in ACString aFilePath);
+  AString getReferrerUrl(in AUTF8String aFilePath);
 
   /**
    * Used by the tests.
@@ -25,7 +25,7 @@ interface nsIMacAttributionService : nsISupports
    *                  any existing properties.  If false, the referrer is only
    *                  set if quarantine properties already exist on the file.
    */
-  void setReferrerUrl(in ACString aFilePath,
-                      in ACString aReferrer,
+  void setReferrerUrl(in AUTF8String aFilePath,
+                      in AUTF8String aReferrer,
                       in boolean aCreate);
 };
