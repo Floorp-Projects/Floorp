@@ -55,7 +55,9 @@ class GamepadPlatformService final {
   // When only a digital button are available the value will be synthesized.
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
                       bool aTouched);
-
+  // When only a digital button are available the value will be synthesized.
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
+                      double aValue);
   // Update the state of |aAxis| for the gamepad at |aIndex| for all
   // windows that are listening and visible, and fire a gamepadaxismove
   // event at them as well.
