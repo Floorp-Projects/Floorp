@@ -282,7 +282,7 @@ const calculateHorizontalPosition = (
 const getRelativeRect = function(node, relativeTo) {
   // getBoxQuads is a non-standard WebAPI which will not work on non-firefox
   // browser when running launchpad on Chrome.
-  if (!node.getBoxQuads) {
+  if (!node.getBoxQuads || !node.getBoxQuads({ relativeTo })[0]) {
     const { top, left, width, height } = node.getBoundingClientRect();
     const right = left + width;
     const bottom = top + height;
@@ -623,7 +623,9 @@ HTMLTooltip.prototype = {
       this.preferredHeight === Infinity
     );
 
-    this.container.style.height = height + "px";
+    if (!this.useXulWrapper) {
+      this.container.style.height = height + "px";
+    }
 
     return { left, top };
   },

@@ -5,9 +5,32 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { colorUtils } = require("devtools/shared/css/color.js");
-
+const { MultiLocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new MultiLocalizationHelper(
+  "devtools/shared/locales/en-US/accessibility.properties",
+  "devtools/client/locales/en-US/accessibility.properties"
+);
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
+
+loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
+loader.lazyRequireGetter(
+  this,
+  "cssColors",
+  "devtools/shared/css/color-db",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getContrastRatioScore",
+  "devtools/shared/accessibility",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getTextProperties",
+  "devtools/shared/accessibility",
+  true
+);
 
 /**
  * Spectrum creates a color picker widget in any container you give it.
@@ -40,6 +63,7 @@ function Spectrum(parentEl, rgb) {
   this.parentEl = parentEl;
 
   this.element.className = "spectrum-container";
+  // eslint-disable-next-line no-unsanitized/property
   this.element.innerHTML = `
     <section class="spectrum-color-picker">
       <div class="spectrum-color spectrum-box">
@@ -64,7 +88,23 @@ function Spectrum(parentEl, rgb) {
           </div>
          </div>
         </div>
-     </section>
+    </section>
+    <section
+      class="spectrum-color-contrast accessibility-color-contrast"
+      role="presentation"
+    >
+      <span class="contrast-ratio-label">
+        ${L10N.getStr("accessibility.contrast.ratio.label")}
+      </span>
+      <span class="accessibility-contrast-value" role="presentation"></span>
+      <span
+        class="accessibility-color-contrast-large-text"
+        role="presentation"
+        title="${L10N.getStr("accessibility.contrast.large.title")}"
+      >
+        ${L10N.getStr("accessibility.contrast.large.text")}
+      </span>
+    </section>
   `;
 
   this.onElementClick = this.onElementClick.bind(this);
@@ -99,6 +139,14 @@ function Spectrum(parentEl, rgb) {
   this.alphaSliderInner = this.element.querySelector(".spectrum-alpha-inner");
   this.alphaSliderHelper = this.element.querySelector(".spectrum-alpha-handle");
   Spectrum.draggable(this.alphaSliderInner, this.onAlphaSliderMove.bind(this));
+
+  // Color contrast
+  this.spectrumContrast = this.element.querySelector(
+    ".spectrum-color-contrast"
+  );
+  this.contrastValue = this.element.querySelector(
+    ".accessibility-contrast-value"
+  );
 
   if (rgb) {
     this.rgb = rgb;
@@ -256,9 +304,55 @@ Spectrum.draggable = function(element, onmove, onstart, onstop) {
   element.addEventListener("mousedown", start);
 };
 
+/**
+ * Calculates the contrast ratio for a DOM node's computed style against
+ * a given background.
+ *
+ * @param  {Object} computedStyle
+ *         The computed style for which we want to calculate the contrast ratio.
+ * @param  {Array} background
+ *         The rgba value array for background color (i.e. [255, 255, 255, 1]).
+ * @return {Object}
+ *         An object that may contain one or more of the following fields: error,
+ *         isLargeText, value, score for contrast.
+ */
+function getContrastRatioAgainstSolidBg(
+  computedStyle,
+  background = cssColors.white
+) {
+  const props = getTextProperties(computedStyle);
+  if (!props) {
+    return {
+      error: true,
+    };
+  }
+
+  const { color, isLargeText } = props;
+  const value = colorUtils.calculateContrastRatio(background, color);
+  return {
+    value,
+    color,
+    isLargeText,
+    score: getContrastRatioScore(value, isLargeText),
+  };
+}
+
 Spectrum.prototype = {
+  set textProps(style) {
+    this._textProps = style
+      ? {
+          fontSize: style["font-size"].value,
+          fontWeight: style["font-weight"].value,
+        }
+      : null;
+  },
+
   set rgb(color) {
     this.hsv = Spectrum.rgbToHsv(color[0], color[1], color[2], color[3]);
+  },
+
+  get textProps() {
+    return this._textProps;
   },
 
   get rgb() {
@@ -394,12 +488,56 @@ Spectrum.prototype = {
     this.alphaSliderHelper.style.left = alphaSliderX + "px";
   },
 
+  /* Calculates the contrast ratio for the currently selected
+   * color against white background and displays/hides contrast ratio span
+   * components depending on the contrast ratio calculated.
+   *
+   * Contrast ratio components include:
+   *    - contrastLargeTextIndicator: Hidden by default, shown when text has large font
+   *                                  size if there is no error in calculation.
+   *    - contrastValue:              Set to calculated value and score if no
+   *                                  error. Set to error text if there is an error in
+   *                                  calculation.
+   */
+  updateContrast: function() {
+    // Remove additional classes on spectrum contrast, leaving behind only base classes
+    this.spectrumContrast.classList.toggle("large-text", false);
+    this.spectrumContrast.classList.toggle("visible", false);
+    // Assign only base class to contrastValue, removing any score class
+    this.contrastValue.className = "accessibility-contrast-value";
+
+    if (!this.contrastEnabled) {
+      return;
+    }
+
+    this.spectrumContrast.classList.toggle("visible", true);
+
+    const contrastRatio = getContrastRatioAgainstSolidBg({
+      ...this.textProps,
+      color: this.rgbCssString,
+    });
+    const { value, score, isLargeText, error } = contrastRatio;
+
+    if (error) {
+      this.contrastValue.textContent = L10N.getStr(
+        "accessibility.contrast.error"
+      );
+      this.spectrumContrast.classList.remove("large-text");
+      return;
+    }
+
+    this.contrastValue.classList.toggle(score, true);
+    this.contrastValue.textContent = value.toFixed(2);
+    this.spectrumContrast.classList.toggle("large-text", isLargeText);
+  },
+
   updateUI: function() {
     this.updateHelperLocations();
 
     this.updateColorPreview();
     this.updateDraggerBackgroundColor();
     this.updateAlphaSliderBackground();
+    this.updateContrast();
   },
 
   destroy: function() {
@@ -410,9 +548,9 @@ Spectrum.prototype = {
     this.dragger = null;
     this.alphaSlider = this.alphaSliderInner = this.alphaSliderHelper = null;
     this.colorPreview = null;
-    this.dragger = null;
     this.element = null;
     this.parentEl = null;
-    this.slider = null;
+    this.spectrumContrast = null;
+    this.contrastValue = null;
   },
 };
