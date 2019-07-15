@@ -277,7 +277,7 @@ bool nsXHTMLContentSerializer::SerializeAttributes(
           // but that gets more complicated since we have to
           // search the tag list for CODEBASE as well.
           // For now, just leave them relative.
-          nsCOMPtr<nsIURI> uri = aElement->GetBaseURI();
+          nsIURI* uri = aElement->GetBaseURI();
           if (uri) {
             nsAutoString absURI;
             rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);

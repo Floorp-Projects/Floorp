@@ -186,9 +186,8 @@ void HTMLScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
   if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
     // Empty src should be treated as invalid URL.
     if (!src.IsEmpty()) {
-      nsCOMPtr<nsIURI> baseURI = GetBaseURI();
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(mUri), src,
-                                                OwnerDoc(), baseURI);
+                                                OwnerDoc(), GetBaseURI());
 
       if (!mUri) {
         AutoTArray<nsString, 2> params = {NS_LITERAL_STRING("src"), src};
