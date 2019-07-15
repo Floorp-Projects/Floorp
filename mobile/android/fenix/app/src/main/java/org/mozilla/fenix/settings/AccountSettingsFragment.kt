@@ -34,6 +34,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 
 class AccountSettingsFragment : PreferenceFragmentCompat() {
@@ -124,10 +125,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
-            requireComponents.analytics.metrics.track(Event.SyncAccountSignOut)
-            lifecycleScope.launch {
-                accountManager.logoutAsync().await()
-            }
+            nav(
+                R.id.accountSettingsFragment,
+                AccountSettingsFragmentDirections.actionAccountSettingsFragmentToSignOutFragment()
+            )
             true
         }
     }

@@ -1,0 +1,39 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/sign_out_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?foundation"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/sign_out_message"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:drawableStart="@drawable/ic_info"
+        android:text="@string/sign_out_confirmation_message"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/sign_out_cancel"
+        style="@style/SitePermissionCancelButton"
+        android:text="@string/sign_out_cancel"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/sign_out_disconnect"
+        app:layout_constraintTop_toBottomOf="@+id/sign_out_message" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/sign_out_disconnect"
+        style="@style/SitePermissionPrimaryButton"
+        android:text="@string/sign_out_disconnect"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sign_out_message" />
+</androidx.constraintlayout.widget.ConstraintLayout>
