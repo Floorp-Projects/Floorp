@@ -13,15 +13,13 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
-import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.containsString
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -67,10 +65,8 @@ class HomeScreenRobot {
     fun verifyStartBrowsingButton() = assertStartBrowsingButton()
 
     private fun scrollToElementByText(text: String): UiScrollable {
-        mDevice.wait(Until.findObject(By.text(text)), waitingTime)
-        val matchedScrollableElement = mDevice.findObject(UiSelector().text(text))
         val appView = UiScrollable(UiSelector().scrollable(true))
-        appView.scrollIntoView(matchedScrollableElement)
+        appView.scrollTextIntoView(text)
         return appView
     }
 
@@ -124,15 +120,18 @@ private fun assertHomeWordmark() = onView(ViewMatchers.withResourceName("wordmar
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertHomeToolbar() = onView(ViewMatchers.withResourceName("toolbar"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertOpenTabsHeader() {
-    mDevice.wait(Until.findObject(By.text("Open tabs")), waitingTime)
-}
-private fun assertAddTabButton() {
-    mDevice.wait(Until.findObject(By.res("add_tab_button")), waitingTime)
-}
-private fun assertNoTabsOpenedHeader() {
-    mDevice.wait(Until.findObject(By.text("No tabs opened")), waitingTime)
-}
+private fun assertOpenTabsHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Open tabs")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertAddTabButton() =
+    onView(CoreMatchers.allOf(ViewMatchers.withResourceName("add_tab_button")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertNoTabsOpenedHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("No tabs opened")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertNoTabsOpenedText() {
     onView(CoreMatchers.allOf(ViewMatchers.withText("Your open tabs will be shown here.")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -152,19 +151,21 @@ private fun threeDotButton() = onView(allOf(ViewMatchers.withId(R.id.menuButton)
 // First Run elements
 private fun assertWelcomeHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("Welcome to Firefox Preview!")))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertGetTheMostHeader() {
-    mDevice.wait(Until.findObject(By.res("Get the most out of Firefox Preview")), waitingTime)
-}
+private fun assertGetTheMostHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Get the most out of Firefox Preview.")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertAccountsSignInButton() = onView(ViewMatchers.withResourceName("turn_on_sync_button"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertGetToKnowHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("Get to know Firefox Preview")))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertChooseThemeHeader() {
+
+private fun assertChooseThemeHeader() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Choose your theme")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
+
 private fun assertChooseThemeText() =
-    mDevice.wait(Until.findObject(By.res("Try dark theme: easier on your battery and eyes")), waitingTime)
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Try dark theme: easier on your battery and your eyes.")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertLightThemeToggle() = onView(ViewMatchers.withResourceName("theme_light_radio_button"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -178,32 +179,36 @@ private fun assertAutomaticThemeToggle() = onView(ViewMatchers.withResourceName(
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertAutomaticThemeDescription() = onView(CoreMatchers.allOf(ViewMatchers.withText("Automatic")))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertProtectYourselfHeader() {
-    mDevice.wait(Until.findObject(By.text("Protect yourself")), waitingTime)
-}
-private fun assertTrackingProtectionToggle() {
-    mDevice.wait(Until.findObject(By.res("tracking_protection_toggle")), waitingTime)
-}
+
+private fun assertProtectYourselfHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Protect yourself")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertTrackingProtectionToggle() = onView(
+    CoreMatchers.allOf(ViewMatchers.withResourceName("tracking_protection_toggle")))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertProtectYourselfText() {
-    val protectText = "Firefox Preview blocks ad trackers that follow you around the web."
-    mDevice.wait(Until.findObject(By.text(protectText)), waitingTime)
+    onView(CoreMatchers.allOf(ViewMatchers.withText(
+        "Firefox Preview blocks ad trackers that follow you around the web.")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
-private fun assertBrowsePrivatelyHeader() {
-    mDevice.wait(Until.findObject(By.text("Browse privately")), waitingTime)
-}
-private fun assertBrowsePrivatelyText() {
-    mDevice.wait(Until.findObject(By.text("private browsing is just a tap away.")), waitingTime)
-}
-private fun assertYourPrivacyHeader() {
-    mDevice.wait(Until.findObject(By.text("Your privacy")), waitingTime)
-}
-private fun assertYourPrivacyText() {
-    val privacyText = "We've designed Firefox Preview to give you control"
-    mDevice.wait(Until.findObject(By.text(privacyText)), waitingTime)
-}
-private fun assertPrivacyNoticeButton() {
-    mDevice.wait(Until.findObject(By.text("Read our privacy notice")), waitingTime)
-}
-private fun assertStartBrowsingButton() {
-    mDevice.wait(Until.findObject(By.text("Start browsing")), waitingTime)
-}
+private fun assertBrowsePrivatelyHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Browse privately")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertBrowsePrivatelyText() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText(containsString("private browsing is just a tap away."))))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertYourPrivacyHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Your privacy")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertYourPrivacyText() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText(
+        "We’ve designed Firefox Preview to give you control over what you share online and what you share with us.")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertPrivacyNoticeButton() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Read our privacy notice")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertStartBrowsingButton() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Start browsing")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
