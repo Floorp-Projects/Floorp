@@ -97,7 +97,7 @@ def raptor(is_staging):
 
         all_raptor_craft_functions = [
             BUILDER.craft_raptor_tp6m_cold_task(for_suite=i)
-            for i in range(1, 15)
+            for i in range(1, 27)
         ]
         for craft_function in all_raptor_craft_functions:
             args = (signing_task_id, mozharness_task_id, variant, gecko_revision)
