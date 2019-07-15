@@ -436,6 +436,9 @@ with Files("tests/payment-request/**"):
 with Files("tests/performance-timeline/**"):
     BUG_COMPONENT = ("Core", "Performance")
 
+with Files("tests/picture-in-picture/**"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+
 with Files("tests/pointerevents/**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
