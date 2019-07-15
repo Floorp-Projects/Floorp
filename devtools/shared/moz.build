@@ -43,6 +43,7 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 JAR_MANIFESTS += ['jar.mn']
 
 DevToolsModules(
+    'accessibility.js',
     'async-storage.js',
     'async-utils.js',
     'base-loader.js',
