@@ -117,6 +117,20 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+bool nsINode::IsInclusiveDescendantOf(const nsINode* aNode) const {
+  MOZ_ASSERT(aNode, "The node is nullptr.");
+
+  const nsINode* node = this;
+  do {
+    if (node == aNode) {
+      return true;
+    }
+    node = node->GetParentNode();
+  } while (node);
+
+  return false;
+}
+
 nsINode::nsSlots::nsSlots() : mWeakReference(nullptr) {}
 
 nsINode::nsSlots::~nsSlots() {
@@ -2460,7 +2474,7 @@ bool nsINode::Contains(const nsINode* aOther) const {
     return false;
   }
 
-  return nsContentUtils::ContentIsDescendantOf(other, this);
+  return other->IsInclusiveDescendantOf(this);
 }
 
 uint32_t nsINode::Length() const {
@@ -2538,7 +2552,7 @@ inline static Element* FindMatchingElementWithId(
       continue;
     }
 
-    if (!nsContentUtils::ContentIsDescendantOf(element, &aRoot)) {
+    if (!element->IsInclusiveDescendantOf(&aRoot)) {
       continue;
     }
 

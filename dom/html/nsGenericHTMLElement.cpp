@@ -510,7 +510,7 @@ HTMLFormElement* nsGenericHTMLElement::FindAncestorForm(
       // we're one of those inputs-in-a-table that have a hacked mForm pointer
       // and a subtree containing both us and the form got removed from the
       // DOM.
-      if (nsContentUtils::ContentIsDescendantOf(aCurrentForm, prevContent)) {
+      if (aCurrentForm->IsInclusiveDescendantOf(prevContent)) {
         return aCurrentForm;
       }
     }
