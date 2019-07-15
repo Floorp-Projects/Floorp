@@ -498,7 +498,7 @@ endif # target == SunO
 ifdef USE_64
 # no __int128 at least up to lcc 1.23 (pretending to be gcc5)
 # NB: CC_NAME is not defined here
-ifneq ($(shell $(CC) -? 2>&1 >/dev/null | sed -e 's/:.*//;1q'),lcc)
+ifneq ($(shell $(CC) -? 2>&1 >/dev/null </dev/null | sed -e 's/:.*//;1q'),lcc)
     ifdef CC_IS_CLANG
             HAVE_INT128_SUPPORT = 1
             DEFINES += -DHAVE_INT128_SUPPORT
