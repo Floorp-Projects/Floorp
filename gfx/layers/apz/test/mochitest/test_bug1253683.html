@@ -49,6 +49,7 @@ if (isApzEnabled()) {
   pushPrefs([["apz.displayport_expiry_ms", 0],
              ["apz.test.logging_enabled", true]])
   .then(waitUntilApzStable)
+  .then(forceLayerTreeToCompositor)
   .then(runContinuation(test))
   .then(SimpleTest.finish);
 }
