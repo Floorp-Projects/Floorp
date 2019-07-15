@@ -2,7 +2,8 @@
   "name": "ヤフオク!",
   "description": "ヤフオク! 検索",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
+  "encoding": "EUC-JP",
   "applications": {
     "gecko": {
       "id": "yahoo-jp-auctions@search.mozilla.org"
