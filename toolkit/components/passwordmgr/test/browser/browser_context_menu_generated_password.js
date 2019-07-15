@@ -87,10 +87,12 @@ add_task(async function fill_generated_password_empty_field() {
         browser,
         [passwordInputSelector],
         function checkInitialFieldValue(inputSelector) {
+          const input = content.document.querySelector(inputSelector);
+          is(input.value.length, 0, "Password field is empty");
           is(
-            content.document.querySelector(inputSelector).value.length,
-            0,
-            "Password field is empty"
+            content.getComputedStyle(input).filter,
+            "none",
+            "Password field should not be highlighted"
           );
         }
       );
@@ -103,10 +105,16 @@ add_task(async function fill_generated_password_empty_field() {
         browser,
         [passwordInputSelector],
         function checkFinalFieldValue(inputSelector) {
+          const input = content.document.querySelector(inputSelector);
           is(
-            content.document.querySelector(inputSelector).value.length,
+            input.value.length,
             15,
             "Password field was filled with generated password"
+          );
+          isnot(
+            content.getComputedStyle(input).filter,
+            "none",
+            "Password field should be highlighted"
           );
         }
       );
@@ -127,7 +135,13 @@ add_task(async function fill_generated_password_nonempty_field() {
         browser,
         [passwordInputSelector],
         function checkInitialFieldValue(inputSelector) {
-          content.document.querySelector(inputSelector).setUserInput("aa");
+          const input = content.document.querySelector(inputSelector);
+          input.setUserInput("aa");
+          is(
+            content.getComputedStyle(input).filter,
+            "none",
+            "Password field should not be highlighted"
+          );
         }
       );
 
@@ -139,10 +153,16 @@ add_task(async function fill_generated_password_nonempty_field() {
         browser,
         [passwordInputSelector],
         function checkFinalFieldValue(inputSelector) {
+          const input = content.document.querySelector(inputSelector);
           is(
-            content.document.querySelector(inputSelector).value.length,
+            input.value.length,
             15,
             "Password field was filled with generated password"
+          );
+          isnot(
+            content.getComputedStyle(input).filter,
+            "none",
+            "Password field should be highlighted"
           );
         }
       );
