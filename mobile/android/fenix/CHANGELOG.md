@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #2419 - Adds a deletion state to the history component
 - #1570 - Enables the opening of links by other apps. Disabled in #3359.
 - #3200 - Adds application-services fretboard feature flags for FxA and Sync.
+- #3865 - Added a new nightly icon and app name
 
 ### Changed
 - #2673 - Fixed can't upload files using third party apps from the file manager.
