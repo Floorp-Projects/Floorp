@@ -496,13 +496,13 @@ class HomeFragment : Fragment(), AccountObserver {
             }
             is CollectionAction.OpenTab -> {
                 invokePendingDeleteJobs()
-                val tabSnapshot = action.tab.restore(
+                val session = action.tab.restore(
                     context = context!!,
                     engine = requireComponents.core.engine,
                     tab = action.tab,
                     restoreSessionId = false
                 )
-                if (tabSnapshot.isEmpty()) {
+                if (session == null) {
                     // We were unable to create a snapshot, so just load the tab instead
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = action.tab.url,
@@ -510,8 +510,8 @@ class HomeFragment : Fragment(), AccountObserver {
                         from = BrowserDirection.FromHome
                     )
                 } else {
-                    requireComponents.core.sessionManager.restore(
-                        tabSnapshot,
+                    requireComponents.core.sessionManager.add(
+                        session,
                         true
                     )
                     (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
@@ -520,18 +520,18 @@ class HomeFragment : Fragment(), AccountObserver {
             is CollectionAction.OpenTabs -> {
                 invokePendingDeleteJobs()
                 action.collection.tabs.forEach {
-                    val tabSnapshot = it.restore(
+                    val session = it.restore(
                         context = context!!,
                         engine = requireComponents.core.engine,
                         tab = it,
                         restoreSessionId = false
                     )
-                    if (tabSnapshot.isEmpty()) {
+                    if (session == null) {
                         // We were unable to create a snapshot, so just load the tab instead
                         requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
                     } else {
-                        requireComponents.core.sessionManager.restore(
-                            tabSnapshot,
+                        requireComponents.core.sessionManager.add(
+                            session,
                             requireComponents.core.sessionManager.selectedSession == null
                         )
                     }
