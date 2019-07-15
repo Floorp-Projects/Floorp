@@ -117,6 +117,7 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-release
+          - mozilla-esr68
       when:
           - {hour: 10, minute: 0}
 
