@@ -1069,7 +1069,7 @@ lg_FindTrustAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
     NSSLOWCERTCertificate *cert;
     unsigned char hash[SHA1_LENGTH];
     unsigned int trustFlags;
-    CK_RV crv;
+    CK_RV crv = CKR_CANCEL;
 
     switch (type) {
         case CKA_PRIVATE:

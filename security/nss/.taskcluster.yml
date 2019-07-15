@@ -55,7 +55,7 @@ tasks:
         image: djmitche/nss-decision:0.0.3
 
         env:
-          TC_OWNER: "${push.owner}"
+          TC_OWNER: "${ownerEmail}"
           TC_SOURCE: "${repository.url}"
           TC_PROJECT: ${repository.project}
           TC_SCHEDULER_ID: "${schedulerId}"
