@@ -44,9 +44,6 @@
 }
 
 .app__content {
-  padding-block-start: var(--app-top-padding);
-  padding-block-end: var(--app-bottom-padding);
-
   /* we want to scroll only the main content, not the sidebar */
   overflow-y: auto;
 
@@ -54,6 +51,15 @@
      margin will correct the alignment */
   margin-inline-start: calc(var(--card-shadow-blur-radius) * -1);
   padding-inline: var(--card-shadow-blur-radius);
+  padding-block-start: var(--app-top-padding);
+}
+
+/* Workaround for Gecko clipping the padding-bottom of a scrollable container;
+   we create a block to act as the bottom padding instead. */
+.app__content::after {
+  content: "";
+  display: block;
+  height: var(--app-bottom-padding);
 }
 
 .page {
