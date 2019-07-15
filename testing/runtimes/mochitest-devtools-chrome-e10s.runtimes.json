@@ -366,7 +366,7 @@
     "devtools/client/inspector/rules/test/browser_rules_class_panel_state_preserved.js": 3655,
     "devtools/client/inspector/rules/test/browser_rules_colorUnit.js": 8353,
     "devtools/client/inspector/rules/test/browser_rules_colorpicker-and-image-tooltip_02.js": 3600,
-    "devtools/client/inspector/rules/test/browser_rules_colorpicker-appears-on-swatch-click.js": 3714,
+    "devtools/client/inspector/rules/test/browser_rules_colorpicker-appears-on-swatch-click-or-keyboard-activation.js": 3714,
     "devtools/client/inspector/rules/test/browser_rules_colorpicker-hides-on-tooltip.js": 3620,
     "devtools/client/inspector/rules/test/browser_rules_colorpicker-multiple-changes.js": 4665,
     "devtools/client/inspector/rules/test/browser_rules_colorpicker-revert-on-ESC.js": 3580,

@@ -29,14 +29,6 @@
   background-position: 0 0, 6px 6px;
 }
 
-.spectrum-slider-control {
-  cursor: pointer;
-  box-shadow: 0 0 2px rgba(0,0,0,.6);
-  background: #fff;
-  border-radius: 50%;
-  opacity: .9;
-}
-
 .spectrum-box {
   border: 1px solid rgba(0,0,0,0.2);
   border-radius: 2px;
@@ -135,18 +127,37 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   height: 8px;
 }
 
-.spectrum-alpha-inner,
-.spectrum-hue-inner {
-  height: 100%;
+.spectrum-alpha-input,
+.spectrum-hue-input {
+  width: 100%;
+  margin: 0;
+  position: absolute;
+  height: 8px;
+  border-radius: 2px;
 }
 
-.spectrum-alpha-handle,
-.spectrum-hue-handle {
-  position: absolute;
-  top: -2px;
-  bottom: -2px;
+/* Focus style already exists on input[type="range"]. Remove overlap */
+.spectrum-hue-input:focus,
+.spectrum-alpha-input:focus {
+  outline: none;
+}
+
+.spectrum-hue-input::-moz-range-thumb,
+.spectrum-alpha-input::-moz-range-thumb {
+  cursor: pointer;
   height: 12px;
   width: 12px;
+  box-shadow: 0 0 2px rgba(0,0,0,.6);
+  background: #fff;
+  border-radius: 50%;
+  opacity: .9;
+  border: none;
+}
+
+.spectrum-hue-input::-moz-range-track {
+  border-radius: 2px;
+  height: 8px;
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
 }
 
 .spectrum-sat {
@@ -155,10 +166,6 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 
 .spectrum-val {
   background-image: linear-gradient(to top, #000000, rgba(204, 154, 129, 0));
-}
-
-.spectrum-hue {
-  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
 }
 
 .spectrum-dragger {
@@ -172,14 +179,6 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   width: 8px;
   border: 1px solid white;
   box-shadow: 0 0 2px rgba(0,0,0,.6);
-}
-
-.spectrum-slider {
-  position: absolute;
-  top: 0;
-  height: 5px;
-  left: -3px;
-  right: -3px;
 }
 
 .spectrum-color-contrast {
@@ -236,7 +235,12 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   margin-right: 1px;
 }
 
-.learn-more:hover {
+.learn-more:hover, .learn-more:focus {
   fill: var(--theme-icon-color);
   cursor: pointer;
+  outline: none;
+}
+
+.learn-more::-moz-focus-inner {
+  border: none;
 }
