@@ -492,10 +492,6 @@ class TryNoteIterAll : public TryNoteIter<NoOpTryNoteFilter> {
 
 static bool HasLiveStackValueAtDepth(JSContext* cx, HandleScript script,
                                      jsbytecode* pc, uint32_t stackDepth) {
-  if (!script->hasTrynotes()) {
-    return false;
-  }
-
   for (TryNoteIterAll tni(cx, script, pc); !tni.done(); ++tni) {
     const JSTryNote& tn = **tni;
 

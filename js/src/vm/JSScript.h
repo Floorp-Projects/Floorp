@@ -2943,16 +2943,6 @@ class JSScript : public js::gc::TenuredCell {
 
   size_t dataSize() const { return dataSize_; }
 
-  bool hasTrynotes() const {
-    return !immutableScriptData()->tryNotes().empty();
-  }
-  bool hasScopeNotes() const {
-    return !immutableScriptData()->scopeNotes().empty();
-  }
-  bool hasResumeOffsets() const {
-    return !immutableScriptData()->resumeOffsets().empty();
-  }
-
   mozilla::Span<const JS::GCCellPtr> gcthings() const {
     return data_->gcthings();
   }
