@@ -37,7 +37,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
-import org.mozilla.fenix.components.StateViewModel
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.requireComponents
@@ -72,9 +72,10 @@ class SearchFragment : Fragment(), BackHandler {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = session?.url ?: ""
 
-        val viewModel = StateViewModel.get(
+        searchStore = StoreProvider.get(
             this,
-            SearchState(
+            Store(
+                SearchState(
                 query = url,
                 showShortcutEnginePicker = false,
                 searchEngineSource = SearchEngineSource.Default(
@@ -82,16 +83,10 @@ class SearchFragment : Fragment(), BackHandler {
                 ),
                 showSuggestions = Settings.getInstance(requireContext()).showSearchSuggestions,
                 showVisitedSitesBookmarks = Settings.getInstance(requireContext()).shouldShowVisitedSitesBookmarks,
-                session = session
+                session = session),
+                ::searchStateReducer
             )
         )
-
-        searchStore = Store(
-            viewModel.state,
-            ::searchStateReducer
-        )
-
-        searchStore.observe(this) { viewModel.update(it) }
 
         searchInteractor = SearchInteractor(
             activity as HomeActivity,

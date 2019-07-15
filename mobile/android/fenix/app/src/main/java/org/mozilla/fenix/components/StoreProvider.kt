@@ -9,27 +9,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.get
+import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
+import mozilla.components.lib.state.Store
 
 /**
  * Generic ViewModel to wrap a State object for state restoration
  */
 @Suppress("UNCHECKED_CAST")
-class StateViewModel<T : State>(initialState: T) : ViewModel() {
-    var state: T = initialState
-        private set(value) { field = value }
-
-    fun update(state: T) { this.state = state }
-
+class StoreProvider<S : State, A : Action, T : Store<S, A>>(val store: T) : ViewModel() {
     companion object {
-        fun <S : State> get(fragment: Fragment, initialState: S): StateViewModel<S> {
+        fun <S : State, A : Action, T : Store<S, A>> get(fragment: Fragment, initialStore: T): T {
             val factory = object : ViewModelProvider.Factory {
-                override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                    return StateViewModel(initialState) as T
+                override fun <VM : ViewModel?> create(modelClass: Class<VM>): VM {
+                    return StoreProvider(initialStore) as VM
                 }
             }
 
-            return ViewModelProviders.of(fragment, factory).get()
+            val viewModel: StoreProvider<S, A, T> = ViewModelProviders.of(fragment, factory).get()
+            return viewModel.store
         }
     }
 }
