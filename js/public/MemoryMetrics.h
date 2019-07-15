@@ -185,13 +185,13 @@ struct ClassInfo {
 
   ClassInfo() : FOR_EACH_SIZE(ZERO_SIZE) wasmGuardPages(0) {}
 
-  void add(const ClassInfo& other) { FOR_EACH_SIZE(ADD_OTHER_SIZE) }
+  void add(const ClassInfo& other) { FOR_EACH_SIZE(ADD_OTHER_SIZE); }
 
-  void subtract(const ClassInfo& other){FOR_EACH_SIZE(SUB_OTHER_SIZE)}
+  void subtract(const ClassInfo& other) { FOR_EACH_SIZE(SUB_OTHER_SIZE); }
 
   size_t sizeOfAllThings() const {
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N);
     return n;
   }
 
@@ -202,16 +202,18 @@ struct ClassInfo {
 
   size_t sizeOfLiveGCThings() const {
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING);
     return n;
   }
 
-  void addToTabSizes(TabSizes* sizes) const { FOR_EACH_SIZE(ADD_TO_TAB_SIZES) }
+  void addToTabSizes(TabSizes* sizes) const { FOR_EACH_SIZE(ADD_TO_TAB_SIZES); }
 
   void addToServoSizes(ServoSizes* sizes) const {
-      FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)}
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
+  }
 
-  FOR_EACH_SIZE(DECL_SIZE) size_t wasmGuardPages;
+  FOR_EACH_SIZE(DECL_SIZE);
+  size_t wasmGuardPages;
 
 #undef FOR_EACH_SIZE
 };
@@ -227,29 +229,31 @@ struct ShapeInfo {
 
   ShapeInfo() : FOR_EACH_SIZE(ZERO_SIZE) dummy() {}
 
-  void add(const ShapeInfo& other) { FOR_EACH_SIZE(ADD_OTHER_SIZE) }
+  void add(const ShapeInfo& other) { FOR_EACH_SIZE(ADD_OTHER_SIZE); }
 
-  void subtract(const ShapeInfo& other){FOR_EACH_SIZE(SUB_OTHER_SIZE)}
+  void subtract(const ShapeInfo& other) { FOR_EACH_SIZE(SUB_OTHER_SIZE); }
 
   size_t sizeOfAllThings() const {
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N);
     return n;
   }
 
   size_t sizeOfLiveGCThings() const {
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING);
     return n;
   }
 
-  void addToTabSizes(TabSizes* sizes) const { FOR_EACH_SIZE(ADD_TO_TAB_SIZES) }
+  void addToTabSizes(TabSizes* sizes) const { FOR_EACH_SIZE(ADD_TO_TAB_SIZES); }
 
   void addToServoSizes(ServoSizes* sizes) const {
-      FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)}
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
+  }
 
-  FOR_EACH_SIZE(DECL_SIZE) int dummy;  // present just to absorb the trailing
-                                       // comma from FOR_EACH_SIZE(ZERO_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
+  int dummy;  // present just to absorb the trailing
+              // comma from FOR_EACH_SIZE(ZERO_SIZE)
 
 #undef FOR_EACH_SIZE
 };
@@ -288,10 +292,12 @@ struct CodeSizes {
   CodeSizes() : FOR_EACH_SIZE(ZERO_SIZE) dummy() {}
 
   void addToServoSizes(ServoSizes* sizes) const {
-      FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)}
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
+  }
 
-  FOR_EACH_SIZE(DECL_SIZE) int dummy;  // present just to absorb the trailing
-                                       // comma from FOR_EACH_SIZE(ZERO_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
+  int dummy;  // present just to absorb the trailing
+              // comma from FOR_EACH_SIZE(ZERO_SIZE)
 
 #undef FOR_EACH_SIZE
 };
@@ -313,10 +319,12 @@ struct GCSizes {
   GCSizes() : FOR_EACH_SIZE(ZERO_SIZE) dummy() {}
 
   void addToServoSizes(ServoSizes* sizes) const {
-      FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)}
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
+  }
 
-  FOR_EACH_SIZE(DECL_SIZE) int dummy;  // present just to absorb the trailing
-                                       // comma from FOR_EACH_SIZE(ZERO_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
+  int dummy;  // present just to absorb the trailing
+              // comma from FOR_EACH_SIZE(ZERO_SIZE)
 
 #undef FOR_EACH_SIZE
 };
@@ -350,23 +358,24 @@ struct StringInfo {
   bool isNotable() const {
     static const size_t NotabilityThreshold = 16 * 1024;
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N);
     return n >= NotabilityThreshold;
   }
 
   size_t sizeOfLiveGCThings() const {
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING);
     return n;
   }
 
-  void addToTabSizes(TabSizes* sizes) const { FOR_EACH_SIZE(ADD_TO_TAB_SIZES) }
+  void addToTabSizes(TabSizes* sizes) const { FOR_EACH_SIZE(ADD_TO_TAB_SIZES); }
 
   void addToServoSizes(ServoSizes* sizes) const {
-      FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)}
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
+  }
 
-  FOR_EACH_SIZE(DECL_SIZE)
-      uint32_t numCopies;  // How many copies of the string have we seen?
+  FOR_EACH_SIZE(DECL_SIZE);
+  uint32_t numCopies;  // How many copies of the string have we seen?
 
 #undef FOR_EACH_SIZE
 };
@@ -405,27 +414,27 @@ struct ScriptSourceInfo {
   ScriptSourceInfo() : FOR_EACH_SIZE(ZERO_SIZE) numScripts(0) {}
 
   void add(const ScriptSourceInfo& other) {
-    FOR_EACH_SIZE(ADD_OTHER_SIZE)
+    FOR_EACH_SIZE(ADD_OTHER_SIZE);
     numScripts++;
   }
 
   void subtract(const ScriptSourceInfo& other) {
-    FOR_EACH_SIZE(SUB_OTHER_SIZE)
+    FOR_EACH_SIZE(SUB_OTHER_SIZE);
     numScripts--;
   }
 
   void addToServoSizes(ServoSizes* sizes) const {
-    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
   }
 
   bool isNotable() const {
     static const size_t NotabilityThreshold = 16 * 1024;
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N);
     return n >= NotabilityThreshold;
   }
 
-  FOR_EACH_SIZE(DECL_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
   uint32_t numScripts;  // How many ScriptSources come from this file? (It
                         // can be more than one in XML files that have
                         // multiple scripts in CDATA sections.)
@@ -464,7 +473,7 @@ struct HelperThreadStats {
   explicit HelperThreadStats()
       : FOR_EACH_SIZE(ZERO_SIZE) idleThreadCount(0), activeThreadCount(0) {}
 
-  FOR_EACH_SIZE(DECL_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
 
   unsigned idleThreadCount;
   unsigned activeThreadCount;
@@ -481,7 +490,7 @@ struct GlobalStats {
   explicit GlobalStats(mozilla::MallocSizeOf mallocSizeOf)
       : FOR_EACH_SIZE(ZERO_SIZE) mallocSizeOf_(mallocSizeOf) {}
 
-  FOR_EACH_SIZE(DECL_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
 
   HelperThreadStats helperThread;
 
@@ -529,7 +538,7 @@ struct RuntimeSizes {
   }
 
   void addToServoSizes(ServoSizes* sizes) const {
-    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
     scriptSourceInfo.addToServoSizes(sizes);
     code.addToServoSizes(sizes);
     gc.addToServoSizes(sizes);
@@ -539,7 +548,7 @@ struct RuntimeSizes {
   // all script sources.  At the end, if the measurement granularity is
   // FineGrained, we subtract the measurements of the notable script sources
   // and move them into |notableScriptSources|.
-  FOR_EACH_SIZE(DECL_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
   ScriptSourceInfo scriptSourceInfo;
   CodeSizes code;
   GCSizes gc;
@@ -622,23 +631,27 @@ struct UnusedGCThingSizes {
     }
   }
 
-  void addSizes(const UnusedGCThingSizes& other){FOR_EACH_SIZE(ADD_OTHER_SIZE)}
+  void addSizes(const UnusedGCThingSizes& other) {
+    FOR_EACH_SIZE(ADD_OTHER_SIZE);
+  }
 
   size_t totalSize() const {
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N);
     return n;
   }
 
   void addToTabSizes(JS::TabSizes* sizes) const {
-    FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+    FOR_EACH_SIZE(ADD_TO_TAB_SIZES);
   }
 
   void addToServoSizes(JS::ServoSizes* sizes) const {
-      FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)}
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
+  }
 
-  FOR_EACH_SIZE(DECL_SIZE) int dummy;  // present just to absorb the trailing
-                                       // comma from FOR_EACH_SIZE(ZERO_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
+  int dummy;  // present just to absorb the trailing
+              // comma from FOR_EACH_SIZE(ZERO_SIZE)
 
 #undef FOR_EACH_SIZE
 };
@@ -702,7 +715,7 @@ struct ZoneStats {
 
   void addSizes(const ZoneStats& other) {
     MOZ_ASSERT(isTotals);
-    FOR_EACH_SIZE(ADD_OTHER_SIZE)
+    FOR_EACH_SIZE(ADD_OTHER_SIZE);
     unusedGCThings.addSizes(other.unusedGCThings);
     stringInfo.add(other.stringInfo);
     shapeInfo.add(other.shapeInfo);
@@ -711,7 +724,7 @@ struct ZoneStats {
   size_t sizeOfLiveGCThings() const {
     MOZ_ASSERT(isTotals);
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING);
     n += stringInfo.sizeOfLiveGCThings();
     n += shapeInfo.sizeOfLiveGCThings();
     return n;
@@ -719,7 +732,7 @@ struct ZoneStats {
 
   void addToTabSizes(JS::TabSizes* sizes) const {
     MOZ_ASSERT(isTotals);
-    FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+    FOR_EACH_SIZE(ADD_TO_TAB_SIZES);
     unusedGCThings.addToTabSizes(sizes);
     stringInfo.addToTabSizes(sizes);
     shapeInfo.addToTabSizes(sizes);
@@ -727,7 +740,7 @@ struct ZoneStats {
 
   void addToServoSizes(JS::ServoSizes* sizes) const {
     MOZ_ASSERT(isTotals);
-    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
     unusedGCThings.addToServoSizes(sizes);
     stringInfo.addToServoSizes(sizes);
     shapeInfo.addToServoSizes(sizes);
@@ -737,7 +750,7 @@ struct ZoneStats {
   // if the measurement granularity is FineGrained, we subtract the
   // measurements of the notable script sources and move them into
   // |notableStrings|.
-  FOR_EACH_SIZE(DECL_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
   UnusedGCThingSizes unusedGCThings;
   StringInfo stringInfo;
   ShapeInfo shapeInfo;
@@ -816,14 +829,14 @@ struct RealmStats {
 
   void addSizes(const RealmStats& other) {
     MOZ_ASSERT(isTotals);
-    FOR_EACH_SIZE(ADD_OTHER_SIZE)
+    FOR_EACH_SIZE(ADD_OTHER_SIZE);
     classInfo.add(other.classInfo);
   }
 
   size_t sizeOfLiveGCThings() const {
     MOZ_ASSERT(isTotals);
     size_t n = 0;
-    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+    FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING);
     n += classInfo.sizeOfLiveGCThings();
     return n;
   }
@@ -843,7 +856,7 @@ struct RealmStats {
   // The class measurements in |classInfo| are initially for all classes.  At
   // the end, if the measurement granularity is FineGrained, we subtract the
   // measurements of the notable classes and move them into |notableClasses|.
-  FOR_EACH_SIZE(DECL_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
   ClassInfo classInfo;
   void* extra;  // This field can be used by embedders.
 
@@ -909,11 +922,11 @@ struct RuntimeStats {
   // multiple of the chunk size, which is good.
 
   void addToServoSizes(ServoSizes* sizes) const {
-    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)
+    FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
     runtime.addToServoSizes(sizes);
   }
 
-  FOR_EACH_SIZE(DECL_SIZE)
+  FOR_EACH_SIZE(DECL_SIZE);
 
   RuntimeSizes runtime;
 
