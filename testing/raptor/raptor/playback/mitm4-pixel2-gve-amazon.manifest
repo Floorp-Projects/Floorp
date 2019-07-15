@@ -1,0 +1,10 @@
+[
+  {
+    "size": 17326440,
+    "visibility": "public",
+    "digest": "21599de9f7e9eb0a8484dd8016247bfe520bdb188edf10beb155a13ddfedce80652075289d175e4bd07f45a87bcb62d2e546e058cb211998492f730ca8bf07a0",
+    "algorithm": "sha512",
+    "filename": "mitm4-pixel2-gve-amazon.zip",
+    "unpack": true
+  }
+]
