@@ -33,7 +33,8 @@ function sortWithClones(requests, sorter, a, b) {
     b = requests.get(bOrigId);
   }
 
-  return sorter(a, b);
+  const defaultSorter = () => false;
+  return sorter ? sorter(a, b) : defaultSorter;
 }
 
 /**

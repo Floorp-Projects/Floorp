@@ -150,6 +150,30 @@ add_task(async function() {
   testHeaders("file", "ascending");
   await testContents([0, 1, 2, 3, 4]);
 
+  info("Testing URL sort, ascending.");
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#requests-list-url-button")
+  );
+  testHeaders("url", "ascending");
+  await testContents([0, 1, 2, 3, 4]);
+
+  info("Testing URL sort, descending.");
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#requests-list-url-button")
+  );
+  testHeaders("url", "descending");
+  await testContents([4, 3, 2, 1, 0]);
+
+  info("Testing URL sort, ascending. Checking sort loops correctly.");
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#requests-list-url-button")
+  );
+  testHeaders("url", "ascending");
+  await testContents([0, 1, 2, 3, 4]);
+
   info("Testing type sort, ascending.");
   EventUtils.sendMouseEvent(
     { type: "click" },
