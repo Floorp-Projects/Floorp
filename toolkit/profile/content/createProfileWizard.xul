@@ -20,6 +20,8 @@
         onload="initWizard();"
         style="&window.size;">
   <script src="chrome://global/content/customElements.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
 
   <stringbundle id="bundle_profileManager"
                 src="chrome://mozapps/locale/profile/profileSelection.properties"/>
