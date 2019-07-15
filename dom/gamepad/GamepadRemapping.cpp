@@ -403,7 +403,11 @@ class Dualshock4Remapper final : public GamepadRemapper {
     aReport[8] = aBlue;
   }
 
-  virtual void GetTouchData(uint32_t aIndex, void* aInput) override {
+  virtual uint32_t GetMaxInputReportLength() const override {
+    return MAX_INPUT_LEN;
+  }
+
+  virtual void ProcessTouchData(uint32_t aIndex, void* aInput) override {
     nsTArray<GamepadTouchState> touches(TOUCH_EVENT_COUNT);
     touches.SetLength(TOUCH_EVENT_COUNT);
     uint8_t* rawData = (uint8_t*)aInput;
@@ -546,6 +550,7 @@ class Dualshock4Remapper final : public GamepadRemapper {
 
   static const uint32_t LIGHT_INDICATOR_COUNT = 1;
   static const uint32_t TOUCH_EVENT_COUNT = 2;
+  static const uint32_t MAX_INPUT_LEN = 68;
 
   nsTArray<unsigned long> mLastTouchId;
   nsTArray<bool> mLastTouches;

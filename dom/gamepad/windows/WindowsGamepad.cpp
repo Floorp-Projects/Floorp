@@ -850,7 +850,7 @@ bool WindowsGamepadService::HandleRawInput(HRAWINPUT handle) {
   }
 
   BYTE* rawData = raw->data.hid.bRawData;
-  gamepad->remapper->GetTouchData(gamepad->id, rawData);
+  gamepad->remapper->ProcessTouchData(gamepad->id, rawData);
 
   return true;
 }
