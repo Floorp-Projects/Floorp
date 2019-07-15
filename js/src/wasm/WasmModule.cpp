@@ -560,7 +560,6 @@ static bool AllSegmentsArePassive(const DataSegmentVector& vec) {
 #endif
 
 bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                          const JSFunctionVector& funcImports,
                           HandleWasmMemoryObject memoryObj,
                           const ValVector& globalImportValues) const {
   MOZ_ASSERT_IF(!memoryObj, AllSegmentsArePassive(dataSegments_));
@@ -1409,8 +1408,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   // constructed since this can make the instance live to content (even if the
   // start function fails).
 
-  if (!initSegments(cx, instance, imports.funcs, memory,
-                    imports.globalValues)) {
+  if (!initSegments(cx, instance, memory, imports.globalValues)) {
     return false;
   }
 
