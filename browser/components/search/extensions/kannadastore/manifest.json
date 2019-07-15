@@ -2,7 +2,8 @@
   "name": "Kannada Store",
   "description": "Kanada Store, Online store",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
+  "encoding": "ISO-8859-1",
   "applications": {
     "gecko": {
       "id": "kannadastore@search.mozilla.org"
