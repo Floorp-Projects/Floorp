@@ -861,8 +861,8 @@ bool TextOverflow::CanHaveOverflowMarkers(nsIFrame* aBlockFrame) {
     if (domSelection) {
       nsCOMPtr<nsIContent> content =
           nsIContent::FromNodeOrNull(domSelection->GetFocusNode());
-      if (content && nsContentUtils::ContentIsDescendantOf(
-                         content, aBlockFrame->GetContent())) {
+      if (content &&
+          content->IsInclusiveDescendantOf(aBlockFrame->GetContent())) {
         return false;
       }
     }

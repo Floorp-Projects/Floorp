@@ -1530,12 +1530,12 @@ bool HyperTextAccessible::SelectionBoundsAt(int32_t aSelectionNum,
     endOffset = tempOffset;
   }
 
-  if (!nsContentUtils::ContentIsDescendantOf(startNode, mContent))
+  if (!startNode->IsInclusiveDescendantOf(mContent))
     *aStartOffset = 0;
   else
     *aStartOffset = DOMPointToOffset(startNode, startOffset);
 
-  if (!nsContentUtils::ContentIsDescendantOf(endNode, mContent))
+  if (!endNode->IsInclusiveDescendantOf(mContent))
     *aEndOffset = CharacterCount();
   else
     *aEndOffset = DOMPointToOffset(endNode, endOffset, true);
