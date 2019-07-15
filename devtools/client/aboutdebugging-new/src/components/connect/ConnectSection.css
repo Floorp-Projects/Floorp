@@ -5,6 +5,7 @@
 .connect-section {
   --icon-size: calc(var(--base-unit) * 9);
   --header-col-gap: calc(var(--base-unit) * 2);
+  margin-block-end: calc(var(--base-unit) * 4);
 }
 
 /*

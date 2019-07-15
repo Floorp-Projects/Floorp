@@ -199,7 +199,6 @@ class ConnectPage extends PureComponent {
         attrs: { title: true },
       },
       ConnectSection({
-        className: "connect-page__breather",
         icon: GLOBE_ICON_SRC,
         title: "Network Location",
         extraContent: dom.div(
