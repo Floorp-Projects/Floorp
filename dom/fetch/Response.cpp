@@ -96,7 +96,7 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
   nsAutoString parsedURL;
 
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsIURI> baseURI;
+    nsIURI* baseURI = nullptr;
     nsCOMPtr<nsPIDOMWindowInner> inner(
         do_QueryInterface(aGlobal.GetAsSupports()));
     Document* doc = inner ? inner->GetExtantDoc() : nullptr;
