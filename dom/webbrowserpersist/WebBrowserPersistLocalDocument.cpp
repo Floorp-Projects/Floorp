@@ -208,7 +208,7 @@ uint32_t WebBrowserPersistLocalDocument::GetPersistFlags() const {
   return mPersistFlags;
 }
 
-already_AddRefed<nsIURI> WebBrowserPersistLocalDocument::GetBaseURI() const {
+nsIURI* WebBrowserPersistLocalDocument::GetBaseURI() const {
   return mDocument->GetBaseURI();
 }
 

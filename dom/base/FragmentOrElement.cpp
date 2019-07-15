@@ -327,19 +327,14 @@ nsAtom* nsIContent::GetLang() const {
   return nullptr;
 }
 
-already_AddRefed<nsIURI> nsIContent::GetBaseURI(
-    bool aTryUseXHRDocBaseURI) const {
+nsIURI* nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const {
   if (SVGUseElement* use = GetContainingSVGUseShadowHost()) {
     if (URLExtraData* data = use->GetContentURLData()) {
-      return do_AddRef(data->BaseURI());
+      return data->BaseURI();
     }
   }
 
-  Document* doc = OwnerDoc();
-  // Start with document base
-  nsCOMPtr<nsIURI> base = doc->GetBaseURI(aTryUseXHRDocBaseURI);
-
-  return base.forget();
+  return OwnerDoc()->GetBaseURI(aTryUseXHRDocBaseURI);
 }
 
 nsIURI* nsIContent::GetBaseURIForStyleAttr() const {

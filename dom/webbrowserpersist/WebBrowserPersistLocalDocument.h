@@ -25,7 +25,7 @@ class WebBrowserPersistLocalDocument final
 
   NotNull<const Encoding*> GetCharacterSet() const;
   uint32_t GetPersistFlags() const;
-  already_AddRefed<nsIURI> GetBaseURI() const;
+  nsIURI* GetBaseURI() const;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIWEBBROWSERPERSISTDOCUMENT
