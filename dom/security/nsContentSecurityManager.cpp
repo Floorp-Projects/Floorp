@@ -839,7 +839,7 @@ static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
 
   // FIXME The discovery feature in about:addons uses the SystemPrincpal.
   // We should remove the exception for AMO with bug 1544011.
-  // We should remove the exception for Firefox Accounts with bug 1561310.
+  // We should remove the exception for Firefox Accounts with bug 1561318.
   static nsAutoCString sDiscoveryPrePath;
 #  ifdef ANDROID
   static nsAutoCString sFxaSPrePath;
