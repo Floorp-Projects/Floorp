@@ -10,7 +10,8 @@
 
 | Name | Summary |
 |---|---|
-| [AddTabAction](-add-tab-action/index.md) | `data class AddTabAction : `[`TabListAction`](./index.md)<br>Adds a new [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) to the list. |
+| [AddMultipleTabsAction](-add-multiple-tabs-action/index.md) | `data class AddMultipleTabsAction : `[`TabListAction`](./index.md)<br>Adds multiple [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) objects to the [BrowserState.tabs](../../mozilla.components.browser.state.state/-browser-state/tabs.md) list. |
+| [AddTabAction](-add-tab-action/index.md) | `data class AddTabAction : `[`TabListAction`](./index.md)<br>Adds a new [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) to the [BrowserState.tabs](../../mozilla.components.browser.state.state/-browser-state/tabs.md) list. |
 | [RemoveAllNormalTabsAction](-remove-all-normal-tabs-action.md) | `object RemoveAllNormalTabsAction : `[`TabListAction`](./index.md)<br>Removes all non-private [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md)s. |
 | [RemoveAllPrivateTabsAction](-remove-all-private-tabs-action.md) | `object RemoveAllPrivateTabsAction : `[`TabListAction`](./index.md)<br>Removes all private [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md)s. |
 | [RemoveAllTabsAction](-remove-all-tabs-action.md) | `object RemoveAllTabsAction : `[`TabListAction`](./index.md)<br>Removes both private and normal [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md)s. |
@@ -22,7 +23,8 @@
 
 | Name | Summary |
 |---|---|
-| [AddTabAction](-add-tab-action/index.md) | `data class AddTabAction : `[`TabListAction`](./index.md)<br>Adds a new [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) to the list. |
+| [AddMultipleTabsAction](-add-multiple-tabs-action/index.md) | `data class AddMultipleTabsAction : `[`TabListAction`](./index.md)<br>Adds multiple [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) objects to the [BrowserState.tabs](../../mozilla.components.browser.state.state/-browser-state/tabs.md) list. |
+| [AddTabAction](-add-tab-action/index.md) | `data class AddTabAction : `[`TabListAction`](./index.md)<br>Adds a new [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) to the [BrowserState.tabs](../../mozilla.components.browser.state.state/-browser-state/tabs.md) list. |
 | [RemoveAllNormalTabsAction](-remove-all-normal-tabs-action.md) | `object RemoveAllNormalTabsAction : `[`TabListAction`](./index.md)<br>Removes all non-private [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md)s. |
 | [RemoveAllPrivateTabsAction](-remove-all-private-tabs-action.md) | `object RemoveAllPrivateTabsAction : `[`TabListAction`](./index.md)<br>Removes all private [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md)s. |
 | [RemoveAllTabsAction](-remove-all-tabs-action.md) | `object RemoveAllTabsAction : `[`TabListAction`](./index.md)<br>Removes both private and normal [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md)s. |

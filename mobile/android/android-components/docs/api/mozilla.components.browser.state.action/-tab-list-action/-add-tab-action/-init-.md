@@ -4,5 +4,5 @@
 
 `AddTabAction(tab: `[`TabSessionState`](../../../mozilla.components.browser.state.state/-tab-session-state/index.md)`, select: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`
 
-Adds a new [TabSessionState](../../../mozilla.components.browser.state.state/-tab-session-state/index.md) to the list.
+Adds a new [TabSessionState](../../../mozilla.components.browser.state.state/-tab-session-state/index.md) to the [BrowserState.tabs](../../../mozilla.components.browser.state.state/-browser-state/tabs.md) list.
 
