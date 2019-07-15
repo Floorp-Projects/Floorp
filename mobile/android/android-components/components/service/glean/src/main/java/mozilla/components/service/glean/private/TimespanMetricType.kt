@@ -110,14 +110,23 @@ data class TimespanMetricType(
      * This API should only be used if your library or application requires recording
      * times in a way that can not make use of [start]/[stop]/[cancel].
      *
-     * Care should be taken using this if the ping lifetime might contain more than one
-     * timespan measurement.  To be safe, [setRawNanos] should generally be followed by
-     * sending a custom ping containing the timespan.
+     * [setRawNanos] does not overwrite a running timer or an already existing value.
      *
      * @param elapsedNanos The elapsed time to record, in nanoseconds.
      */
+    @Suppress("LongMethod")
     fun setRawNanos(elapsedNanos: Long) {
         if (!shouldRecord(logger)) {
+            return
+        }
+
+        if (timerId != null) {
+            ErrorRecording.recordError(
+                    this,
+                    ErrorRecording.ErrorType.InvalidValue,
+                    "Timespan already running. Raw value not recorded.",
+                    logger
+            )
             return
         }
 
