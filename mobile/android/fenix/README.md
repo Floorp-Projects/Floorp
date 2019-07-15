@@ -51,9 +51,13 @@ To add it on Mac/Linux, run this command from the project root:
 ```sh
 ln -s ../../config/pre-push-recommended.sh .git/hooks/pre-push
 ```
-or for Windows run this command with administrative privileges:
+or for Windows run this command using the Command Prompt with administrative privileges:
 ```sh
 mklink .git\hooks\pre-push ..\..\config\pre-push-recommended.sh
+```
+or using PowerShell:
+```sh
+New-Item -ItemType SymbolicLink -Path .git\hooks\pre-push -Value (Resolve-Path config\pre-push-recommended.sh)
 ```
 
 To push without running the pre-push hook (e.g. doc updates):
