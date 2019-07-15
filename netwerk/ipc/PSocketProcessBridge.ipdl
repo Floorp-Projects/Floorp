@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PMediaTransport;
 
 namespace mozilla {
 namespace net {
@@ -20,13 +19,9 @@ namespace net {
   */
 nested(upto inside_cpow) sync protocol PSocketProcessBridge
 {
-  manages PMediaTransport;
 
 parent:
   async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
-
-  async PMediaTransport();
-
 both:
   async Test();
 };

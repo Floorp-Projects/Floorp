@@ -10,7 +10,6 @@
 #include "mozilla/net/NeckoChild.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
-#include "mozilla/dom/PMediaTransportChild.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
@@ -42,13 +41,7 @@ bool SocketProcessBridgeChild::Create(
 // static
 already_AddRefed<SocketProcessBridgeChild>
 SocketProcessBridgeChild::GetSingleton() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!sSocketProcessBridgeChild) {
-    return nullptr;
-  }
-
-  RefPtr<SocketProcessBridgeChild> child = sSocketProcessBridgeChild.get();
+  RefPtr<SocketProcessBridgeChild> child = sSocketProcessBridgeChild;
   return child.forget();
 }
 
@@ -177,22 +170,6 @@ void SocketProcessBridgeChild::DeferredDestroy() {
   MOZ_ASSERT(NS_IsMainThread());
 
   sSocketProcessBridgeChild = nullptr;
-}
-
-dom::PMediaTransportChild*
-SocketProcessBridgeChild::AllocPMediaTransportChild() {
-  // We don't allocate here: MediaTransportHandlerIPC is in charge of that,
-  // so we don't need to know the implementation particulars here.
-  MOZ_ASSERT_UNREACHABLE(
-      "The only thing that ought to be creating a PMediaTransportChild is "
-      "MediaTransportHandlerIPC!");
-  return nullptr;
-}
-
-bool SocketProcessBridgeChild::DeallocPMediaTransportChild(
-    dom::PMediaTransportChild* aActor) {
-  delete aActor;
-  return true;
 }
 
 }  // namespace net

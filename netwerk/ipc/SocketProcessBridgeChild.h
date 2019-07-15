@@ -19,7 +19,7 @@ namespace net {
 class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
                                        public nsIObserver {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<SocketProcessBridgeChild> GetSingleton();
@@ -33,9 +33,6 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
   bool IsShuttingDown() const { return mShuttingDown; };
   bool Inited() const { return mInited; };
   ProcessId SocketProcessPid() const { return mSocketProcessPid; };
-
-  dom::PMediaTransportChild* AllocPMediaTransportChild();
-  bool DeallocPMediaTransportChild(dom::PMediaTransportChild* aActor);
 
  private:
   DISALLOW_COPY_AND_ASSIGN(SocketProcessBridgeChild);
