@@ -970,10 +970,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
     return false;
   }
 
-  Rooted<JSScript*> script(
-      cx, JSScript::Create(cx, options, sourceObject, lazy->sourceStart(),
-                           lazy->sourceEnd(), lazy->toStringStart(),
-                           lazy->toStringEnd()));
+  Rooted<JSScript*> script(cx, JSScript::CreateFromLazy(cx, lazy));
   if (!script) {
     return false;
   }

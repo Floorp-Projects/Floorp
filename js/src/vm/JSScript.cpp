@@ -3874,6 +3874,29 @@ JSScript* JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
   return script;
 }
 
+/* static */ JSScript* JSScript::CreateFromLazy(JSContext* cx,
+                                                Handle<LazyScript*> lazy) {
+  RootedScriptSourceObject sourceObject(cx, &lazy->sourceObject());
+  RootedScript script(
+      cx,
+      JSScript::New(cx, sourceObject, lazy->sourceStart(), lazy->sourceEnd(),
+                    lazy->toStringStart(), lazy->toStringEnd()));
+  if (!script) {
+    return nullptr;
+  }
+
+  script->setFlag(MutableFlags::TrackRecordReplayProgress,
+                  ShouldTrackRecordReplayProgress(script));
+
+  if (coverage::IsLCovEnabled()) {
+    if (!script->initScriptName(cx)) {
+      return nullptr;
+    }
+  }
+
+  return script;
+}
+
 #ifdef MOZ_VTUNE
 uint32_t JSScript::vtuneMethodID() {
   if (!realm()->scriptVTuneIdMap) {
