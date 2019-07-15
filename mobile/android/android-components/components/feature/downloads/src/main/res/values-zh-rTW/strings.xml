@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">下載項目</string>
+    <!-- Text shown on the first row of an ongoing download notification. -->
+    <string name="mozac_feature_downloads_ongoing_notification_title">下載中</string>
+    <!-- Text shown on the second row of an ongoing download notification. -->
+    <string name="mozac_feature_downloads_ongoing_notification_text">正在下載中</string>
+
     <!-- Alert dialog confirmation before download a file, this is the title. -->
     <string name="mozac_feature_downloads_dialog_title">下載檔案</string>
 
