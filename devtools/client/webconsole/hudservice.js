@@ -147,16 +147,19 @@ HUDService.prototype = {
     }
 
     async function connect() {
+      // The Browser console ends up using the debugger in autocomplete.
       // Because the debugger can't be running in the same compartment than its debuggee,
       // we have to load the server in a dedicated Loader, flagged with
-      // invisibleToDebugger, which will force it to be loaded in another compartment.
-      // The console ends up using the debugger in autocomplete.
+      // `freshCompartment`, which will force it to be loaded in another compartment.
+      // We aren't using `invisibleToDebugger` in order to allow the Browser toolbox to
+      // debug the Browser console. This is fine as they will spawn distinct Loaders and
+      // so distinct `DebuggerServer` and actor modules.
       const ChromeUtils = require("ChromeUtils");
       const { DevToolsLoader } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
       const loader = new DevToolsLoader();
-      loader.invisibleToDebugger = true;
+      loader.freshCompartment = true;
       const { DebuggerServer } = loader.require("devtools/server/main");
 
       DebuggerServer.init();
