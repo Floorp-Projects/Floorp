@@ -300,7 +300,7 @@ nsresult CheckScope(nsIPrincipal* aPrincipal, const nsACString& aScope) {
   MOZ_ASSERT(aPrincipal);
 
   nsCOMPtr<nsIURI> scopeURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

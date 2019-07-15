@@ -373,7 +373,7 @@ bool MatchPattern::MatchesDomain(const nsACString& aDomain) const {
 bool MatchPattern::Matches(const nsAString& aURL, bool aExplicit,
                            ErrorResult& aRv) const {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
@@ -511,7 +511,7 @@ already_AddRefed<MatchPatternSet> MatchPatternSet::Constructor(
 bool MatchPatternSet::Matches(const nsAString& aURL, bool aExplicit,
                               ErrorResult& aRv) const {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;

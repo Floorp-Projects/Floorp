@@ -796,7 +796,7 @@ class AutoIncrement {
 
 nsresult nsIOService::NewURI(const nsACString& aSpec, const char* aCharset,
                              nsIURI* aBaseURI, nsIURI** result) {
-  return NS_NewURI(result, aSpec, aCharset, aBaseURI, nullptr);
+  return NS_NewURI(result, aSpec, aCharset, aBaseURI);
 }
 
 NS_IMETHODIMP

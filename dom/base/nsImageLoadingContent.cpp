@@ -1359,8 +1359,7 @@ nsresult nsImageLoadingContent::StringToURI(const nsAString& aSpec,
   auto encoding = aDocument->GetDocumentCharacterSet();
 
   // (3) Construct the silly thing
-  return NS_NewURI(aURI, aSpec, encoding, baseURL,
-                   nsContentUtils::GetIOService());
+  return NS_NewURI(aURI, aSpec, encoding, baseURL);
 }
 
 nsresult nsImageLoadingContent::FireEvent(const nsAString& aEventType,

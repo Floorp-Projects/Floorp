@@ -46,7 +46,6 @@
 #include "nsStyleUtil.h"
 #include "nsTransform2D.h"
 #include "nsImageMap.h"
-#include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsISupportsPriority.h"
 #include "nsNetUtil.h"
@@ -106,9 +105,6 @@ using mozilla::layout::TextDrawTarget;
 
 // static icon information
 StaticRefPtr<nsImageFrame::IconLoad> nsImageFrame::gIconLoad;
-
-// cached IO service for loading icons
-nsIIOService* nsImageFrame::sIOService;
 
 // test if the width and height are fixed, looking at the style data
 // This is used by nsImageFrame::ShouldCreateImageFrameFor and should
@@ -2381,16 +2377,10 @@ nsresult nsImageFrame::GetIntrinsicImageSize(nsSize& aSize) {
 nsresult nsImageFrame::LoadIcon(const nsAString& aSpec,
                                 nsPresContext* aPresContext,
                                 imgRequestProxy** aRequest) {
-  nsresult rv = NS_OK;
   MOZ_ASSERT(!aSpec.IsEmpty(), "What happened??");
 
-  if (!sIOService) {
-    rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsIURI> realURI;
-  SpecToURI(aSpec, sIOService, getter_AddRefs(realURI));
+  SpecToURI(aSpec, getter_AddRefs(realURI));
 
   RefPtr<imgLoader> il =
       nsContentUtils::GetImgLoaderForDocument(aPresContext->Document());
@@ -2424,16 +2414,14 @@ void nsImageFrame::GetDocumentCharacterSet(nsACString& aCharset) const {
   }
 }
 
-void nsImageFrame::SpecToURI(const nsAString& aSpec, nsIIOService* aIOService,
-                             nsIURI** aURI) {
+void nsImageFrame::SpecToURI(const nsAString& aSpec, nsIURI** aURI) {
   nsCOMPtr<nsIURI> baseURI;
   if (mContent) {
     baseURI = mContent->GetBaseURI();
   }
   nsAutoCString charset;
   GetDocumentCharacterSet(charset);
-  NS_NewURI(aURI, aSpec, charset.IsEmpty() ? nullptr : charset.get(), baseURI,
-            aIOService);
+  NS_NewURI(aURI, aSpec, charset.IsEmpty() ? nullptr : charset.get(), baseURI);
 }
 
 void nsImageFrame::GetLoadGroup(nsPresContext* aPresContext,

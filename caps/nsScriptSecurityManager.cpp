@@ -1051,8 +1051,7 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(
     uint32_t aFlags) {
   nsresult rv;
   nsCOMPtr<nsIURI> target;
-  rv = NS_NewURI(getter_AddRefs(target), aTargetURIStr, nullptr, nullptr,
-                 sIOService);
+  rv = NS_NewURI(getter_AddRefs(target), aTargetURIStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CheckLoadURIWithPrincipal(aPrincipal, target, aFlags);
@@ -1487,8 +1486,7 @@ void nsScriptSecurityManager::AddSitesToFileURIAllowlist(
 
     // Convert it to a URI and add it to our list.
     nsCOMPtr<nsIURI> uri;
-    nsresult rv =
-        NS_NewURI(getter_AddRefs(uri), site, nullptr, nullptr, sIOService);
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), site);
     if (NS_SUCCEEDED(rv)) {
       mFileURIAllowlist.ref().AppendElement(uri);
     } else {

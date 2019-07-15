@@ -621,7 +621,7 @@ nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
