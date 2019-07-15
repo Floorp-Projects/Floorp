@@ -111,9 +111,7 @@ bool ResponsiveImageSelector::SetCandidatesFromSourceSet(
     const nsAString& aSrcSet, nsIPrincipal* aTriggeringPrincipal) {
   ClearSelectedCandidate();
 
-  nsCOMPtr<nsIURI> docBaseURI = mOwnerNode ? mOwnerNode->GetBaseURI() : nullptr;
-
-  if (!docBaseURI) {
+  if (!mOwnerNode || !mOwnerNode->GetBaseURI()) {
     MOZ_ASSERT(false, "Should not be parsing SourceSet without a document");
     return false;
   }
