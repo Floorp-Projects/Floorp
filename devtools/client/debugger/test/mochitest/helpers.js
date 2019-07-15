@@ -22,6 +22,10 @@ const {
   getSelectedLocation
 } = require("devtools/client/debugger/src/utils/selected-location");
 
+const {
+  resetSchemaVersion
+} = require("devtools/client/debugger/src/utils/prefs");
+
 function log(msg, data) {
   info(`${msg} ${!data ? "" : JSON.stringify(data)}`);
 }
@@ -505,6 +509,7 @@ function isSelectedFrameSelected(dbg, state) {
  * Clear all the debugger related preferences.
  */
 async function clearDebuggerPreferences() {
+  resetSchemaVersion();
   asyncStorage.clear();
   Services.prefs.clearUserPref("devtools.recordreplay.enabled");
   Services.prefs.clearUserPref("devtools.debugger.pause-on-exceptions");
