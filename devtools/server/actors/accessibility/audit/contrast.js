@@ -37,14 +37,20 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DevToolsWorker",
-  "devtools/shared/worker/worker",
+  "getContrastRatioScore",
+  "devtools/shared/accessibility",
   true
 );
 loader.lazyRequireGetter(
   this,
-  "accessibility",
-  "devtools/shared/constants",
+  "getTextProperties",
+  "devtools/shared/accessibility",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "DevToolsWorker",
+  "devtools/shared/worker/worker",
   true
 );
 loader.lazyRequireGetter(
@@ -55,66 +61,11 @@ loader.lazyRequireGetter(
 
 const WORKER_URL = "resource://devtools/server/actors/accessibility/worker.js";
 const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
-// CSS pixel value (constant) that corresponds to 14 point text size which defines large
-// text when font text is bold (font weight is greater than or equal to 600).
-const BOLD_LARGE_TEXT_MIN_PIXELS = 18.66;
-// CSS pixel value (constant) that corresponds to 18 point text size which defines large
-// text for normal text (e.g. not bold).
-const LARGE_TEXT_MIN_PIXELS = 24;
+const {
+  LARGE_TEXT: { BOLD_LARGE_TEXT_MIN_PIXELS, LARGE_TEXT_MIN_PIXELS },
+} = require("devtools/shared/accessibility");
 
 loader.lazyGetter(this, "worker", () => new DevToolsWorker(WORKER_URL));
-
-/**
- * Get text style properties for a given node, if possible.
- * @param  {DOMNode} node
- *         DOM node for which text styling information is to be calculated.
- * @return {Object}
- *         Color and text size information for a given DOM node.
- */
-function getTextProperties(node) {
-  const computedStyles = CssLogic.getComputedStyle(node);
-  if (!computedStyles) {
-    return null;
-  }
-
-  const {
-    color,
-    "font-size": fontSize,
-    "font-weight": fontWeight,
-  } = computedStyles;
-  const opacity = parseFloat(computedStyles.opacity);
-
-  let { r, g, b, a } = colorUtils.colorToRGBA(color, true);
-  // If the element has opacity in addition to background alpha value, take it
-  // into account. TODO: this does not handle opacity set on ancestor elements
-  // (see bug https://bugzilla.mozilla.org/show_bug.cgi?id=1544721).
-  a = opacity * a;
-  const textRgbaColor = new colorUtils.CssColor(
-    `rgba(${r}, ${g}, ${b}, ${a})`,
-    true
-  );
-  // TODO: For cases where text color is transparent, it likely comes from the color of
-  // the background that is underneath it (commonly from background-clip: text
-  // property). With some additional investigation it might be possible to calculate the
-  // color contrast where the color of the background is used as text color and the
-  // color of the ancestor's background is used as its background.
-  if (textRgbaColor.isTransparent()) {
-    return null;
-  }
-
-  const isBoldText = parseInt(fontWeight, 10) >= 600;
-  const size = parseFloat(fontSize);
-  const isLargeText =
-    size >= (isBoldText ? BOLD_LARGE_TEXT_MIN_PIXELS : LARGE_TEXT_MIN_PIXELS);
-
-  return {
-    color: [r, g, b, a],
-    isLargeText,
-    isBoldText,
-    size,
-    opacity,
-  };
-}
 
 /**
  * Get canvas rendering context for the current target window bound by the bounds of the
@@ -168,31 +119,6 @@ function getImageCtx(win, bounds, zoom, scale, node) {
 }
 
 /**
- * Get contrast ratio score based on WCAG criteria.
- * @param  {Number} ratio
- *         Value of the contrast ratio for a given accessible object.
- * @param  {Boolean} isLargeText
- *         True if the accessible object contains large text.
- * @return {String}
- *         Value that represents calculated contrast ratio score.
- */
-function getContrastRatioScore(ratio, isLargeText) {
-  const {
-    SCORES: { FAIL, AA, AAA },
-  } = accessibility;
-  const levels = isLargeText ? { AA: 3, AAA: 4.5 } : { AA: 4.5, AAA: 7 };
-
-  let score = FAIL;
-  if (ratio >= levels.AAA) {
-    score = AAA;
-  } else if (ratio >= levels.AA) {
-    score = AA;
-  }
-
-  return score;
-}
-
-/**
  * Calculates the contrast ratio of the referenced DOM node.
  *
  * @param  {DOMNode} node
@@ -208,7 +134,9 @@ function getContrastRatioScore(ratio, isLargeText) {
  *         isLargeText, value, min, max values for contrast.
  */
 async function getContrastRatioFor(node, options = {}) {
-  const props = getTextProperties(node);
+  const computedStyle = CssLogic.getComputedStyle(node);
+  const props = computedStyle ? getTextProperties(computedStyle) : null;
+
   if (!props) {
     return {
       error: true,
