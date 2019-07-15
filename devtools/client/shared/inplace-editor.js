@@ -205,6 +205,10 @@ function editableItem(options, callback) {
   element.addEventListener(
     "keypress",
     function(evt) {
+      if (evt.target.nodeName === "button") {
+        return;
+      }
+
       if (isKeyIn(evt.keyCode, "RETURN") || isKeyIn(evt.charCode, "SPACE")) {
         callback(element);
       }
