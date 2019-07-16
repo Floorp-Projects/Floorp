@@ -4119,6 +4119,8 @@ class Document : public nsINode,
   bool InRDMPane() const { return mInRDMPane; }
   void SetInRDMPane(bool aInRDMPane) { mInRDMPane = aInRDMPane; }
 
+  static bool HasRecentlyStartedForegroundLoads();
+
  protected:
   void DoUpdateSVGUseElementShadowTrees();
 
@@ -4390,6 +4392,10 @@ class Document : public nsINode,
   // This should *ONLY* be used in GetCookie/SetCookie.
   already_AddRefed<nsIChannel> CreateDummyChannelForCookies(
       nsIURI* aContentURI);
+
+  void AddToplevelLoadingDocument(Document* aDoc);
+  void RemoveToplevelLoadingDocument(Document* aDoc);
+  static AutoTArray<Document*, 8>* sLoadingForegroundTopLevelContentDocument;
 
   nsCOMPtr<nsIReferrerInfo> mPreloadReferrerInfo;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
