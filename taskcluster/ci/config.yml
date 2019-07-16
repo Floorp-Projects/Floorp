@@ -413,7 +413,7 @@ mac-notarization:
     mac-entitlements:
         by-platform:
             macosx64.*:
-                by-project:
-                    mozilla-(central|beta|release): security/mac/hardenedruntime/production.entitlements.xml
+                by-release-level:
+                    production: security/mac/hardenedruntime/production.entitlements.xml
                     default: security/mac/hardenedruntime/developer.entitlements.xml
             default: ''
