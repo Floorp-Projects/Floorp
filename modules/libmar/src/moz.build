@@ -16,19 +16,16 @@ HOST_SOURCES += [
 ]
 HostLibrary('hostmar')
 
-Library('mar')
-
-UNIFIED_SOURCES += [
-    'mar_create.c',
-    'mar_extract.c',
-    'mar_read.c',
-]
-
 LOCAL_INCLUDES += [
     '../../../other-licenses/nsis/Contrib/CityHash/cityhash',
 ]
 
-FORCE_STATIC_LIB = True
+if CONFIG['MOZ_BUILD_APP'] != 'tools/update-packaging':
+    Library('mar')
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    USE_STATIC_LIBS = True
+    UNIFIED_SOURCES += HOST_SOURCES
+
+    FORCE_STATIC_LIB = True
+
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        USE_STATIC_LIBS = True
