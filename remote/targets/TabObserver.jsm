@@ -92,17 +92,19 @@ class TabObserver {
   constructor({ registerExisting = false } = {}) {
     this.windows = new WindowObserver({ registerExisting });
     EventEmitter.decorate(this);
+    this.onWindowOpen = this.onWindowOpen.bind(this);
+    this.onWindowClose = this.onWindowClose.bind(this);
   }
 
   async start() {
-    this.windows.on("open", this.onWindowOpen.bind(this));
-    this.windows.on("close", this.onWindowClose.bind(this));
+    this.windows.on("open", this.onWindowOpen);
+    this.windows.on("close", this.onWindowClose);
     await this.windows.start();
   }
 
   stop() {
-    this.windows.off("open");
-    this.windows.off("close");
+    this.windows.off("open", this.onWindowOpen);
+    this.windows.off("close", this.onWindowClose);
     this.windows.stop();
   }
 
