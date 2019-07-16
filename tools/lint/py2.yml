@@ -27,7 +27,6 @@ py2:
         - testing/mochitest
         - testing/mozharness
         - testing/raptor
-        - testing/runtimes
         - testing/tools
         - testing/tps
         - testing/web-platform
