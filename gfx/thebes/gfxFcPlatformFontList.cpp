@@ -1650,10 +1650,11 @@ void gfxFcPlatformFontList::ReadSystemFontList(
       family->AddFacesToFontList([&](FcPattern* aPat, bool aAppFonts) {
         char* s = (char*)FcNameUnparse(aPat);
         nsDependentCString patternStr(s);
+        char* file = nullptr;
         if (FcResultMatch ==
-            FcPatternGetString(aPat, FC_FILE, 0, (FcChar8**)&s)) {
+            FcPatternGetString(aPat, FC_FILE, 0, (FcChar8**)&file)) {
           patternStr.Append(":file=");
-          patternStr.Append(s);
+          patternStr.Append(file);
         }
         retValue->AppendElement(FontPatternListEntry(patternStr, aAppFonts));
         free(s);
