@@ -47,6 +47,10 @@ activity_stream:
       "TOP_SITES_EDIT_CLOSE",
       "UNPIN"]
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: >
       This is recorded with every user interaction on Activity Stream elements.
@@ -65,6 +69,10 @@ activity_stream:
   end:
     objects: ["session"]
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: >
       This is recorded with every session ended in Activity Stream.
@@ -87,6 +95,10 @@ activity_stream:
     notification_emails:
       - "najiang@mozilla.com"
       - "edilee@mozilla.com"
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     expiry_version: never
     extra_keys:
@@ -126,6 +138,10 @@ addonsManager:
           - download_started, download_completed, download_failed
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641, 1549770]
     release_channel_collection: opt-out
@@ -146,6 +162,10 @@ addonsManager:
       num_strings: The number of permission description strings in the extension permission doorhanger
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641, 1549770]
     release_channel_collection: opt-out
@@ -165,6 +185,10 @@ addonsManager:
       type: "For search: the type of page for this view (especially extension or theme list)."
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1500147, 1546248]
     release_channel_collection: opt-out
@@ -183,6 +207,10 @@ addonsManager:
       addonId: The id of the add-on being acted upon.
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1500147]
     release_channel_collection: opt-out
@@ -209,6 +237,10 @@ addonsManager:
       addonId: The id of the add-on being acted upon.
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1500147, 1513344, 1529347, 1546248]
     release_channel_collection: opt-out
@@ -228,6 +260,10 @@ addonsManager:
         ERROR_RECENT_SUBMIT, ERROR_SERVER
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1544927]
     release_channel_collection: opt-out
@@ -238,6 +274,10 @@ extensions.data:
     bug_numbers: [1470213, 1553297]
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     extra_keys:
@@ -260,6 +300,10 @@ navigation:
               "suggestion", "alias", "enter", "searchbar", "urlbar",
               "webextension"]
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: >
       This is recorded on each search navigation.
@@ -287,6 +331,10 @@ normandy:
       addonVersion: For addon_study recipes, the version of the addon that was installed.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -307,6 +355,10 @@ normandy:
         The branch that failed to enroll.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -327,6 +379,10 @@ normandy:
       branch: The branch that was updated.
     bug_numbers: [1443560, 1474413]
     notification_emails: ["normandy-notifications@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -344,6 +400,10 @@ normandy:
       branch: The branch that failed to update.
     bug_numbers: [1474413]
     notification_emails: ["normandy-notifications@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -363,6 +423,10 @@ normandy:
       branch: The branch of the experiment that this client was on.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -376,6 +440,10 @@ normandy:
       reason: A code describing the reason the unenroll failed.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -387,6 +455,10 @@ normandy:
       preference becoming a new default.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -399,6 +471,10 @@ pwmgr:
       Sent when opening the password management UI.
     bug_numbers: [1543499, 1454733, 1545172]
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "sfoster@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -433,6 +509,10 @@ pwmgr:
     expiry_version: "74"
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: [content]
 
   autocomplete_field:
@@ -442,6 +522,10 @@ pwmgr:
       Sent the first time each unique generated password is used to fill a login field - i.e. the user selects it from from the autocomplete dropdown on a password input
     bug_numbers: [1548878]
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "sfoster@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     expiry_version: never
@@ -462,6 +546,10 @@ fxa_avatar_menu:
       ]
     methods: ["click"]
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This is recorded on interactions with the FxA avatar menu on the toolbar
     bug_numbers: [1524665]
@@ -487,6 +575,10 @@ fxa_app_menu:
       ]
     methods: ["click"]
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This is recorded on interactions with the FxA menu in the app (hamburger) menu
     bug_numbers: [1542334]
@@ -506,6 +598,10 @@ telemetry.test:
     objects: ["object1", "object2"]
     bug_numbers: [1286606]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This is a test entry for Telemetry.
     expiry_version: never
@@ -517,6 +613,10 @@ telemetry.test:
     bug_numbers: [1286606]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This is an opt-out test entry.
     expiry_version: never
@@ -526,6 +626,10 @@ telemetry.test:
     objects: ["object1", "object2"]
     bug_numbers: [1286606]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This is a test entry with an expired version.
     expiry_version: "3"
@@ -535,12 +639,20 @@ telemetry.test:
     notification_emails: ["telemetry-client-dev@mozilla.com"]
     description: This is an opt-out test entry with unexpired date and version.
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     expiry_version: "999"
   main_only:
     objects: ["object1"]
     bug_numbers: [1313326]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This event is used to test main-process only recording.
     expiry_version: never
@@ -548,6 +660,10 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1313326]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["content"]
     description: This event is used to test content-process only recording.
     expiry_version: never
@@ -558,6 +674,10 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1313326]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main", "content"]
     description: This event is used to test main and content process recording.
     expiry_version: never
@@ -565,6 +685,10 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1452552]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This event is used to test default products main recording.
     expiry_version: never
@@ -572,6 +696,10 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1452552]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This event is used to test desktop-only main recording.
     expiry_version: never
@@ -580,6 +708,10 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1452552]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This event is used to test multiproduct main recording.
     expiry_version: never
@@ -588,6 +720,10 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1452552]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This event is used to test mobile-only main recording.
     expiry_version: never
@@ -600,6 +736,10 @@ telemetry.test.second:
     objects: ["object1", "object2", "object3"]
     bug_numbers: [1286606]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: This is a test entry for Telemetry.
     expiry_version: never
@@ -611,6 +751,10 @@ devtools.main:
     objects: ["responsive_design", "split_console"]
     bug_numbers: [1455273]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User activates the responsive_design or split_console in the devtools toolbox.
     release_channel_collection: opt-out
@@ -623,6 +767,10 @@ devtools.main:
     objects: ["debugger"]
     bug_numbers: [1463123]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has added a breakpoint to a script.
     release_channel_collection: opt-out
@@ -633,6 +781,10 @@ devtools.main:
     objects: ["debugger"]
     bug_numbers: [1463126]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User clicked the blackbox button to blackbox a script.
     release_channel_collection: opt-out
@@ -643,6 +795,10 @@ devtools.main:
     objects: ["tools"]
     bug_numbers: [1453312]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User closes devtools toolbox.
     release_channel_collection: opt-out
@@ -655,6 +811,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1504173]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User closes about:debugging.
     release_channel_collection: opt-out
@@ -666,6 +826,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1549970]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User is trying to connect to a remote runtime.
     release_channel_collection: opt-out
@@ -680,6 +844,10 @@ devtools.main:
     objects: ["debugger"]
     bug_numbers: [1463122]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has pressed the continue button on a paused script.
     release_channel_collection: opt-out
@@ -690,6 +858,10 @@ devtools.main:
     objects: ["responsive_design", "split_console"]
     bug_numbers: [1455275]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User deactivates the responsive_design or split_console in the devtools toolbox.
     release_channel_collection: opt-out
@@ -702,6 +874,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: A new device was detected in about:debugging
     release_channel_collection: opt-out
@@ -714,6 +890,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: A previously listed device was removed in about:debugging
     release_channel_collection: opt-out
@@ -726,6 +906,10 @@ devtools.main:
     objects: ["inspector"]
     bug_numbers: [1463080]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User is editing HTML via the context menu item in the markup view.
     release_channel_collection: opt-out
@@ -738,6 +922,10 @@ devtools.main:
     objects: ["netmonitor"]
     bug_numbers: [1463171]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has executed edit / resend in the netmonitor.
     release_channel_collection: opt-out
@@ -748,6 +936,10 @@ devtools.main:
     objects: ["ruleview"]
     bug_numbers: [1463081]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User is editing a CSS rule by clicking on or next to a CSS property, enabling / disabling a rule or creating a new property.
     release_channel_collection: opt-out
@@ -758,6 +950,10 @@ devtools.main:
     objects: ["accessibility", "application", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "storage", "styleeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1441070]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User opens a tool in the devtools toolbox.
     release_channel_collection: opt-out
@@ -774,6 +970,10 @@ devtools.main:
     objects: ["webconsole"]
     bug_numbers: [1463083]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has executed some JS in the Web Console.
     release_channel_collection: opt-out
@@ -785,6 +985,10 @@ devtools.main:
     objects: ["accessibility", "application", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "storage", "styleeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1455270]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User closes a tool in the devtools toolbox.
     release_channel_collection: opt-out
@@ -800,6 +1004,10 @@ devtools.main:
     objects: ["netmonitor", "webconsole"]
     bug_numbers: [1463144, 1463095]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has changed filters in the web console.
     release_channel_collection: opt-out
@@ -813,6 +1021,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1504173]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked on the inspect button of one of the debug targets of aboutdebugging.
     release_channel_collection: opt-out
@@ -825,6 +1037,10 @@ devtools.main:
     objects: ["webconsole"]
     bug_numbers: [1463101]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked "Jump to definition" icon (next to logged functions) in the web console.
     release_channel_collection: opt-out
@@ -835,6 +1051,10 @@ devtools.main:
     objects: ["webconsole"]
     bug_numbers: [1463092]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked a link to a source file in the web console.
     release_channel_collection: opt-out
@@ -845,6 +1065,10 @@ devtools.main:
     objects: ["webconsole"]
     bug_numbers: [1463104]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has expanded an object in the web console.
     release_channel_collection: opt-out
@@ -855,6 +1079,10 @@ devtools.main:
     objects: ["tools"]
     bug_numbers: [1416024, 1456984]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User opens devtools toolbox.
     release_channel_collection: opt-out
@@ -871,6 +1099,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1504173]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User opens about:debugging.
     release_channel_collection: opt-out
@@ -882,6 +1114,10 @@ devtools.main:
     objects: ["debugger"]
     bug_numbers: [1463117]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has changed pausing behaviour in the debugger.
     release_channel_collection: opt-out
@@ -894,6 +1130,10 @@ devtools.main:
     objects: ["debugger"]
     bug_numbers: [1463118]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: Debugger has paused in a script due to a breakpoint or exception.
     release_channel_collection: opt-out
@@ -906,6 +1146,10 @@ devtools.main:
     objects: ["netmonitor", "webconsole"]
     bug_numbers: [1531395, 1542312]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has changed log persist status.
     release_channel_collection: opt-out
@@ -916,6 +1160,10 @@ devtools.main:
     objects: ["debugger"]
     bug_numbers: [1463125]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User clicked the pretty print button to pretty print a script.
     release_channel_collection: opt-out
@@ -926,6 +1174,10 @@ devtools.main:
     objects: ["debugger"]
     bug_numbers: [1463124]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has removed a breakpoint from a script.
     release_channel_collection: opt-out
@@ -936,6 +1188,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: A new remote runtime has been detected in about:debugging
     release_channel_collection: opt-out
@@ -950,6 +1206,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507, 1530997]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: Connection was established with a remote runtime in about:debugging
     release_channel_collection: opt-out
@@ -966,6 +1226,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: Connection was lost with a remote runtime in about debugging
     release_channel_collection: opt-out
@@ -980,6 +1244,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: A previously listed runtime was removed in about:debugging
     release_channel_collection: opt-out
@@ -994,6 +1262,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1504173]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User navigates to a new page of an application such as about:debugging
     release_channel_collection: opt-out
@@ -1005,6 +1277,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1521511]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked on the "Open Profiler" button in a runtime page of about:debugging
     release_channel_collection: opt-out
@@ -1016,6 +1292,10 @@ devtools.main:
     objects: ["inspector", "netmonitor"]
     bug_numbers: [1463083, 1463169]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has switched sidepanel tabs.
     release_channel_collection: opt-out
@@ -1029,6 +1309,10 @@ devtools.main:
     objects: ["netmonitor"]
     bug_numbers: [1463147]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has changed the throttle setting in the netmonitor.
     release_channel_collection: opt-out
@@ -1040,6 +1324,10 @@ devtools.main:
     objects: ["animationinspector", "computedview", "changesview", "fontinspector", "layoutview", "ruleview"]
     bug_numbers: [1483817]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: The amount of time a tool was opened for.
     release_channel_collection: opt-out
@@ -1052,6 +1340,10 @@ devtools.main:
     objects: ["aboutdebugging"]
     bug_numbers: [1521511]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked on the "Enable/Disable connection prompt" button in a runtime page of about:debugging
     release_channel_collection: opt-out
@@ -1076,6 +1368,10 @@ security.ui.certerror:
       - rtestard@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main", "content"]
     products:
       - firefox
@@ -1106,6 +1402,10 @@ security.ui.certerror:
       - rtestard@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["content"]
     products:
       - firefox
@@ -1131,6 +1431,10 @@ security.ui.identitypopup:
       - pdol@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-in
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     products:
@@ -1153,6 +1457,10 @@ security.ui.identitypopup:
       - pdol@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-in
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     products:
@@ -1183,6 +1491,10 @@ uptake.remotecontent.result:
         The duration of the synchronization process in milliseconds.
     bug_numbers:
       - 1517469
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     expiry_version: never
@@ -1218,6 +1530,10 @@ intl.ui.browserLanguage:
       - flod@mozilla.com
       - mstriemer@mozilla.com
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1486507, 1553311]
 
@@ -1240,6 +1556,10 @@ security.ui.permissionprompt:
       - ehsan@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     extra_keys:
@@ -1276,6 +1596,10 @@ security.ui.permissionprompt:
       - ehsan@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     extra_keys:
@@ -1304,6 +1628,10 @@ pictureinpicture:
     notification_emails:
       - mconley@mozilla.com
       - astevenson@mozilla.com
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     bug_numbers:
@@ -1320,6 +1648,10 @@ pictureinpicture:
     notification_emails:
       - mconley@mozilla.com
       - astevenson@mozilla.com
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     bug_numbers:
@@ -1336,6 +1668,10 @@ pictureinpicture:
     notification_emails:
       - mconley@mozilla.com
       - astevenson@mozilla.com
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     bug_numbers:

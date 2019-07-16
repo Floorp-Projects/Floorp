@@ -28,7 +28,6 @@ SUPPORTED_PRODUCTS = {
     'firefox': 'Firefox',
     'fennec': 'Fennec',
     'geckoview': 'Geckoview',
-    'all': 'All',
 }
 
 SUPPORTED_OPERATING_SYSTEMS = [
@@ -118,6 +117,8 @@ def canonical_os(os):
 
 
 def product_name_to_enum(product):
+    if not is_valid_product(product):
+        raise ParserError("Invalid product {}".format(product))
     return PRODUCT_ENUM_PREFIX + SUPPORTED_PRODUCTS.get(product)
 
 
