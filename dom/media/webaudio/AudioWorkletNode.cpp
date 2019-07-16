@@ -43,10 +43,32 @@ class WorkletNodeEngine final : public AudioNodeEngine {
 
   void NotifyForcedShutdown() override { ReleaseJSResources(); }
 
+  // Vector<T> supports non-memmovable types such as PersistentRooted
+  // (without any need to jump through hoops like
+  // DECLARE_USE_COPY_CONSTRUCTORS_FOR_TEMPLATE for nsTArray).
+  // PersistentRooted is used because these AudioWorkletGlobalScope scope
+  // objects may be kept alive as long as the AudioWorkletNode in the
+  // main-thread global.
+  struct Channels {
+    Vector<JS::PersistentRooted<JSObject*>, GUESS_AUDIO_CHANNELS>
+        mFloat32Arrays;
+    JS::PersistentRooted<JSObject*> mJSArray;
+    // For SetArrayElements():
+    operator JS::Handle<JSObject*>() const { return mJSArray; }
+  };
+  struct Ports {
+    Vector<Channels, 1> mPorts;
+    JS::PersistentRooted<JSObject*> mJSArray;
+  };
+
  private:
   void SendProcessorError();
 
   void ReleaseJSResources() {
+    mInputs.mPorts.clearAndFree();
+    mOutputs.mPorts.clearAndFree();
+    mInputs.mJSArray.reset();
+    mOutputs.mJSArray.reset();
     mGlobal = nullptr;
     mProcessor.reset();
   }
@@ -60,6 +82,16 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   // released by the MSG.  That occurs on the rendering thread except during
   // process shutdown, in which case NotifyForcedShutdown() is called on the
   // rendering thread.
+  //
+  // mInputs and mOutputs keep references to all objects passed to process(),
+  // for reuse of the same objects.  The JS objects are all in the compartment
+  // of the realm of mGlobal.  Properties on the objects may be replaced by
+  // script, so don't assume that getting indexed properties on the JS arrays
+  // will return the same objects.  Only objects and buffers created by the
+  // implementation are modified or read by the implementation.
+  Ports mInputs;
+  Ports mOutputs;
+
   RefPtr<AudioWorkletGlobalScope> mGlobal;
   JS::PersistentRooted<JSObject*> mProcessor;
 };
@@ -82,15 +114,127 @@ void WorkletNodeEngine::SendProcessorError() {
 void WorkletNodeEngine::ConstructProcessor(
     AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
     NotNull<StructuredCloneHolder*> aOptionsSerialization) {
+  MOZ_ASSERT(mInputs.mPorts.empty() && mOutputs.mPorts.empty());
   RefPtr<AudioWorkletGlobalScope> global = aWorkletImpl->GetGlobalScope();
   MOZ_ASSERT(global);  // global has already been used to register processor
   JS::RootingContext* cx = RootingCx();
   mProcessor.init(cx);
-  if (!global->ConstructProcessor(aName, aOptionsSerialization, &mProcessor)) {
+  if (!global->ConstructProcessor(aName, aOptionsSerialization, &mProcessor) ||
+      // mInputs and mOutputs outer arrays are fixed length and so much of the
+      // initialization need only be performed once (i.e. here).
+      NS_WARN_IF(!mInputs.mPorts.growBy(InputCount())) ||
+      NS_WARN_IF(!mOutputs.mPorts.growBy(OutputCount()))) {
     SendProcessorError();
     return;
   }
   mGlobal = std::move(global);
+  mInputs.mJSArray.init(cx);
+  mOutputs.mJSArray.init(cx);
+  for (auto& port : mInputs.mPorts) {
+    port.mJSArray.init(cx);
+  }
+  for (auto& port : mOutputs.mPorts) {
+    port.mJSArray.init(cx);
+  }
+}
+
+// Type T should support the length() and operator[]() methods and the return
+// type of |operator[]() const| should support conversion to Handle<JSObject*>.
+template <typename T>
+static bool SetArrayElements(JSContext* aCx, const T& aElements,
+                             JS::Handle<JSObject*> aArray) {
+  for (size_t i = 0; i < aElements.length(); ++i) {
+    if (!JS_DefineElement(aCx, aArray, i, aElements[i], JSPROP_ENUMERATE)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+template <typename T>
+static bool PrepareArray(JSContext* aCx, const T& aElements,
+                         JS::MutableHandle<JSObject*> aArray) {
+  size_t length = aElements.length();
+  if (aArray) {
+    // Attempt to reuse.
+    uint32_t oldLength;
+    if (JS_GetArrayLength(aCx, aArray, &oldLength) &&
+        (oldLength == length || JS_SetArrayLength(aCx, aArray, length)) &&
+        SetArrayElements(aCx, aElements, aArray)) {
+      return true;
+    }
+    // Script may have frozen the array.  Try again with a new Array.
+    JS_ClearPendingException(aCx);
+  }
+  JSObject* array = JS_NewArrayObject(aCx, length);
+  if (NS_WARN_IF(!array)) {
+    return false;
+  }
+  aArray.set(array);
+  return SetArrayElements(aCx, aElements, aArray);
+}
+
+enum class ArrayElementInit { None, Zero };
+
+// Exactly when to create new Float32Array and Array objects is not specified.
+// This approach aims to minimize garbage creation, while continuing to
+// function after objects are modified by content.
+// See https://github.com/WebAudio/web-audio-api/issues/1934 and
+// https://github.com/WebAudio/web-audio-api/issues/1933
+static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
+                                WorkletNodeEngine::Ports* aPorts,
+                                ArrayElementInit aInit) {
+  for (size_t i = 0; i < aBlocks.Length(); ++i) {
+    size_t channelCount = aBlocks[i].ChannelCount();
+    WorkletNodeEngine::Channels& portRef = aPorts->mPorts[i];
+
+    auto& float32ArraysRef = portRef.mFloat32Arrays;
+    for (auto& channelRef : float32ArraysRef) {
+      uint32_t length = JS_GetTypedArrayLength(channelRef);
+      if (length != WEBAUDIO_BLOCK_SIZE) {
+        // Script has detached array buffers.  Create new objects.
+        JSObject* array = JS_NewFloat32Array(aCx, WEBAUDIO_BLOCK_SIZE);
+        if (NS_WARN_IF(!array)) {
+          return false;
+        }
+        channelRef = array;
+      } else if (aInit == ArrayElementInit::Zero) {
+        // Need only zero existing arrays as new arrays are already zeroed.
+        JS::AutoCheckCannotGC nogc;
+        bool isShared;
+        float* elementData =
+            JS_GetFloat32ArrayData(channelRef, &isShared, nogc);
+        MOZ_ASSERT(!isShared);  // Was created as unshared
+        std::fill_n(elementData, WEBAUDIO_BLOCK_SIZE, 0.0f);
+      }
+    }
+    // Enlarge if necessary...
+    if (NS_WARN_IF(!float32ArraysRef.reserve(channelCount))) {
+      return false;
+    }
+    while (float32ArraysRef.length() < channelCount) {
+      JSObject* array = JS_NewFloat32Array(aCx, WEBAUDIO_BLOCK_SIZE);
+      if (NS_WARN_IF(!array)) {
+        return false;
+      }
+      float32ArraysRef.infallibleEmplaceBack(aCx, array);
+    }
+    // ... or shrink if necessary.
+    float32ArraysRef.shrinkTo(channelCount);
+
+    if (NS_WARN_IF(!PrepareArray(aCx, float32ArraysRef, &portRef.mJSArray))) {
+      return false;
+    }
+  }
+
+  return !(NS_WARN_IF(!PrepareArray(aCx, aPorts->mPorts, &aPorts->mJSArray)));
+}
+
+static void ProduceSilence(Span<AudioBlock> aOutput) {
+  for (AudioBlock& output : aOutput) {
+    output.SetNull(WEBAUDIO_BLOCK_SIZE);
+  }
 }
 
 void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
@@ -98,9 +242,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
                                              Span<AudioBlock> aOutput,
                                              bool* aFinished) {
   if (!mProcessor) {
-    for (AudioBlock& output : aOutput) {
-      output.SetNull(WEBAUDIO_BLOCK_SIZE);
-    }
+    ProduceSilence(aOutput);
     return;
   }
 
@@ -115,6 +257,17 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
     for (AudioBlock& output : aOutput) {
       output.AllocateChannels(1);
     }
+  }
+
+  AutoEntryScript aes(mGlobal, "Worklet Process");
+  JSContext* cx = aes.cx();
+
+  if (!PrepareBufferArrays(cx, aInput, &mInputs, ArrayElementInit::None) ||
+      !PrepareBufferArrays(cx, aOutput, &mOutputs, ArrayElementInit::Zero)) {
+    // OOM.  Give up.
+    SendProcessorError();
+    ProduceSilence(aOutput);
+    return;
   }
 }
 
