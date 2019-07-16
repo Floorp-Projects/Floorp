@@ -301,7 +301,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       }
 
       if (this._dbg) {
-        this._dbg.enabled = false;
+        this._dbg.disable();
         delete this._dbg;
       }
     },
