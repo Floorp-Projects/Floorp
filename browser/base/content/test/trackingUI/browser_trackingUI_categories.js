@@ -19,53 +19,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(FP_PREF);
 });
 
-add_task(async function testCategoryLabelsInControlPanel() {
-  await BrowserTestUtils.withNewTab("http://www.example.com", async function() {
-    await openIdentityPopup();
-
-    let preferencesButton = document.getElementById(
-      "tracking-protection-preferences-button"
-    );
-    ok(preferencesButton.label, "The preferencesButton label exists");
-
-    Services.prefs.setStringPref(CAT_PREF, "strict");
-    await TestUtils.waitForCondition(
-      () =>
-        preferencesButton.label ==
-        gNavigatorBundle.getString("contentBlocking.category.strict")
-    );
-    is(
-      preferencesButton.label,
-      gNavigatorBundle.getString("contentBlocking.category.strict"),
-      "The preferencesButton label has been changed to strict"
-    );
-
-    Services.prefs.setStringPref(CAT_PREF, "standard");
-    await TestUtils.waitForCondition(
-      () =>
-        preferencesButton.label ==
-        gNavigatorBundle.getString("contentBlocking.category.standard")
-    );
-    is(
-      preferencesButton.label,
-      gNavigatorBundle.getString("contentBlocking.category.standard"),
-      "The preferencesButton label has been changed to standard"
-    );
-
-    Services.prefs.setStringPref(CAT_PREF, "custom");
-    await TestUtils.waitForCondition(
-      () =>
-        preferencesButton.label ==
-        gNavigatorBundle.getString("contentBlocking.category.custom")
-    );
-    is(
-      preferencesButton.label,
-      gNavigatorBundle.getString("contentBlocking.category.custom"),
-      "The preferencesButton label has been changed to custom"
-    );
-  });
-});
-
 add_task(async function testCategoryLabelsInAppMenu() {
   await BrowserTestUtils.withNewTab("http://www.example.com", async function() {
     let cuiTestUtils = new CustomizableUITestUtils(window);
