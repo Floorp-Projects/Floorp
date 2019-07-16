@@ -26,7 +26,6 @@
 #include "jsmath.h"
 
 #include "builtin/Promise.h"
-#include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
@@ -53,6 +52,7 @@
 #include "vm/TraceLoggingGraph.h"
 #include "wasm/WasmSignalHandlers.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "gc/GC-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/Realm-inl.h"
@@ -434,7 +434,7 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
     if (cx->realm()->isDebuggee()) {
       ScriptFrameIter iter(cx);
       if (!iter.done() && cx->compartment() == iter.compartment() &&
-          iter.script()->stepModeEnabled()) {
+          DebugAPI::stepModeEnabled(iter.script())) {
         RootedValue rval(cx);
         switch (DebugAPI::onSingleStep(cx, &rval)) {
           case ResumeMode::Terminate:
