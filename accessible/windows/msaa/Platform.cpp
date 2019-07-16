@@ -20,6 +20,7 @@
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "ProxyWrappers.h"
@@ -275,35 +276,13 @@ static bool GetInstantiatorExecutable(const DWORD aPid,
 static void AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  nsAutoString fullPath;
-  nsresult rv = aClientExe->GetPath(fullPath);
-  if (NS_FAILED(rv)) {
+  WindowsErrorResult<ModuleVersion> version = GetModuleVersion(aClientExe);
+  if (version.isErr()) {
     return;
   }
 
-  DWORD verInfoSize = ::GetFileVersionInfoSize(fullPath.get(), nullptr);
-  if (!verInfoSize) {
-    return;
-  }
-
-  auto verInfoBuf = MakeUnique<BYTE[]>(verInfoSize);
-
-  if (!::GetFileVersionInfo(fullPath.get(), 0, verInfoSize, verInfoBuf.get())) {
-    return;
-  }
-
-  VS_FIXEDFILEINFO* fixedInfo = nullptr;
-  UINT fixedInfoLen = 0;
-
-  if (!::VerQueryValue(verInfoBuf.get(), L"\\", (LPVOID*)&fixedInfo,
-                       &fixedInfoLen)) {
-    return;
-  }
-
-  uint32_t major = HIWORD(fixedInfo->dwFileVersionMS);
-  uint32_t minor = LOWORD(fixedInfo->dwFileVersionMS);
-  uint32_t patch = HIWORD(fixedInfo->dwFileVersionLS);
-  uint32_t build = LOWORD(fixedInfo->dwFileVersionLS);
+  uint16_t major, minor, patch, build;
+  Tie(major, minor, patch, build) = version.unwrap().AsTuple();
 
   aStrToAppend.AppendLiteral(u"|");
 
