@@ -512,6 +512,12 @@ class OSXBootstrapper(BaseBootstrapper):
         from mozboot import sccache
 
         self.install_toolchain_artifact(state_dir, checkout_root, sccache.MACOS_SCCACHE)
+        self.install_toolchain_artifact(state_dir, checkout_root,
+                                        sccache.RUSTC_DIST_TOOLCHAIN,
+                                        no_unpack=True)
+        self.install_toolchain_artifact(state_dir, checkout_root,
+                                        sccache.CLANG_DIST_TOOLCHAIN,
+                                        no_unpack=True)
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
         from mozboot import stylo
