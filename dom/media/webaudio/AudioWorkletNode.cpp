@@ -17,8 +17,13 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(AudioWorkletNode, AudioNode)
 
 class WorkletNodeEngine final : public AudioNodeEngine {
  public:
-  explicit WorkletNodeEngine(AudioWorkletNode* aNode)
-      : AudioNodeEngine(aNode) {}
+  WorkletNodeEngine(AudioWorkletNode* aNode,
+                    const Optional<Sequence<uint32_t>>& aOutputChannelCount)
+      : AudioNodeEngine(aNode) {
+    if (aOutputChannelCount.WasPassed()) {
+      mOutputChannelCount = aOutputChannelCount.Value();
+    }
+  }
 
   MOZ_CAN_RUN_SCRIPT
   void ConstructProcessor(
@@ -32,6 +37,10 @@ class WorkletNodeEngine final : public AudioNodeEngine {
                          aFinished);
   }
 
+  void ProcessBlocksOnPorts(AudioNodeStream* aStream,
+                            Span<const AudioBlock> aInput,
+                            Span<AudioBlock> aOutput, bool* aFinished) override;
+
   void NotifyForcedShutdown() override { ReleaseJSResources(); }
 
  private:
@@ -42,6 +51,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
     mProcessor.reset();
   }
 
+  nsTArray<uint32_t> mOutputChannelCount;
   // The AudioWorkletGlobalScope-associated objects referenced from
   // WorkletNodeEngine are typically kept alive as long as the
   // AudioWorkletNode in the main-thread global.  The objects must be released
@@ -81,6 +91,31 @@ void WorkletNodeEngine::ConstructProcessor(
     return;
   }
   mGlobal = std::move(global);
+}
+
+void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
+                                             Span<const AudioBlock> aInput,
+                                             Span<AudioBlock> aOutput,
+                                             bool* aFinished) {
+  if (!mProcessor) {
+    for (AudioBlock& output : aOutput) {
+      output.SetNull(WEBAUDIO_BLOCK_SIZE);
+    }
+    return;
+  }
+
+  if (!mOutputChannelCount.IsEmpty()) {
+    MOZ_ASSERT(mOutputChannelCount.Length() == aOutput.Length());
+    for (size_t o = 0; o < aOutput.Length(); ++o) {
+      aOutput[o].AllocateChannels(mOutputChannelCount[o]);
+    }
+  } else if (aInput.Length() == 1 && aOutput.Length() == 1) {
+    aOutput[0].AllocateChannels(aInput[0].ChannelCount());
+  } else {
+    for (AudioBlock& output : aOutput) {
+      output.AllocateChannels(1);
+    }
+  }
 }
 
 AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
@@ -169,9 +204,12 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     return nullptr;
   }
 
+  auto engine =
+      new WorkletNodeEngine(audioWorkletNode, aOptions.mOutputChannelCount);
   audioWorkletNode->mStream = AudioNodeStream::Create(
-      &aAudioContext, new WorkletNodeEngine(audioWorkletNode),
-      AudioNodeStream::NO_STREAM_FLAGS, aAudioContext.Graph());
+      &aAudioContext, engine, AudioNodeStream::NO_STREAM_FLAGS,
+      aAudioContext.Graph());
+
   /**
    * 10. Queue a control message to create an AudioWorkletProcessor, given
    *     nodeName, processorPortSerialization, optionsSerialization, and node.
