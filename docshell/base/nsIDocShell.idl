@@ -1133,11 +1133,9 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript, nostdcall, notxpcom]
   UniqueClientSource TakeInitialClientSource();
 
-  void setColorMatrix([array, size_is(aMatrixLen)] in float aMatrix,
-                      [optional] in unsigned long aMatrixLen);
+  void setColorMatrix(in Array<float> aMatrix);
 
-  void getColorMatrix([optional] out unsigned long aMatrixLen,
-                      [array, size_is(aMatrixLen), retval] out float aMatrix);
+  Array<float> getColorMatrix();
 
   /**
    * Initialize session history for this docshell. The docshell must be the root
