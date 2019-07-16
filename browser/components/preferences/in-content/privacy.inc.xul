@@ -422,6 +422,13 @@
                     preference="signon.rememberSignons"
                     flex="1" />
         </hbox>
+        <hbox class="indent" flex="1">
+          <checkbox id="passwordAutofillCheckbox"
+                    data-l10n-id="forms-fill-logins-and-passwords"
+                    search-l10n-id="forms-fill-logins-and-passwords.label"
+                    preference="signon.autofillForms"
+                    flex="1" />
+        </hbox>
         <hbox class="indent" id="generatePasswordsBox" flex="1">
           <checkbox id="generatePasswords"
                     data-l10n-id="forms-generate-passwords"

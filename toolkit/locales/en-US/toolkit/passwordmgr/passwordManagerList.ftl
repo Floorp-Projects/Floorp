@@ -72,5 +72,3 @@ remove-all-shown =
 remove-all-passwords-prompt = Are you sure you wish to remove all passwords?
 remove-all-passwords-title = Remove all passwords
 no-master-password-prompt = Are you sure you wish to show your passwords?
-auto-fill-logins-and-passwords =
-    .label = Autofill logins and passwords
