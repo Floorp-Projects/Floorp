@@ -4,25 +4,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS += [
-    'OggCodecState.h',
-    'OggCodecStore.h',
-    'OggDecoder.h',
-    'OggDemuxer.h',
-    'OggWriter.h',
-    'OpusParser.h',
+Library('FuzzingMedia')
+
+SOURCES += [
+    'FuzzMedia.cpp',
 ]
 
-UNIFIED_SOURCES += [
-    'OggCodecState.cpp',
-    'OggCodecStore.cpp',
-    'OggDecoder.cpp',
-    'OggDemuxer.cpp',
-    'OggWriter.cpp',
-    'OpusParser.cpp',
+include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/dom/media',
+    '/dom/media/encoder',
+    '/dom/media/gmp',
+    '/dom/media/hls',
+    '/dom/media/mp4',
+    '/dom/media/ogg',
+    '/dom/media/platforms',
+    '/dom/media/platforms/agnostic',
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = 'xul-gtest'
 
 # Add libFuzzer configuration directives
 include('/tools/fuzzing/libfuzzer-config.mozbuild')
