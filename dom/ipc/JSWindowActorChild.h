@@ -46,7 +46,8 @@ class JSWindowActorChild final : public JSWindowActor {
 
   static already_AddRefed<JSWindowActorChild> Constructor(GlobalObject& aGlobal,
                                                           ErrorResult& aRv) {
-    nsCOMPtr<nsIGlobalObject> global(do_QueryInterface(aGlobal.GetAsSupports()));
+    nsCOMPtr<nsIGlobalObject> global(
+        do_QueryInterface(aGlobal.GetAsSupports()));
     return MakeAndAddRef<JSWindowActorChild>(global);
   }
 

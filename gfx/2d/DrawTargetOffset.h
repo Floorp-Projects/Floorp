@@ -95,9 +95,9 @@ class DrawTargetOffset : public DrawTarget {
 
   virtual void FillRect(const Rect& aRect, const Pattern& aPattern,
                         const DrawOptions& aOptions = DrawOptions()) override;
-  virtual void FillRoundedRect(const RoundedRect& aRect,
-                               const Pattern& aPattern,
-                               const DrawOptions& aOptions = DrawOptions()) override;
+  virtual void FillRoundedRect(
+      const RoundedRect& aRect, const Pattern& aPattern,
+      const DrawOptions& aOptions = DrawOptions()) override;
   virtual void StrokeRect(const Rect& aRect, const Pattern& aPattern,
                           const StrokeOptions& aStrokeOptions = StrokeOptions(),
                           const DrawOptions& aOptions = DrawOptions()) override;
@@ -113,10 +113,10 @@ class DrawTargetOffset : public DrawTarget {
   virtual void FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                           const Pattern& aPattern,
                           const DrawOptions& aOptions = DrawOptions()) override;
-  virtual void StrokeGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
-                            const Pattern& aPattern,
-                            const StrokeOptions& aStrokeOptions = StrokeOptions(),
-                            const DrawOptions& aOptions = DrawOptions()) override;
+  virtual void StrokeGlyphs(
+      ScaledFont* aFont, const GlyphBuffer& aBuffer, const Pattern& aPattern,
+      const StrokeOptions& aStrokeOptions = StrokeOptions(),
+      const DrawOptions& aOptions = DrawOptions()) override;
   virtual void Mask(const Pattern& aSource, const Pattern& aMask,
                     const DrawOptions& aOptions = DrawOptions()) override;
   virtual void PushClip(const Path* aPath) override;

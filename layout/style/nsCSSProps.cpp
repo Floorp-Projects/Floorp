@@ -172,7 +172,6 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
 
 /***************************************************************************/
 
-
 const KTableEntry nsCSSProps::kCursorKTable[] = {
     // CSS 2.0
     {eCSSKeyword_auto, StyleCursorKind::Auto},

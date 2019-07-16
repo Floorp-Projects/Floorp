@@ -832,8 +832,8 @@ class FullParseHandler {
     return new_<ModuleNode>(pos);
   }
 
-  LexicalScopeNodeType newLexicalScope(LexicalScope::Data* bindings,
-                                       Node body, ScopeKind kind = ScopeKind::Lexical) {
+  LexicalScopeNodeType newLexicalScope(LexicalScope::Data* bindings, Node body,
+                                       ScopeKind kind = ScopeKind::Lexical) {
     return new_<LexicalScopeNode>(bindings, body, kind);
   }
 

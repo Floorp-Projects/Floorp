@@ -390,8 +390,8 @@ bool OpenVRSession::SetupContollerActions() {
         knucklesBindingFile.close();
       }
     }
-    if (vrParent->GetOpenVRControllerManifestPath(
-            OpenVRControllerType::Cosmos, &output)) {
+    if (vrParent->GetOpenVRControllerManifestPath(OpenVRControllerType::Cosmos,
+                                                  &output)) {
       cosmosManifest = output;
     }
     if (!cosmosManifest.Length() || !FileIsExisting(cosmosManifest)) {
@@ -822,7 +822,8 @@ bool OpenVRSession::SetupContollerActions() {
     }
   }
 
-  vr::EVRInputError err = vr::VRInput()->SetActionManifestPath(controllerAction.BeginReading());
+  vr::EVRInputError err =
+      vr::VRInput()->SetActionManifestPath(controllerAction.BeginReading());
   if (err != vr::VRInputError_None) {
     NS_WARNING("OpenVR - SetActionManifestPath failed.");
     return false;
@@ -1200,8 +1201,9 @@ void OpenVRSession::EnumerateControllers(VRSystemState& aState) {
             mControllerHand[handIndex]
                 .mActionFingerPinky_Value.name.BeginReading(),
             &mControllerHand[handIndex].mActionFingerPinky_Value.handle);
-         vr::VRInput()->GetActionHandle(
-            mControllerHand[handIndex].mActionBumper_Pressed.name.BeginReading(),
+        vr::VRInput()->GetActionHandle(
+            mControllerHand[handIndex]
+                .mActionBumper_Pressed.name.BeginReading(),
             &mControllerHand[handIndex].mActionBumper_Pressed.handle);
 
         nsCString deviceId;
@@ -1648,8 +1650,8 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
     // Button 7: Bumper (Cosmos only)
     if (mControllerHand[stateIndex].mActionBumper_Pressed.handle &&
         vr::VRInput()->GetDigitalActionData(
-            mControllerHand[stateIndex].mActionBumper_Pressed.handle, &actionData,
-            sizeof(actionData),
+            mControllerHand[stateIndex].mActionBumper_Pressed.handle,
+            &actionData, sizeof(actionData),
             vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None &&
         actionData.bActive) {
       bPressed = actionData.bState;

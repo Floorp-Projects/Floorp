@@ -18,8 +18,9 @@
 #include <cmath>
 
 /* SSEv1 is only included in non-Windows or non-x86-64-bit builds. */
-#if defined(MOZILLA_MAY_SUPPORT_SSE) && (!(defined(_MSC_VER) && defined(_M_AMD64)))
-#define QCMS_MAY_SUPPORT_SSE
+#if defined(MOZILLA_MAY_SUPPORT_SSE) && \
+    (!(defined(_MSC_VER) && defined(_M_AMD64)))
+#  define QCMS_MAY_SUPPORT_SSE
 #endif
 
 using namespace mozilla;

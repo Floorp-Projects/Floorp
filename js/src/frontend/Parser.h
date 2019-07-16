@@ -548,8 +548,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   bool propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope);
 
   bool finishFunctionScopes(bool isStandaloneFunction);
-  LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope,
-                                          Node body,
+  LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope, Node body,
                                           ScopeKind kind = ScopeKind::Lexical);
   bool finishFunction(
       bool isStandaloneFunction = false,

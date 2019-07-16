@@ -1412,8 +1412,7 @@ uint32_t nsGenericHTMLElement::GetDimensionAttrAsUnsignedInt(
   attrVal->ToString(val);
   nsContentUtils::ParseHTMLIntegerResultFlags result;
   int32_t parsedInt = nsContentUtils::ParseHTMLInteger(val, &result);
-  if ((result & nsContentUtils::eParseHTMLInteger_Error) ||
-      parsedInt < 0) {
+  if ((result & nsContentUtils::eParseHTMLInteger_Error) || parsedInt < 0) {
     return aDefault;
   }
 

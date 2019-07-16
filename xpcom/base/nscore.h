@@ -173,11 +173,11 @@
  *
  */
 #ifndef NS_FREE_PERMANENT_DATA
-#if defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_VALGRIND) || \
-    defined(MOZ_ASAN) || defined(MOZ_CODE_COVERAGE) ||           \
-    defined(MOZ_PROFILE_GENERATE)
-#  define NS_FREE_PERMANENT_DATA
-#endif
+#  if defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_VALGRIND) || \
+      defined(MOZ_ASAN) || defined(MOZ_CODE_COVERAGE) ||           \
+      defined(MOZ_PROFILE_GENERATE)
+#    define NS_FREE_PERMANENT_DATA
+#  endif
 #endif
 
 /**

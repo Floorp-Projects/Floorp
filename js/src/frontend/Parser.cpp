@@ -7320,8 +7320,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     handler_.addStatementToList(stmtList, exprStatement);
   }
 
-  auto initializerBody = finishLexicalScope(pc_->varScope(), stmtList,
-                                            ScopeKind::FunctionLexical);
+  auto initializerBody =
+      finishLexicalScope(pc_->varScope(), stmtList, ScopeKind::FunctionLexical);
   if (!initializerBody) {
     return null();
   }
@@ -7528,9 +7528,8 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   handler_.addStatementToList(statementList, exprStatement);
 
   // Set the function's body to the field assignment.
-  LexicalScopeNodeType initializerBody =
-      finishLexicalScope(pc_->varScope(), statementList,
-                         ScopeKind::FunctionLexical);
+  LexicalScopeNodeType initializerBody = finishLexicalScope(
+      pc_->varScope(), statementList, ScopeKind::FunctionLexical);
   if (!initializerBody) {
     return null();
   }

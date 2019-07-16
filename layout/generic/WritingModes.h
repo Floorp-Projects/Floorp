@@ -1919,7 +1919,6 @@ const T& StyleRect<T>::GetBEnd(mozilla::WritingMode aWM) const {
 
 }  // namespace mozilla
 
-
 // Definitions of inline methods for nsStylePosition, declared in
 // nsStyleStruct.h but not defined there because they need WritingMode.
 inline const mozilla::StyleSize& nsStylePosition::ISize(WritingMode aWM) const {
