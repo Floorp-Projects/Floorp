@@ -297,7 +297,8 @@ class BaseBootstrapper(object):
             os.mkdir(clang_tools_path)
         self.install_toolchain_artifact(clang_tools_path, checkout_root, toolchain_job)
 
-    def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job):
+    def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job,
+                                   no_unpack=False):
         mach_binary = os.path.join(checkout_root, 'mach')
         mach_binary = os.path.abspath(mach_binary)
         if not os.path.exists(mach_binary):
@@ -311,6 +312,9 @@ class BaseBootstrapper(object):
 
         cmd = [sys.executable, mach_binary, 'artifact', 'toolchain',
                '--from-build', toolchain_job]
+
+        if no_unpack:
+            cmd += ['--no-unpack']
 
         subprocess.check_call(cmd, cwd=state_dir)
 
