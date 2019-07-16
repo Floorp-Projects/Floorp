@@ -9,6 +9,7 @@
 
 // needed for HeadersGuardEnum.
 #include "mozilla/dom/HeadersBinding.h"
+#include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 
 #include "nsClassHashtable.h"
@@ -113,7 +114,8 @@ class InternalHeaders final {
       InternalHeaders* aHeaders);
 
   static already_AddRefed<InternalHeaders> CORSHeaders(
-      InternalHeaders* aHeaders);
+      InternalHeaders* aHeaders,
+      RequestCredentials mCredentialsMode = RequestCredentials::Omit);
 
   void GetEntries(nsTArray<InternalHeaders::Entry>& aEntries) const;
 
