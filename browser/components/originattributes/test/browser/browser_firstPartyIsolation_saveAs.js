@@ -29,6 +29,8 @@ const TEST_PATH_FRAME = `${TEST_BASE_PATH}file_favicon.png`;
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
+const tempDir = createTemporarySaveDirectory();
+MockFilePicker.displayDirectory = tempDir;
 
 add_task(async function setup() {
   info("Setting the prefs.");
@@ -38,22 +40,6 @@ add_task(async function setup() {
   });
 
   info("Setting MockFilePicker.");
-  let tempDir = createTemporarySaveDirectory();
-
-  MockFilePicker.displayDirectory = tempDir;
-  MockFilePicker.showCallback = fp => {
-    info("MockFilePicker showCallback");
-
-    let fileName = fp.defaultString;
-    let destFile = tempDir.clone();
-    destFile.append(fileName);
-
-    MockFilePicker.setFiles([destFile]);
-    MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
-
-    info("MockFilePicker showCallback done");
-  };
-
   mockTransferRegisterer.register();
 
   registerCleanupFunction(function() {
@@ -100,14 +86,23 @@ function createPromiseForObservingChannel(aURL, aFirstParty) {
 
 function createPromiseForTransferComplete() {
   return new Promise(resolve => {
-    function onTransferComplete(downloadSuccess) {
-      ok(downloadSuccess, "File should have been downloaded successfully");
-      // Clear the callback for now.
-      mockTransferCallback = () => {};
-      resolve();
-    }
+    MockFilePicker.showCallback = fp => {
+      info("MockFilePicker showCallback");
 
-    mockTransferCallback = onTransferComplete;
+      let fileName = fp.defaultString;
+      let destFile = tempDir.clone();
+      destFile.append(fileName);
+
+      MockFilePicker.setFiles([destFile]);
+      MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
+
+      MockFilePicker.showCallback = null;
+      mockTransferCallback = function(downloadSuccess) {
+        ok(downloadSuccess, "File should have been downloaded successfully");
+        mockTransferCallback = () => {};
+        resolve();
+      };
+    };
   });
 }
 
@@ -184,6 +179,9 @@ add_task(async function testContextMenuSaveAs() {
     info("Waiting for the channel.");
     await observerPromise;
 
+    info("Wait until the save is finished.");
+    await transferCompletePromise;
+
     info("Close the context menu.");
     let contextMenu = document.getElementById("contentAreaContextMenu");
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(
@@ -192,9 +190,6 @@ add_task(async function testContextMenuSaveAs() {
     );
     contextMenu.hidePopup();
     await popupHiddenPromise;
-
-    info("Wait until the save is finished.");
-    await transferCompletePromise;
 
     BrowserTestUtils.removeTab(tab);
   }
@@ -245,6 +240,9 @@ add_task(async function testFileMenuSavePageAs() {
   info("Waiting for the channel.");
   await observerPromise;
 
+  info("Wait until the save is finished.");
+  await transferCompletePromise;
+
   // Close the file menu.
   if (Services.appinfo.OS !== "Darwin") {
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(
@@ -254,9 +252,6 @@ add_task(async function testFileMenuSavePageAs() {
     filePopup.hidePopup();
     await popupHiddenPromise;
   }
-
-  info("Wait until the save is finished.");
-  await transferCompletePromise;
 
   BrowserTestUtils.removeTab(tab);
 });
