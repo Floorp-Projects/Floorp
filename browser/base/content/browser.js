@@ -7187,6 +7187,14 @@ function handleLinkClick(event, href, linkNode) {
   }
 
   var doc = event.target.ownerDocument;
+  let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
+    Ci.nsIReferrerInfo
+  );
+  if (linkNode) {
+    referrerInfo.initWithNode(linkNode);
+  } else {
+    referrerInfo.initWithDocument(doc);
+  }
 
   if (where == "save") {
     saveURL(
@@ -7195,20 +7203,11 @@ function handleLinkClick(event, href, linkNode) {
       null,
       true,
       true,
-      doc.documentURIObject,
+      referrerInfo,
       doc
     );
     event.preventDefault();
     return true;
-  }
-
-  let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
-    Ci.nsIReferrerInfo
-  );
-  if (linkNode) {
-    referrerInfo.initWithNode(linkNode);
-  } else {
-    referrerInfo.initWithDocument(doc);
   }
 
   // if the mixedContentChannel is present and the referring URI passes

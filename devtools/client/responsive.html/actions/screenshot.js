@@ -47,9 +47,10 @@ function saveToFile(data, filename) {
   // append .png extension to filename if it doesn't exist
   filename = filename.replace(/\.png$|$/i, ".png");
 
+  // In chrome doc, we don't need to pass a referrer, just pass null
   chromeWindow.saveURL(data, filename, null,
                         true, true,
-                        chromeDocument.documentURIObject, chromeDocument);
+                        null, chromeDocument);
 }
 
 function simulateCameraEffects(node) {

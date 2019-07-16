@@ -647,7 +647,22 @@ class ContextMenuChild extends JSWindowActorChild {
     };
 
     if (context.inFrame && !context.inSrcdocFrame) {
-      data.frameReferrerInfo = doc.referrerInfo;
+      data.frameReferrerInfo = E10SUtils.serializeReferrerInfo(
+        doc.referrerInfo
+      );
+    }
+
+    // In the case "onLink" we may have to send target referrerInfo. This object
+    // may be used to in saveMedia function.
+    if (context.onLink) {
+      let targetReferrerInfo = Cc[
+        "@mozilla.org/referrer-info;1"
+      ].createInstance(Ci.nsIReferrerInfo);
+
+      targetReferrerInfo.initWithNode(aEvent.composedTarget);
+      data.targetReferrerInfo = E10SUtils.serializeReferrerInfo(
+        targetReferrerInfo
+      );
     }
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {

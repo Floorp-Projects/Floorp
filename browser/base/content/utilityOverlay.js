@@ -400,7 +400,7 @@ function openLinkIn(url, where, params) {
         null,
         true,
         true,
-        aReferrerInfo.sendReferrer ? aReferrerInfo.originalReferrer : null,
+        aReferrerInfo,
         null,
         params.isContentWindowPrivate,
         aPrincipal
@@ -413,15 +413,7 @@ function openLinkIn(url, where, params) {
         );
         return;
       }
-      saveURL(
-        url,
-        null,
-        null,
-        true,
-        true,
-        aReferrerInfo.sendReferrer ? aReferrerInfo.originalReferrer : null,
-        aInitiatingDoc
-      );
+      saveURL(url, null, null, true, true, aReferrerInfo, aInitiatingDoc);
     }
     return;
   }

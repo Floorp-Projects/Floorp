@@ -244,7 +244,6 @@ var gViewSourceUtils = {
           // the default setting is to not decode. we need to decode.
           webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
-          let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER;
           let ssm = Services.scriptSecurityManager;
           let principal = ssm.createContentPrincipal(
             data.uri,
@@ -255,7 +254,6 @@ var gViewSourceUtils = {
             principal,
             null,
             null,
-            referrerPolicy,
             null,
             null,
             file,

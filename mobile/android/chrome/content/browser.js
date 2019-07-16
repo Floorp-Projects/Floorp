@@ -1330,6 +1330,10 @@ var BrowserApp = {
             return;
           }
 
+          let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
+            Ci.nsIReferrerInfo
+          );
+          referrerInfo.initWithDocument(aTarget.ownerDocument);
           let uri = aTarget.currentRequestFinalURI || aTarget.currentURI;
           ContentAreaUtils.saveImageURL(
             uri.spec,
@@ -1337,7 +1341,7 @@ var BrowserApp = {
             "SaveImageTitle",
             false,
             true,
-            aTarget.ownerDocument.documentURIObject,
+            referrerInfo,
             aTarget.ownerDocument
           );
         });
@@ -1395,6 +1399,10 @@ var BrowserApp = {
         }
 
         // Skipped trying to pull MIME type out of cache for now
+        let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
+          Ci.nsIReferrerInfo
+        );
+        referrerInfo.initWithDocument(aTarget.ownerDocument);
         ContentAreaUtils.internalSave(
           url,
           null,
@@ -1404,7 +1412,7 @@ var BrowserApp = {
           false,
           filePickerTitleKey,
           null,
-          aTarget.ownerDocument.documentURIObject,
+          referrerInfo,
           aTarget.ownerDocument,
           true,
           null
