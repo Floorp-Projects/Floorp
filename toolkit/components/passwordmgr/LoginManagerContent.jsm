@@ -1504,6 +1504,8 @@ this.LoginManagerContent = {
     log("_generatedPasswordFilled", passwordField);
     let win = passwordField.ownerGlobal;
 
+    this._highlightFilledField(passwordField);
+
     if (PrivateBrowsingUtils.isContentWindowPrivate(win)) {
       log(
         "_generatedPasswordFilled: not automatically saving the password in private browsing mode"

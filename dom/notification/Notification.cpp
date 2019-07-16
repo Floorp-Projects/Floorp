@@ -1675,7 +1675,7 @@ nsresult Notification::ResolveIconAndSoundURL(nsString& iconUrl,
   AssertIsOnMainThread();
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIURI> baseUri;
+  nsIURI* baseUri = nullptr;
 
   // XXXnsm If I understand correctly, the character encoding for resolving
   // URIs in new specs is dictated by the URL spec, which states that unless

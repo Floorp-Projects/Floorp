@@ -284,7 +284,7 @@ Structure:
         },
       },
       experiments: {
-        "<experiment id>": { branch: "<branch>" },
+        "<experiment id>": { branch: "<branch>", type: "<type>", enrollmentId: "<id>" },
         // ...
       }
     }
@@ -465,15 +465,25 @@ Just like activePlugins, this will report dummy values until the blocklist is lo
 
 experiments
 -----------
-For each experiment we collect the ``id`` and the ``branch`` the client is enrolled in. Both fields are truncated to 100 characters and a warning is printed when that happens.
+For each experiment we collect the
 
+- ``id`` (Like ``hotfix-reset-xpi-verification-timestamp-1548973``, max length 100 characters)
+- ``branch`` (Like ``control``, max length 100 characters)
+- ``type`` (Optional. Like ``normandy-exp``, max length 20 characters)
+- ``enrollmentId`` (Optional. Like ``5bae2134-e121-46c2-aa00-232f3f5855c5``, max length 40 characters)
+
+In the event any of these fields are truncated, a warning is printed to the console.
 
 Version History
 ---------------
 
+- Firefox 70:
+
+  - Added ``experiments.<experiment id>.enrollmentId``. (`bug 1555172 <https://bugzilla.mozilla.org/show_bug.cgi?id=1555172>`_)
+
 - Firefox 67:
 
-  - Removed ``persona``. The ``addons.activeAddons`` list should be used instead. (`bug 1525511 https://bugzilla.mozilla.org/show_bug.cgi?id=1525511>`_)
+  - Removed ``persona``. The ``addons.activeAddons`` list should be used instead. (`bug 1525511 <https://bugzilla.mozilla.org/show_bug.cgi?id=1525511>`_)
 
 - Firefox 61:
 

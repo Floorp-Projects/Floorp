@@ -128,7 +128,7 @@ already_AddRefed<Promise> SVGImageElement::Decode(ErrorResult& aRv) {
 
 nsresult SVGImageElement::LoadSVGImage(bool aForce, bool aNotify) {
   // resolve href attribute
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  nsIURI* baseURI = GetBaseURI();
 
   nsAutoString href;
   if (mStringAttributes[HREF].IsExplicitlySet()) {

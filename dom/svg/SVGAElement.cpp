@@ -276,12 +276,12 @@ bool SVGAElement::IsLink(nsIURI** aURI) const {
                       eCaseMatters) != Element::ATTR_VALUE_NO_MATCH &&
       FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::actuate, sActuateVals,
                       eCaseMatters) != Element::ATTR_VALUE_NO_MATCH) {
-    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     // Get absolute URI
     nsAutoString str;
     const uint8_t idx = useBareHref ? HREF : XLINK_HREF;
     mStringAttributes[idx].GetAnimValue(str, this);
-    nsContentUtils::NewURIWithDocumentCharset(aURI, str, OwnerDoc(), baseURI);
+    nsContentUtils::NewURIWithDocumentCharset(aURI, str, OwnerDoc(),
+                                              GetBaseURI());
     // must promise out param is non-null if we return true
     return !!*aURI;
   }

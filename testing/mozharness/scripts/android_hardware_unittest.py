@@ -94,6 +94,13 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
          "help": "Repeat the tests the given number of times. Supported "
                  "by mochitest, reftest, crashtest, ignored otherwise."
          }
+    ], [
+        ['--setpref', ],
+        {"action": "append",
+         "dest": "extra_prefs",
+         "default": [],
+         "help": "Extra user prefs.",
+         }
     ]] + copy.deepcopy(testing_config_options)
 
     def __init__(self, require_config_file=False):
@@ -136,6 +143,7 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         self.log_tbpl_level = c.get('log_tbpl_level')
         self.e10s = c.get('e10s')
         self.enable_webrender = c.get('enable_webrender')
+        self.extra_prefs = c.get('extra_prefs')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -277,6 +285,8 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         # set.
         if self.enable_webrender:
             cmd.extend(['--enable-webrender'])
+
+        cmd.extend(['--setpref={}'.format(p) for p in self.extra_prefs])
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)

@@ -1492,7 +1492,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   ///
 
   nsAutoString codebaseStr;
-  nsCOMPtr<nsIURI> docBaseURI = thisElement->GetBaseURI();
+  nsIURI* docBaseURI = thisElement->GetBaseURI();
   thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::codebase, codebaseStr);
 
   if (!codebaseStr.IsEmpty()) {
@@ -1508,6 +1508,11 @@ nsObjectLoadingContent::UpdateObjectParameters() {
     }
   }
 
+  // If we failed to build a valid URI, use the document's base URI
+  if (!newBaseURI) {
+    newBaseURI = docBaseURI;
+  }
+
   nsAutoString rawTypeAttr;
   thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::type, rawTypeAttr);
   if (!rawTypeAttr.IsEmpty()) {
@@ -1516,11 +1521,6 @@ nsObjectLoadingContent::UpdateObjectParameters() {
     nsAutoString mime;
     nsContentUtils::SplitMimeType(rawTypeAttr, mime, params);
     CopyUTF16toUTF8(mime, newMime);
-  }
-
-  // If we failed to build a valid URI, use the document's base URI
-  if (!newBaseURI) {
-    newBaseURI = docBaseURI;
   }
 
   ///

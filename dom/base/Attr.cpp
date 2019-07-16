@@ -182,7 +182,7 @@ nsresult Attr::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
   return NS_OK;
 }
 
-already_AddRefed<nsIURI> Attr::GetBaseURI(bool aTryUseXHRDocBaseURI) const {
+nsIURI* Attr::GetBaseURI(bool aTryUseXHRDocBaseURI) const {
   Element* parent = GetElement();
 
   return parent ? parent->GetBaseURI(aTryUseXHRDocBaseURI) : nullptr;

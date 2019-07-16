@@ -12,7 +12,6 @@
 obj*/**
 
 # dom/ exclusions which should be removed (aka ESLint enabled)
-dom/base/*.*
 dom/media/test/**
 !dom/media/test/marionette/yttest/*.js
 dom/xhr/**

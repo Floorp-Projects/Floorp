@@ -611,7 +611,7 @@ void nsINode::Normalize() {
 }
 
 nsresult nsINode::GetBaseURI(nsAString& aURI) const {
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  nsIURI* baseURI = GetBaseURI();
 
   nsAutoCString spec;
   if (baseURI) {
@@ -625,7 +625,7 @@ nsresult nsINode::GetBaseURI(nsAString& aURI) const {
 
 void nsINode::GetBaseURIFromJS(nsAString& aURI, CallerType aCallerType,
                                ErrorResult& aRv) const {
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI(aCallerType == CallerType::System);
+  nsIURI* baseURI = GetBaseURI(aCallerType == CallerType::System);
   nsAutoCString spec;
   if (baseURI) {
     nsresult res = baseURI->GetSpec(spec);
@@ -637,9 +637,7 @@ void nsINode::GetBaseURIFromJS(nsAString& aURI, CallerType aCallerType,
   CopyUTF8toUTF16(spec, aURI);
 }
 
-already_AddRefed<nsIURI> nsINode::GetBaseURIObject() const {
-  return GetBaseURI(true);
-}
+nsIURI* nsINode::GetBaseURIObject() const { return GetBaseURI(true); }
 
 void nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix) {
   Element* element = GetNameSpaceElement();
