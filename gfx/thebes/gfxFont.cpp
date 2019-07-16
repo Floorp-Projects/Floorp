@@ -2224,9 +2224,19 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
     gfx::Float xscale = CalcXScale(aRunParams.context->GetDrawTarget());
     fontParams.synBoldOnePixelOffset = aRunParams.direction * xscale;
     if (xscale != 0.0) {
-      // use as many strikes as needed for the the increased advance
-      fontParams.extraStrikes =
-          std::max(1, NS_lroundf(GetSyntheticBoldOffset() / xscale));
+      static const int32_t kMaxExtraStrikes = 128;
+      gfxFloat extraStrikes = GetSyntheticBoldOffset() / xscale;
+      if (extraStrikes > kMaxExtraStrikes) {
+        // if too many strikes are required, limit them and increase the step
+        // size to compensate
+        fontParams.extraStrikes = kMaxExtraStrikes;
+        fontParams.synBoldOnePixelOffset = aRunParams.direction *
+                                           GetSyntheticBoldOffset() /
+                                           fontParams.extraStrikes;
+      } else {
+        // use as many strikes as needed for the increased advance
+        fontParams.extraStrikes = NS_lroundf(std::max(1.0, extraStrikes));
+      }
     }
   } else {
     fontParams.synBoldOnePixelOffset = 0;
