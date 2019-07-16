@@ -11,9 +11,13 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.click
 
 class BrowserRobot {
 
@@ -26,8 +30,24 @@ class BrowserRobot {
             .check(matches(withText(containsString(redirectUrl))))
     }
 
-    class Transition {
+    /* Asserts that the text within DOM element with ID="testContent" has the given text, i.e.
+    *  document.querySelector('#testContent').innerText == expectedText
+    */
+    fun verifyPageContent(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        mDevice.wait(Until.findObject(By.res(expectedText)), TestAssetHelper.waitingTime)
+    }
+
+    class Transition {
+        private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
+
+            navURLBar().click()
+
+            NavigationToolbarRobot().interact()
+            return NavigationToolbarRobot.Transition()
+        }
     }
 }
 
@@ -35,3 +55,5 @@ fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
     BrowserRobot().interact()
     return BrowserRobot.Transition()
 }
+
+fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
