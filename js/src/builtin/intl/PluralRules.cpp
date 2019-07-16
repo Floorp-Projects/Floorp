@@ -261,6 +261,10 @@ static UNumberFormatter* NewUNumberFormatterForPluralRules(
     }
   }
 
+  if (!skeleton.roundingModeHalfUp()) {
+    return nullptr;
+  }
+
   return skeleton.toFormatter(cx, locale.get());
 }
 
