@@ -677,7 +677,10 @@ void CustomElementRegistry::Define(
   Document* doc = mWindow->GetExtantDoc();
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
   if (!nsContentUtils::IsCustomElementName(nameAtom, nameSpaceID)) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_SYNTAX_ERR,
+        nsPrintfCString("'%s' is not a valid custom element name",
+                        NS_ConvertUTF16toUTF8(aName).get()));
     return;
   }
 
@@ -686,7 +689,9 @@ void CustomElementRegistry::Define(
    *    throw a "NotSupportedError" DOMException and abort these steps.
    */
   if (mCustomDefinitions.GetWeak(nameAtom)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                          nsPrintfCString("'%s' has already been used",
+                                          NS_ConvertUTF16toUTF8(aName).get()));
     return;
   }
 
@@ -699,7 +704,12 @@ void CustomElementRegistry::Define(
   if (ptr) {
     MOZ_ASSERT(mCustomDefinitions.GetWeak(ptr->value()),
                "Definition must be found in mCustomDefinitions");
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    nsAutoCString name;
+    ptr->value()->ToUTF8String(name);
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        nsPrintfCString("'%s' and '%s' have the same constructor",
+                        NS_ConvertUTF16toUTF8(aName).get(), name.get()));
     return;
   }
 
@@ -731,7 +741,10 @@ void CustomElementRegistry::Define(
   if (aOptions.mExtends.WasPassed()) {
     RefPtr<nsAtom> extendsAtom(NS_Atomize(aOptions.mExtends.Value()));
     if (nsContentUtils::IsCustomElementName(extendsAtom, kNameSpaceID_XHTML)) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.ThrowDOMException(
+          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          nsPrintfCString("'%s' cannot extend a custom element",
+                          NS_ConvertUTF16toUTF8(aName).get()));
       return;
     }
 
@@ -760,7 +773,10 @@ void CustomElementRegistry::Define(
    * set, then throw a "NotSupportedError" DOMException and abort these steps.
    */
   if (mIsCustomDefinitionRunning) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        NS_LITERAL_CSTRING("Cannot define a custom element while defining "
+                           "another custom elment"));
     return;
   }
 
