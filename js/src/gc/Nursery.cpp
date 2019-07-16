@@ -816,6 +816,10 @@ inline void js::Nursery::endProfile(ProfileKey key) {
 }
 
 bool js::Nursery::shouldCollect() const {
+  if (isEmpty()) {
+    return false;
+  }
+
   if (minorGCRequested()) {
     return true;
   }
