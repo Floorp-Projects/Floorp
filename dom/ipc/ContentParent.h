@@ -842,9 +842,8 @@ class ContentParent final : public PContentParent,
   bool DeallocPBrowserParent(PBrowserParent* frame);
 
   mozilla::ipc::IPCResult RecvConstructPopupBrowser(
-      ManagedEndpoint<PBrowserParent>&& actor,
-      ManagedEndpoint<PWindowGlobalParent>&& windowEp, const TabId& tabId,
-      const IPCTabContext& context, const WindowGlobalInit& initialWindowInit,
+      ManagedEndpoint<PBrowserParent>&& actor, const TabId& tabId,
+      const IPCTabContext& context, BrowsingContext* aBrowsingContext,
       const uint32_t& chromeFlags);
 
   PIPCBlobInputStreamParent* AllocPIPCBlobInputStreamParent(

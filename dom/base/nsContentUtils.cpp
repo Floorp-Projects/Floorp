@@ -9850,12 +9850,8 @@ bool nsContentUtils::IsLocalRefURL(const nsString& aString) {
   return !aString.IsEmpty() && aString[0] == '#';
 }
 
-// We use only 53 bits for the ID so that it can be converted to and from a JS
-// value without loss of precision. The upper bits of the ID hold the process
-// ID. The lower bits identify the object itself.
-static constexpr uint64_t kIdTotalBits = 53;
-static constexpr uint64_t kIdProcessBits = 22;
-static constexpr uint64_t kIdBits = kIdTotalBits - kIdProcessBits;
+static const uint64_t kIdProcessBits = 32;
+static const uint64_t kIdBits = 64 - kIdProcessBits;
 
 /* static */ uint64_t GenerateProcessSpecificId(uint64_t aId) {
   uint64_t processId = 0;
@@ -9880,7 +9876,7 @@ static constexpr uint64_t kIdBits = kIdTotalBits - kIdProcessBits;
   return (processBits << kIdBits) | bits;
 }
 
-// Next process-local Tab ID.
+// Tab ID is composed in a similar manner of Window ID.
 static uint64_t gNextTabId = 0;
 
 /* static */
@@ -9888,20 +9884,12 @@ uint64_t nsContentUtils::GenerateTabId() {
   return GenerateProcessSpecificId(++gNextTabId);
 }
 
-// Next process-local Browsing Context ID.
+// Browsing context ID is composed in a similar manner of Window ID.
 static uint64_t gNextBrowsingContextId = 0;
 
 /* static */
 uint64_t nsContentUtils::GenerateBrowsingContextId() {
   return GenerateProcessSpecificId(++gNextBrowsingContextId);
-}
-
-// Next process-local Window ID.
-static uint64_t gNextWindowId = 0;
-
-/* static */
-uint64_t nsContentUtils::GenerateWindowId() {
-  return GenerateProcessSpecificId(++gNextWindowId);
 }
 
 /* static */
