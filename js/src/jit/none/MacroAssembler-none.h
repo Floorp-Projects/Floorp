@@ -489,10 +489,6 @@ class MacroAssemblerNone : public Assembler {
   void unboxDouble(T, FloatRegister) {
     MOZ_CRASH();
   }
-  template <typename T>
-  void unboxPrivate(T, Register) {
-    MOZ_CRASH();
-  }
   void unboxValue(const ValueOperand&, AnyRegister, JSValueType) {
     MOZ_CRASH();
   }

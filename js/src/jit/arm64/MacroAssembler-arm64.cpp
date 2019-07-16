@@ -109,7 +109,6 @@ BufferOffset MacroAssemblerCompat::movePatchablePtr(ImmWord ptr,
 
 void MacroAssemblerCompat::loadPrivate(const Address& src, Register dest) {
   loadPtr(src, dest);
-  asMasm().lshiftPtr(Imm32(1), dest);
 }
 
 void MacroAssemblerCompat::handleFailureWithHandlerTail(
