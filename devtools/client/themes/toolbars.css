@@ -3,20 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* CSS Variables specific to the devtools toolbar that aren't defined by the themes */
-:root {
-  --separator-block-margin: 4px;
-  --separator-inline-margin: 1px;
-}
-
-.theme-light {
-  --separator-border-color: rgba(0,0,0,.1);
-}
-
-.theme-dark {
-  --separator-border-color: rgba(100%,100%,100%,.2);
-}
-
 /* Toolbars */
 .devtools-toolbar,
 .devtools-sidebar-tabs tabs {
@@ -68,9 +54,9 @@
  * Some separators may be using a bigger, 6px horizontal margin.
  */
 .devtools-separator {
-  border-inline-start: 1px solid var(--separator-border-color);
-  height: calc(100% - 2 * var(--separator-block-margin));
-  margin: var(--separator-block-margin) var(--separator-inline-margin);
+  border-inline-start: 1px solid var(--theme-toolbar-separator);
+  height: calc(100% - 8px);
+  margin: 4px 1px;
 }
 
 /* In-tools sidebar */

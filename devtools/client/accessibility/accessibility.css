@@ -20,8 +20,6 @@
   --accessibility-link-color: var(--blue-60);
   --accessibility-link-color-active: var(--blue-70);
   --accessibility-body-background-a90: rgba(255, 255, 255, 0.9);
-  /* Similarly to webconsole, add more padding before the toolbar group. */
-  --separator-inline-margin: 5px;
   --accessibility-code-background: var(--grey-20);
 }
 
@@ -124,6 +122,11 @@ body {
   align-items: center;
   font: message-box;
   font-size: var(--accessibility-font-size);
+}
+
+/* Similarly to webconsole, add more padding before the toolbar group. */
+.devtools-toolbar .devtools-separator {
+  margin-inline: 5px;
 }
 
 .devtools-toolbar .help {
