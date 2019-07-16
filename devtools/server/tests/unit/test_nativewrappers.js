@@ -10,7 +10,7 @@ function run_test() {
   addDebuggerToGlobal(this);
   const g = testGlobal("test1");
 
-  const dbg = new Debugger();
+  const dbg = makeDebugger();
   dbg.addDebuggee(g);
   dbg.onDebuggerStatement = function(frame) {
     const args = frame.arguments;
@@ -35,5 +35,5 @@ function run_test() {
     g.stopMe(doc.createEvent("MouseEvent"));
   } )()`);
 
-  dbg.enabled = false;
+  dbg.disable();
 }

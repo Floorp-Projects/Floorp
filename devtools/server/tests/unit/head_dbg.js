@@ -33,6 +33,7 @@ Services.prefs.setBoolPref("devtools.debugger.log", true);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
+const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {
   ActorRegistry,

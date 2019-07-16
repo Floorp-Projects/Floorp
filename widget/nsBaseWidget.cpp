@@ -1269,6 +1269,8 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
     if (!GetNativeData(NS_JAVA_SURFACE)) {
       options.SetInitiallyPaused(true);
     }
+#else
+    options.SetInitiallyPaused(CompositorInitiallyPaused());
 #endif
 
     RefPtr<LayerManager> lm;

@@ -181,6 +181,7 @@ parent:
   // the compositor needs to pause/resume in lockstep with the application.
   sync Pause();
   sync Resume();
+  async ResumeAsync();
 
   // See bug 1316632 comment #33 for why this has to be sync. Otherwise,
   // there are ordering issues with SendPLayerTransactionConstructor.
