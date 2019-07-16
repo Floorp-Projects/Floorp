@@ -77,6 +77,18 @@ add_task(async function test_backButton_forwardButton() {
     );
     await fillTestPage(aBrowser);
 
+    let forwardButton = document.getElementById("forward-button");
+
+    let forwardTransitionPromise;
+    if (forwardButton.nextElementSibling == gURLBar) {
+      // We need to wait for the forward button transition to complete before we
+      // can click it, so we hook up a listener to wait for it to be ready.
+      forwardTransitionPromise = BrowserTestUtils.waitForEvent(
+        forwardButton,
+        "transitionend"
+      );
+    }
+
     let backPromise = BrowserTestUtils.browserStopped(aBrowser);
     EventUtils.synthesizeMouseAtCenter(
       document.getElementById("back-button"),
@@ -91,7 +103,11 @@ add_task(async function test_backButton_forwardButton() {
     // Now go forward again after filling
     await fillTestPage(aBrowser);
 
-    let forwardButton = document.getElementById("forward-button");
+    if (forwardTransitionPromise) {
+      await forwardTransitionPromise;
+      info("transition done");
+    }
+
     await BrowserTestUtils.waitForCondition(() => {
       return !forwardButton.disabled;
     });
