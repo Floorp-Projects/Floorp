@@ -520,10 +520,9 @@ class ContentChild final : public PContentChild,
   bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*);
 
   mozilla::ipc::IPCResult RecvConstructBrowser(
-      ManagedEndpoint<PBrowserChild>&& aBrowserEp,
-      ManagedEndpoint<PWindowGlobalChild>&& aWindowEp, const TabId& aTabId,
+      ManagedEndpoint<PBrowserChild>&& aBrowserEp, const TabId& aTabId,
       const TabId& aSameTabGroupAs, const IPCTabContext& aContext,
-      const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
+      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
       const ContentParentId& aCpID, const bool& aIsForBrowser,
       const bool& aIsTopLevel);
 
@@ -834,6 +833,8 @@ class ContentChild final : public PContentChild,
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
+
+uint64_t NextWindowID();
 
 }  // namespace dom
 }  // namespace mozilla

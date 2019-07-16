@@ -1227,30 +1227,31 @@ IPCResult BrowserParent::RecvIndexedDBPermissionRequest(
   return IPC_OK();
 }
 
-IPCResult BrowserParent::RecvNewWindowGlobal(
-    ManagedEndpoint<PWindowGlobalParent>&& aEndpoint,
-    const WindowGlobalInit& aInit) {
-  // Construct our new WindowGlobalParent, bind, and initialize it.
-  auto wgp = MakeRefPtr<WindowGlobalParent>(aInit, /* inproc */ false);
-
-  // Reference freed in DeallocPWindowGlobalParent.
-  BindPWindowGlobalEndpoint(std::move(aEndpoint), do_AddRef(wgp).take());
-  wgp->Init(aInit);
+IPCResult BrowserParent::RecvPWindowGlobalConstructor(
+    PWindowGlobalParent* aActor, const WindowGlobalInit& aInit) {
+  static_cast<WindowGlobalParent*>(aActor)->Init(aInit);
   return IPC_OK();
 }
 
+PWindowGlobalParent* BrowserParent::AllocPWindowGlobalParent(
+    const WindowGlobalInit& aInit) {
+  // Reference freed in DeallocPWindowGlobalParent.
+  return do_AddRef(new WindowGlobalParent(aInit, /* inproc */ false)).take();
+}
+
 bool BrowserParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
-  // Free reference from RecvNewWindowGlobal.
+  // Free reference from AllocPWindowGlobalParent.
   static_cast<WindowGlobalParent*>(aActor)->Release();
   return true;
 }
 
 IPCResult BrowserParent::RecvPBrowserBridgeConstructor(
     PBrowserBridgeParent* aActor, const nsString& aName,
-    const nsString& aRemoteType, const WindowGlobalInit& aWindowInit,
+    const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
     const uint32_t& aChromeFlags, const TabId& aTabId) {
   nsresult rv = static_cast<BrowserBridgeParent*>(aActor)->Init(
-      aName, aRemoteType, aWindowInit, aChromeFlags, aTabId);
+      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext),
+      aChromeFlags, aTabId);
   if (NS_FAILED(rv)) {
     return IPC_FAIL(this, "Failed to construct BrowserBridgeParent");
   }
@@ -1259,7 +1260,7 @@ IPCResult BrowserParent::RecvPBrowserBridgeConstructor(
 
 PBrowserBridgeParent* BrowserParent::AllocPBrowserBridgeParent(
     const nsString& aName, const nsString& aRemoteType,
-    const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
+    BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
     const TabId& aTabId) {
   // Reference freed in DeallocPBrowserBridgeParent.
   return do_AddRef(new BrowserBridgeParent()).take();

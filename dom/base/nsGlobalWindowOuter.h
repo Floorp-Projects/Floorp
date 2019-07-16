@@ -312,9 +312,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   void DetachFromDocShell();
 
-  virtual nsresult SetNewDocument(
-      Document* aDocument, nsISupports* aState, bool aForceReuseInnerWindow,
-      mozilla::dom::WindowGlobalChild* aActor = nullptr) override;
+  virtual nsresult SetNewDocument(Document* aDocument, nsISupports* aState,
+                                  bool aForceReuseInnerWindow) override;
 
   // Outer windows only.
   void DispatchDOMWindowCreated();

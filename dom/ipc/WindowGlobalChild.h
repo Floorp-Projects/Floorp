@@ -50,17 +50,12 @@ class WindowGlobalChild final : public WindowGlobalActor,
   nsGlobalWindowInner* WindowGlobal() { return mWindowGlobal; }
 
   // Has this actor been shut down
-  bool IsClosed() { return !CanSend(); }
+  bool IsClosed() { return mIPCClosed; }
   void Destroy();
 
   // Check if this actor is managed by PInProcess, as-in the document is loaded
   // in the chrome process.
   bool IsInProcess() { return XRE_IsParentProcess(); }
-
-  nsIURI* GetDocumentURI() override { return mDocumentURI; }
-  void SetDocumentURI(nsIURI* aDocumentURI);
-
-  nsIPrincipal* DocumentPrincipal() { return mDocumentPrincipal; }
 
   // The Window ID for this WindowGlobal
   uint64_t InnerWindowId() { return mInnerWindowId; }
@@ -95,16 +90,10 @@ class WindowGlobalChild final : public WindowGlobalActor,
   static already_AddRefed<WindowGlobalChild> Create(
       nsGlobalWindowInner* aWindow);
 
-  WindowGlobalChild(const WindowGlobalInit& aInit,
-                    nsGlobalWindowInner* aWindow);
-
-  void Init();
-
-  void InitWindowGlobal(nsGlobalWindowInner* aWindow);
-
   nsISupports* GetParentObject();
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+  nsIURI* GetDocumentURI() override;
 
  protected:
   const nsAString& GetRemoteType() override;
@@ -129,16 +118,16 @@ class WindowGlobalChild final : public WindowGlobalActor,
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
+  WindowGlobalChild(nsGlobalWindowInner* aWindow, dom::BrowsingContext* aBc);
   ~WindowGlobalChild();
 
   RefPtr<nsGlobalWindowInner> mWindowGlobal;
   RefPtr<dom::BrowsingContext> mBrowsingContext;
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorChild> mWindowActors;
-  nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
-  nsCOMPtr<nsIURI> mDocumentURI;
   uint64_t mInnerWindowId;
   uint64_t mOuterWindowId;
   int64_t mBeforeUnloadListeners;
+  bool mIPCClosed;
 };
 
 }  // namespace dom

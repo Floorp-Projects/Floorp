@@ -55,7 +55,7 @@ class WindowGlobalParent final : public WindowGlobalActor,
   }
 
   // Has this actor been shut down
-  bool IsClosed() { return !CanSend(); }
+  bool IsClosed() { return mIPCClosed; }
 
   // Check if this actor is managed by PInProcess, as-in the document is loaded
   // in-process.
@@ -171,6 +171,7 @@ class WindowGlobalParent final : public WindowGlobalActor,
   uint64_t mInnerWindowId;
   uint64_t mOuterWindowId;
   bool mInProcess;
+  bool mIPCClosed;
   bool mIsInitialDocument;
 
   // True if this window has a "beforeunload" event listener.

@@ -1217,35 +1217,16 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       return nullptr;
     }
 
-    nsCOMPtr<nsIPrincipal> initialPrincipal =
-        NullPrincipal::Create(aContext.OriginAttributesRef());
-    WindowGlobalInit windowInit = WindowGlobalActor::AboutBlankInitializer(
-        aBrowsingContext, initialPrincipal);
-
-    auto windowParent =
-        MakeRefPtr<WindowGlobalParent>(windowInit, /* inprocess */ false);
-
-    // Open a remote endpoint for the initial PWindowGlobal actor.
-    // DeallocPWindowGlobalParent releases the ref taken.
-    ManagedEndpoint<PWindowGlobalChild> windowEp =
-        browserParent->OpenPWindowGlobalEndpoint(
-            do_AddRef(windowParent).take());
-    if (NS_WARN_IF(!windowEp.IsValid())) {
-      return nullptr;
-    }
-
     // Tell the content process to set up its PBrowserChild.
     bool ok = constructorSender->SendConstructBrowser(
-        std::move(childEp), std::move(windowEp), tabId,
+        std::move(childEp), tabId,
         aSameTabGroupAs ? aSameTabGroupAs->GetTabId() : TabId(0),
-        aContext.AsIPCTabContext(), windowInit, chromeFlags,
+        aContext.AsIPCTabContext(), aBrowsingContext, chromeFlags,
         constructorSender->ChildID(), constructorSender->IsForBrowser(),
         /* aIsTopLevel */ true);
     if (NS_WARN_IF(!ok)) {
       return nullptr;
     }
-
-    windowParent->Init(windowInit);
 
     if (remoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
       // Tell the BrowserChild object that it was created due to a
@@ -3291,9 +3272,8 @@ bool ContentParent::DeallocPBrowserParent(PBrowserParent* frame) {
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
-    ManagedEndpoint<PBrowserParent>&& aBrowserEp,
-    ManagedEndpoint<PWindowGlobalParent>&& aWindowEp, const TabId& aTabId,
-    const IPCTabContext& aContext, const WindowGlobalInit& aInitialWindowInit,
+    ManagedEndpoint<PBrowserParent>&& aBrowserEp, const TabId& aTabId,
+    const IPCTabContext& aContext, BrowsingContext* aBrowsingContext,
     const uint32_t& aChromeFlags) {
   if (!CanOpenBrowser(aContext)) {
     return IPC_FAIL(this, "CanOpenBrowser Failed");
@@ -3348,19 +3328,15 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
   chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
 
   CanonicalBrowsingContext* browsingContext =
-      CanonicalBrowsingContext::Cast(aInitialWindowInit.browsingContext());
+      CanonicalBrowsingContext::Cast(aBrowsingContext);
   if (NS_WARN_IF(!browsingContext->IsOwnedByProcess(ChildID()))) {
     return IPC_FAIL(this, "BrowsingContext Owned by Incorrect Process!");
   }
 
   MaybeInvalidTabContext tc(aContext);
   MOZ_ASSERT(tc.IsValid());
-
-  auto initialWindow =
-      MakeRefPtr<WindowGlobalParent>(aInitialWindowInit, /* inprocess */ false);
-
-  auto parent = MakeRefPtr<BrowserParent>(this, aTabId, tc.GetTabContext(),
-                                          browsingContext, chromeFlags);
+  RefPtr<BrowserParent> parent = new BrowserParent(
+      this, aTabId, tc.GetTabContext(), browsingContext, chromeFlags);
 
   // Bind the created BrowserParent to IPC to actually link the actor. The ref
   // here is released in DeallocPBrowserParent.
@@ -3368,14 +3344,6 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
                                        do_AddRef(parent).take()))) {
     return IPC_FAIL(this, "BindPBrowserEndpoint failed");
   }
-
-  // The ref here is released in DeallocPWindowGlobalParent.
-  if (NS_WARN_IF(!parent->BindPWindowGlobalEndpoint(
-          std::move(aWindowEp), do_AddRef(initialWindow).take()))) {
-    return IPC_FAIL(this, "BindPWindowGlobalEndpoint failed");
-  }
-
-  initialWindow->Init(aInitialWindowInit);
 
   // When enabling input event prioritization, input events may preempt other
   // normal priority IPC messages. To prevent the input events preempt
