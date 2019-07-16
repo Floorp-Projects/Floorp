@@ -86,14 +86,6 @@ function testBenignPage() {
   );
 
   ok(
-    !hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is visible"
-  );
-  ok(
-    hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is hidden"
-  );
-  ok(
     hidden("#identity-popup-content-blocking-category-cookies"),
     "Not showing cookie restrictions category"
   );
@@ -133,14 +125,6 @@ function testBenignPageWithException() {
     "icon box is not hidden"
   );
 
-  ok(
-    !hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is visible"
-  );
-  ok(
-    hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is hidden"
-  );
   ok(
     hidden("#identity-popup-content-blocking-category-cookies"),
     "Not showing cookie restrictions category"
@@ -197,15 +181,6 @@ function testTrackingPage(window) {
   );
 
   ok(
-    hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is hidden"
-  );
-  ok(
-    !hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is visible"
-  );
-
-  ok(
     !hidden("#identity-popup-content-blocking-category-tracking-protection"),
     "Showing trackers category"
   );
@@ -250,15 +225,6 @@ function testTrackingPageUnblocked(blockedByTP, window) {
   ok(
     BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
     "icon box is visible"
-  );
-
-  ok(
-    hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is hidden"
-  );
-  ok(
-    !hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is visible"
   );
 
   ok(

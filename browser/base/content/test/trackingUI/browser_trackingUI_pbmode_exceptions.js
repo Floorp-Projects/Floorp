@@ -62,15 +62,6 @@ function testTrackingPage(window) {
     gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"),
     "correct tooltip"
   );
-
-  ok(
-    hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is hidden"
-  );
-  ok(
-    !hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is visible"
-  );
 }
 
 function testTrackingPageUnblocked() {
@@ -98,15 +89,6 @@ function testTrackingPageUnblocked() {
   ok(
     BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
     "icon box is visible"
-  );
-
-  ok(
-    hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is hidden"
-  );
-  ok(
-    !hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is visible"
   );
 }
 

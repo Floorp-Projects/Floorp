@@ -1169,9 +1169,6 @@ var gProtectionsHandler = {
       // Fallback to not setting a label, it's preferable to not set a label than to set an incorrect one.
       return;
     }
-    let button = document.getElementById(
-      "tracking-protection-preferences-button"
-    );
     let appMenuCategoryLabel = document.getElementById("appMenu-tp-category");
     let label;
     let category = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
@@ -1187,7 +1184,6 @@ var gProtectionsHandler = {
         break;
     }
     appMenuCategoryLabel.value = label;
-    button.label = label;
   },
 
   openPreferences(origin) {
