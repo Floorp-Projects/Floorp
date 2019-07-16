@@ -12,6 +12,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -166,7 +167,7 @@ public class FindInPageBar extends LinearLayout
             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(errorText);
             spannableStringBuilder.setSpan(foregroundColorSpan, 0, errorText.length(), 0);
 
-            Drawable errorDrawable = getResources().getDrawable(R.drawable.ic_baseline_error);
+            Drawable errorDrawable = VectorDrawableCompat.create(getResources(), R.drawable.ic_baseline_error, null);
             errorDrawable.setBounds(0, 0, errorDrawable.getIntrinsicWidth(), errorDrawable.getIntrinsicHeight());
 
             mFindText.setError(spannableStringBuilder, errorDrawable);
