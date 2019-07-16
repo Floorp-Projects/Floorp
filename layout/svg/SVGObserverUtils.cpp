@@ -38,10 +38,9 @@ using namespace mozilla::dom;
 bool URLAndReferrerInfo::operator==(const URLAndReferrerInfo& aRHS) const {
   bool uriEqual = false, referrerEqual = false;
   this->mURI->Equals(aRHS.mURI, &uriEqual);
-  this->mReferrer->Equals(aRHS.mReferrer, &referrerEqual);
+  this->mReferrerInfo->Equals(aRHS.mReferrerInfo, &referrerEqual);
 
-  return uriEqual && referrerEqual &&
-         this->mReferrerPolicy == aRHS.mReferrerPolicy;
+  return uriEqual && referrerEqual;
 }
 
 class URLAndReferrerInfoHashKey : public PLDHashEntryHdr {
@@ -81,9 +80,9 @@ class URLAndReferrerInfoHashKey : public PLDHashEntryHdr {
     nsAutoCString urlSpec, referrerSpec;
     // nsURIHashKey ignores GetSpec() failures, so we do too:
     Unused << aKey->GetURI()->GetSpec(urlSpec);
-    Unused << aKey->GetReferrer()->GetSpec(referrerSpec);
-    auto refPolicy = aKey->GetReferrerPolicy();
-    return AddToHash(HashString(urlSpec), HashString(referrerSpec), refPolicy);
+    return AddToHash(
+        HashString(urlSpec),
+        static_cast<ReferrerInfo*>(aKey->GetReferrerInfo())->Hash());
   }
 
   enum { ALLOW_MEMMOVE = true };
@@ -328,16 +327,14 @@ SVGIDRenderingObserver::SVGIDRenderingObserver(URLAndReferrerInfo* aURI,
     : mObservedElementTracker(this) {
   // Start watching the target element
   nsCOMPtr<nsIURI> uri;
-  nsCOMPtr<nsIURI> referrer;
-  uint32_t referrerPolicy = mozilla::net::RP_Unset;
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
   if (aURI) {
     uri = aURI->GetURI();
-    referrer = aURI->GetReferrer();
-    referrerPolicy = aURI->GetReferrerPolicy();
+    referrerInfo = aURI->GetReferrerInfo();
   }
 
   mObservedElementTracker.ResetToURIFragmentID(
-      aObservingContent, uri, referrer, referrerPolicy, true, aReferenceImage);
+      aObservingContent, uri, referrerInfo, true, aReferenceImage);
   StartObserving();
 }
 
@@ -1378,9 +1375,10 @@ SVGGeometryElement* SVGObserverUtils::GetAndObserveTextPathsPath(
 
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references Bug 1415044 to investigate which referrer we should use
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        ReferrerInfo::CreateForSVGResources(content->OwnerDoc());
     RefPtr<URLAndReferrerInfo> target =
-        new URLAndReferrerInfo(targetURI, content->OwnerDoc()->GetDocumentURI(),
-                               content->OwnerDoc()->GetReferrerPolicy());
+        new URLAndReferrerInfo(targetURI, referrerInfo);
 
     property =
         GetEffectProperty(target, aTextPathFrame, HrefAsTextPathProperty());
@@ -1428,9 +1426,10 @@ nsIFrame* SVGObserverUtils::GetAndObserveTemplate(
 
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references.  Bug 1415044 to investigate which referrer we should use.
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        ReferrerInfo::CreateForSVGResources(content->OwnerDoc());
     RefPtr<URLAndReferrerInfo> target =
-        new URLAndReferrerInfo(targetURI, content->OwnerDoc()->GetDocumentURI(),
-                               content->OwnerDoc()->GetReferrerPolicy());
+        new URLAndReferrerInfo(targetURI, referrerInfo);
 
     observer = GetEffectProperty(target, aFrame, HrefToTemplateProperty());
   }
@@ -1461,9 +1460,10 @@ Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
       getter_AddRefs(targetURI), elementId,
       aFrame->GetContent()->GetUncomposedDoc(),
       aFrame->GetContent()->GetBaseURI());
-  RefPtr<URLAndReferrerInfo> url = new URLAndReferrerInfo(
-      targetURI, aFrame->GetContent()->OwnerDoc()->GetDocumentURI(),
-      aFrame->GetContent()->OwnerDoc()->GetReferrerPolicy());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForSVGResources(aFrame->GetContent()->OwnerDoc());
+  RefPtr<URLAndReferrerInfo> url =
+      new URLAndReferrerInfo(targetURI, referrerInfo);
 
   SVGMozElementObserver* observer =
       static_cast<SVGMozElementObserver*>(hashtable->GetWeak(url));

@@ -17,7 +17,6 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Unused.h"
-#include "mozilla/net/ReferrerPolicy.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsTArray.h"

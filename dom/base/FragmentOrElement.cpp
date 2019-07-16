@@ -357,9 +357,10 @@ already_AddRefed<URLExtraData> nsIContent::GetURLDataForStyleAttr(
   }
   if (aSubjectPrincipal && aSubjectPrincipal != NodePrincipal()) {
     // TODO: Cache this?
-    return MakeAndAddRef<URLExtraData>(
-        OwnerDoc()->GetDocBaseURI(), OwnerDoc()->GetDocumentURI(),
-        aSubjectPrincipal, OwnerDoc()->GetReferrerPolicy());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        ReferrerInfo::CreateForInternalCSSResources(OwnerDoc());
+    return MakeAndAddRef<URLExtraData>(OwnerDoc()->GetDocBaseURI(),
+                                       referrerInfo, aSubjectPrincipal);
   }
   // This also ignores the case that SVG inside XBL binding.
   // But it is probably fine.

@@ -242,11 +242,13 @@ void nsImageBoxFrame::UpdateImage() {
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri), src, doc,
                                                 mContent->GetBaseURI());
       if (uri) {
+        nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+        referrerInfo->InitWithNode(mContent);
+
         nsresult rv = nsContentUtils::LoadImage(
             uri, mContent, doc, triggeringPrincipal, requestContextID,
-            doc->GetDocumentURIAsReferrer(), doc->GetReferrerPolicy(),
-            mListener, mLoadFlags, EmptyString(), getter_AddRefs(mImageRequest),
-            contentPolicyType);
+            referrerInfo, mListener, mLoadFlags, EmptyString(),
+            getter_AddRefs(mImageRequest), contentPolicyType);
 
         if (NS_SUCCEEDED(rv) && mImageRequest) {
           nsLayoutUtils::RegisterImageRequestIfAnimated(

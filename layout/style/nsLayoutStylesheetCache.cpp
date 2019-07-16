@@ -292,8 +292,8 @@ void nsLayoutStylesheetCache::LoadSheetFromSharedMemory(
     Shm* aSharedMemory, Header* aHeader, UserAgentStyleSheetID aSheetID) {
   auto i = size_t(aSheetID);
 
-  auto sheet = MakeRefPtr<StyleSheet>(
-      aParsingMode, CORS_NONE, mozilla::net::RP_Unset, dom::SRIMetadata());
+  auto sheet =
+      MakeRefPtr<StyleSheet>(aParsingMode, CORS_NONE, dom::SRIMetadata());
 
   nsCOMPtr<nsIURI> uri;
   MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aURL));
@@ -303,6 +303,9 @@ void nsLayoutStylesheetCache::LoadSheetFromSharedMemory(
   sheet->SetSharedContents(aSharedMemory, aHeader->mSheets[i]);
   sheet->SetComplete();
 
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      dom::ReferrerInfo::CreateForExternalCSSResources(sheet);
+  sheet->SetReferrerInfo(referrerInfo);
   URLExtraData::sShared[i] = sheet->URLData();
 
   *aSheet = sheet.forget();
@@ -534,8 +537,7 @@ void nsLayoutStylesheetCache::InvalidatePreferenceSheets() {
 
 void nsLayoutStylesheetCache::BuildPreferenceSheet(
     RefPtr<StyleSheet>* aSheet, const PreferenceSheet::Prefs& aPrefs) {
-  *aSheet = new StyleSheet(eAgentSheetFeatures, CORS_NONE,
-                           mozilla::net::RP_Unset, dom::SRIMetadata());
+  *aSheet = new StyleSheet(eAgentSheetFeatures, CORS_NONE, dom::SRIMetadata());
 
   StyleSheet* sheet = *aSheet;
 

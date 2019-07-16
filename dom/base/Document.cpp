@@ -683,14 +683,14 @@ namespace dom {
 ExternalResourceMap::ExternalResourceMap() : mHaveShutDown(false) {}
 
 Document* ExternalResourceMap::RequestResource(
-    nsIURI* aURI, nsIURI* aReferrer, uint32_t aReferrerPolicy,
-    nsINode* aRequestingNode, Document* aDisplayDocument,
-    ExternalResourceLoad** aPendingLoad) {
+    nsIURI* aURI, nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode,
+    Document* aDisplayDocument, ExternalResourceLoad** aPendingLoad) {
   // If we ever start allowing non-same-origin loads here, we might need to do
   // something interesting with aRequestingPrincipal even for the hashtable
   // gets.
   MOZ_ASSERT(aURI, "Must have a URI");
   MOZ_ASSERT(aRequestingNode, "Must have a node");
+  MOZ_ASSERT(aReferrerInfo, "Must have a referrerInfo");
   *aPendingLoad = nullptr;
   if (mHaveShutDown) {
     return nullptr;
@@ -719,8 +719,7 @@ Document* ExternalResourceMap::RequestResource(
   RefPtr<PendingLoad> load(new PendingLoad(aDisplayDocument));
   loadEntry = load;
 
-  if (NS_FAILED(load->StartLoad(clone, aReferrer, aReferrerPolicy,
-                                aRequestingNode))) {
+  if (NS_FAILED(load->StartLoad(clone, aReferrerInfo, aRequestingNode))) {
     // Make sure we don't thrash things by trying this load again, since
     // chances are it failed for good reasons (security check, etc).
     AddExternalResource(clone, nullptr, nullptr, aDisplayDocument);
@@ -998,12 +997,11 @@ ExternalResourceMap::PendingLoad::OnStopRequest(nsIRequest* aRequest,
   return NS_OK;
 }
 
-nsresult ExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
-                                                     nsIURI* aReferrer,
-                                                     uint32_t aReferrerPolicy,
-                                                     nsINode* aRequestingNode) {
+nsresult ExternalResourceMap::PendingLoad::StartLoad(
+    nsIURI* aURI, nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode) {
   MOZ_ASSERT(aURI, "Must have a URI");
   MOZ_ASSERT(aRequestingNode, "Must have a node");
+  MOZ_ASSERT(aReferrerInfo, "Must have a referrerInfo");
 
   nsCOMPtr<nsILoadGroup> loadGroup =
       aRequestingNode->OwnerDoc()->GetDocumentLoadGroup();
@@ -1019,9 +1017,7 @@ nsresult ExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new dom::ReferrerInfo(aReferrer, aReferrerPolicy);
-    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
+    rv = httpChannel->SetReferrerInfo(aReferrerInfo);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
@@ -5734,14 +5730,15 @@ void Document::SetBaseURI(nsIURI* aURI) {
 URLExtraData* Document::DefaultStyleAttrURLData() {
   MOZ_ASSERT(NS_IsMainThread());
   nsIURI* baseURI = GetDocBaseURI();
-  nsIURI* docURI = GetDocumentURI();
   nsIPrincipal* principal = NodePrincipal();
-  mozilla::net::ReferrerPolicy policy = GetReferrerPolicy();
+  bool equals;
   if (!mCachedURLData || mCachedURLData->BaseURI() != baseURI ||
-      mCachedURLData->GetReferrer() != docURI ||
-      mCachedURLData->GetReferrerPolicy() != policy ||
-      mCachedURLData->Principal() != principal) {
-    mCachedURLData = new URLExtraData(baseURI, docURI, principal, policy);
+      mCachedURLData->Principal() != principal || !mCachedReferrerInfo ||
+      NS_FAILED(mCachedURLData->ReferrerInfo()->Equals(mCachedReferrerInfo,
+                                                       &equals)) ||
+      !equals) {
+    mCachedReferrerInfo = ReferrerInfo::CreateForInternalCSSResources(this);
+    mCachedURLData = new URLExtraData(baseURI, mCachedReferrerInfo, principal);
   }
   return mCachedURLData;
 }
@@ -8527,17 +8524,18 @@ void Document::SetPrototypeDocument(nsXULPrototypeDocument* aPrototype) {
 }
 
 Document* Document::RequestExternalResource(
-    nsIURI* aURI, nsIURI* aReferrer, uint32_t aReferrerPolicy,
-    nsINode* aRequestingNode, ExternalResourceLoad** aPendingLoad) {
+    nsIURI* aURI, nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode,
+    ExternalResourceLoad** aPendingLoad) {
   MOZ_ASSERT(aURI, "Must have a URI");
   MOZ_ASSERT(aRequestingNode, "Must have a node");
+  MOZ_ASSERT(aReferrerInfo, "Must have a referrerInfo");
   if (mDisplayDocument) {
     return mDisplayDocument->RequestExternalResource(
-        aURI, aReferrer, aReferrerPolicy, aRequestingNode, aPendingLoad);
+        aURI, aReferrerInfo, aRequestingNode, aPendingLoad);
   }
 
   return mExternalResourceMap.RequestResource(
-      aURI, aReferrer, aReferrerPolicy, aRequestingNode, this, aPendingLoad);
+      aURI, aReferrerInfo, aRequestingNode, this, aPendingLoad);
 }
 
 void Document::EnumerateExternalResources(SubDocEnumFunc aCallback,
@@ -11336,12 +11334,13 @@ void Document::MaybePreLoadImage(
       aIsImgSet ? nsIContentPolicy::TYPE_IMAGESET
                 : nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD;
 
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateFromDocumentAndPolicyOverride(this, aReferrerPolicy);
+
   // Image not in cache - trigger preload
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(
-      uri, static_cast<nsINode*>(this), this, NodePrincipal(), 0,
-      GetDocumentURIAsReferrer(),  // uri of document used as referrer
-      aReferrerPolicy,
+      uri, static_cast<nsINode*>(this), this, NodePrincipal(), 0, referrerInfo,
       nullptr,  // no observer
       loadFlags, NS_LITERAL_STRING("img"), getter_AddRefs(request), policyType);
 
@@ -11462,10 +11461,13 @@ void Document::PreloadStyle(
   // The CSSLoader will retain this object after we return.
   nsCOMPtr<nsICSSLoaderObserver> obs = new StubCSSLoaderObserver();
 
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateFromDocumentAndPolicyOverride(this, aReferrerPolicy);
+
   // Charset names are always ASCII.
-  CSSLoader()->LoadSheet(uri, true, NodePrincipal(), aEncoding, obs,
-                         Element::StringToCORSMode(aCrossOriginAttr),
-                         aReferrerPolicy, aIntegrity);
+  CSSLoader()->LoadSheet(uri, true, NodePrincipal(), aEncoding, referrerInfo,
+                         obs, Element::StringToCORSMode(aCrossOriginAttr),
+                         aIntegrity);
 }
 
 RefPtr<StyleSheet> Document::LoadChromeSheetSync(nsIURI* uri) {
