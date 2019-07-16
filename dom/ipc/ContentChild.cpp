@@ -976,9 +976,24 @@ nsresult ContentChild::ProvideWindowCommon(
 
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
 
-  auto newChild = MakeRefPtr<BrowserChild>(
-      this, tabId, tabGroup, newTabContext, browsingContext,
-      /* aInitialWindowChild */ nullptr, aChromeFlags, /* aIsTopLevel */ true);
+  // The initial about:blank document we generate within the nsDocShell will
+  // almost certainly be replaced at some point. Unfortunately, getting the
+  // principal right here causes bugs due to frame scripts not getting events
+  // they expect, due to the real initial about:blank not being created yet.
+  //
+  // For this reason, we intentionally mispredict the initial principal here, so
+  // that we can act the same as we did before when not predicting a result
+  // principal. This `PWindowGlobal` will almost immediately be destroyed.
+  nsCOMPtr<nsIPrincipal> initialPrincipal =
+      NullPrincipal::Create(newTabContext.OriginAttributesRef());
+  WindowGlobalInit windowInit = WindowGlobalActor::AboutBlankInitializer(
+      browsingContext, initialPrincipal);
+
+  auto windowChild = MakeRefPtr<WindowGlobalChild>(windowInit, nullptr);
+
+  auto newChild = MakeRefPtr<BrowserChild>(this, tabId, tabGroup, newTabContext,
+                                           browsingContext, aChromeFlags,
+                                           /* aIsTopLevel */ true);
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -1001,16 +1016,26 @@ nsresult ContentChild::ProvideWindowCommon(
     return NS_ERROR_ABORT;
   }
 
-  // Tell the parent process to set up its PBrowserParent.
-  if (NS_WARN_IF(!SendConstructPopupBrowser(std::move(parentEp), tabId,
-                                            *ipcContext, browsingContext,
-                                            aChromeFlags))) {
+  // Open a remote endpoint for our PWindowGlobal actor.
+  // DeallocPWindowGlobalChild releases the ref taken.
+  ManagedEndpoint<PWindowGlobalParent> windowParentEp =
+      newChild->OpenPWindowGlobalEndpoint(do_AddRef(windowChild).take());
+  if (NS_WARN_IF(!windowParentEp.IsValid())) {
     return NS_ERROR_ABORT;
   }
 
+  // Tell the parent process to set up its PBrowserParent.
+  if (NS_WARN_IF(!SendConstructPopupBrowser(
+          std::move(parentEp), std::move(windowParentEp), tabId, *ipcContext,
+          windowInit, aChromeFlags))) {
+    return NS_ERROR_ABORT;
+  }
+
+  windowChild->Init();
+
   // Now that |newChild| has had its IPC link established, call |Init| to set it
   // up.
-  if (NS_FAILED(newChild->Init(aParent))) {
+  if (NS_FAILED(newChild->Init(aParent, windowChild))) {
     return NS_ERROR_ABORT;
   }
 
