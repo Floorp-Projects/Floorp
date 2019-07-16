@@ -25,6 +25,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsWindowsHelpers.h"
 #include "WindowsDllBlocklist.h"
 #include "mozilla/AutoProfilerLabel.h"
@@ -41,7 +42,7 @@ static glue::detail::DllServicesBase* gDllServices;
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) {name, __VA_ARGS__},
 #define DLL_BLOCKLIST_STRING_TYPE const char*
-#include "mozilla/WindowsDllBlocklistDefs.h"
+#include "mozilla/WindowsDllBlocklistLegacyDefs.h"
 
 // define this for very verbose dll load debug spew
 #undef DEBUG_very_verbose
@@ -269,7 +270,7 @@ void DllBlockSet::Write(HANDLE file) {
     for (DllBlockSet* b = gFirst; b; b = b->mNext) {
       // write name[,v.v.v.v];
       WriteFile(file, b->mName, strlen(b->mName), &nBytes, nullptr);
-      if (b->mVersion != ALL_VERSIONS) {
+      if (b->mVersion != DllBlockInfo::ALL_VERSIONS) {
         WriteFile(file, ",", 1, &nBytes, nullptr);
         uint16_t parts[4];
         parts[0] = b->mVersion >> 48;
@@ -436,37 +437,37 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
 
     // then compare to everything on the blocklist
     DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(info);
-    while (info->name) {
-      if (strcmp(info->name, dllName) == 0) break;
+    while (info->mName) {
+      if (strcmp(info->mName, dllName) == 0) break;
 
       info++;
     }
 
-    if (info->name) {
+    if (info->mName) {
       bool load_ok = false;
 
 #ifdef DEBUG_very_verbose
-      printf_stderr("LdrLoadDll: info->name: '%s'\n", info->name);
+      printf_stderr("LdrLoadDll: info->mName: '%s'\n", info->mName);
 #endif
 
-      if ((info->flags & DllBlockInfo::BLOCK_WIN8PLUS_ONLY) &&
+      if ((info->mFlags & DllBlockInfo::BLOCK_WIN8PLUS_ONLY) &&
           !IsWin8OrLater()) {
         goto continue_loading;
       }
 
-      if ((info->flags & DllBlockInfo::BLOCK_WIN8_ONLY) &&
+      if ((info->mFlags & DllBlockInfo::BLOCK_WIN8_ONLY) &&
           (!IsWin8OrLater() || IsWin8Point1OrLater())) {
         goto continue_loading;
       }
 
-      if ((info->flags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
+      if ((info->mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
           !(sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
         goto continue_loading;
       }
 
-      unsigned long long fVersion = ALL_VERSIONS;
+      unsigned long long fVersion = DllBlockInfo::ALL_VERSIONS;
 
-      if (info->maxVersion != ALL_VERSIONS) {
+      if (info->mMaxVersion != DllBlockInfo::ALL_VERSIONS) {
         ReentrancySentinel sentinel(dllName);
         if (sentinel.BailOut()) {
           goto continue_loading;
@@ -482,33 +483,17 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
           return STATUS_DLL_NOT_FOUND;
         }
 
-        if (info->flags & DllBlockInfo::USE_TIMESTAMP) {
+        if (info->mFlags & DllBlockInfo::USE_TIMESTAMP) {
           fVersion = GetTimestamp(full_fname.get());
-          if (fVersion > info->maxVersion) {
+          if (fVersion > info->mMaxVersion) {
             load_ok = true;
           }
         } else {
-          DWORD zero;
-          DWORD infoSize = GetFileVersionInfoSizeW(full_fname.get(), &zero);
-
+          WindowsErrorResult<ModuleVersion> version =
+              GetModuleVersion(full_fname.get());
           // If we failed to get the version information, we block.
-
-          if (infoSize != 0) {
-            auto infoData = MakeUnique<unsigned char[]>(infoSize);
-            VS_FIXEDFILEINFO* vInfo;
-            UINT vInfoLen;
-
-            if (GetFileVersionInfoW(full_fname.get(), 0, infoSize,
-                                    infoData.get()) &&
-                VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo,
-                               &vInfoLen)) {
-              fVersion = ((unsigned long long)vInfo->dwFileVersionMS) << 32 |
-                         ((unsigned long long)vInfo->dwFileVersionLS);
-
-              // finally do the version check, and if it's greater than our
-              // block version, keep loading
-              if (fVersion > info->maxVersion) load_ok = true;
-            }
+          if (version.isOk()) {
+            load_ok = !info->IsVersionBlocked(version.unwrap());
           }
         }
       }
@@ -518,7 +503,7 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
             "LdrLoadDll: Blocking load of '%s' -- see "
             "http://www.mozilla.com/en-US/blocklist/\n",
             dllName);
-        DllBlockSet::Add(info->name, fVersion);
+        DllBlockSet::Add(info->mName, fVersion);
         return STATUS_DLL_NOT_FOUND;
       }
     }
