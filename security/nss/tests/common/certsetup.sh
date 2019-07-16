@@ -55,9 +55,11 @@ make_cert() {
   msg="create certificate: $@"
   shift 2
   counter=$(($counter + 1))
-  certscript $@ | ${BINDIR}/certutil -S \
+  cmd=(${BINDIR}/certutil -S \
     -z "$R_NOISE_FILE" -d "$PROFILEDIR" \
     -n $name -s "CN=$name" -t "$trust" "${sign[@]}" -m "$counter" \
-    -w -2 -v 120 -k "$type" "${type_args[@]}" "${sighash[@]}" -1 -2
+    -w -2 -v 120 -k "$type" "${type_args[@]}" "${sighash[@]}" -1 -2)
+  echo "${cmd[@]}"
+  certscript $@ | "${cmd[@]}"
   html_msg $? 0 "$msg"
 }

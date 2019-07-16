@@ -580,7 +580,7 @@ tls13_ClientSetupESNI(sslSocket *ss)
     size_t i;
     PRCList *cur;
     SECStatus rv;
-    TLS13KeyShareEntry *share;
+    TLS13KeyShareEntry *share = NULL;
     const sslNamedGroupDef *group = NULL;
     PRTime now = PR_Now() / PR_USEC_PER_SEC;
 
