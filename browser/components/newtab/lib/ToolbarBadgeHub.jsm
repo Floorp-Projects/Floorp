@@ -102,12 +102,14 @@ class _ToolbarBadgeHub {
   }
 
   removeToolbarNotification(toolbarButton) {
+    // Remove it from the element that displays the badge
     toolbarButton
       .querySelector(".toolbarbutton-badge")
       .classList.remove("feature-callout");
+    // Remove it from the toolbar icon
     toolbarButton
       .querySelector(".toolbarbutton-icon")
-      .classList.add("feature-callout");
+      .classList.remove("feature-callout");
     toolbarButton.removeAttribute("badged");
   }
 
@@ -122,6 +124,8 @@ class _ToolbarBadgeHub {
       toolbarbutton
         .querySelector(".toolbarbutton-badge")
         .classList.add("feature-callout");
+      // This creates the cut-out effect for the icon where the notification
+      // fits in
       toolbarbutton
         .querySelector(".toolbarbutton-icon")
         .classList.add("feature-callout");

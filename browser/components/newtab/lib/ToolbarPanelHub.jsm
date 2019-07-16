@@ -68,6 +68,24 @@ class _ToolbarPanelHub {
     );
   }
 
+  // When the panel is hidden we want to run some cleanup
+  _onPanelHidden(win) {
+    const panelContainer = win.document.getElementById(
+      "customizationui-widget-panel"
+    );
+    // When the panel is hidden we want to remove any toolbar buttons that
+    // might have been added as an entry point to the panel
+    const removeToolbarButton = () => {
+      EveryWindow.unregisterCallback(TOOLBAR_BUTTON_ID);
+    };
+    if (!panelContainer) {
+      return;
+    }
+    panelContainer.addEventListener("popuphidden", removeToolbarButton, {
+      once: true,
+    });
+  }
+
   // Render what's new messages into the panel.
   async renderMessages(win, doc, containerId) {
     const messages = (await this._getMessages({
@@ -97,6 +115,7 @@ class _ToolbarPanelHub {
     }
 
     // TODO: TELEMETRY
+    this._onPanelHidden(win);
   }
 
   _createMessageElements(win, doc, content, previousDate) {

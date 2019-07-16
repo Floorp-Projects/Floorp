@@ -48,7 +48,8 @@ module.exports = {
         "content-src/asrouter/templates/StartupOverlay/StartupOverlay.jsx",
         "content-src/components/TopSites/**",
         "content-src/components/MoreRecommendations/MoreRecommendations.jsx",
-        "content-src/components/CollapsibleSection/CollapsibleSection.jsx"
+        "content-src/components/CollapsibleSection/CollapsibleSection.jsx",
+        "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx"
       ],
       "rules": {
         "jsx-a11y/anchor-has-content": 0,
