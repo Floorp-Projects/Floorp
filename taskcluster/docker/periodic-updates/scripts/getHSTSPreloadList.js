@@ -368,15 +368,14 @@ function readCurrentList(filename) {
 }
 
 function combineLists(newHosts, currentHosts) {
+  let newHostsSet = new Set();
+
+  for (let newHost of newHosts) {
+    newHostsSet.add(newHost.name);
+  }
+
   for (let currentHost in currentHosts) {
-    let found = false;
-    for (let newHost of newHosts) {
-      if (newHost.name == currentHost) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
+    if (!newHostsSet.has(currentHost)) {
       newHosts.push({ name: currentHost, retries: MAX_RETRIES });
     }
   }
