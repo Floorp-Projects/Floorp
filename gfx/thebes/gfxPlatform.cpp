@@ -2906,18 +2906,19 @@ static FeatureState& WebRenderHardwareQualificationStatus(
   // We leave checking the battery for last because we would like to know
   // which users were denied WebRender only because they have a battery.
   if (aHasBattery) {
+#ifndef XP_WIN
+    // aHasBattery is only ever true on Windows, we don't check it on other
+    // platforms.
+    MOZ_ASSERT(false);
+#endif
     // We never released WR to the battery populations, so let's keep the pref
     // guard for these populations. That way we can do a gradual rollout to
     // the battery population using the pref.
     *aOutGuardedByQualifiedPref = true;
 
-    // For AMD/Intel devices, if we have a battery, ignore it if the
-    // screen is small enough. Note that we always check for a battery
-    // with NVIDIA because we do not have a limited/curated set of devices
-    // to support WebRender on.
+    // if we have a battery, ignore it if the screen is small enough.
     const int32_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
-    if ((adapterVendorID == u"0x8086" || adapterVendorID == u"0x1002") &&
-        screenPixels > 0 && screenPixels <= kMaxPixelsBattery) {
+    if (screenPixels > 0 && screenPixels <= kMaxPixelsBattery) {
 #ifndef NIGHTLY_BUILD
       featureWebRenderQualified.Disable(
           FeatureStatus::BlockedReleaseChannelBattery,
