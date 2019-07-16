@@ -37,6 +37,7 @@ kind: uint
 notification_emails:
   - test01@mozilla.com
   - test02@mozilla.com
+products: ["firefox"]
 bug_numbers:
   - 12345
 """
@@ -58,6 +59,7 @@ record_in_processes:
 kind: uint
 notification_emails:
   - test01@mozilla.com, test02@mozilla.com
+products: ["firefox"]
 bug_numbers:
   - 12345
 """
@@ -78,6 +80,7 @@ record_in_processes:
 kind: uint
 notification_emails:
   - test01@mozilla.com
+products: ["firefox"]
 bug_numbers:
   - 12345
 """
@@ -101,6 +104,7 @@ notification_emails:
   - test01@mozilla.com
 bug_numbers:
   - 12345
+products: ["firefox"]
 record_into_store:
     - main
     - sync
@@ -125,6 +129,7 @@ notification_emails:
   - test01@mozilla.com
 bug_numbers:
   - 12345
+products: ["firefox"]
 record_into_store: []
 """
         scalar = load_scalar(SAMPLE_SCALAR)
@@ -143,6 +148,7 @@ record_in_processes:
 kind: uint
 notification_emails:
   - test01@mozilla.com
+products: ["firefox"]
 bug_numbers:
   - 12345
 """
@@ -166,6 +172,7 @@ notification_emails:
   - test01@mozilla.com
 bug_numbers:
   - 12345
+products: ["firefox"]
 operating_systems:
     - windows
 """
@@ -189,8 +196,50 @@ notification_emails:
   - test01@mozilla.com
 bug_numbers:
   - 12345
+products: ["firefox"]
 operating_systems: []
 """
+        scalar = load_scalar(SAMPLE_SCALAR)
+        parse_scalars.ScalarType("CATEGORY",
+                                 "PROVE",
+                                 scalar,
+                                 strict_type_checks=True)
+        self.assertRaises(SystemExit, ParserError.exit_func)
+
+    def test_products_absent(self):
+        SAMPLE_SCALAR = """
+description: A nice one-line description.
+expires: never
+record_in_processes:
+  - 'main'
+kind: uint
+notification_emails:
+  - test01@mozilla.com
+bug_numbers:
+  - 12345
+"""
+
+        scalar = load_scalar(SAMPLE_SCALAR)
+        parse_scalars.ScalarType("CATEGORY",
+                                 "PROVE",
+                                 scalar,
+                                 strict_type_checks=True)
+        self.assertRaises(SystemExit, ParserError.exit_func)
+
+    def test_products_empty(self):
+        SAMPLE_SCALAR = """
+description: A nice one-line description.
+expires: never
+record_in_processes:
+  - 'main'
+kind: uint
+notification_emails:
+  - test01@mozilla.com
+products: []
+bug_numbers:
+  - 12345
+"""
+
         scalar = load_scalar(SAMPLE_SCALAR)
         parse_scalars.ScalarType("CATEGORY",
                                  "PROVE",
