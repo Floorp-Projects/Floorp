@@ -9618,6 +9618,18 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
           }
         }
       }
+#ifdef MOZ_LAYOUT_DEBUGGER
+      // Also allow loads in the layout debugger window.
+      nsCOMPtr<nsIDocShellTreeItem> rootItem;
+      GetRootTreeItem(getter_AddRefs(rootItem));
+      nsCOMPtr<nsIWebNavigation> root = do_QueryInterface(rootItem);
+      nsCOMPtr<nsIURI> rootURL;
+      root->GetCurrentURI(getter_AddRefs(rootURL));
+      if (rootURL && rootURL->GetSpecOrDefault().EqualsLiteral(
+                         "chrome://layoutdebug/content/layoutdebug.xul")) {
+        break;
+      }
+#endif
       // Final exception for some legacy automated tests:
       if (xpc::IsInAutomation() &&
           Preferences::GetBool("security.allow_unsafe_parent_loads", false)) {
