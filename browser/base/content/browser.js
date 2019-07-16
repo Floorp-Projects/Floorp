@@ -1620,10 +1620,6 @@ var gBrowserInit = {
   },
 
   onBeforeInitialXULLayout() {
-    // Turn on QuantumBar. This can be removed once the quantumbar attribute is gone.
-    let urlbar = document.getElementById("urlbar");
-    urlbar.setAttribute("quantumbar", true);
-
     // Set a sane starting width/height for all resolutions on new profiles.
     if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
       // When the fingerprinting resistance is enabled, making sure that we don't
@@ -1799,7 +1795,7 @@ var gBrowserInit = {
 
     if (!window.toolbar.visible) {
       // adjust browser UI for popups
-      gURLBar.setAttribute("readonly", "true");
+      gURLBar.readOnly = true;
     }
 
     // Misc. inits.
@@ -4528,7 +4524,7 @@ const BrowserSearch = {
     } else {
       placeholder = gURLBar.getAttribute("defaultPlaceholder");
     }
-    gURLBar.setAttribute("placeholder", placeholder);
+    gURLBar.placeholder = placeholder;
   },
 
   addEngine(browser, engine, uri) {
