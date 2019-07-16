@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_BaselineCompiler_h
-#define jit_BaselineCompiler_h
+#ifndef jit_BaselineCodeGen_h
+#define jit_BaselineCodeGen_h
 
 #include "jit/BaselineFrameInfo.h"
 #include "jit/BaselineIC.h"
@@ -765,4 +765,4 @@ class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
 }  // namespace jit
 }  // namespace js
 
-#endif /* jit_BaselineCompiler_h */
+#endif /* jit_BaselineCodeGen_h */
