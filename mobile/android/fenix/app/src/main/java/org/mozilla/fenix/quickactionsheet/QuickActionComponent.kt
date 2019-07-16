@@ -36,7 +36,8 @@ data class QuickActionState(
     val readable: Boolean,
     val bookmarked: Boolean,
     val readerActive: Boolean,
-    val bounceNeeded: Boolean
+    val bounceNeeded: Boolean,
+    val isAppLink: Boolean
 ) : ViewState
 
 sealed class QuickActionAction : Action {
@@ -47,12 +48,14 @@ sealed class QuickActionAction : Action {
     object BookmarkPressed : QuickActionAction()
     object ReadPressed : QuickActionAction()
     object ReadAppearancePressed : QuickActionAction()
+    object OpenAppLinkPressed : QuickActionAction()
 }
 
 sealed class QuickActionChange : Change {
     data class BookmarkedStateChange(val bookmarked: Boolean) : QuickActionChange()
     data class ReadableStateChange(val readable: Boolean) : QuickActionChange()
     data class ReaderActiveStateChange(val active: Boolean) : QuickActionChange()
+    data class AppLinkStateChange(val isAppLink: Boolean) : QuickActionChange()
     object BounceNeededChange : QuickActionChange()
 }
 
@@ -73,6 +76,9 @@ class QuickActionViewModel(
                 }
                 is QuickActionChange.ReaderActiveStateChange -> {
                     state.copy(readerActive = change.active)
+                }
+                is QuickActionChange.AppLinkStateChange -> {
+                    state.copy(isAppLink = change.isAppLink)
                 }
             }
         }

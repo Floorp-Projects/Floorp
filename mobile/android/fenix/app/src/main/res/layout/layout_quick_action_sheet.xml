@@ -92,6 +92,20 @@
                 android:visibility="gone" />
 
             <Button
+                android:id="@+id/quick_action_open_app_link"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?selectableItemBackgroundBorderless"
+                android:drawableTop="@drawable/library_icon_app_links_circle_background"
+                android:drawablePadding="5dp"
+                android:text="@string/quick_action_open_app_link"
+                android:textAllCaps="false"
+                android:textColor="?primaryText"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <Button
                 android:id="@+id/quick_action_read"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

@@ -256,6 +256,8 @@
     <string name="quick_action_read">Read</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">Close</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">Open in App</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">Appearance</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users

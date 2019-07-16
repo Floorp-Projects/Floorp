@@ -120,6 +120,9 @@
     <color name="library_downloads_icon_background">#D4C1FA</color>
     <color name="library_downloads_icon">#2E2060</color>
 
+    <color name="library_app_links_icon_background">#E0E0E6</color>
+    <color name="library_app_links_icon">#20123A</color>
+
     <color name="bookmarks_icon_background_filled">#C60084</color>
     <color name="bookmarks_icon_filled">#FFB4DB</color>
     <color name="bookmarks_icon_background_outline">#FFB4DB</color>

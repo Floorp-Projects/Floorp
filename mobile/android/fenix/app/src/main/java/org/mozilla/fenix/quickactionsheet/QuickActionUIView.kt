@@ -79,6 +79,10 @@ class QuickActionUIView(
             actionEmitter.onNext(QuickActionAction.ReadAppearancePressed)
             quickActionSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         }
+        view.quick_action_open_app_link.setOnClickListener {
+            actionEmitter.onNext(QuickActionAction.OpenAppLinkPressed)
+            quickActionSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
     }
 
     /**
@@ -132,6 +136,10 @@ class QuickActionUIView(
 
         if (it.bounceNeeded && Settings.getInstance(view.context).shouldAutoBounceQuickActionSheet) {
             quickActionSheet.bounceSheet()
+        }
+
+        view.quick_action_open_app_link.apply {
+            visibility = if (it.isAppLink) View.VISIBLE else View.GONE
         }
     }
 
