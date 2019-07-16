@@ -122,6 +122,11 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
     mFrameLoader = flOwner->GetFrameLoader();
   }
 
+  // Ensure we have a document URI
+  if (!mDocumentURI) {
+    NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
+  }
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(this, "window-global-created", nullptr);

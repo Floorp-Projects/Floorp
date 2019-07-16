@@ -24,6 +24,9 @@ class WindowGlobalActor : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WindowGlobalActor)
 
+  static WindowGlobalInit AboutBlankInitializer(
+      dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal);
+
  protected:
   virtual ~WindowGlobalActor() = default;
 

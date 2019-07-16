@@ -1247,11 +1247,10 @@ bool BrowserParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
 
 IPCResult BrowserParent::RecvPBrowserBridgeConstructor(
     PBrowserBridgeParent* aActor, const nsString& aName,
-    const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
+    const nsString& aRemoteType, const WindowGlobalInit& aWindowInit,
     const uint32_t& aChromeFlags, const TabId& aTabId) {
   nsresult rv = static_cast<BrowserBridgeParent*>(aActor)->Init(
-      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext),
-      aChromeFlags, aTabId);
+      aName, aRemoteType, aWindowInit, aChromeFlags, aTabId);
   if (NS_FAILED(rv)) {
     return IPC_FAIL(this, "Failed to construct BrowserBridgeParent");
   }
@@ -1260,7 +1259,7 @@ IPCResult BrowserParent::RecvPBrowserBridgeConstructor(
 
 PBrowserBridgeParent* BrowserParent::AllocPBrowserBridgeParent(
     const nsString& aName, const nsString& aRemoteType,
-    BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
+    const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
     const TabId& aTabId) {
   // Reference freed in DeallocPBrowserBridgeParent.
   return do_AddRef(new BrowserBridgeParent()).take();

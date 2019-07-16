@@ -204,7 +204,7 @@ parent:
      * Construct a new Remote iframe actor.
      */
     async PBrowserBridge(nsString aPresentationURL, nsString aRemoteType,
-                         BrowsingContext aBrowsingContext, uint32_t aChromeFlags,
+                         WindowGlobalInit aWindowInit, uint32_t aChromeFlags,
                          TabId tabId);
 
     /**
