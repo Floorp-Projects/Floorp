@@ -107,7 +107,7 @@ Memory.prototype = {
     "attached",
     function() {
       this._clearDebuggees();
-      this.dbg.enabled = false;
+      this.dbg.disable();
       this._dbg = null;
       this.state = "detached";
       return this.state;

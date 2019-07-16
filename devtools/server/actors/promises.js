@@ -87,7 +87,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
    */
   detach: expectState("attached", function() {
     this.dbg.removeAllDebuggees();
-    this.dbg.enabled = false;
+    this.dbg.disable();
     this._dbg = null;
     this._newPromises = null;
     this._promisesSettled = null;
