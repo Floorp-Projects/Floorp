@@ -29,6 +29,7 @@ const SplitBox = createFactory(
 );
 const FrameListContent = createFactory(require("./FrameListContent"));
 const Toolbar = createFactory(require("./Toolbar"));
+const StatusBar = createFactory(require("./StatusBar"));
 
 loader.lazyGetter(this, "FramePayload", function() {
   return createFactory(require("./FramePayload"));
@@ -109,7 +110,8 @@ class WebSocketsPanel extends Component {
         endPanelCollapsed: !frameDetailsOpen,
         endPanelControl: true,
         vert: false,
-      })
+      }),
+      StatusBar()
     );
   }
 }
