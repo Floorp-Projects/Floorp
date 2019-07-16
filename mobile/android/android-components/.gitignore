@@ -61,6 +61,6 @@ jacoco.exec
 .firebase_token*
 results/
 test_artifacts/
-google-cloud-sdk/
-*.jar
-*.gz
+/build/test-tools/google-cloud-sdk/
+/build/test-tools/*.jar
+/build/test-tools/*.gz

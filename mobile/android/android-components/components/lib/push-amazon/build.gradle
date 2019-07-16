@@ -24,8 +24,14 @@ android {
 }
 
 dependencies {
-    implementation Dependencies.kotlin_stdlib
+    compileOnly files('libs/amazon-device-messaging-1.0.1.jar')
+    testImplementation files('libs/amazon-device-messaging-1.0.1.jar')
 
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.androidx_annotation
+
+    // for Logger
+    implementation project(':support-base')
     implementation project(':concept-push')
 
     testImplementation project(':support-test')
