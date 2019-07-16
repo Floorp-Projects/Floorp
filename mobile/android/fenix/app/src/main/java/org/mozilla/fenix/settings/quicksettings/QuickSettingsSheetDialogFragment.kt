@@ -15,6 +15,7 @@ import android.view.Gravity.BOTTOM
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.view.ContextThemeWrapper
@@ -22,6 +23,7 @@ import androidx.core.net.toUri
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment.findNavController
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,6 +44,7 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.PhoneFeature
 import java.net.MalformedURLException
 import java.net.URL
+import com.google.android.material.R as MaterialR
 
 private const val REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS = 4
 
@@ -102,12 +105,18 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val customDialog = if (promptGravity == BOTTOM) {
-            return BottomSheetDialog(requireContext(), this.theme)
+        return if (promptGravity == BOTTOM) {
+            BottomSheetDialog(requireContext(), this.theme).apply {
+                setOnShowListener {
+                    val bottomSheet =
+                        findViewById<View>(MaterialR.id.design_bottom_sheet) as? FrameLayout
+                    val behavior = BottomSheetBehavior.from(bottomSheet)
+                    behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
+            }
         } else {
-            Dialog(requireContext())
+            Dialog(requireContext()).applyCustomizationsForTopDialog(inflateRootView())
         }
-        return customDialog.applyCustomizationsForTopDialog(inflateRootView())
     }
 
     private fun Dialog.applyCustomizationsForTopDialog(rootView: View): Dialog {
