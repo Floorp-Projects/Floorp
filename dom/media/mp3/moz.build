@@ -17,3 +17,6 @@ UNIFIED_SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

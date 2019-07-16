@@ -56,3 +56,6 @@ FINAL_LIBRARY = 'gkmedias'
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-Wno-uninitialized']
+
+# Add libFuzzer configuration directives
+#include('/tools/fuzzing/libfuzzer-config.mozbuild')

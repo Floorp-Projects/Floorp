@@ -75,3 +75,6 @@ if CONFIG['MOZ_DEBUG']:
 elif not CONFIG['RELEASE_OR_BETA']:
     # Enable fast assertions in opt builds of Nightly and Aurora.
     DEFINES['ASSERT_LEVEL'] = 1
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
