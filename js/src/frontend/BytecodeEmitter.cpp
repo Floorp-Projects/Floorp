@@ -1521,11 +1521,7 @@ bool BytecodeEmitter::isInLoop() {
 }
 
 bool BytecodeEmitter::checkSingletonContext() {
-  if (!script->treatAsRunOnce() || sc->isFunctionBox() || isInLoop()) {
-    return false;
-  }
-  hasSingletons = true;
-  return true;
+  return script->treatAsRunOnce() && !sc->isFunctionBox() && !isInLoop();
 }
 
 bool BytecodeEmitter::checkRunOnceContext() {

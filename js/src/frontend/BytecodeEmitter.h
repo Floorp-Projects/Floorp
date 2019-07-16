@@ -132,9 +132,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Script contains JSOP_CALLSITEOBJ.
   bool hasCallSiteObj = false;
 
-  // Script contains singleton initializer JSOP_OBJECT.
-  bool hasSingletons = false;
-
   // Script contains finally block.
   bool hasTryFinally = false;
 

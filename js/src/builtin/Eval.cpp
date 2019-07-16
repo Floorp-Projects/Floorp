@@ -47,12 +47,8 @@ static bool IsEvalCacheCandidate(JSScript* script) {
     return false;
   }
 
-  // Make sure there are no inner objects which might use the wrong parent
-  // and/or call scope by reusing the previous eval's script.
-  if (script->hasSingletons()) {
-    return false;
-  }
-
+  // Make sure there are no inner objects (which may be used directly by script
+  // and clobbered) or inner functions (which may have wrong scope).
   for (JS::GCCellPtr gcThing : script->gcthings()) {
     if (gcThing.is<JSObject>()) {
       return false;
