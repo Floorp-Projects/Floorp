@@ -19,3 +19,6 @@ path:tools/lint/tox/tox_requirements.txt
 
 # Required for the webrender docker image
 path:gfx/wr/ci-scripts/docker-image/setup.sh
+# Required for the webrender-updater docker image
+path:gfx/wr/ci-scripts/wrupdater/docker-setup.sh
+path:gfx/wr/ci-scripts/wrupdater/requirements.txt
