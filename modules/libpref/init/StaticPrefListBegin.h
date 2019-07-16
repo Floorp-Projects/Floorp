@@ -41,7 +41,7 @@ namespace StaticPrefs {
   inline StripAtomic<cpp_type> id() {                            \
     if (UpdatePolicy::policy != UpdatePolicy::Once) {            \
       MOZ_DIAGNOSTIC_ASSERT(                                     \
-              IsAtomic<cpp_type>::value || NS_IsMainThread(),    \
+          IsAtomic<cpp_type>::value || NS_IsMainThread(),        \
           "Non-atomic static pref '" name                        \
           "' being accessed on background thread by getter");    \
       return sVarCache_##id;                                     \

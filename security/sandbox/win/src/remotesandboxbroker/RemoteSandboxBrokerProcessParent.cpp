@@ -23,8 +23,7 @@ RemoteSandboxBrokerProcessParent::~RemoteSandboxBrokerProcessParent() {
   MOZ_COUNT_DTOR(RemoteSandboxBrokerProcessParent);
 }
 
-RefPtr<ProcessHandlePromise>
-RemoteSandboxBrokerProcessParent::AsyncLaunch() {
+RefPtr<ProcessHandlePromise> RemoteSandboxBrokerProcessParent::AsyncLaunch() {
   if (!GeckoChildProcessHost::AsyncLaunch()) {
     return ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
   }

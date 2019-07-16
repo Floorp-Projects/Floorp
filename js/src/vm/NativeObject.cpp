@@ -453,7 +453,7 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCount,
       ReallocateObjectBuffer<HeapSlot>(cx, this, slots_, oldCount, newCount);
   if (!newslots) {
     cx->recoverFromOutOfMemory();
-    return; // Leave slots at its old size.
+    return;  // Leave slots at its old size.
   }
 
   slots_ = newslots;

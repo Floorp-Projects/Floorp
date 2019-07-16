@@ -3906,7 +3906,8 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
   //   cached styles
   bool allowStyleCaching =
       StaticPrefs::layout_css_cached_scrollbar_styles_enabled() &&
-      aParentFrame->StyleVisibility()->mVisible == NS_STYLE_VISIBILITY_VISIBLE &&
+      aParentFrame->StyleVisibility()->mVisible ==
+          NS_STYLE_VISIBILITY_VISIBLE &&
       mPresShell->GetPresContext()->Medium() == nsGkAtoms::screen;
 
   // Compute styles for the anonymous content tree.

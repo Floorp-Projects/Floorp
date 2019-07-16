@@ -307,9 +307,8 @@ void nsImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
 
     UpdateIntrinsicSize(mImage);
     UpdateIntrinsicRatio(mImage);
-  } else if (!aOldStyle ||
-             aOldStyle->StylePosition()->mAspectRatio !=
-                 StylePosition()->mAspectRatio) {
+  } else if (!aOldStyle || aOldStyle->StylePosition()->mAspectRatio !=
+                               StylePosition()->mAspectRatio) {
     UpdateIntrinsicRatio(mImage);
   }
 }

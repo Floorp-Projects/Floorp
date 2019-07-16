@@ -977,7 +977,12 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       auto blendItem = static_cast<nsDisplayBlendMode*>(aItem);
       auto blendMode = blendItem->BlendMode();
       aContext->GetDrawTarget()->PushLayerWithBlend(
+<<<<<<< dest
           false, 1.0, nullptr, mozilla::gfx::Matrix(), aItemBounds, false,
+=======
+          false, 1.0, nullptr, mozilla::gfx::Matrix(),
+          aItemBounds + aGroup->mLayerBounds.ToUnknownRect().TopLeft(), false,
+>>>>>>> source
           blendMode);
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
@@ -991,8 +996,14 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       break;
     }
     case DisplayItemType::TYPE_BLEND_CONTAINER: {
+<<<<<<< dest
       aContext->GetDrawTarget()->PushLayer(false, 1.0, nullptr,
                                            mozilla::gfx::Matrix(), aItemBounds);
+=======
+      aContext->GetDrawTarget()->PushLayer(
+          false, 1.0, nullptr, mozilla::gfx::Matrix(),
+          aItemBounds + aGroup->mLayerBounds.ToUnknownRect().TopLeft());
+>>>>>>> source
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);

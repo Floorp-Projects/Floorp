@@ -517,7 +517,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void UpdateMinimumScaleSize(const nsRect& aScrollableOverflow,
                               const nsSize& aICBSize);
 
-
   // Return the scroll frame's "true outer size".
   // This is mOuter->GetSize(), except when mOuter has been sized to reflect
   // a virtual (layout) viewport in which case this returns the outer size

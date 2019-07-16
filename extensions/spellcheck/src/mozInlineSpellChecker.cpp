@@ -1627,7 +1627,7 @@ nsresult mozInlineSpellChecker::AddRange(Selection* aSpellCheckSelection,
   if (!SpellCheckSelectionIsFull()) {
     IgnoredErrorResult err;
     aSpellCheckSelection->AddRangeAndSelectFramesAndNotifyListeners(*aRange,
-        err);
+                                                                    err);
     if (err.Failed()) {
       rv = err.StealNSResult();
     } else {
