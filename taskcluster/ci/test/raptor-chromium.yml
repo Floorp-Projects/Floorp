@@ -313,3 +313,14 @@ raptor-tp6-4-chromium-cold:
         extra-options:
             - --test=raptor-tp6-cold-4
             - --app=chromium
+
+raptor-ares6-chromium:
+    description: "Raptor Ares6 on Chromium"
+    try-name: raptor-ares6-chromium
+    treeherder-symbol: Rap-Cr(ares6)
+    max-run-time: 2500
+    tier: 3
+    mozharness:
+        extra-options:
+            - --test=raptor-ares6
+            - --app=chromium
