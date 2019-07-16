@@ -1028,10 +1028,14 @@ bool XMLHttpRequestMainThread::IsSafeHeader(
     if (!NS_IsValidHTTPToken(token)) {
       return false;
     }
-    if (aHeader.Equals(token, nsCaseInsensitiveCStringComparator())) {
+
+    if (token.EqualsLiteral("*") && !mFlagACwithCredentials) {
+      isSafe = true;
+    } else if (aHeader.Equals(token, nsCaseInsensitiveCStringComparator())) {
       isSafe = true;
     }
   }
+
   return isSafe;
 }
 
