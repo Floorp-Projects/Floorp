@@ -148,17 +148,6 @@ LoadContext::SetRemoteSubframes(bool aUseRemoteSubframes) {
 }
 
 NS_IMETHODIMP
-LoadContext::GetIsInIsolatedMozBrowserElement(
-    bool* aIsInIsolatedMozBrowserElement) {
-  MOZ_ASSERT(mIsNotNull);
-
-  NS_ENSURE_ARG_POINTER(aIsInIsolatedMozBrowserElement);
-
-  *aIsInIsolatedMozBrowserElement = mOriginAttributes.mInIsolatedMozBrowser;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 LoadContext::GetScriptableOriginAttributes(JSContext* aCx,
                                            JS::MutableHandleValue aAttrs) {
   bool ok = ToJSValue(aCx, mOriginAttributes, aAttrs);
