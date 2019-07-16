@@ -55,8 +55,8 @@ void GfxInfo::AddCrashReportAnnotations() {
       CrashReporter::Annotation::AdapterDriverVendor, mDriverVendor);
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::AdapterDriverVersion, mDriverVersion);
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IsWayland, mIsWayland);
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IsWayland,
+                                     mIsWayland);
 }
 
 void GfxInfo::GetData() {
@@ -312,7 +312,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverNonMesaAll),
         GfxDriverInfo::allDevices, GfxDriverInfo::allFeatures,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(257, 21, 0, 0), "FEATURE_FAILURE_OLD_NVIDIA", "NVIDIA 257.21");
@@ -363,6 +363,11 @@ bool GfxInfo::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
                                     const nsAString& aDriverVendor) {
   if (mIsMesa &&
       aBlocklistVendor.Equals(GfxDriverInfo::GetDriverVendor(DriverMesaAll),
+                              nsCaseInsensitiveStringComparator())) {
+    return true;
+  }
+  if (!mIsMesa &&
+      aBlocklistVendor.Equals(GfxDriverInfo::GetDriverVendor(DriverNonMesaAll),
                               nsCaseInsensitiveStringComparator())) {
     return true;
   }
