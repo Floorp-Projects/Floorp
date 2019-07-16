@@ -10,6 +10,7 @@ add_task(async function initialState() {
         ["signon.rememberSignons", true],
         ["signon.generation.available", true],
         ["signon.generation.enabled", true],
+        ["signon.autofillForms", true],
       ],
       expected: "checked",
     },
@@ -18,6 +19,7 @@ add_task(async function initialState() {
         ["signon.rememberSignons", true],
         ["signon.generation.available", true],
         ["signon.generation.enabled", false],
+        ["signon.autofillForms", false],
       ],
       expected: "unchecked",
     },
@@ -34,6 +36,7 @@ add_task(async function initialState() {
         ["signon.rememberSignons", false],
         ["signon.generation.available", true],
         ["signon.generation.enabled", true],
+        ["signon.autofillForms", true],
       ],
       expected: "disabled",
     },
@@ -52,29 +55,53 @@ add_task(async function initialState() {
       },
       async function(browser) {
         let doc = browser.contentDocument;
-        let checkbox = doc.getElementById("generatePasswords");
+        let generatePasswordsCheckbox = doc.getElementById("generatePasswords");
+        let autofillFormsCheckbox = doc.getElementById(
+          "passwordAutofillCheckbox"
+        );
         doc.getElementById("passwordSettings").scrollIntoView();
 
         info("initialState, assert on expected state:" + test.expected);
         switch (test.expected) {
           case "hidden":
             is_element_hidden(
-              checkbox,
+              generatePasswordsCheckbox,
               "#generatePasswords checkbox is hidden"
             );
             break;
           case "checked":
             is_element_visible(
-              checkbox,
+              generatePasswordsCheckbox,
               "#generatePasswords checkbox is visible"
             );
-            ok(checkbox.checked, "#generatePasswords checkbox is checked");
+            ok(
+              generatePasswordsCheckbox.checked,
+              "#generatePasswords checkbox is checked"
+            );
+            ok(
+              autofillFormsCheckbox.checked,
+              "#passwordAutofillCheckbox is checked"
+            );
             break;
           case "unchecked":
-            ok(!checkbox.checked, "#generatePasswords checkbox is un-checked");
+            ok(
+              !generatePasswordsCheckbox.checked,
+              "#generatePasswords checkbox is un-checked"
+            );
+            ok(
+              !autofillFormsCheckbox.checked,
+              "#passwordAutofillCheckbox is un-checked"
+            );
             break;
           case "disabled":
-            ok(checkbox.disabled, "#generatePasswords checkbox is disabled");
+            ok(
+              generatePasswordsCheckbox.disabled,
+              "#generatePasswords checkbox is disabled"
+            );
+            ok(
+              autofillFormsCheckbox.disabled,
+              "#passwordAutofillCheckbox is disabled"
+            );
             break;
           default:
             ok(false, "Unknown expected state: " + test.expected);
