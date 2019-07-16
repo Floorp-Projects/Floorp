@@ -23,7 +23,7 @@
             android:ellipsize="none"
             android:gravity="center_vertical"
             android:scrollHorizontally="false"
-            tools:text="@string/private_browsing_explanation"
+            tools:text="@string/private_browsing_placeholder"
             android:textColor="?primaryText"
             android:textSize="14sp" />
 </LinearLayout>

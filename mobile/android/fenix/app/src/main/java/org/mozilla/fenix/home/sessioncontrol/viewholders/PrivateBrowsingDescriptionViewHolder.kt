@@ -26,7 +26,7 @@ class PrivateBrowsingDescriptionViewHolder(
         val resources = view.context.resources
         // Format the description text to include a hyperlink
         val appName = resources.getString(R.string.app_name)
-        view.private_session_description.text = resources.getString(R.string.private_browsing_explanation, appName)
+        view.private_session_description.text = resources.getString(R.string.private_browsing_placeholder, appName)
         val descriptionText = String
             .format(view.private_session_description.text.toString(), System.getProperty("line.separator"))
         val linkStartIndex = descriptionText.indexOf("\n\n") + 2

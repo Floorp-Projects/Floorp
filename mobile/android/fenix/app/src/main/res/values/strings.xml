@@ -21,8 +21,8 @@
     <string name="private_browsing_title">You’re in a private session</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s clears your search and browsing history when you close your private
-        session. While this doesn’t make you anonymous to websites or your internet service provider, it makes it
+    <string name="private_browsing_placeholder">
+         %1$s clears your search and browsing history when you quit the app or close all private tabs. While this doesn’t make you anonymous to websites or your internet service provider, it makes it
         easier to keep what you do online private from anyone else who uses this device.\n\nCommon myths about private
         browsing
     </string>
