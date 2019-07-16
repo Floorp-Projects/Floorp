@@ -24,6 +24,7 @@ import {
   getWorkers,
   getCurrentThread,
   getThreadContext,
+  getSourceFromId,
 } from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
@@ -45,7 +46,13 @@ import Scopes from "./Scopes";
 
 import "./SecondaryPanes.css";
 
-import type { Expression, Frame, WorkerList, ThreadContext } from "../../types";
+import type {
+  Expression,
+  Frame,
+  WorkerList,
+  ThreadContext,
+  Source,
+} from "../../types";
 
 type AccordionPaneItem = {
   header: string,
@@ -88,6 +95,7 @@ type Props = {
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
   workers: WorkerList,
+  source: ?Source,
   toggleShortcutsModal: () => void,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
   toggleMapScopes: typeof actions.toggleMapScopes,
@@ -228,9 +236,13 @@ class SecondaryPanes extends Component<Props, State> {
   }
 
   getScopesButtons() {
-    const { selectedFrame, mapScopesEnabled } = this.props;
+    const { selectedFrame, mapScopesEnabled, source } = this.props;
 
-    if (!selectedFrame || isGeneratedId(selectedFrame.location.sourceId)) {
+    if (
+      !selectedFrame ||
+      isGeneratedId(selectedFrame.location.sourceId) ||
+      (source && source.isPrettyPrinted)
+    ) {
       return null;
     }
 
@@ -487,6 +499,7 @@ function getRenderWhyPauseDelay(state, thread) {
 
 const mapStateToProps = state => {
   const thread = getCurrentThread(state);
+  const selectedFrame = getSelectedFrame(state, thread);
 
   return {
     cx: getThreadContext(state),
@@ -496,11 +509,13 @@ const mapStateToProps = state => {
     breakpointsDisabled: getBreakpointsDisabled(state),
     isWaitingOnBreak: getIsWaitingOnBreak(state, thread),
     renderWhyPauseDelay: getRenderWhyPauseDelay(state, thread),
-    selectedFrame: getSelectedFrame(state, thread),
+    selectedFrame,
     mapScopesEnabled: isMapScopesEnabled(state),
     shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
     shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
     workers: getWorkers(state),
+    source:
+      selectedFrame && getSourceFromId(state, selectedFrame.location.sourceId),
   };
 };
 
