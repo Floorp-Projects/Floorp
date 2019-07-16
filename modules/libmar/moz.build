@@ -7,14 +7,11 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Application Update')
 
-DIRS += ['src']
+DIRS += [
+    'src',
+    'sign',
+    'tool',
+    'verify',
+]
 
-if CONFIG['MOZ_ENABLE_SIGNMAR']:
-    DIRS += ['sign']
-    TEST_DIRS += ['tests']
-    if CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
-        DIRS += ['verify']
-
-# If we are building ./sign and ./verify then ./tool must come after it
-DIRS += ['tool']
-
+TEST_DIRS += ['tests']
