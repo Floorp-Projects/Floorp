@@ -760,6 +760,12 @@ async function selectSaveFolder(aCallback) {
 function saveMedia() {
   var tree = document.getElementById("imagetree");
   var rowArray = getSelectedRows(tree);
+  let ReferrerInfo = Components.Constructor(
+    "@mozilla.org/referrer-info;1",
+    "nsIReferrerInfo",
+    "init"
+  );
+
   if (rowArray.length == 1) {
     let row = rowArray[0];
     let item = gImageView.data[row][COL_IMAGE_NODE];
@@ -774,13 +780,19 @@ function saveMedia() {
         titleKey = "SaveAudioTitle";
       }
 
+      // Bug 1565216 to evaluate passing referrer as item.baseURL
+      let referrerInfo = new ReferrerInfo(
+        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+        true,
+        Services.io.newURI(item.baseURI)
+      );
       saveURL(
         url,
         null,
         titleKey,
         false,
         false,
-        Services.io.newURI(item.baseURI),
+        referrerInfo,
         null,
         gDocInfo.isContentWindowPrivate,
         gDocInfo.principal
@@ -791,6 +803,12 @@ function saveMedia() {
       if (aDirectory) {
         var saveAnImage = function(aURIString, aChosenData, aBaseURI) {
           uniqueFile(aChosenData.file);
+
+          let referrerInfo = new ReferrerInfo(
+            Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+            true,
+            aBaseURI
+          );
           internalSave(
             aURIString,
             null,
@@ -800,7 +818,7 @@ function saveMedia() {
             false,
             "SaveImageTitle",
             aChosenData,
-            aBaseURI,
+            referrerInfo,
             null,
             false,
             null,
