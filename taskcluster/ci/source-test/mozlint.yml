@@ -173,6 +173,17 @@ yaml:
             - '**/*.yaml'
             - '**/.ymllint'
 
+rst:
+    description: rst lint run over the gecko codebase
+    platform: lint/opt
+    treeherder:
+        symbol: rst
+    run:
+        mach: lint -l rst -f treeherder -f json:/builds/worker/mozlint.json
+    when:
+        files-changed:
+            - '**/*.rst'
+
 shellcheck:
     description: shellcheck run over the gecko codebase
     platform: lint/opt
