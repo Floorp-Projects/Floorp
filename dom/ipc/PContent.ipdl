@@ -383,8 +383,9 @@ nested(upto inside_cpow) sync protocol PContent
     // Keep the last 3 attributes in sync with GetProcessAttributes!
 parent:
     async ConstructPopupBrowser(ManagedEndpoint<PBrowserParent> browserEp,
+                                ManagedEndpoint<PWindowGlobalParent> windowEp,
                                 TabId tabId, IPCTabContext context,
-                                BrowsingContext browsingContext,
+                                WindowGlobalInit windowInit,
                                 uint32_t chromeFlags);
 
 child:
