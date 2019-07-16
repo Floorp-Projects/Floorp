@@ -478,10 +478,12 @@ already_AddRefed<URLExtraData> FontFace::GetURLExtraData() const {
   nsCOMPtr<nsIURI> docURI = window->GetDocumentURI();
   nsCOMPtr<nsIURI> base = window->GetDocBaseURI();
 
-  // We pass RP_Unset when creating URLExtraData object here because it's not
+  // We pass RP_Unset when creating ReferrerInfo object here because it's not
   // going to result to change referer policy in a resource request.
-  RefPtr<URLExtraData> url =
-      new URLExtraData(base, docURI, principal, net::RP_Unset);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      new mozilla::dom::ReferrerInfo(docURI, net::RP_Unset);
+
+  RefPtr<URLExtraData> url = new URLExtraData(base, referrerInfo, principal);
   return url.forget();
 }
 

@@ -179,6 +179,8 @@ Maybe<nsStyleLinkElement::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
   nsAutoString title;
   nsAutoString media;
   GetTitleAndMediaForElement(*this, title, media);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+  referrerInfo->InitWithNode(this);
 
   return Some(SheetInfo{
       *OwnerDoc(),
@@ -187,9 +189,9 @@ Maybe<nsStyleLinkElement::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
       // FIXME(bug 1459822): Why doesn't this need a principal, but
       // HTMLStyleElement does?
       nullptr,
-      net::ReferrerPolicy::RP_Unset,
       // FIXME(bug 1459822): Why does this need a crossorigin attribute, but
       // HTMLStyleElement doesn't?
+      referrerInfo.forget(),
       AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)),
       title,
       media,

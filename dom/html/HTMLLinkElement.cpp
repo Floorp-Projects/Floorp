@@ -453,12 +453,14 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
 
   nsCOMPtr<nsIURI> uri = Link::GetURI();
   nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+  referrerInfo->InitWithNode(this);
   return Some(SheetInfo{
       *OwnerDoc(),
       this,
       uri.forget(),
       prin.forget(),
-      GetReferrerPolicyAsEnum(),
+      referrerInfo.forget(),
       GetCORSMode(),
       title,
       media,

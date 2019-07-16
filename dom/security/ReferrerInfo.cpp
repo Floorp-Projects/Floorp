@@ -929,7 +929,7 @@ void ReferrerInfo::GetReferrerPolicyFromAtribute(nsINode* aNode,
 
   if (!element->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area,
                                     nsGkAtoms::script, nsGkAtoms::iframe,
-                                    nsGkAtoms::img)) {
+                                    nsGkAtoms::link, nsGkAtoms::img)) {
     return;
   }
 

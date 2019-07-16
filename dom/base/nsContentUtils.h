@@ -109,6 +109,7 @@ class nsAttrValue;
 class nsITransferable;
 class nsPIWindowRoot;
 class nsIWindowProvider;
+class nsIReferrerInfo;
 
 struct JSRuntime;
 
@@ -867,9 +868,7 @@ class nsContentUtils {
    *                 will be used.
    * @param aLoadingDocument the document we belong to
    * @param aLoadingPrincipal the principal doing the load
-   * @param aReferrer the referrer URI
-   * @param aReferrerPolicy the referrer-sending policy to use on channel
-   *         creation
+   * @param aReferrerInfo the referrerInfo use on channel creation
    * @param aObserver the observer for the image load
    * @param aLoadFlags the load flags to use.  See nsIRequest
    * @param [aContentPolicyType=nsIContentPolicy::TYPE_INTERNAL_IMAGE]
@@ -881,9 +880,9 @@ class nsContentUtils {
   static nsresult LoadImage(
       nsIURI* aURI, nsINode* aContext, Document* aLoadingDocument,
       nsIPrincipal* aLoadingPrincipal, uint64_t aRequestContextID,
-      nsIURI* aReferrer, mozilla::net::ReferrerPolicy aReferrerPolicy,
-      imgINotificationObserver* aObserver, int32_t aLoadFlags,
-      const nsAString& initiatorType, imgRequestProxy** aRequest,
+      nsIReferrerInfo* aReferrerInfo, imgINotificationObserver* aObserver,
+      int32_t aLoadFlags, const nsAString& initiatorType,
+      imgRequestProxy** aRequest,
       uint32_t aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE,
       bool aUseUrgentStartForChannel = false);
 

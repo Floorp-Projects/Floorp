@@ -1076,9 +1076,8 @@ bool nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // -moz-binding is blacklisted.
   bool didSanitize = false;
   // Create a sheet to hold the parsed CSS
-  RefPtr<StyleSheet> sheet =
-      new StyleSheet(mozilla::css::eAuthorSheetFeatures, CORS_NONE,
-                     aDocument->GetReferrerPolicy(), SRIMetadata());
+  RefPtr<StyleSheet> sheet = new StyleSheet(mozilla::css::eAuthorSheetFeatures,
+                                            CORS_NONE, SRIMetadata());
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
   sheet->ParseSheetSync(aDocument->CSSLoader(),
@@ -1089,6 +1088,11 @@ bool nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // Mark the sheet as complete.
   MOZ_ASSERT(!sheet->HasForcedUniqueInner(),
              "should not get a forced unique inner during parsing");
+
+  // This should be an inline stylesheet
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForInternalCSSResources(aDocument);
+  sheet->SetReferrerInfo(referrerInfo);
   sheet->SetComplete();
   // Loop through all the rules found in the CSS text
   ErrorResult err;
