@@ -51,27 +51,6 @@ add_task(async function setup() {
   });
 });
 
-// Tests that pressing the content blocking preferences icon in the protections popup
-// links to about:preferences
-add_task(async function testOpenPreferencesFromCBPrefsButton() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
-    await openProtectionsPopup();
-
-    let preferencesButton = document.getElementById(
-      "tracking-protection-preferences-button"
-    );
-
-    ok(
-      BrowserTestUtils.is_visible(preferencesButton),
-      "The preferences button is shown."
-    );
-
-    let shown = waitAndAssertPreferencesShown("trackingprotection");
-    preferencesButton.click();
-    await shown;
-  });
-});
-
 // Tests that pressing the permissions preferences icon in the identity popup
 // links to about:preferences
 add_task(async function testOpenPreferencesFromPermissionsPrefsButton() {

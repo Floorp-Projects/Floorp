@@ -169,16 +169,9 @@
   display: none;
 }
 
-#tracking-protection-preferences-button > .toolbarbutton-text {
-  display: inline;
-  padding-inline-end: 25px;
-  padding-inline-start: 0px;
-}
-
 /* CONTENT */
 
 .identity-popup-content-blocking-empty-label,
-#tracking-protection-preferences-button > .toolbarbutton-text,
 .tracking-protection-button,
 #identity-popup-trackersView-strict-info > label,
 .identity-popup-cookiesView-list-header,
@@ -414,10 +407,6 @@ description#identity-popup-content-verifier,
   height: 120px;
 }
 
-#identity-popup-content-blocking-content {
-  background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
-}
-
 .identity-popup-content-blocking-category {
   /* Overwrite toolbarbutton styles */
   -moz-appearance: none;
@@ -586,12 +575,6 @@ description#identity-popup-content-verifier,
 
 #identity-popup-content-blocking-category-list {
   margin-top: 10px;
-}
-
-/* Show the "detected"/"not detected" message depending on the content state. */
-#protections-popup:not([detected]) #identity-popup-content-blocking-detected,
-#protections-popup[detected] #identity-popup-content-blocking-not-detected {
-  display: none;
 }
 
 .tracking-protection-icon {

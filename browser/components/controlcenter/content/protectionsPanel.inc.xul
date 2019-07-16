@@ -46,21 +46,6 @@
       <!-- Tracking Protection Section -->
       <hbox id="tracking-protection-container" class="identity-popup-section">
         <vbox id="identity-popup-content-blocking-content" flex="1">
-          <hbox align="start">
-            <label id="content-blocking-label"
-                   class="identity-popup-headline"
-                   flex="1">&contentBlocking.title;</label>
-            <toolbarbutton id="tracking-protection-preferences-button"
-                           class="identity-popup-preferences-button subviewbutton"
-                           tooltiptext="&identity.contentBlockingPreferences.tooltip;"
-                           oncommand="gProtectionsHandler.openPreferences('identityPopup-TP-preferencesButton');" />
-          </hbox>
-
-          <description id="identity-popup-content-blocking-detected"
-                       crop="end">&contentBlocking.detected;</description>
-          <description id="identity-popup-content-blocking-not-detected"
-                       crop="end">&contentBlocking.notDetected;</description>
-
           <vbox id="identity-popup-content-blocking-category-list">
             <toolbarbutton id="identity-popup-content-blocking-category-tracking-protection"
                            onclick="gProtectionsHandler.showTrackersSubview();"
