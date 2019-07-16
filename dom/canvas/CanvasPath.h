@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 enum class CanvasWindingRule : uint8_t;
-class SVGMatrix;
+struct DOMMatrix2DInit;
 
 class CanvasPath final : public nsWrapperCache {
  public:
@@ -65,8 +65,8 @@ class CanvasPath final : public nsWrapperCache {
   CanvasPath(nsISupports* aParent,
              already_AddRefed<gfx::PathBuilder> aPathBuilder);
 
-  void AddPath(CanvasPath& aCanvasPath,
-               const Optional<NonNull<SVGMatrix>>& aMatrix);
+  void AddPath(CanvasPath& aCanvasPath, const DOMMatrix2DInit& aInit,
+               ErrorResult& aError);
 
  private:
   virtual ~CanvasPath() {}
