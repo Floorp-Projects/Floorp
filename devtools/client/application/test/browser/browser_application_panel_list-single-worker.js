@@ -23,10 +23,13 @@ add_task(async function() {
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length > 0);
 
-  const workerContainer = getWorkerContainers(doc)[0];
+  let workerContainer = getWorkerContainers(doc)[0];
 
   info("Wait until the unregister button is displayed for the service worker");
-  await waitUntil(() => workerContainer.querySelector(".js-unregister-button"));
+  await waitUntil(() => {
+    workerContainer = getWorkerContainers(doc)[0];
+    return workerContainer.querySelector(".js-unregister-button");
+  });
 
   const scopeEl = workerContainer.querySelector(".js-sw-scope");
   const expectedScope =
