@@ -39,6 +39,11 @@ var gStrings = Services.strings.createBundle(
   "chrome://global/locale/aboutReader.properties"
 );
 
+const zoomOnCtrl =
+  Services.prefs.getIntPref("mousewheel.with_control.action", 3) == 3;
+const zoomOnMeta =
+  Services.prefs.getIntPref("mousewheel.with_meta.action", 1) == 3;
+
 const gIsFirefoxDesktop =
   Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
@@ -116,6 +121,7 @@ var AboutReader = function(mm, win, articlePromise) {
   win.addEventListener("pagehide", this);
   win.addEventListener("mozvisualscroll", this, { mozSystemGroup: true });
   win.addEventListener("resize", this);
+  win.addEventListener("wheel", this, { passive: false });
 
   Services.obs.addObserver(this, "inner-window-destroyed");
 
@@ -411,6 +417,36 @@ AboutReader.prototype = {
               this._updatePopupPosition(dropdown);
             }
           }, 0);
+        }
+        break;
+
+      case "wheel":
+        let doZoom =
+          (aEvent.ctrlKey && zoomOnCtrl) || (aEvent.metaKey && zoomOnMeta);
+        if (!doZoom) {
+          return;
+        }
+        aEvent.preventDefault();
+
+        // Throttle events to once per 150ms. This avoids excessively fast zooming.
+        if (aEvent.timeStamp <= this._zoomBackoffTime) {
+          return;
+        }
+        this._zoomBackoffTime = aEvent.timeStamp + 150;
+
+        // Determine the direction of the delta (we don't care about its size);
+        // This code is adapted from normalizeWheelEventDelta in
+        // browser/extensions/pdfjs/content/web/viewer.js
+        let delta = Math.abs(aEvent.deltaX) + Math.abs(aEvent.deltaY);
+        let angle = Math.atan2(aEvent.deltaY, aEvent.deltaX);
+        if (-0.25 * Math.PI < angle && angle < 0.75 * Math.PI) {
+          delta = -delta;
+        }
+
+        if (delta > 0) {
+          this._changeFontSize(+1);
+        } else if (delta < 0) {
+          this._changeFontSize(-1);
         }
         break;
 
