@@ -8,6 +8,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Document.h"
 #include "nsRefreshDriver.h"
 #include "nsThreadUtils.h"
 
@@ -20,6 +21,7 @@ static const double kLongIdlePeriodMS = 50.0;
 // expect to become busy again be:
 //   now + kMinIdlePeriodMS + layout.idle_period.time_limit
 static const double kMinIdlePeriodMS = 3.0;
+static const double kMinIdlePeriodDuringLoadMS = 12.0;
 
 static const uint32_t kMaxTimerThreadBound = 5;        // milliseconds
 static const uint32_t kMaxTimerThreadBoundClamp = 15;  // milliseconds
@@ -45,6 +47,14 @@ MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline) {
   bool busySoon = currentGuess.IsNull() ||
                   (now >= (currentGuess - minIdlePeriod)) ||
                   currentGuess < mLastIdleDeadline;
+
+  // During page load use higher minimum idle period.
+  if (!busySoon && XRE_IsContentProcess() &&
+      mozilla::dom::Document::HasRecentlyStartedForegroundLoads()) {
+    TimeDuration minIdlePeriod =
+        TimeDuration::FromMilliseconds(kMinIdlePeriodDuringLoadMS);
+    busySoon = (now >= (currentGuess - minIdlePeriod));
+  }
 
   if (!busySoon) {
     *aIdleDeadline = mLastIdleDeadline = currentGuess;
