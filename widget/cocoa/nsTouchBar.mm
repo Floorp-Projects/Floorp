@@ -202,6 +202,11 @@ static char sIdentifierAssociationKey;
   }
 
   nsCOMPtr<nsITouchBarInputCallback> callback = [input callback];
+  if (!callback) {
+    NSLog(@"Touch Bar action attempted with no valid callback! Identifier: %@",
+          [input nativeIdentifier]);
+    return;
+  }
   callback->OnCommand();
 }
 
