@@ -720,13 +720,6 @@ bool CompositorBridgeChild::SendResume() {
   return PCompositorBridgeChild::SendResume();
 }
 
-bool CompositorBridgeChild::SendResumeAsync() {
-  if (!mCanSend) {
-    return false;
-  }
-  return PCompositorBridgeChild::SendResumeAsync();
-}
-
 bool CompositorBridgeChild::SendNotifyChildCreated(
     const LayersId& id, CompositorOptions* aOptions) {
   if (!mCanSend) {
