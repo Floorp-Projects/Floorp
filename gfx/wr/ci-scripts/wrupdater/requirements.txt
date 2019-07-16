@@ -1,0 +1,3 @@
+requests==2.21.0
+pygit2==0.27.0    # this requires libgit2 v0.27.*
+python-hglib==2.6.1
