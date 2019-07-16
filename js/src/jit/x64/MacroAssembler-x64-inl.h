@@ -566,13 +566,7 @@ void MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs,
 
 void MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs,
                                       Register rhs, Label* label) {
-  ScratchRegisterScope scratch(*this);
-  if (rhs != scratch) {
-    movePtr(rhs, scratch);
-  }
-  // Instead of unboxing lhs, box rhs and do direct comparison with lhs.
-  rshiftPtr(Imm32(1), scratch);
-  branchPtr(cond, lhs, scratch, label);
+  branchPtr(cond, lhs, rhs, label);
 }
 
 void MacroAssembler::branchTruncateFloat32ToPtr(FloatRegister src,

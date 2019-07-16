@@ -605,15 +605,11 @@ static void GenerateJitEntryLoadTls(MacroAssembler& masm, unsigned frameSize) {
   masm.loadFunctionFromCalleeToken(Address(masm.getStackPointer(), offset),
                                    ScratchIonEntry);
 
-  // ScratchValIonEntry := callee->getExtendedSlot(WASM_TLSDATA_SLOT)
-  //                    => Private(TlsData*)
+  // ScratchIonEntry := callee->getExtendedSlot(WASM_TLSDATA_SLOT)->toPrivate()
+  //                 => TlsData*
   offset = FunctionExtended::offsetOfExtendedSlot(
       FunctionExtended::WASM_TLSDATA_SLOT);
-  masm.loadValue(Address(ScratchIonEntry, offset), ScratchValIonEntry);
-
-  // ScratchIonEntry := ScratchIonEntry->toPrivate() => TlsData*
-  masm.unboxPrivate(ScratchValIonEntry, WasmTlsReg);
-  // \o/
+  masm.loadPrivate(Address(ScratchIonEntry, offset), WasmTlsReg);
 }
 
 // Creates a JS fake exit frame for wasm, so the frame iterators just use

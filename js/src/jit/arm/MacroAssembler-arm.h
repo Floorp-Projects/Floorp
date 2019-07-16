@@ -861,7 +861,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void unboxDouble(const BaseIndex& src, FloatRegister dest);
 
   void unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type);
-  void unboxPrivate(const ValueOperand& src, Register dest);
 
   // See comment in MacroAssembler-x64.h.
   void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
