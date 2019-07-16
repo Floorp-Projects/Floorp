@@ -24,7 +24,7 @@ static const ECMethod kMethods[] = {
 static const ECMethod *
 ec_get_method_from_name(ECCurveName name)
 {
-    int i;
+    unsigned long i;
     for (i = 0; i < sizeof(kMethods) / sizeof(kMethods[0]); ++i) {
         if (kMethods[i].name == name) {
             return &kMethods[i];

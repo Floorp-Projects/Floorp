@@ -116,11 +116,7 @@ ifdef NS_USE_GCC
 	DEFINES    += -UDEBUG -DNDEBUG
     else
 	OPTIMIZER  += -g
-	NULLSTRING :=
-	SPACE      := $(NULLSTRING) # end of the line
-	USERNAME   := $(subst $(SPACE),_,$(USERNAME))
-	USERNAME   := $(subst -,_,$(USERNAME))
-	DEFINES    += -DDEBUG -UNDEBUG -DDEBUG_$(USERNAME)
+	DEFINES    += -DDEBUG -UNDEBUG
     endif
 else # !NS_USE_GCC
     WARNING_CFLAGS = -W3 -nologo -D_CRT_SECURE_NO_WARNINGS \
@@ -179,10 +175,7 @@ else # !NS_USE_GCC
     else
 	OPTIMIZER += -Zi -Fd$(OBJDIR)/ -Od
 	NULLSTRING :=
-	SPACE      := $(NULLSTRING) # end of the line
-	USERNAME   := $(subst $(SPACE),_,$(USERNAME))
-	USERNAME   := $(subst -,_,$(USERNAME))
-	DEFINES    += -DDEBUG -UNDEBUG -DDEBUG_$(USERNAME)
+	DEFINES    += -DDEBUG -UNDEBUG
 	DLLFLAGS   += -DEBUG -OUT:$@
 	LDFLAGS    += -DEBUG 
 ifeq ($(_MSC_VER),$(_MSC_VER_6))

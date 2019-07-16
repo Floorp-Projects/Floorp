@@ -127,6 +127,10 @@ queue.map(task => {
       task.env = {};
     }
     task.env.NSS_SSL_TESTS = "crl iopr policy";
+
+    if (task.platform == "mac") {
+      task.maxRunTime = 7200;
+    }
   }
 
   // Windows is slow.
@@ -135,6 +139,9 @@ queue.map(task => {
     task.maxRunTime = 7200;
   }
 
+  if (task.platform == "mac" && task.tests == "tools") {
+      task.maxRunTime = 7200;
+  }
   return task;
 });
 
