@@ -17,10 +17,7 @@ examine the differences, and don't forget to commit the changes to the
 template and the outputs.
 '''
 
-from __future__ import (
-    print_function,
-    unicode_literals,
-)
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
