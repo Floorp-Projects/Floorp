@@ -34,3 +34,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 # Avoid warnings from third-party code that we can not modify.
 if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += ['-Wno-invalid-source-encoding']
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

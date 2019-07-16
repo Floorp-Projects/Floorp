@@ -138,3 +138,6 @@ if CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     if CONFIG['CC_TYPE'] == 'clang':
         CFLAGS += ['-Wno-#pragma-messages']
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
