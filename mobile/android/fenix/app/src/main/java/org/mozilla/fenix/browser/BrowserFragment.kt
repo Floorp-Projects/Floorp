@@ -8,6 +8,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -311,10 +312,12 @@ class BrowserFragment : Fragment(), BackHandler {
                         .setAnchorView(toolbarComponent.uiView.view)
                         .setText(getString(R.string.full_screen_notification))
                         .show()
+                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                     activity?.enterToImmersiveMode()
                     toolbar.visibility = View.GONE
                     nestedScrollQuickAction.visibility = View.GONE
                 } else {
+                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                     activity?.exitImmersiveModeIfNeeded()
                     (activity as HomeActivity).let { activity: HomeActivity ->
                         ThemeManager.applyStatusBarTheme(
