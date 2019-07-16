@@ -25,7 +25,6 @@ from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
 )
-from moztest.resolve import TEST_SUITES
 
 UNKNOWN_TEST = '''
 I was unable to find tests from the given argument(s).
@@ -50,9 +49,8 @@ TEST_HELP = '''
 Test or tests to run. Tests can be specified by filename, directory, suite
 name or suite alias.
 
-The following test suites and aliases are supported: %s
-''' % ', '.join(sorted(TEST_SUITES))
-TEST_HELP = TEST_HELP.strip()
+The following test suites and aliases are supported: {}
+'''.strip()
 
 
 @SettingsProvider
@@ -74,8 +72,10 @@ class TestConfig(object):
 
 def get_test_parser():
     from mozlog.commandline import add_logging_group
+    from moztest.resolve import TEST_SUITES
     parser = argparse.ArgumentParser()
-    parser.add_argument('what', default=None, nargs='+', help=TEST_HELP)
+    parser.add_argument('what', default=None, nargs='+',
+                        help=TEST_HELP.format(', '.join(sorted(TEST_SUITES))))
     parser.add_argument('extra_args', default=None, nargs=argparse.REMAINDER,
                         help="Extra arguments to pass to the underlying test command(s). "
                              "If an underlying command doesn't recognize the argument, it "
@@ -139,6 +139,7 @@ class AddTest(MachCommandBase):
     def addtest(self, suite=None, test=None, doc=None, overwrite=False,
                 editor=MISSING_ARG, **kwargs):
         import addtest
+        from moztest.resolve import TEST_SUITES
 
         if not suite and not test:
             return create_parser_addtest().parse_args(["--help"])
