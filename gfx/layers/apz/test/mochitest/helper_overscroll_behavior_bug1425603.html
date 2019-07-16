@@ -67,7 +67,7 @@ function* test(testDriver) {
   // i.e. overscroll-behavior is respected.
   var waitForScroll = false; // don't wait for a scroll event, it will never come
   yield moveMouseAndScrollWheelOver(subframe, 50, 50, testDriver, waitForScroll);
-  ok(window.scrollY == 0, "overscroll-behavior was respected");
+  is(window.scrollY, 0, "overscroll-behavior was respected");
 
   subtestDone();
 }

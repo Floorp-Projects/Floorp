@@ -119,8 +119,7 @@ already_AddRefed<nsIURI> StyleComputedUrl::ResolveLocalRef(nsIURI* aURI) const {
 
 already_AddRefed<nsIURI> StyleComputedUrl::ResolveLocalRef(
     const nsIContent* aContent) const {
-  nsCOMPtr<nsIURI> url = aContent->GetBaseURI();
-  return ResolveLocalRef(url);
+  return ResolveLocalRef(aContent->GetBaseURI());
 }
 
 imgRequestProxy* StyleComputedUrl::LoadImage(Document& aDocument) {

@@ -152,10 +152,10 @@ already_AddRefed<nsIURI> ImageAccessible::GetLongDescURI() const {
         longdesc.FindChar('\r') != -1 || longdesc.FindChar('\n') != -1) {
       return nullptr;
     }
-    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
     nsCOMPtr<nsIURI> uri;
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri), longdesc,
-                                              mContent->OwnerDoc(), baseURI);
+                                              mContent->OwnerDoc(),
+                                              mContent->GetBaseURI());
     return uri.forget();
   }
 

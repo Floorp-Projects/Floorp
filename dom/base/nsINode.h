@@ -1218,14 +1218,12 @@ class nsINode : public mozilla::dom::EventTarget {
   /**
    * Get the base URI for any relative URIs within this piece of
    * content. Generally, this is the document's base URI, but certain
-   * content carries a local base for backward compatibility, and XML
-   * supports setting a per-node base URI.
+   * content carries a local base for backward compatibility.
    *
-   * @return the base URI
+   * @return the base URI.  May return null.
    */
-  virtual already_AddRefed<nsIURI> GetBaseURI(
-      bool aTryUseXHRDocBaseURI = false) const = 0;
-  already_AddRefed<nsIURI> GetBaseURIObject() const;
+  virtual nsIURI* GetBaseURI(bool aTryUseXHRDocBaseURI = false) const = 0;
+  nsIURI* GetBaseURIObject() const;
 
   /**
    * Return true if the node may be apz aware. There are two cases. One is that

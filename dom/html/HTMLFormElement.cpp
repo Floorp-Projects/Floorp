@@ -1485,7 +1485,7 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
 
     actionURL = docURI;
   } else {
-    nsCOMPtr<nsIURI> baseURL = GetBaseURI();
+    nsIURI* baseURL = GetBaseURI();
     NS_ASSERTION(baseURL, "No Base URL found in Form Submit!\n");
     if (!baseURL) {
       return NS_OK;  // No base URL -> exit early, see Bug 30721

@@ -405,6 +405,11 @@ nsresult nsIOService::LaunchSocketProcess() {
     return NS_OK;
   }
 
+  if (!XRE_IsE10sParentProcess()) {
+    LOG(("nsIOService skipping LaunchSocketProcess because e10s is disabled"));
+    return NS_OK;
+  }
+
   if (!Preferences::GetBool("network.process.enabled", true)) {
     LOG(("nsIOService skipping LaunchSocketProcess because of the pref"));
     return NS_OK;

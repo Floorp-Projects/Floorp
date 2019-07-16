@@ -77,6 +77,8 @@ add_task(async function test_set_login() {
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
+  let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
+  ok(copyButtons.every(button => !isHidden(button)), "The copy buttons should be visible when viewing a login");
 });
 
 add_task(async function test_edit_login() {
@@ -95,6 +97,8 @@ add_task(async function test_edit_login() {
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
+  let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
+  ok(copyButtons.every(button => !isHidden(button)), "The copy buttons should be visible when editing a login");
 
   gLoginItem.shadowRoot.querySelector("input[name='username']").value = "newUsername";
   gLoginItem.shadowRoot.querySelector("input[name='password']").value = "newPassword";
@@ -155,6 +159,8 @@ add_task(async function test_set_login_empty() {
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, "", "time-created should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, "", "time-changed should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, "", "time-used should be blank when undefined");
+  let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
+  ok(copyButtons.every(button => isHidden(button)), "The copy buttons should be hidden when creating a login");
 
   let createEventDispatched = false;
   document.addEventListener("AboutLoginsCreateLogin", event => {

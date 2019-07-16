@@ -198,7 +198,7 @@ class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
     this.value = generatedPassword;
 
     XPCOMUtils.defineLazyGetter(this, "label", () => {
-      return getLocalizedString("useGeneratedPassword");
+      return getLocalizedString("useASecurelyGeneratedPassword");
     });
   }
 }

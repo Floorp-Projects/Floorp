@@ -10,7 +10,7 @@ The JS API
 Privileged JavaScript code can annotate experiments using the functions exposed by ``TelemetryEnvironment.jsm``.
 
 The following function adds an annotation to the environment for the provided ``id``, ``branch`` and ``options``. Calling this function repeatedly with the same ``id`` will overwrite the state and trigger new subsessions (subject to throttling).
-``options`` is an object that currently may contain ``type``, to tag the experiment with a specific type.
+``options`` is an object that may contain ``type`` to tag the experiment with a specific type or ``enrollmentId`` to tag the enrollment in this experiment with an identifier.
 
 .. code-block:: js
 
@@ -35,6 +35,7 @@ This synchronously returns a dictionary containing the information for each acti
 
 Limits and restrictions
 -----------------------
-To prevent abuses, the content of both the experiment ``id`` and ``branch`` is limited to
+To prevent abuses, the content of the experiment ``id`` and ``branch`` is limited to
 100 characters in length.
 ``type`` is limited to a length of 20 characters.
+``enrollmentId`` is limited to 40 characters (chosen to be just a little longer than the 36-character long GUID text representation).

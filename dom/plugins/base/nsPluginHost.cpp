@@ -3048,7 +3048,6 @@ nsresult nsPluginHost::NewPluginURLStream(
     const char* aHeadersData, uint32_t aHeadersDataLen) {
   nsCOMPtr<nsIURI> url;
   nsAutoString absUrl;
-  nsresult rv;
 
   if (aURL.Length() <= 0) return NS_OK;
 
@@ -3056,13 +3055,12 @@ nsresult nsPluginHost::NewPluginURLStream(
   // in case aURL is relative
   RefPtr<nsPluginInstanceOwner> owner = aInstance->GetOwner();
   if (owner) {
-    nsCOMPtr<nsIURI> baseURI = owner->GetBaseURI();
-    rv = NS_MakeAbsoluteURI(absUrl, aURL, baseURI);
+    NS_MakeAbsoluteURI(absUrl, aURL, owner->GetBaseURI());
   }
 
   if (absUrl.IsEmpty()) absUrl.Assign(aURL);
 
-  rv = NS_NewURI(getter_AddRefs(url), absUrl);
+  nsresult rv = NS_NewURI(getter_AddRefs(url), absUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsPluginStreamListenerPeer> listenerPeer =

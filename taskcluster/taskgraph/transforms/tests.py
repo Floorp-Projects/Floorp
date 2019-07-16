@@ -198,8 +198,8 @@ TEST_VARIANTS = {
         'merge': {
             'mozharness': {
                 'extra-options': [
-                    '--setpref="media.peerconnection.mtransport_process=true"',
-                    '--setpref="network.process.enabled=true"',
+                    '--setpref=media.peerconnection.mtransport_process=true',
+                    '--setpref=network.process.enabled=true',
                 ],
             }
         }
@@ -1035,6 +1035,25 @@ def split_variants(config, tests):
 
             testv.update(variant.get('replace', {}))
             yield merge(testv, variant.get('merge', {}))
+
+
+@transforms.add
+def ensure_spi_disabled_on_all_but_spi(config, tests):
+    for test in tests:
+        variant = test['attributes'].get('unittest_variant', '')
+        has_setpref = ('gtest' not in test['suite'] and
+                       'cppunit' not in test['suite'] and
+                       'jittest' not in test['suite'] and
+                       'junit' not in test['suite'] and
+                       'raptor' not in test['suite'])
+
+        if has_setpref and variant != 'socketprocess':
+            test['mozharness']['extra-options'].append(
+                    '--setpref=media.peerconnection.mtransport_process=false')
+            test['mozharness']['extra-options'].append(
+                    '--setpref=network.process.enabled=false')
+
+        yield test
 
 
 @transforms.add

@@ -67,8 +67,6 @@ SdpMediaSection::Protocol RsdparsaSdpMediaSection::GetProtocol() const {
       return kTcpDtlsRtpSavp;
     case RustSdpProtocolValue::kRustUdpTlsRtpSavpf:
       return kUdpTlsRtpSavpf;
-    case RustSdpProtocolValue::kRustTcpTlsRtpSavpf:
-      return kTcpTlsRtpSavpf;
     case RustSdpProtocolValue::kRustTcpDtlsRtpSavpf:
       return kTcpDtlsRtpSavpf;
     case RustSdpProtocolValue::kRustDtlsSctp:

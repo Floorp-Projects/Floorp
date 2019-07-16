@@ -59,9 +59,11 @@ add_task(async function test_onGeneratedPasswordFilled() {
 
   info("Stubbing _getPrompter");
   let fakePromptToSavePassword = sinon.stub();
+  let fakePromptToChangePassword = sinon.stub();
   sinon.stub(LMP, "_getPrompter").callsFake(() => {
     return {
       promptToSavePassword: fakePromptToSavePassword,
+      promptToChangePassword: fakePromptToChangePassword,
     };
   });
   LMP._getPrompter().promptToSavePassword();
@@ -113,20 +115,20 @@ add_task(async function test_onGeneratedPasswordFilled() {
   ok(login.equals(expected), "Check added login");
   ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
   ok(
-    fakePromptToSavePassword.calledOnce,
-    "Checking promptToSavePassword was called"
+    fakePromptToChangePassword.calledOnce,
+    "Checking promptToChangePassword was called"
   );
   ok(
-    fakePromptToSavePassword.getCall(0).args[1],
-    "promptToSavePassword had a truthy 'dismissed' argument"
+    fakePromptToChangePassword.getCall(0).args[2],
+    "promptToChangePassword had a truthy 'dismissed' argument"
   );
   ok(
-    fakePromptToSavePassword.getCall(0).args[2],
-    "promptToSavePassword had a truthy 'notifySaved' argument"
+    fakePromptToChangePassword.getCall(0).args[3],
+    "promptToChangePassword had a truthy 'notifySaved' argument"
   );
 
   LMP._getPrompter.resetHistory();
-  fakePromptToSavePassword.resetHistory();
+  fakePromptToChangePassword.resetHistory();
 
   Services.logins.removeAllLogins();
 

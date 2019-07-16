@@ -40,12 +40,6 @@ class OffThreadToken;
 using OffThreadCompileCallback = void (*)(OffThreadToken* token,
                                           void* callbackData);
 
-extern JS_PUBLIC_API bool CanCompileOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
-
-extern JS_PUBLIC_API bool CanDecodeOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
-
 /*
  * Off thread compilation control flow.
  *
@@ -62,6 +56,9 @@ extern JS_PUBLIC_API bool CanDecodeOffThread(
  * callback is invoked, and the resulting script will be rooted until the call
  * to FinishOffThreadScript.
  */
+
+extern JS_PUBLIC_API bool CanCompileOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
 
 extern JS_PUBLIC_API bool CompileOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -103,6 +100,9 @@ extern JS_PUBLIC_API JSObject* FinishOffThreadModule(JSContext* cx,
 extern JS_PUBLIC_API void CancelOffThreadModule(JSContext* cx,
                                                 OffThreadToken* token);
 
+extern JS_PUBLIC_API bool CanDecodeOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
+
 extern JS_PUBLIC_API bool DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
@@ -135,6 +135,13 @@ extern JS_PUBLIC_API void CancelMultiOffThreadScriptsDecoder(
 
 extern JS_PUBLIC_API bool CanDecodeBinASTOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
+
+extern JS_PUBLIC_API bool DecodeBinASTOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
+    size_t length, OffThreadCompileCallback callback, void* callbackData);
+
+extern JS_PUBLIC_API JSScript* FinishOffThreadBinASTDecode(
+    JSContext* cx, OffThreadToken* token);
 
 #endif  // defined(JS_BUILD_BINAST)
 

@@ -63,6 +63,13 @@
                 android:process=":tab">
         </service>
         <service
+                android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$socket"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":socket">
+        </service>
+        <service
                 android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
                 android:enabled="true"
                 android:exported="false"

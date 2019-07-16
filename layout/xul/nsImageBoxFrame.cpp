@@ -238,10 +238,9 @@ void nsImageBoxFrame::UpdateImage() {
           mContent, getter_AddRefs(triggeringPrincipal), contentPolicyType,
           &requestContextID);
 
-      nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
       nsCOMPtr<nsIURI> uri;
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri), src, doc,
-                                                baseURI);
+                                                mContent->GetBaseURI());
       if (uri) {
         nsresult rv = nsContentUtils::LoadImage(
             uri, mContent, doc, triggeringPrincipal, requestContextID,
