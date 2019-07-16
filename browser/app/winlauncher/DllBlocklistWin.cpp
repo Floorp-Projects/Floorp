@@ -7,6 +7,7 @@
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/ImportDir.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/Types.h"
@@ -30,7 +31,7 @@
 #define DLL_BLOCKLIST_STRING_TYPE UNICODE_STRING
 
 #if defined(MOZ_LAUNCHER_PROCESS) || defined(NIGHTLY_BUILD)
-#  include "mozilla/WindowsDllBlocklistDefs.h"
+#  include "mozilla/WindowsDllBlocklistLauncherDefs.h"
 #else
 #  include "mozilla/WindowsDllBlocklistCommon.h"
 DLL_BLOCKLIST_DEFINITIONS_BEGIN
@@ -135,7 +136,7 @@ void NativeNtBlockSet::Write(HANDLE aFile) {
         continue;
       }
 
-      if (entry->mVersion != ALL_VERSIONS) {
+      if (entry->mVersion != DllBlockInfo::ALL_VERSIONS) {
         WriteFile(aFile, ",", 1, &nBytes, nullptr);
         uint16_t parts[4];
         parts[0] = entry->mVersion >> 48;
@@ -166,9 +167,9 @@ extern "C" void MOZ_EXPORT NativeNtBlockSet_Write(HANDLE aHandle) {
 
 static bool CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
                            uint64_t& aVersion) {
-  aVersion = ALL_VERSIONS;
+  aVersion = DllBlockInfo::ALL_VERSIONS;
 
-  if (aInfo->flags &
+  if (aInfo->mFlags &
       (DllBlockInfo::BLOCK_WIN8PLUS_ONLY | DllBlockInfo::BLOCK_WIN8_ONLY)) {
     RTL_OSVERSIONINFOW osv = {sizeof(osv)};
     NTSTATUS ntStatus = ::RtlGetVersion(&osv);
@@ -181,7 +182,7 @@ static bool CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
       return true;
     }
 
-    if ((aInfo->flags & DllBlockInfo::BLOCK_WIN8_ONLY) &&
+    if ((aInfo->mFlags & DllBlockInfo::BLOCK_WIN8_ONLY) &&
         (osv.dwMajorVersion > 8 ||
          (osv.dwMajorVersion == 8 && osv.dwMinorVersion > 0))) {
       return true;
@@ -190,11 +191,11 @@ static bool CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
 
   // We're not bootstrapping child processes at this time, so this case is
   // always true.
-  if (aInfo->flags & DllBlockInfo::CHILD_PROCESSES_ONLY) {
+  if (aInfo->mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) {
     return true;
   }
 
-  if (aInfo->maxVersion == ALL_VERSIONS) {
+  if (aInfo->mMaxVersion == DllBlockInfo::ALL_VERSIONS) {
     return false;
   }
 
@@ -203,13 +204,13 @@ static bool CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
     return false;
   }
 
-  if (aInfo->flags & DllBlockInfo::USE_TIMESTAMP) {
+  if (aInfo->mFlags & DllBlockInfo::USE_TIMESTAMP) {
     DWORD timestamp;
     if (!headers.GetTimeStamp(timestamp)) {
       return false;
     }
 
-    return timestamp > aInfo->maxVersion;
+    return timestamp > aInfo->mMaxVersion;
   }
 
   // Else we try to get the file version information. Note that we don't have
@@ -218,8 +219,20 @@ static bool CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
     return false;
   }
 
-  return aVersion > aInfo->maxVersion;
+  return !aInfo->IsVersionBlocked(aVersion);
 }
+
+struct DllBlockInfoComparator {
+  explicit DllBlockInfoComparator(const UNICODE_STRING& aTarget)
+      : mTarget(&aTarget) {}
+
+  int operator()(const DllBlockInfo& aVal) const {
+    return static_cast<int>(
+        ::RtlCompareUnicodeString(mTarget, &aVal.mName, TRUE));
+  }
+
+  PCUNICODE_STRING mTarget;
+};
 
 static bool IsDllAllowed(const UNICODE_STRING& aLeafName, void* aBaseAddress) {
   if (mozilla::nt::Contains12DigitHexString(aLeafName) ||
@@ -228,19 +241,20 @@ static bool IsDllAllowed(const UNICODE_STRING& aLeafName, void* aBaseAddress) {
   }
 
   DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(info);
-  DECLARE_POINTER_TO_LAST_DLL_BLOCKLIST_ENTRY(end);
+  DECLARE_DLL_BLOCKLIST_NUM_ENTRIES(infoNumEntries);
 
-  while (info < end) {
-    if (::RtlEqualUnicodeString(&aLeafName, &info->name, TRUE)) {
-      break;
-    }
+  DllBlockInfoComparator comp(aLeafName);
 
-    ++info;
+  size_t match;
+  if (!BinarySearchIf(info, 0, infoNumEntries, comp, &match)) {
+    return true;
   }
 
+  const DllBlockInfo& entry = info[match];
+
   uint64_t version;
-  if (info->name.Length && !CheckBlockInfo(info, aBaseAddress, version)) {
-    gBlockSet.Add(info->name, version);
+  if (!CheckBlockInfo(&entry, aBaseAddress, version)) {
+    gBlockSet.Add(entry.mName, version);
     return false;
   }
 
