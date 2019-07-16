@@ -88,6 +88,10 @@ class nsBinaryInputStream final : public nsIObjectInputStream {
   nsCOMPtr<nsIStreamBufferAccess> mBufferAccess;
 
  private:
+  // Shared infrastructure for ReadBytes and ReadByteArray.  Callers
+  // are expected to provide a buffer that can contain aLength bytes.
+  nsresult ReadBytesToBuffer(uint32_t aLength, uint8_t* aBuffer);
+
   // virtual dtor since subclasses call our Release()
   virtual ~nsBinaryInputStream() {}
 };
