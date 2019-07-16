@@ -10,7 +10,6 @@ py2:
         - gfx
         - ipc
         - js/src
-        - js/xpconnect
         - layout
         - modules
         - mozglue
