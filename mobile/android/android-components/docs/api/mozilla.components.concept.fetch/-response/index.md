@@ -2,7 +2,7 @@
 
 # Response
 
-`data class Response : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L31)
+`data class Response : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L33)
 
 The [Response](./index.md) data class represents a response to a [Request](../-request/index.md) send by a [Client](../-client/index.md).
 
@@ -46,6 +46,13 @@ response.use {
 | Name | Summary |
 |---|---|
 | [close](close.md) | `fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Closes this [Response](./index.md) and its [Body](-body/index.md) and releases any system resources associated with it. |
+
+### Companion Object Properties
+
+| Name | Summary |
+|---|---|
+| [CLIENT_ERROR_STATUS_RANGE](-c-l-i-e-n-t_-e-r-r-o-r_-s-t-a-t-u-s_-r-a-n-g-e.md) | `val CLIENT_ERROR_STATUS_RANGE: `[`IntRange`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/-int-range/index.html) |
+| [SUCCESS_STATUS_RANGE](-s-u-c-c-e-s-s_-s-t-a-t-u-s_-r-a-n-g-e.md) | `val SUCCESS_STATUS_RANGE: `[`IntRange`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/-int-range/index.html) |
 
 ### Extension Properties
 

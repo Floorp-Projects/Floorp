@@ -2,7 +2,7 @@
 
 # empty
 
-`fun empty(): `[`Body`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L122)
+`fun empty(): `[`Body`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L124)
 
 Creates an empty response body.
 

@@ -2,4 +2,4 @@
 
 # headers
 
-`val headers: `[`Headers`](../-headers/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L34)
+`val headers: `[`Headers`](../-headers/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L36)

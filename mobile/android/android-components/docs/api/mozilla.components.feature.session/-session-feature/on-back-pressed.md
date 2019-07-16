@@ -2,7 +2,7 @@
 
 # onBackPressed
 
-`fun onBackPressed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionFeature.kt#L35)
+`fun onBackPressed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionFeature.kt#L45)
 
 Overrides [BackHandler.onBackPressed](../../mozilla.components.support.base.feature/-back-handler/on-back-pressed.md)
 

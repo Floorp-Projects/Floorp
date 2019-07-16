@@ -2,4 +2,4 @@
 
 # type
 
-`val type: `[`Type`](../../mozilla.components.lib.jexl.lexer/-token/-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/src/main/java/mozilla/components/lib/jexl/grammar/Grammar.kt#L139)
+`val type: `[`Type`](../../mozilla.components.lib.jexl.lexer/-token/-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/src/main/java/mozilla/components/lib/jexl/grammar/Grammar.kt#L137)

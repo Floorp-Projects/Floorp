@@ -10,7 +10,7 @@ Feature implementation for connecting the engine module with the session module.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SessionFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionUseCases: `[`SessionUseCases`](../-session-use-cases/index.md)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Feature implementation for connecting the engine module with the session module. |
+| [&lt;init&gt;](-init-.md) | `SessionFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionUseCases: `[`SessionUseCases`](../-session-use-cases/index.md)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)``SessionFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, goBackUseCase: `[`GoBackUseCase`](../-session-use-cases/-go-back-use-case/index.md)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Feature implementation for connecting the engine module with the session module. |
 
 ### Functions
 

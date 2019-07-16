@@ -2,4 +2,4 @@
 
 # evaluate
 
-`val evaluate: (`[`JexlValue`](../../mozilla.components.lib.jexl.value/-jexl-value/index.md)`, `[`JexlValue`](../../mozilla.components.lib.jexl.value/-jexl-value/index.md)`) -> `[`JexlValue`](../../mozilla.components.lib.jexl.value/-jexl-value/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/src/main/java/mozilla/components/lib/jexl/grammar/Grammar.kt#L141)
+`val evaluate: (`[`JexlValue`](../../mozilla.components.lib.jexl.value/-jexl-value/index.md)`, `[`JexlValue`](../../mozilla.components.lib.jexl.value/-jexl-value/index.md)`) -> `[`JexlValue`](../../mozilla.components.lib.jexl.value/-jexl-value/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/src/main/java/mozilla/components/lib/jexl/grammar/Grammar.kt#L139)

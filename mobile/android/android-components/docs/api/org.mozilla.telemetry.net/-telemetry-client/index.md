@@ -2,7 +2,7 @@
 
 # TelemetryClient
 
-`class TelemetryClient` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/net/TelemetryClient.kt#L20)
+`class TelemetryClient` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/net/TelemetryClient.kt#L21)
 
 ### Constructors
 

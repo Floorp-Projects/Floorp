@@ -2,7 +2,7 @@
 
 # GrammarElement
 
-`data class GrammarElement` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/src/main/java/mozilla/components/lib/jexl/grammar/Grammar.kt#L138)
+`data class GrammarElement` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/src/main/java/mozilla/components/lib/jexl/grammar/Grammar.kt#L136)
 
 ### Constructors
 
