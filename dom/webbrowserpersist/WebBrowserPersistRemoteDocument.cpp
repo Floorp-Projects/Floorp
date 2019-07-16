@@ -73,8 +73,9 @@ WebBrowserPersistRemoteDocument::GetTitle(nsAString& aTitle) {
 }
 
 NS_IMETHODIMP
-WebBrowserPersistRemoteDocument::GetReferrer(nsAString& aReferrer) {
-  aReferrer = mAttrs.referrer();
+WebBrowserPersistRemoteDocument::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
+  *aReferrerInfo = mAttrs.referrerInfo();
+  NS_IF_ADDREF(*aReferrerInfo);
   return NS_OK;
 }
 
