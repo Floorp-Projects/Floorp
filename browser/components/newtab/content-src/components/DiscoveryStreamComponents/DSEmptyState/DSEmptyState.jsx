@@ -52,13 +52,20 @@ export class DSEmptyState extends React.PureComponent {
 
   renderButton() {
     if (this.props.status === "waiting" || this.state.waiting) {
-      return <button className="try-again-button waiting">Loading...</button>;
+      return (
+        <button
+          className="try-again-button waiting"
+          data-l10n-id="newtab-discovery-empty-section-topstories-loading"
+        />
+      );
     }
 
     return (
-      <button className="try-again-button" onClick={this.onReset}>
-        Try Again
-      </button>
+      <button
+        className="try-again-button"
+        onClick={this.onReset}
+        data-l10n-id="newtab-discovery-empty-section-topstories-try-again-button"
+      />
     );
   }
 
@@ -66,7 +73,7 @@ export class DSEmptyState extends React.PureComponent {
     if (this.props.status === "waiting" || this.props.status === "failed") {
       return (
         <React.Fragment>
-          <h2>Oops! We almost loaded this section, but not quite.</h2>
+          <h2 data-l10n-id="newtab-discovery-empty-section-topstories-timed-out" />
           {this.renderButton()}
         </React.Fragment>
       );
@@ -74,8 +81,8 @@ export class DSEmptyState extends React.PureComponent {
 
     return (
       <React.Fragment>
-        <h2>You are caught up!</h2>
-        <p>Check back later for more stories.</p>
+        <h2 data-l10n-id="newtab-discovery-empty-section-topstories-header" />
+        <p data-l10n-id="newtab-discovery-empty-section-topstories-content" />
       </React.Fragment>
     );
   }

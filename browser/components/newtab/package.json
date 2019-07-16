@@ -51,6 +51,7 @@
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "3.0.5",
     "loader-utils": "1.2.3",
+    "lodash": "4.17.14",
     "minimist": "1.2.0",
     "mocha": "6.1.4",
     "mock-raf": "1.0.1",
