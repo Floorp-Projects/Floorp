@@ -18,7 +18,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { table, tbody, div } = dom;
 
 const { L10N } = require("../../utils/l10n");
-const FRAMES_EMPTY_TEXT = L10N.getStr("webSocketsEmptyText");
+const FRAMES_EMPTY_TEXT = L10N.getStr("messagesEmptyText");
 const Actions = require("../../actions/index");
 
 const { getSelectedFrame } = require("../../selectors/index");
