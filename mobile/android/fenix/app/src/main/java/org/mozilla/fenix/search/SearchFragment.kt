@@ -72,20 +72,20 @@ class SearchFragment : Fragment(), BackHandler {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = session?.url ?: ""
 
-        searchStore = StoreProvider.get(
-            this,
+        searchStore = StoreProvider.get(this) {
             SearchStore(
                 SearchState(
-                query = url,
-                showShortcutEnginePicker = false,
-                searchEngineSource = SearchEngineSource.Default(
-                    requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
-                ),
-                showSuggestions = Settings.getInstance(requireContext()).showSearchSuggestions,
-                showVisitedSitesBookmarks = Settings.getInstance(requireContext()).shouldShowVisitedSitesBookmarks,
-                session = session)
+                    query = url,
+                    showShortcutEnginePicker = false,
+                    searchEngineSource = SearchEngineSource.Default(
+                        requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+                    ),
+                    showSuggestions = Settings.getInstance(requireContext()).showSearchSuggestions,
+                    showVisitedSitesBookmarks = Settings.getInstance(requireContext()).shouldShowVisitedSitesBookmarks,
+                    session = session
+                )
             )
-        )
+        }
 
         searchInteractor = SearchInteractor(
             activity as HomeActivity,

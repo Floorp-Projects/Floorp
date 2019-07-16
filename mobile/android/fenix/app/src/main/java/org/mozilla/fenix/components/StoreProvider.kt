@@ -9,25 +9,37 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.get
-import mozilla.components.lib.state.Action
-import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
 /**
- * Generic ViewModel to wrap a State object for state restoration
+ * Generic ViewModel to wrap a State object for state restoration.
+ *
+ * @property store [Store] instance attached to [ViewModel].
  */
-@Suppress("UNCHECKED_CAST")
-class StoreProvider<S : State, A : Action, T : Store<S, A>>(val store: T) : ViewModel() {
-    companion object {
-        fun <S : State, A : Action, T : Store<S, A>> get(fragment: Fragment, initialStore: T): T {
-            val factory = object : ViewModelProvider.Factory {
-                override fun <VM : ViewModel?> create(modelClass: Class<VM>): VM {
-                    return StoreProvider(initialStore) as VM
-                }
-            }
+class StoreProvider<T : Store<*, *>>(
+    val store: T
+) : ViewModel() {
 
-            val viewModel: StoreProvider<S, A, T> = ViewModelProviders.of(fragment, factory).get()
+    companion object {
+        fun <T : Store<*, *>> get(fragment: Fragment, createStore: () -> T): T {
+            val factory = StoreProviderFactory(createStore)
+            val viewModel: StoreProvider<T> = ViewModelProviders.of(fragment, factory).get()
             return viewModel.store
         }
+    }
+}
+
+/**
+ * ViewModel factory to create [StoreProvider] instances.
+ *
+ * @param createStore Callback to create a new [Store], used when the [ViewModel] is first created.
+ */
+class StoreProviderFactory<T : Store<*, *>>(
+    private val createStore: () -> T
+) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <VM : ViewModel?> create(modelClass: Class<VM>): VM {
+        return StoreProvider(createStore()) as VM
     }
 }

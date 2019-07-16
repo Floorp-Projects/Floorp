@@ -55,14 +55,13 @@ class HistoryFragment : Fragment(), BackHandler {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
-        historyStore = StoreProvider.get(
-            this,
+        historyStore = StoreProvider.get(this) {
             HistoryStore(
                 HistoryState(
                     items = listOf(), mode = HistoryState.Mode.Normal
                 )
             )
-        )
+        }
         historyInteractor = HistoryInteractor(
             historyStore,
             ::openItem,
