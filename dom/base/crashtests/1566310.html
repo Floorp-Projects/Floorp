@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+<script type="text/javascript">
+function noop() {}
+function crash() {
+  let div = document.querySelector("div");
+  let ifr = document.querySelector("iframe");
+
+  // We need a reference to the iframe's window from *before* it gets detached.
+  let win = ifr.contentWindow;
+
+  div.appendChild(ifr);
+
+  win.addEventListener("beforeunload", noop);
+  win.removeEventListener("beforeunload", noop);
+}
+</script>
+</head>
+<body onload="crash()">
+  <div></div>
+  <iframe></iframe>
+</body>
+</html>

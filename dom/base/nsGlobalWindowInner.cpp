@@ -6069,7 +6069,7 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
     mHasVRDisplayActivateEvents = true;
   }
 
-  if (aType == nsGkAtoms::onbeforeunload && mBrowserChild &&
+  if (aType == nsGkAtoms::onbeforeunload && mWindowGlobalChild &&
       (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
     mWindowGlobalChild->BeforeUnloadAdded();
     MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() > 0);
@@ -6091,7 +6091,7 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
 }
 
 void nsGlobalWindowInner::EventListenerRemoved(nsAtom* aType) {
-  if (aType == nsGkAtoms::onbeforeunload && mBrowserChild &&
+  if (aType == nsGkAtoms::onbeforeunload && mWindowGlobalChild &&
       (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
     mWindowGlobalChild->BeforeUnloadRemoved();
     MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() >= 0);
