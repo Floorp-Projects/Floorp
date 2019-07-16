@@ -34,9 +34,6 @@ exclude: true
   [`browser.tabs.create`][69.6] calls by WebExtensions.
 
 [69.6]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/create
-[69.7]: ../GeckoSession.ContentDelegate.html#onKill
-
-- Created `onKill` to `ContentDelegate` to differentiate from crashes.
 
 ## v68
 - Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
@@ -350,4 +347,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: a48d987bbc9301577c072823070ff5541e0fa211
+[api-version]: 3d726407275d906a54c1fc86eb92f2c3bfaaa3d0
