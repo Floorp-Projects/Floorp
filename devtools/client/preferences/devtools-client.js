@@ -357,9 +357,6 @@ pref("devtools.responsive.showUserAgentInput", true);
 pref("devtools.responsive.showUserAgentInput", false);
 #endif
 
-// Enable new about:debugging.
-pref("devtools.aboutdebugging.new-enabled", true);
-
 // Show tab debug targets for This Firefox (on by default for local builds).
 #ifdef MOZILLA_OFFICIAL
   pref("devtools.aboutdebugging.local-tab-debugging", false);

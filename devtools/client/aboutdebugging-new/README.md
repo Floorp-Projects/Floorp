@@ -3,7 +3,7 @@
 ## What is about:debugging-new
 The purpose of about:debugging is to be a debugging hub to start inspecting your addons, processes, tabs and workers. This new version of about:debugging will also allow you to debug remote devices (Firefox for Android on a smartphone). The user should be able to connect either via USB or WiFi. This solution is supposed to replace the various existing remote debugging solutions available in Firefox DevTools, WebIDE and the Connect page.
 
-To try about:debugging-new, the preference `devtools.aboutdebugging.new-enabled` needs to be set to true in `about:config`. After that, the UI is available by typing `about:debugging` in the Firefox URL bar.
+To try out about:debugging, type `about:debugging` in the Firefox URL bar.
 
 ## Technical overview
 
@@ -16,7 +16,7 @@ The about:debugging-new UI is built using React and Redux. The various React/Red
 The folder `devtools/client/aboutdebugging-new/src/modules` contains various helpers and classes that are not related to React/Redux. For instance modules/usb-runtimes.js provides an abstraction layer to enable USB runtimes scanning, to list USB runtimes etc...
 
 ### Firefox Component Registration
-about:debugging-new is an "about" page registered via a component manifest that is located in `/devtools/startup/aboutdebugging.manifest`. The component registration code is at `/devtools/startup/aboutdebugging-registration.js` and mostly contains the logic to switch between the old and the new about:debugging UI, based on the value of the preference `devtools.aboutdebugging.new-enabled`.
+about:debugging-new is an "about" page registered via a component manifest that is located in `/devtools/startup/aboutdebugging.manifest`. The component registration code is at `/devtools/startup/aboutdebugging-registration.js`.
 
 ### Actions
 Actions should cover all user or external events that change the UI.
