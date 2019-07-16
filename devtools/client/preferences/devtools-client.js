@@ -189,8 +189,12 @@ pref("devtools.netmonitor.har.forceExport", false);
 pref("devtools.netmonitor.har.pageLoadedTimeout", 1500);
 pref("devtools.netmonitor.har.enableAutoExportToFile", false);
 
-// Support for WebSocket monitoring pref (pending complete implementation)
+// Enable WebSocket monitoring in Nightly builds.
+#if defined(NIGHTLY_BUILD)
+pref("devtools.netmonitor.features.webSockets", true);
+#else
 pref("devtools.netmonitor.features.webSockets", false);
+#endif
 
 // Scratchpad settings
 // - recentFileMax: The maximum number of recently-opened files
