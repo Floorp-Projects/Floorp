@@ -26,7 +26,6 @@ py2:
         - testing/mozharness
         - testing/raptor
         - testing/tools
-        - testing/tps
         - testing/web-platform
         - toolkit
         - tools/profiler
