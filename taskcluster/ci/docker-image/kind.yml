@@ -202,6 +202,3 @@ jobs:
     webrender:
         symbol: I(webrender)
         parent: debian9-base
-    webrender-updater:
-        symbol: I(wrupdater)
-        parent: debian9-base
