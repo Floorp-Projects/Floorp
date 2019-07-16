@@ -20,6 +20,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PWA_LAUNCHER
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -205,7 +206,7 @@ class WebAppShortcutManagerTest {
         assertEquals("https://example.com", shortcut.id)
         assertEquals("Demo", shortcut.longLabel)
         assertEquals("Demo", shortcut.shortLabel)
-        assertEquals(WebAppLauncherActivity.INTENT_ACTION, intent.action)
+        assertEquals(ACTION_PWA_LAUNCHER, intent.action)
         assertEquals("https://example.com".toUri(), intent.data)
     }
 

@@ -19,8 +19,14 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.samples.browser.ext.components
 
+/**
+ * Activity that holds the [BrowserFragment].
+ */
 open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
 
+    /**
+     * Returns a new instance of [BrowserFragment] to display.
+     */
     open fun createBrowserFragment(sessionId: String?): Fragment =
         BrowserFragment.create(sessionId)
 

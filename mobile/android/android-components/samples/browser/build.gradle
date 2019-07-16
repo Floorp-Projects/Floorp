@@ -170,6 +170,7 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
 
     implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_constraintlayout
 
     androidTestImplementation project(':support-android-test')

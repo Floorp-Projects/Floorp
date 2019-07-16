@@ -20,6 +20,15 @@ import org.junit.runner.RunWith
 class WebAppManifestParserTest {
 
     @Test
+    fun `getOrNull returns parsed manifest`() {
+        val sucessfulResult = WebAppManifestParser().parse(loadManifest("example_mdn.json"))
+        assertNotNull(sucessfulResult.getOrNull())
+
+        val failedResult = WebAppManifestParser().parse(loadManifest("invalid_json.json"))
+        assertNull(failedResult.getOrNull())
+    }
+
+    @Test
     fun `Parsing example manifest from MDN`() {
         val json = loadManifest("example_mdn.json")
         val result = WebAppManifestParser().parse(json)

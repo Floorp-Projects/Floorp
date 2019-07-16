@@ -18,20 +18,35 @@ class IntentReceiverActivity : Activity() {
         MainScope().launch {
             val intent = intent?.let { Intent(it) } ?: Intent()
             val intentProcessors = listOf(
+                components.webAppIntentProcessor,
                 components.customTabIntentProcessor,
                 components.tabIntentProcessor
             )
 
             intentProcessors.any { it.process(intent) }
 
-            if (components.customTabIntentProcessor.matches(intent)) {
-                intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
-            } else {
-                intent.setClassName(applicationContext, BrowserActivity::class.java.name)
-            }
+            setBrowserActivity(intent)
 
             startActivity(intent)
             finish()
         }
+    }
+
+    /**
+     * Sets the activity that this [intent] will launch.
+     */
+    private fun setBrowserActivity(intent: Intent) {
+        val externalAppIntentProcessors = listOf(
+            components.webAppIntentProcessor,
+            components.customTabIntentProcessor
+        )
+
+        val className = if (externalAppIntentProcessors.any { it.matches(intent) }) {
+            ExternalAppBrowserActivity::class
+        } else {
+            BrowserActivity::class
+        }
+
+        intent.setClassName(applicationContext, className.java.name)
     }
 }

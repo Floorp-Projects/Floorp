@@ -5,9 +5,10 @@
 package mozilla.components.feature.pwa
 
 import android.content.Intent
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.core.net.toUri
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.pwa.intent.WebAppIntentProcessor.Companion.ACTION_VIEW_PWA
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import org.junit.Assert.assertEquals
@@ -120,9 +121,8 @@ class WebAppLauncherActivityTest {
         val captor = argumentCaptor<Intent>()
         verify(activity).startActivity(captor.capture())
 
-        assertEquals(AbstractWebAppShellActivity.INTENT_ACTION, captor.value.action)
+        assertEquals(ACTION_VIEW_PWA, captor.value.action)
         assertEquals(url, captor.value.data)
-        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK, captor.value.flags)
         assertEquals("test", captor.value.`package`)
     }
 }

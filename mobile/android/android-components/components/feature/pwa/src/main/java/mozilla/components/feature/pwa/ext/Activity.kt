@@ -15,13 +15,12 @@ import mozilla.components.concept.engine.manifest.WebAppManifest.Orientation
  */
 fun Activity.applyOrientation(manifest: WebAppManifest?) {
     requestedOrientation = when (manifest?.orientation) {
-        Orientation.NATURAL, Orientation.ANY -> ActivityInfo.SCREEN_ORIENTATION_USER
+        Orientation.NATURAL, Orientation.ANY, null -> ActivityInfo.SCREEN_ORIENTATION_USER
         Orientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
         Orientation.LANDSCAPE_PRIMARY -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         Orientation.LANDSCAPE_SECONDARY -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
         Orientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
         Orientation.PORTRAIT_PRIMARY -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         Orientation.PORTRAIT_SECONDARY -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
-        else -> ActivityInfo.SCREEN_ORIENTATION_USER
     }
 }

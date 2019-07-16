@@ -32,6 +32,8 @@ import mozilla.components.feature.intent.TabIntentProcessor
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.notification.MediaNotificationFeature
 import mozilla.components.feature.media.state.MediaStateMachine
+import mozilla.components.feature.pwa.ManifestStorage
+import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.HistoryDelegate
@@ -118,6 +120,9 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
     val customTabIntentProcessor by lazy {
         CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources)
+    }
+    val webAppIntentProcessor by lazy {
+        WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(applicationContext))
     }
 
     // Menu

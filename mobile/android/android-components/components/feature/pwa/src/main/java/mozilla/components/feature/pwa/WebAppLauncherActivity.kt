@@ -16,6 +16,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.pwa.intent.WebAppIntentProcessor.Companion.ACTION_VIEW_PWA
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -76,16 +77,14 @@ class WebAppLauncherActivity : AppCompatActivity(), CoroutineScope by MainScope(
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun launchWebAppShell(startUrl: Uri) {
-        val intent = Intent(AbstractWebAppShellActivity.INTENT_ACTION).apply {
-            data = startUrl
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+        val intent = Intent(ACTION_VIEW_PWA, startUrl).apply {
             `package` = packageName
         }
 
         try {
             startActivity(intent)
         } catch (e: ActivityNotFoundException) {
-            logger.error("Packages does not handle AbstractWebAppShellActivity intent. Can't launch web app.", e)
+            logger.error("Packages does not handle ACTION_VIEW_PWA intent. Can't launch as web app.", e)
             // Fall back to normal browser
             launchBrowser(startUrl)
         }
@@ -97,6 +96,6 @@ class WebAppLauncherActivity : AppCompatActivity(), CoroutineScope by MainScope(
     }
 
     companion object {
-        const val INTENT_ACTION = "mozilla.components.feature.pwa.PWA_LAUNCHER"
+        internal const val ACTION_PWA_LAUNCHER = "mozilla.components.feature.pwa.PWA_LAUNCHER"
     }
 }
