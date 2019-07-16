@@ -15,6 +15,8 @@ Exits with code 0 if creating the keystore and every signing succeeded,
 or with code 1 if any creation or signing failed.
 """
 
+from __future__ import absolute_import
+
 from argparse import ArgumentParser
 import errno
 import logging

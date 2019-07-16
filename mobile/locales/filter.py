@@ -7,6 +7,8 @@ reported and l10n-merged.
 This needs to stay in sync with the copy in mobile/android/locales.
 """
 
+from __future__ import absolute_import
+
 
 def test(mod, path, entity=None):
     import re
