@@ -320,8 +320,8 @@ class ExternalResourceMap {
    * Request an external resource document.  This does exactly what
    * Document::RequestExternalResource is documented to do.
    */
-  Document* RequestResource(nsIURI* aURI, nsIURI* aReferrer,
-                            uint32_t aReferrerPolicy, nsINode* aRequestingNode,
+  Document* RequestResource(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
+                            nsINode* aRequestingNode,
                             Document* aDisplayDocument,
                             ExternalResourceLoad** aPendingLoad);
 
@@ -378,8 +378,8 @@ class ExternalResourceMap {
      * Start aURI loading.  This will perform the necessary security checks and
      * so forth.
      */
-    nsresult StartLoad(nsIURI* aURI, nsIURI* aReferrer,
-                       uint32_t aReferrerPolicy, nsINode* aRequestingNode);
+    nsresult StartLoad(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
+                       nsINode* aRequestingNode);
     /**
      * Set up an nsIContentViewer based on aRequest.  This is guaranteed to
      * put null in *aViewer and *aLoadGroup on all failures.
@@ -2802,13 +2802,12 @@ class Document : public nsINode,
    * one in the future.
    *
    * @param aURI the URI to get
-   * @param aReferrer the referrer of the request
-   * @param aReferrerPolicy the referrer policy of the request
+   * @param aReferrerInfo the referrerInfo of the request
    * @param aRequestingNode the node making the request
    * @param aPendingLoad the pending load for this request, if any
    */
-  Document* RequestExternalResource(nsIURI* aURI, nsIURI* aReferrer,
-                                    uint32_t aReferrerPolicy,
+  Document* RequestExternalResource(nsIURI* aURI,
+                                    nsIReferrerInfo* aReferrerInfo,
                                     nsINode* aRequestingNode,
                                     ExternalResourceLoad** aPendingLoad);
 
@@ -4408,6 +4407,7 @@ class Document : public nsINode,
 
   // A lazily-constructed URL data for style system to resolve URL value.
   RefPtr<URLExtraData> mCachedURLData;
+  nsCOMPtr<nsIReferrerInfo> mCachedReferrerInfo;
 
   nsWeakPtr mDocumentLoadGroup;
 

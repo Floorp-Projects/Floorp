@@ -1796,6 +1796,9 @@ static already_AddRefed<StyleSheet> LoadImportSheet(
     }
     emptySheet->SetURIs(uri, uri, uri);
     emptySheet->SetPrincipal(aURL.ExtraData().Principal());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        ReferrerInfo::CreateForExternalCSSResources(emptySheet);
+    emptySheet->SetReferrerInfo(referrerInfo);
     emptySheet->SetComplete();
     aParent->PrependStyleSheet(emptySheet);
     return emptySheet.forget();

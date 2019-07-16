@@ -3367,10 +3367,10 @@ int32_t nsContentUtils::CORSModeToLoadImageFlags(mozilla::CORSMode aMode) {
 nsresult nsContentUtils::LoadImage(
     nsIURI* aURI, nsINode* aContext, Document* aLoadingDocument,
     nsIPrincipal* aLoadingPrincipal, uint64_t aRequestContextID,
-    nsIURI* aReferrer, net::ReferrerPolicy aReferrerPolicy,
-    imgINotificationObserver* aObserver, int32_t aLoadFlags,
-    const nsAString& initiatorType, imgRequestProxy** aRequest,
-    uint32_t aContentPolicyType, bool aUseUrgentStartForChannel) {
+    nsIReferrerInfo* aReferrerInfo, imgINotificationObserver* aObserver,
+    int32_t aLoadFlags, const nsAString& initiatorType,
+    imgRequestProxy** aRequest, uint32_t aContentPolicyType,
+    bool aUseUrgentStartForChannel) {
   MOZ_ASSERT(aURI, "Must have a URI");
   MOZ_ASSERT(aContext, "Must have a context");
   MOZ_ASSERT(aLoadingDocument, "Must have a document");
@@ -3392,10 +3392,13 @@ nsresult nsContentUtils::LoadImage(
 
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
+  nsCOMPtr<nsIURI> referrer = aReferrerInfo->GetOriginalReferrer();
+  auto referrerPolicy = static_cast<mozilla::net::ReferrerPolicy>(
+      aReferrerInfo->GetReferrerPolicy());
   return imgLoader->LoadImage(aURI,               /* uri to load */
                               documentURI,        /* initialDocumentURI */
-                              aReferrer,          /* referrer */
-                              aReferrerPolicy,    /* referrer policy */
+                              referrer,           /* referrerInfo */
+                              referrerPolicy,     /* referrer policy */
                               aLoadingPrincipal,  /* loading principal */
                               aRequestContextID,  /* request context ID */
                               loadGroup,          /* loadgroup */

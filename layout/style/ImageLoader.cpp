@@ -456,9 +456,8 @@ void ImageLoader::LoadImage(const StyleComputedImageUrl& aImage,
 
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(
-      uri, &aLoadingDoc, &aLoadingDoc, data.Principal(), 0, data.GetReferrer(),
-      data.GetReferrerPolicy(), nullptr, loadFlags, NS_LITERAL_STRING("css"),
-      getter_AddRefs(request));
+      uri, &aLoadingDoc, &aLoadingDoc, data.Principal(), 0, data.ReferrerInfo(),
+      nullptr, loadFlags, NS_LITERAL_STRING("css"), getter_AddRefs(request));
 
   if (NS_FAILED(rv) || !request) {
     return;

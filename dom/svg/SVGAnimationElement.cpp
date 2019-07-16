@@ -13,6 +13,7 @@
 #include "mozilla/SMILTimeContainer.h"
 #include "nsContentUtils.h"
 #include "nsIContentInlines.h"
+#include "nsIReferrerInfo.h"
 #include "nsIURI.h"
 #include "prtime.h"
 
@@ -358,10 +359,10 @@ void SVGAnimationElement::UpdateHrefTarget(const nsAString& aHrefStr) {
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), aHrefStr,
                                             OwnerDoc(), GetBaseURI());
-  // Bug 1415044 to investigate which referrer we should use
-  mHrefTarget.ResetToURIFragmentID(this, targetURI,
-                                   OwnerDoc()->GetDocumentURI(),
-                                   OwnerDoc()->GetReferrerPolicy());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForSVGResources(OwnerDoc());
+
+  mHrefTarget.ResetToURIFragmentID(this, targetURI, referrerInfo);
   AnimationTargetChanged();
 }
 

@@ -2182,9 +2182,11 @@ void CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor) {
 static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
     nsCSSPropertyID aProperty, const nsAString& aPropertyValue,
     Document* aDocument) {
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForInternalCSSResources(aDocument);
+
   RefPtr<URLExtraData> data = new URLExtraData(
-      aDocument->GetDocBaseURI(), aDocument->GetDocumentURI(),
-      aDocument->NodePrincipal(), aDocument->GetReferrerPolicy());
+      aDocument->GetDocBaseURI(), referrerInfo, aDocument->NodePrincipal());
 
   ServoCSSParser::ParsingEnvironment env(
       data, aDocument->GetCompatibilityMode(), aDocument->CSSLoader());
