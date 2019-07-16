@@ -241,14 +241,6 @@ OfflineCacheUpdateParent::SetRemoteSubframes(bool aUseRemoteSubframes) {
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::GetIsInIsolatedMozBrowserElement(
-    bool* aIsInIsolatedMozBrowserElement) {
-  NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
-  return mLoadingPrincipal->GetIsInIsolatedMozBrowserElement(
-      aIsInIsolatedMozBrowserElement);
-}
-
-NS_IMETHODIMP
 OfflineCacheUpdateParent::GetScriptableOriginAttributes(
     JSContext* aCx, JS::MutableHandleValue aAttrs) {
   NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
