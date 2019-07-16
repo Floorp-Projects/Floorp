@@ -110,7 +110,7 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
     }
 
     let payload = frame.payload;
-    payload = new LongStringActor(this.conn, JSON.stringify(payload));
+    payload = new LongStringActor(this.conn, payload);
     this.manage(payload);
     payload = payload.form();
 
@@ -135,7 +135,7 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
       return;
     }
 
-    let payload = new LongStringActor(this.conn, JSON.stringify(frame.payload));
+    let payload = new LongStringActor(this.conn, frame.payload);
     this.manage(payload);
     payload = payload.form();
 
