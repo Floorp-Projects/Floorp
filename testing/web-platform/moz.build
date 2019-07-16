@@ -282,7 +282,7 @@ with Files("tests/entries-api/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/eventsource/**"):
-    BUG_COMPONENT = ("Core", "DOM: Networking")
+    BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("tests/feature-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
