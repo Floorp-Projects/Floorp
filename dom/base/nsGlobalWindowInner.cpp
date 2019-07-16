@@ -838,9 +838,8 @@ class PromiseDocumentFlushedResolver final {
 //***    nsGlobalWindowInner: Object Management
 //*****************************************************************************
 
-nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
-                                         WindowGlobalChild* aActor)
-    : nsPIDOMWindowInner(aOuterWindow, aActor),
+nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow)
+    : nsPIDOMWindowInner(aOuterWindow),
       mozilla::webgpu::InstanceProvider(this),
       mWasOffline(false),
       mHasHadSlowScript(false),
@@ -1616,7 +1615,9 @@ void nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx,
   // FIXME: Currently, devtools can crete a fallback webextension window global
   // in the content process which does not have a corresponding BrowserChild
   // actor. This means we have no actor to be our parent. (Bug 1498293)
-  if (!mWindowGlobalChild && (XRE_IsParentProcess() || mBrowserChild)) {
+  MOZ_DIAGNOSTIC_ASSERT(!mWindowGlobalChild,
+                        "Shouldn't have created WindowGlobalChild yet!");
+  if (XRE_IsParentProcess() || mBrowserChild) {
     mWindowGlobalChild = WindowGlobalChild::Create(this);
   }
 
@@ -7139,17 +7140,11 @@ mozilla::dom::TabGroup* nsPIDOMWindowInner::TabGroup() {
 
 /* static */
 already_AddRefed<nsGlobalWindowInner> nsGlobalWindowInner::Create(
-    nsGlobalWindowOuter* aOuterWindow, bool aIsChrome,
-    WindowGlobalChild* aActor) {
-  RefPtr<nsGlobalWindowInner> window =
-      new nsGlobalWindowInner(aOuterWindow, aActor);
+    nsGlobalWindowOuter* aOuterWindow, bool aIsChrome) {
+  RefPtr<nsGlobalWindowInner> window = new nsGlobalWindowInner(aOuterWindow);
   if (aIsChrome) {
     window->mIsChrome = true;
     window->mCleanMessageManager = true;
-  }
-
-  if (aActor) {
-    aActor->InitWindowGlobal(window);
   }
 
   window->InitWasOffline();
@@ -7204,8 +7199,14 @@ bool nsPIDOMWindowInner::HasStorageAccessGranted(
   return mStorageAccessGranted.Contains(aPermissionKey);
 }
 
-nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
-                                       WindowGlobalChild* aActor)
+// XXX: Can we define this in a header instead of here?
+namespace mozilla {
+namespace dom {
+extern uint64_t NextWindowID();
+}  // namespace dom
+}  // namespace mozilla
+
+nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow)
     : mMutationBits(0),
       mActivePeerConnections(0),
       mIsDocumentLoaded(false),
@@ -7217,24 +7218,16 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
       mMayHavePointerEnterLeaveEventListener(false),
       mMayHaveTextEventListenerInDefaultGroup(false),
       mOuterWindow(aOuterWindow),
-      mWindowID(0),
+      // Make sure no actual window ends up with mWindowID == 0
+      mWindowID(NextWindowID()),
       mHasNotifiedGlobalCreated(false),
       mMarkedCCGeneration(0),
       mHasTriedToCacheTopInnerWindow(false),
       mNumOfIndexedDBDatabases(0),
       mNumOfOpenWebSockets(0),
-      mEvent(nullptr),
-      mWindowGlobalChild(aActor) {
+      mEvent(nullptr) {
   MOZ_ASSERT(aOuterWindow);
   mBrowsingContext = aOuterWindow->GetBrowsingContext();
-
-  if (mWindowGlobalChild) {
-    mWindowID = aActor->InnerWindowId();
-
-    MOZ_ASSERT(mWindowGlobalChild->BrowsingContext() == mBrowsingContext);
-  } else {
-    mWindowID = nsContentUtils::GenerateWindowId();
-  }
 }
 
 void nsPIDOMWindowInner::RegisterReportingObserver(ReportingObserver* aObserver,

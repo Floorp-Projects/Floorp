@@ -190,8 +190,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                const TabContext& aContext, BrowsingContext* aBrowsingContext,
                uint32_t aChromeFlags, bool aIsTopLevel);
 
-  nsresult Init(mozIDOMWindowProxy* aParent,
-                WindowGlobalChild* aInitialWindowChild);
+  nsresult Init(mozIDOMWindowProxy* aParent);
 
   /** Return a BrowserChild with the given attributes. */
   static already_AddRefed<BrowserChild> Create(
@@ -674,7 +673,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   PBrowserBridgeChild* AllocPBrowserBridgeChild(
       const nsString& aName, const nsString& aRemoteType,
-      const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
+      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
       const TabId& aTabId);
 
   bool DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor);

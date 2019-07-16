@@ -58,12 +58,6 @@ class nsWebBrowserInitInfo {
 
 class mozIDOMWindowProxy;
 
-namespace mozilla {
-namespace dom {
-class WindowGlobalChild;
-}  // namespace dom
-}  // namespace mozilla
-
 class nsWebBrowser final : public nsIWebBrowser,
                            public nsIWebNavigation,
                            public nsIDocShellTreeItem,
@@ -115,7 +109,6 @@ class nsWebBrowser final : public nsIWebBrowser,
       nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
       const mozilla::OriginAttributes& aOriginAttributes,
       mozilla::dom::BrowsingContext* aBrowsingContext,
-      mozilla::dom::WindowGlobalChild* aInitialWindowChild,
       bool aDisableHistory = false);
 
  protected:
