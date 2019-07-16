@@ -9,6 +9,8 @@ It's probably best to specify a path NOT inside the repo, otherwise
 all the virtualenv files will show up in e.g. hg status.
 """
 
+from __future__ import absolute_import, print_function
+
 import optparse
 import os
 import shutil

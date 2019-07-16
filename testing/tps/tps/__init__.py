@@ -3,5 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # flake8: noqa
+
+from __future__ import absolute_import
+
 from . firefoxrunner import TPSFirefoxRunner
 from . testrunner import TPSTestRunner
