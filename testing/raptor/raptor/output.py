@@ -133,6 +133,8 @@ class Output(object):
             elif test.type == "benchmark":
                 if 'assorted-dom' in test.measurements:
                     subtests, vals = self.parseAssortedDomOutput(test)
+                elif 'ares6' in test.measurements:
+                    subtests, vals = self.parseAresSixOutput(test)
                 elif 'motionmark' in test.measurements:
                     subtests, vals = self.parseMotionmarkOutput(test)
                 elif 'speedometer' in test.measurements:
@@ -407,6 +409,109 @@ class Output(object):
         names.sort(reverse=True)
         for name in names:
             _subtests[name]['value'] = filters.median(_subtests[name]['replicates'])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]['value'], name])
+
+        return subtests, vals
+
+    def parseAresSixOutput(self, test):
+        # https://browserbench.org/ARES-6/
+        # Every pagecycle will perform the tests from the index page
+        # We have 4 main tests per index page:
+        # - Air, Basic, Babylon, ML
+        # - and from these 4 above, ares6 generates the Overall results
+        # Each test has 3 subtests (firstIteration, steadyState, averageWorstCase):
+        # - _steadyState
+        # - _firstIteration
+        # - _averageWorstCase
+        # Each index page will run 5 cycles, this is set in glue.js
+        #
+        # {
+        #     'expected_browser_cycles': 1,
+        #     'subtest_unit': 'ms',
+        #     'name': 'raptor-ares6-firefox',
+        #     'lower_is_better': False,
+        #     'browser_cycle': '1',
+        #     'subtest_lower_is_better': True,
+        #     'cold': False,
+        #     'browser': 'Firefox 69.0a1 20190531035909',
+        #     'type': 'benchmark',
+        #     'page': 'http://127.0.0.1:35369/ARES-6/index.html?raptor',
+        #     'unit': 'ms',
+        #     'alert_threshold': 2
+        #     'measurements': {
+        #         'ares6': [[{
+        #             'Babylon_firstIteration': [
+        #                 123.68,
+        #                 168.21999999999997,
+        #                 127.34000000000003,
+        #                 113.56,
+        #                 128.78,
+        #                 169.44000000000003
+        #             ],
+        #             'Air_steadyState': [
+        #                 21.184723618090434,
+        #                 22.906331658291457,
+        #                 19.939396984924624,
+        #                 20.572462311557775,
+        #                 20.790452261306534,
+        #                 18.378693467336696
+        #             ],
+        #             etc.
+        #         }]]
+        #     }
+        # }
+        #
+        # Details on how /ARES6/index.html is showing the mean on subsequent test results:
+        #
+        # I selected just a small part from the metrics just to be easier to explain
+        # what is going on.
+        #
+        # After the raptor GeckoView test finishes, we have these results in the logs:
+        #
+        # Extracted from "INFO - raptor-control-server Info: received webext_results:"
+        # 'Air_firstIteration': [660.8000000000002, 626.4599999999999, 655.6199999999999,
+        # 635.9000000000001, 636.4000000000001]
+        #
+        # Extracted from "INFO - raptor-output Info: PERFHERDER_DATA:"
+        # {"name": "Air_firstIteration", "lowerIsBetter": true, "alertThreshold": 2.0,
+        # "replicates": [660.8, 626.46, 655.62, 635.9, 636.4], "value": 636.4, "unit": "ms"}
+        #
+        # On GeckoView's /ARES6/index.html this is what we see for Air - First Iteration:
+        #
+        # - on 1st test cycle : 660.80 (rounded from 660.8000000000002)
+        #
+        # - on 2nd test cycle : 643.63 , this is coming from
+        #   (660.8000000000002 + 626.4599999999999) / 2 ,
+        #   then rounded up to a precision of 2 decimals
+        #
+        # - on 3rd test cycle : 647.63 this is coming from
+        #   (660.8000000000002 + 626.4599999999999 + 655.6199999999999) / 3 ,
+        #   then rounded up to a precision of 2 decimals
+        #
+        # - and so on
+        #
+
+        _subtests = {}
+        data = test.measurements['ares6']
+        for page_cycle in data:
+            for sub, replicates in page_cycle[0].iteritems():
+                # for each pagecycle, build a list of subtests and append all related replicates
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {'unit': test.subtest_unit,
+                                      'alertThreshold': float(test.alert_threshold),
+                                      'lowerIsBetter': test.subtest_lower_is_better,
+                                      'name': sub,
+                                      'replicates': []}
+                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
+
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]['value'] = filters.mean(_subtests[name]['replicates'])
             subtests.append(_subtests[name])
             vals.append([_subtests[name]['value'], name])
 
