@@ -2108,7 +2108,6 @@ void nsWindow::WaylandEGLSurfaceForceRedraw() {
     if (mCompositorWidgetDelegate) {
       mNeedsUpdatingEGLSurface = false;
       mCompositorWidgetDelegate->RequestsUpdatingEGLSurface();
-      remoteRenderer->SendResumeAsync();
     }
     remoteRenderer->SendForcePresent();
   }
