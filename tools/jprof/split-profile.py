@@ -52,6 +52,8 @@
 # functions in the input file can lead to a logical splitting of the
 # profile into segments.
 
+from __future__ import absolute_import, print_function
+
 import sys
 import subprocess
 import os.path
