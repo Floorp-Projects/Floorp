@@ -16,10 +16,7 @@ This mechanism will be replaced with the Gradle native version as we
 transition to Gradle.
 '''
 
-from __future__ import (
-    print_function,
-    unicode_literals,
-)
+from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import defaultdict
 import os
