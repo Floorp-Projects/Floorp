@@ -401,11 +401,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
     unitarget.AssignASCII(aTarget);  // XXX could this be nonascii?
   }
 
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-
   // Create an absolute URL
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, baseURI);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, GetBaseURI());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIInputStream> headersDataStream;
@@ -3225,7 +3223,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::PrivateModeChanged(bool aEnabled) {
   return mInstance ? mInstance->PrivateModeStateChanged(aEnabled) : NS_OK;
 }
 
-already_AddRefed<nsIURI> nsPluginInstanceOwner::GetBaseURI() const {
+nsIURI* nsPluginInstanceOwner::GetBaseURI() const {
   nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
   if (!content) {
     return nullptr;

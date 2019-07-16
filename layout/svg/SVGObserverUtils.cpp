@@ -1372,9 +1372,9 @@ SVGGeometryElement* SVGObserverUtils::GetAndObserveTextPathsPath(
     }
 
     nsCOMPtr<nsIURI> targetURI;
-    nsCOMPtr<nsIURI> base = content->GetBaseURI();
-    nsContentUtils::NewURIWithDocumentCharset(
-        getter_AddRefs(targetURI), href, content->GetUncomposedDoc(), base);
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
+                                              content->GetUncomposedDoc(),
+                                              content->GetBaseURI());
 
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references Bug 1415044 to investigate which referrer we should use
@@ -1422,9 +1422,9 @@ nsIFrame* SVGObserverUtils::GetAndObserveTemplate(
     // Convert href to an nsIURI
     nsIContent* content = aFrame->GetContent();
     nsCOMPtr<nsIURI> targetURI;
-    nsCOMPtr<nsIURI> base = content->GetBaseURI();
-    nsContentUtils::NewURIWithDocumentCharset(
-        getter_AddRefs(targetURI), href, content->GetUncomposedDoc(), base);
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
+                                              content->GetUncomposedDoc(),
+                                              content->GetBaseURI());
 
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references.  Bug 1415044 to investigate which referrer we should use.
@@ -1457,10 +1457,10 @@ Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
   nsAutoString elementId =
       NS_LITERAL_STRING("#") + nsDependentAtomString(aHref);
   nsCOMPtr<nsIURI> targetURI;
-  nsCOMPtr<nsIURI> base = aFrame->GetContent()->GetBaseURI();
   nsContentUtils::NewURIWithDocumentCharset(
       getter_AddRefs(targetURI), elementId,
-      aFrame->GetContent()->GetUncomposedDoc(), base);
+      aFrame->GetContent()->GetUncomposedDoc(),
+      aFrame->GetContent()->GetBaseURI());
   RefPtr<URLAndReferrerInfo> url = new URLAndReferrerInfo(
       targetURI, aFrame->GetContent()->OwnerDoc()->GetDocumentURI(),
       aFrame->GetContent()->OwnerDoc()->GetReferrerPolicy());

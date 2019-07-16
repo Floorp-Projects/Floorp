@@ -97,14 +97,14 @@
             <span class="origin-label field-label" data-l10n-id="login-item-origin-label"></span>
             <input type="url" name="origin" class="origin-input" required data-l10n-id="login-item-origin"/>
           </label>
-          <button class="open-site-button" data-l10n-id="login-item-open-site-button"></button>
+          <button class="open-site-button" data-l10n-id="login-item-open-site-button" type="button"></button>
         </div>
         <div class="detail-row">
           <label class="detail-cell">
             <span class="username-label field-label" data-l10n-id="login-item-username-label"></span>
             <input type="text" name="username" data-l10n-id="login-item-username"/>
           </label>
-          <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username">
+          <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username" type="button">
             <span class="copied-button-text" data-l10n-id="login-item-copied-username-button-text"></span>
             <span class="copy-button-text" data-l10n-id="login-item-copy-username-button-text"></span>
           </button>
@@ -119,7 +119,7 @@
                      data-l10n-id="login-item-password-reveal-checkbox"/>
             </div>
           </label>
-          <button class="copy-button copy-password-button" data-copy-login-property="password" data-telemetry-object="password">
+          <button class="copy-button copy-password-button" data-copy-login-property="password" data-telemetry-object="password" type="button">
             <span class="copied-button-text" data-l10n-id="login-item-copied-password-button-text"></span>
             <span class="copy-button-text" data-l10n-id="login-item-copy-password-button-text"></span>
           </button>
@@ -127,8 +127,8 @@
         <p class="time-created meta-info" data-l10n-id="login-item-time-created" data-l10n-args='{"timeCreated": 0}'></p>
         <p class="time-changed meta-info" data-l10n-id="login-item-time-changed" data-l10n-args='{"timeChanged": 0}'></p>
         <p class="time-used meta-info" data-l10n-id="login-item-time-used" data-l10n-args='{"timeUsed": 0}'></p>
-        <button class="save-changes-button" data-l10n-id="login-item-save-changes-button"></button>
-        <button class="cancel-button" data-l10n-id="login-item-cancel-button"></button>
+        <button class="save-changes-button" type="submit"></button>
+        <button class="cancel-button" data-l10n-id="login-item-cancel-button" type="button"></button>
       </form>
     </template>
 

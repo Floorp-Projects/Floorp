@@ -1063,8 +1063,8 @@ namespace {
 
 class MOZ_STACK_CLASS MappedAttrParser {
  public:
-  MappedAttrParser(css::Loader* aLoader, nsIURI* aDocURI,
-                   already_AddRefed<nsIURI> aBaseURI, SVGElement* aElement);
+  MappedAttrParser(css::Loader* aLoader, nsIURI* aDocURI, nsIURI* aBaseURI,
+                   SVGElement* aElement);
   ~MappedAttrParser();
 
   // Parses a mapped attribute value.
@@ -1096,8 +1096,7 @@ class MOZ_STACK_CLASS MappedAttrParser {
 };
 
 MappedAttrParser::MappedAttrParser(css::Loader* aLoader, nsIURI* aDocURI,
-                                   already_AddRefed<nsIURI> aBaseURI,
-                                   SVGElement* aElement)
+                                   nsIURI* aBaseURI, SVGElement* aElement)
     : mLoader(aLoader),
       mDocURI(aDocURI),
       mBaseURI(aBaseURI),

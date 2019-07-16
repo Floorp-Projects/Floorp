@@ -7,24 +7,28 @@
 var DEBUG = 0;
 var debug;
 if (DEBUG) {
-  debug = function (s) { dump("-*- IndexedDBHelper: " + s + "\n"); }
+  debug = function(s) {
+    dump("-*- IndexedDBHelper: " + s + "\n");
+  };
 } else {
-  debug = function (s) {}
+  debug = function(s) {};
 }
 
 var EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
 Cu.importGlobalProperties(["indexedDB"]);
 
-ChromeUtils.defineModuleGetter(this, 'Services',
-  'resource://gre/modules/Services.jsm');
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 function getErrorName(err) {
-  return err && err.name || "UnknownError";
+  return (err && err.name) || "UnknownError";
 }
 
-function IndexedDBHelper() {
-}
+function IndexedDBHelper() {}
 
 IndexedDBHelper.prototype = {
   // Close the database
@@ -60,39 +64,64 @@ IndexedDBHelper.prototype = {
       self._waitForOpenCallbacks.clear();
     };
 
-    if (DEBUG) debug("Try to open database:" + self.dbName + " " + self.dbVersion);
+    if (DEBUG) {
+      debug("Try to open database:" + self.dbName + " " + self.dbVersion);
+    }
     let req;
     try {
       req = indexedDB.open(this.dbName, this.dbVersion);
     } catch (e) {
-      if (DEBUG) debug("Error opening database: " + self.dbName);
+      if (DEBUG) {
+        debug("Error opening database: " + self.dbName);
+      }
       Services.tm.dispatchToMainThread(() => invokeCallbacks(getErrorName(e)));
       return;
     }
-    req.onsuccess = function (event) {
-      if (DEBUG) debug("Opened database:" + self.dbName + " " + self.dbVersion);
+    req.onsuccess = function(event) {
+      if (DEBUG) {
+        debug("Opened database:" + self.dbName + " " + self.dbVersion);
+      }
       self._db = event.target.result;
       self._db.onversionchange = function(event) {
-        if (DEBUG) debug("WARNING: DB modified from a different window.");
-      }
+        if (DEBUG) {
+          debug("WARNING: DB modified from a different window.");
+        }
+      };
       invokeCallbacks();
     };
 
-    req.onupgradeneeded = function (aEvent) {
+    req.onupgradeneeded = function(aEvent) {
       if (DEBUG) {
-        debug("Database needs upgrade:" + self.dbName + aEvent.oldVersion + aEvent.newVersion);
-        debug("Correct new database version:" + (aEvent.newVersion == this.dbVersion));
+        debug(
+          "Database needs upgrade:" +
+            self.dbName +
+            aEvent.oldVersion +
+            aEvent.newVersion
+        );
+        debug(
+          "Correct new database version:" +
+            (aEvent.newVersion == this.dbVersion)
+        );
       }
 
       let _db = aEvent.target.result;
-      self.upgradeSchema(req.transaction, _db, aEvent.oldVersion, aEvent.newVersion);
+      self.upgradeSchema(
+        req.transaction,
+        _db,
+        aEvent.oldVersion,
+        aEvent.newVersion
+      );
     };
-    req.onerror = function (aEvent) {
-      if (DEBUG) debug("Failed to open database: " + self.dbName);
+    req.onerror = function(aEvent) {
+      if (DEBUG) {
+        debug("Failed to open database: " + self.dbName);
+      }
       invokeCallbacks(getErrorName(aEvent.target.error));
     };
-    req.onblocked = function (aEvent) {
-      if (DEBUG) debug("Opening database request is blocked.");
+    req.onblocked = function(aEvent) {
+      if (DEBUG) {
+        debug("Opening database request is blocked.");
+      }
     };
   },
 
@@ -106,7 +135,9 @@ IndexedDBHelper.prototype = {
    */
   ensureDB: function ensureDB(aSuccessCb, aFailureCb) {
     if (this._db) {
-      if (DEBUG) debug("ensureDB: already have a database, returning early.");
+      if (DEBUG) {
+        debug("ensureDB: already have a database, returning early.");
+      }
       if (aSuccessCb) {
         Services.tm.dispatchToMainThread(aSuccessCb);
       }
@@ -137,18 +168,33 @@ IndexedDBHelper.prototype = {
    * @param failureCb
    *        Error callback to call when an error is encountered.
    */
-  newTxn: function newTxn(txn_type, store_name, callback, successCb, failureCb) {
+  newTxn: function newTxn(
+    txn_type,
+    store_name,
+    callback,
+    successCb,
+    failureCb
+  ) {
     this.ensureDB(() => {
-      if (DEBUG) debug("Starting new transaction" + txn_type);
+      if (DEBUG) {
+        debug("Starting new transaction" + txn_type);
+      }
       let txn;
       try {
-        txn = this._db.transaction(Array.isArray(store_name) ? store_name : this.dbStoreNames, txn_type);
+        txn = this._db.transaction(
+          Array.isArray(store_name) ? store_name : this.dbStoreNames,
+          txn_type
+        );
       } catch (e) {
-        if (DEBUG) debug("Error starting transaction: " + this.dbName);
+        if (DEBUG) {
+          debug("Error starting transaction: " + this.dbName);
+        }
         failureCb(getErrorName(e));
         return;
       }
-      if (DEBUG) debug("Retrieving object store: " + this.dbName);
+      if (DEBUG) {
+        debug("Retrieving object store: " + this.dbName);
+      }
       let stores;
       if (Array.isArray(store_name)) {
         stores = [];
@@ -159,8 +205,10 @@ IndexedDBHelper.prototype = {
         stores = txn.objectStore(store_name);
       }
 
-      txn.oncomplete = function () {
-        if (DEBUG) debug("Transaction complete. Returning to callback.");
+      txn.oncomplete = function() {
+        if (DEBUG) {
+          debug("Transaction complete. Returning to callback.");
+        }
         /*
          * txn.result property is not part of the transaction object returned
          * by this._db.transaction method called above.
@@ -178,8 +226,10 @@ IndexedDBHelper.prototype = {
         }
       };
 
-      txn.onabort = function () {
-        if (DEBUG) debug("Caught error on transaction");
+      txn.onabort = function() {
+        if (DEBUG) {
+          debug("Caught error on transaction");
+        }
         /*
          * txn.error property is part of the transaction object returned by
          * this._db.transaction method called above.
@@ -211,5 +261,5 @@ IndexedDBHelper.prototype = {
     // Cache the database.
     this._db = null;
     this._waitForOpenCallbacks = new Set();
-  }
-}
+  },
+};

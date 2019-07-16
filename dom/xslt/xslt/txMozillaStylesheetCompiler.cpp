@@ -592,17 +592,11 @@ nsresult TX_CompileStylesheet(nsINode* aNode,
   // If we move GetBaseURI to nsINode this can be simplified.
   nsCOMPtr<Document> doc = aNode->OwnerDoc();
 
-  nsCOMPtr<nsIURI> uri;
-  if (aNode->IsContent()) {
-    uri = aNode->AsContent()->GetBaseURI();
-  } else {
-    NS_ASSERTION(aNode->IsDocument(), "not a doc");
-    uri = aNode->AsDocument()->GetBaseURI();
-  }
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+  nsIURI* nodeBaseURI = aNode->GetBaseURI();
+  NS_ENSURE_TRUE(nodeBaseURI, NS_ERROR_FAILURE);
 
   nsAutoCString spec;
-  uri->GetSpec(spec);
+  nodeBaseURI->GetSpec(spec);
   NS_ConvertUTF8toUTF16 baseURI(spec);
 
   nsIURI* docUri = doc->GetDocumentURI();
@@ -610,6 +604,7 @@ nsresult TX_CompileStylesheet(nsINode* aNode,
 
   // We need to remove the ref, a URI with a ref would mean that we have an
   // embedded stylesheet.
+  nsCOMPtr<nsIURI> uri;
   NS_GetURIWithoutRef(docUri, getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 

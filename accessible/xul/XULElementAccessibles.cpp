@@ -205,12 +205,11 @@ already_AddRefed<nsIURI> XULLinkAccessible::AnchorURIAt(
   nsAutoString href;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
-  nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
   dom::Document* document = mContent->OwnerDoc();
 
   nsCOMPtr<nsIURI> anchorURI;
   NS_NewURI(getter_AddRefs(anchorURI), href,
-            document->GetDocumentCharacterSet(), baseURI);
+            document->GetDocumentCharacterSet(), mContent->GetBaseURI());
 
   return anchorURI.forget();
 }

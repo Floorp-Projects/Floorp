@@ -1372,7 +1372,7 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   }
 
   // Steps 5-6
-  nsCOMPtr<nsIURI> baseURI;
+  nsIURI* baseURI = nullptr;
   if (mBaseURI) {
     baseURI = mBaseURI;
   } else if (responsibleDocument) {

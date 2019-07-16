@@ -300,7 +300,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
     return;
   }
 
-  RefPtr<BrowsingContext> kungFuDeathGrip(this);
+  RefPtr<BrowsingContext> self(this);
 
   if (!mGroup->EvictCachedContext(this)) {
     Children* children = nullptr;
@@ -313,15 +313,17 @@ void BrowsingContext::Detach(bool aFromIPC) {
     children->RemoveElement(this);
   }
 
-  // As our nsDocShell is going away, this should implicitly mark us as closed.
-  // We directly set our member, rather than using a transaction as we're going
-  // to send a `Detach` message to other processes either way.
   Unregister();
 
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendDetachBrowsingContext(this);
+    // Tell our parent that the BrowsingContext has been detached. A strong
+    // reference to this is held until the promise is resolved to ensure it
+    // doesn't die before the parent receives the message.
+    auto resolve = [self](bool) {};
+    auto reject = [self](mozilla::ipc::ResponseRejectReason) {};
+    cc->SendDetachBrowsingContext(Id(), resolve, reject);
   }
 }
 
@@ -955,12 +957,24 @@ void IPDLParamTraits<dom::BrowsingContext*>::Write(
     IPC::Message* aMsg, IProtocol* aActor, dom::BrowsingContext* aParam) {
   uint64_t id = aParam ? aParam->Id() : 0;
   WriteIPDLParam(aMsg, aActor, id);
+  if (!aParam) {
+    return;
+  }
 
-  // If his is an in-process send. We want to make sure that our BrowsingContext
-  // object lives long enough to make it to the other side, so we take an extra
-  // reference. This reference is freed in ::Read().
-  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
-    NS_IF_ADDREF(aParam);
+  // Make sure that the other side will still have our BrowsingContext around
+  // when it tries to perform deserialization.
+  if (aActor->GetIPCChannel()->IsCrossProcess()) {
+    // If we're sending the message between processes, we only know the other
+    // side will still have a copy if we've not been discarded yet. As
+    // serialization cannot fail softly, fail loudly by crashing.
+    MOZ_RELEASE_ASSERT(
+        !aParam->IsDiscarded(),
+        "Cannot send discarded BrowsingContext between processes!");
+  } else {
+    // If we're in-process, we can take an extra reference to ensure it lives
+    // long enough to make it to the other side. This reference is freed in
+    // `::Read()`.
+    aParam->AddRef();
   }
 }
 
@@ -977,16 +991,26 @@ bool IPDLParamTraits<dom::BrowsingContext*>::Read(
     return true;
   }
 
-  *aResult = dom::BrowsingContext::Get(id);
-  MOZ_ASSERT(*aResult, "Deserialized absent BrowsingContext!");
-
-  // If this is an in-process actor, free the reference taken in ::Write().
-  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
-    dom::BrowsingContext* bc = *aResult;
-    NS_IF_RELEASE(bc);
+  RefPtr<dom::BrowsingContext> browsingContext = dom::BrowsingContext::Get(id);
+  if (!browsingContext) {
+    // NOTE: We could fail softly by returning `false` if the `BrowsingContext`
+    // isn't present, but doing so will cause a crash anyway. Let's improve
+    // diagnostics by reliably crashing here.
+    //
+    // If we can recover from failures to deserialize in the future, this crash
+    // should be removed or modified.
+    MOZ_CRASH("Attempt to deserialize absent BrowsingContext");
+    *aResult = nullptr;
+    return false;
   }
 
-  return *aResult != nullptr;
+  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
+    // Release the reference taken in `::Write()` for in-process actors.
+    browsingContext.get()->Release();
+  }
+
+  *aResult = browsingContext.forget();
+  return true;
 }
 
 void IPDLParamTraits<dom::BrowsingContext::Transaction>::Write(

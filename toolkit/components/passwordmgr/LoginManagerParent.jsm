@@ -725,6 +725,13 @@ this.LoginManagerParent = {
     if (logins.length > 0) {
       log("_onGeneratedPasswordFilled: Login already saved for this site");
       shouldSaveLogin = false;
+      for (let login of logins) {
+        if (formLogin.matches(login, false)) {
+          // This login is already saved so show no new UI.
+          log("_onGeneratedPasswordFilled: Matching login already saved");
+          return;
+        }
+      }
     }
 
     if (shouldSaveLogin) {
@@ -735,6 +742,18 @@ this.LoginManagerParent = {
     );
     let browser = browsingContext.top.embedderElement;
     let prompter = this._getPrompter(browser, openerTopWindowID);
+
+    if (shouldSaveLogin) {
+      // If we auto-saved the login then show a change doorhanger to allow
+      // modifying it e.g. adding a username.
+      prompter.promptToChangePassword(
+        formLogin,
+        formLogin,
+        true, // dimissed prompt
+        shouldSaveLogin // notifySaved
+      );
+      return;
+    }
     prompter.promptToSavePassword(
       formLogin,
       true, // dimissed prompt

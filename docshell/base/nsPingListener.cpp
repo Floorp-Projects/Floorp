@@ -273,9 +273,9 @@ static void ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback,
   nsWhitespaceTokenizer tokenizer(value);
 
   while (tokenizer.hasMoreTokens()) {
-    nsCOMPtr<nsIURI> uri, baseURI = aContent->GetBaseURI();
-    ios->NewURI(NS_ConvertUTF16toUTF8(tokenizer.nextToken()), charset.get(),
-                baseURI, getter_AddRefs(uri));
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), tokenizer.nextToken(), charset.get(),
+              aContent->GetBaseURI());
     // if we can't generate a valid URI, then there is nothing to do
     if (!uri) {
       continue;

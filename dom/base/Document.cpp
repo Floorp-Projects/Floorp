@@ -5705,15 +5705,12 @@ void Document::ReleaseCapture() const {
   }
 }
 
-already_AddRefed<nsIURI> Document::GetBaseURI(bool aTryUseXHRDocBaseURI) const {
-  nsCOMPtr<nsIURI> uri;
+nsIURI* Document::GetBaseURI(bool aTryUseXHRDocBaseURI) const {
   if (aTryUseXHRDocBaseURI && mChromeXHRDocBaseURI) {
-    uri = mChromeXHRDocBaseURI;
-  } else {
-    uri = GetDocBaseURI();
+    return mChromeXHRDocBaseURI;
   }
 
-  return uri.forget();
+  return GetDocBaseURI();
 }
 
 void Document::SetBaseURI(nsIURI* aURI) {

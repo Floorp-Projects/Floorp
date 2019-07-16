@@ -445,7 +445,7 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
     return;
   }
 
-  nsCOMPtr<nsIURI> base_uri = mOwnerContent->GetBaseURI();
+  nsIURI* base_uri = mOwnerContent->GetBaseURI();
   auto encoding = doc->GetDocumentCharacterSet();
 
   nsCOMPtr<nsIURI> uri;
@@ -635,8 +635,7 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
 
   if (isSrcdoc) {
     loadState->SetSrcdocData(srcdoc);
-    nsCOMPtr<nsIURI> baseURI = mOwnerContent->GetBaseURI();
-    loadState->SetBaseURI(baseURI);
+    loadState->SetBaseURI(mOwnerContent->GetBaseURI());
   }
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();

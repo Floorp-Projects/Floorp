@@ -70,19 +70,6 @@ JS_PUBLIC_API bool JS::CanCompileOffThread(
   return CanDoOffThread(cx, options, length, OffThread::Compile);
 }
 
-JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
-                                          const ReadOnlyCompileOptions& options,
-                                          size_t length) {
-  return CanDoOffThread(cx, options, length, OffThread::Decode);
-}
-
-#ifdef JS_BUILD_BINAST
-JS_PUBLIC_API bool JS::CanDecodeBinASTOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options, size_t length) {
-  return CanDoOffThread(cx, options, length, OffThread::DecodeBinAST);
-}
-#endif
-
 JS_PUBLIC_API bool JS::CompileOffThread(JSContext* cx,
                                         const ReadOnlyCompileOptions& options,
                                         JS::SourceText<char16_t>& srcBuf,
@@ -147,6 +134,12 @@ JS_PUBLIC_API void JS::CancelOffThreadModule(JSContext* cx,
                                       token);
 }
 
+JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
+                                          const ReadOnlyCompileOptions& options,
+                                          size_t length) {
+  return CanDoOffThread(cx, options, length, OffThread::Decode);
+}
+
 JS_PUBLIC_API bool JS::DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
@@ -164,21 +157,6 @@ JS_PUBLIC_API bool JS::DecodeOffThreadScript(
   return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
-JS_PUBLIC_API bool JS::DecodeMultiOffThreadScripts(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    TranscodeSources& sources, OffThreadCompileCallback callback,
-    void* callbackData) {
-#ifdef DEBUG
-  size_t length = 0;
-  for (auto& source : sources) {
-    length += source.range.length();
-  }
-  MOZ_ASSERT(CanCompileOffThread(cx, options, length));
-#endif
-  return StartOffThreadDecodeMultiScripts(cx, options, sources, callback,
-                                          callbackData);
-}
-
 JS_PUBLIC_API JSScript* JS::FinishOffThreadScriptDecoder(
     JSContext* cx, JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
@@ -192,6 +170,21 @@ JS_PUBLIC_API void JS::CancelOffThreadScriptDecoder(JSContext* cx,
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   HelperThreadState().cancelParseTask(cx->runtime(),
                                       ParseTaskKind::ScriptDecode, token);
+}
+
+JS_PUBLIC_API bool JS::DecodeMultiOffThreadScripts(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    TranscodeSources& sources, OffThreadCompileCallback callback,
+    void* callbackData) {
+#ifdef DEBUG
+  size_t length = 0;
+  for (auto& source : sources) {
+    length += source.range.length();
+  }
+  MOZ_ASSERT(CanCompileOffThread(cx, options, length));
+#endif
+  return StartOffThreadDecodeMultiScripts(cx, options, sources, callback,
+                                          callbackData);
 }
 
 JS_PUBLIC_API bool JS::FinishMultiOffThreadScriptsDecoder(
@@ -209,3 +202,26 @@ JS_PUBLIC_API void JS::CancelMultiOffThreadScriptsDecoder(
   HelperThreadState().cancelParseTask(cx->runtime(),
                                       ParseTaskKind::MultiScriptsDecode, token);
 }
+
+#ifdef JS_BUILD_BINAST
+
+JS_PUBLIC_API bool JS::CanDecodeBinASTOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options, size_t length) {
+  return CanDoOffThread(cx, options, length, OffThread::DecodeBinAST);
+}
+
+JS_PUBLIC_API bool JS::DecodeBinASTOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
+    size_t length, OffThreadCompileCallback callback, void* callbackData) {
+  return StartOffThreadDecodeBinAST(cx, options, buf, length, callback,
+                                    callbackData);
+}
+
+JS_PUBLIC_API JSScript* JS::FinishOffThreadBinASTDecode(
+    JSContext* cx, JS::OffThreadToken* token) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+  return HelperThreadState().finishBinASTDecodeTask(cx, token);
+}
+
+#endif  // JS_BUILD_BINAST

@@ -285,8 +285,9 @@ class BaseMarionetteArguments(ArgumentParser):
                           help='profile to use when launching the gecko process. If not passed, '
                                'then a profile will be constructed and used',
                           type=dir_path)
-        self.add_argument('--pref',
+        self.add_argument('--setpref',
                           action='append',
+                          metavar='PREF=VALUE',
                           dest='prefs_args',
                           help="A preference to set. Must be a key-value pair separated by a ':'.")
         self.add_argument('--preferences',
@@ -414,7 +415,7 @@ class BaseMarionetteArguments(ArgumentParser):
             for prefs_file in prefs_files:
                 prefs.add_file(prefs_file)
 
-        separator = ':'
+        separator = '='
         cli_prefs = []
         if prefs_args:
             misformatted = []

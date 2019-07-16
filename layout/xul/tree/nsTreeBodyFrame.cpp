@@ -1913,11 +1913,9 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
       styleRequest->SyncClone(imgNotificationObserver, doc,
                               getter_AddRefs(imageRequest));
     } else {
-      nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-
       nsCOMPtr<nsIURI> srcURI;
-      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(srcURI),
-                                                imageSrc, doc, baseURI);
+      nsContentUtils::NewURIWithDocumentCharset(
+          getter_AddRefs(srcURI), imageSrc, doc, mContent->GetBaseURI());
       if (!srcURI) return NS_ERROR_FAILURE;
 
       // XXXbz what's the origin principal for this stuff that comes from our

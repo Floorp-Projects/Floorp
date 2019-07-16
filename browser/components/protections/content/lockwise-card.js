@@ -27,9 +27,14 @@ export default class LockwiseCard {
     });
 
     RPMAddMessageListener("SendUserLoginsData", ({ data }) => {
-      // Once browser data for the user is retrieved, display it on the card's body
-      // section.
+      // Once data for the user is retrieved, display the lockwise card.
       this.buildContent(data);
+
+      // Show the Lockwise card.
+      const lockwiseCard = this.doc.querySelector(
+        ".report-card.lockwise-card.hidden"
+      );
+      lockwiseCard.classList.remove("hidden");
     });
 
     // Dispatch messages to retrieve data for the Lockwise  card.

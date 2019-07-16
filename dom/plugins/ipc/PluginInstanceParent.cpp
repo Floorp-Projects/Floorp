@@ -163,9 +163,8 @@ bool PluginInstanceParent::InitMetadata(const nsACString& aMimeType,
   if (!owner) {
     return false;
   }
-  nsCOMPtr<nsIURI> baseUri(owner->GetBaseURI());
   return NS_SUCCEEDED(
-      NS_MakeAbsoluteURI(mSrcAttribute, aSrcAttribute, baseUri));
+      NS_MakeAbsoluteURI(mSrcAttribute, aSrcAttribute, owner->GetBaseURI()));
 }
 
 void PluginInstanceParent::ActorDestroy(ActorDestroyReason why) {

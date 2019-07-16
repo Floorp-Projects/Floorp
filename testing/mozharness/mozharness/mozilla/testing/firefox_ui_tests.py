@@ -49,6 +49,12 @@ firefox_ui_tests_config_options = [
         'default': True,
         'help': 'Disable multi-process (e10s) mode when running tests.',
     }],
+    [["--setpref"], {
+        'dest': 'extra_prefs',
+        'action': 'append',
+        'default': [],
+        'help': 'Extra user prefs.',
+    }],
     [['--symbols-path=SYMBOLS_PATH'], {
         'dest': 'symbols_path',
         'help': 'absolute path to directory containing breakpad '
@@ -242,6 +248,8 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         if not self.config.get('e10s'):
             cmd.append('--disable-e10s')
+
+        cmd.extend(['--setpref={}'.format(p) for p in self.config.get('extra_prefs')])
 
         if self.symbols_url:
             cmd.extend(['--symbols-path', self.symbols_url])

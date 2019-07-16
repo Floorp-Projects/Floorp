@@ -24,19 +24,6 @@
 #include <cpptl/forwards.h>
 #endif
 
-// Conditional NORETURN attribute on the throw functions would:
-// a) suppress false positives from static code analysis
-// b) possibly improve optimization opportunities.
-#if !defined(JSONCPP_NORETURN)
-#if defined(_MSC_VER)
-#define JSONCPP_NORETURN __declspec(noreturn)
-#elif defined(__GNUC__)
-#define JSONCPP_NORETURN __attribute__((__noreturn__))
-#else
-#define JSONCPP_NORETURN
-#endif
-#endif
-
 // Disable warning C4251: <data member>: <type> needs to have dll-interface to
 // be used by...
 #if defined(JSONCPP_DISABLE_DLL_INTERFACE_WARNING)
@@ -89,9 +76,9 @@ public:
 #endif
 
 /// used internally
-JSONCPP_NORETURN void throwRuntimeError(String const& msg);
+[[noreturn]] void throwRuntimeError(String const& msg);
 /// used internally
-JSONCPP_NORETURN void throwLogicError(String const& msg);
+[[noreturn]] void throwLogicError(String const& msg);
 
 /** \brief Type of the value held by a Value object.
  */
@@ -206,11 +193,14 @@ public:
   // Required for boost integration, e. g. BOOST_TEST
   typedef std::string value_type;
 
-  static const Value& null; ///< We regret this reference to a global instance;
-                            ///< prefer the simpler Value().
-  static const Value& nullRef; ///< just a kludge for binary-compatibility; same
-                               ///< as null
-  static Value const& nullSingleton(); ///< Prefer this to null or nullRef.
+#if JSON_USE_NULLREF
+  // Binary compatibility kludges, do not use.
+  static const Value& null;
+  static const Value& nullRef;
+#endif
+
+  // null and nullRef are deprecated, use this instead.
+  static Value const& nullSingleton();
 
   /// Minimum signed integer value that can be stored in a Json::Value.
   static const LargestInt minLargestInt;
