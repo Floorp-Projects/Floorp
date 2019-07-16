@@ -68,7 +68,7 @@
         screenX="4" screenY="4"
         fullscreenbutton="true"
         sizemode="normal"
-        retargetdocumentfocus="urlbar"
+        retargetdocumentfocus="urlbar-input"
         persist="screenX screenY width height sizemode"
         >
 
@@ -841,11 +841,10 @@
                      removable="false"
                      class="chromeclass-location" overflows="false">
             <toolbartabstop/>
-            <textbox id="urlbar" flex="1"
-                     placeholder="&urlbar.placeholder2;"
-                     defaultPlaceholder="&urlbar.placeholder2;"
-                     focused="true"
-                     pageproxystate="invalid">
+            <hbox id="urlbar" flex="1"
+                  defaultPlaceholder="&urlbar.placeholder2;"
+                  focused="true"
+                  pageproxystate="invalid">
               <!-- Use onclick instead of normal popup= syntax since the popup
                    code fires onmousedown, and hence eats our favicon drag events. -->
               <box id="identity-box" role="button"
@@ -950,6 +949,28 @@
                 <label id="switchtab" class="urlbar-display urlbar-display-switchtab" value="&urlbar.switchToTab.label;"/>
                 <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
               </box>
+              <moz-input-box tooltip="aHTMLTooltip"
+                             class="urlbar-input-box"
+                             flex="1">
+                <html:input class="urlbar-scheme textbox-input"
+                            required="required"/>
+                <html:input id="urlbar-input"
+                            anonid="input"
+                            class="urlbar-input textbox-input"
+                            role="combobox"
+                            aria-owns="urlbarView-results"
+                            aria-controls="urlbarView-results"
+                            aria-autocomplete="both"
+                            allowevents="true"
+                            inputmode="mozAwesomebar"
+                            placeholder="&urlbar.placeholder2;"/>
+              </moz-input-box>
+              <image class="urlbar-go-button urlbar-icon"
+                     onclick="gURLBar.handleCommand(event);"
+                     tooltiptext="&goEndCap.tooltip;"/>
+              <image class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
+                     tooltiptext="&urlbar.openHistoryPopup.tooltip;"
+                     allowevents="true"/>
               <hbox id="page-action-buttons" context="pageActionContextMenu">
                 <toolbartabstop/>
                 <hbox id="contextual-feature-recommendation" role="button" hidden="true">
@@ -1008,7 +1029,7 @@
                   </hbox>
                 </hbox>
               </hbox>
-            </textbox>
+            </hbox>
             <toolbartabstop/>
         </toolbaritem>
 

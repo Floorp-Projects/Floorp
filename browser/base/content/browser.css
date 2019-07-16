@@ -529,11 +529,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   min-width: 1px;
 }
 
-
-#urlbar[quantumbar="true"] {
-  -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
-}
-
 /* Display URLs left-to-right but right aligned in RTL mode. */
 html|input.urlbar-input:-moz-locale-dir(rtl) {
   direction: ltr !important;
@@ -583,18 +578,18 @@ html|input.urlbar-scheme {
 
 /* Visible if the urlbar is not focused and it overflows at the start.
    Uses the required-valid trick to check if it contains a value */
-html|input.urlbar-scheme[textoverflow="start"]:not([focused]):valid {
+#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > html|input.urlbar-scheme:valid {
   visibility: visible;
 }
 
 /* Fade out URL on overflow
    This mask may be overriden when a Contextual Feature Recommendation is shown,
    see browser/themes/shared/urlbar-searchbar.inc.css for details */
-html|input.urlbar-input[textoverflow="end"]:not([focused]) {
+#urlbar[textoverflow="end"]:not([focused]) > .urlbar-input-box > html|input.urlbar-input {
   mask-image: linear-gradient(to left, transparent, black 3ch);
 }
 
-html|input.urlbar-input[textoverflow="start"]:not([focused]) {
+#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > html|input.urlbar-input {
   mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
 }
 
@@ -655,9 +650,9 @@ html|input.urlbar-input {
 
 #urlbar[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
-.urlbar-history-dropmarker[usertyping],
-.urlbar-go-button:not([usertyping]),
-.urlbar-go-button:not([parentfocused="true"]) {
+#urlbar[usertyping] > .urlbar-history-dropmarker,
+#urlbar:not([usertyping]) > .urlbar-go-button,
+#urlbar:not([focused]) > .urlbar-go-button {
   display: none;
 }
 
