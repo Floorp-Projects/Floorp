@@ -127,8 +127,9 @@ WebBrowserPersistLocalDocument::GetTitle(nsAString& aTitle) {
 }
 
 NS_IMETHODIMP
-WebBrowserPersistLocalDocument::GetReferrer(nsAString& aReferrer) {
-  mDocument->GetReferrer(aReferrer);
+WebBrowserPersistLocalDocument::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
+  *aReferrerInfo = mDocument->GetReferrerInfo();
+  NS_IF_ADDREF(*aReferrerInfo);
   return NS_OK;
 }
 
