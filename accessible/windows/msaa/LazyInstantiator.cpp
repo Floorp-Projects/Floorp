@@ -14,6 +14,7 @@
 #include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsAccessibilityService.h"
 #include "nsWindowsHelpers.h"
 #include "nsCOMPtr.h"
@@ -27,6 +28,10 @@
 #if !defined(STATE_SYSTEM_NORMAL)
 #  define STATE_SYSTEM_NORMAL (0)
 #endif  // !defined(STATE_SYSTEM_NORMAL)
+
+#define DLL_BLOCKLIST_ENTRY(name, ...) {L##name, __VA_ARGS__},
+#define DLL_BLOCKLIST_STRING_TYPE const wchar_t*
+#include "mozilla/WindowsDllBlocklistA11yDefs.h"
 
 namespace mozilla {
 namespace a11y {
@@ -156,31 +161,6 @@ LazyInstantiator::GetClientPid(const DWORD aClientTid) {
   return ::GetProcessIdOfThread(callingThread);
 }
 
-#define ALL_VERSIONS ((unsigned long long)-1LL)
-
-struct DllBlockInfo {
-  // The name of the DLL.
-  const wchar_t* mName;
-
-  // If mUntilVersion is ALL_VERSIONS, we'll block all versions of this dll.
-  // Otherwise, we'll block all versions less than the given version, as queried
-  // by GetFileVersionInfo and VS_FIXEDFILEINFO's dwFileVersionMS and
-  // dwFileVersionLS fields.
-  //
-  // Note that the version is usually 4 components, which is A.B.C.D
-  // encoded as 0x AAAA BBBB CCCC DDDD ULL (spaces added for clarity).
-  unsigned long long mUntilVersion;
-};
-
-/**
- * This is the blocklist for known "bad" DLLs that instantiate a11y.
- */
-static const DllBlockInfo gBlockedInprocDlls[] = {
-    // RealPlayer, bug 1418535, bug 1437417
-    // Versions before 18.1.11.0 cause severe performance problems.
-    {L"dtvhooks.dll", MAKE_FILE_VERSION(18, 1, 11, 0)},
-    {L"dtvhooks64.dll", MAKE_FILE_VERSION(18, 1, 11, 0)}};
-
 /**
  * This is the blocklist for known "bad" remote clients that instantiate a11y.
  */
@@ -213,11 +193,9 @@ bool LazyInstantiator::IsBlockedInjection() {
       // This dll isn't loaded.
       continue;
     }
-    if (blockedDll.mUntilVersion == ALL_VERSIONS) {
-      return true;
-    }
-    return Compatibility::IsModuleVersionLessThan(module,
-                                                  blockedDll.mUntilVersion);
+
+    WindowsErrorResult<ModuleVersion> version = GetModuleVersion(module);
+    return version.isOk() && blockedDll.IsVersionBlocked(version.unwrap());
   }
 
   return false;
