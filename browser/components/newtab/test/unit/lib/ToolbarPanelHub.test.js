@@ -22,6 +22,7 @@ describe("ToolbarPanelHub", () => {
       removeAttribute: sandbox.stub(),
       querySelector: sandbox.stub().returns(null),
       appendChild: sandbox.stub(),
+      addEventListener: sandbox.stub(),
     };
     fakeDocument = {
       l10n: {
@@ -45,6 +46,7 @@ describe("ToolbarPanelHub", () => {
       },
     };
     fakeWindow = {
+      document: fakeDocument,
       browser: {
         ownerDocument: fakeDocument,
       },
@@ -146,5 +148,45 @@ describe("ToolbarPanelHub", () => {
     });
     await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
     assert.callCount(instance._createDateElement, uniqueDates.length);
+  });
+  it("should listen for panelhidden and remove the toolbar button", async () => {
+    instance.init({
+      getMessages: sandbox.stub().returns([]),
+    });
+    fakeDocument.getElementById
+      .withArgs("customizationui-widget-panel")
+      .returns(null);
+
+    await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+    assert.notCalled(fakeElementById.addEventListener);
+  });
+  it("should listen for panelhidden and remove the toolbar button", async () => {
+    instance.init({
+      getMessages: sandbox.stub().returns([]),
+    });
+
+    await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+    assert.calledOnce(fakeElementById.addEventListener);
+    assert.calledWithExactly(
+      fakeElementById.addEventListener,
+      "popuphidden",
+      sinon.match.func,
+      {
+        once: true,
+      }
+    );
+    const [, cb] = fakeElementById.addEventListener.firstCall.args;
+
+    assert.notCalled(everyWindowStub.unregisterCallback);
+
+    cb();
+
+    assert.calledOnce(everyWindowStub.unregisterCallback);
+    assert.calledWithExactly(
+      everyWindowStub.unregisterCallback,
+      "whats-new-menu-button"
+    );
   });
 });

@@ -16,18 +16,33 @@ describe("<DSEmptyState>", () => {
 
   it("should render defaultempty state message", () => {
     assert.ok(wrapper.find(".empty-state-message").exists());
-    assert.ok(wrapper.find("h2").exists());
-    assert.ok(wrapper.find("p").exists());
+    const header = wrapper.find(
+      "h2[data-l10n-id='newtab-discovery-empty-section-topstories-header']"
+    );
+    const paragraph = wrapper.find(
+      "p[data-l10n-id='newtab-discovery-empty-section-topstories-content']"
+    );
+
+    assert.ok(header.exists());
+    assert.ok(paragraph.exists());
   });
 
   it("should render failed state message", () => {
     wrapper = shallow(<DSEmptyState status="failed" />);
-    assert.ok(wrapper.find("button.try-again-button").exists());
+    const button = wrapper.find(
+      "button[data-l10n-id='newtab-discovery-empty-section-topstories-try-again-button']"
+    );
+
+    assert.ok(button.exists());
   });
 
   it("should render waiting state message", () => {
     wrapper = shallow(<DSEmptyState status="waiting" />);
-    assert.ok(wrapper.find("button.try-again-button.waiting").exists());
+    const button = wrapper.find(
+      "button[data-l10n-id='newtab-discovery-empty-section-topstories-loading']"
+    );
+
+    assert.ok(button.exists());
   });
 
   it("should dispatch DISCOVERY_STREAM_RETRY_FEED on failed state button click", () => {

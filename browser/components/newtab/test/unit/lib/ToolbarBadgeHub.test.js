@@ -23,6 +23,10 @@ describe("ToolbarBadgeHub", () => {
     fxaMessage = msgs.find(({ id }) => id === "FXA_ACCOUNTS_BADGE");
     whatsnewMessage = msgs.find(({ id }) => id.includes("WHATS_NEW_BADGE_"));
     fakeElement = {
+      classList: {
+        add: sandbox.stub(),
+        remove: sandbox.stub(),
+      },
       setAttribute: sandbox.stub(),
       removeAttribute: sandbox.stub(),
       querySelector: sandbox.stub(),
@@ -128,9 +132,9 @@ describe("ToolbarBadgeHub", () => {
     it("should show a notification", () => {
       instance.addToolbarNotification(target, fxaMessage);
 
-      assert.calledTwice(fakeElement.setAttribute);
+      assert.calledOnce(fakeElement.setAttribute);
       assert.calledWithExactly(fakeElement.setAttribute, "badged", true);
-      assert.calledWithExactly(fakeElement.setAttribute, "value", "x");
+      assert.calledWithExactly(fakeElement.classList.add, "feature-callout");
     });
     it("should attach a cb on the notification", () => {
       instance.addToolbarNotification(target, fxaMessage);
@@ -231,8 +235,10 @@ describe("ToolbarBadgeHub", () => {
     it("should remove the notification", () => {
       instance.removeToolbarNotification(fakeElement);
 
-      assert.calledTwice(fakeElement.removeAttribute);
+      assert.calledOnce(fakeElement.removeAttribute);
       assert.calledWithExactly(fakeElement.removeAttribute, "badged");
+      assert.calledTwice(fakeElement.classList.remove);
+      assert.calledWithExactly(fakeElement.classList.remove, "feature-callout");
     });
   });
   describe("removeAllNotifications", () => {

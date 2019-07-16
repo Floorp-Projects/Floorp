@@ -18,7 +18,12 @@ module.exports = (env = {}) => ({
   },
   // TODO: switch to eval-source-map for faster builds. Requires CSP changes
   devtool: env.development ? "inline-source-map" : false,
-  plugins: [new webpack.optimize.ModuleConcatenationPlugin()],
+  plugins: [
+    new webpack.BannerPlugin(
+      `THIS FILE IS AUTO-GENERATED: ${path.basename(__filename)}`
+    ),
+    new webpack.optimize.ModuleConcatenationPlugin(),
+  ],
   module: {
     rules: [
       {
