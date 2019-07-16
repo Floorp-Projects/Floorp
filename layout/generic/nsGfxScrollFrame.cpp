@@ -150,8 +150,7 @@ class ScrollFrameHelper::AsyncScrollPortEvent : public Runnable {
  public:
   NS_DECL_NSIRUNNABLE
   explicit AsyncScrollPortEvent(ScrollFrameHelper* helper)
-      : Runnable("ScrollFrameHelper::AsyncScrollPortEvent"),
-        mHelper(helper) {}
+      : Runnable("ScrollFrameHelper::AsyncScrollPortEvent"), mHelper(helper) {}
   void Revoke() { mHelper = nullptr; }
 
  private:

@@ -388,8 +388,14 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   auto bounds = gfx::IntRect(origin, aSize);
 
   if (aDirtyRect) {
+<<<<<<< dest
     Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y,
                aDirtyRect->size.width, aDirtyRect->size.height);
+=======
+    Rect dirty(aDirtyRect->origin.x + recordingOrigin.x,
+               aDirtyRect->origin.y + recordingOrigin.y, aDirtyRect->size.width,
+               aDirtyRect->size.height);
+>>>>>>> source
     dt->PushClipRect(dirty);
     bounds = bounds.Intersect(
         IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,

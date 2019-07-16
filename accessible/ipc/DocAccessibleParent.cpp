@@ -540,8 +540,10 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   if (aChildDoc->IsTopLevelInContentProcess()) {
     // aChildDoc is an embedded document in a different content process to
     // this document.
-    auto embeddedBrowser = static_cast<dom::BrowserParent*>(aChildDoc->Manager());
-    dom::BrowserBridgeParent* bridge = embeddedBrowser->GetBrowserBridgeParent();
+    auto embeddedBrowser =
+        static_cast<dom::BrowserParent*>(aChildDoc->Manager());
+    dom::BrowserBridgeParent* bridge =
+        embeddedBrowser->GetBrowserBridgeParent();
     if (bridge) {
       // Send a COM proxy for the embedded document to the embedder process
       // hosting the iframe. This will be returned as the child of the

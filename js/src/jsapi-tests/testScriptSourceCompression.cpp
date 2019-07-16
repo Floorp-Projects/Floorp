@@ -26,8 +26,8 @@
 #include "js/Utility.h"                   // JS::FreePolicy
 #include "js/Value.h"  // JS::NullValue, JS::ObjectValue, JS::Value
 #include "jsapi-tests/tests.h"
-#include "vm/Compression.h"    // js::Compressor::CHUNK_SIZE
-#include "vm/JSFunction.h"     // JSFunction::getOrCreateScript
+#include "vm/Compression.h"  // js::Compressor::CHUNK_SIZE
+#include "vm/JSFunction.h"   // JSFunction::getOrCreateScript
 #include "vm/JSScript.h"  // JSScript, js::ScriptSource::MinimumCompressibleLength, js::SynchronouslyCompressSource
 
 using mozilla::ArrayLength;

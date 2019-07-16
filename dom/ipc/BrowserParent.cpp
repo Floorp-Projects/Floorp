@@ -2640,7 +2640,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
   }
   if (aPositions.Length() != 0) {
     data.mPositions.Construct().Assign(std::move(aPositions));
-    data.mPositionDescendants.Construct().Assign(std::move(aPositionDescendants));
+    data.mPositionDescendants.Construct().Assign(
+        std::move(aPositionDescendants));
   }
 
   nsCOMPtr<nsISessionStoreFunctions> funcs =

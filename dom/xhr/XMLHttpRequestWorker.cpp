@@ -2191,7 +2191,8 @@ void XMLHttpRequestWorker::SetResponseType(
 
   if (mStateData.mReadyState == XMLHttpRequest_Binding::LOADING ||
       mStateData.mReadyState == XMLHttpRequest_Binding::DONE) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_RESPONSE_TYPE);
+    aRv.Throw(
+        NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_RESPONSE_TYPE);
     return;
   }
 

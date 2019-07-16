@@ -70,7 +70,7 @@ extern const twb_t _TwbType[0x100 - 0xa0];
 /////////////////////////////////////////////////
 */
 
-int TrbWordBreakPos(const th_char *pstr, int left, const th_char *rstr,
+int TrbWordBreakPos(const th_char* pstr, int left, const th_char* rstr,
                     int right)
 /*                 const ThBreakIterator *it, const th_char **p)*/
 {
@@ -78,7 +78,7 @@ int TrbWordBreakPos(const th_char *pstr, int left, const th_char *rstr,
   //int left, right;
   //const th_char *s = *p;
   */
-  const th_char *lstr = pstr + left;
+  const th_char* lstr = pstr + left;
   th_char _c[6];
   twb_t _t[6];
 #define c(i) (_c[(i) + 3])
@@ -243,13 +243,13 @@ int TrbWordBreakPos(const th_char *pstr, int left, const th_char *rstr,
   return -1;
 }
 
-int TrbFollowing(const th_char *begin, int length, int offset)
+int TrbFollowing(const th_char* begin, int length, int offset)
 /*
 //(ThBreakIterator *this, int offset)
 */
 {
-  const th_char *w = begin + offset;
-  const th_char *end = begin + length;
+  const th_char* w = begin + offset;
+  const th_char* end = begin + length;
   while (w < end && *w && !th_isthai(*w) && th_isspace(*w)) w++;
 
   if (w < end && *w && !th_isthai(*w)) {
