@@ -76,6 +76,22 @@ class TestParser(unittest.TestCase):
         self.assertEqual(test_histogram.record_in_processes(), ["main", "content"])
         self.assertEqual(test_histogram.keyed(), False)
 
+    def test_no_products(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_EMPTY_PRODUCTS": {
+                "kind": "flag",
+                "description": "sample",
+                }}
+
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        hist = parse_histograms.Histogram('TEST_EMPTY_PRODUCTS',
+                                          histograms['TEST_EMPTY_PRODUCTS'],
+                                          strict_type_checks=False)
+
+        self.assertEqual(hist.kind(), 'flag')
+        # bug 1486072: absent `product` key becomes None instead of ["all"]
+        self.assertEqual(hist.products(), None)
+
 
 if __name__ == '__main__':
     mozunit.main()

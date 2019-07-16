@@ -21,6 +21,8 @@ import gen_event_data   # noqa: E402
 
 class TestEventDataJson(unittest.TestCase):
 
+    maxDiff = None
+
     def test_JSON_definitions_generation(self):
         EVENTS_YAML = """
 with.optout:
@@ -32,6 +34,8 @@ with.optout:
     description: opt-out event
     release_channel_collection: opt-out
     expiry_version: never
+    products:
+      - firefox
     extra_keys:
       message: a message 1
 with.optin:
@@ -43,6 +47,7 @@ with.optin:
     description: opt-in event
     release_channel_collection: opt-in
     expiry_version: never
+    products: ['firefox', 'fennec', 'geckoview']
     extra_keys:
       message: a message 2
         """
@@ -55,7 +60,8 @@ with.optin:
                     "expires": "never",
                     "methods": ["testme1"],
                     "extra_keys": ["message"],
-                    "record_on_release": True
+                    "record_on_release": True,
+                    "products": ["firefox"],
                 }
             },
             "with.optin": {
@@ -65,7 +71,8 @@ with.optin:
                     "expires": "never",
                     "methods": ["testme2"],
                     "extra_keys": ["message"],
-                    "record_on_release": False
+                    "record_on_release": False,
+                    "products": ["firefox", "fennec", "geckoview"],
                 }
             },
         }
