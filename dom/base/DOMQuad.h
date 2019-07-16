@@ -26,6 +26,7 @@ class DOMRectReadOnly;
 class DOMPoint;
 struct DOMPointInit;
 struct DOMQuadInit;
+struct DOMRectInit;
 
 class DOMQuad final : public nsWrapperCache {
   ~DOMQuad();
