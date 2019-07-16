@@ -29,3 +29,9 @@ interface nsIRunnablePriority : nsISupports
     const unsigned short PRIORITY_DEFERRED_TIMERS = 5;
     readonly attribute unsigned long priority;
 };
+
+[builtinclass, uuid(3114c36c-a482-4c6e-9523-1dcfc6f605b9)]
+interface nsIRunnableIPCMessageType : nsISupports
+{
+    readonly attribute unsigned long type;
+};

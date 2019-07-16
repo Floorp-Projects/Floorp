@@ -1940,7 +1940,7 @@ void MessageChannel::RunMessage(MessageTask& aTask) {
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(MessageChannel::MessageTask, CancelableRunnable,
-                            nsIRunnablePriority)
+                            nsIRunnablePriority, nsIRunnableIPCMessageType)
 
 MessageChannel::MessageTask::MessageTask(MessageChannel* aChannel,
                                          Message&& aMessage)
@@ -2041,6 +2041,16 @@ MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
     default:
       MOZ_ASSERT(false);
       break;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MessageChannel::MessageTask::GetType(uint32_t* aType) {
+  if (!Msg().is_valid()) {
+    // If mMessage has been moved already elsewhere, we can't know what the type
+    // has been.
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
