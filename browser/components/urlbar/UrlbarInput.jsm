@@ -71,6 +71,7 @@ class UrlbarInput {
                flip="none"
                consumeoutsideclicks="never"
                norolluponanchor="true"
+               rolluponmousewheel="true"
                level="parent">
           <html:div class="urlbarView-body-outer">
             <html:div class="urlbarView-body-inner"
