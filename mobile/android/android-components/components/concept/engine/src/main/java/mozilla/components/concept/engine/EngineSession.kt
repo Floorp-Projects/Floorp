@@ -54,7 +54,8 @@ abstract class EngineSession(
         fun onMediaAdded(media: Media) = Unit
         fun onMediaRemoved(media: Media) = Unit
         fun onWebAppManifestLoaded(manifest: WebAppManifest) = Unit
-        fun onCrashStateChange(crashed: Boolean) = Unit
+        fun onCrash() = Unit
+        fun onProcessKilled() = Unit
         fun onRecordingStateChanged(devices: List<RecordingDevice>) = Unit
 
         /**

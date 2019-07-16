@@ -1568,11 +1568,11 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        var crashedState: Boolean? = null
+        var crashedState: Boolean = false
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onCrashStateChange(crashed: Boolean) {
-                crashedState = crashed
+            override fun onCrash() {
+                crashedState = true
             }
         })
 

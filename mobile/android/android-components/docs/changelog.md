@@ -5,6 +5,7 @@ permalink: /changelog/
 ---
 
 # 6.0.0-SNAPSHOT  (In Development)
+
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v5.0.0...master)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/65?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
@@ -14,12 +15,22 @@ permalink: /changelog/
 * **feature-readerview**
   * Fixed [#3864](https://github.com/mozilla-mobile/android-components/issues/3864) now minus and plus buttons have the same size on reader view.
 
+* **browser-engine-gecko-nightly**
+  * The component now handles situations where the Android system kills the content process (without killing the main app process) in order to reclaim resources. In those situations the component will automatically recover and restore the last known state of those sessions.
+
+* **service-location**
+  * 🆕 A new component for accessing Mozilla's and other location services.
+
 # 5.0.0
+
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v5.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/64?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v5.0.0/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v5.0.0/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v5.0.0/buildSrc/src/main/java/Config.kt)
+
+* **All components**
+  * Increased `compileSdkVersion` to 29 (Android Q)
 
 * **feature-tab**
   * ⚠️ **This is a breaking change**: Now `TabsUseCases.SelectTabUseCase` is an interface, if you want to rely on its previous behavior you could keep using `TabsUseCases.selectTab` or use `TabsUseCases.DefaultSelectTabUseCase`.
@@ -28,12 +39,9 @@ permalink: /changelog/
   * `SessionSuggestionProvider` now have a new parameter `excludeSelectedSession`, to ignore the selected session on the suggestions.
 
 * **concept-engine** and **browser-session**
-  * ⚠️ **This is a breaking change**: Function signature changed  `Session.Observer.onTrackerBlocked(session: Session, blocked: String, all: List<String>) = Unit` from to `Session.Observer.onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit`
-  * ⚠️ **This is a breaking change**: Function signature changed  `EngineSession.Observer.onTrackerBlocked(url: String) = Unit` from to `EngineSession.Observer.onTrackerBlocked(tracker: Tracker) = Unit`
+  * ⚠️ **This is a breaking change**: Function signature changed from `Session.Observer.onTrackerBlocked(session: Session, blocked: String, all: List<String>) = Unit` to `Session.Observer.onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit`
+  * ⚠️ **This is a breaking change**: Function signature changed from `EngineSession.Observer.onTrackerBlocked(url: String) = Unit` to `EngineSession.Observer.onTrackerBlocked(tracker: Tracker) = Unit`
   * Added: To provide more details about a blocked content, we introduced a new class called `Tracker` this contains information like the `url` and `categories` of the `Tracker`. Among the categories we have `Ad`, `Analytic`, `Social`,`Cryptomining`, `Fingerprinting` and `Content`.
-
-* **All components**
-  * Increased `compileSdkVersion` to 29 (Android Q)
 
 * **browser-icons**
   * Added `BrowserIcons.loadIntoView` to automatically load an icon into an `ImageView`.
@@ -47,9 +55,6 @@ permalink: /changelog/
 * **service-glean**
   * Hyphens `-` are now allowed in labels for metrics.  See [1566764](https://bugzilla.mozilla.org/show_bug.cgi?id=1566764).
   * ⚠️ **This is a breaking change**: Timespan values are returned in their configured time unit in the testing API.
-
-* **service-location**
-  * 🆕 A new component for accessing Mozilla's and other location services.
 
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.

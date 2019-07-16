@@ -62,8 +62,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCloseWindowRequest(windowRequest) }
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
-        session.notifyInternalObservers { onCrashStateChange(true) }
+        session.notifyInternalObservers { onCrash() }
         session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true) }
+        session.notifyInternalObservers { onProcessKilled() }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -86,8 +87,9 @@ class EngineSessionTest {
         verify(observer).onCloseWindowRequest(windowRequest)
         verify(observer).onMediaAdded(mediaAdded)
         verify(observer).onMediaRemoved(mediaRemoved)
-        verify(observer).onCrashStateChange(true)
+        verify(observer).onCrash()
         verify(observer).onLoadRequest("https://www.mozilla.org", true, true)
+        verify(observer).onProcessKilled()
         verifyNoMoreInteractions(observer)
     }
 
@@ -122,7 +124,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onOpenWindowRequest(windowRequest) }
         session.notifyInternalObservers { onCloseWindowRequest(windowRequest) }
-        session.notifyInternalObservers { onCrashStateChange(false) }
+        session.notifyInternalObservers { onCrash() }
         session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true) }
         session.unregister(observer)
 
@@ -148,7 +150,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCloseWindowRequest(otherWindowRequest) }
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
-        session.notifyInternalObservers { onCrashStateChange(true) }
+        session.notifyInternalObservers { onCrash() }
         session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", false, true) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
@@ -168,7 +170,7 @@ class EngineSessionTest {
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verify(observer).onOpenWindowRequest(windowRequest)
         verify(observer).onCloseWindowRequest(windowRequest)
-        verify(observer).onCrashStateChange(false)
+        verify(observer).onCrash()
         verify(observer).onLoadRequest("https://www.mozilla.org", true, true)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
@@ -189,7 +191,6 @@ class EngineSessionTest {
         verify(observer, never()).onCloseWindowRequest(otherWindowRequest)
         verify(observer, never()).onMediaAdded(mediaAdded)
         verify(observer, never()).onMediaRemoved(mediaRemoved)
-        verify(observer, never()).onCrashStateChange(true)
         verify(observer, never()).onLoadRequest("https://www.mozilla.org", false, true)
         verifyNoMoreInteractions(observer)
     }
@@ -639,7 +640,7 @@ class EngineSessionTest {
         defaultObserver.onCloseWindowRequest(mock(WindowRequest::class.java))
         defaultObserver.onMediaAdded(mock())
         defaultObserver.onMediaRemoved(mock())
-        defaultObserver.onCrashStateChange(true)
+        defaultObserver.onCrash()
     }
 
     @Test

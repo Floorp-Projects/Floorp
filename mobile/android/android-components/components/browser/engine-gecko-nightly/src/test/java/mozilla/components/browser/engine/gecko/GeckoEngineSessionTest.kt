@@ -1592,11 +1592,11 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        var crashedState: Boolean? = null
+        var crashedState = false
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onCrashStateChange(crashed: Boolean) {
-                crashedState = crashed
+            override fun onCrash() {
+                crashedState = true
             }
         })
 
@@ -1790,6 +1790,32 @@ class GeckoEngineSessionTest {
         assertEquals(LoadUrlFlags.EXTERNAL, GeckoSession.LOAD_FLAGS_EXTERNAL)
         assertEquals(LoadUrlFlags.ALLOW_POPUPS, GeckoSession.LOAD_FLAGS_ALLOW_POPUPS)
         assertEquals(LoadUrlFlags.BYPASS_CLASSIFIER, GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
+    }
+
+    @Test
+    fun `onKill will recover, restore state and notify observers`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observerNotified = false
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onProcessKilled() {
+                observerNotified = true
+            }
+        })
+
+        val mockedState: GeckoSession.SessionState = mock()
+        progressDelegate.value.onSessionStateChange(geckoSession, mockedState)
+
+        verify(geckoSession, never()).restoreState(mockedState)
+
+        contentDelegate.value.onKill(geckoSession)
+
+        verify(geckoSession).restoreState(mockedState)
+        assertTrue(observerNotified)
     }
 
     private fun mockGeckoSession(): GeckoSession {

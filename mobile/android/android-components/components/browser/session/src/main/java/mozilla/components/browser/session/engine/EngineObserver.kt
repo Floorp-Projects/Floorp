@@ -174,8 +174,8 @@ internal class EngineObserver(
         session.webAppManifest = manifest
     }
 
-    override fun onCrashStateChange(crashed: Boolean) {
-        session.crashed = crashed
+    override fun onCrash() {
+        session.crashed = true
     }
 
     override fun onRecordingStateChanged(devices: List<RecordingDevice>) {

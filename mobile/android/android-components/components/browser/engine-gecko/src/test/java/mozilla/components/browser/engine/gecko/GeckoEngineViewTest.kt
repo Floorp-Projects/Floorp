@@ -104,4 +104,24 @@ class GeckoEngineViewTest {
         verify(geckoView).releaseSession()
         verify(engineSession).unregister(any())
     }
+
+    @Test
+    fun `View will rebind session if session crashed`() {
+        val engineView = GeckoEngineView(context)
+        val engineSession = mock<GeckoEngineSession>()
+        val geckoSession = mock<GeckoSession>()
+        val geckoView = mock<NestedGeckoView>()
+
+        whenever(engineSession.geckoSession).thenReturn(geckoSession)
+        engineView.currentGeckoView = geckoView
+
+        engineView.render(engineSession)
+
+        Mockito.reset(geckoView)
+        verify(geckoView, Mockito.never()).setSession(geckoSession)
+
+        engineView.observer.onCrash()
+
+        verify(geckoView).setSession(geckoSession)
+    }
 }

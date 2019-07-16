@@ -411,13 +411,12 @@ class EngineObserverTest {
 
         val observer = EngineObserver(session)
 
-        observer.onCrashStateChange(true)
+        observer.onCrash()
         assertTrue(session.crashed)
 
-        observer.onCrashStateChange(false)
-        assertFalse(session.crashed)
+        session.crashed = false
 
-        observer.onCrashStateChange(true)
+        observer.onCrash()
         assertTrue(session.crashed)
     }
 
