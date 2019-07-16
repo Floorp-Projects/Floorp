@@ -30,7 +30,6 @@ py2:
         - testing/web-platform
         - toolkit
         - tools/docs
-        - tools/jprof/split-profile.py
         - tools/lint
         - tools/profiler
         - tools/rb
