@@ -11,7 +11,7 @@
  */
 
 [Pref="layout.css.DOMMatrix.enabled",
- Constructor(optional (DOMString or sequence<unrestricted double>) init),
+ Constructor(optional (DOMString or sequence<unrestricted double> or DOMMatrixReadOnly) init),
  Exposed=(Window,Worker),
  Serializable]
 interface DOMMatrixReadOnly {
@@ -88,12 +88,7 @@ interface DOMMatrixReadOnly {
 };
 
 [Pref="layout.css.DOMMatrix.enabled",
- Constructor,
- Constructor(DOMString transformList),
- Constructor(DOMMatrixReadOnly other),
- Constructor(Float32Array array32),
- Constructor(Float64Array array64),
- Constructor(sequence<unrestricted double> numberSequence),
+ Constructor(optional (DOMString or sequence<unrestricted double> or DOMMatrixReadOnly) init),
  Exposed=(Window,Worker),
  Serializable,
  LegacyWindowAlias=WebKitCSSMatrix]
