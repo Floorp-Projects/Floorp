@@ -2834,25 +2834,6 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(int32_t, ARefBase* param) {
   if (ent->mActiveConns.RemoveElement(conn)) {
     DecrementActiveConnCount(conn);
     ConditionallyStopTimeoutTick();
-  } else if (conn->EverUsedSpdy()) {
-    LOG(("nsHttpConnection %p not found in its connection entry, try ^anon",
-         conn));
-    // repeat for flipped anon flag as we share connection entries for spdy
-    // connections.
-    RefPtr<nsHttpConnectionInfo> anonInvertedCI(ci->Clone());
-    anonInvertedCI->SetAnonymous(!ci->GetAnonymous());
-
-    nsConnectionEntry* ent = mCT.GetWeak(anonInvertedCI->HashKey());
-    if (ent && ent->mActiveConns.RemoveElement(conn)) {
-      DecrementActiveConnCount(conn);
-      ConditionallyStopTimeoutTick();
-    } else {
-      LOG(
-          ("nsHttpConnection %p could not be removed from its entry's active "
-           "list",
-           conn));
-      MOZ_ASSERT(false, "Active connection not found");
-    }
   }
 
   if (conn->CanReuse()) {
