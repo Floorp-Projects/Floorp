@@ -475,14 +475,14 @@ class BrowserParent final : public PBrowserParent,
 
   PBrowserBridgeParent* AllocPBrowserBridgeParent(
       const nsString& aPresentationURL, const nsString& aRemoteType,
-      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
+      const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
       const TabId& aTabId);
 
   bool DeallocPBrowserBridgeParent(PBrowserBridgeParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPBrowserBridgeConstructor(
       PBrowserBridgeParent* aActor, const nsString& aPresentationURL,
-      const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
+      const nsString& aRemoteType, const WindowGlobalInit& aWindowInit,
       const uint32_t& aChromeFlags, const TabId& aTabId) override;
 
   void LoadURL(nsIURI* aURI);
