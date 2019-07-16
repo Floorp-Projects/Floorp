@@ -1178,8 +1178,8 @@ class WasmBreakpoint;
 class WasmBreakpointSite;
 
 class BreakpointSite {
+  friend class DebugAPI;
   friend class Breakpoint;
-  friend class ::JSScript;
   friend class Debugger;
 
  public:

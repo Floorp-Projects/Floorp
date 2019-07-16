@@ -1797,7 +1797,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
   JS_BEGIN_MACRO                                                            \
     script = (s);                                                           \
     MOZ_ASSERT(cx->realm() == script->realm());                             \
-    if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts()) \
+    if (DebugAPI::hasAnyBreakpointsOrStepMode(script) || script->hasScriptCounts()) \
       activation.enableInterruptsUnconditionally();                         \
   JS_END_MACRO
 
@@ -1888,7 +1888,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       if (script->isDebuggee()) {
-        if (script->stepModeEnabled()) {
+        if (DebugAPI::stepModeEnabled(script)) {
           RootedValue rval(cx);
           ResumeMode mode = DebugAPI::onSingleStep(cx, &rval);
           switch (mode) {
@@ -1910,11 +1910,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           moreInterrupts = true;
         }
 
-        if (script->hasAnyBreakpointsOrStepMode()) {
+        if (DebugAPI::hasAnyBreakpointsOrStepMode(script)) {
           moreInterrupts = true;
         }
 
-        if (script->hasBreakpointsAt(REGS.pc)) {
+        if (DebugAPI::hasBreakpointsAt(script, REGS.pc)) {
           RootedValue rval(cx);
           ResumeMode mode = DebugAPI::onTrap(cx, &rval);
           switch (mode) {
