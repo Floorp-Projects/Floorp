@@ -8,17 +8,17 @@
   --clickable-text-active: hsla(0,0%,70%,.3);
   --card-divider: rgba(12,12,13,0.1) 1px solid;
   --report-background: #FAFAFC;
-  --card-padding: 22px;
-  --social-color: #AB71FF;
-  --social-color-darker: #7F27FF;
+  --card-padding: 24px;
+  --social-color: #9059FF;
+  --social-color-darker: #7F40FF;
   --cookie-color: #0090F4;
   --cookie-color-darker: #0073C3;
   --tracker-color: #2AC3A2;
   --tracker-color-darker: #229C82;
   --orange: #FFA436;
-  --dark-orange: #ffA40C;
-  --grey: #AFAFBB;
-  --dark-grey: #88889A;
+  --dark-orange: #FF981D;
+  --grey: #8F8F9D;
+  --dark-grey: #818191;
   --tab-highlight: var(--social-color); /* start with social selected */
   --blue-60: #0060DF;
   --blue-70: #003eaa;
@@ -172,15 +172,14 @@ body[focuseddatatype=cryptominer] {
   border-top: var(--card-divider);
   grid-column: span 2;
   grid-row: 2;
-  margin-bottom: 24px;
 }
 
 .body-wrapper {
   grid-column: 2;
 }
 
-.graph-week-summary,
-.graph-total-summary {
+#graph-week-summary,
+#graph-total-summary {
   font-size: 0.8rem;
 }
 
@@ -191,6 +190,7 @@ body[focuseddatatype=cryptominer] {
 #graph-wrapper {
   width: 100%;
   margin-top: 40px;
+  margin-bottom: 25px;
 }
 
 #graph {

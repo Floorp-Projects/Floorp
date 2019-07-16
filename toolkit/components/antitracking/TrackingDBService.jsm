@@ -56,6 +56,11 @@ const SQL = {
   selectByDateRange:
     "SELECT * FROM events " +
     "WHERE timestamp BETWEEN date(:dateFrom) AND date(:dateTo);",
+
+  sumAllEvents: "SELECT sum(count) FROM events;",
+
+  getEarliestDate:
+    "SELECT timestamp FROM events ORDER BY timestamp DESC LIMIT 1;",
 };
 
 /**
@@ -255,6 +260,26 @@ TrackingDBService.prototype = {
     dateFrom = new Date(dateFrom).toISOString();
     dateTo = new Date(dateTo).toISOString();
     return db.execute(SQL.selectByDateRange, { dateFrom, dateTo });
+  },
+
+  async sumAllEvents() {
+    let db = await this.ensureDB();
+    let results = await db.execute(SQL.sumAllEvents);
+    if (!results[0]) {
+      return 0;
+    }
+    let total = results[0].getResultByName("sum(count)");
+    return total || 0;
+  },
+
+  async getEarliestRecordedDate() {
+    let db = await this.ensureDB();
+    let date = await db.execute(SQL.getEarliestDate);
+    if (!date[0]) {
+      return null;
+    }
+    let earliestDate = date[0].getResultByName("timestamp");
+    return earliestDate || null;
   },
 };
 
