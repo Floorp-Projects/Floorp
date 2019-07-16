@@ -123,3 +123,6 @@ LOCAL_INCLUDES += [
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
+
+if CONFIG['MOZ_LAYOUT_DEBUGGER']:
+    DEFINES['MOZ_LAYOUT_DEBUGGER'] = True
