@@ -61,7 +61,7 @@ extern "C" {
  *
  * @section page_ifaces_gtk_primary_selection Interfaces
  * - @subpage page_iface_gtk_primary_selection_device_manager - X primary selection emulation
- * - @subpage page_iface_gtk_primary_selection_device - 
+ * - @subpage page_iface_gtk_primary_selection_device -
  * - @subpage page_iface_gtk_primary_selection_offer - offer to transfer primary selection contents
  * - @subpage page_iface_gtk_primary_selection_source - offer to replace the contents of the primary selection
  * @section page_copyright_gtk_primary_selection Copyright
