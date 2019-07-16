@@ -708,6 +708,42 @@ ReferrerInfo::GetSendReferrer(bool* aSendReferrer) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ReferrerInfo::Equals(nsIReferrerInfo* aOther, bool* aResult) {
+  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+  MOZ_ASSERT(mInitialized);
+  if (aOther == this) {
+    *aResult = true;
+    return NS_OK;
+  }
+
+  *aResult = false;
+  ReferrerInfo* other = static_cast<ReferrerInfo*>(aOther);
+  MOZ_ASSERT(other->mInitialized);
+
+  if (mPolicy != other->mPolicy || mSendReferrer != other->mSendReferrer ||
+      mOverridePolicyByDefault != other->mOverridePolicyByDefault ||
+      mComputedReferrer != other->mComputedReferrer) {
+    return NS_OK;
+  }
+
+  if (!mOriginalReferrer != !other->mOriginalReferrer) {
+    // One or the other has mOriginalReferrer, but not both... not equal
+    return NS_OK;
+  }
+
+  bool originalReferrerEquals;
+  if (mOriginalReferrer &&
+      (NS_FAILED(mOriginalReferrer->Equals(other->mOriginalReferrer,
+                                           &originalReferrerEquals)) ||
+       !originalReferrerEquals)) {
+    return NS_OK;
+  }
+
+  *aResult = true;
+  return NS_OK;
+}
+
 already_AddRefed<nsIURI> ReferrerInfo::GetComputedReferrer() {
   if (!mComputedReferrer.isSome() || mComputedReferrer.value().IsEmpty()) {
     return nullptr;
@@ -720,6 +756,20 @@ already_AddRefed<nsIURI> ReferrerInfo::GetComputedReferrer() {
   }
 
   return result.forget();
+}
+
+PLDHashNumber ReferrerInfo::Hash() const {
+  MOZ_ASSERT(mInitialized);
+  nsAutoCString originalReferrerSpec;
+  if (mOriginalReferrer) {
+    Unused << mOriginalReferrer->GetSpec(originalReferrerSpec);
+  }
+
+  return mozilla::AddToHash(
+      mPolicy, mSendReferrer, mOverridePolicyByDefault,
+      mozilla::HashString(originalReferrerSpec),
+      mozilla::HashString(mComputedReferrer.isSome() ? mComputedReferrer.value()
+                                                     : EmptyCString()));
 }
 
 NS_IMETHODIMP
