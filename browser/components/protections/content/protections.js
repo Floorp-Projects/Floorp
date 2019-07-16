@@ -32,31 +32,12 @@ document.addEventListener("DOMContentLoaded", e => {
   RPMSendAsyncMessage("GetEnabledLockwiseCard");
 
   let createGraph = data => {
-    let dateInMS = data.earliestDate
-      ? new Date(data.earliestDate).getTime()
-      : Date.now();
-
-    let summary = document.getElementById("graph-total-summary");
-    summary.setAttribute(
-      "data-l10n-args",
-      `{"earliestDate": ${dateInMS}, "count": ${data.sumEvents}}`
-    );
-    summary.setAttribute("data-l10n-id", "graph-total-summary");
-
     // Set a default top size for the height of the graph bars so that small
     // numbers don't fill the whole graph.
     let largest = 100;
     if (largest < data.largest) {
       largest = data.largest;
     }
-    let weekCount = 0;
-    let weekTypeCounts = {
-      social: 0,
-      cookie: 0,
-      tracker: 0,
-      fingerprinter: 0,
-      cryptominer: 0,
-    };
 
     let graph = document.getElementById("graph");
     for (let i = weekdays.length - 1; i >= 0; i--) {
@@ -73,7 +54,6 @@ document.addEventListener("DOMContentLoaded", e => {
         count.textContent = content.total;
         bar.appendChild(count);
         let barHeight = (content.total / largest) * 100;
-        weekCount += content.total;
         bar.style.height = `${barHeight}%`;
         for (let type of dataTypes) {
           if (content[type]) {
@@ -82,7 +62,6 @@ document.addEventListener("DOMContentLoaded", e => {
             div.className = `${type}-bar inner-bar`;
             div.setAttribute("data-type", type);
             div.style.height = `${dataHeight}%`;
-            weekTypeCounts[type] += content[type];
             bar.appendChild(div);
           }
         }
@@ -91,14 +70,6 @@ document.addEventListener("DOMContentLoaded", e => {
         bar.classList.add("empty");
       }
       graph.appendChild(bar);
-      let weekSummary = document.getElementById("graph-week-summary");
-      weekSummary.setAttribute("data-l10n-args", `{"count": ${weekCount}}`);
-      weekSummary.setAttribute("data-l10n-id", "graph-week-summary");
-
-      for (let type of dataTypes) {
-        document.querySelector(`label[data-type=${type}]`).textContent =
-          weekTypeCounts[type];
-      }
 
       let label = document.createElement("span");
       label.className = "column-label";
