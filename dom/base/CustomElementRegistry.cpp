@@ -689,9 +689,10 @@ void CustomElementRegistry::Define(
    *    throw a "NotSupportedError" DOMException and abort these steps.
    */
   if (mCustomDefinitions.GetWeak(nameAtom)) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                          nsPrintfCString("'%s' has already been used",
-                                          NS_ConvertUTF16toUTF8(aName).get()));
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        nsPrintfCString("'%s' has already been defined as a custom element",
+                        NS_ConvertUTF16toUTF8(aName).get()));
     return;
   }
 
