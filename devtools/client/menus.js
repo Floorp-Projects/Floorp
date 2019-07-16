@@ -20,9 +20,6 @@
  *   Identifier used in devtools/client/devtools-startup.js
  *   Helps figuring out the DOM id for the related <xul:key>
  *   in order to have the key text displayed in menus.
- * - disabled:
- *   If true, the menuitem and key shortcut are going to be hidden and disabled
- *   on startup, until some runtime code eventually enable them.
  * - checkbox:
  *   If true, the menuitem is prefixed by a checkbox and runtime code can
  *   toggle it.
@@ -79,7 +76,6 @@ const isAboutDebuggingEnabled = Services.prefs.getBoolPref(
 const aboutDebuggingItem = {
   id: "menu_devtools_remotedebugging",
   l10nKey: "devtoolsRemoteDebugging",
-  disabled: true,
   oncommand(event) {
     const window = event.target.ownerDocument.defaultView;
     gDevToolsBrowser.openAboutDebugging(window.gBrowser);
@@ -106,7 +102,6 @@ exports.menuitems = [
   {
     id: "menu_webide",
     l10nKey: "webide",
-    disabled: true,
     oncommand() {
       gDevToolsBrowser.openWebIDE();
     },
@@ -115,7 +110,6 @@ exports.menuitems = [
   {
     id: "menu_browserToolbox",
     l10nKey: "browserToolboxMenu",
-    disabled: true,
     oncommand() {
       BrowserToolboxProcess.init();
     },
@@ -124,7 +118,6 @@ exports.menuitems = [
   {
     id: "menu_browserContentToolbox",
     l10nKey: "browserContentToolboxMenu",
-    disabled: true,
     oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
       gDevToolsBrowser.openContentProcessToolbox(window.gBrowser);
@@ -185,7 +178,6 @@ exports.menuitems = [
   {
     id: "menu_devtools_connect",
     l10nKey: "devtoolsConnect",
-    disabled: true,
     oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
       gDevToolsBrowser.openConnectScreen(window.gBrowser);
