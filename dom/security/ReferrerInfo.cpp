@@ -21,6 +21,7 @@
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StyleSheet.h"
 
 static mozilla::LazyLogModule gReferrerInfoLog("ReferrerInfo");
 #define LOG(msg) MOZ_LOG(gReferrerInfoLog, mozilla::LogLevel::Debug, msg)
@@ -774,6 +775,18 @@ ReferrerInfo::InitWithNode(nsINode* aNode) {
 }
 
 /* static */
+already_AddRefed<nsIReferrerInfo>
+ReferrerInfo::CreateFromDocumentAndPolicyOverride(Document* aDoc,
+                                                  uint32_t aPolicyOverride) {
+  uint32_t policy = aPolicyOverride != net::RP_Unset
+                        ? aPolicyOverride
+                        : aDoc->GetReferrerPolicy();
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      new ReferrerInfo(aDoc->GetDocumentURIAsReferrer(), policy);
+  return referrerInfo.forget();
+}
+
+/* static */
 already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForFetch(
     nsIPrincipal* aPrincipal, Document* aDoc) {
   MOZ_ASSERT(aPrincipal);
@@ -819,6 +832,43 @@ already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForFetch(
   }
 
   referrerInfo = new ReferrerInfo(referrerURI, aDoc->GetReferrerPolicy());
+  return referrerInfo.forget();
+}
+
+/* static */
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForExternalCSSResources(
+    mozilla::StyleSheet* aExternalSheet, uint32_t aPolicy) {
+  MOZ_ASSERT(aExternalSheet && !aExternalSheet->IsInline());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+
+  // Step 2
+  // https://w3c.github.io/webappsec-referrer-policy/#integration-with-css
+  // Use empty policy at the beginning and update it later from Referrer-Policy
+  // header.
+  referrerInfo = new ReferrerInfo(aExternalSheet->GetSheetURI(), aPolicy);
+  return referrerInfo.forget();
+}
+
+/* static */
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForInternalCSSResources(
+    Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+
+  referrerInfo = new ReferrerInfo(aDocument->GetDocumentURI(),
+                                  aDocument->GetReferrerPolicy());
+  return referrerInfo.forget();
+}
+
+// Bug 1415044 to investigate which referrer and policy we should use
+/* static */
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForSVGResources(
+    Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+
+  referrerInfo = new ReferrerInfo(aDocument->GetDocumentURI(),
+                                  aDocument->GetReferrerPolicy());
   return referrerInfo.forget();
 }
 
