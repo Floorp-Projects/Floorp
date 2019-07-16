@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 4.0.0-SNAPSHOT  (In Development)
+# 5.0.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v3.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/63?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/64?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 4.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v3.0.0...v4.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/63?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v4.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v4.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v4.0.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * **Merge day!**
