@@ -508,7 +508,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
                                   nullptr);  // HandleWidgetEvent
 
   mWebBrowser = nsWebBrowser::Create(this, mPuppetWidget, OriginAttributesRef(),
-                                     mBrowsingContext);
+                                     mBrowsingContext, aInitialWindowChild);
   nsIWebBrowser* webBrowser = mWebBrowser;
 
   mWebNav = do_QueryInterface(webBrowser);

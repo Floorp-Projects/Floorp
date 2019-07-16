@@ -232,7 +232,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   }
 
   static already_AddRefed<nsGlobalWindowInner> Create(
-      nsGlobalWindowOuter* aOuter, bool aIsChrome);
+      nsGlobalWindowOuter* aOuter, bool aIsChrome,
+      mozilla::dom::WindowGlobalChild* aActor);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -618,7 +619,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       mozilla::ErrorResult& aError);
 
  protected:
-  explicit nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow);
+  explicit nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
+                               mozilla::dom::WindowGlobalChild* aActor);
   // Initializes the mWasOffline member variable
   void InitWasOffline();
 
