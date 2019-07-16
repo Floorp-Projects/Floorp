@@ -414,6 +414,7 @@ const nsAString& GfxDriverInfo::GetDriverVendor(DriverVendor id) {
     DECLARE_DRIVER_VENDOR_ID(DriverMesaSoftPipe, "mesa/softpipe");
     DECLARE_DRIVER_VENDOR_ID(DriverMesaSWRast, "mesa/swrast");
     DECLARE_DRIVER_VENDOR_ID(DriverMesaUnknown, "mesa/unknown");
+    DECLARE_DRIVER_VENDOR_ID(DriverNonMesaAll, "non-mesa/all");
     // Suppress a warning.
     DECLARE_DRIVER_VENDOR_ID(DriverVendorMax, "");
   }
