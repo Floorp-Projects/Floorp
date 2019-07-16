@@ -93,6 +93,11 @@ sealed class Event {
     object SyncAccountClosed : Event()
     object SyncAccountSyncNow : Event()
     object SyncAccountSignOut : Event()
+    object HistoryOpened : Event()
+    object HistoryItemShared : Event()
+    object HistoryItemOpened : Event()
+    object HistoryItemRemoved : Event()
+    object HistoryAllItemsRemoved : Event()
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(

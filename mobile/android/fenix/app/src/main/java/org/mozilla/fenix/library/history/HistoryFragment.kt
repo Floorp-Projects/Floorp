@@ -33,6 +33,7 @@ import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getHostFromUrl
 import org.mozilla.fenix.ext.nav
@@ -69,6 +70,7 @@ class HistoryFragment : Fragment(), BackHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        requireComponents.analytics.metrics.track(Event.HistoryOpened)
         setHasOptionsMenu(true)
     }
 
@@ -209,6 +211,7 @@ class HistoryFragment : Fragment(), BackHandler {
     }
 
     private fun openItem(item: HistoryItem) {
+        requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = item.url,
             newTab = true,
@@ -226,6 +229,7 @@ class HistoryFragment : Fragment(), BackHandler {
                 setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
                     emitChange { HistoryChange.EnterDeletionMode }
                     lifecycleScope.launch {
+                        requireComponents.analytics.metrics.track(Event.HistoryAllItemsRemoved)
                         requireComponents.core.historyStorage.deleteEverything()
                         reloadData()
                         launch(Dispatchers.Main) {
@@ -279,6 +283,7 @@ class HistoryFragment : Fragment(), BackHandler {
         selected: List<HistoryItem>,
         components: Components = requireComponents
     ) {
+        requireComponents.analytics.metrics.track(Event.HistoryItemRemoved)
         val storage = components.core.historyStorage
         for (item in selected) {
             storage.deleteVisit(item.url, item.visitedAt)
@@ -286,6 +291,7 @@ class HistoryFragment : Fragment(), BackHandler {
     }
 
     private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
+        requireComponents.analytics.metrics.track(Event.HistoryItemShared)
         val directions =
             HistoryFragmentDirections.actionHistoryFragmentToShareFragment(
                 url = url,

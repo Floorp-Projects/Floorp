@@ -22,6 +22,7 @@ import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
+import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
@@ -226,6 +227,21 @@ private val Event.wrapper
         is Event.PreferenceToggled -> EventWrapper(
             { Events.preferenceToggled.record(it) },
             { Events.preferenceToggledKeys.valueOf(it) }
+        )
+        is Event.HistoryOpened -> EventWrapper<NoExtraKeys>(
+            { History.opened.record(it) }
+        )
+        is Event.HistoryItemShared -> EventWrapper<NoExtraKeys>(
+            { History.shared.record(it) }
+        )
+        is Event.HistoryItemOpened -> EventWrapper<NoExtraKeys>(
+            { History.openedItem.record(it) }
+        )
+        is Event.HistoryItemRemoved -> EventWrapper<NoExtraKeys>(
+            { History.removed.record(it) }
+        )
+        is Event.HistoryAllItemsRemoved -> EventWrapper<NoExtraKeys>(
+            { History.removedAll.record(it) }
         )
 
         // Don't track other events with Glean

@@ -706,6 +706,62 @@ tracking_protection</td>
 </pre>
 
 
+## history
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>A user opened the history screen</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3940">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>removed</td>
+        <td>event</td>
+        <td>A user removed a history item</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3940">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>removed_all</td>
+        <td>event</td>
+        <td>A user removed all history items</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3940">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>shared</td>
+        <td>event</td>
+        <td>A user shared a history item</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3940">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>opened_item</td>
+        <td>event</td>
+        <td>A user opened a history item</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3940">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
+
 ## Metrics
 
 Items that are added to the metrics ping

@@ -613,7 +613,7 @@ activation:
     type: string
     lifetime: ping
     description: >
-      An hashed and salted version of the Google Advertising ID from the device.
+      A hashed and salted version of the Google Advertising ID from the device.
       This will never be sent in a ping that also contains the client_id.
     send_in_pings:
     - activation
@@ -843,4 +843,61 @@ sync_account:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
+history:
+  opened:
+    type: event
+    description: >
+      A user opened the history screen
+    bugs:
+      - 2362
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3940
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  removed:
+    type: event
+    description: >
+      A user removed a history item
+    bugs:
+      - 2362
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3940
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  removed_all:
+    type: event
+    description: >
+      A user removed all history items
+    bugs:
+      - 2362
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3940
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  shared:
+    type: event
+    description: >
+      A user shared a history item
+    bugs:
+      - 2362
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3940
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  opened_item:
+    type: event
+    description: >
+      A user opened a history item
+    bugs:
+      - 2362
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3940
+    notification_emails:
+      - fenix-core@mozilla.com
     expires: "2020-03-01"
