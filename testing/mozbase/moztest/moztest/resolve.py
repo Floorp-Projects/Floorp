@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import cPickle as pickle
+import pickle
 import os
 import sys
 from collections import defaultdict

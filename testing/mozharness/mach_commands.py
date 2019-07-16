@@ -9,10 +9,10 @@ import os
 import re
 import subprocess
 import sys
-import urllib
-import urlparse
 
 import mozinfo
+from six.moves.urllib.parse import urljoin
+from six.moves.urllib.request import pathname2url
 
 from mach.decorators import (
     CommandArgument,
@@ -136,7 +136,7 @@ class MozharnessRunner(MozbuildObject):
 
 
     def path_to_url(self, path):
-        return urlparse.urljoin('file:', urllib.pathname2url(path))
+        return urljoin('file:', pathname2url(path))
 
     def _installer_url(self):
         package_re = {
