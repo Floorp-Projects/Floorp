@@ -52,7 +52,6 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
       mInnerWindowId(aInit.innerWindowId()),
       mOuterWindowId(aInit.outerWindowId()),
       mInProcess(aInProcess),
-      mIPCClosed(true),  // Closed until WGP::Init
       mIsInitialDocument(false),
       mHasBeforeUnload(false) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "Parent process only");
@@ -66,9 +65,6 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
 void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   MOZ_ASSERT(Manager(), "Should have a manager!");
   MOZ_ASSERT(!mFrameLoader, "Cannot Init() a WindowGlobalParent twice!");
-
-  MOZ_ASSERT(mIPCClosed, "IPC shouldn't be open yet");
-  mIPCClosed = false;
 
   // Register this WindowGlobal in the gWindowGlobalParentsById map.
   if (!gWindowGlobalParentsById) {
@@ -142,7 +138,7 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::GetByInnerWindowId(
 }
 
 already_AddRefed<WindowGlobalChild> WindowGlobalParent::GetChildActor() {
-  if (mIPCClosed) {
+  if (!CanSend()) {
     return nullptr;
   }
   IProtocol* otherSide = InProcessParent::ChildActorFor(this);
@@ -150,7 +146,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalParent::GetChildActor() {
 }
 
 already_AddRefed<BrowserParent> WindowGlobalParent::GetBrowserParent() {
-  if (IsInProcess() || mIPCClosed) {
+  if (IsInProcess() || !CanSend()) {
     return nullptr;
   }
   return do_AddRef(static_cast<BrowserParent*>(Manager()));
@@ -196,7 +192,7 @@ IPCResult WindowGlobalParent::RecvBecomeCurrentWindowGlobal() {
 }
 
 IPCResult WindowGlobalParent::RecvDestroy() {
-  if (!mIPCClosed) {
+  if (CanSend()) {
     RefPtr<BrowserParent> browserParent = GetBrowserParent();
     if (!browserParent || !browserParent->IsDestroyed()) {
       // Make a copy so that we can avoid potential iterator invalidation when
@@ -242,7 +238,7 @@ const nsAString& WindowGlobalParent::GetRemoteType() {
 
 already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
     const nsAString& aName, ErrorResult& aRv) {
-  if (mIPCClosed) {
+  if (!CanSend()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
@@ -273,7 +269,7 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
 }
 
 bool WindowGlobalParent::IsCurrentGlobal() {
-  return !mIPCClosed && mBrowsingContext->GetCurrentWindowGlobal() == this;
+  return CanSend() && mBrowsingContext->GetCurrentWindowGlobal() == this;
 }
 
 IPCResult WindowGlobalParent::RecvDidEmbedBrowsingContext(
@@ -431,7 +427,6 @@ already_AddRefed<Promise> WindowGlobalParent::GetSecurityInfo(
 }
 
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCClosed = true;
   gWindowGlobalParentsById->Remove(mInnerWindowId);
   mBrowsingContext->UnregisterWindowGlobal(this);
 
