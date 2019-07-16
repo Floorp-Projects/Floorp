@@ -1,6 +1,6 @@
 include dirAuto/reftest.list
 include numeral/reftest.list
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bdi-element.html bdi-element-ref.html # Bug 1392106
+fuzzy-if(cocoaWidget,0-1,0-1) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bdi-element.html bdi-element-ref.html # Bug 1392106
 == bidi-000.html bidi-000-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bidi-001.html bidi-001-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bidi-001-j.html bidi-001-ref.html # Bug 1392106
@@ -12,10 +12,10 @@ fuzzy-if(gtkWidget,0-255,0-17) == bidi-004-j.html bidi-004-ref.html # inconsiste
 == bidi-005.html bidi-005-ref.html
 random-if(cocoaWidget) == bidi-006.html bidi-006-ref.html # bug 734313
 random-if(cocoaWidget) == bidi-006-j.html bidi-006-ref.html # bug 734313
-== bidiSVG-01.svg bidiSVG-01-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bidiSVG-02.svg bidiSVG-02-ref.svg # Bug 1392106
-fuzzy-if(Android,0-253,0-76) == bidiSVG-03.svg bidiSVG-03-ref.svg
-fuzzy-if(skiaContent,0-1,0-1) == bidiSVG-04.svg bidiSVG-04-ref.svg
+fuzzy-if(winWidget,0-1,0-1) == bidiSVG-01.svg bidiSVG-01-ref.svg
+fuzzy-if(Android,0-1,0-1) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bidiSVG-02.svg bidiSVG-02-ref.svg # Bug 1392106
+fuzzy-if(Android,0-253,0-77) == bidiSVG-03.svg bidiSVG-03-ref.svg
+fuzzy-if(skiaContent,0-1,0-1) fuzzy-if(winWidget,0-1,0-2) == bidiSVG-04.svg bidiSVG-04-ref.svg
 == bidiSVG-05.svg bidiSVG-05-ref.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bidiMirroring.svg bidiMirroring-ref.svg # Bug 1392106
 fuzzy-if(Android,0-9,0-134) random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
@@ -30,8 +30,8 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == mixedChartype-00-j.html mixedChartype-00-ref.html
 == mixedChartype-01.html mixedChartype-01-ref.html
 == mixedChartype-01-j.html mixedChartype-01-ref.html
-== mixedChartype-02.html mixedChartype-02-ref.html
-== mixedChartype-02-j.html mixedChartype-02-ref.html
+fuzzy-if(Android,0-1,0-6) fuzzy-if(cocoaWidget,0-1,0-2) == mixedChartype-02.html mixedChartype-02-ref.html
+fuzzy-if(Android,0-1,0-6) fuzzy-if(cocoaWidget,0-1,0-2) == mixedChartype-02-j.html mixedChartype-02-ref.html
 == mixedChartype-03.html mixedChartype-03-ref.html
 == mixedChartype-03-j.html mixedChartype-03-ref.html
 == unicode-bidi-anonymous-001.html unicode-bidi-anonymous-001-ref.html
@@ -109,8 +109,8 @@ fuzzy-if(webrender,0-122,0-1) == 562169-1a.html 562169-1-ref.html
 == 588739-2.html 588739-ref.html
 == 588739-3.html 588739-ref.html
 == 612843-1.html 612843-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-1a.html 613149-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-1b.html 613149-1-ref.html # Bug 1392106
+fuzzy-if(Android,0-1,0-1) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-1a.html 613149-1-ref.html # Bug 1392106
+fuzzy-if(Android,0-1,0-1) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-1b.html 613149-1-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-2a.html 613149-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(Android,0-24,0-1) == 613149-2b.html 613149-2-ref.html # Bug 1392106
 == 613157-1.html 613157-1-ref.html
@@ -160,14 +160,14 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1b-ltr.html bra
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1b-rtl.html brackets-1b-rtl-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1c-ltr.html brackets-1c-ltr-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1c-rtl.html brackets-1c-rtl-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2a-ltr.html brackets-2a-ltr-ref.html # Bug 1392106
-fuzzy-if(Android,0-254,0-557) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2a-rtl.html brackets-2a-rtl-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2b-ltr.html brackets-2b-ltr-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2b-rtl.html brackets-2b-rtl-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2c-ltr.html brackets-2c-ltr-ref.html # Bug 1392106
+fuzzy-if(Android,0-1,0-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2a-ltr.html brackets-2a-ltr-ref.html # Bug 1392106
+fuzzy-if(cocoaWidget,0-1,0-2) fuzzy-if(Android,0-254,0-557) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2a-rtl.html brackets-2a-rtl-ref.html # Bug 1392106
+fuzzy-if(Android,0-1,0-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2b-ltr.html brackets-2b-ltr-ref.html # Bug 1392106
+fuzzy-if(cocoaWidget,0-1,0-2) fuzzy-if(Android,0-1,0-5) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2b-rtl.html brackets-2b-rtl-ref.html # Bug 1392106
+fuzzy-if(cocoaWidget,0-1,0-2) fuzzy-if(Android,0-1,0-5) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2c-ltr.html brackets-2c-ltr-ref.html # Bug 1392106
 fuzzy-if(Android,0-254,0-231) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2c-rtl.html brackets-2c-rtl-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3a-ltr.html brackets-3a-ltr-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3a-rtl.html brackets-3a-rtl-ref.html # Bug 1392106
+fuzzy-if(cocoaWidget,0-1,0-3) fuzzy-if(Android,0-1,0-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3a-ltr.html brackets-3a-ltr-ref.html # Bug 1392106
+fuzzy-if(cocoaWidget,0-1,0-2) fuzzy-if(Android,0-1,0-5) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3a-rtl.html brackets-3a-rtl-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3b-ltr.html brackets-3b-ltr-ref.html # Bug 1392106
 fuzzy-if(Android&&!geckoview,207-207,32-32) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3b-rtl.html brackets-3b-rtl-ref.html # Bug 1392106
 == 1217833-1.html 1217833-1-ref.html
