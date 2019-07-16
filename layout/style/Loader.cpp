@@ -148,14 +148,12 @@ namespace css {
  ********************************/
 NS_IMPL_ISUPPORTS(SheetLoadData, nsIRunnable, nsIThreadObserver)
 
-SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
-                             nsIURI* aURI, StyleSheet* aSheet, bool aSyncLoad,
-                             nsIStyleSheetLinkingElement* aOwningElement,
-                             IsAlternate aIsAlternate,
-                             MediaMatched aMediaMatches,
-                             nsICSSLoaderObserver* aObserver,
-                             nsIPrincipal* aLoaderPrincipal,
-                             nsINode* aRequestingNode)
+SheetLoadData::SheetLoadData(
+    Loader* aLoader, const nsAString& aTitle, nsIURI* aURI, StyleSheet* aSheet,
+    bool aSyncLoad, nsIStyleSheetLinkingElement* aOwningElement,
+    IsAlternate aIsAlternate, MediaMatched aMediaMatches,
+    nsICSSLoaderObserver* aObserver, nsIPrincipal* aLoaderPrincipal,
+    nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode)
     : mLoader(aLoader),
       mTitle(aTitle),
       mEncoding(nullptr),
@@ -180,6 +178,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
       mOwningElement(aOwningElement),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
+      mReferrerInfo(aReferrerInfo),
       mRequestingNode(aRequestingNode),
       mPreloadEncoding(nullptr) {
   MOZ_ASSERT(mLoader, "Must have a loader!");
@@ -189,6 +188,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
                              SheetLoadData* aParentData,
                              nsICSSLoaderObserver* aObserver,
                              nsIPrincipal* aLoaderPrincipal,
+                             nsIReferrerInfo* aReferrerInfo,
                              nsINode* aRequestingNode)
     : mLoader(aLoader),
       mEncoding(nullptr),
@@ -214,6 +214,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
       mOwningElement(nullptr),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
+      mReferrerInfo(aReferrerInfo),
       mRequestingNode(aRequestingNode),
       mPreloadEncoding(nullptr) {
   MOZ_ASSERT(mLoader, "Must have a loader!");
@@ -233,6 +234,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
                              const Encoding* aPreloadEncoding,
                              nsICSSLoaderObserver* aObserver,
                              nsIPrincipal* aLoaderPrincipal,
+                             nsIReferrerInfo* aReferrerInfo,
                              nsINode* aRequestingNode)
     : mLoader(aLoader),
       mEncoding(nullptr),
@@ -257,6 +259,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
       mOwningElement(nullptr),
       mObserver(aObserver),
       mLoaderPrincipal(aLoaderPrincipal),
+      mReferrerInfo(aReferrerInfo),
       mRequestingNode(aRequestingNode),
       mPreloadEncoding(aPreloadEncoding) {
   MOZ_ASSERT(mLoader, "Must have a loader!");
