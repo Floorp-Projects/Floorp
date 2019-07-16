@@ -8,6 +8,7 @@ import android.content.Context
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
+import android.media.Image
 import android.util.Size
 import androidx.fragment.app.FragmentActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -21,6 +22,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -29,10 +31,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import java.nio.ByteBuffer
 
 @RunWith(AndroidJUnit4::class)
 class QrFragmentTest {
@@ -298,5 +302,31 @@ class QrFragmentTest {
 
         assertEquals(1024, size.width)
         assertEquals(768, size.height)
+    }
+
+    @Test
+    fun `read image source adjusts for rowstride`() {
+        val image: Image = mock()
+        val plane: Image.Plane = mock()
+
+        `when`(image.height).thenReturn(1080)
+        `when`(image.width).thenReturn(1920)
+        `when`(plane.pixelStride).thenReturn(1)
+        `when`(image.planes).thenReturn(arrayOf(plane))
+
+        // Create an image source where rowstride is equal to the width
+        val bytesWithEqualRowStride: ByteBuffer = ByteBuffer.allocate(1080 * 1920)
+        `when`(plane.buffer).thenReturn(bytesWithEqualRowStride)
+        `when`(plane.rowStride).thenReturn(1920)
+        assertArrayEquals(bytesWithEqualRowStride.array(), QrFragment.readImageSource(image).matrix)
+
+        // Create an image source where rowstride is greater than the width
+        val bytesWithNotEqualRowStride: ByteBuffer = ByteBuffer.allocate(1080 * (1920 + 128))
+        `when`(plane.buffer).thenReturn(bytesWithNotEqualRowStride)
+        `when`(plane.rowStride).thenReturn(2048)
+
+        // The rowstride / offset should have been taken into account resulting
+        // in the same 1080 * 1920 image source as if the rowstride was equal to the width
+        assertArrayEquals(bytesWithEqualRowStride.array(), QrFragment.readImageSource(image).matrix)
     }
 }

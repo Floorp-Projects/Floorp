@@ -170,7 +170,6 @@ class QrFragment : Fragment() {
      * This is the output file for our picture.
      */
     private var imageReader: ImageReader? = null
-    private var data: ByteArray? = null
     private val imageAvailableListener = object : ImageReader.OnImageAvailableListener {
 
         private var image: Image? = null
@@ -180,11 +179,7 @@ class QrFragment : Fragment() {
                 image = reader.acquireNextImage()
                 val availableImage = image
                 if (availableImage != null) {
-                    val buffer = availableImage.planes[0].buffer
-                    data = ByteArray(buffer.remaining()).also { buffer.get(it) }
-                    val width = availableImage.width
-                    val height = availableImage.height
-                    val source = PlanarYUVLuminanceSource(data!!, width, height, 0, 0, width, height, false)
+                    val source = readImageSource(availableImage)
                     val bitmap = BinaryBitmap(HybridBinarizer(source))
                     if (qrState == STATE_FIND_QRCODE) {
                         qrState = STATE_DECODE_PROGRESS
@@ -532,6 +527,17 @@ class QrFragment : Fragment() {
                 notBigEnough.size > 0 -> Collections.max(notBigEnough, CompareSizesByArea())
                 else -> choices[0]
             }
+        }
+
+        internal fun readImageSource(image: Image): PlanarYUVLuminanceSource {
+            val plane = image.planes[0]
+            val buffer = plane.buffer
+            val data = ByteArray(buffer.remaining()).also { buffer.get(it) }
+
+            val height = image.height
+            val width = image.width
+            val dataWidth = width + ((plane.rowStride - plane.pixelStride * width) / plane.pixelStride)
+            return PlanarYUVLuminanceSource(data, dataWidth, height, 0, 0, width, height, false)
         }
 
         @Volatile internal var qrState: Int = 0
