@@ -1,0 +1,242 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file exposes three lists:
+# ALL_PROCESSES, BROWSER_PROCESS, and CHILD_PROCESSES
+#
+# In addition, each of those lists supports a special variant for test-only
+# entries:
+# ALL_PROCESSES_TESTS, BROWSER_PROCESS_TESTS, and CHILD_PROCESSES_TESTS
+#
+# Choose the list that is applicable to the applicable process type(s) for your
+# DLL block.
+#
+# The currently supported blocklist entry types are:
+# DllBlocklistEntry, A11yBlocklistEntry, LspBlocklistEntry
+# (See gen_dll_blocklist_defs.py for their documentation.)
+#
+# Example:
+# ALL_PROCESSES += [
+#     DllBlocklistEntry("foo.dll", (1, 2, 3, 4)),
+#     DllBlocklistEntry("foo.dll", ALL_VERSIONS),
+#     DllBlocklistEntry("foo.dll", UNVERSIONED),
+#     DllBlocklistEntry("foo.dll", 0x0000123400000000),
+#     DllBlocklistEntry("foo.dll", PETimeStamp(0x12345678)),
+# ]
+#
+# The version parameter the "last bad" version, that is, we block anything that
+# is less-than or equal to that version.
+
+ALL_PROCESSES += [
+    # NPFFAddon - Known malware
+    DllBlocklistEntry("npffaddon.dll", ALL_VERSIONS),
+
+    # AVG 8 - Antivirus vendor AVG, old version, plugin already blocklisted
+    DllBlocklistEntry("avgrsstx.dll", (8,5,0,401)),
+
+    # calc.dll - Suspected malware
+    DllBlocklistEntry("calc.dll", (1,0,0,1)),
+
+    # hook.dll - Suspected malware
+    DllBlocklistEntry("hook.dll", ALL_VERSIONS),
+
+    # GoogleDesktopNetwork3.dll - Extremely old, unversioned instances
+    # of this DLL cause crashes
+    DllBlocklistEntry("googledesktopnetwork3.dll", UNVERSIONED),
+
+    # rdolib.dll - Suspected malware
+    DllBlocklistEntry("rdolib.dll", (6,0,88,4)),
+
+    # fgjk4wvb.dll - Suspected malware
+    DllBlocklistEntry("fgjk4wvb.dll", (8,8,8,8)),
+
+    # radhslib.dll - Naomi internet filter - unmaintained since 2006
+    DllBlocklistEntry("radhslib.dll", UNVERSIONED),
+
+    # Music download filter for vkontakte.ru - old instances
+    # of this DLL cause crashes
+    DllBlocklistEntry("vksaver.dll", (2,2,2,0)),
+
+    # Topcrash in Firefox 4.0b1
+    DllBlocklistEntry("rlxf.dll", (1,2,323,1)),
+
+    # psicon.dll - Topcrashes in Thunderbird, and some crashes in Firefox
+    # Adobe photoshop library, now redundant in later installations
+    DllBlocklistEntry("psicon.dll", ALL_VERSIONS),
+
+    # Topcrash in Firefox 4 betas (bug 618899),
+    DllBlocklistEntry("accelerator.dll", (3,2,1,6)),
+
+    # Topcrash with Roboform in Firefox 8 (bug 699134),
+    DllBlocklistEntry("rf-firefox.dll", (7,6,1,0)),
+    DllBlocklistEntry("roboform.dll", (7,6,1,0)),
+
+    # Topcrash with Babylon Toolbar on FF16+ (bug 721264),
+    DllBlocklistEntry("babyfox.dll", ALL_VERSIONS),
+
+    # sprotector.dll crashes, bug 957258
+    DllBlocklistEntry("sprotector.dll", ALL_VERSIONS),
+
+    # Windows Media Foundation FLAC decoder and type sniffer (bug 839031).
+    DllBlocklistEntry("mfflac.dll", ALL_VERSIONS),
+
+    # Older Relevant Knowledge DLLs cause us to crash (bug 904001).
+    DllBlocklistEntry("rlnx.dll", (1, 3, 334, 9)),
+    DllBlocklistEntry("pmnx.dll", (1, 3, 334, 9)),
+    DllBlocklistEntry("opnx.dll", (1, 3, 334, 9)),
+    DllBlocklistEntry("prnx.dll", (1, 3, 334, 9)),
+
+    # Older belgian ID card software causes Firefox to crash or hang on
+    # shutdown, bug 831285 and 918399.
+    DllBlocklistEntry("beid35cardlayer.dll", (3, 5, 6, 6968)),
+
+    # bug 925459, bitguard crashes
+    DllBlocklistEntry("bitguard.dll", ALL_VERSIONS),
+
+    # bug 812683 - crashes in Windows library when Asus Gamer OSD is installed
+    # Software is discontinued/unsupported
+    DllBlocklistEntry("atkdx11disp.dll", ALL_VERSIONS),
+
+    # Topcrash with Conduit SearchProtect, bug 944542
+    DllBlocklistEntry("spvc32.dll", ALL_VERSIONS),
+
+    # Topcrash with V-bates, bug 1002748 and bug 1023239
+    DllBlocklistEntry("libinject.dll", UNVERSIONED),
+    DllBlocklistEntry("libinject2.dll", PETimeStamp(0x537DDC93)),
+    DllBlocklistEntry("libredir2.dll", PETimeStamp(0x5385B7ED)),
+
+    # Crashes with RoboForm2Go written against old SDK, bug 988311/1196859
+    DllBlocklistEntry("rf-firefox-22.dll", ALL_VERSIONS),
+    DllBlocklistEntry("rf-firefox-40.dll", ALL_VERSIONS),
+
+    # Crashes with DesktopTemperature, bug 1046382
+    DllBlocklistEntry("dtwxsvc.dll", PETimeStamp(0x53153234)),
+
+    # Startup crashes with Lenovo Onekey Theater, bug 1123778
+    DllBlocklistEntry("activedetect32.dll", UNVERSIONED),
+    DllBlocklistEntry("activedetect64.dll", UNVERSIONED),
+    DllBlocklistEntry("windowsapihookdll32.dll", UNVERSIONED),
+    DllBlocklistEntry("windowsapihookdll64.dll", UNVERSIONED),
+
+    # Flash crashes with RealNetworks RealDownloader, bug 1132663
+    DllBlocklistEntry("rndlnpshimswf.dll", ALL_VERSIONS),
+    DllBlocklistEntry("rndlmainbrowserrecordplugin.dll", ALL_VERSIONS),
+
+    # Startup crashes with RealNetworks Browser Record Plugin, bug 1170141
+    DllBlocklistEntry("nprpffbrowserrecordext.dll", ALL_VERSIONS),
+    DllBlocklistEntry("nprndlffbrowserrecordext.dll", ALL_VERSIONS),
+
+    # Crashes with CyberLink YouCam, bug 1136968
+    DllBlocklistEntry("ycwebcamerasource.ax", (2, 0, 0, 1611)),
+
+    # Old version of WebcamMax crashes WebRTC, bug 1130061
+    DllBlocklistEntry("vwcsource.ax", (1, 5, 0, 0)),
+
+    # NetOp School, discontinued product, bug 763395
+    DllBlocklistEntry("nlsp.dll", (6, 23, 2012, 19)),
+
+    # Orbit Downloader, bug 1222819
+    DllBlocklistEntry("grabdll.dll", (2, 6, 1, 0)),
+    DllBlocklistEntry("grabkernel.dll", (1, 0, 0, 1)),
+
+    # ESET, bug 1229252
+    DllBlocklistEntry("eoppmonitor.dll", ALL_VERSIONS),
+
+    # SS2OSD, bug 1262348
+    DllBlocklistEntry("ss2osd.dll", ALL_VERSIONS),
+    DllBlocklistEntry("ss2devprops.dll", ALL_VERSIONS),
+
+    # NHASUSSTRIXOSD.DLL, bug 1269244
+    DllBlocklistEntry("nhasusstrixosd.dll", ALL_VERSIONS),
+    DllBlocklistEntry("nhasusstrixdevprops.dll", ALL_VERSIONS),
+
+    # Crashes with PremierOpinion/RelevantKnowledge, bug 1277846
+    DllBlocklistEntry("opls.dll", ALL_VERSIONS),
+    DllBlocklistEntry("opls64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("pmls.dll", ALL_VERSIONS),
+    DllBlocklistEntry("pmls64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("prls.dll", ALL_VERSIONS),
+    DllBlocklistEntry("prls64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("rlls.dll", ALL_VERSIONS),
+    DllBlocklistEntry("rlls64.dll", ALL_VERSIONS),
+
+    # Vorbis DirectShow filters, bug 1239690.
+    DllBlocklistEntry("vorbis.acm", (0, 0, 3, 6)),
+
+    # AhnLab Internet Security, bug 1311969
+    DllBlocklistEntry("nzbrcom.dll", ALL_VERSIONS),
+
+    # K7TotalSecurity, bug 1339083.
+    DllBlocklistEntry("k7pswsen.dll", (15, 2, 2, 95)),
+
+    # smci*.dll - goobzo crashware (bug 1339908),
+    DllBlocklistEntry("smci32.dll", ALL_VERSIONS),
+    DllBlocklistEntry("smci64.dll", ALL_VERSIONS),
+
+    # Crashes with Internet Download Manager, bug 1333486
+    DllBlocklistEntry("idmcchandler7.dll", ALL_VERSIONS),
+    DllBlocklistEntry("idmcchandler7_64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("idmcchandler5.dll", ALL_VERSIONS),
+    DllBlocklistEntry("idmcchandler5_64.dll", ALL_VERSIONS),
+
+    # Nahimic 2 breaks applicaton update (bug 1356637),
+    DllBlocklistEntry("nahimic2devprops.dll", (2, 5, 19, 0xffff)),
+    # Nahimic is causing crashes, bug 1233556
+    DllBlocklistEntry("nahimicmsiosd.dll", UNVERSIONED),
+    # Nahimic is causing crashes, bug 1360029
+    DllBlocklistEntry("nahimicvrdevprops.dll", UNVERSIONED),
+    DllBlocklistEntry("nahimic2osd.dll", (2, 5, 19, 0xffff)),
+    DllBlocklistEntry("nahimicmsidevprops.dll", UNVERSIONED),
+
+    # Bug 1268470 - crashes with Kaspersky Lab on Windows 8
+    DllBlocklistEntry("klsihk64.dll", (14, 0, 456, 0xffff), BLOCK_WIN8_ONLY),
+
+    # Bug 1407337, crashes with OpenSC < 0.16.0
+    DllBlocklistEntry("onepin-opensc-pkcs11.dll", (0, 15, 0xffff, 0xffff)),
+
+    # Avecto Privilege Guard causes crashes, bug 1385542
+    DllBlocklistEntry("pghook.dll", ALL_VERSIONS),
+
+    # Old versions of G DATA BankGuard, bug 1421991
+    DllBlocklistEntry("banksafe64.dll", (1, 2, 15299, 65535)),
+
+    # Old versions of G DATA, bug 1043775
+    DllBlocklistEntry("gdkbfltdll64.dll", (1, 0, 14141, 240)),
+
+    # Dell Backup and Recovery tool causes crashes, bug 1433408
+    DllBlocklistEntry("dbroverlayiconnotbackuped.dll", (1, 8, 0, 9)),
+    DllBlocklistEntry("dbroverlayiconbackuped.dll", (1, 8, 0, 9)),
+
+    # NVIDIA nView Desktop Management causes crashes, bug 1465787
+    DllBlocklistEntry("nviewh64.dll", (6, 14, 10, 14847)),
+
+    # Ivanti Endpoint Security, bug 1553776
+    DllBlocklistEntry("sxwmon.dll", ALL_VERSIONS),
+    DllBlocklistEntry("sxwmon64.dll", ALL_VERSIONS),
+
+    # 360 Safeguard/360 Total Security causes a11y crashes, bug 1536227.
+    DllBlocklistEntry("safemon64.dll", ALL_VERSIONS),
+]
+
+ALL_PROCESSES_TESTS += [
+    # DLLs used by TestDllBlocklist* gTests
+    DllBlocklistEntry("testdllblocklist_matchbyname.dll", ALL_VERSIONS),
+    DllBlocklistEntry("testdllblocklist_matchbyversion.dll", (5, 5, 5, 5)),
+    DllBlocklistEntry("testdllblocklist_allowbyversion.dll", (5, 5, 5, 5)),
+]
+
+BROWSER_PROCESS += [
+    # RealPlayer, bug 1418535, bug 1437417
+    # Versions before 18.1.11.0 cause severe performance problems.
+    A11yBlocklistEntry("dtvhooks.dll", (18, 1, 10, 0xffff)),
+    A11yBlocklistEntry("dtvhooks64.dll", (18, 1, 10, 0xffff)),
+]
+
+CHILD_PROCESSES += [
+    # Causes crashes in the GPU process with WebRender enabled, bug 1544435
+    DllBlocklistEntry("wbload.dll", ALL_VERSIONS),
+]
+
