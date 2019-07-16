@@ -924,7 +924,7 @@ restartHandshakeAfterServerCertIfNeeded(PRFileDesc *fd,
                                         PRBool override)
 {
     SECStatus rv;
-    PRErrorCode error;
+    PRErrorCode error = 0;
 
     if (!serverCertAuth->isPaused)
         return SECSuccess;
