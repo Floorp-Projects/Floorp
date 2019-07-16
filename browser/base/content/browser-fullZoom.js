@@ -384,20 +384,16 @@ var FullZoom = {
       browser.messageManager.sendAsyncMessage("Reader:ResetZoom");
     } else if (this._isPDFViewer(browser)) {
       browser.messageManager.sendAsyncMessage("PDFJS:ZoomReset");
-    } else {
-      let token = this._getBrowserToken(browser);
-      let result = this._getGlobalValue(browser).then(value => {
-        if (token.isCurrent) {
-          ZoomManager.setZoomForBrowser(
-            browser,
-            value === undefined ? 1 : value
-          );
-          this._ignorePendingZoomAccesses(browser);
-        }
-      });
-      this._removePref(browser);
-      return result;
     }
+    let token = this._getBrowserToken(browser);
+    let result = this._getGlobalValue(browser).then(value => {
+      if (token.isCurrent) {
+        ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
+        this._ignorePendingZoomAccesses(browser);
+      }
+    });
+    this._removePref(browser);
+    return result;
   },
 
   /**
