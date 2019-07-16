@@ -10,7 +10,6 @@ DevToolsModules(
     'FrameListColumnOpCode.js',
     'FrameListColumnSize.js',
     'FrameListColumnTime.js',
-    'FrameListColumnType.js',
     'FrameListContent.js',
     'FrameListHeader.js',
     'FrameListItem.js',

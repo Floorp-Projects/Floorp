@@ -322,25 +322,28 @@ const FILTER_TAGS = [
 
 const WS_FRAMES_HEADERS = [
   {
-    name: "frameType",
+    name: "data",
+    width: "40%",
   },
   {
     name: "size",
-  },
-  {
-    name: "data",
+    width: "12%",
   },
   {
     name: "opCode",
+    width: "9%",
   },
   {
     name: "maskBit",
+    width: "9%",
   },
   {
     name: "finBit",
+    width: "9%",
   },
   {
     name: "time",
+    width: "22%",
   },
 ];
 

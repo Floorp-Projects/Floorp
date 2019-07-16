@@ -10,11 +10,8 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { tr } = dom;
+const { WS_FRAMES_HEADERS } = require("../../constants");
 
-loader.lazyGetter(this, "FrameListColumnType", function() {
-  return createFactory(require("./FrameListColumnType"));
-});
 loader.lazyGetter(this, "FrameListColumnSize", function() {
   return createFactory(require("./FrameListColumnSize"));
 });
@@ -34,15 +31,19 @@ loader.lazyGetter(this, "FrameListColumnTime", function() {
   return createFactory(require("./FrameListColumnTime"));
 });
 
-const COLUMN_COMPONENTS = [
-  { column: "type", ColumnComponent: FrameListColumnType },
-  { column: "size", ColumnComponent: FrameListColumnSize },
-  { column: "data", ColumnComponent: FrameListColumnData },
-  { column: "opCode", ColumnComponent: FrameListColumnOpCode },
-  { column: "maskBit", ColumnComponent: FrameListColumnMaskBit },
-  { column: "finBit", ColumnComponent: FrameListColumnFinBit },
-  { column: "time", ColumnComponent: FrameListColumnTime },
-];
+const COLUMN_COMPONENT_MAP = {
+  time: FrameListColumnTime,
+  data: FrameListColumnData,
+  size: FrameListColumnSize,
+  opCode: FrameListColumnOpCode,
+  maskBit: FrameListColumnMaskBit,
+  finBit: FrameListColumnFinBit,
+};
+
+const COLUMN_COMPONENTS = WS_FRAMES_HEADERS.map(({ name }) => ({
+  name,
+  ColumnComponent: COLUMN_COMPONENT_MAP[name] || dom.td,
+}));
 
 /**
  * Renders one row in the frame list.
@@ -66,15 +67,15 @@ class FrameListItem extends Component {
       classList.push("selected");
     }
 
-    return tr(
+    return dom.tr(
       {
         className: classList.join(" "),
         tabIndex: 0,
         onMouseDown,
       },
-      COLUMN_COMPONENTS.map(({ ColumnComponent, column }) =>
+      COLUMN_COMPONENTS.map(({ ColumnComponent, name }) =>
         ColumnComponent({
-          key: column + "-" + index,
+          key: `ws-frame-list-column-${name}-${index}`,
           connector,
           item,
           index,

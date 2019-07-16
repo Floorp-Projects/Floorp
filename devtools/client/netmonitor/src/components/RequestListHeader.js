@@ -546,10 +546,11 @@ class RequestListHeader extends Component {
       onMove: x => this.onMove(name, x),
     });
 
-    return dom.td(
+    return dom.th(
       {
         id: `requests-list-${boxName}-header-box`,
         className: `requests-list-column requests-list-${boxName}`,
+        scope: "col",
         style: columnStyle,
         key: name,
         ref: `${name}Header`,
@@ -583,7 +584,7 @@ class RequestListHeader extends Component {
 
   render() {
     return dom.thead(
-      { className: "devtools-toolbar requests-list-headers-group" },
+      { className: "requests-list-headers-group" },
       dom.tr(
         {
           className: "requests-list-headers",
