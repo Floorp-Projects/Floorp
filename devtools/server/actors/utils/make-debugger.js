@@ -60,7 +60,7 @@ const { reportException } = require("devtools/shared/DevToolsUtils");
 module.exports = function makeDebugger({
   findDebuggees,
   shouldAddNewGlobalAsDebuggee,
-}) {
+} = {}) {
   const dbg = isReplaying ? new ReplayDebugger() : new Debugger();
   EventEmitter.decorate(dbg);
 
@@ -73,18 +73,30 @@ module.exports = function makeDebugger({
     }
   }
 
-  dbg.onNewGlobalObject = function(global) {
+  const onNewGlobalObject = function(global) {
     if (shouldAddNewGlobalAsDebuggee(global)) {
       safeAddDebuggee(this, global);
       onNewDebuggee(global);
     }
   };
 
+  dbg.onNewGlobalObject = onNewGlobalObject;
+
   dbg.addDebuggees = function() {
     for (const global of findDebuggees(this)) {
       safeAddDebuggee(this, global);
       onNewDebuggee(global);
     }
+  };
+
+  dbg.enable = () => {
+    dbg.addDebuggees();
+    dbg.onNewGlobalObject = onNewGlobalObject;
+  };
+
+  dbg.disable = function() {
+    dbg.removeAllDebuggees();
+    dbg.onNewGlobalObject = undefined;
   };
 
   return dbg;

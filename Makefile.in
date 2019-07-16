@@ -51,7 +51,7 @@ ifndef TEST_MOZBUILD
 ifndef MOZ_PROFILE_USE
 # We need to explicitly put BUILD_BACKEND_FILES here otherwise the rule in
 # rules.mk doesn't run early enough.
-$(TIERS) binaries:: CLOBBER $(BUILD_BACKEND_FILES)
+$(RUNNABLE_TIERS) binaries:: CLOBBER $(BUILD_BACKEND_FILES)
 endif
 endif
 

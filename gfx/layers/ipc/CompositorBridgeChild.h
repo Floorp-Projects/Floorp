@@ -146,6 +146,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   bool SendWillClose();
   bool SendPause();
   bool SendResume();
+  bool SendResumeAsync();
   bool SendNotifyChildCreated(const LayersId& id, CompositorOptions* aOptions);
   bool SendAdoptChild(const LayersId& id);
   bool SendMakeSnapshot(const SurfaceDescriptor& inSnapshot,

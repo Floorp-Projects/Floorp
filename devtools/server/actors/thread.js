@@ -286,7 +286,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (!this._dbg) {
       return;
     }
-    this._dbg.enabled = false;
+    this._dbg.disable();
     this._dbg = null;
   },
 
@@ -344,8 +344,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.setActiveEventBreakpoints(options.eventBreakpoints);
     }
 
-    this.dbg.addDebuggees();
-    this.dbg.enabled = true;
+    this.dbg.enable();
 
     if ("observeAsmJS" in this._options) {
       this.dbg.allowUnobservedAsmJS = !this._options.observeAsmJS;

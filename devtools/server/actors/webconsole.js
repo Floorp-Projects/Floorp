@@ -469,7 +469,7 @@ WebConsoleActor.prototype = {
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
     this._evalWindow = null;
-    this.dbg.enabled = false;
+    this.dbg.disable();
     this.dbg = null;
     this.conn = null;
   },
