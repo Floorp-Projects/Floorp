@@ -52,7 +52,6 @@ export PATH="$WORKSPACE/build/src/binutils/bin:$PATH"
 # Common setup for libtapi and cctools
 export CC=$CLANG_DIR/bin/clang
 export CXX=$CLANG_DIR/bin/clang++
-# TODO: bug 1357317 to avoid the LD_LIBRARY_PATH.
 # We also need this LD_LIBRARY_PATH at build time, since tapi builds bits of
 # clang build tools, and then executes those tools.
 export LD_LIBRARY_PATH=$CLANG_DIR/lib
@@ -84,7 +83,7 @@ ninja libtapi install-libtapi install-tapi-headers
 # Also set it up such that loading libtapi doesn't require a LD_LIBRARY_PATH.
 # (this requires two dollars and extra backslashing because it's used verbatim
 # via a Makefile)
-export LDFLAGS="-lpthread -Wl,-rpath-link,$CLANG_DIR/lib -Wl,-rpath,\\\$\$ORIGIN/../lib"
+export LDFLAGS="-lpthread -Wl,-rpath-link,$CLANG_DIR/lib -Wl,-rpath,\\\$\$ORIGIN/../lib,-rpath,\\\$\$ORIGIN/../../clang/lib"
 
 # Configure crosstools-port
 cd $CROSSTOOLS_CCTOOLS_DIR
