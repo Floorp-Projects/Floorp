@@ -1009,11 +1009,7 @@ pref("browser.flash-protected-mode-flip.enable", false);
 pref("browser.flash-protected-mode-flip.done", false);
 
 // Dark in-content pages
-#ifdef NIGHTLY_BUILD
 pref("browser.in-content.dark-mode", true);
-#else
-pref("browser.in-content.dark-mode", false);
-#endif
 
 pref("dom.ipc.shims.enabledWarnings", false);
 
