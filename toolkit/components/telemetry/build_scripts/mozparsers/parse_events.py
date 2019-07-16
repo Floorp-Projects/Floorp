@@ -41,6 +41,7 @@ class OneOf:
 
 class AtomicTypeChecker:
     """Validate a simple value against a given type"""
+
     def __init__(self, instance_type):
         self.instance_type = instance_type
 
@@ -53,6 +54,7 @@ class AtomicTypeChecker:
 
 class MultiTypeChecker:
     """Validate a simple value against a list of possible types"""
+
     def __init__(self, *instance_types):
         if not instance_types:
             raise Exception("At least one instance type is required.")
@@ -68,6 +70,7 @@ class MultiTypeChecker:
 
 class ListTypeChecker:
     """Validate a list of values against a given type"""
+
     def __init__(self, instance_type):
         self.instance_type = instance_type
 
@@ -85,6 +88,7 @@ class ListTypeChecker:
 
 class DictTypeChecker:
     """Validate keys and values of a dict against a given type"""
+
     def __init__(self, keys_instance_type, values_instance_type):
         self.keys_instance_type = keys_instance_type
         self.values_instance_type = values_instance_type
@@ -117,13 +121,13 @@ def type_check_event_fields(identifier, name, definition):
         'notification_emails': ListTypeChecker(basestring),
         'record_in_processes': ListTypeChecker(basestring),
         'description': AtomicTypeChecker(basestring),
+        'products': ListTypeChecker(basestring),
     }
     OPTIONAL_FIELDS = {
         'methods': ListTypeChecker(basestring),
         'release_channel_collection': AtomicTypeChecker(basestring),
         'expiry_version': AtomicTypeChecker(basestring),
         'extra_keys': DictTypeChecker(basestring, basestring),
-        'products': ListTypeChecker(basestring),
         'operating_systems': ListTypeChecker(basestring),
     }
     ALL_FIELDS = REQUIRED_FIELDS.copy()
@@ -197,7 +201,7 @@ class EventData:
                             proc).handle_later()
 
         # Check products.
-        products = definition.get('products', [])
+        products = definition.get('products')
         for product in products:
             if not utils.is_valid_product(product):
                 ParserError(self.identifier + ': Unknown value in products: ' +
@@ -272,7 +276,7 @@ class EventData:
     @property
     def products(self):
         """Get the non-empty list of products to record data on"""
-        return self._definition.get('products', ["all"])
+        return self._definition.get('products')
 
     @property
     def products_enum(self):
