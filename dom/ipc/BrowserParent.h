@@ -467,12 +467,11 @@ class BrowserParent final : public PBrowserParent,
       const uint64_t& aParentID, const uint32_t& aMsaaID,
       const IAccessibleHolder& aDocCOMProxy) override;
 
-  PWindowGlobalParent* AllocPWindowGlobalParent(const WindowGlobalInit& aInit);
-
   bool DeallocPWindowGlobalParent(PWindowGlobalParent* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvPWindowGlobalConstructor(
-      PWindowGlobalParent* aActor, const WindowGlobalInit& aInit) override;
+  mozilla::ipc::IPCResult RecvNewWindowGlobal(
+      ManagedEndpoint<PWindowGlobalParent>&& aEndpoint,
+      const WindowGlobalInit& aInit);
 
   PBrowserBridgeParent* AllocPBrowserBridgeParent(
       const nsString& aPresentationURL, const nsString& aRemoteType,
