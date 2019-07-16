@@ -219,7 +219,7 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat64Array(
 
 already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
     const GlobalObject& aGlobal,
-    const Optional<StringOrUnrestrictedDoubleSequence>& aArg,
+    const Optional<StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>& aArg,
     ErrorResult& aRv) {
   if (!aArg.WasPassed()) {
     RefPtr<DOMMatrixReadOnly> rval =
@@ -239,6 +239,11 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
         new DOMMatrixReadOnly(aGlobal.GetAsSupports());
     rval->SetMatrixValue(arg.GetAsString(), aRv);
     return rval.forget();
+  }
+  if (arg.IsDOMMatrixReadOnly()) {
+    RefPtr<DOMMatrixReadOnly> obj = new DOMMatrixReadOnly(
+        aGlobal.GetAsSupports(), arg.GetAsDOMMatrixReadOnly());
+    return obj.forget();
   }
 
   const auto& sequence = arg.GetAsUnrestrictedDoubleSequence();
@@ -658,30 +663,39 @@ already_AddRefed<DOMMatrix> DOMMatrix::FromFloat64Array(
   return obj.forget();
 }
 
-already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
-                                                   ErrorResult& aRv) {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
-  return obj.forget();
-}
-
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
-    const GlobalObject& aGlobal, const nsAString& aTransformList,
+    const GlobalObject& aGlobal,
+    const Optional<StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>& aArg,
     ErrorResult& aRv) {
-  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!win) {
-    aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
-    return nullptr;
+  if (!aArg.WasPassed()) {
+    RefPtr<DOMMatrix> rval = new DOMMatrix(aGlobal.GetAsSupports());
+    return rval.forget();
   }
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
-  obj = obj->SetMatrixValue(aTransformList, aRv);
-  return obj.forget();
-}
 
-already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
-    const GlobalObject& aGlobal, const DOMMatrixReadOnly& aOther,
-    ErrorResult& aRv) {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), aOther);
-  return obj.forget();
+  const auto& arg = aArg.Value();
+  if (arg.IsString()) {
+    nsCOMPtr<nsPIDOMWindowInner> win =
+        do_QueryInterface(aGlobal.GetAsSupports());
+    if (!win) {
+      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+      return nullptr;
+    }
+    RefPtr<DOMMatrix> rval = new DOMMatrix(aGlobal.GetAsSupports());
+    rval->SetMatrixValue(arg.GetAsString(), aRv);
+    return rval.forget();
+  }
+  if (arg.IsDOMMatrixReadOnly()) {
+    RefPtr<DOMMatrix> obj =
+        new DOMMatrix(aGlobal.GetAsSupports(), arg.GetAsDOMMatrixReadOnly());
+    return obj.forget();
+  }
+
+  const auto& sequence = arg.GetAsUnrestrictedDoubleSequence();
+  const int length = sequence.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrix> rval = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(rval, sequence.Elements(), length, aRv);
+  return rval.forget();
 }
 
 template <typename T>
@@ -716,29 +730,6 @@ static void SetDataInMatrix(DOMMatrixReadOnly* aMatrix, const T* aData,
     lengthStr.AppendInt(aLength);
     aRv.ThrowTypeError<MSG_MATRIX_INIT_LENGTH_WRONG>(lengthStr);
   }
-}
-
-already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
-                                                   const Float32Array& aArray32,
-                                                   ErrorResult& aRv) {
-  return FromFloat32Array(aGlobal, aArray32, aRv);
-}
-
-already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
-                                                   const Float64Array& aArray64,
-                                                   ErrorResult& aRv) {
-  return FromFloat64Array(aGlobal, aArray64, aRv);
-}
-
-already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
-    const GlobalObject& aGlobal, const Sequence<double>& aNumberSequence,
-    ErrorResult& aRv) {
-  const int length = aNumberSequence.Length();
-  const bool is2D = length == 6;
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
-  SetDataInMatrix(obj, aNumberSequence.Elements(), length, aRv);
-
-  return obj.forget();
 }
 
 already_AddRefed<DOMMatrix> DOMMatrix::ReadStructuredClone(
