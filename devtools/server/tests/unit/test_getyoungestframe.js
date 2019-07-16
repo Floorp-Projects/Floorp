@@ -13,7 +13,7 @@ function run_test() {
   );
   const g = testGlobal("test1");
 
-  const dbg = new Debugger();
+  const dbg = makeDebugger();
   dbg.uncaughtExceptionHook = testExceptionHook;
 
   dbg.addDebuggee(g);
@@ -34,5 +34,5 @@ function run_test() {
 
   g.eval("function debuggerStatement() { debugger; }; debuggerStatement();");
 
-  dbg.enabled = false;
+  dbg.disable();
 }
