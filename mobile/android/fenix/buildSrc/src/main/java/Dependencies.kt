@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-private object Versions {
+object Versions {
     const val kotlin = "1.3.30"
     const val coroutines = "1.2.1"
     const val android_gradle_plugin = "3.4.1"
@@ -33,7 +33,7 @@ private object Versions {
     const val androidx_work = "2.0.1"
     const val google_material = "1.1.0-alpha07"
 
-    const val mozilla_android_components = "4.0.0-SNAPSHOT"
+    const val mozilla_android_components = "4.0.0"
     // Note that android-components also depends on application-services,
     // and in fact is our main source of appservices-related functionality.
     // The version number below tracks the application-services version
