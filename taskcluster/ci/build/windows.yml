@@ -1052,6 +1052,7 @@ win64-aarch64-shippable/opt:
             PERFHERDER_EXTRA_OPTIONS: aarch64
             MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
             MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
+            MOZ_AUTOMATION_PACKAGE_TESTS: '0'
             USE_ARTIFACT: '1'
     run:
         actions: [get-secrets, build]
@@ -1070,10 +1071,43 @@ win64-aarch64-shippable/opt:
         win32-opt: build-win32-shippable/opt
         win64-aarch64-opt: build-win64-aarch64-shippable-no-eme/opt
     fetches:
-        # Abuse fetches to copy the generated-files artifact from the non-eme
-        # build directly to the artifacts directory of this build. Likewise
-        # for target.langpack.xpi
+        # Abuse fetches to copy the generated-files, langpack, and test
+        # artifacts from the non-eme build directly to the artifacts directory
+        # of this build.
         win64-aarch64-opt:
+            - artifact: target.test_packages.json
+              extract: false
+              dest: ../public/build
+            - artifact: target.common.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.cppunittest.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.mochitest.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.reftest.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.talos.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.raptor.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.awsy.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.xpcshell.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.web-platform.tests.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.updater-dep.tests.tar.gz
+              extract: false
+              dest: ../public/build
             - artifact: target.generated-files.tar.gz
               extract: false
               dest: ../public/build
