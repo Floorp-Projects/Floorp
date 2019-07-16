@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/BaselineCompiler.h"
+#include "jit/BaselineCodeGen.h"
 
 #include "mozilla/Casting.h"
 
@@ -268,16 +268,15 @@ MethodStatus BaselineCompiler::compile() {
   }
 
   UniquePtr<BaselineScript> baselineScript(
-      BaselineScript::New(script, bailoutPrologueOffset_.offset(),
-                          warmUpCheckPrologueOffset_.offset(),
-                          debugOsrPrologueOffset_.offset(),
-                          debugOsrEpilogueOffset_.offset(),
-                          profilerEnterFrameToggleOffset_.offset(),
-                          profilerExitFrameToggleOffset_.offset(),
-                          handler.retAddrEntries().length(),
-                          pcMappingIndexEntries.length(), pcEntries.length(),
-                          script->resumeOffsets().size(),
-                          traceLoggerToggleOffsets_.length()),
+      BaselineScript::New(
+          script, bailoutPrologueOffset_.offset(),
+          warmUpCheckPrologueOffset_.offset(), debugOsrPrologueOffset_.offset(),
+          debugOsrEpilogueOffset_.offset(),
+          profilerEnterFrameToggleOffset_.offset(),
+          profilerExitFrameToggleOffset_.offset(),
+          handler.retAddrEntries().length(), pcMappingIndexEntries.length(),
+          pcEntries.length(), script->resumeOffsets().size(),
+          traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     ReportOutOfMemory(cx);
