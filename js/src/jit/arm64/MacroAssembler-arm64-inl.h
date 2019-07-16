@@ -1005,14 +1005,7 @@ void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
 
 void MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs,
                                       Register rhs, Label* label) {
-  vixl::UseScratchRegisterScope temps(this);
-  const Register scratch = temps.AcquireX().asUnsized();
-  if (rhs != scratch) {
-    movePtr(rhs, scratch);
-  }
-  // Instead of unboxing lhs, box rhs and do direct comparison with lhs.
-  rshiftPtr(Imm32(1), scratch);
-  branchPtr(cond, lhs, scratch, label);
+  branchPtr(cond, lhs, rhs, label);
 }
 
 void MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs,

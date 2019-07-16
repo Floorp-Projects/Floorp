@@ -1376,10 +1376,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
         Operand(JSVAL_TYPE_TO_SHIFTED_TAG(type)));
   }
 
-  void unboxPrivate(const ValueOperand& src, Register dest) {
-    Lsl(ARMRegister(dest, 64), ARMRegister(src.valueReg(), 64), 1);
-  }
-
   void notBoolean(const ValueOperand& val) {
     ARMRegister r(val.valueReg(), 64);
     eor(r, r, Operand(1));
