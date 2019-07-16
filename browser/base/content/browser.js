@@ -5616,26 +5616,6 @@ var XULBrowserWindow = {
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated) {
     var location = aLocationURI ? aLocationURI.spec : "";
 
-    let pageTooltip = document.getElementById("aHTMLTooltip");
-    let tooltipNode = pageTooltip.triggerNode;
-    if (tooltipNode) {
-      // Optimise for the common case
-      if (aWebProgress.isTopLevel) {
-        pageTooltip.hidePopup();
-      } else {
-        for (
-          let tooltipWindow = tooltipNode.ownerGlobal;
-          tooltipWindow != tooltipWindow.parent;
-          tooltipWindow = tooltipWindow.parent
-        ) {
-          if (tooltipWindow == aWebProgress.DOMWindow) {
-            pageTooltip.hidePopup();
-            break;
-          }
-        }
-      }
-    }
-
     this.hideOverLinkImmediately = true;
     this.setOverLink("", null);
     this.hideOverLinkImmediately = false;
@@ -5858,6 +5838,13 @@ var XULBrowserWindow = {
     }
 
     CombinedStopReload.onTabSwitch();
+
+    // Docshell should normally take care of hiding the tooltip, but we need to do it
+    // ourselves for tabswitches.
+    this.hideTooltip();
+
+    // Also hide tooltips for content loaded in the parent process:
+    document.getElementById("aHTMLTooltip").hidePopup();
 
     var nsIWebProgressListener = Ci.nsIWebProgressListener;
     var loadingDone = aStateFlags & nsIWebProgressListener.STATE_STOP;
