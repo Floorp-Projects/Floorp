@@ -2019,8 +2019,7 @@ class JSScript : public js::gc::TenuredCell {
     // (We don't relazify functions with template strings, due to observability)
     HasCallSiteObj = 1 << 7,
 
-    // Script has singleton objects.
-    HasSingletons = 1 << 8,
+    // (1 << 8) is unused.
 
     FunctionHasThisBinding = 1 << 9,
     FunctionHasExtraBodyVarScope = 1 << 10,
@@ -2441,7 +2440,6 @@ class JSScript : public js::gc::TenuredCell {
     return hasFlag(ImmutableFlags::HasCallSiteObj);
   }
 
-  bool hasSingletons() const { return hasFlag(ImmutableFlags::HasSingletons); }
   bool treatAsRunOnce() const {
     return hasFlag(ImmutableFlags::TreatAsRunOnce);
   }
