@@ -128,7 +128,7 @@ tr:-moz-any([selected], :hover) > td > .action-icon {
 #dispatch-thead > tr > td:not(:first-child) {
   border-inline-start-width: 1px;
   border-inline-start-style: solid;
-  border-image: linear-gradient(transparent 0%, transparent 20%, #c1c1c1 20%, #c1c1c1 80%, transparent 80%, transparent 100%) 1 1;
+  border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
   border-bottom: 1px solid var(--in-content-border-color);
 }
 td {
@@ -217,9 +217,13 @@ td {
 }
 .asc {
   background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 .desc {
   background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 #dispatch-thead > tr > td.clickable:hover {
   background-color: var(--in-content-button-background-hover);
@@ -230,8 +234,8 @@ td {
 
 .energy-impact {
   --bar-width: 0;
-  background: linear-gradient(to right, rgb(182, 211, 252) calc(var(--bar-width) * 1%), transparent calc(var(--bar-width) * 1%));
+  background: linear-gradient(to right, var(--blue-40) calc(var(--bar-width) * 1%), transparent calc(var(--bar-width) * 1%));
 }
 .energy-impact:dir(rtl) {
-  background: linear-gradient(to left, rgb(182, 211, 252) calc(var(--bar-width) * 1%), transparent calc(var(--bar-width) * 1%));
+  background: linear-gradient(to left, var(--blue-40) calc(var(--bar-width) * 1%), transparent calc(var(--bar-width) * 1%));
 }
