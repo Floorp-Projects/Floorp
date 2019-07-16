@@ -10,7 +10,10 @@ var gItemsToTest = {
     "devtools.chrome.enabled",
     "devtools.debugger.remote-enabled",
   ],
-  menu_devtools_connect: "devtools.debugger.remote-enabled",
+  menu_devtools_connect: [
+    "devtools.connectpage.enabled",
+    "devtools.debugger.remote-enabled",
+  ],
 };
 
 function expectedAttributeValueFromPrefs(prefs) {
@@ -34,10 +37,7 @@ function checkItem(el, prefs) {
 function test() {
   for (const k in gItemsToTest) {
     const el = document.getElementById(k);
-    let prefs = gItemsToTest[k];
-    if (typeof prefs == "string") {
-      prefs = [prefs];
-    }
+    const prefs = gItemsToTest[k];
     checkItem(el, prefs);
     for (const pref of prefs) {
       Services.prefs.setBoolPref(pref, !Services.prefs.getBoolPref(pref));

@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Enable DevTools WebIDE by default
-pref("devtools.webide.enabled", true);
+// Disable WebIDE and ConnectPage by default (Bug 1539451)
+pref("devtools.webide.enabled", false);
+pref("devtools.connectpage.enabled", false);
 
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
