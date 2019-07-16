@@ -26,6 +26,7 @@ class TestParser(unittest.TestCase):
                 "bug_numbers": [1383793],
                 "expires_in_version": "never",
                 "kind": "boolean",
+                "products": ["firefox"],
                 "description": "Test histogram"
             }
         }
@@ -49,6 +50,7 @@ class TestParser(unittest.TestCase):
                 "alert_emails": ["team@mozilla.xyz"],
                 "expires_in_version": "never",
                 "kind": "boolean",
+                "products": ["firefox"],
                 "description": "Test histogram"
             }
         }
@@ -91,6 +93,7 @@ class TestParser(unittest.TestCase):
                 "bug_numbers": [1383793],
                 "expires_in_version": "never",
                 "kind": "boolean",
+                "products": ["firefox"],
                 "description": "Test histogram",
             }
         }
@@ -137,6 +140,7 @@ class TestParser(unittest.TestCase):
                 "low": 1024,
                 "high": 2 ** 64,
                 "n_buckets": 100,
+                "products": ["firefox"],
                 "description": "Test histogram",
             }
         }
@@ -160,6 +164,7 @@ class TestParser(unittest.TestCase):
                 "low": 1024,
                 "high": 16777216,
                 "n_buckets": 200,
+                "products": ["firefox"],
                 "description": "Test histogram",
             }
         }
@@ -206,6 +211,7 @@ class TestParser(unittest.TestCase):
                 "alert_emails": ["team@mozilla.xyz"],
                 "bug_numbers": [1383793],
                 "kind": "boolean",
+                "products": ["firefox"],
                 "description": "Test histogram",
             }
         }
@@ -250,6 +256,7 @@ class TestParser(unittest.TestCase):
                 "releaseChannelCollection": "opt-out",
                 "alert_emails": ["team@mozilla.xyz"],
                 "bug_numbers": [1383793],
+                "products": ["firefox"],
                 "description": "Test histogram",
             }
         }
@@ -292,6 +299,7 @@ class TestParser(unittest.TestCase):
                 "kind": "flag",
                 "alert_emails": ["team@mozilla.xyz"],
                 "bug_numbers": [1383793],
+                "products": ["firefox"],
                 "description": "Test histogram",
             }
         }
@@ -335,6 +343,7 @@ class TestParser(unittest.TestCase):
                 "expires_in_version": "never",
                 "kind": "boolean",
                 "description": "Test histogram",
+                "products": ["firefox"],
                 "record_into_store": ["main", "sync"],
             }
         }
@@ -359,6 +368,7 @@ class TestParser(unittest.TestCase):
                 "expires_in_version": "never",
                 "kind": "boolean",
                 "description": "Test histogram",
+                "products": ["firefox"],
                 "record_into_store": [],
             }
         }
@@ -367,6 +377,65 @@ class TestParser(unittest.TestCase):
 
         parse_histograms.Histogram('TEST_HISTOGRAM_EMPTY_MULTISTORE',
                                    histograms['TEST_HISTOGRAM_EMPTY_MULTISTORE'],
+                                   strict_type_checks=True)
+        self.assertRaises(SystemExit, ParserError.exit_func)
+
+    def test_products_absent(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_NO_PRODUCTS": {
+                "record_in_processes": ["main", "content"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "boolean",
+                "description": "Test histogram",
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_whitelist()
+
+        def test_parse(): return parse_histograms.Histogram('TEST_NO_PRODUCTS',
+                                                            histograms['TEST_NO_PRODUCTS'],
+                                                            strict_type_checks=True)
+        self.assertRaises(SystemExit, test_parse)
+
+    def test_products_empty(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_EMPTY_PRODUCTS": {
+                "record_in_processes": ["main", "content"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "boolean",
+                "description": "Test histogram",
+                "products": [],
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_whitelist()
+
+        def test_parse(): return parse_histograms.Histogram('TEST_EMPTY_PRODUCTS',
+                                                            histograms['TEST_EMPTY_PRODUCTS'],
+                                                            strict_type_checks=True)
+        self.assertRaises(SystemExit, test_parse)
+
+    def test_products_all(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_HISTOGRAM_ALL_PRODUCTS": {
+                "record_in_processes": ["main", "content"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "boolean",
+                "description": "Test histogram",
+                "products": ["all"],
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_whitelist()
+
+        parse_histograms.Histogram('TEST_HISTOGRAM_ALL_PRODUCTS',
+                                   histograms['TEST_HISTOGRAM_ALL_PRODUCTS'],
                                    strict_type_checks=True)
         self.assertRaises(SystemExit, ParserError.exit_func)
 
