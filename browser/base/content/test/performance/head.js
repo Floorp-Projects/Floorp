@@ -298,8 +298,13 @@ async function ensureFocusedUrlbar() {
     () => !gURLBar.hasAttribute("switchingtabs")
   );
 
+  let dropmarker = document.getAnonymousElementByAttribute(
+    gURLBar.textbox,
+    "anonid",
+    "historydropmarker"
+  );
   let opacityPromise = BrowserTestUtils.waitForEvent(
-    gURLBar.dropmarker,
+    dropmarker,
     "transitionend",
     false,
     e => e.propertyName === "opacity"
@@ -816,9 +821,15 @@ async function runUrlbarTest(
     await UrlbarTestUtils.promisePopupClose(win);
   };
 
-  let dropmarkerRect = URLBar.dropmarker.getBoundingClientRect();
-  let textBoxRect = gURLBar
-    .querySelector("moz-input-box")
+  let dropmarkerRect = win.document
+    .getAnonymousElementByAttribute(
+      URLBar.textbox,
+      "anonid",
+      "historydropmarker"
+    )
+    .getBoundingClientRect();
+  let textBoxRect = win.document
+    .getAnonymousElementByAttribute(URLBar.textbox, "anonid", "moz-input-box")
     .getBoundingClientRect();
   let expectedRects = {
     filter: rects =>

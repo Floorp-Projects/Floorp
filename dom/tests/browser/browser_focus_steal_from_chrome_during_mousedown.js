@@ -17,11 +17,11 @@ add_task(async function test() {
 
   for (var button = 0; button < 3; button++) {
     // Set focus to a chrome element before synthesizing a mouse down event.
-    gURLBar.focus();
+    document.getElementById("urlbar").focus();
 
     is(
       fm.focusedElement,
-      gURLBar.inputField,
+      document.getElementById("urlbar").inputField,
       "Failed to move focus to search bar: button=" + button
     );
 
@@ -31,7 +31,7 @@ add_task(async function test() {
 
     isnot(
       fm.focusedElement,
-      gURLBar.inputField,
+      document.getElementById("urlbar").inputField,
       "Failed to move focus away from search bar: button=" + button
     );
 

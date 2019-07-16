@@ -32,10 +32,8 @@ async function runTests(browser, accDoc) {
   evt = await onFocus;
   testStates(evt.accessible, STATE_FOCUSED);
 
-  onFocus = waitForEvent(
-    EVENT_FOCUS,
-    event => event.accessible.DOMNode == gURLBar.inputField
-  );
+  let inputField = browser.ownerDocument.getElementById("urlbar").inputField;
+  onFocus = waitForEvent(EVENT_FOCUS, getAccessible(inputField));
   EventUtils.synthesizeKey("t", { accelKey: true }, browser.ownerGlobal);
   evt = await onFocus;
   testStates(evt.accessible, STATE_FOCUSED);
