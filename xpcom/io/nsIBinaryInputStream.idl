@@ -65,8 +65,7 @@ interface nsIBinaryInputStream : nsIInputStream {
      *
      * @throws NS_ERROR_FAILURE if it can't read aLength bytes
      */
-    void readByteArray(in uint32_t aLength,
-                       [array, size_is(aLength), retval] out uint8_t aBytes);
+    Array<uint8_t> readByteArray(in uint32_t aLength);
 
     /**
      * Read opaque bytes from the stream, storing the results in an ArrayBuffer.
