@@ -2,8 +2,7 @@
   "name": "Zoznam",
   "description": "Zoznam slovenskeho internetu",
   "manifest_version": 2,
-  "version": "1.1",
-  "encoding": "WINDOWS-1250",
+  "version": "1.2",
   "applications": {
     "gecko": {
       "id": "zoznam-sk@search.mozilla.org"
@@ -19,6 +18,7 @@
   "chrome_settings_overrides": {
     "search_provider": {
       "name": "Zoznam",
+      "encoding": "WINDOWS-1250",
       "search_url": "https://www.zoznam.sk/hladaj.fcgi",
       "search_form": "https://www.zoznam.sk/",
       "search_url_get_params": "co=odkazy&s={searchTerms}"

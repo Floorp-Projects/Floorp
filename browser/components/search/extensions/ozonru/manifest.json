@@ -2,8 +2,7 @@
   "name": "OZON.ru",
   "description": "OZON.ru provider",
   "manifest_version": 2,
-  "version": "1.1",
-  "encoding": "WINDOWS-1251",
+  "version": "1.2",
   "applications": {
     "gecko": {
       "id": "ozonru@search.mozilla.org"
@@ -19,6 +18,7 @@
   "chrome_settings_overrides": {
     "search_provider": {
       "name": "OZON.ru",
+      "encoding": "WINDOWS-1251",
       "search_url": "https://www.ozon.ru/?",
       "search_form": "https://www.ozon.ru/",
       "search_url_get_params": "context=search&text={searchTerms}&from=firefox",
