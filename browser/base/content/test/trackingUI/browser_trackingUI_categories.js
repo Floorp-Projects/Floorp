@@ -75,7 +75,7 @@ add_task(async function testSubcategoryLabels() {
 
   await BrowserTestUtils.withNewTab("http://www.example.com", async function() {
     let categoryLabel = document.getElementById(
-      "identity-popup-content-blocking-tracking-protection-state-label"
+      "protections-popup-tracking-protection-state-label"
     );
 
     Services.prefs.setBoolPref(TP_PREF, true);
@@ -103,7 +103,7 @@ add_task(async function testSubcategoryLabels() {
     );
 
     categoryLabel = document.getElementById(
-      "identity-popup-content-blocking-cookies-state-label"
+      "protections-popup-cookies-state-label"
     );
 
     Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
@@ -188,7 +188,7 @@ add_task(async function testSubcategoryLabels() {
     );
 
     categoryLabel = document.getElementById(
-      "identity-popup-content-blocking-fingerprinters-state-label"
+      "protections-popup-fingerprinters-state-label"
     );
 
     Services.prefs.setBoolPref(FP_PREF, true);
@@ -222,7 +222,7 @@ add_task(async function testSubcategoryLabels() {
     );
 
     categoryLabel = document.getElementById(
-      "identity-popup-content-blocking-cryptominers-state-label"
+      "protections-popup-cryptominers-state-label"
     );
 
     Services.prefs.setBoolPref(CM_PREF, true);

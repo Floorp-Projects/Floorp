@@ -134,17 +134,15 @@ async function testSubview(hasException) {
   await openProtectionsPopup();
 
   let categoryItem = document.getElementById(
-    "identity-popup-content-blocking-category-fingerprinters"
+    "protections-popup-category-fingerprinters"
   );
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
-  let subview = document.getElementById("identity-popup-fingerprintersView");
+  let subview = document.getElementById("protections-popup-fingerprintersView");
   let viewShown = BrowserTestUtils.waitForEvent(subview, "ViewShown");
   categoryItem.click();
   await viewShown;
 
-  let listItems = subview.querySelectorAll(
-    ".identity-popup-content-blocking-list-item"
-  );
+  let listItems = subview.querySelectorAll(".protections-popup-list-item");
   is(listItems.length, 1, "We have 1 item in the list");
   let listItem = listItems[0];
   ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
