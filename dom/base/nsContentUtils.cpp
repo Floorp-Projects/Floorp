@@ -6913,6 +6913,9 @@ bool nsContentUtils::IsAllowedNonCorsLanguage(const nsACString& aHeaderValue) {
 bool nsContentUtils::IsCORSSafelistedRequestHeader(const nsACString& aName,
                                                    const nsACString& aValue) {
   // see https://fetch.spec.whatwg.org/#cors-safelisted-request-header
+  if (aValue.Length() > 128) {
+    return false;
+  }
   return (aName.LowerCaseEqualsLiteral("accept") &&
           nsContentUtils::IsAllowedNonCorsAccept(aValue)) ||
          (aName.LowerCaseEqualsLiteral("accept-language") &&
