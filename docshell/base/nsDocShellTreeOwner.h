@@ -131,6 +131,10 @@ class ChromeTooltipListener final : public nsIDOMEventListener {
   NS_IMETHOD AddChromeListeners();
   NS_IMETHOD RemoveChromeListeners();
 
+  NS_IMETHOD HideTooltip();
+
+  bool WebProgressShowedTooltip(nsIWebProgress* aWebProgress);
+
  private:
   // various delays for tooltips
   enum {
@@ -144,7 +148,6 @@ class ChromeTooltipListener final : public nsIDOMEventListener {
   NS_IMETHOD ShowTooltip(int32_t aInXCoords, int32_t aInYCoords,
                          const nsAString& aInTipText,
                          const nsAString& aDirText);
-  NS_IMETHOD HideTooltip();
   nsITooltipTextProvider* GetTooltipTextProvider();
 
   nsWebBrowser* mWebBrowser;
@@ -176,6 +179,8 @@ class ChromeTooltipListener final : public nsIDOMEventListener {
 
   // The string of text that we last displayed.
   nsString mLastShownTooltipText;
+
+  nsWeakPtr mLastDocshell;
 
   // The node hovered over that fired the timer. This may turn into the node
   // that triggered the tooltip, but only if the timer ever gets around to
