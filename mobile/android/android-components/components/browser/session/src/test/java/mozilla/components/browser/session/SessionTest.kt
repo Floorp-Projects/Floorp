@@ -289,7 +289,14 @@ class SessionTest {
 
         assertNull(session.customTabConfig)
 
-        val customTabConfig = CustomTabConfig("id", null, null, true, null, true, listOf(), listOf())
+        val customTabConfig = CustomTabConfig(
+            "id",
+            toolbarColor = null,
+            closeButtonIcon = null,
+            enableUrlbarHiding = true,
+            actionButtonConfig = null,
+            showShareMenuItem = true
+        )
         session.customTabConfig = customTabConfig
 
         assertEquals(customTabConfig, session.customTabConfig)

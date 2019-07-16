@@ -35,6 +35,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 
+@Suppress("Deprecation")
 @RunWith(AndroidJUnit4::class)
 class IntentProcessorTest {
 

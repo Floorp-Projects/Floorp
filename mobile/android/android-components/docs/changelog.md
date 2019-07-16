@@ -53,8 +53,20 @@ permalink: /changelog/
 * **browser-icons**
   * Added `BrowserIcons.loadIntoView` to automatically load an icon into an `ImageView`.
 
+* **browser-session**
+  * Added `IntentProcessor` interface to represent a class that processes intents to create sessions.
+  * Deprecated `CustomTabConfig.isCustomTabIntent` and `CustomTabConfig.createFromIntent`. Use `isCustomTabIntent` and `createFromCustomTabIntent` in feature-customtabs instead.
+
+* **feature-customtabs**
+  * Added `CustomTabIntentProcessor` to create custom tab sessions from intents.
+  * Added `isCustomTabIntent` to check if an intent is for creating custom tabs.
+  * Added `createCustomTabConfigFromIntent` to create a `CustomTabConfig` from a custom tab intent.
+
 * **feature-downloads**
   * `FetchDownloadManager` now determines the filename during the download, resulting in more accurate filenames.
+
+* **feature-intent**
+  * Deprecated `IntentProcessor` class and moved some of its code to the new `TabIntentProcessor`.
 
 * **feature-push**
   * Updated the default autopush service endpoint to `updates.push.services.mozilla.com`.

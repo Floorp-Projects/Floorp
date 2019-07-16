@@ -6,15 +6,15 @@ package mozilla.components.feature.customtabs
 
 import android.content.Intent
 import android.content.Intent.ACTION_VIEW
-import android.util.DisplayMetrics
+import android.content.res.Resources
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.intent.IntentProcessor
 import mozilla.components.browser.session.intent.putSessionId
-import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.SafeIntent
+import mozilla.components.support.utils.toSafeIntent
 
 /**
  * Processor for intents which trigger actions related to custom tabs.
@@ -22,12 +22,12 @@ import mozilla.components.support.utils.SafeIntent
 class CustomTabIntentProcessor(
     private val sessionManager: SessionManager,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
-    private val displayMetrics: DisplayMetrics
+    private val resources: Resources
 ) : IntentProcessor {
 
     override fun matches(intent: Intent): Boolean {
-        val safeIntent = SafeIntent(intent)
-        return safeIntent.action == ACTION_VIEW && CustomTabConfig.isCustomTabIntent(safeIntent)
+        val safeIntent = intent.toSafeIntent()
+        return safeIntent.action == ACTION_VIEW && isCustomTabIntent(safeIntent)
     }
 
     override suspend fun process(intent: Intent): Boolean {
@@ -36,7 +36,7 @@ class CustomTabIntentProcessor(
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
             val session = Session(url, private = false, source = Session.Source.CUSTOM_TAB)
-            session.customTabConfig = CustomTabConfig.createFromIntent(safeIntent, displayMetrics)
+            session.customTabConfig = createCustomTabConfigFromIntent(intent, resources)
 
             sessionManager.add(session)
             loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())

@@ -8,30 +8,60 @@ import android.app.PendingIntent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Parcelable
-import androidx.browser.customtabs.CustomTabsIntent
 import android.util.DisplayMetrics
 import androidx.annotation.ColorInt
-
+import androidx.browser.customtabs.CustomTabsIntent
 import mozilla.components.support.utils.SafeBundle
 import mozilla.components.support.utils.SafeIntent
 import java.util.ArrayList
-import java.util.Collections
 import java.util.UUID
 
 /**
- * Holds configuration data for a Custom Tab. Use [createFromIntent] to
- * create instances.
+ * Holds configuration data for a Custom Tab.
+ *
+ * @property toolbarColor Background color for the toolbar.
+ * @property closeButtonIcon Custom icon of the back button on the toolbar.
+ * @property enableUrlbarHiding Enables the toolbar to hide as the user scrolls down on the page.
+ * @property actionButtonConfig Custom action button on the toolbar.
+ * @property showShareMenuItem Specifies whether a default share button will be shown in the menu.
+ * @property menuItems Custom overflow menu items.
+ * @property exitAnimations Bundle containing custom exit animations for the tab.
+ * @property titleVisible Whether the title should be shown in the custom tab.
  */
-class CustomTabConfig internal constructor(
+data class CustomTabConfig(
     val id: String,
     @ColorInt val toolbarColor: Int?,
     val closeButtonIcon: Bitmap?,
-    val disableUrlbarHiding: Boolean,
+    val enableUrlbarHiding: Boolean,
     val actionButtonConfig: CustomTabActionButtonConfig?,
     val showShareMenuItem: Boolean,
-    val menuItems: List<CustomTabMenuItem>,
-    val options: List<String>
+    val menuItems: List<CustomTabMenuItem> = emptyList(),
+    val exitAnimations: Bundle? = null,
+    val titleVisible: Boolean = false
 ) {
+    inline val disableUrlbarHiding
+        get() = !enableUrlbarHiding
+
+    val options: List<String> by lazy { generateOptions() }
+
+    @Suppress("ComplexMethod")
+    private fun generateOptions(): List<String> {
+        val options = mutableListOf<String>()
+
+        if (toolbarColor != null) options.add(TOOLBAR_COLOR_OPTION)
+        if (closeButtonIcon != null) options.add(CLOSE_BUTTON_OPTION)
+        if (enableUrlbarHiding) options.add(DISABLE_URLBAR_HIDING_OPTION)
+        if (actionButtonConfig != null) options.add(ACTION_BUTTON_OPTION)
+        if (showShareMenuItem) options.add(SHARE_MENU_ITEM_OPTION)
+        if (menuItems.isNotEmpty()) options.add(CUSTOMIZED_MENU_OPTION)
+        if (actionButtonConfig?.tint == true) options.add(ACTION_BUTTON_TINT_OPTION)
+
+        if (exitAnimations != null) options.add(EXIT_ANIMATION_OPTION)
+        if (titleVisible) options.add(PAGE_TITLE_OPTION)
+
+        return options
+    }
+
     companion object {
         internal const val TOOLBAR_COLOR_OPTION = "hasToolbarColor"
         internal const val CLOSE_BUTTON_OPTION = "hasCloseButton"
@@ -57,9 +87,6 @@ class CustomTabConfig internal constructor(
         private val EXTRA_DEFAULT_SHARE_MENU_ITEM = StringBuilder("support.customtabs.extra.SHARE_MENU_ITEM").toExtra()
         private val EXTRA_MENU_ITEMS = StringBuilder("support.customtabs.extra.MENU_ITEMS").toExtra()
         private val KEY_MENU_ITEM_TITLE = StringBuilder("support.customtabs.customaction.MENU_ITEM_TITLE").toExtra()
-        private val EXTRA_TINT_ACTION_BUTTON = StringBuilder("support.customtabs.extra.TINT_ACTION_BUTTON").toExtra()
-        private val EXTRA_REMOTEVIEWS = StringBuilder("support.customtabs.extra.EXTRA_REMOTEVIEWS").toExtra()
-        private val EXTRA_TOOLBAR_ITEMS = StringBuilder("support.customtabs.extra.TOOLBAR_ITEMS").toExtra()
 
         /**
          * TODO remove when fixed: https://github.com/mozilla-mobile/android-components/issues/1884
@@ -72,6 +99,8 @@ class CustomTabConfig internal constructor(
          * @param intent the intent to check, wrapped as a SafeIntent.
          * @return true if the intent is a custom tab intent, otherwise false.
          */
+        @Deprecated("Use isCustomTabIntent in feature-customtabs",
+            ReplaceWith("isCustomTabIntent(intent.unsafe)", "mozilla.components.feature.customtabs.isCustomTabIntent"))
         fun isCustomTabIntent(intent: SafeIntent): Boolean {
             return intent.hasExtra(EXTRA_SESSION)
         }
@@ -84,14 +113,16 @@ class CustomTabConfig internal constructor(
          * @param displayMetrics needed in-order to verify that icons of a max size are only provided.
          * @return the CustomTabConfig instance.
          */
-        @Suppress("ComplexMethod")
+        @Deprecated("Use createCustomTabConfigFromIntent in feature-customtabs",
+            ReplaceWith(
+                "createCustomTabConfigFromIntent(intent.unsafe)",
+                "mozilla.components.feature.customtabs.createCustomTabConfigFromIntent"
+            ))
+        @Suppress("LongMethod", "ComplexMethod")
         fun createFromIntent(intent: SafeIntent, displayMetrics: DisplayMetrics? = null): CustomTabConfig {
             val id = UUID.randomUUID().toString()
 
-            val options = mutableListOf<String>()
-
             val toolbarColor = if (intent.hasExtra(EXTRA_TOOLBAR_COLOR)) {
-                options.add(TOOLBAR_COLOR_OPTION)
                 intent.getIntExtra(EXTRA_TOOLBAR_COLOR, -1)
             } else {
                 null
@@ -104,57 +135,25 @@ class CustomTabConfig internal constructor(
                     icon.width / density <= MAX_CLOSE_BUTTON_SIZE_DP &&
                     icon.height / density <= MAX_CLOSE_BUTTON_SIZE_DP
                 ) {
-                    options.add(CLOSE_BUTTON_OPTION)
                     icon
                 } else {
                     null
                 }
             }
 
-            val disableUrlbarHiding = !intent.getBooleanExtra(EXTRA_ENABLE_URLBAR_HIDING, true)
-            if (!disableUrlbarHiding) {
-                options.add(DISABLE_URLBAR_HIDING_OPTION)
-            }
+            val enableUrlbarHiding = intent.getBooleanExtra(EXTRA_ENABLE_URLBAR_HIDING, true)
 
             val actionButtonConfig = getActionButtonConfig(intent)
-            if (actionButtonConfig != null) {
-                options.add(ACTION_BUTTON_OPTION)
-            }
 
             val showShareMenuItem = intent.getBooleanExtra(EXTRA_DEFAULT_SHARE_MENU_ITEM, false)
-            if (showShareMenuItem) {
-                options.add(SHARE_MENU_ITEM_OPTION)
-            }
 
             val menuItems = getMenuItems(intent)
-            if (menuItems.isNotEmpty()) {
-                options.add(CUSTOMIZED_MENU_OPTION)
-            }
-
-            if (intent.hasExtra(EXTRA_TINT_ACTION_BUTTON)) {
-                options.add(ACTION_BUTTON_TINT_OPTION)
-            }
-
-            if (intent.hasExtra(EXTRA_REMOTEVIEWS) || intent.hasExtra(EXTRA_TOOLBAR_ITEMS)) {
-                options.add(BOTTOM_TOOLBAR_OPTION)
-            }
-
-            if (intent.hasExtra(CustomTabsIntent.EXTRA_EXIT_ANIMATION_BUNDLE)) {
-                options.add(EXIT_ANIMATION_OPTION)
-            }
-
-            if (intent.hasExtra(CustomTabsIntent.EXTRA_TITLE_VISIBILITY_STATE)) {
-                val titleVisibility = intent.getIntExtra(CustomTabsIntent.EXTRA_TITLE_VISIBILITY_STATE, 0)
-                if (titleVisibility == CustomTabsIntent.SHOW_PAGE_TITLE) {
-                    options.add(PAGE_TITLE_OPTION)
-                }
-            }
 
             // We are currently ignoring EXTRA_SECONDARY_TOOLBAR_COLOR and EXTRA_ENABLE_INSTANT_APPS
             // due to https://github.com/mozilla-mobile/focus-android/issues/629
 
-            return CustomTabConfig(id, toolbarColor, closeButtonIcon, disableUrlbarHiding, actionButtonConfig,
-                    showShareMenuItem, menuItems, Collections.unmodifiableList(options))
+            return CustomTabConfig(id, toolbarColor, closeButtonIcon, enableUrlbarHiding, actionButtonConfig,
+                    showShareMenuItem, menuItems)
         }
 
         private fun getActionButtonConfig(intent: SafeIntent): CustomTabActionButtonConfig? {
@@ -193,5 +192,15 @@ class CustomTabConfig internal constructor(
     }
 }
 
-data class CustomTabActionButtonConfig(val description: String, val icon: Bitmap, val pendingIntent: PendingIntent)
-data class CustomTabMenuItem(val name: String, val pendingIntent: PendingIntent)
+data class CustomTabActionButtonConfig(
+    val description: String,
+    val icon: Bitmap,
+    val pendingIntent: PendingIntent,
+    val id: Int = CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID,
+    val tint: Boolean = false
+)
+
+data class CustomTabMenuItem(
+    val name: String,
+    val pendingIntent: PendingIntent
+)

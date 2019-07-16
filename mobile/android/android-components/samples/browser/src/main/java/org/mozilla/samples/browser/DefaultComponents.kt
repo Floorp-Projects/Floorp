@@ -117,7 +117,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
     }
     val customTabIntentProcessor by lazy {
-        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources.displayMetrics)
+        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources)
     }
 
     // Menu

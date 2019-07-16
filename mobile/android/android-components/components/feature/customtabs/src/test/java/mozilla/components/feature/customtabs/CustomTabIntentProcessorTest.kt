@@ -52,7 +52,7 @@ class CustomTabIntentProcessorTest {
         val useCases = SessionUseCases(sessionManager)
 
         val handler =
-            CustomTabIntentProcessor(sessionManager, useCases.loadUrl, testContext.resources.displayMetrics)
+            CustomTabIntentProcessor(sessionManager, useCases.loadUrl, testContext.resources)
 
         val intent = mock<Intent>()
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)

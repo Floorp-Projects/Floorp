@@ -57,12 +57,7 @@ class SafeIntent(val unsafe: Intent) {
     }
 
     fun getBundleExtra(name: String): SafeBundle? = safeAccess {
-        val bundle = unsafe.getBundleExtra(name)
-        if (bundle != null) {
-            SafeBundle(bundle)
-        } else {
-            null
-        }
+        unsafe.getBundleExtra(name)?.toSafeBundle()
     }
 
     fun getCharSequenceExtra(name: String): CharSequence? = safeAccess {

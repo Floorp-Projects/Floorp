@@ -2,19 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.session.tab
+package mozilla.components.feature.customtabs
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
-import android.util.DisplayMetrics
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.utils.SafeIntent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -23,23 +22,22 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
-@Suppress("Deprecation")
 @RunWith(AndroidJUnit4::class)
-class CustomTabConfigTest {
+class CustomTabConfigHelperTest {
 
     @Test
     fun isCustomTabIntent() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
-        assertTrue(CustomTabConfig.isCustomTabIntent(SafeIntent(customTabsIntent.intent)))
-        assertFalse(CustomTabConfig.isCustomTabIntent(SafeIntent(mock(Intent::class.java))))
+        assertTrue(isCustomTabIntent(customTabsIntent.intent))
+        assertFalse(isCustomTabIntent(mock<Intent>()))
     }
 
     @Test
     fun createFromIntentAssignsId() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((customTabsIntent.intent)))
+        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
         assertTrue(customTabConfig.id.isNotBlank())
     }
 
@@ -48,9 +46,8 @@ class CustomTabConfigTest {
         val builder = CustomTabsIntent.Builder()
         builder.setToolbarColor(Color.BLACK)
 
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((builder.build().intent)))
+        val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertEquals(Color.BLACK, customTabConfig.toolbarColor)
-        assertTrue(customTabConfig.options.contains(CustomTabConfig.TOOLBAR_COLOR_OPTION))
     }
 
     @Test
@@ -60,11 +57,10 @@ class CustomTabConfigTest {
         val closeButtonIcon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888)
         builder.setCloseButtonIcon(closeButtonIcon)
 
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((builder.build().intent)))
+        val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertEquals(closeButtonIcon, customTabConfig.closeButtonIcon)
         assertEquals(size, customTabConfig.closeButtonIcon?.width)
         assertEquals(size, customTabConfig.closeButtonIcon?.height)
-        assertTrue(customTabConfig.options.contains(CustomTabConfig.CLOSE_BUTTON_OPTION))
     }
 
     @Test
@@ -74,24 +70,22 @@ class CustomTabConfigTest {
         val closeButtonIcon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888)
         builder.setCloseButtonIcon(closeButtonIcon)
 
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((builder.build().intent)))
+        val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertNull(customTabConfig.closeButtonIcon)
-        assertFalse(customTabConfig.options.contains(CustomTabConfig.CLOSE_BUTTON_OPTION))
     }
 
     @Test
     fun createFromIntentUsingDisplayMetricsForCloseButton() {
         val size = 64
         val builder = CustomTabsIntent.Builder()
-        val displayMetrics: DisplayMetrics = mock()
+        val resources: Resources = mock()
         val closeButtonIcon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888)
         builder.setCloseButtonIcon(closeButtonIcon)
 
-        displayMetrics.density = 3f
+        `when`(resources.getDimension(R.dimen.mozac_feature_customtabs_max_close_button_size)).thenReturn(64f)
 
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((builder.build().intent)), displayMetrics)
+        val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, resources)
         assertEquals(closeButtonIcon, customTabConfig.closeButtonIcon)
-        assertTrue(customTabConfig.options.contains(CustomTabConfig.CLOSE_BUTTON_OPTION))
     }
 
     @Test
@@ -100,9 +94,8 @@ class CustomTabConfigTest {
         // Intent is a parcelable but not a Bitmap
         customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON, Intent())
 
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((customTabsIntent.intent)))
+        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
         assertNull(customTabConfig.closeButtonIcon)
-        assertFalse(customTabConfig.options.contains(CustomTabConfig.CLOSE_BUTTON_OPTION))
     }
 
     @Test
@@ -110,9 +103,8 @@ class CustomTabConfigTest {
         val builder = CustomTabsIntent.Builder()
         builder.enableUrlBarHiding()
 
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((builder.build().intent)))
+        val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertFalse(customTabConfig.disableUrlbarHiding)
-        assertTrue(customTabConfig.options.contains(CustomTabConfig.DISABLE_URLBAR_HIDING_OPTION))
     }
 
     @Test
@@ -120,9 +112,8 @@ class CustomTabConfigTest {
         val builder = CustomTabsIntent.Builder()
         builder.addDefaultShareMenuItem()
 
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((builder.build().intent)))
+        val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertTrue(customTabConfig.showShareMenuItem)
-        assertTrue(customTabConfig.options.contains(CustomTabConfig.SHARE_MENU_ITEM_OPTION))
     }
 
     @Test
@@ -132,31 +123,30 @@ class CustomTabConfigTest {
         builder.addMenuItem("menuitem1", pendingIntent)
         builder.addMenuItem("menuitem2", pendingIntent)
 
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((builder.build().intent)))
+        val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertEquals(2, customTabConfig.menuItems.size)
         assertEquals("menuitem1", customTabConfig.menuItems[0].name)
         assertSame(pendingIntent, customTabConfig.menuItems[0].pendingIntent)
         assertEquals("menuitem2", customTabConfig.menuItems[1].name)
         assertSame(pendingIntent, customTabConfig.menuItems[1].pendingIntent)
-        assertTrue(customTabConfig.options.contains(CustomTabConfig.CUSTOMIZED_MENU_OPTION))
     }
 
     @Test
     fun createFromIntentWithActionButton() {
         val builder = CustomTabsIntent.Builder()
 
-        val bitmap = mock(Bitmap::class.java)
+        val bitmap = mock<Bitmap>()
         val intent = PendingIntent.getActivity(testContext, 0, Intent("testAction"), 0)
         builder.setActionButton(bitmap, "desc", intent)
 
         val customTabsIntent = builder.build()
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent(customTabsIntent.intent))
+        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
 
         assertNotNull(customTabConfig.actionButtonConfig)
         assertEquals("desc", customTabConfig.actionButtonConfig?.description)
         assertEquals(intent, customTabConfig.actionButtonConfig?.pendingIntent)
         assertEquals(bitmap, customTabConfig.actionButtonConfig?.icon)
-        assertTrue(customTabConfig.options.contains(CustomTabConfig.ACTION_BUTTON_OPTION))
+        assertFalse(customTabConfig.actionButtonConfig!!.tint)
     }
 
     @Test
@@ -165,7 +155,7 @@ class CustomTabConfigTest {
 
         val invalid = Bundle()
         customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE, invalid)
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent(customTabsIntent.intent))
+        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
 
         assertNull(customTabConfig.actionButtonConfig)
     }
@@ -179,11 +169,30 @@ class CustomTabConfigTest {
         extrasField.set(customTabsIntent.intent, null)
         extrasField.isAccessible = false
 
-        assertFalse(CustomTabConfig.isCustomTabIntent(SafeIntent(customTabsIntent.intent)))
+        assertFalse(isCustomTabIntent(customTabsIntent.intent))
 
         // Make sure we're not failing
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent(customTabsIntent.intent))
+        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
         assertNotNull(customTabConfig)
         assertNull(customTabConfig.actionButtonConfig)
+    }
+
+    @Test
+    fun createFromIntentWithExitAnimationOption() {
+        val customTabsIntent = CustomTabsIntent.Builder().build()
+        val bundle = Bundle()
+        customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_EXIT_ANIMATION_BUNDLE, bundle)
+
+        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+        assertEquals(bundle, customTabConfig.exitAnimations)
+    }
+
+    @Test
+    fun createFromIntentWithPageTitleOption() {
+        val customTabsIntent = CustomTabsIntent.Builder().build()
+        customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_TITLE_VISIBILITY_STATE, CustomTabsIntent.SHOW_PAGE_TITLE)
+
+        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+        assertTrue(customTabConfig.titleVisible)
     }
 }

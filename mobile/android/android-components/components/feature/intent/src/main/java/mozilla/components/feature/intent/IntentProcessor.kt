@@ -29,6 +29,7 @@ typealias IntentHandler = (Intent) -> Boolean
  *
  * @deprecated Use individual intent processors instead.
  */
+@Deprecated("Use individual processors such as TabIntentProcessor instead.")
 class IntentProcessor(
     private val sessionUseCases: SessionUseCases,
     private val sessionManager: SessionManager,
@@ -50,7 +51,7 @@ class IntentProcessor(
         val customTabIntentProcessor = CustomTabIntentProcessor(
             sessionManager,
             sessionUseCases.loadUrl,
-            context.resources.displayMetrics
+            context.resources
         )
         val viewHandlers = listOf(customTabIntentProcessor, tabIntentProcessor)
 

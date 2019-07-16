@@ -15,31 +15,32 @@ import mozilla.components.support.base.log.logger.Logger
  *
  * See bug 1090385 for more.
  */
-class SafeBundle(private val bundle: Bundle) {
+class SafeBundle(val unsafe: Bundle) {
+
+    fun getInt(name: String, defaultValue: Int = 0): Int =
+        safeAccess(defaultValue) { getInt(name, defaultValue) }!!
+
+    fun getString(name: String): String? =
+        safeAccess { getString(name) }
+
+    fun <T : Parcelable> getParcelable(name: String): T? =
+        safeAccess { getParcelable<T>(name) }
 
     @SuppressWarnings("TooGenericExceptionCaught")
-    fun getString(name: String): String? {
+    private fun <T> safeAccess(default: T? = null, block: Bundle.() -> T): T? {
         return try {
-            bundle.getString(name)
+            block(unsafe)
         } catch (e: OutOfMemoryError) {
             Logger.warn("Couldn't get bundle items: OOM. Malformed?")
-            null
+            default
         } catch (e: RuntimeException) {
             Logger.warn("Couldn't get bundle items.", e)
-            null
-        }
-    }
-
-    @SuppressWarnings("TooGenericExceptionCaught")
-    fun <T : Parcelable> getParcelable(name: String): T? {
-        return try {
-            bundle.getParcelable(name)
-        } catch (e: OutOfMemoryError) {
-            Logger.warn("Couldn't get bundle items: OOM. Malformed?")
-            null
-        } catch (e: RuntimeException) {
-            Logger.warn("Couldn't get bundle items.", e)
-            null
+            default
         }
     }
 }
+
+/**
+ * Returns a [SafeBundle] for the given [Bundle].
+ */
+fun Bundle.toSafeBundle() = SafeBundle(this)
