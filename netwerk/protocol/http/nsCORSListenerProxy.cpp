@@ -1348,7 +1348,12 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
                         parentHttpChannel);
       return NS_ERROR_DOM_BAD_URI;
     }
-    foundMethod |= mPreflightMethod.Equals(method);
+
+    if (method.EqualsLiteral("*") && !mWithCredentials) {
+      foundMethod = true;
+    } else {
+      foundMethod |= mPreflightMethod.Equals(method);
+    }
   }
   if (!foundMethod) {
     LogBlockedRequest(aRequest, "CORSMethodNotFound", nullptr,
@@ -1363,6 +1368,7 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
       NS_LITERAL_CSTRING("Access-Control-Allow-Headers"), headerVal);
   nsTArray<nsCString> headers;
   nsCCharSeparatedTokenizer headerTokens(headerVal, ',');
+  bool allowAllHeaders = false;
   while (headerTokens.hasMoreTokens()) {
     const nsDependentCSubstring& header = headerTokens.nextToken();
     if (header.IsEmpty()) {
@@ -1375,17 +1381,24 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
                         parentHttpChannel);
       return NS_ERROR_DOM_BAD_URI;
     }
-    headers.AppendElement(header);
+    if (header.EqualsLiteral("*") && !mWithCredentials) {
+      allowAllHeaders = true;
+    } else {
+      headers.AppendElement(header);
+    }
   }
-  for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
-    const auto& comparator = nsCaseInsensitiveCStringArrayComparator();
-    if (!headers.Contains(mPreflightHeaders[i], comparator)) {
-      LogBlockedRequest(
-          aRequest, "CORSMissingAllowHeaderFromPreflight",
-          NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(),
-          nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWHEADERFROMPREFLIGHT,
-          parentHttpChannel);
-      return NS_ERROR_DOM_BAD_URI;
+
+  if (!allowAllHeaders) {
+    for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
+      const auto& comparator = nsCaseInsensitiveCStringArrayComparator();
+      if (!headers.Contains(mPreflightHeaders[i], comparator)) {
+        LogBlockedRequest(
+            aRequest, "CORSMissingAllowHeaderFromPreflight",
+            NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(),
+            nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWHEADERFROMPREFLIGHT,
+            parentHttpChannel);
+        return NS_ERROR_DOM_BAD_URI;
+      }
     }
   }
 
