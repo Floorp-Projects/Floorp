@@ -409,7 +409,13 @@ class nsWindow final : public nsBaseWidget {
                                     GtkWidget* aOldContainer);
 
   virtual void RegisterTouchWindow() override;
-
+  virtual bool CompositorInitiallyPaused() override {
+#ifdef MOZ_WAYLAND
+    return mNeedsUpdatingEGLSurface;
+#else
+    return false;
+#endif
+  }
   nsCOMPtr<nsIWidget> mParent;
   // Is this a toplevel window?
   bool mIsTopLevel;
