@@ -51,6 +51,7 @@ add_task(async function() {
     url: "about:protections",
     gBrowser,
   });
+  const { getLoginData } = AboutProtectionsHandler;
 
   info("Check that the correct content is displayed for non-logged in users.");
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
@@ -192,5 +193,7 @@ add_task(async function() {
   // remove logins
   Services.logins.removeLogin(TEST_LOGIN1);
   Services.logins.removeLogin(TEST_LOGIN2);
+
+  AboutProtectionsHandler.getLoginData = getLoginData;
   await BrowserTestUtils.removeTab(tab);
 });
