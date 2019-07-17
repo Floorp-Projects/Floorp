@@ -321,9 +321,9 @@ DevToolsStartup.prototype = {
     const isInitialLaunch =
       cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
     if (isInitialLaunch) {
-      // Execute only on first launch of this browser instance.
-      const hasDevToolsFlag = flags.console || flags.devtools || flags.debugger;
-      this.setupEnabledPref(hasDevToolsFlag);
+      // Enable devtools for all users on startup (onboarding experiment from Bug 1408969
+      // is over).
+      Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
 
       // Store devtoolsFlag to check it later in onWindowReady.
       this.devtoolsFlag = flags.devtools;
@@ -664,51 +664,6 @@ DevToolsStartup.prototype = {
   isDevToolsUser() {
     const selfXssCount = Services.prefs.getIntPref("devtools.selfxss.count", 0);
     return selfXssCount > 0;
-  },
-
-  /**
-   * Depending on some runtime parameters (command line arguments as well as existing
-   * preferences), the DEVTOOLS_ENABLED_PREF might be forced to true.
-   *
-   * @param {Boolean} hasDevToolsFlag
-   *        true if any DevTools command line argument was passed when starting Firefox.
-   */
-  setupEnabledPref(hasDevToolsFlag) {
-    // Read the current experiment state.
-    const experimentState = Services.prefs.getCharPref(
-      "devtools.onboarding.experiment"
-    );
-    const isRegularExperiment = experimentState == "on";
-    const isForcedExperiment = experimentState == "force";
-    const isInExperiment = isRegularExperiment || isForcedExperiment;
-
-    // Force devtools.enabled to true for users that are not part of the experiment.
-    if (!isInExperiment) {
-      Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
-      return;
-    }
-
-    // Force devtools.enabled to false once for each experiment user.
-    if (!Services.prefs.getBoolPref("devtools.onboarding.experiment.flipped")) {
-      Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, false);
-      Services.prefs.setBoolPref(
-        "devtools.onboarding.experiment.flipped",
-        true
-      );
-    }
-
-    if (Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
-      // Nothing to do if DevTools are already enabled.
-      return;
-    }
-
-    // We only consider checking the actual isDevToolsUser() if the user is in the
-    // "regular" experiment group.
-    const isDevToolsUser = isRegularExperiment && this.isDevToolsUser();
-
-    if (hasDevToolsFlag || isDevToolsUser) {
-      Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
-    }
   },
 
   hookKeyShortcuts(window) {
