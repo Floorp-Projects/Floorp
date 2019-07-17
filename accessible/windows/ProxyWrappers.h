@@ -64,6 +64,14 @@ class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap {
     return mIDToAccessibleMap.Get(aID);
   }
 
+  virtual nsIntRect Bounds() const override {
+    // OuterDocAccessible can return a DocProxyAccessibleWrap as a child.
+    // Accessible::ChildAtPoint on an ancestor might retrieve this proxy and
+    // call Bounds() on it. This will crash on a proxy, so we override it to do
+    // nothing here.
+    return nsIntRect();
+  }
+
  private:
   /*
    * This provides a mapping from 32 bit id to accessible objects.
@@ -103,6 +111,14 @@ class RemoteIframeDocProxyAccessibleWrap : public HyperTextAccessibleWrap {
   virtual void GetNativeInterface(void** aOutAccessible) override {
     RefPtr<IDispatch> addRefed = mCOMProxy;
     addRefed.forget(aOutAccessible);
+  }
+
+  virtual nsIntRect Bounds() const override {
+    // OuterDocAccessible can return a RemoteIframeDocProxyAccessibleWrap as a
+    // child. Accessible::ChildAtPoint on an ancestor might retrieve this proxy
+    // and call Bounds() on it. This will crash on a proxy, so we override it
+    // to do nothing here.
+    return nsIntRect();
   }
 
  private:
