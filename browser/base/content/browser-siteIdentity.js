@@ -194,14 +194,6 @@ var gIdentityHandler = {
       "identity-icon-label"
     ));
   },
-  get _connectionIcon() {
-    delete this._connectionIcon;
-    return (this._connectionIcon = document.getElementById("connection-icon"));
-  },
-  get _extensionIcon() {
-    delete this._extensionIcon;
-    return (this._extensionIcon = document.getElementById("extension-icon"));
-  },
   get _overrideService() {
     delete this._overrideService;
     return (this._overrideService = Cc[
@@ -785,11 +777,11 @@ var gIdentityHandler = {
     }
 
     // Push the appropriate strings out to the UI
-    this._connectionIcon.setAttribute("tooltiptext", tooltip);
+    this._identityIcon.setAttribute("tooltiptext", tooltip);
 
     if (this._pageExtensionPolicy) {
       let extensionName = this._pageExtensionPolicy.name;
-      this._extensionIcon.setAttribute(
+      this._identityIcon.setAttribute(
         "tooltiptext",
         gNavigatorBundle.getFormattedString("identity.extension.tooltip", [
           extensionName,
@@ -798,10 +790,6 @@ var gIdentityHandler = {
     }
 
     this._identityIconLabels.setAttribute("tooltiptext", tooltip);
-    this._identityIcon.setAttribute(
-      "tooltiptext",
-      gNavigatorBundle.getString("identity.icon.tooltip")
-    );
     this._identityIconLabel.setAttribute("value", icon_label);
     this._identityIconCountryLabel.setAttribute("value", icon_country_label);
     // Set cropping and direction
