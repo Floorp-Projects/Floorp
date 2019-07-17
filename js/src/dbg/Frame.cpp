@@ -143,8 +143,9 @@ bool DebuggerFrame::hasAnyLiveHooks() const {
 }
 
 /* static */
-NativeObject* DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor,
-                                       Handle<GlobalObject*> global) {
+NativeObject* DebuggerFrame::initClass(JSContext* cx,
+                                       Handle<GlobalObject*> global,
+                                       HandleObject dbgCtor) {
   return InitClass(cx, dbgCtor, nullptr, &class_, construct, 0, properties_,
                    methods_, nullptr, nullptr);
 }
