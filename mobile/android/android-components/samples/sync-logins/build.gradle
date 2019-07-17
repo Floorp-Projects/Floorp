@@ -39,6 +39,9 @@ dependencies {
     implementation project(':concept-storage')
     implementation project(':service-firefox-accounts')
     implementation project(':service-sync-logins')
+    implementation project(':support-rustlog')
+    implementation project(':support-rusthttp')
+    implementation project(':lib-fetch-httpurlconnection')
 
     implementation Dependencies.kotlin_stdlib
 

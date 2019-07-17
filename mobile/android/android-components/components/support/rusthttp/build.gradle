@@ -28,19 +28,10 @@ android {
 }
 
 dependencies {
-    // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
-    api Dependencies.mozilla_sync_logins
-    api Dependencies.mozilla_sync15
-
-    // Types defined in concept-sync are part of this module's public API.
-    api project(':concept-sync')
-
-    implementation project(':concept-storage')
+    implementation Dependencies.mozilla_httpconfig
+    api project(':concept-fetch')
 
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
-
-    testImplementation Dependencies.mozilla_sync_logins
 
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric

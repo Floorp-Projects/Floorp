@@ -64,11 +64,13 @@ dependencies {
     testImplementation Dependencies.testing_mockito
 
     jnaForTest Dependencies.thirdparty_jna
-    testImplementation Dependencies.mozilla_support
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
-    testImplementation Dependencies.mozilla_places_forUnitTests
+
+    testImplementation Dependencies.mozilla_places
     testImplementation Dependencies.testing_mockwebserver
     testImplementation Dependencies.androidx_work_testing
+
+    testImplementation Dependencies.mozilla_full_megazord_forUnitTests
 }
 
 apply from: '../../../publish.gradle'

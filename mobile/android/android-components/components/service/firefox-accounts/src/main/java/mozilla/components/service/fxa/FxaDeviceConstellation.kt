@@ -72,7 +72,7 @@ class FxaDeviceConstellation(
         state?.currentDevice?.let {
             return scope.async {
                 handleFxaExceptions(logger, "destroying current device") {
-                    account.destroyDevice(it.id)
+                    account.disconnect() // Not sure if this is right!
                 }
             }
         }

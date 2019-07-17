@@ -206,6 +206,20 @@ permalink: /changelog/
 
 * Imported latest state of translations.
 
+* **support-rusthttp**
+  * ⚠️ **This is a breaking change**: The application-services (FxA, sync, push) code now will send HTTP requests through a kotlin-provided HTTP stack in all configurations, however it requires configuration at startup. This may be done via the neq `support-rusthttp` component as follows:
+
+  ```kotlin
+  import mozilla.components.support.rusthttp.RustHttpConfig
+  // Note: other implementions of `Client` from concept-fetch are fine as well.
+  import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+  // some point before calling rust code that makes HTTP requests.
+  RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
+  ```
+
+  * Note that code which uses a custom megazord **must** call this after initializing the megazord.
+
+
 # 4.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v3.0.0...v4.0.0)

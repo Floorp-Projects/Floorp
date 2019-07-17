@@ -264,6 +264,10 @@ projects:
     path: components/support/rustlog
     description: 'A bridge allowing log messages from Rust code to be sent to the log system in support-base'
     publish: true
+  support-rusthttp:
+    path: components/support/rusthttp
+    description: 'A bridge allowing configuration of Rust HTTP requests without directly depending on the application services library'
+    publish: true
   support-locale:
     path: components/support/locale
     description: 'A component to allow apps to change the system defined language by their custom one'
