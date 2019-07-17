@@ -184,7 +184,7 @@ VARCACHE_PREF(
   Live,
   "apz.axis_lock.breakout_angle",
    apz_axis_lock_breakout_angle,
-  AtomicFloat, float(M_PI / 8.0) /* 22.5 degrees */
+  AtomicFloat, float(M_PI / 8.0)  // 22.5 degrees
 )
 
 VARCACHE_PREF(
@@ -198,14 +198,14 @@ VARCACHE_PREF(
   Live,
   "apz.axis_lock.direct_pan_angle",
    apz_axis_lock_direct_pan_angle,
-  AtomicFloat, float(M_PI / 3.0) /* 60 degrees */
+  AtomicFloat, float(M_PI / 3.0)  // 60 degrees
 )
 
 VARCACHE_PREF(
   Live,
   "apz.axis_lock.lock_angle",
    apz_axis_lock_lock_angle,
-  AtomicFloat, float(M_PI / 6.0) /* 30 degrees */
+  AtomicFloat, float(M_PI / 6.0)  // 30 degrees
 )
 
 VARCACHE_PREF(
@@ -267,7 +267,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "apz.drag.touch.enabled",
-   apz_touch_drag_enabled,
+   apz_drag_touch_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -749,9 +749,9 @@ VARCACHE_PREF(
    browser_cache_memory_capacity,
   RelaxedAtomicInt32,
 #ifdef ANDROID
-  1024  // kilobytes
+  1024
 #else
-  -1    // determine dynamically
+  -1
 #endif
 )
 
@@ -1721,8 +1721,7 @@ VARCACHE_PREF(
 // How long a content process can take before closing its IPC channel
 // after shutdown is initiated.  If the process exceeds the timeout,
 // we fear the worst and kill it.
-#if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && \
-    !defined(MOZ_TSAN)
+#if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && !defined(MOZ_TSAN)
 # define PREF_VALUE 5
 #else
 # define PREF_VALUE 0
@@ -1918,7 +1917,6 @@ VARCACHE_PREF(
   dom_performance_children_results_ipc_timeout,
   uint32_t, 1000
 )
-#undef PREF_VALUE
 
 // Enable notification of performance timing
 VARCACHE_PREF(
@@ -1989,7 +1987,11 @@ VARCACHE_PREF(
 
 // Presentation API
 #if defined(ANDROID)
-# define PREF_VALUE NOT_IN_RELEASE_OR_BETA_VALUE
+# ifdef RELEASE_OR_BETA
+#  define PREF_VALUE false
+# else
+#  define PREF_VALUE true
+# endif
 #else
 # define PREF_VALUE false
 #endif
@@ -1999,14 +2001,12 @@ VARCACHE_PREF(
   dom_presentation_enabled,
   bool, PREF_VALUE
 )
-
 VARCACHE_PREF(
   Live,
   "dom.presentation.controller.enabled",
   dom_presentation_controller_enabled,
   bool, PREF_VALUE
 )
-
 VARCACHE_PREF(
   Live,
   "dom.presentation.receiver.enabled",
@@ -2136,18 +2136,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-VARCACHE_PREF(
-  Live,
-  "idle_period.min",
-   idle_period_min,
-  uint32_t, 3)
-
-VARCACHE_PREF(
-  Live,
-  "idle_period.during_page_load.min",
-   idle_period_during_page_load_min,
-  uint32_t, 12)
-
 #ifdef JS_BUILD_BINAST
 VARCACHE_PREF(
   Live,
@@ -2220,7 +2208,6 @@ VARCACHE_PREF(
   dom_security_featurePolicy_enabled,
   bool, PREF_VALUE
 )
-
 // This pref enables the featurePolicy header support.
 VARCACHE_PREF(
   Live,
@@ -2228,7 +2215,6 @@ VARCACHE_PREF(
   dom_security_featurePolicy_header_enabled,
   bool, PREF_VALUE
 )
-
 // Expose the 'policy' attribute in document and HTMLIFrameElement
 VARCACHE_PREF(
   Live,
@@ -2732,7 +2718,7 @@ VARCACHE_PREF(
   Live,
   "dom.worker.canceling.timeoutMilliseconds",
   dom_worker_canceling_timeoutMilliseconds,
-  RelaxedAtomicUint32, 30000 /* 30 seconds */
+  RelaxedAtomicUint32, 30000  // 30 seconds
 )
 
 // Is support for compiling DOM worker scripts directly from UTF-8 (without ever
@@ -2791,8 +2777,7 @@ VARCACHE_PREF(
   bool, false
 )
 
-// WebIDL test prefs
-
+// WebIDL test prefs.
 VARCACHE_PREF(
   Live,
   "dom.webidl.test1",
@@ -3747,6 +3732,24 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
+  "idle_period.min",
+   idle_period_min,
+  uint32_t, 3
+)
+
+VARCACHE_PREF(
+  Live,
+  "idle_period.during_page_load.min",
+   idle_period_during_page_load_min,
+  uint32_t, 12
+)
+
+//---------------------------------------------------------------------------
+// Prefs starting with "image."
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  Live,
   "image.animated.decode-on-demand.threshold-kb",
    image_animated_decode_on_demand_threshold_kb,
   RelaxedAtomicUint32, 20480
@@ -3953,6 +3956,19 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Prefs starting with "intl."
+//---------------------------------------------------------------------------
+
+// Whether ISO-2022-JP is a permitted content-based encoding detection
+// outcome.
+VARCACHE_PREF(
+  Live,
+  "intl.charset.detector.iso2022jp.allowed",
+   intl_charset_detector_iso2022jp_allowed,
+  bool, true
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "javascript."
 //---------------------------------------------------------------------------
 
@@ -3972,11 +3988,11 @@ VARCACHE_PREF(
 )
 
 // The default amount of time to wait from the user being idle to starting a
-// shrinking GC.
+// shrinking GC. Measured in milliseconds.
 #ifdef NIGHTLY_BUILD
-# define PREF_VALUE  15000  // ms
+# define PREF_VALUE  15000
 #else
-# define PREF_VALUE 300000  // ms
+# define PREF_VALUE 300000
 #endif
 VARCACHE_PREF(
   Live,
@@ -4040,15 +4056,6 @@ VARCACHE_PREF(
   "javascript.options.streams",
   javascript_options_streams,
   RelaxedAtomicBool, false
-)
-
-// Whether ISO-2022-JP is a permitted content-based encoding detection
-// outcome.
-VARCACHE_PREF(
-  Live,
-  "intl.charset.detector.iso2022jp.allowed",
-   intl_charset_detector_iso2022jp_allowed,
-  bool, true
 )
 
 //---------------------------------------------------------------------------
@@ -4277,7 +4284,7 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-#if defined(XP_MACOSX) || defined (OS_OPENBSD)
+#if defined(XP_MACOSX) || defined (XP_OPENBSD)
 #define PREF_VALUE true
 #else
 #define PREF_VALUE false
@@ -5504,7 +5511,7 @@ VARCACHE_PREF(
   Live,
   "layout.min-active-layer-size",
    layout_min_active_layer_size,
-  int, 64
+  int32_t, 64
 )
 
 VARCACHE_PREF(
@@ -6078,7 +6085,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.wmf.low-latency.force-disabled",
-   media_mwf_low_latency_force_disabled,
+   media_wmf_low_latency_force_disabled,
   RelaxedAtomicBool, false
 )
 
@@ -6624,13 +6631,12 @@ VARCACHE_PREF(
 #undef PREF_VALUE
 
 // Use MediaDataDecoder API for H264 in WebRTC. This includes hardware
-// acceleration for decoding.
+// acceleration for decoding. False on Android due to bug 1509316.
 # if defined(ANDROID)
-#  define PREF_VALUE false // Bug 1509316
+#  define PREF_VALUE false
 # else
 #  define PREF_VALUE true
 # endif
-
 VARCACHE_PREF(
   Live,
   "media.navigator.mediadatadecoder_h264_enabled",
@@ -7280,19 +7286,19 @@ VARCACHE_PREF(
   uint32_t, 1800 // 30 minutes (in seconds)
 )
 
-// Maximum client-side cookie life-time cap
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE 604800 // 7 days
-#else
-# define PREF_VALUE 0
-#endif
+// Maximum client-side cookie life-time cap. Measured in seconds, set to 0 to
+// disable.
 VARCACHE_PREF(
   Live,
   "privacy.documentCookies.maxage",
   privacy_documentCookies_maxage,
-  uint32_t, PREF_VALUE // (in seconds, set to 0 to disable)
+  uint32_t,
+#ifdef NIGHTLY_BUILD
+  7 * 24 * 60 * 60
+#else
+  0
+#endif
 )
-#undef PREF_VALUE
 
 // Anti-fingerprinting, disabled by default
 VARCACHE_PREF(
