@@ -12,6 +12,7 @@
 #include "dbg/Environment.h"
 #include "dbg/NoExecute.h"
 #include "dbg/Object.h"
+#include "dbg/Script.h"
 #include "frontend/BytecodeCompilation.h"
 #include "jit/JitFrames.h"
 #include "jit/RematerializedFrame.h"
@@ -1341,7 +1342,7 @@ bool DebuggerFrame::getScript(JSContext* cx, unsigned argc, Value* vp) {
   THIS_FRAME(cx, argc, vp, "get script", args, thisobj, frameIter, frame);
   Debugger* debug = Debugger::fromChildJSObject(thisobj);
 
-  RootedObject scriptObject(cx);
+  RootedDebuggerScript scriptObject(cx);
   if (frame.isWasmDebugFrame()) {
     RootedWasmInstanceObject instance(cx, frame.wasmInstance()->object());
     scriptObject = debug->wrapWasmScript(cx, instance);
