@@ -222,43 +222,28 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     return "{} {}:publish {}".format(gradle_tasks, module_name, rename_step, module_name)
 
 
-def _to_release_artifact(extension, version, component):
-    artifact_filename = '{}-{}{}'.format(component['name'], version, extension)
+def _to_release_artifact(extension, version, component, timestamp=None):
+    if timestamp:
+        artifact_filename = '{}-{}-{}{}'.format(component['name'], version, timestamp, extension)
+    else:
+        artifact_filename = '{}-{}{}'.format(component['name'], version, extension)
 
     return {
         'taskcluster_path': 'public/build/{}'.format(artifact_filename),
         'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
             os.path.abspath(component['path']),
             component['name'],
-            version, artifact_filename),
+            version if not timestamp else version + '-SNAPSHOT',
+            artifact_filename),
         'maven_destination': 'maven2/org/mozilla/components/{}/{}/{}'.format(
             component['name'],
-            version,
+            version if not timestamp else version + '-SNAPSHOT',
             artifact_filename,
         )
     }
 
 
-# TODO: try to mold this on top of the above one
-def _to_snapshot_release_artifact(extension, version, component, timestamp):
-    artifact_filename = '{}-{}-{}{}'.format(component['name'], version, timestamp, extension)
-
-    return {
-        'taskcluster_path': 'public/build/{}'.format(artifact_filename),
-        'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}-SNAPSHOT/{}'.format(
-            os.path.abspath(component['path']),
-            component['name'],
-            version, artifact_filename),
-        'maven_destination': 'maven2/org/mozilla/components/{}/{}-SNAPSHOT/{}'.format(
-            component['name'],
-            version,
-            artifact_filename,
-        )
-    }
-
-
-# TODO: DELETE once bug 1558795 is fixed in early Q3
-def release_snapshot(components, is_snapshot, is_staging):
+def release(components, is_snapshot, is_staging):
     version = components_version()
 
     build_tasks = {}
@@ -268,7 +253,9 @@ def release_snapshot(components, is_snapshot, is_staging):
     other_tasks = {}
     wait_on_builds_task_id = taskcluster.slugId()
 
-    timestamp = generate_snapshot_timestamp()
+    timestamp = None
+    if is_snapshot:
+        timestamp = generate_snapshot_timestamp()
 
     for component in components:
         build_task_id = taskcluster.slugId()
@@ -280,7 +267,7 @@ def release_snapshot(components, is_snapshot, is_staging):
             run_coverage=False,
             is_snapshot=is_snapshot,
             component=component,
-            artifacts=[_to_snapshot_release_artifact(extension + hash_extension, version, component, timestamp)
+            artifacts=[_to_release_artifact(extension + hash_extension, version, component, timestamp)
                        for extension, hash_extension in
                        itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)],
             timestamp=timestamp,
@@ -288,70 +275,15 @@ def release_snapshot(components, is_snapshot, is_staging):
 
         sign_task_id = taskcluster.slugId()
         sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
-            build_task_id, wait_on_builds_task_id, [_to_snapshot_release_artifact(extension, version, component, timestamp)
+            build_task_id, wait_on_builds_task_id, [_to_release_artifact(extension, version, component, timestamp)
                             for extension in AAR_EXTENSIONS],
             component['name'], is_staging,
         )
 
-        beetmover_build_artifacts = [_to_snapshot_release_artifact(extension + hash_extension, version, component, timestamp)
+        beetmover_build_artifacts = [_to_release_artifact(extension + hash_extension, version, component, timestamp)
                                      for extension, hash_extension in
                                      itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
-        beetmover_sign_artifacts = [_to_snapshot_release_artifact(extension + '.asc', version, component, timestamp)
-                                    for extension in AAR_EXTENSIONS]
-        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
-            build_task_id, sign_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
-            component['name'], is_snapshot, is_staging
-        )
-
-    wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_barrier_task(build_tasks.keys())
-
-    for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
-        other_tasks[taskcluster.slugId()] = craft_function()
-
-    return (build_tasks, wait_on_builds_tasks, sign_tasks, beetmover_tasks, other_tasks)
-
-
-def release(components, is_snapshot, is_staging):
-    if is_snapshot:
-        # TODO: DELETE once bug 1558795 is fixed in early Q3
-        return release_snapshot(components, is_snapshot, is_staging)
-
-    version = components_version()
-
-    build_tasks = {}
-    wait_on_builds_tasks = {}
-    sign_tasks = {}
-    beetmover_tasks = {}
-    other_tasks = {}
-    wait_on_builds_task_id = taskcluster.slugId()
-
-
-    for component in components:
-        build_task_id = taskcluster.slugId()
-        module_name = _get_gradle_module_name(component)
-        build_tasks[build_task_id] = BUILDER.craft_build_task(
-            module_name=module_name,
-            gradle_tasks=_get_release_gradle_tasks(module_name, is_snapshot),
-            subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
-            run_coverage=False,
-            is_snapshot=is_snapshot,
-            component=component,
-            artifacts=[_to_release_artifact(extension + hash_extension, version, component)
-                       for extension, hash_extension in
-                       itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
-        )
-
-        sign_task_id = taskcluster.slugId()
-        sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
-            build_task_id, wait_on_builds_task_id, [_to_release_artifact(extension, version, component)
-                            for extension in AAR_EXTENSIONS],
-            component['name'], is_staging,
-        )
-
-        beetmover_build_artifacts = [_to_release_artifact(extension + hash_extension, version, component)
-                                     for extension, hash_extension in
-                                     itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
-        beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc', version, component)
+        beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc', version, component, timestamp)
                                     for extension in AAR_EXTENSIONS]
         beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
             build_task_id, sign_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
