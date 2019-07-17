@@ -21,7 +21,7 @@
 .menu {
   position: absolute;
   top: 30px;
-  right: 0;
+  inset-inline-end: 0;
   margin: 0;
   padding: 5px 0;
   background-color: var(--in-content-box-background);
@@ -32,11 +32,6 @@
   list-style-type: none;
   display: flex;
   flex-direction: column;
-}
-
-.menu:dir(rtl) {
-  right: auto;
-  left: 0;
 }
 
 .menuitem-button {
