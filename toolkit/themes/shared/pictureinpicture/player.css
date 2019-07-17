@@ -8,6 +8,10 @@
   --resize-margin: 5px;
 }
 
+button::-moz-focus-inner {
+  border: 0;
+}
+
 body {
   margin: 0;
 }
@@ -36,6 +40,11 @@ browser {
 #controls button {
   -moz-appearance: none;
   border: 0;
+}
+
+#controls[keying] button:-moz-focusring {
+  outline: 2px solid #fff;
+  box-shadow: 1px 2px 5px #000;
 }
 
 #controls-bottom {
@@ -72,10 +81,15 @@ browser {
   background-repeat: no-repeat;
 }
 
+#controls[keying] .control-item:focus {
+  border-radius: 0px;
+}
+
 #controls:hover .control-item {
   opacity: 0.8;
 }
 
+#controls[keying] .control-item,
 #controls[showing] .control-item,
 #controls:hover .control-item:hover {
   opacity: 1;
