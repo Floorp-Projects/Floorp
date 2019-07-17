@@ -25,7 +25,7 @@
 #include "jstypes.h"  // JS_BIT
 #include "jsutil.h"   // Min
 
-#include "dbg/Debugger.h"                        // Debugger
+#include "debugger/Debugger.h"                   // Debugger
 #include "ds/Nestable.h"                         // Nestable
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl
 #include "frontend/CallOrNewEmitter.h"           // CallOrNewEmitter

@@ -10,7 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/FreeOp.h"
 #include "jit/BaselineCodeGen.h"
 #include "jit/BaselineIC.h"

@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "dbg/Script-inl.h"
+#include "debugger/Script-inl.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "wasm/WasmInstance.h"
 
 #include "vm/BytecodeUtil-inl.h"

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dbg_Frame_h
-#define dbg_Frame_h
+#ifndef debugger_Frame_h
+#define debugger_Frame_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
@@ -13,7 +13,7 @@
 
 #include "jsapi.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Rooting.h"
 #include "js/Class.h"
 #include "js/PropertySpec.h"
@@ -299,4 +299,4 @@ class DebuggerFrame : public NativeObject {
 
 } /* namespace js */
 
-#endif /* dbg_Frame_h */
+#endif /* debugger_Frame_h */

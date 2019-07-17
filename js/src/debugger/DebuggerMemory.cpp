@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "dbg/DebuggerMemory.h"
+#include "debugger/DebuggerMemory.h"
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 #include "builtin/MapObject.h"
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Marking.h"
 #include "js/AllocPolicy.h"
 #include "js/Debug.h"
@@ -27,7 +27,7 @@
 #include "vm/Realm.h"
 #include "vm/SavedStacks.h"
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

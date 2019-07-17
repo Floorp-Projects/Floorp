@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dbg_NoExecute_h
-#define dbg_NoExecute_h
+#ifndef debugger_NoExecute_h
+#define debugger_NoExecute_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "js/Promise.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
@@ -92,4 +92,4 @@ class MOZ_RAII LeaveDebuggeeNoExecute {
 
 } /* namespace js */
 
-#endif /* dbg_NoExecute_h */
+#endif /* debugger_NoExecute_h */

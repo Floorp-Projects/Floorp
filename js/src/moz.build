@@ -400,7 +400,7 @@ if CONFIG['MOZ_VTUNE']:
 
 DIRS += [
     'build',
-    'dbg',
+    'debugger',
     'frontend',
     'gc',
     'jit',

@@ -16,7 +16,7 @@
 #include "jsfriendapi.h"
 
 #include "builtin/ModuleObject.h"
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/GCInternals.h"
 #include "gc/Policy.h"
 #include "jit/IonCode.h"

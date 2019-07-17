@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dbg_Object_inl_h
-#define dbg_Object_inl_h
+#ifndef debugger_Object_inl_h
+#define debugger_Object_inl_h
 
-#include "dbg/Object.h"
+#include "debugger/Object.h"
 
 inline js::Debugger* js::DebuggerObject::owner() const {
   JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
@@ -27,4 +27,4 @@ inline js::PromiseObject* js::DebuggerObject::promise() const {
   return &referent->as<PromiseObject>();
 }
 
-#endif /* dbg_Object_inl_h */
+#endif /* debugger_Object_inl_h */
