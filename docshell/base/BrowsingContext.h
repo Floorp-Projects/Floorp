@@ -397,7 +397,9 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // Performs access control to check that 'this' can access 'aContext'.
   bool CanAccess(BrowsingContext* aContext);
 
-  bool IsActive() const;
+  // Check that this browsing context is targetable for navigations (i.e. that
+  // it is neither closed, cached, nor discarded).
+  bool IsTargetable();
 
   // Removes the context from its group and sets mIsDetached to true.
   void Unregister();
