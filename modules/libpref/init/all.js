@@ -741,6 +741,7 @@ pref("gfx.webrender.program-binary-disk", true);
 
 #ifdef XP_MACOSX
 pref("gfx.compositor.glcontext.opaque", false);
+pref("gfx.core-animation.enabled", false);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);
