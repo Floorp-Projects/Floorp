@@ -269,6 +269,44 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
     ProduceSilence(aOutput);
     return;
   }
+
+  // Copy input values to JS objects.
+  for (size_t i = 0; i < aInput.Length(); ++i) {
+    const AudioBlock& input = aInput[i];
+    size_t channelCount = input.ChannelCount();
+    if (channelCount == 0) {
+      // Null blocks have AUDIO_FORMAT_SILENCE.
+      // Don't call ChannelData<float>().
+      continue;
+    }
+    float volume = input.mVolume;
+    const auto& channelData = input.ChannelData<float>();
+    const auto& float32Arrays = mInputs.mPorts[i].mFloat32Arrays;
+    JS::AutoCheckCannotGC nogc;
+    for (size_t c = 0; c < channelCount; ++c) {
+      bool isShared;
+      float* dest = JS_GetFloat32ArrayData(float32Arrays[c], &isShared, nogc);
+      MOZ_ASSERT(!isShared);  // Was created as unshared
+      AudioBlockCopyChannelWithScale(channelData[c], volume, dest);
+    }
+  }
+
+  // TODO call process() - bug 1558123
+
+  // Copy output values from JS objects.
+  for (size_t o = 0; o < aOutput.Length(); ++o) {
+    AudioBlock* output = &aOutput[o];
+    size_t channelCount = output->ChannelCount();
+    const auto& float32Arrays = mOutputs.mPorts[o].mFloat32Arrays;
+    JS::AutoCheckCannotGC nogc;
+    for (size_t c = 0; c < channelCount; ++c) {
+      bool isShared;
+      const float* src =
+          JS_GetFloat32ArrayData(float32Arrays[c], &isShared, nogc);
+      MOZ_ASSERT(!isShared);  // Was created as unshared
+      PodCopy(output->ChannelFloatsForWrite(c), src, WEBAUDIO_BLOCK_SIZE);
+    }
+  }
 }
 
 AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
