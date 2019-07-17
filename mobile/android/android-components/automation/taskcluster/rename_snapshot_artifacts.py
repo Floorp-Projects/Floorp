@@ -18,7 +18,7 @@ SNAPSHOT_TIMESTAMP_REGEX = r'\d{8}\.\d{6}-\d{1}'
 
 
 def _extract_and_check_timestamps(archive_filename, regex):
-    """TODO"""
+    """Function to check if a timestamp-based regex matches a given filename"""
     match = re.search(regex, archive_filename)
     try:
         identifier = match.group()
@@ -45,7 +45,8 @@ def _extract_and_check_timestamps(archive_filename, regex):
 
 
 def _extract_old_timestamp(files):
-    """TODO"""
+    """Function to find and ensure that a single timestamp has been used
+    across a component's related files"""
     identifiers_collection = set()
     for file_ in files:
         (date, clock, bno) = _extract_and_check_timestamps(file_,
@@ -79,7 +80,6 @@ def is_snapshot_timestamped_file(filename):
 
 
 def process_snapshots_artifacts(path, timestamp):
-    """TODO"""
     files = []
     # gather all the files recursively
     for (dirpath, dirnames, filenames) in os.walk(args.path):
