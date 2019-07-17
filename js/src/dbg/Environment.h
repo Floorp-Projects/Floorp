@@ -28,8 +28,8 @@ class DebuggerEnvironment : public NativeObject {
 
   static const Class class_;
 
-  static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor,
-                                 Handle<GlobalObject*> global);
+  static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
+                                 HandleObject dbgCtor);
   static DebuggerEnvironment* create(JSContext* cx, HandleObject proto,
                                      HandleObject referent,
                                      HandleNativeObject debugger);
