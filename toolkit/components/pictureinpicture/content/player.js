@@ -161,13 +161,12 @@ let Player = {
         break;
       }
 
-      case "play": {
-        this.mm.sendAsyncMessage("PictureInPicture:Play");
-        break;
-      }
-
-      case "pause": {
-        this.mm.sendAsyncMessage("PictureInPicture:Pause");
+      case "playpause": {
+        if (!this.isPlaying) {
+          this.mm.sendAsyncMessage("PictureInPicture:Play");
+        } else {
+          this.mm.sendAsyncMessage("PictureInPicture:Pause");
+        }
         break;
       }
 

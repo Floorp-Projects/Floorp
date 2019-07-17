@@ -33,6 +33,11 @@ browser {
   -moz-window-dragging: drag;
 }
 
+#controls button {
+  -moz-appearance: none;
+  border: 0;
+}
+
 #controls-bottom {
   display: flex;
   position: absolute;
@@ -84,24 +89,16 @@ browser {
   top: 10px;
 }
 
-#play {
-  background-image: url("chrome://global/skin/pictureinpicture/play.svg");
-  display: block;
-  left: 55%;
+#playpause {
+  left: 55%; 
 }
 
-#pause {
+#controls.playing #playpause {
   background-image: url("chrome://global/skin/pictureinpicture/pause.svg");
-  display: none;
-  left: 55%;
 }
 
-.playing #play {
-  display: none;
-}
-
-.playing #pause {
-  display: block;
+#controls:not(.playing) #playpause {
+  background-image: url("chrome://global/skin/pictureinpicture/play.svg");
 }
 
 #unpip {
