@@ -19,7 +19,7 @@
 }
 
 .count {
-  flex: auto;
+  flex-grow: 1;
   text-align: end;
   font-size: smaller;
   margin-inline-start: 18px;
