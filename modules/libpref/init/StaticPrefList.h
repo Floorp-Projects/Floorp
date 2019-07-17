@@ -5861,7 +5861,7 @@ VARCACHE_PREF(
 #undef PREF_VALUE
 
 #if defined(XP_WIN)
-# if defined(_ARM64_) || defined(__MINGW32__)
+# if defined(_ARM64_)
 #  define PREF_VALUE false
 # else
 #  define PREF_VALUE true
