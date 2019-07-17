@@ -30,11 +30,7 @@ add_task(async function() {
           () => reject(new Error(`Failed to copy string '${url}' to clipboard`))
         );
       });
-      let textBox = document.getAnonymousElementByAttribute(
-        gURLBar.textbox,
-        "anonid",
-        "moz-input-box"
-      );
+      let textBox = gURLBar.querySelector("moz-input-box");
       let cxmenu = textBox.menupopup;
       let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
       EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
@@ -71,11 +67,7 @@ add_task(async function() {
         () => reject(new Error(`Failed to copy string '${url}' to clipboard`))
       );
     });
-    let textBox = document.getAnonymousElementByAttribute(
-      gURLBar.textbox,
-      "anonid",
-      "moz-input-box"
-    );
+    let textBox = gURLBar.querySelector("moz-input-box");
     let cxmenu = textBox.menupopup;
     let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
     EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {

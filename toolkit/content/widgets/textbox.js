@@ -88,7 +88,7 @@
       this.menupopup = this.querySelector(".textbox-contextmenu");
 
       this.menupopup.addEventListener("popupshowing", event => {
-        var input = this.getElementsByAttribute("anonid", "input")[0];
+        let input = this._input;
         if (document.commandDispatcher.focusedElement != input) {
           input.focus();
         }
@@ -196,18 +196,13 @@
           return null;
         }
 
-        var textbox = document.getBindingParent(this);
-        if (!textbox || textbox.localName != "textbox") {
-          return null;
-        }
-
         try {
           ChromeUtils.import(
             "resource://gre/modules/InlineSpellChecker.jsm",
             this
           );
           this.InlineSpellCheckerUI = new this.InlineSpellChecker(
-            textbox.editor
+            this._input.editor
           );
         } catch (ex) {}
       }
@@ -228,6 +223,13 @@
         command
       );
       controller.doCommand(command);
+    }
+
+    get _input() {
+      return (
+        this.getElementsByAttribute("anonid", "input")[0] ||
+        this.querySelector(".textbox-input")
+      );
     }
   }
 
