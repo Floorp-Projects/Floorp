@@ -10,6 +10,7 @@
 #include "GLContext.h"
 
 #include "OpenGL/OpenGL.h"
+#include <IOSurface/IOSurface.h>
 
 #ifdef __OBJC__
 #  include <AppKit/NSOpenGL.h>
@@ -17,13 +18,36 @@
 typedef void NSOpenGLContext;
 #endif
 
+#include <unordered_map>
+
+#include "mozilla/HashFunctions.h"
+#include "mozilla/UniquePtr.h"
+
+class nsIWidget;
+
 namespace mozilla {
 namespace gl {
+
+class MozFramebuffer;
 
 class GLContextCGL : public GLContext {
   friend class GLContextProviderCGL;
 
   NSOpenGLContext* mContext;
+  GLuint mDefaultFramebuffer = 0;
+
+  struct IOSurfaceRefHasher {
+    std::size_t operator()(const IOSurfaceRef& aSurface) const {
+      return HashGeneric(reinterpret_cast<uintptr_t>(aSurface));
+    }
+  };
+
+  std::unordered_map<IOSurfaceRef, UniquePtr<MozFramebuffer>,
+                     IOSurfaceRefHasher>
+      mRegisteredIOSurfaceFramebuffers;
+
+ protected:
+  virtual void OnMarkDestroyed() override;
 
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextCGL, override)
@@ -57,6 +81,12 @@ class GLContextCGL : public GLContext {
   virtual void GetWSIInfo(nsCString* const out) const override;
 
   Maybe<SymbolLoader> GetSymbolLoader() const override;
+
+  virtual GLuint GetDefaultFramebuffer() override;
+
+  void RegisterIOSurface(IOSurfaceRef aSurface);
+  void UnregisterIOSurface(IOSurfaceRef aSurface);
+  void UseRegisteredIOSurfaceForDefaultFramebuffer(IOSurfaceRef aSurface);
 };
 
 }  // namespace gl
