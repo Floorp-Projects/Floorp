@@ -173,6 +173,10 @@
   fill: currentColor;
 }
 
+#urlbar[pageproxystate="valid"] > #tracking-protection-icon-container.chromeUI {
+  display: none;
+}
+
 #tracking-protection-icon-box {
   overflow: hidden;
   width: 20px;
