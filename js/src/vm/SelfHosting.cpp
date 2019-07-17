@@ -3464,13 +3464,14 @@ bool JSRuntime::createLazySelfHostedFunctionClone(
     funName = selfHostedFun->explicitName();
   }
 
-  fun.set(NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED_LAZY, funName,
+  fun.set(NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED, funName,
                               proto, gc::AllocKind::FUNCTION_EXTENDED,
                               newKind));
   if (!fun) {
     return false;
   }
   fun->setIsSelfHostedBuiltin();
+  fun->initSelfHostLazyScript(&cx->runtime()->selfHostedLazyScript.ref());
   SetClonedSelfHostedFunctionName(fun, selfHostedName);
   return true;
 }

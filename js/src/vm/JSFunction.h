@@ -19,6 +19,7 @@
 namespace js {
 
 class FunctionExtended;
+struct SelfHostedLazyScript;
 
 typedef JSNative Native;
 }  // namespace js
@@ -162,6 +163,7 @@ class JSFunction : public js::NativeObject {
         JSScript* script_;     /* interpreted bytecode descriptor or
                                   null; use the accessor! */
         js::LazyScript* lazy_; /* lazily compiled script, or nullptr */
+        js::SelfHostedLazyScript* selfHostedLazy_;
       } s;
     } scripted;
   } u;
@@ -302,6 +304,9 @@ class JSFunction : public js::NativeObject {
   bool hasScript() const { return flags() & INTERPRETED; }
   bool hasLazyScript() const {
     return isInterpretedLazy() && !isSelfHostedOrIntrinsic();
+  }
+  bool hasSelfHostedLazyScript() const {
+    return isInterpretedLazy() && isSelfHostedOrIntrinsic();
   }
 
   // Arrow functions store their lexical new.target in the first extended slot.
@@ -628,6 +633,11 @@ class JSFunction : public js::NativeObject {
     return u.scripted.s.lazy_;
   }
 
+  js::SelfHostedLazyScript* selfHostedLazyScript() const {
+    MOZ_ASSERT(hasSelfHostedLazyScript() && u.scripted.s.selfHostedLazy_);
+    return u.scripted.s.selfHostedLazy_;
+  }
+
   js::GeneratorKind generatorKind() const {
     if (!isInterpreted()) {
       return js::GeneratorKind::NotGenerator;
@@ -693,6 +703,14 @@ class JSFunction : public js::NativeObject {
     flags_ &= ~INTERPRETED;
     flags_ |= INTERPRETED_LAZY;
     u.scripted.s.lazy_ = lazy;
+  }
+
+  void initSelfHostLazyScript(js::SelfHostedLazyScript* lazy) {
+    MOZ_ASSERT(isInterpreted());
+    MOZ_ASSERT(isSelfHostedBuiltin());
+    flags_ &= ~INTERPRETED;
+    flags_ |= INTERPRETED_LAZY;
+    u.scripted.s.selfHostedLazy_ = lazy;
   }
 
   JSNative native() const {
