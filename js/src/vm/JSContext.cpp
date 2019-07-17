@@ -155,6 +155,7 @@ JSContext* js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes,
     js_delete(runtime);
     return nullptr;
   }
+  cx->setThread();
 
   if (!runtime->init(cx, maxBytes, maxNurseryBytes)) {
     runtime->destroyRuntime();
@@ -1305,9 +1306,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 {
   MOZ_ASSERT(static_cast<JS::RootingContext*>(this) ==
              JS::RootingContext::get(this));
-
-  MOZ_ASSERT(!TlsContext.get());
-  TlsContext.set(this);
 }
 
 JSContext::~JSContext() {
@@ -1337,7 +1335,17 @@ JSContext::~JSContext() {
 
   js_delete(atomsZoneFreeLists_.ref());
 
-  MOZ_ASSERT(TlsContext.get() == this);
+  clearThread();
+}
+
+void JSContext::setThread() {
+  MOZ_ASSERT(!TlsContext.get());
+  TlsContext.set(this);
+  currentThread_ = ThisThread::GetId();
+}
+
+void JSContext::clearThread() {
+  currentThread_ = Thread::Id();
   TlsContext.set(nullptr);
 }
 
