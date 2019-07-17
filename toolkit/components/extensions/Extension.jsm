@@ -2173,12 +2173,24 @@ class Extension extends ExtensionData {
 
       // We automatically add permissions to system/built-in extensions.
       // Extensions expliticy stating not_allowed will never get permission.
-      if (
-        !allowPrivateBrowsingByDefault &&
-        this.manifest.incognito !== "not_allowed" &&
-        !this.permissions.has(PRIVATE_ALLOWED_PERMISSION)
-      ) {
-        if (this.isPrivileged && !this.addonData.temporarilyInstalled) {
+      if (!allowPrivateBrowsingByDefault) {
+        let isAllowed = this.permissions.has(PRIVATE_ALLOWED_PERMISSION);
+        if (this.manifest.incognito === "not_allowed") {
+          // If an extension previously had permission, but upgrades/downgrades to
+          // a version that specifies "not_allowed" in manifest, remove the
+          // permission.
+          if (isAllowed) {
+            ExtensionPermissions.remove(this.id, {
+              permissions: [PRIVATE_ALLOWED_PERMISSION],
+              origins: [],
+            });
+            this.permissions.delete(PRIVATE_ALLOWED_PERMISSION);
+          }
+        } else if (
+          !isAllowed &&
+          this.isPrivileged &&
+          !this.addonData.temporarilyInstalled
+        ) {
           // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
           // since we are pushing the value into this.permissions.  EP will eventually save.
           ExtensionPermissions.add(this.id, {
