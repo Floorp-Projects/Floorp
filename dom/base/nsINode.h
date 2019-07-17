@@ -425,6 +425,13 @@ class nsINode : public mozilla::dom::EventTarget {
   bool IsInclusiveDescendantOf(const nsINode* aNode) const;
 
   /**
+   * https://dom.spec.whatwg.org/#concept-shadow-including-inclusive-descendant
+   *
+   * @param aNode must not be nullptr.
+   */
+  bool IsShadowIncludingInclusiveDescendantOf(const nsINode* aNode) const;
+
+  /**
    * Return this node as a document fragment. Asserts IsDocumentFragment().
    *
    * This is defined inline in DocumentFragment.h.
@@ -884,11 +891,7 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   nsINode* GetParentNode() const { return mParent; }
 
-  /**
-   * This is similar to above, but in case 'this' is ShadowRoot, we return its
-   * host element.
-   */
-  nsINode* GetParentOrHostNode() const;
+  nsINode* GetParentOrShadowHostNode() const;
 
   enum FlattenedParentType { eNotForStyle, eForStyle };
 

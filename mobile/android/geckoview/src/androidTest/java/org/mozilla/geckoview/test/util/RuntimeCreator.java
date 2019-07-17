@@ -81,8 +81,11 @@ public class RuntimeCreator {
         runtimeSettingsBuilder.arguments(new String[]{"-purgecaches"})
                 .extras(InstrumentationRegistry.getArguments())
                 .remoteDebuggingEnabled(true)
-                .consoleOutput(true)
-                .crashHandler(TestCrashHandler.class);
+                .consoleOutput(true);
+
+        if (new Environment().isAutomation()) {
+            runtimeSettingsBuilder.crashHandler(TestCrashHandler.class);
+        }
 
         TEST_SUPPORT_WEB_EXTENSION.setMessageDelegate(sMessageDelegate, "browser");
 
