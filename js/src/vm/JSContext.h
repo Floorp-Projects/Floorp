@@ -176,33 +176,12 @@ struct JSContext : public JS::RootingContext,
 
   js::ContextData<js::FreeOp> defaultFreeOp_;
 
-  // Thread that the JSContext is currently running on, if in use.
-  js::Thread::Id currentThread_;
-
   js::ParseTask* parseTask_;
-
-  // When a helper thread is using a context, it may need to periodically
-  // free unused memory.
-  mozilla::Atomic<bool, mozilla::ReleaseAcquire> freeUnusedMemory;
 
  public:
   // This is used by helper threads to change the runtime their context is
   // currently operating on.
   void setRuntime(JSRuntime* rt);
-
-  void setThread();
-  void clearThread();
-
-  bool contextAvailable() {
-    MOZ_ASSERT(kind_ == js::ContextKind::HelperThread);
-    return currentThread_ == js::Thread::Id();
-  }
-
-  void setFreeUnusedMemory(bool shouldFree) { freeUnusedMemory = shouldFree; }
-
-  bool shouldFreeUnusedMemory() const {
-    return kind_ == js::ContextKind::HelperThread && freeUnusedMemory;
-  }
 
   bool isMainThreadContext() const {
     return kind_ == js::ContextKind::MainThread;
@@ -491,7 +470,7 @@ struct JSContext : public JS::RootingContext,
   }
 
   /* Base address of the native stack for the current thread. */
-  uintptr_t nativeStackBase;
+  const uintptr_t nativeStackBase;
 
  public:
   /* If non-null, report JavaScript entry points to this monitor. */
