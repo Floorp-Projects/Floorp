@@ -235,7 +235,7 @@ const ProxyInfoData = {
       proxyAuthorizationHeader,
       connectionIsolationKey,
     } = ProxyInfoData.validate(proxyData);
-    if (type === PROXY_TYPES.DIRECT) {
+    if (type === PROXY_TYPES.DIRECT && defaultProxyInfo) {
       return defaultProxyInfo;
     }
     let failoverProxy = this.createProxyInfoFromData(
