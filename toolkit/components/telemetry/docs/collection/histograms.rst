@@ -226,14 +226,11 @@ Optional. This is one of:
 
 ``products``
 -------------
-Optional. This field is a list of products this histogram can be recorded on. Currently-supported values are:
+Required. This field is a list of products this histogram can be recorded on. Currently-supported values are:
 
-- ``firefox``
-- ``fennec``
-- ``geckoview``
-- ``all`` (record on all products)
-
-If this field is left out it defaults to ``all``.
+- ``firefox`` - Collected in Firefox Desktop for submission via Firefox Telemetry.
+- ``fennec`` - Collected in Firefox for Android for submission via Firefox Mobile Telemetry.
+- ``geckoview`` - Collected in GeckoView-based Android products and surfaced via `GeckoViewTelemetryController.jsm <https://hg.mozilla.org/mozilla-central/raw-file/tip/toolkit/components/telemetry/geckoview/GeckoViewTelemetryController.jsm>`__.
 
 ``record_into_store``
 ---------------------

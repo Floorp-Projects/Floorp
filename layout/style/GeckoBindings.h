@@ -537,7 +537,11 @@ void Gecko_GetComputedImageURLSpec(const mozilla::StyleComputedUrl* url,
 
 void Gecko_nsIURI_Debug(nsIURI*, nsCString* spec);
 
+void Gecko_nsIReferrerInfo_Debug(nsIReferrerInfo* aReferrerInfo,
+                                 nsCString* aOut);
+
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::URLExtraData, URLExtraData);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsIReferrerInfo, nsIReferrerInfo);
 
 void Gecko_FillAllImageLayers(nsStyleImageLayers* layers, uint32_t max_len);
 

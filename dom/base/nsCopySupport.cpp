@@ -120,15 +120,6 @@ static nsresult EncodeForTextUnicode(nsIDocumentEncoder& aEncoder,
   rv = aEncoder.GetMimeType(mimeType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!selForcedTextPlain && mimeType.EqualsLiteral(kTextMime)) {
-    // SetSelection and EncodeToString use this case to signal that text/plain
-    // was forced because the document is either not an HTMLDocument or it's
-    // XHTML.  We want to pretty print XHTML but not non-HTMLDocuments.
-    if (!aDocument.IsHTMLOrXHTML()) {
-      selForcedTextPlain = true;
-    }
-  }
-
   // The mime type is ultimately text/html if the encoder successfully encoded
   // the selection as text/html.
   aEncodedAsTextHTMLResult = mimeType.EqualsLiteral(kHTMLMime);

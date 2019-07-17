@@ -27,7 +27,7 @@ job-defaults:
                 macosx.*:
                     - web_platform_tests/prod_config_mac.py
                 android-em.*:
-                    - android/androidx86_7_0-old.py
+                    - android/androidx86_7_0.py
                     - web_platform_tests/prod_config_android.py
                 default:
                     - web_platform_tests/prod_config.py
@@ -85,7 +85,7 @@ web-platform-tests-reftests:
             .*-ccov/debug: 8
             linux64(-qr|-asan)/.*: 6
             linux64(-shippable|-devedition)?/opt: 3
-            macosx10(10|14)-64/debug: 6
+            macosx10.*-64/debug: 6
             windows.*-(32|64)(-qr)?/debug: 5
             android.*: 6
             default: 4

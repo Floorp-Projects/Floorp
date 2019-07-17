@@ -14,6 +14,7 @@ and localizers.
 
    fluent_tutorial
    fluent_migrations
+   fluent_review
 
 Other resources:
 

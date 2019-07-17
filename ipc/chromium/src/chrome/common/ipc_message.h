@@ -216,6 +216,8 @@ class Message : public Pickle {
 
   bool is_reply_error() const { return header()->flags.IsReplyError(); }
 
+  bool is_valid() const { return !!header(); }
+
   msgid_t type() const { return header()->type; }
 
   int32_t routing_id() const { return header()->routing; }

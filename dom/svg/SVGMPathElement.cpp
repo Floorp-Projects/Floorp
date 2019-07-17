@@ -11,6 +11,7 @@
 #include "mozilla/dom/SVGAnimateMotionElement.h"
 #include "mozilla/dom/SVGPathElement.h"
 #include "nsContentUtils.h"
+#include "nsIReferrerInfo.h"
 #include "mozilla/dom/SVGMPathElementBinding.h"
 #include "nsIURI.h"
 
@@ -203,10 +204,10 @@ void SVGMPathElement::UpdateHrefTarget(nsIContent* aParent,
     // Pass in |aParent| instead of |this| -- first argument is only used
     // for a call to GetComposedDoc(), and |this| might not have a current
     // document yet (if our caller is BindToTree).
-    // Bug 1415044 to investigate which referrer we should use
-    mPathTracker.ResetToURIFragmentID(aParent, targetURI,
-                                      OwnerDoc()->GetDocumentURI(),
-                                      OwnerDoc()->GetReferrerPolicy());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        ReferrerInfo::CreateForSVGResources(OwnerDoc());
+
+    mPathTracker.ResetToURIFragmentID(aParent, targetURI, referrerInfo);
   } else {
     // if we don't have a parent, then there's no animateMotion element
     // depending on our target, so there's no point tracking it right now.

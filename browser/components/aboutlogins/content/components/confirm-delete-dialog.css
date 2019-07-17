@@ -9,7 +9,6 @@
            why isn't it declared as a variable? */
   background-color: rgba(0,0,0,0.5);
   display: flex;
-  align-items: center;
 }
 
 .container {
@@ -17,7 +16,6 @@
 
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 
   width: 50%;
   min-width: 250px;
@@ -31,7 +29,6 @@
 
 .title-bar {
   position: relative;
-  flex: 0 1 auto;
   text-align: center;
   background-color: var(--in-content-dialog-header-background);
   padding: 5px;
@@ -49,7 +46,7 @@
 button.dismiss-button {
   position: absolute;
   top: 0;
-  right: 0;
+  inset-inline-end: 0;
   min-width: 20px;
   min-height: 20px;
   margin: 8px 16px;
@@ -60,29 +57,19 @@ button.dismiss-button {
   fill-opacity: 0;
 }
 
-button.dismiss-button:dir(rtl) {
-  right: auto;
-  left: 0;
+.content,
+.buttons {
+  padding: 16px;
 }
 
 .content {
-  flex: 1 1 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  margin: auto;
 }
 
-.buttons {
-  flex: 0 1 auto;
-  display: flex;
-  justify-content: space-between;
+.confirm-button {
+  float: inline-end;
 }
 
 .buttons button {
   margin: 0;
-}
-
-.content,
-.buttons {
-  margin: 16px;
 }

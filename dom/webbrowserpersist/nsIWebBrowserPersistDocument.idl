@@ -13,6 +13,7 @@ interface nsIPrincipal;
 interface nsIRemoteTab;
 interface nsIWebBrowserPersistResourceVisitor;
 interface nsIWebBrowserPersistWriteCompletion;
+interface nsIReferrerInfo;
 
 /**
  * Interface for the URI-mapping information that can be supplied when
@@ -59,7 +60,7 @@ interface nsIWebBrowserPersistDocument : nsISupports
   readonly attribute ACString contentType;
   readonly attribute ACString characterSet;
   readonly attribute AString title;
-  readonly attribute AString referrer;
+  readonly attribute nsIReferrerInfo referrerInfo;
   readonly attribute AString contentDisposition;
   readonly attribute nsIInputStream postData;
   readonly attribute nsIPrincipal principal;

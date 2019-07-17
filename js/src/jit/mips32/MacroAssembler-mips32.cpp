@@ -1401,11 +1401,6 @@ void MacroAssemblerMIPSCompat::unboxValue(const ValueOperand& src,
   }
 }
 
-void MacroAssemblerMIPSCompat::unboxPrivate(const ValueOperand& src,
-                                            Register dest) {
-  ma_move(dest, src.payloadReg());
-}
-
 void MacroAssemblerMIPSCompat::boxDouble(FloatRegister src,
                                          const ValueOperand& dest,
                                          FloatRegister) {

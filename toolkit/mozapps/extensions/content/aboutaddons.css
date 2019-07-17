@@ -7,6 +7,10 @@
   display: none !important;
 }
 
+body {
+  cursor: default;
+}
+
 .header-name {
   -moz-user-select: initial;
 }
@@ -27,21 +31,17 @@ message-bar-stack > * {
   margin-bottom: 8px;
 }
 
-/* The margin between pending message-bar-stack and the section heading. */
-addon-list message-bar-stack.pending-uninstall {
-  margin-bottom: 12px;
-}
-
 /* List sections */
 
 .list-section-heading {
   font-size: 17px;
   font-weight: 600;
-  margin-block: 16px;
+  margin-top: 32px;
+  margin-bottom: 16px;
 }
 
 /* The margin is set on the main heading, no need on the first subheading. */
-.list-section-heading:first-of-type {
+addon-list > section:first-of-type .list-section-heading {
   margin-top: 0;
 }
 
@@ -180,7 +180,7 @@ addon-card:not([expanded]) .addon-description {
 
 /* Recommended add-ons on list views */
 .recommended-heading {
-  margin-bottom: 16px;
+  margin-top: 48px;
 }
 
 /* Discopane extensions to the add-on card */
@@ -217,6 +217,7 @@ recommended-addon-card .addon-description:not(:empty) {
   flex-shrink: 0;
   flex-grow: 0;
   align-self: baseline;
+  margin-inline-end: 0;
 }
 
 .disco-cta-button[action="install-addon"]::before {
@@ -225,7 +226,7 @@ recommended-addon-card .addon-description:not(:empty) {
 }
 
 .discopane-notice {
-  margin: 0.5em 0;
+  margin: 24px 0;
 }
 
 .discopane-notice-content {

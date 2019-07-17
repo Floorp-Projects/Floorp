@@ -152,7 +152,11 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     );
 
     // Enable DevTools connection screen, if the preference allows this.
-    toggleMenuItem("menu_devtools_connect", devtoolsRemoteEnabled);
+    const connectPageEnabled = Services.prefs.getBoolPref(
+      "devtools.connectpage.enabled"
+    );
+    const connectEnabled = devtoolsRemoteEnabled && connectPageEnabled;
+    toggleMenuItem("menu_devtools_connect", connectEnabled);
 
     // Enable record/replay menu items?
     try {

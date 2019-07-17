@@ -579,7 +579,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   void loadPrivate(const Address& src, Register dest) {
     loadPtr(src, dest);
-    shlq(Imm32(1), dest);
   }
   void load32(AbsoluteAddress address, Register dest) {
     if (X86Encoding::IsAddressImmediate(address.addr)) {
@@ -756,10 +755,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
 
   void unboxDouble(const ValueOperand& src, FloatRegister dest) {
     vmovq(src.valueReg(), dest);
-  }
-  void unboxPrivate(const ValueOperand& src, const Register dest) {
-    movq(src.valueReg(), dest);
-    shlq(Imm32(1), dest);
   }
 
   void notBoolean(const ValueOperand& val) { xorq(Imm32(1), val.valueReg()); }

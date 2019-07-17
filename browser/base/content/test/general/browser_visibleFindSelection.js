@@ -14,7 +14,10 @@ add_task(async function() {
 
   let remote = gBrowser.selectedBrowser.isRemoteBrowser;
 
-  let findBarOpenPromise = promiseWaitForEvent(gBrowser, "findbaropen");
+  let findBarOpenPromise = BrowserTestUtils.waitForEvent(
+    gBrowser,
+    "findbaropen"
+  );
   EventUtils.synthesizeKey("f", { accelKey: true });
   await findBarOpenPromise;
 

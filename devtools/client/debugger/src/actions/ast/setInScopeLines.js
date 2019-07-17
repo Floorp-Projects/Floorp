@@ -66,9 +66,9 @@ export function setInScopeLines(cx: Context) {
     }
 
     const { location } = visibleFrame;
-    const { source } = getSourceWithContent(getState(), location.sourceId);
+    const { content } = getSourceWithContent(getState(), location.sourceId);
 
-    if (hasInScopeLines(getState(), location) || !source) {
+    if (hasInScopeLines(getState(), location) || !content) {
       return;
     }
 

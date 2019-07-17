@@ -153,9 +153,11 @@ nsMacShellService::SetDesktopBackground(Element* aElement, int32_t aPosition,
     loadContext = do_QueryInterface(docShell);
   }
 
-  return wbp->SaveURI(imageURI, aElement->NodePrincipal(), 0, docURI,
-                      aElement->OwnerDoc()->GetReferrerPolicy(), nullptr,
-                      nullptr, mBackgroundFile, loadContext);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new mozilla::dom::ReferrerInfo();
+  referrerInfo->InitWithNode(aElement);
+
+  return wbp->SaveURI(imageURI, aElement->NodePrincipal(), 0, referrerInfo,
+                      nullptr, nullptr, mBackgroundFile, loadContext);
 }
 
 NS_IMETHODIMP

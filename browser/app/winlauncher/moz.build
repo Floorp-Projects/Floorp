@@ -24,6 +24,14 @@ SOURCES += [
 # that might call an import.
 SOURCES['DllBlocklistWin.cpp'].no_pgo = True
 
+# DllBlocklistWin.cpp should be compiled in a freestanding environment, as
+# our patched NtMapViewOfSection must not assume that it has access to any
+# runtime libraries.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    SOURCES['DllBlocklistWin.cpp'].flags += ['-Xclang', '-ffreestanding']
+else:
+    SOURCES['DllBlocklistWin.cpp'].flags += ['-ffreestanding']
+
 OS_LIBS += [
     'ntdll',
     'oleaut32',

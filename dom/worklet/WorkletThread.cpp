@@ -167,6 +167,11 @@ class WorkletJSContext final : public CycleCollectedJSContext {
     // Currently no support for special system worklet privileges.
     return false;
   }
+
+  void ReportError(JSErrorReport* aReport,
+                   JS::ConstUTF8CharsZ aToStringResult) override {
+    // TODO: bug 1558128;
+  }
 };
 
 // This is the first runnable to be dispatched. It calls the RunEventLoop() so

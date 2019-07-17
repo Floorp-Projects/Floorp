@@ -998,6 +998,25 @@ NS_IMETHODIMP
 nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
                                       const nsACString& aTrust,
                                       nsIX509Cert** addedCertificate) {
+  // Base64Decode() doesn't consider a zero length input as an error, and just
+  // returns the empty string. We don't want this behavior, so the below check
+  // catches this case.
+  if (aBase64.Length() < 1) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsAutoCString aCertDER;
+  nsresult rv = Base64Decode(aBase64, aCertDER);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return AddCert(aCertDER, aTrust, addedCertificate);
+}
+
+NS_IMETHODIMP
+nsNSSCertificateDB::AddCert(const nsACString& aCertDER,
+                            const nsACString& aTrust,
+                            nsIX509Cert** addedCertificate) {
   MOZ_ASSERT(addedCertificate);
   if (!addedCertificate) {
     return NS_ERROR_INVALID_ARG;
@@ -1011,7 +1030,7 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
   }
 
   nsCOMPtr<nsIX509Cert> newCert;
-  nsresult rv = ConstructX509FromBase64(aBase64, getter_AddRefs(newCert));
+  nsresult rv = ConstructX509(aCertDER, getter_AddRefs(newCert));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1051,16 +1070,6 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
   }
   newCert.forget(addedCertificate);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificateDB::AddCert(const nsACString& aCertDER,
-                            const nsACString& aTrust,
-                            nsIX509Cert** addedCertificate) {
-  nsCString base64;
-  nsresult rv = Base64Encode(aCertDER, base64);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AddCertFromBase64(base64, aTrust, addedCertificate);
 }
 
 NS_IMETHODIMP

@@ -1754,7 +1754,12 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
   //
   // We don't do this for pseudos that may trigger animations or transitions,
   // since those need to be kicked off by the traversal machinery.
-  if (!Servo_ComputedValues_SpecifiesAnimationsOrTransitions(pseudoStyle)) {
+  //
+  // Note that when a pseudo-element animates, we flag the originating element,
+  // so we check that flag, but we could also a more expensive (but exhaustive)
+  // check using EffectSet::GetEffectSet, for example.
+  if (!Servo_ComputedValues_SpecifiesAnimationsOrTransitions(pseudoStyle) &&
+      !aOriginatingElement.MayHaveAnimations()) {
     Servo_SetExplicitStyle(container, pseudoStyle);
   } else {
     // If animations are involved, we avoid the SetExplicitStyle optimization

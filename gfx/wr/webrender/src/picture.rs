@@ -2427,6 +2427,10 @@ impl PicturePrimitive {
                             let tile = tile_cache.tiles.get_mut(key).expect("bug: no tile found!");
 
                             if tile.is_valid {
+                                // Register active image keys of valid tile.
+                                for image_key in tile.descriptor.image_keys.items() {
+                                    frame_state.resource_cache.set_image_active(*image_key);
+                                }
                                 continue;
                             }
 
