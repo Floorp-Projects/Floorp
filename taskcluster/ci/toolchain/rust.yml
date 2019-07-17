@@ -135,10 +135,22 @@ linux64-rust-macos-1.34:
 linux64-rust-macos-1.35:
     description: "rust repack with macos-cross support"
     treeherder:
-        symbol: TL(rust-macos)
+        symbol: TL(rust-macos-1.35)
     run:
         arguments: [
             '--channel', '1.35.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+        ]
+
+linux64-rust-macos-1.36:
+    description: "rust repack with macos-cross support"
+    treeherder:
+        symbol: TL(rust-macos)
+    run:
+        arguments: [
+            '--channel', '1.36.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
