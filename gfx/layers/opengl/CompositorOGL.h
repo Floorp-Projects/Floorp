@@ -181,6 +181,8 @@ class CompositorOGL final : public Compositor {
 
   void EndFrame() override;
 
+  void WaitForGPU() override;
+
   bool SupportsPartialTextureUpdate() override;
 
   bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override {
@@ -276,6 +278,8 @@ class CompositorOGL final : public Compositor {
 
   bool SupportsTextureDirectMapping();
 
+  void InsertFrameDoneSync();
+
   /** Widget associated with this compositor */
   LayoutDeviceIntSize mWidgetSize;
   RefPtr<GLContext> mGLContext;
@@ -314,6 +318,10 @@ class CompositorOGL final : public Compositor {
    * VBO that stores dynamic triangle geometry.
    */
   GLuint mTriangleVBO;
+
+  // Used to apply back-pressure in WaitForPreviousFrameDoneSync().
+  GLsync mPreviousFrameDoneSync;
+  GLsync mThisFrameDoneSync;
 
   bool mHasBGRA;
 
