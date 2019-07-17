@@ -10,7 +10,6 @@
 #include "dbg/Debugger.h"
 
 #include "builtin/Promise.h"
-#include "vm/GeneratorObject.h"
 
 #include "gc/WeakMap-inl.h"
 #include "vm/Stack-inl.h"
@@ -116,17 +115,6 @@
 inline js::Debugger* js::DebuggerEnvironment::owner() const {
   JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
   return Debugger::fromJSObject(dbgobj);
-}
-
-inline bool js::DebuggerFrame::hasGenerator() const {
-  return !getReservedSlot(GENERATOR_INFO_SLOT).isUndefined();
-}
-
-inline js::DebuggerFrame::GeneratorInfo* js::DebuggerFrame::generatorInfo()
-    const {
-  MOZ_ASSERT(hasGenerator());
-  return static_cast<GeneratorInfo*>(
-      getReservedSlot(GENERATOR_INFO_SLOT).toPrivate());
 }
 
 #endif /* dbg_Debugger_inl_h */
