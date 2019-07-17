@@ -167,7 +167,7 @@ bool SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(
 
     // With degenerately large point coordinates, TraversePathSegment can fail
     // and end up producing NaNs.
-    if (!isfinite(state.length)) {
+    if (!std::isfinite(state.length)) {
       return false;
     }
 
