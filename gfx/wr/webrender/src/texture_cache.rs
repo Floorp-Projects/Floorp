@@ -916,6 +916,14 @@ impl TextureCache {
         self.entries.get_opt(handle).is_some()
     }
 
+    // Return the allocated size of the texture handle's associated data,
+    // or otherwise indicate the handle is invalid.
+    pub fn get_allocated_size(&self, handle: &TextureCacheHandle) -> Option<usize> {
+        self.entries.get_opt(handle).map(|entry| {
+            (entry.format.bytes_per_pixel() * entry.size.area()) as usize
+        })
+    }
+
     // Retrieve the details of an item in the cache. This is used
     // during batch creation to provide the resource rect address
     // to the shaders and texture ID to the batching logic.
