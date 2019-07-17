@@ -7658,11 +7658,12 @@ void nsGridContainerFrame::AppendFrames(ChildListID aListID,
   nsContainerFrame::AppendFrames(aListID, aFrameList);
 }
 
-void nsGridContainerFrame::InsertFrames(ChildListID aListID,
-                                        nsIFrame* aPrevFrame,
-                                        nsFrameList& aFrameList) {
+void nsGridContainerFrame::InsertFrames(
+    ChildListID aListID, nsIFrame* aPrevFrame,
+    const nsLineList::iterator* aPrevFrameLine, nsFrameList& aFrameList) {
   NoteNewChildren(aListID, aFrameList);
-  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
+                                 aFrameList);
 }
 
 void nsGridContainerFrame::RemoveFrame(ChildListID aListID,

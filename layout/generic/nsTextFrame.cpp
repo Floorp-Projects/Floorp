@@ -8695,7 +8695,7 @@ void nsTextFrame::SetLength(int32_t aLength, nsLineLayout* aLineLayout,
               presContext, this, GetParent());
       nsTextFrame* next = static_cast<nsTextFrame*>(newFrame);
       nsFrameList temp(next, next);
-      GetParent()->InsertFrames(kNoReflowPrincipalList, this, temp);
+      GetParent()->InsertFrames(kNoReflowPrincipalList, this, nullptr, temp);
       f = next;
     }
 

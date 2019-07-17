@@ -115,6 +115,7 @@ class nsBlockFrame : public nsContainerFrame {
                            nsFrameList& aChildList) override;
   void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) override;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList& aFrameList) override;
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
   const nsFrameList& GetChildList(ChildListID aListID) const override;

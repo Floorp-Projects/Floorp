@@ -47,6 +47,7 @@ class nsMathMLTokenFrame : public nsMathMLContainerFrame {
                             nsFrameList& aChildList) override;
 
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aChildList) override;
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,

@@ -268,6 +268,7 @@ void nsCanvasFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
 }
 
 void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                                 const nsLineList::iterator* aPrevFrameLine,
                                  nsFrameList& aFrameList) {
   // Because we only support a single child frame inserting is the same
   // as appending
