@@ -27,4 +27,5 @@ SOURCES = [
     'Frame.cpp',
     'NoExecute.cpp',
     'Object.cpp',
+    'Script.cpp',
 ]
