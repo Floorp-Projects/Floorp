@@ -11,9 +11,14 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
 /**
- * An alias to make it easier to work with `Store<SearchState, SearchAction>`
+ * The [Store] for holding the [SearchState] and applying [SearchAction]s.
  */
-typealias SearchStore = Store<SearchState, SearchAction>
+class SearchStore(
+    initialState: SearchState
+) : Store<SearchState, SearchAction>(
+    initialState,
+    ::searchStateReducer
+)
 
 /**
  * Wraps a `SearchEngine` to give consumers the context that it was selected as a shortcut

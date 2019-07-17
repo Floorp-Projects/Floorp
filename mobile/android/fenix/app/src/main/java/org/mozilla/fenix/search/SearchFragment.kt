@@ -19,14 +19,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.whenStarted
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.qr.QrFeature
-import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.observe
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -74,7 +74,7 @@ class SearchFragment : Fragment(), BackHandler {
 
         searchStore = StoreProvider.get(
             this,
-            Store(
+            SearchStore(
                 SearchState(
                 query = url,
                 showShortcutEnginePicker = false,
@@ -83,8 +83,7 @@ class SearchFragment : Fragment(), BackHandler {
                 ),
                 showSuggestions = Settings.getInstance(requireContext()).showSearchSuggestions,
                 showVisitedSitesBookmarks = Settings.getInstance(requireContext()).shouldShowVisitedSitesBookmarks,
-                session = session),
-                ::searchStateReducer
+                session = session)
             )
         )
 
@@ -168,12 +167,14 @@ class SearchFragment : Fragment(), BackHandler {
         }
 
         searchStore.observe(view) {
-            MainScope().launch {
-                awesomeBarView.update(it)
-                toolbarView.update(it)
-                updateSearchEngineIcon(it)
-                updateSearchShortuctsIcon(it)
-                updateSearchWithLabel(it)
+            viewLifecycleOwner.lifecycleScope.launch {
+                whenStarted {
+                    awesomeBarView.update(it)
+                    toolbarView.update(it)
+                    updateSearchEngineIcon(it)
+                    updateSearchShortuctsIcon(it)
+                    updateSearchWithLabel(it)
+                }
             }
         }
 

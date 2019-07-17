@@ -16,7 +16,7 @@ class SearchStoreTest {
     @Test
     fun updateQuery() = runBlocking {
         val initialState = emptyDefaultState()
-        val store = SearchStore(initialState, ::searchStateReducer)
+        val store = SearchStore(initialState)
         val query = "test query"
 
         store.dispatch(SearchAction.UpdateQuery(query)).join()
@@ -27,7 +27,7 @@ class SearchStoreTest {
     @Test
     fun selectSearchShortcutEngine() = runBlocking {
         val initialState = emptyDefaultState()
-        val store = SearchStore(initialState, ::searchStateReducer)
+        val store = SearchStore(initialState)
         val searchEngine: SearchEngine = mockk()
 
         store.dispatch(SearchAction.SearchShortcutEngineSelected(searchEngine)).join()
@@ -38,7 +38,7 @@ class SearchStoreTest {
     @Test
     fun showSearchShortcutEnginePicker() = runBlocking {
         val initialState = emptyDefaultState()
-        val store = SearchStore(initialState, ::searchStateReducer)
+        val store = SearchStore(initialState)
 
         store.dispatch(SearchAction.ShowSearchShortcutEnginePicker(true)).join()
         assertNotSame(initialState, store.state)
