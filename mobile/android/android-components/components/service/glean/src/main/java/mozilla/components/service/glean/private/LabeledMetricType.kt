@@ -38,9 +38,10 @@ data class LabeledMetricType<T>(
         private const val MAX_LABELS = 16
         private const val OTHER_LABEL = "__other__"
 
-        // This regex is used for matching against labels and should allow for dots and/or
-        // snake_case.
-        private val labelRegex = Regex("^[a-z_][a-z0-9_]{0,29}(\\.[a-z0-9_]{0,29})*$")
+        // This regex is used for matching against labels and should allow for dots, underscores,
+        // and/or hyphens. Labels are also limited to starting with either a letter or an
+        // underscore character.
+        private val labelRegex = Regex("^[a-z_][a-z0-9_-]{0,29}(\\.[a-z0-9_-]{0,29})*$")
         // Some examples of good and bad labels:
         //
         // Good:
@@ -49,11 +50,14 @@ data class LabeledMetricType<T>(
         //   this.is_still_fine
         //   thisisfine
         //   this.is_fine.2
+        //   _.is_fine
+        //   this.is-fine
+        //   this-is-fine
         // Bad:
         //   this.is.not_fine_due_tu_the_length_being_too_long_i_thing.i.guess
         //   1.not_fine
-        //   this.is-not-fine
         //   this.$isnotfine
+        //   -.not_fine
 
         private const val MAX_LABEL_LENGTH = 61
     }

@@ -288,34 +288,52 @@ class LabeledMetricTypeTest {
             subMetric = counterMetric
         )
 
-        // Add some passing labels
-        CountersStorageEngine.record(labeledCounterMetric["this.is.fine"], 1)
-        CountersStorageEngine.record(labeledCounterMetric["this.is_still_fine"], 1)
-        CountersStorageEngine.record(labeledCounterMetric["thisisfine"], 1)
+        // Declare the labels we expect to pass the regex.
+        val expectedToPass = listOf(
+            "this.is.fine",
+            "this.is_still_fine",
+            "thisisfine",
+            "this_is_fine_too",
+            "this.is_fine.2",
+            "_.is_fine",
+            "this.is-fine",
+            "this-is-fine"
+        )
 
-        // Add some labels that fail the regex to ensure they get filtered to "__other__"
-        CountersStorageEngine.record(
-            labeledCounterMetric["this.is.not_fine_due_to_the_length_being_too_long"],
-            1)
-        CountersStorageEngine.record(labeledCounterMetric["1.not_fine"], 1)
-        CountersStorageEngine.record(labeledCounterMetric["this.is-not-fine"], 1)
-        CountersStorageEngine.record(labeledCounterMetric["this.\$isnotfine"], 1)
+        // And the ones we expect to fail the regex.
+        val expectedToFail = listOf(
+            "this.is.not_fine_due_to_the_length_being_too_long",
+            "1.not_fine",
+            "this.\$isnotfine",
+            "-.not_fine"
+        )
 
+        // Attempt to record both the failing and the passing labels.
+        expectedToPass.forEach { label ->
+            CountersStorageEngine.record(labeledCounterMetric[label], 1)
+        }
+
+        expectedToFail.forEach { label ->
+            CountersStorageEngine.record(labeledCounterMetric[label], 1)
+        }
+
+        // Validate the recorded data.
         val snapshot = CountersStorageEngine.getSnapshot(storeName = "metrics", clearStore = false)
         // This snapshot includes:
-        // - The 3 valid values from above
+        // - The expectedToPass.size valid values from above
         // - The error counter
         // - The invalid (__other__) value
-        assertEquals(5, snapshot!!.size)
+        val numExpectedLabels = expectedToPass.size + 2
+        assertEquals(numExpectedLabels, snapshot!!.size)
 
         // Make sure the passing labels were accepted
-        assertEquals(1, snapshot["telemetry.labeled_counter_metric/this.is.fine"])
-        assertEquals(1, snapshot["telemetry.labeled_counter_metric/this.is_still_fine"])
-        assertEquals(1, snapshot["telemetry.labeled_counter_metric/thisisfine"])
+        expectedToPass.forEach { label ->
+            assertEquals(1, snapshot["telemetry.labeled_counter_metric/$label"])
+        }
 
         // Make sure we see the bad labels went to "__other__"
         assertEquals(
-            4,
+            expectedToFail.size,
             labeledCounterMetric["__other__"].testGetValue()
         )
     }

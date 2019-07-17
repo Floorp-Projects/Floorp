@@ -17,6 +17,9 @@ permalink: /changelog/
 * **browser-icons**
   * Added `BrowserIcons.loadIntoView` to automatically load an icon into an `ImageView`.
 
+* **service-glean**
+  * Hyphens `-` are now allowed in labels for metrics.  See [1566764](https://bugzilla.mozilla.org/show_bug.cgi?id=1566764).
+
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.
 
