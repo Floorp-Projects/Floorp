@@ -6,6 +6,8 @@
 
 DevToolsModules(
     'channel-event-sink.js',
+    'network-event.js',
+    'network-monitor.js',
     'network-observer.js',
     'network-response-listener.js',
     'stack-trace-collector.js',
