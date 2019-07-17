@@ -33,7 +33,6 @@
 // returned from the gethash server. They are not serialized,
 // only cached until the next update.
 
-
 // MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define LOG(args) \

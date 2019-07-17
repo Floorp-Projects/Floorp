@@ -24,7 +24,7 @@
         <description id="protections-popup-toast-panel-tp-off-desc">Enhanced Tracking Protection is OFF for this site</description>
       </hbox>
 
-      <hbox id="protections-popup-tp-switch-section" class="identity-popup-section">
+      <hbox id="protections-popup-tp-switch-section" class="protections-popup-section">
         <vbox class="protections-popup-tp-switch-label-box" flex="1">
           <label class="protections-popup-tp-switch-on-header"
                  hidden="true">Tracking protection is ON for this site</label>
@@ -44,52 +44,37 @@
       </hbox>
 
       <!-- Tracking Protection Section -->
-      <hbox id="tracking-protection-container" class="identity-popup-section">
-        <vbox id="identity-popup-content-blocking-content" flex="1">
-          <hbox align="start">
-            <label id="content-blocking-label"
-                   class="identity-popup-headline"
-                   flex="1">&contentBlocking.title;</label>
-            <toolbarbutton id="tracking-protection-preferences-button"
-                           class="identity-popup-preferences-button subviewbutton"
-                           tooltiptext="&identity.contentBlockingPreferences.tooltip;"
-                           oncommand="gProtectionsHandler.openPreferences('identityPopup-TP-preferencesButton');" />
-          </hbox>
-
-          <description id="identity-popup-content-blocking-detected"
-                       crop="end">&contentBlocking.detected;</description>
-          <description id="identity-popup-content-blocking-not-detected"
-                       crop="end">&contentBlocking.notDetected;</description>
-
-          <vbox id="identity-popup-content-blocking-category-list">
-            <toolbarbutton id="identity-popup-content-blocking-category-tracking-protection"
+      <hbox id="tracking-protection-container" class="protections-popup-section">
+        <vbox id="protections-popup-content" flex="1">
+          <vbox id="protections-popup-category-list">
+            <toolbarbutton id="protections-popup-category-tracking-protection"
                            onclick="gProtectionsHandler.showTrackersSubview();"
-                           class="identity-popup-content-blocking-category" align="center">
-              <image class="identity-popup-content-blocking-category-icon tracking-protection-icon"/>
-              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection3.label;</label>
-              <label flex="1" id="identity-popup-content-blocking-tracking-protection-state-label" class="identity-popup-content-blocking-category-state-label"/>
+                           class="protections-popup-category" align="center">
+              <image class="protections-popup-category-icon tracking-protection-icon"/>
+              <label flex="1" class="protections-popup-category-label">&contentBlocking.trackingProtection3.label;</label>
+              <label flex="1" id="protections-popup-tracking-protection-state-label" class="protections-popup-category-state-label"/>
             </toolbarbutton>
-            <toolbarbutton id="identity-popup-content-blocking-category-cookies"
+            <toolbarbutton id="protections-popup-category-cookies"
                            onclick="gProtectionsHandler.showCookiesSubview();"
-                           class="identity-popup-content-blocking-category" align="center">
-              <image class="identity-popup-content-blocking-category-icon thirdpartycookies-icon"/>
-              <label flex="1" id="identity-popup-content-blocking-category-label-default"
-                     class="identity-popup-content-blocking-category-label">&contentBlocking.cookies.label;</label>
-              <label flex="1" id="identity-popup-content-blocking-cookies-state-label" class="identity-popup-content-blocking-category-state-label"/>
+                           class="protections-popup-category" align="center">
+              <image class="protections-popup-category-icon thirdpartycookies-icon"/>
+              <label flex="1" id="protections-popup-category-label-default"
+                     class="protections-popup-category-label">&contentBlocking.cookies.label;</label>
+              <label flex="1" id="protections-popup-cookies-state-label" class="protections-popup-category-state-label"/>
             </toolbarbutton>
-            <toolbarbutton id="identity-popup-content-blocking-category-cryptominers"
+            <toolbarbutton id="protections-popup-category-cryptominers"
                            onclick="gProtectionsHandler.showCryptominersSubview();"
-                           class="identity-popup-content-blocking-category" align="center">
-              <image class="identity-popup-content-blocking-category-icon cryptominers-icon"/>
-              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.cryptominers.label;</label>
-              <label flex="1" id="identity-popup-content-blocking-cryptominers-state-label" class="identity-popup-content-blocking-category-state-label"/>
+                           class="protections-popup-category" align="center">
+              <image class="protections-popup-category-icon cryptominers-icon"/>
+              <label flex="1" class="protections-popup-category-label">&contentBlocking.cryptominers.label;</label>
+              <label flex="1" id="protections-popup-cryptominers-state-label" class="protections-popup-category-state-label"/>
             </toolbarbutton>
-            <toolbarbutton id="identity-popup-content-blocking-category-fingerprinters"
+            <toolbarbutton id="protections-popup-category-fingerprinters"
                            onclick="gProtectionsHandler.showFingerprintersSubview();"
-                           class="identity-popup-content-blocking-category" align="center">
-              <image class="identity-popup-content-blocking-category-icon fingerprinters-icon"/>
-              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.fingerprinters.label;</label>
-              <label flex="1" id="identity-popup-content-blocking-fingerprinters-state-label" class="identity-popup-content-blocking-category-state-label"/>
+                           class="protections-popup-category" align="center">
+              <image class="protections-popup-category-icon fingerprinters-icon"/>
+              <label flex="1" class="protections-popup-category-label">&contentBlocking.fingerprinters.label;</label>
+              <label flex="1" id="protections-popup-fingerprinters-state-label" class="protections-popup-category-state-label"/>
             </toolbarbutton>
           </vbox>
         </vbox>
@@ -97,7 +82,7 @@
 
 
       <vbox id="protections-popup-settings-section"
-            class="identity-popup-section">
+            class="protections-popup-section">
         <toolbarbutton id="protections-popup-settings-button"
                        oncommand="gProtectionsHandler.openPreferences();">
           <image class="protection-settings-icon"/>
@@ -156,18 +141,18 @@
     </panelview>
 
     <!-- Trackers SubView -->
-    <panelview id="identity-popup-trackersView"
+    <panelview id="protections-popup-trackersView"
                role="document"
                title="&contentBlocking.trackersView.label;"
                descriptionheightworkaround="true">
-        <vbox id="identity-popup-trackersView-list" class="identity-popup-content-blocking-list">
+        <vbox id="protections-popup-trackersView-list" class="protections-popup-list">
         </vbox>
-        <hbox id="identity-popup-trackersView-strict-info">
+        <hbox id="protections-popup-trackersView-strict-info">
           <image/>
           <label>&contentBlocking.trackersView.strictInfo.label;</label>
         </hbox>
         <vbox class="panel-footer">
-          <button id="identity-popup-trackersView-settings-button"
+          <button id="protections-popup-trackersView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
@@ -175,14 +160,14 @@
     </panelview>
 
     <!-- Cookies SubView -->
-    <panelview id="identity-popup-cookiesView"
+    <panelview id="protections-popup-cookiesView"
                role="document"
                title="&contentBlocking.cookiesView.label;"
                descriptionheightworkaround="true">
-        <vbox id="identity-popup-cookiesView-list" class="identity-popup-content-blocking-list">
+        <vbox id="protections-popup-cookiesView-list" class="protections-popup-list">
         </vbox>
         <vbox class="panel-footer">
-          <button id="identity-popup-cookiesView-settings-button"
+          <button id="protections-popup-cookiesView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
@@ -190,14 +175,14 @@
     </panelview>
 
     <!-- Fingerprinters SubView -->
-    <panelview id="identity-popup-fingerprintersView"
+    <panelview id="protections-popup-fingerprintersView"
                role="document"
                title="&contentBlocking.fingerprintersView.label;"
                descriptionheightworkaround="true">
-        <vbox id="identity-popup-fingerprintersView-list" class="identity-popup-content-blocking-list">
+        <vbox id="protections-popup-fingerprintersView-list" class="protections-popup-list">
         </vbox>
         <vbox class="panel-footer">
-          <button id="identity-popup-fingerprintersView-settings-button"
+          <button id="protections-popup-fingerprintersView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
@@ -205,14 +190,14 @@
     </panelview>
 
     <!-- Cryptominers SubView -->
-    <panelview id="identity-popup-cryptominersView"
+    <panelview id="protections-popup-cryptominersView"
                role="document"
                title="&contentBlocking.cryptominersView.label;"
                descriptionheightworkaround="true">
-        <vbox id="identity-popup-cryptominersView-list" class="identity-popup-content-blocking-list">
+        <vbox id="protections-popup-cryptominersView-list" class="protections-popup-list">
         </vbox>
         <vbox class="panel-footer">
-          <button id="identity-popup-cryptominersView-settings-button"
+          <button id="protections-popup-cryptominersView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>

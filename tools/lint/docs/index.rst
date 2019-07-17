@@ -29,6 +29,7 @@ like mach, mozreview and taskcluster.
   linters/eslint
   linters/flake8
   linters/l10n
+  linters/rstlinter
 
 Indices and tables
 ==================

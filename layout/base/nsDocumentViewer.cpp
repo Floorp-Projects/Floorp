@@ -4179,9 +4179,7 @@ void nsDocumentViewer::DestroyPresShell() {
   mPresShell = nullptr;
 }
 
-void nsDocumentViewer::DestroyPresContext() {
-  mPresContext = nullptr;
-}
+void nsDocumentViewer::DestroyPresContext() { mPresContext = nullptr; }
 
 bool nsDocumentViewer::IsInitializedForPrintPreview() {
   return mInitializedForPrintPreview;

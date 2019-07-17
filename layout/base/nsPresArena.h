@@ -48,7 +48,6 @@ class nsPresArena {
   void Check() { mPool.Check(); }
 
  private:
-
   class FreeList {
    public:
     nsTArray<void*> mEntries;

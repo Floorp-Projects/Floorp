@@ -112,8 +112,7 @@ TEST(PrincipalSerialization, ExpandedPrincipal)
 
   nsAutoCString spec2("https://mozilla.org");
   nsCOMPtr<nsIPrincipal> principal2;
-  rv =
-      ssm->CreateContentPrincipalFromOrigin(spec2, getter_AddRefs(principal2));
+  rv = ssm->CreateContentPrincipalFromOrigin(spec2, getter_AddRefs(principal2));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principal2)->Kind(),
             BasePrincipal::eContentPrincipal);
@@ -142,7 +141,7 @@ TEST(PrincipalSerialization, ExpandedPrincipal)
   nsAutoCString specDev("https://mozilla.dev");
   nsCOMPtr<nsIPrincipal> principalDev;
   rv = ssm->CreateContentPrincipalFromOrigin(specDev,
-                                              getter_AddRefs(principalDev));
+                                             getter_AddRefs(principalDev));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principalDev)->Kind(),
             BasePrincipal::eContentPrincipal);
@@ -171,8 +170,7 @@ TEST(PrincipalSerialization, ExpandedPrincipalOA)
 
   nsAutoCString spec2("https://mozilla.org");
   nsCOMPtr<nsIPrincipal> principal2;
-  rv =
-      ssm->CreateContentPrincipalFromOrigin(spec2, getter_AddRefs(principal2));
+  rv = ssm->CreateContentPrincipalFromOrigin(spec2, getter_AddRefs(principal2));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principal2)->Kind(),
             BasePrincipal::eContentPrincipal);
@@ -206,7 +204,7 @@ TEST(PrincipalSerialization, ExpandedPrincipalOA)
   nsAutoCString specDev("https://mozilla.dev");
   nsCOMPtr<nsIPrincipal> principalDev;
   rv = ssm->CreateContentPrincipalFromOrigin(specDev,
-                                              getter_AddRefs(principalDev));
+                                             getter_AddRefs(principalDev));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(BasePrincipal::Cast(principalDev)->Kind(),
             BasePrincipal::eContentPrincipal);

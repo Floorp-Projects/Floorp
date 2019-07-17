@@ -213,11 +213,11 @@
 }
 
 #toolbox-buttons-start > .devtools-separator {
-  --separator-inline-margin: 0;
+  margin-inline: 0;
 }
 
 #toolbox-buttons-end > .devtools-separator {
-  --separator-inline-margin: 5px;
+  margin-inline: 5px;
 }
 
 #toolbox-close::before {

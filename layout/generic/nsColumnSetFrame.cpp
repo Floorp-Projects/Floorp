@@ -598,10 +598,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   // will be adjusted later, after our correct contentSize is known.
   nsSize containerSize = aReflowInput.ComputedSizeAsContainerIfConstrained();
 
-  LogicalSize computedSize =
-      StaticPrefs::layout_css_column_span_enabled()
-          ? aReflowInput.mCBReflowInput->ComputedSize(wm)
-          : aReflowInput.ComputedSize(wm);
+  LogicalSize computedSize = StaticPrefs::layout_css_column_span_enabled()
+                                 ? aReflowInput.mCBReflowInput->ComputedSize(wm)
+                                 : aReflowInput.ComputedSize(wm);
 
   // For RTL, since the columns might not fill the frame exactly, we
   // need to account for the slop. Otherwise we'll waste time moving the

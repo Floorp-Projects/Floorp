@@ -651,13 +651,16 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .devtools-toolbar.webconsole-filterbar-secondary {
-  --separator-inline-margin: 5px;
   display: flex;
   align-items: center;
   align-self: stretch;
   -moz-user-select: none;
   grid-column: 1 / -1;
   min-height: var(--primary-toolbar-height);
+}
+
+.devtools-toolbar.webconsole-filterbar-secondary .devtools-separator {
+  margin-inline: 5px;
 }
 
 .split-console-close-button-wrapper {

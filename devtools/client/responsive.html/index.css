@@ -215,8 +215,8 @@ input:-moz-focusring {
   #toolbar.user-agent {
     background-image: linear-gradient(to bottom,
       transparent var(--toolbar-row-height),
-      var(--separator-border-color) var(--toolbar-row-height),
-      var(--separator-border-color) calc(var(--toolbar-row-height) + 1px),
+      var(--theme-splitter-color) var(--toolbar-row-height),
+      var(--theme-splitter-color) calc(var(--toolbar-row-height) + 1px),
       transparent 0);
   }
 }

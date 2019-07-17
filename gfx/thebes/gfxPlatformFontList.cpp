@@ -315,7 +315,7 @@ void gfxPlatformFontList::ApplyWhitelist() {
     ToLowerCase(list[i], key);
     familyNamesWhitelist.PutEntry(key);
   }
-  AutoTArray<RefPtr<gfxFontFamily>,128> accepted;
+  AutoTArray<RefPtr<gfxFontFamily>, 128> accepted;
   for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
     nsAutoCString fontFamilyName(iter.Key());
     ToLowerCase(fontFamilyName);
@@ -350,7 +350,7 @@ void gfxPlatformFontList::ApplyWhitelist(
     ToLowerCase(item, key);
     familyNamesWhitelist.PutEntry(key);
   }
-  AutoTArray<fontlist::Family::InitData,128> accepted;
+  AutoTArray<fontlist::Family::InitData, 128> accepted;
   bool keptNonHidden = false;
   for (auto& f : aFamilies) {
     if (f.mHidden || familyNamesWhitelist.Contains(f.mKey)) {

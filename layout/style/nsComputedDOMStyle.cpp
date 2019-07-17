@@ -1274,8 +1274,7 @@ void nsComputedDOMStyle::AppendGridLineNames(
 }
 
 void nsComputedDOMStyle::SetValueToTrackBreadth(
-    nsROCSSPrimitiveValue* aValue,
-    const StyleTrackBreadth& aBreadth) {
+    nsROCSSPrimitiveValue* aValue, const StyleTrackBreadth& aBreadth) {
   using Tag = StyleTrackBreadth::Tag;
   switch (aBreadth.tag) {
     case Tag::MinContent:
@@ -1314,7 +1313,8 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
     fitContentStr.AppendLiteral("fit-content(");
     MOZ_ASSERT(aTrackSize.AsFitContent().IsBreadth(),
                "unexpected unit for fit-content() argument value");
-    SetValueToLengthPercentage(val, aTrackSize.AsFitContent().AsBreadth(), true);
+    SetValueToLengthPercentage(val, aTrackSize.AsFitContent().AsBreadth(),
+                               true);
     val->GetCssText(argumentStr);
     fitContentStr.Append(argumentStr);
     fitContentStr.Append(char16_t(')'));

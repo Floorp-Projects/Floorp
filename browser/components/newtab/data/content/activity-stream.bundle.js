@@ -1,3 +1,4 @@
+/*! THIS FILE IS AUTO-GENERATED: webpack.system-addon.config.js */
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -7577,22 +7578,30 @@ class DSEmptyState_DSEmptyState extends external_React_default.a.PureComponent {
   renderButton() {
     if (this.props.status === "waiting" || this.state.waiting) {
       return external_React_default.a.createElement("button", {
-        className: "try-again-button waiting"
-      }, "Loading...");
+        className: "try-again-button waiting",
+        "data-l10n-id": "newtab-discovery-empty-section-topstories-loading"
+      });
     }
 
     return external_React_default.a.createElement("button", {
       className: "try-again-button",
-      onClick: this.onReset
-    }, "Try Again");
+      onClick: this.onReset,
+      "data-l10n-id": "newtab-discovery-empty-section-topstories-try-again-button"
+    });
   }
 
   renderState() {
     if (this.props.status === "waiting" || this.props.status === "failed") {
-      return external_React_default.a.createElement(external_React_default.a.Fragment, null, external_React_default.a.createElement("h2", null, "Oops! We almost loaded this section, but not quite."), this.renderButton());
+      return external_React_default.a.createElement(external_React_default.a.Fragment, null, external_React_default.a.createElement("h2", {
+        "data-l10n-id": "newtab-discovery-empty-section-topstories-timed-out"
+      }), this.renderButton());
     }
 
-    return external_React_default.a.createElement(external_React_default.a.Fragment, null, external_React_default.a.createElement("h2", null, "You are caught up!"), external_React_default.a.createElement("p", null, "Check back later for more stories."));
+    return external_React_default.a.createElement(external_React_default.a.Fragment, null, external_React_default.a.createElement("h2", {
+      "data-l10n-id": "newtab-discovery-empty-section-topstories-header"
+    }), external_React_default.a.createElement("p", {
+      "data-l10n-id": "newtab-discovery-empty-section-topstories-content"
+    }));
   }
 
   render() {
@@ -7621,7 +7630,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       cards.push(!rec || rec.placeholder ? external_React_default.a.createElement(PlaceholderDSCard, {
         key: `dscard-${index}`
       }) : external_React_default.a.createElement(DSCard_DSCard, {
-        key: `dscard-${index}`,
+        key: `dscard-${rec.id}`,
         pos: rec.pos,
         campaignId: rec.campaign_id,
         image_src: rec.image_src,
@@ -7823,7 +7832,7 @@ function _List(props) {
       recMarkup.push(!rec || rec.placeholder ? external_React_default.a.createElement(PlaceholderListItem, {
         key: `ds-list-item-${index}`
       }) : external_React_default.a.createElement(List_ListItem, {
-        key: `ds-list-item-${index}`,
+        key: `ds-list-item-${rec.id}`,
         dispatch: props.dispatch,
         campaignId: rec.campaign_id,
         domain: rec.domain,
@@ -7936,7 +7945,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         key: `dscard-${index}`
       }) : external_React_default.a.createElement(DSCard_DSCard, {
         campaignId: rec.campaign_id,
-        key: `dscard-${index}`,
+        key: `dscard-${rec.id}`,
         image_src: rec.image_src,
         raw_image_src: rec.raw_image_src,
         title: rec.title,
@@ -7959,7 +7968,8 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       heroCard = external_React_default.a.createElement(PlaceholderDSCard, null);
     } else {
       heroCard = external_React_default.a.createElement("div", {
-        className: "ds-hero-item"
+        className: "ds-hero-item",
+        key: `dscard-${heroRec.id}`
       }, external_React_default.a.createElement(SafeAnchor_SafeAnchor, {
         className: "wrapper",
         dispatch: this.props.dispatch,

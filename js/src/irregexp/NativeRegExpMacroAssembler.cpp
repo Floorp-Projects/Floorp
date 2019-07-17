@@ -248,7 +248,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     Label load_char_start_regexp, start_regexp;
 
     // Load newline if index is at start, previous character otherwise.
-    masm.branchPtr(Assembler::NotEqual, 
+    masm.branchPtr(Assembler::NotEqual,
                    Address(masm.getStackPointer(), offsetof(FrameData, startIndex)), ImmWord(0),
                    &load_char_start_regexp);
     masm.movePtr(ImmWord('\n'), current_character);

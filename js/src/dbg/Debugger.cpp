@@ -13190,7 +13190,8 @@ mozilla::Maybe<ScopeKind> DebuggerEnvironment::scopeKind() const {
   if (!referent()->is<DebugEnvironmentProxy>()) {
     return Nothing();
   }
-  EnvironmentObject& env = referent()->as<DebugEnvironmentProxy>().environment();
+  EnvironmentObject& env =
+      referent()->as<DebugEnvironmentProxy>().environment();
   Scope* scope = GetEnvironmentScope(env);
   return scope ? Some(scope->kind()) : Nothing();
 }

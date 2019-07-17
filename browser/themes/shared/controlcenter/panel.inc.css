@@ -93,13 +93,14 @@
   min-height: 30px;
 }
 
-.identity-popup-section {
+.identity-popup-section,
+.protections-popup-section {
   border-top: 1px solid var(--panel-separator-color);
 }
 
 .identity-popup-security-content,
 #identity-popup-permissions-content,
-#identity-popup-content-blocking-content {
+#protections-popup-content {
   background-repeat: no-repeat;
   background-position: 1em 1em;
   background-size: 24px auto;
@@ -114,7 +115,7 @@
 
 .identity-popup-security-content:-moz-locale-dir(rtl),
 #identity-popup-permissions-content:-moz-locale-dir(rtl),
-#identity-popup-content-blocking-content:-moz-locale-dir(rtl) {
+#protections-popup-content:-moz-locale-dir(rtl) {
   background-position: calc(100% - 1em) 1em;
 }
 
@@ -169,37 +170,29 @@
   display: none;
 }
 
-#tracking-protection-preferences-button > .toolbarbutton-text {
-  display: inline;
-  padding-inline-end: 25px;
-  padding-inline-start: 0px;
-}
-
 /* CONTENT */
 
-.identity-popup-content-blocking-empty-label,
-#tracking-protection-preferences-button > .toolbarbutton-text,
+.protections-popup-empty-label,
 .tracking-protection-button,
-#identity-popup-trackersView-strict-info > label,
-.identity-popup-cookiesView-list-header,
-.identity-popup-content-blocking-list-item > label,
+#protections-popup-trackersView-strict-info > label,
+.protections-popup-cookiesView-list-header,
+.protections-popup-list-item > label,
 #identity-popup-mainView-panel-header > label,
 #protections-popup-mainView-panel-header > label,
 #protections-popup-mainView-panel-header > description,
-#identity-popup-trackersView > .panel-header,
+#protections-popup-trackersView > .panel-header,
 #identity-popup-securityView > .panel-header,
 #identity-popup-breakageReportView > .panel-header,
 #protections-popup-sendReportView > .panel-header,
-#identity-popup-content-blocking-report-breakage,
-.identity-popup-content-blocking-category-label,
-.identity-popup-content-blocking-category-state-label,
+.protections-popup-category-label,
+.protections-popup-category-state-label,
 .identity-popup-permission-label,
 .identity-popup-permission-state-label,
 .identity-popup-security-content > description,
 #identity-popup-security-descriptions > description,
 #identity-popup-securityView-body > description,
 #identity-popup-permissions-content > description,
-#identity-popup-content-blocking-content > description,
+#protections-popup-content > description,
 .protections-popup-settings-label,
 #protections-popup-footer > description,
 #protections-popup-footer > label {
@@ -249,7 +242,7 @@
 }
 
 #identity-popup-permissions-content > description,
-#identity-popup-content-blocking-content > description {
+#protections-popup-content > description {
   color: var(--panel-disabled-color);
 }
 
@@ -414,148 +407,144 @@ description#identity-popup-content-verifier,
   height: 120px;
 }
 
-#identity-popup-content-blocking-content {
-  background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
-}
-
-.identity-popup-content-blocking-category {
+.protections-popup-category {
   /* Overwrite toolbarbutton styles */
   -moz-appearance: none;
   margin: 0;
   padding-inline-start: 0;
 }
 
-.identity-popup-content-blocking-category:-moz-focusring,
-.identity-popup-content-blocking-category:hover,
+.protections-popup-category:-moz-focusring,
+.protections-popup-category:hover,
 #protections-popup-settings-button:hover {
   border-radius: 2px;
   background-color: var(--arrowpanel-dimmed);
   outline: none;
 }
 
-.identity-popup-content-blocking-category:hover:active {
+.protections-popup-category:hover:active {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-.identity-popup-content-blocking-category::after {
+.protections-popup-category::after {
   content: url(chrome://browser/skin/back-12.svg);
   -moz-context-properties: fill, fill-opacity;
   transform: scaleX(-1) translateY(1px);
   float: right;
 }
 
-.identity-popup-content-blocking-category:-moz-locale-dir(rtl)::after {
+.protections-popup-category:-moz-locale-dir(rtl)::after {
   transform: scaleX(1) translateY(1px);
 }
 
 /* This subview could get filled with a lot of trackers, set a maximum size
  * and allow it to scroll vertically.*/
-#identity-popup-cookiesView,
-#identity-popup-trackersView {
+#protections-popup-cookiesView,
+#protections-popup-trackersView {
   max-height: 600px;
 }
 
-#identity-popup-trackersView-list.empty {
+#protections-popup-trackersView-list.empty {
   -moz-box-align: center;
   -moz-box-pack: center;
 }
 
-.identity-popup-content-blocking-empty-label {
+.protections-popup-empty-label {
   margin-inline-start: 0;
   color: var(--panel-disabled-color);
 }
 
-.identity-popup-content-blocking-trackersView-empty-image {
+.protections-popup-trackersView-empty-image {
   width: 48px;
   height: 48px;
   -moz-context-properties: fill, fill-opacity;
   margin-bottom: 16px;
 }
 
-#identity-popup-cookiesView .identity-popup-content-blocking-empty-label {
+#protections-popup-cookiesView .protections-popup-empty-label {
   margin-inline-start: 24px;
   margin-top: 2px;
   margin-bottom: 4px;
 }
 
-.identity-popup-cookiesView-list-header {
+.protections-popup-cookiesView-list-header {
   color: var(--panel-disabled-color);
   margin: 5px 0;
 }
 
-.identity-popup-content-blocking-list {
+.protections-popup-list {
   padding: 5px 20px;
   -moz-box-flex: 1;
   overflow: auto;
 }
 
-.identity-popup-content-blocking-list-item {
+.protections-popup-list-item {
   margin: 5px 0;
   overflow: hidden;
   -moz-box-align: center;
 }
 
-.identity-popup-content-blocking-list-item:not(.allowed) {
+.protections-popup-list-item:not(.allowed) {
   color: var(--panel-disabled-color);
 }
 
-.identity-popup-content-blocking-list-host-label {
+.protections-popup-list-host-label {
   -moz-box-flex: 1;
   direction: ltr;
 }
 
-.identity-popup-content-blocking-list-host-label:-moz-locale-dir(rtl) {
+.protections-popup-list-host-label:-moz-locale-dir(rtl) {
   text-align: right;
 }
 
-.identity-popup-content-blocking-list-state-label {
+.protections-popup-list-state-label {
   -moz-box-flex: 1;
   text-align: end;
   margin-inline-start: 5px;
   margin-inline-end: 2px;
 }
 
-.identity-popup-fingerprintersView-icon,
-.identity-popup-cryptominersView-icon,
-.identity-popup-trackersView-icon,
-.identity-popup-cookiesView-icon {
+.protections-popup-fingerprintersView-icon,
+.protections-popup-cryptominersView-icon,
+.protections-popup-trackersView-icon,
+.protections-popup-cookiesView-icon {
   margin-inline-end: 10px;
   -moz-context-properties: fill, fill-opacity;
 }
 
-.identity-popup-trackersView-icon {
+.protections-popup-trackersView-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/trackers-disabled.svg);
 }
 
-.identity-popup-trackersView-icon.allowed {
+.protections-popup-trackersView-icon.allowed {
   list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
 }
 
-.identity-popup-cookiesView-icon {
+.protections-popup-cookiesView-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg);
 }
 
-.identity-popup-cookiesView-icon.allowed {
+.protections-popup-cookiesView-icon.allowed {
   list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
 }
 
-.identity-popup-fingerprintersView-icon {
+.protections-popup-fingerprintersView-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/fingerprinters-disabled.svg);
 }
 
-.identity-popup-fingerprintersView-icon.allowed {
+.protections-popup-fingerprintersView-icon.allowed {
   list-style-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
 }
 
-.identity-popup-cryptominersView-icon {
+.protections-popup-cryptominersView-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/cryptominers-disabled.svg);
 }
 
-.identity-popup-cryptominersView-icon.allowed {
+.protections-popup-cryptominersView-icon.allowed {
   list-style-image: url(chrome://browser/skin/controlcenter/cryptominers.svg);
 }
 
-#identity-popup-trackersView-strict-info {
+#protections-popup-trackersView-strict-info {
   min-height: 40px;
   /* Limit to full width - margin */
   max-width: calc(var(--popup-width) - 12px);
@@ -569,14 +558,14 @@ description#identity-popup-content-verifier,
   border-radius: 3px;
 }
 
-#identity-popup-trackersView-strict-info > image {
+#protections-popup-trackersView-strict-info > image {
   list-style-image: url(chrome://browser/skin/controlcenter/info.svg);
   -moz-context-properties: fill;
   fill: currentColor;
   margin-inline-end: 10px;
 }
 
-#identity-popup-trackersView-strict-info > label {
+#protections-popup-trackersView-strict-info > label {
   overflow-wrap: break-word;
   /* Limit to full width - container margin - container padding - icon width - icon margin */
   max-width: calc(var(--popup-width) - 12px - 20px - 16px - 10px);
@@ -584,14 +573,8 @@ description#identity-popup-content-verifier,
 
 /* Content Blocking categories */
 
-#identity-popup-content-blocking-category-list {
+#protections-popup-category-list {
   margin-top: 10px;
-}
-
-/* Show the "detected"/"not detected" message depending on the content state. */
-#protections-popup:not([detected]) #identity-popup-content-blocking-detected,
-#protections-popup[detected] #identity-popup-content-blocking-not-detected {
-  display: none;
 }
 
 .tracking-protection-icon {
@@ -637,10 +620,6 @@ description#identity-popup-content-verifier,
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-#identity-popup-content-blocking-report-breakage {
-  margin-top: 6px;
-}
-
 /* Hide the "report breakage" button if we have not detected any trackers
  * (except if the user added an exception, in which case they might still
  * (especially!) want to report the breakage). */
@@ -669,7 +648,7 @@ description#identity-popup-content-verifier,
   min-height: 24px;
 }
 
-#identity-popup-content-blocking-category-list,
+#protections-popup-category-list,
 #identity-popup-permission-list {
   /* Offset the padding set on #identity-popup-permissions-content so that it
      shows up just below the section. The permission icons are 16px wide and
@@ -677,12 +656,12 @@ description#identity-popup-content-verifier,
   margin-inline-start: calc(-1em - 24px);
 }
 
-.identity-popup-content-blocking-category,
+.protections-popup-category,
 .identity-popup-permission-item {
   min-height: 24px;
 }
 
-.identity-popup-content-blocking-category {
+.protections-popup-category {
   padding-inline-end: 12px;
 }
 
@@ -694,7 +673,7 @@ description#identity-popup-content-verifier,
   margin-top: 5px;
 }
 
-.identity-popup-content-blocking-category-icon,
+.protections-popup-category-icon,
 .identity-popup-permission-icon {
   width: 16px;
   height: 16px;
@@ -711,8 +690,8 @@ description#identity-popup-content-verifier,
   50% { opacity: 0; }
 }
 
-.identity-popup-content-blocking-category-label,
-.identity-popup-content-blocking-category-state-label,
+.protections-popup-category-label,
+.protections-popup-category-state-label,
 .identity-popup-permission-label,
 .identity-popup-permission-state-label,
 .protections-popup-settings-label {
@@ -724,23 +703,23 @@ description#identity-popup-content-verifier,
   margin-top: -0.1em;
 }
 
-.identity-popup-content-blocking-category-label {
+.protections-popup-category-label {
   max-width: 200px;
 }
 
-.identity-popup-content-blocking-category-label,
+.protections-popup-category-label,
 .identity-popup-permission-label,
 .protections-popup-settings-label {
   margin-inline-start: 1em;
 }
 
-.identity-popup-content-blocking-category-state-label,
+.protections-popup-category-state-label,
 .identity-popup-permission-state-label {
   margin-inline-end: 5px;
   text-align: end;
 }
 
-#protections-popup[hasException] .identity-popup-content-blocking-category-state-label {
+#protections-popup[hasException] .protections-popup-category-state-label {
   visibility: hidden;
 }
 

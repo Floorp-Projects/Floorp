@@ -7,6 +7,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { L10N } = require("../../utils/l10n");
 
 /**
  * Renders the "Time" column of a WebSocket frame.
@@ -20,26 +21,42 @@ class FrameListColumnTime extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.props.item.timeStamp !== nextProps.item.timeStamp;
+    return (
+      this.props.item.type !== nextProps.item.type ||
+      this.props.item.timeStamp !== nextProps.item.timeStamp
+    );
+  }
+
+  /**
+   * Format a DOMHighResTimeStamp (in microseconds) as HH:mm:ss.SSS
+   * @param {number} highResTimeStamp
+   */
+  formatTime(highResTimeStamp) {
+    const timeStamp = Math.floor(highResTimeStamp / 1000);
+    const hoursMinutesSeconds = new Date(timeStamp).toLocaleTimeString(
+      undefined,
+      {
+        formatMatcher: "basic",
+        hour12: false,
+      }
+    );
+    return L10N.getFormatStr(
+      "netmonitor.ws.time.format",
+      hoursMinutesSeconds,
+      String(timeStamp % 1000).padStart(3, "0")
+    );
   }
 
   render() {
-    const { timeStamp } = this.props.item;
-    const { index } = this.props;
-
-    // Convert microseconds (DOMHighResTimeStamp) to milliseconds
-    const time = timeStamp / 1000;
-    const microseconds = (timeStamp % 1000).toString().padStart(3, "0");
+    const label = this.formatTime(this.props.item.timeStamp);
 
     return dom.td(
       {
-        key: index,
+        key: this.props.index,
         className: "ws-frames-list-column ws-frames-list-time",
-        title: timeStamp,
+        title: label,
       },
-      new Date(time).toLocaleTimeString(undefined, { hour12: false }) +
-        "." +
-        microseconds
+      label
     );
   }
 }
