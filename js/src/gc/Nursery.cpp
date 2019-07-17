@@ -322,6 +322,9 @@ void js::Nursery::disable() {
     return;
   }
 
+  // Freeing the chunks must not race with decommitting part of one of our
+  // chunks. So join the decommitTask here and also below.
+  decommitTask.join();
   freeChunksFrom(0);
   capacity_ = 0;
 
@@ -363,6 +366,11 @@ bool js::Nursery::isEmpty() const {
 void js::Nursery::enterZealMode() {
   if (isEnabled()) {
     if (isSubChunkMode()) {
+      // The poisoning call below must not race with background decommit,
+      // which could be attempting to decommit the currently-unused part of this
+      // chunk.
+      decommitTask.join();
+
       // It'd be simpler to poison the whole chunk, but we can't do that
       // because the nursery might be partially used.
       chunk(0).poisonRange(capacity_, NurseryChunkUsableSize - capacity_,
