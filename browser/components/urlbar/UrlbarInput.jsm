@@ -111,21 +111,17 @@ class UrlbarInput {
     // This exists only for tests.
     this._enableAutofillPlaceholder = true;
 
-    // Forward certain methods and properties.
-    const CONTAINER_METHODS = [
+    // Forward textbox methods and properties.
+    const METHODS = [
+      "addEventListener",
+      "removeEventListener",
       "getAttribute",
       "hasAttribute",
-      "querySelector",
       "setAttribute",
       "removeAttribute",
       "toggleAttribute",
     ];
-    const INPUT_METHODS = [
-      "addEventListener",
-      "blur",
-      "focus",
-      "removeEventListener",
-    ];
+    const READ_ONLY_PROPERTIES = ["inputField", "editor"];
     const READ_WRITE_PROPERTIES = [
       "placeholder",
       "readOnly",
@@ -133,32 +129,32 @@ class UrlbarInput {
       "selectionEnd",
     ];
 
-    for (let method of CONTAINER_METHODS) {
+    for (let method of METHODS) {
       this[method] = (...args) => {
         return this.textbox[method](...args);
       };
     }
 
-    for (let method of INPUT_METHODS) {
-      this[method] = (...args) => {
-        return this.inputField[method](...args);
-      };
+    for (let property of READ_ONLY_PROPERTIES) {
+      Object.defineProperty(this, property, {
+        enumerable: true,
+        get() {
+          return this.textbox && this.textbox[property];
+        },
+      });
     }
 
     for (let property of READ_WRITE_PROPERTIES) {
       Object.defineProperty(this, property, {
         enumerable: true,
         get() {
-          return this.inputField[property];
+          return this.textbox && this.textbox[property];
         },
         set(val) {
-          return (this.inputField[property] = val);
+          return (this.textbox[property] = val);
         },
       });
     }
-
-    this.inputField = this.querySelector(".urlbar-input");
-    this.dropmarker = this.querySelector(".urlbar-history-dropmarker");
 
     XPCOMUtils.defineLazyGetter(this, "valueFormatter", () => {
       return new UrlbarValueFormatter(this);
@@ -167,7 +163,7 @@ class UrlbarInput {
     // If the toolbar is not visible in this window or the urlbar is readonly,
     // we'll stop here, so that most properties of the input object are valid,
     // but we won't handle events.
-    if (!this.window.toolbar.visible || this.readOnly) {
+    if (!this.window.toolbar.visible || this.hasAttribute("readonly")) {
       return;
     }
 
@@ -199,10 +195,12 @@ class UrlbarInput {
       "select",
     ];
     for (let name of this._inputFieldEvents) {
-      this.addEventListener(name, this);
+      this.inputField.addEventListener(name, this);
     }
 
-    this.dropmarker.addEventListener("mousedown", this);
+    // This is needed for the dropmarker. Once we remove that (i.e. make
+    // openViewOnFocus = true the default), this won't be needed anymore.
+    this.addEventListener("mousedown", this);
 
     this.view.panel.addEventListener("popupshowing", this);
     this.view.panel.addEventListener("popuphidden", this);
@@ -229,9 +227,9 @@ class UrlbarInput {
   uninit() {
     this.window.removeEventListener("unload", this);
     for (let name of this._inputFieldEvents) {
-      this.removeEventListener(name, this);
+      this.inputField.removeEventListener(name, this);
     }
-    this.dropmarker.removeEventListener("mousedown", this);
+    this.removeEventListener("mousedown", this);
 
     this.view.panel.remove();
 
@@ -266,7 +264,6 @@ class UrlbarInput {
     delete this.view;
     delete this.controller;
     delete this.textbox;
-    delete this.inputField;
   }
 
   /**
@@ -302,6 +299,14 @@ class UrlbarInput {
     if (this.editor) {
       this.valueFormatter.update();
     }
+  }
+
+  focus() {
+    this.inputField.focus();
+  }
+
+  blur() {
+    this.inputField.blur();
   }
 
   select() {
@@ -780,16 +785,16 @@ class UrlbarInput {
 
   // Getters and Setters below.
 
-  get editor() {
-    return this.inputField.editor;
-  }
-
   get focused() {
-    return this.getAttribute("focused") == "true";
+    return this.textbox.getAttribute("focused") == "true";
   }
 
   get goButton() {
-    return this.querySelector(".urlbar-go-button");
+    return this.document.getAnonymousElementByAttribute(
+      this.textbox,
+      "anonid",
+      "urlbar-go-button"
+    );
   }
 
   get textValue() {
@@ -817,7 +822,7 @@ class UrlbarInput {
     this._openViewOnFocus = Services.prefs.getBoolPref(
       "browser.urlbar.openViewOnFocus"
     );
-    this.dropmarker.hidden = this._openViewOnFocus;
+    this.toggleAttribute("hidedropmarker", this._openViewOnFocus);
   }
 
   _setValue(val, allowTrim) {
@@ -1317,7 +1322,13 @@ class UrlbarInput {
   }
 
   _initPasteAndGo() {
-    let inputBox = this.querySelector("moz-input-box");
+    let inputBox = this.document.getAnonymousElementByAttribute(
+      this.textbox,
+      "anonid",
+      "moz-input-box"
+    );
+    // Force the Custom Element to upgrade until Bug 1470242 handles this:
+    this.window.customElements.upgrade(inputBox);
     let contextMenu = inputBox.menupopup;
     let insertLocation = contextMenu.firstElementChild;
     while (
@@ -1394,14 +1405,11 @@ class UrlbarInput {
   // Event handlers below.
 
   _on_blur(event) {
-    this.removeAttribute("focused");
-    this.formatValue();
-    this._resetSearchState();
-
     // In certain cases, like holding an override key and confirming an entry,
     // we don't key a keyup event for the override key, thus we make this
     // additional cleanup on blur.
     this._clearActionOverride();
+    this.formatValue();
 
     // The extension input sessions depends more on blur than on the fact we
     // actually cancel a running query, so we do it here.
@@ -1414,11 +1422,11 @@ class UrlbarInput {
     if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
       this.view.close();
     }
-
     // We may have hidden popup notifications, show them again if necessary.
     if (this.getAttribute("pageproxystate") != "valid") {
       this.window.UpdatePopupNotificationsVisibility();
     }
+    this._resetSearchState();
   }
 
   _on_click(event) {
@@ -1442,7 +1450,6 @@ class UrlbarInput {
   }
 
   _on_focus(event) {
-    this.setAttribute("focused", "true");
     this._updateUrlTooltip();
     this.formatValue();
 
@@ -1476,7 +1483,10 @@ class UrlbarInput {
       return;
     }
 
-    if (event.currentTarget == this.dropmarker && event.button == 0) {
+    if (
+      event.originalTarget.classList.contains("urlbar-history-dropmarker") &&
+      event.button == 0
+    ) {
       if (this.view.isOpen) {
         this.view.close();
       } else {
@@ -1701,11 +1711,11 @@ class UrlbarInput {
   }
 
   _on_popupshowing() {
-    this.dropmarker.setAttribute("open", "true");
+    this.setAttribute("open", "true");
   }
 
   _on_popuphidden() {
-    this.dropmarker.removeAttribute("open");
+    this.removeAttribute("open");
   }
 
   _on_dragstart(event) {
@@ -1714,7 +1724,7 @@ class UrlbarInput {
       event.originalTarget
     );
     if (
-      event.target != this.inputField &&
+      this.inputField != event.originalTarget &&
       !(nodePosition & Node.DOCUMENT_POSITION_CONTAINED_BY)
     ) {
       return;
