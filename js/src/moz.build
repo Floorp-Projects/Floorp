@@ -231,8 +231,6 @@ UNIFIED_SOURCES += [
     'builtin/TypedObject.cpp',
     'builtin/WeakMapObject.cpp',
     'builtin/WeakSetObject.cpp',
-    'dbg/Debugger.cpp',
-    'dbg/DebuggerMemory.cpp',
     'ds/Bitmap.cpp',
     'ds/LifoAlloc.cpp',
     'ds/MemoryProtectionExceptionHandler.cpp',
@@ -351,7 +349,6 @@ UNIFIED_SOURCES += [
 #   files unlucky enough to be unified with it.
 SOURCES += [
     'builtin/RegExp.cpp',
-    'dbg/NoExecute.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
     'util/DoubleToString.cpp',
@@ -403,6 +400,7 @@ if CONFIG['MOZ_VTUNE']:
 
 DIRS += [
     'build',
+    'dbg',
     'frontend',
     'gc',
     'jit',
