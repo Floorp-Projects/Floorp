@@ -26,6 +26,9 @@ sync protocol PVideoBridge
 parent:
   async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend,
                  TextureFlags aTextureFlags, uint64_t aSerial);
+
+  async Flush() returns (bool result);
+
 };
 
 } // namespace
