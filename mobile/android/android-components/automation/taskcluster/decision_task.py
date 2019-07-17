@@ -218,7 +218,8 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
         for gradle_task in ('assemble', 'test', 'lint')
     )
 
-    return gradle_tasks + ' ' + module_name + ':publish' + ' ' + module_name + ':zipMavenArtifacts'
+    rename_step = '{}:renameSnapshotArtifacts'.format(module_name) if is_snapshot else ''
+    return "{} {}:publish {} {}:zipMavenArtifacts".format(gradle_tasks, module_name, rename_step, module_name)
 
 
 def _to_release_artifact(extension, version, component):

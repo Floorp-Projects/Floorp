@@ -8,6 +8,8 @@ import datetime
 import json
 import taskcluster
 
+from lib.build_config import generate_snapshot_timestamp
+
 DEFAULT_EXPIRES_IN = '1 year'
 GOOGLE_PROJECT = 'moz-android-components-230120'
 GOOGLE_APPLICATION_CREDENTIALS = '.firebase_token.json'
@@ -54,7 +56,7 @@ class TaskBuilder(object):
             "secrets:get:project/mobile/android-components/public-tokens"
         ] if run_coverage else []
 
-        snapshot_flag = '-Psnapshot ' if is_snapshot else ''
+        snapshot_flag = '-Psnapshot -Ptimestamp={} '.format(generate_snapshot_timestamp()) if is_snapshot else ''
         coverage_flag = '-Pcoverage ' if run_coverage else ''
         gradle_command = (
             './gradlew --no-daemon clean ' + coverage_flag + snapshot_flag + gradle_tasks

@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
+
+import datetime
 import os
 import yaml
 
@@ -41,3 +43,9 @@ def snapshot_components():
 def components_version():
     build_config = read_build_config()
     return build_config['componentsVersion']
+
+
+def generate_snapshot_timestamp():
+    """Function to return a valid snapshot timestamp. The build number always
+    defaults to 1."""
+    return datetime.datetime.now().strftime('%Y%m%d.%H%M%S-1')

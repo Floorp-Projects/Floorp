@@ -58,8 +58,17 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
         }
     }
 
-    task zipMavenArtifacts(type: Zip) {
+    task renameSnapshotArtifacts(type: Exec) {
         dependsOn publish
+
+        def renameScript = "${rootDir}/automation/taskcluster/rename_snapshot_artifacts.py"
+        def mavenBuildDir = "${project.buildDir}/maven"
+
+        commandLine 'python', renameScript, '--path', mavenBuildDir, '--timestamp', timestamp
+    }
+
+    task zipMavenArtifacts(type: Zip) {
+        dependsOn renameSnapshotArtifacts
 
         from "${project.buildDir}/maven"
 
@@ -77,12 +86,4 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
         destinationDir(file("${project.buildDir}"))
     }
 
-    task renameSnapshotArtifacts(type: Exec) {
-        dependsOn publish
-
-        def renameScript = "${rootDir}/automation/taskcluster/rename_snapshot_artifacts.py"
-        def mavenBuildDir = "${project.buildDir}/maven"
-
-        commandLine 'python', renameScript, '--path', mavenBuildDir, '--timestamp', timestamp
-    }
 }
