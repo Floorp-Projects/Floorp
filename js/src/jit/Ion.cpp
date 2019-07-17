@@ -224,6 +224,11 @@ bool JitRuntime::initialize(JSContext* cx) {
     return false;
   }
 
+  // Initialize the jitCodeRaw of the Runtime's canonical SelfHostedLazyScript
+  // to point to the interpreter trampoline.
+  cx->runtime()->selfHostedLazyScript.ref().jitCodeRaw_ =
+      interpreterStub().value;
+
   return true;
 }
 
