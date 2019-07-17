@@ -136,8 +136,8 @@ class DebuggerFrame : public NativeObject {
 
   static void trace(JSTracer* trc, JSObject* obj);
 
-  static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor,
-                                 Handle<GlobalObject*> global);
+  static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
+                                 HandleObject dbgCtor);
   static DebuggerFrame* create(JSContext* cx, HandleObject proto,
                                const FrameIter& iter,
                                HandleNativeObject debugger);

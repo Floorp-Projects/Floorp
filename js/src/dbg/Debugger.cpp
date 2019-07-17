@@ -8918,7 +8918,7 @@ extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
     return false;
   }
 
-  frameProto = DebuggerFrame::initClass(cx, debugCtor, global);
+  frameProto = DebuggerFrame::initClass(cx, global, debugCtor);
   if (!frameProto) {
     return false;
   }
@@ -8942,7 +8942,7 @@ extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
     return false;
   }
 
-  envProto = DebuggerEnvironment::initClass(cx, debugCtor, global);
+  envProto = DebuggerEnvironment::initClass(cx, global, debugCtor);
   if (!envProto) {
     return false;
   }

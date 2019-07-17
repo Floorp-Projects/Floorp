@@ -371,8 +371,8 @@ const JSFunctionSpec DebuggerEnvironment::methods_[] = {
 
 /* static */
 NativeObject* DebuggerEnvironment::initClass(JSContext* cx,
-                                             HandleObject dbgCtor,
-                                             Handle<GlobalObject*> global) {
+                                             Handle<GlobalObject*> global,
+                                             HandleObject dbgCtor) {
   return InitClass(cx, dbgCtor, nullptr, &DebuggerEnvironment::class_,
                    construct, 0, properties_, methods_, nullptr, nullptr);
 }
