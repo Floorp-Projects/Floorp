@@ -131,6 +131,26 @@ bool nsINode::IsInclusiveDescendantOf(const nsINode* aNode) const {
   return false;
 }
 
+bool nsINode::IsShadowIncludingInclusiveDescendantOf(
+    const nsINode* aNode) const {
+  MOZ_ASSERT(aNode, "The node is nullptr.");
+
+  if (this->GetComposedDoc() == aNode) {
+    return true;
+  }
+
+  const nsINode* node = this;
+  do {
+    if (node == aNode) {
+      return true;
+    }
+
+    node = node->GetParentOrShadowHostNode();
+  } while (node);
+
+  return false;
+}
+
 nsINode::nsSlots::nsSlots() : mWeakReference(nullptr) {}
 
 nsINode::nsSlots::~nsSlots() {
@@ -261,7 +281,7 @@ nsINode* nsINode::GetRootNode(const GetRootNodeOptions& aOptions) {
   return SubtreeRoot();
 }
 
-nsINode* nsINode::GetParentOrHostNode() const {
+nsINode* nsINode::GetParentOrShadowHostNode() const {
   if (mParent) {
     return mParent;
   }

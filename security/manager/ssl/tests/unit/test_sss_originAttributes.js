@@ -83,7 +83,7 @@ function doTest(originAttributes1, originAttributes2, shouldShare) {
 
     if (!shouldShare) {
       // Remove originAttributes2 from the storage.
-      sss.removeState(type, uri, 0, originAttributes2);
+      sss.resetState(type, uri, 0, originAttributes2);
       ok(
         sss.isSecureURI(type, uri, 0, originAttributes1),
         "URI should still be secure given original origin attributes"
@@ -91,7 +91,7 @@ function doTest(originAttributes1, originAttributes2, shouldShare) {
     }
 
     // Remove originAttributes1 from the storage.
-    sss.removeState(type, uri, 0, originAttributes1);
+    sss.resetState(type, uri, 0, originAttributes1);
     ok(
       !sss.isSecureURI(type, uri, 0, originAttributes1),
       "URI should be not be secure after removeState"
@@ -161,7 +161,7 @@ function testInvalidOriginAttributes(originAttributes) {
           originAttributes
         ),
       () => sss.isSecureURI(type, uri, 0, originAttributes),
-      () => sss.removeState(type, uri, 0, originAttributes),
+      () => sss.resetState(type, uri, 0, originAttributes),
     ];
 
     for (let callback of callbacks) {

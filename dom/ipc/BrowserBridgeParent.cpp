@@ -114,6 +114,7 @@ BrowserParent* BrowserBridgeParent::Manager() {
 void BrowserBridgeParent::Destroy() {
   if (mBrowserParent) {
     mBrowserParent->Destroy();
+    mBrowserParent->SetBrowserBridgeParent(nullptr);
     mBrowserParent = nullptr;
   }
 }
