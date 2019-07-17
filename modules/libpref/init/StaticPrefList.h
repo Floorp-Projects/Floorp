@@ -2136,6 +2136,18 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  Live,
+  "idle_period.min",
+   idle_period_min,
+  uint32_t, 3)
+
+VARCACHE_PREF(
+  Live,
+  "idle_period.during_page_load.min",
+   idle_period_during_page_load_min,
+  uint32_t, 12)
+
 #ifdef JS_BUILD_BINAST
 VARCACHE_PREF(
   Live,
