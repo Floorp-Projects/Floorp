@@ -18,14 +18,14 @@ function getPopupContentVerifier() {
   return document.getElementById("identity-popup-content-verifier");
 }
 
-function getConnectionIcon() {
-  return window.getComputedStyle(document.getElementById("connection-icon"))
+function getIdentityIcon() {
+  return window.getComputedStyle(document.getElementById("identity-icon"))
     .listStyleImage;
 }
 
 function checkIdentityPopup(icon) {
   gIdentityHandler.refreshIdentityPopup();
-  is(getConnectionIcon(), `url("chrome://browser/skin/${icon}")`);
+  is(getIdentityIcon(), `url("chrome://browser/skin/${icon}")`);
   is(getConnectionState(), "secure-cert-user-overridden");
   isnot(
     getPopupContentVerifier().style.display,

@@ -14,9 +14,11 @@ async function openProtectionsPanel(toast) {
     protectionsPopup,
     "popupshown"
   );
-  let identityBox = document.getElementById("identity-box");
+  let shieldIconContainer = document.getElementById(
+    "tracking-protection-icon-container"
+  );
   if (!toast) {
-    EventUtils.synthesizeMouseAtCenter(identityBox, { altKey: true });
+    EventUtils.synthesizeMouseAtCenter(shieldIconContainer, {});
   } else {
     gProtectionsHandler.showProtectionsPopup({ toast });
   }
