@@ -411,7 +411,7 @@ class nsWindow final : public nsBaseWidget {
   virtual void RegisterTouchWindow() override;
   virtual bool CompositorInitiallyPaused() override {
 #ifdef MOZ_WAYLAND
-    return mNeedsUpdatingEGLSurface;
+    return mCompositorInitiallyPaused;
 #else
     return false;
 #endif
@@ -443,6 +443,7 @@ class nsWindow final : public nsBaseWidget {
   bool mIsX11Display;
 #ifdef MOZ_WAYLAND
   bool mNeedsUpdatingEGLSurface;
+  bool mCompositorInitiallyPaused;
 #endif
 
  private:
