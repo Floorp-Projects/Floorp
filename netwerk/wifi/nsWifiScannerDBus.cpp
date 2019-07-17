@@ -267,9 +267,10 @@ nsresult nsWifiScannerDBus::IdentifyAPProperties(DBusMessage* aMsg) {
           return NS_ERROR_FAILURE;
         }
 
-        uint8_t strength;
+        uint8_t strength;  // in %
         dbus_message_iter_get_basic(&variant, &strength);
-        ap->setSignal(strength);
+        int signal_strength = (strength / 2) - 100;  // strength to dB
+        ap->setSignal(signal_strength);
       }
     } while (dbus_message_iter_next(&dict));
   } while (dbus_message_iter_next(&arr));
