@@ -1000,12 +1000,6 @@ var gIdentityHandler = {
    * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent(event) {
-    // For Nightly users, show the WIP protections panel if the meta key was held.
-    if (this._protectionsPanelEnabled && event.altKey) {
-      gProtectionsHandler.handleProtectionsButtonEvent(event);
-      return;
-    }
-
     event.stopPropagation();
 
     if (
@@ -1076,6 +1070,11 @@ var gIdentityHandler = {
 
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
+
+    // Check the panel state of the protections panel. Hide it if needed.
+    if (gProtectionsHandler._protectionsPopup.state != "closed") {
+      PanelMultiView.hidePopup(gProtectionsHandler._protectionsPopup);
+    }
 
     // Now open the popup, anchored off the primary chrome element
     PanelMultiView.openPopup(this._identityPopup, this._identityIcon, {

@@ -847,7 +847,9 @@
                   pageproxystate="invalid">
               <!-- Use onclick instead of normal popup= syntax since the popup
                    code fires onmousedown, and hence eats our favicon drag events. -->
-              <box id="tracking-protection-icon-container" align="center">
+              <box id="tracking-protection-icon-container" align="center"
+                   onclick="gProtectionsHandler.handleProtectionsButtonEvent(event);"
+                   onkeypress="gProtectionsHandler.handleProtectionsButtonEvent(event);">
                 <box id="tracking-protection-icon-box" animationsenabled="true">
                   <image id="tracking-protection-icon"/>
                   <box id="tracking-protection-icon-animatable-box" flex="1">
