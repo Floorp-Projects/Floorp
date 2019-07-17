@@ -3171,6 +3171,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  Once,
+  "gfx.core-animation.enabled",
+  gfx_core_animation_enabled,
+  bool, false
+)
+
 #if defined(MOZ_WIDGET_ANDROID)
 // Overrides the glClear color used when the surface origin is not (0, 0)
 // Used for drawing a border around the content.
