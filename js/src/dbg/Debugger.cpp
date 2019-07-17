@@ -18,6 +18,7 @@
 
 #include "builtin/Promise.h"
 #include "dbg/DebuggerMemory.h"
+#include "dbg/NoExecute.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"
@@ -249,124 +250,6 @@ class js::AutoRestoreRealmDebugMode {
   }
 
   void release() { realm_ = nullptr; }
-};
-
-// Given a Debugger instance dbg, if it is enabled, prevents all its debuggee
-// compartments from executing scripts. Attempts to run script will throw an
-// instance of Debugger.DebuggeeWouldRun from the topmost locked Debugger's
-// compartment.
-class MOZ_RAII js::EnterDebuggeeNoExecute {
-  friend class js::LeaveDebuggeeNoExecute;
-
-  Debugger& dbg_;
-  EnterDebuggeeNoExecute** stack_;
-  EnterDebuggeeNoExecute* prev_;
-
-  // Non-nullptr when unlocked temporarily by a LeaveDebuggeeNoExecute.
-  LeaveDebuggeeNoExecute* unlocked_;
-
-  // When DebuggeeWouldRun is a warning instead of an error, whether we've
-  // reported a warning already.
-  bool reported_;
-
- public:
-  // Mark execution in dbg's debuggees as forbidden, for the lifetime of this
-  // object. Require an AutoDebuggerJobQueueInterruption in scope.
-  explicit EnterDebuggeeNoExecute(
-      JSContext* cx, Debugger& dbg,
-      const JS::AutoDebuggerJobQueueInterruption& adjqiProof)
-      : dbg_(dbg), unlocked_(nullptr), reported_(false) {
-    MOZ_ASSERT(adjqiProof.initialized());
-    stack_ = &cx->noExecuteDebuggerTop.ref();
-    prev_ = *stack_;
-    *stack_ = this;
-  }
-
-  ~EnterDebuggeeNoExecute() {
-    MOZ_ASSERT(*stack_ == this);
-    *stack_ = prev_;
-  }
-
-  Debugger& debugger() const { return dbg_; }
-
-#ifdef DEBUG
-  static bool isLockedInStack(JSContext* cx, Debugger& dbg) {
-    for (EnterDebuggeeNoExecute* it = cx->noExecuteDebuggerTop; it;
-         it = it->prev_) {
-      if (&it->debugger() == &dbg) {
-        return !it->unlocked_;
-      }
-    }
-    return false;
-  }
-#endif
-
-  // Given a JSContext entered into a debuggee realm, find the lock
-  // that locks it. Returns nullptr if not found.
-  static EnterDebuggeeNoExecute* findInStack(JSContext* cx) {
-    Realm* debuggee = cx->realm();
-    for (EnterDebuggeeNoExecute* it = cx->noExecuteDebuggerTop; it;
-         it = it->prev_) {
-      Debugger& dbg = it->debugger();
-      if (!it->unlocked_ && dbg.isEnabled() &&
-          dbg.observesGlobal(debuggee->maybeGlobal())) {
-        return it;
-      }
-    }
-    return nullptr;
-  }
-
-  // Given a JSContext entered into a debuggee compartment, report a
-  // warning or an error if there is a lock that locks it.
-  static bool reportIfFoundInStack(JSContext* cx, HandleScript script) {
-    if (EnterDebuggeeNoExecute* nx = findInStack(cx)) {
-      bool warning = !cx->options().throwOnDebuggeeWouldRun();
-      if (!warning || !nx->reported_) {
-        AutoRealm ar(cx, nx->debugger().toJSObject());
-        nx->reported_ = true;
-        if (cx->options().dumpStackOnDebuggeeWouldRun()) {
-          fprintf(stdout, "Dumping stack for DebuggeeWouldRun:\n");
-          DumpBacktrace(cx);
-        }
-        const char* filename =
-            script->filename() ? script->filename() : "(none)";
-        char linenoStr[15];
-        SprintfLiteral(linenoStr, "%u", script->lineno());
-        unsigned flags = warning ? JSREPORT_WARNING : JSREPORT_ERROR;
-        // FIXME: filename should be UTF-8 (bug 987069).
-        return JS_ReportErrorFlagsAndNumberLatin1(
-            cx, flags, GetErrorMessage, nullptr, JSMSG_DEBUGGEE_WOULD_RUN,
-            filename, linenoStr);
-      }
-    }
-    return true;
-  }
-};
-
-// Given a JSContext entered into a debuggee compartment, if it is in
-// an NX section, unlock the topmost EnterDebuggeeNoExecute instance.
-//
-// Does nothing if debuggee is not in an NX section. For example, this
-// situation arises when invocation functions are called without entering
-// Debugger code, e.g., calling D.O.p.executeInGlobal or D.O.p.apply.
-class MOZ_RAII js::LeaveDebuggeeNoExecute {
-  EnterDebuggeeNoExecute* prevLocked_;
-
- public:
-  explicit LeaveDebuggeeNoExecute(JSContext* cx)
-      : prevLocked_(EnterDebuggeeNoExecute::findInStack(cx)) {
-    if (prevLocked_) {
-      MOZ_ASSERT(!prevLocked_->unlocked_);
-      prevLocked_->unlocked_ = this;
-    }
-  }
-
-  ~LeaveDebuggeeNoExecute() {
-    if (prevLocked_) {
-      MOZ_ASSERT(prevLocked_->unlocked_ == this);
-      prevLocked_->unlocked_ = nullptr;
-    }
-  }
 };
 
 /* static */
