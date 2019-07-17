@@ -10,6 +10,8 @@
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
+#include "nsIObserverService.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -68,7 +70,14 @@ void BrowserHost::DestroyComplete() {
   }
   mRoot->SetOwnerElement(nullptr);
   mRoot->Destroy();
+  mRoot->SetBrowserHost(nullptr);
   mRoot = nullptr;
+
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIRemoteTab*, this),
+                        "ipc:browser-destroyed", nullptr);
+  }
 }
 
 bool BrowserHost::Show(const ScreenIntSize& aSize, bool aParentIsActive) {
