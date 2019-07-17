@@ -49,11 +49,26 @@ window.onload = function() {
     }
   }
 
+  var tabListTree = document.getElementById("tabList");
+  tabListTree.addEventListener("click", onListClick);
+  tabListTree.addEventListener("keydown", onListKeyDown);
+
+  var errorCancelButton = document.getElementById("errorCancel");
+  // aboutSessionRestore.js is included aboutSessionRestore.xhtml
+  // and aboutWelcomeBack.xhtml, but the latter does not have an
+  // errorCancel button.
+  if (errorCancelButton) {
+    errorCancelButton.addEventListener("command", startNewSession);
+  }
+
+  var errorTryAgainButton = document.getElementById("errorTryAgain");
+  errorTryAgainButton.addEventListener("command", restoreSession);
+
   // the crashed session state is kept inside a textbox so that SessionStore picks it up
   // (for when the tab is closed or the session crashes right again)
   var sessionData = document.getElementById("sessionData");
   if (!sessionData.value) {
-    document.getElementById("errorTryAgain").disabled = true;
+    errorTryAgainButton.disabled = true;
     return;
   }
 
@@ -66,7 +81,7 @@ window.onload = function() {
 
   initTreeView();
 
-  document.getElementById("errorTryAgain").focus();
+  errorTryAgainButton.focus();
 };
 
 function isTreeViewVisible() {
