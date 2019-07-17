@@ -642,8 +642,7 @@ struct ReflowInput : public SizeComputationInput {
 
   // Computed values for 'min-width/max-width' and 'min-height/max-height'
   // XXXldb The width ones here should go; they should be needed only
-  // internally, except for nsComboboxDisplayFrame, which still wants to honor
-  // min-inline-size even though it wants to trump inline-size.
+  // internally.
   MOZ_INIT_OUTSIDE_CTOR
   nscoord mComputedMinWidth, mComputedMaxWidth;
   MOZ_INIT_OUTSIDE_CTOR

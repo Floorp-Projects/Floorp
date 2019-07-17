@@ -228,7 +228,6 @@ nsComboboxControlFrame::nsComboboxControlFrame(ComputedStyle* aStyle,
       mDropdownFrame(nullptr),
       mListControlFrame(nullptr),
       mDisplayISize(0),
-      mMaxDisplayISize(0),
       mRecentSelectedIndex(NS_SKIP_NOTIFY_INDEX),
       mDisplayedIndex(-1),
       mLastDropDownBeforeScreenBCoord(nscoord_MIN),
@@ -829,12 +828,6 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
 
   mDisplayISize = aReflowInput.ComputedISize() - buttonISize;
 
-  // Note that not all of this size may actually be usable, since it's from the
-  // inline-start side of where the display frame starts, but that this isn't
-  // actually a problem because it gets clipped anyway. This is exclusively to
-  // avoid exposing the size of the contents inadvertently via DOM APIs.
-  mMaxDisplayISize = aReflowInput.ComputedSizeWithBorderPadding().ISize(wm);
-
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   // The button should occupy the same space as a scrollbar
@@ -1252,24 +1245,12 @@ void nsComboboxDisplayFrame::Reflow(nsPresContext* aPresContext,
     state.SetComputedBSize(lh);
   }
   WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord inlineBp = state.ComputedLogicalBorderPadding().IStartEnd(wm);
-  nscoord computedISize = mComboBox->mDisplayISize - inlineBp;
-
-  // Other UAs ignore padding in some (but not all) platforms for (themed only)
-  // comboboxes. Instead of doing that, we prevent that padding if present from
-  // clipping the display text, by enforcing the display text minimum size in
-  // that situation.
-  const bool shouldHonorMinISize =
-      mComboBox->StyleDisplay()->mAppearance == StyleAppearance::Menulist;
-  if (shouldHonorMinISize) {
-    computedISize = std::max(state.ComputedMinISize(), computedISize);
-    // Don't let this size go over mMaxDisplayISize, since that'd be
-    // observable via clientWidth / scrollWidth.
-    computedISize =
-        std::min(computedISize, mComboBox->mMaxDisplayISize - inlineBp);
+  nscoord computedISize = mComboBox->mDisplayISize -
+                          state.ComputedLogicalBorderPadding().IStartEnd(wm);
+  if (computedISize < 0) {
+    computedISize = 0;
   }
-
-  state.SetComputedISize(std::max(0, computedISize));
+  state.SetComputedISize(computedISize);
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
   aStatus.Reset();  // this type of frame can't be split
 }
