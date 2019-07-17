@@ -32,10 +32,16 @@ add_task(async function() {
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
   let firstTabLabelRect = gBrowser.selectedTab.textLabel.getBoundingClientRect();
-  let textBoxRect = gURLBar
-    .querySelector("moz-input-box")
+  let textBoxRect = document
+    .getAnonymousElementByAttribute(gURLBar.textbox, "anonid", "moz-input-box")
     .getBoundingClientRect();
-  let historyDropmarkerRect = gURLBar.dropmarker.getBoundingClientRect();
+  let historyDropmarkerRect = document
+    .getAnonymousElementByAttribute(
+      gURLBar.textbox,
+      "anonid",
+      "historydropmarker"
+    )
+    .getBoundingClientRect();
 
   let inRange = (val, min, max) => min <= val && val <= max;
 
