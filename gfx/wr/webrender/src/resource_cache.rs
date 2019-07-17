@@ -33,7 +33,7 @@ use crate::render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
 use crate::render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskGraph};
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
-use std::collections::hash_map::IterMut;
+use std::collections::hash_map::{Iter, IterMut};
 use std::collections::VecDeque;
 use std::{cmp, mem};
 use std::fmt::Debug;
@@ -273,8 +273,16 @@ where
         self.resources.entry(key)
     }
 
+    pub fn iter(&self) -> Iter<K, V> {
+        self.resources.iter()
+    }
+
     pub fn iter_mut(&mut self) -> IterMut<K, V> {
         self.resources.iter_mut()
+    }
+
+    pub fn is_empty(&mut self) -> bool {
+        self.resources.is_empty()
     }
 
     pub fn clear(&mut self) {
@@ -489,10 +497,11 @@ impl ResourceCache {
     pub fn new(
         texture_cache: TextureCache,
         glyph_rasterizer: GlyphRasterizer,
+        cached_glyphs: GlyphCache,
         blob_image_handler: Option<Box<dyn BlobImageHandler>>,
     ) -> Self {
         ResourceCache {
-            cached_glyphs: GlyphCache::new(),
+            cached_glyphs,
             cached_images: ResourceClassCache::new(),
             cached_render_tasks: RenderTaskCache::new(),
             resources: Resources::default(),
@@ -775,7 +784,7 @@ impl ResourceCache {
         self.glyph_rasterizer.delete_font(font_key);
         self.resources.font_templates.remove(&font_key);
         self.cached_glyphs
-            .clear_fonts(|font| font.font_key == font_key);
+            .clear_fonts(&mut self.texture_cache, |font| font.font_key == font_key);
         if let Some(ref mut r) = self.blob_image_handler {
             r.delete_font(font_key);
         }
@@ -1578,7 +1587,12 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.texture_cache.begin_frame(stamp);
-        self.cached_glyphs.begin_frame(&self.texture_cache, &self.cached_render_tasks, &mut self.glyph_rasterizer);
+        self.cached_glyphs.begin_frame(
+            stamp,
+            &mut self.texture_cache,
+            &self.cached_render_tasks,
+            &mut self.glyph_rasterizer,
+        );
         self.cached_render_tasks.begin_frame(&mut self.texture_cache);
         self.current_frame_id = stamp.frame_id();
 
@@ -1815,7 +1829,7 @@ impl ResourceCache {
             .font_templates
             .retain(|key, _| key.0 != namespace);
         self.cached_glyphs
-            .clear_fonts(|font| font.font_key.0 == namespace);
+            .clear_fonts(&mut self.texture_cache, |font| font.font_key.0 == namespace);
 
         if let Some(ref mut r) = self.blob_image_handler {
             r.clear_namespace(namespace);

@@ -1783,13 +1783,13 @@ impl RenderTaskCache {
     }
 
     #[allow(dead_code)]
-    pub fn cache_item_is_allocated_for_render_task(&self,
-                                                   texture_cache: &TextureCache,
-                                                   key: &RenderTaskCacheKey)
-                                                   -> bool {
+    pub fn get_allocated_size_for_render_task(&self,
+                                              texture_cache: &TextureCache,
+                                              key: &RenderTaskCacheKey)
+                                              -> Option<usize> {
         let handle = self.map.get(key).unwrap();
         let cache_entry = self.cache_entries.get(handle);
-        texture_cache.is_allocated(&cache_entry.handle)
+        texture_cache.get_allocated_size(&cache_entry.handle)
     }
 }
 
