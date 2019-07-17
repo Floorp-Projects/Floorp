@@ -21,15 +21,18 @@
 using namespace mozilla::dom;
 
 #define ANCHOR_LOG(...)
-// #define ANCHOR_LOG(fmt, ...)                  \
-//   printf_stderr("ANCHOR(%p, %s): " fmt, this, \
-//                 Frame()                       \
-//                     ->PresContext()           \
-//                     ->Document()              \
-//                     ->GetDocumentURI()        \
-//                     ->GetSpecOrDefault()      \
-//                     .get(),                   \
-//                 ##__VA_ARGS__)
+
+/*
+#define ANCHOR_LOG(fmt, ...)                  \
+  printf_stderr("ANCHOR(%p, %s): " fmt, this, \
+                Frame()                       \
+                    ->PresContext()           \
+                    ->Document()              \
+                    ->GetDocumentURI()        \
+                    ->GetSpecOrDefault()      \
+                    .get(),                   \
+                ##__VA_ARGS__)
+*/
 
 namespace mozilla {
 namespace layout {
