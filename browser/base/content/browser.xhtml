@@ -847,6 +847,14 @@
                   pageproxystate="invalid">
               <!-- Use onclick instead of normal popup= syntax since the popup
                    code fires onmousedown, and hence eats our favicon drag events. -->
+              <box id="tracking-protection-icon-container" align="center">
+                <box id="tracking-protection-icon-box" animationsenabled="true">
+                  <image id="tracking-protection-icon"/>
+                  <box id="tracking-protection-icon-animatable-box" flex="1">
+                    <image id="tracking-protection-icon-animatable-image" flex="1"/>
+                  </box>
+                </box>
+              </box>
               <box id="identity-box" role="button"
                    align="center"
                    aria-label="&urlbar.viewSiteInfo.label;"
@@ -857,12 +865,6 @@
                        consumeanchor="identity-box"
                        onclick="PageProxyClickHandler(event);"/>
                 <image id="sharing-icon" mousethrough="always"/>
-                <box id="tracking-protection-icon-box" animationsenabled="true">
-                  <image id="tracking-protection-icon"/>
-                  <box id="tracking-protection-icon-animatable-box" flex="1">
-                    <image id="tracking-protection-icon-animatable-image" flex="1"/>
-                  </box>
-                </box>
                 <box id="blocked-permissions-container" align="center">
                   <image data-permission-id="geo" class="blocked-permission-icon geo-icon" role="button"
                          tooltiptext="&urlbar.geolocationBlocked.tooltip;"/>

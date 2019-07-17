@@ -1254,13 +1254,20 @@ var gProtectionsHandler = {
   onPopupShown(event) {
     if (event.target == this._protectionsPopup) {
       window.addEventListener("focus", this, true);
+
+      // Add the "open" attribute to the tracking protection icon container
+      // for styling.
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "open",
+        "true"
+      );
     }
   },
 
   onPopupHidden(event) {
     if (event.target == this._protectionsPopup) {
       window.removeEventListener("focus", this, true);
-      this._protectionsPopup.removeAttribute("open");
+      gIdentityHandler._trackingProtectionIconContainer.removeAttribute("open");
     }
   },
 
