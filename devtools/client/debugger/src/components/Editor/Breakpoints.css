@@ -36,7 +36,7 @@
   pointer-events: none;
 }
 
-.editor-wrapper:not(.blackboxed) :not(.empty-line):not(.new-breakpoint)
+.editor-wrapper :not(.empty-line):not(.new-breakpoint)
   > .CodeMirror-gutter-wrapper:hover
   > .CodeMirror-linenumber::after {
   content: "";
