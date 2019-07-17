@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -158,11 +159,14 @@ class EngineObserverTest {
         engineSession.disableTrackingProtection()
         assertFalse(session.trackerBlockingEnabled)
 
-        observer.onTrackerBlocked("tracker1")
-        assertEquals(listOf("tracker1"), session.trackersBlocked)
+        val tracker1 = Tracker("tracker1", emptyList())
+        val tracker2 = Tracker("tracker2", emptyList())
 
-        observer.onTrackerBlocked("tracker2")
-        assertEquals(listOf("tracker1", "tracker2"), session.trackersBlocked)
+        observer.onTrackerBlocked(tracker1)
+        assertEquals(listOf(tracker1), session.trackersBlocked)
+
+        observer.onTrackerBlocked(tracker2)
+        assertEquals(listOf(tracker1, tracker2), session.trackersBlocked)
     }
 
     @Test
@@ -200,9 +204,11 @@ class EngineObserverTest {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)
 
-        observer.onTrackerBlocked("tracker1")
-        observer.onTrackerBlocked("tracker2")
-        assertEquals(listOf("tracker1", "tracker2"), session.trackersBlocked)
+        val tracker1 = Tracker("tracker1")
+        val tracker2 = Tracker("tracker2")
+        observer.onTrackerBlocked(tracker1)
+        observer.onTrackerBlocked(tracker2)
+        assertEquals(listOf(tracker1, tracker2), session.trackersBlocked)
 
         observer.onLoadingStateChange(true)
         assertEquals(emptyList<String>(), session.trackersBlocked)

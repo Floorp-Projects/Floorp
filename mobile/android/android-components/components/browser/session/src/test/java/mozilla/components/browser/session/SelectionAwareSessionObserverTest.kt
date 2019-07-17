@@ -6,6 +6,7 @@ package mozilla.components.browser.session
 
 import android.graphics.Bitmap
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -147,7 +148,7 @@ class SelectionAwareSessionObserverTest {
         observer.onCustomTabConfigChanged(session, null)
         observer.onDownload(session, Mockito.mock(Download::class.java))
         observer.onTrackerBlockingEnabledChanged(session, true)
-        observer.onTrackerBlocked(session, "", emptyList())
+        observer.onTrackerBlocked(session, Tracker(""), emptyList())
         observer.onLongPress(session, Mockito.mock(HitResult::class.java))
         observer.onFindResult(session, Mockito.mock(Session.FindResult::class.java))
         observer.onDesktopModeChanged(session, true)

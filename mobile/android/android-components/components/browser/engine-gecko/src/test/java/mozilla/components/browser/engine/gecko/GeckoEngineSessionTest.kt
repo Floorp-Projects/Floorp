@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
@@ -759,17 +760,26 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
 
-        var trackerBlocked = ""
+        var trackerBlocked: Tracker? = null
         engineSession.register(object : EngineSession.Observer {
-            override fun onTrackerBlocked(url: String) {
-                trackerBlocked = url
+            override fun onTrackerBlocked(tracker: Tracker) {
+                trackerBlocked = tracker
             }
         })
 
         captureDelegates()
 
-        contentBlockingDelegate.value.onContentBlocked(geckoSession, ContentBlocking.BlockEvent("tracker1", 0))
-        assertEquals("tracker1", trackerBlocked)
+        var geckoCatgories = 0
+        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_AD)
+        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_ANALYTIC)
+        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_SOCIAL)
+        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_CRYPTOMINING)
+        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_FINGERPRINTING)
+        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_CONTENT)
+
+        contentBlockingDelegate.value.onContentBlocked(geckoSession, ContentBlocking.BlockEvent("tracker1", geckoCatgories))
+        assertEquals("tracker1", trackerBlocked!!.url)
+        assertTrue(trackerBlocked!!.categories.containsAll(Tracker.Category.values().toList()))
     }
 
     @Test

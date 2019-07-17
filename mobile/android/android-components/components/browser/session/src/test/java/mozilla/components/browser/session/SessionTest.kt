@@ -17,6 +17,7 @@ import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
@@ -564,23 +565,26 @@ class SessionTest {
         val session = Session("https://www.mozilla.org")
         session.register(observer)
 
-        session.trackersBlocked += "trackerUrl1"
+        val tracker1 = Tracker("trackerUrl1")
+        val tracker2 = Tracker("trackerUrl2")
+
+        session.trackersBlocked += tracker1
 
         verify(observer).onTrackerBlocked(
                 eq(session),
-                eq("trackerUrl1"),
-                eq(listOf("trackerUrl1")))
+                eq(tracker1),
+                eq(listOf(tracker1)))
 
-        assertEquals(listOf("trackerUrl1"), session.trackersBlocked)
+        assertEquals(listOf(tracker1), session.trackersBlocked)
 
-        session.trackersBlocked += "trackerUrl2"
+        session.trackersBlocked += tracker2
 
         verify(observer).onTrackerBlocked(
                 eq(session),
-                eq("trackerUrl2"),
-                eq(listOf("trackerUrl1", "trackerUrl2")))
+                eq(tracker2),
+                eq(listOf(tracker1, tracker2)))
 
-        assertEquals(listOf("trackerUrl1", "trackerUrl2"), session.trackersBlocked)
+        assertEquals(listOf(tracker1, tracker2), session.trackersBlocked)
 
         session.trackersBlocked = emptyList()
         verifyNoMoreInteractions(observer)
@@ -713,7 +717,7 @@ class SessionTest {
         defaultObserver.onCustomTabConfigChanged(session, null)
         defaultObserver.onDownload(session, mock(Download::class.java))
         defaultObserver.onTrackerBlockingEnabledChanged(session, true)
-        defaultObserver.onTrackerBlocked(session, "", emptyList())
+        defaultObserver.onTrackerBlocked(session, mock(), emptyList())
         defaultObserver.onLongPress(session, mock(HitResult::class.java))
         defaultObserver.onFindResult(session, mock(Session.FindResult::class.java))
         defaultObserver.onDesktopModeChanged(session, true)
@@ -892,12 +896,12 @@ class SessionTest {
             (1..3).map {
                 val def = GlobalScope.async(IO) {
                     session.trackersBlocked = emptyList()
-                    session.trackersBlocked += "test"
+                    session.trackersBlocked += Tracker("test")
                     session.trackersBlocked = emptyList()
                 }
                 val def2 = GlobalScope.async(IO) {
                     session.trackersBlocked = emptyList()
-                    session.trackersBlocked += "test"
+                    session.trackersBlocked += Tracker("test")
                     session.trackersBlocked = emptyList()
                 }
                 def.await()

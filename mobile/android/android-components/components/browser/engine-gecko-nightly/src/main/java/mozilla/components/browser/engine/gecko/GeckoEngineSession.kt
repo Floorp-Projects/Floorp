@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
@@ -30,6 +31,12 @@ import mozilla.components.support.utils.DownloadUtils
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.ContentBlocking.AT_AD
+import org.mozilla.geckoview.ContentBlocking.AT_ANALYTIC
+import org.mozilla.geckoview.ContentBlocking.AT_CONTENT
+import org.mozilla.geckoview.ContentBlocking.AT_CRYPTOMINING
+import org.mozilla.geckoview.ContentBlocking.AT_FINGERPRINTING
+import org.mozilla.geckoview.ContentBlocking.AT_SOCIAL
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -543,8 +550,43 @@ class GeckoEngineSession(
 
     private fun createContentBlockingDelegate() = object : ContentBlocking.Delegate {
         override fun onContentBlocked(session: GeckoSession, event: ContentBlocking.BlockEvent) {
-            notifyObservers { onTrackerBlocked(event.uri) }
+            notifyObservers {
+                onTrackerBlocked(event.toTracker())
+            }
         }
+    }
+
+    @Suppress("LongMethod")
+    private fun ContentBlocking.BlockEvent.toTracker(): Tracker {
+        val blockedContentCategories = ArrayList<Tracker.Category>()
+
+        if (categories.contains(AT_AD)) {
+            blockedContentCategories.add(Tracker.Category.Ad)
+        }
+
+        if (categories.contains(AT_ANALYTIC)) {
+            blockedContentCategories.add(Tracker.Category.Analytic)
+        }
+
+        if (categories.contains(AT_SOCIAL)) {
+            blockedContentCategories.add(Tracker.Category.Social)
+        }
+
+        if (categories.contains(AT_FINGERPRINTING)) {
+            blockedContentCategories.add(Tracker.Category.Fingerprinting)
+        }
+
+        if (categories.contains(AT_CRYPTOMINING)) {
+            blockedContentCategories.add(Tracker.Category.Cryptomining)
+        }
+        if (categories.contains(AT_CONTENT)) {
+            blockedContentCategories.add(Tracker.Category.Content)
+        }
+        return Tracker(uri, blockedContentCategories)
+    }
+
+    private operator fun Int.contains(mask: Int): Boolean {
+        return (this and mask) != 0
     }
 
     private fun createPermissionDelegate() = object : GeckoSession.PermissionDelegate {

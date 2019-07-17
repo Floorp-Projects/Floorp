@@ -7,6 +7,7 @@ package mozilla.components.concept.engine
 import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -38,6 +39,7 @@ class EngineSessionTest {
 
         val mediaAdded: Media = mock()
         val mediaRemoved: Media = mock()
+        val tracker = Tracker("tracker")
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
@@ -46,7 +48,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
-        session.notifyInternalObservers { onTrackerBlocked("tracker") }
+        session.notifyInternalObservers { onTrackerBlocked(tracker) }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
@@ -70,7 +72,7 @@ class EngineSessionTest {
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
         verify(observer).onTrackerBlockingEnabledChange(true)
-        verify(observer).onTrackerBlocked("tracker")
+        verify(observer).onTrackerBlocked(tracker)
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
@@ -99,6 +101,8 @@ class EngineSessionTest {
         val windowRequest = mock(WindowRequest::class.java)
         val otherWindowRequest = mock(WindowRequest::class.java)
         val emptyBitmap = spy(Bitmap::class.java)
+        val tracker = Tracker("tracker")
+
         session.register(observer)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
@@ -106,7 +110,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
-        session.notifyInternalObservers { onTrackerBlocked("tracker") }
+        session.notifyInternalObservers { onTrackerBlocked(tracker) }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
@@ -129,7 +133,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
         session.notifyInternalObservers { onSecurityChange(false, "", "") }
-        session.notifyInternalObservers { onTrackerBlocked("tracker2") }
+        session.notifyInternalObservers { onTrackerBlocked(tracker) }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(false) }
         session.notifyInternalObservers { onLongPress(otherHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(false) }
@@ -152,7 +156,7 @@ class EngineSessionTest {
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
         verify(observer).onTrackerBlockingEnabledChange(true)
-        verify(observer).onTrackerBlocked("tracker")
+        verify(observer).onTrackerBlocked(tracker)
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
@@ -171,7 +175,7 @@ class EngineSessionTest {
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
         verify(observer, never()).onTrackerBlockingEnabledChange(false)
-        verify(observer, never()).onTrackerBlocked("tracker2")
+        verify(observer, never()).onTrackerBlocked(Tracker("Tracker"))
         verify(observer, never()).onLongPress(otherHitResult)
         verify(observer, never()).onDesktopModeChange(false)
         verify(observer, never()).onFind("search2")
@@ -201,6 +205,8 @@ class EngineSessionTest {
         val otherWindowRequest = mock(WindowRequest::class.java)
         val otherHitResult = HitResult.UNKNOWN("file://foobaz")
         val emptyBitmap = spy(Bitmap::class.java)
+        val tracker = Tracker("tracker")
+
         session.register(observer)
         session.register(otherObserver)
 
@@ -209,7 +215,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
-        session.notifyInternalObservers { onTrackerBlocked("tracker") }
+        session.notifyInternalObservers { onTrackerBlocked(tracker) }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
@@ -228,7 +234,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
         session.notifyInternalObservers { onSecurityChange(false, "", "") }
-        session.notifyInternalObservers { onTrackerBlocked("tracker2") }
+        session.notifyInternalObservers { onTrackerBlocked(tracker) }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(false) }
         session.notifyInternalObservers { onLongPress(otherHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(false) }
@@ -247,7 +253,7 @@ class EngineSessionTest {
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
         verify(observer).onTrackerBlockingEnabledChange(true)
-        verify(observer).onTrackerBlocked("tracker")
+        verify(observer).onTrackerBlocked(tracker)
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
@@ -264,7 +270,7 @@ class EngineSessionTest {
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
         verify(observer, never()).onTrackerBlockingEnabledChange(false)
-        verify(observer, never()).onTrackerBlocked("tracker2")
+        verify(observer, never()).onTrackerBlocked(Tracker("Tracker"))
         verify(observer, never()).onLongPress(otherHitResult)
         verify(observer, never()).onDesktopModeChange(false)
         verify(observer, never()).onFind("search2")
@@ -281,7 +287,7 @@ class EngineSessionTest {
         verify(otherObserver, never()).onLoadingStateChange(false)
         verify(otherObserver, never()).onSecurityChange(false, "", "")
         verify(otherObserver, never()).onTrackerBlockingEnabledChange(false)
-        verify(otherObserver, never()).onTrackerBlocked("tracker2")
+        verify(otherObserver, never()).onTrackerBlocked(Tracker("Tracker"))
         verify(otherObserver, never()).onLongPress(otherHitResult)
         verify(otherObserver, never()).onDesktopModeChange(false)
         verify(otherObserver, never()).onFind("search2")
@@ -305,6 +311,8 @@ class EngineSessionTest {
         val windowRequest = mock(WindowRequest::class.java)
         val otherWindowRequest = mock(WindowRequest::class.java)
         val emptyBitmap = spy(Bitmap::class.java)
+        val tracker = Tracker("tracker")
+
         session.register(observer)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
@@ -312,7 +320,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
-        session.notifyInternalObservers { onTrackerBlocked("tracker") }
+        session.notifyInternalObservers { onTrackerBlocked(tracker) }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
@@ -331,7 +339,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
         session.notifyInternalObservers { onSecurityChange(false, "", "") }
-        session.notifyInternalObservers { onTrackerBlocked("tracker2") }
+        session.notifyInternalObservers { onTrackerBlocked(tracker) }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(false) }
         session.notifyInternalObservers { onLongPress(otherHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(false) }
@@ -350,7 +358,7 @@ class EngineSessionTest {
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
         verify(observer).onTrackerBlockingEnabledChange(true)
-        verify(observer).onTrackerBlocked("tracker")
+        verify(observer).onTrackerBlocked(tracker)
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
@@ -367,7 +375,7 @@ class EngineSessionTest {
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
         verify(observer, never()).onTrackerBlockingEnabledChange(false)
-        verify(observer, never()).onTrackerBlocked("tracker2")
+        verify(observer, never()).onTrackerBlocked(Tracker("Tracker"))
         verify(observer, never()).onLongPress(otherHitResult)
         verify(observer, never()).onDesktopModeChange(false)
         verify(observer, never()).onFind("search2")
@@ -390,6 +398,7 @@ class EngineSessionTest {
         val windowRequest = mock(WindowRequest::class.java)
         val emptyBitmap = spy(Bitmap::class.java)
         val observer = mock(EngineSession.Observer::class.java)
+        val tracker = Tracker("tracker")
         session.register(observer)
 
         otherSession.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
@@ -398,7 +407,7 @@ class EngineSessionTest {
         otherSession.notifyInternalObservers { onLoadingStateChange(true) }
         otherSession.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
         otherSession.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
-        otherSession.notifyInternalObservers { onTrackerBlocked("tracker") }
+        otherSession.notifyInternalObservers { onTrackerBlocked(tracker) }
         otherSession.notifyInternalObservers { onLongPress(unknownHitResult) }
         otherSession.notifyInternalObservers { onDesktopModeChange(true) }
         otherSession.notifyInternalObservers { onFind("search") }
@@ -415,7 +424,7 @@ class EngineSessionTest {
         verify(observer, never()).onLoadingStateChange(true)
         verify(observer, never()).onSecurityChange(true, "mozilla.org", "issuer")
         verify(observer, never()).onTrackerBlockingEnabledChange(true)
-        verify(observer, never()).onTrackerBlocked("tracker")
+        verify(observer, never()).onTrackerBlocked(tracker)
         verify(observer, never()).onLongPress(unknownHitResult)
         verify(observer, never()).onDesktopModeChange(true)
         verify(observer, never()).onFind("search")
@@ -433,7 +442,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
-        session.notifyInternalObservers { onTrackerBlocked("tracker") }
+        session.notifyInternalObservers { onTrackerBlocked(tracker) }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(false) }
         session.notifyInternalObservers { onFind("search") }
@@ -450,7 +459,7 @@ class EngineSessionTest {
         verify(observer, times(1)).onLoadingStateChange(true)
         verify(observer, times(1)).onSecurityChange(true, "mozilla.org", "issuer")
         verify(observer, times(1)).onTrackerBlockingEnabledChange(true)
-        verify(observer, times(1)).onTrackerBlocked("tracker")
+        verify(observer, times(1)).onTrackerBlocked(tracker)
         verify(observer, times(1)).onLongPress(unknownHitResult)
         verify(observer, times(1)).onDesktopModeChange(false)
         verify(observer, times(1)).onFind("search")
@@ -613,7 +622,7 @@ class EngineSessionTest {
         defaultObserver.onExternalResource("", "")
         defaultObserver.onDesktopModeChange(true)
         defaultObserver.onSecurityChange(true)
-        defaultObserver.onTrackerBlocked("")
+        defaultObserver.onTrackerBlocked(mock())
         defaultObserver.onTrackerBlockingEnabledChange(true)
         defaultObserver.onFindResult(0, 0, false)
         defaultObserver.onFind("text")

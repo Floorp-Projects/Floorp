@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.util.Base64
@@ -538,8 +539,43 @@ class GeckoEngineSession(
 
     private fun createContentBlockingDelegate() = object : ContentBlocking.Delegate {
         override fun onContentBlocked(session: GeckoSession, event: ContentBlocking.BlockEvent) {
-            notifyObservers { onTrackerBlocked(event.uri) }
+            notifyObservers {
+                onTrackerBlocked(event.toTracker())
+            }
         }
+    }
+
+    @Suppress("LongMethod")
+    private fun ContentBlocking.BlockEvent.toTracker(): Tracker {
+        val blockedContentCategories = ArrayList<Tracker.Category>()
+
+        if (categories.contains(ContentBlocking.AT_AD)) {
+            blockedContentCategories.add(Tracker.Category.Ad)
+        }
+
+        if (categories.contains(ContentBlocking.AT_ANALYTIC)) {
+            blockedContentCategories.add(Tracker.Category.Analytic)
+        }
+
+        if (categories.contains(ContentBlocking.AT_SOCIAL)) {
+            blockedContentCategories.add(Tracker.Category.Social)
+        }
+
+        if (categories.contains(ContentBlocking.AT_FINGERPRINTING)) {
+            blockedContentCategories.add(Tracker.Category.Fingerprinting)
+        }
+
+        if (categories.contains(ContentBlocking.AT_CRYPTOMINING)) {
+            blockedContentCategories.add(Tracker.Category.Cryptomining)
+        }
+        if (categories.contains(ContentBlocking.AT_CONTENT)) {
+            blockedContentCategories.add(Tracker.Category.Content)
+        }
+        return Tracker(uri, blockedContentCategories)
+    }
+
+    private operator fun Int.contains(mask: Int): Boolean {
+        return (this and mask) != 0
     }
 
     private fun createPermissionDelegate() = object : GeckoSession.PermissionDelegate {

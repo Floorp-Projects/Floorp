@@ -12,6 +12,7 @@ import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
@@ -88,8 +89,8 @@ internal class EngineObserver(
                 ?: "", issuer ?: "")
     }
 
-    override fun onTrackerBlocked(url: String) {
-        session.trackersBlocked += url
+    override fun onTrackerBlocked(tracker: Tracker) {
+        session.trackersBlocked += tracker
     }
 
     override fun onTrackerBlockingEnabledChange(enabled: Boolean) {

@@ -52,6 +52,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.storage.VisitType
@@ -214,7 +215,14 @@ class SystemEngineView @JvmOverloads constructor(
 
                 if (!request.isForMainFrame &&
                         getOrCreateUrlMatcher(resources, it).matches(resourceUri, Uri.parse(session?.currentUrl))) {
-                    session?.internalNotifyObservers { onTrackerBlocked(resourceUri.toString()) }
+                    session?.internalNotifyObservers {
+                        onTrackerBlocked(
+                            Tracker(
+                                resourceUri.toString(),
+                                emptyList()
+                            )
+                        )
+                    }
                     return WebResourceResponse(null, null, null)
                 }
             }

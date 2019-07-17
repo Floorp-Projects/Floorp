@@ -11,6 +11,11 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **concept-engine** and **browser-session**
+  * ⚠️ **This is a breaking change**: Function signature changed  `Session.Observer.onTrackerBlocked(session: Session, blocked: String, all: List<String>) = Unit` from to `Session.Observer.onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit`
+  * ⚠️ **This is a breaking change**: Function signature changed  `EngineSession.Observer.onTrackerBlocked(url: String) = Unit` from to `EngineSession.Observer.onTrackerBlocked(tracker: Tracker) = Unit`
+  * Added: To provide more details about a blocked content, we introduced a new class called `Tracker` this contains information like the `url` and `categories` of the `Tracker`. Among the categories we have `Ad`, `Analytic`, `Social`,`Cryptomining`, `Fingerprinting` and `Content`.
+
 * **All components**
   * Increased `compileSdkVersion` to 29 (Android Q)
 

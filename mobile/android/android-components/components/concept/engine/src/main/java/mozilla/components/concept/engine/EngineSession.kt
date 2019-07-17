@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import androidx.annotation.CallSuper
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
@@ -38,7 +39,7 @@ abstract class EngineSession(
         fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null) = Unit
         fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null) = Unit
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
-        fun onTrackerBlocked(url: String) = Unit
+        fun onTrackerBlocked(tracker: Tracker) = Unit
         fun onLongPress(hitResult: HitResult) = Unit
         fun onDesktopModeChange(enabled: Boolean) = Unit
         fun onFind(text: String) = Unit
