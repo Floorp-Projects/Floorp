@@ -1674,6 +1674,9 @@ void MacroAssembler::assertRectifierFrameParentType(Register frameType) {
 }
 
 void MacroAssembler::loadJitCodeRaw(Register func, Register dest) {
+  static_assert(
+      JSScript::offsetOfJitCodeRaw() == LazyScript::offsetOfJitCodeRaw(),
+      "LazyScript and JSScript must use same layout for jitCodeRaw_");
   loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
   loadPtr(Address(dest, JSScript::offsetOfJitCodeRaw()), dest);
 }

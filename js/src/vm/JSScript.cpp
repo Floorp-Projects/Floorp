@@ -3801,9 +3801,7 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry,
                    uint32_t sourceEnd, uint32_t toStringStart,
                    uint32_t toStringEnd)
     :
-#ifndef JS_CODEGEN_NONE
       jitCodeRaw_(stubEntry),
-#endif
       realm_(realm),
       sourceStart_(sourceStart),
       sourceEnd_(sourceEnd),
@@ -5476,11 +5474,14 @@ void LazyScriptData::trace(JSTracer* trc) {
   }
 }
 
-LazyScript::LazyScript(JSFunction* fun, ScriptSourceObject& sourceObject,
-                       LazyScriptData* data, uint32_t immutableFlags,
-                       uint32_t sourceStart, uint32_t sourceEnd,
-                       uint32_t toStringStart, uint32_t lineno, uint32_t column)
-    : script_(nullptr),
+LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
+                       ScriptSourceObject& sourceObject, LazyScriptData* data,
+                       uint32_t immutableFlags, uint32_t sourceStart,
+                       uint32_t sourceEnd, uint32_t toStringStart,
+                       uint32_t lineno, uint32_t column)
+    :
+      jitCodeRaw_(stubEntry),
+      script_(nullptr),
       function_(fun),
       sourceObject_(&sourceObject),
       lazyData_(data),
@@ -5575,8 +5576,14 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
 
   cx->realm()->scheduleDelazificationForDebugger();
 
+#ifndef JS_CODEGEN_NONE
+  uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
+#else
+  uint8_t* stubEntry = nullptr;
+#endif
+
   return new (res)
-      LazyScript(fun, *sourceObject, data.release(), immutableFlags,
+      LazyScript(fun, stubEntry, *sourceObject, data.release(), immutableFlags,
                  sourceStart, sourceEnd, toStringStart, lineno, column);
 }
 
