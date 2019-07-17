@@ -583,10 +583,8 @@
   ) {
     constructor() {
       super();
-
       this.attachShadow({ mode: "open" });
-      this.shadowRoot.appendChild(
-        MozXULElement.parseXULToFragment(`
+      let fragment = MozXULElement.parseXULToFragment(`
         <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
         <html:slot name="treecols"></html:slot>
         <stack class="tree-stack" flex="1">
@@ -596,24 +594,28 @@
             </hbox>
             <scrollbar height="0" minwidth="0" minheight="0" orient="vertical"
                        class="hidevscroll-scrollbar"
-                       style="position:relative; z-index:2147483647;"
-                       oncontextmenu="event.stopPropagation(); event.preventDefault();"
-                       onclick="event.stopPropagation(); event.preventDefault();"
-                       ondblclick="event.stopPropagation();"
-                       oncommand="event.stopPropagation();"></scrollbar>
+                       style="position:relative; z-index:2147483647;"></scrollbar>
           </hbox>
           <textbox class="tree-input" left="0" top="0" hidden="true"></textbox>
         </stack>
         <hbox class="hidehscroll-box">
-          <scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;" oncontextmenu="event.stopPropagation(); event.preventDefault();" onclick="event.stopPropagation(); event.preventDefault();" ondblclick="event.stopPropagation();" oncommand="event.stopPropagation();"></scrollbar>
-          <scrollcorner class="hidevscroll-scrollcorner"
-                        oncontextmenu="event.stopPropagation(); event.preventDefault();"
-                        onclick="event.stopPropagation(); event.preventDefault();"
-                        ondblclick="event.stopPropagation();"
-                        oncommand="event.stopPropagation();"></scrollcorner>
+          <scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;"></scrollbar>
+          <scrollcorner class="hidevscroll-scrollcorner"></scrollcorner>
         </hbox>
-      `)
-      );
+      `);
+      let handledElements = fragment.querySelectorAll("scrollbar,scrollcorner");
+      let stopAndPrevent = e => {
+        e.stopPropagation();
+        e.preventDefault();
+      };
+      let stopProp = e => e.stopPropagation();
+      for (let el of handledElements) {
+        el.addEventListener("click", stopAndPrevent);
+        el.addEventListener("contextmenu", stopAndPrevent);
+        el.addEventListener("dblclick", stopProp);
+        el.addEventListener("command", stopProp);
+      }
+      this.shadowRoot.appendChild(fragment);
     }
 
     static get inheritedAttributes() {
