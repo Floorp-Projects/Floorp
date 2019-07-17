@@ -51,16 +51,16 @@ var PictureInPicture = {
         break;
       }
       case "PictureInPicture:Playing": {
-        let controls = this.weakPipControls && this.weakPipControls.get();
-        if (controls) {
-          controls.classList.add("playing");
+        let player = this.weakPipPlayer && this.weakPipPlayer.get();
+        if (player) {
+          player.setIsPlayingState(true);
         }
         break;
       }
       case "PictureInPicture:Paused": {
-        let controls = this.weakPipControls && this.weakPipControls.get();
-        if (controls) {
-          controls.classList.remove("playing");
+        let player = this.weakPipPlayer && this.weakPipPlayer.get();
+        if (player) {
+          player.setIsPlayingState(false);
         }
         break;
       }
@@ -131,16 +131,14 @@ var PictureInPicture = {
     let parentWin = browser.ownerGlobal;
     this.browser = browser;
     let win = await this.openPipWindow(parentWin, videoData);
-    let controls = win.document.getElementById("controls");
-    this.weakPipControls = Cu.getWeakReference(controls);
-    if (videoData.playing) {
-      controls.classList.add("playing");
-    }
+    this.weakPipPlayer = Cu.getWeakReference(win);
+    win.setIsPlayingState(videoData.playing);
+
     // set attribute which shows pip icon in tab
     let tab = parentWin.gBrowser.getTabForBrowser(browser);
     tab.setAttribute("pictureinpicture", true);
 
-    win.setupPlayer(gNextWindowID.toString(), browser, videoData);
+    win.setupPlayer(gNextWindowID.toString(), browser);
     gNextWindowID++;
   },
 
@@ -162,7 +160,7 @@ var PictureInPicture = {
     );
 
     this.clearPipTabIcon();
-    delete this.weakPipControls;
+    delete this.weakPipPlayer;
     delete this.browser;
   },
 
