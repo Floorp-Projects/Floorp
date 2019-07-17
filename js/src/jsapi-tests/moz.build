@@ -173,8 +173,5 @@ USE_LIBS += [
     'static:js',
 ]
 
-if CONFIG['MOZ_NEEDS_LIBATOMIC']:
-    OS_LIBS += ['atomic']
-
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
 OBJDIR_PP_FILES.js.src['jsapi-tests'] += ['jsapi-tests-gdb.py.in']
