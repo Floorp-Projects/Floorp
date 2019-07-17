@@ -40,186 +40,179 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const WILDCARD = Symbol();
 
 const ATTRIBUTE_TYPES = new Map([
-  ["action", [{ namespaceURI: HTML_NS, tagName: "form", type: TYPE_URI }]],
-  ["background", [{ namespaceURI: HTML_NS, tagName: "body", type: TYPE_URI }]],
+  ["action", { form: { namespaceURI: HTML_NS, type: TYPE_URI } }],
+  ["background", { body: { namespaceURI: HTML_NS, type: TYPE_URI } }],
   [
     "cite",
-    [
-      { namespaceURI: HTML_NS, tagName: "blockquote", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "q", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "del", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "ins", type: TYPE_URI },
-    ],
+    {
+      blockquote: { namespaceURI: HTML_NS, type: TYPE_URI },
+      q: { namespaceURI: HTML_NS, type: TYPE_URI },
+      del: { namespaceURI: HTML_NS, type: TYPE_URI },
+      ins: { namespaceURI: HTML_NS, type: TYPE_URI },
+    },
   ],
-  ["classid", [{ namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI }]],
+  ["classid", { object: { namespaceURI: HTML_NS, type: TYPE_URI } }],
   [
     "codebase",
-    [
-      { namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "applet", type: TYPE_URI },
-    ],
+    {
+      object: { namespaceURI: HTML_NS, type: TYPE_URI },
+      applet: { namespaceURI: HTML_NS, type: TYPE_URI },
+    },
   ],
   [
     "command",
-    [
-      { namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_IDREF },
-      { namespaceURI: XUL_NS, tagName: "key", type: TYPE_IDREF },
-    ],
+    {
+      menuitem: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      key: { namespaceURI: XUL_NS, type: TYPE_IDREF },
+    },
   ],
   [
     "contextmenu",
-    [{ namespaceURI: WILDCARD, tagName: WILDCARD, type: TYPE_IDREF }],
+    {
+      WILDCARD: { namespaceURI: WILDCARD, type: TYPE_IDREF },
+    },
   ],
-  ["data", [{ namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI }]],
+  ["data", { object: { namespaceURI: HTML_NS, type: TYPE_URI } }],
   [
     "for",
-    [
-      { namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF_LIST },
-    ],
+    {
+      label: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      output: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST },
+    },
   ],
   [
     "form",
-    [
-      { namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "fieldset", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "keygen", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "object", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "select", type: TYPE_IDREF },
-      { namespaceURI: HTML_NS, tagName: "textarea", type: TYPE_IDREF },
-    ],
+    {
+      button: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      fieldset: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      input: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      keygen: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      label: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      object: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      output: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      select: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      textarea: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+    },
   ],
   [
     "formaction",
-    [
-      { namespaceURI: HTML_NS, tagName: "button", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI },
-    ],
+    {
+      button: { namespaceURI: HTML_NS, type: TYPE_URI },
+      input: { namespaceURI: HTML_NS, type: TYPE_URI },
+    },
   ],
   [
     "headers",
-    [
-      { namespaceURI: HTML_NS, tagName: "td", type: TYPE_IDREF_LIST },
-      { namespaceURI: HTML_NS, tagName: "th", type: TYPE_IDREF_LIST },
-    ],
+    {
+      td: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST },
+      th: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST },
+    },
   ],
   [
     "href",
-    [
-      { namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI },
-      {
-        namespaceURI: WILDCARD,
-        tagName: "link",
-        type: TYPE_CSS_RESOURCE_URI,
-        isValid: (namespaceURI, tagName, attributes) => {
-          return getAttribute(attributes, "rel") === "stylesheet";
+    {
+      a: { namespaceURI: HTML_NS, type: TYPE_URI },
+      area: { namespaceURI: HTML_NS, type: TYPE_URI },
+      link: [
+        {
+          namespaceURI: WILDCARD,
+          type: TYPE_CSS_RESOURCE_URI,
+          isValid: attributes => {
+            return getAttribute(attributes, "rel") === "stylesheet";
+          },
         },
-      },
-      { namespaceURI: WILDCARD, tagName: "link", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "base", type: TYPE_URI },
-    ],
+        { namespaceURI: WILDCARD, type: TYPE_URI },
+      ],
+      base: { namespaceURI: HTML_NS, type: TYPE_URI },
+    },
   ],
-  ["icon", [{ namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_URI }]],
-  ["list", [{ namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF }]],
+  [
+    "icon",
+    {
+      menuitem: { namespaceURI: HTML_NS, type: TYPE_URI },
+    },
+  ],
+  ["list", { input: { namespaceURI: HTML_NS, type: TYPE_IDREF } }],
   [
     "longdesc",
-    [
-      { namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI },
-    ],
+    {
+      img: { namespaceURI: HTML_NS, type: TYPE_URI },
+      frame: { namespaceURI: HTML_NS, type: TYPE_URI },
+      iframe: { namespaceURI: HTML_NS, type: TYPE_URI },
+    },
   ],
-  ["manifest", [{ namespaceURI: HTML_NS, tagName: "html", type: TYPE_URI }]],
+  ["manifest", { html: { namespaceURI: HTML_NS, type: TYPE_URI } }],
   [
     "menu",
-    [
-      { namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF },
-      { namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF },
-    ],
+    {
+      button: { namespaceURI: HTML_NS, type: TYPE_IDREF },
+      WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF },
+    },
   ],
   [
     "ping",
-    [
-      { namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI_LIST },
-      { namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI_LIST },
-    ],
+    {
+      a: { namespaceURI: HTML_NS, type: TYPE_URI_LIST },
+      area: { namespaceURI: HTML_NS, type: TYPE_URI_LIST },
+    },
   ],
-  ["poster", [{ namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI }]],
-  ["profile", [{ namespaceURI: HTML_NS, tagName: "head", type: TYPE_URI }]],
+  ["poster", { video: { namespaceURI: HTML_NS, type: TYPE_URI } }],
+  ["profile", { head: { namespaceURI: HTML_NS, type: TYPE_URI } }],
   [
     "src",
-    [
-      { namespaceURI: WILDCARD, tagName: "script", type: TYPE_JS_RESOURCE_URI },
-      { namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "audio", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "embed", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "source", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "track", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI },
-      { namespaceURI: XUL_NS, tagName: "stringbundle", type: TYPE_URI },
-    ],
+    {
+      script: { namespaceURI: WILDCARD, type: TYPE_JS_RESOURCE_URI },
+      input: { namespaceURI: HTML_NS, type: TYPE_URI },
+      frame: { namespaceURI: HTML_NS, type: TYPE_URI },
+      iframe: { namespaceURI: HTML_NS, type: TYPE_URI },
+      img: { namespaceURI: HTML_NS, type: TYPE_URI },
+      audio: { namespaceURI: HTML_NS, type: TYPE_URI },
+      embed: { namespaceURI: HTML_NS, type: TYPE_URI },
+      source: { namespaceURI: HTML_NS, type: TYPE_URI },
+      track: { namespaceURI: HTML_NS, type: TYPE_URI },
+      video: { namespaceURI: HTML_NS, type: TYPE_URI },
+      stringbundle: { namespaceURI: XUL_NS, type: TYPE_URI },
+    },
   ],
   [
     "usemap",
-    [
-      { namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI },
-      { namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI },
-    ],
+    {
+      img: { namespaceURI: HTML_NS, type: TYPE_URI },
+      input: { namespaceURI: HTML_NS, type: TYPE_URI },
+      object: { namespaceURI: HTML_NS, type: TYPE_URI },
+    },
   ],
-  ["xmlns", [{ namespaceURI: WILDCARD, tagName: WILDCARD, type: TYPE_URI }]],
-  [
-    "containment",
-    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_URI }],
-  ],
-  ["context", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
-  [
-    "datasources",
-    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_URI_LIST }],
-  ],
-  [
-    "insertafter",
-    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }],
-  ],
-  [
-    "insertbefore",
-    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }],
-  ],
-  ["observes", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
-  ["popup", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
-  ["ref", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_URI }]],
-  [
-    "removeelement",
-    [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }],
-  ],
-  ["template", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
-  ["tooltip", [{ namespaceURI: XUL_NS, tagName: WILDCARD, type: TYPE_IDREF }]],
+  ["xmlns", { WILDCARD: { namespaceURI: WILDCARD, type: TYPE_URI } }],
+  ["containment", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_URI } }],
+  ["context", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
+  ["datasources", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_URI_LIST } }],
+  ["insertafter", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
+  ["insertbefore", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
+  ["observes", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
+  ["popup", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
+  ["ref", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_URI } }],
+  ["removeelement", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
+  ["template", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
+  ["tooltip", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
   // SVG links aren't handled yet, see bug 1158831.
-  // ["fill", [
-  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
-  // ]],
-  // ["stroke", [
-  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
-  // ]],
-  // ["markerstart", [
-  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
-  // ]],
-  // ["markermid", [
-  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
-  // ]],
-  // ["markerend", [
-  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
-  // ]],
-  // ["xlink:href", [
-  //   {namespaceURI: SVG_NS, tagName: WILDCARD, type: },
-  // ]],
+  // ["fill", {
+  //   WILDCARD: {namespaceURI: SVG_NS, type: },
+  // }],
+  // ["stroke", {
+  //   WILDCARD: {namespaceURI: SVG_NS, type: },
+  // }],
+  // ["markerstart", {
+  //   WILDCARD: {namespaceURI: SVG_NS, type: },
+  // }],
+  // ["markermid", {
+  //   WILDCARD: {namespaceURI: SVG_NS, type: },
+  // }],
+  // ["markerend", {
+  //   WILDCARD: {namespaceURI: SVG_NS, type: },
+  // }],
+  // ["xlink:href", {
+  //   WILDCARD: {namespaceURI: SVG_NS, type: },
+  // }],
 ]);
 
 var parsers = {
@@ -330,19 +323,29 @@ function getType(namespaceURI, tagName, attributes, attributeName) {
   }
 
   const lcTagName = tagName.toLowerCase();
-  for (const typeData of attributeType) {
-    const hasNamespace =
-      typeData.namespaceURI === WILDCARD ||
-      typeData.namespaceURI === namespaceURI;
-    const hasTagName =
-      typeData.tagName === WILDCARD || typeData.tagName === lcTagName;
-    const isValid = typeData.isValid
-      ? typeData.isValid(namespaceURI, tagName, attributes, attributeName)
-      : true;
+  const typeData = attributeType[lcTagName] || attributeType.WILDCARD;
 
-    if (hasNamespace && hasTagName && isValid) {
-      return typeData.type;
+  if (!typeData) {
+    return null;
+  }
+
+  if (Array.isArray(typeData)) {
+    for (const data of typeData) {
+      const hasNamespace =
+        data.namespaceURI === WILDCARD || data.namespaceURI === namespaceURI;
+      const isValid = data.isValid ? data.isValid(attributes) : true;
+
+      if (hasNamespace && isValid) {
+        return data.type;
+      }
     }
+
+    return null;
+  } else if (
+    typeData.namespaceURI === WILDCARD ||
+    typeData.namespaceURI === namespaceURI
+  ) {
+    return typeData.type;
   }
 
   return null;
