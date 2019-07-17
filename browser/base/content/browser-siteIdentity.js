@@ -257,6 +257,12 @@ var gIdentityHandler = {
     }
     return (this._permissionAnchors = permissionAnchors);
   },
+  get _trackingProtectionIconContainer() {
+    delete this._trackingProtectionIconContainer;
+    return (this._trackingProtectionIconContainer = document.getElementById(
+      "tracking-protection-icon-container"
+    ));
+  },
 
   get _insecureConnectionIconEnabled() {
     delete this._insecureConnectionIconEnabled;
@@ -721,6 +727,12 @@ var gIdentityHandler = {
         this._identityBox.classList.add("insecureLoginForms");
       }
     }
+
+    // Hide the shield icon if it is a chrome page.
+    this._trackingProtectionIconContainer.classList.toggle(
+      "chromeUI",
+      this._isSecureInternalUI
+    );
 
     if (this._isCertUserOverridden) {
       this._identityBox.classList.add("certUserOverridden");
