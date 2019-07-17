@@ -163,7 +163,7 @@ void GLContextCGL::RegisterIOSurface(IOSurfaceRef aSurface) {
                            aSurface, 0);
   }
 
-  auto fb = MozFramebuffer::CreateWith(this, IntSize(width, height), 0, false,
+  auto fb = MozFramebuffer::CreateWith(this, IntSize(width, height), 0, mCaps.depth,
                                        LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
   mRegisteredIOSurfaceFramebuffers.insert({aSurface, std::move(fb)});
 }
@@ -236,12 +236,14 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWi
 #endif
 
   const NSOpenGLPixelFormatAttribute* attribs;
+  SurfaceCaps caps = SurfaceCaps::ForRGBA();
   if (sCGLLibrary.UseDoubleBufferedWindows()) {
     if (aWebRender) {
       MOZ_RELEASE_ASSERT(aForceAccelerated,
                          "At the moment, aForceAccelerated is always true if aWebRender is true. "
                          "If this changes, please update the code here.");
       attribs = kAttribs_doubleBuffered_accel_webrender;
+      caps.depth = true;
     } else {
       attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel : kAttribs_doubleBuffered;
     }
@@ -256,8 +258,7 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWi
   GLint opaque = StaticPrefs::gfx_compositor_glcontext_opaque();
   [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
 
-  RefPtr<GLContextCGL> glContext =
-      new GLContextCGL(CreateContextFlags::NONE, SurfaceCaps::ForRGBA(), context, false);
+  RefPtr<GLContextCGL> glContext = new GLContextCGL(CreateContextFlags::NONE, caps, context, false);
 
   if (!glContext->Init()) {
     glContext = nullptr;
