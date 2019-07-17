@@ -70,7 +70,7 @@ add_task(async function() {
   let uri = INSECURE_TEST_URI + "#blank";
   await BrowserTestUtils.withNewTab(uri, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
-    is(identityMode, "unknownIdentity", "identity should be 'unknown' before");
+    is(identityMode, "notSecure", "identity should be 'not secure' before");
 
     await ContentTask.spawn(browser, null, async () => {
       content.postMessage("", "*"); // This kicks off the navigation.
@@ -81,11 +81,7 @@ add_task(async function() {
 
     let newIdentityMode = window.document.getElementById("identity-box")
       .className;
-    is(
-      newIdentityMode,
-      "unknownIdentity",
-      "identity should be 'unknown' after"
-    );
+    is(newIdentityMode, "notSecure", "identity should be 'not secure' after");
   });
 });
 
@@ -95,7 +91,7 @@ add_task(async function() {
   let uri = INSECURE_TEST_URI + "#secure";
   await BrowserTestUtils.withNewTab(uri, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
-    is(identityMode, "unknownIdentity", "identity should be 'unknown' before");
+    is(identityMode, "notSecure", "identity should be 'not secure' before");
 
     await ContentTask.spawn(browser, null, async () => {
       content.postMessage("", "*"); // This kicks off the navigation.
@@ -106,10 +102,6 @@ add_task(async function() {
 
     let newIdentityMode = window.document.getElementById("identity-box")
       .className;
-    is(
-      newIdentityMode,
-      "unknownIdentity",
-      "identity should be 'unknown' after"
-    );
+    is(newIdentityMode, "notSecure", "identity should be 'not secure' after");
   });
 });

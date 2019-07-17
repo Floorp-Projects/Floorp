@@ -110,9 +110,9 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
   let doc = tabbrowser.ownerDocument;
   let identityBox = gIdentityHandler._identityBox;
   let classList = identityBox.classList;
-  let connectionIcon = doc.getElementById("connection-icon");
-  let connectionIconImage = tabbrowser.ownerGlobal
-    .getComputedStyle(connectionIcon)
+  let identityIcon = doc.getElementById("identity-icon");
+  let identityIconImage = tabbrowser.ownerGlobal
+    .getComputedStyle(identityIcon)
     .getPropertyValue("list-style-image");
 
   let stateSecure =
@@ -156,15 +156,15 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
       // should always be visible regardless of MCB state.
       ok(classList.contains("unknownIdentity"), "unknownIdentity on HTTP page");
       ok(
-        BrowserTestUtils.is_hidden(connectionIcon),
-        "connection icon should be hidden"
+        BrowserTestUtils.is_visible(identityIcon),
+        "information icon should be still visible"
       );
     } else {
       // HTTP request, there should be a broken padlock shown always.
       ok(classList.contains("notSecure"), "notSecure on HTTP page");
       ok(
-        !BrowserTestUtils.is_hidden(connectionIcon),
-        "connection icon should be visible"
+        !BrowserTestUtils.is_hidden(identityIcon),
+        "information icon should be visible"
       );
     }
 
@@ -199,33 +199,33 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     );
 
     ok(
-      !BrowserTestUtils.is_hidden(connectionIcon),
-      "connection icon should be visible"
+      !BrowserTestUtils.is_hidden(identityIcon),
+      "information icon should be visible"
     );
     if (activeLoaded) {
       is(
-        connectionIconImage,
+        identityIconImage,
         'url("chrome://browser/skin/connection-mixed-active-loaded.svg")',
         "Using active loaded icon"
       );
     }
     if (activeBlocked && !passiveLoaded) {
       is(
-        connectionIconImage,
+        identityIconImage,
         'url("chrome://browser/skin/connection-secure.svg")',
         "Using active blocked icon"
       );
     }
     if (passiveLoaded && !(activeLoaded || activeBlocked)) {
       is(
-        connectionIconImage,
+        identityIconImage,
         'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
         "Using passive loaded icon"
       );
     }
     if (passiveLoaded && activeBlocked) {
       is(
-        connectionIconImage,
+        identityIconImage,
         'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
         "Using active blocked and passive loaded icon"
       );
