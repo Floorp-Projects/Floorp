@@ -16,7 +16,6 @@ use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, Scrol
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
-use api::{ExternalImageType, ImageData};
 use api::units::*;
 use api::channel::{MsgReceiver, MsgSender, Payload};
 #[cfg(feature = "capture")]
@@ -1442,12 +1441,8 @@ impl RenderBackend {
             if resource_updates.iter().any(|update| {
                 match update {
                     ResourceUpdate::UpdateImage(update_image) => {
-                        if let ImageData::External(ext_image_data) = update_image.data {
-                            if let ExternalImageType::TextureHandle(_) = ext_image_data.image_type {
-                                if !resource_cache.is_image_active(update_image.key) {
-                                    return false;
-                                }
-                            }
+                        if !resource_cache.is_image_active(update_image.key) {
+                            return false;
                         }
                         true
                     }
