@@ -10,9 +10,9 @@ import {
   getObjPath,
   hash,
   hashify,
-} from "./utils.js";
-import { strings } from "./strings.js";
-import { ctLogNames } from "./ctlognames.js";
+} from "chrome://global/content/certviewer/utils.js";
+import { strings } from "chrome://global/content/certviewer/strings.js";
+import { ctLogNames } from "chrome://global/content/certviewer/ctlognames.js";
 
 const getTimeZone = () => {
   let timeZone = new Date().toString().match(/\(([A-Za-z\s].*)\)/);
