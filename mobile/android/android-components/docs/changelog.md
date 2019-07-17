@@ -48,6 +48,9 @@ permalink: /changelog/
   * Hyphens `-` are now allowed in labels for metrics.  See [1566764](https://bugzilla.mozilla.org/show_bug.cgi?id=1566764).
   * ⚠️ **This is a breaking change**: Timespan values are returned in their configured time unit in the testing API.
 
+* **service-location**
+  * 🆕 A new component for accessing Mozilla's and other location services.
+
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.
 

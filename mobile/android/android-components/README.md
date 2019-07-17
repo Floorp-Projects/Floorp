@@ -176,6 +176,8 @@ _Components and libraries to interact with backend services._
 
 * 🔴 [**Experiments**](components/service/experiments/README.md) - An Android SDK for running experiments on user segments in multiple branches.
 
+* ⚪ [**Location**](components/service/location/README.md) - A library for accessing Mozilla's and other location services.
+
 * 🔴 [**Pocket**](components/service/pocket/README.md) - A library for communicating with the Pocket API.
 
 * 🔵 [**Telemetry**](components/service/telemetry/README.md) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
