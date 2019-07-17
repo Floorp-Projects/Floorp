@@ -219,7 +219,7 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     )
 
     rename_step = '{}:renameSnapshotArtifacts'.format(module_name) if is_snapshot else ''
-    return "{} {}:publish {} {}:zipMavenArtifacts".format(gradle_tasks, module_name, rename_step, module_name)
+    return "{} {}:publish {}".format(gradle_tasks, module_name, rename_step, module_name)
 
 
 def _to_release_artifact(extension, version, component):
