@@ -5770,6 +5770,50 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// MediaSource
+
+// Whether to enable MediaSource support.
+VARCACHE_PREF(
+  Live,
+  "media.mediasource.enabled",
+   media_mediasource_enabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.mediasource.mp4.enabled",
+   media_mediasource_mp4_enabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.mediasource.webm.enabled",
+   media_mediasource_webm_enabled,
+  RelaxedAtomicBool,
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
+  false
+#else
+  true
+#endif
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.mediasource.webm.audio.enabled",
+   media_mediasource_webm_audio_enabled,
+  RelaxedAtomicBool, true
+)
+
+// Whether to enable MediaSource v2 support.
+VARCACHE_PREF(
+  Live,
+  "media.mediasource.experimental.enabled",
+   media_mediasource_experimental_enabled,
+  RelaxedAtomicBool, false
+)
+
 // VideoSink
 VARCACHE_PREF(
   Live,
