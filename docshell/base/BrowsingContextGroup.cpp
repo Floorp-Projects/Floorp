@@ -29,6 +29,18 @@ void BrowsingContextGroup::Register(BrowsingContext* aBrowsingContext) {
 void BrowsingContextGroup::Unregister(BrowsingContext* aBrowsingContext) {
   MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
   mContexts.RemoveEntry(aBrowsingContext);
+
+  if (mContexts.IsEmpty()) {
+    // There are no browsing context still referencing this group. We can clear
+    // all subscribers.
+    UnsubscribeAllContentParents();
+    if (XRE_IsContentProcess()) {
+      ContentChild::GetSingleton()->ReleaseBrowsingContextGroup(this);
+      // We may have been deleted here as the ContentChild may have held the
+      // last references to `this`.
+      // Do not access any members at this point.
+    }
+  }
 }
 
 void BrowsingContextGroup::Subscribe(ContentParent* aOriginProcess) {
@@ -101,10 +113,15 @@ bool BrowsingContextGroup::EvictCachedContext(BrowsingContext* aContext) {
 }
 
 BrowsingContextGroup::~BrowsingContextGroup() {
+  UnsubscribeAllContentParents();
+}
+
+void BrowsingContextGroup::UnsubscribeAllContentParents() {
   for (auto iter = mSubscribers.Iter(); !iter.Done(); iter.Next()) {
     nsRefPtrHashKey<ContentParent>* entry = iter.Get();
     entry->GetKey()->OnBrowsingContextGroupUnsubscribe(this);
   }
+  mSubscribers.Clear();
 }
 
 nsISupports* BrowsingContextGroup::GetParentObject() const {

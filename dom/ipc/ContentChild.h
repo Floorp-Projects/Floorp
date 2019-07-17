@@ -687,6 +687,7 @@ class ContentChild final : public PContentChild,
                                             bool aMuted);
 
   void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
+  void ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG);
 
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
