@@ -1726,9 +1726,9 @@ class nsDisplayMathMLCharForeground final : public nsPaintedDisplayItem {
   }
 
   // Should have the same argument signature as the above ctor
-  static uint16_t CalculatePerFrameKey(nsDisplayListBuilder* aBuilder,
-                                       nsIFrame* aFrame, nsMathMLChar* aChar,
-                                       uint16_t aIndex, bool aIsSelected) {
+  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsMathMLChar* aChar,
+                                         uint16_t aIndex, bool aIsSelected) {
     return aIndex;
   }
 
