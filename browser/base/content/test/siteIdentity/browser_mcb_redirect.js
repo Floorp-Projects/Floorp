@@ -355,5 +355,5 @@ function test() {
   gTestBrowser = gBrowser.selectedBrowser;
   newTab.linkedBrowser.stop();
 
-  executeSoon(test1);
+  executeSoon(testInsecure1);
 }

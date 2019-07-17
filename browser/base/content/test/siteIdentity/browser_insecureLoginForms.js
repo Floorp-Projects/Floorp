@@ -77,11 +77,11 @@ add_task(async function test_simple() {
 
     if (expectWarning) {
       ok(
-        BrowserTestUtils.is_visible(document.getElementById("connection-icon")),
-        "Connection icon should be visible"
+        BrowserTestUtils.is_visible(document.getElementById("identity-icon")),
+        "Identity icon should be visible"
       );
-      let connectionIconImage = gBrowser.ownerGlobal
-        .getComputedStyle(document.getElementById("connection-icon"))
+      let identityIconImage = gBrowser.ownerGlobal
+        .getComputedStyle(document.getElementById("identity-icon"))
         .getPropertyValue("list-style-image");
       let securityViewBG = gBrowser.ownerGlobal
         .getComputedStyle(
@@ -98,7 +98,7 @@ add_task(async function test_simple() {
         )
         .getPropertyValue("background-image");
       is(
-        connectionIconImage,
+        identityIconImage,
         'url("chrome://browser/skin/connection-mixed-active-loaded.svg")',
         "Using expected icon image in the identity block"
       );
@@ -243,13 +243,13 @@ add_task(async function test_ignoring_window_opener() {
     await promiseViewShown;
 
     ok(
-      BrowserTestUtils.is_visible(document.getElementById("connection-icon")),
-      "Connection icon is visible"
+      BrowserTestUtils.is_visible(document.getElementById("identity-icon")),
+      "Identity icon is visible"
     );
 
     // Assert that the identity indicators are still "secure".
-    let connectionIconImage = gBrowser.ownerGlobal
-      .getComputedStyle(document.getElementById("connection-icon"))
+    let identityIconImage = gBrowser.ownerGlobal
+      .getComputedStyle(document.getElementById("identity-icon"))
       .getPropertyValue("list-style-image");
     let securityViewBG = gBrowser.ownerGlobal
       .getComputedStyle(
@@ -266,7 +266,7 @@ add_task(async function test_ignoring_window_opener() {
       )
       .getPropertyValue("background-image");
     is(
-      connectionIconImage,
+      identityIconImage,
       'url("chrome://browser/skin/connection-secure.svg")',
       "Using expected icon image in the identity block"
     );

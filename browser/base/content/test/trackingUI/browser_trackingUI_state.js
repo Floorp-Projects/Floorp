@@ -79,12 +79,10 @@ function testBenignPage() {
     !gProtectionsHandler.iconBox.hasAttribute("tooltiptext"),
     "icon box has no tooltip"
   );
-
   ok(
-    BrowserTestUtils.is_hidden(gProtectionsHandler.iconBox),
-    "icon box is hidden"
+    BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
+    "icon box is visible"
   );
-
   ok(
     hidden("#protections-popup-category-cookies"),
     "Not showing cookie restrictions category"
@@ -158,10 +156,9 @@ function testTrackingPage(window) {
 
   let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
   let blockedByTP = areTrackersBlocked(isWindowPrivate);
-  is(
+  ok(
     BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
-    blockedByTP,
-    "icon box is" + (blockedByTP ? "" : " not") + " visible"
+    "icon box is always visible"
   );
   is(
     gProtectionsHandler.iconBox.hasAttribute("active"),

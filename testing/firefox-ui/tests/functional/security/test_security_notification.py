@@ -59,5 +59,5 @@ class TestSecurityNotification(PuppeteerMixin, MarionetteTestCase):
             self.marionette.navigate(self.urls[2])
 
         Wait(self.marionette).until(lambda _: (
-            self.identity_box.get_property('className') == 'unknownIdentity')
+            self.identity_box.get_property('className') == 'notSecure')
         )
