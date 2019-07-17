@@ -46,7 +46,7 @@ class TestEventPing(TelemetryTestCase):
         self.enable_search_events()
         self.wait_for_search_service_init()
 
-        self.search("mozilla firefox")
+        self.search_in_new_tab("mozilla firefox")
 
         payload = self.wait_for_ping(self.restart_browser, EVENT_PING)["payload"]
 

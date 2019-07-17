@@ -216,11 +216,7 @@ var UrlbarTestUtils = {
   },
 
   getDropMarker(win) {
-    return win.document.getAnonymousElementByAttribute(
-      win.gURLBar.textbox,
-      "anonid",
-      "historydropmarker"
-    );
+    return win.gURLBar.dropmarker;
   },
 
   /**
