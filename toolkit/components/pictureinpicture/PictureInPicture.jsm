@@ -252,9 +252,21 @@ var PictureInPicture = {
     // to position it in the bottom right corner. Since we know the width of the
     // available rect, we need to subtract the dimensions of the window we're
     // opening to get the top left coordinates that openWindow expects.
+    //
+    // In event that the user has multiple displays connected, we have to
+    // calculate the top-left coordinate of the new window in absolute
+    // coordinates that span the entire display space, since this is what the
+    // openWindow expects for its top and left feature values.
+    //
+    // The screenWidth and screenHeight values only tell us the available
+    // dimensions on the screen that the parent window is on. We add these to
+    // the screenLeft and screenTop values, which tell us where this screen is
+    // located relative to the "origin" in absolute coordinates.
     let isRTL = Services.locale.isAppLocaleRTL;
-    let pipLeft = isRTL ? 0 : screenWidth.value - resultWidth;
-    let pipTop = screenHeight.value - resultHeight;
+    let pipLeft = isRTL
+      ? screenLeft.value
+      : screenLeft.value + screenWidth.value - resultWidth;
+    let pipTop = screenTop.value + screenHeight.value - resultHeight;
     let features =
       `${PLAYER_FEATURES},top=${pipTop},left=${pipLeft},` +
       `outerWidth=${resultWidth},outerHeight=${resultHeight}`;
