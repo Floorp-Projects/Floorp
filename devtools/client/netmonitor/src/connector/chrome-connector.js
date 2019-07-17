@@ -37,7 +37,7 @@ class ChromeConnector {
     this.connector.willNavigate(this.willNavigate);
   }
 
-  async disconnect() {
+  disconnect() {
     this.connector.disconnect();
   }
 

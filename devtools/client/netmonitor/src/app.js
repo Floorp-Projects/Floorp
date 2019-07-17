@@ -68,14 +68,14 @@ NetMonitorApp.prototype = {
   /**
    * Clean up (unmount from DOM, remove listeners, disconnect).
    */
-  async destroy() {
+  destroy() {
     unmountComponentAtNode(this.mount);
 
     // Make sure to destroy the API object. It's usually destroyed
     // in the Toolbox destroy method, but we need it here for case
     // where the Network panel is initialized without the toolbox
     // and running in a tab (see initialize.js for details).
-    await this.api.destroy();
+    this.api.destroy();
   },
 
   /**
