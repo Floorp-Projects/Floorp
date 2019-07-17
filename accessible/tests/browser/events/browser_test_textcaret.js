@@ -30,7 +30,7 @@ async function checkURLBarCaretEvents() {
   });
   info("Loaded " + kURL);
 
-  let urlbarInputEl = newWin.document.getElementById("urlbar").inputField;
+  let urlbarInputEl = newWin.gURLBar.inputField;
   let urlbarInput = getAccessible(urlbarInputEl, [nsIAccessibleText]);
 
   let onCaretMove = waitForEvents([
