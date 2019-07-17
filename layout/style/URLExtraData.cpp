@@ -10,7 +10,7 @@
 
 #include "mozilla/NullPrincipalURI.h"
 #include "nsProxyRelease.h"
-#include "mozilla/net/ReferrerPolicy.h"
+#include "ReferrerInfo.h"
 
 namespace mozilla {
 
@@ -19,10 +19,9 @@ StaticRefPtr<URLExtraData> URLExtraData::sDummy;
 /* static */
 void URLExtraData::InitDummy() {
   RefPtr<nsIURI> baseURI = NullPrincipalURI::Create();
-  RefPtr<nsIURI> referrer = baseURI;
-  sDummy = new URLExtraData(baseURI.forget(), referrer.forget(),
-                            NullPrincipal::CreateWithoutOriginAttributes(),
-                            net::RP_Unset);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new dom::ReferrerInfo(nullptr);
+  sDummy = new URLExtraData(baseURI.forget(), referrerInfo.forget(),
+                            NullPrincipal::CreateWithoutOriginAttributes());
 }
 
 /* static */

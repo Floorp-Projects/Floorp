@@ -13,6 +13,7 @@
 #include "mozilla/net/ReferrerPolicy.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/HashFunctions.h"
 
 #define REFERRERINFOF_CONTRACTID "@mozilla.org/referrer-info;1"
 // 041a129f-10ce-4bda-a60d-e027a26d5ed0
@@ -30,6 +31,9 @@ class nsINode;
 class nsIPrincipal;
 
 namespace mozilla {
+class StyleSheet;
+class URLAndReferrerInfo;
+
 namespace net {
 class HttpBaseChannel;
 class nsHttpChannel;
@@ -79,14 +83,57 @@ class ReferrerInfo : public nsIReferrerInfo {
       nsIURI* aOriginalReferrer) const;
 
   /*
+   * Helper function to create a new ReferrerInfo object from a given document
+   * and override referrer policy if needed (for example, when parsing link
+   * header or speculative loading).
+   *
+   * @param aDocument the document to init referrerInfo object.
+   * @param aPolicyOverride referrer policy to override if necessary.
+   */
+
+  static already_AddRefed<nsIReferrerInfo> CreateFromDocumentAndPolicyOverride(
+      Document* aDoc, uint32_t aPolicyOverride);
+
+  /*
    * Implements step 3.1 and 3.3 of the Determine request's Referrer algorithm
    * from the Referrer Policy specification.
    *
    * https://w3c.github.io/webappsec/specs/referrer-policy/#determine-requests-referrer
    */
-
   static already_AddRefed<nsIReferrerInfo> CreateForFetch(
       nsIPrincipal* aPrincipal, Document* aDoc);
+
+  /**
+   * Helper function to create new ReferrerInfo object from a given external
+   * stylesheet. The returned nsIReferrerInfo object will be used for any
+   * requests or resources referenced by the sheet.
+   *
+   * @param aSheet the stylesheet to init referrerInfo.
+   * @param aPolicy referrer policy from header if there's any.
+   */
+  static already_AddRefed<nsIReferrerInfo> CreateForExternalCSSResources(
+      StyleSheet* aExternalSheet, uint32_t aPolicy = mozilla::net::RP_Unset);
+
+  /**
+   * Helper function to create new ReferrerInfo object from a given document.
+   * The returned nsIReferrerInfo object will be used for any requests or
+   * resources referenced by internal stylesheet (for example style="" or
+   * wrapped by <style> tag).
+   *
+   * @param aDocument the document to init referrerInfo object.
+   */
+  static already_AddRefed<nsIReferrerInfo> CreateForInternalCSSResources(
+      Document* aDocument);
+
+  /**
+   * Helper function to create new ReferrerInfo object from a given document.
+   * The returned nsIReferrerInfo object will be used for any requests or
+   * resources referenced by SVG.
+   *
+   * @param aDocument the document to init referrerInfo object.
+   */
+  static already_AddRefed<nsIReferrerInfo> CreateForSVGResources(
+      Document* aDocument);
 
   /**
    * Check whether the given referrer's scheme is allowed to be computed and
@@ -141,6 +188,11 @@ class ReferrerInfo : public nsIReferrerInfo {
   static uint32_t GetDefaultReferrerPolicy(nsIHttpChannel* aChannel = nullptr,
                                            nsIURI* aURI = nullptr,
                                            bool privateBrowsing = false);
+
+  /**
+   * Hash function for this object
+   */
+  PLDHashNumber Hash() const;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREFERRERINFO
@@ -302,6 +354,8 @@ class ReferrerInfo : public nsIReferrerInfo {
    */
   void LogMessageToConsole(nsIHttpChannel* aChannel, const char* aMsg,
                            const nsTArray<nsString>& aParams) const;
+
+  friend class mozilla::URLAndReferrerInfo;
 
   nsCOMPtr<nsIURI> mOriginalReferrer;
 

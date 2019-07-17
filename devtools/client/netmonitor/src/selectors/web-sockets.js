@@ -22,9 +22,12 @@ const getDisplayedFrames = createSelector(
       return framesArray;
     }
 
+    // If frame payload is > 10,000 characters long, we check the LongStringActor payload string
     return framesArray.filter(
       frame =>
-        frame.payload.includes(frameFilterText) &&
+        (frame.payload.initial
+          ? frame.payload.initial.includes(frameFilterText)
+          : frame.payload.includes(frameFilterText)) &&
         (frameFilterType === "all" || frameFilterType === frame.type)
     );
   }
@@ -50,8 +53,38 @@ const getSelectedFrame = createSelector(
   ({ selectedFrame }) => (selectedFrame ? selectedFrame : undefined)
 );
 
+/**
+ * Returns summary data of the list of frames that are visible to the user.
+ * Filtered frames by types and text are factored in.
+ */
+const getDisplayedFramesSummary = createSelector(
+  getDisplayedFrames,
+  displayedFrames => {
+    let firstStartedMillis = +Infinity;
+    let lastEndedMillis = -Infinity;
+    let totalSize = 0;
+
+    displayedFrames.forEach(frame => {
+      totalSize += frame.payload.length;
+      if (frame.timeStamp < firstStartedMillis) {
+        firstStartedMillis = frame.timeStamp;
+      }
+      if (frame.timeStamp > lastEndedMillis) {
+        lastEndedMillis = frame.timeStamp;
+      }
+    });
+
+    return {
+      count: displayedFrames.length,
+      totalMillis: (lastEndedMillis - firstStartedMillis) / 1000,
+      totalSize,
+    };
+  }
+);
+
 module.exports = {
   getSelectedFrame,
   isSelectedFrameVisible,
   getDisplayedFrames,
+  getDisplayedFramesSummary,
 };

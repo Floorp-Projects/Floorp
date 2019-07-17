@@ -2019,8 +2019,7 @@ class JSScript : public js::gc::TenuredCell {
     // (We don't relazify functions with template strings, due to observability)
     HasCallSiteObj = 1 << 7,
 
-    // Script has singleton objects.
-    HasSingletons = 1 << 8,
+    // (1 << 8) is unused.
 
     FunctionHasThisBinding = 1 << 9,
     FunctionHasExtraBodyVarScope = 1 << 10,
@@ -2068,11 +2067,15 @@ class JSScript : public js::gc::TenuredCell {
     // Whether this function needs a call object or named lambda environment.
     NeedsFunctionEnvironmentObjects = 1 << 24,
 
-    // LazyScript flags
+    // Whether the Parser declared 'arguments'.
     ShouldDeclareArguments = 1 << 25,
+
+    // Whether source is BinAST.
+    // FIXME: JSScript should also set this flag correctly.
     IsBinAST = 1 << 26,
-    HasDebuggerStatement = 1 << 27,
-    HasDirectEval = 1 << 28,
+
+    // Whether this script contains a direct eval statement.
+    HasDirectEval = 1 << 27,
   };
 
  private:
@@ -2436,12 +2439,12 @@ class JSScript : public js::gc::TenuredCell {
   bool funHasExtensibleScope() const {
     return hasFlag(ImmutableFlags::FunHasExtensibleScope);
   }
+  bool hasDirectEval() const { return hasFlag(ImmutableFlags::HasDirectEval); }
 
   bool hasCallSiteObj() const {
     return hasFlag(ImmutableFlags::HasCallSiteObj);
   }
 
-  bool hasSingletons() const { return hasFlag(ImmutableFlags::HasSingletons); }
   bool treatAsRunOnce() const {
     return hasFlag(ImmutableFlags::TreatAsRunOnce);
   }
@@ -3525,13 +3528,6 @@ class LazyScript : public gc::TenuredCell {
   }
   void setBindingsAccessedDynamically() {
     setFlag(ImmutableFlags::BindingsAccessedDynamically);
-  }
-
-  bool hasDebuggerStatement() const {
-    return hasFlag(ImmutableFlags::HasDebuggerStatement);
-  }
-  void setHasDebuggerStatement() {
-    setFlag(ImmutableFlags::HasDebuggerStatement);
   }
 
   bool hasDirectEval() const { return hasFlag(ImmutableFlags::HasDirectEval); }

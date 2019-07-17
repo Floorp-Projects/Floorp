@@ -533,18 +533,19 @@ nsAsyncResolveRequest::AsyncApplyFilters::OnProxyFilterResult(
   }
 
   mFilterCalledBack = true;
+
+  if (!mRequest) {
+    // We got canceled
+    LOG(("  canceled"));
+    return NS_OK;
+  }
+
   mProxyInfo = aProxyInfo;
 
   if (mProcessingInLoop) {
     // No need to call/dispatch ProcessNextFilter(), we are in a control
     // loop that will do this for us and save recursion/dispatching.
     LOG(("  in a root loop"));
-    return NS_OK;
-  }
-
-  if (!mRequest) {
-    // We got canceled
-    LOG(("  canceled"));
     return NS_OK;
   }
 

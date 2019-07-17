@@ -26,7 +26,7 @@ namespace dom {
 class GlobalObject;
 class DOMMatrix;
 class DOMPoint;
-class StringOrUnrestrictedDoubleSequence;
+class StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly;
 struct DOMPointInit;
 struct DOMMatrixInit;
 struct DOMMatrix2DInit;
@@ -83,7 +83,8 @@ class DOMMatrixReadOnly : public nsWrapperCache {
 
   static already_AddRefed<DOMMatrixReadOnly> Constructor(
       const GlobalObject& aGlobal,
-      const Optional<StringOrUnrestrictedDoubleSequence>& aArg,
+      const Optional<StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>&
+          aArg,
       ErrorResult& aRv);
 
   static already_AddRefed<DOMMatrixReadOnly> ReadStructuredClone(
@@ -288,22 +289,10 @@ class DOMMatrix : public DOMMatrixReadOnly {
       const GlobalObject& aGlobal, const Float64Array& aArray64,
       ErrorResult& aRv);
 
-  static already_AddRefed<DOMMatrix> Constructor(const GlobalObject& aGlobal,
-                                                 ErrorResult& aRv);
   static already_AddRefed<DOMMatrix> Constructor(
-      const GlobalObject& aGlobal, const nsAString& aTransformList,
-      ErrorResult& aRv);
-  static already_AddRefed<DOMMatrix> Constructor(
-      const GlobalObject& aGlobal, const DOMMatrixReadOnly& aOther,
-      ErrorResult& aRv);
-  static already_AddRefed<DOMMatrix> Constructor(const GlobalObject& aGlobal,
-                                                 const Float32Array& aArray32,
-                                                 ErrorResult& aRv);
-  static already_AddRefed<DOMMatrix> Constructor(const GlobalObject& aGlobal,
-                                                 const Float64Array& aArray64,
-                                                 ErrorResult& aRv);
-  static already_AddRefed<DOMMatrix> Constructor(
-      const GlobalObject& aGlobal, const Sequence<double>& aNumberSequence,
+      const GlobalObject& aGlobal,
+      const Optional<StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>&
+          aArg,
       ErrorResult& aRv);
 
   static already_AddRefed<DOMMatrix> ReadStructuredClone(

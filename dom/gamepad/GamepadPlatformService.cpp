@@ -118,6 +118,16 @@ void GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
 }
 
 void GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
+                                            bool aPressed, double aValue) {
+  // This method is called by monitor thread populated in
+  // platform-dependent backends
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(!NS_IsMainThread());
+  // When only a digital button is available the value will be synthesized.
+  NewButtonEvent(aIndex, aButton, aPressed, aPressed, aValue);
+}
+
+void GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
                                             bool aPressed, bool aTouched) {
   // This method is called by monitor thread populated in
   // platform-dependent backends

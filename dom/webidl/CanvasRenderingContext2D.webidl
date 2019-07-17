@@ -395,6 +395,6 @@ interface TextMetrics {
  Constructor(DOMString pathString)]
 interface Path2D
 {
-  void addPath(Path2D path, optional SVGMatrix transformation);
+  [Throws] void addPath(Path2D path, optional DOMMatrix2DInit transform = {});
 };
 Path2D implements CanvasPathMethods;

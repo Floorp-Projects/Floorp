@@ -10,7 +10,6 @@
 #include "dbg/Debugger.h"
 
 #include "builtin/Promise.h"
-#include "vm/GeneratorObject.h"
 
 #include "gc/WeakMap-inl.h"
 #include "vm/Stack-inl.h"
@@ -111,40 +110,6 @@
   if (MOZ_UNLIKELY(promise->realm()->isDebuggee())) {
     slowPathPromiseHook(cx, Debugger::OnPromiseSettled, promise);
   }
-}
-
-inline js::Debugger* js::DebuggerEnvironment::owner() const {
-  JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
-  return Debugger::fromJSObject(dbgobj);
-}
-
-inline js::Debugger* js::DebuggerObject::owner() const {
-  JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
-  return Debugger::fromJSObject(dbgobj);
-}
-
-inline js::PromiseObject* js::DebuggerObject::promise() const {
-  MOZ_ASSERT(isPromise());
-
-  JSObject* referent = this->referent();
-  if (IsCrossCompartmentWrapper(referent)) {
-    // We know we have a Promise here, so CheckedUnwrapStatic is fine.
-    referent = CheckedUnwrapStatic(referent);
-    MOZ_ASSERT(referent);
-  }
-
-  return &referent->as<PromiseObject>();
-}
-
-inline bool js::DebuggerFrame::hasGenerator() const {
-  return !getReservedSlot(GENERATOR_INFO_SLOT).isUndefined();
-}
-
-inline js::DebuggerFrame::GeneratorInfo* js::DebuggerFrame::generatorInfo()
-    const {
-  MOZ_ASSERT(hasGenerator());
-  return static_cast<GeneratorInfo*>(
-      getReservedSlot(GENERATOR_INFO_SLOT).toPrivate());
 }
 
 #endif /* dbg_Debugger_inl_h */

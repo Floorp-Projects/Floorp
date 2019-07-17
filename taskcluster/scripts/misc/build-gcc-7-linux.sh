@@ -12,7 +12,7 @@ data_dir=$HOME_DIR/src/build/unix/build-gcc
 
 . $data_dir/build-gcc.sh
 
-gcc_version=7.3.0
+gcc_version=7.4.0
 gcc_ext=xz
 binutils_version=2.31.1
 binutils_ext=xz

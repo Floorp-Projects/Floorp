@@ -78,13 +78,14 @@ class GamepadRemapper {
   virtual uint32_t GetTouchEventCount() const { return 0; }
   virtual void GetLightColorReport(uint8_t aRed, uint8_t aGreen, uint8_t aBlue,
                                    std::vector<uint8_t>& aReport) const {}
+  virtual uint32_t GetMaxInputReportLength() const { return 0; }
 
   virtual void SetAxisCount(uint32_t aButtonCount) {}
   virtual void SetButtonCount(uint32_t aButtonCount) {}
   virtual GamepadMappingType GetMappingType() const {
     return GamepadMappingType::Standard;
   }
-  virtual void GetTouchData(uint32_t aIndex, void* aInput) {}
+  virtual void ProcessTouchData(uint32_t aIndex, void* aInput) {}
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                                   double aValue) const = 0;
   virtual void RemapButtonEvent(uint32_t aIndex, uint32_t aButton,

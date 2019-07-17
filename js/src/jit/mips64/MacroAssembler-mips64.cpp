@@ -967,7 +967,6 @@ void MacroAssemblerMIPS64Compat::loadPtr(wasm::SymbolicAddress address,
 void MacroAssemblerMIPS64Compat::loadPrivate(const Address& address,
                                              Register dest) {
   loadPtr(address, dest);
-  ma_dsll(dest, dest, Imm32(1));
 }
 
 void MacroAssemblerMIPS64Compat::loadUnalignedDouble(
@@ -1314,11 +1313,6 @@ void MacroAssemblerMIPS64Compat::unboxValue(const ValueOperand& src,
   } else {
     unboxNonDouble(src, dest.gpr(), type);
   }
-}
-
-void MacroAssemblerMIPS64Compat::unboxPrivate(const ValueOperand& src,
-                                              Register dest) {
-  ma_dsll(dest, src.valueReg(), Imm32(1));
 }
 
 void MacroAssemblerMIPS64Compat::boxDouble(FloatRegister src,

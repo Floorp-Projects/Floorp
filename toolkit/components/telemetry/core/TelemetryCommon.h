@@ -38,7 +38,6 @@ enum class SupportedProduct : uint8_t {
   Firefox = (1 << 0),
   Fennec = (1 << 1),
   Geckoview = (1 << 2),
-  All = 0xFF  // All the products
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SupportedProduct);
 

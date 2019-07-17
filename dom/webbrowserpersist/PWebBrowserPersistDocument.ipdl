@@ -13,6 +13,8 @@ include protocol PParentToChildStream; //FIXME: bug #792908
 include PBackgroundSharedTypes;
 include IPCStream;
 
+using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
+
 namespace mozilla {
 
 // nsIWebBrowserPersistDocument has attributes which can be read
@@ -26,7 +28,7 @@ struct WebBrowserPersistDocumentAttrs {
   nsCString contentType;
   nsCString characterSet;
   nsString title;
-  nsString referrer;
+  nsIReferrerInfo referrerInfo;
   nsString contentDisposition;
   uint32_t cacheKey;
   uint32_t persistFlags;

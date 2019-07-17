@@ -25,13 +25,13 @@
 #include "mozAutoDocUpdate.h"
 #include "nsLayoutStylesheetCache.h"
 #include "SheetLoadData.h"
+#include "nsIReferrerInfo.h"
 
 namespace mozilla {
 
 using namespace dom;
 
 StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
-                       net::ReferrerPolicy aReferrerPolicy,
                        const dom::SRIMetadata& aIntegrity)
     : mParent(nullptr),
       mDocumentOrShadowRoot(nullptr),
@@ -40,8 +40,7 @@ StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
       mParsingMode(aParsingMode),
       mState(static_cast<State>(0)),
       mAssociationMode(NotOwnedByDocumentOrShadowRoot),
-      mInner(new StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity,
-                                aParsingMode)) {
+      mInner(new StyleSheetInfo(aCORSMode, aIntegrity, aParsingMode)) {
   mInner->AddSheet(this);
 }
 
@@ -263,17 +262,16 @@ void StyleSheet::SetDisabled(bool aDisabled) {
 }
 
 void StyleSheet::SetURLExtraData() {
-  Inner().mURLData = new URLExtraData(GetBaseURI(), GetSheetURI(), Principal(),
-                                      GetReferrerPolicy());
+  Inner().mURLData =
+      new URLExtraData(GetBaseURI(), GetReferrerInfo(), Principal());
 }
 
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
-                               ReferrerPolicy aReferrerPolicy,
                                const SRIMetadata& aIntegrity,
                                css::SheetParsingMode aParsingMode)
     : mPrincipal(NullPrincipal::CreateWithoutOriginAttributes()),
       mCORSMode(aCORSMode),
-      mReferrerPolicy(aReferrerPolicy),
+      mReferrerInfo(new ReferrerInfo(nullptr)),
       mIntegrity(aIntegrity),
       mContents(Servo_StyleSheet_Empty(aParsingMode).Consume()),
       mURLData(URLExtraData::Dummy())
@@ -294,7 +292,7 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet)
       mBaseURI(aCopy.mBaseURI),
       mPrincipal(aCopy.mPrincipal),
       mCORSMode(aCopy.mCORSMode),
-      mReferrerPolicy(aCopy.mReferrerPolicy),
+      mReferrerInfo(aCopy.mReferrerInfo),
       mIntegrity(aCopy.mIntegrity),
       mFirstChild(),  // We don't rebuild the child because we're making a copy
                       // without children.
@@ -843,10 +841,6 @@ void StyleSheet::SetMedia(dom::MediaList* aMedia) {
   mMedia = aMedia;
 }
 
-void StyleSheet::SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy) {
-  Inner().mReferrerPolicy = aReferrerPolicy;
-}
-
 void StyleSheet::DropMedia() {
   if (mMedia) {
     mMedia->SetStyleSheet(nullptr);
@@ -908,8 +902,8 @@ void StyleSheet::BuildChildListAfterInnerClone() {
 
 already_AddRefed<StyleSheet> StyleSheet::CreateEmptyChildSheet(
     already_AddRefed<dom::MediaList> aMediaList) const {
-  RefPtr<StyleSheet> child = new StyleSheet(ParsingMode(), CORSMode::CORS_NONE,
-                                            GetReferrerPolicy(), SRIMetadata());
+  RefPtr<StyleSheet> child =
+      new StyleSheet(ParsingMode(), CORSMode::CORS_NONE, SRIMetadata());
 
   child->mMedia = aMediaList;
   return child.forget();
@@ -1251,7 +1245,9 @@ const ServoCssRules* StyleSheet::ToShared(
     RawServoSharedMemoryBuilder* aBuilder) {
   // Assert some things we assume when creating a StyleSheet using shared
   // memory.
-  MOZ_ASSERT(GetReferrerPolicy() == net::RP_Unset);
+  MOZ_ASSERT(GetReferrerInfo()->GetReferrerPolicy() == net::RP_Unset);
+  MOZ_ASSERT(GetReferrerInfo()->GetSendReferrer());
+  MOZ_ASSERT(!nsCOMPtr<nsIURI>(GetReferrerInfo()->GetComputedReferrer()));
   MOZ_ASSERT(GetCORSMode() == CORS_NONE);
   MOZ_ASSERT(Inner().mIntegrity.IsEmpty());
   MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(Principal()));

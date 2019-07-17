@@ -16,6 +16,7 @@
 #include "nsIMutationObserver.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
+#include "nsIReferrerInfo.h"
 #include "nsStringFwd.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGUtils.h"
@@ -45,26 +46,20 @@ namespace mozilla {
  */
 class URLAndReferrerInfo {
  public:
-  URLAndReferrerInfo(nsIURI* aURI, nsIURI* aReferrer,
-                     mozilla::net::ReferrerPolicy aReferrerPolicy)
-      : mURI(aURI), mReferrer(aReferrer), mReferrerPolicy(aReferrerPolicy) {
+  URLAndReferrerInfo(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo)
+      : mURI(aURI), mReferrerInfo(aReferrerInfo) {
     MOZ_ASSERT(aURI);
   }
 
   URLAndReferrerInfo(nsIURI* aURI, const URLExtraData& aExtraData)
-      : mURI(aURI),
-        mReferrer(aExtraData.GetReferrer()),
-        mReferrerPolicy(aExtraData.GetReferrerPolicy()) {
+      : mURI(aURI), mReferrerInfo(aExtraData.ReferrerInfo()) {
     MOZ_ASSERT(aURI);
   }
 
   NS_INLINE_DECL_REFCOUNTING(URLAndReferrerInfo)
 
   nsIURI* GetURI() const { return mURI; }
-  nsIURI* GetReferrer() const { return mReferrer; }
-  mozilla::net::ReferrerPolicy GetReferrerPolicy() const {
-    return mReferrerPolicy;
-  }
+  nsIReferrerInfo* GetReferrerInfo() const { return mReferrerInfo; }
 
   bool operator==(const URLAndReferrerInfo& aRHS) const;
 
@@ -72,8 +67,7 @@ class URLAndReferrerInfo {
   ~URLAndReferrerInfo() = default;
 
   nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<nsIURI> mReferrer;
-  mozilla::net::ReferrerPolicy mReferrerPolicy;
+  nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
 };
 
 /**

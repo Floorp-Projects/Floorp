@@ -9,6 +9,7 @@
 #include "mozilla/Encoding.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
+#include "nsIReferrerInfo.h"
 #include "nsBindingManager.h"
 #include "nsEscape.h"
 #include "nsXBLPrototypeBinding.h"
@@ -33,9 +34,8 @@ static DocumentOrShadowRoot* DocOrShadowFromContent(nsIContent& aContent) {
 }
 
 void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
-                                     nsIURI* aReferrer,
-                                     uint32_t aReferrerPolicy, bool aWatch,
-                                     bool aReferenceImage) {
+                                     nsIReferrerInfo* aReferrerInfo,
+                                     bool aWatch, bool aReferenceImage) {
   MOZ_ASSERT(aFromContent,
              "ResetToURIFragmentID() expects non-null content pointer");
 
@@ -112,8 +112,8 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
   rv = aURI->EqualsExceptRef(doc->GetDocumentURI(), &isEqualExceptRef);
   if (NS_FAILED(rv) || !isEqualExceptRef) {
     RefPtr<Document::ExternalResourceLoad> load;
-    doc = doc->RequestExternalResource(aURI, aReferrer, aReferrerPolicy,
-                                       aFromContent, getter_AddRefs(load));
+    doc = doc->RequestExternalResource(aURI, aReferrerInfo, aFromContent,
+                                       getter_AddRefs(load));
     docOrShadow = doc;
     if (!doc) {
       if (!load || !aWatch) {

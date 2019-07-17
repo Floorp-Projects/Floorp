@@ -402,13 +402,21 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
         );
         persist.progressListener = transfer;
 
+        let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
+          Ci.nsIReferrerInfo
+        );
+        referrerInfo.init(
+          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+          true,
+          referrer
+        );
+
         // Start the actual download process.
         persist.savePrivacyAwareURI(
           sourceURI,
           Services.scriptSecurityManager.getSystemPrincipal(),
           0,
-          referrer,
-          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+          referrerInfo,
           null,
           null,
           targetFile,

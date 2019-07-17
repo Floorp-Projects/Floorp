@@ -80,13 +80,11 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(ComputedStyle* aStyle,
 // helper
 static inline bool DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame) {
   const nsStylePosition* pos = aEmbeddingFrame->StylePosition();
-  const auto& width = pos->mWidth;
-  const auto& height = pos->mHeight;
 
   // XXX it would be nice to know if the size of aEmbeddingFrame's containing
   // block depends on aEmbeddingFrame, then we'd know if we can return false
   // for eStyleUnit_Percent too.
-  return !width.ConvertsToLength() || !height.ConvertsToLength();
+  return !pos->mWidth.ConvertsToLength() || !pos->mHeight.ConvertsToLength();
 }
 
 // The CSS Containment spec says that size-contained replaced elements must be
@@ -132,14 +130,22 @@ void nsSVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
       nsIFrame* embeddingFrame;
       if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
-        if (MOZ_UNLIKELY(!embeddingFrame->HasAllStateBits(NS_FRAME_IS_DIRTY)) &&
-            DependsOnIntrinsicSize(embeddingFrame)) {
-          // Looks like this document is loading after the embedding element
-          // has had its first reflow, and that its size depends on our
-          // intrinsic size.  We need it to resize itself to use our (now
-          // available) intrinsic size:
-          embeddingFrame->PresShell()->FrameNeedsReflow(
-              embeddingFrame, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
+        if (MOZ_UNLIKELY(!embeddingFrame->HasAllStateBits(NS_FRAME_IS_DIRTY))) {
+          bool dependsOnIntrinsicSize = DependsOnIntrinsicSize(embeddingFrame);
+          if (dependsOnIntrinsicSize ||
+              embeddingFrame->StylePosition()->mObjectFit !=
+                  NS_STYLE_OBJECT_FIT_FILL) {
+            // Looks like this document is loading after the embedding element
+            // has had its first reflow, and it cares about our intrinsic size
+            // (either for determining its own size, or for sizing/positioning
+            // its view to honor "object-fit").  We need it to reflow itself to
+            // use our (now-available) intrinsic size:
+            auto dirtyHint = dependsOnIntrinsicSize
+                                 ? IntrinsicDirty::StyleChange
+                                 : IntrinsicDirty::Resize;
+            embeddingFrame->PresShell()->FrameNeedsReflow(
+                embeddingFrame, dirtyHint, NS_FRAME_IS_DIRTY);
+          }
         }
       }
     }
@@ -699,13 +705,19 @@ nsresult nsSVGOuterSVGFrame::AttributeChanged(int32_t aNameSpaceID,
 
       nsIFrame* embeddingFrame;
       if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
-        if (DependsOnIntrinsicSize(embeddingFrame)) {
+        bool dependsOnIntrinsicSize = DependsOnIntrinsicSize(embeddingFrame);
+        if (dependsOnIntrinsicSize ||
+            embeddingFrame->StylePosition()->mObjectFit !=
+                NS_STYLE_OBJECT_FIT_FILL) {
           // Tell embeddingFrame's presShell it needs to be reflowed (which
-          // takes care of reflowing us too).
+          // takes care of reflowing us too). And if it depends on our
+          // intrinsic size, then we need to invalidate its intrinsic sizes
+          // (via the IntrinsicDirty::StyleChange hint.)
+          auto dirtyHint = dependsOnIntrinsicSize ? IntrinsicDirty::StyleChange
+                                                  : IntrinsicDirty::Resize;
           embeddingFrame->PresShell()->FrameNeedsReflow(
-              embeddingFrame, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
-        }
-        // else our width and height is overridden - don't reflow anything
+              embeddingFrame, dirtyHint, NS_FRAME_IS_DIRTY);
+        }  // else our width/height/viewBox are irrelevant to the outer doc.
       } else {
         // We are not embedded by reference, so our 'width' and 'height'
         // attributes are not overridden (and viewBox may influence our

@@ -40,6 +40,11 @@ interface nsIReferrerInfo : nsISerializable
   URIRef GetComputedReferrer();
 
   /**
+   * Returns whether the other referrerInfo is equivalent to this referrerInfo.
+   */
+  boolean equals(in nsIReferrerInfo other);
+
+  /**
    * Initialize method.
    * @param aReferrerPolicy referrer policy of the created object
    * @param aSendReferrer sendReferrer of the created object, defaults to false

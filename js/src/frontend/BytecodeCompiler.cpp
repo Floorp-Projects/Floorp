@@ -979,6 +979,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   }
 
   MOZ_ASSERT(lazy->treatAsRunOnce() == script->treatAsRunOnce());
+  MOZ_ASSERT(lazy->hasDirectEval() == script->hasDirectEval());
 
   delazificationCompletion.complete();
   assertException.reset();

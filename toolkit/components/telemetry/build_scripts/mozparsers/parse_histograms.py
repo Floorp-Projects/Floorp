@@ -134,6 +134,7 @@ definition is a dict-like object that must contain at least the keys:
         if self._is_use_counter:
             definition.setdefault('record_in_processes', ['main', 'content'])
             definition.setdefault('releaseChannelCollection', 'opt-out')
+            definition.setdefault('products', ['firefox', 'fennec', 'geckoview'])
         self.verify_attributes(name, definition)
         self._name = name
         self._description = definition['description']
@@ -144,7 +145,7 @@ definition is a dict-like object that must contain at least the keys:
         self._labels = definition.get('labels', [])
         self._record_in_processes = definition.get('record_in_processes')
         self._record_into_store = definition.get('record_into_store', ['main'])
-        self._products = definition.get('products', ["all"])
+        self._products = definition.get('products')
         self._operating_systems = definition.get('operating_systems', ["all"])
 
         self.compute_bucket_parameters(definition)
@@ -352,7 +353,7 @@ the histogram."""
            not utils.validate_expiration_version(expiration) and \
            self._strict_type_checks:
             ParserError(('Error for histogram {} - invalid {}: {}.'
-                        '\nSee: {}#expires-in-version')
+                         '\nSee: {}#expires-in-version')
                         .format(name, field, expiration, HISTOGRAMS_DOC_URL)).handle_later()
 
         expiration = utils.add_expiration_postfix(expiration)
@@ -408,8 +409,8 @@ the histogram."""
         DOC_URL = HISTOGRAMS_DOC_URL + "#products"
 
         if not products:
-            # products is optional
-            return
+            ParserError('Histogram "%s" must have a "%s" field:\n%s'
+                        % (name, field, DOC_URL)).handle_now()
 
         for product in products:
             if not utils.is_valid_product(product):

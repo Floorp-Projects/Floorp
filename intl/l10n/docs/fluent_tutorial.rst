@@ -51,6 +51,9 @@ L10n Drivers:
   - Axel Hecht (:pike)
   - Staś Małolepszy (:stas)
 
+Guidelines for the review process are available `here`__.
+
+__ ./fluent_review.html
 
 Major Benefits
 ==============

@@ -2821,11 +2821,6 @@ void MacroAssemblerARMCompat::unboxValue(const ValueOperand& src,
   }
 }
 
-void MacroAssemblerARMCompat::unboxPrivate(const ValueOperand& src,
-                                           Register dest) {
-  ma_mov(src.payloadReg(), dest);
-}
-
 void MacroAssemblerARMCompat::boxDouble(FloatRegister src,
                                         const ValueOperand& dest,
                                         FloatRegister) {

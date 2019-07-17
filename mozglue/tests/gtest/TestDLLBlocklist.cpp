@@ -72,7 +72,7 @@ TEST(TestDllBlocklist, AllowDllByVersion)
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) {name, __VA_ARGS__},
 #define DLL_BLOCKLIST_STRING_TYPE const char*
-#include "mozilla/WindowsDllBlocklistDefs.h"
+#include "mozilla/WindowsDllBlocklistLegacyDefs.h"
 
 TEST(TestDllBlocklist, BlocklistIntegrity)
 {
@@ -80,26 +80,26 @@ TEST(TestDllBlocklist, BlocklistIntegrity)
   DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(pFirst);
   DECLARE_POINTER_TO_LAST_DLL_BLOCKLIST_ENTRY(pLast);
 
-  EXPECT_FALSE(pLast->name || pLast->maxVersion || pLast->flags);
+  EXPECT_FALSE(pLast->mName || pLast->mMaxVersion || pLast->mFlags);
 
   for (size_t i = 0; i < mozilla::ArrayLength(gWindowsDllBlocklist) - 1; ++i) {
     auto pEntry = pFirst + i;
 
     // Validate name
-    EXPECT_TRUE(!!pEntry->name);
-    EXPECT_GT(strlen(pEntry->name), 3);
+    EXPECT_TRUE(!!pEntry->mName);
+    EXPECT_GT(strlen(pEntry->mName), 3);
 
     // Check the filename for valid characters.
-    for (auto pch = pEntry->name; *pch != 0; ++pch) {
+    for (auto pch = pEntry->mName; *pch != 0; ++pch) {
       EXPECT_FALSE(*pch >= 'A' && *pch <= 'Z');
     }
 
     // Check for duplicate entries
     for (auto&& dupe : dupes) {
-      EXPECT_NE(stricmp(dupe, pEntry->name), 0);
+      EXPECT_NE(stricmp(dupe, pEntry->mName), 0);
     }
 
-    dupes.AppendElement(pEntry->name);
+    dupes.AppendElement(pEntry->mName);
   }
 }
 

@@ -13,6 +13,7 @@ interface nsIFile;
 interface nsIChannel;
 interface nsILoadContext;
 interface nsIPrincipal;
+interface nsIReferrerInfo;
 
 /**
  * Interface for persisting DOM documents and URIs to local or remote storage.
@@ -114,12 +115,8 @@ interface nsIWebBrowserPersist : nsICancelable
    * @param aTriggeringPrincipal
    *                   The triggering principal for the URI we're saving.
    * @param aCacheKey  The necko cache key integer.
-   * @param aReferrer  The referrer URI to pass with an HTTP request or
-   *                   <CODE>nullptr</CODE>.
-   * @param aReferrerPolicy  The referrer policy for when and what to send via
-   *                   HTTP Referer header.  Ignored if aReferrer is
-   *                   <CODE>nullptr</CODE>.  Taken from REFERRER_POLICY
-   *                   constants in nsIHttpChannel.
+   * @param aReferrerInfo  The referrer info for compute and send referrer via
+   *                   HTTP Referer header.
    * @param aPostData  Post data to pass with an HTTP request or
    *                   <CODE>nullptr</CODE>.
    * @param aExtraHeaders Additional headers to supply with an HTTP request
@@ -141,7 +138,7 @@ interface nsIWebBrowserPersist : nsICancelable
    */
   void saveURI(in nsIURI aURI, in nsIPrincipal aTriggeringPrincipal,
       in unsigned long aCacheKey,
-      in nsIURI aReferrer, in unsigned long aReferrerPolicy,
+      in nsIReferrerInfo aReferrerInfo,
       in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
       in nsILoadContext aPrivacyContext);
@@ -154,7 +151,7 @@ interface nsIWebBrowserPersist : nsICancelable
    */
   void savePrivacyAwareURI(in nsIURI aURI,
       in nsIPrincipal aTriggeringPrincipal, in unsigned long aCacheKey,
-      in nsIURI aReferrer, in unsigned long aReferrerPolicy,
+      in nsIReferrerInfo aReferrerInfo,
       in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
       in boolean aIsPrivate);

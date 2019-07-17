@@ -11,6 +11,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome: resource:; img-src chrome: resource: data:" />
     <title data-l10n-id="restore-page-tab-title"></title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutSessionRestore.css" type="text/css" media="all"/>
@@ -40,8 +41,7 @@
         </button>
       </div>
       <div class="tree-container" available="true">
-        <xul:tree id="tabList" seltype="single" hidecolumnpicker="true"
-              onclick="onListClick(event);" onkeydown="onListKeyDown(event);">
+        <xul:tree id="tabList" seltype="single" hidecolumnpicker="true">
           <xul:treecols>
             <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
             <xul:splitter class="tree-splitter"/>
@@ -53,24 +53,20 @@
       <div class="button-container">
 #ifdef XP_UNIX
         <xul:button id="errorCancel"
-                data-l10n-id="restore-page-close-button"
-                oncommand="startNewSession();"/>
+                data-l10n-id="restore-page-close-button"/>
         <xul:button class="primary"
                 id="errorTryAgain"
-                data-l10n-id="restore-page-try-again-button"
-                oncommand="restoreSession();"/>
+                data-l10n-id="restore-page-try-again-button"/>
 #else
         <xul:button class="primary"
                 id="errorTryAgain"
-                data-l10n-id="restore-page-try-again-button"
-                oncommand="restoreSession();"/>
+                data-l10n-id="restore-page-try-again-button"/>
         <xul:button id="errorCancel"
-                data-l10n-id="restore-page-close-button"
-                oncommand="startNewSession();"/>
+                data-l10n-id="restore-page-close-button"/>
 #endif
       </div>
       <!-- holds the session data for when the tab is closed -->
-      <input type="text" id="sessionData" style="display: none;"/>
+      <input type="text" id="sessionData" hidden="true"/>
     </div>
 
   </body>

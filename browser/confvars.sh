@@ -28,9 +28,6 @@ if test "$OS_ARCH" = "WINNT"; then
   fi
 fi
 
-# Enable building ./signmar and running libmar signature tests
-MOZ_ENABLE_SIGNMAR=1
-
 BROWSER_CHROME_URL=chrome://browser/content/browser.xhtml
 
 # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh

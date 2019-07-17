@@ -336,11 +336,13 @@ void SVGUseElement::UpdateShadowTree() {
                                mLengthAttributes[ATTR_HEIGHT]);
   }
 
-  // The specs do not say which referrer policy we should use, pass RP_Unset for
-  // now
-  mContentURLData = new URLExtraData(
-      baseURI.forget(), do_AddRef(OwnerDoc()->GetDocumentURI()),
-      do_AddRef(NodePrincipal()), mozilla::net::RP_Unset);
+  // Bug 1415044 the specs do not say which referrer information we should use.
+  // This may change if there's any spec comes out.
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new mozilla::dom::ReferrerInfo();
+  referrerInfo->InitWithNode(this);
+
+  mContentURLData = new URLExtraData(baseURI.forget(), referrerInfo.forget(),
+                                     do_AddRef(NodePrincipal()));
 
   targetElement->AddMutationObserver(this);
 }
@@ -422,10 +424,10 @@ void SVGUseElement::LookupHref() {
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                             GetComposedDoc(), baseURI);
-  // Bug 1415044 to investigate which referrer we should use
-  mReferencedElementTracker.ResetToURIFragmentID(
-      this, targetURI, OwnerDoc()->GetDocumentURI(),
-      OwnerDoc()->GetReferrerPolicy());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForSVGResources(OwnerDoc());
+
+  mReferencedElementTracker.ResetToURIFragmentID(this, targetURI, referrerInfo);
 }
 
 void SVGUseElement::TriggerReclone() {

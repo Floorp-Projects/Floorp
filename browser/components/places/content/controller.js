@@ -608,11 +608,15 @@ PlacesController.prototype = {
           item.getAttribute("hideifnoinsertionpoint") == "true" &&
           noIp &&
           !(ip && ip.isTag && item.id == "placesContext_paste");
+        var hideIfinTabBrowser =
+          item.getAttribute("forcehideintabbrowser") == "true" &&
+          window.top.gBrowser;
         var hideIfPrivate =
           item.getAttribute("hideifprivatebrowsing") == "true" &&
           PrivateBrowsingUtils.isWindowPrivate(window);
         var shouldHideItem =
           hideIfNoIP ||
+          hideIfinTabBrowser ||
           hideIfPrivate ||
           !this._shouldShowMenuItem(item, metadata);
         item.hidden = item.disabled = shouldHideItem;

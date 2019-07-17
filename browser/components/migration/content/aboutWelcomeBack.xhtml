@@ -11,6 +11,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome: resource:; img-src chrome: resource: data:" />
     <title data-l10n-id="welcome-back-tab-title"></title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutWelcomeBack.css" type="text/css" media="all"/>
@@ -50,8 +51,7 @@
       </div>
 
       <div class="tree-container">
-        <xul:tree id="tabList" flex="1" seltype="single" hidecolumnpicker="true"
-                  onclick="onListClick(event);" onkeydown="onListKeyDown(event);">
+        <xul:tree id="tabList" flex="1" seltype="single" hidecolumnpicker="true">
           <xul:treecols>
             <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
             <xul:splitter class="tree-splitter"/>
@@ -64,11 +64,10 @@
       <div class="button-container">
         <xul:button class="primary"
                     id="errorTryAgain"
-                    data-l10n-id="welcome-back-restore-button"
-                    oncommand="restoreSession();"/>
+                    data-l10n-id="welcome-back-restore-button"/>
       </div>
 
-      <input type="text" id="sessionData" style="display: none;"/>
+      <input type="text" id="sessionData" hidden="true"/>
 
     </div>
   </body>

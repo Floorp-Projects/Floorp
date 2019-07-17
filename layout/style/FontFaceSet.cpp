@@ -604,20 +604,20 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   mLoaders.PutEntry(fontLoader);
 
   if (LOG_ENABLED()) {
+    nsCOMPtr<nsIURI> referrer =
+        aFontFaceSrc->mReferrerInfo
+            ? aFontFaceSrc->mReferrerInfo->GetOriginalReferrer()
+            : nullptr;
     LOG(
         ("userfonts (%p) download start - font uri: (%s) "
          "referrer uri: (%s)\n",
          fontLoader.get(), aFontFaceSrc->mURI->GetSpecOrDefault().get(),
-         aFontFaceSrc->mReferrer
-             ? aFontFaceSrc->mReferrer->GetSpecOrDefault().get()
-             : ""));
+         referrer ? referrer->GetSpecOrDefault().get() : ""));
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo = new mozilla::dom::ReferrerInfo(
-        aFontFaceSrc->mReferrer, aFontFaceSrc->mReferrerPolicy);
-    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
+    rv = httpChannel->SetReferrerInfo(aFontFaceSrc->mReferrerInfo);
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
     rv = httpChannel->SetRequestHeader(
@@ -1058,7 +1058,6 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
 
     face->mSourceType = gfxFontFaceSrc::eSourceType_Buffer;
     face->mBuffer = aFontFace->CreateBufferSource();
-    face->mReferrerPolicy = mozilla::net::RP_Unset;
   } else {
     AutoTArray<StyleFontFaceSourceListComponent, 8> sourceListComponents;
     aFontFace->GetSources(sourceListComponents);
@@ -1073,7 +1072,6 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
           face->mSourceType = gfxFontFaceSrc::eSourceType_Local;
           face->mURI = nullptr;
           face->mFormatFlags = 0;
-          face->mReferrerPolicy = mozilla::net::RP_Unset;
           break;
         }
         case StyleFontFaceSourceListComponent::Tag::Url: {
@@ -1082,8 +1080,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
           nsIURI* uri = url->GetURI();
           face->mURI = uri ? new gfxFontSrcURI(uri) : nullptr;
           const URLExtraData& extraData = url->ExtraData();
-          face->mReferrer = extraData.GetReferrer();
-          face->mReferrerPolicy = extraData.GetReferrerPolicy();
+          face->mReferrerInfo = extraData.ReferrerInfo();
           face->mOriginPrincipal =
               new gfxFontSrcPrincipal(extraData.Principal());
 

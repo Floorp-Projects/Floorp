@@ -8,6 +8,7 @@
 
 #ifdef MOZ_BASE_PROFILER
 
+#  include "mozilla/BlocksRingBuffer.h"
 #  include "mozilla/leb128iterator.h"
 #  include "mozilla/ModuloBuffer.h"
 #  include "mozilla/PowerOfTwo.h"
@@ -23,6 +24,11 @@
 #    include <time.h>
 #    include <unistd.h>
 #  endif
+
+#  include <algorithm>
+#  include <atomic>
+#  include <thread>
+#  include <type_traits>
 
 using namespace mozilla;
 
@@ -367,6 +373,311 @@ void TestModuloBuffer() {
   printf("TestModuloBuffer done\n");
 }
 
+// Backdoor into value of BlockIndex, only for unit-testing.
+static uint64_t ExtractBlockIndex(const BlocksRingBuffer::BlockIndex bi) {
+  uint64_t index;
+  static_assert(sizeof(bi) == sizeof(index),
+                "BlockIndex expected to only contain a uint64_t");
+  memcpy(&index, &bi, sizeof(index));
+  return index;
+};
+
+void TestBlocksRingBufferAPI() {
+  printf("TestBlocksRingBufferAPI...\n");
+
+  // Deleter will store about-to-be-deleted value in `lastDestroyed`.
+  uint32_t lastDestroyed = 0;
+
+  // Start a temporary block to constrain buffer lifetime.
+  {
+    // Create a 16-byte buffer, enough to store up to 3 entries (1 byte size + 4
+    // bytes uint64_t).
+    BlocksRingBuffer rb(MakePowerOfTwo32<16>(),
+                        [&](BlocksRingBuffer::EntryReader aReader) {
+                          lastDestroyed = aReader.ReadObject<uint32_t>();
+                        });
+
+#  define VERIFY_START_END_DESTROYED(aStart, aEnd, aLastDestroyed)        \
+    rb.Read([&](const BlocksRingBuffer::Reader aReader) {                 \
+      MOZ_RELEASE_ASSERT(ExtractBlockIndex(aReader.BufferRangeStart()) == \
+                         (aStart));                                       \
+      MOZ_RELEASE_ASSERT(ExtractBlockIndex(aReader.BufferRangeEnd()) ==   \
+                         (aEnd));                                         \
+      MOZ_RELEASE_ASSERT(lastDestroyed == (aLastDestroyed));              \
+    });
+
+    // Empty buffer to start with.
+    // Start&end indices still at 0, nothing destroyed.
+    VERIFY_START_END_DESTROYED(0, 0, 0);
+
+    // All entries will contain one 32-bit number. The resulting blocks will
+    // have the following structure:
+    // - 1 byte for the LEB128 size of 4
+    // - 4 bytes for the number.
+    // E.g., if we have entries with `123` and `456`:
+    // .-- first readable block at index 0
+    // |.-- first block at index 0
+    // ||.-- 1 byte for the entry size, which is `4` (32 bits)
+    // |||  .-- entry starts at index 1, contain 32-bit int
+    // |||  |             .-- entry and block finish *after* index 4, i.e., 5
+    // |||  |             | .-- second block starts at index 5
+    // |||  |             | |         etc.
+    // |||  |             | |                  .-- End of readable blocks at 10
+    // vvv  v             v V                  v
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    // S[4 |   int(123)   ] [4 |   int(456)   ]E
+
+    // Push `1` directly.
+    MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(1))) == 0);
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    // S[4 |    int(1)    ]E
+    VERIFY_START_END_DESTROYED(0, 5, 0);
+
+    // Push `2` through EntryReserver, check output BlockIndex.
+    auto bi2 = rb.Put([](BlocksRingBuffer::EntryReserver aER) {
+      return aER.WriteObject(uint32_t(2));
+    });
+    static_assert(
+        std::is_same<decltype(bi2), BlocksRingBuffer::BlockIndex>::value,
+        "All index-returning functions should return a "
+        "BlocksRingBuffer::BlockIndex");
+    MOZ_RELEASE_ASSERT(ExtractBlockIndex(bi2) == 5);
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    // S[4 |    int(1)    ] [4 |    int(2)    ]E
+    VERIFY_START_END_DESTROYED(0, 10, 0);
+
+    // Check single entry at bi2, store next block index.
+    auto bi2Next =
+        rb.ReadAt(bi2, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+          MOZ_RELEASE_ASSERT(aMaybeReader.isSome());
+          MOZ_RELEASE_ASSERT(aMaybeReader->ReadObject<uint32_t>() == 2);
+          MOZ_RELEASE_ASSERT(
+              aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex())
+                  .isNothing());
+          return aMaybeReader->NextBlockIndex();
+        });
+    // bi2Next is at the end, nothing to read.
+    rb.ReadAt(bi2Next, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+      MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
+    });
+
+    // Push `3` through EntryReserver and then EntryWriter, check writer output
+    // is returned to the initial caller.
+    auto put3 = rb.Put([&](BlocksRingBuffer::EntryReserver aER) {
+      return aER.Reserve(
+          sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter aEW) {
+            aEW.WriteObject(uint32_t(3));
+            return float(ExtractBlockIndex(aEW.CurrentBlockIndex()));
+          });
+    });
+    static_assert(std::is_same<decltype(put3), float>::value,
+                  "Expect float as returned by callback.");
+    MOZ_RELEASE_ASSERT(put3 == 10.0);
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    // S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
+    VERIFY_START_END_DESTROYED(0, 15, 0);
+
+    // Re-Read single entry at bi2, should now have a next entry.
+    rb.ReadAt(bi2, [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+      MOZ_RELEASE_ASSERT(aMaybeReader.isSome());
+      MOZ_RELEASE_ASSERT(aMaybeReader->ReadObject<uint32_t>() == 2);
+      MOZ_RELEASE_ASSERT(aMaybeReader->NextBlockIndex() == bi2Next);
+      MOZ_RELEASE_ASSERT(aMaybeReader->GetNextEntry().isSome());
+      MOZ_RELEASE_ASSERT(
+          aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex()).isSome());
+      MOZ_RELEASE_ASSERT(
+          aMaybeReader->GetNextEntry()->CurrentBlockIndex() ==
+          aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex())
+              ->CurrentBlockIndex());
+      MOZ_RELEASE_ASSERT(
+          aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex())
+              ->ReadObject<uint32_t>() == 3);
+    });
+
+    // Check that we have `1` to `3`.
+    uint32_t count = 0;
+    rb.ReadEach([&](BlocksRingBuffer::EntryReader aReader) {
+      MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == ++count);
+    });
+    MOZ_RELEASE_ASSERT(count == 3);
+
+    // Push `4`, store its BlockIndex for later.
+    // This will wrap around, and destroy the first entry.
+    BlocksRingBuffer::BlockIndex bi4 = rb.PutObject(uint32_t(4));
+    // Before:
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    // S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
+    // 1. First entry destroyed:
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    //   ?   ?   ?   ?   ? S[4 |    int(2)    ] [4 |    int(3)    ]E
+    // 2. New entry starts at 15 and wraps around: (shown on separate line)
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    //   ?   ?   ?   ?   ? S[4 |    int(2)    ] [4 |    int(3)    ] [4 |
+    //  16  17  18  19  20  21  ...
+    //      int(4)    ]E
+    // (collapsed)
+    //  16  17  18  19  20   5   6   7   8   9  10  11  12  13  14  15
+    //      int(4)    ]E ? S[4 |    int(2)    ] [4 |    int(3)    ] [4 |
+    VERIFY_START_END_DESTROYED(5, 20, 1);
+
+    // Check that we have `2` to `4`.
+    count = 1;
+    rb.ReadEach([&](BlocksRingBuffer::EntryReader aReader) {
+      MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == ++count);
+    });
+    MOZ_RELEASE_ASSERT(count == 4);
+
+    // Push 5 through EntryReserver then EntryWriter, no returns.
+    // This will destroy the second entry.
+    // Check that the EntryWriter can access bi4 but not bi2.
+    auto bi5 = rb.Put([&](BlocksRingBuffer::EntryReserver aER) {
+      return aER.Reserve(
+          sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter aEW) {
+            aEW.WriteObject(uint32_t(5));
+            MOZ_RELEASE_ASSERT(aEW.GetEntryAt(bi2).isNothing());
+            MOZ_RELEASE_ASSERT(aEW.GetEntryAt(bi4).isSome());
+            MOZ_RELEASE_ASSERT(aEW.GetEntryAt(bi4)->CurrentBlockIndex() == bi4);
+            MOZ_RELEASE_ASSERT(aEW.GetEntryAt(bi4)->ReadObject<uint32_t>() ==
+                               4);
+            return aEW.CurrentBlockIndex();
+          });
+    });
+    //  16  17  18  19  20  21  22  23  24  25  10  11  12  13  14  15
+    //      int(4)    ] [4 |    int(5)    ]E ? S[4 |    int(3)    ] [4 |
+    VERIFY_START_END_DESTROYED(10, 25, 2);
+
+    // Read single entry at bi2, should now gracefully fail.
+    rb.ReadAt(bi2, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+      MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
+    });
+
+    // Read single entry at bi5.
+    rb.ReadAt(bi5, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+      MOZ_RELEASE_ASSERT(aMaybeReader.isSome());
+      MOZ_RELEASE_ASSERT(aMaybeReader->ReadObject<uint32_t>() == 5);
+      MOZ_RELEASE_ASSERT(
+          aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex()).isNothing());
+    });
+
+    // Check that we have `3` to `5`.
+    count = 2;
+    rb.ReadEach([&](BlocksRingBuffer::EntryReader aReader) {
+      MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == ++count);
+    });
+    MOZ_RELEASE_ASSERT(count == 5);
+
+    // Delete everything before `4`, this should delete `3`.
+    rb.ClearBefore(bi4);
+    //  16  17  18  19  20  21  22  23  24  25  10  11  12  13  14  15
+    //      int(4)    ] [4 |    int(5)    ]E ?   ?   ?   ?   ?   ? S[4 |
+    VERIFY_START_END_DESTROYED(15, 25, 3);
+
+    // Check that we have `4` to `5`.
+    count = 3;
+    rb.ReadEach([&](BlocksRingBuffer::EntryReader aReader) {
+      MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == ++count);
+    });
+    MOZ_RELEASE_ASSERT(count == 5);
+
+    // Delete everything before `4` again, nothing to delete.
+    lastDestroyed = 0;
+    rb.ClearBefore(bi4);
+    VERIFY_START_END_DESTROYED(15, 25, 0);
+
+    // Delete everything, this should delete `4` and `5`, and bring the start
+    // index where the end index currently is.
+    rb.Clear();
+    //  16  17  18  19  20  21  22  23  24  25  10  11  12  13  14  15
+    //   ?   ?   ?   ?   ?   ?   ?   ?   ?S E?   ?   ?   ?   ?   ?   ?
+    VERIFY_START_END_DESTROYED(25, 25, 5);
+
+    // Check that we have nothing to read.
+    rb.ReadEach([&](auto&&) { MOZ_RELEASE_ASSERT(false); });
+
+    // Read single entry at bi5, should now gracefully fail.
+    rb.ReadAt(bi5, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+      MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
+    });
+
+    // Delete everything before now-deleted `4`, nothing to delete.
+    lastDestroyed = 0;
+    rb.ClearBefore(bi4);
+    VERIFY_START_END_DESTROYED(25, 25, 0);
+
+    // Push `6` directly.
+    MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(6))) == 25);
+    //  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31
+    //   ?   ?   ?   ?   ?   ?   ?   ?   ? S[4 |    int(6)    ]E ?   ?
+    VERIFY_START_END_DESTROYED(25, 30, 0);
+
+    // End of block where rb lives, should call deleter on destruction.
+  }
+  MOZ_RELEASE_ASSERT(lastDestroyed == 6);
+
+  printf("TestBlocksRingBufferAPI done\n");
+}
+
+void TestBlocksRingBufferThreading() {
+  printf("TestBlocksRingBufferThreading...\n");
+
+  // Deleter will store about-to-be-deleted value in `lastDestroyed`.
+  std::atomic<int> lastDestroyed{0};
+
+  BlocksRingBuffer rb(MakePowerOfTwo32<8192>(),
+                      [&](BlocksRingBuffer::EntryReader aReader) {
+                        lastDestroyed = aReader.ReadObject<int>();
+                      });
+
+  // Start reader thread.
+  std::atomic<bool> stopReader{false};
+  std::thread reader([&]() {
+    for (;;) {
+      Pair<uint64_t, uint64_t> counts = rb.GetPushedAndDeletedCounts();
+      printf("Reader: pushed=%llu deleted=%llu alive=%llu lastDestroyed=%d\n",
+             static_cast<unsigned long long>(counts.first()),
+             static_cast<unsigned long long>(counts.second()),
+             static_cast<unsigned long long>(counts.first() - counts.second()),
+             int(lastDestroyed));
+      if (stopReader) {
+        break;
+      }
+      ::SleepMilli(1);
+    }
+  });
+
+  // Start writer threads.
+  constexpr int ThreadCount = 32;
+  std::thread threads[ThreadCount];
+  for (int threadNo = 0; threadNo < ThreadCount; ++threadNo) {
+    threads[threadNo] = std::thread(
+        [&](int aThreadNo) {
+          ::SleepMilli(1);
+          constexpr int pushCount = 1024;
+          for (int push = 0; push < pushCount; ++push) {
+            // Reserve as many bytes as the thread number (but at least enough
+            // to store an int), and write an increasing int.
+            rb.Put(std::max(aThreadNo, int(sizeof(push))),
+                   [&](BlocksRingBuffer::EntryWriter aEW) {
+                     aEW.WriteObject(aThreadNo * 1000000 + push);
+                     aEW += aEW.RemainingBytes();
+                   });
+          }
+        },
+        threadNo);
+  }
+
+  // Wait for all writer threads to die.
+  for (auto&& thread : threads) {
+    thread.join();
+  }
+
+  // Stop reader thread.
+  stopReader = true;
+  reader.join();
+
+  printf("TestBlocksRingBufferThreading done\n");
+}
+
 // Increase the depth, to a maximum (to avoid too-deep recursion).
 static constexpr size_t NextDepth(size_t aDepth) {
   constexpr size_t MAX_DEPTH = 128;
@@ -404,6 +715,8 @@ void TestProfiler() {
   TestPowerOfTwo();
   TestLEB128();
   TestModuloBuffer();
+  TestBlocksRingBufferAPI();
+  TestBlocksRingBufferThreading();
 
   {
     printf("profiler_init()...\n");

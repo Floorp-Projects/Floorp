@@ -20,6 +20,8 @@ import gen_scalar_data   # noqa: E402
 
 class TestScalarDataJson(unittest.TestCase):
 
+    maxDiff = None
+
     def test_JSON_definitions_generation(self):
         SCALARS_YAML = """
 newscalar:
@@ -32,6 +34,8 @@ newscalar:
     notification_emails: ["telemetry-client-dev@mozilla.org"]
     record_in_processes: ["main"]
     release_channel_collection: opt-in
+    products:
+      - firefox
     keyed: false
   withoptout:
     bug_numbers:
@@ -42,6 +46,7 @@ newscalar:
     notification_emails: ["telemetry-client-dev@mozilla.org"]
     record_in_processes: ["main"]
     release_channel_collection: opt-out
+    products: ["firefox", "fennec", "geckoview"]
     keyed: false
         """
 
@@ -54,6 +59,7 @@ newscalar:
                     "record_on_release": True,
                     "keyed": False,
                     "stores": ["main"],
+                    "products": ["firefox", "fennec", "geckoview"],
                 },
                 "withoptin": {
                     "kind": "nsITelemetry::SCALAR_TYPE_COUNT",
@@ -62,6 +68,7 @@ newscalar:
                     "record_on_release": False,
                     "keyed": False,
                     "stores": ["main"],
+                    "products": ["firefox"],
                 }
             }
         }

@@ -44,6 +44,8 @@ namespace js {
 
 class AbstractGeneratorObject;
 class Breakpoint;
+class DebuggerFrame;
+class DebuggerScript;
 class DebuggerMemory;
 class PromiseObject;
 class ScriptedOnStepHandler;
@@ -416,19 +418,36 @@ class MOZ_RAII EvalOptions {
  */
 typedef JSObject Env;
 
-// One of a real JSScript, a real LazyScript, or synthesized.
+// The referent of a Debugger.Script.
 //
-// If synthesized, the referent is one of the following:
+// - For most scripts, we point at their LazyScript, because that address
+//   doesn't change as the script is lazified/delazified.
 //
-//   1. A WasmInstanceObject, denoting a synthesized toplevel wasm module
-//      script.
-//   2. A wasm JSFunction, denoting a synthesized wasm function script.
-//      NYI!
+// - For scripts that cannot be lazified, and thus have no LazyScript, we point
+//   directly to their JSScript.
+//
+// - For Web Assembly instances for which we are presenting a script-like
+//   interface, we point at their WasmInstanceObject.
+//
+// The DebuggerScript object itself simply stores a Cell* in its private
+// pointer, but when we're working with that pointer in C++ code, we'd rather
+// not pass around a Cell* and be constantly asserting that, yes, this really
+// does point to something okay. Instead, we immediately build an instance of
+// this type from the Cell* and use that instead, so we can benefit from
+// Variant's static checks.
 typedef mozilla::Variant<JSScript*, LazyScript*, WasmInstanceObject*>
     DebuggerScriptReferent;
 
-// Either a ScriptSourceObject, for ordinary JS, or a WasmInstanceObject,
-// denoting the synthesized source of a wasm module.
+// The referent of a Debugger.Source.
+//
+// - For most sources, this is a ScriptSourceObject.
+//
+// - For Web Assembly instances for which we are presenting a source-like
+//   interface, we point at their WasmInstanceObject.
+//
+// The DebuggerSource object actually simply stores a Cell* in its private
+// pointer. See the comments for DebuggerScriptReferent for the rationale for
+// this type.
 typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*>
     DebuggerSourceReferent;
 
@@ -931,7 +950,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static MOZ_MUST_USE bool ensureExecutionObservabilityOfOsrFrame(
       JSContext* cx, AbstractFramePtr osrSourceFrame);
 
-  // Public for DebuggerScript_setBreakpoint.
+  // Public for DebuggerScript::setBreakpoint.
   static MOZ_MUST_USE bool ensureExecutionObservabilityOfScript(
       JSContext* cx, JSScript* script);
 
@@ -1003,8 +1022,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   ResumeMode firePromiseHook(JSContext* cx, Hook hook, HandleObject promise,
                              MutableHandleValue vp);
 
-  NativeObject* newVariantWrapper(JSContext* cx,
-                                  Handle<DebuggerScriptReferent> referent) {
+  DebuggerScript* newVariantWrapper(JSContext* cx,
+                                    Handle<DebuggerScriptReferent> referent) {
     return newDebuggerScript(cx, referent);
   }
   NativeObject* newVariantWrapper(JSContext* cx,
@@ -1020,12 +1039,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Prefer using wrapScript, wrapWasmScript, wrapSource, and wrapWasmSource
    * whenever possible.
    */
-  template <typename ReferentVariant, typename Referent, typename Map>
-  JSObject* wrapVariantReferent(JSContext* cx, Map& map,
-                                Handle<CrossCompartmentKey> key,
-                                Handle<ReferentVariant> referent);
-  JSObject* wrapVariantReferent(JSContext* cx,
-                                Handle<DebuggerScriptReferent> referent);
+  template <typename Wrapper, typename ReferentVariant, typename Referent,
+            typename Map>
+  Wrapper* wrapVariantReferent(JSContext* cx, Map& map,
+                               Handle<CrossCompartmentKey> key,
+                               Handle<ReferentVariant> referent);
+  DebuggerScript* wrapVariantReferent(JSContext* cx,
+                                      Handle<DebuggerScriptReferent> referent);
   JSObject* wrapVariantReferent(JSContext* cx,
                                 Handle<DebuggerSourceReferent> referent);
 
@@ -1033,8 +1053,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Allocate and initialize a Debugger.Script instance whose referent is
    * |referent|.
    */
-  NativeObject* newDebuggerScript(JSContext* cx,
-                                  Handle<DebuggerScriptReferent> referent);
+  DebuggerScript* newDebuggerScript(JSContext* cx,
+                                    Handle<DebuggerScriptReferent> referent);
 
   /*
    * Allocate and initialize a Debugger.Source instance whose referent is
@@ -1318,9 +1338,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * needed. The context |cx| must be in the debugger realm; |script| must be
    * a script in a debuggee realm.
    */
-  JSObject* wrapScript(JSContext* cx, HandleScript script);
+  DebuggerScript* wrapScript(JSContext* cx, HandleScript script);
 
-  JSObject* wrapLazyScript(JSContext* cx, Handle<LazyScript*> script);
+  DebuggerScript* wrapLazyScript(JSContext* cx, Handle<LazyScript*> script);
 
   /*
    * Return the Debugger.Script object for |wasmInstance| (the toplevel
@@ -1328,8 +1348,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * the debugger compartment; |wasmInstance| must be a WasmInstanceObject in
    * the debuggee realm.
    */
-  JSObject* wrapWasmScript(JSContext* cx,
-                           Handle<WasmInstanceObject*> wasmInstance);
+  DebuggerScript* wrapWasmScript(JSContext* cx,
+                                 Handle<WasmInstanceObject*> wasmInstance);
 
   /*
    * Return the Debugger.Source object for |source|, or create a new one if
@@ -1351,91 +1371,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   Debugger(const Debugger&) = delete;
   Debugger& operator=(const Debugger&) = delete;
 };
-
-enum class DebuggerEnvironmentType { Declarative, With, Object };
-
-class DebuggerEnvironment : public NativeObject {
- public:
-  enum { OWNER_SLOT };
-
-  static const unsigned RESERVED_SLOTS = 1;
-
-  static const Class class_;
-
-  static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor,
-                                 Handle<GlobalObject*> global);
-  static DebuggerEnvironment* create(JSContext* cx, HandleObject proto,
-                                     HandleObject referent,
-                                     HandleNativeObject debugger);
-
-  DebuggerEnvironmentType type() const;
-  mozilla::Maybe<ScopeKind> scopeKind() const;
-  MOZ_MUST_USE bool getParent(JSContext* cx,
-                              MutableHandleDebuggerEnvironment result) const;
-  MOZ_MUST_USE bool getObject(JSContext* cx,
-                              MutableHandleDebuggerObject result) const;
-  MOZ_MUST_USE bool getCallee(JSContext* cx,
-                              MutableHandleDebuggerObject result) const;
-  bool isDebuggee() const;
-  bool isOptimized() const;
-
-  static MOZ_MUST_USE bool getNames(JSContext* cx,
-                                    HandleDebuggerEnvironment environment,
-                                    MutableHandle<IdVector> result);
-  static MOZ_MUST_USE bool find(JSContext* cx,
-                                HandleDebuggerEnvironment environment,
-                                HandleId id,
-                                MutableHandleDebuggerEnvironment result);
-  static MOZ_MUST_USE bool getVariable(JSContext* cx,
-                                       HandleDebuggerEnvironment environment,
-                                       HandleId id, MutableHandleValue result);
-  static MOZ_MUST_USE bool setVariable(JSContext* cx,
-                                       HandleDebuggerEnvironment environment,
-                                       HandleId id, HandleValue value);
-
- private:
-  static const ClassOps classOps_;
-
-  static const JSPropertySpec properties_[];
-  static const JSFunctionSpec methods_[];
-
-  Env* referent() const {
-    Env* env = static_cast<Env*>(getPrivate());
-    MOZ_ASSERT(env);
-    return env;
-  }
-
-  Debugger* owner() const;
-
-  bool requireDebuggee(JSContext* cx) const;
-
-  static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
-
-  static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool scopeKindGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool parentGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool objectGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool inspectableGetter(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool optimizedOutGetter(JSContext* cx, unsigned argc,
-                                              Value* vp);
-
-  static MOZ_MUST_USE bool namesMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool findMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool getVariableMethod(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool setVariableMethod(JSContext* cx, unsigned argc,
-                                             Value* vp);
-};
-
-enum class DebuggerFrameType { Eval, Global, Call, Module, WasmCall };
-
-enum class DebuggerFrameImplementation { Interpreter, Baseline, Ion, Wasm };
 
 /*
  * A Handler represents a reference to a handler function. These handler
@@ -1475,551 +1410,6 @@ struct Handler {
 
   /* Allocation size in bytes for memory accounting purposes. */
   virtual size_t allocSize() const = 0;
-};
-
-class DebuggerArguments : public NativeObject {
- public:
-  static const Class class_;
-
-  static DebuggerArguments* create(JSContext* cx, HandleObject proto,
-                                   HandleDebuggerFrame frame);
-
- private:
-  enum { FRAME_SLOT };
-
-  static const unsigned RESERVED_SLOTS = 1;
-};
-
-/*
- * An OnStepHandler represents a handler function that is called when a small
- * amount of progress is made in a frame.
- */
-struct OnStepHandler : Handler {
-  /*
-   * If we have made a small amount of progress in a frame, this method is
-   * called with the frame as argument. If succesful, this method should
-   * return true, with `resumeMode` and `vp` set to a resumption value
-   * specifiying how execution should continue.
-   */
-  virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame,
-                      ResumeMode& resumeMode, MutableHandleValue vp) = 0;
-};
-
-class ScriptedOnStepHandler final : public OnStepHandler {
- public:
-  explicit ScriptedOnStepHandler(JSObject* object);
-  virtual JSObject* object() const override;
-  virtual void drop(js::FreeOp* fop, DebuggerFrame* frame) override;
-  virtual void trace(JSTracer* tracer) override;
-  virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame,
-                      ResumeMode& resumeMode, MutableHandleValue vp) override;
-  virtual size_t allocSize() const override;
-
- private:
-  HeapPtr<JSObject*> object_;
-};
-
-/*
- * An OnPopHandler represents a handler function that is called just before a
- * frame is popped.
- */
-struct OnPopHandler : Handler {
-  /*
-   * The given `frame` is about to be popped; `completion` explains why.
-   *
-   * When this method returns true, it must set `resumeMode` and `vp` to a
-   * resumption value specifying how execution should continue.
-   *
-   * When this method returns false, it should set an exception on `cx`.
-   */
-  virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
-                     const Completion& completion, ResumeMode& resumeMode,
-                     MutableHandleValue vp) = 0;
-};
-
-class ScriptedOnPopHandler final : public OnPopHandler {
- public:
-  explicit ScriptedOnPopHandler(JSObject* object);
-  virtual JSObject* object() const override;
-  virtual void drop(js::FreeOp* fop, DebuggerFrame* frame) override;
-  virtual void trace(JSTracer* tracer) override;
-  virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
-                     const Completion& completion, ResumeMode& resumeMode,
-                     MutableHandleValue vp) override;
-  virtual size_t allocSize() const override;
-
- private:
-  HeapPtr<JSObject*> object_;
-};
-
-class DebuggerFrame : public NativeObject {
-  friend class DebuggerArguments;
-  friend class ScriptedOnStepHandler;
-  friend class ScriptedOnPopHandler;
-
- public:
-  static const Class class_;
-
-  enum {
-    OWNER_SLOT = 0,
-    ARGUMENTS_SLOT,
-    ONSTEP_HANDLER_SLOT,
-    ONPOP_HANDLER_SLOT,
-
-    // If this is a frame for a generator call, and the generator object has
-    // been created (which doesn't happen until after default argument
-    // evaluation and destructuring), then this is a PrivateValue pointing to a
-    // GeneratorInfo struct that points to the call's AbstractGeneratorObject.
-    // This allows us to implement Debugger.Frame methods even while the call is
-    // suspended, and we have no FrameIter::Data.
-    //
-    // While Debugger::generatorFrames maps an AbstractGeneratorObject to its
-    // Debugger.Frame, this link represents the reverse relation, from a
-    // Debugger.Frame to its generator object. This slot is set if and only if
-    // there is a corresponding entry in generatorFrames.
-    GENERATOR_INFO_SLOT,
-
-    RESERVED_SLOTS,
-  };
-
-  static void trace(JSTracer* trc, JSObject* obj);
-
-  static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor,
-                                 Handle<GlobalObject*> global);
-  static DebuggerFrame* create(JSContext* cx, HandleObject proto,
-                               const FrameIter& iter,
-                               HandleNativeObject debugger);
-
-  static MOZ_MUST_USE bool getScript(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool getArguments(JSContext* cx,
-                                        HandleDebuggerFrame frame,
-                                        MutableHandleDebuggerArguments result);
-  static MOZ_MUST_USE bool getCallee(JSContext* cx, HandleDebuggerFrame frame,
-                                     MutableHandleDebuggerObject result);
-  static MOZ_MUST_USE bool getIsConstructing(JSContext* cx,
-                                             HandleDebuggerFrame frame,
-                                             bool& result);
-  static MOZ_MUST_USE bool getEnvironment(
-      JSContext* cx, HandleDebuggerFrame frame,
-      MutableHandleDebuggerEnvironment result);
-  static bool getIsGenerator(HandleDebuggerFrame frame);
-  static MOZ_MUST_USE bool getOffset(JSContext* cx, HandleDebuggerFrame frame,
-                                     size_t& result);
-  static MOZ_MUST_USE bool getOlder(JSContext* cx, HandleDebuggerFrame frame,
-                                    MutableHandleDebuggerFrame result);
-  static MOZ_MUST_USE bool getThis(JSContext* cx, HandleDebuggerFrame frame,
-                                   MutableHandleValue result);
-  static DebuggerFrameType getType(HandleDebuggerFrame frame);
-  static DebuggerFrameImplementation getImplementation(
-      HandleDebuggerFrame frame);
-  static MOZ_MUST_USE bool setOnStepHandler(JSContext* cx,
-                                            HandleDebuggerFrame frame,
-                                            OnStepHandler* handler);
-
-  static MOZ_MUST_USE JS::Result<Completion> eval(
-      JSContext* cx, HandleDebuggerFrame frame,
-      mozilla::Range<const char16_t> chars, HandleObject bindings,
-      const EvalOptions& options);
-
-  MOZ_MUST_USE bool requireLive(JSContext* cx);
-  static MOZ_MUST_USE DebuggerFrame* checkThis(JSContext* cx,
-                                               const CallArgs& args,
-                                               const char* fnname,
-                                               bool checkLive);
-
-  bool isLive() const;
-  OnStepHandler* onStepHandler() const;
-  OnPopHandler* onPopHandler() const;
-  void setOnPopHandler(JSContext* cx, OnPopHandler* handler);
-
-  bool hasGenerator() const;
-
-  // If hasGenerator(), return an direct cross-compartment reference to this
-  // Debugger.Frame's generator object.
-  AbstractGeneratorObject& unwrappedGenerator() const;
-
-  /*
-   * Associate the generator object genObj with this Debugger.Frame. This
-   * association allows the Debugger.Frame to track the generator's execution
-   * across suspensions and resumptions, and to implement some methods even
-   * while the generator is suspended.
-   *
-   * The context `cx` must be in the Debugger.Frame's realm, and `genObj` must
-   * be in a debuggee realm.
-   *
-   * Technically, the generator activation need not actually be on the stack
-   * right now; it's okay to call this method on a Debugger.Frame that has no
-   * ScriptFrameIter::Data at present. However, this function has no way to
-   * verify that genObj really is the generator associated with the call for
-   * which this Debugger.Frame was originally created, so it's best to make the
-   * association while the call is on the stack, and the relationships are easy
-   * to discern.
-   */
-  MOZ_MUST_USE bool setGenerator(JSContext* cx,
-                                 Handle<AbstractGeneratorObject*> genObj);
-
-  /*
-   * Undo the effects of a prior call to setGenerator.
-   *
-   * If provided, owner must be the Debugger to which this Debugger.Frame
-   * belongs; remove this frame's entry from its generatorFrames map, and clean
-   * up its cross-compartment wrapper table entry. The owner must be passed
-   * unless this method is being called from the Debugger.Frame's finalizer. (In
-   * that case, the owner is not reliably available, and is not actually
-   * necessary.)
-   *
-   * If maybeGeneratorFramesEnum is non-null, use it to remove this frame's
-   * entry from the Debugger's generatorFrames weak map. In this case, this
-   * function will not otherwise disturb generatorFrames. Passing the enum
-   * allows this function to be used while iterating over generatorFrames.
-   */
-  void clearGenerator(FreeOp* fop);
-  void clearGenerator(
-      FreeOp* fop, Debugger* owner,
-      Debugger::GeneratorWeakMap::Enum* maybeGeneratorFramesEnum = nullptr);
-
-  /*
-   * Called after a generator/async frame is resumed, before exposing this
-   * Debugger.Frame object to any hooks.
-   */
-  bool resume(const FrameIter& iter);
-
-  bool hasAnyLiveHooks() const;
-
- private:
-  static const ClassOps classOps_;
-
-  static const JSPropertySpec properties_[];
-  static const JSFunctionSpec methods_[];
-
-  static void finalize(FreeOp* fop, JSObject* obj);
-
-  static AbstractFramePtr getReferent(HandleDebuggerFrame frame);
-  static MOZ_MUST_USE bool getFrameIter(JSContext* cx,
-                                        HandleDebuggerFrame frame,
-                                        mozilla::Maybe<FrameIter>& result);
-  static MOZ_MUST_USE bool requireScriptReferent(JSContext* cx,
-                                                 HandleDebuggerFrame frame);
-
-  static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
-
-  static MOZ_MUST_USE bool argumentsGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool constructingGetter(JSContext* cx, unsigned argc,
-                                              Value* vp);
-  static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool generatorGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool liveGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool offsetGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool olderGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool thisGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool implementationGetter(JSContext* cx, unsigned argc,
-                                                Value* vp);
-  static MOZ_MUST_USE bool onStepGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool onStepSetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool onPopGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool onPopSetter(JSContext* cx, unsigned argc, Value* vp);
-
-  static MOZ_MUST_USE bool evalMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool evalWithBindingsMethod(JSContext* cx, unsigned argc,
-                                                  Value* vp);
-
-  Debugger* owner() const;
-
- public:
-  FrameIter::Data* frameIterData() const;
-  void setFrameIterData(FrameIter::Data*);
-  void freeFrameIterData(FreeOp* fop);
-  void maybeDecrementFrameScriptStepperCount(FreeOp* fop,
-                                             AbstractFramePtr frame);
-
-  class GeneratorInfo;
-  inline GeneratorInfo* generatorInfo() const;
-};
-
-class DebuggerObject : public NativeObject {
- public:
-  static const Class class_;
-
-  static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
-                                 HandleObject debugCtor);
-  static DebuggerObject* create(JSContext* cx, HandleObject proto,
-                                HandleObject obj, HandleNativeObject debugger);
-
-  // Properties
-  static MOZ_MUST_USE bool getClassName(JSContext* cx,
-                                        HandleDebuggerObject object,
-                                        MutableHandleString result);
-  static MOZ_MUST_USE bool getParameterNames(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandle<StringVector> result);
-  static MOZ_MUST_USE bool getBoundTargetFunction(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandleDebuggerObject result);
-  static MOZ_MUST_USE bool getBoundThis(JSContext* cx,
-                                        HandleDebuggerObject object,
-                                        MutableHandleValue result);
-  static MOZ_MUST_USE bool getBoundArguments(JSContext* cx,
-                                             HandleDebuggerObject object,
-                                             MutableHandle<ValueVector> result);
-  static MOZ_MUST_USE bool getAllocationSite(JSContext* cx,
-                                             HandleDebuggerObject object,
-                                             MutableHandleObject result);
-  static MOZ_MUST_USE bool getErrorMessageName(JSContext* cx,
-                                               HandleDebuggerObject object,
-                                               MutableHandleString result);
-  static MOZ_MUST_USE bool getErrorNotes(JSContext* cx,
-                                         HandleDebuggerObject object,
-                                         MutableHandleValue result);
-  static MOZ_MUST_USE bool getErrorLineNumber(JSContext* cx,
-                                              HandleDebuggerObject object,
-                                              MutableHandleValue result);
-  static MOZ_MUST_USE bool getErrorColumnNumber(JSContext* cx,
-                                                HandleDebuggerObject object,
-                                                MutableHandleValue result);
-  static MOZ_MUST_USE bool getScriptedProxyTarget(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandleDebuggerObject result);
-  static MOZ_MUST_USE bool getScriptedProxyHandler(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandleDebuggerObject result);
-  static MOZ_MUST_USE bool getPromiseValue(JSContext* cx,
-                                           HandleDebuggerObject object,
-                                           MutableHandleValue result);
-  static MOZ_MUST_USE bool getPromiseReason(JSContext* cx,
-                                            HandleDebuggerObject object,
-                                            MutableHandleValue result);
-
-  // Methods
-  static MOZ_MUST_USE bool isExtensible(JSContext* cx,
-                                        HandleDebuggerObject object,
-                                        bool& result);
-  static MOZ_MUST_USE bool isSealed(JSContext* cx, HandleDebuggerObject object,
-                                    bool& result);
-  static MOZ_MUST_USE bool isFrozen(JSContext* cx, HandleDebuggerObject object,
-                                    bool& result);
-  static MOZ_MUST_USE JS::Result<Completion> getProperty(
-      JSContext* cx, HandleDebuggerObject object, HandleId id,
-      HandleValue receiver);
-  static MOZ_MUST_USE JS::Result<Completion> setProperty(
-      JSContext* cx, HandleDebuggerObject object, HandleId id,
-      HandleValue value, HandleValue receiver);
-  static MOZ_MUST_USE bool getPrototypeOf(JSContext* cx,
-                                          HandleDebuggerObject object,
-                                          MutableHandleDebuggerObject result);
-  static MOZ_MUST_USE bool getOwnPropertyNames(JSContext* cx,
-                                               HandleDebuggerObject object,
-                                               MutableHandle<IdVector> result);
-  static MOZ_MUST_USE bool getOwnPropertySymbols(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandle<IdVector> result);
-  static MOZ_MUST_USE bool getOwnPropertyDescriptor(
-      JSContext* cx, HandleDebuggerObject object, HandleId id,
-      MutableHandle<PropertyDescriptor> desc);
-  static MOZ_MUST_USE bool preventExtensions(JSContext* cx,
-                                             HandleDebuggerObject object);
-  static MOZ_MUST_USE bool seal(JSContext* cx, HandleDebuggerObject object);
-  static MOZ_MUST_USE bool freeze(JSContext* cx, HandleDebuggerObject object);
-  static MOZ_MUST_USE bool defineProperty(JSContext* cx,
-                                          HandleDebuggerObject object,
-                                          HandleId id,
-                                          Handle<PropertyDescriptor> desc);
-  static MOZ_MUST_USE bool defineProperties(
-      JSContext* cx, HandleDebuggerObject object, Handle<IdVector> ids,
-      Handle<PropertyDescriptorVector> descs);
-  static MOZ_MUST_USE bool deleteProperty(JSContext* cx,
-                                          HandleDebuggerObject object,
-                                          HandleId id, ObjectOpResult& result);
-  static MOZ_MUST_USE mozilla::Maybe<Completion> call(
-      JSContext* cx, HandleDebuggerObject object, HandleValue thisv,
-      Handle<ValueVector> args);
-  static MOZ_MUST_USE bool forceLexicalInitializationByName(
-      JSContext* cx, HandleDebuggerObject object, HandleId id, bool& result);
-  static MOZ_MUST_USE JS::Result<Completion> executeInGlobal(
-      JSContext* cx, HandleDebuggerObject object,
-      mozilla::Range<const char16_t> chars, HandleObject bindings,
-      const EvalOptions& options);
-  static MOZ_MUST_USE bool makeDebuggeeValue(JSContext* cx,
-                                             HandleDebuggerObject object,
-                                             HandleValue value,
-                                             MutableHandleValue result);
-  static MOZ_MUST_USE bool unsafeDereference(JSContext* cx,
-                                             HandleDebuggerObject object,
-                                             MutableHandleObject result);
-  static MOZ_MUST_USE bool unwrap(JSContext* cx, HandleDebuggerObject object,
-                                  MutableHandleDebuggerObject result);
-
-  // Infallible properties
-  bool isCallable() const;
-  bool isFunction() const;
-  bool isDebuggeeFunction() const;
-  bool isBoundFunction() const;
-  bool isArrowFunction() const;
-  bool isAsyncFunction() const;
-  bool isGeneratorFunction() const;
-  bool isGlobal() const;
-  bool isScriptedProxy() const;
-  bool isPromise() const;
-  JSAtom* name(JSContext* cx) const;
-  JSAtom* displayName(JSContext* cx) const;
-  JS::PromiseState promiseState() const;
-  double promiseLifetime() const;
-  double promiseTimeToResolution() const;
-
- private:
-  enum { OWNER_SLOT };
-
-  static const unsigned RESERVED_SLOTS = 1;
-
-  static const ClassOps classOps_;
-
-  static const JSPropertySpec properties_[];
-  static const JSPropertySpec promiseProperties_[];
-  static const JSFunctionSpec methods_[];
-
-  JSObject* referent() const {
-    JSObject* obj = (JSObject*)getPrivate();
-    MOZ_ASSERT(obj);
-    return obj;
-  }
-
-  Debugger* owner() const;
-  PromiseObject* promise() const;
-
-  static MOZ_MUST_USE bool requireGlobal(JSContext* cx,
-                                         HandleDebuggerObject object);
-  static MOZ_MUST_USE bool requirePromise(JSContext* cx,
-                                          HandleDebuggerObject object);
-  static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
-
-  // JSNative properties
-  static MOZ_MUST_USE bool callableGetter(JSContext* cx, unsigned argc,
-                                          Value* vp);
-  static MOZ_MUST_USE bool isBoundFunctionGetter(JSContext* cx, unsigned argc,
-                                                 Value* vp);
-  static MOZ_MUST_USE bool isArrowFunctionGetter(JSContext* cx, unsigned argc,
-                                                 Value* vp);
-  static MOZ_MUST_USE bool isAsyncFunctionGetter(JSContext* cx, unsigned argc,
-                                                 Value* vp);
-  static MOZ_MUST_USE bool isGeneratorFunctionGetter(JSContext* cx,
-                                                     unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool protoGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool classGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool nameGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool displayNameGetter(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool parameterNamesGetter(JSContext* cx, unsigned argc,
-                                                Value* vp);
-  static MOZ_MUST_USE bool scriptGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool boundTargetFunctionGetter(JSContext* cx,
-                                                     unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool boundThisGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool boundArgumentsGetter(JSContext* cx, unsigned argc,
-                                                Value* vp);
-  static MOZ_MUST_USE bool allocationSiteGetter(JSContext* cx, unsigned argc,
-                                                Value* vp);
-  static MOZ_MUST_USE bool errorMessageNameGetter(JSContext* cx, unsigned argc,
-                                                  Value* vp);
-  static MOZ_MUST_USE bool errorNotesGetter(JSContext* cx, unsigned argc,
-                                            Value* vp);
-  static MOZ_MUST_USE bool errorLineNumberGetter(JSContext* cx, unsigned argc,
-                                                 Value* vp);
-  static MOZ_MUST_USE bool errorColumnNumberGetter(JSContext* cx, unsigned argc,
-                                                   Value* vp);
-  static MOZ_MUST_USE bool isProxyGetter(JSContext* cx, unsigned argc,
-                                         Value* vp);
-  static MOZ_MUST_USE bool proxyTargetGetter(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool proxyHandlerGetter(JSContext* cx, unsigned argc,
-                                              Value* vp);
-  static MOZ_MUST_USE bool isPromiseGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool promiseStateGetter(JSContext* cx, unsigned argc,
-                                              Value* vp);
-  static MOZ_MUST_USE bool promiseValueGetter(JSContext* cx, unsigned argc,
-                                              Value* vp);
-  static MOZ_MUST_USE bool promiseReasonGetter(JSContext* cx, unsigned argc,
-                                               Value* vp);
-  static MOZ_MUST_USE bool promiseLifetimeGetter(JSContext* cx, unsigned argc,
-                                                 Value* vp);
-  static MOZ_MUST_USE bool promiseTimeToResolutionGetter(JSContext* cx,
-                                                         unsigned argc,
-                                                         Value* vp);
-  static MOZ_MUST_USE bool promiseAllocationSiteGetter(JSContext* cx,
-                                                       unsigned argc,
-                                                       Value* vp);
-  static MOZ_MUST_USE bool promiseResolutionSiteGetter(JSContext* cx,
-                                                       unsigned argc,
-                                                       Value* vp);
-  static MOZ_MUST_USE bool promiseIDGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool promiseDependentPromisesGetter(JSContext* cx,
-                                                          unsigned argc,
-                                                          Value* vp);
-
-  // JSNative methods
-  static MOZ_MUST_USE bool isExtensibleMethod(JSContext* cx, unsigned argc,
-                                              Value* vp);
-  static MOZ_MUST_USE bool isSealedMethod(JSContext* cx, unsigned argc,
-                                          Value* vp);
-  static MOZ_MUST_USE bool isFrozenMethod(JSContext* cx, unsigned argc,
-                                          Value* vp);
-  static MOZ_MUST_USE bool getPropertyMethod(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool setPropertyMethod(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool getOwnPropertyNamesMethod(JSContext* cx,
-                                                     unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool getOwnPropertySymbolsMethod(JSContext* cx,
-                                                       unsigned argc,
-                                                       Value* vp);
-  static MOZ_MUST_USE bool getOwnPropertyDescriptorMethod(JSContext* cx,
-                                                          unsigned argc,
-                                                          Value* vp);
-  static MOZ_MUST_USE bool preventExtensionsMethod(JSContext* cx, unsigned argc,
-                                                   Value* vp);
-  static MOZ_MUST_USE bool sealMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool freezeMethod(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool definePropertyMethod(JSContext* cx, unsigned argc,
-                                                Value* vp);
-  static MOZ_MUST_USE bool definePropertiesMethod(JSContext* cx, unsigned argc,
-                                                  Value* vp);
-  static MOZ_MUST_USE bool deletePropertyMethod(JSContext* cx, unsigned argc,
-                                                Value* vp);
-  static MOZ_MUST_USE bool callMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool applyMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool asEnvironmentMethod(JSContext* cx, unsigned argc,
-                                               Value* vp);
-  static MOZ_MUST_USE bool forceLexicalInitializationByNameMethod(JSContext* cx,
-                                                                  unsigned argc,
-                                                                  Value* vp);
-  static MOZ_MUST_USE bool executeInGlobalMethod(JSContext* cx, unsigned argc,
-                                                 Value* vp);
-  static MOZ_MUST_USE bool executeInGlobalWithBindingsMethod(JSContext* cx,
-                                                             unsigned argc,
-                                                             Value* vp);
-  static MOZ_MUST_USE bool makeDebuggeeValueMethod(JSContext* cx, unsigned argc,
-                                                   Value* vp);
-  static MOZ_MUST_USE bool unsafeDereferenceMethod(JSContext* cx, unsigned argc,
-                                                   Value* vp);
-  static MOZ_MUST_USE bool unwrapMethod(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool getErrorReport(JSContext* cx,
-                                          HandleObject maybeError,
-                                          JSErrorReport*& report);
 };
 
 class JSBreakpointSite;
@@ -2253,6 +1643,23 @@ bool Debugger::observesGlobal(GlobalObject* global) const {
 }
 
 MOZ_MUST_USE bool ReportObjectRequired(JSContext* cx);
+
+JSObject* IdVectorToArray(JSContext* cx, Handle<IdVector> ids);
+bool IsInterpretedNonSelfHostedFunction(JSFunction* fun);
+bool EnsureFunctionHasScript(JSContext* cx, HandleFunction fun);
+JSScript* GetOrCreateFunctionScript(JSContext* cx, HandleFunction fun);
+bool ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id);
+bool ValueToStableChars(JSContext* cx, const char* fnname, HandleValue value,
+                        JS::AutoStableStringChars& stableChars);
+bool ParseEvalOptions(JSContext* cx, HandleValue value, EvalOptions& options);
+
+Result<Completion> DebuggerGenericEval(
+    JSContext* cx, const mozilla::Range<const char16_t> chars,
+    HandleObject bindings, const EvalOptions& options, Debugger* dbg,
+    HandleObject envArg, FrameIter* iter);
+
+bool ParseResumptionValue(JSContext* cx, HandleValue rval,
+                          ResumeMode& resumeMode, MutableHandleValue vp);
 
 } /* namespace js */
 

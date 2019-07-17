@@ -69,13 +69,13 @@ function saveURL(
   aFilePickerTitleKey,
   aShouldBypassCache,
   aSkipPrompt,
-  aReferrer,
+  aReferrerInfo,
   aSourceDocument,
   aIsContentWindowPrivate,
   aPrincipal
 ) {
   forbidCPOW(aURL, "saveURL", "aURL");
-  forbidCPOW(aReferrer, "saveURL", "aReferrer");
+  forbidCPOW(aReferrerInfo, "saveURL", "aReferrerInfo");
   // Allow aSourceDocument to be a CPOW.
 
   internalSave(
@@ -87,7 +87,7 @@ function saveURL(
     aShouldBypassCache,
     aFilePickerTitleKey,
     null,
-    aReferrer,
+    aReferrerInfo,
     aSourceDocument,
     aSkipPrompt,
     null,
@@ -120,9 +120,8 @@ const nsISupportsCString = Ci.nsISupportsCString;
  *        If true, we will attempt to save the file with the suggested
  *        filename to the default downloads folder without showing the
  *        file picker.
- * @param aReferrer (nsIURI, optional)
- *        The referrer URI object (not a URL string) to use, or null
- *        if no referrer should be sent.
+ * @param aReferrerInfo (nsIReferrerInfo, optional)
+ *        the referrerInfo object to use, or null if no referrer should be sent.
  * @param aDoc (Document, deprecated, optional)
  *        The content document that the save is being initiated from. If this
  *        is omitted, then aIsContentWindowPrivate must be provided.
@@ -140,7 +139,7 @@ function saveImageURL(
   aFilePickerTitleKey,
   aShouldBypassCache,
   aSkipPrompt,
-  aReferrer,
+  aReferrerInfo,
   aDoc,
   aContentType,
   aContentDisp,
@@ -148,7 +147,7 @@ function saveImageURL(
   aPrincipal
 ) {
   forbidCPOW(aURL, "saveImageURL", "aURL");
-  forbidCPOW(aReferrer, "saveImageURL", "aReferrer");
+  forbidCPOW(aReferrerInfo, "saveImageURL", "aReferrerInfo");
 
   if (aDoc && aIsContentWindowPrivate == undefined) {
     if (Cu.isCrossProcessWrapper(aDoc)) {
@@ -209,7 +208,7 @@ function saveImageURL(
     aShouldBypassCache,
     aFilePickerTitleKey,
     null,
-    aReferrer,
+    aReferrerInfo,
     aDoc,
     aSkipPrompt,
     null,
@@ -322,7 +321,7 @@ function saveDocument(aDocument, aSkipPrompt) {
     false,
     null,
     null,
-    aDocument.referrer ? makeURI(aDocument.referrer) : null,
+    aDocument.referrerInfo,
     aDocument,
     aSkipPrompt,
     cacheKey
@@ -378,9 +377,8 @@ XPCOMUtils.defineConstant(this, "kSaveAsType_Text", kSaveAsType_Text);
  *  - Determines a local target filename to use
  *  - Prompts the user to confirm the destination filename and save mode
  *    (aContentType affects this)
- *  - [Note] This process involves the parameters aURL, aReferrer (to determine
- *    how aURL was encoded), aDocument, aDefaultFileName, aFilePickerTitleKey,
- *    and aSkipPrompt.
+ *  - [Note] This process involves the parameters aURL, aReferrerInfo,
+ *    aDocument, aDefaultFileName, aFilePickerTitleKey, and aSkipPrompt.
  *
  * If aChosenData is non-null, this method:
  *  - Uses the provided source URI and save file name
@@ -393,8 +391,8 @@ XPCOMUtils.defineConstant(this, "kSaveAsType_Text", kSaveAsType_Text);
  *  - Creates a 'Persist' object (which will perform the saving in the
  *    background) and then starts it.
  *  - [Note] This part of the process only involves the parameters aDocument,
- *    aShouldBypassCache and aReferrer. The source, the save name and the save
- *    mode are the ones determined previously.
+ *    aShouldBypassCache and aReferrerInfo. The source, the save name and the
+ *    save mode are the ones determined previously.
  *
  * @param aURL
  *        The String representation of the URL of the document being saved
@@ -415,9 +413,8 @@ XPCOMUtils.defineConstant(this, "kSaveAsType_Text", kSaveAsType_Text);
  *        If non-null this contains an instance of object AutoChosen (see below)
  *        which holds pre-determined data so that the user does not need to be
  *        prompted for a target filename.
- * @param aReferrer
- *        the referrer URI object (not URL string) to use, or null
- *        if no referrer should be sent.
+ * @param aReferrerInfo
+ *        the referrerInfo object to use, or null if no referrer should be sent.
  * @param aInitiatingDocument [optional]
  *        The document from which the save was initiated.
  *        If this is omitted then aIsContentWindowPrivate has to be provided.
@@ -445,7 +442,7 @@ function internalSave(
   aShouldBypassCache,
   aFilePickerTitleKey,
   aChosenData,
-  aReferrer,
+  aReferrerInfo,
   aInitiatingDocument,
   aSkipPrompt,
   aCacheKey,
@@ -453,7 +450,7 @@ function internalSave(
   aPrincipal
 ) {
   forbidCPOW(aURL, "internalSave", "aURL");
-  forbidCPOW(aReferrer, "internalSave", "aReferrer");
+  forbidCPOW(aReferrerInfo, "internalSave", "aReferrerInfo");
   forbidCPOW(aCacheKey, "internalSave", "aCacheKey");
   // Allow aInitiatingDocument to be a CPOW.
 
@@ -503,7 +500,7 @@ function internalSave(
     };
 
     // Find a URI to use for determining last-downloaded-to directory
-    let relatedURI = aReferrer || sourceURI;
+    let relatedURI = aReferrerInfo ? aReferrerInfo.orginalReferrer : sourceURI;
 
     promiseTargetFile(fpParams, aSkipPrompt, relatedURI)
       .then(aDialogAccepted => {
@@ -554,7 +551,7 @@ function internalSave(
     var persistArgs = {
       sourceURI,
       sourcePrincipal,
-      sourceReferrer: aReferrer,
+      sourceReferrerInfo: aReferrerInfo,
       sourceDocument: useSaveDocument ? aDocument : null,
       targetContentType: saveAsType == kSaveAsType_Text ? "text/plain" : null,
       targetFile: file,
@@ -579,10 +576,10 @@ function internalSave(
  *        If set will be passed to savePrivacyAwareURI
  * @param persistArgs.sourceDocument [optional]
  *        The document to be saved, or null if not saving a complete document
- * @param persistArgs.sourceReferrer
+ * @param persistArgs.sourceReferrerInfo
  *        Required and used only when persistArgs.sourceDocument is NOT present,
- *        the nsIURI of the referrer to use, or null if no referrer should be
- *        sent.
+ *        the nsIReferrerInfo of the referrer info to use, or null if no
+ *        referrer should be sent.
  * @param persistArgs.sourcePostData
  *        Required and used only when persistArgs.sourceDocument is NOT present,
  *        represents the POST data to be sent along with the HTTP request, and
@@ -670,8 +667,7 @@ function internalPersist(persistArgs) {
       persistArgs.sourceURI,
       persistArgs.sourcePrincipal,
       persistArgs.sourceCacheKey,
-      persistArgs.sourceReferrer,
-      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      persistArgs.sourceReferrerInfo,
       persistArgs.sourcePostData,
       null,
       targetFileURL,

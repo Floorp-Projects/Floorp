@@ -87,7 +87,7 @@ class SandboxBrokerTest : public ::testing::Test {
     mServer = SandboxBroker::Create(GetPolicy(), getpid(), fd);
     ASSERT_NE(mServer, nullptr);
     ASSERT_TRUE(fd.IsValid());
-    auto rawFD = fd.ClonePlatformHandle();
+    auto rawFD = fd.TakePlatformHandle();
     mClient.reset(new SandboxBrokerClient(rawFD.release()));
   }
 

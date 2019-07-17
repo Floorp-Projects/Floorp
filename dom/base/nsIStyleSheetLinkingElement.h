@@ -93,7 +93,7 @@ class nsIStyleSheetLinkingElement : public nsISupports {
     // The principal of the scripted caller that initiated the load, if
     // available. Otherwise null.
     nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-    mozilla::net::ReferrerPolicy mReferrerPolicy;
+    nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
     mozilla::CORSMode mCORSMode;
     nsString mTitle;
     nsString mMedia;
@@ -106,9 +106,10 @@ class nsIStyleSheetLinkingElement : public nsISupports {
     SheetInfo(const mozilla::dom::Document&, nsIContent*,
               already_AddRefed<nsIURI> aURI,
               already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
-              mozilla::net::ReferrerPolicy aReferrerPolicy, mozilla::CORSMode,
-              const nsAString& aTitle, const nsAString& aMedia, HasAlternateRel,
-              IsInline, IsExplicitlyEnabled);
+              already_AddRefed<nsIReferrerInfo> aReferrerInfo,
+              mozilla::CORSMode, const nsAString& aTitle,
+              const nsAString& aMedia, HasAlternateRel, IsInline,
+              IsExplicitlyEnabled);
 
     ~SheetInfo();
   };

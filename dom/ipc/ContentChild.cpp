@@ -4047,8 +4047,11 @@ mozilla::ipc::IPCResult ContentChild::RecvCommitBrowsingContextTransaction(
 }
 
 void ContentChild::HoldBrowsingContextGroup(BrowsingContextGroup* aBCG) {
-  RefPtr<BrowsingContextGroup> bcgPtr(aBCG);
-  mBrowsingContextGroupHolder.AppendElement(bcgPtr);
+  mBrowsingContextGroupHolder.AppendElement(aBCG);
+}
+
+void ContentChild::ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG) {
+  mBrowsingContextGroupHolder.RemoveElement(aBCG);
 }
 
 }  // namespace dom

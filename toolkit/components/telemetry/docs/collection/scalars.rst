@@ -159,6 +159,12 @@ Required Fields
 - ``expires``: The version number in which the scalar expires, e.g. "30"; a version number of type "N" is automatically converted to "N.0a1" in order to expire the scalar also in the development channels. A telemetry probe acting on an expired scalar will print a warning into the browser console. For scalars that never expire the value ``never`` can be used.
 - ``kind``: A string representing the scalar type. Allowed values are ``uint``, ``string`` and ``boolean``.
 - ``notification_emails``: A list of email addresses to notify with alerts of expiring probes. More importantly, these are used by the data steward to verify that the probe is still useful.
+- ``products``: A list of products the scalar can be recorded on. Currently supported values are:
+
+  - ``firefox`` - Collected in Firefox Desktop for submission via Firefox Telemetry.
+  - ``fennec`` - Collected in Firefox for Android for submission via Firefox Mobile Telemetry.
+  - ``geckoview`` - Collected in GeckoView-based Android products and surfaced via `GeckoViewTelemetryController.jsm <https://hg.mozilla.org/mozilla-central/raw-file/tip/toolkit/components/telemetry/geckoview/GeckoViewTelemetryController.jsm>`__.
+
 - ``record_in_processes``: A list of processes the scalar is allowed to record in. Currently supported values are:
 
   - ``main``;
@@ -172,13 +178,6 @@ Optional Fields
 
 - ``release_channel_collection``: This can be either ``opt-in`` (default) or ``opt-out``. With the former the scalar is submitted by default on pre-release channels, unless the user has opted out. With the latter the scalar is submitted by default on release and pre-release channels, unless the user has opted out.
 - ``keyed``: A boolean that determines whether this is a keyed scalar. It defaults to ``False``.
-- ``products``: A list of products the scalar can be recorded on. It defaults to ``all``. Currently supported values are:
-
-  - ``firefox``
-  - ``fennec``
-  - ``geckoview``
-  - ``all`` (record on all products)
-
 - ``record_into_store``: A list of stores this scalar should be recorded into. It defaults to ``[main]``.
 - ``operating_systems``: This field restricts recording to certain operating systems only. Use that in-place of previous ``cpp_guards`` to avoid inclusion on not-specified operating systems. It defaults to ``all``. Currently supported values are:
 
