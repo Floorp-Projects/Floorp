@@ -13,11 +13,11 @@ RUN apt-get install \
       bzip2 \
       curl \
       enjarify \
-      diffoscope/stretch-backports \
+      diffoscope \
       jsbeautifier \
       libc++abi1 \
       locales \
-      openjdk-8-jdk-headless \
+      default-jdk-headless \
       python3-progressbar \
       unzip \
       zip \
