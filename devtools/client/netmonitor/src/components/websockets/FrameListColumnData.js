@@ -8,6 +8,7 @@ const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getFramePayload } = require("../../utils/request-utils");
+const { L10N } = require("../../utils/l10n");
 
 /**
  * Renders the "Data" column of a WebSocket frame.
@@ -49,14 +50,21 @@ class FrameListColumnData extends Component {
 
   render() {
     const { index } = this.props;
+    const { type } = this.props.item;
+    const typeLabel = L10N.getStr(`netmonitor.ws.type.${type}`);
 
     return dom.td(
       {
         key: index,
         className: "ws-frames-list-column ws-frames-list-payload",
-        title: this.state.payload,
+        title: typeLabel + " " + this.state.payload,
       },
-      this.state.payload
+      dom.img({
+        alt: typeLabel,
+        className: `ws-frames-list-type-icon ws-frames-list-type-icon-${type}`,
+        src: `chrome://devtools/content/netmonitor/src/assets/icons/arrow-up.svg`,
+      }),
+      " " + this.state.payload
     );
   }
 }

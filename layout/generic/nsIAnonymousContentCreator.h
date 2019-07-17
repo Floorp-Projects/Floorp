@@ -32,8 +32,9 @@ class nsIAnonymousContentCreator {
   NS_DECL_QUERYFRAME_TARGET(nsIAnonymousContentCreator)
 
   struct ContentInfo {
-    explicit ContentInfo(nsIContent* aContent,
-                         mozilla::AnonymousContentKey aKey = mozilla::AnonymousContentKey::None)
+    explicit ContentInfo(
+        nsIContent* aContent,
+        mozilla::AnonymousContentKey aKey = mozilla::AnonymousContentKey::None)
         : mContent(aContent), mKey(aKey) {}
 
     nsIContent* mContent;

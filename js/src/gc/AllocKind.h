@@ -201,7 +201,7 @@ static inline bool IsBackgroundFinalized(AllocKind kind) {
   static const bool map[] = {
 #define DEFINE_BACKGROUND_FINALIZED(_1, _2, _3, _4, bgFinal, _5, _6) bgFinal,
       FOR_EACH_ALLOCKIND(DEFINE_BACKGROUND_FINALIZED)
-#undef DEFINE_BG_FINALIZE
+#undef DEFINE_BACKGROUND_FINALIZED
   };
 
   static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),

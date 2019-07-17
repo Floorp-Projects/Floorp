@@ -79,10 +79,7 @@ struct DebugModeOSREntry {
   }
 
   bool needsRecompileInfo() const {
-    return frameKind == RetAddrEntry::Kind::CallVM ||
-           frameKind == RetAddrEntry::Kind::WarmupCounter ||
-           frameKind == RetAddrEntry::Kind::StackCheck ||
-           frameKind == RetAddrEntry::Kind::DebugTrap ||
+    return frameKind == RetAddrEntry::Kind::DebugTrap ||
            frameKind == RetAddrEntry::Kind::DebugPrologue ||
            frameKind == RetAddrEntry::Kind::DebugAfterYield ||
            frameKind == RetAddrEntry::Kind::DebugEpilogue;
@@ -391,15 +388,32 @@ static void PatchBaselineFramesForDebugMode(
         BaselineScript* bl = script->baselineScript();
         RetAddrEntry::Kind kind = entry.frameKind;
 
-        if (kind == RetAddrEntry::Kind::IC) {
-          // Case A above.
+        if (kind == RetAddrEntry::Kind::IC ||
+            kind == RetAddrEntry::Kind::CallVM ||
+            kind == RetAddrEntry::Kind::WarmupCounter ||
+            kind == RetAddrEntry::Kind::StackCheck) {
+          // Cases A, B, I, J above.
           //
-          // For the baseline frame here, we resume right after the IC
-          // returns. Since we're using the same IC stubs and stub code,
-          // we don't have to patch the stub or stub frame.
-          RetAddrEntry& retAddrEntry =
-              bl->retAddrEntryFromPCOffset(pcOffset, kind);
-          uint8_t* retAddr = bl->returnAddressForEntry(retAddrEntry);
+          // For the baseline frame here, we resume right after the CallVM or IC
+          // returns.
+          //
+          // For CallVM (case B) the assumption is that all callVMs which can
+          // trigger debug mode OSR are the *only* callVMs generated for their
+          // respective pc locations in the Baseline JIT code.
+          RetAddrEntry* retAddrEntry = nullptr;
+          switch (kind) {
+            case RetAddrEntry::Kind::IC:
+            case RetAddrEntry::Kind::CallVM:
+              retAddrEntry = &bl->retAddrEntryFromPCOffset(pcOffset, kind);
+              break;
+            case RetAddrEntry::Kind::WarmupCounter:
+            case RetAddrEntry::Kind::StackCheck:
+              retAddrEntry = &bl->prologueRetAddrEntry(kind);
+              break;
+            default:
+              MOZ_CRASH("Unexpected kind");
+          }
+          uint8_t* retAddr = bl->returnAddressForEntry(*retAddrEntry);
           SpewPatchBaselineFrame(prev->returnAddress(), retAddr, script, kind,
                                  pc);
           DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(
@@ -443,18 +457,15 @@ static void PatchBaselineFramesForDebugMode(
 
         // Case F above.
         //
-        // We undo a previous recompile by handling cases B, C, D, E, I or J
-        // like normal, except that we retrieve the pc information via
-        // the previous OSR debug info stashed on the frame.
+        // We undo a previous recompile by handling cases C, D or E like normal,
+        // except that we retrieve the pc information via the previous OSR debug
+        // info stashed on the frame.
         BaselineDebugModeOSRInfo* info =
             frame.baselineFrame()->getDebugModeOSRInfo();
         if (info) {
           MOZ_ASSERT(info->pc == pc);
           MOZ_ASSERT(info->frameKind == kind);
-          MOZ_ASSERT(kind == RetAddrEntry::Kind::CallVM ||
-                     kind == RetAddrEntry::Kind::WarmupCounter ||
-                     kind == RetAddrEntry::Kind::StackCheck ||
-                     kind == RetAddrEntry::Kind::DebugTrap ||
+          MOZ_ASSERT(kind == RetAddrEntry::Kind::DebugTrap ||
                      kind == RetAddrEntry::Kind::DebugPrologue ||
                      kind == RetAddrEntry::Kind::DebugAfterYield ||
                      kind == RetAddrEntry::Kind::DebugEpilogue);
@@ -470,36 +481,6 @@ static void PatchBaselineFramesForDebugMode(
 
         bool popFrameReg;
         switch (kind) {
-          case RetAddrEntry::Kind::CallVM: {
-            // Case B above.
-            //
-            // Patching returns from a VM call. After fixing up the the
-            // continuation for unsynced values (the frame register is
-            // popped by the callVM trampoline), we resume at the
-            // return-from-callVM address. The assumption here is that all
-            // callVMs which can trigger debug mode OSR are the *only*
-            // callVMs generated for their respective pc locations in the
-            // baseline JIT code.
-            RetAddrEntry& retAddrEntry =
-                bl->retAddrEntryFromPCOffset(pcOffset, kind);
-            recompInfo->resumeAddr = bl->returnAddressForEntry(retAddrEntry);
-            popFrameReg = false;
-            break;
-          }
-
-          case RetAddrEntry::Kind::WarmupCounter:
-          case RetAddrEntry::Kind::StackCheck: {
-            // Cases I and J above.
-            //
-            // Patching mechanism is identical to a CallVM. This is
-            // handled especially only because these VM calls are part of
-            // the prologue, and not tied to an opcode.
-            RetAddrEntry& entry = bl->prologueRetAddrEntry(kind);
-            recompInfo->resumeAddr = bl->returnAddressForEntry(entry);
-            popFrameReg = false;
-            break;
-          }
-
           case RetAddrEntry::Kind::DebugTrap:
             // Case C above.
             //
@@ -800,33 +781,6 @@ static inline bool HasForcedReturn(BaselineDebugModeOSRInfo* info, bool rv) {
   return false;
 }
 
-static inline bool IsReturningFromCallVM(BaselineDebugModeOSRInfo* info) {
-  // Keep this in sync with EmitBranchIsReturningFromCallVM.
-  //
-  // The stack check entries are returns from a callVM, but have a special
-  // kind because they do not exist in a 1-1 relationship with a pc offset.
-  return info->frameKind == RetAddrEntry::Kind::CallVM ||
-         info->frameKind == RetAddrEntry::Kind::WarmupCounter ||
-         info->frameKind == RetAddrEntry::Kind::StackCheck;
-}
-
-static void EmitBranchRetAddrEntryKind(MacroAssembler& masm, Register entry,
-                                       RetAddrEntry::Kind kind, Label* label) {
-  masm.branch32(MacroAssembler::Equal,
-                Address(entry, offsetof(BaselineDebugModeOSRInfo, frameKind)),
-                Imm32(uint32_t(kind)), label);
-}
-
-static void EmitBranchIsReturningFromCallVM(MacroAssembler& masm,
-                                            Register entry, Label* label) {
-  // Keep this in sync with IsReturningFromCallVM.
-  EmitBranchRetAddrEntryKind(masm, entry, RetAddrEntry::Kind::CallVM, label);
-  EmitBranchRetAddrEntryKind(masm, entry, RetAddrEntry::Kind::WarmupCounter,
-                             label);
-  EmitBranchRetAddrEntryKind(masm, entry, RetAddrEntry::Kind::StackCheck,
-                             label);
-}
-
 static void SyncBaselineDebugModeOSRInfo(BaselineFrame* frame, Value* vp,
                                          bool rv) {
   AutoUnsafeCallWithABI unsafe;
@@ -845,20 +799,14 @@ static void SyncBaselineDebugModeOSRInfo(BaselineFrame* frame, Value* vp,
     return;
   }
 
-  // Read stack values and make sure R0 and R1 have the right values if we
-  // aren't returning from a callVM.
-  //
-  // In the case of returning from a callVM, we don't need to restore R0 and
-  // R1 ourself since we'll return into code that does it if needed.
-  if (!IsReturningFromCallVM(info)) {
-    unsigned numUnsynced = info->slotInfo.numUnsynced();
-    MOZ_ASSERT(numUnsynced <= 2);
-    if (numUnsynced > 0) {
-      info->popValueInto(info->slotInfo.topSlotLocation(), vp);
-    }
-    if (numUnsynced > 1) {
-      info->popValueInto(info->slotInfo.nextSlotLocation(), vp);
-    }
+  // Read stack values and make sure R0 and R1 have the right values.
+  unsigned numUnsynced = info->slotInfo.numUnsynced();
+  MOZ_ASSERT(numUnsynced <= 2);
+  if (numUnsynced > 0) {
+    info->popValueInto(info->slotInfo.topSlotLocation(), vp);
+  }
+  if (numUnsynced > 1) {
+    info->popValueInto(info->slotInfo.nextSlotLocation(), vp);
   }
 
   // Scale stackAdjust.
@@ -921,20 +869,10 @@ static void TakeCallVMOutputRegisters(AllocatableGeneralRegisterSet& regs) {
 }
 
 static void EmitBaselineDebugModeOSRHandlerTail(MacroAssembler& masm,
-                                                Register temp,
-                                                bool returnFromCallVM) {
-  // Save real return address on the stack temporarily.
-  //
-  // If we're returning from a callVM, we don't need to worry about R0 and
-  // R1 but do need to propagate the registers the call might write to.
-  // Otherwise we need to worry about R0 and R1 but can clobber ReturnReg.
-  // Indeed, on x86, R1 contains ReturnReg.
-  if (returnFromCallVM) {
-    PushCallVMOutputRegisters(masm);
-  } else {
-    masm.pushValue(Address(temp, offsetof(BaselineDebugModeOSRInfo, valueR0)));
-    masm.pushValue(Address(temp, offsetof(BaselineDebugModeOSRInfo, valueR1)));
-  }
+                                                Register temp) {
+  // Push values we need later.
+  masm.pushValue(Address(temp, offsetof(BaselineDebugModeOSRInfo, valueR0)));
+  masm.pushValue(Address(temp, offsetof(BaselineDebugModeOSRInfo, valueR1)));
   masm.push(BaselineFrameReg);
   masm.push(Address(temp, offsetof(BaselineDebugModeOSRInfo, resumeAddr)));
 
@@ -946,23 +884,16 @@ static void EmitBaselineDebugModeOSRHandlerTail(MacroAssembler& masm,
 
   // Restore saved values.
   AllocatableGeneralRegisterSet jumpRegs(GeneralRegisterSet::All());
-  if (returnFromCallVM) {
-    TakeCallVMOutputRegisters(jumpRegs);
-  } else {
-    jumpRegs.take(R0);
-    jumpRegs.take(R1);
-  }
+  jumpRegs.take(R0);
+  jumpRegs.take(R1);
   jumpRegs.take(BaselineFrameReg);
   Register target = jumpRegs.takeAny();
 
   masm.pop(target);
   masm.pop(BaselineFrameReg);
-  if (returnFromCallVM) {
-    PopCallVMOutputRegisters(masm);
-  } else {
-    masm.popValue(R1);
-    masm.popValue(R0);
-  }
+
+  masm.popValue(R1);
+  masm.popValue(R0);
 
   masm.jump(target);
 }
@@ -1009,18 +940,7 @@ JitCode* JitRuntime::generateBaselineDebugModeOSRHandler(
   masm.addToStackPtr(
       Address(temp, offsetof(BaselineDebugModeOSRInfo, stackAdjust)));
 
-  // Emit two tails for the case of returning from a callVM and all other
-  // cases, as the state we need to restore differs depending on the case.
-  Label returnFromCallVM, end;
-  EmitBranchIsReturningFromCallVM(masm, temp, &returnFromCallVM);
-
-  EmitBaselineDebugModeOSRHandlerTail(masm, temp,
-                                      /* returnFromCallVM = */ false);
-  masm.jump(&end);
-  masm.bind(&returnFromCallVM);
-  EmitBaselineDebugModeOSRHandlerTail(masm, temp,
-                                      /* returnFromCallVM = */ true);
-  masm.bind(&end);
+  EmitBaselineDebugModeOSRHandlerTail(masm, temp);
 
   Linker linker(masm, "BaselineDebugModeOSRHandler");
   JitCode* code = linker.newCode(cx, CodeKind::Other);

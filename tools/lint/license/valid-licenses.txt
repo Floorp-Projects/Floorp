@@ -16,3 +16,6 @@ License: Public domain. You are free to use this code however you
 You are granted a license to use, reproduce and create derivative works
 GENERATED FILE, DO NOT EDIT
 This code is governed by the BSD license
+This Source Code Form is subject to the terms of the Apache License
+DO NOT EDIT
+

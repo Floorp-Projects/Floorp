@@ -4,6 +4,8 @@ license:
     include:
         - .
     exclude:
+        - browser/app/blocklist.xml
+        - browser/components/pocket/
         - config/external/nspr/_pl_bld.h
         - config/external/nspr/_pr_bld.h
         - gfx/2d/MMIHelpers.h
@@ -20,8 +22,22 @@ license:
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
         - toolkit/mozapps/update/updater/crctable.h
         - xpcom/io/crc32c.h
-    extensions: ['.cpp', '.c', '.cc', '.h', '.m', '.mm']
-    # , 'js', 'jsm', 'jsx', 'xml', 'xul', 'html', 'xhtml', 'py', 'rs']
+    extensions:
+        - .c
+        - .cc
+        - .cpp
+        - .h
+        - .html
+        - .js
+        - .jsm
+        - .jsx
+        - .m
+        - .mm
+        - .py
+        - .rs
+        - .xhtml
+        - .xml
+        - .xul
     support-files:
         - 'tools/lint/license/**'
     type: external

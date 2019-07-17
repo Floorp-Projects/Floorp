@@ -2,8 +2,7 @@
   "name": "Allaannonser",
   "description": "Allaannonser",
   "manifest_version": 2,
-  "version": "1.1",
-  "encoding": "ISO-8859-1",
+  "version": "1.2",
   "applications": {
     "gecko": {
       "id": "allaannonser-sv-SE@search.mozilla.org"
@@ -19,6 +18,7 @@
   "chrome_settings_overrides": {
     "search_provider": {
       "name": "Allaannonser",
+      "encoding": "ISO-8859-1",
       "search_url": "https://www.allaannonser.se/hitlist.php",
       "search_form": "https://www.allaannonser.se",
       "search_url_get_params": "sourceid=Mozilla-search&keyword={searchTerms}&order=date&desc=1"

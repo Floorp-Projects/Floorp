@@ -2870,25 +2870,12 @@ impl PrimitiveStore {
                 let common_data = &mut prim_data.common;
                 let border_data = &mut prim_data.kind;
 
-                let mut needs_repetition = false;
-                needs_repetition |= match border_data.border.top.style {
-                    BorderStyle::Dotted | BorderStyle::Dashed => true,
-                    _ => false,
-                };
-                needs_repetition |= match border_data.border.right.style {
-                    BorderStyle::Dotted | BorderStyle::Dashed => true,
-                    _ => false,
-                };
-                needs_repetition |= match border_data.border.bottom.style {
-                    BorderStyle::Dotted | BorderStyle::Dashed => true,
-                    _ => false,
-                };
-                needs_repetition |= match border_data.border.left.style {
-                    BorderStyle::Dotted | BorderStyle::Dashed => true,
-                    _ => false,
-                };
+                common_data.may_need_repetition =
+                    matches!(border_data.border.top.style, BorderStyle::Dotted | BorderStyle::Dashed) ||
+                    matches!(border_data.border.right.style, BorderStyle::Dotted | BorderStyle::Dashed) ||
+                    matches!(border_data.border.bottom.style, BorderStyle::Dotted | BorderStyle::Dashed) ||
+                    matches!(border_data.border.left.style, BorderStyle::Dotted | BorderStyle::Dashed);
 
-                common_data.may_need_repetition = needs_repetition;
 
                 // Update the template this instance references, which may refresh the GPU
                 // cache with any shared template data.

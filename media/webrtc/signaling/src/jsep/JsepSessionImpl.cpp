@@ -1446,7 +1446,8 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
     }
 
     if (!mSdpHelper.MsectionIsDisabled(msection)) {
-      if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
+      if (msection.GetAttributeList().HasAttribute(
+              SdpAttribute::kMidAttribute)) {
         transceiver->Associate(msection.GetAttributeList().GetMid());
       }
       if (!transceiver->IsAssociated()) {

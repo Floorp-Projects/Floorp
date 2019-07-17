@@ -20,6 +20,6 @@
 }
 
 /* This overrides color: -moz-buttonhovertext from toolbarbutton.css */
-.identity-popup-content-blocking-category:hover {
+.protections-popup-category:hover {
   color: inherit;
 }

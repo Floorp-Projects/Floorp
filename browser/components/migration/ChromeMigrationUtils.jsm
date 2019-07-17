@@ -321,11 +321,20 @@ var ChromeMigrationUtils = {
    *
    * @param   aTime
    *          Chrome time
+   * @param   aFallbackValue
+   *          a date or timestamp (valid argument for the Date constructor)
+   *          that will be used if the chrometime value passed is invalid.
    * @return  converted Date object
    * @note    Google Chrome uses FILETIME / 10 as time.
    *          FILETIME is based on same structure of Windows.
    */
-  chromeTimeToDate(aTime) {
+  chromeTimeToDate(aTime, aFallbackValue) {
+    // The date value may be 0 in some cases. Because of the subtraction below,
+    // that'd generate a date before the unix epoch, which can upset consumers
+    // due to the unix timestamp then being negative. Catch this case:
+    if (!aTime) {
+      return new Date(aFallbackValue);
+    }
     return new Date((aTime * S100NS_PER_MS - S100NS_FROM1601TO1970) / 10000);
   },
 

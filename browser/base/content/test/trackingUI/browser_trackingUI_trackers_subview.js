@@ -22,13 +22,15 @@ async function assertSitesListed(blocked) {
     await openProtectionsPopup();
 
     let categoryItem = document.getElementById(
-      "identity-popup-content-blocking-category-tracking-protection"
+      "protections-popup-category-tracking-protection"
     );
     ok(
       BrowserTestUtils.is_visible(categoryItem),
       "TP category item is visible"
     );
-    let trackersView = document.getElementById("identity-popup-trackersView");
+    let trackersView = document.getElementById(
+      "protections-popup-trackersView"
+    );
     let viewShown = BrowserTestUtils.waitForEvent(trackersView, "ViewShown");
     categoryItem.click();
     await viewShown;
@@ -36,12 +38,12 @@ async function assertSitesListed(blocked) {
     ok(true, "Trackers view was shown");
 
     let listItems = trackersView.querySelectorAll(
-      ".identity-popup-content-blocking-list-item"
+      ".protections-popup-list-item"
     );
     is(listItems.length, 1, "We have 1 tracker in the list");
 
     let strictInfo = document.getElementById(
-      "identity-popup-trackersView-strict-info"
+      "protections-popup-trackersView-strict-info"
     );
     is(
       BrowserTestUtils.is_hidden(strictInfo),
@@ -74,9 +76,7 @@ async function assertSitesListed(blocked) {
     ok(true, "Trackers view was shown");
 
     listItems = Array.from(
-      trackersView.querySelectorAll(
-        ".identity-popup-content-blocking-list-item"
-      )
+      trackersView.querySelectorAll(".protections-popup-list-item")
     );
     is(listItems.length, 2, "We have 2 trackers in the list");
 

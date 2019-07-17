@@ -632,7 +632,8 @@ void XMLHttpRequestMainThread::SetResponseType(
 
   if (mState == XMLHttpRequest_Binding::LOADING ||
       mState == XMLHttpRequest_Binding::DONE) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_RESPONSE_TYPE);
+    aRv.Throw(
+        NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_RESPONSE_TYPE);
     return;
   }
 
@@ -1028,10 +1029,14 @@ bool XMLHttpRequestMainThread::IsSafeHeader(
     if (!NS_IsValidHTTPToken(token)) {
       return false;
     }
-    if (aHeader.Equals(token, nsCaseInsensitiveCStringComparator())) {
+
+    if (token.EqualsLiteral("*") && !mFlagACwithCredentials) {
+      isSafe = true;
+    } else if (aHeader.Equals(token, nsCaseInsensitiveCStringComparator())) {
       isSafe = true;
     }
   }
+
   return isSafe;
 }
 
@@ -3101,7 +3106,8 @@ void XMLHttpRequestMainThread::OverrideMimeType(const nsAString& aMimeType,
 
   if (mState == XMLHttpRequest_Binding::LOADING ||
       mState == XMLHttpRequest_Binding::DONE) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_OVERRIDE_MIME_TYPE);
+    aRv.Throw(
+        NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE_OVERRIDE_MIME_TYPE);
     return;
   }
 

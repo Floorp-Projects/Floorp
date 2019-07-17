@@ -292,8 +292,10 @@ static int _os_lacing_expand(ogg_stream_state *os,long needed){
 
 void ogg_page_checksum_set(ogg_page *og){
   if(og){
+#ifndef FUZZING
     ogg_uint32_t crc_reg=0;
     int i;
+#endif
 
     /* safety; needed for API behavior, but not framing code */
     og->header[22]=0;
@@ -301,6 +303,7 @@ void ogg_page_checksum_set(ogg_page *og){
     og->header[24]=0;
     og->header[25]=0;
 
+#ifndef FUZZING
     for(i=0;i<og->header_len;i++)
       crc_reg=(crc_reg<<8)^crc_lookup[((crc_reg >> 24)&0xff)^og->header[i]];
     for(i=0;i<og->body_len;i++)
@@ -310,6 +313,7 @@ void ogg_page_checksum_set(ogg_page *og){
     og->header[23]=(unsigned char)((crc_reg>>8)&0xff);
     og->header[24]=(unsigned char)((crc_reg>>16)&0xff);
     og->header[25]=(unsigned char)((crc_reg>>24)&0xff);
+#endif
   }
 }
 

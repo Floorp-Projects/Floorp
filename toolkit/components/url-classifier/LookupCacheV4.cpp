@@ -124,7 +124,6 @@ nsresult LookupCacheV4::Has(const Completion& aCompletion, bool* aHas,
   *aHas = true;
   *aMatchLength = length;
 
-
   // Even though V4 supports variable-length prefix, we always send 4-bytes for
   // completion (Bug 1323953). This means cached prefix length is also 4-bytes.
   return CheckCache(aCompletion, aHas, aConfirmed);
