@@ -346,13 +346,6 @@ class nsContentUtils {
       const nsINode* aPossibleDescendant, const nsINode* aPossibleAncestor);
 
   /**
-   * Similar to above, but does special case only ShadowRoot,
-   * not HTMLTemplateElement.
-   */
-  static bool ContentIsShadowIncludingDescendantOf(
-      const nsINode* aPossibleDescendant, const nsINode* aPossibleAncestor);
-
-  /**
    * Similar to nsINode::IsInclusiveDescendantOf except it crosses document
    * boundaries, this function uses ancestor/descendant relations in the
    * composed document (see shadow DOM spec).
