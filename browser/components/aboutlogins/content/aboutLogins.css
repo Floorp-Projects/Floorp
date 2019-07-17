@@ -21,7 +21,7 @@ header {
 }
 
 login-filter {
-  flex: auto;
+  flex-grow: 1;
   align-self: center;
 }
 
