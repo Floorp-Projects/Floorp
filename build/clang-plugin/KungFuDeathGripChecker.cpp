@@ -6,7 +6,11 @@
 #include "CustomMatchers.h"
 
 void KungFuDeathGripChecker::registerMatchers(MatchFinder *AstMatcher) {
-  AstMatcher->addMatcher(varDecl(hasType(isRefPtr())).bind("decl"), this);
+  AstMatcher->addMatcher(varDecl(allOf(hasType(isRefPtr()),
+                                       hasLocalStorage(),
+                                       hasInitializer(anything())))
+                             .bind("decl"),
+                         this);
 }
 
 void KungFuDeathGripChecker::check(const MatchFinder::MatchResult &Result) {
@@ -16,7 +20,7 @@ void KungFuDeathGripChecker::check(const MatchFinder::MatchResult &Result) {
                      "'%1', or explicitly pass '%1' to `mozilla::Unused`";
 
   const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("decl");
-  if (D->isReferenced() || !D->hasLocalStorage() || !D->hasInit()) {
+  if (D->isReferenced()) {
     return;
   }
 
@@ -42,6 +46,12 @@ void KungFuDeathGripChecker::check(const MatchFinder::MatchResult &Result) {
   // conversion constructors, we ignore it and continue to dig.
   while ((CE = dyn_cast<CXXConstructExpr>(E)) && CE->getNumArgs() == 1) {
     E = IgnoreTrivials(CE->getArg(0));
+  }
+
+  // It is possible that the QualType doesn't point to a type yet so we are
+  // not interested.
+  if (E->getType().isNull()) {
+    return;
   }
 
   // We allow taking a kungFuDeathGrip of `this` because it cannot change
