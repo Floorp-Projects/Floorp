@@ -39,6 +39,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getHostFromUrl
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.simplifiedUrl
 import org.mozilla.fenix.share.ShareTab
 import java.util.concurrent.TimeUnit
 
@@ -256,12 +257,20 @@ class HistoryFragment : Fragment(), BackHandler {
         // Until we have proper pagination, only display a limited set of history to avoid blowing up the UI.
         // See https://github.com/mozilla-mobile/fenix/issues/1393
         val sinceTimeMs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(HISTORY_TIME_DAYS)
+        var previous: String? = null
+
         val items = requireComponents.core.historyStorage
             .getDetailedVisits(sinceTimeMs, excludeTypes = excludeTypes)
             // We potentially have a large amount of visits, and multiple processing steps.
             // Wrapping iterator in a sequence should make this a little memory-more efficient.
             .asSequence()
             .sortedByDescending { it.visitTime }
+            .filter {
+                val current = it.url.simplifiedUrl()
+                val isNotDuplicate = current != previous
+                previous = current
+                isNotDuplicate
+            }
             .mapIndexed { id, item ->
                 val title = item.title
                     ?.takeIf(String::isNotEmpty)

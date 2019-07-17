@@ -43,3 +43,20 @@ fun String.urlToTrimmedHost(context: Context): String {
         this
     }
 }
+
+/**
+ * Trims a URL string of its scheme and common prefixes.
+ *
+ * This is intended to act much like [PublicSuffixList.getPublicSuffixPlusOne()] but unlike
+ * that method, leaves the path, anchor, etc intact.
+ *
+ */
+fun String.simplifiedUrl(): String {
+    val afterScheme = this.substringAfter("://")
+    for (prefix in listOf("www.", "m.", "mobile.")) {
+        if (afterScheme.startsWith(prefix)) {
+            return afterScheme.substring(prefix.length)
+        }
+    }
+    return afterScheme
+}
