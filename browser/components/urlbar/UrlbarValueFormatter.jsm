@@ -46,11 +46,7 @@ class UrlbarValueFormatter {
   }
 
   get scheme() {
-    return this.document.getAnonymousElementByAttribute(
-      this.urlbarInput.textbox,
-      "anonid",
-      "scheme"
-    );
+    return this.urlbarInput.textbox.querySelector(".urlbar-scheme");
   }
 
   update() {
