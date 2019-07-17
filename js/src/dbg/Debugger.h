@@ -417,19 +417,36 @@ class MOZ_RAII EvalOptions {
  */
 typedef JSObject Env;
 
-// One of a real JSScript, a real LazyScript, or synthesized.
+// The referent of a Debugger.Script.
 //
-// If synthesized, the referent is one of the following:
+// - For most scripts, we point at their LazyScript, because that address
+//   doesn't change as the script is lazified/delazified.
 //
-//   1. A WasmInstanceObject, denoting a synthesized toplevel wasm module
-//      script.
-//   2. A wasm JSFunction, denoting a synthesized wasm function script.
-//      NYI!
+// - For scripts that cannot be lazified, and thus have no LazyScript, we point
+//   directly to their JSScript.
+//
+// - For Web Assembly instances for which we are presenting a script-like
+//   interface, we point at their WasmInstanceObject.
+//
+// The DebuggerScript object itself simply stores a Cell* in its private
+// pointer, but when we're working with that pointer in C++ code, we'd rather
+// not pass around a Cell* and be constantly asserting that, yes, this really
+// does point to something okay. Instead, we immediately build an instance of
+// this type from the Cell* and use that instead, so we can benefit from
+// Variant's static checks.
 typedef mozilla::Variant<JSScript*, LazyScript*, WasmInstanceObject*>
     DebuggerScriptReferent;
 
-// Either a ScriptSourceObject, for ordinary JS, or a WasmInstanceObject,
-// denoting the synthesized source of a wasm module.
+// The referent of a Debugger.Source.
+//
+// - For most sources, this is a ScriptSourceObject.
+//
+// - For Web Assembly instances for which we are presenting a source-like
+//   interface, we point at their WasmInstanceObject.
+//
+// The DebuggerSource object actually simply stores a Cell* in its private
+// pointer. See the comments for DebuggerScriptReferent for the rationale for
+// this type.
 typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*>
     DebuggerSourceReferent;
 
@@ -932,7 +949,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static MOZ_MUST_USE bool ensureExecutionObservabilityOfOsrFrame(
       JSContext* cx, AbstractFramePtr osrSourceFrame);
 
-  // Public for DebuggerScript_setBreakpoint.
+  // Public for DebuggerScript::setBreakpoint.
   static MOZ_MUST_USE bool ensureExecutionObservabilityOfScript(
       JSContext* cx, JSScript* script);
 
@@ -1004,8 +1021,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   ResumeMode firePromiseHook(JSContext* cx, Hook hook, HandleObject promise,
                              MutableHandleValue vp);
 
-  NativeObject* newVariantWrapper(JSContext* cx,
-                                  Handle<DebuggerScriptReferent> referent) {
+  DebuggerScript* newVariantWrapper(JSContext* cx,
+                                    Handle<DebuggerScriptReferent> referent) {
     return newDebuggerScript(cx, referent);
   }
   NativeObject* newVariantWrapper(JSContext* cx,
@@ -1021,12 +1038,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Prefer using wrapScript, wrapWasmScript, wrapSource, and wrapWasmSource
    * whenever possible.
    */
-  template <typename ReferentVariant, typename Referent, typename Map>
-  JSObject* wrapVariantReferent(JSContext* cx, Map& map,
-                                Handle<CrossCompartmentKey> key,
-                                Handle<ReferentVariant> referent);
-  JSObject* wrapVariantReferent(JSContext* cx,
-                                Handle<DebuggerScriptReferent> referent);
+  template <typename Wrapper, typename ReferentVariant, typename Referent,
+            typename Map>
+  Wrapper* wrapVariantReferent(JSContext* cx, Map& map,
+                               Handle<CrossCompartmentKey> key,
+                               Handle<ReferentVariant> referent);
+  DebuggerScript* wrapVariantReferent(JSContext* cx,
+                                      Handle<DebuggerScriptReferent> referent);
   JSObject* wrapVariantReferent(JSContext* cx,
                                 Handle<DebuggerSourceReferent> referent);
 
@@ -1034,8 +1052,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Allocate and initialize a Debugger.Script instance whose referent is
    * |referent|.
    */
-  NativeObject* newDebuggerScript(JSContext* cx,
-                                  Handle<DebuggerScriptReferent> referent);
+  DebuggerScript* newDebuggerScript(JSContext* cx,
+                                    Handle<DebuggerScriptReferent> referent);
 
   /*
    * Allocate and initialize a Debugger.Source instance whose referent is
@@ -1319,9 +1337,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * needed. The context |cx| must be in the debugger realm; |script| must be
    * a script in a debuggee realm.
    */
-  JSObject* wrapScript(JSContext* cx, HandleScript script);
+  DebuggerScript* wrapScript(JSContext* cx, HandleScript script);
 
-  JSObject* wrapLazyScript(JSContext* cx, Handle<LazyScript*> script);
+  DebuggerScript* wrapLazyScript(JSContext* cx, Handle<LazyScript*> script);
 
   /*
    * Return the Debugger.Script object for |wasmInstance| (the toplevel
@@ -1329,8 +1347,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * the debugger compartment; |wasmInstance| must be a WasmInstanceObject in
    * the debuggee realm.
    */
-  JSObject* wrapWasmScript(JSContext* cx,
-                           Handle<WasmInstanceObject*> wasmInstance);
+  DebuggerScript* wrapWasmScript(JSContext* cx,
+                                 Handle<WasmInstanceObject*> wasmInstance);
 
   /*
    * Return the Debugger.Source object for |source|, or create a new one if
@@ -1351,6 +1369,78 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
  private:
   Debugger(const Debugger&) = delete;
   Debugger& operator=(const Debugger&) = delete;
+};
+
+class DebuggerScript : public NativeObject {
+ public:
+  static const Class class_;
+
+  enum {
+    OWNER_SLOT,
+    RESERVED_SLOTS,
+  };
+
+  static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
+                                 HandleObject debugCtor);
+  static DebuggerScript* create(JSContext* cx, HandleObject proto,
+                                Handle<DebuggerScriptReferent> referent,
+                                HandleNativeObject debugger);
+
+  static void trace(JSTracer* trc, JSObject* obj);
+
+  inline gc::Cell* getReferentCell() const;
+  inline DebuggerScriptReferent getReferent() const;
+
+  static DebuggerScript* check(JSContext* cx, HandleValue v,
+                               const char* fnname);
+  static DebuggerScript* checkThis(JSContext* cx, const CallArgs& args,
+                                   const char* fnname);
+
+  // JS methods
+  static bool getIsGeneratorFunction(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIsAsyncFunction(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIsModule(JSContext* cx, unsigned argc, Value* vp);
+  static bool getDisplayName(JSContext* cx, unsigned argc, Value* vp);
+  static bool getUrl(JSContext* cx, unsigned argc, Value* vp);
+  static bool getStartLine(JSContext* cx, unsigned argc, Value* vp);
+  static bool getLineCount(JSContext* cx, unsigned argc, Value* vp);
+  static bool getSource(JSContext* cx, unsigned argc, Value* vp);
+  static bool getSourceStart(JSContext* cx, unsigned argc, Value* vp);
+  static bool getSourceLength(JSContext* cx, unsigned argc, Value* vp);
+  static bool getMainOffset(JSContext* cx, unsigned argc, Value* vp);
+  static bool getGlobal(JSContext* cx, unsigned argc, Value* vp);
+  static bool getFormat(JSContext* cx, unsigned argc, Value* vp);
+  static bool getChildScripts(JSContext* cx, unsigned argc, Value* vp);
+  static bool getPossibleBreakpoints(JSContext* cx, unsigned argc, Value* vp);
+  static bool getPossibleBreakpointOffsets(JSContext* cx, unsigned argc,
+                                           Value* vp);
+  static bool getOffsetMetadata(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOffsetLocation(JSContext* cx, unsigned argc, Value* vp);
+  static bool getSuccessorOffsets(JSContext* cx, unsigned argc, Value* vp);
+  static bool getPredecessorOffsets(JSContext* cx, unsigned argc, Value* vp);
+  static bool getAllOffsets(JSContext* cx, unsigned argc, Value* vp);
+  static bool getAllColumnOffsets(JSContext* cx, unsigned argc, Value* vp);
+  static bool getLineOffsets(JSContext* cx, unsigned argc, Value* vp);
+  static bool setBreakpoint(JSContext* cx, unsigned argc, Value* vp);
+  static bool getBreakpoints(JSContext* cx, unsigned argc, Value* vp);
+  static bool clearBreakpoint(JSContext* cx, unsigned argc, Value* vp);
+  static bool clearAllBreakpoints(JSContext* cx, unsigned argc, Value* vp);
+  static bool isInCatchScope(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOffsetsCoverage(JSContext* cx, unsigned argc, Value* vp);
+  static bool construct(JSContext* cx, unsigned argc, Value* vp);
+
+  template <typename T>
+  static bool getUrlImpl(JSContext* cx, CallArgs& args, Handle<T*> script);
+
+  static bool getSuccessorOrPredecessorOffsets(JSContext* cx, unsigned argc,
+                                               Value* vp, const char* name,
+                                               bool successor);
+
+ private:
+  static const ClassOps classOps_;
+
+  static const JSPropertySpec properties_[];
+  static const JSFunctionSpec methods_[];
 };
 
 /*
