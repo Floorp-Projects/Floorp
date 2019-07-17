@@ -5873,11 +5873,11 @@ NativeObject* DebuggerScript::initClass(JSContext* cx,
                    methods_, nullptr, nullptr);
 }
 
-class DebuggerScriptSetPrivateMatcher {
+class DebuggerScript::SetPrivateMatcher {
   DebuggerScript* obj_;
 
  public:
-  explicit DebuggerScriptSetPrivateMatcher(DebuggerScript* obj) : obj_(obj) {}
+  explicit SetPrivateMatcher(DebuggerScript* obj) : obj_(obj) {}
   using ReturnType = void;
   ReturnType match(HandleScript script) { obj_->setPrivateGCThing(script); }
   ReturnType match(Handle<LazyScript*> lazyScript) {
@@ -5900,7 +5900,7 @@ DebuggerScript* DebuggerScript::create(JSContext* cx, HandleObject proto,
 
   scriptobj->setReservedSlot(DebuggerScript::OWNER_SLOT,
                              ObjectValue(*debugger));
-  DebuggerScriptSetPrivateMatcher matcher(scriptobj);
+  SetPrivateMatcher matcher(scriptobj);
   referent.match(matcher);
 
   return scriptobj;
@@ -6228,7 +6228,7 @@ bool DebuggerScript::getUrl(JSContext* cx, unsigned argc, Value* vp) {
   return getUrlImpl<LazyScript>(cx, args, lazyScript);
 }
 
-struct DebuggerScriptGetStartLineMatcher {
+struct DebuggerScript::GetStartLineMatcher {
   using ReturnType = uint32_t;
 
   ReturnType match(HandleScript script) { return script->lineno(); }
@@ -6242,17 +6242,16 @@ struct DebuggerScriptGetStartLineMatcher {
 bool DebuggerScript::getStartLine(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get startLine)", args, obj,
                             referent);
-  DebuggerScriptGetStartLineMatcher matcher;
+  GetStartLineMatcher matcher;
   args.rval().setNumber(referent.match(matcher));
   return true;
 }
 
-struct DebuggerScriptGetLineCountMatcher {
+struct DebuggerScript::GetLineCountMatcher {
   JSContext* cx_;
   double totalLines;
 
-  explicit DebuggerScriptGetLineCountMatcher(JSContext* cx)
-      : cx_(cx), totalLines(0.0) {}
+  explicit GetLineCountMatcher(JSContext* cx) : cx_(cx), totalLines(0.0) {}
   using ReturnType = bool;
 
   ReturnType match(HandleScript script) {
@@ -6281,7 +6280,7 @@ struct DebuggerScriptGetLineCountMatcher {
 bool DebuggerScript::getLineCount(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get lineCount)", args, obj,
                             referent);
-  DebuggerScriptGetLineCountMatcher matcher(cx);
+  GetLineCountMatcher matcher(cx);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -6289,13 +6288,12 @@ bool DebuggerScript::getLineCount(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-class DebuggerScriptGetSourceMatcher {
+class DebuggerScript::GetSourceMatcher {
   JSContext* cx_;
   Debugger* dbg_;
 
  public:
-  DebuggerScriptGetSourceMatcher(JSContext* cx, Debugger* dbg)
-      : cx_(cx), dbg_(dbg) {}
+  GetSourceMatcher(JSContext* cx, Debugger* dbg) : cx_(cx), dbg_(dbg) {}
 
   using ReturnType = JSObject*;
 
@@ -6323,7 +6321,7 @@ bool DebuggerScript::getSource(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get source)", args, obj, referent);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
 
-  DebuggerScriptGetSourceMatcher matcher(cx, dbg);
+  GetSourceMatcher matcher(cx, dbg);
   RootedObject sourceObject(cx, referent.match(matcher));
   if (!sourceObject) {
     return false;
@@ -6373,12 +6371,11 @@ bool DebuggerScript::getGlobal(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-class DebuggerScriptGetFormatMatcher {
+class DebuggerScript::GetFormatMatcher {
   const JSAtomState& names_;
 
  public:
-  explicit DebuggerScriptGetFormatMatcher(const JSAtomState& names)
-      : names_(names) {}
+  explicit GetFormatMatcher(const JSAtomState& names) : names_(names) {}
   using ReturnType = JSAtom*;
   ReturnType match(HandleScript script) { return names_.js; }
   ReturnType match(Handle<LazyScript*> lazyScript) { return names_.js; }
@@ -6390,7 +6387,7 @@ class DebuggerScriptGetFormatMatcher {
 /* static */
 bool DebuggerScript::getFormat(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get format)", args, obj, referent);
-  DebuggerScriptGetFormatMatcher matcher(cx->names());
+  GetFormatMatcher matcher(cx->names());
   args.rval().setString(referent.match(matcher));
   return true;
 }
@@ -6465,7 +6462,7 @@ static bool EnsureScriptOffsetIsValid(JSContext* cx, JSScript* script,
 }
 
 template <bool OnlyOffsets>
-class DebuggerScriptGetPossibleBreakpointsMatcher {
+class DebuggerScript::GetPossibleBreakpointsMatcher {
   JSContext* cx_;
   MutableHandleObject result_;
 
@@ -6569,8 +6566,8 @@ class DebuggerScriptGetPossibleBreakpointsMatcher {
   }
 
  public:
-  explicit DebuggerScriptGetPossibleBreakpointsMatcher(
-      JSContext* cx, MutableHandleObject result)
+  explicit GetPossibleBreakpointsMatcher(JSContext* cx,
+                                         MutableHandleObject result)
       : cx_(cx),
         result_(result),
         minOffset(),
@@ -6780,7 +6777,7 @@ bool DebuggerScript::getPossibleBreakpoints(JSContext* cx, unsigned argc,
                             referent);
 
   RootedObject result(cx);
-  DebuggerScriptGetPossibleBreakpointsMatcher<false> matcher(cx, &result);
+  GetPossibleBreakpointsMatcher<false> matcher(cx, &result);
   if (args.length() >= 1 && !args[0].isUndefined()) {
     RootedObject queryObject(cx, RequireObject(cx, args[0]));
     if (!queryObject || !matcher.parseQuery(queryObject)) {
@@ -6802,7 +6799,7 @@ bool DebuggerScript::getPossibleBreakpointOffsets(JSContext* cx, unsigned argc,
                             obj, referent);
 
   RootedObject result(cx);
-  DebuggerScriptGetPossibleBreakpointsMatcher<true> matcher(cx, &result);
+  GetPossibleBreakpointsMatcher<true> matcher(cx, &result);
   if (args.length() >= 1 && !args[0].isUndefined()) {
     RootedObject queryObject(cx, RequireObject(cx, args[0]));
     if (!queryObject || !matcher.parseQuery(queryObject)) {
@@ -6817,14 +6814,14 @@ bool DebuggerScript::getPossibleBreakpointOffsets(JSContext* cx, unsigned argc,
   return true;
 }
 
-class DebuggerScriptGetOffsetMetadataMatcher {
+class DebuggerScript::GetOffsetMetadataMatcher {
   JSContext* cx_;
   size_t offset_;
   MutableHandlePlainObject result_;
 
  public:
-  explicit DebuggerScriptGetOffsetMetadataMatcher(
-      JSContext* cx, size_t offset, MutableHandlePlainObject result)
+  explicit GetOffsetMetadataMatcher(JSContext* cx, size_t offset,
+                                    MutableHandlePlainObject result)
       : cx_(cx), offset_(offset), result_(result) {}
   using ReturnType = bool;
   ReturnType match(HandleScript script) {
@@ -6930,7 +6927,7 @@ bool DebuggerScript::getOffsetMetadata(JSContext* cx, unsigned argc,
   }
 
   RootedPlainObject result(cx);
-  DebuggerScriptGetOffsetMetadataMatcher matcher(cx, offset, &result);
+  GetOffsetMetadataMatcher matcher(cx, offset, &result);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -7105,14 +7102,14 @@ class FlowGraphSummary {
 
 } /* anonymous namespace */
 
-class DebuggerScriptGetOffsetLocationMatcher {
+class DebuggerScript::GetOffsetLocationMatcher {
   JSContext* cx_;
   size_t offset_;
   MutableHandlePlainObject result_;
 
  public:
-  explicit DebuggerScriptGetOffsetLocationMatcher(
-      JSContext* cx, size_t offset, MutableHandlePlainObject result)
+  explicit GetOffsetLocationMatcher(JSContext* cx, size_t offset,
+                                    MutableHandlePlainObject result)
       : cx_(cx), offset_(offset), result_(result) {}
   using ReturnType = bool;
   ReturnType match(HandleScript script) {
@@ -7243,7 +7240,7 @@ bool DebuggerScript::getOffsetLocation(JSContext* cx, unsigned argc,
   }
 
   RootedPlainObject result(cx);
-  DebuggerScriptGetOffsetLocationMatcher matcher(cx, offset, &result);
+  GetOffsetLocationMatcher matcher(cx, offset, &result);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -7252,15 +7249,16 @@ bool DebuggerScript::getOffsetLocation(JSContext* cx, unsigned argc,
   return true;
 }
 
-class DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher {
+class DebuggerScript::GetSuccessorOrPredecessorOffsetsMatcher {
   JSContext* cx_;
   size_t offset_;
   bool successor_;
   MutableHandleObject result_;
 
  public:
-  DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher(
-      JSContext* cx, size_t offset, bool successor, MutableHandleObject result)
+  GetSuccessorOrPredecessorOffsetsMatcher(JSContext* cx, size_t offset,
+                                          bool successor,
+                                          MutableHandleObject result)
       : cx_(cx), offset_(offset), successor_(successor), result_(result) {}
 
   using ReturnType = bool;
@@ -7328,8 +7326,8 @@ bool DebuggerScript::getSuccessorOrPredecessorOffsets(JSContext* cx,
   }
 
   RootedObject result(cx);
-  DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher matcher(
-      cx, offset, successor, &result);
+  GetSuccessorOrPredecessorOffsetsMatcher matcher(cx, offset, successor,
+                                                  &result);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -7425,7 +7423,7 @@ bool DebuggerScript::getAllOffsets(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-class DebuggerScriptGetAllColumnOffsetsMatcher {
+class DebuggerScript::GetAllColumnOffsetsMatcher {
   JSContext* cx_;
   MutableHandleObject result_;
 
@@ -7454,8 +7452,7 @@ class DebuggerScriptGetAllColumnOffsetsMatcher {
   }
 
  public:
-  explicit DebuggerScriptGetAllColumnOffsetsMatcher(JSContext* cx,
-                                                    MutableHandleObject result)
+  explicit GetAllColumnOffsetsMatcher(JSContext* cx, MutableHandleObject result)
       : cx_(cx), result_(result) {}
   using ReturnType = bool;
   ReturnType match(HandleScript script) {
@@ -7529,7 +7526,7 @@ bool DebuggerScript::getAllColumnOffsets(JSContext* cx, unsigned argc,
                             referent);
 
   RootedObject result(cx);
-  DebuggerScriptGetAllColumnOffsetsMatcher matcher(cx, &result);
+  GetAllColumnOffsetsMatcher matcher(cx, &result);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -7538,14 +7535,14 @@ bool DebuggerScript::getAllColumnOffsets(JSContext* cx, unsigned argc,
   return true;
 }
 
-class DebuggerScriptGetLineOffsetsMatcher {
+class DebuggerScript::GetLineOffsetsMatcher {
   JSContext* cx_;
   size_t lineno_;
   MutableHandleObject result_;
 
  public:
-  explicit DebuggerScriptGetLineOffsetsMatcher(JSContext* cx, size_t lineno,
-                                               MutableHandleObject result)
+  explicit GetLineOffsetsMatcher(JSContext* cx, size_t lineno,
+                                 MutableHandleObject result)
       : cx_(cx), lineno_(lineno), result_(result) {}
   using ReturnType = bool;
   ReturnType match(HandleScript script) {
@@ -7635,7 +7632,7 @@ bool DebuggerScript::getLineOffsets(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject result(cx);
-  DebuggerScriptGetLineOffsetsMatcher matcher(cx, lineno, &result);
+  GetLineOffsetsMatcher matcher(cx, lineno, &result);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -7868,16 +7865,15 @@ void Debugger::propagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
   frame.setReturnValue(rval);
 }
 
-struct DebuggerScriptSetBreakpointMatcher {
+struct DebuggerScript::SetBreakpointMatcher {
   JSContext* cx_;
   Debugger* dbg_;
   size_t offset_;
   RootedObject handler_;
 
  public:
-  explicit DebuggerScriptSetBreakpointMatcher(JSContext* cx, Debugger* dbg,
-                                              size_t offset,
-                                              HandleObject handler)
+  explicit SetBreakpointMatcher(JSContext* cx, Debugger* dbg, size_t offset,
+                                HandleObject handler)
       : cx_(cx), dbg_(dbg), offset_(offset), handler_(cx, handler) {}
 
   using ReturnType = bool;
@@ -7965,7 +7961,7 @@ bool DebuggerScript::setBreakpoint(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  DebuggerScriptSetBreakpointMatcher matcher(cx, dbg, offset, handler);
+  SetBreakpointMatcher matcher(cx, dbg, offset, handler);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -8016,14 +8012,13 @@ bool DebuggerScript::getBreakpoints(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-class DebuggerScriptClearBreakpointMatcher {
+class DebuggerScript::ClearBreakpointMatcher {
   JSContext* cx_;
   Debugger* dbg_;
   JSObject* handler_;
 
  public:
-  DebuggerScriptClearBreakpointMatcher(JSContext* cx, Debugger* dbg,
-                                       JSObject* handler)
+  ClearBreakpointMatcher(JSContext* cx, Debugger* dbg, JSObject* handler)
       : cx_(cx), dbg_(dbg), handler_(handler) {}
   using ReturnType = bool;
 
@@ -8063,7 +8058,7 @@ bool DebuggerScript::clearBreakpoint(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  DebuggerScriptClearBreakpointMatcher matcher(cx, dbg, handler);
+  ClearBreakpointMatcher matcher(cx, dbg, handler);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -8078,7 +8073,7 @@ bool DebuggerScript::clearAllBreakpoints(JSContext* cx, unsigned argc,
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "clearAllBreakpoints", args, obj,
                             referent);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
-  DebuggerScriptClearBreakpointMatcher matcher(cx, dbg, nullptr);
+  ClearBreakpointMatcher matcher(cx, dbg, nullptr);
   if (!referent.match(matcher)) {
     return false;
   }
@@ -8086,13 +8081,13 @@ bool DebuggerScript::clearAllBreakpoints(JSContext* cx, unsigned argc,
   return true;
 }
 
-class DebuggerScriptIsInCatchScopeMatcher {
+class DebuggerScript::IsInCatchScopeMatcher {
   JSContext* cx_;
   size_t offset_;
   bool isInCatch_;
 
  public:
-  explicit DebuggerScriptIsInCatchScopeMatcher(JSContext* cx, size_t offset)
+  explicit IsInCatchScopeMatcher(JSContext* cx, size_t offset)
       : cx_(cx), offset_(offset), isInCatch_(false) {}
   using ReturnType = bool;
 
@@ -8140,7 +8135,7 @@ bool DebuggerScript::isInCatchScope(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  DebuggerScriptIsInCatchScopeMatcher matcher(cx, offset);
+  IsInCatchScopeMatcher matcher(cx, offset);
   if (!referent.match(matcher)) {
     return false;
   }
