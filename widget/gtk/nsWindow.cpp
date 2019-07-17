@@ -420,6 +420,7 @@ nsWindow::nsWindow() {
 
 #ifdef MOZ_WAYLAND
   mNeedsUpdatingEGLSurface = false;
+  mCompositorInitiallyPaused = false;
 #endif
 
   if (!gGlobalsInitialized) {
@@ -2106,6 +2107,7 @@ void nsWindow::WaylandEGLSurfaceForceRedraw() {
   if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
     MOZ_ASSERT(mCompositorWidgetDelegate);
     if (mCompositorWidgetDelegate) {
+      mCompositorInitiallyPaused = false;
       mNeedsUpdatingEGLSurface = false;
       mCompositorWidgetDelegate->RequestsUpdatingEGLSurface();
       remoteRenderer->SendResumeAsync();
@@ -3754,6 +3756,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       mContainer = MOZ_CONTAINER(container);
 #ifdef MOZ_WAYLAND
       if (!mIsX11Display && ComputeShouldAccelerate()) {
+        mCompositorInitiallyPaused = true;
         RefPtr<nsWindow> self(this);
         moz_container_set_initial_draw_callback(mContainer, [self]() -> void {
           self->mNeedsUpdatingEGLSurface = true;
