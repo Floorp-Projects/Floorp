@@ -109,7 +109,7 @@ inline Chunk* js::NurseryChunk::toChunk(JSRuntime* rt) {
 
 void js::NurseryDecommitTask::queueChunk(
     NurseryChunk* nchunk, const AutoLockHelperThreadState& lock) {
-  // Using the chunk pointers is infalliable.
+  // Using the chunk pointers to build the queue is infallible.
   Chunk* chunk = nchunk->toChunk(runtime());
   chunk->info.prev = nullptr;
   chunk->info.next = queue;
@@ -363,8 +363,8 @@ bool js::Nursery::isEmpty() const {
 void js::Nursery::enterZealMode() {
   if (isEnabled()) {
     if (isSubChunkMode()) {
-      // It'd be simplier to poison the whole chunk, but we can't do that
-      // because the nursery might be partily used.
+      // It'd be simpler to poison the whole chunk, but we can't do that
+      // because the nursery might be partially used.
       chunk(0).poisonRange(capacity_, NurseryChunkUsableSize - capacity_,
                            JS_FRESH_NURSERY_PATTERN,
                            MemCheckKind::MakeUndefined);
