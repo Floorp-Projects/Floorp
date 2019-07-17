@@ -63,8 +63,7 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         """Perform a search via the browser's URL bar."""
 
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            self.marionette.execute_script("gURLBar.select();")
-            urlbar = self.marionette.find_element(By.ID, "urlbar-input")
+            urlbar = self.marionette.find_element(By.ID, "urlbar")
             urlbar.send_keys(keys.Keys.DELETE)
             urlbar.send_keys(text + keys.Keys.ENTER)
 
