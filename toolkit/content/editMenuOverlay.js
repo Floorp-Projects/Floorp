@@ -74,7 +74,6 @@ window.addEventListener("contextmenu", e => {
   let needsContextMenu =
     e.target.ownerDocument == document &&
     !e.defaultPrevented &&
-    e.target.parentNode.nodeName != "moz-input-box" &&
     ((["textarea", "input"].includes(e.target.localName) &&
       e.target.namespaceURI == HTML_NS) ||
       e.target.closest("textbox[is='search-textbox']"));
