@@ -7,6 +7,7 @@
 #include "dbg/Object-inl.h"
 
 #include "dbg/NoExecute.h"
+#include "dbg/Script.h"
 #include "proxy/ScriptedProxyHandler.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/WrapperObject.h"
@@ -324,7 +325,7 @@ bool DebuggerObject::scriptGetter(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  RootedObject scriptObject(cx, dbg->wrapScript(cx, script));
+  RootedDebuggerScript scriptObject(cx, dbg->wrapScript(cx, script));
   if (!scriptObject) {
     return false;
   }
