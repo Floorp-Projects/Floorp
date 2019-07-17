@@ -222,8 +222,7 @@ nsresult mozInlineSpellStatus::InitForNavigation(
   }
   // the anchor node might not be in the DOM anymore, check
   if (root && aOldAnchorNode &&
-      !nsContentUtils::ContentIsShadowIncludingDescendantOf(aOldAnchorNode,
-                                                            root)) {
+      !aOldAnchorNode->IsShadowIncludingInclusiveDescendantOf(root)) {
     *aContinue = false;
     return NS_OK;
   }
@@ -1271,10 +1270,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     // aWordUtil.GetRootNode()
     nsINode* rootNode = aWordUtil.GetRootNode();
     if (!beginNode->IsInComposedDoc() || !endNode->IsInComposedDoc() ||
-        !nsContentUtils::ContentIsShadowIncludingDescendantOf(beginNode,
-                                                              rootNode) ||
-        !nsContentUtils::ContentIsShadowIncludingDescendantOf(endNode,
-                                                              rootNode)) {
+        !beginNode->IsShadowIncludingInclusiveDescendantOf(rootNode) ||
+        !endNode->IsShadowIncludingInclusiveDescendantOf(rootNode)) {
       // Just bail out and don't try to spell-check this
       return NS_OK;
     }

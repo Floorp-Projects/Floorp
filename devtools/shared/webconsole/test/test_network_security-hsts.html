@@ -48,7 +48,7 @@ function startTest()
                        .getService(Ci.nsIIOService);
 
     let uri = gIOService.newURI(TEST_CASES[0].url);
-    gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
+    gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
   });
 
   info("Test detection of HTTP Strict Transport Security.");

@@ -675,7 +675,6 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   // Tell our embedder that the tab is now going away unless we're an
   // out-of-process iframe.
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (frameLoader) {
     ReceiveMessage(CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr, nullptr,
                    nullptr);
@@ -694,10 +693,6 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   }
 
   mFrameLoader = nullptr;
-  if (os && mBrowserHost) {
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIRemoteTab*, mBrowserHost),
-                        "ipc:browser-destroyed", nullptr);
-  }
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvMoveFocus(
@@ -3712,20 +3707,18 @@ void BrowserParent::LiveResizeStarted() { SuppressDisplayport(true); }
 void BrowserParent::LiveResizeStopped() { SuppressDisplayport(false); }
 
 void BrowserParent::SetBrowserBridgeParent(BrowserBridgeParent* aBrowser) {
-  // We should not have either a browser bridge or browser host yet
-  MOZ_ASSERT(!mBrowserBridgeParent);
-  MOZ_ASSERT(!mBrowserHost);
-  // We should not have owner content yet
-  MOZ_ASSERT(!mFrameElement);
+  // We should either be clearing out our reference to a browser bridge, or not
+  // have either a browser bridge, browser host, or owner content yet.
+  MOZ_ASSERT(!aBrowser ||
+             (!mBrowserBridgeParent && !mBrowserHost && !mFrameElement));
   mBrowserBridgeParent = aBrowser;
 }
 
 void BrowserParent::SetBrowserHost(BrowserHost* aBrowser) {
-  // We should not have either a browser bridge or browser host yet
-  MOZ_ASSERT(!mBrowserBridgeParent);
-  MOZ_ASSERT(!mBrowserHost);
-  // We should not have owner content yet
-  MOZ_ASSERT(!mFrameElement);
+  // We should either be clearing out our reference to a browser host, or not
+  // have either a browser bridge, browser host, or owner content yet.
+  MOZ_ASSERT(!aBrowser ||
+             (!mBrowserBridgeParent && !mBrowserHost && !mFrameElement));
   mBrowserHost = aBrowser;
 }
 
