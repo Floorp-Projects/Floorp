@@ -67,7 +67,7 @@ function templateHTML(options) {
     }
   </body>
 </html>
-`.trimStart();
+`.trimLeft();
 }
 
 /**

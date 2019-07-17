@@ -69,6 +69,14 @@ TEST_DIRS += [
     'gtest',
 ]
 
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
+
+if CONFIG['FUZZING_INTERFACES']:
+    TEST_DIRS += [
+        'fuzz'
+    ]
+
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
     'tests/mochitest/identity/mochitest.ini',

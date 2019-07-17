@@ -86,19 +86,11 @@ function testBenignPage() {
   );
 
   ok(
-    !hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is visible"
-  );
-  ok(
-    hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is hidden"
-  );
-  ok(
-    hidden("#identity-popup-content-blocking-category-cookies"),
+    hidden("#protections-popup-category-cookies"),
     "Not showing cookie restrictions category"
   );
   ok(
-    hidden("#identity-popup-content-blocking-category-tracking-protection"),
+    hidden("#protections-popup-category-tracking-protection"),
     "Not showing trackers category"
   );
 }
@@ -134,19 +126,11 @@ function testBenignPageWithException() {
   );
 
   ok(
-    !hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is visible"
-  );
-  ok(
-    hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is hidden"
-  );
-  ok(
-    hidden("#identity-popup-content-blocking-category-cookies"),
+    hidden("#protections-popup-category-cookies"),
     "Not showing cookie restrictions category"
   );
   ok(
-    hidden("#identity-popup-content-blocking-category-tracking-protection"),
+    hidden("#protections-popup-category-tracking-protection"),
     "Not showing trackers category"
   );
 }
@@ -197,26 +181,17 @@ function testTrackingPage(window) {
   );
 
   ok(
-    hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is hidden"
-  );
-  ok(
-    !hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is visible"
-  );
-
-  ok(
-    !hidden("#identity-popup-content-blocking-category-tracking-protection"),
+    !hidden("#protections-popup-category-tracking-protection"),
     "Showing trackers category"
   );
   if (gTrackingPageURL == COOKIE_PAGE) {
     ok(
-      !hidden("#identity-popup-content-blocking-category-cookies"),
+      !hidden("#protections-popup-category-cookies"),
       "Showing cookie restrictions category"
     );
   } else {
     ok(
-      hidden("#identity-popup-content-blocking-category-cookies"),
+      hidden("#protections-popup-category-cookies"),
       "Not showing cookie restrictions category"
     );
   }
@@ -253,26 +228,17 @@ function testTrackingPageUnblocked(blockedByTP, window) {
   );
 
   ok(
-    hidden("#identity-popup-content-blocking-not-detected"),
-    "blocking not detected label is hidden"
-  );
-  ok(
-    !hidden("#identity-popup-content-blocking-detected"),
-    "blocking detected label is visible"
-  );
-
-  ok(
-    !hidden("#identity-popup-content-blocking-category-tracking-protection"),
+    !hidden("#protections-popup-category-tracking-protection"),
     "Showing trackers category"
   );
   if (gTrackingPageURL == COOKIE_PAGE) {
     ok(
-      !hidden("#identity-popup-content-blocking-category-cookies"),
+      !hidden("#protections-popup-category-cookies"),
       "Showing cookie restrictions category"
     );
   } else {
     ok(
-      hidden("#identity-popup-content-blocking-category-cookies"),
+      hidden("#protections-popup-category-cookies"),
       "Not showing cookie restrictions category"
     );
   }

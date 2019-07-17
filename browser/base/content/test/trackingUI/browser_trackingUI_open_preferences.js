@@ -51,27 +51,6 @@ add_task(async function setup() {
   });
 });
 
-// Tests that pressing the content blocking preferences icon in the protections popup
-// links to about:preferences
-add_task(async function testOpenPreferencesFromCBPrefsButton() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
-    await openProtectionsPopup();
-
-    let preferencesButton = document.getElementById(
-      "tracking-protection-preferences-button"
-    );
-
-    ok(
-      BrowserTestUtils.is_visible(preferencesButton),
-      "The preferences button is shown."
-    );
-
-    let shown = waitAndAssertPreferencesShown("trackingprotection");
-    preferencesButton.click();
-    await shown;
-  });
-});
-
 // Tests that pressing the permissions preferences icon in the identity popup
 // links to about:preferences
 add_task(async function testOpenPreferencesFromPermissionsPrefsButton() {
@@ -116,13 +95,15 @@ add_task(async function testOpenPreferencesFromTrackersSubview() {
     await openProtectionsPopup();
 
     let categoryItem = document.getElementById(
-      "identity-popup-content-blocking-category-tracking-protection"
+      "protections-popup-category-tracking-protection"
     );
     ok(
       BrowserTestUtils.is_visible(categoryItem),
       "TP category item is visible"
     );
-    let trackersView = document.getElementById("identity-popup-trackersView");
+    let trackersView = document.getElementById(
+      "protections-popup-trackersView"
+    );
     let viewShown = BrowserTestUtils.waitForEvent(trackersView, "ViewShown");
     categoryItem.click();
     await viewShown;
@@ -130,7 +111,7 @@ add_task(async function testOpenPreferencesFromTrackersSubview() {
     ok(true, "Trackers view was shown");
 
     let preferencesButton = document.getElementById(
-      "identity-popup-trackersView-settings-button"
+      "protections-popup-trackersView-settings-button"
     );
 
     ok(
@@ -158,13 +139,13 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
     await openProtectionsPopup();
 
     let categoryItem = document.getElementById(
-      "identity-popup-content-blocking-category-cookies"
+      "protections-popup-category-cookies"
     );
     ok(
       BrowserTestUtils.is_visible(categoryItem),
       "TP category item is visible"
     );
-    let cookiesView = document.getElementById("identity-popup-cookiesView");
+    let cookiesView = document.getElementById("protections-popup-cookiesView");
     let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
     categoryItem.click();
     await viewShown;
@@ -172,7 +153,7 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
     ok(true, "Cookies view was shown");
 
     let preferencesButton = document.getElementById(
-      "identity-popup-cookiesView-settings-button"
+      "protections-popup-cookiesView-settings-button"
     );
 
     ok(

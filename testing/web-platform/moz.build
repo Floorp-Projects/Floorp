@@ -282,7 +282,7 @@ with Files("tests/entries-api/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/eventsource/**"):
-    BUG_COMPONENT = ("Core", "DOM: Networking")
+    BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("tests/feature-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -436,6 +436,9 @@ with Files("tests/payment-request/**"):
 with Files("tests/performance-timeline/**"):
     BUG_COMPONENT = ("Core", "Performance")
 
+with Files("tests/picture-in-picture/**"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+
 with Files("tests/pointerevents/**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
@@ -472,6 +475,9 @@ with Files("tests/resource-timing/**"):
 
 with Files("tests/resources/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/screen-capture/**"):
+    BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
 
 with Files("tests/screen-orientation/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")

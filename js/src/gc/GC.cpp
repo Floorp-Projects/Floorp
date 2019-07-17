@@ -6654,8 +6654,7 @@ static UniquePtr<SweepAction> ForEachAllocKind(AllocKinds kinds,
     return nullptr;
   }
 
-  using Action =
-      SweepActionForEach<ContainerIter<AllocKinds>, AllocKinds>;
+  using Action = SweepActionForEach<ContainerIter<AllocKinds>, AllocKinds>;
   return js::MakeUnique<Action>(kinds, kindOut, std::move(action));
 }
 

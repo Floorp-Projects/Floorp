@@ -2,8 +2,7 @@
   "name": "ヤフオク!",
   "description": "ヤフオク! 検索",
   "manifest_version": 2,
-  "version": "1.1",
-  "encoding": "EUC-JP",
+  "version": "1.2",
   "applications": {
     "gecko": {
       "id": "yahoo-jp-auctions@search.mozilla.org"
@@ -19,6 +18,7 @@
   "chrome_settings_overrides": {
     "search_provider": {
       "name": "ヤフオク!",
+      "encoding": "EUC-JP",
       "search_url": "https://auctions.yahoo.co.jp/search/search",
       "search_form": "https://auctions.yahoo.co.jp/",
       "search_url_get_params": "p={searchTerms}&ei=EUC-JP&fr=mozff&rls={moz:distributionID}:ja-JP:{moz:official}"

@@ -90,9 +90,6 @@
 
 .requests-list-headers-group,
 .ws-frames-list-headers-group {
-  /* Avoid .devtools-toolbar to override <thead> display type */
-  display: table-header-group;
-
   position: sticky;
   top: 0;
   left: 0;
@@ -104,6 +101,13 @@
 .ws-frames-list-headers {
   height: 24px;
   padding: 0;
+  color: var(--theme-body-color);
+  background-color: var(--theme-toolbar-background);
+}
+
+.requests-list-headers th,
+.ws-frames-list-headers th {
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .requests-list-headers .requests-list-column:first-child .requests-list-header-button,
@@ -127,7 +131,8 @@
   padding: 1px 4px;
 }
 
-.requests-list-header-button::-moz-focus-inner {
+.requests-list-header-button::-moz-focus-inner,
+.ws-frames-list-header-button::-moz-focus-inner {
   border: 0;
   padding: 0;
 }
@@ -509,6 +514,43 @@
 .ws-frame-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
+}
+
+/* Frame type icon in the WebSockets Time column */
+
+.ws-frames-list-type-icon {
+  display: inline-block;
+  /* align bottom of image 4px below the text baseline
+     this tends to give a better result than "middle" */
+  vertical-align: -4px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.ws-frames-list-type-icon-sent {
+  color: var(--green-70);
+}
+
+.theme-dark .ws-frames-list-type-icon-sent {
+  color: var(--green-50);
+}
+
+.ws-frames-list-type-icon-received {
+  color: var(--red-60);
+  transform: scaleY(-1);
+}
+
+.theme-dark .ws-frames-list-type-icon-received {
+  color: var(--red-40);
+}
+
+.ws-frame-list-item.selected .ws-frames-list-type-icon {
+  color: inherit;
+}
+
+/* Use lining numbers so that seconds and milliseconds align */
+.ws-frames-list-time {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Responsive web design support */

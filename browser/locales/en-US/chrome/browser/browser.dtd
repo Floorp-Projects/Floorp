@@ -820,8 +820,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.permissionsEmpty "You have not granted this site any special permissions.">
 <!ENTITY identity.permissionsReloadHint "You may need to reload the page for changes to apply.">
 <!ENTITY identity.permissionsPreferences.tooltip "Open Permissions Preferences">
-<!ENTITY identity.contentBlockingPreferences.tooltip "Open Content Blocking Preferences">
-
 
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
@@ -851,10 +849,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY getUserMedia.selectMicrophone.accesskey "M">
 <!ENTITY getUserMedia.audioCapture.label "Audio from the tab will be shared.">
 <!ENTITY getUserMedia.allWindowsShared.message "All visible windows on your screen will be shared.">
-
-<!ENTITY contentBlocking.title "Content Blocking">
-<!ENTITY contentBlocking.detected "Blockable content detected on this site.">
-<!ENTITY contentBlocking.notDetected "No blockable content detected on this page.">
 
 <!ENTITY contentBlocking.trackingProtection3.label "Trackers">
 

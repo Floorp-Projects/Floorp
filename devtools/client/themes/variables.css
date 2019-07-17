@@ -29,6 +29,7 @@
   --theme-toolbar-background-alt: #f5f5f5;
   --theme-toolbar-hover: var(--grey-20);
   --theme-toolbar-hover-active: var(--grey-20);
+  --theme-toolbar-separator: var(--grey-90-a10);
 
   /* Buttons */
   --theme-button-background: rgba(12, 12, 13, 0.05);
@@ -135,6 +136,7 @@
   --theme-toolbar-background-alt: var(--grey-85);
   --theme-toolbar-hover: #232327;
   --theme-toolbar-hover-active: #252526;
+  --theme-toolbar-separator: var(--grey-10-a20);
 
   /* Buttons */
   --theme-button-background: rgba(249, 249, 250, 0.1);

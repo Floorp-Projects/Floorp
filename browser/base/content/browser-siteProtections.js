@@ -37,21 +37,21 @@ var Fingerprinting = {
   get categoryItem() {
     delete this.categoryItem;
     return (this.categoryItem = document.getElementById(
-      "identity-popup-content-blocking-category-fingerprinters"
+      "protections-popup-category-fingerprinters"
     ));
   },
 
   get categoryLabel() {
     delete this.categoryLabel;
     return (this.categoryLabel = document.getElementById(
-      "identity-popup-content-blocking-fingerprinters-state-label"
+      "protections-popup-fingerprinters-state-label"
     ));
   },
 
   get subViewList() {
     delete this.subViewList;
     return (this.subViewList = document.getElementById(
-      "identity-popup-fingerprintersView-list"
+      "protections-popup-fingerprintersView-list"
     ));
   },
 
@@ -119,27 +119,27 @@ var Fingerprinting = {
     let uri = Services.io.newURI(origin);
 
     let listItem = document.createXULElement("hbox");
-    listItem.className = "identity-popup-content-blocking-list-item";
+    listItem.className = "protections-popup-list-item";
     listItem.classList.toggle("allowed", isAllowed);
     // Repeat the host in the tooltip in case it's too long
     // and overflows in our panel.
     listItem.tooltipText = uri.host;
 
     let image = document.createXULElement("image");
-    image.className = "identity-popup-fingerprintersView-icon";
+    image.className = "protections-popup-fingerprintersView-icon";
     image.classList.toggle("allowed", isAllowed);
     listItem.append(image);
 
     let label = document.createXULElement("label");
     label.value = uri.host;
-    label.className = "identity-popup-content-blocking-list-host-label";
+    label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
 
     if (!isAllowed) {
       let stateLabel = document.createXULElement("label");
       stateLabel.value = this.strings.subViewBlocked;
-      stateLabel.className = "identity-popup-content-blocking-list-state-label";
+      stateLabel.className = "protections-popup-list-state-label";
       listItem.append(stateLabel);
     }
 
@@ -174,21 +174,21 @@ var Cryptomining = {
   get categoryItem() {
     delete this.categoryItem;
     return (this.categoryItem = document.getElementById(
-      "identity-popup-content-blocking-category-cryptominers"
+      "protections-popup-category-cryptominers"
     ));
   },
 
   get categoryLabel() {
     delete this.categoryLabel;
     return (this.categoryLabel = document.getElementById(
-      "identity-popup-content-blocking-cryptominers-state-label"
+      "protections-popup-cryptominers-state-label"
     ));
   },
 
   get subViewList() {
     delete this.subViewList;
     return (this.subViewList = document.getElementById(
-      "identity-popup-cryptominersView-list"
+      "protections-popup-cryptominersView-list"
     ));
   },
 
@@ -254,27 +254,27 @@ var Cryptomining = {
     let uri = Services.io.newURI(origin);
 
     let listItem = document.createXULElement("hbox");
-    listItem.className = "identity-popup-content-blocking-list-item";
+    listItem.className = "protections-popup-list-item";
     listItem.classList.toggle("allowed", isAllowed);
     // Repeat the host in the tooltip in case it's too long
     // and overflows in our panel.
     listItem.tooltipText = uri.host;
 
     let image = document.createXULElement("image");
-    image.className = "identity-popup-cryptominersView-icon";
+    image.className = "protections-popup-cryptominersView-icon";
     image.classList.toggle("allowed", isAllowed);
     listItem.append(image);
 
     let label = document.createXULElement("label");
     label.value = uri.host;
-    label.className = "identity-popup-content-blocking-list-host-label";
+    label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
 
     if (!isAllowed) {
       let stateLabel = document.createXULElement("label");
       stateLabel.value = this.strings.subViewBlocked;
-      stateLabel.className = "identity-popup-content-blocking-list-state-label";
+      stateLabel.className = "protections-popup-list-state-label";
       listItem.append(stateLabel);
     }
 
@@ -294,28 +294,28 @@ var TrackingProtection = {
   get categoryItem() {
     delete this.categoryItem;
     return (this.categoryItem = document.getElementById(
-      "identity-popup-content-blocking-category-tracking-protection"
+      "protections-popup-category-tracking-protection"
     ));
   },
 
   get categoryLabel() {
     delete this.categoryLabel;
     return (this.categoryLabel = document.getElementById(
-      "identity-popup-content-blocking-tracking-protection-state-label"
+      "protections-popup-tracking-protection-state-label"
     ));
   },
 
   get subViewList() {
     delete this.subViewList;
     return (this.subViewList = document.getElementById(
-      "identity-popup-trackersView-list"
+      "protections-popup-trackersView-list"
     ));
   },
 
   get strictInfo() {
     delete this.strictInfo;
     return (this.strictInfo = document.getElementById(
-      "identity-popup-trackersView-strict-info"
+      "protections-popup-trackersView-strict-info"
     ));
   },
 
@@ -434,13 +434,11 @@ var TrackingProtection = {
     if (fragment.childNodes.length == 0) {
       let emptyBox = document.createXULElement("vbox");
       let emptyImage = document.createXULElement("image");
-      emptyImage.classList.add(
-        "identity-popup-content-blocking-trackersView-empty-image"
-      );
+      emptyImage.classList.add("protections-popup-trackersView-empty-image");
       emptyImage.classList.add("tracking-protection-icon");
 
       let emptyLabel = document.createXULElement("label");
-      emptyLabel.classList.add("identity-popup-content-blocking-empty-label");
+      emptyLabel.classList.add("protections-popup-empty-label");
       emptyLabel.textContent = gNavigatorBundle.getString(
         "contentBlocking.trackersView.empty.label"
       );
@@ -507,27 +505,27 @@ var TrackingProtection = {
     }
 
     let listItem = document.createXULElement("hbox");
-    listItem.className = "identity-popup-content-blocking-list-item";
+    listItem.className = "protections-popup-list-item";
     listItem.classList.toggle("allowed", isAllowed);
     // Repeat the host in the tooltip in case it's too long
     // and overflows in our panel.
     listItem.tooltipText = uri.host;
 
     let image = document.createXULElement("image");
-    image.className = "identity-popup-trackersView-icon";
+    image.className = "protections-popup-trackersView-icon";
     image.classList.toggle("allowed", isAllowed);
     listItem.append(image);
 
     let label = document.createXULElement("label");
     label.value = uri.host;
-    label.className = "identity-popup-content-blocking-list-host-label";
+    label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
 
     if (!isAllowed) {
       let stateLabel = document.createXULElement("label");
       stateLabel.value = this.strings.subViewBlocked;
-      stateLabel.className = "identity-popup-content-blocking-list-state-label";
+      stateLabel.className = "protections-popup-list-state-label";
       listItem.append(stateLabel);
     }
 
@@ -549,21 +547,21 @@ var ThirdPartyCookies = {
   get categoryItem() {
     delete this.categoryItem;
     return (this.categoryItem = document.getElementById(
-      "identity-popup-content-blocking-category-cookies"
+      "protections-popup-category-cookies"
     ));
   },
 
   get categoryLabel() {
     delete this.categoryLabel;
     return (this.categoryLabel = document.getElementById(
-      "identity-popup-content-blocking-cookies-state-label"
+      "protections-popup-cookies-state-label"
     ));
   },
 
   get subViewList() {
     delete this.subViewList;
     return (this.subViewList = document.getElementById(
-      "identity-popup-cookiesView-list"
+      "protections-popup-cookiesView-list"
     ));
   },
 
@@ -690,7 +688,7 @@ var ThirdPartyCookies = {
     for (let category of ["firstParty", "trackers", "thirdParty"]) {
       let box = document.createXULElement("vbox");
       let label = document.createXULElement("label");
-      label.className = "identity-popup-cookiesView-list-header";
+      label.className = "protections-popup-cookiesView-list-header";
       label.textContent = gNavigatorBundle.getString(
         `contentBlocking.cookiesView.${category}.label`
       );
@@ -703,7 +701,7 @@ var ThirdPartyCookies = {
       // If the category is empty, add a label noting that to the user.
       if (categories[category].length == 0) {
         let emptyLabel = document.createXULElement("label");
-        emptyLabel.classList.add("identity-popup-content-blocking-empty-label");
+        emptyLabel.classList.add("protections-popup-empty-label");
         emptyLabel.textContent = gNavigatorBundle.getString(
           `contentBlocking.cookiesView.${category}.empty.label`
         );
@@ -850,20 +848,20 @@ var ThirdPartyCookies = {
 
   _createListItem({ origin, isAllowed, hasException }) {
     let listItem = document.createXULElement("hbox");
-    listItem.className = "identity-popup-content-blocking-list-item";
+    listItem.className = "protections-popup-list-item";
     listItem.classList.toggle("allowed", isAllowed);
     // Repeat the origin in the tooltip in case it's too long
     // and overflows in our panel.
     listItem.tooltipText = origin;
 
     let image = document.createXULElement("image");
-    image.className = "identity-popup-cookiesView-icon";
+    image.className = "protections-popup-cookiesView-icon";
     image.classList.toggle("allowed", isAllowed);
     listItem.append(image);
 
     let label = document.createXULElement("label");
     label.value = origin;
-    label.className = "identity-popup-content-blocking-list-host-label";
+    label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
 
@@ -871,12 +869,12 @@ var ThirdPartyCookies = {
     if (isAllowed && hasException) {
       stateLabel = document.createXULElement("label");
       stateLabel.value = this.strings.subViewAllowed;
-      stateLabel.className = "identity-popup-content-blocking-list-state-label";
+      stateLabel.className = "protections-popup-list-state-label";
       listItem.append(stateLabel);
     } else if (!isAllowed) {
       stateLabel = document.createXULElement("label");
       stateLabel.value = this.strings.subViewBlocked;
-      stateLabel.className = "identity-popup-content-blocking-list-state-label";
+      stateLabel.className = "protections-popup-list-state-label";
       listItem.append(stateLabel);
     }
 
@@ -1169,9 +1167,6 @@ var gProtectionsHandler = {
       // Fallback to not setting a label, it's preferable to not set a label than to set an incorrect one.
       return;
     }
-    let button = document.getElementById(
-      "tracking-protection-preferences-button"
-    );
     let appMenuCategoryLabel = document.getElementById("appMenu-tp-category");
     let label;
     let category = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
@@ -1187,7 +1182,6 @@ var gProtectionsHandler = {
         break;
     }
     appMenuCategoryLabel.value = label;
-    button.label = label;
   },
 
   openPreferences(origin) {
@@ -1196,25 +1190,29 @@ var gProtectionsHandler = {
 
   async showTrackersSubview() {
     await TrackingProtection.updateSubView();
-    this._protectionsPopupMultiView.showSubView("identity-popup-trackersView");
+    this._protectionsPopupMultiView.showSubView(
+      "protections-popup-trackersView"
+    );
   },
 
   async showCookiesSubview() {
     await ThirdPartyCookies.updateSubView();
-    this._protectionsPopupMultiView.showSubView("identity-popup-cookiesView");
+    this._protectionsPopupMultiView.showSubView(
+      "protections-popup-cookiesView"
+    );
   },
 
   async showFingerprintersSubview() {
     await Fingerprinting.updateSubView();
     this._protectionsPopupMultiView.showSubView(
-      "identity-popup-fingerprintersView"
+      "protections-popup-fingerprintersView"
     );
   },
 
   async showCryptominersSubview() {
     await Cryptomining.updateSubView();
     this._protectionsPopupMultiView.showSubView(
-      "identity-popup-cryptominersView"
+      "protections-popup-cryptominersView"
     );
   },
 
