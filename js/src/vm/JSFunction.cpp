@@ -777,6 +777,7 @@ inline void JSFunction::trace(JSTracer* trc) {
     } else if (hasLazyScript() && u.scripted.s.lazy_) {
       TraceManuallyBarrieredEdge(trc, &u.scripted.s.lazy_, "lazyScript");
     }
+    // NOTE: The u.scripted.s.selfHostedLazy_ does not point to GC things.
 
     if (u.scripted.env_) {
       TraceManuallyBarrieredEdge(trc, &u.scripted.env_, "fun_environment");
@@ -1743,10 +1744,13 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   flags_ &= ~INTERPRETED;
   flags_ |= INTERPRETED_LAZY;
   LazyScript* lazy = script->maybeLazyScript();
-  u.scripted.s.lazy_ = lazy;
   if (lazy) {
+    u.scripted.s.lazy_ = lazy;
     MOZ_ASSERT(!isSelfHostedBuiltin());
   } else {
+    // Lazy self-hosted builtins point to a SelfHostedLazyScript that may be
+    // called from JIT scripted calls.
+    u.scripted.s.selfHostedLazy_ = &rt->selfHostedLazyScript.ref();
     MOZ_ASSERT(isSelfHostedBuiltin());
     MOZ_ASSERT(isExtended());
     MOZ_ASSERT(GetClonedSelfHostedFunctionName(this));
@@ -2252,9 +2256,10 @@ JSFunction* js::CloneFunctionReuseScript(
     clone->initLazyScript(lazy);
     clone->initEnvironment(enclosingEnv);
   } else {
-    MOZ_ASSERT(fun->isSelfHostedBuiltin());
+    MOZ_ASSERT(fun->hasSelfHostedLazyScript());
     MOZ_ASSERT(fun->compartment() == clone->compartment());
-    clone->initLazyScript(nullptr);
+    SelfHostedLazyScript* lazy = fun->selfHostedLazyScript();
+    clone->initSelfHostLazyScript(lazy);
     clone->initEnvironment(enclosingEnv);
   }
 
@@ -2493,12 +2498,10 @@ JSFunction* js::DefineFunction(
     return nullptr;
   }
 
+  MOZ_ASSERT(native);
+
   RootedFunction fun(cx);
-  if (!native) {
-    fun = NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED_LAZY, atom,
-                              /* proto = */ nullptr, allocKind, GenericObject,
-                              obj);
-  } else if (flags & JSFUN_CONSTRUCTOR) {
+  if (flags & JSFUN_CONSTRUCTOR) {
     fun = NewNativeConstructor(cx, native, nargs, atom, allocKind);
   } else {
     fun = NewNativeFunction(cx, native, nargs, atom, allocKind);

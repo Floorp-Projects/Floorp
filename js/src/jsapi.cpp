@@ -3246,11 +3246,10 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
     return nullptr;
   }
 
+  MOZ_ASSERT(fs->call.op);
+
   JSFunction* fun;
-  if (!fs->call.op) {
-    fun =
-        NewScriptedFunction(cx, fs->nargs, JSFunction::INTERPRETED_LAZY, atom);
-  } else if (fs->flags & JSFUN_CONSTRUCTOR) {
+  if (fs->flags & JSFUN_CONSTRUCTOR) {
     fun = NewNativeConstructor(cx, fs->call.op, fs->nargs, atom);
   } else {
     fun = NewNativeFunction(cx, fs->call.op, fs->nargs, atom);
