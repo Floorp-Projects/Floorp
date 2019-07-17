@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ScopeExit.h"
 
+#include "dbg/Environment.h"
 #include "dbg/NoExecute.h"
 #include "dbg/Object.h"
 #include "frontend/BytecodeCompilation.h"

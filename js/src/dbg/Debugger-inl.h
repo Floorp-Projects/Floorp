@@ -112,9 +112,4 @@
   }
 }
 
-inline js::Debugger* js::DebuggerEnvironment::owner() const {
-  JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
-  return Debugger::fromJSObject(dbgobj);
-}
-
 #endif /* dbg_Debugger_inl_h */
