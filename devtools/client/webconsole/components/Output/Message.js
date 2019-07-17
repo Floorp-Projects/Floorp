@@ -152,6 +152,13 @@ class Message extends Component {
     e.stopPropagation();
     const { open, dispatch, messageId, onToggle } = this.props;
 
+    // Early exit the function to avoid the message to collapse if the user is
+    // selecting a range in the toggle message.
+    const window = e.target.ownerDocument.defaultView;
+    if (window.getSelection && window.getSelection().type === "Range") {
+      return;
+    }
+
     // If defined on props, we let the onToggle() method handle the toggling,
     // otherwise we toggle the message open/closed ourselves.
     if (onToggle) {

@@ -23,6 +23,8 @@ function CollapseButton(props) {
       // prevent focus from moving to the disclosure if clicked,
       // which is annoying if on the input
       e.preventDefault();
+      // Clearing the text selection to allow the message to collpase.
+      e.target.ownerDocument.defaultView.getSelection().removeAllRanges();
     },
     title: title,
   });
