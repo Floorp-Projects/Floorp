@@ -118,12 +118,6 @@ impl FrameId {
     pub const INVALID: FrameId = FrameId(0);
 }
 
-impl Default for FrameId {
-    fn default() -> Self {
-        FrameId::INVALID
-    }
-}
-
 impl ::std::ops::Add<usize> for FrameId {
     type Output = Self;
     fn add(self, other: usize) -> FrameId {
