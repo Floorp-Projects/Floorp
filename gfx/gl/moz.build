@@ -90,6 +90,10 @@ if gl_provider == 'CGL':
     SOURCES += [
         'SharedSurfaceIO.cpp',
     ]
+    OS_LIBS += [
+        '-framework IOSurface',
+    ]
+
 elif gl_provider == 'EAGL':
     # These files include ObjC headers that are unfriendly to unified builds
     SOURCES += [
