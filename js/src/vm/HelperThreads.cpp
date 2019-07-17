@@ -65,8 +65,16 @@ GlobalHelperThreadState* gHelperThreadState = nullptr;
 
 bool js::CreateHelperThreadsState() {
   MOZ_ASSERT(!gHelperThreadState);
-  gHelperThreadState = js_new<GlobalHelperThreadState>();
-  return gHelperThreadState != nullptr;
+  UniquePtr<GlobalHelperThreadState> helperThreadState =
+      MakeUnique<GlobalHelperThreadState>();
+  if (!helperThreadState) {
+    return false;
+  }
+  if (!helperThreadState->initializeHelperContexts()) {
+    return false;
+  }
+  gHelperThreadState = helperThreadState.release();
+  return true;
 }
 
 void js::DestroyHelperThreadsState() {
@@ -434,6 +442,43 @@ struct MOZ_RAII AutoSetContextParse {
   }
   ~AutoSetContextParse() { TlsContext.get()->setParseTask(nullptr); }
 };
+
+// We want our default stack size limit to be approximately 2MB, to be safe, but
+// expect most threads to use much less. On Linux, however, requesting a stack
+// of 2MB or larger risks the kernel allocating an entire 2MB huge page for it
+// on first access, which we do not want. To avoid this possibility, we subtract
+// 2 standard VM page sizes from our default.
+static const uint32_t kDefaultHelperStackSize = 2048 * 1024 - 2 * 4096;
+static const uint32_t kDefaultHelperStackQuota = 1800 * 1024;
+
+// TSan enforces a minimum stack size that's just slightly larger than our
+// default helper stack size.  It does this to store blobs of TSan-specific
+// data on each thread's stack.  Unfortunately, that means that even though
+// we'll actually receive a larger stack than we requested, the effective
+// usable space of that stack is significantly less than what we expect.
+// To offset TSan stealing our stack space from underneath us, double the
+// default.
+//
+// Note that we don't need this for ASan/MOZ_ASAN because ASan doesn't
+// require all the thread-specific state that TSan does.
+#if defined(MOZ_TSAN)
+static const uint32_t HELPER_STACK_SIZE = 2 * kDefaultHelperStackSize;
+static const uint32_t HELPER_STACK_QUOTA = 2 * kDefaultHelperStackQuota;
+#else
+static const uint32_t HELPER_STACK_SIZE = kDefaultHelperStackSize;
+static const uint32_t HELPER_STACK_QUOTA = kDefaultHelperStackQuota;
+#endif
+
+AutoSetHelperThreadContext::AutoSetHelperThreadContext() {
+  AutoLockHelperThreadState lock;
+  cx = HelperThreadState().getFirstUnusedContext(lock);
+  MOZ_ASSERT(cx);
+  cx->setThread();
+  cx->nativeStackBase = GetNativeStackBase();
+  // When we set the JSContext, we need to reset the computed stack limits for
+  // the current thread, so we also set the native stack quota.
+  JS_SetNativeStackQuota(cx, HELPER_STACK_QUOTA);
+}
 
 static const JSClass parseTaskGlobalClass = {"internal-parse-task-global",
                                              JSCLASS_GLOBAL_FLAGS,
@@ -1074,32 +1119,6 @@ bool js::CurrentThreadIsParseThread() {
 }
 #endif
 
-// We want our default stack size limit to be approximately 2MB, to be safe, but
-// expect most threads to use much less. On Linux, however, requesting a stack
-// of 2MB or larger risks the kernel allocating an entire 2MB huge page for it
-// on first access, which we do not want. To avoid this possibility, we subtract
-// 2 standard VM page sizes from our default.
-static const uint32_t kDefaultHelperStackSize = 2048 * 1024 - 2 * 4096;
-static const uint32_t kDefaultHelperStackQuota = 1800 * 1024;
-
-// TSan enforces a minimum stack size that's just slightly larger than our
-// default helper stack size.  It does this to store blobs of TSan-specific
-// data on each thread's stack.  Unfortunately, that means that even though
-// we'll actually receive a larger stack than we requested, the effective
-// usable space of that stack is significantly less than what we expect.
-// To offset TSan stealing our stack space from underneath us, double the
-// default.
-//
-// Note that we don't need this for ASan/MOZ_ASAN because ASan doesn't
-// require all the thread-specific state that TSan does.
-#if defined(MOZ_TSAN)
-static const uint32_t HELPER_STACK_SIZE = 2 * kDefaultHelperStackSize;
-static const uint32_t HELPER_STACK_QUOTA = 2 * kDefaultHelperStackQuota;
-#else
-static const uint32_t HELPER_STACK_SIZE = kDefaultHelperStackSize;
-static const uint32_t HELPER_STACK_QUOTA = kDefaultHelperStackQuota;
-#endif
-
 bool GlobalHelperThreadState::ensureInitialized() {
   MOZ_ASSERT(CanUseExtraThreads());
 
@@ -1164,6 +1183,7 @@ void GlobalHelperThreadState::finish() {
   while (!freeList.empty()) {
     jit::FreeIonBuilder(freeList.popCopy());
   }
+  destroyHelperContexts();
 }
 
 void GlobalHelperThreadState::finishThreads() {
@@ -1178,9 +1198,46 @@ void GlobalHelperThreadState::finishThreads() {
   threads.reset(nullptr);
 }
 
-void GlobalHelperThreadState::lock() { helperLock.lock(); }
+bool GlobalHelperThreadState::initializeHelperContexts() {
+  MOZ_ASSERT(!TlsContext.get());
+  for (size_t i = 0; i < threadCount; i++) {
+    UniquePtr<JSContext> cx =
+        js::MakeUnique<JSContext>(nullptr, JS::ContextOptions());
+    // To initialize context-specific protected data, the context must
+    // temporarily set itself to the main thread. After initialization,
+    // cx can clear itself from the thread.
+    cx->setThread();
+    if (!cx->init(ContextKind::HelperThread)) {
+      return false;
+    }
+    cx->clearThread();
+    if (!helperContexts_.append(cx.release())) {
+      return false;
+    }
+  }
+  return true;
+}
 
-void GlobalHelperThreadState::unlock() { helperLock.unlock(); }
+JSContext* GlobalHelperThreadState::getFirstUnusedContext(
+    AutoLockHelperThreadState& locked) {
+  for (auto& cx : helperContexts_) {
+    if (cx->contextAvailable()) {
+      return cx;
+    }
+  }
+  MOZ_CRASH("Expected available JSContext");
+}
+
+void GlobalHelperThreadState::destroyHelperContexts() {
+  MOZ_ASSERT(!TlsContext.get());
+  while (helperContexts_.length() > 0) {
+    JSContext* cx = helperContexts_.popCopy();
+    // Before cx can be destroyed, it has to set itself to the main thread.
+    // This enables it to pass its context-specific data checks.
+    cx->setThread();
+    js_delete(cx);
+  }
+}
 
 #ifdef DEBUG
 bool GlobalHelperThreadState::isLockedByCurrentThread() const {
@@ -1298,8 +1355,8 @@ void GlobalHelperThreadState::triggerFreeUnusedMemory() {
   }
 
   AutoLockHelperThreadState lock;
-  for (auto& thread : *threads) {
-    thread.shouldFreeUnusedMemory = true;
+  for (auto& context : helperContexts_) {
+    context->setFreeUnusedMemory(true);
   }
   notifyAll(PRODUCER, lock);
 }
@@ -2531,15 +2588,4 @@ const HelperThread::TaskSpec* HelperThread::findHighestPriorityTask(
   }
 
   return nullptr;
-}
-
-void HelperThread::maybeFreeUnusedMemory(JSContext* cx) {
-  MOZ_ASSERT(idle());
-
-  cx->tempLifoAlloc().releaseAll();
-
-  if (shouldFreeUnusedMemory) {
-    cx->tempLifoAlloc().freeAll();
-    shouldFreeUnusedMemory = false;
-  }
 }
