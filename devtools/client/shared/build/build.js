@@ -22,7 +22,23 @@ function transform(filePath) {
     : defaultPlugins;
 
   const doc = fs.readFileSync(filePath, "utf8");
-  const out = Babel.transform(doc, { plugins });
+
+  let out;
+  try {
+    out = Babel.transform(doc, { plugins });
+  } catch (err) {
+    throw new Error(`
+========================
+NODE COMPILATION ERROR!
+
+File:   ${filePath}
+Stack:
+
+${err.stack}
+
+========================
+`);
+  }
 
   return out.code;
 }
