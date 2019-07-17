@@ -1293,7 +1293,14 @@ NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
 }
 @end
 
+static bool AlwaysUsesNativeFullScreen() {
+  return Preferences::GetBool("full-screen-api.macos-native-full-screen", false);
+}
+
 /* virtual */ bool nsCocoaWindow::PrepareForFullscreenTransition(nsISupports** aData) {
+  if (AlwaysUsesNativeFullScreen()) {
+    return false;
+  }
   nsCOMPtr<nsIScreen> widgetScreen = GetWidgetScreen();
   NSScreen* cocoaScreen = ScreenHelperCocoa::CocoaScreenForScreen(widgetScreen);
 
@@ -1343,10 +1350,17 @@ void nsCocoaWindow::WillEnterFullScreen(bool aFullScreen) {
   if (mWidgetListener) {
     mWidgetListener->FullscreenWillChange(aFullScreen);
   }
+  // Update the state to full screen when we are entering, so that we switch to
+  // full screen view as soon as possible.
+  UpdateFullscreenState(aFullScreen, true);
 }
 
 void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode) {
   mInFullScreenTransition = false;
+  UpdateFullscreenState(aFullScreen, aNativeMode);
+}
+
+void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
   bool wasInFullscreen = mInFullScreenMode;
   mInFullScreenMode = aFullScreen;
   if (aNativeMode || mInNativeFullScreenMode) {
@@ -1378,7 +1392,7 @@ inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
 }
 
 nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
-  return DoMakeFullScreen(aFullScreen, false);
+  return DoMakeFullScreen(aFullScreen, AlwaysUsesNativeFullScreen());
 }
 
 nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen,
@@ -2322,6 +2336,20 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   }
 
   mGeckoWindow->ReportMoveEvent();
+}
+
+- (NSArray<NSWindow*>*)customWindowsToEnterFullScreenForWindow:(NSWindow*)window {
+  return AlwaysUsesNativeFullScreen() ? @[ window ] : nil;
+}
+
+- (void)window:(NSWindow*)window
+    startCustomAnimationToEnterFullScreenOnScreen:(NSScreen*)screen
+                                     withDuration:(NSTimeInterval)duration {
+  // Immediately switch to cover full screen, so we don't show the default
+  // transition effect which stops video from playing.
+  // XXX Is it possible to simulate the native transition effect without
+  //     triggering content size change?
+  [window setFrame:[screen frame] display:YES];
 }
 
 - (void)windowWillEnterFullScreen:(NSNotification*)notification {
