@@ -18,6 +18,7 @@
 #include "SourceBufferList.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLMediaElement.h"
@@ -109,13 +110,13 @@ nsresult MediaSource::IsTypeSupported(const nsAString& aType,
   const MediaMIMEType& mimeType = containerType->Type();
   if (mimeType == MEDIAMIMETYPE("video/mp4") ||
       mimeType == MEDIAMIMETYPE("audio/mp4")) {
-    if (!StaticPrefs::media_mediasource_mp4_enabled()) {
+    if (!Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
     return NS_OK;
   }
   if (mimeType == MEDIAMIMETYPE("video/webm")) {
-    if (!(StaticPrefs::media_mediasource_webm_enabled() ||
+    if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
           StaticPrefs::media_media_capabilities_enabled() ||
           containerType->ExtendedType().Codecs().Contains(
               NS_LITERAL_STRING("vp8")) ||
@@ -130,8 +131,8 @@ nsresult MediaSource::IsTypeSupported(const nsAString& aType,
     return NS_OK;
   }
   if (mimeType == MEDIAMIMETYPE("audio/webm")) {
-    if (!(StaticPrefs::media_mediasource_webm_enabled() ||
-          StaticPrefs::media_mediasource_webm_audio_enabled())) {
+    if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
+          Preferences::GetBool("media.mediasource.webm.audio.enabled", true))) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
     return NS_OK;
@@ -425,6 +426,16 @@ bool MediaSource::IsTypeSupported(const GlobalObject& aOwner,
            NS_ConvertUTF16toUTF8(aType).get(),
            rv == NS_OK ? "OK" : "[not supported]"));
   return NS_SUCCEEDED(rv);
+}
+
+/* static */
+bool MediaSource::Enabled(JSContext* cx, JSObject* aGlobal) {
+  return Preferences::GetBool("media.mediasource.enabled");
+}
+
+/* static */
+bool MediaSource::ExperimentalEnabled(JSContext* cx, JSObject* aGlobal) {
+  return Preferences::GetBool("media.mediasource.experimental.enabled");
 }
 
 void MediaSource::SetLiveSeekableRange(double aStart, double aEnd,
