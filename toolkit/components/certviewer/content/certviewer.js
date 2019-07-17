@@ -6,7 +6,7 @@
 
 "use strict";
 
-import { parse } from "chrome://global/content/certviewer/certDecoder.js";
+import { parse } from "./certDecoder.js";
 const { stringToArrayBuffer } = pvutils.pvutils;
 
 const derString =

@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals InfoGroup, ErrorSection */
-
-import { updateSelectedItem } from "chrome://global/content/certviewer/certviewer.js";
-import { certArray } from "chrome://global/content/certviewer/components/dummy-info.js";
+import { updateSelectedItem } from "../certviewer.js";
+import { certArray } from "./dummy-info.js";
+import { InfoGroup } from "./info-group.js";
+import { ErrorSection } from "./error-section.js";
 
 class CertificateSection extends HTMLElement {
   constructor() {
