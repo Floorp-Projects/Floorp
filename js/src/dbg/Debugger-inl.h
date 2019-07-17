@@ -118,24 +118,6 @@ inline js::Debugger* js::DebuggerEnvironment::owner() const {
   return Debugger::fromJSObject(dbgobj);
 }
 
-inline js::Debugger* js::DebuggerObject::owner() const {
-  JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
-  return Debugger::fromJSObject(dbgobj);
-}
-
-inline js::PromiseObject* js::DebuggerObject::promise() const {
-  MOZ_ASSERT(isPromise());
-
-  JSObject* referent = this->referent();
-  if (IsCrossCompartmentWrapper(referent)) {
-    // We know we have a Promise here, so CheckedUnwrapStatic is fine.
-    referent = CheckedUnwrapStatic(referent);
-    MOZ_ASSERT(referent);
-  }
-
-  return &referent->as<PromiseObject>();
-}
-
 inline bool js::DebuggerFrame::hasGenerator() const {
   return !getReservedSlot(GENERATOR_INFO_SLOT).isUndefined();
 }
