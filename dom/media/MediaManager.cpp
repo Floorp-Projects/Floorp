@@ -2294,9 +2294,10 @@ static void ReduceConstraint(
     mediaSource =
         Some(aConstraint.GetAsMediaTrackConstraints().mMediaSource.Value());
   }
+  aConstraint.Uninit();
   if (mediaSource) {
-    aConstraint.SetAsMediaTrackConstraints().mMediaSource.Value() =
-        *mediaSource;
+    aConstraint.SetAsMediaTrackConstraints().mMediaSource.Construct(
+        *mediaSource);
   } else {
     aConstraint.SetAsMediaTrackConstraints();
   }
