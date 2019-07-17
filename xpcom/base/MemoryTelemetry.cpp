@@ -245,6 +245,13 @@ nsresult MemoryTelemetry::GatherReports(
   // GHOST_WINDOWS is opt-out as of Firefox 55
   RECORD(GHOST_WINDOWS, GhostWindows, UNITS_COUNT);
 
+  // If we're running in the parent process, collect data from all processes for
+  // the MEMORY_TOTAL histogram.
+  if (XRE_IsParentProcess() && !mTotalMemoryGatherer) {
+    mTotalMemoryGatherer = new TotalMemoryGatherer();
+    mTotalMemoryGatherer->Begin(mThreadPool);
+  }
+
   if (!Telemetry::CanRecordReleaseData()) {
     return NS_OK;
   }
@@ -321,13 +328,6 @@ nsresult MemoryTelemetry::GatherReports(
   nsresult rv = mThreadPool->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   if (!NS_WARN_IF(NS_FAILED(rv))) {
     cleanup.release();
-  }
-
-  // If we're running in the parent process, collect data from all processes for
-  // the MEMORY_TOTAL histogram.
-  if (XRE_IsParentProcess() && !mTotalMemoryGatherer) {
-    mTotalMemoryGatherer = new TotalMemoryGatherer();
-    mTotalMemoryGatherer->Begin(mThreadPool);
   }
 
   return NS_OK;
