@@ -63,6 +63,8 @@ class WorkletNodeEngine final : public AudioNodeEngine {
 
  private:
   void SendProcessorError();
+  bool CallProcess(JSContext* aCx, JS::Handle<JS::Value> aCallable,
+                   bool* aActiveRet);
 
   void ReleaseJSResources() {
     mInputs.mPorts.clearAndFree();
@@ -70,6 +72,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
     mInputs.mJSArray.reset();
     mOutputs.mJSArray.reset();
     mGlobal = nullptr;
+    // This is equivalent to setting [[callable process]] to false.
     mProcessor.reset();
   }
 
@@ -231,6 +234,29 @@ static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
   return !(NS_WARN_IF(!PrepareArray(aCx, aPorts->mPorts, &aPorts->mJSArray)));
 }
 
+// This runs JS script.  MediaStreamGraph control messages, which would
+// potentially destroy the WorkletNodeEngine and its AudioNodeStream, cannot
+// be triggered by script.  They are not run from an nsIThread event loop and
+// do not run until after ProcessBlocksOnPorts() has returned.
+bool WorkletNodeEngine::CallProcess(JSContext* aCx,
+                                    JS::Handle<JS::Value> aCallable,
+                                    bool* aActiveRet) {
+  JS::RootedVector<JS::Value> argv(aCx);
+  if (NS_WARN_IF(!argv.resize(3))) {
+    return false;
+  }
+  argv[0].setObject(*mInputs.mJSArray);
+  argv[1].setObject(*mOutputs.mJSArray);
+  // TODO: argv[2].setObject() for parameters.
+  JS::Rooted<JS::Value> rval(aCx);
+  if (!JS::Call(aCx, mProcessor, aCallable, argv, &rval)) {
+    return false;
+  }
+
+  *aActiveRet = JS::ToBoolean(rval);
+  return true;
+}
+
 static void ProduceSilence(Span<AudioBlock> aOutput) {
   for (AudioBlock& output : aOutput) {
     output.SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -262,9 +288,12 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
   AutoEntryScript aes(mGlobal, "Worklet Process");
   JSContext* cx = aes.cx();
 
-  if (!PrepareBufferArrays(cx, aInput, &mInputs, ArrayElementInit::None) ||
+  JS::Rooted<JS::Value> process(cx);
+  if (!JS_GetProperty(cx, mProcessor, "process", &process) ||
+      !process.isObject() || !JS::IsCallable(&process.toObject()) ||
+      !PrepareBufferArrays(cx, aInput, &mInputs, ArrayElementInit::None) ||
       !PrepareBufferArrays(cx, aOutput, &mOutputs, ArrayElementInit::Zero)) {
-    // OOM.  Give up.
+    // process() not callable or OOM.
     SendProcessorError();
     ProduceSilence(aOutput);
     return;
@@ -291,7 +320,19 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
     }
   }
 
-  // TODO call process() - bug 1558123
+  bool active;
+  if (!CallProcess(cx, process, &active)) {
+    // An exception occurred.
+    SendProcessorError();
+    /**
+     * https://webaudio.github.io/web-audio-api/#dom-audioworkletnode-onprocessorerror
+     * Note that once an exception is thrown, the processor will output silence
+     * throughout its lifetime.
+     */
+    ProduceSilence(aOutput);
+    return;
+  }
+  // TODO: Stay active even without inputs, if active is set.
 
   // Copy output values from JS objects.
   for (size_t o = 0; o < aOutput.Length(); ++o) {
