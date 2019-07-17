@@ -42,7 +42,7 @@ void CompositingRenderTargetOGL::BindRenderTarget() {
     }
   } else {
     MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
-    GLuint fbo = mFBO == 0 ? mGL->GetDefaultFramebuffer() : mFBO;
+    GLuint fbo = GetFBO();
     mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fbo);
     GLenum result = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (result != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
@@ -76,6 +76,11 @@ void CompositingRenderTargetOGL::BindRenderTarget() {
     mGL->fClearDepth(0.0);
     mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
   }
+}
+
+GLuint CompositingRenderTargetOGL::GetFBO() const {
+  MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
+  return mFBO == 0 ? mGL->GetDefaultFramebuffer() : mFBO;
 }
 
 #ifdef MOZ_DUMP_PAINTING
