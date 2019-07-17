@@ -23,6 +23,7 @@ include('../js-cxxflags.mozbuild')
 SOURCES = [
     'Debugger.cpp',
     'DebuggerMemory.cpp',
+    'Environment.cpp',
     'Frame.cpp',
     'NoExecute.cpp',
     'Object.cpp',
