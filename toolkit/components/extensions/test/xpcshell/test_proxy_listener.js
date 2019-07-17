@@ -64,6 +64,7 @@ const testData = [
         username: "mungosantamaria",
         password: "foobar",
       },
+      { type: "direct" },
     ],
     expected: {
       proxyInfo: {
@@ -174,7 +175,7 @@ add_task(async function test_proxy_listener() {
           failoverTimeout,
         } = expectedProxyInfo;
         equal(proxyUsed.host, host, `Expected proxy host to be ${host}`);
-        equal(proxyUsed.port, port, `Expected proxy port to be ${port}`);
+        equal(proxyUsed.port, port || -1, `Expected proxy port to be ${port}`);
         equal(proxyUsed.type, type, `Expected proxy type to be ${type}`);
         // May be null or undefined depending on use of newProxyInfoWithAuth or newProxyInfo
         equal(
@@ -200,6 +201,7 @@ add_task(async function test_proxy_listener() {
         );
         expectedProxyInfo = expectedProxyInfo.failoverProxy;
       }
+      ok(!expectedProxyInfo, "no left over failoverProxy");
     }
   }
 
