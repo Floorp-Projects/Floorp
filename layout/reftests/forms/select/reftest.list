@@ -14,4 +14,3 @@ needs-focus == focusring-3.html focusring-3-ref.html
 == listbox-zero-row-initial.html listbox-zero-row-initial-ref.html
 == 1246836.html 1246836-ref.html
 skip-if(Android) == select-option-display-none-inline-size.html select-option-display-none-inline-size-ref.html
-skip-if(Android) == themed-select-padding-no-clip.html themed-select-padding-no-clip-ref.html
