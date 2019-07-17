@@ -1256,7 +1256,7 @@ function dispatchPointerDown(a, inputState, win) {
         let mouseEvent = new action.Mouse("mousedown", a.button);
         mouseEvent.update(inputState);
         if (mouseEvent.ctrlKey) {
-          if (Services.appinfo.OS !== "WINNT") {
+          if (Services.appinfo.OS === "Darwin") {
             mouseEvent.button = 2;
             event.DoubleClickTracker.resetClick();
           }
@@ -1271,7 +1271,7 @@ function dispatchPointerDown(a, inputState, win) {
         );
         if (
           event.MouseButton.isSecondary(a.button) ||
-          (mouseEvent.ctrlKey && Services.appinfo.OS !== "WINNT")
+          (mouseEvent.ctrlKey && Services.appinfo.OS === "Darwin")
         ) {
           let contextMenuEvent = Object.assign({}, mouseEvent, {
             type: "contextmenu",
