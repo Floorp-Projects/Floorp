@@ -1852,6 +1852,55 @@ var gBrowserInit = {
     }
 
     this._loadHandled = true;
+    let reloadHistogram = Services.telemetry.getHistogramById(
+      "FX_PAGE_RELOAD_KEY_COMBO"
+    );
+    let reloadCommand = document.getElementById("Browser:Reload");
+    reloadCommand.addEventListener("command", function(event) {
+      let { target } = event.sourceEvent || {};
+      if (target.getAttribute("keycode") == "VK_F5") {
+        reloadHistogram.add("only_f5", 1);
+      } else if (target.id == "key_reload") {
+        reloadHistogram.add("accel_reloadKey", 1);
+      }
+    });
+
+    let reloadSkipCacheCommand = document.getElementById(
+      "Browser:ReloadSkipCache"
+    );
+    reloadSkipCacheCommand.addEventListener("command", function(event) {
+      let { target } = event.sourceEvent || {};
+      if (target.getAttribute("keycode") == "VK_F5") {
+        reloadHistogram.add("ctrl_f5", 1);
+      } else if (target.id == "key_reload_skip_cache") {
+        reloadHistogram.add("accel_shift_reload", 1);
+      }
+    });
+
+    let reloadOrDuplicateCommand = document.getElementById(
+      "Browser:ReloadOrDuplicate"
+    );
+    reloadOrDuplicateCommand.addEventListener("command", function(event) {
+      let { target } = event.sourceEvent || {};
+      if (target.id == "reload-button") {
+        let accelKeyPressed =
+          AppConstants.platform == "macosx" ? event.metaKey : event.ctrlKey;
+        let auxiliaryPressed = false;
+        let { sourceEvent } = event.sourceEvent || {};
+        if (sourceEvent) {
+          auxiliaryPressed = sourceEvent.button == 1;
+        }
+        if (auxiliaryPressed) {
+          reloadHistogram.add("auxiliary_toolbar", 1);
+        } else if (accelKeyPressed) {
+          reloadHistogram.add("accel_toolbar", 1);
+        } else if (event.shiftKey) {
+          reloadHistogram.add("shift_toolbar", 1);
+        } else {
+          reloadHistogram.add("toolbar", 1);
+        }
+      }
+    });
   },
 
   _cancelDelayedStartup() {
@@ -2617,9 +2666,9 @@ function BrowserStop() {
 
 function BrowserReloadOrDuplicate(aEvent) {
   aEvent = getRootEvent(aEvent);
-  let metaKeyPressed =
+  let accelKeyPressed =
     AppConstants.platform == "macosx" ? aEvent.metaKey : aEvent.ctrlKey;
-  var backgroundTabModifier = aEvent.button == 1 || metaKeyPressed;
+  var backgroundTabModifier = aEvent.button == 1 || accelKeyPressed;
 
   if (aEvent.shiftKey && !backgroundTabModifier) {
     BrowserReloadSkipCache();
