@@ -383,6 +383,10 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
 
 bool BrowsingContext::IsCached() { return mGroup->IsContextCached(this); }
 
+bool BrowsingContext::IsTargetable() {
+  return !mClosed && !mIsDiscarded && !IsCached();
+}
+
 bool BrowsingContext::HasOpener() const {
   return sBrowsingContexts->Contains(mOpenerId);
 }
@@ -524,10 +528,6 @@ bool BrowsingContext::CanAccess(BrowsingContext* aContext) {
   // temporary, we should implement a replacement for this in
   // BrowsingContext. See Bug 151590.
   return aContext && nsDocShell::CanAccessItem(aContext->mDocShell, mDocShell);
-}
-
-bool BrowsingContext::IsTargetable() {
-  return !mClosed && !mIsDiscarded && !IsCached();
 }
 
 BrowsingContext::~BrowsingContext() {
