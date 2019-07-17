@@ -14,7 +14,7 @@ import os
 import taskcluster
 import sys
 
-from lib.build_config import components_version, components, snapshot_components
+from lib.build_config import components_version, components, generate_snapshot_timestamp
 from lib.tasks import TaskBuilder, schedule_task_graph
 from lib.util import (
     populate_chain_of_trust_task_graph,
@@ -239,6 +239,24 @@ def _to_release_artifact(extension, version, component):
     }
 
 
+# TODO: try to mold this on top of the above one
+def _to_snapshot_release_artifact(extension, version, component, timestamp):
+    artifact_filename = '{}-{}-{}{}'.format(component['name'], version, timestamp, extension)
+
+    return {
+        'taskcluster_path': 'public/build/{}'.format(artifact_filename),
+        'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}-SNAPSHOT/{}'.format(
+            os.path.abspath(component['path']),
+            component['name'],
+            version, artifact_filename),
+        'maven_destination': 'maven2/org/mozilla/components/{}/{}/{}'.format(
+            component['name'],
+            version,
+            artifact_filename,
+        )
+    }
+
+
 # TODO: DELETE once bug 1558795 is fixed in early Q3
 def release_snapshot(components, is_snapshot, is_staging):
     version = components_version()
@@ -249,6 +267,8 @@ def release_snapshot(components, is_snapshot, is_staging):
     other_tasks = {}
     wait_on_builds_task_id = taskcluster.slugId()
 
+    timestamp = generate_snapshot_timestamp()
+
     for component in components:
         build_task_id = taskcluster.slugId()
         module_name = _get_gradle_module_name(component)
@@ -258,7 +278,11 @@ def release_snapshot(components, is_snapshot, is_staging):
             subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
             run_coverage=False,
             is_snapshot=is_snapshot,
-            component=component
+            component=component,
+            artifacts=[_to_snapshot_release_artifact(extension + hash_extension, version, component, timestamp)
+                       for extension, hash_extension in
+                       itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)],
+            timestamp=timestamp,
         )
 
         beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_snapshot_beetmover_task(
@@ -355,9 +379,6 @@ if __name__ == "__main__":
 
     components = components()
     if command == 'release':
-        if result.is_snapshot:
-            # TODO: DELETE once bug 1558795 is fixed in early Q3
-            components = snapshot_components()
         components = [info for info in components if info['shouldPublish']]
 
     if len(components) == 0:
