@@ -4,7 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:mozac="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/browserLayout"
     android:layout_width="match_parent"
@@ -31,18 +30,11 @@
         app:behavior_peekHeight="12dp"
         app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior" />
 
-    <mozilla.components.feature.findinpage.view.FindInPageBar
-        android:id="@+id/findInPageView"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_gravity="bottom"
-        android:background="?foundation"
-        android:clickable="true"
-        android:visibility="gone"
-        android:elevation="5dp"
-        app:findInPageNoMatchesTextColor="?attr/destructive"
-        mozac:findInPageButtonsTint="?primaryText"
-        mozac:findInPageResultCountTextColor="?primaryText" />
+    <ViewStub
+        android:id="@+id/stub_find_in_page"
+        android:inflatedId="@+id/findInPageView"
+        android:layout="@layout/stub_find_in_page"
+        android:layout_gravity="bottom" />
 
     <mozilla.components.feature.readerview.view.ReaderViewControlsBar
         android:id="@+id/readerViewControlsBar"
