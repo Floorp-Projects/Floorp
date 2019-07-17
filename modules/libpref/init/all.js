@@ -4868,6 +4868,10 @@ pref("alerts.useSystemBackend", true);
 #endif
 
 // DOM full-screen API.
+#ifdef XP_MACOSX
+// Whether to use macOS native full screen for Fullscreen API
+pref("full-screen-api.macos-native-full-screen", false);
+#endif
 // whether to prevent the top level widget from going fullscreen
 pref("full-screen-api.ignore-widgets", false);
 pref("full-screen-api.pointer-lock.enabled", true);
