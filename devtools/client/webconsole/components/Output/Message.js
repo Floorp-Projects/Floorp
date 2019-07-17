@@ -82,12 +82,16 @@ class Message extends Component {
       timestampsVisible: PropTypes.bool.isRequired,
       serviceContainer: PropTypes.shape({
         emitNewMessage: PropTypes.func.isRequired,
+        onViewSource: PropTypes.func.isRequired,
         onViewSourceInDebugger: PropTypes.func,
         onViewSourceInScratchpad: PropTypes.func,
         onViewSourceInStyleEditor: PropTypes.func,
         openContextMenu: PropTypes.func.isRequired,
         openLink: PropTypes.func.isRequired,
         sourceMapService: PropTypes.any,
+        canRewind: PropTypes.func.isRequired,
+        jumpToExecutionPoint: PropTypes.func.isRequired,
+        onMessageHover: PropTypes.func.isRequired,
       }),
       notes: PropTypes.arrayOf(
         PropTypes.shape({
