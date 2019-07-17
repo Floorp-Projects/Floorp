@@ -39,13 +39,6 @@ registerCleanupFunction(async function() {
   await remoteClientManager.removeAllClients();
 });
 
-/**
- * Enable the new about:debugging panel.
- */
-async function enableNewAboutDebugging() {
-  await pushPref("devtools.aboutdebugging.new-enabled", true);
-}
-
 async function openAboutDebugging({
   enableWorkerUpdates,
   enableLocalTabs = true,
@@ -60,8 +53,6 @@ async function openAboutDebugging({
     "devtools.aboutdebugging.local-tab-debugging",
     enableLocalTabs
   );
-
-  await enableNewAboutDebugging();
 
   info("opening about:debugging");
 

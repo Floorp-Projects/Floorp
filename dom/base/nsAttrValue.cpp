@@ -1623,8 +1623,10 @@ bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
     }
   }
 
-  RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI, principal,
-                                               ownerDoc->GetReferrerPolicy());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForInternalCSSResources(ownerDoc);
+  RefPtr<URLExtraData> data =
+      new URLExtraData(baseURI, referrerInfo, principal);
   RefPtr<DeclarationBlock> decl = DeclarationBlock::FromCssText(
       aString, data, ownerDoc->GetCompatibilityMode(), ownerDoc->CSSLoader());
   if (!decl) {

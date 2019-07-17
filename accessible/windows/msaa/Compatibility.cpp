@@ -7,6 +7,7 @@
 #include "Compatibility.h"
 
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
 #include "nsUnicharUtils.h"
@@ -31,48 +32,12 @@ static const wchar_t* ConsumerStringMap[CONSUMERS_ENUM_LEN + 1] = {
 
 bool Compatibility::IsModuleVersionLessThan(HMODULE aModuleHandle,
                                             unsigned long long aVersion) {
-  // Get the full path to the dll.
-  // We start with MAX_PATH, but the path can actually be longer.
-  DWORD fnSize = MAX_PATH;
-  UniquePtr<wchar_t[]> fileName;
-  while (true) {
-    fileName = MakeUnique<wchar_t[]>(fnSize);
-    DWORD retLen = ::GetModuleFileNameW(aModuleHandle, fileName.get(), fnSize);
-    MOZ_ASSERT(retLen != 0);
-    if (retLen == 0) {
-      return true;
-    }
-    if (retLen == fnSize && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-      // The buffer was too short. Increase the size and try again.
-      fnSize *= 2;
-    }
-    break;  // Success!
-  }
-
-  // Get the version info from the file.
-  DWORD length = ::GetFileVersionInfoSizeW(fileName.get(), nullptr);
-  if (length == 0) {
+  WindowsErrorResult<ModuleVersion> version = GetModuleVersion(aModuleHandle);
+  if (version.isErr()) {
     return true;
   }
 
-  auto versionInfo = MakeUnique<unsigned char[]>(length);
-  if (!::GetFileVersionInfoW(fileName.get(), 0, length, versionInfo.get())) {
-    return true;
-  }
-
-  UINT uLen;
-  VS_FIXEDFILEINFO* fixedFileInfo = nullptr;
-  if (!::VerQueryValueW(versionInfo.get(), L"\\", (LPVOID*)&fixedFileInfo,
-                        &uLen)) {
-    return true;
-  }
-
-  // Combine into a 64 bit value for comparison.
-  unsigned long long version =
-      ((unsigned long long)fixedFileInfo->dwFileVersionMS) << 32 |
-      ((unsigned long long)fixedFileInfo->dwFileVersionLS);
-
-  return version < aVersion;
+  return version.unwrap() < aVersion;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

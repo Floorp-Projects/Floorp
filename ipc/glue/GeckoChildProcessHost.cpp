@@ -773,9 +773,11 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
 
 // Windows needs a single dedicated thread for process launching,
 // because of thread-safety restrictions/assertions in the sandbox
-// code.  (This implementation isn't itself Windows-specific, so
-// the ifdef can be changed to test on other platforms.)
-#ifdef XP_WIN
+// code.
+//
+// Android also needs a single dedicated thread to simplify thread
+// safety in java.
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
 
 static mozilla::StaticMutex gIPCLaunchThreadMutex;
 static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread;
@@ -828,9 +830,9 @@ nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
   return thread;
 }
 
-#else  // XP_WIN
+#else  // defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
 
-// Non-Windows platforms can use an on-demand thread pool.
+// Other platforms use an on-demand thread pool.
 
 nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
   nsCOMPtr<nsIEventTarget> pool =

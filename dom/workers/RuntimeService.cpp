@@ -1017,6 +1017,11 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
     return mWorkerPrivate->UsesSystemPrincipal();
   }
 
+  void ReportError(JSErrorReport* aReport,
+                   JS::ConstUTF8CharsZ aToStringResult) override {
+    mWorkerPrivate->ReportError(Context(), aToStringResult, aReport);
+  }
+
   WorkerPrivate* GetWorkerPrivate() const { return mWorkerPrivate; }
 
  private:

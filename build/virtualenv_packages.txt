@@ -19,7 +19,7 @@ mozilla.pth:third_party/python/dlmanager
 mozilla.pth:third_party/python/enum34
 mozilla.pth:third_party/python/fluent
 mozilla.pth:third_party/python/funcsigs
-mozilla.pth:third_party/python/futures
+python2:mozilla.pth:third_party/python/futures
 mozilla.pth:third_party/python/mohawk
 mozilla.pth:third_party/python/more-itertools
 mozilla.pth:third_party/python/mozilla-version
@@ -38,7 +38,7 @@ python2:mozilla.pth:third_party/python/pyyaml/lib
 python3:mozilla.pth:third_party/python/pyyaml/lib3/
 mozilla.pth:third_party/python/requests
 mozilla.pth:third_party/python/requests-unixsocket
-mozilla.pth:third_party/python/scandir
+python2:mozilla.pth:third_party/python/scandir
 mozilla.pth:third_party/python/slugid
 mozilla.pth:third_party/python/taskcluster
 mozilla.pth:third_party/python/taskcluster-urls

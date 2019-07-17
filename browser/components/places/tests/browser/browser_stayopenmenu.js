@@ -29,8 +29,6 @@ async function testContextmenu(menuitem) {
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, null);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   BrowserTestUtils.waitForEvent(menuitem, "DOMMenuItemActive");
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  BrowserTestUtils.waitForEvent(menuitem, "DOMMenuItemActive");
   EventUtils.sendKey("return");
   let newTab = await promiseTabOpened;
   return newTab;

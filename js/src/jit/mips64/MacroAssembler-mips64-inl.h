@@ -463,12 +463,7 @@ void MacroAssembler::branch64(Condition cond, const Address& lhs,
 
 void MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs,
                                       Register rhs, Label* label) {
-  if (rhs != ScratchRegister) {
-    movePtr(rhs, ScratchRegister);
-  }
-  // Instead of unboxing lhs, box rhs and do direct comparison with lhs.
-  rshiftPtr(Imm32(1), ScratchRegister);
-  branchPtr(cond, lhs, ScratchRegister, label);
+  branchPtr(cond, lhs, rhs, label);
 }
 
 template <class L>

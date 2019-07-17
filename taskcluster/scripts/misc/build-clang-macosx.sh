@@ -10,8 +10,6 @@ cd $HOME_DIR/src
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
-# ld needs libLTO.so from llvm
-export LD_LIBRARY_PATH=$HOME_DIR/src/clang/lib
 # these variables are used in build-clang.py
 export CROSS_CCTOOLS_PATH=$HOME_DIR/src/cctools
 export CROSS_SYSROOT=$HOME_DIR/src/MacOSX10.11.sdk

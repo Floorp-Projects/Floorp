@@ -21,6 +21,7 @@
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StyleSheet.h"
 
 static mozilla::LazyLogModule gReferrerInfoLog("ReferrerInfo");
 #define LOG(msg) MOZ_LOG(gReferrerInfoLog, mozilla::LogLevel::Debug, msg)
@@ -707,6 +708,42 @@ ReferrerInfo::GetSendReferrer(bool* aSendReferrer) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ReferrerInfo::Equals(nsIReferrerInfo* aOther, bool* aResult) {
+  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+  MOZ_ASSERT(mInitialized);
+  if (aOther == this) {
+    *aResult = true;
+    return NS_OK;
+  }
+
+  *aResult = false;
+  ReferrerInfo* other = static_cast<ReferrerInfo*>(aOther);
+  MOZ_ASSERT(other->mInitialized);
+
+  if (mPolicy != other->mPolicy || mSendReferrer != other->mSendReferrer ||
+      mOverridePolicyByDefault != other->mOverridePolicyByDefault ||
+      mComputedReferrer != other->mComputedReferrer) {
+    return NS_OK;
+  }
+
+  if (!mOriginalReferrer != !other->mOriginalReferrer) {
+    // One or the other has mOriginalReferrer, but not both... not equal
+    return NS_OK;
+  }
+
+  bool originalReferrerEquals;
+  if (mOriginalReferrer &&
+      (NS_FAILED(mOriginalReferrer->Equals(other->mOriginalReferrer,
+                                           &originalReferrerEquals)) ||
+       !originalReferrerEquals)) {
+    return NS_OK;
+  }
+
+  *aResult = true;
+  return NS_OK;
+}
+
 already_AddRefed<nsIURI> ReferrerInfo::GetComputedReferrer() {
   if (!mComputedReferrer.isSome() || mComputedReferrer.value().IsEmpty()) {
     return nullptr;
@@ -719,6 +756,20 @@ already_AddRefed<nsIURI> ReferrerInfo::GetComputedReferrer() {
   }
 
   return result.forget();
+}
+
+PLDHashNumber ReferrerInfo::Hash() const {
+  MOZ_ASSERT(mInitialized);
+  nsAutoCString originalReferrerSpec;
+  if (mOriginalReferrer) {
+    Unused << mOriginalReferrer->GetSpec(originalReferrerSpec);
+  }
+
+  return mozilla::AddToHash(
+      mPolicy, mSendReferrer, mOverridePolicyByDefault,
+      mozilla::HashString(originalReferrerSpec),
+      mozilla::HashString(mComputedReferrer.isSome() ? mComputedReferrer.value()
+                                                     : EmptyCString()));
 }
 
 NS_IMETHODIMP
@@ -774,6 +825,18 @@ ReferrerInfo::InitWithNode(nsINode* aNode) {
 }
 
 /* static */
+already_AddRefed<nsIReferrerInfo>
+ReferrerInfo::CreateFromDocumentAndPolicyOverride(Document* aDoc,
+                                                  uint32_t aPolicyOverride) {
+  uint32_t policy = aPolicyOverride != net::RP_Unset
+                        ? aPolicyOverride
+                        : aDoc->GetReferrerPolicy();
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      new ReferrerInfo(aDoc->GetDocumentURIAsReferrer(), policy);
+  return referrerInfo.forget();
+}
+
+/* static */
 already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForFetch(
     nsIPrincipal* aPrincipal, Document* aDoc) {
   MOZ_ASSERT(aPrincipal);
@@ -822,6 +885,43 @@ already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForFetch(
   return referrerInfo.forget();
 }
 
+/* static */
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForExternalCSSResources(
+    mozilla::StyleSheet* aExternalSheet, uint32_t aPolicy) {
+  MOZ_ASSERT(aExternalSheet && !aExternalSheet->IsInline());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+
+  // Step 2
+  // https://w3c.github.io/webappsec-referrer-policy/#integration-with-css
+  // Use empty policy at the beginning and update it later from Referrer-Policy
+  // header.
+  referrerInfo = new ReferrerInfo(aExternalSheet->GetSheetURI(), aPolicy);
+  return referrerInfo.forget();
+}
+
+/* static */
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForInternalCSSResources(
+    Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+
+  referrerInfo = new ReferrerInfo(aDocument->GetDocumentURI(),
+                                  aDocument->GetReferrerPolicy());
+  return referrerInfo.forget();
+}
+
+// Bug 1415044 to investigate which referrer and policy we should use
+/* static */
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForSVGResources(
+    Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+
+  referrerInfo = new ReferrerInfo(aDocument->GetDocumentURI(),
+                                  aDocument->GetReferrerPolicy());
+  return referrerInfo.forget();
+}
+
 void ReferrerInfo::GetReferrerPolicyFromAtribute(nsINode* aNode,
                                                  uint32_t& aPolicy) const {
   aPolicy = mozilla::net::RP_Unset;
@@ -829,7 +929,7 @@ void ReferrerInfo::GetReferrerPolicyFromAtribute(nsINode* aNode,
 
   if (!element->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area,
                                     nsGkAtoms::script, nsGkAtoms::iframe,
-                                    nsGkAtoms::img)) {
+                                    nsGkAtoms::link, nsGkAtoms::img)) {
     return;
   }
 

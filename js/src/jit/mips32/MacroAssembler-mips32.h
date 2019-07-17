@@ -346,7 +346,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
   }
   void unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType);
-  void unboxPrivate(const ValueOperand& src, Register dest);
 
   void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
     unboxObject(src, dest);

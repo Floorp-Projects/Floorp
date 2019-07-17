@@ -148,13 +148,8 @@ var UI = {
       "devtools.webide.zoom"
     );
 
-    // If the new about:debugging is enabled, show a deprecation message to encourage
-    // users to open the new Remote Debugging
-    if (
-      Services.prefs.getBoolPref("devtools.aboutdebugging.new-enabled", false)
-    ) {
-      this.showDeprecationMessage();
-    }
+    // Show the deprecation message to encourage users to open the new Remote Debugging
+    this.showDeprecationMessage();
 
     gDevToolsBrowser.isWebIDEInitialized.resolve();
   },

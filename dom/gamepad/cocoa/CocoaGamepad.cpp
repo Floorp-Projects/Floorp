@@ -34,13 +34,15 @@ struct Button {
   IOHIDElementRef element;
   CFIndex min;
   CFIndex max;
+  bool pressed;
 
   Button(int aId, IOHIDElementRef aElement, CFIndex aMin, CFIndex aMax)
       : id(aId),
         analog((aMax - aMin) > 1),
         element(aElement),
         min(aMin),
-        max(aMax) {}
+        max(aMax),
+        pressed(false) {}
 };
 
 struct Axis {
@@ -50,9 +52,8 @@ struct Axis {
   uint32_t usage;
   CFIndex min;
   CFIndex max;
+  double value;
 };
-
-typedef bool dpad_buttons[4];
 
 // These values can be found in the USB HID Usage Tables:
 // http://www.usb.org/developers/hidpage
@@ -79,63 +80,43 @@ class Gamepad {
   IOHIDDeviceRef mDevice;
   nsTArray<Button> buttons;
   nsTArray<Axis> axes;
-  IOHIDElementRef mDpad;
-  dpad_buttons mDpadState;
 
  public:
-  Gamepad() : mDevice(nullptr), mDpad(nullptr), mSuperIndex(-1) {}
+  Gamepad() : mDevice(nullptr), mSuperIndex(-1) {}
+
   bool operator==(IOHIDDeviceRef device) const { return mDevice == device; }
   bool empty() const { return mDevice == nullptr; }
   void clear() {
     mDevice = nullptr;
     buttons.Clear();
     axes.Clear();
-    mDpad = nullptr;
     mSuperIndex = -1;
   }
   void init(IOHIDDeviceRef device);
-  size_t numButtons() { return buttons.Length() + (mDpad ? 4 : 0); }
+  void ReportChanged(uint8_t* report, CFIndex report_length);
+  size_t WriteOutputReport(const std::vector<uint8_t>& aReport) const;
+
+  size_t numButtons() { return buttons.Length(); }
   size_t numAxes() { return axes.Length(); }
 
-  // Index given by our superclass.
-  uint32_t mSuperIndex;
-
-  bool isDpad(IOHIDElementRef element) const { return element == mDpad; }
-
-  const dpad_buttons& getDpadState() const { return mDpadState; }
-
-  void setDpadState(const dpad_buttons& dpadState) {
-    for (unsigned i = 0; i < ArrayLength(mDpadState); i++) {
-      mDpadState[i] = dpadState[i];
-    }
-  }
-
-  const Button* lookupButton(IOHIDElementRef element) const {
+  Button* lookupButton(IOHIDElementRef element) {
     for (unsigned i = 0; i < buttons.Length(); i++) {
       if (buttons[i].element == element) return &buttons[i];
     }
     return nullptr;
   }
 
-  const Axis* lookupAxis(IOHIDElementRef element) const {
+  Axis* lookupAxis(IOHIDElementRef element) {
     for (unsigned i = 0; i < axes.Length(); i++) {
       if (axes[i].element == element) return &axes[i];
     }
     return nullptr;
   }
-};
 
-class AxisComparator {
- public:
-  bool Equals(const Axis& a1, const Axis& a2) const {
-    return a1.usagePage == a2.usagePage && a1.usage == a2.usage;
-  }
-  bool LessThan(const Axis& a1, const Axis& a2) const {
-    if (a1.usagePage == a2.usagePage) {
-      return a1.usage < a2.usage;
-    }
-    return a1.usagePage < a2.usagePage;
-  }
+  // Index given by our superclass.
+  uint32_t mSuperIndex;
+  RefPtr<GamepadRemapper> mRemapper;
+  std::vector<uint8_t> mInputReport;
 };
 
 void Gamepad::init(IOHIDDeviceRef device) {
@@ -153,7 +134,7 @@ void Gamepad::init(IOHIDDeviceRef device) {
 
     if (usagePage == kDesktopUsagePage && usage >= kAxisUsageMin &&
         usage <= kAxisUsageMax) {
-      Axis axis = {int(axes.Length()),
+      Axis axis = {static_cast<int>(usage - kAxisUsageMin),
                    element,
                    usagePage,
                    usage,
@@ -165,7 +146,13 @@ void Gamepad::init(IOHIDDeviceRef device) {
                IOHIDElementGetLogicalMax(element) -
                        IOHIDElementGetLogicalMin(element) ==
                    7) {
-      mDpad = element;
+      Axis axis = {static_cast<int>(usage - kAxisUsageMin),
+                   element,
+                   usagePage,
+                   usage,
+                   IOHIDElementGetLogicalMin(element),
+                   IOHIDElementGetLogicalMax(element)};
+      axes.AppendElement(axis);
     } else if ((usagePage == kSimUsagePage &&
                 (usage == kAcceleratorUsage || usage == kBrakeUsage)) ||
                (usagePage == kButtonUsagePage) ||
@@ -178,12 +165,6 @@ void Gamepad::init(IOHIDDeviceRef device) {
     } else {
       // TODO: handle other usage pages
     }
-  }
-
-  AxisComparator comparator;
-  axes.Sort(comparator);
-  for (unsigned i = 0; i < axes.Length(); i++) {
-    axes[i].id = i;
   }
 }
 
@@ -216,8 +197,16 @@ class DarwinGamepadService {
  public:
   DarwinGamepadService();
   ~DarwinGamepadService();
+
+  static void ReportChangedCallback(void* context, IOReturn result,
+                                    void* sender, IOHIDReportType report_type,
+                                    uint32_t report_id, uint8_t* report,
+                                    CFIndex report_length);
+
   void Startup();
   void Shutdown();
+  void SetLightIndicatorColor(uint32_t aControllerIdx, uint32_t aLightIndex,
+                              uint8_t aRed, uint8_t aGreen, uint8_t aBlue);
   friend class DarwinGamepadServiceStartupRunnable;
   friend class DarwinGamepadServiceShutdownRunnable;
 };
@@ -301,13 +290,34 @@ void DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device) {
                      kCFStringEncodingASCII);
   char buffer[256];
   sprintf(buffer, "%x-%x-%s", vendorId, productId, product_name);
+
+  RefPtr<GamepadRemapper> remapper = GetGamepadRemapper(vendorId, productId);
+  MOZ_ASSERT(remapper);
+  remapper->SetAxisCount(mGamepads[slot].numAxes());
+  remapper->SetButtonCount(mGamepads[slot].numButtons());
+
   uint32_t index = service->AddGamepad(
-      buffer, mozilla::dom::GamepadMappingType::_empty,
-      mozilla::dom::GamepadHand::_empty, (int)mGamepads[slot].numButtons(),
-      (int)mGamepads[slot].numAxes(), 0, 0,
-      0);  // TODO: Bug 680289, implement gamepad haptics for cocoa.
-  // TODO: Bug 1523355, implement gamepad lighindicator and touch for cocoa.
+      buffer, remapper->GetMappingType(), mozilla::dom::GamepadHand::_empty,
+      remapper->GetButtonCount(), remapper->GetAxisCount(),
+      0,  // TODO: Bug 680289, implement gamepad haptics for cocoa.
+      remapper->GetLightIndicatorCount(), remapper->GetTouchEventCount());
+
+  nsTArray<GamepadLightIndicatorType> lightTypes;
+  remapper->GetLightIndicators(lightTypes);
+  for (uint32_t i = 0; i < lightTypes.Length(); ++i) {
+    if (lightTypes[i] != GamepadLightIndicator::DefaultType()) {
+      service->NewLightIndicatorTypeEvent(index, i, lightTypes[i]);
+    }
+  }
+
   mGamepads[slot].mSuperIndex = index;
+  mGamepads[slot].mInputReport.resize(remapper->GetMaxInputReportLength());
+  mGamepads[slot].mRemapper = remapper.forget();
+
+  IOHIDDeviceRegisterInputReportCallback(
+      device, mGamepads[slot].mInputReport.data(),
+      mGamepads[slot].mInputReport.size(), ReportChangedCallback,
+      &mGamepads[slot]);
 }
 
 void DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device) {
@@ -325,42 +335,27 @@ void DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device) {
   }
 }
 
-/*
- * Given a value from a d-pad (POV hat in USB HID terminology),
- * represent it as 4 buttons, one for each cardinal direction.
- */
-static void UnpackDpad(int dpad_value, int min, int max,
-                       dpad_buttons& buttons) {
-  const unsigned kUp = 0;
-  const unsigned kDown = 1;
-  const unsigned kLeft = 2;
-  const unsigned kRight = 3;
+// Replace context to be Gamepad.
+void DarwinGamepadService::ReportChangedCallback(
+    void* context, IOReturn result, void* sender, IOHIDReportType report_type,
+    uint32_t report_id, uint8_t* report, CFIndex report_length) {
+  if (report_type == kIOHIDReportTypeInput) {
+    reinterpret_cast<Gamepad*>(context)->ReportChanged(report, report_length);
+  }
+}
 
-  // Different controllers have different ways of representing
-  // "nothing is pressed", but they're all outside the range of values.
-  if (dpad_value < min || dpad_value > max) {
-    // Nothing is pressed.
-    return;
-  }
+void Gamepad::ReportChanged(uint8_t* report, CFIndex report_len) {
+  MOZ_RELEASE_ASSERT(report_len <= mRemapper->GetMaxInputReportLength());
+  mRemapper->ProcessTouchData(mSuperIndex, report);
+}
 
-  // Normalize value to start at 0.
-  int value = dpad_value - min;
+size_t Gamepad::WriteOutputReport(const std::vector<uint8_t>& aReport) const {
+  IOReturn success =
+      IOHIDDeviceSetReport(mDevice, kIOHIDReportTypeOutput, aReport[0],
+                           aReport.data(), aReport.size());
 
-  // Value will be in the range 0-7. The value represents the
-  // position of the d-pad around a circle, with 0 being straight up,
-  // 2 being right, 4 being straight down, and 6 being left.
-  if (value < 2 || value > 6) {
-    buttons[kUp] = true;
-  }
-  if (value > 2 && value < 6) {
-    buttons[kDown] = true;
-  }
-  if (value > 4) {
-    buttons[kLeft] = true;
-  }
-  if (value > 0 && value < 4) {
-    buttons[kRight] = true;
-  }
+  MOZ_ASSERT(success == kIOReturnSuccess);
+  return (success == kIOReturnSuccess) ? aReport.size() : 0;
 }
 
 void DarwinGamepadService::InputValueChanged(IOHIDValueRef value) {
@@ -382,36 +377,24 @@ void DarwinGamepadService::InputValueChanged(IOHIDValueRef value) {
   for (unsigned i = 0; i < mGamepads.size(); i++) {
     Gamepad& gamepad = mGamepads[i];
     if (gamepad == device) {
-      if (gamepad.isDpad(element)) {
-        const dpad_buttons& oldState = gamepad.getDpadState();
-        dpad_buttons newState = {false, false, false, false};
-        UnpackDpad(IOHIDValueGetIntegerValue(value),
-                   IOHIDElementGetLogicalMin(element),
-                   IOHIDElementGetLogicalMax(element), newState);
-        const int numButtons = gamepad.numButtons();
-        for (unsigned b = 0; b < ArrayLength(newState); b++) {
-          if (newState[b] != oldState[b]) {
-            service->NewButtonEvent(gamepad.mSuperIndex, numButtons - 4 + b,
-                                    newState[b]);
-          }
-        }
-        gamepad.setDpadState(newState);
-      } else if (const Axis* axis = gamepad.lookupAxis(element)) {
-        double d = IOHIDValueGetIntegerValue(value);
-        double v =
+      // Axis elements represent axes and d-pads.
+      if (Axis* axis = gamepad.lookupAxis(element)) {
+        const double d = IOHIDValueGetIntegerValue(value);
+        const double v =
             2.0f * (d - axis->min) / (double)(axis->max - axis->min) - 1.0f;
-        service->NewAxisMoveEvent(gamepad.mSuperIndex, axis->id, v);
-      } else if (const Button* button = gamepad.lookupButton(element)) {
-        int iv = IOHIDValueGetIntegerValue(value);
-        bool pressed = iv != 0;
-        double v = 0;
-        if (button->analog) {
-          double dv = iv;
-          v = (dv - button->min) / (double)(button->max - button->min);
-        } else {
-          v = pressed ? 1.0 : 0.0;
+        if (axis->value != v) {
+          gamepad.mRemapper->RemapAxisMoveEvent(gamepad.mSuperIndex, axis->id,
+                                                v);
+          axis->value = v;
         }
-        service->NewButtonEvent(gamepad.mSuperIndex, button->id, pressed, v);
+      } else if (Button* button = gamepad.lookupButton(element)) {
+        const int iv = IOHIDValueGetIntegerValue(value);
+        const bool pressed = iv != 0;
+        if (button->pressed != pressed) {
+          gamepad.mRemapper->RemapButtonEvent(gamepad.mSuperIndex, button->id,
+                                              pressed);
+          button->pressed = pressed;
+        }
       }
       return;
     }
@@ -574,6 +557,35 @@ void DarwinGamepadService::Shutdown() {
   mIsRunning = false;
 }
 
+void DarwinGamepadService::SetLightIndicatorColor(uint32_t aControllerIdx,
+                                                  uint32_t aLightColorIndex,
+                                                  uint8_t aRed, uint8_t aGreen,
+                                                  uint8_t aBlue) {
+  // We get aControllerIdx from GamepadPlatformService::AddGamepad(),
+  // It begins from 1 and is stored at Gamepad.id.
+  const Gamepad* gamepad = nullptr;
+  for (const auto& pad : mGamepads) {
+    if (pad.mSuperIndex == aControllerIdx) {
+      gamepad = &pad;
+      break;
+    }
+  }
+  if (!gamepad) {
+    MOZ_ASSERT(false);
+    return;
+  }
+
+  RefPtr<GamepadRemapper> remapper = gamepad->mRemapper;
+  if (!remapper || remapper->GetLightIndicatorCount() <= aLightColorIndex) {
+    MOZ_ASSERT(false);
+    return;
+  }
+
+  std::vector<uint8_t> report;
+  remapper->GetLightColorReport(aRed, aGreen, aBlue, report);
+  gamepad->WriteOutputReport(report);
+}
+
 }  // namespace
 
 namespace mozilla {
@@ -602,8 +614,12 @@ void StopGamepadMonitoring() {
 void SetGamepadLightIndicatorColor(uint32_t aControllerIdx,
                                    uint32_t aLightColorIndex, uint8_t aRed,
                                    uint8_t aGreen, uint8_t aBlue) {
-  // TODO: Bug 1523353.
-  NS_WARNING("Mac OS doesn't support gamepad light indicator.");
+  MOZ_ASSERT(gService);
+  if (!gService) {
+    return;
+  }
+  gService->SetLightIndicatorColor(aControllerIdx, aLightColorIndex, aRed,
+                                   aGreen, aBlue);
 }
 
 }  // namespace dom

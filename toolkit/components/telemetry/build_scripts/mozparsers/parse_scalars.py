@@ -104,13 +104,13 @@ class ScalarType:
             'kind': basestring,
             'notification_emails': list,  # This contains strings. See LIST_FIELDS_CONTENT.
             'record_in_processes': list,
+            'products': list,
         }
 
         OPTIONAL_FIELDS = {
             'release_channel_collection': basestring,
             'keyed': bool,
             'operating_systems': list,
-            'products': list,
             'record_into_store': list,
         }
 
@@ -302,7 +302,7 @@ class ScalarType:
     @property
     def products(self):
         """Get the non-empty list of products to record data on"""
-        return self._definition.get('products', ["all"])
+        return self._definition.get('products')
 
     @property
     def products_enum(self):

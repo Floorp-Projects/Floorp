@@ -1167,10 +1167,8 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   referrerInfo->InitWithNode(thisNode);
   nsCOMPtr<nsIURI> referrer = referrerInfo->GetOriginalReferrer();
   nsresult rv = nsContentUtils::LoadImage(
-      aNewURI, thisNode, aDocument, triggeringPrincipal, 0, referrer,
-      static_cast<mozilla::net::ReferrerPolicy>(
-          referrerInfo->GetReferrerPolicy()),
-      this, loadFlags, content->LocalName(), getter_AddRefs(req), policyType,
+      aNewURI, thisNode, aDocument, triggeringPrincipal, 0, referrerInfo, this,
+      loadFlags, content->LocalName(), getter_AddRefs(req), policyType,
       mUseUrgentStartForChannel);
 
   // Reset the flag to avoid loading from XPCOM or somewhere again else without

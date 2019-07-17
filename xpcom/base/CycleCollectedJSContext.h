@@ -247,6 +247,12 @@ class CycleCollectedJSContext
 
   virtual bool IsSystemCaller() const = 0;
 
+  // Unused on main thread.  Used by AutoJSAPI on Worker and Worklet threads.
+  virtual void ReportError(JSErrorReport* aReport,
+                           JS::ConstUTF8CharsZ aToStringResult) {
+    MOZ_ASSERT_UNREACHABLE("Not supported");
+  }
+
  private:
   // JS::JobQueue implementation: see js/public/Promise.h.
   // SpiderMonkey uses some of these methods to enqueue promise resolution jobs.

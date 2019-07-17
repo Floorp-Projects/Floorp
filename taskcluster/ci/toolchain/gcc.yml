@@ -36,7 +36,37 @@ linux64-gcc-7:
     fetches:
         fetch:
             - binutils-2.31.1
-            - gcc-7.3.0
+            - gcc-7.4.0
+            - gmp-6.1.0
+            - isl-0.16.1
+            - mpc-1.0.3
+            - mpfr-3.1.4
+
+linux64-gcc-8:
+    description: "GCC 8 toolchain build"
+    treeherder:
+        symbol: TL(gcc8)
+    run:
+        script: build-gcc-8-linux.sh
+    fetches:
+        fetch:
+            - binutils-2.31.1
+            - gcc-8.3.0
+            - gmp-6.1.0
+            - isl-0.16.1
+            - mpc-1.0.3
+            - mpfr-3.1.4
+
+linux64-gcc-9:
+    description: "GCC 9 toolchain build"
+    treeherder:
+        symbol: TL(gcc9)
+    run:
+        script: build-gcc-9-linux.sh
+    fetches:
+        fetch:
+            - binutils-2.31.1
+            - gcc-9.1.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3

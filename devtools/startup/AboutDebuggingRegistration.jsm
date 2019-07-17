@@ -4,10 +4,8 @@
 
 "use strict";
 
-// Register the about:debugging URL, that allows to debug various targets such as addons,
-// workers and tabs by launching a dedicated DevTools toolbox for the selected target.
-// If DevTools are not installed, this about page will display a shim landing page
-// encouraging the user to download and install DevTools.
+// Register the about:debugging URL, that allows to debug tabs, extensions, workers on
+// the current instance of Firefox or on a remote Firefox.
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { nsIAboutModule } = Ci;
@@ -22,14 +20,10 @@ AboutDebugging.prototype = {
   QueryInterface: ChromeUtils.generateQI([nsIAboutModule]),
 
   newChannel: function(_, loadInfo) {
-    const uri = Services.prefs.getBoolPref(
-      "devtools.aboutdebugging.new-enabled"
-    )
-      ? "chrome://devtools/content/aboutdebugging-new/index.html"
-      : "chrome://devtools/content/aboutdebugging/aboutdebugging.xhtml";
-
     const chan = Services.io.newChannelFromURIWithLoadInfo(
-      Services.io.newURI(uri),
+      Services.io.newURI(
+        "chrome://devtools/content/aboutdebugging-new/index.html"
+      ),
       loadInfo
     );
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();

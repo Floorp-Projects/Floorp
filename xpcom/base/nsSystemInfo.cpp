@@ -777,6 +777,17 @@ nsresult nsSystemInfo::Init() {
   }
 
 #ifdef XP_WIN
+  bool isMinGW =
+#  ifdef __MINGW32__
+      true;
+#  else
+      false;
+#  endif
+  rv = SetPropertyAsBool(NS_LITERAL_STRING("isMinGW"), !!isMinGW);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   // IsWow64Process2 is only available on Windows 10+, so we have to dynamically
   // check for its existence.
   typedef BOOL(WINAPI * LPFN_IWP2)(HANDLE, USHORT*, USHORT*);

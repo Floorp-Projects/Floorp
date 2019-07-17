@@ -411,7 +411,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
   }
   void unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type);
-  void unboxPrivate(const ValueOperand& src, Register dest);
 
   void notBoolean(const ValueOperand& val) {
     as_xori(val.valueReg(), val.valueReg(), 1);

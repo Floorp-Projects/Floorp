@@ -43,6 +43,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
   let actor = aActor;
   let spellInfo = data.spellInfo;
   let frameReferrerInfo = data.frameReferrerInfo;
+  let targetReferrerInfo = data.targetReferrerInfo;
   let principal = data.principal;
   let storagePrincipal = data.storagePrincipal;
 
@@ -58,6 +59,10 @@ function openContextMenu(aMessage, aBrowser, aActor) {
 
   if (frameReferrerInfo) {
     frameReferrerInfo = E10SUtils.deserializeReferrerInfo(frameReferrerInfo);
+  }
+
+  if (targetReferrerInfo) {
+    targetReferrerInfo = E10SUtils.deserializeReferrerInfo(targetReferrerInfo);
   }
 
   // For now, JS Window Actors don't deserialize Principals automatically, so we
@@ -95,6 +100,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     charSet: data.charSet,
     referrerInfo: E10SUtils.deserializeReferrerInfo(data.referrerInfo),
     frameReferrerInfo,
+    targetReferrerInfo,
     contentType: data.contentType,
     contentDisposition: data.contentDisposition,
     frameOuterWindowID: data.frameOuterWindowID,
@@ -1324,7 +1330,7 @@ nsContextMenu.prototype = {
     }
 
     // Cache this because we fetch the data async
-    let { documentURIObject } = gContextMenuContentData;
+    let { targetReferrerInfo } = gContextMenuContentData;
 
     this.actor.saveVideoFrameAsImage(this.targetIdentifier).then(dataURL => {
       // FIXME can we switch this to a blob URL?
@@ -1334,7 +1340,7 @@ nsContextMenu.prototype = {
         "SaveImageTitle",
         true, // bypass cache
         false, // don't skip prompt for where to save
-        documentURIObject, // referrer
+        targetReferrerInfo, // referrer info
         null, // document
         null, // content type
         null, // content disposition
@@ -1429,7 +1435,7 @@ nsContextMenu.prototype = {
     dialogTitle,
     bypassCache,
     doc,
-    docURI,
+    referrerInfo,
     windowID,
     linkDownload,
     isContentWindowPrivate
@@ -1497,7 +1503,7 @@ nsContextMenu.prototype = {
             dialogTitle,
             bypassCache,
             false,
-            docURI,
+            referrerInfo,
             doc,
             isContentWindowPrivate,
             this._triggeringPrincipal
@@ -1579,12 +1585,6 @@ nsContextMenu.prototype = {
     channel.loadFlags |= flags;
 
     if (channel instanceof Ci.nsIHttpChannel) {
-      let referrerInfo = new ReferrerInfo(
-        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-        true,
-        docURI
-      );
-
       channel.referrerInfo = referrerInfo;
       if (channel instanceof Ci.nsIHttpChannelInternal) {
         channel.forceAllowThirdPartyCookie = true;
@@ -1615,7 +1615,7 @@ nsContextMenu.prototype = {
       null,
       true,
       this.ownerDoc,
-      gContextMenuContentData.documentURIObject,
+      gContextMenuContentData.referrerInfo,
       this.frameOuterWindowID,
       this.linkDownload,
       isContentWindowPrivate
@@ -1633,7 +1633,7 @@ nsContextMenu.prototype = {
   saveMedia() {
     let doc = this.ownerDoc;
     let isContentWindowPrivate = this.ownerDoc.isPrivate;
-    let referrerURI = gContextMenuContentData.documentURIObject;
+    let referrerInfo = gContextMenuContentData.targetReferrerInfo;
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.
@@ -1644,7 +1644,7 @@ nsContextMenu.prototype = {
           "SaveImageTitle",
           true,
           false,
-          referrerURI,
+          referrerInfo,
           null,
           null,
           null,
@@ -1660,7 +1660,7 @@ nsContextMenu.prototype = {
         "SaveImageTitle",
         false,
         false,
-        referrerURI,
+        referrerInfo,
         null,
         gContextMenuContentData.contentType,
         gContextMenuContentData.contentDisposition,
@@ -1675,7 +1675,7 @@ nsContextMenu.prototype = {
         dialogTitle,
         false,
         doc,
-        referrerURI,
+        referrerInfo,
         this.frameOuterWindowID,
         "",
         isContentWindowPrivate

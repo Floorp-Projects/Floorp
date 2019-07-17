@@ -14,6 +14,11 @@
   min-height: var(--primary-toolbar-height);
 }
 
+.requests-list-filter-buttons {
+  white-space: nowrap;
+  margin: 0 7px;
+}
+
 .devtools-button.devtools-pause-icon::before,
 .devtools-button.devtools-play-icon::before {
   margin-bottom: 1px;

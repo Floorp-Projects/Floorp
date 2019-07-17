@@ -109,7 +109,7 @@ inline Chunk* js::NurseryChunk::toChunk(JSRuntime* rt) {
 
 void js::NurseryDecommitTask::queueChunk(
     NurseryChunk* nchunk, const AutoLockHelperThreadState& lock) {
-  // Using the chunk pointers is infalliable.
+  // Using the chunk pointers to build the queue is infallible.
   Chunk* chunk = nchunk->toChunk(runtime());
   chunk->info.prev = nullptr;
   chunk->info.next = queue;
@@ -322,6 +322,9 @@ void js::Nursery::disable() {
     return;
   }
 
+  // Freeing the chunks must not race with decommitting part of one of our
+  // chunks. So join the decommitTask here and also below.
+  decommitTask.join();
   freeChunksFrom(0);
   capacity_ = 0;
 
@@ -363,8 +366,13 @@ bool js::Nursery::isEmpty() const {
 void js::Nursery::enterZealMode() {
   if (isEnabled()) {
     if (isSubChunkMode()) {
-      // It'd be simplier to poison the whole chunk, but we can't do that
-      // because the nursery might be partily used.
+      // The poisoning call below must not race with background decommit,
+      // which could be attempting to decommit the currently-unused part of this
+      // chunk.
+      decommitTask.join();
+
+      // It'd be simpler to poison the whole chunk, but we can't do that
+      // because the nursery might be partially used.
       chunk(0).poisonRange(capacity_, NurseryChunkUsableSize - capacity_,
                            JS_FRESH_NURSERY_PATTERN,
                            MemCheckKind::MakeUndefined);

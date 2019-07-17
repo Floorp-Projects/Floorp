@@ -628,7 +628,7 @@ const listeners = {
     "PasswordManager:findLogins": ["LoginManagerParent"],
     "PasswordManager:findRecipes": ["LoginManagerParent"],
     "PasswordManager:onFormSubmit": ["LoginManagerParent"],
-    "PasswordManager:onGeneratedPasswordFilled": ["LoginManagerParent"],
+    "PasswordManager:onGeneratedPasswordFilledOrEdited": ["LoginManagerParent"],
     "PasswordManager:autoCompleteLogins": ["LoginManagerParent"],
     "PasswordManager:removeLogin": ["LoginManagerParent"],
     "PasswordManager:insecureLoginFormPresent": ["LoginManagerParent"],

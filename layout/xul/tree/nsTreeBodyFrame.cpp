@@ -1918,11 +1918,13 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
           getter_AddRefs(srcURI), imageSrc, doc, mContent->GetBaseURI());
       if (!srcURI) return NS_ERROR_FAILURE;
 
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = new mozilla::dom::ReferrerInfo();
+      referrerInfo->InitWithDocument(doc);
+
       // XXXbz what's the origin principal for this stuff that comes from our
       // view?  I guess we should assume that it's the node's principal...
       nsresult rv = nsContentUtils::LoadImage(
-          srcURI, mContent, doc, mContent->NodePrincipal(), 0,
-          doc->GetDocumentURIAsReferrer(), doc->GetReferrerPolicy(),
+          srcURI, mContent, doc, mContent->NodePrincipal(), 0, referrerInfo,
           imgNotificationObserver, nsIRequest::LOAD_NORMAL, EmptyString(),
           getter_AddRefs(imageRequest));
       NS_ENSURE_SUCCESS(rv, rv);

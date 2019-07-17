@@ -39,14 +39,19 @@ if (parent) {
   parent.SimpleTest.requestFlakyTimeout('untriaged');
 
   try {
+    let timeoutLengthMultiplier;
     if (navigator.appVersion.includes('Android')) {
       // From layout/tools/reftest/reftest.js:
       var version = SpecialPowers.Services.sysinfo.getProperty('version');
       var kAndroidVersion2_3 = 9;
       if (version == kAndroidVersion2_3) {
-        var timeoutLengthMultiplier = 2.0;
-        parent.SimpleTest.requestLongerTimeout(timeoutLengthMultiplier);
+        timeoutLengthMultiplier = 2.0;
       }
+    } else if (SpecialPowers.Services.sysinfo.getProperty('isMinGW')) {
+      timeoutLengthMultiplier = 2.0;
+    }
+    if (timeoutLengthMultiplier) {
+      parent.SimpleTest.requestLongerTimeout(timeoutLengthMultiplier);
     }
   } catch (e) {
     console.log('Warning: No SpecialPowers.');

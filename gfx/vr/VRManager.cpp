@@ -1002,7 +1002,11 @@ void VRManager::PullState(
           if (!aWaitCondition || aWaitCondition()) {
             return;
           }
-        }  // if (isCleanCopy)
+        } else if (!aWaitCondition) {
+          // We did not get a clean copy, and we are not waiting for a condition
+          // to exit from PullState call.
+          return;
+        }
         // Yield the thread while polling
         YieldThread();
 #  if defined(XP_WIN)

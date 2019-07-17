@@ -38,7 +38,6 @@ let signonsIntro;
 let removeButton;
 let removeAllButton;
 let signonsTree;
-let autofillCheckbox;
 
 let signonReloadDisplay = {
   observe(subject, topic, data) {
@@ -84,17 +83,11 @@ function Startup() {
   filterField = document.getElementById("filter");
   togglePasswordsButton = document.getElementById("togglePasswords");
   signonsIntro = document.getElementById("signonsIntro");
-  autofillCheckbox = document.getElementById("passwordAutofillCheckbox");
   removeButton = document.getElementById("removeSignon");
   removeAllButton = document.getElementById("removeAllSignons");
 
   document.l10n.setAttributes(togglePasswordsButton, "show-passwords");
   document.l10n.setAttributes(signonsIntro, "logins-description-all");
-  document.l10n.setAttributes(
-    autofillCheckbox,
-    "auto-fill-logins-and-passwords"
-  );
-  autofillCheckbox.checked = Services.prefs.getBoolPref("signon.autofillForms");
   document.l10n.setAttributes(removeAllButton, "remove-all");
 
   document
@@ -128,10 +121,6 @@ function Startup() {
   document.l10n
     .translateElements(document.querySelectorAll("[data-l10n-id]"))
     .then(() => window.sizeToContent());
-}
-
-function watchLoginAutofill() {
-  Services.prefs.setBoolPref("signon.autofillForms", autofillCheckbox.checked);
 }
 
 function Shutdown() {

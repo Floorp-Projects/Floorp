@@ -39,10 +39,9 @@ bool AudioWorkletGlobalScope::WrapGlobalObject(
       aReflector);
 }
 
-void AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
-                                                const nsAString& aName,
-                                                VoidFunction& aProcessorCtor,
-                                                ErrorResult& aRv) {
+void AudioWorkletGlobalScope::RegisterProcessor(
+    JSContext* aCx, const nsAString& aName,
+    AudioWorkletProcessorConstructor& aProcessorCtor, ErrorResult& aRv) {
   JS::Rooted<JSObject*> processorConstructor(aCx,
                                              aProcessorCtor.CallableOrNull());
 

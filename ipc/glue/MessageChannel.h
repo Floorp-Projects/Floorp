@@ -565,7 +565,8 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
  private:
   class MessageTask : public CancelableRunnable,
                       public LinkedListElement<RefPtr<MessageTask>>,
-                      public nsIRunnablePriority {
+                      public nsIRunnablePriority,
+                      public nsIRunnableIPCMessageType {
    public:
     explicit MessageTask(MessageChannel* aChannel, Message&& aMessage);
 
@@ -574,6 +575,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
     NS_IMETHOD Run() override;
     nsresult Cancel() override;
     NS_IMETHOD GetPriority(uint32_t* aPriority) override;
+    NS_DECL_NSIRUNNABLEIPCMESSAGETYPE
     void Post();
     void Clear();
 

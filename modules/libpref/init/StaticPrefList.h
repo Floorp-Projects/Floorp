@@ -2136,6 +2136,18 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  Live,
+  "idle_period.min",
+   idle_period_min,
+  uint32_t, 3)
+
+VARCACHE_PREF(
+  Live,
+  "idle_period.during_page_load.min",
+   idle_period_during_page_load_min,
+  uint32_t, 12)
+
 #ifdef JS_BUILD_BINAST
 VARCACHE_PREF(
   Live,
@@ -6987,6 +6999,13 @@ VARCACHE_PREF(
   "network.traffic_analyzer.enabled",
   network_traffic_analyzer_enabled,
   RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "network.delay.tracking.load",
+  network_delay_tracking_load,
+  uint32_t, 0
 )
 
 // Max time to shutdown the resolver threads

@@ -502,7 +502,6 @@ choose-bookmark =
 
 home-prefs-content-header = Firefox Home Content
 home-prefs-content-description = Choose what content you want on your Firefox Home screen.
-home-prefs-content-discovery-description = Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.
 
 home-prefs-search-header =
     .label = Web Search
@@ -749,6 +748,9 @@ forms-exceptions =
 forms-generate-passwords =
     .label = Suggest and generate strong passwords
     .accesskey = u
+forms-fill-logins-and-passwords =
+    .label = Autofill logins and passwords
+    .accesskey = i
 forms-saved-logins =
     .label = Saved Logins…
     .accesskey = L

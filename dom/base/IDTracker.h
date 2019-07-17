@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 
 class nsIURI;
+class nsIReferrerInfo;
 
 namespace mozilla {
 namespace dom {
@@ -55,16 +56,15 @@ class IDTracker {
    * do not trigger ElementChanged.
    * @param aFrom the source element for context
    * @param aURI the URI containing a hash-reference to the element
-   * @param aReferrer the referrer URI for loading external resource
-   * @param aReferrerPolicy the referrer policy for loading external resource
+   * @param aReferrerInfo the referrerInfo for loading external resource
    * @param aWatch if false, then we do not set up the notifications to track
    * changes, so ElementChanged won't fire and get() will always return the same
    * value, the current element for the ID.
    * @param aReferenceImage whether the ID references image elements which are
    * subject to the document's mozSetImageElement overriding mechanism.
    */
-  void ResetToURIFragmentID(nsIContent* aFrom, nsIURI* aURI, nsIURI* aReferrer,
-                            uint32_t aReferrerPolicy, bool aWatch = true,
+  void ResetToURIFragmentID(nsIContent* aFrom, nsIURI* aURI,
+                            nsIReferrerInfo* aReferrerInfo, bool aWatch = true,
                             bool aReferenceImage = false);
 
   /**
