@@ -17,7 +17,7 @@ let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
 let BrowserApp = chromeWin.BrowserApp;
 
 const BASE = "https://example.com:443/tests/robocop/";
-const XPI = BASE + "browser_theme_image_file.xpi";
+const XPI = BASE + "addons/browser_theme_image_file.xpi";
 const PAGE = BASE + "robocop_blank_04.html";
 
 // Track the tabs where the tests are happening.
