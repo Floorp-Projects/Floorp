@@ -273,14 +273,7 @@ add_task(async function test_timestamp_aggragation() {
   Services.prefs.clearUserPref("browser.contentblocking.database.enabled");
 });
 
-// This tests that TrackingDBService.getEventsByDateRange can accept two timestamps in unix epoch time
-// and return entries that occur within the timestamps, rounded to the nearest day and inclusive.
-add_task(async function test_getEventsByDateRange() {
-  Services.prefs.setBoolPref("browser.contentblocking.database.enabled", true);
-  // This creates the schema.
-  await TrackingDBService.saveEvents(JSON.stringify({}));
-  let db = await Sqlite.openConnection({ path: DB_PATH });
-
+let addEventsToDB = async db => {
   let d = new Date(1521009000000);
   let date = d.toISOString();
   await db.execute(SQL.insertCustomTimeEvent, {
@@ -316,7 +309,18 @@ add_task(async function test_getEventsByDateRange() {
     count: 2,
     timestamp: date,
   });
+};
 
+// This tests that TrackingDBService.getEventsByDateRange can accept two timestamps in unix epoch time
+// and return entries that occur within the timestamps, rounded to the nearest day and inclusive.
+add_task(async function test_getEventsByDateRange() {
+  Services.prefs.setBoolPref("browser.contentblocking.database.enabled", true);
+  // This creates the schema.
+  await TrackingDBService.saveEvents(JSON.stringify({}));
+  let db = await Sqlite.openConnection({ path: DB_PATH });
+  await addEventsToDB(db);
+
+  let d = new Date(1521009000000);
   let daysBefore1 = new Date(d - 24 * 60 * 60 * 1000);
   let daysBefore4 = new Date(d - 4 * 24 * 60 * 60 * 1000);
   let daysBefore9 = new Date(d - 9 * 24 * 60 * 60 * 1000);
@@ -344,6 +348,50 @@ add_task(async function test_getEventsByDateRange() {
     2,
     "There is 2 event entries between nine and four days before, inclusive"
   );
+
+  await TrackingDBService.clearAll();
+  await db.close();
+  Services.prefs.clearUserPref("browser.contentblocking.database.enabled");
+});
+
+// This tests that TrackingDBService.sumAllEvents returns the number of
+// tracking events in the database, and can handle 0 entries.
+add_task(async function test_sumAllEvents() {
+  Services.prefs.setBoolPref("browser.contentblocking.database.enabled", true);
+  // This creates the schema.
+  await TrackingDBService.saveEvents(JSON.stringify({}));
+  let db = await Sqlite.openConnection({ path: DB_PATH });
+
+  let sum = await TrackingDBService.sumAllEvents();
+  equal(sum, 0, "There have been 0 events recorded");
+
+  // populate the database
+  await addEventsToDB(db);
+
+  sum = await TrackingDBService.sumAllEvents();
+  equal(sum, 11, "There have been 11 events recorded");
+
+  await TrackingDBService.clearAll();
+  await db.close();
+  Services.prefs.clearUserPref("browser.contentblocking.database.enabled");
+});
+
+// This tests that TrackingDBService.getEarliestRecordedDate returns the
+// earliest date recorded and can handle 0 entries.
+add_task(async function test_getEarliestRecordedDate() {
+  Services.prefs.setBoolPref("browser.contentblocking.database.enabled", true);
+  // This creates the schema.
+  await TrackingDBService.saveEvents(JSON.stringify({}));
+  let db = await Sqlite.openConnection({ path: DB_PATH });
+
+  let date = await TrackingDBService.getEarliestRecordedDate();
+  equal(date, null, "There is no earliest recorded date");
+
+  // populate the database
+  await addEventsToDB(db);
+
+  date = await TrackingDBService.getEarliestRecordedDate();
+  equal(date, "2018-03-14", "The earliest recorded event is 2018-03-14");
 
   await TrackingDBService.clearAll();
   await db.close();
