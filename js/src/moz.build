@@ -351,6 +351,7 @@ UNIFIED_SOURCES += [
 #   files unlucky enough to be unified with it.
 SOURCES += [
     'builtin/RegExp.cpp',
+    'dbg/NoExecute.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
     'util/DoubleToString.cpp',
