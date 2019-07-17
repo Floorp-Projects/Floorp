@@ -10229,7 +10229,8 @@ void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
       RemoveFrame(kPrincipalList, textFrame);
 
       // Insert in the letter frame(s)
-      parentFrame->InsertFrames(kPrincipalList, prevFrame, letterFrames);
+      parentFrame->InsertFrames(kPrincipalList, prevFrame, nullptr,
+                                letterFrames);
     }
   }
 }
@@ -10518,7 +10519,7 @@ void nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame) {
     RemoveFrame(kPrincipalList, textFrame);
 
     // Insert in the letter frame(s)
-    parentFrame->InsertFrames(kPrincipalList, prevFrame, letterFrames);
+    parentFrame->InsertFrames(kPrincipalList, prevFrame, nullptr, letterFrames);
   }
 }
 

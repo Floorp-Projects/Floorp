@@ -71,6 +71,7 @@ class nsSVGContainerFrame : public nsContainerFrame {
   virtual void AppendFrames(ChildListID aListID,
                             nsFrameList& aFrameList) override;
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override;
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 
@@ -123,6 +124,7 @@ class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
 
   // nsIFrame:
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override;
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,

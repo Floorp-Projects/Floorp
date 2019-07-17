@@ -1145,6 +1145,7 @@ void nsMenuFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
 }
 
 void nsMenuFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                               const nsLineList::iterator* aPrevFrameLine,
                                nsFrameList& aFrameList) {
   if (!HasPopup() && (aListID == kPrincipalList || aListID == kPopupList)) {
     SetPopupFrame(aFrameList);
@@ -1160,7 +1161,7 @@ void nsMenuFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
     aPrevFrame = nullptr;
   }
 
-  nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+  nsBoxFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine, aFrameList);
 }
 
 void nsMenuFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
