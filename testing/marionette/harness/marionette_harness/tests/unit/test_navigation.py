@@ -305,7 +305,7 @@ class TestNavigate(BaseNavigationTestCase):
         self.assertFalse(self.is_remote_tab)
 
         with self.marionette.using_context("chrome"):
-            urlbar = self.marionette.find_element(By.ID, "urlbar")
+            urlbar = self.marionette.find_element(By.ID, "urlbar-input")
             urlbar.send_keys(self.mod_key + "a")
             urlbar.send_keys(self.mod_key + "x")
             urlbar.send_keys("about:support" + Keys.ENTER)
@@ -321,7 +321,7 @@ class TestNavigate(BaseNavigationTestCase):
         self.assertTrue(self.is_remote_tab)
 
         with self.marionette.using_context("chrome"):
-            urlbar = self.marionette.find_element(By.ID, "urlbar")
+            urlbar = self.marionette.find_element(By.ID, "urlbar-input")
             urlbar.send_keys(self.mod_key + "a")
             urlbar.send_keys(self.mod_key + "x")
             urlbar.send_keys(self.test_page_remote + Keys.ENTER)
