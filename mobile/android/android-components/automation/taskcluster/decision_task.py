@@ -249,7 +249,7 @@ def _to_snapshot_release_artifact(extension, version, component, timestamp):
             os.path.abspath(component['path']),
             component['name'],
             version, artifact_filename),
-        'maven_destination': 'maven2/org/mozilla/components/{}/{}/{}'.format(
+        'maven_destination': 'maven2/org/mozilla/components/{}/{}-SNAPSHOT/{}'.format(
             component['name'],
             version,
             artifact_filename,
@@ -263,6 +263,7 @@ def release_snapshot(components, is_snapshot, is_staging):
 
     build_tasks = {}
     wait_on_builds_tasks = {}
+    sign_tasks = {}
     beetmover_tasks = {}
     other_tasks = {}
     wait_on_builds_task_id = taskcluster.slugId()
@@ -285,8 +286,20 @@ def release_snapshot(components, is_snapshot, is_staging):
             timestamp=timestamp,
         )
 
-        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_snapshot_beetmover_task(
-            build_task_id, wait_on_builds_task_id, version, component['artifact'],
+        sign_task_id = taskcluster.slugId()
+        sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
+            build_task_id, wait_on_builds_task_id, [_to_snapshot_release_artifact(extension, version, component, timestamp)
+                            for extension in AAR_EXTENSIONS],
+            component['name'], is_staging,
+        )
+
+        beetmover_build_artifacts = [_to_snapshot_release_artifact(extension + hash_extension, version, component, timestamp)
+                                     for extension, hash_extension in
+                                     itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
+        beetmover_sign_artifacts = [_to_snapshot_release_artifact(extension + '.asc', version, component, timestamp)
+                                    for extension in AAR_EXTENSIONS]
+        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
+            build_task_id, sign_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
             component['name'], is_snapshot, is_staging
         )
 
@@ -295,7 +308,7 @@ def release_snapshot(components, is_snapshot, is_staging):
     for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
         other_tasks[taskcluster.slugId()] = craft_function()
 
-    return (build_tasks, wait_on_builds_tasks, beetmover_tasks, other_tasks)
+    return (build_tasks, wait_on_builds_tasks, sign_tasks, beetmover_tasks, other_tasks)
 
 
 def release(components, is_snapshot, is_staging):

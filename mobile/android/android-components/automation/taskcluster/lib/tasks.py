@@ -220,54 +220,6 @@ class TaskBuilder(object):
             payload=payload
         )
 
-    # TODO: DELETE once bug 1558795 is fixed in early Q3
-    def craft_snapshot_beetmover_task(
-        self, build_task_id, wait_on_builds_task_id, version, artifact, artifact_name,
-        is_snapshot, is_staging
-    ):
-        if is_snapshot:
-            if is_staging:
-                bucket_name = 'maven-snapshot-staging'
-                bucket_public_url = 'https://maven-snapshots.stage.mozaws.net/'
-            else:
-                bucket_name = 'maven-snapshot-production'
-                bucket_public_url = 'https://snapshots.maven.mozilla.org/'
-        else:
-            if is_staging:
-                bucket_name = 'maven-staging'
-                bucket_public_url = 'https://maven-default.stage.mozaws.net/'
-            else:
-                bucket_name = 'maven-production'
-                bucket_public_url = 'https://maven.mozilla.org/'
-
-        payload = {
-            "upstreamArtifacts": [{
-                'paths': [artifact],
-                'taskId': build_task_id,
-                'taskType': 'build',
-                'zipExtract': True,
-            }],
-            "releaseProperties": {
-                "appName": "snapshot_components" if is_snapshot else "components",
-            },
-            "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
-            "artifact_id": artifact_name
-        }
-
-        return self._craft_default_task_definition(
-            self.beetmover_worker_type,
-            'scriptworker-prov-v1',
-            dependencies=[build_task_id, wait_on_builds_task_id],
-            routes=[],
-            scopes=[
-                "project:mobile:android-components:releng:beetmover:bucket:{}".format(bucket_name),
-                "project:mobile:android-components:releng:beetmover:action:push-to-maven",
-            ],
-            name="Android Components - Publish Module :{} via beetmover".format(artifact_name),
-            description="Publish release module {} to {}".format(artifact_name, bucket_public_url),
-            payload=payload
-        )
-
     def _craft_build_ish_task(
         self, name, description, command, dependencies=None, artifacts=None, scopes=None,
         routes=None, features=None, env_vars=None
