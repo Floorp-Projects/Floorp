@@ -806,6 +806,15 @@
       );
 
       this.addEventListener("keydown", event => {
+        if (
+          event.altKey ||
+          event.getModifierState("Accel") ||
+          event.metaKey ||
+          event.ctrlKey
+        ) {
+          return;
+        }
+
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_RETURN: {
             if (this._handleEnter(event)) {
