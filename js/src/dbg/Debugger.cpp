@@ -9055,7 +9055,6 @@ ScriptedOnStepHandler::ScriptedOnStepHandler(JSObject* object)
 JSObject* ScriptedOnStepHandler::object() const { return object_; }
 
 void ScriptedOnStepHandler::drop(FreeOp* fop, DebuggerFrame* frame) {
-  MOZ_ASSERT(frame->onStepHandler() == this);
   fop->delete_(frame, this, allocSize(), MemoryUse::DebuggerOnStepHandler);
 }
 
@@ -9084,7 +9083,6 @@ ScriptedOnPopHandler::ScriptedOnPopHandler(JSObject* object) : object_(object) {
 JSObject* ScriptedOnPopHandler::object() const { return object_; }
 
 void ScriptedOnPopHandler::drop(FreeOp* fop, DebuggerFrame* frame) {
-  MOZ_ASSERT(frame->onPopHandler() == this);
   fop->delete_(frame, this, allocSize(), MemoryUse::DebuggerOnPopHandler);
 }
 
@@ -9313,8 +9311,8 @@ void DebuggerFrame::clearGenerator(FreeOp* fop) {
     OnStepHandler* handler = onStepHandler();
     if (handler) {
       generatorScript->decrementStepperCount(fop);
-      handler->drop(fop, this);
       setReservedSlot(ONSTEP_HANDLER_SLOT, UndefinedValue());
+      handler->drop(fop, this);
     }
   }
 
@@ -9591,8 +9589,8 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
 
   OnStepHandler* prior = frame->onStepHandler();
   if (prior && handler != prior) {
-    prior->drop(cx->defaultFreeOp(), frame);
     frame->setReservedSlot(ONSTEP_HANDLER_SLOT, UndefinedValue());
+    prior->drop(cx->defaultFreeOp(), frame);
   }
 
   AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
@@ -9877,8 +9875,8 @@ void DebuggerFrame::setOnPopHandler(JSContext* cx, OnPopHandler* handler) {
 
   OnPopHandler* prior = onPopHandler();
   if (prior && prior != handler) {
-    prior->drop(cx->defaultFreeOp(), this);
     setReservedSlot(ONPOP_HANDLER_SLOT, UndefinedValue());
+    prior->drop(cx->defaultFreeOp(), this);
   }
 
   if (handler && prior != handler) {
@@ -10394,9 +10392,7 @@ bool DebuggerFrame::onStepSetter(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (!DebuggerFrame::setOnStepHandler(cx, frame, handler)) {
-    // Handler has never been successfully associated with the frame so just
-    // delete it rather than calling drop().
-    js_delete(handler);
+    handler->drop(cx->defaultFreeOp(), frame);
     return false;
   }
 
