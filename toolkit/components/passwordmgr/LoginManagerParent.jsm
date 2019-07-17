@@ -163,8 +163,8 @@ this.LoginManagerParent = {
         break;
       }
 
-      case "PasswordManager:onGeneratedPasswordFilled": {
-        this._onGeneratedPasswordFilled(data);
+      case "PasswordManager:onGeneratedPasswordFilledOrEdited": {
+        this._onGeneratedPasswordFilledOrEdited(data);
         break;
       }
 
@@ -460,8 +460,8 @@ this.LoginManagerParent = {
     }
 
     generatedPW = {
-      value: PasswordGenerator.generatePassword(),
       filled: false,
+      value: PasswordGenerator.generatePassword(),
     };
     this._generatedPasswordsByPrincipalOrigin.set(
       framePrincipalOrigin,
@@ -666,12 +666,14 @@ this.LoginManagerParent = {
     prompter.promptToSavePassword(formLogin, dismissedPrompt);
   },
 
-  _onGeneratedPasswordFilled({
+  _onGeneratedPasswordFilledOrEdited({
     browsingContextId,
     formActionOrigin,
-    username = "",
     openerTopWindowID,
+    password: passwordInField,
+    username = "",
   }) {
+    log("_onGeneratedPasswordFilledOrEdited");
     let browsingContext = BrowsingContext.get(browsingContextId);
     let {
       originNoSuffix,
@@ -679,7 +681,7 @@ this.LoginManagerParent = {
     let formOrigin = LoginHelper.getLoginOrigin(originNoSuffix);
     if (!formOrigin) {
       log(
-        "_onGeneratedPasswordFilled: Invalid form origin:",
+        "_onGeneratedPasswordFilledOrEdited: Invalid form origin:",
         browsingContext.currentWindowGlobal.documentPrincipal
       );
       return;
@@ -690,6 +692,15 @@ this.LoginManagerParent = {
       framePrincipalOrigin
     );
     let password = generatedPW.value;
+    if (!passwordInField) {
+      log("_onGeneratedPasswordFilledOrEdited: The password field is empty");
+      return;
+    }
+    if (passwordInField != password) {
+      // The user edited the field after generation to a non-empty value.
+      log("The field containing the generated password has changed");
+      return;
+    }
     let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
       Ci.nsILoginInfo
     );
@@ -709,7 +720,10 @@ this.LoginManagerParent = {
     }
 
     if (!Services.logins.getLoginSavingEnabled(formOrigin)) {
-      log("_onGeneratedPasswordFilled: saving is disabled for:", formOrigin);
+      log(
+        "_onGeneratedPasswordFilledOrEdited: saving is disabled for:",
+        formOrigin
+      );
       shouldSaveLogin = false;
     }
 
@@ -723,12 +737,16 @@ this.LoginManagerParent = {
     });
 
     if (logins.length > 0) {
-      log("_onGeneratedPasswordFilled: Login already saved for this site");
+      log(
+        "_onGeneratedPasswordFilledOrEdited: Login already saved for this site"
+      );
       shouldSaveLogin = false;
       for (let login of logins) {
         if (formLogin.matches(login, false)) {
           // This login is already saved so show no new UI.
-          log("_onGeneratedPasswordFilled: Matching login already saved");
+          log(
+            "_onGeneratedPasswordFilledOrEdited: Matching login already saved"
+          );
           return;
         }
       }
@@ -738,7 +756,7 @@ this.LoginManagerParent = {
       Services.logins.addLogin(formLogin);
     }
     log(
-      "_onGeneratedPasswordFilled: show dismissed save-password notification"
+      "_onGeneratedPasswordFilledOrEdited: show dismissed save-password notification"
     );
     let browser = browsingContext.top.embedderElement;
     let prompter = this._getPrompter(browser, openerTopWindowID);

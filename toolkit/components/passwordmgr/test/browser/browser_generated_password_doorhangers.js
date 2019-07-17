@@ -403,14 +403,9 @@ add_task(async function password_change_without_username() {
       // Make the 2nd field use a generated password
       await doFillGeneratedPasswordContextMenuItem(browser, "#newpass");
 
-      // Submit the form
-      await ContentTask.spawn(browser, null, function() {
-        content.document.querySelector("#form").submit();
-      });
-
-      // Check a non-dismissed prompt was shown
+      // check a dismissed prompt was shown
       let notif = getCaptureDoorhanger("password-save");
-      ok(notif && !notif.dismissed, "Non-dismissed notification was created");
+      ok(notif && notif.dismissed, "Dismissed notification was created");
 
       let { passwordValue, usernameValue } = await checkPromptContents(
         notif.anchorElement
@@ -420,7 +415,37 @@ add_task(async function password_change_without_username() {
         15,
         "Doorhanger password field has generated 15-char value"
       );
-      is(usernameValue, "", "Doorhanger username field has no value");
+      is(
+        usernameValue,
+        "",
+        "Doorhanger username field has the username field value"
+      );
+      ok(
+        !notif.anchorElement.hasAttribute("extraAttr"),
+        "Check if icon has the extraAttr attribute"
+      );
+      notif.remove();
+
+      // Submit the form
+      await ContentTask.spawn(browser, null, function() {
+        content.document.querySelector("#form").submit();
+      });
+
+      // Check a non-dismissed prompt was shown
+      notif = getCaptureDoorhanger("password-save");
+      ok(notif && !notif.dismissed, "Non-dismissed notification was created");
+
+      ok(!EventUtils.isHidden(notif.anchorElement), "Anchor should be shown");
+      let {
+        passwordValue: passwordValue2,
+        usernameValue: usernameValue2,
+      } = await checkPromptContents(notif.anchorElement);
+      is(
+        passwordValue2.length,
+        15,
+        "Doorhanger password field has generated 15-char value"
+      );
+      is(usernameValue2, "", "Doorhanger username field has no value");
       notif.remove();
     }
   );
