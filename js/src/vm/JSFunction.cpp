@@ -774,7 +774,7 @@ inline void JSFunction::trace(JSTracer* trc) {
     // for self-hosted code.
     if (hasScript() && !hasUncompletedScript()) {
       TraceManuallyBarrieredEdge(trc, &u.scripted.s.script_, "script");
-    } else if (isInterpretedLazy() && u.scripted.s.lazy_) {
+    } else if (hasLazyScript() && u.scripted.s.lazy_) {
       TraceManuallyBarrieredEdge(trc, &u.scripted.s.lazy_, "lazyScript");
     }
 
@@ -1548,8 +1548,8 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
   // the script is created in the function's realm.
   AutoRealm ar(cx, fun);
 
-  Rooted<LazyScript*> lazy(cx, fun->lazyScriptOrNull());
-  if (lazy) {
+  if (fun->hasLazyScript()) {
+    Rooted<LazyScript*> lazy(cx, fun->lazyScript());
     RootedScript script(cx, lazy->maybeScript());
 
     // Only functions without inner functions or direct eval are
@@ -2246,11 +2246,15 @@ JSFunction* js::CloneFunctionReuseScript(
   if (fun->hasScript()) {
     clone->initScript(fun->nonLazyScript());
     clone->initEnvironment(enclosingEnv);
-  } else {
-    MOZ_ASSERT(fun->isInterpretedLazy());
+  } else if (fun->hasLazyScript()) {
     MOZ_ASSERT(fun->compartment() == clone->compartment());
-    LazyScript* lazy = fun->lazyScriptOrNull();
+    LazyScript* lazy = fun->lazyScript();
     clone->initLazyScript(lazy);
+    clone->initEnvironment(enclosingEnv);
+  } else {
+    MOZ_ASSERT(fun->isSelfHostedBuiltin());
+    MOZ_ASSERT(fun->compartment() == clone->compartment());
+    clone->initLazyScript(nullptr);
     clone->initEnvironment(enclosingEnv);
   }
 
