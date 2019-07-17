@@ -126,6 +126,7 @@ var ManifestProcessor = {
     processedManifest.scope = processScopeMember();
     if (checkConformance) {
       processedManifest.moz_validation = errors;
+      processedManifest.moz_manifest_url = manifestURL.href;
     }
     return processedManifest;
 
