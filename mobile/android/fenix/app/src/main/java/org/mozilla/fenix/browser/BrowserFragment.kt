@@ -240,7 +240,7 @@ class BrowserFragment : Fragment(), BackHandler {
                 requireContext(),
                 sessionManager = sessionManager,
                 sessionId = customTabSessionId,
-                interceptLinkClicks = false,
+                interceptLinkClicks = true,
                 fragmentManager = requireFragmentManager()
             ),
             owner = this,
