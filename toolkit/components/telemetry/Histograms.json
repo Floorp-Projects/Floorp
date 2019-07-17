@@ -7104,6 +7104,17 @@
     "alert_emails": ["sefeng@mozilla.com", "perfteam@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
     "releaseChannelCollection": "opt-out"
   },
+  "FX_PAGE_RELOAD_KEY_COMBO": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "72",
+    "kind": "categorical",
+    "description": "Record the frequency for common key combinations that users can use to trigger a page reload",
+    "labels": ["only_f5", "ctrl_f5", "accel_reloadKey", "accel_shift_reload", "toolbar", "shift_toolbar", "accel_toolbar", "auxiliary_toolbar"],
+    "bug_numbers": [1551965],
+    "alert_emails": ["sefeng@mozilla.com", "perfteam@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
+    "releaseChannelCollection": "opt-out"
+  },
   "FX_SCHEDULE_PRESSURE_IDLE_SAMPLE_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
