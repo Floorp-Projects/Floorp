@@ -35,6 +35,7 @@ import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
@@ -118,6 +119,12 @@ class EditBookmarkFragment : Fragment() {
         }
 
         updateBookmarkFromObservableInput()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        bookmark_name_edit.hideKeyboard()
+        bookmark_url_edit.hideKeyboard()
     }
 
     private fun updateBookmarkFromObservableInput() {
