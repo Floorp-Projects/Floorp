@@ -37,9 +37,10 @@ object Versions {
     // Note that android-components also depends on application-services,
     // and in fact is our main source of appservices-related functionality.
     // The version number below tracks the application-services version
-    // that we depend on directly for tests, and it's important that it
-    // be kept in sync with the version used by android-components above.
-    const val mozilla_appservices = "0.34.0"
+    // that we depend on directly for the fenix-megazord (and for it's
+    // forUnitTest variant), and it's important that it be kept in
+    // sync with the version used by android-components above.
+    const val mozilla_appservices = "0.36.0"
 
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
@@ -139,6 +140,7 @@ object Deps {
 
     const val mozilla_support_base = "org.mozilla.components:support-base:${Versions.mozilla_android_components}"
     const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${Versions.mozilla_android_components}"
+    const val mozilla_support_rusthttp = "org.mozilla.components:support-rusthttp:${Versions.mozilla_android_components}"
     const val mozilla_support_rustlog = "org.mozilla.components:support-rustlog:${Versions.mozilla_android_components}"
     const val mozilla_support_utils = "org.mozilla.components:support-utils:${Versions.mozilla_android_components}"
     const val mozilla_support_test = "org.mozilla.components:support-test:${Versions.mozilla_android_components}"
@@ -200,7 +202,9 @@ object Deps {
     const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val fragment_testing = "androidx.fragment:fragment-testing:${Versions.androidx_testing}"
     const val androidx_junit = "androidx.test.ext:junit:${Versions.androidx_test_ext}"
-    const val places_forUnitTests = "org.mozilla.appservices:places-forUnitTests:${Versions.mozilla_appservices}"
+
+    const val fenix_megazord = "org.mozilla.appservices:fenix-megazord:${Versions.mozilla_appservices}"
+    const val fenix_megazord_forUnitTests = "org.mozilla.appservices:fenix-megazord-forUnitTests:${Versions.mozilla_appservices}"
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
 }

@@ -20,16 +20,8 @@ if (localProperties != null) {
 
     if (appServicesLocalPath != null) {
         logger.lifecycle("Local configuration: substituting application-services modules from path: $appServicesLocalPath")
-
-        includeBuild(appServicesLocalPath) {
-            dependencySubstitution {
-                substitute module('org.mozilla.appservices:fxaclient') with project(':fxa-client-library')
-                substitute module('org.mozilla.appservices:logins') with project(':logins-library')
-                substitute module('org.mozilla.appservices:places') with project(':places-library')
-                substitute module('org.mozilla.appservices:rustlog') with project(':rustlog-library')
-            }
-        }
-
+        // XXX doesn't quite work yet.
+        includeBuild(appServicesLocalPath)
     } else {
         logger.lifecycle("Local configuration: application-services substitution path missing. Specify it via '$settingAppServicesPath' setting.")
     }

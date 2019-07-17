@@ -409,7 +409,22 @@ dependencies {
 
     testImplementation 'org.apache.maven:maven-ant-tasks:2.1.3'
     implementation Deps.fragment_testing
-    testImplementation Deps.places_forUnitTests
+    // For production builds, the native code for all `org.mozilla.appservices`
+    // dependencies gets compiled together into a single "megazord" build, and
+    // different megazords are published for different subsets of features. Ref
+    // https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html
+    // We want to use the one that's specifically designed for Fenix.
+    implementation Deps.fenix_megazord
+    testImplementation Deps.fenix_megazord_forUnitTests
+    implementation Deps.mozilla_support_rusthttp
+    modules {
+        module('org.mozilla.appservices:full-megazord') {
+            replacedBy('org.mozilla.appservices:fenix-megazord', 'prefer the fenix megazord, to reduce final application size')
+        }
+        module('org.mozilla.appservices:fenix-megazord') {
+            replacedBy('org.mozilla.appservices:fenix-megazord-forUnitTests', 'prefer the forUnitTests variant if present')
+        }
+    }
 
     testImplementation Deps.mockito_core
     androidTestImplementation Deps.mockito_android
@@ -419,6 +434,10 @@ dependencies {
     debugImplementation Deps.flipper
     debugImplementation Deps.soLoader
     releaseImplementation Deps.flipper_noop
+}
+
+if (project.hasProperty("raptor")) {
+    android.defaultConfig.manifestPlaceholders.isRaptorEnabled = "true"
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -448,41 +467,8 @@ apply from: 'https://github.com/mozilla-mobile/android-components/raw/' + glean_
 // into a single "megazord" build, and different megazords are published for different subsets of features.
 // Ref https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html
 // Substitute all appservices dependencies with an appropriate megazord.
+
 afterEvaluate {
-    def megazord = "fenix-megazord"
-    def appServicesGroup = "org.mozilla.appservices"
-    def appServicesVersion = null
-    configurations.each { configuration ->
-        configuration.resolutionStrategy.eachDependency { DependencyResolveDetails dependency ->
-            if (dependency.requested.group == appServicesGroup) {
-                // Ensure that we only depend on a single, consistent version of appservices.
-                if (appServicesVersion == null) {
-                  appServicesVersion = dependency.requested.version
-                } else {
-                    if (dependency.requested.version != appServicesVersion) {
-                        logger.lifecycle("In ${configuration}: mismatched '${appServicesGroup}` dependency version:" +
-                                         " '${dependency.requested.group}:${dependency.requested.name}:${dependency.requested.version}'" +
-                                         " does not have expected version ${appServicesVersion}")
-                        throw new RuntimeException("mismatched '${appServicesGroup}` dependency version")
-                    }
-                }
-                // Check whether it was already megazorded.
-                // Hack: sync15 is pure kotlin, and thus not part of the megazord.
-                if (! dependency.requested.name.endsWith("-withoutLib") && dependency.requested.name != "sync15") {
-                    // Use either the -forUnitTests megazord, or the default one.
-                    def substitution
-                    if (dependency.requested.name.endsWith("-forUnitTests")) {
-                      substitution = "org.mozilla.appservices:${megazord}-forUnitTests:${appServicesVersion}"
-                    } else {
-                      substitution = "org.mozilla.appservices:${megazord}:${appServicesVersion}"
-                    }
-                    logger.lifecycle("In ${configuration}: substituting megazord module '$substitution' for component module" +
-                                     " '${dependency.requested.group}:${dependency.requested.name}:${dependency.requested.version}'")
-                    dependency.useTarget(substitution)
-                }
-            }
-        }
-    }
 
     // Format test output. Ported from AC #2401
     tasks.matching {it instanceof Test}.all {
