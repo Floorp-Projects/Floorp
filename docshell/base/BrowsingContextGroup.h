@@ -113,6 +113,8 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   ~BrowsingContextGroup();
 
+  void UnsubscribeAllContentParents();
+
   // A BrowsingContextGroup contains a series of BrowsingContext objects. They
   // are addressed using a hashtable to avoid linear lookup when adding or
   // removing elements from the set.

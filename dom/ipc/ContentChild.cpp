@@ -4050,6 +4050,10 @@ void ContentChild::HoldBrowsingContextGroup(BrowsingContextGroup* aBCG) {
   mBrowsingContextGroupHolder.AppendElement(aBCG);
 }
 
+void ContentChild::ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG) {
+  mBrowsingContextGroupHolder.RemoveElement(aBCG);
+}
+
 }  // namespace dom
 
 #if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
