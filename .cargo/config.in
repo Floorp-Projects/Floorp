@@ -27,5 +27,10 @@ git = "https://github.com/CraneStation/Cranelift"
 rev = "312516a69da03dc06eace32f61412389a8dcadf3"
 replace-with = "vendored-sources"
 
+[source."https://github.com/ChunMinChang/coreaudio-sys"]
+git = "https://github.com/ChunMinChang/coreaudio-sys"
+branch = "gecko-build"
+replace-with = "vendored-sources"
+
 [source.vendored-sources]
 directory = '@top_srcdir@/third_party/rust'
