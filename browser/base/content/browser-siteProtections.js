@@ -1574,10 +1574,15 @@ var gProtectionsHandler = {
     // blocking something or not.
     gProtectionsHandler.toggleBreakageLink();
 
+    // Check the panel state of the identity panel. Hide it if needed.
+    if (gIdentityHandler._identityPopup.state != "closed") {
+      PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
+    }
+
     // Now open the popup, anchored off the primary chrome element
     PanelMultiView.openPopup(
       this._protectionsPopup,
-      gIdentityHandler._identityIcon,
+      gIdentityHandler._trackingProtectionIconContainer,
       {
         position: "bottomcenter topleft",
         triggerEvent: event,
