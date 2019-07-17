@@ -12,11 +12,11 @@
 
   "theme": {
     "images": {
-      "headerURL": "testImage.png"
+      "theme_frame": "testImage.png"
     },
     "colors": {
-      "accentcolor": "#000000",
-      "textcolor": "#ffffff"
+      "frame": "#000000",
+      "tab_background_text": "#ffffff"
     }
   }
 }
