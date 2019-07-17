@@ -29,10 +29,9 @@ NetMonitorPanel.prototype = {
     return this;
   },
 
-  async destroy() {
-    await this.panelWin.Netmonitor.destroy();
+  destroy() {
+    this.panelWin.Netmonitor.destroy();
     this.emit("destroyed");
-    return this;
   },
 };
 
