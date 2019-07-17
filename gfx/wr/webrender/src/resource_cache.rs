@@ -1210,8 +1210,9 @@ impl ResourceCache {
                     && (tiles.size.width > MAX_TILES_PER_REQUEST
                         || tiles.size.height > MAX_TILES_PER_REQUEST
                         || tiles.size.width * tiles.size.height > MAX_TILES_PER_REQUEST) {
-                    let w = tiles.size.width;
-                    let h = tiles.size.height;
+                    let limit = 46340; // sqrt(i32::MAX) rounded down to avoid overflow.
+                    let w = tiles.size.width.min(limit);
+                    let h = tiles.size.height.min(limit);
                     let diff = w * h - MAX_TILES_PER_REQUEST;
                     // Remove tiles in the largest dimension.
                     if tiles.size.width > tiles.size.height {
