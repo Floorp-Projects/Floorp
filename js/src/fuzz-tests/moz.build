@@ -45,7 +45,4 @@ USE_LIBS += [
     'static:js',
 ]
 
-if CONFIG['MOZ_NEEDS_LIBATOMIC']:
-    OS_LIBS += ['atomic']
-
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
