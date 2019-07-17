@@ -1,5 +1,5 @@
 /**
- * Test LoginManagerParent._onGeneratedPasswordFilled()
+ * Test LoginManagerParent._onGeneratedPasswordFilledOrEdited()
  */
 
 "use strict";
@@ -21,8 +21,11 @@ add_task(async function setup() {
   Services.prefs.setBoolPref("signon.generation.enabled", true);
 });
 
-add_task(async function test_onGeneratedPasswordFilled() {
-  ok(LMP._onGeneratedPasswordFilled, "LMP._onGeneratedPasswordFilled exists");
+add_task(async function test_onGeneratedPasswordFilledOrEdited() {
+  ok(
+    LMP._onGeneratedPasswordFilledOrEdited,
+    "LMP._onGeneratedPasswordFilledOrEdited exists"
+  );
   equal(
     LMP._generatedPasswordsByPrincipalOrigin.size,
     0,
@@ -98,9 +101,10 @@ add_task(async function test_onGeneratedPasswordFilled() {
     "Should have no saved logins at the start of the test"
   );
 
-  LMP._onGeneratedPasswordFilled({
+  LMP._onGeneratedPasswordFilledOrEdited({
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
+    password: password1,
   });
 
   let [login] = await storageChangedPromised;
@@ -134,9 +138,10 @@ add_task(async function test_onGeneratedPasswordFilled() {
 
   info("Disable login saving for the site");
   Services.logins.setLoginSavingEnabled("https://www.example.com", false);
-  await LMP._onGeneratedPasswordFilled({
+  await LMP._onGeneratedPasswordFilledOrEdited({
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
+    password: password1,
   });
   equal(
     Services.logins.getAllLogins().length,
