@@ -20,17 +20,60 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   explicit WorkletNodeEngine(AudioWorkletNode* aNode)
       : AudioNodeEngine(aNode) {}
 
-  void ConstructProcessor(AudioWorkletImpl* aWorkletImpl,
-                          const nsAString& aName,
-                          StructuredCloneHolder* aOptionsSerialization);
+  MOZ_CAN_RUN_SCRIPT
+  void ConstructProcessor(
+      AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
+      NotNull<StructuredCloneHolder*> aOptionsSerialization);
 
-  void NotifyForcedShutdown() override {}
+  void NotifyForcedShutdown() override { ReleaseJSResources(); }
+
+ private:
+  void SendProcessorError();
+
+  void ReleaseJSResources() {
+    mGlobal = nullptr;
+    mProcessor.reset();
+  }
+
+  // The AudioWorkletGlobalScope-associated objects referenced from
+  // WorkletNodeEngine are typically kept alive as long as the
+  // AudioWorkletNode in the main-thread global.  The objects must be released
+  // on the rendering thread, which usually happens simply because
+  // AudioWorkletNode is such that the last AudioNodeStream reference is
+  // released by the MSG.  That occurs on the rendering thread except during
+  // process shutdown, in which case NotifyForcedShutdown() is called on the
+  // rendering thread.
+  RefPtr<AudioWorkletGlobalScope> mGlobal;
+  JS::PersistentRooted<JSObject*> mProcessor;
 };
+
+void WorkletNodeEngine::SendProcessorError() {
+  /**
+   * https://webaudio.github.io/web-audio-api/#dom-audioworkletnode-onprocessorerror
+   * TODO: bug 1558124
+   * queue a task on the control thread to fire onprocessorerror event
+   * to the node.
+   */
+
+  /**
+   * Note that once an exception is thrown, the processor will output silence
+   * throughout its lifetime.
+   */
+  ReleaseJSResources();
+}
 
 void WorkletNodeEngine::ConstructProcessor(
     AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
-    StructuredCloneHolder* aOptionsSerialization) {
-  // TODO: bug 1542931
+    NotNull<StructuredCloneHolder*> aOptionsSerialization) {
+  RefPtr<AudioWorkletGlobalScope> global = aWorkletImpl->GetGlobalScope();
+  MOZ_ASSERT(global);  // global has already been used to register processor
+  JS::RootingContext* cx = RootingCx();
+  mProcessor.init(cx);
+  if (!global->ConstructProcessor(aName, aOptionsSerialization, &mProcessor)) {
+    SendProcessorError();
+    return;
+  }
+  mGlobal = std::move(global);
 }
 
 AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
@@ -131,12 +174,16 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   auto workletImpl = static_cast<AudioWorkletImpl*>(worklet->Impl());
   audioWorkletNode->mStream->SendRunnable(NS_NewRunnableFunction(
       "WorkletNodeEngine::ConstructProcessor",
+      // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
+      // See bug 1535398.
       [stream = audioWorkletNode->mStream,
        workletImpl = RefPtr<AudioWorkletImpl>(workletImpl),
-       name = nsString(aName), options = std::move(optionsSerialization)]() {
-        auto engine = static_cast<WorkletNodeEngine*>(stream->Engine());
-        engine->ConstructProcessor(workletImpl, name, options.get());
-      }));
+       name = nsString(aName), options = std::move(optionsSerialization)]()
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            auto engine = static_cast<WorkletNodeEngine*>(stream->Engine());
+            engine->ConstructProcessor(workletImpl, name,
+                                       WrapNotNull(options.get()));
+          }));
 
   return audioWorkletNode.forget();
 }
