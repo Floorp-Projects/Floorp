@@ -24,6 +24,7 @@ class RenderCompositorOGL : public RenderCompositor {
 
   bool BeginFrame() override;
   void EndFrame() override;
+  bool WaitForGPU() override;
   void Pause() override;
   bool Resume() override;
 
@@ -34,7 +35,13 @@ class RenderCompositorOGL : public RenderCompositor {
   LayoutDeviceIntSize GetBufferSize() override;
 
  protected:
+  void InsertFrameDoneSync();
+
   RefPtr<gl::GLContext> mGL;
+
+  // Used to apply back-pressure in WaitForGPU().
+  GLsync mPreviousFrameDoneSync;
+  GLsync mThisFrameDoneSync;
 };
 
 }  // namespace wr
