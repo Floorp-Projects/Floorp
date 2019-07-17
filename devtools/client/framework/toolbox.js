@@ -3576,11 +3576,11 @@ Toolbox.prototype = {
         settleAll(outstanding)
           .catch(console.error)
           .then(() => {
-            const api = this._netMonitorAPI;
-            this._netMonitorAPI = null;
-            return api ? api.destroy() : null;
-          }, console.error)
-          .then(() => {
+            if (this._netMonitorAPI) {
+              this._netMonitorAPI.destroy();
+              this._netMonitorAPI = null;
+            }
+
             this._removeWindowListeners();
             this._removeChromeEventHandlerEvents();
 
