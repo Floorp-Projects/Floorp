@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "dbg/Object-inl.h"
+#include "debugger/Object-inl.h"
 
-#include "dbg/NoExecute.h"
-#include "dbg/Script.h"
+#include "debugger/NoExecute.h"
+#include "debugger/Script.h"
 #include "proxy/ScriptedProxyHandler.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/WrapperObject.h"
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSObject-inl.h"

@@ -8,7 +8,7 @@
 
 #include "builtin/Promise.h"
 #include "builtin/TypedObject.h"
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/BaselineIC.h"
@@ -22,7 +22,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/TraceLogging.h"
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 #include "jit/BaselineFrame-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/VMFunctionList-inl.h"

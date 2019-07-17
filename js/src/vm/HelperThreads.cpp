@@ -12,7 +12,7 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "builtin/Promise.h"
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompilation.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"

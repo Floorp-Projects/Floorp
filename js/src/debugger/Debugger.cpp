@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ScopeExit.h"
@@ -17,12 +17,12 @@
 #include "jsnum.h"
 
 #include "builtin/Promise.h"
-#include "dbg/DebuggerMemory.h"
-#include "dbg/Environment.h"
-#include "dbg/Frame.h"
-#include "dbg/NoExecute.h"
-#include "dbg/Object.h"
-#include "dbg/Script.h"
+#include "debugger/DebuggerMemory.h"
+#include "debugger/Environment.h"
+#include "debugger/Frame.h"
+#include "debugger/NoExecute.h"
+#include "debugger/Object.h"
+#include "debugger/Script.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"
@@ -54,8 +54,8 @@
 #include "vm/WrapperObject.h"
 #include "wasm/WasmInstance.h"
 
-#include "dbg/Frame-inl.h"
-#include "dbg/Script-inl.h"
+#include "debugger/Frame-inl.h"
+#include "debugger/Script-inl.h"
 #include "gc/GC-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/Compartment-inl.h"

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dbg_Environment_h
-#define dbg_Environment_h
+#ifndef debugger_Environment_h
+#define debugger_Environment_h
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Rooting.h"
 #include "js/Class.h"
 #include "js/PropertySpec.h"
@@ -103,4 +103,4 @@ class DebuggerEnvironment : public NativeObject {
 
 } /* namespace js */
 
-#endif /* dbg_Environment_h */
+#endif /* debugger_Environment_h */
