@@ -7406,6 +7406,13 @@ VARCACHE_PREF(
   int32_t, 40
 )
 
+VARCACHE_PREF(
+  Live,
+  "security.allow_eval_with_system_principal",
+  security_allow_eval_with_system_principal,
+  bool, false
+)
+
 // Whether strict file origin policy is in effect.
 VARCACHE_PREF(
   Live,
