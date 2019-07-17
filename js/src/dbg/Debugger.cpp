@@ -84,27 +84,23 @@ using mozilla::TimeStamp;
 
 /*** Forward declarations, ClassOps and Classes *****************************/
 
-static void DebuggerScript_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerSource_trace(JSTracer* trc, JSObject* obj);
 
-enum { JSSLOT_DEBUGSCRIPT_OWNER, JSSLOT_DEBUGSCRIPT_COUNT };
+const ClassOps DebuggerScript::classOps_ = {nullptr, /* addProperty */
+                                            nullptr, /* delProperty */
+                                            nullptr, /* enumerate   */
+                                            nullptr, /* newEnumerate */
+                                            nullptr, /* resolve     */
+                                            nullptr, /* mayResolve  */
+                                            nullptr, /* finalize    */
+                                            nullptr, /* call        */
+                                            nullptr, /* hasInstance */
+                                            nullptr, /* construct   */
+                                            trace};
 
-static const ClassOps DebuggerScript_classOps = {nullptr, /* addProperty */
-                                                 nullptr, /* delProperty */
-                                                 nullptr, /* enumerate   */
-                                                 nullptr, /* newEnumerate */
-                                                 nullptr, /* resolve     */
-                                                 nullptr, /* mayResolve  */
-                                                 nullptr, /* finalize    */
-                                                 nullptr, /* call        */
-                                                 nullptr, /* hasInstance */
-                                                 nullptr, /* construct   */
-                                                 DebuggerScript_trace};
-
-static const Class DebuggerScript_class = {
-    "Script",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGSCRIPT_COUNT),
-    &DebuggerScript_classOps};
+const Class DebuggerScript::class_ = {
+    "Script", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
+    &classOps_};
 
 enum {
   JSSLOT_DEBUGSOURCE_OWNER,
@@ -446,7 +442,7 @@ Debugger::~Debugger() {
 }
 
 JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
-                 unsigned(JSSLOT_DEBUGSCRIPT_OWNER));
+                 unsigned(DebuggerScript::OWNER_SLOT));
 JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
                  unsigned(JSSLOT_DEBUGSOURCE_OWNER));
 JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
@@ -457,7 +453,7 @@ JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
 /* static */
 Debugger* Debugger::fromChildJSObject(JSObject* obj) {
   MOZ_ASSERT(obj->getClass() == &DebuggerFrame::class_ ||
-             obj->getClass() == &DebuggerScript_class ||
+             obj->getClass() == &DebuggerScript::class_ ||
              obj->getClass() == &DebuggerSource_class ||
              obj->getClass() == &DebuggerObject::class_ ||
              obj->getClass() == &DebuggerEnvironment::class_);
@@ -3297,10 +3293,10 @@ void Debugger::traceCrossCompartmentEdges(JSTracer* trc) {
   generatorFrames.traceCrossCompartmentEdges<DebuggerFrame::trace>(trc);
   objects.traceCrossCompartmentEdges<DebuggerObject::trace>(trc);
   environments.traceCrossCompartmentEdges<DebuggerEnvironment::trace>(trc);
-  scripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
-  lazyScripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
+  scripts.traceCrossCompartmentEdges<DebuggerScript::trace>(trc);
+  lazyScripts.traceCrossCompartmentEdges<DebuggerScript::trace>(trc);
   sources.traceCrossCompartmentEdges<DebuggerSource_trace>(trc);
-  wasmInstanceScripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
+  wasmInstanceScripts.traceCrossCompartmentEdges<DebuggerScript::trace>(trc);
   wasmInstanceSources.traceCrossCompartmentEdges<DebuggerSource_trace>(trc);
 }
 
@@ -5824,16 +5820,12 @@ const JSFunctionSpec Debugger::static_methods[]{
 
 /*** Debugger.Script ********************************************************/
 
-// Get the Debugger.Script referent as bare Cell. This should only be used for
-// GC operations like tracing. Please use GetScriptReferent below.
-static inline gc::Cell* GetScriptReferentCell(JSObject* obj) {
-  MOZ_ASSERT(obj->getClass() == &DebuggerScript_class);
-  return static_cast<gc::Cell*>(obj->as<NativeObject>().getPrivate());
+gc::Cell* DebuggerScript::getReferentCell() const {
+  return static_cast<gc::Cell*>(getPrivate());
 }
 
-static inline DebuggerScriptReferent GetScriptReferent(JSObject* obj) {
-  MOZ_ASSERT(obj->getClass() == &DebuggerScript_class);
-  if (gc::Cell* cell = GetScriptReferentCell(obj)) {
+DebuggerScriptReferent DebuggerScript::getReferent() const {
+  if (gc::Cell* cell = getReferentCell()) {
     if (cell->is<JSScript>()) {
       return AsVariant(cell->as<JSScript>());
     }
@@ -5847,28 +5839,71 @@ static inline DebuggerScriptReferent GetScriptReferent(JSObject* obj) {
   return AsVariant(static_cast<JSScript*>(nullptr));
 }
 
-void DebuggerScript_trace(JSTracer* trc, JSObject* obj) {
+/* static */
+void DebuggerScript::trace(JSTracer* trc, JSObject* obj) {
+  DebuggerScript* self = &obj->as<DebuggerScript>();
   // This comes from a private pointer, so no barrier needed.
-  gc::Cell* cell = GetScriptReferentCell(obj);
+  gc::Cell* cell = self->getReferentCell();
   if (cell) {
     if (cell->is<JSScript>()) {
       JSScript* script = cell->as<JSScript>();
       TraceManuallyBarrieredCrossCompartmentEdge(
-          trc, obj, &script, "Debugger.Script script referent");
-      obj->as<NativeObject>().setPrivateUnbarriered(script);
+          trc, self, &script, "Debugger.Script script referent");
+      self->setPrivateUnbarriered(script);
     } else if (cell->is<LazyScript>()) {
       LazyScript* lazyScript = cell->as<LazyScript>();
       TraceManuallyBarrieredCrossCompartmentEdge(
-          trc, obj, &lazyScript, "Debugger.Script lazy script referent");
-      obj->as<NativeObject>().setPrivateUnbarriered(lazyScript);
+          trc, self, &lazyScript, "Debugger.Script lazy script referent");
+      self->setPrivateUnbarriered(lazyScript);
     } else {
       JSObject* wasm = cell->as<JSObject>();
       TraceManuallyBarrieredCrossCompartmentEdge(
-          trc, obj, &wasm, "Debugger.Script wasm referent");
+          trc, self, &wasm, "Debugger.Script wasm referent");
       MOZ_ASSERT(wasm->is<WasmInstanceObject>());
-      obj->as<NativeObject>().setPrivateUnbarriered(wasm);
+      self->setPrivateUnbarriered(wasm);
     }
   }
+}
+
+/* static */
+NativeObject* DebuggerScript::initClass(JSContext* cx,
+                                        Handle<GlobalObject*> global,
+                                        HandleObject debugCtor) {
+  return InitClass(cx, debugCtor, nullptr, &class_, construct, 0, properties_,
+                   methods_, nullptr, nullptr);
+}
+
+class DebuggerScriptSetPrivateMatcher {
+  DebuggerScript* obj_;
+
+ public:
+  explicit DebuggerScriptSetPrivateMatcher(DebuggerScript* obj) : obj_(obj) {}
+  using ReturnType = void;
+  ReturnType match(HandleScript script) { obj_->setPrivateGCThing(script); }
+  ReturnType match(Handle<LazyScript*> lazyScript) {
+    obj_->setPrivateGCThing(lazyScript);
+  }
+  ReturnType match(Handle<WasmInstanceObject*> instance) {
+    obj_->setPrivateGCThing(instance);
+  }
+};
+
+/* static */
+DebuggerScript* DebuggerScript::create(JSContext* cx, HandleObject proto,
+                                       Handle<DebuggerScriptReferent> referent,
+                                       HandleNativeObject debugger) {
+  DebuggerScript* scriptobj =
+      NewObjectWithGivenProto<DebuggerScript>(cx, proto, TenuredObject);
+  if (!scriptobj) {
+    return nullptr;
+  }
+
+  scriptobj->setReservedSlot(DebuggerScript::OWNER_SLOT,
+                             ObjectValue(*debugger));
+  DebuggerScriptSetPrivateMatcher matcher(scriptobj);
+  referent.match(matcher);
+
+  return scriptobj;
 }
 
 static JSScript* DelazifyScript(JSContext* cx, Handle<LazyScript*> lazyScript) {
@@ -5907,44 +5942,23 @@ static JSScript* DelazifyScript(JSContext* cx, Handle<LazyScript*> lazyScript) {
   return fun->getOrCreateScript(cx, fun);
 }
 
-class DebuggerScriptSetPrivateMatcher {
-  NativeObject* obj_;
-
- public:
-  explicit DebuggerScriptSetPrivateMatcher(NativeObject* obj) : obj_(obj) {}
-  using ReturnType = void;
-  ReturnType match(HandleScript script) { obj_->setPrivateGCThing(script); }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    obj_->setPrivateGCThing(lazyScript);
-  }
-  ReturnType match(Handle<WasmInstanceObject*> instance) {
-    obj_->setPrivateGCThing(instance);
-  }
-};
-
-NativeObject* Debugger::newDebuggerScript(
+DebuggerScript* Debugger::newDebuggerScript(
     JSContext* cx, Handle<DebuggerScriptReferent> referent) {
   cx->check(object.get());
 
   RootedObject proto(
       cx, &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject());
   MOZ_ASSERT(proto);
-  NativeObject* scriptobj = NewNativeObjectWithGivenProto(
-      cx, &DebuggerScript_class, proto, TenuredObject);
-  if (!scriptobj) {
-    return nullptr;
-  }
-  scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
-  DebuggerScriptSetPrivateMatcher matcher(scriptobj);
-  referent.match(matcher);
+  RootedNativeObject debugger(cx, object);
 
-  return scriptobj;
+  return DebuggerScript::create(cx, proto, referent, debugger);
 }
 
-template <typename ReferentVariant, typename Referent, typename Map>
-JSObject* Debugger::wrapVariantReferent(JSContext* cx, Map& map,
-                                        Handle<CrossCompartmentKey> key,
-                                        Handle<ReferentVariant> referent) {
+template <typename Wrapper, typename ReferentVariant, typename Referent,
+          typename Map>
+Wrapper* Debugger::wrapVariantReferent(JSContext* cx, Map& map,
+                                       Handle<CrossCompartmentKey> key,
+                                       Handle<ReferentVariant> referent) {
   cx->check(object);
 
   Handle<Referent> untaggedReferent = referent.template as<Referent>();
@@ -5952,7 +5966,7 @@ JSObject* Debugger::wrapVariantReferent(JSContext* cx, Map& map,
 
   DependentAddPtr<Map> p(cx, map, untaggedReferent);
   if (!p) {
-    NativeObject* wrapper = newVariantWrapper(cx, referent);
+    Wrapper* wrapper = newVariantWrapper(cx, referent);
     if (!wrapper) {
       return nullptr;
     }
@@ -5970,12 +5984,12 @@ JSObject* Debugger::wrapVariantReferent(JSContext* cx, Map& map,
     }
   }
 
-  return p->value();
+  return &p->value()->template as<Wrapper>();
 }
 
-JSObject* Debugger::wrapVariantReferent(
+DebuggerScript* Debugger::wrapVariantReferent(
     JSContext* cx, Handle<DebuggerScriptReferent> referent) {
-  JSObject* obj;
+  DebuggerScript* obj;
   if (referent.is<JSScript*>()) {
     Handle<JSScript*> untaggedReferent = referent.template as<JSScript*>();
     if (untaggedReferent->maybeLazyScript()) {
@@ -5995,10 +6009,10 @@ JSObject* Debugger::wrapVariantReferent(
 
       Rooted<CrossCompartmentKey> key(cx,
                                       CrossCompartmentKey(object, lazyScript));
-      obj = wrapVariantReferent<DebuggerScriptReferent, LazyScript*,
-                                LazyScriptWeakMap>(cx, lazyScripts, key,
-                                                   lazyScriptReferent);
-      MOZ_ASSERT_IF(obj, GetScriptReferent(obj) == lazyScriptReferent);
+      obj = wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
+                                LazyScript*, LazyScriptWeakMap>(
+          cx, lazyScripts, key, lazyScriptReferent);
+      MOZ_ASSERT_IF(obj, obj->getReferent() == lazyScriptReferent);
       return obj;
     } else {
       // If the JSScript doesn't have corresponding LazyScript, the script
@@ -6006,80 +6020,84 @@ JSObject* Debugger::wrapVariantReferent(
       Rooted<CrossCompartmentKey> key(
           cx, CrossCompartmentKey(object, untaggedReferent));
       obj =
-          wrapVariantReferent<DebuggerScriptReferent, JSScript*, ScriptWeakMap>(
-              cx, scripts, key, referent);
+          wrapVariantReferent<DebuggerScript, DebuggerScriptReferent, JSScript*,
+                              ScriptWeakMap>(cx, scripts, key, referent);
     }
   } else if (referent.is<LazyScript*>()) {
     Handle<LazyScript*> untaggedReferent = referent.template as<LazyScript*>();
     Rooted<CrossCompartmentKey> key(
         cx, CrossCompartmentKey(object, untaggedReferent));
     obj =
-        wrapVariantReferent<DebuggerScriptReferent, LazyScript*,
+        wrapVariantReferent<DebuggerScript, DebuggerScriptReferent, LazyScript*,
                             LazyScriptWeakMap>(cx, lazyScripts, key, referent);
   } else {
     Handle<WasmInstanceObject*> untaggedReferent =
         referent.template as<WasmInstanceObject*>();
     Rooted<CrossCompartmentKey> key(
         cx, CrossCompartmentKey::DebuggeeWasmScript(object, untaggedReferent));
-    obj = wrapVariantReferent<DebuggerScriptReferent, WasmInstanceObject*,
-                              WasmInstanceWeakMap>(cx, wasmInstanceScripts, key,
-                                                   referent);
+    obj = wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
+                              WasmInstanceObject*, WasmInstanceWeakMap>(
+        cx, wasmInstanceScripts, key, referent);
   }
-  MOZ_ASSERT_IF(obj, GetScriptReferent(obj) == referent);
+  MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
 }
 
-JSObject* Debugger::wrapScript(JSContext* cx, HandleScript script) {
+DebuggerScript* Debugger::wrapScript(JSContext* cx, HandleScript script) {
   Rooted<DebuggerScriptReferent> referent(cx, script.get());
   return wrapVariantReferent(cx, referent);
 }
 
-JSObject* Debugger::wrapLazyScript(JSContext* cx,
-                                   Handle<LazyScript*> lazyScript) {
+DebuggerScript* Debugger::wrapLazyScript(JSContext* cx,
+                                         Handle<LazyScript*> lazyScript) {
   Rooted<DebuggerScriptReferent> referent(cx, lazyScript.get());
   return wrapVariantReferent(cx, referent);
 }
 
-JSObject* Debugger::wrapWasmScript(JSContext* cx,
-                                   Handle<WasmInstanceObject*> wasmInstance) {
+DebuggerScript* Debugger::wrapWasmScript(
+    JSContext* cx, Handle<WasmInstanceObject*> wasmInstance) {
   Rooted<DebuggerScriptReferent> referent(cx, wasmInstance.get());
   return wrapVariantReferent(cx, referent);
 }
 
-static JSObject* DebuggerScript_check(JSContext* cx, HandleValue v,
+/* static */
+DebuggerScript* DebuggerScript::check(JSContext* cx, HandleValue v,
                                       const char* fnname) {
   JSObject* thisobj = RequireObject(cx, v);
   if (!thisobj) {
     return nullptr;
   }
-  if (thisobj->getClass() != &DebuggerScript_class) {
+  if (!thisobj->is<DebuggerScript>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Script",
                               fnname, thisobj->getClass()->name);
     return nullptr;
   }
 
-  // Check for Debugger.Script.prototype, which is of class DebuggerScript_class
-  // but whose script is null.
-  if (!GetScriptReferentCell(thisobj)) {
+  DebuggerScript& scriptObj = thisobj->as<DebuggerScript>();
+
+  // Check for Debugger.Script.prototype, which is of class
+  // DebuggerScript::class but whose script is null.
+  if (!scriptObj.getReferentCell()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Script",
                               fnname, "prototype object");
     return nullptr;
   }
 
-  return thisobj;
+  return &scriptObj;
 }
 
-static JSObject* DebuggerScript_checkThis(JSContext* cx, const CallArgs& args,
+/* static */
+DebuggerScript* DebuggerScript::checkThis(JSContext* cx, const CallArgs& args,
                                           const char* fnname) {
-  JSObject* thisobj = DebuggerScript_check(cx, args.thisv(), fnname);
+  DebuggerScript* thisobj = DebuggerScript::check(cx, args.thisv(), fnname);
   if (!thisobj) {
     return nullptr;
   }
 
-  if (!GetScriptReferent(thisobj).is<JSScript*>() &&
-      !GetScriptReferent(thisobj).is<LazyScript*>()) {
+  if (!thisobj->getReferent().is<JSScript*>() &&
+      !thisobj->getReferent().is<LazyScript*>()) {
     ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK,
                      args.thisv(), nullptr, "a JS script");
     return nullptr;
@@ -6090,43 +6108,44 @@ static JSObject* DebuggerScript_checkThis(JSContext* cx, const CallArgs& args,
 
 #define THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, fnname, args, obj, referent) \
   CallArgs args = CallArgsFromVp(argc, vp);                                  \
-  RootedObject obj(cx, DebuggerScript_check(cx, args.thisv(), fnname));      \
+  RootedDebuggerScript obj(cx,                                               \
+                           DebuggerScript::check(cx, args.thisv(), fnname)); \
   if (!obj) return false;                                                    \
-  Rooted<DebuggerScriptReferent> referent(cx, GetScriptReferent(obj))
+  Rooted<DebuggerScriptReferent> referent(cx, obj->getReferent())
 
-#define THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, fnname, args, obj) \
-  CallArgs args = CallArgsFromVp(argc, vp);                                 \
-  RootedObject obj(cx, DebuggerScript_checkThis(cx, args, fnname));         \
+#define THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, fnname, args, obj)  \
+  CallArgs args = CallArgsFromVp(argc, vp);                                  \
+  RootedDebuggerScript obj(cx, DebuggerScript::checkThis(cx, args, fnname)); \
   if (!obj) return false;
 
 #define THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, fnname, args, obj,     \
                                          script)                              \
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, fnname, args, obj);        \
   RootedScript script(cx);                                                    \
-  if (GetScriptReferent(obj).is<JSScript*>()) {                               \
-    script = GetScriptReferent(obj).as<JSScript*>();                          \
+  if (obj->getReferent().is<JSScript*>()) {                                   \
+    script = obj->getReferent().as<JSScript*>();                              \
   } else {                                                                    \
-    Rooted<LazyScript*> lazyScript(cx,                                        \
-                                   GetScriptReferent(obj).as<LazyScript*>()); \
+    Rooted<LazyScript*> lazyScript(cx, obj->getReferent().as<LazyScript*>()); \
     script = DelazifyScript(cx, lazyScript);                                  \
     if (!script) return false;                                                \
   }
 
 template <typename Result>
-Result CallScriptMethod(HandleObject obj,
+Result CallScriptMethod(HandleDebuggerScript obj,
                         Result (JSScript::*ifJSScript)() const,
                         Result (LazyScript::*ifLazyScript)() const) {
-  if (GetScriptReferent(obj).is<JSScript*>()) {
-    JSScript* script = GetScriptReferent(obj).as<JSScript*>();
+  if (obj->getReferent().is<JSScript*>()) {
+    JSScript* script = obj->getReferent().as<JSScript*>();
     return (script->*ifJSScript)();
   }
 
-  LazyScript* lazyScript = GetScriptReferent(obj).as<LazyScript*>();
+  LazyScript* lazyScript = obj->getReferent().as<LazyScript*>();
   return (lazyScript->*ifLazyScript)();
 }
 
-static bool DebuggerScript_getIsGeneratorFunction(JSContext* cx, unsigned argc,
-                                                  Value* vp) {
+/* static */
+bool DebuggerScript::getIsGeneratorFunction(JSContext* cx, unsigned argc,
+                                            Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isGeneratorFunction)",
                                      args, obj);
   args.rval().setBoolean(
@@ -6134,8 +6153,9 @@ static bool DebuggerScript_getIsGeneratorFunction(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_getIsAsyncFunction(JSContext* cx, unsigned argc,
-                                              Value* vp) {
+/* static */
+bool DebuggerScript::getIsAsyncFunction(JSContext* cx, unsigned argc,
+                                        Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isAsyncFunction)",
                                      args, obj);
   args.rval().setBoolean(
@@ -6143,17 +6163,17 @@ static bool DebuggerScript_getIsAsyncFunction(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_getIsModule(JSContext* cx, unsigned argc,
-                                       Value* vp) {
+/* static */
+bool DebuggerScript::getIsModule(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isModule)", args, obj);
-  DebuggerScriptReferent referent = GetScriptReferent(obj);
+  DebuggerScriptReferent referent = obj->getReferent();
   args.rval().setBoolean(referent.is<JSScript*>() &&
                          referent.as<JSScript*>()->isModule());
   return true;
 }
 
-static bool DebuggerScript_getDisplayName(JSContext* cx, unsigned argc,
-                                          Value* vp) {
+/* static */
+bool DebuggerScript::getDisplayName(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get displayName)", args,
                                      obj);
   JSFunction* func = CallScriptMethod(obj, &JSScript::functionNonDelazifying,
@@ -6175,8 +6195,9 @@ static bool DebuggerScript_getDisplayName(JSContext* cx, unsigned argc,
 }
 
 template <typename T>
-static bool DebuggerScript_getUrlImpl(JSContext* cx, CallArgs& args,
-                                      Handle<T*> script) {
+/* static */
+bool DebuggerScript::getUrlImpl(JSContext* cx, CallArgs& args,
+                                Handle<T*> script) {
   if (script->filename()) {
     JSString* str;
     if (script->scriptSource()->introducerFilename()) {
@@ -6195,15 +6216,16 @@ static bool DebuggerScript_getUrlImpl(JSContext* cx, CallArgs& args,
   return true;
 }
 
-static bool DebuggerScript_getUrl(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool DebuggerScript::getUrl(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get url)", args, obj);
-  if (GetScriptReferent(obj).is<JSScript*>()) {
-    RootedScript script(cx, GetScriptReferent(obj).as<JSScript*>());
-    return DebuggerScript_getUrlImpl<JSScript>(cx, args, script);
+  if (obj->getReferent().is<JSScript*>()) {
+    RootedScript script(cx, obj->getReferent().as<JSScript*>());
+    return getUrlImpl<JSScript>(cx, args, script);
   }
 
-  Rooted<LazyScript*> lazyScript(cx, GetScriptReferent(obj).as<LazyScript*>());
-  return DebuggerScript_getUrlImpl<LazyScript>(cx, args, lazyScript);
+  Rooted<LazyScript*> lazyScript(cx, obj->getReferent().as<LazyScript*>());
+  return getUrlImpl<LazyScript>(cx, args, lazyScript);
 }
 
 struct DebuggerScriptGetStartLineMatcher {
@@ -6216,8 +6238,8 @@ struct DebuggerScriptGetStartLineMatcher {
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) { return 1; }
 };
 
-static bool DebuggerScript_getStartLine(JSContext* cx, unsigned argc,
-                                        Value* vp) {
+/* static */
+bool DebuggerScript::getStartLine(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get startLine)", args, obj,
                             referent);
   DebuggerScriptGetStartLineMatcher matcher;
@@ -6255,8 +6277,8 @@ struct DebuggerScriptGetLineCountMatcher {
   }
 };
 
-static bool DebuggerScript_getLineCount(JSContext* cx, unsigned argc,
-                                        Value* vp) {
+/* static */
+bool DebuggerScript::getLineCount(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get lineCount)", args, obj,
                             referent);
   DebuggerScriptGetLineCountMatcher matcher(cx);
@@ -6296,7 +6318,8 @@ class DebuggerScriptGetSourceMatcher {
   }
 };
 
-static bool DebuggerScript_getSource(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool DebuggerScript::getSource(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get source)", args, obj, referent);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
 
@@ -6310,8 +6333,8 @@ static bool DebuggerScript_getSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool DebuggerScript_getSourceStart(JSContext* cx, unsigned argc,
-                                          Value* vp) {
+/* static */
+bool DebuggerScript::getSourceStart(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get sourceStart)", args,
                                      obj);
   args.rval().setNumber(uint32_t(
@@ -6319,8 +6342,8 @@ static bool DebuggerScript_getSourceStart(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_getSourceLength(JSContext* cx, unsigned argc,
-                                           Value* vp) {
+/* static */
+bool DebuggerScript::getSourceLength(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get sourceEnd)", args,
                                      obj);
   args.rval().setNumber(uint32_t(CallScriptMethod(obj, &JSScript::sourceLength,
@@ -6328,15 +6351,16 @@ static bool DebuggerScript_getSourceLength(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_getMainOffset(JSContext* cx, unsigned argc,
-                                         Value* vp) {
+/* static */
+bool DebuggerScript::getMainOffset(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "(get mainOffset)", args, obj,
                                    script);
   args.rval().setNumber(uint32_t(script->mainOffset()));
   return true;
 }
 
-static bool DebuggerScript_getGlobal(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool DebuggerScript::getGlobal(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "(get global)", args, obj,
                                    script);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
@@ -6363,15 +6387,16 @@ class DebuggerScriptGetFormatMatcher {
   }
 };
 
-static bool DebuggerScript_getFormat(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool DebuggerScript::getFormat(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get format)", args, obj, referent);
   DebuggerScriptGetFormatMatcher matcher(cx->names());
   args.rval().setString(referent.match(matcher));
   return true;
 }
 
-static bool DebuggerScript_getChildScripts(JSContext* cx, unsigned argc,
-                                           Value* vp) {
+/* static */
+bool DebuggerScript::getChildScripts(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getChildScripts", args, obj,
                                    script);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
@@ -6748,8 +6773,9 @@ class DebuggerScriptGetPossibleBreakpointsMatcher {
   }
 };
 
-static bool DebuggerScript_getPossibleBreakpoints(JSContext* cx, unsigned argc,
-                                                  Value* vp) {
+/* static */
+bool DebuggerScript::getPossibleBreakpoints(JSContext* cx, unsigned argc,
+                                            Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getPossibleBreakpoints", args, obj,
                             referent);
 
@@ -6769,9 +6795,9 @@ static bool DebuggerScript_getPossibleBreakpoints(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_getPossibleBreakpointOffsets(JSContext* cx,
-                                                        unsigned argc,
-                                                        Value* vp) {
+/* static */
+bool DebuggerScript::getPossibleBreakpointOffsets(JSContext* cx, unsigned argc,
+                                                  Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getPossibleBreakpointOffsets", args,
                             obj, referent);
 
@@ -6890,8 +6916,9 @@ class DebuggerScriptGetOffsetMetadataMatcher {
   }
 };
 
-static bool DebuggerScript_getOffsetMetadata(JSContext* cx, unsigned argc,
-                                             Value* vp) {
+/* static */
+bool DebuggerScript::getOffsetMetadata(JSContext* cx, unsigned argc,
+                                       Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getOffsetMetadata", args, obj,
                             referent);
   if (!args.requireAtLeast(cx, "Debugger.Script.getOffsetMetadata", 1)) {
@@ -7202,8 +7229,9 @@ class DebuggerScriptGetOffsetLocationMatcher {
   }
 };
 
-static bool DebuggerScript_getOffsetLocation(JSContext* cx, unsigned argc,
-                                             Value* vp) {
+/* static */
+bool DebuggerScript::getOffsetLocation(JSContext* cx, unsigned argc,
+                                       Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getOffsetLocation", args, obj,
                             referent);
   if (!args.requireAtLeast(cx, "Debugger.Script.getOffsetLocation", 1)) {
@@ -7284,8 +7312,11 @@ class DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher {
   }
 };
 
-static bool DebuggerScript_getSuccessorOrPredecessorOffsets(
-    JSContext* cx, unsigned argc, Value* vp, const char* name, bool successor) {
+/* static */
+bool DebuggerScript::getSuccessorOrPredecessorOffsets(JSContext* cx,
+                                                      unsigned argc, Value* vp,
+                                                      const char* name,
+                                                      bool successor) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, name, args, obj, referent);
 
   if (!args.requireAtLeast(cx, name, 1)) {
@@ -7307,20 +7338,22 @@ static bool DebuggerScript_getSuccessorOrPredecessorOffsets(
   return true;
 }
 
-static bool DebuggerScript_getSuccessorOffsets(JSContext* cx, unsigned argc,
-                                               Value* vp) {
-  return DebuggerScript_getSuccessorOrPredecessorOffsets(
+/* static */
+bool DebuggerScript::getSuccessorOffsets(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  return DebuggerScript::getSuccessorOrPredecessorOffsets(
       cx, argc, vp, "getSuccessorOffsets", true);
 }
 
-static bool DebuggerScript_getPredecessorOffsets(JSContext* cx, unsigned argc,
-                                                 Value* vp) {
-  return DebuggerScript_getSuccessorOrPredecessorOffsets(
+/* static */
+bool DebuggerScript::getPredecessorOffsets(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  return DebuggerScript::getSuccessorOrPredecessorOffsets(
       cx, argc, vp, "getPredecessorOffsets", false);
 }
 
-static bool DebuggerScript_getAllOffsets(JSContext* cx, unsigned argc,
-                                         Value* vp) {
+/* static */
+bool DebuggerScript::getAllOffsets(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getAllOffsets", args, obj,
                                    script);
 
@@ -7489,8 +7522,9 @@ class DebuggerScriptGetAllColumnOffsetsMatcher {
   }
 };
 
-static bool DebuggerScript_getAllColumnOffsets(JSContext* cx, unsigned argc,
-                                               Value* vp) {
+/* static */
+bool DebuggerScript::getAllColumnOffsets(JSContext* cx, unsigned argc,
+                                         Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getAllColumnOffsets", args, obj,
                             referent);
 
@@ -7576,8 +7610,8 @@ class DebuggerScriptGetLineOffsetsMatcher {
   }
 };
 
-static bool DebuggerScript_getLineOffsets(JSContext* cx, unsigned argc,
-                                          Value* vp) {
+/* static */
+bool DebuggerScript::getLineOffsets(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getLineOffsets", args, obj,
                             referent);
   if (!args.requireAtLeast(cx, "Debugger.Script.getLineOffsets", 1)) {
@@ -7913,8 +7947,8 @@ struct DebuggerScriptSetBreakpointMatcher {
   }
 };
 
-static bool DebuggerScript_setBreakpoint(JSContext* cx, unsigned argc,
-                                         Value* vp) {
+/* static */
+bool DebuggerScript::setBreakpoint(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "setBreakpoint", args, obj, referent);
   if (!args.requireAtLeast(cx, "Debugger.Script.setBreakpoint", 2)) {
     return false;
@@ -7939,8 +7973,8 @@ static bool DebuggerScript_setBreakpoint(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_getBreakpoints(JSContext* cx, unsigned argc,
-                                          Value* vp) {
+/* static */
+bool DebuggerScript::getBreakpoints(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getBreakpoints", args, obj,
                                    script);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
@@ -8015,8 +8049,8 @@ class DebuggerScriptClearBreakpointMatcher {
   }
 };
 
-static bool DebuggerScript_clearBreakpoint(JSContext* cx, unsigned argc,
-                                           Value* vp) {
+/* static */
+bool DebuggerScript::clearBreakpoint(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "clearBreakpoint", args, obj,
                             referent);
   if (!args.requireAtLeast(cx, "Debugger.Script.clearBreakpoint", 1)) {
@@ -8038,8 +8072,9 @@ static bool DebuggerScript_clearBreakpoint(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_clearAllBreakpoints(JSContext* cx, unsigned argc,
-                                               Value* vp) {
+/* static */
+bool DebuggerScript::clearAllBreakpoints(JSContext* cx, unsigned argc,
+                                         Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "clearAllBreakpoints", args, obj,
                             referent);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
@@ -8092,8 +8127,8 @@ class DebuggerScriptIsInCatchScopeMatcher {
   }
 };
 
-static bool DebuggerScript_isInCatchScope(JSContext* cx, unsigned argc,
-                                          Value* vp) {
+/* static */
+bool DebuggerScript::isInCatchScope(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "isInCatchScope", args, obj,
                             referent);
   if (!args.requireAtLeast(cx, "Debugger.Script.isInCatchScope", 1)) {
@@ -8113,8 +8148,9 @@ static bool DebuggerScript_isInCatchScope(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_getOffsetsCoverage(JSContext* cx, unsigned argc,
-                                              Value* vp) {
+/* static */
+bool DebuggerScript::getOffsetsCoverage(JSContext* cx, unsigned argc,
+                                        Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getOffsetsCoverage", args,
                                    obj, script);
 
@@ -8197,52 +8233,50 @@ static bool DebuggerScript_getOffsetsCoverage(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool DebuggerScript_construct(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool DebuggerScript::construct(JSContext* cx, unsigned argc, Value* vp) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
                             "Debugger.Script");
   return false;
 }
 
-static const JSPropertySpec DebuggerScript_properties[] = {
-    JS_PSG("isGeneratorFunction", DebuggerScript_getIsGeneratorFunction, 0),
-    JS_PSG("isAsyncFunction", DebuggerScript_getIsAsyncFunction, 0),
-    JS_PSG("isModule", DebuggerScript_getIsModule, 0),
-    JS_PSG("displayName", DebuggerScript_getDisplayName, 0),
-    JS_PSG("url", DebuggerScript_getUrl, 0),
-    JS_PSG("startLine", DebuggerScript_getStartLine, 0),
-    JS_PSG("lineCount", DebuggerScript_getLineCount, 0),
-    JS_PSG("source", DebuggerScript_getSource, 0),
-    JS_PSG("sourceStart", DebuggerScript_getSourceStart, 0),
-    JS_PSG("sourceLength", DebuggerScript_getSourceLength, 0),
-    JS_PSG("mainOffset", DebuggerScript_getMainOffset, 0),
-    JS_PSG("global", DebuggerScript_getGlobal, 0),
-    JS_PSG("format", DebuggerScript_getFormat, 0),
+const JSPropertySpec DebuggerScript::properties_[] = {
+    JS_PSG("isGeneratorFunction", getIsGeneratorFunction, 0),
+    JS_PSG("isAsyncFunction", getIsAsyncFunction, 0),
+    JS_PSG("isModule", getIsModule, 0),
+    JS_PSG("displayName", getDisplayName, 0),
+    JS_PSG("url", getUrl, 0),
+    JS_PSG("startLine", getStartLine, 0),
+    JS_PSG("lineCount", getLineCount, 0),
+    JS_PSG("source", getSource, 0),
+    JS_PSG("sourceStart", getSourceStart, 0),
+    JS_PSG("sourceLength", getSourceLength, 0),
+    JS_PSG("mainOffset", getMainOffset, 0),
+    JS_PSG("global", getGlobal, 0),
+    JS_PSG("format", getFormat, 0),
     JS_PS_END};
 
-static const JSFunctionSpec DebuggerScript_methods[] = {
-    JS_FN("getChildScripts", DebuggerScript_getChildScripts, 0, 0),
-    JS_FN("getPossibleBreakpoints", DebuggerScript_getPossibleBreakpoints, 0,
-          0),
-    JS_FN("getPossibleBreakpointOffsets",
-          DebuggerScript_getPossibleBreakpointOffsets, 0, 0),
-    JS_FN("setBreakpoint", DebuggerScript_setBreakpoint, 2, 0),
-    JS_FN("getBreakpoints", DebuggerScript_getBreakpoints, 1, 0),
-    JS_FN("clearBreakpoint", DebuggerScript_clearBreakpoint, 1, 0),
-    JS_FN("clearAllBreakpoints", DebuggerScript_clearAllBreakpoints, 0, 0),
-    JS_FN("isInCatchScope", DebuggerScript_isInCatchScope, 1, 0),
-    JS_FN("getOffsetMetadata", DebuggerScript_getOffsetMetadata, 1, 0),
-    JS_FN("getOffsetsCoverage", DebuggerScript_getOffsetsCoverage, 0, 0),
-    JS_FN("getSuccessorOffsets", DebuggerScript_getSuccessorOffsets, 1, 0),
-    JS_FN("getPredecessorOffsets", DebuggerScript_getPredecessorOffsets, 1, 0),
+const JSFunctionSpec DebuggerScript::methods_[] = {
+    JS_FN("getChildScripts", getChildScripts, 0, 0),
+    JS_FN("getPossibleBreakpoints", getPossibleBreakpoints, 0, 0),
+    JS_FN("getPossibleBreakpointOffsets", getPossibleBreakpointOffsets, 0, 0),
+    JS_FN("setBreakpoint", setBreakpoint, 2, 0),
+    JS_FN("getBreakpoints", getBreakpoints, 1, 0),
+    JS_FN("clearBreakpoint", clearBreakpoint, 1, 0),
+    JS_FN("clearAllBreakpoints", clearAllBreakpoints, 0, 0),
+    JS_FN("isInCatchScope", isInCatchScope, 1, 0),
+    JS_FN("getOffsetMetadata", getOffsetMetadata, 1, 0),
+    JS_FN("getOffsetsCoverage", getOffsetsCoverage, 0, 0),
+    JS_FN("getSuccessorOffsets", getSuccessorOffsets, 1, 0),
+    JS_FN("getPredecessorOffsets", getPredecessorOffsets, 1, 0),
 
     // The following APIs are deprecated due to their reliance on the
     // under-defined 'entrypoint' concept. Make use of getPossibleBreakpoints,
     // getPossibleBreakpointOffsets, or getOffsetMetadata instead.
-    JS_FN("getAllOffsets", DebuggerScript_getAllOffsets, 0, 0),
-    JS_FN("getAllColumnOffsets", DebuggerScript_getAllColumnOffsets, 0, 0),
-    JS_FN("getLineOffsets", DebuggerScript_getLineOffsets, 1, 0),
-    JS_FN("getOffsetLocation", DebuggerScript_getOffsetLocation, 0, 0),
-    JS_FS_END};
+    JS_FN("getAllOffsets", getAllOffsets, 0, 0),
+    JS_FN("getAllColumnOffsets", getAllColumnOffsets, 0, 0),
+    JS_FN("getLineOffsets", getLineOffsets, 1, 0),
+    JS_FN("getOffsetLocation", getOffsetLocation, 0, 0), JS_FS_END};
 
 /*** Debugger.Source ********************************************************/
 
@@ -8313,16 +8347,17 @@ JSObject* Debugger::wrapVariantReferent(
         referent.template as<ScriptSourceObject*>();
     Rooted<CrossCompartmentKey> key(
         cx, CrossCompartmentKey::DebuggeeSource(object, untaggedReferent));
-    obj = wrapVariantReferent<DebuggerSourceReferent, ScriptSourceObject*,
-                              SourceWeakMap>(cx, sources, key, referent);
+    obj = wrapVariantReferent<NativeObject, DebuggerSourceReferent,
+                              ScriptSourceObject*, SourceWeakMap>(
+        cx, sources, key, referent);
   } else {
     Handle<WasmInstanceObject*> untaggedReferent =
         referent.template as<WasmInstanceObject*>();
     Rooted<CrossCompartmentKey> key(
         cx, CrossCompartmentKey::DebuggeeSource(object, untaggedReferent));
-    obj = wrapVariantReferent<DebuggerSourceReferent, WasmInstanceObject*,
-                              WasmInstanceWeakMap>(cx, wasmInstanceSources, key,
-                                                   referent);
+    obj = wrapVariantReferent<NativeObject, DebuggerSourceReferent,
+                              WasmInstanceObject*, WasmInstanceWeakMap>(
+        cx, wasmInstanceSources, key, referent);
   }
   MOZ_ASSERT_IF(obj, GetSourceReferent(obj) == referent);
   return obj;
@@ -8923,9 +8958,7 @@ extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
     return false;
   }
 
-  scriptProto = InitClass(
-      cx, debugCtor, nullptr, &DebuggerScript_class, DebuggerScript_construct,
-      0, DebuggerScript_properties, DebuggerScript_methods, nullptr, nullptr);
+  scriptProto = DebuggerScript::initClass(cx, global, debugCtor);
   if (!scriptProto) {
     return false;
   }
@@ -9017,8 +9050,8 @@ bool Debugger::isDebuggerCrossCompartmentEdge(JSObject* obj,
 
   auto cls = obj->getClass();
   const gc::Cell* referent = nullptr;
-  if (cls == &DebuggerScript_class) {
-    referent = GetScriptReferentCell(obj);
+  if (obj->is<DebuggerScript>()) {
+    referent = obj->as<DebuggerScript>().getReferentCell();
   } else if (cls == &DebuggerSource_class) {
     referent = GetSourceReferentRawObject(obj);
   } else if (obj->is<DebuggerObject>()) {
