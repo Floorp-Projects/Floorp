@@ -21,7 +21,7 @@
 #include "vm/Realm.h"
 #include "wasm/WasmInstance.h"
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 
 using namespace js;
 using namespace wasm;

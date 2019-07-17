@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dbg_Frame_inl_h
-#define dbg_Frame_inl_h
+#ifndef debugger_Frame_inl_h
+#define debugger_Frame_inl_h
 
-#include "dbg/Frame.h"
+#include "debugger/Frame.h"
 
 #include "vm/GeneratorObject.h"
 
@@ -22,4 +22,4 @@ inline js::DebuggerFrame::GeneratorInfo* js::DebuggerFrame::generatorInfo()
       getReservedSlot(GENERATOR_INFO_SLOT).toPrivate());
 }
 
-#endif /* dbg_Frame_inl_h */
+#endif /* debugger_Frame_inl_h */

@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dbg_Script_h
-#define dbg_Script_h
+#ifndef debugger_Script_h
+#define debugger_Script_h
 
 #include "mozilla/Variant.h"
 
 #include "jsapi.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Cell.h"
 #include "gc/Rooting.h"
 #include "js/CallArgs.h"
@@ -117,4 +117,4 @@ class DebuggerScript : public NativeObject {
 
 } /* namespace js */
 
-#endif /* dbg_Script_h */
+#endif /* debugger_Script_h */

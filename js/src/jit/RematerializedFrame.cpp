@@ -8,7 +8,7 @@
 
 #include <utility>
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "jit/JitFrames.h"
 #include "vm/ArgumentsObject.h"
 

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dbg_Script_inl_h
-#define dbg_Script_inl_h
+#ifndef debugger_Script_inl_h
+#define debugger_Script_inl_h
 
-#include "dbg/Script.h"
+#include "debugger/Script.h"
 
 js::gc::Cell* js::DebuggerScript::getReferentCell() const {
   return static_cast<gc::Cell*>(getPrivate());
@@ -28,4 +28,4 @@ js::DebuggerScriptReferent js::DebuggerScript::getReferent() const {
   return mozilla::AsVariant(static_cast<JSScript*>(nullptr));
 }
 
-#endif /* dbg_Script_inl_h */
+#endif /* debugger_Script_inl_h */

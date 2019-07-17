@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dbg_Object_h
-#define dbg_Object_h
+#ifndef debugger_Object_h
+#define debugger_Object_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -15,7 +15,7 @@
 #include "jsapi.h"
 
 #include "builtin/Promise.h"
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Rooting.h"
 #include "js/Class.h"
 #include "js/Promise.h"
@@ -313,4 +313,4 @@ class DebuggerObject : public NativeObject {
 
 } /* namespace js */
 
-#endif /* dbg_Object_h */
+#endif /* debugger_Object_h */

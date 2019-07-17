@@ -26,7 +26,7 @@
 #include "jsmath.h"
 
 #include "builtin/Promise.h"
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
