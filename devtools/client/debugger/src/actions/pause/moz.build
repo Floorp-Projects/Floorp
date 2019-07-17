@@ -11,6 +11,7 @@ CompiledModules(
     'breakOnNext.js',
     'commands.js',
     'continueToHere.js',
+    'expandScopes.js',
     'fetchScopes.js',
     'index.js',
     'mapFrames.js',

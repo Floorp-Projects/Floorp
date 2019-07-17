@@ -28,3 +28,4 @@ export { pauseOnExceptions } from "./pauseOnExceptions";
 export { selectFrame } from "./selectFrame";
 export { toggleSkipPausing } from "./skipPausing";
 export { toggleMapScopes } from "./mapScopes";
+export { setExpandedScope } from "./expandScopes";
