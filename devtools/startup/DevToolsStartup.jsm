@@ -438,26 +438,6 @@ DevToolsStartup.prototype = {
         this.sendEntryPointTelemetry("CommandLine");
       }
     }
-
-    // Wait until we get a window before sending a ping to telemetry to avoid slowing down
-    // the startup phase.
-    this.pingOnboardingTelemetry();
-  },
-
-  /**
-   * Check if the user is being flagged as DevTools users or not. This probe should only
-   * be logged once per profile.
-   */
-  pingOnboardingTelemetry() {
-    // Only ping telemetry once per profile.
-    const alreadyLoggedPref = "devtools.onboarding.telemetry.logged";
-    if (Services.prefs.getBoolPref(alreadyLoggedPref)) {
-      return;
-    }
-
-    const scalarId = "devtools.onboarding.is_devtools_user";
-    this.telemetry.scalarSet(scalarId, this.isDevToolsUser());
-    Services.prefs.setBoolPref(alreadyLoggedPref, true);
   },
 
   /**
