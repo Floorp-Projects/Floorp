@@ -40,6 +40,8 @@ bool RenderCompositorOGL::BeginFrame() {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     return false;
   }
+
+  mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGL->GetDefaultFramebuffer());
   return true;
 }
 
