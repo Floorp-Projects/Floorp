@@ -59,11 +59,6 @@ class D3D11YCbCrImage : public Image {
   D3D11YCbCrImage();
   virtual ~D3D11YCbCrImage();
 
-  static already_AddRefed<TextureClient>
-  CreateAndCopyDataToDXGIYCbCrTextureData(KnowsCompositor* aAllocator,
-                                          ImageContainer* aContainer,
-                                          const PlanarYCbCrData& aData);
-
   // Copies the surface into a sharable texture's surface, and initializes
   // the image.
   bool SetData(KnowsCompositor* aAllocator, ImageContainer* aContainer,
