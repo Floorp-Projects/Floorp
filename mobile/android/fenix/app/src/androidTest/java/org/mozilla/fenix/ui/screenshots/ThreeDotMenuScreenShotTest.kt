@@ -14,6 +14,7 @@ import tools.fastlane.screengrab.Screengrab
 import tools.fastlane.screengrab.locale.LocaleTestRule
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.swipeUp
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -77,18 +78,47 @@ class ThreeDotMenuScreenShotTest : ScreenshotTest() {
         }.openThreeDotMenu {
         }
         settingsButton2()
-        onView(withId(R.id.recycler_view)).perform(swipeUp())
-        Screengrab.screenshot("settings-scroll-to-bottom")
         SystemClock.sleep(1000)
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        Screengrab.screenshot("settings-scroll")
+        SystemClock.sleep(2000)
 
         settingsRemoveData()
         Screengrab.screenshot("settings-delete-browsing-data")
         device.pressBack()
+
         SystemClock.sleep(1000)
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        Screengrab.screenshot("settings-scroll")
+        SystemClock.sleep(3000)
 
         settingsTelemetry()
         Screengrab.screenshot("settings-telemetry")
         device.pressBack()
+    }
+
+    @Test
+    fun settingsScrollToBottomTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }
+        settingsButton2()
+        SystemClock.sleep(1000)
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        Screengrab.screenshot("settings-scroll2")
+        SystemClock.sleep(1000)
+
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
+        Screengrab.screenshot("settings-scroll3")
+        SystemClock.sleep(1000)
+
+        onView(withId(R.id.recycler_view)).perform(swipeUp())
+        Screengrab.screenshot("settings-scroll4")
     }
 
     @Test
