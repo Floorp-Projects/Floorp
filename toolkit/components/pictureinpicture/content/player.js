@@ -43,7 +43,7 @@ function setIsPlayingState(isPlaying) {
  * events for updating state.
  */
 let Player = {
-  WINDOW_EVENTS: ["click", "mouseout", "resize", "unload"],
+  WINDOW_EVENTS: ["click", "keydown", "mouseout", "resize", "unload"],
   mm: null,
   /**
    * Used for resizing Telemetry to avoid recording an event for every resize
@@ -58,6 +58,12 @@ let Player = {
   lastScreenX: -1,
   lastScreenY: -1,
   id: -1,
+
+  /**
+   * When set to a non-null value, a timer is scheduled to hide the controls
+   * after CONTROLS_FADE_TIMEOUT_MS milliseconds.
+   */
+  showingTimeout: null,
 
   /**
    * Initializes the player browser, and sets up the initial state.
@@ -93,12 +99,7 @@ let Player = {
     // just close the window for now.
     browser.addEventListener("oop-browser-crashed", this);
 
-    // Show the controls immediately, but set them up to fade out after
-    // CONTROLS_FADE_TIMEOUT_MS if the mouse isn't hovering them.
-    this.controls.setAttribute("showing", true);
-    setTimeout(() => {
-      this.controls.removeAttribute("showing");
-    }, CONTROLS_FADE_TIMEOUT_MS);
+    this.revealControls(false);
 
     Services.telemetry.setEventRecordingEnabled("pictureinpicture", true);
 
@@ -129,6 +130,16 @@ let Player = {
     switch (event.type) {
       case "click": {
         this.onClick(event);
+        this.controls.removeAttribute("keying");
+        break;
+      }
+
+      case "keydown": {
+        if (event.keyCode == KeyEvent.DOM_VK_TAB) {
+          this.controls.setAttribute("keying", true);
+        } else if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+          this.controls.removeAttribute("keying");
+        }
         break;
       }
 
@@ -164,9 +175,12 @@ let Player = {
       case "playpause": {
         if (!this.isPlaying) {
           this.mm.sendAsyncMessage("PictureInPicture:Play");
+          this.revealControls(false);
         } else {
           this.mm.sendAsyncMessage("PictureInPicture:Pause");
+          this.revealControls(true);
         }
+
         break;
       }
 
@@ -229,5 +243,26 @@ let Player = {
       this.id,
       args
     );
+  },
+
+  /**
+   * Makes the player controls visible.
+   *
+   * @param revealIndefinitely (Boolean)
+   *   If false, this will hide the controls again after
+   *   CONTROLS_FADE_TIMEOUT_MS milliseconds has passed. If true, the controls
+   *   will remain visible until revealControls is called again with
+   *   revealIndefinitely set to false.
+   */
+  revealControls(revealIndefinitely) {
+    clearTimeout(this.showingTimeout);
+    this.showingTimeout = null;
+
+    this.controls.setAttribute("showing", true);
+    if (!revealIndefinitely) {
+      this.showingTimeout = setTimeout(() => {
+        this.controls.removeAttribute("showing");
+      }, CONTROLS_FADE_TIMEOUT_MS);
+    }
   },
 };
