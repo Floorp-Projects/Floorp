@@ -35,7 +35,17 @@
   color: var(--theme-toolbar-color);
   background-color: var(--theme-body-background);
   text-shadow: none;
-  border-bottom: 1px solid var(--theme-splitter-color);
+  border-color: var(--theme-splitter-color);
+  border-style: solid;
+  border-width: 0;
+}
+
+.notificationbox.border-top .notification {
+   border-top-width: 1px;
+}
+
+.notificationbox.border-bottom .notification {
+   border-bottom-width: 1px;
 }
 
 .notificationbox .notification[data-type="info"] {

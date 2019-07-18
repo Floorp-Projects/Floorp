@@ -76,12 +76,18 @@ class NotificationBox extends Component {
       closeButtonTooltip: PropTypes.string,
       // Wraps text when passed from console window as wrapping: true
       wrapping: PropTypes.bool,
+      // Display a top border (default to false)
+      displayBorderTop: PropTypes.bool,
+      // Display a bottom border (default to true)
+      displayBorderBottom: PropTypes.bool,
     };
   }
 
   static get defaultProps() {
     return {
       closeButtonTooltip: l10n.getStr("notificationBox.closeTooltip"),
+      displayBorderTop: false,
+      displayBorderBottom: true,
     };
   }
 
@@ -251,10 +257,20 @@ class NotificationBox extends Component {
     const notifications = this.props.notifications || this.state.notifications;
     const notification = getHighestPriorityNotification(notifications);
     const content = notification ? this.renderNotification(notification) : null;
+
     const classNames = ["notificationbox"];
     if (this.props.wrapping) {
       classNames.push("wrapping");
     }
+
+    if (this.props.displayBorderBottom) {
+      classNames.push("border-bottom");
+    }
+
+    if (this.props.displayBorderTop) {
+      classNames.push("border-top");
+    }
+
     return div(
       {
         className: classNames.join(" "),

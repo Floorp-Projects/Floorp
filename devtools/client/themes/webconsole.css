@@ -466,6 +466,11 @@ html #webconsole-notificationbox {
   width: 100%;
 }
 
+.webconsole-output:empty ~ .notificationbox .notification {
+  border-top-width: 0;
+  border-bottom-width: 1px;
+}
+
 .jsterm-input-container {
   max-width: 100%;
   background-color: var(--console-input-background);
