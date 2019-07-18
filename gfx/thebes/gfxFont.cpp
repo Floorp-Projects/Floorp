@@ -1574,20 +1574,26 @@ class GlyphBufferAzure {
     }
   }
 
-  // Ensure the buffer has enough space for aGlyphCount glyphs to be added.
+  // Ensure the buffer has enough space for aGlyphCount glyphs to be added,
+  // considering the supplied strike multipler aStrikeCount.
   // This MUST be called before OutputGlyph is used to actually store glyph
   // records in the buffer. It may be called repeated to add further capacity
   // in case we don't know up-front exactly what will be needed.
-  void AddCapacity(uint32_t aGlyphCount) {
+  void AddCapacity(uint32_t aGlyphCount, uint32_t aStrikeCount) {
+    // Calculate the new capacity and ensure it will fit within the maximum
+    // allowed capacity.
+    static const uint64_t kMaxCapacity = 64 * 1024;
+    mCapacity = uint32_t(std::min(
+        kMaxCapacity,
+        uint64_t(mCapacity) + uint64_t(aGlyphCount) * uint64_t(aStrikeCount)));
     // See if the required capacity fits within the already-allocated space
-    if (mCapacity + aGlyphCount <= mBufSize) {
-      mCapacity += aGlyphCount;
+    if (mCapacity <= mBufSize) {
       return;
     }
     // We need to grow the buffer: determine a new size, allocate, and
     // copy the existing data over if we didn't use realloc (which would
     // do it automatically).
-    mBufSize = std::max(mCapacity + aGlyphCount, mBufSize * 2);
+    mBufSize = std::max(mCapacity, mBufSize * 2);
     if (mBuffer == *mAutoBuffer.addr()) {
       // switching from autobuffer to malloc, so we need to copy
       mBuffer = reinterpret_cast<Glyph*>(moz_xmalloc(mBufSize * sizeof(Glyph)));
@@ -1596,12 +1602,15 @@ class GlyphBufferAzure {
       mBuffer = reinterpret_cast<Glyph*>(
           moz_xrealloc(mBuffer, mBufSize * sizeof(Glyph)));
     }
-    mCapacity += aGlyphCount;
   }
 
   void OutputGlyph(uint32_t aGlyphID, const gfx::Point& aPt) {
-    // Check that AddCapacity has been used appropriately!
-    MOZ_ASSERT(mNumGlyphs < mCapacity);
+    // If the buffer is full, flush to make room for the new glyph.
+    if (mNumGlyphs >= mCapacity) {
+      // Check that AddCapacity has been used appropriately!
+      MOZ_ASSERT(mCapacity > 0 && mNumGlyphs == mCapacity);
+      Flush();
+    }
     Glyph* glyph = mBuffer + mNumGlyphs++;
     glyph->mIndex = aGlyphID;
     glyph->mPosition = aPt;
@@ -1809,7 +1818,7 @@ bool gfxFont::DrawGlyphs(const gfxShapedText* aShapedText,
 
   // Allocate buffer space for the run, assuming all simple glyphs.
   uint32_t capacityMult = 1 + aBuffer.mFontParams.extraStrikes;
-  aBuffer.AddCapacity(capacityMult * aCount);
+  aBuffer.AddCapacity(aCount, capacityMult);
 
   bool emittedGlyphs = false;
 
@@ -1829,7 +1838,7 @@ bool gfxFont::DrawGlyphs(const gfxShapedText* aShapedText,
       uint32_t glyphCount = glyphData->GetGlyphCount();
       if (glyphCount > 0) {
         // Add extra buffer capacity to allow for multiple-glyph entry.
-        aBuffer.AddCapacity(capacityMult * (glyphCount - 1));
+        aBuffer.AddCapacity(glyphCount - 1, capacityMult);
         const gfxShapedText::DetailedGlyph* details =
             aShapedText->GetDetailedGlyphs(aOffset + i);
         MOZ_ASSERT(details, "missing DetailedGlyph!");
