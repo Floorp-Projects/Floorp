@@ -50,23 +50,73 @@ struct NormalizedInterfaceAndField {
                      : identity) {}
 };
 
+// A bunch of bits used to lookup a value in a Huffman table. In most cases,
+// these are the 32 leading bits of the underlying bit stream.
+//
+// In a Huffman table, keys have variable bitlength. Consequently, we only know
+// the bitlength of the key *after* we have performed the lookup. A
+// `HuffmanLookup` is a data structure contained at least as many bits as
+// needed to perform the lookup.
+//
+// Whenever a lookup is performed, the consumer MUST look at the `bitLength` of
+// the returned `HuffmanKey` and consume as many bits from the bit stream.
+struct HuffmanLookup {
+  HuffmanLookup(uint32_t bits, uint8_t bitLength)
+      : bits(bits), bitLength(bitLength) {
+    MOZ_ASSERT(bitLength <= 32);
+    MOZ_ASSERT(bits >> bitLength == 0);
+  }
+
+  // Return the `bitLength` leading bits of this superset.
+  // This only makes sense if `bitLength <= this.bitLength`.
+  uint32_t leadingBits(const uint8_t bitLength) const;
+
+  // The buffer holding the bits.
+  // FIXME: Document bit order.
+  uint32_t bits;
+
+  // The actual length of buffer `bits`:
+  // - if `bitLength == 0`, use 0 bits of `bits`, this entire value is `0`;
+  // - if `bitLength == 1`, only use the last bit of `bits`;
+  // - ...
+  // - if `bitLength == 32`, use the entire value of `bits`;
+  // - other values of `bitLength` are invalid.
+  //
+  // Invariant: the first `32 - bitLength` bits are always 0.
+  uint8_t bitLength;
+};
+
+// A Huffman Key.
+struct HuffmanKey {
+  HuffmanKey(uint32_t bits, uint8_t bitLength)
+      : bits(bits), bitLength(bitLength) {
+    MOZ_ASSERT(bitLength <= 32);
+    MOZ_ASSERT(bits >> bitLength == 0);
+  }
+
+  // The buffer holding the bits.
+  // FIXME: Document bit order.
+  uint32_t bits;
+
+  // The actual length of buffer `bits`:
+  // - if `bitLength == 0`, use 0 bits of `bits`, this entire value is `0`;
+  // - if `bitLength == 1`, only use the last bit of `bits`;
+  // - ...
+  // - if `bitLength == 32`, use the entire value of `bits`;
+  // - other values of `bitLength` are invalid.
+  //
+  // Invariant: the first `32 - bitLength` bits are always 0.
+  uint8_t bitLength;
+};
+
 // An entry in a Huffman table.
 template <typename T>
 struct HuffmanEntry {
-  HuffmanEntry(uint32_t bits, uint8_t bits_length, T&& value)
-      : bits(bits), bits_length(bits_length), value(value) {
-    MOZ_ASSERT(bits >> bits_length == 0);
-  }
+  HuffmanEntry(HuffmanKey key, T&& value) : key(key), value(value) {}
+  HuffmanEntry(uint32_t bits, uint8_t bitLength, T&& value)
+      : key(bits, bitLength), value(value) {}
 
-  // Together, `bits` and `bits_length` represent the prefix for this entry
-  // in the Huffman table.
-  //
-  // This entry matches a candidate `c` iff `c.bits_length == bits_length`
-  // and `c.bits << (32 - c.bits_len) == bits << (32 - bits_len)`.
-  //
-  // Invariant: the first `32 - bits_len` bits are always 0.
-  const uint32_t bits;
-  const uint8_t bits_length;
+  const HuffmanKey key;
   const T value;
 };
 
@@ -102,6 +152,17 @@ class HuffmanTableImpl {
   HuffmanTableImpl() = delete;
   HuffmanTableImpl(HuffmanTableImpl&) = delete;
 
+  // Lookup a value in the table.
+  //
+  // Return an entry with a value of `nullptr` if the value is not in the table.
+  //
+  // The lookup may consume `[0, key.bitLength]` bits of `key`. Typically, in a
+  // table with a single instance, or if the value is not in the table, 0 bits
+  // will be consumed. The caller is responsible for advancing its bitstream by
+  // `result.key.bitLength` bits.
+  HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
+
+  // The number of values in the table.
   size_t length() const { return values.length(); }
   const HuffmanEntry<T>* begin() const { return values.begin(); }
   const HuffmanEntry<T>* end() const { return values.end(); }
@@ -109,8 +170,9 @@ class HuffmanTableImpl {
  private:
   // The entries in this Huffman table.
   // Entries are always ranked by increasing bit_length, and within
-  // a bitlength by increasing value of `bits`. This lets us implement
-  // `HuffmanTableImpl::next()` in `O(number_of_bits)` worst case time.
+  // a bitlength by increasing value of `bits`. This representation
+  // is good for small tables, but in the future, we may adopt a
+  // representation more optimized for larger tables.
   Vector<HuffmanEntry<T>, N> values;
   friend class HuffmanPreludeReader;
 };
@@ -126,25 +188,30 @@ struct HuffmanTableUnreachable {};
 // These classes are all parts of variant `HuffmanTable`.
 
 struct HuffmanTableExplicitSymbolsF64 {
+  using Contents = double;
   HuffmanTableImpl<double> impl;
   explicit HuffmanTableExplicitSymbolsF64(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableExplicitSymbolsU32 {
+  using Contents = uint32_t;
   HuffmanTableImpl<uint32_t> impl;
 };
 
 struct HuffmanTableIndexedSymbolsSum {
+  using Contents = BinASTKind;
   HuffmanTableImpl<BinASTKind> impl;
   explicit HuffmanTableIndexedSymbolsSum(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsBool {
+  using Contents = bool;
   HuffmanTableImpl<bool, 2> impl;
   explicit HuffmanTableIndexedSymbolsBool(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsMaybeInterface {
+  using Contents = Nullable;
   HuffmanTableImpl<Nullable, 2> impl;
   explicit HuffmanTableIndexedSymbolsMaybeInterface(JSContext* cx) : impl(cx) {}
 
@@ -163,16 +230,19 @@ struct HuffmanTableIndexedSymbolsMaybeInterface {
 };
 
 struct HuffmanTableIndexedSymbolsStringEnum {
+  using Contents = BinASTVariant;
   HuffmanTableImpl<BinASTVariant> impl;
   explicit HuffmanTableIndexedSymbolsStringEnum(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsLiteralString {
+  using Contents = JSAtom*;
   HuffmanTableImpl<JSAtom*> impl;
   explicit HuffmanTableIndexedSymbolsLiteralString(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsOptionalLiteralString {
+  using Contents = JSAtom*;
   HuffmanTableImpl<JSAtom*> impl;
   explicit HuffmanTableIndexedSymbolsOptionalLiteralString(JSContext* cx)
       : impl(cx) {}
@@ -188,6 +258,7 @@ using HuffmanTable = mozilla::Variant<
     HuffmanTableIndexedSymbolsOptionalLiteralString>;
 
 struct HuffmanTableExplicitSymbolsListLength {
+  using Contents = uint32_t;
   HuffmanTableImpl<uint32_t> impl;
   explicit HuffmanTableExplicitSymbolsListLength(JSContext* cx) : impl(cx) {}
 };
@@ -277,7 +348,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
 
   ~BinASTTokenReaderContext();
 
- private:
   // {readByte, readBuf, readVarU32} are implemented both for uncompressed
   // stream and brotli-compressed stream.
   //
@@ -288,12 +358,55 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   // buffered and uncompressed variant cannot be called.
   enum class Compression { No, Yes };
 
+  // Determine what to do if we reach the end of the file.
+  enum class EndOfFilePolicy {
+    // End of file was not expected, raise an error.
+    RaiseError,
+    // End of file is ok, read as many bytes as possible.
+    BestEffort
+  };
+
+ private:
   // Buffer that holds already brotli-decoded but not yet used data.
   // decodedBuffer[decodedBegin, decodedEnd) holds the data.
   static const size_t DECODED_BUFFER_SIZE = 128;
   uint8_t decodedBuffer_[DECODED_BUFFER_SIZE];
   size_t decodedBegin_ = 0;
   size_t decodedEnd_ = 0;
+
+  // A buffer of bits used to lookup data from the Huffman tables.
+  // It may contain up to 64 bits.
+  //
+  // To interact with the buffer, see methods
+  // - advanceBitBuffer()
+  // - getHuffmanLookup()
+  struct BitBuffer {
+    BitBuffer();
+
+    // Return the HuffmanLookup for the next lookup in a Huffman table.
+    // After calling this method, do not forget to call `advanceBitBuffer`.
+    //
+    // If `result.bitLength == 0`, you have reached the end of the stream.
+    template <Compression Compression>
+    HuffmanLookup getHuffmanLookup();
+
+    // Advance the bit buffer by `bitLength` bits.
+    template <Compression Compression>
+    MOZ_MUST_USE JS::Result<Ok> advanceBitBuffer(
+        BinASTTokenReaderContext& owner, const uint8_t bitLength);
+
+   private:
+    // The contents of the buffer.
+    uint64_t bits;
+
+    // The number of elements in `bits`.
+    //
+    // Until we start lookup up into Huffman tables, `length == 0`.
+    // Once we do, we refill the buffer before any lookup, i.e.
+    // `length == 32` until we reach the last few bytes of the stream,
+    // in which case `length` decreases monotonically to 0.
+    uint64_t length;
+  } bitBuffer;
 
   // The number of already decoded bytes.
   size_t availableDecodedLength() const { return decodedEnd_ - decodedBegin_; }
@@ -315,11 +428,15 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   /**
    * Read several bytes.
    *
-   * If there is not enough data, or if the tokenizer has previously been
-   * poisoned, return an error.
+   * If the tokenizer has previously been poisoned, return an error.
+   * If the end of file is reached, in the case of
+   * EndOfFilePolicy::RaiseError, raise an error. Otherwise, update
+   * `len` to indicate how many bytes have actually been read.
    */
-  template <Compression compression>
-  MOZ_MUST_USE JS::Result<Ok> readBuf(uint8_t* bytes, uint32_t len);
+  template <Compression compression, EndOfFilePolicy policy>
+  MOZ_MUST_USE JS::Result<Ok> readBuf(uint8_t* bytes, uint32_t& len);
+
+  enum class FillResult { EndOfStream, Filled };
 
   /**
    * Read bytes to fill decodedBuffer_.
@@ -327,7 +444,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    * On success, this guarantees there's at least 1 byte in the buffer.
    * If there is no data, return an error.
    */
-  MOZ_MUST_USE JS::Result<Ok> fillDecodedBuf();
+  MOZ_MUST_USE JS::Result<FillResult> fillDecodedBuf();
 
   void advanceDecodedBuffer(uint32_t count);
 
@@ -459,11 +576,28 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   MOZ_MUST_USE JS::Result<uint32_t> readUnsignedLong(const Context&);
 
  private:
+  template <typename Table>
+  MOZ_MUST_USE JS::Result<typename Table::Contents> readFieldFromTable(
+      const Context&);
+
+  /**
+   * Report an "invalid value error".
+   */
+  MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidValue(const Context&);
+
+ private:
   /**
    * Read a single uint32_t.
    */
   template <Compression compression>
   MOZ_MUST_USE JS::Result<uint32_t> readVarU32();
+
+  template <EndOfFilePolicy policy>
+  MOZ_MUST_USE JS::Result<Ok> handleEndOfStream();
+
+  template <EndOfFilePolicy policy>
+  MOZ_MUST_USE JS::Result<Ok> readBufCompressedAux(uint8_t* bytes,
+                                                   uint32_t& len);
 
  private:
   // A mapping string index => BinASTVariant as extracted from the [STRINGS]
