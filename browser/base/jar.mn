@@ -21,6 +21,7 @@ browser.jar:
         content/browser/illustrations/blue-berror.svg (content/illustrations/blue-berror.svg)
         content/browser/logos/lockwise.svg             (content/logos/lockwise.svg)
         content/browser/logos/lockwise-mobile-app.svg             (content/logos/lockwise-mobile-app.svg)
+        content/browser/logos/monitor.svg             (content/logos/monitor.svg)
         content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
         content/browser/aboutNetError.js               (content/aboutNetError.js)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)

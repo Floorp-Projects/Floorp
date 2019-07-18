@@ -1610,6 +1610,9 @@ pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-
 // Enable Protections report's Lockwise card by default.
 pref("browser.contentblocking.report.lockwise.enabled", true);
 
+// Enable Protections report's Monitor card by default.
+pref("browser.contentblocking.report.monitor.enabled", true);
+
 // Enables the new Protections Panel.
 #ifdef NIGHTLY_BUILD
 pref("browser.protections_panel.enabled", true);

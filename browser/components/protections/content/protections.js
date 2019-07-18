@@ -5,6 +5,7 @@
 /* eslint-env mozilla/frame-script */
 
 import LockwiseCard from "./lockwise-card.js";
+import MonitorCard from "./monitor-card.js";
 
 document.addEventListener("DOMContentLoaded", e => {
   let todayInMs = Date.now();
@@ -28,8 +29,8 @@ document.addEventListener("DOMContentLoaded", e => {
     RPMSendAsyncMessage("OpenContentBlockingPreferences");
   });
 
-  // Check to see if displaying the Lockwise card pref is enabled.
-  RPMSendAsyncMessage("GetEnabledLockwiseCard");
+  // Get the display prefs for each component
+  RPMSendAsyncMessage("GetEnabledPrefs");
 
   let createGraph = data => {
     let dateInMS = data.earliestDate
@@ -149,8 +150,20 @@ document.addEventListener("DOMContentLoaded", e => {
     createGraph(message.data);
   });
 
+  // Display Monitor card
+  RPMAddMessageListener("SendEnabledMonitorCardPref", message => {
+    if (message.data.isEnabled) {
+      const monitorCard = new MonitorCard(document);
+      monitorCard.init();
+    }
+
+    // For tests
+    const monitorUI = document.querySelector(".monitor-card");
+    monitorUI.dataset.enabled = message.data.isEnabled;
+  });
+
   // Display Lockwise card
-  RPMAddMessageListener("SendEnabledLockWiseCardPref", message => {
+  RPMAddMessageListener("SendEnabledLockwiseCardPref", message => {
     if (message.data.isEnabled) {
       const lockwiseCard = new LockwiseCard(document);
       lockwiseCard.init();
@@ -160,4 +173,8 @@ document.addEventListener("DOMContentLoaded", e => {
     const lockwiseUI = document.querySelector(".lockwise-card");
     lockwiseUI.dataset.enabled = message.data.isEnabled;
   });
+
+  // Dispatch messages to retrieve data for the Lockwise & Monitor
+  // cards.
+  RPMSendAsyncMessage("FetchUserLoginsData");
 });
