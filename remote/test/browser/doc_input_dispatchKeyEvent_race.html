@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test page for dispatchKeyEvent race test</title>
+</head>
+<body>
+  <input type="text">
+  <script type="text/javascript">
+    window.testValue = "initial-value";
+
+    // Small helper to synchronously pause for a given delay, in ms.
+    function sleep(delay) {
+      const start = Date.now();
+      while (Date.now() - start < delay) {
+        // Wait for the condition to fail.
+      }
+    }
+
+    document.querySelector("input").addEventListener("input", () => {
+      // Block the execution synchronously for one second.
+      sleep(1000);
+      // Update the value that will be checked by the test.
+      window.testValue = document.querySelector("input").value;
+    });
+  </script>
+</body>
+</html>
