@@ -30,8 +30,9 @@ install:: $(LIBRARY_NAME).pc
 	cp $^ $(JS_LIBRARY_NAME).pc
 	$(SYSINSTALL) $(JS_LIBRARY_NAME).pc $(DESTDIR)$(libdir)/pkgconfig
 
-install:: ../js-config.h
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(JS_LIBRARY_NAME)
+install:: ../js-config.h ../js-confdefs.h
+	$(SYSINSTALL) -m644 ../js-config.h $(DESTDIR)$(includedir)/$(JS_LIBRARY_NAME)
+	$(SYSINSTALL) -m644 ../js-confdefs.h $(DESTDIR)$(includedir)/$(JS_LIBRARY_NAME)
 
 ######################################################
 # BEGIN SpiderMonkey header installation
