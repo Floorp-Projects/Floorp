@@ -24,8 +24,9 @@ const languageTags = {
     "ja-Latn-hepburn-alalc97-heploc": "ja-Latn-alalc97",
     "ja-Latn-hepburn-heploc-alalc97": "ja-Latn-alalc97",
 
-    // No replacement when "heploc" appears before "hepburn".
-    "ja-Latn-heploc-hepburn": "ja-Latn-heploc-hepburn",
+    // Variants are reordered before canonicalizing, so "heploc-hepburn" is
+    // reordered to "hepburn-heploc" which then can be canonicalized to "alalc97".
+    "ja-Latn-heploc-hepburn": "ja-Latn-alalc97",
 };
 
 for (let [tag, canonical] of Object.entries(languageTags)) {
