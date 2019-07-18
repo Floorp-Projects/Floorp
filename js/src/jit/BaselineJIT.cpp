@@ -650,22 +650,40 @@ RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
   MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(RetAddrEntries(this), pcOffset, &mid));
   MOZ_ASSERT(mid < numRetAddrEntries());
 
-  for (size_t i = mid; retAddrEntry(i).pcOffset() == pcOffset; i--) {
-    if (retAddrEntry(i).kind() == kind) {
-      return retAddrEntry(i);
-    }
-    if (i == 0) {
-      break;
-    }
+  // Search for the first entry for this pc.
+  size_t first = mid;
+  while (first > 0 && retAddrEntry(first - 1).pcOffset() == pcOffset) {
+    first--;
   }
-  for (size_t i = mid + 1; i < numRetAddrEntries(); i++) {
-    if (retAddrEntry(i).pcOffset() != pcOffset) {
-      break;
-    }
-    if (retAddrEntry(i).kind() == kind) {
-      return retAddrEntry(i);
-    }
+
+  // Search for the last entry for this pc.
+  size_t last = mid;
+  while (last + 1 < numRetAddrEntries() &&
+         retAddrEntry(last + 1).pcOffset() == pcOffset) {
+    last++;
   }
+
+  MOZ_ASSERT(first <= last);
+  MOZ_ASSERT(retAddrEntry(first).pcOffset() == pcOffset);
+  MOZ_ASSERT(retAddrEntry(last).pcOffset() == pcOffset);
+
+  for (size_t i = first; i <= last; i++) {
+    RetAddrEntry& entry = retAddrEntry(i);
+    if (entry.kind() != kind) {
+      continue;
+    }
+
+#ifdef DEBUG
+    // There must be a unique entry for this pcOffset and Kind to ensure our
+    // return value is well-defined.
+    for (size_t j = i + 1; j <= last; j++) {
+      MOZ_ASSERT(retAddrEntry(j).kind() != kind);
+    }
+#endif
+
+    return entry;
+  }
+
   MOZ_CRASH("Didn't find RetAddrEntry.");
 }
 

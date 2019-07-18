@@ -167,7 +167,9 @@ class RetAddrEntry {
 
  public:
   RetAddrEntry(uint32_t pcOffset, Kind kind, CodeOffset retOffset)
-      : returnOffset_(uint32_t(retOffset.offset())), pcOffset_(pcOffset) {
+      : returnOffset_(uint32_t(retOffset.offset())),
+        pcOffset_(pcOffset),
+        kind_(uint32_t(kind)) {
     MOZ_ASSERT(returnOffset_ == retOffset.offset(),
                "retOffset must fit in returnOffset_");
 
@@ -176,14 +178,9 @@ class RetAddrEntry {
     MOZ_ASSERT(pcOffset_ == pcOffset);
     JS_STATIC_ASSERT(BaselineMaxScriptLength <= (1u << 28) - 1);
     MOZ_ASSERT(pcOffset <= BaselineMaxScriptLength);
-    setKind(kind);
-  }
 
-  // Set the kind and asserts that it's sane.
-  void setKind(Kind kind) {
     MOZ_ASSERT(kind < Kind::Invalid);
-    kind_ = uint32_t(kind);
-    MOZ_ASSERT(this->kind() == kind);
+    MOZ_ASSERT(this->kind() == kind, "kind must fit in kind_ bit field");
   }
 
   CodeOffset returnOffset() const { return CodeOffset(returnOffset_); }
