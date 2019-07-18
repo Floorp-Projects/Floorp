@@ -16,6 +16,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
+// Stale rows are removed on a timer with this timeout.  Tests can override this
+// by setting UrlbarView.removeStaleRowsTimeout.
+const DEFAULT_REMOVE_STALE_ROWS_TIMEOUT = 400;
+
 /**
  * Receives and displays address bar autocomplete results.
  */
@@ -719,7 +723,7 @@ class UrlbarView {
     this._removeStaleRowsTimer = this.window.setTimeout(() => {
       this._removeStaleRowsTimer = null;
       this._removeStaleRows();
-    }, 400);
+    }, UrlbarView.removeStaleRowsTimeout);
   }
 
   _cancelRemoveStaleRowsTimer() {
@@ -949,3 +953,5 @@ class UrlbarView {
     this.close();
   }
 }
+
+UrlbarView.removeStaleRowsTimeout = DEFAULT_REMOVE_STALE_ROWS_TIMEOUT;
