@@ -193,7 +193,7 @@ const previewers = {
             value = ObjectUtils.makeDebuggeeValueIfNeeded(obj, value);
             items.push(hooks.createValueGrip(value));
           } else {
-            items.push(null);
+            items.push(hooks.createValueGrip(undefined));
           }
         } else {
           // Workers do not have access to Cu, and when recording/replaying we
