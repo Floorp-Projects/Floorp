@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals InfoItem */
+import { InfoItem } from "./info-item.js";
 
-class InfoGroup extends HTMLElement {
+export class InfoGroup extends HTMLElement {
   constructor(item) {
     super();
     this.item = item;
