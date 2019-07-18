@@ -244,9 +244,13 @@ class Connection {
     this.onPacket(packet);
   }
 
+  /**
+   * Instruct the connection to close.
+   * This will ask the transport to shutdown the WebSocket connection
+   * and destroy all active sessions.
+   */
   close() {
     this.transport.close();
-    this.sessions.clear();
 
     // In addition to the WebSocket transport, we also have to close the Connection
     // used internaly within httpd.js. Otherwise the server doesn't shut down correctly
@@ -254,7 +258,16 @@ class Connection {
     this.httpdConnection.close();
   }
 
-  onClosed(status) {}
+  /**
+   * This is called by the `transport` when the connection is closed.
+   * Cleanup all the registered sessions.
+   */
+  onClosed(status) {
+    for (const session of this.sessions.values()) {
+      session.destructor();
+    }
+    this.sessions.clear();
+  }
 
   /**
    * Splits a method, e.g. "Browser.getVersion",

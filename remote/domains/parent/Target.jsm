@@ -105,20 +105,21 @@ class Target extends Domain {
       return new Error(`Unable to find target with id '${targetId}'`);
     }
 
-    const session = new TabSession(
+    const tabSession = new TabSession(
       this.session.connection,
       target,
       sessionIds++
     );
+    this.session.connection.registerSession(tabSession);
     this.emit("Target.attachedToTarget", {
       targetInfo: {
         type: "page",
       },
-      sessionId: session.id,
+      sessionId: tabSession.id,
     });
 
     return {
-      sessionId: session.id,
+      sessionId: tabSession.id,
     };
   }
 
