@@ -1376,26 +1376,31 @@ set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
 
-@depends(c_compiler)
-def depend_cflags(info):
-    if info.type != 'clang-cl':
-        return ['-MD', '-MP', '-MF $(MDDEPDIR)/$(@F).pp']
-    else:
-        # clang-cl doesn't accept the normal -MD -MP -MF options that clang
-        # does, but the underlying cc1 binary understands how to generate
-        # dependency files.  These options are based on analyzing what the
-        # normal clang driver sends to cc1 when given the "correct"
-        # dependency options.
-        return [
-            '-Xclang', '-MP',
-            '-Xclang', '-dependency-file',
-            '-Xclang', '$(MDDEPDIR)/$(@F).pp',
-            '-Xclang', '-MT',
-            '-Xclang', '$@'
-        ]
+@template
+def depend_cflags(host_or_target_c_compiler):
+    @depends(host_or_target_c_compiler)
+    def depend_cflags(host_or_target_c_compiler):
+        if host_or_target_c_compiler.type != 'clang-cl':
+            return ['-MD', '-MP', '-MF $(MDDEPDIR)/$(@F).pp']
+        else:
+            # clang-cl doesn't accept the normal -MD -MP -MF options that clang
+            # does, but the underlying cc1 binary understands how to generate
+            # dependency files.  These options are based on analyzing what the
+            # normal clang driver sends to cc1 when given the "correct"
+            # dependency options.
+            return [
+                '-Xclang', '-MP',
+                '-Xclang', '-dependency-file',
+                '-Xclang', '$(MDDEPDIR)/$(@F).pp',
+                '-Xclang', '-MT',
+                '-Xclang', '$@'
+            ]
+
+    return depend_cflags
 
 
-set_config('_DEPEND_CFLAGS', depend_cflags)
+set_config('_DEPEND_CFLAGS', depend_cflags(c_compiler))
+set_config('_HOST_DEPEND_CFLAGS', depend_cflags(host_c_compiler))
 
 
 @depends(c_compiler, check_build_environment, target)
