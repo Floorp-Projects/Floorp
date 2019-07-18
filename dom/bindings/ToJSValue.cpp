@@ -86,7 +86,8 @@ bool ToJSValue(JSContext* aCx, const WindowProxyHolder& aArgument,
     return ToJSValue(aCx, windowProxy, aValue);
   }
 
-  if (!GetRemoteOuterWindowProxy(aCx, bc, &windowProxy)) {
+  if (!GetRemoteOuterWindowProxy(aCx, bc, /* aTransplantTo = */ nullptr,
+                                 &windowProxy)) {
     return false;
   }
   aValue.setObjectOrNull(windowProxy);
