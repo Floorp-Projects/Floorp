@@ -119,7 +119,7 @@
   "L10nRegistry.jsm": ["L10nRegistry", "FileSource", "IndexedFileSource"],
   "loader-plugin-raw.jsm": ["requireRawId"],
   "loader.js": ["WorkerDebuggerLoader", "worker"],
-  "Loader.jsm": ["DevToolsLoader", "devtools", "BuiltinProvider", "require", "loader"],
+  "Loader.jsm": ["DevToolsLoader", "require", "loader"],
   "log.js": ["Log"],
   "logger.jsm": ["Logger"],
   "logging.js": ["getTestLogger", "initTestLogging"],

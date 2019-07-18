@@ -18,8 +18,6 @@ var { requireRawId } = ChromeUtils.import(
 
 this.EXPORTED_SYMBOLS = [
   "DevToolsLoader",
-  "devtools",
-  "BuiltinProvider",
   "require",
   "loader",
   // Export StructuredCloneHolder for its use from builtin-modules
@@ -244,14 +242,6 @@ DevToolsLoader.prototype = {
 };
 
 // Export the standard instance of DevToolsLoader used by the tools.
-this.devtools = this.loader = new DevToolsLoader();
+this.loader = new DevToolsLoader();
 
-this.require = this.devtools.require.bind(this.devtools);
-
-// For compatibility reasons, expose these symbols on "devtools":
-Object.defineProperty(this.devtools, "Toolbox", {
-  get: () => this.require("devtools/client/framework/toolbox").Toolbox,
-});
-Object.defineProperty(this.devtools, "TargetFactory", {
-  get: () => this.require("devtools/client/framework/target").TargetFactory,
-});
+this.require = this.loader.require;
