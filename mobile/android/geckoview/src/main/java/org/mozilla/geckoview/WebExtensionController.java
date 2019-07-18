@@ -17,6 +17,10 @@ public class WebExtensionController {
          *
          * @param source An instance of {@link WebExtension} or null if extension was not registered
          *               with GeckoRuntime.registerWebextension
+         * @param uri The URI to be loaded. This is provided for informational purposes only,
+         *            do not call {@link GeckoSession#loadUri} on it.
+         * @return A {@link GeckoResult} which holds the returned GeckoSession. May be null, in
+         *        which case the request for a new tab by the extension will fail.
          */
         @UiThread
         @Nullable
