@@ -316,6 +316,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                                   bool aForceReuseInnerWindow) override;
 
   // Outer windows only.
+  static void PrepareForProcessChange(JSObject* aProxy);
+
+  // Outer windows only.
   void DispatchDOMWindowCreated();
 
   virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
