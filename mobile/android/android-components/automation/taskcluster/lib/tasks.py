@@ -31,7 +31,6 @@ class TaskBuilder(object):
         taskcluster_artifacts = {}
         # component is not None when this is a release build, in which case artifacts is defined too
         if component is not None:
-            # component is not None when this is a release build, in which case artifacts is defined too
             taskcluster_artifacts = {
                 artifact['taskcluster_path']: {
                     'type': 'file',
