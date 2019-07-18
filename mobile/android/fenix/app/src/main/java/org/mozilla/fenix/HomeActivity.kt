@@ -258,6 +258,12 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
                         customTabSessionId
                     )
                 }
+                BrowserDirection.FromExceptions -> {
+                    fragmentId = R.id.exceptionsFragment
+                    ExceptionsFragmentDirections.actionExceptionsFragmentToBrowserFragment(
+                        customTabSessionId
+                    )
+                }
             }
         } else {
             null

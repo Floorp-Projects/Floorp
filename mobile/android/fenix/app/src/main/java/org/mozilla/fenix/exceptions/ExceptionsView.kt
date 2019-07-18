@@ -13,31 +13,49 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
-import io.reactivex.Observable
-import io.reactivex.Observer
-import io.reactivex.functions.Consumer
+import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_exceptions.view.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.mvi.UIView
 
-class ExceptionsUIView(
-    container: ViewGroup,
-    actionEmitter: Observer<ExceptionsAction>,
-    changesObservable: Observable<ExceptionsChange>
-) :
-    UIView<ExceptionsState, ExceptionsAction, ExceptionsChange>(
-        container,
-        actionEmitter,
-        changesObservable
-    ) {
+/**
+ * Interface for the ExceptionsViewInteractor. This interface is implemented by objects that want
+ * to respond to user interaction on the ExceptionsView
+ */
+interface ExceptionsViewInteractor {
+    /**
+     * Called whenever learn more about tracking protection is tapped
+     */
+    fun onLearnMore()
 
-    override val view: FrameLayout = LayoutInflater.from(container.context)
+    /**
+     * Called whenever all exception items are deleted
+     */
+    fun onDeleteAll()
+
+    /**
+     * Called whenever one exception item is deleted
+     */
+    fun onDeleteOne(item: ExceptionsItem)
+}
+
+/**
+ * View that contains and configures the Exceptions List
+ */
+class ExceptionsView(
+    private val container: ViewGroup,
+    val interactor: ExceptionsInteractor
+) : LayoutContainer {
+
+    val view: FrameLayout = LayoutInflater.from(container.context)
         .inflate(R.layout.component_exceptions, container, true)
         .findViewById(R.id.exceptions_wrapper)
 
+    override val containerView: View?
+        get() = container
+
     init {
         view.exceptions_list.apply {
-            adapter = ExceptionsAdapter(actionEmitter)
+            adapter = ExceptionsAdapter(interactor)
             layoutManager = LinearLayoutManager(container.context)
         }
         val descriptionText = String
@@ -48,7 +66,7 @@ class ExceptionsUIView(
         val linkStartIndex = descriptionText.indexOf("\n\n") + 2
         val linkAction = object : ClickableSpan() {
             override fun onClick(widget: View?) {
-                actionEmitter.onNext(ExceptionsAction.LearnMore)
+                interactor.onLearnMore()
             }
         }
         val textWithLink = SpannableString(descriptionText).apply {
@@ -61,9 +79,10 @@ class ExceptionsUIView(
         view.exceptions_empty_view.text = textWithLink
     }
 
-    override fun updateView() = Consumer<ExceptionsState> {
-        view.exceptions_empty_view.visibility = if (it.items.isEmpty()) View.VISIBLE else View.GONE
-        view.exceptions_list.visibility = if (it.items.isEmpty()) View.GONE else View.VISIBLE
-        (view.exceptions_list.adapter as ExceptionsAdapter).updateData(it.items)
+    fun update(state: ExceptionsState) {
+        view.exceptions_empty_view.visibility =
+            if (state.items.isEmpty()) View.VISIBLE else View.GONE
+        view.exceptions_list.visibility = if (state.items.isEmpty()) View.GONE else View.VISIBLE
+        (view.exceptions_list.adapter as ExceptionsAdapter).updateData(state.items)
     }
 }

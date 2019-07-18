@@ -6,7 +6,6 @@ package org.mozilla.fenix.exceptions.viewholders
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.exception_item.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,14 +13,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
 import org.mozilla.fenix.R
-import org.mozilla.fenix.exceptions.ExceptionsAction
+import org.mozilla.fenix.exceptions.ExceptionsInteractor
 import org.mozilla.fenix.exceptions.ExceptionsItem
 import org.mozilla.fenix.ext.components
 import kotlin.coroutines.CoroutineContext
 
 class ExceptionsListItemViewHolder(
     view: View,
-    private val actionEmitter: Observer<ExceptionsAction>,
+    private val interactor: ExceptionsInteractor,
     val job: Job
 ) : RecyclerView.ViewHolder(view), CoroutineScope {
 
@@ -37,7 +36,7 @@ class ExceptionsListItemViewHolder(
     init {
         deleteButton.setOnClickListener {
             item?.let {
-                actionEmitter.onNext(ExceptionsAction.Delete.One(it))
+                interactor.onDeleteOne(it)
             }
         }
     }
