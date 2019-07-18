@@ -7,6 +7,8 @@ describe("ToolbarBadgeHub", () => {
   let sandbox;
   let instance;
   let fakeAddImpression;
+  let fakeDispatch;
+  let isBrowserPrivateStub;
   let fxaMessage;
   let whatsnewMessage;
   let fakeElement;
@@ -14,11 +16,15 @@ describe("ToolbarBadgeHub", () => {
   let everyWindowStub;
   let clearTimeoutStub;
   let setTimeoutStub;
+  let addObserverStub;
+  let removeObserverStub;
   beforeEach(async () => {
     globals = new GlobalOverrider();
     sandbox = sinon.createSandbox();
     instance = new _ToolbarBadgeHub();
     fakeAddImpression = sandbox.stub();
+    fakeDispatch = sandbox.stub();
+    isBrowserPrivateStub = sandbox.stub();
     const msgs = await PanelTestProvider.getMessages();
     fxaMessage = msgs.find(({ id }) => id === "FXA_ACCOUNTS_BADGE");
     whatsnewMessage = msgs.find(({ id }) => id.includes("WHATS_NEW_BADGE_"));
@@ -40,9 +46,30 @@ describe("ToolbarBadgeHub", () => {
     };
     clearTimeoutStub = sandbox.stub();
     setTimeoutStub = sandbox.stub();
-    globals.set("EveryWindow", everyWindowStub);
-    globals.set("setTimeout", setTimeoutStub);
-    globals.set("clearTimeout", clearTimeoutStub);
+    const fakeWindow = {
+      ownerGlobal: {
+        gBrowser: {
+          selectedBrowser: "browser",
+        },
+      },
+    };
+    addObserverStub = sandbox.stub();
+    removeObserverStub = sandbox.stub();
+    globals.set({
+      EveryWindow: everyWindowStub,
+      PrivateBrowsingUtils: { isBrowserPrivate: isBrowserPrivateStub },
+      setTimeout: setTimeoutStub,
+      clearTimeout: clearTimeoutStub,
+      Services: {
+        wm: {
+          getMostRecentWindow: () => fakeWindow,
+        },
+        prefs: {
+          addObserver: addObserverStub,
+          removeObserver: removeObserverStub,
+        },
+      },
+    });
   });
   afterEach(() => {
     sandbox.restore();
@@ -60,8 +87,21 @@ describe("ToolbarBadgeHub", () => {
       assert.calledOnce(instance.messageRequest);
       assert.calledWithExactly(instance.messageRequest, "toolbarBadgeUpdate");
     });
+    it("should add a pref observer", async () => {
+      await instance.init(sandbox.stub().resolves(), {});
+
+      assert.calledOnce(addObserverStub);
+      assert.calledWithExactly(
+        addObserverStub,
+        instance.prefs.WHATSNEW_TOOLBAR_PANEL,
+        instance
+      );
+    });
   });
   describe("#uninit", () => {
+    beforeEach(async () => {
+      instance.init(sandbox.stub().resolves(), {});
+    });
     it("should clear any setTimeout cbs", () => {
       instance.init(sandbox.stub().resolves(), {});
 
@@ -71,6 +111,16 @@ describe("ToolbarBadgeHub", () => {
 
       assert.calledOnce(clearTimeoutStub);
       assert.calledWithExactly(clearTimeoutStub, 2);
+    });
+    it("should remove the pref observer", () => {
+      instance.uninit();
+
+      assert.calledOnce(removeObserverStub);
+      assert.calledWithExactly(
+        removeObserverStub,
+        instance.prefs.WHATSNEW_TOOLBAR_PANEL,
+        instance
+      );
     });
   });
   describe("messageRequest", () => {
@@ -166,6 +216,7 @@ describe("ToolbarBadgeHub", () => {
     beforeEach(() => {
       instance.init(sandbox.stub().resolves(), {
         addImpression: fakeAddImpression,
+        dispatch: fakeDispatch,
       });
       sandbox.stub(instance, "addToolbarNotification").returns(fakeElement);
       sandbox.stub(instance, "removeToolbarNotification");
@@ -212,6 +263,18 @@ describe("ToolbarBadgeHub", () => {
       assert.calledOnce(instance.removeToolbarNotification);
       assert.calledWithExactly(instance.removeToolbarNotification, fakeElement);
     });
+    it("should send an impression", async () => {
+      sandbox.stub(instance, "sendUserEventTelemetry");
+
+      instance.registerBadgeNotificationListener(fxaMessage);
+
+      assert.calledOnce(instance.sendUserEventTelemetry);
+      assert.calledWithExactly(
+        instance.sendUserEventTelemetry,
+        "IMPRESSION",
+        fxaMessage
+      );
+    });
     it("should unregister notifications when forcing a badge via devtools", () => {
       instance.registerBadgeNotificationListener(fxaMessage, { force: true });
 
@@ -224,6 +287,16 @@ describe("ToolbarBadgeHub", () => {
       const stub = sandbox.stub(
         _ToolbarPanelHub.prototype,
         "enableToolbarButton"
+      );
+
+      instance.executeAction({ id: "show-whatsnew-button" });
+
+      assert.calledOnce(stub);
+    });
+    it("should call ToolbarPanelHub.enableAppmenuButton", () => {
+      const stub = sandbox.stub(
+        _ToolbarPanelHub.prototype,
+        "enableAppmenuButton"
       );
 
       instance.executeAction({ id: "show-whatsnew-button" });
@@ -245,6 +318,7 @@ describe("ToolbarBadgeHub", () => {
     let blockMessageByIdStub;
     let fakeEvent;
     beforeEach(() => {
+      instance.init(sandbox.stub().resolves(), { dispatch: fakeDispatch });
       blockMessageByIdStub = sandbox.stub();
       sandbox.stub(instance, "_blockMessageById").value(blockMessageByIdStub);
       instance.state = { notification: { id: fxaMessage.id } };
@@ -307,6 +381,18 @@ describe("ToolbarBadgeHub", () => {
         instance.removeAllNotifications
       );
     });
+    it("should send telemetry", () => {
+      fakeEvent.type = "click";
+      fakeEvent.button = 0;
+      sandbox.stub(instance, "sendUserEventTelemetry");
+
+      instance.removeAllNotifications(fakeEvent);
+
+      assert.calledOnce(instance.sendUserEventTelemetry);
+      assert.calledWithExactly(instance.sendUserEventTelemetry, "CLICK", {
+        id: "FXA_ACCOUNTS_BADGE",
+      });
+    });
     it("should remove the event listeners after succesfully focusing the element", () => {
       fakeEvent.type = "keypress";
       fakeEvent.key = "Enter";
@@ -365,6 +451,45 @@ describe("ToolbarBadgeHub", () => {
         instance.registerBadgeToAllWindows,
         msg_with_delay
       );
+    });
+  });
+  describe("#sendUserEventTelemetry", () => {
+    beforeEach(() => {
+      instance.init(sandbox.stub().resolves(), { dispatch: fakeDispatch });
+    });
+    it("should check for private window and not send", () => {
+      isBrowserPrivateStub.returns(true);
+
+      instance.sendUserEventTelemetry("CLICK", { id: fxaMessage });
+
+      assert.notCalled(instance._dispatch);
+    });
+    it("should check for private window and send", () => {
+      isBrowserPrivateStub.returns(false);
+
+      instance.sendUserEventTelemetry("CLICK", { id: fxaMessage });
+
+      assert.calledOnce(fakeDispatch);
+      const [ping] = instance._dispatch.firstCall.args;
+      assert.propertyVal(ping, "type", "TOOLBAR_BADGE_TELEMETRY");
+      assert.propertyVal(ping.data, "event", "CLICK");
+    });
+  });
+  describe("#observe", () => {
+    it("should make a message request when the whats new pref is changed", () => {
+      sandbox.stub(instance, "messageRequest");
+
+      instance.observe("", "", instance.prefs.WHATSNEW_TOOLBAR_PANEL);
+
+      assert.calledOnce(instance.messageRequest);
+      assert.calledWithExactly(instance.messageRequest, "toolbarBadgeUpdate");
+    });
+    it("should not react to other pref changes", () => {
+      sandbox.stub(instance, "messageRequest");
+
+      instance.observe("", "", "foo");
+
+      assert.notCalled(instance.messageRequest);
     });
   });
 });

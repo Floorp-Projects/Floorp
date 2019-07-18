@@ -14,6 +14,7 @@ import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 import { ScreenshotUtils } from "content-src/lib/screenshot-utils";
 import { TOP_SITES_MAX_SITES_PER_ROW } from "common/Reducers.jsm";
+import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 
 export class TopSiteLink extends React.PureComponent {
   constructor(props) {
@@ -273,7 +274,6 @@ export class TopSite extends React.PureComponent {
     super(props);
     this.state = { showContextMenu: false };
     this.onLinkClick = this.onLinkClick.bind(this);
-    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
   }
 
@@ -335,21 +335,18 @@ export class TopSite extends React.PureComponent {
     }
   }
 
-  onMenuButtonClick(event) {
-    event.preventDefault();
-    this.props.onActivate(this.props.index);
-    this.setState({ showContextMenu: true });
-  }
-
-  onMenuUpdate(showContextMenu) {
-    this.setState({ showContextMenu });
+  onMenuUpdate(isOpen) {
+    if (isOpen) {
+      this.props.onActivate(this.props.index);
+    } else {
+      this.props.onActivate();
+    }
   }
 
   render() {
     const { props } = this;
     const { link } = props;
-    const isContextMenuOpen =
-      this.state.showContextMenu && props.activeIndex === props.index;
+    const isContextMenuOpen = props.activeIndex === props.index;
     const title = link.label || link.hostname;
     return (
       <TopSiteLink
@@ -362,14 +359,11 @@ export class TopSite extends React.PureComponent {
         title={title}
       >
         <div>
-          <button
-            aria-haspopup="true"
-            className="context-menu-button icon"
-            data-l10n-id="newtab-menu-content-tooltip"
-            data-l10n-args={JSON.stringify({ title })}
-            onClick={this.onMenuButtonClick}
-          />
-          {isContextMenuOpen && (
+          <ContextMenuButton
+            tooltip="newtab-menu-content-tooltip"
+            tooltipArgs={{ title }}
+            onUpdate={this.onMenuUpdate}
+          >
             <LinkMenu
               dispatch={props.dispatch}
               index={props.index}
@@ -383,7 +377,7 @@ export class TopSite extends React.PureComponent {
               siteInfo={this._getTelemetryInfo()}
               source={TOP_SITES_SOURCE}
             />
-          )}
+          </ContextMenuButton>
         </div>
       </TopSiteLink>
     );

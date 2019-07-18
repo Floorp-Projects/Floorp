@@ -19,6 +19,19 @@
   }
 }
 
+.modal-scroll {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.modal-height {
+  // "Welcome header" has 40px of padding and 36px font size that get neglected using position absolute
+  // causing this to visually collide with the newtab searchbar
+  padding-top: 80px;
+}
+
 .modalOverlayInner {
   width: 960px;
   position: fixed;
@@ -29,7 +42,6 @@
   border-radius: 4px;
   display: none;
   z-index: 1101;
-
 
   // modal takes over entire screen
   @media(max-width: 960px) {

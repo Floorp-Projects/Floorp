@@ -3003,6 +3003,15 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   .modalOverlayOuter.active {
     display: block; }
 
+.modal-scroll {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: auto; }
+
+.modal-height {
+  padding-top: 80px; }
+
 .modalOverlayInner {
   width: 960px;
   position: fixed;
@@ -4108,7 +4117,7 @@ a.firstrun-link {
     text-align: center; }
 
 .inline-onboarding.activity-stream.welcome {
-  overflow-y: scroll; }
+  overflow-y: hidden; }
 
 .inline-onboarding .modalOverlayInner {
   position: absolute; }
