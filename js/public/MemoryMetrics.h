@@ -29,37 +29,39 @@ class nsISupports;  // Needed for ObjectPrivateVisitor.
 namespace JS {
 
 struct TabSizes {
-  enum Kind { Objects, Strings, Private, Other };
-
   TabSizes() = default;
+
+  enum Kind { Objects, Strings, Private, Other };
 
   void add(Kind kind, size_t n) {
     switch (kind) {
       case Objects:
-        objects += n;
+        objects_ += n;
         break;
       case Strings:
-        strings += n;
+        strings_ += n;
         break;
       case Private:
         private_ += n;
         break;
       case Other:
-        other += n;
+        other_ += n;
         break;
       default:
         MOZ_CRASH("bad TabSizes kind");
     }
   }
 
-  size_t objects = 0;
-  size_t strings = 0;
+  size_t objects_ = 0;
+  size_t strings_ = 0;
   size_t private_ = 0;
-  size_t other = 0;
+  size_t other_ = 0;
 };
 
 /** These are the measurements used by Servo. */
 struct ServoSizes {
+  ServoSizes() = default;
+
   enum Kind {
     GCHeapUsed,
     GCHeapUnused,
@@ -69,8 +71,6 @@ struct ServoSizes {
     NonHeap,
     Ignore
   };
-
-  ServoSizes() = default;
 
   void add(Kind kind, size_t n) {
     switch (kind) {
