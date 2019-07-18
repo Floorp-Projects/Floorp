@@ -15,42 +15,45 @@
 #include "jsapi-tests/tests.h"  // BEGIN_TEST, CHECK_EQUAL, END_TEST
 
 // Need to account for string literals including the \0 at the end.
-#define STR(x) x, (mozilla::ArrayLength(x) - 1)
+#define REST(x) x, (mozilla::ArrayLength(x) - 1), __LINE__
 
 static const struct NumberToStringTest {
   double number;
   const char* expected;
   size_t expectedLength;
+  size_t lineno;
 } numberToStringTests[] = {
-    {5e-324, STR("5e-324")},                                // 2**-1074
-    {9.5367431640625e-7, STR("9.5367431640625e-7")},        // 2**-20
-    {0.0000019073486328125, STR("0.0000019073486328125")},  // 2**-19
-    {0.000003814697265625, STR("0.000003814697265625")},    // 2**-18
-    {0.0000057220458984375, STR("0.0000057220458984375")},  // 2**-18 + 2**-19
-    {0.000244140625, STR("0.000244140625")},                // 2**-12
-    {0.125, STR("0.125")},
-    {0.25, STR("0.25")},
-    {0.5, STR("0.5")},
-    {1, STR("1")},
-    {1.5, STR("1.5")},
-    {2, STR("2")},
-    {9, STR("9")},
-    {10, STR("10")},
-    {15, STR("15")},
-    {16, STR("16")},
-    {389427, STR("389427")},
-    {1073741823, STR("1073741823")},
-    {1073741824, STR("1073741824")},
-    {1073741825, STR("1073741825")},
-    {2147483647, STR("2147483647")},
-    {2147483648, STR("2147483648")},
-    {2147483649, STR("2147483649")},
-    {4294967294, STR("4294967294")},
-    {4294967295, STR("4294967295")},
-    {999999999999999900000.0, STR("999999999999999900000")},
-    {999999999999999900000.0 + 65535, STR("999999999999999900000")},
-    {999999999999999900000.0 + 65536, STR("1e+21")},
-    {1.7976931348623157e+308, STR("1.7976931348623157e+308")},
+    {5e-324, REST("5e-324")},                          // 2**-1074
+    {9.5367431640625e-7, REST("9.5367431640625e-7")},  // 2**-20
+    {0.0000010984284297360395, REST("0.0000010984284297360395")},
+    {0.0000019073486328125, REST("0.0000019073486328125")},  // 2**-19
+    {0.000003814697265625, REST("0.000003814697265625")},    // 2**-18
+    {0.0000057220458984375, REST("0.0000057220458984375")},  // 2**-18 + 2**-19
+    {0.000244140625, REST("0.000244140625")},                // 2**-12
+    {0.125, REST("0.125")},
+    {0.25, REST("0.25")},
+    {0.5, REST("0.5")},
+    {1, REST("1")},
+    {1.5, REST("1.5")},
+    {2, REST("2")},
+    {9, REST("9")},
+    {10, REST("10")},
+    {15, REST("15")},
+    {16, REST("16")},
+    {389427, REST("389427")},
+    {1073741823, REST("1073741823")},
+    {1073741824, REST("1073741824")},
+    {1073741825, REST("1073741825")},
+    {2147483647, REST("2147483647")},
+    {2147483648, REST("2147483648")},
+    {2147483649, REST("2147483649")},
+    {4294967294, REST("4294967294")},
+    {4294967295, REST("4294967295")},
+    {4294967296, REST("4294967296")},
+    {999999999999999900000.0, REST("999999999999999900000")},
+    {999999999999999900000.0 + 65535, REST("999999999999999900000")},
+    {999999999999999900000.0 + 65536, REST("1e+21")},
+    {1.7976931348623157e+308, REST("1.7976931348623157e+308")},  // MAX_VALUE
 };
 
 static constexpr char PoisonChar = 0x37;
@@ -71,17 +74,17 @@ BEGIN_TEST(testNumberToString) {
     return false;
   }
 
-  NumberToStringTest zeroTest = {0.0, STR("0")};
+  NumberToStringTest zeroTest = {0.0, REST("0")};
   if (!testOne(zeroTest, false, storage)) {
     return false;
   }
-  NumberToStringTest negativeZeroTest = {-0.0, STR("0")};
+  NumberToStringTest negativeZeroTest = {-0.0, REST("0")};
   if (!testOne(negativeZeroTest, false, storage)) {
     return false;
   }
 
   NumberToStringTest infTest = {mozilla::PositiveInfinity<double>(),
-                                STR("Infinity")};
+                                REST("Infinity")};
   if (!testOne(infTest, false, storage)) {
     return false;
   }
@@ -89,7 +92,7 @@ BEGIN_TEST(testNumberToString) {
     return false;
   }
 
-  NumberToStringTest nanTest = {mozilla::UnspecifiedNaN<double>(), STR("NaN")};
+  NumberToStringTest nanTest = {mozilla::UnspecifiedNaN<double>(), REST("NaN")};
   return testOne(nanTest, false, storage);
 }
 
@@ -117,11 +120,15 @@ bool testOne(const NumberToStringTest& test, bool hasMinusSign,
     start++;
   }
 
-  CHECK_EQUAL(memcmp(start, test.expected, test.expectedLength), 0);
-  CHECK_EQUAL(start[test.expectedLength], '\0');
+  if (!checkEqual(memcmp(start, test.expected, test.expectedLength), 0, start,
+                  test.expected, __FILE__, test.lineno)) {
+    return false;
+  }
 
-  return true;
+  char actualTerminator[] = {start[test.expectedLength], '\0'};
+  return checkEqual(actualTerminator[0], '\0', actualTerminator, "'\\0'",
+                    __FILE__, test.lineno);
 }
 END_TEST(testNumberToString)
 
-#undef STR
+#undef REST
