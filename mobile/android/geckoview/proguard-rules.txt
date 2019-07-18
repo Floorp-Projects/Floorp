@@ -13,7 +13,7 @@
 
 # Preserve all native method names and the names of their classes.
 
--keepclasseswithmembernames class * {
+-keepclasseswithmembernames,includedescriptorclasses class * {
     native <methods>;
 }
 
@@ -83,6 +83,10 @@
 -keep class org.mozilla.geckoview.** { *; }
 
 -keep class org.mozilla.gecko.SysInfo {
+    *;
+}
+
+-keep class org.mozilla.gecko.mozglue.JNIObject {
     *;
 }
 
