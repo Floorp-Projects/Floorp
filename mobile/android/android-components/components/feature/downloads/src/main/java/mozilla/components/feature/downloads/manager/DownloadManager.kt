@@ -5,10 +5,8 @@
 package mozilla.components.feature.downloads.manager
 
 import android.content.Context
-import androidx.core.net.toUri
 import mozilla.components.browser.session.Download
 import mozilla.components.support.ktx.android.content.isPermissionGranted
-import mozilla.components.support.utils.DownloadUtils
 
 typealias OnDownloadCompleted = (Download, Long) -> Unit
 
@@ -37,17 +35,5 @@ fun DownloadManager.validatePermissionGranted(context: Context) {
         throw SecurityException("You must be granted ${permissions.joinToString()}")
     }
 }
-
-fun Download.isScheme(protocols: Iterable<String>): Boolean {
-    val scheme = url.trim().toUri().scheme ?: return false
-    return protocols.contains(scheme)
-}
-
-fun Download.getFileName(contentDisposition: String? = null) =
-    if (fileName.isNotBlank()) {
-        fileName
-    } else {
-        DownloadUtils.guessFileName(contentDisposition, url, contentType)
-    }
 
 internal val noop: OnDownloadCompleted = { _, _ -> }

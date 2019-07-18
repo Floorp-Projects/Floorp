@@ -234,8 +234,8 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
 
-        var observedContentPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
-        var observedAppPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
+        val observedContentPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
+        val observedAppPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
         engineSession.register(object : EngineSession.Observer {
             override fun onContentPermissionRequest(permissionRequest: PermissionRequest) {
                 observedContentPermissionRequests.add(permissionRequest)
@@ -1516,37 +1516,6 @@ class GeckoEngineSessionTest {
 
         assertFalse(oldGeckoSession.isOpen)
         assertTrue(engineSession.geckoSession != oldGeckoSession)
-    }
-
-    @Test
-    fun whenOnExternalResponseDoNotProvideAFileNameMustProvideMeaningFulFileNameToTheSessionObserver() {
-        val engineSession = GeckoEngineSession(mock())
-        var meaningFulFileName = ""
-
-        val observer = object : EngineSession.Observer {
-            override fun onExternalResource(
-                url: String,
-                fileName: String,
-                contentLength: Long?,
-                contentType: String?,
-                cookie: String?,
-                userAgent: String?
-            ) {
-                meaningFulFileName = fileName
-            }
-        }
-        engineSession.register(observer)
-
-        val info: GeckoSession.WebResponseInfo = MockWebResponseInfo(
-            uri = "http://ipv4.download.thinkbroadband.com/1MB.zip",
-            contentLength = 0,
-            contentType = "",
-            filename = null
-        )
-
-        engineSession.geckoSession.contentDelegate!!.onExternalResponse(mock(), info)
-
-        assertEquals("1MB.zip", meaningFulFileName)
     }
 
     @Test

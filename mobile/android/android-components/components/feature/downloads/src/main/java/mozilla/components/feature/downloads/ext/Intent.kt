@@ -36,7 +36,7 @@ fun Intent.getDownloadExtra(): Download? =
         val url = getString(INTENT_URL)
         val fileName = getString(INTENT_FILE_NAME)
         val destination = getString(INTENT_DESTINATION)
-        if (url == null || fileName == null || destination == null) return null
+        if (url == null || destination == null) return null
 
         Download(
             url = url,

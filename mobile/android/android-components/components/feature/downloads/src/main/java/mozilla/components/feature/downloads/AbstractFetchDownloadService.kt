@@ -28,16 +28,14 @@ import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.Download
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Header
-import mozilla.components.concept.fetch.Headers.Names.CONTENT_DISPOSITION
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.fetch.Headers.Names.REFERRER
-import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
-import mozilla.components.concept.fetch.Response
+import mozilla.components.concept.fetch.toMutableHeaders
 import mozilla.components.feature.downloads.ext.addCompletedDownload
 import mozilla.components.feature.downloads.ext.getDownloadExtra
-import mozilla.components.feature.downloads.manager.getFileName
+import mozilla.components.feature.downloads.ext.withResponse
 import mozilla.components.support.base.ids.NotificationIds
 import java.io.File
 import java.io.FileOutputStream
@@ -83,15 +81,14 @@ abstract class AbstractFetchDownloadService(
             REFERRER to download.referrerUrl
         ).mapNotNull { (name, value) ->
             if (value.isNullOrBlank()) null else Header(name, value)
-        }
+        }.toMutableHeaders()
 
-        val request = Request(download.url, headers = MutableHeaders(headers))
+        val request = Request(download.url, headers = headers)
 
         val response = httpClient.fetch(request)
-        val filename = download.getFileName(response.headers[CONTENT_DISPOSITION])
 
         response.body.useStream { inStream ->
-            useFileStream(download, response, filename) { outStream ->
+            useFileStream(download.withResponse(response.headers, inStream)) { outStream ->
                 inStream.copyTo(outStream)
             }
         }
@@ -115,32 +112,21 @@ abstract class AbstractFetchDownloadService(
      */
     internal fun useFileStream(
         download: Download,
-        response: Response,
-        filename: String,
         block: (OutputStream) -> Unit
     ) {
         if (SDK_INT >= Build.VERSION_CODES.Q) {
-            useFileStreamScopedStorage(download, response, filename, block)
+            useFileStreamScopedStorage(download, block)
         } else {
-            useFileStreamLegacy(download, response, filename, block)
+            useFileStreamLegacy(download, block)
         }
     }
 
-    @Suppress("LongMethod")
     @TargetApi(Build.VERSION_CODES.Q)
-    private fun useFileStreamScopedStorage(
-        download: Download,
-        response: Response,
-        filename: String,
-        block: (OutputStream) -> Unit
-    ) {
-        val contentType = response.headers[CONTENT_TYPE]
-        val contentLength = response.headers[CONTENT_LENGTH]?.toLongOrNull()
-
+    private fun useFileStreamScopedStorage(download: Download, block: (OutputStream) -> Unit) {
         val values = ContentValues().apply {
-            put(MediaStore.Downloads.DISPLAY_NAME, filename)
-            put(MediaStore.Downloads.MIME_TYPE, contentType ?: download.contentType ?: "*/*")
-            put(MediaStore.Downloads.SIZE, contentLength ?: download.contentLength)
+            put(MediaStore.Downloads.DISPLAY_NAME, download.fileName)
+            put(MediaStore.Downloads.MIME_TYPE, download.contentType ?: "*/*")
+            put(MediaStore.Downloads.SIZE, download.contentLength)
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
 
@@ -157,27 +143,19 @@ abstract class AbstractFetchDownloadService(
     }
 
     @TargetApi(Build.VERSION_CODES.P)
-    @Suppress("Deprecation", "LongMethod")
-    private fun useFileStreamLegacy(
-        download: Download,
-        response: Response,
-        filename: String,
-        block: (OutputStream) -> Unit
-    ) {
+    @Suppress("Deprecation")
+    private fun useFileStreamLegacy(download: Download, block: (OutputStream) -> Unit) {
         val dir = Environment.getExternalStoragePublicDirectory(download.destinationDirectory)
-        val file = File(dir, filename)
+        val file = File(dir, download.fileName!!)
         FileOutputStream(file).use(block)
 
-        val contentType = response.headers[CONTENT_TYPE]
-        val contentLength = response.headers[CONTENT_LENGTH]?.toLongOrNull()
-
         addCompletedDownload(
-            title = filename,
-            description = filename,
+            title = download.fileName!!,
+            description = download.fileName!!,
             isMediaScannerScannable = true,
-            mimeType = contentType ?: download.contentType ?: "*/*",
+            mimeType = download.contentType ?: "*/*",
             path = file.absolutePath,
-            length = contentLength ?: download.contentLength ?: file.length(),
+            length = download.contentLength ?: file.length(),
             showNotification = true,
             uri = download.url.toUri(),
             referer = download.referrerUrl?.toUri()

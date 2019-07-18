@@ -23,6 +23,8 @@ import mozilla.components.browser.session.Download
 import mozilla.components.concept.fetch.Headers.Names.COOKIE
 import mozilla.components.concept.fetch.Headers.Names.REFERRER
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
+import mozilla.components.feature.downloads.ext.isScheme
+import mozilla.components.support.utils.DownloadUtils
 
 typealias SystemDownloadManager = android.app.DownloadManager
 typealias SystemRequest = android.app.DownloadManager.Request
@@ -124,7 +126,12 @@ private fun Download.toAndroidRequest(cookie: String): SystemRequest {
         addRequestHeaderSafely(REFERRER, referrerUrl)
     }
 
-    request.setDestinationInExternalPublicDir(destinationDirectory, getFileName())
+    val fileName = if (fileName.isNullOrBlank()) {
+        DownloadUtils.guessFileName(null, url, contentType)
+    } else {
+        fileName
+    }
+    request.setDestinationInExternalPublicDir(destinationDirectory, fileName)
 
     return request
 }

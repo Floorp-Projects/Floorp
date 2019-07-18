@@ -19,7 +19,7 @@ import android.os.Environment
  */
 data class Download(
     val url: String,
-    val fileName: String,
+    val fileName: String? = null,
     val contentType: String? = null,
     val contentLength: Long? = null,
     val userAgent: String? = null,

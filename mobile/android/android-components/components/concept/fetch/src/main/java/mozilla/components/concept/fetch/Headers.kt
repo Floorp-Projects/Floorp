@@ -159,3 +159,5 @@ class MutableHeaders(headers: List<Header>) : Headers, MutableIterable<Header> {
 
     override fun hashCode() = headers.hashCode()
 }
+
+fun List<Header>.toMutableHeaders() = MutableHeaders(this)

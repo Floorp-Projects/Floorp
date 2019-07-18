@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import java.lang.UnsupportedOperationException
 
 /**
  * Class representing a single engine session.
@@ -71,7 +70,7 @@ abstract class EngineSession(
         @Suppress("LongParameterList")
         fun onExternalResource(
             url: String,
-            fileName: String,
+            fileName: String? = null,
             contentLength: Long? = null,
             contentType: String? = null,
             cookie: String? = null,

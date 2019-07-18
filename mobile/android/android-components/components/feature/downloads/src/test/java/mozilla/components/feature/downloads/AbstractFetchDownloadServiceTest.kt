@@ -53,7 +53,7 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(eq(download), eq(response), eq("file.txt"), any())
+        doNothing().`when`(service).useFileStream(eq(download), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putExtra(EXTRA_DOWNLOAD_ID, 1L)
@@ -62,7 +62,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.onStartCommand(downloadIntent, 0)
 
-        verify(service).useFileStream(eq(download), eq(response), eq("file.txt"), any())
+        verify(service).useFileStream(eq(download), any())
         verify(broadcastManager).sendBroadcast(any())
         Unit
     }

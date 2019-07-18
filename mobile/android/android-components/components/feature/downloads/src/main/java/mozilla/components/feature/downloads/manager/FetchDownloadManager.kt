@@ -21,6 +21,7 @@ import androidx.core.util.set
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mozilla.components.browser.session.Download
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
+import mozilla.components.feature.downloads.ext.isScheme
 import mozilla.components.feature.downloads.ext.putDownloadExtra
 import kotlin.random.Random
 import kotlin.reflect.KClass

@@ -7,6 +7,7 @@ package mozilla.components.feature.downloads
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 import mozilla.components.browser.session.Download
+import mozilla.components.support.utils.DownloadUtils
 
 /**
  * This is a general representation of a dialog meant to be used in collaboration with [DownloadsFeature]
@@ -28,7 +29,8 @@ abstract class DownloadDialogFragment : DialogFragment() {
      */
     fun setDownload(download: Download) {
         val args = arguments ?: Bundle()
-        args.putString(KEY_FILE_NAME, download.fileName)
+        args.putString(KEY_FILE_NAME, download.fileName
+            ?: DownloadUtils.guessFileName(null, download.url, download.contentType))
         args.putString(KEY_URL, download.url)
         args.putLong(KEY_CONTENT_LENGTH, download.contentLength ?: 0)
         arguments = args

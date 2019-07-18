@@ -15,7 +15,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.observer.Consumable
-import mozilla.components.support.utils.DownloadUtils
 
 /**
  * A candidate for an item to be displayed in the context menu.
@@ -149,9 +148,7 @@ data class ContextMenuCandidate(
             label = context.getString(R.string.mozac_feature_contextmenu_save_image),
             showFor = { _, hitResult -> hitResult.isImage() },
             action = { session, hitResult ->
-                session.download = Consumable.from(Download(
-                    hitResult.src,
-                    DownloadUtils.guessFileName(null, hitResult.src, null)))
+                session.download = Consumable.from(Download(hitResult.src))
             }
         )
 

@@ -22,6 +22,9 @@ permalink: /changelog/
 * **browser-icons**
   * Added `BrowserIcons.loadIntoView` to automatically load an icon into an `ImageView`.
 
+* **feature-downloads**
+  * `FetchDownloadManager` now determines the filename during the download, resulting in more accurate filenames.
+
 * **feature-push**
   * Updated the default autopush service endpoint to `updates.push.services.mozilla.com`.
 
