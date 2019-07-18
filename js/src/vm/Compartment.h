@@ -568,6 +568,7 @@ class JS::Compartment {
 
  private:
   bool getNonWrapperObjectForCurrentCompartment(JSContext* cx,
+                                                js::HandleObject origObj,
                                                 js::MutableHandleObject obj);
   bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing,
                           js::MutableHandleObject obj);

@@ -153,6 +153,7 @@ inline bool ShouldWaiveXray(JSContext* cx, JSObject* originalObj) {
 }
 
 void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
+                                        HandleObject origObj,
                                         HandleObject objArg,
                                         HandleObject objectPassedToWrap,
                                         MutableHandleObject retObj) {
