@@ -15,7 +15,7 @@ const ID = "rulers-highlighter-";
 
 add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL);
-  const front = inspector.inspector;
+  const front = inspector.inspectorFront;
 
   const highlighter = await front.getHighlighterByType("RulersHighlighter");
 
